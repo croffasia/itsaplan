@@ -1,0 +1,166 @@
+# ─────────────────────────────────────────────────────────────
+# Self-hosting stack: postgres + minio + api + worker + bot + web.
+# Coolify uses docker-compose.coolify.yml; local dev uses docker-compose.dev.yml
+# (backing services only).
+#
+#   cp .env.example .env      # fill in the required values below
+#   docker compose up -d --build
+#
+# Required in .env (the stack refuses to start without them):
+#   POSTGRES_PASSWORD, BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY, WORKER_INTERNAL_TOKEN,
+#   S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, API_URL, APP_URL
+# Generate each secret with: openssl rand -base64 32
+#
+# Every service is built from this checkout. Bring the stack up with a build:
+#   docker compose up -d --build
+# web bakes API_URL into its bundle at build time, so rebuild it after changing
+# API_URL:  docker compose up -d --build web
+# ─────────────────────────────────────────────────────────────
+name: itsaplan
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-itsaplan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-itsaplan}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-itsaplan} -d ${POSTGRES_DB:-itsaplan}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # S3-compatible object store for issue attachments.
+  # Both the S3 API (:9000) and the console (:9001) stay inside the compose
+  # network: the api streams attachment bytes through itself, so no port is
+  # published. Administer through mc from inside the network or an SSH tunnel.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:?set S3_ACCESS_KEY_ID in .env}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:?set S3_SECRET_ACCESS_KEY in .env}
+    volumes:
+      - minio-data:/data
+
+  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  minio-init:
+    image: minio/mc:latest
+    restart: 'no'
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
+      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do echo 'waiting for minio...'; sleep 2; done;
+      mc mb --ignore-existing local/\"$$S3_BUCKET\";
+      echo 'bucket ready: '\"$$S3_BUCKET\";
+      "
+
+  # Applies database migrations on startup, then serves the API.
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+      # Encrypts stored provider credentials at rest (AES-256-GCM). Changing it
+      # makes existing stored credentials undecryptable.
+      APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?set APP_ENCRYPTION_KEY in .env}
+      # Authenticates the worker and the bot against the /internal/* routes.
+      WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN:?set WORKER_INTERNAL_TOKEN in .env}
+      # Public origins, each entered once. API_URL is the api origin (auth handler,
+      # email links); APP_URL is the web origin (CORS, passkey, email links).
+      API_URL: ${API_URL:?public origin of the api, e.g. https://api.example.com}
+      APP_URL: ${APP_URL:?public origin of the web app, e.g. https://app.example.com}
+      # Set COOKIE_DOMAIN only to override the parent domain derived from
+      # APP_URL (multi-label TLDs, deep subdomains).
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
+      S3_REGION: ${S3_REGION:-us-east-1}
+    ports:
+      - '${API_PORT:-3000}:3000'
+
+  # Webhook delivery, notification delivery, agent schedules, and agent runs.
+  # Shares the database with the api. No public ports.
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      SERVICE_URL_API: http://api:3000
+      WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
+      # Optional tuning lives in apps/worker/src/config.ts.
+
+  # Telegram bot: long polling for the instance bot, completing the account links
+  # users start from their profile. The bot token is stored in the database and
+  # edited in god mode, so it is not an environment variable here.
+  #
+  # Must stay at one replica: Telegram hands each getUpdates call to a single
+  # caller, so a second instance would take updates away from the first.
+  bot:
+    build:
+      context: .
+      dockerfile: apps/bot/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      SERVICE_URL_API: http://api:3000
+      WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
+
+  # The api origin is inlined into the bundle at build time, so the image is bound
+  # to the origin it was built with. Sourced from the shared API_URL so the root
+  # .env keeps it in one place; rebuild web after changing API_URL.
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${API_URL:?public origin of the api, e.g. https://api.example.com}
+        # Legal document URLs shown on the logged-out screens; empty hides the notice.
+        NEXT_PUBLIC_PRIVACY_URL: ${PRIVACY_URL:-}
+        NEXT_PUBLIC_TERMS_URL: ${TERMS_URL:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOSTNAME: 0.0.0.0
+    ports:
+      - '${WEB_PORT:-3001}:3001'
+
+volumes:
+  postgres-data:
+  minio-data:

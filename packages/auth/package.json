@@ -1,0 +1,30 @@
+{
+  "name": "@repo/auth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "auth:generate": "dotenv -e ../../.env -- bunx @better-auth/cli generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@better-auth/api-key": "1.6.23",
+    "@better-auth/passkey": "1.6.23",
+    "@repo/crypto": "workspace:*",
+    "@repo/db": "workspace:*",
+    "@repo/mailer": "workspace:*",
+    "better-auth": "^1.3.4",
+    "drizzle-orm": "^0.44.2"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@types/bun": "latest",
+    "dotenv-cli": "^8.0.0",
+    "eslint": "^9.39.0",
+    "typescript": "^5.7.3"
+  }
+}

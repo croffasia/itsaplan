@@ -1,0 +1,23 @@
+{
+  "name": "@repo/mailer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "nodemailer": "^9.0.3"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@types/bun": "latest",
+    "@types/nodemailer": "^8.0.1",
+    "eslint": "^9.39.0",
+    "typescript": "^5.7.3"
+  }
+}

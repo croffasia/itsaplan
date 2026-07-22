@@ -1,0 +1,20 @@
+version: 2
+updates:
+  # Bun lockfiles are not supported by Dependabot's npm ecosystem resolver for
+  # version bumps, so package updates are handled manually. GitHub Actions and
+  # Docker base images are updated here.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ['dependencies', 'ci']
+
+  - package-ecosystem: docker
+    directories:
+      - /apps/api
+      - /apps/web
+      - /apps/worker
+      - /apps/bot
+    schedule:
+      interval: weekly
+    labels: ['dependencies', 'docker']

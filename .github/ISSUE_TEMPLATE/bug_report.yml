@@ -1,0 +1,61 @@
+name: Bug report
+description: Something does not work as expected
+title: '[bug]: '
+labels: ['bug', 'triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. Please search the existing issues first,
+        a bug may already be tracked.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What you saw, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: How are you running it
+      options:
+        - Self-hosted (Docker Compose)
+        - Local development (bun run dev)
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Image tag, release tag, or commit SHA.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Browser and OS for frontend issues. Docker and Postgres versions for server issues.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant API, worker, or browser console output. Remove secrets before pasting.
+      render: shell

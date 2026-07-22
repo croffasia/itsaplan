@@ -1,0 +1,72 @@
+# ─────────────────────────────────────────────────────────────
+# Local development: brings up the backing services the app needs — Postgres and
+# MinIO — with host-published ports, so one command starts them together instead
+# of running each by hand. The api, web, worker, and Telegram bot apps run on the
+# host via `bun run dev` (watch/hot-reload, turbo) and reach these over localhost.
+#
+#   docker compose -f docker-compose.dev.yml up -d      # starts postgres + minio (+ bucket init)
+#
+# If host port 5432 is taken (a local Postgres is already running),
+# pick another:  POSTGRES_PORT=5433 docker compose -f docker-compose.dev.yml up -d
+# and update the port in DATABASE_URL inside .env.
+#
+# The self-hosting stack (every service, built from source) lives in
+# docker-compose.yml; the Coolify variant in docker-compose.coolify.yml.
+# ─────────────────────────────────────────────────────────────
+name: itsaplan-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-itsaplan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-itsaplan}
+      POSTGRES_DB: ${POSTGRES_DB:-itsaplan}
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-itsaplan} -d ${POSTGRES_DB:-itsaplan}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # S3-compatible object store for issue attachments (MinIO).
+  # The attachments bucket is created by the minio-init service below.
+  #   S3 API:      http://localhost:9000
+  #   Web console: http://localhost:9001
+  #     login with S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY from .env
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-dev-data:/data
+
+  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do echo 'waiting for minio...'; sleep 2; done;
+      mc mb --ignore-existing local/\"$$S3_BUCKET\";
+      echo 'bucket ready: '\"$$S3_BUCKET\";
+      "
+
+volumes:
+  postgres-dev-data:
+  minio-dev-data:

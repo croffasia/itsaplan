@@ -1,0 +1,165 @@
+# ─────────────────────────────────────────────────────────────
+# Coolify stack: postgres + minio + api + worker + bot + web.
+# In Coolify: New Resource → Docker Compose → point to this file, then set the
+# environment variables (see .env.example) in the UI. Builds from source.
+# For self-hosting anywhere else, use docker-compose.yml.
+#
+# SERVICE_PASSWORD_* / SERVICE_URL_* are Coolify magic variables: generated and
+# persisted on first deploy, stable across deploys. SERVICE_URL_* come from the
+# Domains fields, so the public URLs live in one place.
+# ─────────────────────────────────────────────────────────────
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-itsaplan}
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}
+      POSTGRES_DB: ${POSTGRES_DB:-itsaplan}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-itsaplan} -d ${POSTGRES_DB:-itsaplan}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # S3-compatible object store for issue attachments (MinIO).
+  # Both the S3 API (:9000) and the console (:9001) are internal only — the api
+  # streams attachment bytes over the internal network, so no port is published.
+  # Administer through mc from inside the network or an SSH tunnel.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
+      MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_MINIO}
+    volumes:
+      - minio-data:/data
+
+  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  # restart "no" is explicit: it exits 0 by design, and platforms that inject
+  # restart: unless-stopped (e.g. Coolify) would otherwise loop it forever and
+  # trip their restart-count limit, tearing the whole stack down.
+  minio-init:
+    image: minio/mc:latest
+    restart: 'no'
+    depends_on:
+      - minio
+    environment:
+      MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
+      MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_MINIO}
+      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
+    entrypoint: >
+      /bin/sh -c "
+      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do echo 'waiting for minio...'; sleep 2; done;
+      mc mb --ignore-existing local/\"$$S3_BUCKET\";
+      echo 'bucket ready: '\"$$S3_BUCKET\";
+      "
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    # Applies migrations on startup, then starts the server (see api Dockerfile CMD).
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      BETTER_AUTH_SECRET: ${SERVICE_PASSWORD_64_BETTERAUTH}
+      # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
+      # existing stored credentials undecryptable.
+      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
+      # The worker and the bot authenticate to /internal/* with this same token.
+      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      # API_URL is the api origin; APP_URL is the web origin.
+      API_URL: ${SERVICE_URL_API:-http://localhost:3000}
+      APP_URL: ${SERVICE_URL_WEB:-http://localhost:3001}
+      # To override the cookie parent domain (multi-label TLDs / deep subdomains),
+      # add a COOKIE_DOMAIN env in Coolify — the code reads it if present.
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
+      S3_ACCESS_KEY_ID: ${SERVICE_USER_MINIO}
+      S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
+      S3_REGION: ${S3_REGION:-us-east-1}
+    ports:
+      - '${API_PORT:-3000}:3000'
+
+  # Background worker for webhook delivery, agent schedules, and autonomous agent
+  # runs. Shares the database with the api. No public ports.
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      # Optional tuning — defaults live in apps/worker/src/config.ts:
+      # WEBHOOK_POLL_INTERVAL_MS, WEBHOOK_BATCH_SIZE, WEBHOOK_TIMEOUT_MS,
+      # WEBHOOK_MAX_ATTEMPTS, WEBHOOK_DISABLE_THRESHOLD, WEBHOOK_LEASE_SECONDS,
+      # WEBHOOK_CLEANUP_DAYS, WEBHOOK_CLEANUP_EVERY_TICKS.
+      # Agent runs: AGENT_RUN_BATCH_SIZE, AGENT_RUN_TIMEOUT_MS,
+      # AGENT_RUN_MAX_ATTEMPTS, AGENT_RUN_LEASE_SECONDS.
+
+  # Telegram bot: long polling for the instance bot, completing the account links
+  # users start from their profile. No database and no public ports — it reaches the
+  # api's internal routes with the same shared token the worker uses.
+  #
+  # Must stay at one replica: Telegram hands each getUpdates call to a single caller,
+  # so a second instance would take updates away from the first.
+  bot:
+    build:
+      context: .
+      dockerfile: apps/bot/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_started
+    environment:
+      NODE_ENV: production
+      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      # The bot token itself is not set here: it is stored in the database and edited
+      # in god mode, so the service picks up a change without a redeploy.
+      # Optional tuning — defaults live in apps/bot/src/config.ts:
+      # BOT_CONFIG_POLL_INTERVAL_MS, BOT_API_TIMEOUT_MS.
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # The api origin, inlined into the web bundle at build time. Sourced from
+        # Coolify's Domain for the api service.
+        NEXT_PUBLIC_API_URL: ${SERVICE_URL_API:-http://localhost:3000}
+        # Legal document URLs shown on the logged-out screens; empty hides the notice.
+        NEXT_PUBLIC_PRIVACY_URL: ${PRIVACY_URL:-}
+        NEXT_PUBLIC_TERMS_URL: ${TERMS_URL:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      HOSTNAME: 0.0.0.0
+    ports:
+      - '${WEB_PORT:-3001}:3001'
+
+volumes:
+  postgres-data:
+  minio-data:

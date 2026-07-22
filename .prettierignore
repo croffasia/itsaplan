@@ -1,0 +1,10 @@
+# Prettier also respects .gitignore, so node_modules/.next/dist/coverage are already excluded.
+
+# Lockfile
+bun.lock
+
+# Generated Drizzle migrations and snapshots
+packages/db/drizzle
+
+# Generated better-auth schema
+packages/db/src/schema/auth.ts

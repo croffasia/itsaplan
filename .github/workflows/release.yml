@@ -1,0 +1,27 @@
+name: Release
+
+# release-please keeps an open "release PR" on main that accumulates the next
+# version and CHANGELOG from conventional-commit subjects. Merging that PR tags
+# the commit (vX.Y.Z) and publishes a GitHub Release. No manual version bumps.
+on:
+  push:
+    branches: [main]
+
+# Needed to open the release PR and create tags/releases with GITHUB_TOKEN.
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release PR and tag
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

@@ -1,0 +1,53 @@
+/*
+ * Map Scalar's theme variables to the app design tokens (globals.css) so the API
+ * reference matches the rest of the panel. Scalar defines its own variables on the
+ * `.light-mode` / `.dark-mode` classes it puts on its root; scope the override to
+ * the `.itp-scalar` wrapper and target both so it wins regardless of the forced
+ * mode. The app tokens already flip with the `.dark` class, so a single mapping
+ * covers light and dark.
+ */
+.itp-scalar,
+.itp-scalar .light-mode,
+.itp-scalar .dark-mode {
+  --scalar-font: var(--font-sans);
+  --scalar-color-accent: var(--primary);
+  --scalar-color-1: var(--foreground);
+  --scalar-color-2: var(--muted-foreground);
+  --scalar-color-3: var(--muted-foreground);
+  --scalar-background-1: var(--background);
+  --scalar-background-2: var(--muted);
+  --scalar-background-3: var(--accent);
+  --scalar-background-accent: color-mix(in oklch, var(--primary) 12%, transparent);
+  --scalar-border-color: var(--border);
+  --scalar-radius: var(--radius-md);
+
+  /* Scalar's left navigation column. */
+  --scalar-sidebar-background-1: var(--sidebar);
+  --scalar-sidebar-color-1: var(--sidebar-foreground);
+  --scalar-sidebar-color-2: var(--muted-foreground);
+  --scalar-sidebar-border-color: var(--sidebar-border);
+  --scalar-sidebar-item-hover-background: var(--sidebar-accent);
+  --scalar-sidebar-item-hover-color: var(--sidebar-accent-foreground);
+  --scalar-sidebar-item-active-background: var(--sidebar-accent);
+  --scalar-sidebar-color-active: var(--sidebar-accent-foreground);
+}
+
+/* Hide Scalar's own top toolbar (Developer Tools / Configure / Share / Deploy) —
+ * the app owns the page chrome, and those are hosted-Scalar actions we do not use. */
+.itp-scalar .api-reference-toolbar {
+  display: none;
+}
+
+/* Scalar sizes its sticky sidebar against `--full-height`, which defaults to
+ * `100dvh`. Inside the app shell the reference sits below AppHeader, so the
+ * sidebar overflows its container and its footer gets clipped. Making the wrapper
+ * a size container lets `100cqh` feed Scalar the real height instead. The wrapper
+ * takes a definite flex height (see ScalarReference) so size containment has a
+ * size to expose. */
+.itp-scalar {
+  container-type: size;
+}
+.itp-scalar .references-layout {
+  --full-height: 100cqh;
+  min-height: 100%;
+}

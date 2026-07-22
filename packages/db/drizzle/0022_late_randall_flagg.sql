@@ -1,0 +1,2 @@
+ALTER TABLE "project_invite" ADD COLUMN "role_id" integer;--> statement-breakpoint
+ALTER TABLE "project_invite" ADD CONSTRAINT "project_invite_role_id_project_role_id_fk" FOREIGN KEY ("role_id") REFERENCES "public"."project_role"("id") ON DELETE set null ON UPDATE no action;

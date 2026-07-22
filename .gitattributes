@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+bun.lock linguist-generated=true -diff
+packages/db/drizzle/** linguist-generated=true
+packages/db/src/schema/auth.ts linguist-generated=true
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff binary
+*.woff2 binary

@@ -1,0 +1,1 @@
+ALTER TABLE "project_action" ADD COLUMN "icon" text DEFAULT '' NOT NULL;

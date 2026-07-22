@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/croffasia/itsaplan/discussions
+    about: Ask questions and discuss ideas in Discussions, not in issues.
+  - name: Security vulnerability
+    url: https://github.com/croffasia/itsaplan/security/advisories/new
+    about: Report vulnerabilities privately. Do not open a public issue.

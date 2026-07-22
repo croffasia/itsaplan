@@ -1,0 +1,1 @@
+ALTER TABLE "custom_field" DROP COLUMN "is_required";

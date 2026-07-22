@@ -1,0 +1,100 @@
+# ─────────────────────────────────────────────────────────────
+# Test gate: run the API test suite against a throwaway Postgres, in a container
+# built from the same image as production. Integration tests need a live database,
+# so they cannot run during `docker build` (no DB there) — they run here instead.
+#
+# One command (non-zero exit on any failing test):
+#   docker compose -f docker-compose.test.yml up --build \
+#     --abort-on-container-exit --exit-code-from api-test
+#
+# The test database is created automatically by the postgres-test service
+# (POSTGRES_DB=vela_test); its data is tmpfs, so nothing persists between runs.
+# Use as a Coolify pre-deployment step now, or drop the same command into a
+# GitHub Actions job later.
+# ─────────────────────────────────────────────────────────────
+services:
+  postgres-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: vela
+      POSTGRES_PASSWORD: vela
+      # Name contains "test" — the resetDb() guard requires it.
+      POSTGRES_DB: vela_test
+    # Ephemeral: the data directory lives in memory, wiped when the run ends.
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U vela -d vela_test']
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  # Throwaway MinIO for the attachments feature test (object bytes). Ephemeral:
+  # /data is tmpfs, wiped when the run ends.
+  minio-test:
+    image: minio/minio:latest
+    command: server /data
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    tmpfs:
+      - /data
+
+  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  minio-test-init:
+    image: minio/mc:latest
+    depends_on:
+      - minio-test
+    entrypoint: >
+      sh -c "
+      until mc alias set local http://minio-test:9000 minioadmin minioadmin; do echo 'waiting for minio...'; sleep 2; done;
+      mc mb --ignore-existing local/planner-attachments;
+      echo 'bucket ready';
+      "
+
+  api-test:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      # Empty install flags so the image keeps devDeps the test suite needs
+      # (@elysiajs/eden); production builds default to --production.
+      args:
+        INSTALL_FLAGS: ''
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      minio-test-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgres://vela:vela@postgres-test:5432/vela_test
+      # Any fixed secret works for a throwaway test DB.
+      BETTER_AUTH_SECRET: test-secret-not-for-production-use-only
+      # Fixed 32-byte base64 key for the provider-credential encryption tests.
+      APP_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVzLWxlbiE=
+      API_URL: http://localhost:3000
+      APP_URL: http://localhost:3001
+      # Object store for the attachments test (throwaway MinIO above).
+      S3_ENDPOINT: http://minio-test:9000
+      S3_REGION: us-east-1
+      S3_BUCKET: planner-attachments
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+    # Migrate the throwaway DB, then run the api suite. bun test discovers
+    # src/**/*.test.ts; env above satisfies the resetDb() guard.
+    command: sh -c "bun run packages/db/src/migrate.ts && cd apps/api && bun test"
+
+  # Webhook delivery worker, built from the same image as production, so the test
+  # gate also verifies the worker image builds and boots. It idles here (no events
+  # are emitted during the api suite) and is torn down when api-test exits. A tick
+  # before api-test migrates just logs and retries — it does not fail the gate.
+  worker-test:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    environment:
+      NODE_ENV: test
+      DATABASE_URL: postgres://vela:vela@postgres-test:5432/vela_test

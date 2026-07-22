@@ -1,0 +1,10 @@
+# Coverage output for `bun test --coverage` (see the test:coverage script).
+# Writes an lcov file to coverage/lcov.info (read by CI and the VSCode
+# Coverage Gutters extension) and prints the text summary to the terminal.
+[test]
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"
+# Exclude test files and everything under any __tests__ folder (helpers, fixtures)
+# from coverage — only production code is measured.
+coverageSkipTestFiles = true
+coveragePathIgnorePatterns = ["**/__tests__/**"]

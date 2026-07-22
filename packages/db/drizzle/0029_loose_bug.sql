@@ -1,0 +1,1 @@
+ALTER TABLE "project_member" ADD COLUMN "description" text DEFAULT '' NOT NULL;

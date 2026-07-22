@@ -73,7 +73,7 @@ export default function ProjectSwitcher({
               >
                 <Badge
                   variant="outline"
-                  className="shrink-0 rounded px-1 py-0 font-mono text-[10px] text-muted-foreground"
+                  className="w-12 shrink-0 rounded px-1 py-0 font-mono text-[10px] text-muted-foreground"
                 >
                   {b.key}
                 </Badge>

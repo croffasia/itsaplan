@@ -3,9 +3,10 @@
 # built from the same image as production. Integration tests need a live database,
 # so they cannot run during `docker build` (no DB there) — they run here instead.
 #
-# One command (non-zero exit on any failing test):
-#   docker compose -f docker-compose.test.yml up --build \
-#     --abort-on-container-exit --exit-code-from api-test
+# Build the images, then run the suite (non-zero exit on any failing test). `run`
+# starts api-test's dependencies, runs the suite, and exits with its code:
+#   docker compose -f docker-compose.test.yml build
+#   docker compose -f docker-compose.test.yml run --rm api-test
 #
 # The test database is created automatically by the postgres-test service
 # (POSTGRES_DB=vela_test); its data is tmpfs, so nothing persists between runs.

@@ -132,16 +132,22 @@ its Dockerfile CMD). `bot` runs Telegram long polling and must stay at one repli
 `docker-compose.test.yml` runs the test suite against a throwaway Postgres, in a
 container built from the same image as production. Integration tests need a live
 database, so they cannot run during `docker build` — this compose file is the
-mechanism instead. One command, non-zero exit on any failing test:
+mechanism instead. Build the images, then run the suite (non-zero exit on any
+failing test):
 
 ```bash
-docker compose -f docker-compose.test.yml up --build \
-  --abort-on-container-exit --exit-code-from api-test
+docker compose -f docker-compose.test.yml build
+docker compose -f docker-compose.test.yml run --rm api-test
 ```
 
+`run` starts api-test's dependencies (Postgres healthy, the MinIO bucket init
+completed), runs the suite, and exits with its code. It does not use
+`--abort-on-container-exit`, which tears the stack down the moment the one-shot
+`minio-test-init` exits, before api-test starts.
+
 The test database is created by the `postgres-test` service (`POSTGRES_DB=vela_test`,
-tmpfs — nothing persists). The `test` job in `.github/workflows/ci.yml` runs this exact
-command.
+tmpfs — nothing persists). The `test` job in `.github/workflows/ci.yml` runs these
+same commands.
 
 ## CI
 

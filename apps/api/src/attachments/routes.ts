@@ -15,6 +15,7 @@ import {
   listAttachments,
   getAttachmentByPublicId,
   deleteAttachmentByPublicId,
+  removeAttachmentEmbeds,
   getProjectAttachmentBytes,
   type AttachmentRow,
 } from './store';
@@ -274,6 +275,9 @@ export const attachmentRoutes = new Elysia({
     async ({ params }) => {
       const row = await deleteAttachmentByPublicId(params.publicId);
       if (!row) throw new HttpError(404, 'Attachment not found');
+      // Strip any embed of this attachment from the issue description and its
+      // markdown field values, so no broken image is left behind.
+      await removeAttachmentEmbeds(row.issueId, row.publicId);
       // Row is already gone; a failed object delete only orphans bytes, so don't
       // fail the request over it.
       await deleteObject(row.s3Key).catch((err) => {

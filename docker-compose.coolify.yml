@@ -89,11 +89,9 @@ services:
       S3_ACCESS_KEY_ID: ${SERVICE_USER_MINIO}
       S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
       S3_REGION: ${S3_REGION:-us-east-1}
-    # Coolify routes to the container through its proxy by the SERVICE_URL_API
-    # domain; the port is exposed to the internal network, not published on the
-    # host. Publishing a fixed host port conflicts and cannot be remapped in the UI.
-    expose:
-      - '3000'
+    # Set API_PORT in Coolify if 3000 is taken on the host.
+    ports:
+      - '${API_PORT:-3000}:3000'
 
   # Background worker for webhook delivery, agent schedules, and autonomous agent
   # runs. Shares the database with the api. No public ports.
@@ -160,10 +158,9 @@ services:
       NODE_ENV: production
       PORT: 3001
       HOSTNAME: 0.0.0.0
-    # Same as api: Coolify routes by the SERVICE_URL_WEB domain, so the port is
-    # only exposed internally, not published on the host.
-    expose:
-      - '3001'
+    # Set WEB_PORT in Coolify if 3001 is taken on the host.
+    ports:
+      - '${WEB_PORT:-3001}:3001'
 
 volumes:
   postgres-data:

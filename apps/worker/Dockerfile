@@ -1,6 +1,6 @@
 # ── Webhook delivery worker (Bun) — built from the monorepo root ──
 # build context in docker-compose = repository root (.)
-FROM oven/bun:1.3.9-alpine AS base
+FROM oven/bun:1.3.14-alpine AS base
 WORKDIR /app
 
 # 1) Install dependencies from manifests (cacheable layer). All workspace

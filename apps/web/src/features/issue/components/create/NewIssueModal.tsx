@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { type Editor } from '@tiptap/react';
 import { MoreHorizontal } from 'lucide-react';
 import { type IssueFieldValueInput, type ProjectDetail } from '@/lib/api';
 import { type NewIssueDefaults } from '@/utils/project';
 import { useSession } from '@/lib/auth-client';
-import { useCreateIssue, useSetFieldValue } from '@/services/issues.service';
+import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useCustomFieldsQuery } from '@/services/customFields.service';
+import { useUploadAttachment } from '../../services/attachments.service';
+import { attachmentHtml } from '../../utils/attachmentEmbed';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 import Modal from '@/components/common/overlay/Modal';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
@@ -79,7 +82,60 @@ export default function NewIssueModal({
   const [justAddedId, setJustAddedId] = useState<number | null>(null);
 
   const createIssue = useCreateIssue();
+  const updateIssue = useUpdateIssue(project.project.key);
   const setFieldValueMutation = useSetFieldValue(project.project.key);
+  const uploadAttachment = useUploadAttachment();
+
+  // Files pasted or dropped into the description before the issue exists.
+  // Attachments upload against an issue id, which we only have after creation,
+  // so each file is shown inline via a local blob: URL and held here; on submit
+  // they are uploaded for real and their blob: URLs rewritten to the stored URL.
+  const pendingFilesRef = useRef(new Map<string, File>());
+  const uploadFile = async (file: File) => {
+    const url = URL.createObjectURL(file);
+    pendingFilesRef.current.set(url, file);
+    return { url, contentType: file.type, filename: file.name };
+  };
+
+  // Revoke any object URLs still pending when the modal unmounts (closed without
+  // submitting); the submit path revokes the ones it consumes.
+  useEffect(() => {
+    const pending = pendingFilesRef.current;
+    return () => {
+      for (const url of pending.keys()) URL.revokeObjectURL(url);
+    };
+  }, []);
+
+  // The description editor instance, so a file dropped anywhere on the modal
+  // (not just onto the small editor box) can be inserted at the cursor.
+  const [descEditor, setDescEditor] = useState<Editor | null>(null);
+
+  const dropFilesIntoDescription = (files: FileList) => {
+    if (!descEditor) return;
+    let pos = descEditor.state.selection.to;
+    void (async () => {
+      for (const file of Array.from(files)) {
+        const a = await uploadFile(file).catch(() => null);
+        if (!a || !descEditor) continue;
+        descEditor.chain().insertContentAt(pos, attachmentHtml(a)).focus().run();
+        pos = descEditor.state.selection.to;
+      }
+    })();
+  };
+
+  function onModalDragOver(e: DragEvent<HTMLDivElement>) {
+    if (e.dataTransfer.types.includes('Files')) e.preventDefault();
+  }
+
+  function onModalDrop(e: DragEvent<HTMLDivElement>) {
+    // A drop landing on the editor box is already handled by tiptap, which
+    // calls preventDefault; only handle drops elsewhere on the modal here.
+    if (e.defaultPrevented) return;
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    e.preventDefault();
+    dropFilesIntoDescription(files);
+  }
 
   const [addFieldOpen, setAddFieldOpen] = useState(false);
 
@@ -124,6 +180,25 @@ export default function NewIssueModal({
           labelIds,
         },
       });
+      // Upload files pasted/dropped into the description, then rewrite their
+      // blob: URLs to the stored attachment URLs. A failed upload drops its
+      // placeholder rather than leaving a dead blob: link.
+      const pending = pendingFilesRef.current;
+      if (pending.size > 0) {
+        let body = description;
+        for (const [blobUrl, file] of pending) {
+          const a = await uploadAttachment
+            .mutateAsync({ issueId: created.id, file })
+            .catch(() => null);
+          body = body.replaceAll(blobUrl, a ? a.url : '');
+          URL.revokeObjectURL(blobUrl);
+        }
+        pending.clear();
+        if (body !== description) {
+          await updateIssue.mutateAsync({ id: created.id, patch: { description: body.trim() } });
+        }
+      }
+
       // Set custom field values on the freshly created issue. Body fields are
       // always applicable; property fields only if the user added them.
       for (const def of fieldDefs) {
@@ -144,7 +219,7 @@ export default function NewIssueModal({
 
   return (
     <Modal title="New issue" projectKey={project.project.key} onClose={onClose} wide>
-      <div>
+      <div onDragOver={onModalDragOver} onDrop={onModalDrop}>
         <input
           className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground"
           placeholder="Issue title"
@@ -156,6 +231,8 @@ export default function NewIssueModal({
           className={`mt-3 ${bodyDefs.length > 0 ? 'min-h-14' : 'min-h-24'}`}
           defaultValue={description}
           onChange={setDescription}
+          onReady={setDescEditor}
+          uploadFile={uploadFile}
         />
 
         {bodyDefs.length > 0 && (

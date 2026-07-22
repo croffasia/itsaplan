@@ -23,6 +23,11 @@ export function useDeleteAttachment(issueId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (publicId: string) => api.deleteAttachment(publicId),
-    onSuccess: () => void qc.invalidateQueries({ queryKey: qk.attachments(issueId) }),
+    // Deleting also strips the attachment's embeds from the description and
+    // markdown field values, so refetch the issue alongside the panel list.
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: qk.attachments(issueId) });
+      void qc.invalidateQueries({ queryKey: qk.issue(issueId) });
+    },
   });
 }

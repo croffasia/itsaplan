@@ -78,6 +78,21 @@ export default function IssueMarkdownEditor({
   uploadFile?: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
 }) {
   const editorRef = useRef<Editor | null>(null);
+
+  // Upload each file and insert it (image/video inline, other files as a link)
+  // starting at `pos`, advancing past each insertion. Shared by drop and paste.
+  const insertFiles = (files: FileList, pos: number) => {
+    void (async () => {
+      for (const file of Array.from(files)) {
+        const a = await uploadFile?.(file).catch(() => null);
+        const ed = editorRef.current;
+        if (!a || !ed) continue;
+        ed.chain().insertContentAt(pos, attachmentHtml(a)).focus().run();
+        pos = ed.state.selection.to;
+      }
+    })();
+  };
+
   const editor = useEditor({
     editable,
     extensions: [
@@ -117,16 +132,18 @@ export default function IssueMarkdownEditor({
         if (!files || files.length === 0) return false;
         event.preventDefault();
         const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
-        let pos = coords?.pos ?? view.state.selection.to;
-        void (async () => {
-          for (const file of Array.from(files)) {
-            const a = await uploadFile(file).catch(() => null);
-            const ed = editorRef.current;
-            if (!a || !ed) continue;
-            ed.chain().insertContentAt(pos, attachmentHtml(a)).focus().run();
-            pos = ed.state.selection.to;
-          }
-        })();
+        insertFiles(files, coords?.pos ?? view.state.selection.to);
+        return true;
+      },
+      // A pasted screenshot or copied file arrives as clipboard files: upload
+      // each and insert at the cursor, same as a drop. Plain text/html pastes
+      // carry no files and fall through to tiptap's default handling.
+      handlePaste(view, event) {
+        if (!uploadFile) return false;
+        const files = event.clipboardData?.files;
+        if (!files || files.length === 0) return false;
+        event.preventDefault();
+        insertFiles(files, view.state.selection.to);
         return true;
       },
     },

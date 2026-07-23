@@ -1,4 +1,5 @@
 import type { AgentTool, AiAgent, NewAiAgentInput, AiAgentPatch } from '@/lib/api';
+import { transliterate } from '@/utils/projectKey';
 
 // The editable shape of an agent form. temperature/maxSteps are kept as strings so
 // the inputs can be left blank; they are parsed to numbers (or null) on submit.
@@ -20,6 +21,18 @@ export interface AgentFormValue {
 }
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
+
+// Suggests a mention handle from the agent's name: non-Latin scripts are
+// transliterated, the result is lowercased, every run of characters the handle can't
+// hold becomes a single dash, leading/trailing dashes are dropped, and it is capped
+// at the 64-char server limit (e.g. "Tets External" -> "tets-external").
+export function suggestUsername(name: string): string {
+  return transliterate(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 64);
+}
 
 // Whether the form holds a submittable value: a non-empty name and a username
 // matching the server rules (1-64 chars, [a-zA-Z0-9._-]).

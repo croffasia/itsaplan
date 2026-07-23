@@ -1,6 +1,6 @@
 import { usePathname } from 'next/navigation';
-import { Inbox, LayoutDashboard, SquareKanban, Target } from 'lucide-react';
-import { dashboardsPath, inboxPath, initiativesPath, projectPath } from '@/utils/paths';
+import { Inbox, LayoutDashboard, SquareKanban, StickyNote, Target } from 'lucide-react';
+import { dashboardsPath, inboxPath, initiativesPath, notesPath, projectPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
@@ -64,6 +64,13 @@ export default function SidebarWorkNav({
               disabled={disabled}
             />
           )}
+          <SidebarNavItem
+            href={projectKey ? notesPath(projectKey) : '#'}
+            icon={StickyNote}
+            label="Notes"
+            active={pathname.includes('/notes')}
+            disabled={disabled}
+          />
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

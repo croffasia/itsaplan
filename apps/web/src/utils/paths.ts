@@ -13,6 +13,10 @@ export const dashboardsPath = (key: string) => `${projectPath(key)}/dashboard`;
 export const dashboardPath = (key: string, dashboardId: number) =>
   `${dashboardsPath(key)}/${dashboardId}`;
 
+export const notesPath = (key: string) => `${projectPath(key)}/notes`;
+
+export const notePath = (key: string, boardId: number) => `${notesPath(key)}/${boardId}`;
+
 export const settingsPath = (key: string, section: string) =>
   `${projectPath(key)}/settings/${section}`;
 

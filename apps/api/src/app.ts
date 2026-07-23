@@ -79,6 +79,7 @@ export const app = new Elysia()
           { name: 'Webhooks', description: 'Outgoing webhook subscriptions' },
           { name: 'Agent Schedules', description: 'Recurring tasks for internal agents' },
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
+          { name: 'Note boards', description: 'Freeform canvases of sticky notes' },
           { name: 'Notifications', description: "The session user's inbox notifications" },
           {
             name: 'Telegram',

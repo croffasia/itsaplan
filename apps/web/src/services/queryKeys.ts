@@ -24,6 +24,14 @@ export const qk = {
   // widgets. `kind` names the metric (stats/pulse/throughput/breakdown/...) and
   // `params` scopes it to the widget's query (window, filters).
   dashboards: (projectKey: string) => ['dashboards', projectKey] as const,
+  // Note boards (the notes canvases). `noteBoardsForProject` is the invalidation
+  // base for every list/search variant; `noteBoardsSearch` is one paged switcher
+  // query (scoped by search text); `noteBoard` is a single board with its canvas.
+  noteBoardsForProject: (projectKey: string) => ['noteBoards', projectKey] as const,
+  noteBoardsSearch: (projectKey: string, q: string) =>
+    ['noteBoards', projectKey, 'search', q] as const,
+  noteBoard: (projectKey: string, boardId: number) =>
+    ['noteBoards', projectKey, 'board', boardId] as const,
   analytics: (projectKey: string, kind: string, params?: unknown) =>
     ['analytics', projectKey, kind, params ?? {}] as const,
   analyticsForProject: (projectKey: string) => ['analytics', projectKey] as const,

@@ -915,6 +915,77 @@ export interface DashboardPatch {
   layout?: DashboardLayout;
 }
 
+// --- Note board DTOs -------------------------------------------------------------
+
+// One sticky note on the canvas. body is markdown (may contain task-list items).
+// color keys a background swatch defined by the UI. Declared as a type alias (not
+// an interface) so it carries an implicit index signature and satisfies React
+// Flow's Node data constraint (Record<string, unknown>).
+export type NoteSticker = {
+  title: string;
+  body: string;
+  color: string;
+};
+
+// A React Flow node holding a sticker. Kept structurally compatible with React
+// Flow's Node so the canvas can use it directly.
+export interface NoteNode {
+  id: string;
+  type: 'sticker';
+  position: { x: number; y: number };
+  width?: number;
+  height?: number;
+  data: NoteSticker;
+}
+
+// A connection between two stickers (React Flow edge).
+export interface NoteEdge {
+  id: string;
+  source: string;
+  target: string;
+}
+
+// The board canvas, stored verbatim as jsonb on the server.
+export interface NoteCanvas {
+  nodes: NoteNode[];
+  edges: NoteEdge[];
+}
+
+export interface NoteBoard {
+  id: number;
+  projectId: number;
+  // null for a public board (every member sees it); a user id for a personal
+  // board only its owner sees.
+  ownerUserId: string | null;
+  name: string;
+  canvas: NoteCanvas;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// A board without its canvas — what the switcher and MRU tabs list. The canvas is
+// loaded one board at a time via getNoteBoard when the board is opened.
+export type NoteBoardSummary = Omit<NoteBoard, 'canvas'>;
+
+export interface NewNoteBoardInput {
+  name: string;
+  personal?: boolean;
+  canvas?: NoteCanvas;
+}
+
+export interface NoteBoardPatch {
+  name?: string;
+  canvas?: NoteCanvas;
+  // Sets the board's visibility: true makes it personal to the caller, false public.
+  personal?: boolean;
+}
+
+export interface NoteBoardListParams {
+  q?: string;
+  limit?: number;
+  offset?: number;
+}
+
 // --- Analytics DTOs (project metrics behind the dashboard widgets) ---------------
 
 export interface AnalyticsStats {
@@ -1801,6 +1872,32 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ orderedIds }),
     }),
+
+  // Note boards — all ops are project-scoped (a personal board is filtered to its
+  // owner server-side), so board ops take projectKey plus the board id. The list
+  // is paged and searchable (switcher); a single board carries its canvas.
+  listNoteBoards: (projectKey: string, params: NoteBoardListParams = {}) => {
+    const qs = new URLSearchParams();
+    if (params.q) qs.set('q', params.q);
+    if (params.limit != null) qs.set('limit', String(params.limit));
+    if (params.offset != null) qs.set('offset', String(params.offset));
+    const suffix = qs.toString() ? `?${qs}` : '';
+    return request<NoteBoardSummary[]>(`/projects/${projectKey}/note-boards${suffix}`);
+  },
+  getNoteBoard: (projectKey: string, boardId: number) =>
+    request<NoteBoard>(`/projects/${projectKey}/note-boards/${boardId}`),
+  createNoteBoard: (projectKey: string, input: NewNoteBoardInput) =>
+    request<NoteBoard>(`/projects/${projectKey}/note-boards`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateNoteBoard: (projectKey: string, boardId: number, patch: NoteBoardPatch) =>
+    request<NoteBoard>(`/projects/${projectKey}/note-boards/${boardId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteNoteBoard: (projectKey: string, boardId: number) =>
+    request<void>(`/projects/${projectKey}/note-boards/${boardId}`, { method: 'DELETE' }),
 
   // Analytics — read-only project metrics behind the dashboard widgets.
   getStats: (projectKey: string) =>

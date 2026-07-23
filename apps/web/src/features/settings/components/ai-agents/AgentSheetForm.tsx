@@ -30,6 +30,7 @@ import AgentKeyBanner from './AgentKeyBanner';
 import {
   initialAgentValue,
   isAgentFormValid,
+  suggestUsername,
   toCreateInput,
   toUpdatePatch,
   type AgentFormValue,
@@ -59,6 +60,9 @@ export function AgentSheetForm({
 }) {
   const [value, setValue] = useState<AgentFormValue>(() => initialAgentValue(agent ?? undefined));
   const isCreate = agent == null;
+  // While creating, the username is derived from the name until the user edits it.
+  // Clearing the username field resumes auto-generation.
+  const [usernameEdited, setUsernameEdited] = useState(false);
 
   // Skills are a separate permission; when the user can't manage them, the Skills
   // section is hidden and its queries and save are skipped (the backend enforces it
@@ -139,7 +143,14 @@ export function AgentSheetForm({
   const selectedTools = toolIds ?? [];
 
   function merge(patch: Partial<AgentFormValue>) {
-    setValue((prev) => ({ ...prev, ...patch }));
+    setValue((prev) => {
+      const next = { ...prev, ...patch };
+      if (isCreate && 'name' in patch && !usernameEdited) {
+        next.username = suggestUsername(next.name);
+      }
+      return next;
+    });
+    if ('username' in patch) setUsernameEdited((patch.username ?? '').trim() !== '');
   }
 
   function toggleSkill(id: number, on: boolean) {

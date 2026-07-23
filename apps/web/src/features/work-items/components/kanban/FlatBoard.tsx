@@ -135,12 +135,12 @@ export default function FlatBoard({
           ),
         )}
 
-        <div className="ml-auto w-64 shrink-0 self-start rounded-md border p-2">
-          <div className="flex w-full items-center gap-1.5 px-1 py-1 text-sm font-medium text-muted-foreground">
-            <ChevronDown className="size-4" />
-            Hidden {groupNoun}
-          </div>
-          {hiddenGroups.length > 0 && (
+        {hiddenGroups.length > 0 && (
+          <div className="ml-auto w-64 shrink-0 self-start rounded-md border p-2">
+            <div className="flex w-full items-center gap-1.5 px-1 py-1 text-sm font-medium text-muted-foreground">
+              <ChevronDown className="size-4" />
+              Hidden {groupNoun}
+            </div>
             <div className="mt-1 flex flex-col gap-1">
               {hiddenGroups.map((group) => (
                 <div
@@ -166,8 +166,8 @@ export default function FlatBoard({
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <CardOverlay

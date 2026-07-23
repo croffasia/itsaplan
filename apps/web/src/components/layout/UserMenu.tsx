@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
@@ -25,7 +26,13 @@ export default function UserMenu() {
   const router = useRouter();
   const { data: session, isPending } = useSession();
 
-  if (isPending) return <Skeleton className="size-7 rounded-full" />;
+  // better-auth reads the session on the client, so the server renders no user and
+  // the client may already have a cached session. Render the placeholder until
+  // mounted so the first client render matches the server and hydration succeeds.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted || isPending) return <Skeleton className="size-7 rounded-full" />;
   if (!session) return null;
 
   const { user } = session;

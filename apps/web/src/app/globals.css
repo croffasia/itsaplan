@@ -268,6 +268,43 @@
 .md-content ol {
   list-style: decimal;
 }
+/* Task lists render a checkbox per item, not a bullet — drop the list marker and
+   lay each item out as [checkbox] [text]. */
+.md-content ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0;
+}
+.md-content ul[data-type='taskList'] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.md-content ul[data-type='taskList'] li > label {
+  margin-top: 0.2em;
+}
+.md-content ul[data-type='taskList'] input[type='checkbox'] {
+  cursor: pointer;
+}
+/* Sticky notes always sit on a light pastel background, so their placeholder and
+   checkboxes are keyed to dark regardless of the app theme. */
+.sticker-note .md-content p.is-editor-empty:first-child::before {
+  color: rgba(0, 0, 0, 0.4);
+}
+.sticker-note .md-content ul[data-type='taskList'] input[type='checkbox'] {
+  accent-color: #000;
+}
+/* React Flow's default edge stroke is too dark on the dark canvas. On light it
+   matches the muted foreground; on dark that is still too dim against the near-black
+   canvas, so lift it to a brighter grey. */
+.react-flow__edge-path,
+.react-flow__connection-path {
+  stroke: var(--muted-foreground);
+  stroke-width: 1.5;
+}
+.dark .react-flow__edge-path,
+.dark .react-flow__connection-path {
+  stroke: oklch(0.85 0 0);
+}
 .md-content img {
   max-width: 100%;
   height: auto;

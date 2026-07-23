@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import {
   useAccountPreferencesQuery,
@@ -27,8 +27,18 @@ export default function PreferencesSync() {
     if (timezone) setDisplayTimezone(timezone);
   }, [timezone]);
 
+  // Apply the account theme only when the stored value itself changes (initial load,
+  // or another device changing it). Do not reconcile against next-themes' live state:
+  // next-themes keeps its own localStorage copy and syncs it across tabs, so diffing
+  // against it turns two open tabs into a write loop through that shared key. The ref
+  // also makes the effect idempotent, which matters because next-themes rebuilds
+  // setTheme on every theme change and so re-triggers this effect.
+  const appliedTheme = useRef<string | undefined>(undefined);
   useEffect(() => {
-    if (theme) setTheme(theme);
+    if (theme && theme !== appliedTheme.current) {
+      appliedTheme.current = theme;
+      setTheme(theme);
+    }
   }, [theme, setTheme]);
 
   useEffect(() => {

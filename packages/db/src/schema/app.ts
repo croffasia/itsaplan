@@ -970,6 +970,27 @@ export const projectDashboard = pgTable(
   (t) => [index('project_dashboard_project_idx').on(t.projectId, t.position)],
 );
 
+// Note boards: a freeform canvas of sticky notes. canvas is a jsonb blob owned by
+// the UI (React Flow nodes + edges + viewport), stored and returned verbatim.
+// owner_user_id NULL means a public board visible to every project member; a set
+// owner_user_id means a personal board only its owner can see or edit.
+export const noteBoard = pgTable(
+  'note_board',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    canvas: jsonb('canvas').notNull().default({}),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  // Listed by updatedAt within a project; the index covers the project filter.
+  (t) => [index('note_board_project_idx').on(t.projectId, t.updatedAt)],
+);
+
 // Manual actions: saved macros on a project. condition is a filter set deciding
 // which issues the action applies to (empty = always); effect is a partial
 // issue patch applied in one update. Both jsonb blobs are owned by the UI.

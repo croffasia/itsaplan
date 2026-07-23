@@ -7,7 +7,7 @@ import type { HotkeyId } from '@/utils/hotkeys';
 
 // Global ordering preference (see App). 'manual' keeps the drag-and-drop order
 // the API returns (by position); every other field sorts client-side. Applied
-// by the list-like views (Project, Table); the date-laid-out Timeline and Calendar
+// by the list-like views (Kanban, Table); the date-laid-out Timeline and Calendar
 // ignore it.
 export type SortField =
   | 'manual'
@@ -35,7 +35,7 @@ export type WorkItemsView = 'kanban' | 'table' | 'timeline' | 'calendar';
 // key layer and the command palette all read the same binding (see lib/hotkeys).
 export const VIEWS: { value: WorkItemsView; label: string; icon: LucideIcon; hotkey: HotkeyId }[] =
   [
-    { value: 'kanban', label: 'Project', icon: Columns3, hotkey: 'view.kanban' },
+    { value: 'kanban', label: 'Kanban', icon: Columns3, hotkey: 'view.kanban' },
     { value: 'table', label: 'Table', icon: Table2, hotkey: 'view.table' },
     { value: 'timeline', label: 'Timeline', icon: GanttChart, hotkey: 'view.timeline' },
     { value: 'calendar', label: 'Calendar', icon: CalendarDays, hotkey: 'view.calendar' },

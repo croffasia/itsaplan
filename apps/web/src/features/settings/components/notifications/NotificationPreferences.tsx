@@ -1,55 +1,25 @@
-import { useState, type ReactNode } from 'react';
-import { toast } from 'sonner';
+import { type ReactNode } from 'react';
 import { Mail, Send } from 'lucide-react';
-import type { NotificationEventToggles, NotificationPreferences as Prefs } from '@/lib/api';
-import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-  useNotificationPreferencesQuery,
-  useUpdateNotificationPreferences,
-} from '../../services/settings.service';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import NotificationTelegramAccount from './NotificationTelegramAccount';
-import { NOTIFICATION_EVENTS, eventsEqual } from '../../utils/notificationEvents';
+import { NOTIFICATION_EVENTS } from '../../utils/notificationEvents';
+import type { NotificationPreferencesForm } from '../../hooks/useNotificationPreferencesForm';
 
 // A member's own notification preferences for the project: for each issue event, a
 // checkbox per channel (email, Telegram). Visible to every member (each edits only
 // their own). Email is sent to the account address; Telegram to the account connected
 // in the member's profile, shown below. Delivery only happens for channels a project
-// owner has configured.
-export default function NotificationPreferences({ projectKey }: { projectKey: string }) {
-  const query = useNotificationPreferencesQuery(projectKey);
-  if (!query.data) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
-  }
-  return <PreferencesForm projectKey={projectKey} initial={query.data} />;
-}
+// owner has configured. Save lives in the page header.
 
 // Shared column template so the header labels line up with every event row.
 const COLS = 'grid grid-cols-[1fr_5rem_5rem] items-center';
 
-function PreferencesForm({ projectKey, initial }: { projectKey: string; initial: Prefs }) {
-  const update = useUpdateNotificationPreferences(projectKey);
-  const [emailEvents, setEmailEvents] = useState<NotificationEventToggles>(initial.emailEvents);
-  const [telegramEvents, setTelegramEvents] = useState<NotificationEventToggles>(
-    initial.telegramEvents,
-  );
-
-  const dirty =
-    !eventsEqual(emailEvents, initial.emailEvents) ||
-    !eventsEqual(telegramEvents, initial.telegramEvents);
-
-  async function save() {
-    await update.mutateAsync({ emailEvents, telegramEvents });
-    toast.success('Notification preferences saved');
-  }
-
+export default function NotificationPreferences({ form }: { form: NotificationPreferencesForm }) {
+  const { emailEvents, setEmailEvents, telegramEvents, setTelegramEvents } = form;
   return (
     <div className="flex flex-col gap-10">
-      <SettingsSection
-        title="Events"
-        description="Pick a channel for each event. A channel only sends once an admin has set it up for the project."
-      >
+      <SettingsSection title="Events">
         <div className="max-w-xl">
           <div className={`${COLS} px-3 pb-1`}>
             <span />
@@ -72,13 +42,6 @@ function PreferencesForm({ projectKey, initial }: { projectKey: string; initial:
       </SettingsSection>
 
       <NotificationTelegramAccount />
-
-      <div className="flex items-center justify-end gap-4 border-t border-border pt-6">
-        {dirty && <span className="text-xs text-muted-foreground">Unsaved changes</span>}
-        <Button onClick={save} disabled={!dirty || update.isPending}>
-          Save changes
-        </Button>
-      </div>
     </div>
   );
 }

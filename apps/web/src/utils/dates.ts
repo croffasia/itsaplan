@@ -1,3 +1,5 @@
+import type { StateType } from '@/lib/api';
+
 // Date helpers shared by the project views. Kept separate from project grouping so
 // components that only need date math (Calendar, Timeline, cards) do not pull in
 // the sorting/grouping code.
@@ -127,6 +129,13 @@ export function isOverdue(value: string | null): boolean {
   if (!date) return false;
   const now = new Date();
   return date.getTime() < new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+}
+
+// Like isOverdue, but a closed issue (completed or canceled state) is never
+// overdue: its due date passing no longer matters.
+export function isDueOverdue(value: string | null, stateType?: StateType): boolean {
+  if (stateType === 'completed' || stateType === 'canceled') return false;
+  return isOverdue(value);
 }
 
 // A local Date back to "YYYY-MM-DD" (the wire format the API stores dates in).

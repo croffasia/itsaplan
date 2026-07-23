@@ -1,7 +1,7 @@
 import { CalendarClock } from 'lucide-react';
 import { type Issue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
-import { formatDurationShort, formatShortDate, isOverdue } from '@/utils/dates';
+import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
 import {
   AssigneeAvatar,
   DateBadge,
@@ -117,7 +117,7 @@ export function TableBuiltinCell({
             <DateBadge
               icon={<CalendarClock className="size-2.5" />}
               date={issue.dueDate}
-              overdue={isOverdue(issue.dueDate)}
+              overdue={isDueOverdue(issue.dueDate, maps.columnById.get(issue.columnId)?.stateType)}
             />
           ) : (
             DASH

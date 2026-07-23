@@ -1,7 +1,7 @@
 import { CalendarArrowUp, CalendarClock, Target, Timer } from 'lucide-react';
 import { type Issue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
-import { formatDurationShort, formatShortDate, isOverdue } from '@/utils/dates';
+import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
 import type { DisplayProperty, PropertyKey } from '@/utils/viewSettings';
 import {
   AssigneeAvatar,
@@ -98,7 +98,7 @@ export function IssueCardBody({
               icon={<CalendarClock className="size-2.5" />}
               date={issue.dueDate}
               title="Due date"
-              overdue={isOverdue(issue.dueDate)}
+              overdue={isDueOverdue(issue.dueDate, column?.stateType)}
             />
           )}
           {has('type') && type && (

@@ -1375,6 +1375,36 @@ export interface Initiative {
   health: InitiativeHealth | null;
 }
 
+// Columns the initiative list can be sorted by, server-side. progress and health
+// are derived and not sortable.
+export type InitiativeSort = 'title' | 'priority' | 'targetDate' | 'owner';
+
+export interface InitiativeListParams {
+  statuses?: string[];
+  search?: string;
+  sort?: InitiativeSort;
+  dir?: 'asc' | 'desc';
+  page?: number;
+  pageSize?: number;
+}
+
+export interface InitiativePage {
+  items: Initiative[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
+// Per-status initiative counts for the list's status tabs.
+export interface InitiativeCounts {
+  total: number;
+  proposed: number;
+  planned: number;
+  active: number;
+  completed: number;
+  canceled: number;
+}
+
 export interface NewInitiativeInput {
   title: string;
   description?: string;
@@ -1815,11 +1845,19 @@ export const api = {
 
   // Initiatives — collection ops take projectKey; ops on one initiative take its
   // own id and hit /initiatives/:id (like issues).
-  listInitiatives: (projectKey: string, statuses?: string[]) => {
-    const q =
-      statuses && statuses.length ? `?status=${encodeURIComponent(statuses.join(','))}` : '';
-    return request<Initiative[]>(`/projects/${projectKey}/initiatives${q}`);
+  listInitiatives: (projectKey: string, params: InitiativeListParams = {}) => {
+    const q = new URLSearchParams();
+    if (params.statuses && params.statuses.length) q.set('status', params.statuses.join(','));
+    if (params.search) q.set('search', params.search);
+    if (params.sort) q.set('sort', params.sort);
+    if (params.dir) q.set('dir', params.dir);
+    if (params.page) q.set('page', String(params.page));
+    if (params.pageSize) q.set('pageSize', String(params.pageSize));
+    const qs = q.toString();
+    return request<InitiativePage>(`/projects/${projectKey}/initiatives${qs ? `?${qs}` : ''}`);
   },
+  initiativeCounts: (projectKey: string) =>
+    request<InitiativeCounts>(`/projects/${projectKey}/initiatives/counts`),
   getInitiative: (id: number) => request<Initiative>(`/initiatives/${id}`),
   createInitiative: (projectKey: string, input: NewInitiativeInput) =>
     request<Initiative>(`/projects/${projectKey}/initiatives`, {

@@ -5,7 +5,7 @@ import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { Pill } from '@/components/common/fields/Pill';
-import { STATUS_META, STATUS_ORDER } from './initiativeMeta';
+import { STATUS_META, STATUS_ORDER } from '@/utils/initiativeMeta';
 
 // A Pill trigger opening the fixed initiative status lifecycle. Mirrors the issue
 // field selects (Pill + Popover + Command) but over a static enum.

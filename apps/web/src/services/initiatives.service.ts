@@ -1,14 +1,36 @@
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type FeedCursor, type InitiativePatch, type NewInitiativeInput } from '@/lib/api';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import {
+  api,
+  type FeedCursor,
+  type InitiativeListParams,
+  type InitiativePatch,
+  type NewInitiativeInput,
+} from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 
-// A status filter for the list. Omit (or 'all') to load every initiative; a value
-// maps to a comma-separated status set the server filters by.
-export function useInitiativesQuery(projectKey: string | null, statuses?: string[]) {
-  const status = statuses && statuses.length ? statuses.join(',') : undefined;
+// A page of the project's initiatives. params filter (status/search), sort and
+// page it server-side; keepPreviousData holds the current page on screen while the
+// next one loads. Omit params to load the default first page.
+export function useInitiativesQuery(projectKey: string | null, params: InitiativeListParams = {}) {
   return useQuery({
-    queryKey: qk.initiatives(projectKey ?? '', status),
-    queryFn: () => api.listInitiatives(projectKey!, statuses),
+    queryKey: qk.initiatives(projectKey ?? '', params as Record<string, unknown>),
+    queryFn: () => api.listInitiatives(projectKey!, params),
+    enabled: projectKey != null,
+    placeholderData: keepPreviousData,
+  });
+}
+
+// Per-status counts for the list's status tabs, independent of the current page.
+export function useInitiativeCountsQuery(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.initiativeCounts(projectKey ?? ''),
+    queryFn: () => api.initiativeCounts(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -27,6 +49,7 @@ export function useCreateInitiative(projectKey: string) {
     mutationFn: (input: NewInitiativeInput) => api.createInitiative(projectKey, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
+      qc.invalidateQueries({ queryKey: qk.initiativeCounts(projectKey) });
       qc.invalidateQueries({ queryKey: qk.project(projectKey) });
     },
   });
@@ -39,6 +62,7 @@ export function useUpdateInitiative(projectKey: string) {
       api.updateInitiative(id, patch),
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
+      qc.invalidateQueries({ queryKey: qk.initiativeCounts(projectKey) });
       qc.invalidateQueries({ queryKey: qk.project(projectKey) });
       qc.invalidateQueries({ queryKey: qk.initiative(id) });
       qc.invalidateQueries({ queryKey: qk.initiativeFeed(id) });
@@ -52,6 +76,7 @@ export function useDeleteInitiative(projectKey: string) {
     mutationFn: (id: number) => api.deleteInitiative(id),
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
+      qc.invalidateQueries({ queryKey: qk.initiativeCounts(projectKey) });
       qc.invalidateQueries({ queryKey: qk.project(projectKey) });
       // Deleting an initiative unlinks its issues (initiativeId -> null), so the
       // board issues change too.

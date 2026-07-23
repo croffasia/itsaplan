@@ -8,6 +8,7 @@ import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
 import {
   listInitiatives,
+  initiativeStatusCounts,
   getInitiative,
   getInitiativeProjectId,
   createInitiative,
@@ -96,7 +97,17 @@ export const initiativeRoutes = new Elysia({
             .map((s) => s.trim())
             .filter(Boolean)
         : undefined;
-      return listInitiatives(project.id, { statuses });
+      const page = query.page ?? 1;
+      const pageSize = query.pageSize ?? 25;
+      const { items, total } = await listInitiatives(project.id, {
+        statuses,
+        search: query.search,
+        sort: query.sort,
+        dir: query.dir,
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      });
+      return { items, total, page, pageSize };
     },
     {
       params: t.Object({ projectKey: t.String() }),
@@ -107,10 +118,40 @@ export const initiativeRoutes = new Elysia({
               'Filter by status: a comma-separated subset of proposed,planned,active,completed,canceled. Omit for all.',
           }),
         ),
+        search: t.Optional(t.String({ description: 'Case-insensitive match on the title.' })),
+        sort: t.Optional(
+          t.Union(
+            [
+              t.Literal('title'),
+              t.Literal('priority'),
+              t.Literal('targetDate'),
+              t.Literal('owner'),
+            ],
+            { description: 'Sort column. Omit for the manual position order.' },
+          ),
+        ),
+        dir: t.Optional(
+          t.Union([t.Literal('asc'), t.Literal('desc')], {
+            description: 'Sort direction. Default asc.',
+          }),
+        ),
+        page: t.Optional(t.Numeric({ minimum: 1, description: '1-based page. Default 1.' })),
+        pageSize: t.Optional(
+          t.Numeric({
+            minimum: 1,
+            maximum: 100,
+            description: 'Items per page (1-100). Default 25.',
+          }),
+        ),
       }),
       permission: ['initiatives', 'read'],
       response: {
-        200: t.Array(InitiativeResponse),
+        200: t.Object({
+          items: t.Array(InitiativeResponse),
+          total: t.Number(),
+          page: t.Number(),
+          pageSize: t.Number(),
+        }),
         400: ErrorResponse,
         401: ErrorResponse,
         403: ErrorResponse,
@@ -118,8 +159,35 @@ export const initiativeRoutes = new Elysia({
       },
       detail: {
         summary: 'List initiatives',
-        description: "List a project's initiatives.",
+        description: "List a project's initiatives, filtered, sorted and paged.",
         ...mcpTool('list_initiatives'),
+      },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/initiatives/counts',
+    async ({ project }) => initiativeStatusCounts(project.id),
+    {
+      params: t.Object({ projectKey: t.String() }),
+      permission: ['initiatives', 'read'],
+      response: {
+        200: t.Object({
+          total: t.Number(),
+          proposed: t.Number(),
+          planned: t.Number(),
+          active: t.Number(),
+          completed: t.Number(),
+          canceled: t.Number(),
+        }),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Initiative status counts',
+        description: "Per-status initiative counts for a project, for the list's tabs.",
       },
     },
   )

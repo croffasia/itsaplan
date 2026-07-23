@@ -1,5 +1,5 @@
 import type { InitiativeHealth } from '@/lib/api';
-import { healthMeta } from './initiativeMeta';
+import { healthMeta } from '@/utils/initiativeMeta';
 
 // A small health signal: a colored dot plus its label. null renders a muted
 // "No update". Used in the list column and the detail header.

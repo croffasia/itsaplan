@@ -1,5 +1,5 @@
-import { db, initiative, initiativeLabel, issue, label, projectColumn } from '@repo/db';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { db, initiative, initiativeLabel, issue, label, projectColumn, user } from '@repo/db';
+import { and, asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
 import { labelNames } from '../issues/activity';
 import { getMembership } from '../members/store';
 import { HttpError, iso, num } from '../shared/lib';
@@ -109,24 +109,123 @@ function mapInitiative(
 
 const EMPTY_PROGRESS: InitiativeProgress = { completed: 0, canceled: 0, total: 0 };
 
+// Sortable columns. progress and health are derived per row after the query, so
+// they are not sortable at the database level.
+export type InitiativeSort = 'title' | 'priority' | 'targetDate' | 'owner';
+
+export interface ListInitiativesOpts {
+  statuses?: string[];
+  search?: string;
+  sort?: InitiativeSort;
+  dir?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+export interface InitiativeListPage {
+  items: InitiativeRow[];
+  total: number;
+}
+
+// Priority is a text column with no natural sort order; rank it by severity so a
+// priority sort reads urgent → low, with unset last.
+const PRIORITY_ORDER = sql`case ${initiative.priority}
+  when 'urgent' then 0 when 'high' then 1 when 'medium' then 2 when 'low' then 3 else 4 end`;
+
+function orderExpr(sort: InitiativeSort) {
+  switch (sort) {
+    case 'title':
+      return initiative.title;
+    case 'priority':
+      return PRIORITY_ORDER;
+    case 'targetDate':
+      return initiative.targetDate;
+    case 'owner':
+      // Sort by the owner's display name, not the opaque user id.
+      return sql`(select ${user.name} from ${user} where ${user.id} = ${initiative.ownerUserId})`;
+  }
+}
+
 export async function listInitiatives(
   projectId: number,
-  opts: { statuses?: string[] } = {},
-): Promise<InitiativeRow[]> {
-  const where =
-    opts.statuses && opts.statuses.length
-      ? and(eq(initiative.projectId, projectId), inArray(initiative.status, opts.statuses))
-      : eq(initiative.projectId, projectId);
-  const rows = await db
+  opts: ListInitiativesOpts = {},
+): Promise<InitiativeListPage> {
+  const conds = [eq(initiative.projectId, projectId)];
+  if (opts.statuses && opts.statuses.length) {
+    conds.push(inArray(initiative.status, opts.statuses));
+  }
+  if (opts.search && opts.search.trim()) {
+    conds.push(ilike(initiative.title, `%${opts.search.trim()}%`));
+  }
+  const where = and(...conds);
+
+  // A chosen sort orders by that column (nulls last); the default is the manual
+  // position. desc(id) breaks ties for a stable page order.
+  const orderBy = opts.sort
+    ? [
+        sql`${orderExpr(opts.sort)} ${opts.dir === 'desc' ? sql`desc` : sql`asc`} nulls last`,
+        desc(initiative.id),
+      ]
+    : [asc(initiative.position), desc(initiative.id)];
+
+  const q = db
     .select()
     .from(initiative)
     .where(where)
-    .orderBy(initiative.position, desc(initiative.id));
+    .orderBy(...orderBy);
+  const rows =
+    opts.limit !== undefined ? await q.limit(opts.limit).offset(opts.offset ?? 0) : await q;
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(initiative)
+    .where(where);
+
   const ids = rows.map((r) => r.id);
   const [counts, labels] = await Promise.all([countsFor(ids), labelsFor(ids)]);
-  return rows.map((row) =>
-    mapInitiative(row, labels.get(row.id) ?? [], counts.get(row.id) ?? EMPTY_PROGRESS),
-  );
+  return {
+    items: rows.map((row) =>
+      mapInitiative(row, labels.get(row.id) ?? [], counts.get(row.id) ?? EMPTY_PROGRESS),
+    ),
+    total: Number(total),
+  };
+}
+
+export interface InitiativeStatusCounts {
+  total: number;
+  proposed: number;
+  planned: number;
+  active: number;
+  completed: number;
+  canceled: number;
+}
+
+// Per-status row counts for the whole project, for the list's status tabs. Kept
+// separate from listInitiatives so the tab counts stay correct under paging.
+export async function initiativeStatusCounts(projectId: number): Promise<InitiativeStatusCounts> {
+  const rows = await db
+    .select({ status: initiative.status, c: sql<number>`count(*)` })
+    .from(initiative)
+    .where(eq(initiative.projectId, projectId))
+    .groupBy(initiative.status);
+  const out: InitiativeStatusCounts = {
+    total: 0,
+    proposed: 0,
+    planned: 0,
+    active: 0,
+    completed: 0,
+    canceled: 0,
+  };
+  for (const r of rows) {
+    const n = Number(r.c);
+    out.total += n;
+    if (r.status === 'proposed') out.proposed = n;
+    else if (r.status === 'planned') out.planned = n;
+    else if (r.status === 'active') out.active = n;
+    else if (r.status === 'completed') out.completed = n;
+    else if (r.status === 'canceled') out.canceled = n;
+  }
+  return out;
 }
 
 export async function getInitiative(id: number): Promise<InitiativeRow | null> {

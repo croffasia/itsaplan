@@ -3,7 +3,7 @@ import { ChevronRight, HelpCircle } from 'lucide-react';
 import type { InitiativeHealth } from '@/lib/api';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { healthMeta } from './initiativeMeta';
+import { healthMeta } from '@/utils/initiativeMeta';
 
 // The health values explained in the info popover, in severity order.
 const HEALTH_LEGEND: { health: InitiativeHealth | null; desc: string }[] = [

@@ -46,7 +46,8 @@ describe('initiatives', () => {
       expect(typeof created.data?.id).toBe('number');
 
       const list = await initiatives(asOwner).get();
-      expect(list.data!.map((i) => i.title)).toEqual(['Q3 Launch']);
+      expect(list.data!.items.map((i) => i.title)).toEqual(['Q3 Launch']);
+      expect(list.data!.total).toBe(1);
     });
 
     it('stores the provided fields and labels', async () => {
@@ -103,7 +104,7 @@ describe('initiatives', () => {
 
       expect(badOwner.status).toBe(400);
       expect(badLabel.status).toBe(400);
-      expect((await initiatives(asOwner).get()).data).toHaveLength(0);
+      expect((await initiatives(asOwner).get()).data!.items).toHaveLength(0);
     });
   });
 
@@ -115,10 +116,83 @@ describe('initiatives', () => {
       await createInitiative(asOwner, { title: 'Pr', status: 'proposed' });
 
       const active = await initiatives(asOwner).get({ query: { status: 'active' } });
-      expect(active.data!.map((i) => i.title)).toEqual(['A']);
+      expect(active.data!.items.map((i) => i.title)).toEqual(['A']);
 
       const planned = await initiatives(asOwner).get({ query: { status: 'proposed,planned' } });
-      expect(planned.data!.map((i) => i.title).sort()).toEqual(['P', 'Pr']);
+      expect(planned.data!.items.map((i) => i.title).sort()).toEqual(['P', 'Pr']);
+    });
+
+    it('matches the title case-insensitively with search', async () => {
+      const { asOwner } = await setup();
+      await createInitiative(asOwner, { title: 'Growth loops' });
+      await createInitiative(asOwner, { title: 'Retention' });
+
+      const res = await initiatives(asOwner).get({ query: { search: 'GROWTH' } });
+      expect(res.data!.items.map((i) => i.title)).toEqual(['Growth loops']);
+      expect(res.data!.total).toBe(1);
+    });
+  });
+
+  describe('list sort and paging', () => {
+    it('sorts by title and reverses with dir', async () => {
+      const { asOwner } = await setup();
+      await createInitiative(asOwner, { title: 'B' });
+      await createInitiative(asOwner, { title: 'A' });
+      await createInitiative(asOwner, { title: 'C' });
+
+      const asc = await initiatives(asOwner).get({ query: { sort: 'title' } });
+      expect(asc.data!.items.map((i) => i.title)).toEqual(['A', 'B', 'C']);
+
+      const desc = await initiatives(asOwner).get({ query: { sort: 'title', dir: 'desc' } });
+      expect(desc.data!.items.map((i) => i.title)).toEqual(['C', 'B', 'A']);
+    });
+
+    it('sorts by priority severity, unset last', async () => {
+      const { asOwner } = await setup();
+      await createInitiative(asOwner, { title: 'none' });
+      await createInitiative(asOwner, { title: 'low', priority: 'low' });
+      await createInitiative(asOwner, { title: 'urgent', priority: 'urgent' });
+
+      const res = await initiatives(asOwner).get({ query: { sort: 'priority' } });
+      expect(res.data!.items.map((i) => i.title)).toEqual(['urgent', 'low', 'none']);
+    });
+
+    it('pages with page and pageSize and reports the full total', async () => {
+      const { asOwner } = await setup();
+      for (const title of ['A', 'B', 'C']) await createInitiative(asOwner, { title });
+
+      const first = await initiatives(asOwner).get({
+        query: { sort: 'title', page: 1, pageSize: 2 },
+      });
+      expect(first.data!.items.map((i) => i.title)).toEqual(['A', 'B']);
+      expect(first.data!.total).toBe(3);
+
+      const second = await initiatives(asOwner).get({
+        query: { sort: 'title', page: 2, pageSize: 2 },
+      });
+      expect(second.data!.items.map((i) => i.title)).toEqual(['C']);
+      expect(second.data!.total).toBe(3);
+    });
+  });
+
+  describe('counts', () => {
+    it('returns per-status counts for the tabs', async () => {
+      const { asOwner } = await setup();
+      await createInitiative(asOwner, { title: 'a1', status: 'active' });
+      await createInitiative(asOwner, { title: 'a2', status: 'active' });
+      await createInitiative(asOwner, { title: 'p', status: 'planned' });
+      await createInitiative(asOwner, { title: 'c', status: 'completed' });
+
+      const res = await initiatives(asOwner).counts.get();
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({
+        total: 4,
+        proposed: 0,
+        planned: 1,
+        active: 2,
+        completed: 1,
+        canceled: 0,
+      });
     });
   });
 

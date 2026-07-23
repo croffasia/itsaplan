@@ -4,13 +4,16 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useInitiativesQuery } from '@/services/initiatives.service';
-import type { Initiative, InitiativeStatus } from '@/lib/api';
+import { useInitiativeCountsQuery, useInitiativesQuery } from '@/services/initiatives.service';
+import type { InitiativeCounts, InitiativeSort, InitiativeStatus } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import InitiativesList from './components/list/InitiativesList';
+import InitiativesPagination from './components/list/InitiativesPagination';
 import CreateInitiativeDialog from './components/list/CreateInitiativeDialog';
 import InitiativeTabCount from './components/list/InitiativeTabCount';
+
+const PAGE_SIZE = 25;
 
 type Tab = 'all' | 'proposed' | 'planned' | 'active' | 'completed';
 
@@ -24,26 +27,63 @@ const TABS: { value: Tab; label: string; statuses: InitiativeStatus[] | undefine
   { value: 'completed', label: 'Completed', statuses: ['completed', 'canceled'] },
 ];
 
-function filterByTab(initiatives: Initiative[], tab: Tab): Initiative[] {
-  const { statuses } = TABS.find((t) => t.value === tab)!;
-  return statuses ? initiatives.filter((i) => statuses.includes(i.status)) : initiatives;
+// The "Completed" tab groups the two terminal statuses, so its count sums them.
+function tabCount(counts: InitiativeCounts | undefined, tab: Tab): number | undefined {
+  if (!counts) return undefined;
+  switch (tab) {
+    case 'all':
+      return counts.total;
+    case 'proposed':
+      return counts.proposed;
+    case 'planned':
+      return counts.planned;
+    case 'active':
+      return counts.active;
+    case 'completed':
+      return counts.completed + counts.canceled;
+  }
 }
 
-// The list of a project's initiatives, filtered by a status tab. Rows link to the
-// detail page. All initiatives are fetched once and filtered client-side so each
-// tab can show its count.
+// A project's initiatives, one status tab at a time. Each tab loads its own page
+// from the server, sorted and paged there; the tab counts come from a separate
+// aggregate so they stay correct regardless of the current page.
 export default function InitiativesPage() {
   const { project } = useShell();
   const { can } = usePermissions();
   const [tab, setTab] = useState<Tab>('all');
+  const [page, setPage] = useState(1);
+  const [sort, setSort] = useState<{ key: InitiativeSort; dir: 'asc' | 'desc' } | null>(null);
   const [creating, setCreating] = useState(false);
 
   const projectKey = project?.project.key ?? null;
-  const query = useInitiativesQuery(projectKey);
+  const statuses = TABS.find((t) => t.value === tab)!.statuses;
 
-  const all = query.data ?? [];
+  const query = useInitiativesQuery(projectKey, {
+    statuses,
+    sort: sort?.key,
+    dir: sort?.dir,
+    page,
+    pageSize: PAGE_SIZE,
+  });
+  const counts = useInitiativeCountsQuery(projectKey).data;
 
   if (!project) return null;
+
+  const items = query.data?.items ?? [];
+  const total = query.data?.total ?? 0;
+
+  const changeTab = (next: Tab) => {
+    setTab(next);
+    setPage(1);
+  };
+
+  // Re-selecting the sorted column flips its direction; a new column sorts ascending.
+  const changeSort = (key: InitiativeSort) => {
+    setSort((prev) =>
+      prev?.key === key ? { key, dir: prev.dir === 'asc' ? 'desc' : 'asc' } : { key, dir: 'asc' },
+    );
+    setPage(1);
+  };
 
   return (
     <div className="flex-1 overflow-y-auto">
@@ -58,12 +98,12 @@ export default function InitiativesPage() {
       </div>
 
       <div className="px-4 pb-2">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        <Tabs value={tab} onValueChange={(v) => changeTab(v as Tab)}>
           <TabsList variant="line">
             {TABS.map((t) => (
               <TabsTrigger key={t.value} value={t.value}>
                 {t.label}
-                <InitiativeTabCount value={filterByTab(all, t.value).length} />
+                <InitiativeTabCount value={tabCount(counts, t.value)} />
               </TabsTrigger>
             ))}
           </TabsList>
@@ -71,12 +111,17 @@ export default function InitiativesPage() {
       </div>
 
       <InitiativesList
-        initiatives={filterByTab(all, tab)}
+        initiatives={items}
         project={project}
         isLoading={query.isLoading}
         canCreate={can('initiatives', 'create')}
         onCreate={() => setCreating(true)}
+        sort={sort?.key}
+        dir={sort?.dir}
+        onSort={changeSort}
       />
+
+      <InitiativesPagination page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
 
       {creating && projectKey && (
         <CreateInitiativeDialog projectKey={projectKey} onClose={() => setCreating(false)} />

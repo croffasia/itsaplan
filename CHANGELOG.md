@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.1](https://github.com/croffasia/itsaplan/compare/v0.2.0...v0.2.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **web:** batch of UI fixes for notifications, view label, due dates and initiatives ([#24](https://github.com/croffasia/itsaplan/issues/24)) ([17fdfab](https://github.com/croffasia/itsaplan/commit/17fdfaba5d3e33f78ecbffaaf010644f180f939c))
+
+
+### Documentation
+
+* update README ([#23](https://github.com/croffasia/itsaplan/issues/23)) ([6e48308](https://github.com/croffasia/itsaplan/commit/6e4830848dd2f56835b33750fb9a871be44d5cd5))
+
 ## [0.2.0](https://github.com/croffasia/itsaplan/compare/v0.1.0...v0.2.0) (2026-07-23)
 
 

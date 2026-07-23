@@ -21,7 +21,7 @@ export default function SectionPageView({
   widthClassName?: string;
   children: ReactNode;
 }) {
-  const padding = wide ? 'px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10' : 'px-8 py-10';
+  const padding = wide ? 'px-4 pt-5 pb-4 sm:px-6 lg:px-8' : 'px-8 py-10';
   const width = widthClassName ?? (wide ? 'max-w-[1600px]' : 'max-w-4xl');
   // A custom width is left-aligned (the caller controls the span); the default
   // widths are centered.

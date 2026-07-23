@@ -21,12 +21,15 @@ export function BoardCard({
   maps,
   properties,
   onOpen,
+  readOnly,
 }: {
   project: ProjectDetail;
   issue: Issue;
   maps: Maps;
   properties: PropertyKey[];
   onOpen: (id: number) => void;
+  // In a read-only share a click always opens the issue; multi-select is off.
+  readOnly?: boolean;
 }) {
   // Drag is disabled on phones so a touch scrolls the board instead of picking
   // up a card (see the `sm:touch-none` on the card below), and without work_items
@@ -63,7 +66,7 @@ export function BoardCard({
         }}
         onClick={(e) => {
           if (!isClick(e)) return;
-          if (selection.isSelecting || e.shiftKey || e.metaKey || e.ctrlKey) {
+          if (!readOnly && (selection.isSelecting || e.shiftKey || e.metaKey || e.ctrlKey)) {
             e.preventDefault();
             // Don't let the click reach the board background, which clears the
             // selection.

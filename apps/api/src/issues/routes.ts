@@ -70,6 +70,7 @@ const IssueResponse = t.Object({
   updatedAt: t.String(),
   archivedAt: t.Nullable(t.String()),
   statusSince: t.String(),
+  shareToken: t.Nullable(t.String()),
   labelIds: t.Array(t.Number()),
   fieldValues: t.Array(IssueFieldValueEntry),
 });

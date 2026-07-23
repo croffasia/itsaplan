@@ -8,14 +8,17 @@ export default function TypeSelect({
   issueTypes,
   value,
   onChange,
+  readOnly,
 }: {
   issueTypes: IssueType[];
   value: number | null;
   onChange: (id: number | null) => void;
+  readOnly?: boolean;
 }) {
   const type = issueTypes.find((t) => t.id === value);
   return (
     <PopoverPick
+      readOnly={readOnly}
       trigger={
         <Pill active={!!type}>
           {type ? colorDot(type.color) : <CircleDashed />}

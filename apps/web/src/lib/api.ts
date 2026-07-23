@@ -524,6 +524,8 @@ export interface Issue {
   // When the issue entered its current column (or createdAt if it never moved).
   // Drives the "time in current status" badge.
   statusSince: string;
+  // Unguessable token for the public read-only share link, or null when not shared.
+  shareToken: string | null;
   labelIds: number[];
   fieldValues: IssueFieldValueEntry[];
 }
@@ -874,6 +876,8 @@ export interface View {
   filters: FilterSet;
   display: SavedViewDisplay;
   position: number;
+  // Unguessable token for the public read-only share link, or null when not shared.
+  shareToken: string | null;
   createdAt: string;
 }
 
@@ -1300,6 +1304,25 @@ export type ProjectDetail = ProjectScaffold & BoardIssues;
 
 export interface IssueDetail extends Issue {
   fields: IssueFieldValue[];
+}
+
+// Public read-only share bundles, returned by the /share/* routes with no session.
+// The scaffold mirrors ProjectScaffold minus the caller's viewer/permissions and
+// member emails (a public page shows names and avatars only).
+export type PublicScaffold = Omit<ProjectScaffold, 'viewer' | 'permissions' | 'assignees'> & {
+  assignees: Omit<Assignee, 'email'>[];
+};
+
+export interface SharedIssueBundle {
+  project: PublicScaffold;
+  issue: IssueDetail;
+  feed: FeedItem[];
+}
+
+export interface SharedViewBundle {
+  project: PublicScaffold;
+  view: { name: string; icon: string | null; filters: FilterSet; display: SavedViewDisplay };
+  issues: Issue[];
 }
 
 export interface NewIssueInput {
@@ -1757,6 +1780,19 @@ export const api = {
       body: JSON.stringify(input),
     }),
   getIssue: (id: number) => request<IssueDetail>(`/issues/${id}`),
+
+  // Public read-only sharing. Enable returns the link token (idempotent); disable
+  // revokes it. The getShared* reads need no session (public /share/* routes).
+  enableIssueShare: (id: number) =>
+    request<{ token: string }>(`/issues/${id}/share`, { method: 'POST' }),
+  disableIssueShare: (id: number) => request<void>(`/issues/${id}/share`, { method: 'DELETE' }),
+  enableViewShare: (id: number) =>
+    request<{ token: string }>(`/views/${id}/share`, { method: 'POST' }),
+  disableViewShare: (id: number) => request<void>(`/views/${id}/share`, { method: 'DELETE' }),
+  getSharedIssue: (token: string) => request<SharedIssueBundle>(`/share/issue/${token}`),
+  getSharedView: (token: string) => request<SharedViewBundle>(`/share/view/${token}`),
+  getSharedViewIssue: (token: string, issueId: number) =>
+    request<SharedIssueBundle>(`/share/view/${token}/issues/${issueId}`),
   // Resolve an issue by its project-scoped number (the human "42" in the URL).
   getIssueBySeq: (projectKey: string, seq: number) =>
     request<IssueDetail>(`/projects/${projectKey}/issues/${seq}`),

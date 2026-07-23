@@ -24,12 +24,46 @@ export default function IssueCustomFieldControl({
   current,
   saveKey,
   onChange,
+  readOnly,
 }: {
   def: CustomField;
   current: IssueFieldValue | undefined;
   saveKey: string;
   onChange: (value: IssueFieldValueInput) => void;
+  readOnly?: boolean;
 }) {
+  // Read-only (public share): show the current value statically, no editor.
+  if (readOnly) {
+    if (def.fieldType === 'select' || def.fieldType === 'multi_select') {
+      const opts = (current?.optionIds ?? [])
+        .map((id) => def.options.find((o) => o.id === id))
+        .filter((o): o is NonNullable<typeof o> => o != null);
+      if (opts.length === 0) return <span className="text-sm text-muted-foreground">—</span>;
+      return (
+        <span className="flex flex-wrap gap-1">
+          {opts.map((o) => (
+            <span
+              key={o.id}
+              className="rounded px-1.5 py-0.5 text-xs text-white"
+              style={{ backgroundColor: o.color }}
+            >
+              {o.value}
+            </span>
+          ))}
+        </span>
+      );
+    }
+    if (def.fieldType === 'boolean') {
+      return <span className="text-sm">{current?.value ? 'Yes' : 'No'}</span>;
+    }
+    const v = current?.value;
+    return (
+      <span className="text-sm">
+        {v == null || v === '' ? <span className="text-muted-foreground">—</span> : String(v)}
+      </span>
+    );
+  }
+
   if (def.fieldType === 'url') {
     return (
       <InlineUrlField

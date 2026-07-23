@@ -9,6 +9,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import ReadOnlyPill from './ReadOnlyPill';
 
 export interface PickItem {
   key: string;
@@ -38,6 +39,7 @@ export default function PopoverPick({
   items,
   groups,
   closeOnSelect = true,
+  readOnly = false,
 }: {
   trigger: ReactNode;
   inputPlaceholder: string;
@@ -45,8 +47,13 @@ export default function PopoverPick({
   items?: PickItem[];
   groups?: PickGroup[];
   closeOnSelect?: boolean;
+  // When true the pill is shown as-is with no popover — a read-only display of the
+  // current value (public shared pages).
+  readOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+
+  if (readOnly) return <ReadOnlyPill>{trigger}</ReadOnlyPill>;
 
   const renderItem = (it: PickItem) => (
     <CommandItem

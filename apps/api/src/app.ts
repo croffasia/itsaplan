@@ -75,6 +75,7 @@ export const app = new Elysia()
           { name: 'Attachments', description: 'Issue attachments and raw bytes' },
           { name: 'Avatars', description: "Current user's avatar image (upload and raw bytes)" },
           { name: 'Views', description: 'Saved work items views' },
+          { name: 'Share', description: 'Public read-only sharing of issues and views' },
           { name: 'Actions', description: 'Project automation actions' },
           { name: 'Webhooks', description: 'Outgoing webhook subscriptions' },
           { name: 'Agent Schedules', description: 'Recurring tasks for internal agents' },

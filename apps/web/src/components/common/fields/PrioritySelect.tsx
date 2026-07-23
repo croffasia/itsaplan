@@ -6,13 +6,16 @@ import PopoverPick from './PopoverPick';
 export default function PrioritySelect({
   value,
   onChange,
+  readOnly,
 }: {
   value: string;
   onChange: (v: string) => void;
+  readOnly?: boolean;
 }) {
   const prio = PRIORITY_FIELDS.find((p) => p.value === value) ?? PRIORITY_FIELDS[0];
   return (
     <PopoverPick
+      readOnly={readOnly}
       trigger={
         <Pill active={!!value}>
           {prio.icon}

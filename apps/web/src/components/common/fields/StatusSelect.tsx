@@ -8,14 +8,17 @@ export default function StatusSelect({
   columns,
   value,
   onChange,
+  readOnly,
 }: {
   columns: Column[];
   value: number;
   onChange: (id: number) => void;
+  readOnly?: boolean;
 }) {
   const column = columns.find((c) => c.id === value);
   return (
     <PopoverPick
+      readOnly={readOnly}
       trigger={
         <Pill active>
           {column ? colorDot(column.color) : <CircleDashed />}

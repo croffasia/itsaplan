@@ -17,6 +17,7 @@ export default function TimelineView({
   onOpenIssue,
   collapsedGroups,
   onToggleGroup,
+  readOnly,
 }: TimelineViewProps) {
   const [localCollapsedGroups, setLocalCollapsedGroups] = useState<Set<string>>(new Set());
   const activeCollapsedGroups = collapsedGroups ?? localCollapsedGroups;
@@ -127,6 +128,7 @@ export default function TimelineView({
               dayLines={dayLines}
               todayInRange={todayInRange}
               todayLeft={todayLeft}
+              readOnly={readOnly}
               onBeginDrag={beginDrag}
               onOpen={onOpenIssue}
             />

@@ -10,6 +10,14 @@ export const viewPath = (key: string, viewId: number | null) =>
 
 export const dashboardsPath = (key: string) => `${projectPath(key)}/dashboard`;
 
+// Public read-only share pages (no auth). The token is the unguessable share key.
+export const shareIssuePath = (token: string) => `/share/issue/${token}`;
+export const shareViewPath = (token: string) => `/share/view/${token}`;
+
+// The absolute share URL to copy, built from the current origin at call time.
+export const shareUrl = (path: string) =>
+  typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
+
 export const dashboardPath = (key: string, dashboardId: number) =>
   `${dashboardsPath(key)}/${dashboardId}`;
 

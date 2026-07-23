@@ -1,17 +1,22 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import type { View } from '@/lib/api';
+import { Globe, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { api, type View } from '@/lib/api';
+import { qk } from '@/services/queryKeys';
 import { cn } from '@/lib/utils';
+import { shareViewPath } from '@/utils/paths';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import ViewTabChrome from '@/components/layout/ViewTabChrome';
 import ViewTabLabel from '@/components/layout/ViewTabLabel';
+import ShareDialog from '@/components/common/share/ShareDialog';
 
 // A saved view tab. Sortable (drag to reorder); when active it shows a "…" menu
-// with Edit view / Delete.
+// with Share / Edit view / Delete.
 export default function SavedViewTab({
   view,
+  projectKey,
   active,
   canEdit,
   canDelete,
@@ -20,6 +25,7 @@ export default function SavedViewTab({
   onDelete,
 }: {
   view: View;
+  projectKey: string;
   active: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -28,6 +34,20 @@ export default function SavedViewTab({
   onDelete: () => void;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sharing, setSharing] = useState(false);
+  const qc = useQueryClient();
+
+  // Enabling/revoking the public link refetches the views so the tab's shareToken
+  // (and the dialog on reopen) stays in sync.
+  async function enableShare() {
+    const { token } = await api.enableViewShare(view.id);
+    await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
+    return token;
+  }
+  async function disableShare() {
+    await api.disableViewShare(view.id);
+    await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
+  }
   // Reordering views is a views edit; disable dragging without it.
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: view.id,
@@ -65,6 +85,18 @@ export default function SavedViewTab({
                 type="button"
                 onClick={() => {
                   setMenuOpen(false);
+                  setSharing(true);
+                }}
+                className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
+              >
+                <Globe className="size-3.5" /> {view.shareToken ? 'Shared' : 'Share'}
+              </button>
+            )}
+            {canEdit && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
                   onEdit();
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
@@ -89,6 +121,15 @@ export default function SavedViewTab({
       ) : (
         <span className="w-1.5" />
       )}
+      <ShareDialog
+        open={sharing}
+        onOpenChange={setSharing}
+        title="Share view"
+        token={view.shareToken}
+        enable={enableShare}
+        disable={disableShare}
+        pathForToken={shareViewPath}
+      />
     </ViewTabChrome>
   );
 }

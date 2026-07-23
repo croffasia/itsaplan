@@ -9,8 +9,9 @@ const PUBLIC_PATHS = ['/login', '/register'];
 // accept page must open for a logged-out invitee (who registers there) and for a
 // logged-in one (who accepts directly). The password screens are here for the same
 // reason: a reset link opened in a browser that still holds a session must show the
-// form, not bounce to the app.
-const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password'];
+// form, not bounce to the app. The public read-only share pages (/share/*) open for
+// anyone with the link, signed in or not.
+const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share'];
 
 // Gate the whole app behind a session. This is an optimistic check: it only looks
 // for the presence of the better-auth session cookie, not its validity — the API

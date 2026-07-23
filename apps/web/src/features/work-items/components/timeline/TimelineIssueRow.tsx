@@ -21,6 +21,7 @@ export function TimelineIssueRow({
   dayLines,
   todayInRange,
   todayLeft,
+  readOnly,
   onBeginDrag,
   onOpen,
 }: {
@@ -37,6 +38,9 @@ export function TimelineIssueRow({
   dayLines: { backgroundImage: string };
   todayInRange: boolean;
   todayLeft: number;
+  // In a read-only share the bar cannot be dragged or resized; a click on it
+  // still opens the issue.
+  readOnly?: boolean;
   onBeginDrag: (e: React.PointerEvent, issue: Issue, mode: TimelineDragMode) => void;
   onOpen: (id: number) => void;
 }) {
@@ -69,10 +73,11 @@ export function TimelineIssueRow({
           />
         )}
         <div
-          onPointerDown={(e) => onBeginDrag(e, issue, 'move')}
+          onPointerDown={readOnly ? undefined : (e) => onBeginDrag(e, issue, 'move')}
+          onClick={readOnly ? () => onOpen(issue.id) : undefined}
           className={cn(
             'group absolute top-1/2 z-10 flex h-6 -translate-y-1/2 items-center rounded px-1.5 text-white select-none',
-            active ? 'cursor-grabbing' : 'cursor-grab',
+            readOnly ? 'cursor-pointer' : active ? 'cursor-grabbing' : 'cursor-grab',
           )}
           style={{
             left: rect.left,
@@ -85,17 +90,21 @@ export function TimelineIssueRow({
             span.inferredStart ? 'Start inferred from the created date — drag to set it' : undefined
           }
         >
-          <span
-            onPointerDown={(e) => onBeginDrag(e, issue, 'start')}
-            className="absolute top-0 left-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
-            style={{ background: 'rgba(255,255,255,0.4)' }}
-          />
+          {!readOnly && (
+            <span
+              onPointerDown={(e) => onBeginDrag(e, issue, 'start')}
+              className="absolute top-0 left-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
+              style={{ background: 'rgba(255,255,255,0.4)' }}
+            />
+          )}
           <span className="truncate text-[11px] leading-none">{issue.title}</span>
-          <span
-            onPointerDown={(e) => onBeginDrag(e, issue, 'end')}
-            className="absolute top-0 right-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
-            style={{ background: 'rgba(255,255,255,0.4)' }}
-          />
+          {!readOnly && (
+            <span
+              onPointerDown={(e) => onBeginDrag(e, issue, 'end')}
+              className="absolute top-0 right-0 h-full w-1.5 cursor-ew-resize opacity-0 group-hover:opacity-100"
+              style={{ background: 'rgba(255,255,255,0.4)' }}
+            />
+          )}
         </div>
       </div>
     </div>

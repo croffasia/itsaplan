@@ -83,11 +83,12 @@ export const qk = {
   // Resolving an issue by its project-scoped number (the identifier-based URL).
   issueBySeq: (projectKey: string, seq: number) => ['issueBySeq', projectKey, seq] as const,
   feed: (id: number) => ['feed', id] as const,
-  // Initiatives: a project's list (status narrows it), one initiative, and one
-  // initiative's activity feed.
-  initiatives: (projectKey: string, status?: string) =>
-    ['initiatives', projectKey, status ?? 'all'] as const,
+  // Initiatives: a project's list (params narrow, sort and page it), the per-status
+  // tab counts, one initiative, and one initiative's activity feed.
+  initiatives: (projectKey: string, params?: Record<string, unknown>) =>
+    ['initiatives', projectKey, params ?? {}] as const,
   initiativesForProject: (projectKey: string) => ['initiatives', projectKey] as const,
+  initiativeCounts: (projectKey: string) => ['initiativeCounts', projectKey] as const,
   initiative: (id: number) => ['initiative', id] as const,
   initiativeFeed: (id: number) => ['initiativeFeed', id] as const,
   // Prefix keys: issue mutations invalidate every initiative query without

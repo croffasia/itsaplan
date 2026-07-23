@@ -8,7 +8,7 @@ import { AssigneeAvatar } from '@/features/issue/components/shared/IssueBadges';
 import { PriorityIcon } from '@/features/issue/components/shared/IssueIcons';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { TableCell, TableRow } from '@/components/ui/table';
-import { STATUS_META } from '../shared/initiativeMeta';
+import { STATUS_META } from '@/utils/initiativeMeta';
 import HealthBadge from '../shared/HealthBadge';
 import ProgressBar from '../shared/ProgressBar';
 

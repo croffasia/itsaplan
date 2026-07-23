@@ -5,6 +5,7 @@ import { Archive, Bot, CircleDashed, Tag, Target, Trash2, User, X } from 'lucide
 import { type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativesQuery } from '@/services/initiatives.service';
+import { LINKABLE_STATUSES } from '@/utils/initiativeMeta';
 import { cn } from '@/lib/utils';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
@@ -26,11 +27,13 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   const { can } = usePermissions();
   const bulk = useBulkActions(project);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
-  // Initiatives are an unbounded list, so they are not in the board scaffold. The
-  // bulk picker fetches them only while selection is active.
-  const { data: initiatives = [] } = useInitiativesQuery(
-    selection.isSelecting ? project.project.key : null,
-  );
+  // Initiatives are not in the board scaffold. The bulk picker fetches the first
+  // page of linkable (open) initiatives only while selection is active.
+  const { data } = useInitiativesQuery(selection.isSelecting ? project.project.key : null, {
+    statuses: LINKABLE_STATUSES,
+    pageSize: 50,
+  });
+  const initiatives = data?.items ?? [];
 
   if (!selection.isSelecting) return null;
 

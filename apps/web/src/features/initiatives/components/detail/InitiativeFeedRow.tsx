@@ -17,7 +17,7 @@ import type { InitiativeFeedItem } from '@/lib/api';
 import { formatDate } from '@/utils/dates';
 import { issuePath } from '@/utils/paths';
 import { priorityLabel } from '@/utils/fieldOptions';
-import { STATUS_META } from '../shared/initiativeMeta';
+import { STATUS_META } from '@/utils/initiativeMeta';
 
 const ICON: Record<string, typeof CircleDot> = {
   created: CirclePlus,

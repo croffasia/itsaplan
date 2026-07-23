@@ -20,6 +20,10 @@ export const STATUS_ORDER: InitiativeStatus[] = [
   'canceled',
 ];
 
+// The open statuses an issue can be linked to: the lifecycle without the terminal
+// completed and canceled, which are not offered in the link pickers.
+export const LINKABLE_STATUSES: InitiativeStatus[] = ['proposed', 'planned', 'active'];
+
 // Health (computed server-side). null means there is nothing to judge yet.
 export const HEALTH_META: Record<InitiativeHealth, { label: string; color: string }> = {
   on_track: { label: 'On track', color: '#22c55e' },

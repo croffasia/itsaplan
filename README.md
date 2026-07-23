@@ -4,10 +4,11 @@
 
 ### Open-source project management and issue tracking, with AI agents built in
 
-A self-hosted, open-source alternative to Linear, Plane, and Jira for project management
-and issue tracking — projects, issues, boards, and initiatives, with AI agents as
-first-class members of the team. Hand work to people or agents, and let the REST API,
-webhooks, and MCP do the rest.
+Self-hosted, open-source project management and issue tracking, and an alternative to Linear,
+Plane, and Jira. The difference: AI agents work here like any teammate. Hand them issues, or
+run the whole thing over the REST API, webhooks, and MCP.
+
+If It's a Plan looks useful to you, star the repo ⭐ — it helps other people find it.
 
 [Website](https://itsaplan.dev) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
@@ -37,13 +38,6 @@ server and database.
 Heads-up: this is under active development. Expect breaking changes before the first
 stable release.
 
-## Screenshots
-
-The work items board is shown at the top. More views to come: issue detail with an agent
-reply, agent configuration, dashboards, and initiatives.
-
-<!-- Add each new view here, 1600px wide. -->
-
 ## Features
 
 **Tracking**
@@ -53,6 +47,8 @@ reply, agent configuration, dashboards, and initiatives.
 - Save any view as a reusable template
 - Configurable dashboards for project analytics: throughput, breakdown, pulse
 - Custom quick actions that run on an issue
+- Freeform notes boards: sticky notes on a canvas, with colors, checklists, and connections
+- Share a view or an issue by public link, read-only and without sign-in
 - Initiatives that group and track work across projects
 - Auto-archive, a notification inbox, role-based access control, and more
 
@@ -178,11 +174,23 @@ packages/mailer SMTP and Resend transport
 
 The web app never imports the packages directly, it talks to the API over HTTP.
 
+## More from us
+
+**[Vibe Code Kit](https://vibecodekit.dev)** — a Claude Code plugin with 20+ expert skills
+that turn AI slop into senior-level code. It teaches your AI agent professional development
+and design practices, so you ship production-ready code on the first try. Works with Claude
+Code, Codex, Gemini CLI, and Cursor.
+
+It's a Plan is built with it — the code you are reading is the proof.
+
 ## Contributing
 
 Issues and pull requests are welcome — bug fixes, features, docs, all of it. Start with
 [CONTRIBUTING.md](CONTRIBUTING.md). It covers the setup, the conventions, and how a change
 gets merged. Be kind; we follow a [Code of Conduct](CODE_OF_CONDUCT.md).
+
+Not ready to contribute code? [Star the repo](https://github.com/croffasia/itsaplan) and share
+it — it is the simplest way to help the project grow.
 
 ## Security
 

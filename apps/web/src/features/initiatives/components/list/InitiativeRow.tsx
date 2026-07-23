@@ -28,9 +28,9 @@ export default function InitiativeRow({
 
   return (
     <TableRow className="group/item cursor-pointer" onClick={() => router.push(href)}>
-      <TableCell className="px-3 py-2.5 align-top whitespace-normal">
-        <div className="flex min-w-0 items-start gap-2.5">
-          <span className="mt-1">{colorDot(STATUS_META[initiative.status].color)}</span>
+      <TableCell className="px-3 py-2.5 align-middle whitespace-normal">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span className="shrink-0">{colorDot(STATUS_META[initiative.status].color)}</span>
           <div className="min-w-0">
             <Link
               href={href}
@@ -48,7 +48,7 @@ export default function InitiativeRow({
         </div>
       </TableCell>
 
-      <TableCell className="px-3 py-2.5 align-top">
+      <TableCell className="px-3 py-2.5 align-middle">
         {initiative.priority ? (
           <span className="flex items-center gap-1.5 text-sm">
             <PriorityIcon priority={initiative.priority} className="size-3.5" />
@@ -59,7 +59,7 @@ export default function InitiativeRow({
         )}
       </TableCell>
 
-      <TableCell className="px-3 py-2.5 align-top">
+      <TableCell className="px-3 py-2.5 align-middle">
         {owner ? (
           <span className="flex items-center gap-1.5 text-sm">
             <AssigneeAvatar name={owner.name} image={owner.image} />
@@ -70,15 +70,15 @@ export default function InitiativeRow({
         )}
       </TableCell>
 
-      <TableCell className="px-3 py-2.5 align-top text-xs text-muted-foreground">
+      <TableCell className="px-3 py-2.5 align-middle text-xs text-muted-foreground">
         {initiative.targetDate ? formatShortDate(initiative.targetDate) : '—'}
       </TableCell>
 
-      <TableCell className="px-3 py-2.5 align-top">
+      <TableCell className="px-3 py-2.5 align-middle">
         <ProgressBar progress={initiative.progress} />
       </TableCell>
 
-      <TableCell className="px-3 py-2.5 align-top">
+      <TableCell className="px-3 py-2.5 align-middle">
         <HealthBadge health={initiative.health} />
       </TableCell>
     </TableRow>

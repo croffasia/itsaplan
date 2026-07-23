@@ -809,6 +809,9 @@ export const issue = pgTable(
     // sweep for issues that sat in a completed/canceled column past the project's
     // configured threshold. NULL means active (on the board).
     archivedAt: timestamp('archived_at', { withTimezone: true }),
+    // Unguessable token for the public read-only share link. NULL means the issue
+    // is not shared; setting it enables the link, clearing it revokes access.
+    shareToken: uuid('share_token').unique(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -945,6 +948,9 @@ export const projectView = pgTable(
     filters: jsonb('filters').notNull().default({}),
     display: jsonb('display').notNull().default({}),
     position: doublePrecision('position').notNull().default(0),
+    // Unguessable token for the public read-only share link of this view. NULL
+    // means not shared; setting it enables the link, clearing it revokes access.
+    shareToken: uuid('share_token').unique(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('project_view_project_idx').on(t.projectId, t.position)],

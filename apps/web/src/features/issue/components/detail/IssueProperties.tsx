@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import { Target } from 'lucide-react';
 import {
   type CustomField,
   type ProjectDetail,
@@ -8,6 +9,8 @@ import {
 } from '@/lib/api';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
+import { Pill } from '@/components/common/fields/Pill';
+import ReadOnlyPill from '@/components/common/fields/ReadOnlyPill';
 import DelegateSelect from '../fields/DelegateSelect';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
 import PrioritySelect from '@/components/common/fields/PrioritySelect';
@@ -39,6 +42,7 @@ export default function IssueProperties({
   onToggleLabel,
   uploadFile,
   hasSidebar,
+  readOnly,
 }: {
   project: ProjectDetail;
   issue: IssueDetailRow;
@@ -46,8 +50,11 @@ export default function IssueProperties({
   onPatch: (fields: IssuePatch) => void;
   onSetField: (fieldId: number, value: IssueFieldValueInput) => void;
   onToggleLabel: (id: number) => void;
-  uploadFile: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
+  uploadFile?: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
   hasSidebar: boolean;
+  // When true every control is a non-interactive display of its value (public
+  // shared page). The onPatch/onSetField/onToggleLabel callbacks are never called.
+  readOnly?: boolean;
 }) {
   const hasMembers = project.assignees.some((a) => a.kind === 'member');
   const hasAgents = project.assignees.some((a) => a.kind === 'agent');
@@ -58,6 +65,7 @@ export default function IssueProperties({
           columns={project.columns}
           value={issue.columnId}
           onChange={(id) => onPatch({ columnId: id })}
+          readOnly={readOnly}
         />
       </PropertyRow>
 
@@ -67,6 +75,7 @@ export default function IssueProperties({
             assignees={project.assignees}
             value={issue.assigneeUserId}
             onChange={(userId) => onPatch({ assigneeUserId: userId })}
+            readOnly={readOnly}
           />
         </PropertyRow>
       )}
@@ -77,6 +86,7 @@ export default function IssueProperties({
             assignees={project.assignees}
             value={issue.delegateUserId}
             onChange={(userId) => onPatch({ delegateUserId: userId })}
+            readOnly={readOnly}
           />
         </PropertyRow>
       )}
@@ -85,6 +95,7 @@ export default function IssueProperties({
         <PrioritySelect
           value={issue.priority ?? ''}
           onChange={(v) => onPatch({ priority: v || null })}
+          readOnly={readOnly}
         />
       </PropertyRow>
 
@@ -94,16 +105,28 @@ export default function IssueProperties({
             issueTypes={project.issueTypes}
             value={issue.typeId}
             onChange={(id) => onPatch({ typeId: id })}
+            readOnly={readOnly}
           />
         </PropertyRow>
       )}
 
       <PropertyRow label="Initiative">
-        <InitiativeSelect
-          projectKey={project.project.key}
-          value={issue.initiative?.id ?? null}
-          onChange={(id) => onPatch({ initiativeId: id })}
-        />
+        {readOnly ? (
+          // Read-only shows the linked initiative from the issue itself, avoiding
+          // the authenticated initiatives query the editable select runs.
+          <ReadOnlyPill>
+            <Pill active={!!issue.initiative}>
+              <Target />
+              {issue.initiative?.title ?? 'Initiative'}
+            </Pill>
+          </ReadOnlyPill>
+        ) : (
+          <InitiativeSelect
+            projectKey={project.project.key}
+            value={issue.initiative?.id ?? null}
+            onChange={(id) => onPatch({ initiativeId: id })}
+          />
+        )}
       </PropertyRow>
 
       <PropertyRow label="Start date">
@@ -111,6 +134,7 @@ export default function IssueProperties({
           value={issue.startDate}
           placeholder="Start date"
           onChange={(v) => onPatch({ startDate: v })}
+          readOnly={readOnly}
         />
       </PropertyRow>
 
@@ -119,6 +143,7 @@ export default function IssueProperties({
           value={issue.dueDate}
           placeholder="Due date"
           onChange={(v) => onPatch({ dueDate: v })}
+          readOnly={readOnly}
         />
       </PropertyRow>
 
@@ -129,6 +154,7 @@ export default function IssueProperties({
             groups={project.labelGroups}
             value={issue.labelIds}
             onToggle={onToggleLabel}
+            readOnly={readOnly}
           />
         </PropertyRow>
       )}
@@ -149,6 +175,7 @@ export default function IssueProperties({
                   saveKey={saveKey}
                   uploadFile={uploadFile}
                   onSetField={onSetField}
+                  readOnly={readOnly}
                 />
               </div>
             );
@@ -160,6 +187,7 @@ export default function IssueProperties({
                 current={current}
                 saveKey={saveKey}
                 onChange={(value) => onSetField(def.id, value)}
+                readOnly={readOnly}
               />
             </PropertyRow>
           );

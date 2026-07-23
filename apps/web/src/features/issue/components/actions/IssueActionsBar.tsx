@@ -1,16 +1,25 @@
 import { useRef, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Archive, ArchiveRestore, Check, ClipboardCopy, Share2, Trash2 } from 'lucide-react';
-import { type ActionDef, type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
+import { Archive, ArchiveRestore, Check, ClipboardCopy, Globe, Share2, Trash2 } from 'lucide-react';
+import {
+  api,
+  type ActionDef,
+  type ProjectDetail,
+  type IssueDetail as IssueDetailRow,
+} from '@/lib/api';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useArchiveIssue, useRestoreIssue } from '@/services/issues.service';
+import { qk } from '@/services/queryKeys';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
 import { buildIssuePrompt } from '../../utils/issuePrompt';
 import { useSession } from '@/lib/auth-client';
+import { shareIssuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import ShareDialog from '@/components/common/share/ShareDialog';
 
 // The issue detail Actions: the manual actions whose condition matches this
 // issue, plus Copy Prompt and a delete button. Owns the delete/apply
@@ -37,6 +46,7 @@ export default function IssueActionsBar({
 }) {
   const { can } = usePermissions();
   const { data: session } = useSession();
+  const qc = useQueryClient();
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
   const actionsQuery = useActionsQuery(project.project.key);
@@ -44,8 +54,21 @@ export default function IssueActionsBar({
   const restoreIssue = useRestoreIssue(project.project.key);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
+  const [sharing, setSharing] = useState(false);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Enabling/revoking the public link refetches the issue so its shareToken (and
+  // the dialog's state on reopen) stays in sync.
+  async function enableShare() {
+    const { token } = await api.enableIssueShare(issue.id);
+    await qc.invalidateQueries({ queryKey: qk.issue(issue.id) });
+    return token;
+  }
+  async function disableShare() {
+    await api.disableIssueShare(issue.id);
+    await qc.invalidateQueries({ queryKey: qk.issue(issue.id) });
+  }
 
   // Manual actions whose condition matches this issue, applied as one patch.
   // Applying one is a issue edit; Copy Prompt only reads the issue and is always
@@ -101,6 +124,23 @@ export default function IssueActionsBar({
         </TooltipTrigger>
         <TooltipContent>{copied ? 'Copied!' : 'Copy Prompt'}</TooltipContent>
       </Tooltip>
+      {canEdit && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size={btnSize}
+              className={
+                issue.shareToken ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              }
+              onClick={() => setSharing(true)}
+            >
+              <Globe className="size-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{issue.shareToken ? 'Shared publicly' : 'Share publicly'}</TooltipContent>
+        </Tooltip>
+      )}
       {issueActions.map((a) => {
         const Icon = actionIcon(a.icon);
         return (
@@ -194,6 +234,16 @@ export default function IssueActionsBar({
           onClose={() => setConfirmingAction(null)}
         />
       )}
+
+      <ShareDialog
+        open={sharing}
+        onOpenChange={setSharing}
+        title="Share issue"
+        token={issue.shareToken}
+        enable={enableShare}
+        disable={disableShare}
+        pathForToken={shareIssuePath}
+      />
     </>
   );
 }

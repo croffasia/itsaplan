@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useContext, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import {
   Archive,
@@ -20,7 +20,7 @@ import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useArchiveIssue, useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useShell } from '@/context/shellContext';
+import { ShellCtx } from '@/context/shellContext';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
 import { buildIssuePrompt } from '../../utils/issuePrompt';
 import { useSession } from '@/lib/auth-client';
@@ -64,7 +64,9 @@ export default function IssueContextMenu({
   children: ReactNode;
 }) {
   const { can } = usePermissions();
-  const { onOpenIssue } = useShell();
+  // Read the Shell directly (not useShell) so this can render outside it: on the
+  // public read-only board there is no Shell, and the card is shown without a menu.
+  const shell = useContext(ShellCtx);
   const { data: session } = useSession();
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
@@ -74,6 +76,10 @@ export default function IssueContextMenu({
   const actionsQuery = useActionsQuery(project.project.key);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
+
+  // No Shell (public share): render the card as-is, without the right-click menu.
+  if (!shell) return <>{children}</>;
+  const onOpenIssue = shell.onOpenIssue;
 
   const actions = matchedActions(actionsQuery.data ?? [], project, issue);
 

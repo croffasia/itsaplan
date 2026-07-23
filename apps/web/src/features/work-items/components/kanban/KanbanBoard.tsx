@@ -19,7 +19,7 @@ export default function KanbanBoard(props: WorkItemsViewProps) {
   return (
     <SelectionProvider validIds={validIds}>
       {props.settings.subgroup === 'none' ? <FlatBoard {...props} /> : <SwimlaneBoard {...props} />}
-      <BulkActionBar project={props.project} />
+      {!props.readOnly && <BulkActionBar project={props.project} />}
     </SelectionProvider>
   );
 }

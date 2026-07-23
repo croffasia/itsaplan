@@ -12,12 +12,14 @@ export default function IssueCustomFieldBody({
   saveKey,
   uploadFile,
   onSetField,
+  readOnly,
 }: {
   def: CustomField;
   current: IssueFieldValue | undefined;
   saveKey: string;
-  uploadFile: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
+  uploadFile?: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
   onSetField: (fieldId: number, value: IssueFieldValueInput) => void;
+  readOnly?: boolean;
 }) {
   return (
     <div className="mt-6">
@@ -29,6 +31,7 @@ export default function IssueCustomFieldBody({
           defaultValue={(current?.value as string) ?? ''}
           key={saveKey}
           placeholder="Empty"
+          editable={!readOnly}
           uploadFile={uploadFile}
           onBlur={(md) => {
             const next = md.trim() === '' ? null : md;
@@ -42,6 +45,7 @@ export default function IssueCustomFieldBody({
           current={current}
           saveKey={saveKey}
           onChange={(value) => onSetField(def.id, value)}
+          readOnly={readOnly}
         />
       )}
     </div>

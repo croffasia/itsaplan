@@ -20,11 +20,18 @@ export const DRAG_ACTIVATION_DISTANCE = 4;
 // phones per-draggable via `useDraggable({ disabled })` (see useIsPhone), not by
 // dropping sensors here — dnd-kit puts the sensors in a useEffect dependency
 // array and warns if its length changes between renders.
-export function useDndSensors() {
-  return useSensors(
+//
+// `inert` returns empty sensors so no drag can ever start, used by a read-only
+// share: the board keeps its DndContext (cards call useDraggable/useDroppable and
+// need the ancestor), but nothing is draggable. `inert` is fixed per component
+// instance, so the sensor-array length still never changes between its renders.
+export function useDndSensors(inert = false) {
+  const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
+  const inertSensors = useSensors();
+  return inert ? inertSensors : sensors;
 }
 
 // Sensors for a horizontally-scrollable sortable strip (the view tabs). Mouse

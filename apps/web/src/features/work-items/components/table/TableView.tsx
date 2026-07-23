@@ -28,10 +28,11 @@ export default function TableView({
   settings,
   onOpenIssue,
   onAddIssue,
+  readOnly,
 }: WorkItemsViewProps) {
   const updateIssue = useUpdateIssue(project.project.key);
   const [activeId, setActiveId] = useState<number | null>(null);
-  const sensors = useDndSensors();
+  const sensors = useDndSensors(readOnly);
   const collapsed = usePersistedSet(
     collapsedKey(project.project.id, settings.group, settings.subgroup),
   );
@@ -112,6 +113,7 @@ export default function TableView({
             onAddIssue={() =>
               onAddIssue({ columnId: project.columns[0]?.id ?? 0, ...item.group.assign })
             }
+            readOnly={readOnly}
           />
         );
       }

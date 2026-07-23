@@ -14,11 +14,13 @@ export default function AssigneeSelect({
   value,
   onChange,
   placeholder = 'No assignee',
+  readOnly,
 }: {
   assignees: Assignee[];
   value: string | null;
   onChange: (userId: string | null) => void;
   placeholder?: string;
+  readOnly?: boolean;
 }) {
   const { data: session } = useSession();
   const currentUserId = session?.user.id ?? null;
@@ -38,6 +40,7 @@ export default function AssigneeSelect({
 
   return (
     <PopoverPick
+      readOnly={readOnly}
       trigger={
         <Pill active={!!assignee}>
           {assignee ? (

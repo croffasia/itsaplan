@@ -18,6 +18,7 @@ export function SwimlaneCell({
   properties,
   cellKey,
   manualOrder,
+  readOnly,
   onOpenIssue,
   onMoveIssue,
 }: {
@@ -29,6 +30,8 @@ export function SwimlaneCell({
   // Whether the view is ordered manually. Cards can only be reordered within the
   // cell then; otherwise the sort field decides their order.
   manualOrder: boolean;
+  // In a read-only share a card click always opens the issue; multi-select is off.
+  readOnly?: boolean;
   onOpenIssue: (id: number) => void;
   onMoveIssue: (issueId: number, index: number) => void;
 }) {
@@ -61,6 +64,7 @@ export function SwimlaneCell({
               maps={maps}
               properties={properties}
               onOpen={onOpenIssue}
+              readOnly={readOnly}
             />
           </CardDropSlot>
         ))}

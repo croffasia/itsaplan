@@ -27,8 +27,9 @@ export default function FlatBoard({
   onSettingsChange,
   onOpenIssue,
   onAddIssue,
+  readOnly,
 }: WorkItemsViewProps) {
-  const dnd = useBoardDnd(project.project.key);
+  const dnd = useBoardDnd(project.project.key, readOnly);
   const selection = useSelection();
 
   // Hidden columns live in the view's display (settings.hiddenGroups); toggling
@@ -113,6 +114,7 @@ export default function FlatBoard({
               count={issuesByGroup.get(group.key)?.length ?? 0}
               onExpand={() => setCollapsed(group.key, false)}
               onAddIssue={() => addIssueTo(group)}
+              readOnly={readOnly}
             />
           ) : (
             <BoardColumn
@@ -128,6 +130,7 @@ export default function FlatBoard({
               onAddIssue={() => addIssueTo(group)}
               onHide={() => setHidden(group.key, true)}
               onCollapse={() => setCollapsed(group.key, true)}
+              readOnly={readOnly}
             />
           ),
         )}

@@ -16,6 +16,7 @@ export function TableSectionHeader({
   onDrop,
   onToggle,
   onAddIssue,
+  readOnly,
 }: {
   group: IssueGroup;
   count: number;
@@ -25,8 +26,11 @@ export function TableSectionHeader({
   onDrop: (issueId: number) => void;
   onToggle: () => void;
   onAddIssue: () => void;
+  // In a read-only share the add affordance is hidden.
+  readOnly?: boolean;
 }) {
   const { can } = usePermissions();
+  const canCreateIssue = can('work_items', 'create') && !readOnly;
   return (
     <TableDropZone
       id={dropId}
@@ -48,7 +52,7 @@ export function TableSectionHeader({
         {group.name}
         <span className="text-muted-foreground">{count}</span>
       </button>
-      {can('work_items', 'create') && (
+      {canCreateIssue && (
         <Button
           variant="ghost"
           size="icon"

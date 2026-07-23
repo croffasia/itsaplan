@@ -17,11 +17,16 @@ import { CalendarMonthNav } from './CalendarMonthNav';
 import { CalendarDayCell } from './CalendarDayCell';
 import { CalendarUnscheduledPanel, UNSCHEDULED_ID } from './CalendarUnscheduledPanel';
 
-export default function CalendarView({ project, settings, onOpenIssue }: WorkItemsViewProps) {
+export default function CalendarView({
+  project,
+  settings,
+  onOpenIssue,
+  readOnly,
+}: WorkItemsViewProps) {
   const updateIssue = useUpdateIssue(project.project.key);
   const [cursor, setCursor] = useState<Date>(() => startOfMonth(new Date()));
   const [activeId, setActiveId] = useState<number | null>(null);
-  const sensors = useDndSensors();
+  const sensors = useDndSensors(readOnly);
 
   const dateField = settings.calendarDateField;
   const today = new Date();

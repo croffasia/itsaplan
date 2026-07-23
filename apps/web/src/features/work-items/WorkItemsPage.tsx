@@ -137,6 +137,7 @@ export default function WorkItemsPage() {
     <>
       <ViewTabs
         views={views}
+        projectKey={project.project.key}
         activeViewId={editor.activeViewId}
         onSelect={editor.selectView}
         onNewView={editor.beginNewView}

@@ -38,8 +38,13 @@ interface SwimlaneRow {
 // visible swimlane every card renders, since a swimlane's per-column list is
 // short. The whole board scrolls both axes together so the columns stay aligned
 // with the sticky column header row.
-export default function SwimlaneBoard({ project, settings, onOpenIssue }: WorkItemsViewProps) {
-  const dnd = useBoardDnd(project.project.key);
+export default function SwimlaneBoard({
+  project,
+  settings,
+  onOpenIssue,
+  readOnly,
+}: WorkItemsViewProps) {
+  const dnd = useBoardDnd(project.project.key, readOnly);
   const selection = useSelection();
   const collapsed = usePersistedSet(collapsedSwimlanesKey(project.project.id, settings.subgroup));
 
@@ -156,7 +161,9 @@ export default function SwimlaneBoard({ project, settings, onOpenIssue }: WorkIt
                 <GroupDot group={column} />
                 <span className="truncate">{column.name}</span>
                 <span className="text-muted-foreground">{columnTotals.get(column.key) ?? 0}</span>
-                <SelectAllToggle ids={idsByColumn.get(column.key) ?? []} className="ml-auto" />
+                {!readOnly && (
+                  <SelectAllToggle ids={idsByColumn.get(column.key) ?? []} className="ml-auto" />
+                )}
               </div>
             ))}
           </div>
@@ -207,6 +214,7 @@ export default function SwimlaneBoard({ project, settings, onOpenIssue }: WorkIt
                           properties={settings.properties}
                           cellKey={`${row.swimlane.key}|${column.key}`}
                           manualOrder={manualOrder}
+                          readOnly={readOnly}
                           onOpenIssue={onOpenIssue}
                           onMoveIssue={(issueId, index) =>
                             moveIssue(

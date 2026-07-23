@@ -86,6 +86,9 @@ export interface IssueRow {
   // issue has sat in its current state. Populated by listIssues/getIssue; mapIssue
   // alone leaves it at createdAt.
   statusSince: string;
+  // Unguessable token for the public read-only share link, or null when the issue
+  // is not shared. Populated by mapIssue from the row.
+  shareToken: string | null;
   labelIds: number[];
   // Custom field values set on this issue, one entry per field that has a scalar
   // value or selected options (unset fields are omitted). Included so the planner
@@ -115,6 +118,7 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     updatedAt: iso(row.updatedAt),
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     statusSince: iso(row.createdAt),
+    shareToken: row.shareToken,
     labelIds: [],
     fieldValues: [],
   };

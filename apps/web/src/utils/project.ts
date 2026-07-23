@@ -43,6 +43,10 @@ export interface WorkItemsViewProps {
   onSettingsChange: (settings: ViewSettings) => void;
   onOpenIssue: (id: number) => void;
   onAddIssue: (defaults: NewIssueDefaults) => void;
+  // When true the view is a public read-only share: dragging, adding issues and
+  // multi-select are disabled, but opening an issue (onOpenIssue) still works.
+  // Defaults to false (the normal authenticated board).
+  readOnly?: boolean;
 }
 
 // Lookup maps over a project's reference data, built once per render and shared by

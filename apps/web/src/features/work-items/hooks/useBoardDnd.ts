@@ -9,11 +9,12 @@ import { type DropData } from '../utils/dnd';
 // column board and the swimlane grid). It owns which card is being dragged (for
 // the drag overlay) and turns a drop into an issue update. The actual move is
 // carried by the drop target's data (see DropData); onDragEnd just invokes it
-// with the dragged issue id.
-export function useBoardDnd(projectKey: string) {
+// with the dragged issue id. In a read-only share the board keeps its DndContext
+// but gets inert sensors, so no drag can ever start (see useDndSensors).
+export function useBoardDnd(projectKey: string, readOnly = false) {
   const updateIssue = useUpdateIssue(projectKey);
   const [activeId, setActiveId] = useState<number | null>(null);
-  const sensors = useDndSensors();
+  const sensors = useDndSensors(readOnly);
 
   const move = (issueId: number, patch: IssuePatch) => updateIssue.mutate({ id: issueId, patch });
 

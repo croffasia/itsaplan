@@ -18,6 +18,7 @@ import { initiativeRoutes } from './initiatives/routes';
 import { attachmentRoutes } from './attachments/routes';
 import { avatarRoutes } from './avatars/routes';
 import { viewRoutes } from './views/routes';
+import { shareRoutes } from './share/routes';
 import { actionRoutes } from './actions/routes';
 import { webhookRoutes } from './webhooks/routes';
 import { dashboardRoutes } from './dashboards/routes';
@@ -86,6 +87,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(attachmentRoutes)
   .use(avatarRoutes)
   .use(viewRoutes)
+  .use(shareRoutes)
   .use(actionRoutes)
   .use(webhookRoutes)
   .use(agentScheduleRoutes)

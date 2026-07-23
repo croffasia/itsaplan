@@ -11,16 +11,19 @@ export default function DelegateSelect({
   value,
   onChange,
   placeholder = 'No delegate',
+  readOnly,
 }: {
   assignees: Assignee[];
   value: string | null;
   onChange: (userId: string | null) => void;
   placeholder?: string;
+  readOnly?: boolean;
 }) {
   const agents = assignees.filter((a) => a.kind === 'agent');
   const delegate = agents.find((a) => a.userId === value);
   return (
     <PopoverPick
+      readOnly={readOnly}
       trigger={
         <Pill active={!!delegate}>
           {delegate ? (

@@ -32,6 +32,7 @@ export function BoardColumn({
   onAddIssue,
   onHide,
   onCollapse,
+  readOnly,
 }: {
   project: ProjectDetail;
   group: IssueGroup;
@@ -46,9 +47,11 @@ export function BoardColumn({
   onAddIssue: () => void;
   onHide: () => void;
   onCollapse: () => void;
+  // In a read-only share the add affordance and select-all toggle are hidden.
+  readOnly?: boolean;
 }) {
   const { can } = usePermissions();
-  const canCreateIssue = can('work_items', 'create');
+  const canCreateIssue = can('work_items', 'create') && !readOnly;
   const scrollRef = useRef<HTMLDivElement>(null);
   // The scroll area is the append drop target; merge its ref with the virtualizer
   // scroll element ref.
@@ -91,7 +94,7 @@ export function BoardColumn({
           <span className="text-muted-foreground">{issues.length}</span>
         </div>
         <div className="flex items-center gap-1">
-          <SelectAllToggle ids={issues.map((i) => i.id)} />
+          {!readOnly && <SelectAllToggle ids={issues.map((i) => i.id)} />}
           <Button
             variant="ghost"
             size="icon"
@@ -169,6 +172,7 @@ export function BoardColumn({
                     maps={maps}
                     properties={properties}
                     onOpen={onOpenIssue}
+                    readOnly={readOnly}
                   />
                 </CardDropSlot>
               </div>

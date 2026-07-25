@@ -560,6 +560,56 @@ describe('projects', () => {
       });
     });
 
+    it('starts a new project with every optional section enabled', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const res = await api.projects({ projectKey: 'MKT' }).settings.get();
+      expect(res.data?.features).toMatchObject({
+        initiatives: true,
+        dashboards: true,
+        notes: true,
+      });
+      expect((await viewOf(api, 'MKT')).data?.project).toMatchObject({
+        initiativesEnabled: true,
+        dashboardsEnabled: true,
+        notesEnabled: true,
+      });
+    });
+
+    it('lets an owner turn a section off and back on, leaving the others', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const off = await api
+        .projects({ projectKey: 'MKT' })
+        .settings.patch({ features: { initiatives: false } });
+      expect(off.status).toBe(200);
+      expect(off.data?.features).toMatchObject({
+        initiatives: false,
+        dashboards: true,
+        notes: true,
+      });
+      expect((await viewOf(api, 'MKT')).data?.project.initiativesEnabled).toBe(false);
+
+      const on = await api
+        .projects({ projectKey: 'MKT' })
+        .settings.patch({ features: { initiatives: true } });
+      expect(on.data?.features).toMatchObject({ initiatives: true });
+      expect((await viewOf(api, 'MKT')).data?.project.initiativesEnabled).toBe(true);
+    });
+
+    it('denies turning a section off to a non-owner (owner-only)', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const outsider = await signUpClient();
+      const res = await outsider.api
+        .projects({ projectKey: 'MKT' })
+        .settings.patch({ features: { notes: false } });
+      expect(res.status).toBe(403);
+    });
+
     it('lets an owner set and read back the auto-archive thresholds', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });

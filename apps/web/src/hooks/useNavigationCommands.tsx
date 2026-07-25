@@ -31,6 +31,7 @@ import { ACCOUNT_SECTIONS, accountPath } from '@/utils/accountSections';
 import { AI_TEAM_SECTIONS } from '@/utils/settingsSections';
 import { GOD_SECTIONS } from '@/utils/godSections';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
 import type { Command, CommandSection } from '@/utils/commands';
 
@@ -43,6 +44,7 @@ import type { Command, CommandSection } from '@/utils/commands';
 export function useNavigationCommands(projectKey: string | null): CommandSection | null {
   const router = useRouter();
   const { can } = usePermissions();
+  const features = useProjectFeatures();
   const { data: session } = useSession();
   const { groups } = useSettingsNavGroups(projectKey);
   const isGod = session?.user.role === 'god';
@@ -56,10 +58,10 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   if (projectKey) {
     const key = projectKey;
     add('nav.inbox', 'Inbox', <Inbox />, inboxPath(key), 'notifications unread');
-    if (can('dashboards', 'read'))
+    if (features.dashboards && can('dashboards', 'read'))
       add('nav.dashboards', 'Dashboards', <LayoutDashboard />, dashboardsPath(key), 'charts');
     add('nav.work-items', 'Work items', <SquareKanban />, projectPath(key), 'board issues kanban');
-    if (can('initiatives', 'read'))
+    if (features.initiatives && can('initiatives', 'read'))
       add('nav.initiatives', 'Initiatives', <Target />, initiativesPath(key), 'epics');
     if (can('ai_agents', 'read'))
       add('nav.ai-chat', 'Chat with AI Team', <MessagesSquare />, aiChatPath(key), 'ai agents');

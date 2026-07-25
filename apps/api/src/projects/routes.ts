@@ -14,6 +14,8 @@ import {
   updateProject,
   deleteProject,
   setProjectMcpEnabled,
+  projectFeatures,
+  setProjectFeatures,
   getAutoArchiveSettings,
   setAutoArchiveSettings,
   ISSUE_TYPE_PRESET_KEYS,
@@ -65,6 +67,11 @@ const ProjectResponse = t.Object({
   name: t.String(),
   description: t.String(),
   mcpEnabled: t.Boolean(),
+  // The optional sections, toggled in Settings -> General. All on by default; a
+  // disabled section is hidden in the web app and its rows are kept.
+  initiativesEnabled: t.Boolean(),
+  dashboardsEnabled: t.Boolean(),
+  notesEnabled: t.Boolean(),
   createdAt: t.String(),
 });
 
@@ -159,9 +166,18 @@ const AutoArchiveResponse = t.Object({
   canceledDays: t.Nullable(t.Number()),
 });
 
-// The project's settings: MCP reachability and the auto-archive thresholds.
+// Which optional sections the project shows (ProjectFeatures from the store).
+const FeaturesResponse = t.Object({
+  initiatives: t.Boolean(),
+  dashboards: t.Boolean(),
+  notes: t.Boolean(),
+});
+
+// The project's settings: MCP reachability, the enabled sections and the
+// auto-archive thresholds.
 const ProjectSettingsResponse = t.Object({
   mcpEnabled: t.Boolean(),
+  features: FeaturesResponse,
   autoArchive: AutoArchiveResponse,
 });
 
@@ -367,13 +383,15 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     },
   )
 
-  // Reads the project's settings: whether it is reachable over MCP, and the
-  // auto-archive thresholds (days of inactivity in a completed/canceled column
-  // before the worker archives an issue; null = off). Any member may read.
+  // Reads the project's settings: whether it is reachable over MCP, which optional
+  // sections are enabled, and the auto-archive thresholds (days of inactivity in a
+  // completed/canceled column before the worker archives an issue; null = off).
+  // Any member may read.
   .get(
     '/projects/:projectKey/settings',
     async ({ project }) => ({
       mcpEnabled: project.mcpEnabled,
+      features: projectFeatures(project),
       autoArchive: await getAutoArchiveSettings(project.id),
     }),
     {
@@ -389,27 +407,41 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
   )
 
   // Updates the project's settings. Each field is optional; only the supplied ones
-  // change. mcpEnabled toggles MCP access to the project. autoArchive sets the day
-  // count per state group (positive integer) or disables it (null). Owner-only.
-  // Not an MCP tool: it governs MCP access, so an agent must not change it.
+  // change. mcpEnabled toggles MCP access to the project. features turns the
+  // optional sections (initiatives, dashboards, notes) on or off. autoArchive sets
+  // the day count per state group (positive integer) or disables it (null).
+  // Owner-only. Not an MCP tool: it governs MCP access, so an agent must not
+  // change it.
   .patch(
     '/projects/:projectKey/settings',
     async ({ project, body }) => {
-      let mcpEnabled = project.mcpEnabled;
+      let current = project;
       if (body.mcpEnabled !== undefined) {
         const updated = await setProjectMcpEnabled(project.id, body.mcpEnabled);
         if (!updated) throw new HttpError(404, 'Project not found');
-        mcpEnabled = updated.mcpEnabled;
+        current = updated;
+      }
+      if (body.features !== undefined) {
+        const updated = await setProjectFeatures(project.id, body.features);
+        if (!updated) throw new HttpError(404, 'Project not found');
+        current = updated;
       }
       const autoArchive =
         body.autoArchive !== undefined
           ? await setAutoArchiveSettings(project.id, body.autoArchive)
           : await getAutoArchiveSettings(project.id);
-      return { mcpEnabled, autoArchive };
+      return { mcpEnabled: current.mcpEnabled, features: projectFeatures(current), autoArchive };
     },
     {
       body: t.Object({
         mcpEnabled: t.Optional(t.Boolean()),
+        features: t.Optional(
+          t.Object({
+            initiatives: t.Optional(t.Boolean()),
+            dashboards: t.Optional(t.Boolean()),
+            notes: t.Optional(t.Boolean()),
+          }),
+        ),
         autoArchive: t.Optional(
           t.Object({
             completedDays: t.Nullable(t.Integer({ minimum: 1 })),

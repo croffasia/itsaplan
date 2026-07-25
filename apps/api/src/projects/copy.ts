@@ -223,6 +223,9 @@ function mapProjectRow(row: typeof project.$inferSelect): ProjectRow {
     name: row.name,
     description: row.description,
     mcpEnabled: row.mcpEnabled,
+    initiativesEnabled: row.initiativesEnabled,
+    dashboardsEnabled: row.dashboardsEnabled,
+    notesEnabled: row.notesEnabled,
     createdAt: iso(row.createdAt),
   };
 }

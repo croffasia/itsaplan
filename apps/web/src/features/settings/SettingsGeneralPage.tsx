@@ -8,7 +8,9 @@ import SectionPageView from '@/components/common/page/SectionPageView';
 import RequirePermission from '@/components/common/permissions/RequirePermission';
 import { SettingsResourceProvider } from './context/settingsPermission';
 import SettingsGeneral from './components/general/SettingsGeneral';
+import SettingsFeatures from './components/general/SettingsFeatures';
 import { useGeneralForm } from './hooks/useGeneralForm';
+import { useFeatureToggles } from './hooks/useFeatureToggles';
 
 const section = settingsSection('general');
 
@@ -23,6 +25,7 @@ export default function SettingsGeneralPage() {
 
 function GeneralPage({ project }: { project: ProjectDetail }) {
   const form = useGeneralForm(project);
+  const features = useFeatureToggles(project);
   return (
     <SectionPageView
       title={section.label}
@@ -39,7 +42,10 @@ function GeneralPage({ project }: { project: ProjectDetail }) {
     >
       <SettingsResourceProvider resource={section.resource}>
         <RequirePermission resource={section.resource} action="read">
-          <SettingsGeneral form={form} />
+          <div className="space-y-10">
+            <SettingsGeneral form={form} />
+            <SettingsFeatures form={features} />
+          </div>
         </RequirePermission>
       </SettingsResourceProvider>
     </SectionPageView>

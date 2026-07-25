@@ -59,6 +59,16 @@ export const DISPLAY_PROPERTIES: { value: DisplayProperty; label: string }[] = [
   { value: 'statusAge', label: 'Time in status' },
 ];
 
+// The display properties a project offers: Initiative only while its Initiatives
+// section is on.
+export function offeredDisplayProperties(
+  initiativesEnabled: boolean,
+): { value: DisplayProperty; label: string }[] {
+  return initiativesEnabled
+    ? DISPLAY_PROPERTIES
+    : DISPLAY_PROPERTIES.filter((p) => p.value !== 'initiative');
+}
+
 // Timeline zoom: how much horizontal space one day gets, which sets whether day
 // numbers or only week/month ticks are legible.
 export type TimelineScale = 'week' | 'month' | 'quarter';
@@ -242,6 +252,39 @@ export function normalizeViewSettings(
     collapsedGroups: Array.isArray(s.collapsedGroups)
       ? (s.collapsedGroups as unknown[]).filter((x): x is string => typeof x === 'string')
       : d.collapsedGroups,
+  };
+}
+
+// The same settings without the Initiative property, grouping and sub-grouping,
+// for a project with the Initiatives section turned off: a display built while it
+// was on then renders no dead column or lane.
+export function withoutInitiative(settings: ViewSettings): ViewSettings {
+  return {
+    ...settings,
+    group: settings.group === 'initiative' ? 'status' : settings.group,
+    subgroup: settings.subgroup === 'initiative' ? 'none' : settings.subgroup,
+    properties: settings.properties.filter((p) => p !== 'initiative'),
+  };
+}
+
+// The counterpart of withoutInitiative: puts the stored Initiative choices back
+// into a display edited while the section was off, at the column position they
+// had. The panel could not show them, so an edit made then must not drop them —
+// the display comes back as it was once the section is on again. A value the user
+// did change carries through, since it then differs from what stripping left.
+export function restoreInitiative(edited: ViewSettings, stored: ViewSettings): ViewSettings {
+  const at = stored.properties.indexOf('initiative');
+  return {
+    ...edited,
+    group: stored.group === 'initiative' && edited.group === 'status' ? 'initiative' : edited.group,
+    subgroup:
+      stored.subgroup === 'initiative' && edited.subgroup === 'none'
+        ? 'initiative'
+        : edited.subgroup,
+    properties:
+      at === -1
+        ? edited.properties
+        : [...edited.properties.slice(0, at), 'initiative', ...edited.properties.slice(at)],
   };
 }
 

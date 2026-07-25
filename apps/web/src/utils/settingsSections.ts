@@ -43,7 +43,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     slug: 'general',
     label: 'General',
-    description: "The project's name and description. The key is fixed and prefixes every issue.",
+    description: "The project's name, description, and the sections it shows.",
     icon: Info,
     resource: 'danger_zone',
     group: 'general',

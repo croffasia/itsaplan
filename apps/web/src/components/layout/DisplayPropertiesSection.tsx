@@ -1,6 +1,11 @@
 import type { CustomField, IssueType } from '@/lib/api';
-import { DISPLAY_PROPERTIES, type PropertyKey, type ViewSettings } from '@/utils/viewSettings';
+import {
+  offeredDisplayProperties,
+  type PropertyKey,
+  type ViewSettings,
+} from '@/utils/viewSettings';
 import type { WorkItemsView } from '@/utils/viewTypes';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import PropertyChip from '@/components/layout/PropertyChip';
 import TableProperties from '@/components/layout/TableProperties';
 
@@ -20,6 +25,9 @@ export default function DisplayPropertiesSection({
   customFields: CustomField[];
   issueTypes: IssueType[];
 }) {
+  const features = useProjectFeatures();
+  const properties = offeredDisplayProperties(features.initiatives);
+
   // Enabling appends to the end (a new column shows on the right); disabling
   // removes. Order is otherwise preserved.
   const toggleProperty = (property: PropertyKey) =>
@@ -41,7 +49,7 @@ export default function DisplayPropertiesSection({
             onChange={(properties) => onChange({ properties })}
           />
         ) : (
-          DISPLAY_PROPERTIES.map((p) => (
+          properties.map((p) => (
             <PropertyChip
               key={p.value}
               label={p.label}

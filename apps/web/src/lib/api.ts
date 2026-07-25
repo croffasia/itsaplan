@@ -61,6 +61,11 @@ export interface Project {
   // Whether this project is reachable through the MCP server. Toggled by an owner
   // on the MCP page; gates every MCP tool call scoped to the project.
   mcpEnabled: boolean;
+  // The optional sections, toggled by an owner in Settings -> General. Read through
+  // useProjectFeatures, which hides the navigation and the section itself.
+  initiativesEnabled: boolean;
+  dashboardsEnabled: boolean;
+  notesEnabled: boolean;
   createdAt: string;
   // The caller's role in this project. Only present on the /projects list
   // response (used to gate owner-only actions like deletion); absent on the
@@ -556,9 +561,19 @@ export interface AutoArchiveSettings {
   canceledDays: number | null;
 }
 
-// A project's settings: MCP reachability and the auto-archive thresholds.
+// Which optional sections a project shows. All on by default; turning one off
+// hides its navigation entry and its section, keeping the rows behind it.
+export interface ProjectFeatures {
+  initiatives: boolean;
+  dashboards: boolean;
+  notes: boolean;
+}
+
+// A project's settings: MCP reachability, the enabled sections and the
+// auto-archive thresholds.
 export interface ProjectSettings {
   mcpEnabled: boolean;
+  features: ProjectFeatures;
   autoArchive: AutoArchiveSettings;
 }
 
@@ -2295,7 +2310,11 @@ export const api = {
     request<ProjectSettings>(`/projects/${projectKey}/settings`),
   updateProjectSettings: (
     projectKey: string,
-    patch: { mcpEnabled?: boolean; autoArchive?: AutoArchiveSettings },
+    patch: {
+      mcpEnabled?: boolean;
+      features?: Partial<ProjectFeatures>;
+      autoArchive?: AutoArchiveSettings;
+    },
   ) =>
     request<ProjectSettings>(`/projects/${projectKey}/settings`, {
       method: 'PATCH',

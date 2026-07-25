@@ -1,5 +1,10 @@
+import RequireFeature from '@/components/common/permissions/RequireFeature';
 import InitiativeDetailPage from '@/features/initiatives/InitiativeDetailPage';
 
 export default function Page() {
-  return <InitiativeDetailPage tab="overview" />;
+  return (
+    <RequireFeature feature="initiatives">
+      <InitiativeDetailPage tab="overview" />
+    </RequireFeature>
+  );
 }

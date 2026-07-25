@@ -12,6 +12,7 @@ import {
   type AutoArchiveSettings,
   type NotificationSettingsPatch,
   type NotificationPreferences,
+  type ProjectFeatures,
 } from '@/lib/api';
 import { useInvalidateProject } from '@/services/projects.service';
 import { qk } from '@/services/queryKeys';
@@ -124,6 +125,18 @@ export function useUpdateAutoArchive(projectKey: string) {
     mutationFn: (input: AutoArchiveSettings) =>
       api.updateProjectSettings(projectKey, { autoArchive: input }),
     onSuccess: (data) => qc.setQueryData(qk.projectSettings(projectKey), data),
+  });
+}
+
+// General section: which optional sections the project shows. The current state
+// comes with the project payload (getProject), so a write only invalidates it —
+// the navigation and the sections themselves read it from there.
+export function useUpdateProjectFeatures(projectKey: string) {
+  const invalidate = useInvalidateProject(projectKey);
+  return useMutation({
+    mutationFn: (input: Partial<ProjectFeatures>) =>
+      api.updateProjectSettings(projectKey, { features: input }),
+    onSuccess: () => invalidate(),
   });
 }
 

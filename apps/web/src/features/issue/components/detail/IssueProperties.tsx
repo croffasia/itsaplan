@@ -110,24 +110,26 @@ export default function IssueProperties({
         </PropertyRow>
       )}
 
-      <PropertyRow label="Initiative">
-        {readOnly ? (
-          // Read-only shows the linked initiative from the issue itself, avoiding
-          // the authenticated initiatives query the editable select runs.
-          <ReadOnlyPill>
-            <Pill active={!!issue.initiative}>
-              <Target />
-              {issue.initiative?.title ?? 'Initiative'}
-            </Pill>
-          </ReadOnlyPill>
-        ) : (
-          <InitiativeSelect
-            projectKey={project.project.key}
-            value={issue.initiative?.id ?? null}
-            onChange={(id) => onPatch({ initiativeId: id })}
-          />
-        )}
-      </PropertyRow>
+      {project.project.initiativesEnabled && (
+        <PropertyRow label="Initiative">
+          {readOnly ? (
+            // Read-only shows the linked initiative from the issue itself, avoiding
+            // the authenticated initiatives query the editable select runs.
+            <ReadOnlyPill>
+              <Pill active={!!issue.initiative}>
+                <Target />
+                {issue.initiative?.title ?? 'Initiative'}
+              </Pill>
+            </ReadOnlyPill>
+          ) : (
+            <InitiativeSelect
+              projectKey={project.project.key}
+              value={issue.initiative?.id ?? null}
+              onChange={(id) => onPatch({ initiativeId: id })}
+            />
+          )}
+        </PropertyRow>
+      )}
 
       <PropertyRow label="Start date">
         <DatePill

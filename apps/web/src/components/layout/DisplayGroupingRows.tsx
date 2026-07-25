@@ -1,6 +1,7 @@
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 import { SORT_FIELDS, type SortField, type WorkItemsView } from '@/utils/viewTypes';
 import type { GroupField, ViewSettings } from '@/utils/viewSettings';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import DisplaySettingsRow from '@/components/layout/DisplaySettingsRow';
@@ -37,12 +38,16 @@ export default function DisplayGroupingRows({
   const setGroup = (group: GroupField) =>
     onChange(group === settings.subgroup ? { group, subgroup: 'none' } : { group });
 
+  // Initiative is only offered while the project shows the Initiatives section.
+  const features = useProjectFeatures();
+  const options = features.initiatives
+    ? GROUP_OPTIONS
+    : GROUP_OPTIONS.filter((o) => o.value !== 'initiative');
+
   const groupOptions =
-    view === 'kanban' || view === 'timeline'
-      ? GROUP_OPTIONS.filter((o) => o.value !== 'none')
-      : GROUP_OPTIONS;
+    view === 'kanban' || view === 'timeline' ? options.filter((o) => o.value !== 'none') : options;
   // The sub-group never offers the field already used by the primary group.
-  const subgroupOptions = GROUP_OPTIONS.filter((o) => o.value !== settings.group);
+  const subgroupOptions = options.filter((o) => o.value !== settings.group);
   const showsGrouping = view === 'kanban' || view === 'table' || view === 'timeline';
   const showsSubgrouping = (view === 'kanban' || view === 'table') && settings.group !== 'none';
 

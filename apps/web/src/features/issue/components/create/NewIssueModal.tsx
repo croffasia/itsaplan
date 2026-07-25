@@ -289,11 +289,13 @@ export default function NewIssueModal({
             <TypeSelect issueTypes={project.issueTypes} value={typeId} onChange={setTypeId} />
           )}
 
-          <InitiativeSelect
-            projectKey={project.project.key}
-            value={initiativeId}
-            onChange={setInitiativeId}
-          />
+          {project.project.initiativesEnabled && (
+            <InitiativeSelect
+              projectKey={project.project.key}
+              value={initiativeId}
+              onChange={setInitiativeId}
+            />
+          )}
 
           {project.labels.length > 0 && (
             <LabelsSelect

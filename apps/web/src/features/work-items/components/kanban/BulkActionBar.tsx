@@ -28,8 +28,12 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   const bulk = useBulkActions(project);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   // Initiatives are not in the board scaffold. The bulk picker fetches the first
-  // page of linkable (open) initiatives only while selection is active.
-  const { data } = useInitiativesQuery(selection.isSelecting ? project.project.key : null, {
+  // page of linkable (open) initiatives only while selection is active, and only
+  // while the project shows the Initiatives section (with none loaded the picker
+  // is left out).
+  const initiativesKey =
+    selection.isSelecting && project.project.initiativesEnabled ? project.project.key : null;
+  const { data } = useInitiativesQuery(initiativesKey, {
     statuses: LINKABLE_STATUSES,
     pageSize: 50,
   });

@@ -169,6 +169,9 @@ tags the commit and publishes the GitHub Release. PR titles are squash-merged
 into `main`, so the PR title is the commit subject release-please reads; it must
 be a valid Conventional Commit (enforced by `pr-title.yml`).
 
+The scope is the name of one app or package (`api`, `web`, `worker`, `bot`, `db`,
+`auth`, …). A change spanning several of them carries no scope.
+
 **Agents do not commit.** Do the work, then write the proposed commit message in
 chat as a Conventional Commit (`type(scope): summary`) for the user to run. Do
 not call `git commit` or `git push` unless the user explicitly asks.

@@ -1,9 +1,10 @@
 'use client';
 
-import type { ReactNode } from 'react';
 import { toast } from 'sonner';
 import type { InstanceAuthSettings } from '@/lib/api';
 import SettingsCard from '@/components/common/page/SettingsCard';
+import SettingsSection from '@/components/common/page/SettingsSection';
+import SettingsRow from '@/components/common/page/SettingsRow';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import GodSectionPage from './components/GodSectionPage';
@@ -11,53 +12,6 @@ import GodSettingsGate from './components/GodSettingsGate';
 import RegistrationModePicker from './components/authentication/RegistrationModePicker';
 import { useGodPolicyForm } from './hooks/useGodPolicyForm';
 import { useInstanceAuthSettingsQuery } from './services/god.service';
-
-// A settings group: a plain heading above a filled block. The heading stays outside
-// the block so the page reads as a list of groups.
-function Group({
-  title,
-  description,
-  children,
-}: {
-  title: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="space-y-3">
-      <div className="space-y-0.5">
-        <h2 className="text-sm font-medium">{title}</h2>
-        {description && <p className="text-xs text-muted-foreground">{description}</p>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-// A policy row inside a group: label and description on the left, the switch on the
-// right. The dividers come from the card.
-function Row({
-  title,
-  description,
-  disabledNote,
-  control,
-}: {
-  title: string;
-  description: string;
-  disabledNote?: string;
-  control: ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-6 p-4">
-      <div className="space-y-0.5">
-        <div className="text-sm font-medium">{title}</div>
-        <p className="text-xs text-muted-foreground">{description}</p>
-        {disabledNote && <p className="text-xs text-muted-foreground">{disabledNote}</p>}
-      </div>
-      {control}
-    </div>
-  );
-}
 
 export default function GodAuthenticationPage() {
   const auth = useInstanceAuthSettingsQuery();
@@ -97,7 +51,10 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
       }
     >
       <div className="space-y-10">
-        <Group title="Registration" description="Who may create an account on this instance.">
+        <SettingsSection
+          title="Registration"
+          description="Who may create an account on this instance."
+        >
           <SettingsCard className="divide-y divide-border/60">
             <RegistrationModePicker
               value={policy.registration}
@@ -105,17 +62,17 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
               onChange={policy.setRegistration}
             />
           </SettingsCard>
-        </Group>
+        </SettingsSection>
 
-        <Group
+        <SettingsSection
           title="Sign-in options"
           description="Options that need outbound mail. They stay off until a provider is configured."
         >
           <SettingsCard className="divide-y divide-border/60">
-            <Row
+            <SettingsRow
               title="Require email confirmation"
               description="A new account must confirm its address before it can sign in."
-              disabledNote={
+              note={
                 needsProvider ? 'Set up the Email provider under Integrations first.' : undefined
               }
               control={
@@ -126,10 +83,10 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
                 />
               }
             />
-            <Row
+            <SettingsRow
               title="Sign-in links"
               description="Offer signing in with a link sent by email, alongside the password."
-              disabledNote={
+              note={
                 needsProvider ? 'Set up the Email provider under Integrations first.' : undefined
               }
               control={
@@ -141,7 +98,7 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
               }
             />
           </SettingsCard>
-        </Group>
+        </SettingsSection>
       </div>
     </GodSectionPage>
   );

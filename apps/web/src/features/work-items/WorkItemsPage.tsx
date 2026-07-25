@@ -4,10 +4,12 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { api, type BoardIssues } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 import { buildGroups, groupIssues } from '@/utils/project';
+import { restoreInitiative, withoutInitiative, type ViewSettings } from '@/utils/viewSettings';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +34,7 @@ export default function WorkItemsPage() {
   const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
     useShell();
   const { can } = usePermissions();
+  const features = useProjectFeatures();
   const qc = useQueryClient();
   const [timelineCollapseState, setTimelineCollapseState] = useState<TimelineCollapseState>({
     scope: '',
@@ -58,26 +61,30 @@ export default function WorkItemsPage() {
   // one is a views create. Filtering/display stay available to everyone (transient,
   // client-side); only persisting is gated.
   const canSaveView = can('views', editor.activeView ? 'edit' : 'create');
-  const timelineGroups = buildGroups(filteredProject, editor.settings.group);
-  const timelineIssuesByGroup = groupIssues(
-    timelineGroups,
-    filteredProject.issues,
-    editor.settings.group,
-  );
+
+  // With the Initiatives section off, its property and grouping are left out of
+  // what the layouts and the Display panel work with, and put back on the way out
+  // so the stored display keeps them for when the section is on again.
+  const settings = features.initiatives ? editor.settings : withoutInitiative(editor.settings);
+  const changeSettings = (next: ViewSettings) =>
+    editor.changeSettings(features.initiatives ? next : restoreInitiative(next, editor.settings));
+
+  const timelineGroups = buildGroups(filteredProject, settings.group);
+  const timelineIssuesByGroup = groupIssues(timelineGroups, filteredProject.issues, settings.group);
   const visibleTimelineGroupKeys = timelineGroups
     .filter(
       (group) =>
-        editor.settings.showEmptyGroups || (timelineIssuesByGroup.get(group.key)?.length ?? 0) > 0,
+        settings.showEmptyGroups || (timelineIssuesByGroup.get(group.key)?.length ?? 0) > 0,
     )
     .map((group) => group.key);
   const timelineCollapseScope = [
     projectKey,
     editor.activeViewId ?? 'all',
-    editor.settings.group,
-    editor.settings.showEmptyGroups,
-    editor.settings.timelineCollapseAll,
+    settings.group,
+    settings.showEmptyGroups,
+    settings.timelineCollapseAll,
   ].join(':');
-  const initialTimelineCollapsedGroups = editor.settings.timelineCollapseAll
+  const initialTimelineCollapsedGroups = settings.timelineCollapseAll
     ? new Set(visibleTimelineGroupKeys)
     : new Set<string>();
   const collapsedTimelineGroups =
@@ -99,8 +106,8 @@ export default function WorkItemsPage() {
   const viewProps = {
     project: filteredProject,
     customFields,
-    settings: editor.settings,
-    onSettingsChange: editor.changeSettings,
+    settings,
+    onSettingsChange: changeSettings,
     onOpenIssue,
     onAddIssue,
   };
@@ -127,8 +134,8 @@ export default function WorkItemsPage() {
   const displayProps = {
     view: editor.view,
     onViewChange: editor.changeView,
-    settings: editor.settings,
-    onSettingsChange: editor.changeSettings,
+    settings,
+    onSettingsChange: changeSettings,
     customFields,
     issueTypes: project.issueTypes,
   };

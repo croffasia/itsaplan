@@ -2,6 +2,7 @@ import { usePathname } from 'next/navigation';
 import { Inbox, LayoutDashboard, SquareKanban, StickyNote, Target } from 'lucide-react';
 import { dashboardsPath, inboxPath, initiativesPath, notesPath, projectPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import SidebarNavItem from '@/components/layout/SidebarNavItem';
@@ -16,6 +17,7 @@ export default function SidebarWorkNav({
 }) {
   const pathname = usePathname();
   const { can } = usePermissions();
+  const features = useProjectFeatures();
   const disabled = !projectKey;
   const { data: inboxUnread } = useInboxUnread(projectKey, projectId);
 
@@ -39,7 +41,7 @@ export default function SidebarWorkNav({
             disabled={disabled}
             badge={inboxUnread}
           />
-          {can('dashboards', 'read') && (
+          {features.dashboards && can('dashboards', 'read') && (
             <SidebarNavItem
               href={projectKey ? dashboardsPath(projectKey) : '#'}
               icon={LayoutDashboard}
@@ -55,7 +57,7 @@ export default function SidebarWorkNav({
             active={onWorkItems}
             disabled={disabled}
           />
-          {can('initiatives', 'read') && (
+          {features.initiatives && can('initiatives', 'read') && (
             <SidebarNavItem
               href={projectKey ? initiativesPath(projectKey) : '#'}
               icon={Target}
@@ -64,13 +66,15 @@ export default function SidebarWorkNav({
               disabled={disabled}
             />
           )}
-          <SidebarNavItem
-            href={projectKey ? notesPath(projectKey) : '#'}
-            icon={StickyNote}
-            label="Notes"
-            active={pathname.includes('/notes')}
-            disabled={disabled}
-          />
+          {features.notes && (
+            <SidebarNavItem
+              href={projectKey ? notesPath(projectKey) : '#'}
+              icon={StickyNote}
+              label="Notes"
+              active={pathname.includes('/notes')}
+              disabled={disabled}
+            />
+          )}
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

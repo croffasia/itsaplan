@@ -60,6 +60,12 @@ export const project = pgTable('project', {
   // Whether this project is reachable through the MCP server. Off by default: an
   // owner opts a project in before agents can work with it over MCP.
   mcpEnabled: boolean('mcp_enabled').notNull().default(false),
+  // Optional sections of the app, toggled per project in Settings -> Features. All
+  // on by default. Turning one off only hides its UI; the rows it owns stay and
+  // come back with it.
+  initiativesEnabled: boolean('initiatives_enabled').notNull().default(true),
+  dashboardsEnabled: boolean('dashboards_enabled').notNull().default(true),
+  notesEnabled: boolean('notes_enabled').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

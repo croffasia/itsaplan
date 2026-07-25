@@ -6,8 +6,10 @@ import {
   DISPLAY_PROPERTIES,
   customFieldId,
   isCustomFieldKey,
+  offeredDisplayProperties,
   type PropertyKey,
 } from '@/utils/viewSettings';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import CustomFieldMenu from '@/components/layout/CustomFieldMenu';
 import PropertyChip from '@/components/layout/PropertyChip';
 import SortablePropertyChip from '@/components/layout/SortablePropertyChip';
@@ -39,7 +41,10 @@ export default function TableProperties({
   // Enabled keys in display order, dropping any stale (deleted custom field) key.
   const enabled = properties.filter((k) => labelFor(k) != null);
   const enabledSet = new Set(properties);
-  const disabledBuiltins = DISPLAY_PROPERTIES.filter((p) => !enabledSet.has(p.value));
+  const features = useProjectFeatures();
+  const disabledBuiltins = offeredDisplayProperties(features.initiatives).filter(
+    (p) => !enabledSet.has(p.value),
+  );
 
   const toggle = (key: PropertyKey) =>
     onChange(enabledSet.has(key) ? properties.filter((p) => p !== key) : [...properties, key]);

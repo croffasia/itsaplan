@@ -28,7 +28,18 @@ export interface ProjectRow {
   name: string;
   description: string;
   mcpEnabled: boolean;
+  initiativesEnabled: boolean;
+  dashboardsEnabled: boolean;
+  notesEnabled: boolean;
   createdAt: string;
+}
+
+// The optional sections an owner can turn off per project (Settings -> General).
+// A disabled section is hidden in the web app; its rows are kept.
+export interface ProjectFeatures {
+  initiatives: boolean;
+  dashboards: boolean;
+  notes: boolean;
 }
 
 // A project in the caller's list, carrying the caller's own role in it. The list
@@ -48,6 +59,9 @@ function mapProject(row: typeof project.$inferSelect): ProjectRow {
     name: row.name,
     description: row.description,
     mcpEnabled: row.mcpEnabled,
+    initiativesEnabled: row.initiativesEnabled,
+    dashboardsEnabled: row.dashboardsEnabled,
+    notesEnabled: row.notesEnabled,
     createdAt: iso(row.createdAt),
   };
 }
@@ -70,6 +84,9 @@ export async function listProjects(
       name: project.name,
       description: project.description,
       mcpEnabled: project.mcpEnabled,
+      initiativesEnabled: project.initiativesEnabled,
+      dashboardsEnabled: project.dashboardsEnabled,
+      notesEnabled: project.notesEnabled,
       createdAt: project.createdAt,
       role: projectMember.role,
       rolePermissions: projectRole.permissions,
@@ -258,6 +275,30 @@ export async function setProjectMcpEnabled(
     .set({ mcpEnabled: enabled })
     .where(eq(project.id, projectId))
     .returning();
+  return row ? mapProject(row) : null;
+}
+
+// The project's feature toggles, read from the project row.
+export function projectFeatures(row: ProjectRow): ProjectFeatures {
+  return {
+    initiatives: row.initiativesEnabled,
+    dashboards: row.dashboardsEnabled,
+    notes: row.notesEnabled,
+  };
+}
+
+// Turns the optional sections on or off. Only the supplied ones change; a section
+// that is turned off keeps its rows and shows again when it is turned back on.
+export async function setProjectFeatures(
+  projectId: number,
+  patch: Partial<ProjectFeatures>,
+): Promise<ProjectRow | null> {
+  const values: Partial<typeof project.$inferInsert> = {};
+  if (patch.initiatives !== undefined) values.initiativesEnabled = patch.initiatives;
+  if (patch.dashboards !== undefined) values.dashboardsEnabled = patch.dashboards;
+  if (patch.notes !== undefined) values.notesEnabled = patch.notes;
+  if (Object.keys(values).length === 0) return getProjectById(projectId);
+  const [row] = await db.update(project).set(values).where(eq(project.id, projectId)).returning();
   return row ? mapProject(row) : null;
 }
 

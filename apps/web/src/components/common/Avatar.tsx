@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useState, type ComponentProps } from 'react';
+import Image from 'next/image';
 import { avatarColor, initials } from '@/utils/avatar';
 import { resolveApiUrl } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -26,7 +27,7 @@ const Avatar = forwardRef<
     <span
       ref={ref}
       className={cn(
-        'inline-flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full text-[9px] font-semibold text-white',
+        'relative inline-flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full text-[9px] font-semibold text-white',
         className,
       )}
       {...props}
@@ -36,11 +37,15 @@ const Avatar = forwardRef<
       }}
     >
       {showImage ? (
-        <img
+        <Image
           src={resolveApiUrl(image!)}
           alt={name}
+          fill
+          // The largest avatar in the app is size-16 (64px); everything else is
+          // smaller, so one candidate width covers them all.
+          sizes="64px"
           draggable={false}
-          className="size-full object-cover"
+          className="object-cover"
           onError={() => setFailedSrc(image!)}
         />
       ) : (

@@ -17,7 +17,7 @@ export default function SettingsAgentTools({ project }: { project: ProjectDetail
   const toolsQuery = useConfiguredToolsQuery(projectKey);
   const tools = toolsQuery.data ?? [];
   const catalogQuery = useIntegrationCatalogQuery(projectKey);
-  const catalog = catalogQuery.data ?? [];
+  const catalog = useMemo(() => catalogQuery.data ?? [], [catalogQuery.data]);
   const deleteTool = useDeleteConfiguredTool(projectKey);
   const can = useSettingsCan();
 

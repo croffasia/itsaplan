@@ -1,4 +1,5 @@
 import { useRef, useState, type DragEvent } from 'react';
+import Image from 'next/image';
 import {
   Download,
   FileIcon,
@@ -38,7 +39,18 @@ function formatSize(bytes: number): string {
 // The card's leading thumbnail: images and videos preview themselves, every
 // other type falls back to a generic file glyph.
 function AttachmentThumb({ a }: { a: Attachment }) {
-  if (isImage(a)) return <img src={a.url} alt={a.filename} draggable={false} />;
+  if (isImage(a))
+    return (
+      <Image
+        src={a.url}
+        alt={a.filename}
+        fill
+        // The thumbnail is w-10 (40px) in every card size used here.
+        sizes="40px"
+        draggable={false}
+        className="object-cover"
+      />
+    );
   if (isVideo(a))
     return <video src={a.url} className="size-full object-cover" muted draggable={false} />;
   return <FileIcon className="text-muted-foreground" />;

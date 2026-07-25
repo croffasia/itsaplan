@@ -4,7 +4,7 @@ import InitiativesPage from '@/features/initiatives/InitiativesPage';
 export default function Page() {
   return (
     <RequireFeature feature="initiatives">
-      <InitiativesPage />
+      <InitiativesPage tab="all" />
     </RequireFeature>
   );
 }

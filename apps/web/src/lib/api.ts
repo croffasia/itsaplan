@@ -1415,7 +1415,9 @@ export interface Initiative {
 
 // Columns the initiative list can be sorted by, server-side. progress and health
 // are derived and not sortable.
-export type InitiativeSort = 'title' | 'priority' | 'targetDate' | 'owner';
+export const INITIATIVE_SORTS = ['title', 'priority', 'targetDate', 'owner'] as const;
+
+export type InitiativeSort = (typeof INITIATIVE_SORTS)[number];
 
 export interface InitiativeListParams {
   statuses?: string[];

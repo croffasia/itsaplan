@@ -44,7 +44,9 @@ export function useShellRoute(): ShellRoute {
     section: sub === 'settings' ? (segs[3] ?? null) : null,
     aiTeamCrumb: sub === 'ai-team' ? aiTeamLabel(segs[3] ?? null) : null,
     routeIssueSeq: sub === 'issue' && segs[3] ? Number(segs[3]) : null,
-    routeInitiativeId: sub === 'initiatives' && segs[3] ? Number(segs[3]) : null,
+    // /initiatives/details/:id — the segment right after 'initiatives' is a list tab.
+    routeInitiativeId:
+      sub === 'initiatives' && segs[3] === 'details' && segs[4] ? Number(segs[4]) : null,
     onBoard: sub == null || sub === 'view',
   };
 }

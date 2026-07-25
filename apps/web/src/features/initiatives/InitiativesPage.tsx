@@ -56,10 +56,10 @@ export default function InitiativesPage() {
   const [creating, setCreating] = useState(false);
 
   const projectKey = project?.project.key ?? null;
-  const statuses = TABS.find((t) => t.value === tab)!.statuses;
+  const activeTab = TABS.find((t) => t.value === tab)!;
 
   const query = useInitiativesQuery(projectKey, {
-    statuses,
+    statuses: activeTab.statuses,
     sort: sort?.key,
     dir: sort?.dir,
     page,
@@ -86,7 +86,7 @@ export default function InitiativesPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex flex-1 flex-col overflow-y-auto">
       <div className="flex items-center justify-between px-4 py-3">
         <h1 className="text-lg font-semibold">Initiatives</h1>
         {can('initiatives', 'create') && (
@@ -116,6 +116,7 @@ export default function InitiativesPage() {
         isLoading={query.isLoading}
         canCreate={can('initiatives', 'create')}
         onCreate={() => setCreating(true)}
+        statusLabel={activeTab.statuses ? activeTab.label : undefined}
         sort={sort?.key}
         dir={sort?.dir}
         onSort={changeSort}

@@ -7,13 +7,10 @@ import {
   useUpdateAction,
 } from '@/services/actions.service';
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
-import { settingsSection } from '@/utils/settingsSections';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { SettingsActionDialog } from './SettingsActionDialog';
 import { SettingsActionsTable } from './SettingsActionsTable';
-
-const section = settingsSection('actions');
 
 type ActionSeed = { name: string; icon: string; condition: FilterSet; effect: ActionEffect };
 
@@ -79,10 +76,9 @@ export default function SettingsActions({
   return (
     <>
       {actions.length === 0 ? (
-        <SettingsListEmpty
-          icon={section.icon}
+        <EmptyState
           title="No actions yet"
-          description="Create a one-click action that applies field changes when its conditions match."
+          description="Pick which issues an action shows on, then what it sets."
         />
       ) : (
         <div className="space-y-4">

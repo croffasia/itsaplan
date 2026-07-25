@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import type { AgentSkill, ProjectDetail } from '@/lib/api';
-import { AGENT_SKILLS_SECTION } from '@/utils/settingsSections';
 import { useSkillsQuery, useDeleteSkill } from '@/services/agentSkills.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { SkillEditDialog } from './SkillEditDialog';
 import { SkillRow } from './SkillRow';
@@ -26,10 +25,9 @@ export default function SettingsAgentSkills({ project }: { project: ProjectDetai
   return (
     <>
       {skills.length === 0 ? (
-        <SettingsListEmpty
-          icon={AGENT_SKILLS_SECTION.icon}
+        <EmptyState
           title="No skills yet"
-          description="Add a skill: reusable instructions an internal agent loads on demand. Write markdown, upload a file, or import from GitHub."
+          description="Write markdown, upload a file, or import from GitHub."
         />
       ) : (
         <div className="space-y-4">

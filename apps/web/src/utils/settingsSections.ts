@@ -100,8 +100,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     slug: 'actions',
     label: 'Actions',
-    description:
-      'One-click actions on an issue that apply field changes when its conditions match.',
+    description: 'Buttons on an issue that set fields in one click.',
     icon: Zap,
     resource: 'actions',
     group: 'automation',
@@ -109,7 +108,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     slug: 'schedules',
     label: 'Schedules',
-    description: 'Run recurring agent tasks automatically. Schedule times use UTC.',
+    description: 'Run agent tasks on a recurring schedule.',
     icon: Clock3,
     resource: 'ai_agents',
     group: 'ai-team',
@@ -130,8 +129,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
 export const AI_AGENTS_SECTION: SettingsSection = {
   slug: 'ai-agents',
   label: 'Agents',
-  description:
-    'Bot users you can delegate issues to, driven through the API or by the built-in runtime.',
+  description: 'Bot users you can delegate issues to.',
   icon: Bot,
   resource: 'ai_agents',
   group: 'ai',
@@ -141,7 +139,7 @@ export const INTEGRATIONS_SECTION: SettingsSection = {
   slug: 'integrations',
   label: 'Integrations',
   description:
-    'Credentials for the services agents use: AI provider keys and tool integrations (Jina, Firecrawl, Telegram). Stored encrypted and never shown again.',
+    'Credentials your agents use to reach AI providers and tools. Stored encrypted and never shown again.',
   icon: KeyRound,
   resource: 'integrations',
   group: 'ai',
@@ -150,8 +148,7 @@ export const INTEGRATIONS_SECTION: SettingsSection = {
 export const AGENT_SKILLS_SECTION: SettingsSection = {
   slug: 'agent-skills',
   label: 'Skills',
-  description:
-    'Reusable instructions given to internal agents, loaded on demand. Write markdown, upload a file, or import from GitHub.',
+  description: 'Reusable instructions internal agents load on demand.',
   icon: BookText,
   resource: 'agent_skills',
   group: 'ai',
@@ -160,8 +157,7 @@ export const AGENT_SKILLS_SECTION: SettingsSection = {
 export const AGENT_TOOLS_SECTION: SettingsSection = {
   slug: 'agent-tools',
   label: 'Tools',
-  description:
-    'Tools agents can call, each connected to an integration credential. Configure a tool once, then enable it on an agent.',
+  description: 'Tools agents can call, each connected to an integration credential.',
   icon: Wrench,
   resource: 'agent_tools',
   group: 'ai',

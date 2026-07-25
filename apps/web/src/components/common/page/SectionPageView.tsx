@@ -6,6 +6,8 @@ import PageHeader from './PageHeader';
 // container, a centered column, and a header (title and description). Used by
 // the settings and members section pages. `widthClassName` overrides the centered
 // column's width constraints (e.g. a section that wants a narrower cap than `wide`).
+// The column is a flex column at least as tall as the viewport area, so a child
+// marked `flex-1` (an empty state) fills the space left under the header.
 export default function SectionPageView({
   title,
   description,
@@ -28,7 +30,7 @@ export default function SectionPageView({
   const align = widthClassName ? '' : 'mx-auto';
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className={cn(align, 'w-full', width, padding)}>
+      <div className={cn(align, 'flex min-h-full w-full flex-col', width, padding)}>
         <PageHeader title={title} description={description} actions={actions} />
         {children}
       </div>

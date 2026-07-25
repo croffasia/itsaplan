@@ -6,14 +6,11 @@ import {
   useUpdateWebhook,
   useDeleteWebhook,
 } from '@/services/webhooks.service';
-import { settingsSection } from '@/utils/settingsSections';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { SettingsWebhookDialog, type WebhookFormValue } from './SettingsWebhookDialog';
 import { SettingsWebhooksTable } from './SettingsWebhooksTable';
 import { SettingsWebhookDeliveriesSheet } from './SettingsWebhookDeliveriesSheet';
-
-const section = settingsSection('webhooks');
 
 // Project settings tab for outgoing webhooks. Each webhook posts subscribed
 // project events to its URL, signed with a per-webhook secret. Delivery is handled
@@ -61,10 +58,9 @@ export default function SettingsWebhooks({
   return (
     <>
       {webhooks.length === 0 ? (
-        <SettingsListEmpty
-          icon={section.icon}
+        <EmptyState
           title="No webhooks yet"
-          description="Send project events to an external URL, signed with a per-webhook secret."
+          description="Set a payload URL and choose which events to send."
         />
       ) : (
         <div className="space-y-4">

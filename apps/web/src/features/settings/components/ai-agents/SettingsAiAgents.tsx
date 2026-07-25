@@ -6,17 +6,14 @@ import {
   useRegenerateAiAgentKey,
 } from '@/services/aiAgents.service';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
-import { AI_AGENTS_SECTION } from '@/utils/settingsSections';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { SettingsAiAgentRow } from './SettingsAiAgentRow';
 import AgentKeyRevealModal from './AgentKeyRevealModal';
 import { SettingsAiAgentSheet } from './SettingsAiAgentSheet';
 import { SettingsAiAgentRunsSheet } from './SettingsAiAgentRunsSheet';
 import { integrationLabel } from '../../utils/integrationLabels';
-
-const section = AI_AGENTS_SECTION;
 
 // Project settings tab for AI agents: bot users that issues can be delegated to.
 // An external agent is driven through the API; an internal agent runs on the
@@ -55,10 +52,9 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
   return (
     <>
       {agents.length === 0 ? (
-        <SettingsListEmpty
-          icon={section.icon}
+        <EmptyState
           title="No agents yet"
-          description="Add a bot user you can delegate issues to, driven through the API or by the built-in runtime."
+          description="An agent runs on the built-in runtime or through the API."
         />
       ) : (
         <div className="space-y-4">

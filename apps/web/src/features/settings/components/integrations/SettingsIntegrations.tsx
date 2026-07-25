@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { KeyRound } from 'lucide-react';
 import type { IntegrationCredential, ProjectDetail } from '@/lib/api';
 import {
   useCredentialsQuery,
@@ -7,8 +6,8 @@ import {
   useDeleteCredential,
 } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { CredentialDialog } from './CredentialDialog';
 import { CredentialRow } from './CredentialRow';
@@ -34,10 +33,9 @@ export default function SettingsIntegrations({ project }: { project: ProjectDeta
   return (
     <>
       {credentials.length === 0 ? (
-        <SettingsListEmpty
-          icon={KeyRound}
+        <EmptyState
           title="No credentials yet"
-          description="Add a credential for an AI provider or a tool integration so agents can use it."
+          description="Agents can't use an AI provider or a tool without one."
         />
       ) : (
         <div className="space-y-4">

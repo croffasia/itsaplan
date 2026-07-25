@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { type IssueType, type ProjectDetail } from '@/lib/api';
 import { DEFAULT_COLOR } from '@/utils/project';
-import { settingsSection } from '@/utils/settingsSections';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -15,18 +14,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import SettingsColorField from '../crud/SettingsColorField';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsInlineForm } from '../crud/SettingsInlineForm';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { useSettingsCan } from '../../context/settingsPermission';
 import {
   useCreateIssueType,
   useDeleteIssueType,
   useUpdateIssueType,
 } from '../../services/settings.service';
-
-const section = settingsSection('issue-types');
 
 // The project's issue types. Adding is opened from the page header (the `adding`
 // flag is lifted to the page); the add form itself is inline in this list.
@@ -99,8 +96,7 @@ export default function SettingsIssueTypes({
 
   if (showEmpty) {
     return (
-      <SettingsListEmpty
-        icon={section.icon}
+      <EmptyState
         title="No issue types yet"
         description="Add the kinds of issues this project can hold, each with its own fields."
       />

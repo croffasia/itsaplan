@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { ConfiguredTool, ProjectDetail } from '@/lib/api';
-import { AGENT_TOOLS_SECTION } from '@/utils/settingsSections';
 import { useConfiguredToolsQuery, useDeleteConfiguredTool } from '@/services/customTools.service';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { ToolConfigRow } from './ToolConfigRow';
 import { integrationLabel } from '../../utils/integrationLabels';
@@ -32,10 +31,9 @@ export default function SettingsAgentTools({ project }: { project: ProjectDetail
   return (
     <>
       {tools.length === 0 ? (
-        <SettingsListEmpty
-          icon={AGENT_TOOLS_SECTION.icon}
-          title="No tools configured yet"
-          description="Connect a tool to an integration credential so agents can call it, then enable it on an agent."
+        <EmptyState
+          title="No tools yet"
+          description="Configure a tool once, then enable it on any agent."
         />
       ) : (
         <div className="space-y-4">

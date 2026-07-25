@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { AlertCircle, Clock3 } from 'lucide-react';
 import type { AgentSchedule, AgentScheduleInput, ProjectDetail } from '@/lib/api';
+import { aiAgentsPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import {
   useAgentSchedules,
   useCreateAgentSchedule,
@@ -10,15 +11,12 @@ import {
   useRunAgentSchedule,
   useUpdateAgentSchedule,
 } from '@/services/agentSchedules.service';
-import { settingsSection } from '@/utils/settingsSections';
 import { useInternalAgents } from '../../hooks/useInternalAgents';
+import { useSettingsCan } from '../../context/settingsPermission';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
-import { SettingsListEmpty } from '../crud/SettingsListEmpty';
 import { SettingsScheduleDialog } from './SettingsScheduleDialog';
 import { SettingsScheduleRunsSheet } from './SettingsScheduleRunsSheet';
 import { SettingsSchedulesTable } from './SettingsSchedulesTable';
-
-const section = settingsSection('schedules');
 
 export default function SettingsSchedules({
   project,
@@ -30,6 +28,7 @@ export default function SettingsSchedules({
   onNewHandled: () => void;
 }) {
   const projectKey = project.project.key;
+  const can = useSettingsCan();
   const schedulesQuery = useAgentSchedules(projectKey);
   const agentsQuery = useInternalAgents(projectKey);
   const schedules = schedulesQuery.data ?? [];
@@ -51,16 +50,10 @@ export default function SettingsSchedules({
 
   if (agentsQuery.isError || schedulesQuery.isError) {
     return (
-      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-xl bg-muted/30 px-6 text-center">
-        <div className="flex size-11 items-center justify-center rounded-xl bg-background text-muted-foreground shadow-sm">
-          <AlertCircle className="size-5" />
-        </div>
-        <div>
-          <p className="text-sm font-medium">Couldn&apos;t load schedules</p>
-          <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-            Check your connection and try again.
-          </p>
-        </div>
+      <EmptyState
+        title="Couldn't load schedules"
+        description="Check your connection and try again."
+      >
         <Button
           size="sm"
           variant="outline"
@@ -68,7 +61,7 @@ export default function SettingsSchedules({
         >
           Try again
         </Button>
-      </div>
+      </EmptyState>
     );
   }
 
@@ -85,20 +78,16 @@ export default function SettingsSchedules({
 
   if (agents.length === 0) {
     return (
-      <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 rounded-xl bg-muted/30 px-6 text-center">
-        <div className="flex size-11 items-center justify-center rounded-xl bg-background text-muted-foreground shadow-sm">
-          <Clock3 className="size-5" />
-        </div>
-        <div>
-          <p className="text-sm font-medium">No agents to schedule</p>
-          <p className="mt-1 max-w-sm text-xs text-muted-foreground">
-            A schedule runs a task for an internal agent. Create one first, then come back here.
-          </p>
-        </div>
-        <Button size="sm" className="h-8" asChild>
-          <Link href={`/project/${projectKey}/ai-agents`}>Create an agent</Link>
-        </Button>
-      </div>
+      <EmptyState
+        title="No agents to schedule"
+        description="A schedule runs a task for one of your internal agents."
+      >
+        {can('edit') && (
+          <Button size="sm" asChild>
+            <Link href={aiAgentsPath(projectKey)}>Create an agent</Link>
+          </Button>
+        )}
+      </EmptyState>
     );
   }
 
@@ -119,10 +108,9 @@ export default function SettingsSchedules({
   return (
     <>
       {schedules.length === 0 ? (
-        <SettingsListEmpty
-          icon={section.icon}
+        <EmptyState
           title="No schedules yet"
-          description="Run an agent task automatically on a recurring UTC schedule."
+          description="Pick an agent, a task, and how often it runs."
         />
       ) : (
         <div className="space-y-4">

@@ -1,19 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Bot } from 'lucide-react';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { aiAgentsPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from '@/components/ui/empty';
+import { EmptyState } from '@/components/common/page/EmptyState';
 import { AiChatAgentRail } from './components/page/AiChatAgentRail';
 import { AiChatThreadRail } from './components/page/AiChatThreadRail';
 import { AiChatConversation } from './components/page/AiChatConversation';
@@ -57,26 +49,17 @@ export default function AiChatPage() {
 
   if (agents.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center p-6">
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Bot />
-            </EmptyMedia>
-            <EmptyTitle>No agents to chat with</EmptyTitle>
-            <EmptyDescription>
-              Add an internal agent run by the built-in runtime, then come back here to chat with it
-              in test mode.
-            </EmptyDescription>
-          </EmptyHeader>
+      <div className="flex h-full">
+        <EmptyState
+          title="No agents to chat with"
+          description="Only internal agents can chat here, in test mode."
+        >
           {can('ai_agents', 'edit') && (
-            <EmptyContent>
-              <Button asChild size="sm">
-                <Link href={aiAgentsPath(project.project.key)}>Manage agents</Link>
-              </Button>
-            </EmptyContent>
+            <Button asChild size="sm">
+              <Link href={aiAgentsPath(project.project.key)}>Create an agent</Link>
+            </Button>
           )}
-        </Empty>
+        </EmptyState>
       </div>
     );
   }

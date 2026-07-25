@@ -281,6 +281,23 @@ describe('projects', () => {
       expect(view.data?.issueTypes.map((t) => t.name)).toEqual(['Task', 'Bug']);
     });
 
+    it('copies which optional sections the source project shows', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await api
+        .projects({ projectKey: 'SRC' })
+        .settings.patch({ features: { notes: false, dashboards: false } });
+
+      await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
+
+      const settings = await api.projects({ projectKey: 'DST' }).settings.get();
+      expect(settings.data?.features).toEqual({
+        initiatives: true,
+        dashboards: false,
+        notes: false,
+      });
+    });
+
     it("remaps a saved view's filter ids to the copied project's entities", async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });

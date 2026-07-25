@@ -271,9 +271,26 @@ export async function copyProject(
   const agentMap = new Map<number, number>();
 
   const newProject = await db.transaction(async (tx) => {
+    // The optional sections the source project shows are part of its configuration,
+    // so the copy starts with the same ones. mcpEnabled is not carried: a copy opts
+    // into MCP on its own.
+    const [sourceFeatures] = await tx
+      .select({
+        initiativesEnabled: project.initiativesEnabled,
+        dashboardsEnabled: project.dashboardsEnabled,
+        notesEnabled: project.notesEnabled,
+      })
+      .from(project)
+      .where(eq(project.id, sourceProjectId));
+
     const [row] = await tx
       .insert(project)
-      .values({ key: input.key, name: input.name, description: input.description ?? '' })
+      .values({
+        key: input.key,
+        name: input.name,
+        description: input.description ?? '',
+        ...sourceFeatures,
+      })
       .returning();
     const proj = mapProjectRow(row);
     await tx.insert(projectMember).values({ projectId: proj.id, userId: ownerId, role: 'owner' });

@@ -6,11 +6,11 @@ import type { ProjectFeatures } from '@/lib/api';
 // Shell loads. An owner toggles them in Settings -> General.
 //
 // A disabled section is hidden, not blocked: the rows behind it stay and show
-// again once it is turned back on. Everything is on until the project is loaded,
-// so the navigation does not flicker on the first render.
+// again once it is turned back on. Without a project every section reads as off,
+// the same way usePermissions grants nothing until the project is there.
 export function useProjectFeatures(): ProjectFeatures {
   const project = useContext(ShellCtx)?.project ?? null;
-  if (!project) return { initiatives: true, dashboards: true, notes: true };
+  if (!project) return { initiatives: false, dashboards: false, notes: false };
   return {
     initiatives: project.project.initiativesEnabled,
     dashboards: project.project.dashboardsEnabled,

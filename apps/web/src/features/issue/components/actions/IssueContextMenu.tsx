@@ -11,6 +11,7 @@ import {
   PanelRight,
   SquareArrowOutUpRight,
   Tag,
+  Target,
   Trash2,
   User,
   X,
@@ -19,6 +20,8 @@ import type { ActionDef, ProjectDetail, Issue, IssuePatch } from '@/lib/api';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useArchiveIssue, useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
+import { useInitiativesQuery } from '@/services/initiatives.service';
+import { LINKABLE_STATUSES, STATUS_META } from '@/utils/initiativeMeta';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ShellCtx } from '@/context/shellContext';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
@@ -47,8 +50,8 @@ function SelectedCheck({ selected }: { selected: boolean }) {
 }
 
 // Wraps a issue card/row (any single element) so a right-click opens a context
-// menu that changes its status, priority, assignee, labels or due date, or
-// deletes it. Shared by every project view (Kanban, Table, Calendar, Timeline).
+// menu that changes its status, priority, assignee, initiative, labels or due
+// date, or deletes it. Shared by every project view (Kanban, Table, Calendar, Timeline).
 // onDeleted lets a host that is showing this one issue (the detail panel/page)
 // leave after deletion; the project views leave it unset — the card just
 // disappears when the project cache updates.
@@ -74,8 +77,15 @@ export default function IssueContextMenu({
   const archiveIssue = useArchiveIssue(project.project.key);
   const restoreIssue = useRestoreIssue(project.project.key);
   const actionsQuery = useActionsQuery(project.project.key);
+  const [open, setOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
+  // Initiatives are not in the board scaffold, so they are fetched here — only
+  // while this menu is open, as every card on the board mounts one.
+  const initiativesQuery = useInitiativesQuery(
+    open && project.project.initiativesEnabled ? project.project.key : null,
+    { statuses: LINKABLE_STATUSES, pageSize: 50 },
+  );
 
   // No Shell (public share): render the card as-is, without the right-click menu.
   if (!shell) return <>{children}</>;
@@ -104,10 +114,11 @@ export default function IssueContextMenu({
     PRIORITY_FIELDS.find((p) => p.value === (issue.priority ?? '')) ?? PRIORITY_FIELDS[0];
   const members = project.assignees.filter((a) => a.kind === 'member');
   const agents = project.assignees.filter((a) => a.kind === 'agent');
+  const initiatives = initiativesQuery.data?.items ?? [];
 
   return (
     <>
-      <ContextMenu>
+      <ContextMenu onOpenChange={setOpen}>
         <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
         <ContextMenuContent className="w-56">
           {/* Both ways to open the issue, regardless of the account's default
@@ -214,6 +225,29 @@ export default function IssueContextMenu({
                         <Bot />
                         <span className="flex-1 truncate">{a.name}</span>
                         <SelectedCheck selected={a.userId === issue.delegateUserId} />
+                      </ContextMenuItem>
+                    ))}
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
+              )}
+
+              {project.project.initiativesEnabled && (
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>
+                    {issue.initiative ? <Target /> : <CircleDashed />}
+                    Initiative
+                  </ContextMenuSubTrigger>
+                  <ContextMenuSubContent className="w-56">
+                    <ContextMenuItem onSelect={() => patch({ initiativeId: null })}>
+                      <CircleDashed />
+                      <span className="flex-1">No initiative</span>
+                      <SelectedCheck selected={issue.initiative == null} />
+                    </ContextMenuItem>
+                    {initiatives.map((it) => (
+                      <ContextMenuItem key={it.id} onSelect={() => patch({ initiativeId: it.id })}>
+                        {colorDot(STATUS_META[it.status].color)}
+                        <span className="flex-1 truncate">{it.title}</span>
+                        <SelectedCheck selected={it.id === issue.initiative?.id} />
                       </ContextMenuItem>
                     ))}
                   </ContextMenuSubContent>

@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.0](https://github.com/croffasia/itsaplan/compare/v0.2.0...v0.3.0) (2026-07-25)
+
+
+### Features
+
+* add per-project toggles for initiatives, dashboards and notes ([#27](https://github.com/croffasia/itsaplan/issues/27)) ([1286517](https://github.com/croffasia/itsaplan/commit/128651712814e31bc3461c22e41a182f55fb01fb))
+* **web:** add initiative submenu to issue context menu ([#29](https://github.com/croffasia/itsaplan/issues/29)) ([e63067a](https://github.com/croffasia/itsaplan/commit/e63067ab5020eb9e3806d9810eff45d4d0ae78f8))
+* **web:** add shared EmptyState and rewrite empty state texts and small refactoring ([#26](https://github.com/croffasia/itsaplan/issues/26)) ([cb0ca23](https://github.com/croffasia/itsaplan/commit/cb0ca238b6f2a41fa7257a059d3be9428993a7f1))
+* **web:** put initiatives list tab, page and sorting in the URL ([#30](https://github.com/croffasia/itsaplan/issues/30)) ([d6595b3](https://github.com/croffasia/itsaplan/commit/d6595b3f70b8b2d0dfdeb5a7f9c0417df3b623ef))
+
+
+### Bug Fixes
+
+* **web:** batch of UI fixes for notifications, view label, due dates and initiatives ([#24](https://github.com/croffasia/itsaplan/issues/24)) ([17fdfab](https://github.com/croffasia/itsaplan/commit/17fdfaba5d3e33f78ecbffaaf010644f180f939c))
+* **web:** replace raw img tags with next/image and memoize tool catalog ([#28](https://github.com/croffasia/itsaplan/issues/28)) ([21a4fc2](https://github.com/croffasia/itsaplan/commit/21a4fc2248f3a4a716794ff618bfb88c18cd5d26))
+
+
+### Documentation
+
+* update README ([#23](https://github.com/croffasia/itsaplan/issues/23)) ([6e48308](https://github.com/croffasia/itsaplan/commit/6e4830848dd2f56835b33750fb9a871be44d5cd5))
+
 ## [0.2.0](https://github.com/croffasia/itsaplan/compare/v0.1.0...v0.2.0) (2026-07-23)
 
 

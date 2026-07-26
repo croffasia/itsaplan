@@ -172,6 +172,16 @@ be a valid Conventional Commit (enforced by `pr-title.yml`).
 The scope is the name of one app or package (`api`, `web`, `worker`, `bot`, `db`,
 `auth`, …). A change spanning several of them carries no scope.
 
+`"package-name": ""` in `release-please-config.json` is what lets the release be
+created at all. With `separate-pull-requests: false` release-please names the
+release PR branch `release-please--branches--main`, without a component, while the
+`node` release type otherwise derives the component from the `name` in the root
+`package.json`. The two disagree, release-please skips the release, the merged PR
+keeps its `autorelease: pending` label, and every later run stops at
+`There are untagged, merged release PRs outstanding - aborting`. An empty package
+name makes both sides resolve to no component. Tags stay `vX.Y.Z` — that is
+`include-component-in-tag: false`, a separate setting.
+
 **Agents do not commit.** Do the work, then write the proposed commit message in
 chat as a Conventional Commit (`type(scope): summary`) for the user to run. Do
 not call `git commit` or `git push` unless the user explicitly asks.

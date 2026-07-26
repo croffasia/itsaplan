@@ -6,6 +6,7 @@
   "packages": {
     ".": {
       "release-type": "node",
+      "package-name": "",
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [
         { "type": "feat", "section": "Features" },

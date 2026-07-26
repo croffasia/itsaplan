@@ -124,6 +124,9 @@ export const qk = {
   instanceStorageSettings: ['instanceStorageSettings'] as const,
   // The upload limits as read by the upload UI (open to any signed-in user).
   storageSettings: ['storageSettings'] as const,
+  // The running version (any signed-in user) and the upstream release check (god).
+  appVersion: ['appVersion'] as const,
+  updateStatus: ['updateStatus'] as const,
   // The bindings every client resolves from, and the god-mode editor's copy.
   hotkeySettings: ['hotkeySettings'] as const,
   instanceHotkeySettings: ['hotkeySettings', 'god'] as const,

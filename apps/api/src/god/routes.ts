@@ -28,6 +28,7 @@ import {
 import { getInstanceBotSettings, setInstanceBotSettings } from '../telegram/store';
 import { getStorageSettings, setStorageSettings, StorageSettingsSchema } from '../settings/storage';
 import { getHotkeySettings, setHotkeySettings, HotkeyCombosSchema } from '../settings/hotkeys';
+import { getUpdateStatus, UpdateStatusSchema } from '../settings/updates';
 
 // God mode: instance-wide administration, open only to the "god" user (the first
 // registered account). It covers how people may register, the mail provider that
@@ -362,6 +363,28 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       summary: 'Update instance keyboard shortcuts',
       description:
         'Replace the instance keyboard shortcut overrides. Each user may still rebind a shortcut for their own account.',
+    },
+  })
+
+  // Whether a newer release is published, and the notes of the releases around the
+  // running one. Owner-only: they are the one who upgrades the instance, and the
+  // sidebar hides the indicator from everyone else. The version alone is readable by
+  // any signed-in user (/settings/version).
+  .get('/god/updates', () => getUpdateStatus(), {
+    response: { 200: UpdateStatusSchema, 401: ErrorResponse, 403: ErrorResponse },
+    detail: {
+      summary: 'Get the update status',
+      description:
+        'Get the running version, the newest published one, and the release notes. The upstream check is cached for six hours.',
+    },
+  })
+
+  .post('/god/updates/check', () => getUpdateStatus(true), {
+    response: { 200: UpdateStatusSchema, 401: ErrorResponse, 403: ErrorResponse },
+    detail: {
+      summary: 'Check for updates now',
+      description:
+        'Read the published releases again, ignoring the cache. Returns the update status either way: a failed check answers from the previous result.',
     },
   })
 

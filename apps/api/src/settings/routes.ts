@@ -1,8 +1,9 @@
-import { Elysia } from 'elysia';
+import { Elysia, t } from 'elysia';
 import { authContext } from '../shared/auth-context';
 import { ErrorResponse } from '../shared/responses';
 import { getStorageSettings, StorageSettingsSchema } from './storage';
 import { getHotkeySettings, HotkeyCombosSchema } from './hotkeys';
+import { getAppVersion } from './updates';
 
 // Routes for global instance settings (app_setting): a key-value store not scoped
 // to a project. The MCP toggle is per-project (see projects/routes.ts), not here.
@@ -28,5 +29,17 @@ export const settingsRoutes = new Elysia({
       summary: 'Get instance keyboard shortcuts',
       description:
         'Get the keyboard shortcut overrides that apply to everyone on this instance. Every signed-in user reads them; changing them is god mode.',
+    },
+  })
+
+  // The running version, shown in the sidebar to everyone. Whether a newer one
+  // exists is god mode (/god/updates), and so is the release history. A session is
+  // required: the version tells an anonymous visitor which release to look up
+  // vulnerabilities for.
+  .get('/settings/version', () => ({ version: getAppVersion() }), {
+    response: { 200: t.Object({ version: t.String() }), 401: ErrorResponse },
+    detail: {
+      summary: 'Get the running version',
+      description: 'Get the version of the app this instance runs.',
     },
   });

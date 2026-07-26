@@ -182,6 +182,11 @@ keeps its `autorelease: pending` label, and every later run stops at
 name makes both sides resolve to no component. Tags stay `vX.Y.Z` — that is
 `include-component-in-tag: false`, a separate setting.
 
+Publishing a release moves the `release` branch to the released commit
+(`release-branch.yml`), which is what the deploy target follows. `main` stays the
+only branch anyone works in; `release` is a mirror with a single writer, so it
+never needs a merge back. It appears with the first published release.
+
 **Agents do not commit.** Do the work, then write the proposed commit message in
 chat as a Conventional Commit (`type(scope): summary`) for the user to run. Do
 not call `git commit` or `git push` unless the user explicitly asks.

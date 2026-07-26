@@ -2,6 +2,7 @@ import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/ap
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
 import IssueActivityFeed from './IssueActivityFeed';
+import IssueStatusTimeline from './IssueStatusTimeline';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
@@ -122,7 +123,25 @@ export default function IssueDetailContent({
     />
   );
 
-  const activity = <IssueActivityFeed issueId={issue.id} assignees={project.assignees} />;
+  // A feed entry stores the author's name, not their picture, so the uploaded avatar
+  // comes from the project's candidate list by actor id. An author who is no longer a
+  // member falls back to the initials circle.
+  const imageByUserId = new Map(project.assignees.map((a) => [a.userId, a.image]));
+
+  const activity = (
+    <>
+      <IssueStatusTimeline
+        issueId={issue.id}
+        columns={project.columns}
+        imageByUserId={imageByUserId}
+      />
+      <IssueActivityFeed
+        issueId={issue.id}
+        assignees={project.assignees}
+        imageByUserId={imageByUserId}
+      />
+    </>
+  );
 
   if (isPage) {
     // The issue content is left-aligned; the Properties panel is fixed to the

@@ -96,7 +96,10 @@ export const projectSetting = pgTable(
 // after signing in on any device; the FK clears it when that project is deleted.
 // show_chat_by_default keeps the floating AI chat button on screen from the start,
 // with the chat window collapsed. hotkeys holds the keyboard shortcuts this user
-// rebound.
+// rebound. issue_stats_open and issue_stats_view are how the status stats section of
+// an issue starts out: expanded or collapsed, and 'compact' (one bar per status) or
+// 'timeline' (a lane per status on a time axis). Switching it on an issue is not
+// stored — it lasts as long as that issue stays open.
 export const userPreference = pgTable(
   'user_preference',
   {
@@ -108,6 +111,8 @@ export const userPreference = pgTable(
     issueOpenMode: text('issue_open_mode').notNull().default('panel'),
     startPage: text('start_page').notNull().default('work-items'),
     showChatByDefault: boolean('show_chat_by_default').notNull().default(false),
+    issueStatsOpen: boolean('issue_stats_open').notNull().default(true),
+    issueStatsView: text('issue_stats_view').notNull().default('compact'),
     // The user's own keyboard shortcut overrides, as { hotkeyId: combo }. Only the
     // bindings they changed are stored; the rest come from the instance defaults
     // (app_setting key 'hotkeys') and then the built-in ones.
@@ -124,6 +129,10 @@ export const userPreference = pgTable(
     check(
       'user_preference_start_page_check',
       sql`${t.startPage} IN ('inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat')`,
+    ),
+    check(
+      'user_preference_issue_stats_view_check',
+      sql`${t.issueStatsView} IN ('compact', 'timeline')`,
     ),
   ],
 );

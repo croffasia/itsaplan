@@ -1,7 +1,9 @@
 import { Elysia, t } from 'elysia';
 import { mcpTool } from '../mcp/generate';
 import { noContent } from '../shared/http';
+import { authContext } from '../shared/auth-context';
 import { guards } from '../shared/guards';
+import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
 import { listColumns, createColumn, updateColumn, reorderColumns, deleteColumn } from './store';
@@ -27,6 +29,7 @@ const ColumnResponse = t.Object({
 });
 
 export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Columns'] } })
+  .use(authContext)
   .use(guards)
   .post(
     '/projects/:projectKey/columns',
@@ -121,8 +124,8 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
   // rejected by the store layer.
   .delete(
     '/projects/:projectKey/columns/:columnId',
-    async ({ params, project, body }) => {
-      await deleteColumn(params.columnId, project.id, body);
+    async ({ params, project, body, user }) => {
+      await deleteColumn(params.columnId, project.id, body, requireUser(user).id);
       return noContent();
     },
     {

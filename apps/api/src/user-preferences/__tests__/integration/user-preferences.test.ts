@@ -22,6 +22,8 @@ describe('user preferences', () => {
       issueOpenMode: 'panel',
       startPage: 'work-items',
       showChatByDefault: false,
+      issueStatsOpen: true,
+      issueStatsView: 'compact',
       lastProjectId: null,
       hotkeys: {},
     });
@@ -37,6 +39,8 @@ describe('user preferences', () => {
       issueOpenMode: 'page',
       startPage: 'inbox',
       showChatByDefault: true,
+      issueStatsOpen: false,
+      issueStatsView: 'timeline',
       hotkeys: { 'issue.new': 'i' },
     });
 
@@ -48,6 +52,8 @@ describe('user preferences', () => {
       issueOpenMode: 'page',
       startPage: 'inbox',
       showChatByDefault: true,
+      issueStatsOpen: false,
+      issueStatsView: 'timeline',
       lastProjectId: null,
       hotkeys: { 'issue.new': 'i' },
     });
@@ -77,6 +83,16 @@ describe('user preferences', () => {
 
     const res = await authedApi(u.cookie).account.preferences.patch({
       theme: 'sepia' as 'dark',
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an unknown issue stats view', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({
+      issueStatsView: 'lanes' as 'timeline',
     });
 
     expect(res.status).toBe(400);

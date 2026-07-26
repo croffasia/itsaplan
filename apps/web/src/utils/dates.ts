@@ -154,17 +154,22 @@ export function daysBetween(a: Date, b: Date): number {
   return Math.round((ub - ua) / day);
 }
 
-// Compact elapsed time since an ISO datetime, e.g. "5m", "3h", "11d". Largest
-// whole unit among minutes/hours/days; sub-minute reads as "0m". Used by the
-// time-in-current-status badge. Empty string for an unparseable value.
-export function formatDurationShort(fromIso: string): string {
-  const from = new Date(fromIso).getTime();
-  if (Number.isNaN(from)) return '';
-  const mins = Math.max(0, Math.floor((Date.now() - from) / 60000));
+// A compact duration, e.g. "5m", "3h", "11d". Largest whole unit among
+// minutes/hours/days; under a minute reads as "0m".
+export function formatDuration(ms: number): string {
+  const mins = Math.max(0, Math.floor(ms / 60000));
   if (mins < 60) return `${mins}m`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h`;
   return `${Math.floor(hours / 24)}d`;
+}
+
+// The same compact duration, counted from an ISO datetime to now. Empty string for an
+// unparseable value.
+export function formatDurationShort(fromIso: string): string {
+  const from = new Date(fromIso).getTime();
+  if (Number.isNaN(from)) return '';
+  return formatDuration(Date.now() - from);
 }
 
 // A new local date `n` days after `date` (n may be negative).

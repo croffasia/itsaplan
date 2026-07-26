@@ -9,10 +9,12 @@ import { eq, sql } from 'drizzle-orm';
 export const THEMES = ['light', 'dark', 'system'] as const;
 export const ISSUE_OPEN_MODES = ['panel', 'page'] as const;
 export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat'] as const;
+export const ISSUE_STATS_VIEWS = ['compact', 'timeline'] as const;
 
 export type Theme = (typeof THEMES)[number];
 export type IssueOpenMode = (typeof ISSUE_OPEN_MODES)[number];
 export type StartPage = (typeof START_PAGES)[number];
+export type IssueStatsView = (typeof ISSUE_STATS_VIEWS)[number];
 
 export interface UserPreferenceDto {
   timezone: string;
@@ -22,6 +24,10 @@ export interface UserPreferenceDto {
   // Keeps the floating AI chat button on screen from the start, with the chat
   // window collapsed.
   showChatByDefault: boolean;
+  // How the status stats section of an issue starts out: expanded or collapsed, and
+  // in the compact bar or the full timeline. Switching it on an issue is not stored.
+  issueStatsOpen: boolean;
+  issueStatsView: IssueStatsView;
   // The project the user was in last, or null before they opened one. The app root
   // reopens it; a deleted project clears it through the FK.
   lastProjectId: number | null;
@@ -40,6 +46,8 @@ export function defaults(): UserPreferenceDto {
     issueOpenMode: 'panel',
     startPage: 'work-items',
     showChatByDefault: false,
+    issueStatsOpen: true,
+    issueStatsView: 'compact',
     lastProjectId: null,
     hotkeys: {},
   };
@@ -62,6 +70,8 @@ function toDto(row: {
   issueOpenMode: string;
   startPage: string;
   showChatByDefault: boolean;
+  issueStatsOpen: boolean;
+  issueStatsView: string;
   lastProjectId: number | null;
   hotkeys: Record<string, string> | null;
 }): UserPreferenceDto {
@@ -71,6 +81,8 @@ function toDto(row: {
     issueOpenMode: row.issueOpenMode as IssueOpenMode,
     startPage: row.startPage as StartPage,
     showChatByDefault: row.showChatByDefault,
+    issueStatsOpen: row.issueStatsOpen,
+    issueStatsView: row.issueStatsView as IssueStatsView,
     lastProjectId: row.lastProjectId,
     hotkeys: row.hotkeys ?? {},
   };
@@ -85,6 +97,8 @@ export async function getPreferences(userId: string): Promise<UserPreferenceDto>
       issueOpenMode: userPreference.issueOpenMode,
       startPage: userPreference.startPage,
       showChatByDefault: userPreference.showChatByDefault,
+      issueStatsOpen: userPreference.issueStatsOpen,
+      issueStatsView: userPreference.issueStatsView,
       lastProjectId: userPreference.lastProjectId,
       hotkeys: userPreference.hotkeys,
     })

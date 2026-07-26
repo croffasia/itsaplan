@@ -882,6 +882,7 @@ export interface TelegramLinkStart {
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type IssueOpenMode = 'panel' | 'page';
 export type StartPage = 'inbox' | 'dashboard' | 'work-items' | 'initiatives' | 'ai-chat';
+export type IssueStatsView = 'compact' | 'timeline';
 
 export interface AccountPreferences {
   timezone: string;
@@ -889,6 +890,11 @@ export interface AccountPreferences {
   issueOpenMode: IssueOpenMode;
   startPage: StartPage;
   showChatByDefault: boolean;
+  // How the status stats section of an issue starts out: expanded or collapsed, and
+  // in the compact bar or the full timeline. Switching it on an issue is not saved —
+  // it lasts as long as that issue stays open.
+  issueStatsOpen: boolean;
+  issueStatsView: IssueStatsView;
   lastProjectId: number | null;
   // The keyboard shortcuts this user rebound, as { commandId: combo }. Only the
   // changed ones; the rest come from the instance settings, then the built-in
@@ -1281,6 +1287,18 @@ export interface FeedCursor {
 export interface FeedPage {
   items: FeedItem[];
   nextCursor: FeedCursor | null;
+}
+
+// One stretch the issue spent in a single column. `status` is the column-name
+// snapshot taken at the time (null only when the issue has no status history and its
+// column was deleted); `to` is null for the stretch the issue is in now. The entries
+// written inside a stretch are a separate read (listTimelineItems), made when one is
+// opened.
+export interface TimelineSegment {
+  status: string | null;
+  from: string;
+  to: string | null;
+  durationMs: number;
 }
 
 export interface IssueFieldValue {
@@ -1911,6 +1929,13 @@ export const api = {
     if (params.cursor) q.set('cursor', JSON.stringify(params.cursor));
     const qs = q.toString();
     return request<FeedPage>(`/issues/${issueId}/feed${qs ? `?${qs}` : ''}`);
+  },
+  listTimeline: (issueId: number) => request<TimelineSegment[]>(`/issues/${issueId}/timeline`),
+  // The entries of one stretch of the timeline: [from, to), open-ended without `to`.
+  listTimelineItems: (issueId: number, from: string, to: string | null) => {
+    const q = new URLSearchParams({ from });
+    if (to) q.set('to', to);
+    return request<FeedItem[]>(`/issues/${issueId}/timeline/items?${q.toString()}`);
   },
   createComment: (issueId: number, input: { body: string }) =>
     request<FeedItem>(`/issues/${issueId}/comments`, {

@@ -1,6 +1,7 @@
 import { db, projectColumn, issue, issueLabel, issueFieldValue, issueFieldOption } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { HttpError } from '../shared/lib';
+import { recordActivityForIssues } from '../issues/activity';
 
 // Data access for columns (kanban states). A column belongs to one project and
 // has a state type that fixes its place in the work items view's left-to-right order.
@@ -130,6 +131,7 @@ export async function deleteColumn(
   columnId: number,
   projectId: number,
   opts: DeleteColumnOptions,
+  actorUserId?: string | null,
 ): Promise<void> {
   const column = await getColumnById(columnId);
   // Scoped to projectId: a column id outside the caller's project is a 404, not a
@@ -138,20 +140,24 @@ export async function deleteColumn(
     throw new HttpError(404, `Column ${columnId} not found`);
   if (column.stateType === 'backlog') throw new HttpError(400, 'Backlog columns cannot be deleted');
 
+  let target: ColumnRow | null = null;
   if (opts.mode === 'move') {
-    const target = await getColumnById(opts.targetColumnId);
+    target = await getColumnById(opts.targetColumnId);
     if (!target || target.projectId !== column.projectId)
       throw new HttpError(400, 'Target column must belong to the same project');
     if (target.id === column.id)
       throw new HttpError(400, 'Target column must differ from the deleted column');
   }
 
-  await db.transaction(async (tx) => {
+  const movedIssueIds = await db.transaction(async (tx) => {
+    let moved: number[] = [];
     if (opts.mode === 'move') {
-      await tx
+      const rows = await tx
         .update(issue)
         .set({ columnId: opts.targetColumnId, updatedAt: sql`now()` })
-        .where(eq(issue.columnId, columnId));
+        .where(eq(issue.columnId, columnId))
+        .returning({ id: issue.id });
+      moved = rows.map((r) => r.id);
     } else {
       const issueIds = tx.select({ id: issue.id }).from(issue).where(eq(issue.columnId, columnId));
       await tx.delete(issueFieldOption).where(inArray(issueFieldOption.issueId, issueIds));
@@ -160,5 +166,16 @@ export async function deleteColumn(
       await tx.delete(issue).where(eq(issue.columnId, columnId));
     }
     await tx.delete(projectColumn).where(eq(projectColumn.id, columnId));
+    return moved;
   });
+
+  // A reassignment is a status change like any other, so it belongs in the change
+  // log: the issue's status timeline reads its stretches from these entries, and
+  // without one the issue keeps counting time under the column it no longer sits in.
+  if (target)
+    await recordActivityForIssues(
+      movedIssueIds,
+      { action: 'status', fromText: column.name, toText: target.name },
+      actorUserId,
+    );
 }

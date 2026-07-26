@@ -83,6 +83,12 @@ export const qk = {
   // Resolving an issue by its project-scoped number (the identifier-based URL).
   issueBySeq: (projectKey: string, seq: number) => ['issueBySeq', projectKey, seq] as const,
   feed: (id: number) => ['feed', id] as const,
+  // The status stretches of the timeline view, and the entries of one stretch read
+  // when it is opened. Both keyed under the feed, so every existing feed
+  // invalidation refreshes them too.
+  timeline: (id: number) => ['feed', id, 'timeline'] as const,
+  timelineItems: (id: number, from: string, to: string | null) =>
+    ['feed', id, 'timelineItems', from, to] as const,
   // Initiatives: a project's list (params narrow, sort and page it), the per-status
   // tab counts, one initiative, and one initiative's activity feed.
   initiatives: (projectKey: string, params?: Record<string, unknown>) =>

@@ -31,7 +31,7 @@ import {
   getIssueFieldValues,
   issueRev,
 } from './store';
-import { listFeed, createComment } from './activity';
+import { listFeed, listFeedRange, listStatusTimeline, createComment } from './activity';
 
 // Numeric path params are validated (and coerced string -> number) with t.Numeric,
 // so a non-numeric id is rejected with a 400 before reaching the store.
@@ -128,6 +128,14 @@ const FeedItemResponse = t.Object({
 const FeedPageResponse = t.Object({
   items: t.Array(FeedItemResponse),
   nextCursor: t.Nullable(t.Object({ ts: t.String(), id: t.Number() })),
+});
+
+// TimelineSegment from activity.ts: one stretch the issue spent in a column.
+const TimelineSegmentResponse = t.Object({
+  status: t.Nullable(t.String()),
+  from: t.String(),
+  to: t.Nullable(t.String()),
+  durationMs: t.Number(),
 });
 
 export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues'] } })
@@ -802,6 +810,53 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Get an issue feed',
         description: "Get an issue's activity feed by its numeric id.",
         ...mcpTool('list_issue_activity'),
+      },
+    },
+  )
+
+  // The stretches the issue spent in one column, oldest first, with the duration of
+  // each. Entry-free and unpaged: the change log holds a handful of status entries,
+  // and what happened inside a stretch is read separately when it is opened.
+  .get('/issues/:issueId/timeline', async ({ params }) => listStatusTimeline(params.issueId), {
+    params: issueParams,
+    workItem: 'read',
+    response: {
+      200: t.Array(TimelineSegmentResponse),
+      400: ErrorResponse,
+      401: ErrorResponse,
+      403: ErrorResponse,
+      404: ErrorResponse,
+    },
+    detail: {
+      summary: 'Get an issue status timeline',
+      description: "Get the stretches an issue spent in each status, with each one's duration.",
+    },
+  })
+
+  // The entries of one stretch of that timeline, addressed by its bounds: the
+  // client opening a bar asks for [from, to), leaving `to` off for the open one.
+  .get(
+    '/issues/:issueId/timeline/items',
+    async ({ params, query }) => listFeedRange(params.issueId, query.from, query.to),
+    {
+      params: issueParams,
+      query: t.Object({
+        from: t.String({ description: 'Start of the stretch (ISO datetime), inclusive.' }),
+        to: t.Optional(
+          t.String({ description: 'End of the stretch (ISO datetime), exclusive. Open-ended.' }),
+        ),
+      }),
+      workItem: 'read',
+      response: {
+        200: t.Array(FeedItemResponse),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Get the activity of one timeline stretch',
+        description: "Get an issue's activity entries written between two moments, oldest first.",
       },
     },
   )

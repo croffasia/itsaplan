@@ -218,8 +218,99 @@ describe('issue activity', () => {
     });
   });
 
+  // The stretches the issue spent in one column, oldest first and without their
+  // entries (GET /issues/:issueId/timeline).
+  describe('timeline', () => {
+    async function timeline(client: Api, issueId: number) {
+      return client.issues({ issueId }).timeline.get();
+    }
+
+    it('returns one open segment for an issue that never moved', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+      const columnName = view.data!.columns.find((c) => c.id === columnId)!.name;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await timeline(asOwner, issue.id);
+      expect(res.status).toBe(200);
+      expect(res.data!.length).toBe(1);
+      expect(res.data![0]).toMatchObject({ status: columnName, to: null });
+    });
+
+    it('splits at a status change and names both columns', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+      const names = new Map(view.data!.columns.map((c) => [c.id, c.name]));
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnIds[1] });
+
+      const res = await timeline(asOwner, issue.id);
+      expect(res.data!.map((s) => s.status)).toEqual([
+        names.get(columnId)!,
+        names.get(columnIds[1])!,
+      ]);
+      // The first stretch is closed at the move, the second is still open.
+      expect(res.data![0]!.to).not.toBeNull();
+      expect(res.data![1]!.to).toBeNull();
+    });
+
+    it('repeats a status as a separate segment when the issue returns to it', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnIds[1] });
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnId });
+
+      const res = await timeline(asOwner, issue.id);
+      expect(res.data!.length).toBe(3);
+      expect(res.data![0]!.status).toBe(res.data![2]!.status);
+    });
+
+    it('returns 404 for a missing issue', async () => {
+      const { asOwner } = await setupProject();
+      expect((await timeline(asOwner, 999999)).status).toBe(404);
+    });
+  });
+
+  // The entries of one stretch, read when it is opened
+  // (GET /issues/:issueId/timeline/items).
+  describe('timeline items', () => {
+    function itemsOf(client: Api, issueId: number, from: string, to?: string | null) {
+      return client.issues({ issueId }).timeline.items.get({ query: to ? { from, to } : { from } });
+    }
+
+    it('serves each stretch the entries written while it was open', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'before the move' });
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnIds[1] });
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'after the move' });
+
+      const segments = (await asOwner.issues({ issueId: issue.id }).timeline.get()).data!;
+      const bodies = [];
+      for (const segment of segments) {
+        const res = await itemsOf(asOwner, issue.id, segment.from, segment.to);
+        expect(res.status).toBe(200);
+        bodies.push(res.data!.filter((i) => i.kind === 'comment').map((i) => i.body));
+      }
+      expect(bodies).toEqual([['before the move'], ['after the move']]);
+
+      // The move itself opens the second stretch, so it reads as "entered from X".
+      const opened = (await itemsOf(asOwner, issue.id, segments[1]!.from)).data!;
+      expect(opened.some((i) => i.action === 'status')).toBe(true);
+      const created = (await itemsOf(asOwner, issue.id, segments[0]!.from, segments[0]!.to)).data!;
+      expect(created.some((i) => i.action === 'created')).toBe(true);
+    });
+
+    it('rejects a from that is not a datetime', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      expect((await itemsOf(asOwner, issue.id, 'yesterday')).status).toBe(400);
+    });
+  });
+
   describe('access', () => {
-    it('denies a non-member on the feed and comment routes', async () => {
+    it('denies a non-member on the feed, timeline and comment routes', async () => {
       const { asOwner, columnId } = await setupProject();
       const issue = (await createIssue(asOwner, columnId)).data!;
       const outsider = authedApi((await signUpTestUser()).cookie);
@@ -229,6 +320,14 @@ describe('issue activity', () => {
       expect((await outsider.issues({ issueId: issue.id }).feed.get({ query: {} })).status).toBe(
         403,
       );
+      expect((await outsider.issues({ issueId: issue.id }).timeline.get()).status).toBe(403);
+      expect(
+        (
+          await outsider
+            .issues({ issueId: issue.id })
+            .timeline.items.get({ query: { from: new Date(0).toISOString() } })
+        ).status,
+      ).toBe(403);
       expect(
         (await outsider.issues({ issueId: issue.id }).comments.post({ body: 'x' })).status,
       ).toBe(403);

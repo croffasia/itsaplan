@@ -211,6 +211,26 @@ describe('columns', () => {
       expect(moved.data?.columnId).toBe(inProgress.id);
     });
 
+    it('logs the reassignment as a status change on every moved issue', async () => {
+      const { asOwner } = await setupProject();
+      const todo = await columnByName(asOwner, 'Todo');
+      const inProgress = await columnByName(asOwner, 'In Progress');
+      const issue = (await createIssue(asOwner, todo.id)).data!;
+
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: todo.id })
+        .delete({ mode: 'move', targetColumnId: inProgress.id });
+
+      // Without the entry the timeline would keep the issue in the deleted column.
+      const timeline = await asOwner.issues({ issueId: issue.id }).timeline.get();
+      expect(timeline.data!.map((s) => s.status)).toEqual(['Todo', 'In Progress']);
+      const opened = await asOwner
+        .issues({ issueId: issue.id })
+        .timeline.items.get({ query: { from: timeline.data![1]!.from } });
+      expect(opened.data!.some((i) => i.action === 'status')).toBe(true);
+    });
+
     it('removes the column and its issues in delete mode', async () => {
       const { asOwner } = await setupProject();
       const todo = await columnByName(asOwner, 'Todo');

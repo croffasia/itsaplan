@@ -14,6 +14,8 @@ export const PREFERENCE_DEFAULTS: AccountPreferences = {
   issueOpenMode: 'panel',
   startPage: 'work-items',
   showChatByDefault: false,
+  issueStatsOpen: true,
+  issueStatsView: 'compact',
   lastProjectId: null,
   hotkeys: {},
 };

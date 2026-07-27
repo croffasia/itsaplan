@@ -43,6 +43,9 @@ jobs:
         with:
           ref: ${{ steps.release.outputs.tag_name }}
 
+      # The destination is fully qualified: `HEAD:release` makes git resolve the
+      # destination against the remote, which fails while the branch does not
+      # exist yet.
       - name: Move the release branch
         if: ${{ steps.release.outputs.release_created }}
-        run: git push origin HEAD:release
+        run: git push origin HEAD:refs/heads/release

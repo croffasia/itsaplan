@@ -114,14 +114,24 @@ Alternatively, run the same gate CI uses — the suite against a throwaway Postg
 container built from the production image:
 
 ```bash
-docker compose -f docker-compose.test.yml up --build \
-  --abort-on-container-exit --exit-code-from api-test
+docker compose -f docker-compose.test.yml build
+docker compose -f docker-compose.test.yml run --rm api-test
 ```
+
+`run` starts the dependencies, runs the suite, and exits with its code.
 
 ### Deploy on Coolify
 
-Point a Docker Compose resource at `docker-compose.coolify.yml`. Coolify supplies the
-secrets and domains through its own generated variables; nothing else to configure.
+Create a **Git Based** resource pointing at the public repository, with **Docker Compose**
+as the build pack and `docker-compose.coolify.yml` as the compose file. Set the branch to
+`release` and the commit SHA to `HEAD`.
+
+`release` is a mirror branch that the release workflow moves to each published release, so
+the deploy runs released versions only. It appears with the first published release; until
+then there is nothing to deploy from.
+
+Coolify supplies the secrets and domains through its own generated variables; nothing else
+to configure.
 
 ### Self-hosting (production)
 

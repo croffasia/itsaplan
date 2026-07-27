@@ -18,9 +18,15 @@ import { runAgent, streamAgent, type RunOpts } from './runtime';
 import { peoplePreamble } from './prompt/run-context';
 import type { SessionUser } from '../shared/auth-context';
 import { listAgentRuns } from './run-queue';
-import { listChatThreads, getChatThreadMessages } from './runtime/memory';
+import { listChatThreads, getChatThreadMessages, deleteChatThread } from './runtime/memory';
+import { isOwnChatThread } from './runtime/thread-ids';
 
 const agentParams = t.Object({ projectKey: t.String(), agentId: t.Numeric() });
+const threadParams = t.Object({
+  projectKey: t.String(),
+  agentId: t.Numeric(),
+  threadId: t.String(),
+});
 
 // Body of the interactive run endpoints. threadId continues a conversation when the
 // agent has memory enabled; omit it to start a new thread (the id used is returned in
@@ -31,9 +37,14 @@ const runBody = t.Object({
 });
 
 // Run options for an interactive chat run (the test chat): the caller owns the memory
-// thread and is named to the agent as the requester.
-function chatRunOpts(user: SessionUser | null, threadId?: string): RunOpts {
+// thread and is named to the agent as the requester. A supplied thread id must be one
+// issued to this caller for this agent — anyone else's chat, and the threads of the
+// autonomous runs, read as not found.
+function chatRunOpts(user: SessionUser | null, agentId: number, threadId?: string): RunOpts {
   const caller = requireUser(user);
+  if (threadId != null && !isOwnChatThread(threadId, agentId, caller.id)) {
+    throw new HttpError(404, 'Thread not found');
+  }
   return {
     callerUserId: caller.id,
     threadId: threadId ?? null,
@@ -373,7 +384,12 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   .post(
     '/projects/:projectKey/ai-agents/:agentId/run',
     async ({ params, project, body, user }) =>
-      runAgent(params.agentId, project.id, body.prompt, chatRunOpts(user, body.threadId)),
+      runAgent(
+        params.agentId,
+        project.id,
+        body.prompt,
+        chatRunOpts(user, params.agentId, body.threadId),
+      ),
     {
       body: runBody,
       params: agentParams,
@@ -404,7 +420,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         params.agentId,
         project.id,
         body.prompt,
-        chatRunOpts(user, body.threadId),
+        chatRunOpts(user, params.agentId, body.threadId),
       );
       const encoder = new TextEncoder();
       const stream = new ReadableStream<Uint8Array>({
@@ -483,7 +499,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       return messages;
     },
     {
-      params: t.Object({ projectKey: t.String(), agentId: t.Numeric(), threadId: t.String() }),
+      params: threadParams,
       query: t.Object({ page: t.Optional(t.Numeric({ minimum: 0 })) }),
       permission: ['ai_agents', 'read'],
       response: {
@@ -494,5 +510,32 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         404: ErrorResponse,
       },
       detail: { summary: 'Get thread messages' },
+    },
+  )
+
+  // Deletes one of the caller's chat threads with its messages. Scoped the same way as
+  // reading it: a thread owned by another user is a 404.
+  .delete(
+    '/projects/:projectKey/ai-agents/:agentId/threads/:threadId',
+    async ({ params, project, user }) => {
+      const caller = requireUser(user);
+      const agent = await getAgentById(params.agentId, project.id);
+      if (!agent) throw new HttpError(404, 'Agent not found');
+      if (!(await deleteChatThread(params.threadId, caller.id))) {
+        throw new HttpError(404, 'Thread not found');
+      }
+      return noContent();
+    },
+    {
+      params: threadParams,
+      permission: ['ai_agents', 'read'],
+      response: {
+        204: t.Void(),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: { summary: 'Delete a chat thread' },
     },
   );

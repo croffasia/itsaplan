@@ -10,12 +10,14 @@ export function FloatingChatHistory({
   agentId,
   selectedThreadId,
   onSelect,
+  onDeleted,
   onBack,
 }: {
   projectKey: string;
   agentId: number;
   selectedThreadId: string | null;
   onSelect: (threadId: string) => void;
+  onDeleted: (threadId: string) => void;
   onBack: () => void;
 }) {
   return (
@@ -39,6 +41,7 @@ export function FloatingChatHistory({
         agentId={agentId}
         selectedThreadId={selectedThreadId}
         onSelect={onSelect}
+        onDeleted={onDeleted}
       />
     </div>
   );

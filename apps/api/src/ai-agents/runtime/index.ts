@@ -8,7 +8,8 @@ import { buildCustomTools } from './tools/custom-tools';
 import { buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
-import { buildMemory, createChatThread, DEFAULT_LAST_MESSAGES } from './memory';
+import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
+import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { HttpError } from '../../shared/lib';
 
@@ -195,31 +196,51 @@ async function prepareRun(
   }
   const agent = await buildAgent(row, opts.contextPreamble ?? '');
 
-  // Mastra's generate/stream have overloaded options; type the shape we use.
+  // Mastra's generate/stream have overloaded options; type the shape we use. In
+  // Mastra v1 the temperature belongs to the call's model settings — a flat
+  // `temperature` option is only read by the legacy generate.
   const options: RunOptions = { maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS };
+  if (row.temperature != null) options.modelSettings = { temperature: row.temperature };
   let threadId: string | null = null;
   if (row.memoryEnabled) {
-    // A new chat thread (no threadId supplied) is created up front with its
-    // agent/project binding and a title, so the chat history can list it. A
-    // supplied threadId continues an existing thread (chat or issue-triggered) and
-    // is left untouched. The threadId used is returned so the caller can continue.
-    const isNew = !opts.threadId;
-    threadId = opts.threadId ?? crypto.randomUUID();
-    if (isNew) {
-      await createChatThread(threadId, opts.callerUserId, { agentId: row.id, projectId }, prompt);
-    }
+    // A chat run with no threadId starts a new conversation; every other run continues
+    // the thread its caller named (see thread-ids). The thread is created up front with
+    // what it is bound to and a title, so the chat history can list it and deleting the
+    // agent, project or issue can find it. The threadId used is returned so the caller
+    // can continue.
+    threadId = opts.threadId ?? newChatThreadId(row.id, opts.callerUserId);
+    await ensureThread(
+      threadId,
+      opts.callerUserId,
+      {
+        agentId: row.id,
+        projectId,
+        kind: isChatThreadId(threadId) ? 'chat' : 'run',
+        ...(opts.issueId != null ? { issueId: opts.issueId } : {}),
+        ...(opts.scheduleId != null ? { scheduleId: opts.scheduleId } : {}),
+      },
+      prompt,
+    );
     options.memory = { thread: threadId, resource: opts.callerUserId };
   }
   return { agent, options, threadId };
 }
 
 // Options for a single run. callerUserId owns the memory thread; threadId continues a
-// conversation (memory-enabled agents only); contextPreamble is the caller-assembled
-// human-context block (see run-context.ts) prepended to the agent's instructions.
+// conversation (memory-enabled agents only); issueId and scheduleId bind an autonomous
+// run's thread to what it runs on, so deleting that deletes the thread; contextPreamble
+// is the caller-assembled human-context block (see run-context.ts) prepended to the
+// agent's instructions.
 export type RunOpts = {
   callerUserId: string;
   threadId?: string | null;
+  issueId?: number | null;
+  scheduleId?: number | null;
   contextPreamble?: string;
 };
 
-type RunOptions = { maxSteps: number; memory?: { thread: string; resource: string } };
+type RunOptions = {
+  maxSteps: number;
+  modelSettings?: { temperature: number };
+  memory?: { thread: string; resource: string };
+};

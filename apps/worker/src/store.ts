@@ -152,9 +152,10 @@ export async function cleanupOldDeliveries(): Promise<number> {
 // moving to a terminal column bumps it, and any later edit resets the clock, so an
 // issue is archived only after the full period with no activity. The ->> is guarded
 // by a numeric-string regex so a malformed or missing value is treated as disabled,
-// never cast. Returns the number archived. Idempotent (archived_at IS NULL filter).
-export async function archiveStaleIssues(): Promise<number> {
-  const res = await db.execute(sql`
+// never cast. Returns the ids archived, which the caller uses to drop the agent
+// conversation threads of those issues. Idempotent (archived_at IS NULL filter).
+export async function archiveStaleIssues(): Promise<number[]> {
+  const rows = await db.execute(sql`
     UPDATE issue i
     SET archived_at = now()
     FROM project_column c, project_setting s
@@ -171,6 +172,7 @@ export async function archiveStaleIssues(): Promise<number> {
           AND (s.value->>'canceledDays') ~ '^[0-9]+$'
           AND i.updated_at < now() - make_interval(days => (s.value->>'canceledDays')::int))
       )
+    RETURNING i.id
   `);
-  return (res as unknown as { count?: number }).count ?? 0;
+  return (rows as unknown as Array<{ id: number }>).map((row) => row.id);
 }

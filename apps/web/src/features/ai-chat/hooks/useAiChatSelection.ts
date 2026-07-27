@@ -44,6 +44,12 @@ export function useAiChatSelection(projectKey: string | null) {
       void qc.invalidateQueries({ queryKey: qk.agentThreads(projectKey, selected.id) });
   };
 
+  // A deleted conversation cannot be shown: if it was the open one, fall back to a
+  // fresh chat.
+  const handleThreadDeleted = (threadId: string) => {
+    if (threadId === selectedThreadId) startNewChat();
+  };
+
   return {
     agents,
     isLoading: agentsQuery.isLoading,
@@ -55,5 +61,6 @@ export function useAiChatSelection(projectKey: string | null) {
     selectThread: setSelectedThreadId,
     startNewChat,
     handleThreadCreated,
+    handleThreadDeleted,
   };
 }

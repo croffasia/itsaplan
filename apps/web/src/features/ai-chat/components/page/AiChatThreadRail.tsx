@@ -11,12 +11,14 @@ export function AiChatThreadRail({
   agentId,
   selectedThreadId,
   onSelect,
+  onDeleted,
   onNewChat,
 }: {
   projectKey: string;
   agentId: number;
   selectedThreadId: string | null;
   onSelect: (threadId: string) => void;
+  onDeleted: (threadId: string) => void;
   onNewChat: () => void;
 }) {
   return (
@@ -39,6 +41,7 @@ export function AiChatThreadRail({
         agentId={agentId}
         selectedThreadId={selectedThreadId}
         onSelect={onSelect}
+        onDeleted={onDeleted}
       />
     </div>
   );

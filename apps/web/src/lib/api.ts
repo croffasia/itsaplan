@@ -2167,6 +2167,11 @@ export const api = {
     request<AiChatMessagePage>(
       `/projects/${projectKey}/ai-agents/${agentId}/threads/${encodeURIComponent(threadId)}/messages?page=${page}`,
     ),
+  deleteAiAgentThread: (projectKey: string, agentId: number, threadId: string) =>
+    request<void>(
+      `/projects/${projectKey}/ai-agents/${agentId}/threads/${encodeURIComponent(threadId)}`,
+      { method: 'DELETE' },
+    ),
 
   // Integrations: stored credentials for LLM providers and tool integrations. The
   // secret is write-only — responses carry only a redacted view.

@@ -8,12 +8,13 @@ import { toIso } from '../helpers/dates';
 // messages of the given thread. Only the recency window is used (no semantic
 // recall), so no vector store is required.
 //
-// A chat thread carries metadata that binds it to the agent and project it belongs
-// to (agentId, projectId, kind: "chat"), set when the thread is first created. This
-// lets the chat UI list a user's own past conversations with one agent: the thread's
-// resourceId is the caller's user id, so filtering by (resourceId, agentId) returns
-// exactly that user's threads with that agent. Threads created by issue-triggered
-// runs carry no such metadata and are owned by the agent bot, so they never appear.
+// Every thread carries metadata binding it to what it belongs to: the agent and
+// project always, the issue or schedule for an autonomous run, plus the kind (a UI
+// chat or a run). Two things read it. The chat history lists a user's own
+// conversations with one agent — the thread's resourceId is the caller's user id, so
+// filtering by (resourceId, agentId, kind "chat") returns exactly those. And deleting
+// any of those bindings deletes the threads bound to it, since Mastra's tables carry
+// no foreign keys of ours.
 
 // Default recency window when an agent has memory enabled but no count set.
 export const DEFAULT_LAST_MESSAGES = 20;
@@ -46,30 +47,57 @@ function getReadMemory(): Memory {
   return readMemory;
 }
 
-// Metadata written on a chat thread when it is created. `kind: "chat"` marks the
-// thread as a UI conversation (as opposed to an issue-triggered run thread).
-type ChatThreadMeta = { agentId: number; projectId: number; kind: 'chat' };
+// What a thread is bound to, written when it is created. `kind` separates a UI
+// conversation from an autonomous run thread; `issueId` and `scheduleId` are set for
+// an issue run and a scheduled run.
+type ThreadMeta = {
+  agentId: number;
+  projectId: number;
+  kind: 'chat' | 'run';
+  issueId?: number;
+  scheduleId?: number;
+};
 
-// Creates the chat thread up front with its agent/project binding and an initial
-// title (the first prompt, truncated). Called only when a new chat thread starts,
-// so continuing an existing thread does not overwrite its metadata or title.
-export async function createChatThread(
+// Creates the thread with its bindings and an initial title (the first prompt,
+// truncated) unless it already exists, so continuing a conversation leaves its
+// metadata and title alone.
+export async function ensureThread(
   threadId: string,
   resourceId: string,
-  meta: { agentId: number; projectId: number },
+  meta: ThreadMeta,
   title: string,
 ): Promise<void> {
-  await getReadMemory().createThread({
+  const memory = getReadMemory();
+  if (await memory.getThreadById({ threadId })) return;
+  await memory.createThread({
     threadId,
     resourceId,
     title: title.slice(0, 80),
-    metadata: {
-      agentId: meta.agentId,
-      projectId: meta.projectId,
-      kind: 'chat',
-    } satisfies ChatThreadMeta,
+    metadata: meta,
     saveThread: true,
   });
+}
+
+// Deletes one of the caller's chat threads with its messages. Returns false when the
+// thread does not exist or belongs to someone else, so the caller maps it to a 404.
+export async function deleteChatThread(threadId: string, resourceId: string): Promise<boolean> {
+  const memory = getReadMemory();
+  const thread = await memory.getThreadById({ threadId, resourceId });
+  if (!thread) return false;
+  await memory.deleteThread(threadId);
+  return true;
+}
+
+// Deletes every thread bound to the given agent, project, issue or schedule, with its
+// messages, and returns how many were deleted. Called when that binding goes away.
+export async function deleteThreadsWhere(
+  binding:
+    { agentId: number } | { projectId: number } | { issueId: number } | { scheduleId: number },
+): Promise<number> {
+  const memory = getReadMemory();
+  const { threads } = await memory.listThreads({ filter: { metadata: binding }, perPage: false });
+  for (const thread of threads) await memory.deleteThread(thread.id);
+  return threads.length;
 }
 
 // One chat thread in the history list.

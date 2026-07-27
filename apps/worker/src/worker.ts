@@ -2,6 +2,7 @@ import { workerConfig } from './config';
 import { deliver } from './delivery';
 import { processNotificationDeliveries } from './notification-delivery';
 import { equalJitterBackoffMs } from './backoff';
+import { deleteIssueAgentThreads } from './agent-runs';
 import { startPollLoop, type WorkerHandle } from './poll-loop';
 import { TELEMETRY_CHECK_EVERY_TICKS, processTelemetry } from './telemetry';
 import {
@@ -42,7 +43,16 @@ async function tick(): Promise<void> {
   if (++ticksSinceAutoArchive >= cfg.autoArchiveEveryTicks) {
     ticksSinceAutoArchive = 0;
     const archived = await archiveStaleIssues();
-    if (archived > 0) console.log(`[worker] auto-archived ${archived} stale issues`);
+    if (archived.length > 0) {
+      console.log(`[worker] auto-archived ${archived.length} stale issues`);
+      // An unreachable api must not read as a failed tick: the issues are archived
+      // either way, and their threads then stay until the agent or project goes.
+      try {
+        await deleteIssueAgentThreads(archived);
+      } catch (error) {
+        console.error('[worker] deleting agent threads of archived issues failed:', error);
+      }
+    }
   }
   if (++ticksSinceTelemetry >= TELEMETRY_CHECK_EVERY_TICKS) {
     ticksSinceTelemetry = 0;

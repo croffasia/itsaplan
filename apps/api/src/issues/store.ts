@@ -43,6 +43,7 @@ import { mapAttachment, type AttachmentRow } from '../attachments/store';
 import { notifyIssueChange } from '../notifications/store';
 import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '../ai-agents/store';
+import { deleteThreadsWhere } from '../ai-agents/runtime/memory';
 import { getInitiativeProjectId } from '../initiatives/store';
 import { getMembership } from '../members/store';
 import { enqueueAgentRun } from '../ai-agents/run-queue';
@@ -376,6 +377,9 @@ export async function searchIssues(
 // the row for restore. Idempotent (archiving an archived issue is a no-op re-stamp
 // avoided by the archived_at guard). Records a feed entry. Returns the updated
 // issue, or null if it does not exist.
+//
+// The agents' conversation threads for the issue are deleted with it. Archiving is
+// reversible and this is not: a restored issue starts with empty agent memory.
 export async function archiveIssue(
   id: number,
   actorUserId?: string | null,
@@ -390,6 +394,7 @@ export async function archiveIssue(
     return getIssue(id);
   }
   await recordActivity(id, [{ action: 'archived' }], actorUserId);
+  await deleteThreadsWhere({ issueId: id });
   return getIssue(id);
 }
 

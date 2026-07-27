@@ -36,6 +36,7 @@ export function FloatingChat({
     selectThread,
     startNewChat,
     handleThreadCreated,
+    handleThreadDeleted,
   } = useAiChatSelection(project?.project.key ?? null);
 
   const [view, setView] = useState<'chat' | 'history'>('chat');
@@ -104,6 +105,7 @@ export function FloatingChat({
                 agentId={selected.id}
                 selectedThreadId={selectedThreadId}
                 onSelect={handleSelectThread}
+                onDeleted={handleThreadDeleted}
                 onBack={() => setView('chat')}
               />
             </div>

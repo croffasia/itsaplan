@@ -27,6 +27,7 @@ export default function AiChatPage() {
     selectThread,
     startNewChat,
     handleThreadCreated,
+    handleThreadDeleted,
   } = useAiChatSelection(project?.project.key ?? null);
 
   if (!project) return null;
@@ -80,6 +81,7 @@ export default function AiChatPage() {
             agentId={selected.id}
             selectedThreadId={selectedThreadId}
             onSelect={selectThread}
+            onDeleted={handleThreadDeleted}
             onNewChat={startNewChat}
           />
           <div className="flex min-h-0 flex-1 flex-col">

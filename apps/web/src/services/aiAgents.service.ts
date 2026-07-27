@@ -54,6 +54,19 @@ export function useAgentThreadMessagesQuery(
   });
 }
 
+// Deletes one of the caller's chat threads with an agent and refreshes the history
+// list it was in.
+export function useDeleteAgentThread(projectKey: string | null, agentId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (threadId: string) => api.deleteAiAgentThread(projectKey!, agentId!, threadId),
+    onSuccess: () => {
+      if (projectKey && agentId != null)
+        void qc.invalidateQueries({ queryKey: qk.agentThreads(projectKey, agentId) });
+    },
+  });
+}
+
 // The capability-tool catalog for the internal-agent form. Static per project, so
 // it stays fresh for the session.
 export function useAgentToolsQuery(projectKey: string | null) {

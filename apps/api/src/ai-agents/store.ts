@@ -13,6 +13,7 @@ import { auth } from '@repo/auth';
 import { iso, rethrowDuplicate } from '../shared/lib';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
+import { deleteThreadsWhere } from './runtime/memory';
 
 // Data access for AI agents. Each agent is backed by a hidden bot user
 // (ai_agent.user_id -> user.id): that user is what a work item is assigned to,
@@ -473,12 +474,14 @@ export async function regenerateKey(id: number, projectId: number): Promise<stri
   return apiKey;
 }
 
-// Deletes an agent: its API key row(s), then the bot user. Deleting the user
-// cascades to the ai_agent row (ON DELETE CASCADE on user_id), sets assignee_user_id
-// to NULL on every issue the agent was on, and nulls the actor on its activity.
+// Deletes an agent: its conversation threads, its API key row(s), then the bot user.
+// Deleting the user cascades to the ai_agent row (ON DELETE CASCADE on user_id), sets
+// assignee_user_id to NULL on every issue the agent was on, and nulls the actor on its
+// activity.
 export async function deleteAgent(id: number, projectId: number): Promise<boolean> {
   const agent = await getAgentById(id, projectId);
   if (!agent) return false;
+  await deleteThreadsWhere({ agentId: id });
   await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
   await db.delete(user).where(eq(user.id, agent.userId));
   return true;

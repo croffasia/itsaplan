@@ -16,6 +16,7 @@ import {
   type Permissions,
 } from '../shared/permissions';
 import { getProjectSetting, setProjectSetting } from '../settings/store';
+import { deleteThreadsWhere } from '../ai-agents/runtime/memory';
 
 // Data access for projects: the top-level container that groups its own columns,
 // issue types, labels, assignees, custom fields, issues, saved views, and
@@ -353,7 +354,10 @@ export async function setAutoArchiveSettings(
 // actions, which in turn cascade to their own dependents (an issue's labels, field
 // values/options, attachments, and activity; a custom field's values). The
 // issue.column_id foreign key is NO ACTION, checked at end of statement — both the
-// issues and their columns are deleted by the same cascade, so it is satisfied.
+// issues and their columns are deleted by the same cascade, so it is satisfied. The
+// conversation threads of the project's agents are deleted first, since they live
+// outside those cascades.
 export async function deleteProject(projectId: number): Promise<void> {
+  await deleteThreadsWhere({ projectId });
   await db.delete(project).where(eq(project.id, projectId));
 }

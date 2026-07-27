@@ -88,6 +88,22 @@ async function processRun(run: ClaimedRun): Promise<void> {
   }
 }
 
+// Drops the agent conversation threads of archived issues. The threads live in
+// Mastra's tables, which only the api talks to, so the worker asks it over the same
+// internal route it uses to run an agent. The api looks the threads up per issue, so
+// the ids go in batches: the first sweep of an instance that just enabled auto-archive
+// can carry thousands of them, and one request for all would run past the timeout.
+export async function deleteIssueAgentThreads(issueIds: number[]): Promise<void> {
+  for (let from = 0; from < issueIds.length; from += 200) {
+    const response = await postInternal(
+      '/internal/agent-threads/delete-for-issues',
+      { issueIds: issueIds.slice(from, from + 200) },
+      30_000,
+    );
+    if (!response.ok) throw new Error(`Agent API returned ${response.status}`);
+  }
+}
+
 async function executeRun(run: ClaimedRun): Promise<string> {
   const response = await postInternal(
     '/internal/agent-runs/execute',

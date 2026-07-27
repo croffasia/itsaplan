@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.4.0](https://github.com/croffasia/itsaplan/compare/v0.3.0...v0.4.0) (2026-07-27)
+
+
+### Features
+
+* scope agent memory threads and delete them with their owner ([#42](https://github.com/croffasia/itsaplan/issues/42)) ([2857970](https://github.com/croffasia/itsaplan/commit/28579704b98b86a12c6e92081c709c749b5ec8ac))
+* send an anonymous daily instance snapshot ([#35](https://github.com/croffasia/itsaplan/issues/35)) ([be68f4a](https://github.com/croffasia/itsaplan/commit/be68f4aa64d369f9cea24a6cffc8b122e4514743))
+* show an issue status timeline above the activity log ([#34](https://github.com/croffasia/itsaplan/issues/34)) ([a4b6bd9](https://github.com/croffasia/itsaplan/commit/a4b6bd95147cdee870e28ed4b1e810cc08ce80cd))
+* show the running version and available updates in the sidebar ([#31](https://github.com/croffasia/itsaplan/issues/31)) ([74885d3](https://github.com/croffasia/itsaplan/commit/74885d35411219a5f0ddde7abaa9ec9722ca018a))
+* **web:** add code blocks, a slash menu and image picking to the issue editor ([#40](https://github.com/croffasia/itsaplan/issues/40)) ([db52b5e](https://github.com/croffasia/itsaplan/commit/db52b5e069a7f6baef436639d9e329455f03321b))
+
+
+### Bug Fixes
+
+* **api:** scope issue column and type to the issue's project ([#39](https://github.com/croffasia/itsaplan/issues/39)) ([84b82e5](https://github.com/croffasia/itsaplan/commit/84b82e52041fee1b39d883507c10f2d4a3410bcd))
+* **api:** scope issue custom fields to the issue's project ([#36](https://github.com/croffasia/itsaplan/issues/36)) ([51fe6d3](https://github.com/croffasia/itsaplan/commit/51fe6d33ede5990599a76e21d8698e7b51a95d00))
+* **api:** scope issue labels to the issue's project ([#38](https://github.com/croffasia/itsaplan/issues/38)) ([9ba0fe8](https://github.com/croffasia/itsaplan/commit/9ba0fe8a4871f7f5478cbf8db58fc5a3ff3c7229))
+* **web:** correct the layout and figures of the issue stats ([#41](https://github.com/croffasia/itsaplan/issues/41)) ([0a03c84](https://github.com/croffasia/itsaplan/commit/0a03c84d2ef87216711b8ffc47a08e376ed80853))
+
+
+### Performance
+
+* **web:** cut the request waterfall when opening an issue ([#37](https://github.com/croffasia/itsaplan/issues/37)) ([58ca097](https://github.com/croffasia/itsaplan/commit/58ca0970a4650907797d726229bdd0ce052c4e26))
+
+
+### CI
+
+* fix release-please releases and mirror them into a release branch ([#33](https://github.com/croffasia/itsaplan/issues/33)) ([e38f319](https://github.com/croffasia/itsaplan/commit/e38f319a770aebfda9b790dccd53b5c4468aeb37))
+* move the release branch push into the release workflow ([#43](https://github.com/croffasia/itsaplan/issues/43)) ([b8559da](https://github.com/croffasia/itsaplan/commit/b8559da9a8711fe9a93fa4ce58d3034ca89f416c))
+
 ## [0.3.0](https://github.com/croffasia/itsaplan/compare/v0.2.0...v0.3.0) (2026-07-25)
 
 

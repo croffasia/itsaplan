@@ -31,6 +31,13 @@ function createIssue(client: Api, columnId: number, patch: Record<string, unknow
   return client.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task', ...patch });
 }
 
+// A label of a second project, which no issue of the first one may carry.
+async function foreignLabel(client: Api) {
+  await client.projects.post({ key: 'OPS', name: 'Operations' });
+  const res = await client.projects({ projectKey: 'OPS' }).labels.post({ name: 'ops-secret' });
+  return res.data!;
+}
+
 // The board's issue list (carries labelIds and set custom field values).
 async function issuesOf(client: Api, projectKey = 'MKT') {
   const board = await client.projects({ projectKey }).issues.board.get();
@@ -121,6 +128,15 @@ describe('issues', () => {
       // The project view also reports the label on the issue.
       const list = await issuesOf(asOwner);
       expect(list.find((i) => i.id === created.data!.id)?.labelIds).toEqual([label.id]);
+    });
+
+    it('rejects a label of another project and creates no issue', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignLabel(asOwner);
+
+      const created = await createIssue(asOwner, columnId, { labelIds: [foreign.id] });
+      expect(created.status).toBe(400);
+      expect(await issuesOf(asOwner)).toHaveLength(0);
     });
 
     it('rejects an empty title', async () => {
@@ -257,6 +273,19 @@ describe('issues', () => {
 
       const list = await issuesOf(asOwner);
       expect(list.find((i) => i.id === issue.id)?.labelIds).toEqual([b.id]);
+    });
+
+    it('rejects a label of another project and keeps the current set', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const own = (await asOwner.projects({ projectKey: 'MKT' }).labels.post({ name: 'a' })).data!;
+      const foreign = await foreignLabel(asOwner);
+      const issue = (await createIssue(asOwner, columnId, { labelIds: [own.id] })).data!;
+
+      const patched = await asOwner.issues({ issueId: issue.id }).patch({ labelIds: [foreign.id] });
+      expect(patched.status).toBe(400);
+
+      const list = await issuesOf(asOwner);
+      expect(list.find((i) => i.id === issue.id)?.labelIds).toEqual([own.id]);
     });
 
     it('changes only the given fields', async () => {
@@ -923,6 +952,20 @@ describe('issues', () => {
       const list = await issuesOf(asOwner);
       expect(list.find((i) => i.id === one.id)?.labelIds.sort()).toEqual([a.id, b.id].sort());
       expect(list.find((i) => i.id === two.id)?.labelIds).toEqual([b.id]);
+    });
+
+    it("rejects a bulk add of another project's label", async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignLabel(asOwner);
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.bulk.labels.post({ ids: [issue.id], add: [foreign.id] });
+      expect(res.status).toBe(400);
+
+      const list = await issuesOf(asOwner);
+      expect(list.find((i) => i.id === issue.id)?.labelIds).toEqual([]);
     });
 
     it('archives every listed issue', async () => {

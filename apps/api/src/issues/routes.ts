@@ -580,14 +580,14 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // a column (position).
   .patch(
     '/issues/:issueId',
-    async ({ params, body, user }) => {
+    async ({ params, body, user, projectId }) => {
       const actorUserId = requireUser(user).id;
       const issueId = params.issueId;
       const { labelIds, ...patch } = body;
       const issue = await updateIssue(issueId, patch, actorUserId);
       if (!issue) throw new HttpError(404, 'Issue not found');
       if (labelIds) {
-        await setIssueLabels(issueId, labelIds, actorUserId);
+        await setIssueLabels(projectId, issueId, labelIds, actorUserId);
         issue.labelIds = labelIds;
       }
       return issue;

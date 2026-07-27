@@ -189,6 +189,19 @@ describe('issue activity', () => {
       expect(removed?.fromText).toBe('bug');
     });
 
+    it("does not log the name of another project's label", async () => {
+      const { asOwner, columnId } = await setupProject();
+      await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
+      const foreign = (
+        await asOwner.projects({ projectKey: 'OPS' }).labels.post({ name: 'ops-secret' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const patched = await asOwner.issues({ issueId: issue.id }).patch({ labelIds: [foreign.id] });
+      expect(patched.status).toBe(400);
+      expect((await actions(asOwner, issue.id)).some((a) => a.action === 'label_add')).toBe(false);
+    });
+
     it('logs a custom field value change', async () => {
       const { asOwner, columnId } = await setupProject();
       const field = (

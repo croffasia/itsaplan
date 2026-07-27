@@ -313,7 +313,8 @@ export async function createInitiative(
     })
     .returning({ id: initiative.id });
   await recordActivity(row.id, [{ action: 'created' }], actorUserId);
-  if (input.labelIds?.length) await setInitiativeLabels(row.id, input.labelIds, actorUserId);
+  if (input.labelIds?.length)
+    await setInitiativeLabels(projectId, row.id, input.labelIds, actorUserId);
   return (await getInitiative(row.id))!;
 }
 
@@ -369,7 +370,7 @@ export async function updateInitiative(
     await logInitiativeUpdate(snapshot(before), snapshot(after), actorUserId);
   }
   if (patch.labelIds !== undefined) {
-    await setInitiativeLabels(id, patch.labelIds, actorUserId);
+    await setInitiativeLabels(before.projectId, id, patch.labelIds, actorUserId);
   }
   return getInitiative(id);
 }
@@ -384,6 +385,7 @@ export async function deleteInitiative(id: number): Promise<void> {
 // added/removed labels to the activity feed. Bumps updated_at so initiativeRev
 // moves.
 async function setInitiativeLabels(
+  projectId: number,
   initiativeId: number,
   labelIds: number[],
   actorUserId?: string | null,
@@ -412,7 +414,7 @@ async function setInitiativeLabels(
     .set({ updatedAt: sql`now()` })
     .where(eq(initiative.id, initiativeId));
 
-  const names = await labelNames([...added, ...removed]);
+  const names = await labelNames(projectId, [...added, ...removed]);
   const events = [];
   for (const labelId of added)
     events.push({ action: 'label_add', toText: names.get(labelId) ?? null });

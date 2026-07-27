@@ -359,16 +359,16 @@ async function userName(id: string | null): Promise<string | null> {
   const rows = await db.select({ name: user.name }).from(user).where(eq(user.id, id));
   return rows[0]?.name ?? null;
 }
-// Name snapshots for a set of labels in one query, resolved at change time so a
-// log entry keeps reading correctly after a label is renamed or deleted. Ids with
-// no matching label are absent from the map.
-export async function labelNames(ids: number[]): Promise<Map<number, string>> {
+// Name snapshots for a set of labels in one query, resolved at change time so a log
+// entry keeps reading correctly after a label is renamed or deleted. An id outside
+// projectId, or with no label at all, is absent from the map.
+export async function labelNames(projectId: number, ids: number[]): Promise<Map<number, string>> {
   const out = new Map<number, string>();
   if (ids.length === 0) return out;
   const rows = await db
     .select({ id: label.id, name: label.name })
     .from(label)
-    .where(inArray(label.id, ids));
+    .where(and(eq(label.projectId, projectId), inArray(label.id, ids)));
   for (const r of rows) out.set(r.id, r.name);
   return out;
 }

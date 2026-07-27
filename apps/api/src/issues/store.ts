@@ -4,6 +4,7 @@ import {
   issue,
   issueActivity,
   issueLabel,
+  label,
   issueFieldValue,
   issueFieldOption,
   issueAttachment,
@@ -607,6 +608,18 @@ async function assertInitiative(
     throw new HttpError(400, 'Initiative must belong to this project');
 }
 
+// Enforces that every label belongs to the issue's project — the issue_label
+// foreign key only requires the label to exist somewhere. Throws 400 otherwise.
+async function assertIssueLabels(projectId: number, labelIds?: number[]): Promise<void> {
+  const ids = [...new Set(labelIds ?? [])];
+  if (ids.length === 0) return;
+  const rows = await db
+    .select({ id: label.id })
+    .from(label)
+    .where(and(eq(label.projectId, projectId), inArray(label.id, ids)));
+  if (rows.length !== ids.length) throw new HttpError(400, 'Labels must belong to this project');
+}
+
 // Atomic per-project sequence number (the "-42" in "MKT-42"): the UPDATE takes a
 // row lock on project, so concurrent createIssue calls for the same project never
 // hand out the same number.
@@ -617,6 +630,8 @@ export async function createIssue(
 ): Promise<IssueRow> {
   await assertAssignments(project.id, input);
   await assertInitiative(project.id, input.initiativeId);
+  // Also checked by setIssueLabels below, but here it fails before the issue exists.
+  await assertIssueLabels(project.id, input.labelIds);
   const issueId = await db.transaction(async (tx) => {
     const [seqRow] = await tx
       .update(projectTable)
@@ -652,7 +667,8 @@ export async function createIssue(
   await recordActivity(issueId, [{ action: 'created' }], actorUserId);
   // Suppress the label_changed event on creation — the initial labels are part of
   // the issue.created payload, so a separate change event would be redundant.
-  if (input.labelIds?.length) await setIssueLabels(issueId, input.labelIds, actorUserId, false);
+  if (input.labelIds?.length)
+    await setIssueLabels(project.id, issueId, input.labelIds, actorUserId, false);
   const created = (await getIssue(issueId))!;
   await emitWebhookEvent(project.id, 'issue.created', created);
   // An issue created already delegated to an agent enqueues a run, the same as
@@ -785,13 +801,16 @@ export async function deleteIssue(issueId: number): Promise<AttachmentRow[] | nu
 }
 
 // Replaces the issue's full label set (not an add/remove diff) and logs the
-// added/removed labels to the activity feed.
+// added/removed labels to the activity feed. projectId is the issue's project: a
+// label outside it is rejected before anything is written.
 export async function setIssueLabels(
+  projectId: number,
   issueId: number,
   labelIds: number[],
   actorUserId?: string | null,
   emitEvent = true,
 ): Promise<void> {
+  await assertIssueLabels(projectId, labelIds);
   const beforeRows = await db
     .select({ labelId: issueLabel.labelId })
     .from(issueLabel)
@@ -819,7 +838,7 @@ export async function setIssueLabels(
       .where(eq(issue.id, issueId));
   }
 
-  const names = await labelNames([...added, ...removed]);
+  const names = await labelNames(projectId, [...added, ...removed]);
   const events: ActivityInput[] = [];
   for (const labelId of added)
     events.push({ action: 'label_add', toText: names.get(labelId) ?? null });
@@ -873,6 +892,7 @@ export async function bulkAddLabels(
   actorUserId?: string | null,
 ): Promise<number> {
   const add = [...new Set(labelIds)];
+  await assertIssueLabels(projectId, add);
   const valid = await issuesInProject(projectId, ids);
   if (add.length === 0 || valid.length === 0) return 0;
 
@@ -892,7 +912,7 @@ export async function bulkAddLabels(
     const have = current.get(id) ?? [];
     const missing = add.filter((l) => !have.includes(l));
     if (missing.length === 0) continue;
-    await setIssueLabels(id, [...have, ...missing], actorUserId);
+    await setIssueLabels(projectId, id, [...have, ...missing], actorUserId);
     changed++;
   }
   return changed;

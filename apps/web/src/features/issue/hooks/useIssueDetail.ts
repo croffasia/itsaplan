@@ -8,21 +8,16 @@ import {
   type IssueFieldValueInput,
   type IssuePatch,
 } from '@/lib/api';
-import { useCustomFieldsQuery } from '@/services/customFields.service';
 import { useIssueQuery, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { qk } from '@/services/queryKeys';
-import { useUploadAttachment } from '../services/attachments.service';
+import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
+import { useFeedQuery, useTimelineQuery } from '../services/comments.service';
 import { attachmentMarkdown } from '../utils/attachmentEmbed';
+import { fieldDefsForType } from '../utils/fieldDefs';
 
-// Loads one issue with its type-scoped custom fields (global + type-scoped) and
-// exposes the edit operations for the detail surfaces. A patch mutates the
-// project optimistically and invalidates the issue, comments and activity
-// queries, so the properties and feed refresh without a manual reload. The
-// panel (IssueDetail) and full page (IssueViewPage) render the returned data;
-// this hook owns the fetch and mutation logic so those components stay layout
-// only. onIssueLoaded surfaces the loaded issue to the surrounding chrome
-// (identifier breadcrumb).
+// Loads one issue and exposes the edit operations for the detail surfaces.
+// onIssueLoaded surfaces the loaded issue to the surrounding chrome.
 export function useIssueDetail(
   project: ProjectDetail,
   issueId: number,
@@ -30,8 +25,14 @@ export function useIssueDetail(
 ) {
   const issueQuery = useIssueQuery(issueId);
   const issue = issueQuery.data ?? null;
-  const fieldsQuery = useCustomFieldsQuery(project.project.key, issue?.typeId ?? undefined);
-  const fieldDefs = fieldsQuery.data ?? [];
+  const fieldDefs = fieldDefsForType(project.customFields, issue?.typeId ?? null);
+
+  // Started here, not in the components that read them: those mount only after the
+  // issue arrives, which would put these reads in a second wave after it.
+  useAttachmentsQuery(issueId);
+  useTimelineQuery(issueId);
+  useFeedQuery(issueId);
+
   const updateIssue = useUpdateIssue(project.project.key);
   const setFieldValue = useSetFieldValue(project.project.key);
   const uploadAttachment = useUploadAttachment();

@@ -1,5 +1,6 @@
 import { type SharedIssueBundle } from '@/lib/api';
 import { toPublicProjectDetail } from '@/utils/publicProject';
+import { fieldDefsForType } from '../../utils/fieldDefs';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
@@ -24,12 +25,7 @@ export default function ReadOnlyIssueDetail({
   const project = toPublicProjectDetail(scaffold);
   const imageByUserId = new Map(scaffold.assignees.map((a) => [a.userId, a.image]));
 
-  // Custom fields applicable to this issue's type (global + type-scoped), matching
-  // the authenticated detail. Fields flagged "show in main info" render in the body;
-  // the rest render inside the Properties grid.
-  const fieldDefs = scaffold.customFields.filter(
-    (f) => f.issueTypeId == null || f.issueTypeId === issue.typeId,
-  );
+  const fieldDefs = fieldDefsForType(scaffold.customFields, issue.typeId);
 
   const body = (
     <>

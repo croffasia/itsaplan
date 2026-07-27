@@ -1,5 +1,5 @@
 import { type Column, type StateType, type TimelineSegment } from '@/lib/api';
-import { formatShortDate } from '@/utils/dates';
+import { formatDuration, formatShortDate } from '@/utils/dates';
 
 // Turns the API's status segments into the geometry the timeline renders: one lane
 // per status the issue passed through, each holding its stretches placed on a shared
@@ -18,6 +18,9 @@ export interface TimelineBar {
   segment: TimelineSegment;
   leftPct: number;
   widthPct: number;
+  // The stretch left after the work is over: parked at the end of the axis, with a
+  // width the renderer fixes rather than one taken from the span.
+  fixed: boolean;
 }
 
 export interface TimelineLane {
@@ -25,6 +28,11 @@ export interface TimelineLane {
   // and the column was deleted). Unique per lane, so it doubles as the render key.
   label: string;
   color: string;
+  stateType: StateType | undefined;
+  // Where the status sits among the project's columns, for the views that show the
+  // statuses in the project's own order rather than in the order the issue met them.
+  // Statuses whose column is gone come last.
+  order: number;
   // Time spent in this status across all its stretches.
   totalMs: number;
   bars: TimelineBar[];
@@ -38,6 +46,7 @@ export interface TimelineTick {
 export interface TimelineLayout {
   lanes: TimelineLane[];
   ticks: TimelineTick[];
+  hasFixedTail: boolean;
 }
 
 export interface LifecycleMetrics {
@@ -48,17 +57,29 @@ export interface LifecycleMetrics {
   cycleMs: number | null;
 }
 
-// The lead and cycle time of the compact view. A status carries the column name it was
-// logged with, so its state type is resolved by matching that name against the
-// project's live columns; a status whose column was renamed or deleted resolves to
-// undefined and counts as neither started nor completed.
+// "<1m" where formatDuration reads "0m", and empty for a figure the issue has not
+// reached yet.
+export function durationLabel(ms: number | null): string {
+  if (ms == null) return '';
+  return ms < 60_000 ? '<1m' : formatDuration(ms);
+}
+
+// A status carries the column name it was logged with, so it is matched against the
+// project's live columns by that name; a status whose column was renamed or deleted
+// matches nothing and counts as no state type at all. The index is the column's place
+// in the project's own order.
+function columnResolver(columns: Column[]) {
+  const byName = new Map(columns.map((column, index) => [column.name, { column, index }]));
+  return (segment: TimelineSegment) => (segment.status ? byName.get(segment.status) : undefined);
+}
+
+// The lead and cycle time of the compact view.
 export function buildLifecycleMetrics(
   segments: TimelineSegment[],
   columns: Column[],
 ): LifecycleMetrics {
-  const byName = new Map<string, StateType>(columns.map((c) => [c.name, c.stateType]));
-  const stateOf = (segment: TimelineSegment) =>
-    segment.status ? byName.get(segment.status) : undefined;
+  const columnOf = columnResolver(columns);
+  const stateOf = (segment: TimelineSegment) => columnOf(segment)?.column.stateType;
 
   const completed = segments.find((segment) => stateOf(segment) === 'completed');
   const started = segments.find((segment) => stateOf(segment) === 'started');
@@ -77,24 +98,33 @@ export function buildTimelineLayout(
   segments: TimelineSegment[],
   columns: Column[],
 ): TimelineLayout {
-  if (segments.length === 0) return { lanes: [], ticks: [] };
+  if (segments.length === 0) return { lanes: [], ticks: [], hasFixedTail: false };
 
+  const columnOf = columnResolver(columns);
   const last = segments[segments.length - 1];
+  // The stretch the issue sits in after the work is over has no end and grows every
+  // day, so it is drawn at a fixed width and the axis stops where it began.
+  const fixedTail = columnOf(last)?.column.stateType === 'completed' ? last : null;
   const startMs = Date.parse(segments[0].from);
-  const endMs = last.to ? Date.parse(last.to) : Date.now();
+  let endMs: number;
+  if (fixedTail) endMs = Date.parse(fixedTail.from);
+  else if (last.to) endMs = Date.parse(last.to);
+  else endMs = Date.now();
   // An issue created a moment ago spans ~0ms; a floor of one minute keeps the
   // division safe and the single bar visible.
   const spanMs = Math.max(endMs - startMs, 60_000);
-  const colorByName = new Map(columns.map((c) => [c.name, c.color]));
 
   const lanes: TimelineLane[] = [];
   const laneByStatus = new Map<string | null, TimelineLane>();
   for (const segment of segments) {
     let lane = laneByStatus.get(segment.status);
     if (!lane) {
+      const found = columnOf(segment);
       lane = {
         label: segment.status ?? 'Unknown status',
-        color: (segment.status && colorByName.get(segment.status)) || FALLBACK_COLOR,
+        color: found?.column.color || FALLBACK_COLOR,
+        stateType: found?.column.stateType,
+        order: found?.index ?? columns.length,
         totalMs: 0,
         bars: [],
       };
@@ -102,14 +132,16 @@ export function buildTimelineLayout(
       lanes.push(lane);
     }
     lane.totalMs += segment.durationMs;
+    const fixed = segment === fixedTail;
     lane.bars.push({
       segment,
-      leftPct: ((Date.parse(segment.from) - startMs) / spanMs) * 100,
-      widthPct: (segment.durationMs / spanMs) * 100,
+      leftPct: fixed ? 100 : ((Date.parse(segment.from) - startMs) / spanMs) * 100,
+      widthPct: fixed ? 0 : (segment.durationMs / spanMs) * 100,
+      fixed,
     });
   }
 
-  return { lanes, ticks: buildTicks(startMs, spanMs) };
+  return { lanes, ticks: buildTicks(startMs, spanMs), hasFixedTail: fixedTail != null };
 }
 
 // Evenly spaced date labels along the axis, stepping in whole days so a tick always

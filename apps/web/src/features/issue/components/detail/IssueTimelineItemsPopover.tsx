@@ -31,9 +31,9 @@ export default function IssueTimelineItemsPopover({
         <div className="mb-3 border-b pb-2">
           <div className="flex items-baseline gap-2">
             <span className="text-sm font-medium">{title}</span>
-            <span className="text-xs text-muted-foreground">{duration}</span>
+            {duration && <span className="text-xs text-muted-foreground">{duration}</span>}
           </div>
-          <div className="text-xs text-muted-foreground">{subtitle}</div>
+          {subtitle && <div className="text-xs text-muted-foreground">{subtitle}</div>}
         </div>
         <IssueTimelineItems issueId={issueId} ranges={ranges} imageByUserId={imageByUserId} />
       </PopoverContent>

@@ -22,13 +22,15 @@ export default function IssueTimelineLanes({
             key={lane.label}
             issueId={issueId}
             lane={lane}
+            hasFixedTail={layout.hasFixedTail}
             imageByUserId={imageByUserId}
           />
         ))}
       </div>
       {/* The axis sits under the tracks only, so it is inset by the label and total
-          columns at the width where those are beside the track. */}
-      <div className="mt-1 @md:pr-13 @md:pl-31">
+          columns at the width where those are beside the track, and by the fixed bar
+          past its end. */}
+      <div className={`mt-1 @md:pl-31 ${layout.hasFixedTail ? 'pr-12 @md:pr-25' : '@md:pr-13'}`}>
         <div className="relative h-4 text-[10px] text-muted-foreground">
           {layout.ticks.map((tick) => (
             <span

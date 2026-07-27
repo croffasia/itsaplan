@@ -1,5 +1,4 @@
-import { type TimelineLane } from '../../utils/timeline';
-import { formatDuration } from '@/utils/dates';
+import { durationLabel, type TimelineLane } from '../../utils/timeline';
 import IssueTimelineBar from './IssueTimelineBar';
 
 // One status of the issue's history: its name and total time on the left, its
@@ -9,10 +8,14 @@ import IssueTimelineBar from './IssueTimelineBar';
 export default function IssueTimelineLane({
   issueId,
   lane,
+  hasFixedTail,
   imageByUserId,
 }: {
   issueId: number;
   lane: TimelineLane;
+  // Whether the layout ends in a fixed bar: every track then leaves the same room for
+  // it, so the axis stays shared.
+  hasFixedTail: boolean;
   imageByUserId: Map<string, string | null>;
 }) {
   return (
@@ -21,7 +24,7 @@ export default function IssueTimelineLane({
         <span className="size-2 shrink-0 rounded-xs" style={{ backgroundColor: lane.color }} />
         <span className="truncate">{lane.label}</span>
       </div>
-      <div className="relative h-5 flex-1 rounded-sm bg-muted/60">
+      <div className={`relative h-5 flex-1 rounded-sm bg-muted/60 ${hasFixedTail ? 'mr-12' : ''}`}>
         {lane.bars.map((bar) => (
           <IssueTimelineBar
             key={bar.segment.from}
@@ -34,7 +37,7 @@ export default function IssueTimelineLane({
         ))}
       </div>
       <span className="text-xs text-muted-foreground tabular-nums @md:w-10 @md:shrink-0">
-        {formatDuration(lane.totalMs)}
+        {durationLabel(lane.totalMs)}
       </span>
     </div>
   );

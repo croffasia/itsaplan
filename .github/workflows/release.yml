@@ -7,7 +7,7 @@ on:
   push:
     branches: [main]
 
-# Needed to open the release PR and create tags/releases with GITHUB_TOKEN.
+# Needed to open the release PR, create tags/releases, and push `release`.
 permissions:
   contents: write
   pull-requests: write
@@ -22,6 +22,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v5
+        id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      # Move the `release` branch to the released commit, so a deploy target
+      # that follows a branch (Coolify) runs released versions only. The branch
+      # is a mirror: this job is the only writer, which keeps the push a
+      # fast-forward. It is created on the first published release.
+      #
+      # This runs here rather than in a workflow triggered by `release:
+      # published`, because that event is raised by GITHUB_TOKEN and
+      # GITHUB_TOKEN-triggered events do not start workflow runs.
+      #
+      # `release_created` is set only when a release was cut; it has no `false`
+      # value, so an unset output makes the condition skip the steps.
+      - uses: actions/checkout@v7
+        if: ${{ steps.release.outputs.release_created }}
+        with:
+          ref: ${{ steps.release.outputs.tag_name }}
+
+      - name: Move the release branch
+        if: ${{ steps.release.outputs.release_created }}
+        run: git push origin HEAD:release

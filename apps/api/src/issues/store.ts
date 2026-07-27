@@ -987,8 +987,9 @@ function pickScalarValue(row: {
   return null;
 }
 
-// All fields applicable to this issue (global ones plus its type's own), each
-// joined with whatever value has been set for it (null if unset).
+// The fields of the issue's project that apply to it (the project-wide ones plus
+// its type's own), each joined with whatever value has been set for it (null if
+// unset).
 export async function getIssueFieldValues(issueId: number): Promise<IssueFieldValueRow[]> {
   const rows = await db
     .select({
@@ -1003,7 +1004,10 @@ export async function getIssueFieldValues(issueId: number): Promise<IssueFieldVa
     .from(issue)
     .innerJoin(
       customField,
-      or(isNull(customField.issueTypeId), eq(customField.issueTypeId, issue.typeId)),
+      and(
+        eq(customField.projectId, issue.projectId),
+        or(isNull(customField.issueTypeId), eq(customField.issueTypeId, issue.typeId)),
+      ),
     )
     .leftJoin(
       issueFieldValue,
@@ -1044,17 +1048,19 @@ function isHttpUrl(value: string): boolean {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
-// Sets one field's value on one issue. For select/multi_select fields, pass
-// optionIds (replaces the full selection); for every other field type, pass value
-// matching the field's type.
+// Sets one field's value on one issue. projectId is the issue's project: the field
+// is resolved inside it, so a field id belonging to another project does not match.
+// For select/multi_select fields, pass optionIds (replaces the full selection); for
+// every other field type, pass value matching the field's type.
 export async function setIssueFieldValue(
+  projectId: number,
   issueId: number,
   fieldId: number,
   input: { value?: string | number | boolean | null; optionIds?: number[] },
   actorUserId?: string | null,
 ): Promise<void> {
-  const field = await getCustomFieldById(fieldId);
-  if (!field) throw new Error(`Custom field ${fieldId} not found`);
+  const field = await getCustomFieldById(projectId, fieldId);
+  if (!field) throw new HttpError(404, 'Custom field not found');
 
   // A url field stores its value as text but must hold a valid http(s) URL.
   if (field.fieldType === 'url' && typeof input.value === 'string' && input.value !== '') {
@@ -1070,18 +1076,24 @@ export async function setIssueFieldValue(
   let toText: string | null;
 
   if (field.fieldType === 'select' || field.fieldType === 'multi_select') {
+    const optionIds = input.optionIds ?? [];
+    // An option must be one of this field's own: the issue_field_option foreign key
+    // only requires it to exist somewhere. Resolved before the delete so a rejected
+    // request leaves the current selection untouched.
+    const names = optionIds.map((optionId) => {
+      const option = field.options.find((o) => o.id === optionId);
+      if (!option) throw new HttpError(400, 'Option does not belong to this field');
+      return option.value;
+    });
+
     await db
       .delete(issueFieldOption)
       .where(and(eq(issueFieldOption.issueId, issueId), eq(issueFieldOption.fieldId, fieldId)));
-    const optionIds = input.optionIds ?? [];
     if (optionIds.length) {
       await db
         .insert(issueFieldOption)
         .values(optionIds.map((optionId) => ({ issueId, fieldId, optionId })));
     }
-    const names = optionIds
-      .map((oid) => field.options.find((o) => o.id === oid)?.value)
-      .filter((v): v is string => v != null);
     toText = names.length ? names.join(', ') : null;
   } else {
     // The value column matching the field's type; the others stay NULL. Both the

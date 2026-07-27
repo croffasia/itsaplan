@@ -86,8 +86,16 @@ export async function listCustomFields(
   return fields.map((f) => mapField(f, options.get(f.id) ?? []));
 }
 
-export async function getCustomFieldById(id: number): Promise<CustomFieldRow | null> {
-  const rows = await db.select().from(customField).where(eq(customField.id, id));
+// One field by id, scoped to its project so a field id from another project is
+// not matched. Returns null when no field of that id exists in the project.
+export async function getCustomFieldById(
+  projectId: number,
+  id: number,
+): Promise<CustomFieldRow | null> {
+  const rows = await db
+    .select()
+    .from(customField)
+    .where(and(eq(customField.id, id), eq(customField.projectId, projectId)));
   if (!rows[0]) return null;
   const options = await optionsByField([id]);
   return mapField(rows[0], options.get(id) ?? []);
@@ -128,11 +136,11 @@ export async function createCustomField(input: {
       .insert(customFieldOption)
       .values(options.map((value, index) => ({ fieldId: row.id, value, position: index })));
   }
-  return (await getCustomFieldById(row.id))!;
+  return (await getCustomFieldById(input.projectId, row.id))!;
 }
 
-// Updates a field, scoped to its project so a field id from another project is
-// not matched. Returns null when no field of that id exists in the project.
+// Updates a field, scoped to its project. Returns null when no field of that id
+// exists in the project.
 export async function updateCustomField(
   projectId: number,
   id: number,
@@ -153,7 +161,7 @@ export async function updateCustomField(
     const rows = await db.select({ id: customField.id }).from(customField).where(scope);
     if (rows.length === 0) return null;
   }
-  return getCustomFieldById(id);
+  return getCustomFieldById(projectId, id);
 }
 
 // Deletes a field, scoped to its project. Returns true when a row was removed.

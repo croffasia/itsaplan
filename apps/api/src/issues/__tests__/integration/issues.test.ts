@@ -377,6 +377,16 @@ describe('issues', () => {
       return res.data?.fields.find((f) => f.fieldId === fieldId);
     }
 
+    // A project-wide field (no issueTypeId) of a second project, which must stay
+    // invisible to the issues of the first one.
+    async function foreignField(client: Api) {
+      await client.projects.post({ key: 'OPS', name: 'Operations' });
+      const res = await client
+        .projects({ projectKey: 'OPS' })
+        ['custom-fields'].post({ name: 'Source URL', fieldType: 'text' });
+      return res.data!;
+    }
+
     it('sets a text field value', async () => {
       const { asOwner, columnId } = await setupProject();
       const field = (
@@ -502,6 +512,58 @@ describe('issues', () => {
         .fields({ fieldId: field.id })
         .put({ value: 'javascript:alert(1)' });
       expect(put.status).toBe(400);
+    });
+
+    it('rejects an option id of another field and keeps the current selection', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const customFields = asOwner.projects({ projectKey: 'MKT' })['custom-fields'];
+      const target = (
+        await customFields.post({
+          name: 'Priority',
+          fieldType: 'select',
+          options: ['Low', 'High'],
+        })
+      ).data!;
+      const other = (
+        await customFields.post({ name: 'Stage', fieldType: 'select', options: ['Draft'] })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: target.id })
+        .put({ optionIds: [target.options[0].id] });
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: target.id })
+        .put({ optionIds: [other.options[0].id] });
+      expect(put.status).toBe(400);
+
+      expect((await fieldValue(asOwner, issue.id, target.id))?.optionIds).toEqual([
+        target.options[0].id,
+      ]);
+    });
+
+    it("omits another project's field from the issue", async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignField(asOwner);
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await asOwner.issues({ issueId: issue.id }).get();
+      expect(res.status).toBe(200);
+      expect(res.data?.fields.map((f) => f.fieldId)).not.toContain(foreign.id);
+    });
+
+    it("returns 404 setting another project's field", async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignField(asOwner);
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: foreign.id })
+        .put({ value: 'hello' });
+      expect(put.status).toBe(404);
     });
 
     it('rejects a non-numeric field id', async () => {

@@ -745,8 +745,14 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // body.value must match the field's type (text/number/boolean/date).
   .put(
     '/issues/:issueId/fields/:fieldId',
-    async ({ params, body, user }) => {
-      await setIssueFieldValue(params.issueId, params.fieldId, body, requireUser(user).id);
+    async ({ params, body, user, projectId }) => {
+      await setIssueFieldValue(
+        projectId,
+        params.issueId,
+        params.fieldId,
+        body,
+        requireUser(user).id,
+      );
       return { ok: true };
     },
     {

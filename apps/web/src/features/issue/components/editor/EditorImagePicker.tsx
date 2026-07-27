@@ -2,12 +2,9 @@ import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { type Embeddable } from '../../utils/attachmentEmbed';
 
-// Picks one of the issue's image attachments to embed at the editor's cursor.
-// Uploading a new file stays with the Attachments panel and with drop/paste.
-//
-// Nothing here may take focus: blurring the editor saves the description, the
-// save invalidates the issue, and the refetched updatedAt remounts the editor by
-// its key — the dialog would disappear mid-pick and the insert be thrown away.
+// Nothing here may take focus: blurring the editor saves the description, and the
+// refetched updatedAt remounts the editor by its key — mid-pick, throwing away the
+// insert.
 export default function EditorImagePicker({
   open,
   images,

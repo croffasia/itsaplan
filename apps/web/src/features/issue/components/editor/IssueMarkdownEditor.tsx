@@ -13,8 +13,8 @@ import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
 import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from './EditorSelectionMenu';
 
-// Shared by every editor instance. A block with no language written on it is
-// detected by highlightAuto, so there is no language picker.
+// Shared by every editor instance. A block with no language is detected by
+// highlightAuto, so there is no language picker.
 const lowlight = createLowlight(common);
 
 // A minimal WYSIWYG editor over markdown text — no persistent toolbar, just a
@@ -46,9 +46,8 @@ export default function IssueMarkdownEditor({
   // When set, files dropped onto the editor are uploaded and inserted at the
   // drop position (image/video inline, other files as a link).
   uploadFile?: (file: File) => Promise<Embeddable>;
-  // Offered in a picker, so an already uploaded image can be embedded again.
-  // Omitted where there is no issue to read them from yet (the create modal),
-  // which drops the picker.
+  // Offered in a picker, to embed an upload again. Omitted where there is no
+  // issue to read them from yet (the create modal), which drops the picker.
   imageAttachments?: Embeddable[];
 }) {
   const editorRef = useRef<Editor | null>(null);
@@ -71,8 +70,7 @@ export default function IssueMarkdownEditor({
   const editor = useEditor({
     editable,
     extensions: [
-      // The highlighting code block replaces StarterKit's plain one. It keeps the
-      // node name codeBlock, so commands and markdown serialization are unchanged.
+      // Replaces StarterKit's plain code block, keeping the node name codeBlock.
       StarterKit.configure({ codeBlock: false }),
       CodeBlockLowlight.configure({ lowlight }),
       Placeholder.configure({ placeholder }),

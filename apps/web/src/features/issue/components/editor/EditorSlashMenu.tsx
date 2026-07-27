@@ -48,8 +48,7 @@ export default function EditorSlashMenu({
         <button
           key={item.title}
           type="button"
-          // Clicking must not move the caret out of the typed "/query" — the
-          // command deletes that range.
+          // The caret must stay in the typed "/query": the command deletes it.
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => command(item)}
           onMouseEnter={() => setActiveIndex(index)}

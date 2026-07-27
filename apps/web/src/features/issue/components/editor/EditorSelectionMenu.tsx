@@ -54,7 +54,6 @@ const ITEMS: { name: string; icon: LucideIcon; run: (editor: Editor) => void }[]
   },
 ];
 
-// Formatting for the selected text, in a menu floating above the selection.
 export default function EditorSelectionMenu({ editor }: { editor: Editor }) {
   return (
     <BubbleMenu

@@ -10,8 +10,7 @@ import { cn } from '@/lib/utils';
 // Below this an image is too small to grab again.
 const MIN_WIDTH = 60;
 
-// The node's `style` attribute holds the raw CSS text of an embedded
-// <img style="max-width:50%">; React takes the parsed form.
+// The node's `style` attribute holds raw CSS text; React takes the parsed form.
 function styleObject(css: string | null): CSSProperties {
   if (!css) return {};
   return Object.fromEntries(
@@ -27,8 +26,7 @@ function styleObject(css: string | null): CSSProperties {
   );
 }
 
-// Only the width is stored — .md-content img keeps height:auto, so the aspect
-// ratio holds.
+// Only the width is stored — .md-content img keeps height:auto.
 export default function EditorResizableImage({
   node,
   updateAttributes,
@@ -36,8 +34,7 @@ export default function EditorResizableImage({
   selected,
 }: NodeViewProps) {
   const imgRef = useRef<HTMLImageElement>(null);
-  // Set while dragging, so the image follows the pointer without writing a
-  // transaction (and an undo step) per pointermove.
+  // Set while dragging: no transaction (and no undo step) per pointermove.
   const [dragWidth, setDragWidth] = useState<number | null>(null);
 
   const width = dragWidth ?? (node.attrs.width as number | null);
@@ -61,8 +58,7 @@ export default function EditorResizableImage({
       document.removeEventListener('pointerup', onUp);
       setDragWidth(null);
       updateAttributes({ width: widthAt(up.clientX) });
-      // The width is saved on blur like every other edit, and a drag that never
-      // touched the text leaves the editor unfocused — no blur, nothing saved.
+      // The width saves on blur, and a drag alone leaves the editor unfocused.
       editor.commands.focus();
     };
     document.addEventListener('pointermove', onMove);
@@ -80,8 +76,7 @@ export default function EditorResizableImage({
         title={(node.attrs.title as string | null) ?? undefined}
         // The dragged width wins over the embed's own sizing.
         style={{ ...styleObject(node.attrs.style as string | null), ...(width ? { width } : {}) }}
-        // A node view has no drag handle of its own, and without one the image can
-        // no longer be moved within the description.
+        // A node view has no drag handle of its own; without one the image is stuck.
         data-drag-handle
       />
       {editor.isEditable && (
@@ -90,8 +85,7 @@ export default function EditorResizableImage({
           onPointerDown={startResize}
           className={cn(
             'absolute right-1 bottom-1 size-3 cursor-nwse-resize rounded-sm border border-background bg-primary opacity-0 transition-opacity group-hover:opacity-100',
-            // Touch has no hover: tapping the image selects the node, which is the
-            // only way to reach the handle there.
+            // Touch has no hover: tapping selects the node, the only way in there.
             selected && 'opacity-100',
           )}
         />

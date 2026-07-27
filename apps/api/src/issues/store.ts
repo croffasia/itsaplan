@@ -5,6 +5,8 @@ import {
   issueActivity,
   issueLabel,
   label,
+  projectColumn,
+  issueType,
   issueFieldValue,
   issueFieldOption,
   issueAttachment,
@@ -503,11 +505,13 @@ async function attachFieldValues(issues: IssueRow[]): Promise<void> {
 
 // The snapshot columns of an issue, without the label and project-key joins a
 // full load does. Used as the "before" state for the change-log diff, which
-// needs only these columns.
-async function loadSnapshot(id: number): Promise<IssueSnapshot | null> {
+// needs only these columns, plus the project id the update's scope checks run
+// against.
+async function loadSnapshot(id: number): Promise<(IssueSnapshot & { projectId: number }) | null> {
   const rows = await db
     .select({
       id: issue.id,
+      projectId: issue.projectId,
       title: issue.title,
       description: issue.description,
       columnId: issue.columnId,
@@ -608,6 +612,32 @@ async function assertInitiative(
     throw new HttpError(400, 'Initiative must belong to this project');
 }
 
+// Enforces that a column belongs to the issue's project — issue.column_id only
+// requires the column to exist somewhere, so an issue could otherwise sit on
+// another project's board. Throws 400 otherwise.
+async function assertColumn(projectId: number, columnId: number | undefined): Promise<void> {
+  if (columnId === undefined) return;
+  const rows = await db
+    .select({ id: projectColumn.id })
+    .from(projectColumn)
+    .where(and(eq(projectColumn.id, columnId), eq(projectColumn.projectId, projectId)));
+  if (rows.length === 0) throw new HttpError(400, 'Column must belong to this project');
+}
+
+// Enforces that an issue type belongs to the issue's project. Only checks when set
+// to a non-null value (clearing the type is always allowed). Throws 400 otherwise.
+async function assertIssueType(
+  projectId: number,
+  typeId: number | null | undefined,
+): Promise<void> {
+  if (typeId == null) return;
+  const rows = await db
+    .select({ id: issueType.id })
+    .from(issueType)
+    .where(and(eq(issueType.id, typeId), eq(issueType.projectId, projectId)));
+  if (rows.length === 0) throw new HttpError(400, 'Issue type must belong to this project');
+}
+
 // Enforces that every label belongs to the issue's project — the issue_label
 // foreign key only requires the label to exist somewhere. Throws 400 otherwise.
 async function assertIssueLabels(projectId: number, labelIds?: number[]): Promise<void> {
@@ -630,6 +660,8 @@ export async function createIssue(
 ): Promise<IssueRow> {
   await assertAssignments(project.id, input);
   await assertInitiative(project.id, input.initiativeId);
+  await assertColumn(project.id, input.columnId);
+  await assertIssueType(project.id, input.typeId);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
   const issueId = await db.transaction(async (tx) => {
@@ -709,13 +741,10 @@ export async function updateIssue(
   const before = await loadSnapshot(id);
   if (!before) return null;
 
-  if (patch.assigneeUserId || patch.delegateUserId || patch.initiativeId) {
-    const projectId = await getIssueProjectId(id);
-    if (projectId) {
-      await assertAssignments(projectId, patch);
-      await assertInitiative(projectId, patch.initiativeId);
-    }
-  }
+  await assertAssignments(before.projectId, patch);
+  await assertInitiative(before.projectId, patch.initiativeId);
+  await assertColumn(before.projectId, patch.columnId);
+  await assertIssueType(before.projectId, patch.typeId);
 
   const set: Partial<typeof issue.$inferInsert> = {};
   if (patch.columnId !== undefined) set.columnId = patch.columnId;

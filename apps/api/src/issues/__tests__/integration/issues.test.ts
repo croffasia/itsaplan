@@ -38,6 +38,17 @@ async function foreignLabel(client: Api) {
   return res.data!;
 }
 
+// A column and an issue type of a second project, which no issue of the first one
+// may point at.
+async function foreignProject(client: Api) {
+  await client.projects.post({ key: 'OPS', name: 'Operations' });
+  const view = await client.projects({ projectKey: 'OPS' }).get();
+  const type = await client
+    .projects({ projectKey: 'OPS' })
+    ['issue-types'].post({ name: 'Incident' });
+  return { columnId: view.data!.columns[0].id, typeId: type.data!.id };
+}
+
 // The board's issue list (carries labelIds and set custom field values).
 async function issuesOf(client: Api, projectKey = 'MKT') {
   const board = await client.projects({ projectKey }).issues.board.get();
@@ -135,6 +146,24 @@ describe('issues', () => {
       const foreign = await foreignLabel(asOwner);
 
       const created = await createIssue(asOwner, columnId, { labelIds: [foreign.id] });
+      expect(created.status).toBe(400);
+      expect(await issuesOf(asOwner)).toHaveLength(0);
+    });
+
+    it('rejects a column of another project and creates no issue', async () => {
+      const { asOwner } = await setupProject();
+      const foreign = await foreignProject(asOwner);
+
+      const created = await createIssue(asOwner, foreign.columnId);
+      expect(created.status).toBe(400);
+      expect(await issuesOf(asOwner)).toHaveLength(0);
+    });
+
+    it('rejects an issue type of another project and creates no issue', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignProject(asOwner);
+
+      const created = await createIssue(asOwner, columnId, { typeId: foreign.typeId });
       expect(created.status).toBe(400);
       expect(await issuesOf(asOwner)).toHaveLength(0);
     });
@@ -286,6 +315,35 @@ describe('issues', () => {
 
       const list = await issuesOf(asOwner);
       expect(list.find((i) => i.id === issue.id)?.labelIds).toEqual([own.id]);
+    });
+
+    it('rejects a column of another project and keeps the current one', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignProject(asOwner);
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const patched = await asOwner.issues({ issueId: issue.id }).patch({
+        columnId: foreign.columnId,
+      });
+      expect(patched.status).toBe(400);
+
+      const read = await asOwner.issues({ issueId: issue.id }).get();
+      expect(read.data?.columnId).toBe(columnId);
+    });
+
+    it('rejects an issue type of another project and keeps the current one', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const own = (
+        await asOwner.projects({ projectKey: 'MKT' })['issue-types'].post({ name: 'Bug' })
+      ).data!;
+      const foreign = await foreignProject(asOwner);
+      const issue = (await createIssue(asOwner, columnId, { typeId: own.id })).data!;
+
+      const patched = await asOwner.issues({ issueId: issue.id }).patch({ typeId: foreign.typeId });
+      expect(patched.status).toBe(400);
+
+      const read = await asOwner.issues({ issueId: issue.id }).get();
+      expect(read.data?.typeId).toBe(own.id);
     });
 
     it('changes only the given fields', async () => {
@@ -952,6 +1010,20 @@ describe('issues', () => {
       const list = await issuesOf(asOwner);
       expect(list.find((i) => i.id === one.id)?.labelIds.sort()).toEqual([a.id, b.id].sort());
       expect(list.find((i) => i.id === two.id)?.labelIds).toEqual([b.id]);
+    });
+
+    it("rejects a bulk move to another project's column", async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignProject(asOwner);
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.bulk.patch({ ids: [issue.id], patch: { columnId: foreign.columnId } });
+      expect(res.status).toBe(400);
+
+      const list = await issuesOf(asOwner);
+      expect(list.find((i) => i.id === issue.id)?.columnId).toBe(columnId);
     });
 
     it("rejects a bulk add of another project's label", async () => {

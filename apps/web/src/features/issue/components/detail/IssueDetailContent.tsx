@@ -40,6 +40,7 @@ export default function IssueDetailContent({
     toggleLabel,
     insertAttachment,
     uploadFile,
+    imageAttachments,
     setDescEditor,
   } = useIssueDetail(project, issueId, onIssueLoaded);
 
@@ -77,6 +78,7 @@ export default function IssueDetailContent({
         key={`desc-${issue.updatedAt}`}
         onReady={setDescEditor}
         uploadFile={uploadFile}
+        imageAttachments={imageAttachments}
         onBlur={(md) => {
           if (md !== issue.description) patch({ description: md });
         }}
@@ -93,6 +95,7 @@ export default function IssueDetailContent({
             current={issue.fields.find((f) => f.fieldId === def.id)}
             saveKey={`${def.id}-${issue.updatedAt}`}
             uploadFile={uploadFile}
+            imageAttachments={imageAttachments}
             onSetField={setField}
           />
         ))}
@@ -110,6 +113,7 @@ export default function IssueDetailContent({
       onSetField={setField}
       onToggleLabel={toggleLabel}
       uploadFile={uploadFile}
+      imageAttachments={imageAttachments}
       hasSidebar={hasSidebar}
     />
   );

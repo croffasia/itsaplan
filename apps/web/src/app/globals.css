@@ -253,6 +253,104 @@
   background: none;
   padding: 0;
 }
+/* Token colors for the hljs-* classes lowlight emits, taken from highlight.js's
+   GitHub light and dark themes. Their background and base text color are dropped:
+   the block already gets them from .md-content pre above. */
+.md-content {
+  --hljs-keyword: #d73a49;
+  --hljs-title: #6f42c1;
+  --hljs-attr: #005cc5;
+  --hljs-string: #032f62;
+  --hljs-built-in: #e36209;
+  --hljs-comment: #6a737d;
+  --hljs-name: #22863a;
+  --hljs-section: #005cc5;
+  --hljs-bullet: #735c0f;
+  --hljs-addition: #22863a;
+  --hljs-addition-bg: #f0fff4;
+  --hljs-deletion: #b31d28;
+  --hljs-deletion-bg: #ffeef0;
+}
+.dark .md-content {
+  --hljs-keyword: #ff7b72;
+  --hljs-title: #d2a8ff;
+  --hljs-attr: #79c0ff;
+  --hljs-string: #a5d6ff;
+  --hljs-built-in: #ffa657;
+  --hljs-comment: #8b949e;
+  --hljs-name: #7ee787;
+  --hljs-section: #1f6feb;
+  --hljs-bullet: #f2cc60;
+  --hljs-addition: #aff5b4;
+  --hljs-addition-bg: #033a16;
+  --hljs-deletion: #ffdcd7;
+  --hljs-deletion-bg: #67060c;
+}
+.md-content .hljs-doctag,
+.md-content .hljs-keyword,
+.md-content .hljs-meta .hljs-keyword,
+.md-content .hljs-template-tag,
+.md-content .hljs-template-variable,
+.md-content .hljs-type,
+.md-content .hljs-variable.language_ {
+  color: var(--hljs-keyword);
+}
+.md-content .hljs-title {
+  color: var(--hljs-title);
+}
+.md-content .hljs-attr,
+.md-content .hljs-attribute,
+.md-content .hljs-literal,
+.md-content .hljs-meta,
+.md-content .hljs-number,
+.md-content .hljs-operator,
+.md-content .hljs-selector-attr,
+.md-content .hljs-selector-class,
+.md-content .hljs-selector-id,
+.md-content .hljs-variable {
+  color: var(--hljs-attr);
+}
+.md-content .hljs-meta .hljs-string,
+.md-content .hljs-regexp,
+.md-content .hljs-string {
+  color: var(--hljs-string);
+}
+.md-content .hljs-built_in,
+.md-content .hljs-symbol {
+  color: var(--hljs-built-in);
+}
+.md-content .hljs-code,
+.md-content .hljs-comment,
+.md-content .hljs-formula {
+  color: var(--hljs-comment);
+}
+.md-content .hljs-name,
+.md-content .hljs-quote,
+.md-content .hljs-selector-pseudo,
+.md-content .hljs-selector-tag {
+  color: var(--hljs-name);
+}
+.md-content .hljs-section {
+  color: var(--hljs-section);
+  font-weight: 700;
+}
+.md-content .hljs-bullet {
+  color: var(--hljs-bullet);
+}
+.md-content .hljs-emphasis {
+  font-style: italic;
+}
+.md-content .hljs-strong {
+  font-weight: 700;
+}
+.md-content .hljs-addition {
+  color: var(--hljs-addition);
+  background-color: var(--hljs-addition-bg);
+}
+.md-content .hljs-deletion {
+  color: var(--hljs-deletion);
+  background-color: var(--hljs-deletion-bg);
+}
 .md-content blockquote {
   border-left: 2px solid var(--border);
   padding-left: 0.75em;

@@ -19,6 +19,7 @@ import TypeSelect from '@/components/common/fields/TypeSelect';
 import InitiativeSelect from '../fields/InitiativeSelect';
 import IssueCustomFieldControl from '../fields/IssueCustomFieldControl';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
+import { type Embeddable } from '../../utils/attachmentEmbed';
 
 // One property row in the two-column list: name on the left, control on the right.
 function PropertyRow({ label, children }: { label: string; children: ReactNode }) {
@@ -41,6 +42,7 @@ export default function IssueProperties({
   onSetField,
   onToggleLabel,
   uploadFile,
+  imageAttachments,
   hasSidebar,
   readOnly,
 }: {
@@ -50,7 +52,8 @@ export default function IssueProperties({
   onPatch: (fields: IssuePatch) => void;
   onSetField: (fieldId: number, value: IssueFieldValueInput) => void;
   onToggleLabel: (id: number) => void;
-  uploadFile?: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
+  uploadFile?: (file: File) => Promise<Embeddable>;
+  imageAttachments?: Embeddable[];
   hasSidebar: boolean;
   // When true every control is a non-interactive display of its value (public
   // shared page). The onPatch/onSetField/onToggleLabel callbacks are never called.
@@ -176,6 +179,7 @@ export default function IssueProperties({
                   current={current}
                   saveKey={saveKey}
                   uploadFile={uploadFile}
+                  imageAttachments={imageAttachments}
                   onSetField={onSetField}
                   readOnly={readOnly}
                 />

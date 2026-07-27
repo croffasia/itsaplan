@@ -13,7 +13,7 @@ import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { qk } from '@/services/queryKeys';
 import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
 import { useFeedQuery, useTimelineQuery } from '../services/comments.service';
-import { attachmentMarkdown } from '../utils/attachmentEmbed';
+import { attachmentMarkdown, isImage } from '../utils/attachmentEmbed';
 import { fieldDefsForType } from '../utils/fieldDefs';
 
 // Loads one issue and exposes the edit operations for the detail surfaces.
@@ -29,9 +29,12 @@ export function useIssueDetail(
 
   // Started here, not in the components that read them: those mount only after the
   // issue arrives, which would put these reads in a second wave after it.
-  useAttachmentsQuery(issueId);
+  const attachmentsQuery = useAttachmentsQuery(issueId);
   useTimelineQuery(issueId);
   useFeedQuery(issueId);
+
+  // What the markdown editors' image picker offers.
+  const imageAttachments = (attachmentsQuery.data ?? []).filter(isImage);
 
   const updateIssue = useUpdateIssue(project.project.key);
   const setFieldValue = useSetFieldValue(project.project.key);
@@ -92,6 +95,7 @@ export function useIssueDetail(
     toggleLabel,
     insertAttachment,
     uploadFile,
+    imageAttachments,
     setDescEditor,
   };
 }

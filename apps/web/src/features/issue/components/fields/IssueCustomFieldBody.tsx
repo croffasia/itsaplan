@@ -1,5 +1,6 @@
 import { type CustomField, type IssueFieldValue, type IssueFieldValueInput } from '@/lib/api';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import { type Embeddable } from '../../utils/attachmentEmbed';
 import IssueCustomFieldControl from './IssueCustomFieldControl';
 
 // One custom field rendered in the issue body (under the description) rather than
@@ -11,13 +12,15 @@ export default function IssueCustomFieldBody({
   current,
   saveKey,
   uploadFile,
+  imageAttachments,
   onSetField,
   readOnly,
 }: {
   def: CustomField;
   current: IssueFieldValue | undefined;
   saveKey: string;
-  uploadFile?: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
+  uploadFile?: (file: File) => Promise<Embeddable>;
+  imageAttachments?: Embeddable[];
   onSetField: (fieldId: number, value: IssueFieldValueInput) => void;
   readOnly?: boolean;
 }) {
@@ -33,6 +36,7 @@ export default function IssueCustomFieldBody({
           placeholder="Empty"
           editable={!readOnly}
           uploadFile={uploadFile}
+          imageAttachments={imageAttachments}
           onBlur={(md) => {
             const next = md.trim() === '' ? null : md;
             if (next !== ((current?.value as string | null) ?? null))

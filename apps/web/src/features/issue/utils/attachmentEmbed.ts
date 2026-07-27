@@ -1,6 +1,6 @@
 // Embedding an attachment into a description. Both a stored Attachment and a
 // fresh upload response satisfy this shape.
-type Embeddable = { url: string; contentType: string; filename: string };
+export type Embeddable = { url: string; contentType: string; filename: string };
 
 export const isImage = (a: Embeddable) => a.contentType.startsWith('image/');
 export const isVideo = (a: Embeddable) => a.contentType.startsWith('video/');

@@ -1,56 +1,26 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
-import Image from '@tiptap/extension-image';
+import { common, createLowlight } from 'lowlight';
 import { Markdown } from 'tiptap-markdown';
+import { ResizableImage } from '../../utils/tiptap-image';
+import { SlashCommand } from '../../utils/tiptap-slash-command';
 import { Video } from '../../utils/tiptap-video';
-import { attachmentHtml } from '../../utils/attachmentEmbed';
-import {
-  Bold,
-  Italic,
-  Strikethrough,
-  Code,
-  Link as LinkIcon,
-  List,
-  ListOrdered,
-  Quote,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
+import EditorImagePicker from './EditorImagePicker';
+import EditorSelectionMenu from './EditorSelectionMenu';
+
+// Shared by every editor instance. A block with no language written on it is
+// detected by highlightAuto, so there is no language picker.
+const lowlight = createLowlight(common);
 
 // A minimal WYSIWYG editor over markdown text — no persistent toolbar, just a
-// floating bubble menu on selection (Linear/Notion-style). Content in and out
-// is plain markdown (via tiptap-markdown), matching how descriptions are
-// stored everywhere else in the pipeline.
-
-function ToolbarButton({
-  active,
-  onClick,
-  children,
-}: {
-  active?: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      // Selection collapses on mousedown-then-click otherwise — the bubble
-      // menu would disappear before the command runs.
-      onMouseDown={(e) => e.preventDefault()}
-      onClick={onClick}
-      className={cn(
-        'flex size-7 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-accent-foreground [&_svg]:size-3.5',
-        active && 'bg-accent text-accent-foreground',
-      )}
-    >
-      {children}
-    </button>
-  );
-}
-
+// bubble menu on selection and a "/" command list (Linear/Notion-style). Content
+// in and out is plain markdown (via tiptap-markdown), matching how descriptions
+// are stored everywhere else in the pipeline.
 export default function IssueMarkdownEditor({
   defaultValue,
   onChange,
@@ -60,6 +30,7 @@ export default function IssueMarkdownEditor({
   className,
   editable = true,
   uploadFile,
+  imageAttachments,
 }: {
   defaultValue: string;
   onChange?: (markdown: string) => void;
@@ -73,11 +44,15 @@ export default function IssueMarkdownEditor({
   // render comment bodies as markdown.
   editable?: boolean;
   // When set, files dropped onto the editor are uploaded and inserted at the
-  // drop position (image/video inline, other files as a link). The uploaded
-  // shape mirrors the Attachment DTO.
-  uploadFile?: (file: File) => Promise<{ url: string; contentType: string; filename: string }>;
+  // drop position (image/video inline, other files as a link).
+  uploadFile?: (file: File) => Promise<Embeddable>;
+  // Offered in a picker, so an already uploaded image can be embedded again.
+  // Omitted where there is no issue to read them from yet (the create modal),
+  // which drops the picker.
+  imageAttachments?: Embeddable[];
 }) {
   const editorRef = useRef<Editor | null>(null);
+  const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
   // Upload each file and insert it (image/video inline, other files as a link)
   // starting at `pos`, advancing past each insertion. Shared by drop and paste.
@@ -96,20 +71,19 @@ export default function IssueMarkdownEditor({
   const editor = useEditor({
     editable,
     extensions: [
-      StarterKit,
+      // The highlighting code block replaces StarterKit's plain one. It keeps the
+      // node name codeBlock, so commands and markdown serialization are unchanged.
+      StarterKit.configure({ codeBlock: false }),
+      CodeBlockLowlight.configure({ lowlight }),
       Placeholder.configure({ placeholder }),
       Link.configure({ openOnClick: false, autolink: true }),
-      // Renders ![](url) markdown inline. Attachments are embedded this way from
-      // the issue's Attachments panel. `style` is preserved so a raw
-      // <img style="max-width:50%"> (used to embed Instagram photos at half size)
-      // keeps its sizing; plain markdown images carry no style and render full width.
-      Image.extend({
-        addAttributes() {
-          return { ...this.parent?.(), style: { default: null } };
-        },
-      }),
+      // Renders ![](url) markdown inline.
+      ResizableImage,
       // Renders video attachments as an inline <video> player.
       Video,
+      SlashCommand.configure({
+        onPickImage: imageAttachments ? () => setImagePickerOpen(true) : undefined,
+      }),
       // html:true so the custom <video> tag survives the markdown round-trip.
       // tiptap only instantiates nodes declared in its schema (there is no
       // script/iframe node), so this does not allow arbitrary HTML to execute.
@@ -161,68 +135,19 @@ export default function IssueMarkdownEditor({
 
   return (
     <div className={className}>
-      {editable && (
-        <BubbleMenu
-          editor={editor}
-          options={{ placement: 'top' }}
-          className="flex items-center gap-0.5 rounded-md border bg-popover p-1 shadow-md"
-        >
-          <ToolbarButton
-            active={editor.isActive('bold')}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-          >
-            <Bold />
-          </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive('italic')}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-          >
-            <Italic />
-          </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive('strike')}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-          >
-            <Strikethrough />
-          </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive('code')}
-            onClick={() => editor.chain().focus().toggleCode().run()}
-          >
-            <Code />
-          </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive('link')}
-            onClick={() => {
-              const url = window.prompt('Link URL', editor.getAttributes('link').href ?? '');
-              if (url === null) return;
-              if (url === '') editor.chain().focus().unsetLink().run();
-              else editor.chain().focus().setLink({ href: url }).run();
-            }}
-          >
-            <LinkIcon />
-          </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive('blockquote')}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          >
-            <Quote />
-          </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive('bulletList')}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
-          >
-            <List />
-          </ToolbarButton>
-          <ToolbarButton
-            active={editor.isActive('orderedList')}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          >
-            <ListOrdered />
-          </ToolbarButton>
-        </BubbleMenu>
-      )}
+      {editable && <EditorSelectionMenu editor={editor} />}
       <EditorContent editor={editor} />
+      {imageAttachments && (
+        <EditorImagePicker
+          open={imagePickerOpen}
+          images={imageAttachments}
+          onClose={() => setImagePickerOpen(false)}
+          onPick={(a) => {
+            setImagePickerOpen(false);
+            editor.chain().focus().insertContent(attachmentHtml(a)).run();
+          }}
+        />
+      )}
     </div>
   );
 }

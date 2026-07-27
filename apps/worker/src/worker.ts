@@ -3,6 +3,7 @@ import { deliver } from './delivery';
 import { processNotificationDeliveries } from './notification-delivery';
 import { equalJitterBackoffMs } from './backoff';
 import { startPollLoop, type WorkerHandle } from './poll-loop';
+import { TELEMETRY_CHECK_EVERY_TICKS, processTelemetry } from './telemetry';
 import {
   type ClaimedDelivery,
   claimDueDeliveries,
@@ -16,14 +17,16 @@ import {
 
 let ticksSinceCleanup = 0;
 let ticksSinceAutoArchive = 0;
+// Starts due, so an install is visible even if the instance is removed minutes later.
+let ticksSinceTelemetry = TELEMETRY_CHECK_EVERY_TICKS;
 
 export function startWorker(): WorkerHandle {
   return startPollLoop('worker', tick, () => workerConfig().pollIntervalMs);
 }
 
 // One poll: claim a batch of due deliveries, send them concurrently, record each
-// outcome, then run the delivery cleanup and the auto-archive sweep on their own
-// tick intervals.
+// outcome, then run the delivery cleanup, the auto-archive sweep and the telemetry
+// check on their own tick intervals.
 async function tick(): Promise<void> {
   const cfg = workerConfig();
   const claimed = await claimDueDeliveries();
@@ -40,6 +43,15 @@ async function tick(): Promise<void> {
     ticksSinceAutoArchive = 0;
     const archived = await archiveStaleIssues();
     if (archived > 0) console.log(`[worker] auto-archived ${archived} stale issues`);
+  }
+  if (++ticksSinceTelemetry >= TELEMETRY_CHECK_EVERY_TICKS) {
+    ticksSinceTelemetry = 0;
+    // An unreachable collector must not read as a failed tick.
+    try {
+      await processTelemetry();
+    } catch (error) {
+      console.error('[worker] telemetry send failed:', error);
+    }
   }
 }
 

@@ -110,6 +110,11 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
       SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
+      # turns it off.
+      TELEMETRY_DISABLED: ${TELEMETRY_DISABLED:-}
+      DO_NOT_TRACK: ${DO_NOT_TRACK:-}
+      TELEMETRY_DEBUG: ${TELEMETRY_DEBUG:-}
       # Optional tuning — defaults live in apps/worker/src/config.ts:
       # WEBHOOK_POLL_INTERVAL_MS, WEBHOOK_BATCH_SIZE, WEBHOOK_TIMEOUT_MS,
       # WEBHOOK_MAX_ATTEMPTS, WEBHOOK_DISABLE_THRESHOLD, WEBHOOK_LEASE_SECONDS,

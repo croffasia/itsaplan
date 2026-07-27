@@ -15,6 +15,18 @@ export async function getSetting<T>(key: string): Promise<T | null> {
   return rows[0] ? (rows[0].value as T) : null;
 }
 
+// Stores `value` only when the key is free, and returns what the key holds afterwards.
+// The conflict branch rewrites the row with its own value so RETURNING yields the
+// stored one, which makes processes racing on a first write settle on the same result.
+export async function getOrCreateSetting<T>(key: string, value: T): Promise<T> {
+  const rows = await db
+    .insert(appSetting)
+    .values({ key, value })
+    .onConflictDoUpdate({ target: appSetting.key, set: { value: sql`${appSetting.value}` } })
+    .returning({ value: appSetting.value });
+  return rows[0]!.value as T;
+}
+
 export async function setSetting(key: string, value: unknown): Promise<void> {
   await db
     .insert(appSetting)

@@ -118,6 +118,11 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
       SERVICE_URL_API: http://api:3000
       WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
+      # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
+      # turns it off.
+      TELEMETRY_DISABLED: ${TELEMETRY_DISABLED:-}
+      DO_NOT_TRACK: ${DO_NOT_TRACK:-}
+      TELEMETRY_DEBUG: ${TELEMETRY_DEBUG:-}
       # Optional tuning lives in apps/worker/src/config.ts.
 
   # Telegram bot: long polling for the instance bot, completing the account links

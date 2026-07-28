@@ -4,7 +4,7 @@ import type { ProjectRow } from '../../../projects/store';
 import { routeTools, type McpInputSchema, type McpRouteTool } from '../../../mcp/generate';
 import { dispatchTool } from '../../../mcp/dispatch';
 import { getMcpApp } from '../../../mcp/app-ref';
-import { ALWAYS_ON_KEYS, normalizeToolKeys } from './catalog';
+import { ALWAYS_ON_KEYS, normalizeToolKeys, toolMeta } from './catalog';
 
 // The tools an internal agent uses to work in its project, built from the routes
 // tagged with mcpTool() — the same table the MCP endpoint serves. A tool call is
@@ -37,15 +37,13 @@ function jsonSchemaInput(schema: McpInputSchema): z.ZodType<Record<string, unkno
   } as unknown as z.ZodType<Record<string, unknown>>;
 }
 
-// Drops projectKey from a tool's arguments. The agent belongs to one project and the
-// runtime fills the key in itself, so the model neither has to supply it nor can it
-// name another project.
-function withoutProjectKey(schema: McpInputSchema): McpInputSchema {
-  const { projectKey: _bound, ...properties } = schema.properties;
+function omitFields(schema: McpInputSchema, names: string[]): McpInputSchema {
+  const properties = { ...schema.properties };
+  for (const name of names) delete properties[name];
   return {
     type: 'object',
     properties,
-    required: schema.required.filter((name) => name !== 'projectKey'),
+    required: schema.required.filter((name) => !names.includes(name)),
   };
 }
 
@@ -70,6 +68,9 @@ export function buildRouteTools(
 ): Record<string, ReturnType<typeof createTool>> {
   const app = getMcpApp();
   const granted = new Set([...ALWAYS_ON_KEYS, ...normalizeToolKeys(enabledActions)]);
+  // An update replaces the board's canvas as a whole, so without the read the agent
+  // would send a canvas built from nothing and delete every card already on the board.
+  if (granted.has('update_note_board')) granted.add('get_note_board');
 
   const tools: Record<string, ReturnType<typeof createTool>> = {};
   for (const route of routeTools(app)) {
@@ -84,15 +85,22 @@ function buildOne(
   project: ProjectRow,
   apiKey: string,
 ): ReturnType<typeof createTool> {
+  const overrides = toolMeta(route.name)?.overrides;
   const bindsProject = route.pathParams.includes('projectKey');
-  const schema = bindsProject ? withoutProjectKey(route.inputSchema) : route.inputSchema;
+  // Arguments the model never gets to set: projectKey, which the runtime fills in
+  // from the agent's own project so a call cannot name another one, plus whatever
+  // the catalog hides.
+  const hidden = [...(overrides?.hide ?? [])];
+  if (bindsProject) hidden.push('projectKey');
+  const schema = omitFields(route.inputSchema, hidden);
 
   return createTool({
     id: route.name,
-    description: route.description,
+    description: overrides?.description ?? route.description,
     inputSchema: jsonSchemaInput(schema),
     execute: async (input) => {
       const args: Record<string, unknown> = { ...input };
+      for (const name of hidden) delete args[name];
       if (bindsProject) args.projectKey = project.key;
       const { text, isError } = await dispatchTool(getMcpApp(), route, args, apiKey, {
         viaMcpEndpoint: false,

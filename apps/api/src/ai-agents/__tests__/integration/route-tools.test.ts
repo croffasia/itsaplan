@@ -7,6 +7,9 @@ import { resetDb } from '../../../__tests__/helpers/db';
 import { getProjectByKey } from '../../../projects/store';
 import { getAgentById, getInternalAgentApiKey } from '../../store';
 import { buildRouteTools } from '../../runtime/tools/route-tools';
+import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';
+import { routeTools } from '../../../mcp/generate';
+import { getMcpApp } from '../../../mcp/app-ref';
 
 // The tools an internal agent runs with, built from the routes tagged mcpTool() and
 // dispatched in process with the agent's own API key. What is asserted here is the
@@ -25,10 +28,12 @@ async function setup() {
 }
 
 // Builds the tool set of a freshly created internal agent, the way the runtime does.
+// The username only has to be unique, so it is numbered.
+let agentSeq = 0;
 async function toolsFor(asOwner: Api, tools: string[], roleId?: number) {
   const created = await agents(asOwner).post({
     name: 'Triage Bot',
-    username: `triage-${tools.length}-${roleId ?? 'default'}`,
+    username: `triage-${++agentSeq}`,
     kind: 'internal',
     tools,
     ...(roleId === undefined ? {} : { roleId }),
@@ -108,6 +113,45 @@ describe('internal agent route tools', () => {
     expect(ops.data).toEqual([]);
     const mkt = await asOwner.projects({ projectKey: 'MKT' }).issues.search.get({ query: {} });
     expect(mkt.data).toEqual([expect.objectContaining({ title: 'Stray' })]);
+  });
+
+  it('hides personal on note boards: the agent only creates boards the project sees', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, ['create_note_board']);
+
+    const schema = tools.create_note_board?.inputSchema as unknown as {
+      getJsonSchema(): { properties: Record<string, unknown> };
+    };
+    expect(Object.keys(schema.getJsonSchema().properties)).not.toContain('personal');
+
+    // Asking for it anyway does not make the board the agent's own.
+    await run(tools, 'create_note_board', { name: 'Ideas', personal: true });
+    const boards = await asOwner.projects({ projectKey: 'MKT' })['note-boards'].get({ query: {} });
+    expect(boards.data).toEqual([expect.objectContaining({ name: 'Ideas', ownerUserId: null })]);
+  });
+
+  it('carries the board read with the board update, which replaces the canvas whole', async () => {
+    const { asOwner } = await setup();
+    const tools = await toolsFor(asOwner, ['update_note_board']);
+
+    expect(tools.get_note_board).toBeDefined();
+    // The read comes with the update, not with any other note board action.
+    expect((await toolsFor(asOwner, ['create_note_board'])).get_note_board).toBeUndefined();
+  });
+
+  // A hidden argument names a field of the route's own schema. Renaming the field
+  // there would leave the catalog hiding something that no longer exists, and the
+  // agent would silently get the argument back.
+  it('hides only arguments the routes actually take', () => {
+    const table = new Map(routeTools(getMcpApp()).map((route) => [route.name, route]));
+    const hidden = [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS].flatMap((tool) =>
+      (tool.overrides?.hide ?? []).map((name) => ({ key: tool.key, name })),
+    );
+    expect(hidden.length).toBeGreaterThan(0);
+
+    for (const { key, name } of hidden) {
+      expect(Object.keys(table.get(key)?.inputSchema.properties ?? {})).toContain(name);
+    }
   });
 
   it("provisions a legacy agent's key once, even when two runs start together", async () => {

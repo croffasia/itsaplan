@@ -65,8 +65,7 @@ export const noteBoardRoutes = new Elysia({
     },
     {
       projectMember: true,
-      // Paged for the board switcher: `q` filters by name, `limit`/`offset` page
-      // the result. Canvas is omitted; open a board to load its canvas.
+      // Paged for the board switcher.
       query: t.Object({
         q: t.Optional(t.String()),
         limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50 })),
@@ -78,7 +77,12 @@ export const noteBoardRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: "List a project's note boards", ...mcpTool('list_note_boards') },
+      detail: {
+        summary: "List a project's note boards",
+        description:
+          "The boards the caller can see: the project's public boards plus the caller's own personal ones. `q` filters by name; `limit` (10 by default, 50 at most) and `offset` page the result. Cards are omitted — read a board to get them.",
+        ...mcpTool('list_note_boards'),
+      },
     },
   )
 
@@ -96,7 +100,12 @@ export const noteBoardRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: 'Get a note board with its canvas', ...mcpTool('get_note_board') },
+      detail: {
+        summary: 'Get a note board with its canvas',
+        description:
+          'One board with its `canvas`, a React Flow graph `{ nodes, edges }`. A card (sticker, note) is a node: `{ id, type: "sticker", position: { x, y }, width, height, data: { title, body, color } }`, where `body` is markdown and `color` a hex string. A connection between two cards is an edge: `{ id, source, target }` of node ids. Cards exist only inside the canvas.',
+        ...mcpTool('get_note_board'),
+      },
     },
   )
 
@@ -116,8 +125,6 @@ export const noteBoardRoutes = new Elysia({
       projectMember: true,
       body: t.Object({
         name: t.String({ minLength: 1 }),
-        // true creates a personal board owned by the caller; false/omitted a
-        // public board visible to every member.
         personal: t.Optional(t.Boolean()),
         canvas: t.Optional(t.Any()),
       }),
@@ -128,7 +135,12 @@ export const noteBoardRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: 'Create a note board', ...mcpTool('create_note_board') },
+      detail: {
+        summary: 'Create a note board',
+        description:
+          'Create a board. `personal` true makes it private to the caller, otherwise every project member sees it. Cards go in `canvas` as nodes (see `get_note_board`); a card `body` is markdown and `color` a hex string such as `#FFF9B1`.',
+        ...mcpTool('create_note_board'),
+      },
     },
   )
 
@@ -140,8 +152,8 @@ export const noteBoardRoutes = new Elysia({
       const patch: { name?: string; canvas?: unknown; ownerUserId?: string | null } = {};
       if (body.name !== undefined) patch.name = body.name;
       if (body.canvas !== undefined) patch.canvas = body.canvas;
-      // personal true makes the board owned by (private to) the caller; false makes
-      // it public. Only a user who can already access the board reaches here.
+      // Only a user who can already access the board reaches here, so switching it to
+      // personal hands it to the caller.
       if (body.personal !== undefined) patch.ownerUserId = body.personal ? userId : null;
       const board = await updateNoteBoard(params.boardId, patch);
       if (!board) throw new HttpError(404, 'Board not found');
@@ -162,7 +174,12 @@ export const noteBoardRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: 'Update a note board', ...mcpTool('update_note_board') },
+      detail: {
+        summary: 'Update a note board',
+        description:
+          'Rename a board, switch it between personal and public, or replace its `canvas`. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted.',
+        ...mcpTool('update_note_board'),
+      },
     },
   )
 
@@ -182,6 +199,10 @@ export const noteBoardRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: 'Delete a note board', ...mcpTool('delete_note_board') },
+      detail: {
+        summary: 'Delete a note board',
+        description: 'Permanently delete a note board and every note on it.',
+        ...mcpTool('delete_note_board'),
+      },
     },
   );

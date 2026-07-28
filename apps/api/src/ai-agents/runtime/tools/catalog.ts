@@ -1,26 +1,39 @@
 // The actions an internal agent can be given, surfaced to the config UI with
 // human-readable labels. Two groups:
 //
-// - AGENT_ACTIONS: mutating actions the user opts an agent into. The enabled subset
-//   is stored in ai_agent.tools and becomes the tools the runtime exposes.
+// - AGENT_ACTIONS: actions the user opts an agent into. The enabled subset is stored
+//   in ai_agent.tools and becomes the tools the runtime exposes. Mutating actions
+//   belong here; so do the note board reads, since notes are an optional feature.
 // - ALWAYS_ON_ACTIONS: read-only actions always granted, so an agent can always see
 //   its project regardless of which actions it is allowed to take. Listed only so
 //   the UI can show them (always enabled, not editable); their keys are never
 //   stored on the agent.
 //
 // Every key is the name of a route tagged with mcpTool() — the one exception is
-// get_current_date, which has no route behind it (see tools/local.ts). This file is
-// only the allowlist and the UI copy: what a tool accepts, what it does, and who may
-// call it all come from the route itself (see tools/route-tools.ts). An agent's
-// effective rights are the intersection of these keys and its project role.
+// get_current_date, which has no route behind it (see tools/local.ts). What a tool
+// accepts and who may call it come from the route itself (see tools/route-tools.ts);
+// this file adds the allowlist, the UI copy, and the agent-only overrides (see
+// ToolMeta.overrides). An agent's effective rights are the intersection of these keys
+// and its project role.
 
 export interface ToolMeta {
   key: string;
   label: string;
+  // Shown in the config UI next to the label.
   description: string;
   // True for the read-only actions that are always granted and cannot be toggled off.
   always: boolean;
+  // What the agent's copy of the tool changes about the route: `description` is the
+  // text the model reads instead of the route's own, `hide` are arguments it may not
+  // set (dropped from the tool's schema and from its calls). An MCP client is
+  // unaffected and still gets the route's full schema and wording.
+  overrides?: { description?: string; hide?: string[] };
 }
+
+// Told to the model on both note board writes: it lays a canvas out without seeing
+// it, so unsized cards clip their text and unspaced ones land on top of each other.
+const CARD_LAYOUT =
+  'Give each card a `width` and `height` its text fits in — 260×220 holds a short note, longer text needs more — and space `position` so cards do not overlap.';
 
 export const AGENT_ACTIONS: ToolMeta[] = [
   {
@@ -84,6 +97,55 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     description: 'Permanently delete initiatives.',
     always: false,
   },
+  {
+    key: 'list_note_boards',
+    label: 'List note boards',
+    description: 'List and search the note boards the agent can see.',
+    always: false,
+    overrides: {
+      description:
+        'The note boards in this project. `q` filters by name; `limit` (10 by default, 50 at most) and `offset` page the result. Cards are omitted — read a board with `get_note_board` to get them.',
+    },
+  },
+  {
+    key: 'get_note_board',
+    label: 'Read a note board',
+    description: 'View one board with all of its notes and the connections between them.',
+    always: false,
+  },
+  // `personal` is hidden on both writes below: a personal board is visible to its
+  // owner alone, and an agent owns itself, so a personal board it created would be
+  // visible to no person in the project.
+  {
+    key: 'create_note_board',
+    label: 'Create note boards',
+    description: 'Create a note board with an optional set of notes.',
+    always: false,
+    overrides: {
+      hide: ['personal'],
+      description:
+        'Create a note board every project member can see. Cards go in `canvas` as nodes (see `get_note_board`); a card `body` is markdown and `color` a hex string such as `#FFF9B1`. ' +
+        CARD_LAYOUT,
+    },
+  },
+  {
+    key: 'update_note_board',
+    label: 'Update note boards',
+    description: 'Rename a board and add, edit, or remove its notes.',
+    always: false,
+    overrides: {
+      hide: ['personal'],
+      description:
+        'Rename a note board or replace its `canvas`. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted. ' +
+        CARD_LAYOUT,
+    },
+  },
+  {
+    key: 'delete_note_board',
+    label: 'Delete note boards',
+    description: 'Permanently delete note boards and all of their notes.',
+    always: false,
+  },
 ];
 
 // Read-only actions, always granted to an internal agent so it can see its project
@@ -143,6 +205,12 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
 const ACTION_KEYS = new Set(AGENT_ACTIONS.map((t) => t.key));
 
 export const ALWAYS_ON_KEYS: string[] = ALWAYS_ON_ACTIONS.map((t) => t.key);
+
+const BY_KEY = new Map([...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS].map((t) => [t.key, t]));
+
+export function toolMeta(key: string): ToolMeta | undefined {
+  return BY_KEY.get(key);
+}
 
 // Keeps only keys that are grantable actions, so an agent never stores an unknown
 // or non-grantable (always-on) tool key.

@@ -51,6 +51,19 @@ describe('normalizeToolKeys', () => {
     );
   });
 
+  it('registers note board actions as grantable, including the reads', () => {
+    const keys = [
+      'list_note_boards',
+      'get_note_board',
+      'create_note_board',
+      'update_note_board',
+      'delete_note_board',
+    ];
+    expect(normalizeToolKeys(keys)).toEqual(keys);
+    const alwaysOn = new Set(ALWAYS_ON_ACTIONS.map((tool) => tool.key));
+    for (const key of keys) expect(alwaysOn.has(key)).toBe(false);
+  });
+
   // Agent-management tools are exposed over MCP (for an external MCP client to manage
   // agents) but must never be reachable by an internal agent: they are not in the
   // catalog, so normalizeToolKeys drops them and they are not always-on. This locks

@@ -23,7 +23,8 @@ export type { Sort, SortField } from '@/utils/viewTypes';
 export type NewIssueDefaults = Pick<
   NewIssueInput,
   'columnId' | 'typeId' | 'initiativeId' | 'assigneeUserId' | 'delegateUserId' | 'priority'
->;
+> &
+  Partial<Pick<NewIssueInput, 'title' | 'description'>>;
 
 // Fallback dot/bar color for a group or issue whose status/type has no color.
 export const DEFAULT_COLOR = '#6b7280';

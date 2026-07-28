@@ -10,7 +10,10 @@ import {
   type NodeProps,
 } from '@xyflow/react';
 import type { NoteSticker } from '@/lib/api';
+import { useShell } from '@/context/shellContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { stickerColorValue } from '../utils/stickerColors';
+import { stickerToIssue } from '../utils/stickerToIssue';
 import StickerEditor from './StickerEditor';
 import StickerToolbar from './StickerToolbar';
 
@@ -18,16 +21,25 @@ export type StickerNodeType = Node<NoteSticker, 'sticker'>;
 
 // One sticky note on the canvas: a draggable, resizable card with a title, a
 // markdown body (text and checklists), and a bottom toolbar (color, bold, italic,
-// checklist, delete). Edits are written straight back into the React Flow node;
-// the canvas persists the whole board.
+// checklist, convert to issue, delete). Edits are written straight back into the
+// React Flow node; the canvas persists the whole board.
 export default function StickerNode({ id, data, selected }: NodeProps<StickerNodeType>) {
   const { setNodes, setEdges } = useReactFlow();
+  const { project, onAddIssue } = useShell();
+  const { can } = usePermissions();
+  const canCreateIssue = can('work_items', 'create');
   const [editor, setEditor] = useState<Editor | null>(null);
 
   const update = (patch: Partial<NoteSticker>) => {
     setNodes((nodes) =>
       nodes.map((n) => (n.id === id ? { ...n, data: { ...n.data, ...patch } } : n)),
     );
+  };
+
+  // The note itself stays on the board after the issue is created.
+  const convert = () => {
+    if (!project) return;
+    onAddIssue({ columnId: project.columns[0]?.id ?? 0, ...stickerToIssue(data) });
   };
 
   const remove = () => {
@@ -72,6 +84,7 @@ export default function StickerNode({ id, data, selected }: NodeProps<StickerNod
           editor={editor}
           color={data.color}
           onColorChange={(key) => update({ color: key })}
+          onConvert={canCreateIssue ? convert : undefined}
           onDelete={remove}
         />
       </div>

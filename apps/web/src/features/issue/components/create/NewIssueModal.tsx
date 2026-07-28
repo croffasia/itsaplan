@@ -42,8 +42,8 @@ export default function NewIssueModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(defaults.title ?? '');
+  const [description, setDescription] = useState(defaults.description ?? '');
   const [columnId, setColumnId] = useState(defaults.columnId);
   const [typeId, setTypeId] = useState<number | null>(
     defaults.typeId === undefined

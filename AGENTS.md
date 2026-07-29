@@ -19,30 +19,11 @@ conventions when they are sound. Reuse existing shared modules, components, and 
 instead of duplicating or reinventing them; extend what's there rather than adding parallel
 solutions.
 
-Write a minimum of comments. A comment explains why, the code explains what. Never describe
-the code itself — assume the reader knows the language better than you do.
-
-Comment only when the information is not in the code:
-
-- the reason a decision was made: why this algorithm, why this workaround;
-- a non-obvious constraint: units, boundary conditions, an invariant, a rule enforced elsewhere;
-- code that looks wrong but is not, so the next reader does not "fix" it and break it;
-- the contract of an exported function or module: what a caller gets and when to call it;
-- a bug fix, with a link to the issue, so it is possible to tell later whether it is still needed;
-- copied code, with a link to the source;
-- unfinished work: `TODO(<owner>): <what and under what condition>` — never a bare `TODO`.
-
-Do not comment when:
-
-- the comment restates a name, a signature, or the next line;
-- it lists or describes entries that are right there in the code;
-- it explains code that a better name or a simpler structure would explain — fix the code instead;
-- it would be longer than the code it covers;
-- it is commented-out code — git keeps the history.
-
-A wrong comment is worse than no comment: code cannot go stale, prose can. Change the comment
-in the same edit as the code it describes, or delete it. If a comment is hard to write clearly,
-the code is probably too complex — rewrite the code.
+Write a minimum of comments. A comment explains why, the code explains what — cover a comment
+with your hand and read the code under it: if the fact is recoverable from the code alone, the
+comment does not belong there. A wrong comment is worse than no comment, so change a comment in
+the same edit as the code it describes, or delete it. The full rules, and the pass that removes
+comments that no longer hold, are in the `tidy` skill.
 
 ## Writing style (docs, comments, chat)
 

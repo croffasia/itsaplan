@@ -8,19 +8,19 @@ import { toCanvas } from '../utils/noteCanvas';
 // 'saving' — the save request is in flight; 'saved'/'error' — its result.
 export type SaveStatus = 'saved' | 'unsaved' | 'saving' | 'error';
 
-// The debounce between the last edit and the save request.
+// Milliseconds between the last edit and the save request.
 const AUTOSAVE_DELAY = 2000;
 
 // Persist the board a while after the last change, reporting the save state so the
-// UI can show it. A change first marks the canvas 'unsaved', then after the debounce
-// the request goes out ('saving') and its result is 'saved' or 'error'. Opening a
-// board does not save it (the initial canvas matches the saved snapshot). The host
-// keys the canvas by board id, so one hook instance covers one board.
+// UI can show it. Opening a board does not save it (the initial canvas matches the
+// saved snapshot). The host keys the canvas by board id, so one hook instance
+// covers one board.
 export function useCanvasAutosave(
   projectKey: string,
   boardId: number,
   nodes: StickerNodeType[],
   edges: Edge[],
+  enabled: boolean,
 ): SaveStatus {
   const save = useSaveNoteCanvas(projectKey);
   const saveRef = useRef(save);
@@ -36,11 +36,11 @@ export function useCanvasAutosave(
   const [status, setStatus] = useState<SaveStatus>('saved');
 
   // The latest canvas, read by the unmount flush below.
-  const latest = useRef({ serialized, boardId });
-  latest.current = { serialized, boardId };
+  const latest = useRef({ serialized, boardId, enabled });
+  latest.current = { serialized, boardId, enabled };
 
   useEffect(() => {
-    if (serialized === savedSnapshot.current) return;
+    if (!enabled || serialized === savedSnapshot.current) return;
     setStatus('unsaved');
     const timer = setTimeout(() => {
       setStatus('saving');
@@ -56,15 +56,15 @@ export function useCanvasAutosave(
       );
     }, AUTOSAVE_DELAY);
     return () => clearTimeout(timer);
-  }, [serialized, boardId]);
+  }, [serialized, boardId, enabled]);
 
   // Flush a still-pending edit on unmount (switching board, or leaving the page)
   // so a change made inside the debounce window is not dropped. The debounce
   // effect above clears its timer on unmount, so without this the save never fires.
   useEffect(() => {
     return () => {
-      const { serialized, boardId } = latest.current;
-      if (serialized !== savedSnapshot.current) {
+      const { serialized, boardId, enabled } = latest.current;
+      if (enabled && serialized !== savedSnapshot.current) {
         saveRef.current.mutate({ boardId, canvas: JSON.parse(serialized) });
       }
     };

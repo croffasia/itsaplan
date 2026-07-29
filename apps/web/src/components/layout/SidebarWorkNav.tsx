@@ -7,7 +7,8 @@ import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import SidebarNavItem from '@/components/layout/SidebarNavItem';
 
-// The top sidebar group: Inbox, Dashboards, Work items, Initiatives.
+// The top sidebar group. An entry appears only when its project feature is on and
+// the user may read the section.
 export default function SidebarWorkNav({
   projectKey,
   projectId,
@@ -66,7 +67,7 @@ export default function SidebarWorkNav({
               disabled={disabled}
             />
           )}
-          {features.notes && (
+          {features.notes && can('note_boards', 'read') && (
             <SidebarNavItem
               href={projectKey ? notesPath(projectKey) : '#'}
               icon={StickyNote}

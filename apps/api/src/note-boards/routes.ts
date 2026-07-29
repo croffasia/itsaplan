@@ -23,6 +23,7 @@ const NoteBoardResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
   ownerUserId: t.Nullable(t.String()),
+  createdByUserId: t.Nullable(t.String()),
   name: t.String(),
   canvas: t.Any(),
   createdAt: t.String(),
@@ -64,7 +65,7 @@ export const noteBoardRoutes = new Elysia({
       });
     },
     {
-      projectMember: true,
+      permission: ['note_boards', 'read'],
       // Paged for the board switcher.
       query: t.Object({
         q: t.Optional(t.String()),
@@ -92,7 +93,7 @@ export const noteBoardRoutes = new Elysia({
       return loadAccessibleBoard(params.boardId, project.id, requireUser(user).id);
     },
     {
-      projectMember: true,
+      permission: ['note_boards', 'read'],
       params: boardParams,
       response: {
         200: NoteBoardResponse,
@@ -117,12 +118,13 @@ export const noteBoardRoutes = new Elysia({
       return createNoteBoard({
         projectId: project.id,
         ownerUserId: body.personal ? userId : null,
+        createdByUserId: userId,
         name: body.name,
         canvas: body.canvas,
       });
     },
     {
-      projectMember: true,
+      permission: ['note_boards', 'create'],
       body: t.Object({
         name: t.String({ minLength: 1 }),
         personal: t.Optional(t.Boolean()),
@@ -148,19 +150,23 @@ export const noteBoardRoutes = new Elysia({
     '/projects/:projectKey/note-boards/:boardId',
     async ({ project, user, params, body }) => {
       const userId = requireUser(user).id;
-      await loadAccessibleBoard(params.boardId, project.id, userId);
+      const current = await loadAccessibleBoard(params.boardId, project.id, userId);
       const patch: { name?: string; canvas?: unknown; ownerUserId?: string | null } = {};
       if (body.name !== undefined) patch.name = body.name;
       if (body.canvas !== undefined) patch.canvas = body.canvas;
-      // Only a user who can already access the board reaches here, so switching it to
-      // personal hands it to the caller.
-      if (body.personal !== undefined) patch.ownerUserId = body.personal ? userId : null;
+      if (body.personal !== undefined) {
+        // Making a board public again is open to anyone who can edit it.
+        if (body.personal && current.createdByUserId !== userId) {
+          throw new HttpError(403, 'Only the board creator can make it personal');
+        }
+        patch.ownerUserId = body.personal ? userId : null;
+      }
       const board = await updateNoteBoard(params.boardId, patch);
       if (!board) throw new HttpError(404, 'Board not found');
       return board;
     },
     {
-      projectMember: true,
+      permission: ['note_boards', 'edit'],
       params: boardParams,
       body: t.Object({
         name: t.Optional(t.String({ minLength: 1 })),
@@ -177,7 +183,7 @@ export const noteBoardRoutes = new Elysia({
       detail: {
         summary: 'Update a note board',
         description:
-          'Rename a board, switch it between personal and public, or replace its `canvas`. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted.',
+          'Rename a board, switch it between personal and public, or replace its `canvas`. Only the board creator can make it personal. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted.',
         ...mcpTool('update_note_board'),
       },
     },
@@ -191,7 +197,7 @@ export const noteBoardRoutes = new Elysia({
       return noContent();
     },
     {
-      projectMember: true,
+      permission: ['note_boards', 'delete'],
       params: boardParams,
       response: {
         204: t.Void(),

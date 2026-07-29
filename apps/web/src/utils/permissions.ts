@@ -19,6 +19,7 @@ const RESOURCE_LABELS: Record<string, string> = {
   custom_fields: 'Custom fields',
   actions: 'Actions',
   webhooks: 'Webhooks',
+  note_boards: 'Note boards',
   danger_zone: 'Danger zone',
 };
 
@@ -56,6 +57,7 @@ export interface PermissionGroup {
 const GROUP_DEFS: PermissionGroup[] = [
   { title: 'Work items', resources: ['work_items', 'initiatives', 'views'] },
   { title: 'Dashboards', resources: ['dashboards'] },
+  { title: 'Notes', resources: ['note_boards'] },
   { title: 'AI', resources: ['ai_agents', 'integrations', 'agent_skills', 'agent_tools'] },
   {
     title: 'Configuration',

@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useShell } from '@/context/shellContext';
 import { ApiError } from '@/lib/api';
+import { usePermissions } from '@/hooks/usePermissions';
 import { notePath, notesPath } from '@/utils/paths';
 import { qk } from '@/services/queryKeys';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,6 +20,7 @@ import {
   flattenBoardPages,
 } from './services/noteBoards.service';
 import { useNoteBoardMru, type MruEntry } from './hooks/useNoteBoardMru';
+import { useNoteBoardAccess } from './hooks/useNoteBoardAccess';
 import NoteBoardBar from './components/NoteBoardBar';
 import NoteCanvas from './components/NoteCanvas';
 import NotesEmptyState from './components/NotesEmptyState';
@@ -26,17 +28,18 @@ import NotesEmptyState from './components/NotesEmptyState';
 // The maximum number of tabs shown (matches the MRU cap).
 const MAX_TABS = 5;
 
-// The notes section: a tab strip of recently-used boards over a freeform canvas of
-// sticky notes. The active board comes from the route, falling back to the first
-// tab. Tabs are the recently-used boards, topped up from the first page of the
-// switcher list when fewer than MAX_TABS have been opened. Opening a board loads
-// it fresh (its full canvas) and moves it to the front of the tab strip.
+// The notes section: a tab strip of boards over a freeform canvas of sticky notes.
+// The active board comes from the route, falling back to the first tab. The tabs
+// are the recently-used boards, topped up from the first page of the switcher list
+// when fewer than MAX_TABS have been opened. Opening a board loads it fresh (its
+// full canvas) and moves it to the front.
 export default function NotesPage() {
   const { project } = useShell();
   const params = useParams<{ projectKey: string; boardId?: string }>();
   const router = useRouter();
   const qc = useQueryClient();
   const projectKey = params.projectKey;
+  const { can } = usePermissions();
 
   const { entries: mru, record, remove: removeMru } = useNoteBoardMru(projectKey);
   // The first page of the switcher list, reused to top up the tabs. Shares its
@@ -65,6 +68,7 @@ export default function NotesPage() {
   const activeBoardId = routeId ?? tabs[0]?.id ?? null;
 
   const { data: activeBoard, isError, error } = useNoteBoardQuery(projectKey, activeBoardId);
+  const { canMakePrivate } = useNoteBoardAccess(activeBoard);
 
   // Record the opened board as most-recent once it loads. Also refreshes its cached
   // tab label and visibility, healing a stale MRU entry (renamed elsewhere).
@@ -94,6 +98,14 @@ export default function NotesPage() {
       <div className="flex-1 space-y-4 p-6">
         <Skeleton className="h-8 w-full max-w-md" />
         <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
+  if (!can('note_boards', 'read')) {
+    return (
+      <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
+        You do not have access to notes.
       </div>
     );
   }
@@ -138,6 +150,7 @@ export default function NotesPage() {
         onRename={(id, name) => renameBoard.mutate({ boardId: id, name })}
         onToggleVisibility={(id, personal) => setVisibility.mutate({ boardId: id, personal })}
         onDelete={remove}
+        canMakeActivePrivate={canMakePrivate}
       />
 
       {renderContent()}

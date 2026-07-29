@@ -1004,6 +1004,8 @@ export interface NoteBoard {
   // null for a public board (every member sees it); a user id for a personal
   // board only its owner sees.
   ownerUserId: string | null;
+  // Only the creator can make the board private.
+  createdByUserId: string | null;
   name: string;
   canvas: NoteCanvas;
   createdAt: string;
@@ -1539,8 +1541,8 @@ export interface NewCustomFieldInput {
   options?: string[];
 }
 
-// The project permission matrix (mirrors apps/api shared/permissions.ts): 13
-// resources, each granting or denying 4 actions. A custom role carries one matrix.
+// The project permission matrix (mirrors apps/api shared/permissions.ts): each
+// resource grants or denies 4 actions. A custom role carries one matrix.
 export type PermissionAction = 'create' | 'edit' | 'read' | 'delete';
 
 export type PermissionResource =
@@ -1560,6 +1562,7 @@ export type PermissionResource =
   | 'custom_fields'
   | 'actions'
   | 'webhooks'
+  | 'note_boards'
   | 'danger_zone';
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;

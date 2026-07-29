@@ -6,11 +6,13 @@ import { iso } from '../shared/lib';
 // the UI (React Flow nodes + edges + viewport); this layer stores and returns it
 // without inspecting its shape. ownerUserId NULL is a public board (every member
 // sees it); a set ownerUserId is a personal board only its owner sees.
+// Only the creator (createdByUserId) may make a board personal.
 
 export interface NoteBoardRow {
   id: number;
   projectId: number;
   ownerUserId: string | null;
+  createdByUserId: string | null;
   name: string;
   canvas: unknown;
   createdAt: string;
@@ -27,6 +29,7 @@ function mapNoteBoard(row: typeof noteBoard.$inferSelect): NoteBoardRow {
     id: row.id,
     projectId: row.projectId,
     ownerUserId: row.ownerUserId,
+    createdByUserId: row.createdByUserId,
     name: row.name,
     canvas: row.canvas,
     createdAt: iso(row.createdAt),
@@ -52,6 +55,7 @@ export async function listNoteBoards(
       id: noteBoard.id,
       projectId: noteBoard.projectId,
       ownerUserId: noteBoard.ownerUserId,
+      createdByUserId: noteBoard.createdByUserId,
       name: noteBoard.name,
       createdAt: noteBoard.createdAt,
       updatedAt: noteBoard.updatedAt,
@@ -62,10 +66,7 @@ export async function listNoteBoards(
     .limit(opts.limit)
     .offset(opts.offset);
   return rows.map((row) => ({
-    id: row.id,
-    projectId: row.projectId,
-    ownerUserId: row.ownerUserId,
-    name: row.name,
+    ...row,
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
   }));
@@ -76,10 +77,10 @@ export async function getNoteBoard(id: number): Promise<NoteBoardRow | null> {
   return row ? mapNoteBoard(row) : null;
 }
 
-// ownerUserId set makes the board personal to that user; null makes it public.
 export async function createNoteBoard(input: {
   projectId: number;
   ownerUserId: string | null;
+  createdByUserId: string;
   name: string;
   canvas?: unknown;
 }): Promise<NoteBoardRow> {
@@ -88,6 +89,7 @@ export async function createNoteBoard(input: {
     .values({
       projectId: input.projectId,
       ownerUserId: input.ownerUserId,
+      createdByUserId: input.createdByUserId,
       name: input.name,
       canvas: input.canvas ?? {},
     })

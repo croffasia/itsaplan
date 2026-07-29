@@ -27,6 +27,8 @@ describe('hasPermission', () => {
     const p = defaultMemberPermissions();
     expect(hasPermission(p, 'work_items', 'create')).toBe(true);
     expect(hasPermission(p, 'work_items', 'delete')).toBe(true);
+    expect(hasPermission(p, 'note_boards', 'create')).toBe(true);
+    expect(hasPermission(p, 'note_boards', 'delete')).toBe(true);
     expect(hasPermission(p, 'dashboards', 'read')).toBe(true);
     expect(hasPermission(p, 'dashboards', 'edit')).toBe(false);
     expect(hasPermission(p, 'members_manage', 'read')).toBe(false);

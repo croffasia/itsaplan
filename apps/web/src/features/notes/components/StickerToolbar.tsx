@@ -37,46 +37,52 @@ function ToolbarButton({
   );
 }
 
-// The persistent bottom toolbar of a sticky note: background color, bold, italic,
-// a checklist toggle, converting the note into an issue, and delete.
+// The persistent bottom toolbar of a sticky note. Without canEdit only "convert to
+// issue" is left.
 export default function StickerToolbar({
   editor,
   color,
   onColorChange,
   onConvert,
   onDelete,
+  canEdit,
 }: {
   editor: Editor | null;
   color: string;
   onColorChange: (key: string) => void;
   onConvert?: () => void;
   onDelete: () => void;
+  canEdit: boolean;
 }) {
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-0.5">
-        <StickerColorPicker value={color} onChange={onColorChange} />
-        <ToolbarButton
-          label="Bold"
-          active={editor?.isActive('bold')}
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-        >
-          <Bold />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Italic"
-          active={editor?.isActive('italic')}
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-        >
-          <Italic />
-        </ToolbarButton>
-        <ToolbarButton
-          label="Checklist"
-          active={editor?.isActive('taskList')}
-          onClick={() => editor?.chain().focus().toggleTaskList().run()}
-        >
-          <ListChecks />
-        </ToolbarButton>
+        {canEdit && (
+          <>
+            <StickerColorPicker value={color} onChange={onColorChange} />
+            <ToolbarButton
+              label="Bold"
+              active={editor?.isActive('bold')}
+              onClick={() => editor?.chain().focus().toggleBold().run()}
+            >
+              <Bold />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Italic"
+              active={editor?.isActive('italic')}
+              onClick={() => editor?.chain().focus().toggleItalic().run()}
+            >
+              <Italic />
+            </ToolbarButton>
+            <ToolbarButton
+              label="Checklist"
+              active={editor?.isActive('taskList')}
+              onClick={() => editor?.chain().focus().toggleTaskList().run()}
+            >
+              <ListChecks />
+            </ToolbarButton>
+          </>
+        )}
       </div>
       <div className="flex items-center gap-0.5">
         {onConvert && (
@@ -84,9 +90,11 @@ export default function StickerToolbar({
             <SquarePlus />
           </ToolbarButton>
         )}
-        <ToolbarButton label="Delete note" onClick={onDelete}>
-          <Trash2 />
-        </ToolbarButton>
+        {canEdit && (
+          <ToolbarButton label="Delete note" onClick={onDelete}>
+            <Trash2 />
+          </ToolbarButton>
+        )}
       </div>
     </div>
   );

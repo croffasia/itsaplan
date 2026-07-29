@@ -995,6 +995,7 @@ export const projectDashboard = pgTable(
 // the UI (React Flow nodes + edges + viewport), stored and returned verbatim.
 // owner_user_id NULL means a public board visible to every project member; a set
 // owner_user_id means a personal board only its owner can see or edit.
+// Only the creator (created_by_user_id) may make a board personal.
 export const noteBoard = pgTable(
   'note_board',
   {
@@ -1003,6 +1004,7 @@ export const noteBoard = pgTable(
       .notNull()
       .references(() => project.id, { onDelete: 'cascade' }),
     ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'cascade' }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
     name: text('name').notNull(),
     canvas: jsonb('canvas').notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

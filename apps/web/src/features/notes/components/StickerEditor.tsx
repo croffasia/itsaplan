@@ -14,12 +14,15 @@ export default function StickerEditor({
   value,
   onChange,
   onReady,
+  editable,
 }: {
   value: string;
   onChange: (markdown: string) => void;
   onReady?: (editor: Editor | null) => void;
+  editable: boolean;
 }) {
   const editor = useEditor({
+    editable,
     extensions: [
       StarterKit,
       Placeholder.configure({ placeholder: 'Write a note…' }),

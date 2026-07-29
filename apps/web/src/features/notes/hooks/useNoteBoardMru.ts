@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { NoteBoardVisibility } from '@/lib/api';
 
 // The recently-opened boards backing the tab strip. Kept per project in
 // localStorage (per browser, not synced): a lightweight most-recently-used list so
@@ -8,7 +9,7 @@ import { useCallback, useEffect, useState } from 'react';
 export interface MruEntry {
   id: number;
   name: string;
-  personal: boolean;
+  visibility: NoteBoardVisibility;
 }
 
 const MAX = 5;
@@ -18,7 +19,12 @@ function storageKey(projectKey: string) {
 }
 
 function isEntry(v: unknown): v is MruEntry {
-  return typeof v === 'object' && v !== null && typeof (v as MruEntry).id === 'number';
+  return (
+    typeof v === 'object' &&
+    v !== null &&
+    typeof (v as MruEntry).id === 'number' &&
+    typeof (v as MruEntry).visibility === 'string'
+  );
 }
 
 function read(projectKey: string): MruEntry[] {
@@ -33,9 +39,12 @@ function read(projectKey: string): MruEntry[] {
 }
 
 export function useNoteBoardMru(projectKey: string) {
-  const [entries, setEntries] = useState<MruEntry[]>(() => read(projectKey));
+  // Empty until mounted: the server has no localStorage, so seeding the state from
+  // it would render a different tab strip than the server did and break hydration.
+  const [entries, setEntries] = useState<MruEntry[]>([]);
 
-  // Reload when switching projects — the hook instance may outlive the route.
+  // Fills the list after mount, and reloads it when switching projects — the hook
+  // instance may outlive the route.
   useEffect(() => setEntries(read(projectKey)), [projectKey]);
 
   const persist = useCallback(

@@ -12,10 +12,13 @@ import {
   getNoteBoard,
   updateNoteBoard,
   deleteNoteBoard,
+  listNoteBoardAccessCandidates,
   type NoteBoardRow,
 } from './store';
 
 const boardParams = t.Object({ projectKey: t.String(), boardId: t.Numeric() });
+
+const Visibility = t.Union([t.Literal('public'), t.Literal('private'), t.Literal('restricted')]);
 
 // A note board DTO (NoteBoardRow from the store). canvas is a jsonb blob owned by
 // the UI (React Flow nodes/edges) and returned verbatim, so it is typed t.Any().
@@ -24,18 +27,29 @@ const NoteBoardResponse = t.Object({
   projectId: t.Number(),
   ownerUserId: t.Nullable(t.String()),
   createdByUserId: t.Nullable(t.String()),
+  visibility: Visibility,
+  memberIds: t.Array(t.String()),
   name: t.String(),
   canvas: t.Any(),
   createdAt: t.String(),
   updatedAt: t.String(),
 });
 
-// The list/switcher DTO: the board without its canvas.
-const NoteBoardSummaryResponse = t.Omit(NoteBoardResponse, ['canvas']);
+// The list/switcher DTO: the board without its canvas or member list.
+const NoteBoardSummaryResponse = t.Omit(NoteBoardResponse, ['canvas', 'memberIds']);
+
+const NoteBoardAccessCandidateResponse = t.Object({
+  userId: t.String(),
+  name: t.String(),
+  image: t.Nullable(t.String()),
+  kind: t.Union([t.Literal('member'), t.Literal('agent')]),
+  canAccess: t.Boolean(),
+});
 
 // Load a board that belongs to this project and that the user may access: a
-// public board (no owner) is open to any member; a personal board only to its
-// owner. Anything else is a 404 so a personal board's existence does not leak.
+// public board is open to any member; a private one to its owner and the members
+// granted access. Anything else is a 404 so a private board's existence does not
+// leak.
 async function loadAccessibleBoard(
   boardId: number,
   projectId: number,
@@ -43,10 +57,33 @@ async function loadAccessibleBoard(
 ): Promise<NoteBoardRow> {
   const board = await getNoteBoard(boardId);
   if (!board || board.projectId !== projectId) throw new HttpError(404, 'Board not found');
-  if (board.ownerUserId !== null && board.ownerUserId !== userId) {
+  if (
+    board.ownerUserId !== null &&
+    board.ownerUserId !== userId &&
+    !board.memberIds.includes(userId)
+  ) {
     throw new HttpError(404, 'Board not found');
   }
   return board;
+}
+
+// The members to grant access to: deduplicated, without the owner (who always has
+// access), and rejected when someone cannot be granted it — they are not in the
+// project, or their role cannot read note boards, which would make the grant do
+// nothing since every board route checks that permission too.
+async function grantedMembers(
+  projectId: number,
+  ownerUserId: string,
+  userIds: string[],
+): Promise<string[]> {
+  const ids = [...new Set(userIds)].filter((id) => id !== ownerUserId);
+  if (ids.length === 0) return [];
+  const candidates = await listNoteBoardAccessCandidates(projectId);
+  const grantable = new Set(candidates.filter((c) => c.canAccess).map((c) => c.userId));
+  if (ids.some((id) => !grantable.has(id))) {
+    throw new HttpError(400, 'Access can only be granted to project members who may read notes');
+  }
+  return ids;
 }
 
 export const noteBoardRoutes = new Elysia({
@@ -81,8 +118,27 @@ export const noteBoardRoutes = new Elysia({
       detail: {
         summary: "List a project's note boards",
         description:
-          "The boards the caller can see: the project's public boards plus the caller's own personal ones. `q` filters by name; `limit` (10 by default, 50 at most) and `offset` page the result. Cards are omitted — read a board to get them.",
+          "The boards the caller can see: the project's public boards, the caller's own private ones, and the boards they were granted access to. `q` filters by name; `limit` (10 by default, 50 at most) and `offset` page the result. Cards are omitted — read a board to get them.",
         ...mcpTool('list_note_boards'),
+      },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/note-boards/access-candidates',
+    async ({ project }) => listNoteBoardAccessCandidates(project.id),
+    {
+      permission: ['note_boards', 'edit'],
+      response: {
+        200: t.Array(NoteBoardAccessCandidateResponse),
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'List who a board can be shared with',
+        description:
+          'The project members and agents a restricted board can grant access to. `canAccess` false means their role cannot read notes at all, so granting them access would change nothing and is rejected.',
       },
     },
   )
@@ -117,7 +173,7 @@ export const noteBoardRoutes = new Elysia({
       set.status = 201;
       return createNoteBoard({
         projectId: project.id,
-        ownerUserId: body.personal ? userId : null,
+        ownerUserId: body.visibility === 'private' ? userId : null,
         createdByUserId: userId,
         name: body.name,
         canvas: body.canvas,
@@ -127,7 +183,7 @@ export const noteBoardRoutes = new Elysia({
       permission: ['note_boards', 'create'],
       body: t.Object({
         name: t.String({ minLength: 1 }),
-        personal: t.Optional(t.Boolean()),
+        visibility: t.Optional(t.Union([t.Literal('public'), t.Literal('private')])),
         canvas: t.Optional(t.Any()),
       }),
       response: {
@@ -140,7 +196,7 @@ export const noteBoardRoutes = new Elysia({
       detail: {
         summary: 'Create a note board',
         description:
-          'Create a board. `personal` true makes it private to the caller, otherwise every project member sees it. Cards go in `canvas` as nodes (see `get_note_board`); a card `body` is markdown and `color` a hex string such as `#FFF9B1`.',
+          'Create a board. `visibility` "private" keeps it to the caller, "public" (the default) shows it to every project member. Cards go in `canvas` as nodes (see `get_note_board`); a card `body` is markdown and `color` a hex string such as `#FFF9B1`.',
         ...mcpTool('create_note_board'),
       },
     },
@@ -151,16 +207,32 @@ export const noteBoardRoutes = new Elysia({
     async ({ project, user, params, body }) => {
       const userId = requireUser(user).id;
       const current = await loadAccessibleBoard(params.boardId, project.id, userId);
-      const patch: { name?: string; canvas?: unknown; ownerUserId?: string | null } = {};
+      const patch: {
+        name?: string;
+        canvas?: unknown;
+        ownerUserId?: string | null;
+        memberIds?: string[];
+      } = {};
       if (body.name !== undefined) patch.name = body.name;
       if (body.canvas !== undefined) patch.canvas = body.canvas;
-      if (body.personal !== undefined) {
-        // Making a board public again is open to anyone who can edit it.
-        if (body.personal && current.createdByUserId !== userId) {
-          throw new HttpError(403, 'Only the board creator can make it personal');
+
+      if (body.visibility !== undefined || body.memberIds !== undefined) {
+        if (current.createdByUserId !== userId) {
+          throw new HttpError(403, 'Only the board creator can change who sees the board');
         }
-        patch.ownerUserId = body.personal ? userId : null;
+        const visibility = body.visibility ?? current.visibility;
+        if (body.memberIds !== undefined && visibility !== 'restricted') {
+          throw new HttpError(400, 'Members can only be granted access to a restricted board');
+        }
+        patch.ownerUserId = visibility === 'public' ? null : userId;
+        if (visibility !== 'restricted') {
+          // A public or private board grants no one: whoever was listed loses access.
+          patch.memberIds = [];
+        } else if (body.memberIds !== undefined) {
+          patch.memberIds = await grantedMembers(project.id, userId, body.memberIds);
+        }
       }
+
       const board = await updateNoteBoard(params.boardId, patch);
       if (!board) throw new HttpError(404, 'Board not found');
       return board;
@@ -171,7 +243,8 @@ export const noteBoardRoutes = new Elysia({
       body: t.Object({
         name: t.Optional(t.String({ minLength: 1 })),
         canvas: t.Optional(t.Any()),
-        personal: t.Optional(t.Boolean()),
+        visibility: t.Optional(Visibility),
+        memberIds: t.Optional(t.Array(t.String())),
       }),
       response: {
         200: NoteBoardResponse,
@@ -183,7 +256,7 @@ export const noteBoardRoutes = new Elysia({
       detail: {
         summary: 'Update a note board',
         description:
-          'Rename a board, switch it between personal and public, or replace its `canvas`. Only the board creator can make it personal. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted.',
+          'Rename a board, change who sees it, or replace its `canvas`. `visibility` is "public" (every project member), "private" (the creator alone), or "restricted" (the creator plus the project members in `memberIds`, which replaces the granted list as a whole). Only the board creator can change either. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted.',
         ...mcpTool('update_note_board'),
       },
     },

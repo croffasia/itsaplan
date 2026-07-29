@@ -4,6 +4,7 @@ import {
   type NewNoteBoardInput,
   type NoteBoard,
   type NoteBoardSummary,
+  type NoteBoardVisibility,
   type NoteCanvas,
 } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
@@ -47,6 +48,17 @@ export function useNoteBoardQuery(projectKey: string | null, boardId: number | n
   });
 }
 
+// Who a restricted board can be shared with: the project's members and agents,
+// each with whether their role can read notes at all. Only the access picker needs
+// it, so it is a query of its own rather than part of the board payload.
+export function useNoteBoardAccessCandidates(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.noteBoardAccessCandidates(projectKey ?? ''),
+    queryFn: () => api.listNoteBoardAccessCandidates(projectKey!),
+    enabled: projectKey != null,
+  });
+}
+
 export function useCreateNoteBoard(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
@@ -73,13 +85,21 @@ export function useRenameNoteBoard(projectKey: string | null) {
   });
 }
 
-// Toggle a board between public and personal (owned by the caller). Changes both
-// the lock icon and which list section it falls under, so refresh the lists.
+// Change who sees a board: public, private, or restricted to the members in
+// memberIds. Changes both the board's icon and which list section it falls under,
+// so refresh the lists.
 export function useSetNoteBoardVisibility(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ boardId, personal }: { boardId: number; personal: boolean }) =>
-      api.updateNoteBoard(projectKey!, boardId, { personal }),
+    mutationFn: ({
+      boardId,
+      visibility,
+      memberIds,
+    }: {
+      boardId: number;
+      visibility: NoteBoardVisibility;
+      memberIds?: string[];
+    }) => api.updateNoteBoard(projectKey!, boardId, { visibility, memberIds }),
     onSuccess: (updated) => {
       if (!projectKey) return;
       qc.setQueryData<NoteBoard>(qk.noteBoard(projectKey, updated.id), updated);

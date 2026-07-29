@@ -52,15 +52,10 @@ export default function NoteCanvas({
   const { resolvedTheme } = useTheme();
 
   const setVisibility = useSetNoteBoardVisibility(projectKey);
-  const personal = board.ownerUserId != null;
+  const { canEdit, canChangeVisibility } = useNoteBoardAccess(board);
 
-  const { canEdit, canMakePrivate } = useNoteBoardAccess(board);
-  // Anyone who may edit the board can make it public again; only its creator can
-  // make it private.
-  const canToggleVisibility = personal ? canEdit : canMakePrivate;
-
-  // The canvas autosave and the visibility toggle report through one status line
-  // after the board name, so toggling public/personal shows Saving…/Saved too.
+  // The canvas autosave and the access changes report through one status line
+  // after the board name, so changing who sees the board shows Saving…/Saved too.
   const canvasStatus = useCanvasAutosave(projectKey, board.id, nodes, edges, canEdit);
   let saveStatus: SaveStatus = 'saved';
   if (canvasStatus === 'saving' || setVisibility.isPending) saveStatus = 'saving';
@@ -100,12 +95,17 @@ export default function NoteCanvas({
       <NoteCanvasTitle board={board} saveStatus={saveStatus} />
 
       <NoteCanvasControls
+        projectKey={projectKey}
         canEdit={canEdit}
-        personal={personal}
-        canToggleVisibility={canToggleVisibility}
+        visibility={board.visibility}
+        ownerUserId={board.ownerUserId}
+        memberIds={board.memberIds}
+        canChangeVisibility={canChangeVisibility}
         fullscreen={fullscreen}
         onAddNote={addAtCenter}
-        onToggleVisibility={() => setVisibility.mutate({ boardId: board.id, personal: !personal })}
+        onChangeVisibility={(visibility, memberIds) =>
+          setVisibility.mutate({ boardId: board.id, visibility, memberIds })
+        }
         onToggleFullscreen={() => setFullscreen((v) => !v)}
       />
 

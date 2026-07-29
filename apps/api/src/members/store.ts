@@ -51,6 +51,16 @@ export async function getMembership(projectId: number, userId: string): Promise<
   return rows[0] ? (rows[0].role as MemberRole) : null;
 }
 
+function toMemberContext(role: MemberRole, rolePermissions: unknown): MemberContext {
+  if (role === 'owner') return { role, permissions: fullPermissions() };
+  return {
+    role,
+    permissions: rolePermissions
+      ? normalizePermissions(rolePermissions)
+      : defaultMemberPermissions(),
+  };
+}
+
 // The current user's role and resolved permission matrix in a project, or null
 // when they are not a member. This is the single lookup behind assertPermission.
 export async function getMemberContext(
@@ -66,13 +76,23 @@ export async function getMemberContext(
     .leftJoin(projectRole, eq(projectRole.id, projectMember.roleId))
     .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
   const r = rows[0];
-  if (!r) return null;
-  const role = r.role as MemberRole;
-  if (role === 'owner') return { role, permissions: fullPermissions() };
-  const permissions = r.permissions
-    ? normalizePermissions(r.permissions)
-    : defaultMemberPermissions();
-  return { role, permissions };
+  return r ? toMemberContext(r.role as MemberRole, r.permissions) : null;
+}
+
+// Every member's resolved access in the project, keyed by user id — getMemberContext
+// in bulk, for a caller that judges several people at once (agents included: their
+// bot user is a member like any other).
+export async function listMemberContexts(projectId: number): Promise<Map<string, MemberContext>> {
+  const rows = await db
+    .select({
+      userId: projectMember.userId,
+      role: projectMember.role,
+      permissions: projectRole.permissions,
+    })
+    .from(projectMember)
+    .leftJoin(projectRole, eq(projectRole.id, projectMember.roleId))
+    .where(eq(projectMember.projectId, projectId));
+  return new Map(rows.map((r) => [r.userId, toMemberContext(r.role as MemberRole, r.permissions)]));
 }
 
 // A candidate an issue can be assigned to: a project member (a real user) or an

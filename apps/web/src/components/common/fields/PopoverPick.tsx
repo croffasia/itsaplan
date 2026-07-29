@@ -9,6 +9,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 import ReadOnlyPill from './ReadOnlyPill';
 
 export interface PickItem {
@@ -18,6 +19,11 @@ export interface PickItem {
   icon: ReactNode;
   label: string;
   selected: boolean;
+  // Shown after the label, before the checkmark — a badge saying why a row reads
+  // the way it does.
+  trailing?: ReactNode;
+  // Listed but not selectable.
+  disabled?: boolean;
   onSelect: () => void;
 }
 
@@ -39,6 +45,9 @@ export default function PopoverPick({
   items,
   groups,
   closeOnSelect = true,
+  align = 'start',
+  contentClassName = 'w-56',
+  modal = false,
   readOnly = false,
 }: {
   trigger: ReactNode;
@@ -47,6 +56,14 @@ export default function PopoverPick({
   items?: PickItem[];
   groups?: PickGroup[];
   closeOnSelect?: boolean;
+  // Which trigger edge the list lines up with: 'end' for a trigger near the right
+  // of the screen, so the list opens inward instead of off-screen.
+  align?: 'start' | 'center' | 'end';
+  // The list width (a Tailwind class), for a list whose labels need more room.
+  contentClassName?: string;
+  // Set over a surface that swallows pointer events (the React Flow canvas), where
+  // an outside click would otherwise not reach the popover and never dismiss it.
+  modal?: boolean;
   // When true the pill is shown as-is with no popover — a read-only display of the
   // current value (public shared pages).
   readOnly?: boolean;
@@ -59,21 +76,23 @@ export default function PopoverPick({
     <CommandItem
       key={it.key}
       value={it.search}
+      disabled={it.disabled}
       onSelect={() => {
         it.onSelect();
         if (closeOnSelect) setOpen(false);
       }}
     >
       {it.icon}
-      <span className="flex-1">{it.label}</span>
-      {it.selected && <Check className="ml-auto" />}
+      <span className="flex-1 truncate">{it.label}</span>
+      {it.trailing}
+      {it.selected && <Check />}
     </CommandItem>
   );
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover modal={modal} open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent className="w-56 p-0" align="start">
+      <PopoverContent className={cn('p-0', contentClassName)} align={align}>
         <Command>
           <CommandInput placeholder={inputPlaceholder} />
           <CommandList>

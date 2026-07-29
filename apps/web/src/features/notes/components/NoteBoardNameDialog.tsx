@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Globe, Lock } from 'lucide-react';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { VISIBILITY_HINT, VISIBILITY_ICON, type NewBoardVisibility } from '../utils/visibility';
 
 // A name prompt used for creating and renaming a note board. When `withVisibility`
-// is set (creating), it also picks whether the board is public or personal.
+// is set (creating), it also picks whether the board is public or private.
 export default function NoteBoardNameDialog({
   open,
   title,
@@ -24,14 +24,15 @@ export default function NoteBoardNameDialog({
   initial: string;
   withVisibility?: boolean;
   onClose: () => void;
-  onSubmit: (name: string, personal: boolean) => void;
+  onSubmit: (name: string, visibility: NewBoardVisibility) => void;
 }) {
   const [name, setName] = useState(initial);
-  const [personal, setPersonal] = useState(false);
+  const [visibility, setVisibility] = useState<NewBoardVisibility>('public');
 
   if (!open) return null;
 
   const isValid = name.trim().length > 0;
+  const VisibilityIcon = VISIBILITY_ICON[visibility];
 
   return (
     <Modal title={title} description={description} projectKey={projectKey} onClose={onClose}>
@@ -39,7 +40,7 @@ export default function NoteBoardNameDialog({
         className="space-y-5"
         onSubmit={(e) => {
           e.preventDefault();
-          if (isValid) onSubmit(name.trim(), personal);
+          if (isValid) onSubmit(name.trim(), visibility);
         }}
       >
         <div className="space-y-1.5">
@@ -48,14 +49,12 @@ export default function NoteBoardNameDialog({
             {withVisibility && (
               <button
                 type="button"
-                aria-label={personal ? 'Make public' : 'Make personal'}
-                title={
-                  personal ? 'Personal — click to make public' : 'Public — click to make personal'
-                }
-                onClick={() => setPersonal((p) => !p)}
+                aria-label={visibility === 'private' ? 'Make public' : 'Make private'}
+                title={VISIBILITY_HINT[visibility]}
+                onClick={() => setVisibility((v) => (v === 'private' ? 'public' : 'private'))}
                 className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
               >
-                {personal ? <Lock className="size-4" /> : <Globe className="size-4" />}
+                <VisibilityIcon className="size-4" />
               </button>
             )}
             <Input
@@ -72,8 +71,8 @@ export default function NoteBoardNameDialog({
 
         {withVisibility && (
           <p className="text-sm text-muted-foreground">
-            {personal
-              ? 'Only you can see this board.'
+            {visibility === 'private'
+              ? 'Only you can see this board. You can share it with picked members later.'
               : 'Everyone in the project can see this board.'}
           </p>
         )}

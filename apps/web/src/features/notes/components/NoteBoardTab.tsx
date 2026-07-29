@@ -1,4 +1,4 @@
-import { Globe, Lock, MoreHorizontal, Pencil, StickyNote, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -8,31 +8,28 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { MruEntry } from '../hooks/useNoteBoardMru';
+import { boardListIcon } from '../utils/visibility';
 
 // One board tab in the notes header; the active one also carries the board menu.
-// Making a board private is limited to its creator, which the host resolves into
-// canMakePrivate.
+// Who sees the board is changed on the canvas instead (NoteBoardAccessPicker).
 export default function NoteBoardTab({
   tab,
   active,
-  canMakePrivate,
   onSelect,
   onRename,
-  onToggleVisibility,
   onDelete,
 }: {
   tab: MruEntry;
   active: boolean;
-  canMakePrivate: boolean;
   onSelect: () => void;
   onRename: () => void;
-  onToggleVisibility: () => void;
   onDelete: () => void;
 }) {
   const { can } = usePermissions();
   const canEdit = can('note_boards', 'edit');
   const canDelete = can('note_boards', 'delete');
   const showMenu = active && (canEdit || canDelete);
+  const Icon = boardListIcon(tab.visibility);
 
   return (
     <div
@@ -44,7 +41,7 @@ export default function NoteBoardTab({
       )}
     >
       <button type="button" onClick={onSelect} className="flex items-center gap-1.5">
-        {tab.personal ? <Lock className="size-3.5" /> : <StickyNote className="size-3.5" />}
+        <Icon className="size-3.5" />
         {tab.name}
       </button>
 
@@ -60,16 +57,6 @@ export default function NoteBoardTab({
             {canEdit && (
               <DropdownMenuItem onClick={onRename}>
                 <Pencil className="size-4" /> Rename
-              </DropdownMenuItem>
-            )}
-            {canEdit && tab.personal && (
-              <DropdownMenuItem onClick={onToggleVisibility}>
-                <Globe className="size-4" /> Make public
-              </DropdownMenuItem>
-            )}
-            {canEdit && !tab.personal && canMakePrivate && (
-              <DropdownMenuItem onClick={onToggleVisibility}>
-                <Lock className="size-4" /> Make private
               </DropdownMenuItem>
             )}
             {canDelete && (

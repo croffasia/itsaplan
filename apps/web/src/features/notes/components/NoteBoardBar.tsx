@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { MruEntry } from '../hooks/useNoteBoardMru';
+import type { NewBoardVisibility } from '../utils/visibility';
 import NoteBoardNameDialog from './NoteBoardNameDialog';
 import NoteBoardTab from './NoteBoardTab';
 import BoardSwitcher from './BoardSwitcher';
@@ -14,19 +15,15 @@ export default function NoteBoardBar({
   onSelect,
   onCreate,
   onRename,
-  onToggleVisibility,
   onDelete,
-  canMakeActivePrivate,
 }: {
   projectKey: string;
   tabs: MruEntry[];
   activeBoardId: number | null;
   onSelect: (id: number) => void;
-  onCreate: (name: string, personal: boolean) => void;
+  onCreate: (name: string, visibility: NewBoardVisibility) => void;
   onRename: (id: number, name: string) => void;
-  onToggleVisibility: (id: number, personal: boolean) => void;
   onDelete: (id: number) => void;
-  canMakeActivePrivate: boolean;
 }) {
   // 'create' to open the new-board dialog, an MRU entry to rename, or null (closed).
   const [dialog, setDialog] = useState<'create' | MruEntry | null>(null);
@@ -61,10 +58,8 @@ export default function NoteBoardBar({
             key={tab.id}
             tab={tab}
             active={activeBoardId === tab.id}
-            canMakePrivate={canMakeActivePrivate}
             onSelect={() => onSelect(tab.id)}
             onRename={() => setDialog(tab)}
-            onToggleVisibility={() => onToggleVisibility(tab.id, !tab.personal)}
             onDelete={() => onDelete(tab.id)}
           />
         ))}
@@ -79,9 +74,9 @@ export default function NoteBoardBar({
         initial={renaming?.name ?? ''}
         withVisibility={dialog === 'create'}
         onClose={() => setDialog(null)}
-        onSubmit={(name, personal) => {
+        onSubmit={(name, visibility) => {
           if (renaming) onRename(renaming.id, name);
-          else onCreate(name, personal);
+          else onCreate(name, visibility);
           setDialog(null);
         }}
       />

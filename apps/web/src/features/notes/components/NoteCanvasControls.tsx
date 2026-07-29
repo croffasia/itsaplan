@@ -1,40 +1,63 @@
-import { Globe, Lock, Maximize2, Minimize2, Plus } from 'lucide-react';
+import { Maximize2, Minimize2, Plus } from 'lucide-react';
+import type { NoteBoardVisibility } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
-
-// Without the right to toggle it, the visibility icon only reports the current
-// state; otherwise it names the state the click switches to.
-function visibilityCopy(canToggle: boolean, personal: boolean) {
-  if (!canToggle) {
-    return {
-      label: 'Board visibility',
-      hint: personal ? 'Private — visible only to you' : 'Public — visible to every project member',
-    };
-  }
-  return personal
-    ? { label: 'Make public', hint: 'Make public — visible to every project member' }
-    : { label: 'Make private', hint: 'Make private — visible only to you' };
-}
+import NoteBoardAccessList from './NoteBoardAccessList';
+import NoteBoardAccessPicker from './NoteBoardAccessPicker';
+import { VISIBILITY_HINT, VISIBILITY_ICON } from '../utils/visibility';
 
 export default function NoteCanvasControls({
+  projectKey,
   canEdit,
-  personal,
-  canToggleVisibility,
+  visibility,
+  ownerUserId,
+  memberIds,
+  canChangeVisibility,
   fullscreen,
   onAddNote,
-  onToggleVisibility,
+  onChangeVisibility,
   onToggleFullscreen,
 }: {
+  projectKey: string;
   canEdit: boolean;
-  personal: boolean;
-  canToggleVisibility: boolean;
+  visibility: NoteBoardVisibility;
+  ownerUserId: string | null;
+  memberIds: string[];
+  canChangeVisibility: boolean;
   fullscreen: boolean;
   onAddNote: () => void;
-  onToggleVisibility: () => void;
+  onChangeVisibility: (visibility: NoteBoardVisibility, memberIds?: string[]) => void;
   onToggleFullscreen: () => void;
 }) {
-  const visibility = visibilityCopy(canToggleVisibility, personal);
+  const VisibilityIcon = VISIBILITY_ICON[visibility];
+
+  function renderAccess() {
+    if (canChangeVisibility) {
+      return (
+        <NoteBoardAccessPicker
+          projectKey={projectKey}
+          visibility={visibility}
+          memberIds={memberIds}
+          onChange={onChangeVisibility}
+        />
+      );
+    }
+    if (visibility === 'restricted') {
+      return <NoteBoardAccessList ownerUserId={ownerUserId} memberIds={memberIds} />;
+    }
+    // Nothing to list on a public or private board: the icon only reports the state.
+    return (
+      <Tooltip>
+        <TooltipTrigger
+          aria-label="Board access"
+          className="flex size-6 cursor-default items-center justify-center rounded text-muted-foreground"
+        >
+          <VisibilityIcon className="size-3.5" />
+        </TooltipTrigger>
+        <TooltipContent>{VISIBILITY_HINT[visibility]}</TooltipContent>
+      </Tooltip>
+    );
+  }
 
   return (
     <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
@@ -43,22 +66,7 @@ export default function NoteCanvasControls({
           <Plus className="size-4" /> Add note
         </Button>
       )}
-      <Tooltip>
-        <TooltipTrigger
-          aria-label={visibility.label}
-          aria-disabled={!canToggleVisibility}
-          // A `disabled` button takes no pointer events, so its tooltip would never
-          // open — drop the handler instead, the state hint stays reachable.
-          onClick={canToggleVisibility ? onToggleVisibility : undefined}
-          className={cn(
-            'flex size-6 items-center justify-center rounded text-muted-foreground',
-            canToggleVisibility ? 'hover:bg-accent hover:text-foreground' : 'cursor-default',
-          )}
-        >
-          {personal ? <Lock className="size-3.5" /> : <Globe className="size-3.5" />}
-        </TooltipTrigger>
-        <TooltipContent>{visibility.hint}</TooltipContent>
-      </Tooltip>
+      {renderAccess()}
       <Tooltip>
         <TooltipTrigger
           aria-label={fullscreen ? 'Exit fullscreen' : 'Fullscreen'}

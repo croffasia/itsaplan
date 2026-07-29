@@ -998,35 +998,52 @@ export interface NoteCanvas {
   edges: NoteEdge[];
 }
 
+// Who sees a board: every project member, its creator alone, or its creator plus
+// the members granted access.
+export type NoteBoardVisibility = 'public' | 'private' | 'restricted';
+
 export interface NoteBoard {
   id: number;
   projectId: number;
-  // null for a public board (every member sees it); a user id for a personal
-  // board only its owner sees.
+  // null for a public board; a user id for a private or restricted one.
   ownerUserId: string | null;
-  // Only the creator can make the board private.
+  // Only the creator can change who sees the board.
   createdByUserId: string | null;
+  visibility: NoteBoardVisibility;
+  // The members granted access besides the creator (a restricted board).
+  memberIds: string[];
   name: string;
   canvas: NoteCanvas;
   createdAt: string;
   updatedAt: string;
 }
 
-// A board without its canvas — what the switcher and MRU tabs list. The canvas is
-// loaded one board at a time via getNoteBoard when the board is opened.
-export type NoteBoardSummary = Omit<NoteBoard, 'canvas'>;
+// A board without its canvas or member list — what the switcher and MRU tabs list.
+// The canvas is loaded one board at a time via getNoteBoard when the board is opened.
+export type NoteBoardSummary = Omit<NoteBoard, 'canvas' | 'memberIds'>;
 
 export interface NewNoteBoardInput {
   name: string;
-  personal?: boolean;
+  visibility?: Exclude<NoteBoardVisibility, 'restricted'>;
   canvas?: NoteCanvas;
 }
 
 export interface NoteBoardPatch {
   name?: string;
   canvas?: NoteCanvas;
-  // Sets the board's visibility: true makes it personal to the caller, false public.
-  personal?: boolean;
+  visibility?: NoteBoardVisibility;
+  // Replaces the granted members as a whole; only on a restricted board.
+  memberIds?: string[];
+}
+
+// Someone a restricted board can be shared with. `canAccess` false means their
+// role cannot read notes at all, so the API rejects granting them access.
+export interface NoteBoardAccessCandidate {
+  userId: string;
+  name: string;
+  image: string | null;
+  kind: 'member' | 'agent';
+  canAccess: boolean;
 }
 
 export interface NoteBoardListParams {
@@ -2014,9 +2031,10 @@ export const api = {
       body: JSON.stringify({ orderedIds }),
     }),
 
-  // Note boards — all ops are project-scoped (a personal board is filtered to its
-  // owner server-side), so board ops take projectKey plus the board id. The list
-  // is paged and searchable (switcher); a single board carries its canvas.
+  // Note boards — all ops are project-scoped (a board that is not public is
+  // filtered to who may see it server-side), so board ops take projectKey plus the
+  // board id. The list is paged and searchable (switcher); a single board carries
+  // its canvas.
   listNoteBoards: (projectKey: string, params: NoteBoardListParams = {}) => {
     const qs = new URLSearchParams();
     if (params.q) qs.set('q', params.q);
@@ -2027,6 +2045,8 @@ export const api = {
   },
   getNoteBoard: (projectKey: string, boardId: number) =>
     request<NoteBoard>(`/projects/${projectKey}/note-boards/${boardId}`),
+  listNoteBoardAccessCandidates: (projectKey: string) =>
+    request<NoteBoardAccessCandidate[]>(`/projects/${projectKey}/note-boards/access-candidates`),
   createNoteBoard: (projectKey: string, input: NewNoteBoardInput) =>
     request<NoteBoard>(`/projects/${projectKey}/note-boards`, {
       method: 'POST',

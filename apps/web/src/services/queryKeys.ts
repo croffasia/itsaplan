@@ -32,6 +32,8 @@ export const qk = {
     ['noteBoards', projectKey, 'search', q] as const,
   noteBoard: (projectKey: string, boardId: number) =>
     ['noteBoards', projectKey, 'board', boardId] as const,
+  noteBoardAccessCandidates: (projectKey: string) =>
+    ['noteBoards', projectKey, 'accessCandidates'] as const,
   analytics: (projectKey: string, kind: string, params?: unknown) =>
     ['analytics', projectKey, kind, params ?? {}] as const,
   analyticsForProject: (projectKey: string) => ['analytics', projectKey] as const,

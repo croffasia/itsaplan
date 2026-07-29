@@ -113,16 +113,17 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     description: 'View one board with all of its notes and the connections between them.',
     always: false,
   },
-  // `personal` is hidden on both writes below: a personal board is visible to its
-  // owner alone, and an agent owns itself, so a personal board it created would be
-  // visible to no person in the project.
+  // `visibility` is hidden on both writes below, `memberIds` on the update: a board
+  // that is not public is visible to its owner and whoever they grant access to,
+  // and an agent owns itself, so a non-public board it made would be visible to no
+  // person in the project.
   {
     key: 'create_note_board',
     label: 'Create note boards',
     description: 'Create a note board with an optional set of notes.',
     always: false,
     overrides: {
-      hide: ['personal'],
+      hide: ['visibility'],
       description:
         'Create a note board every project member can see. Cards go in `canvas` as nodes (see `get_note_board`); a card `body` is markdown and `color` a hex string such as `#FFF9B1`. ' +
         CARD_LAYOUT,
@@ -134,7 +135,7 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     description: 'Rename a board and add, edit, or remove its notes.',
     always: false,
     overrides: {
-      hide: ['personal'],
+      hide: ['visibility', 'memberIds'],
       description:
         'Rename a note board or replace its `canvas`. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted. ' +
         CARD_LAYOUT,

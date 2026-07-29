@@ -15,12 +15,11 @@ import {
   useNoteBoardQuery,
   useCreateNoteBoard,
   useRenameNoteBoard,
-  useSetNoteBoardVisibility,
   useDeleteNoteBoard,
   flattenBoardPages,
 } from './services/noteBoards.service';
 import { useNoteBoardMru, type MruEntry } from './hooks/useNoteBoardMru';
-import { useNoteBoardAccess } from './hooks/useNoteBoardAccess';
+import type { NewBoardVisibility } from './utils/visibility';
 import NoteBoardBar from './components/NoteBoardBar';
 import NoteCanvas from './components/NoteCanvas';
 import NotesEmptyState from './components/NotesEmptyState';
@@ -49,7 +48,6 @@ export default function NotesPage() {
 
   const createBoard = useCreateNoteBoard(projectKey);
   const renameBoard = useRenameNoteBoard(projectKey);
-  const setVisibility = useSetNoteBoardVisibility(projectKey);
   const deleteBoard = useDeleteNoteBoard(projectKey);
 
   const tabs = useMemo<MruEntry[]>(() => {
@@ -58,7 +56,7 @@ export default function NotesPage() {
     for (const b of seed) {
       if (result.length >= MAX_TABS) break;
       if (seen.has(b.id)) continue;
-      result.push({ id: b.id, name: b.name, personal: b.ownerUserId != null });
+      result.push({ id: b.id, name: b.name, visibility: b.visibility });
       seen.add(b.id);
     }
     return result;
@@ -68,17 +66,12 @@ export default function NotesPage() {
   const activeBoardId = routeId ?? tabs[0]?.id ?? null;
 
   const { data: activeBoard, isError, error } = useNoteBoardQuery(projectKey, activeBoardId);
-  const { canMakePrivate } = useNoteBoardAccess(activeBoard);
 
   // Record the opened board as most-recent once it loads. Also refreshes its cached
   // tab label and visibility, healing a stale MRU entry (renamed elsewhere).
   useEffect(() => {
     if (activeBoard) {
-      record({
-        id: activeBoard.id,
-        name: activeBoard.name,
-        personal: activeBoard.ownerUserId != null,
-      });
+      record({ id: activeBoard.id, name: activeBoard.name, visibility: activeBoard.visibility });
     }
   }, [activeBoard, record]);
 
@@ -110,8 +103,8 @@ export default function NotesPage() {
     );
   }
 
-  async function create(name: string, personal: boolean) {
-    const board = await createBoard.mutateAsync({ name, personal });
+  async function create(name: string, visibility: NewBoardVisibility) {
+    const board = await createBoard.mutateAsync({ name, visibility });
     router.push(notePath(projectKey, board.id));
   }
 
@@ -148,9 +141,7 @@ export default function NotesPage() {
         onSelect={(id) => router.push(notePath(projectKey, id))}
         onCreate={create}
         onRename={(id, name) => renameBoard.mutate({ boardId: id, name })}
-        onToggleVisibility={(id, personal) => setVisibility.mutate({ boardId: id, personal })}
         onDelete={remove}
-        canMakeActivePrivate={canMakePrivate}
       />
 
       {renderContent()}

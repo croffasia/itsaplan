@@ -994,8 +994,8 @@ export const projectDashboard = pgTable(
 // Note boards: a freeform canvas of sticky notes. canvas is a jsonb blob owned by
 // the UI (React Flow nodes + edges + viewport), stored and returned verbatim.
 // owner_user_id NULL means a public board visible to every project member; a set
-// owner_user_id means a personal board only its owner can see or edit.
-// Only the creator (created_by_user_id) may make a board personal.
+// owner_user_id means a private board, seen by its owner and by the members listed
+// in note_board_member. Only the creator (created_by_user_id) may change any of it.
 export const noteBoard = pgTable(
   'note_board',
   {
@@ -1012,6 +1012,25 @@ export const noteBoard = pgTable(
   },
   // Listed by updatedAt within a project; the index covers the project filter.
   (t) => [index('note_board_project_idx').on(t.projectId, t.updatedAt)],
+);
+
+// The members granted access to a private board besides its owner. A private board
+// with at least one row here is what the UI calls "restricted".
+export const noteBoardMember = pgTable(
+  'note_board_member',
+  {
+    boardId: integer('board_id')
+      .notNull()
+      .references(() => noteBoard.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  // The board list filters by the viewer, so it reads this table by user first.
+  (t) => [
+    primaryKey({ columns: [t.boardId, t.userId] }),
+    index('note_board_member_user_idx').on(t.userId),
+  ],
 );
 
 // Manual actions: saved macros on a project. condition is a filter set deciding

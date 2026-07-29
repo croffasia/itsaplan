@@ -115,17 +115,17 @@ describe('internal agent route tools', () => {
     expect(mkt.data).toEqual([expect.objectContaining({ title: 'Stray' })]);
   });
 
-  it('hides personal on note boards: the agent only creates boards the project sees', async () => {
+  it('hides visibility on note boards: the agent only creates boards the project sees', async () => {
     const { asOwner } = await setup();
     const tools = await toolsFor(asOwner, ['create_note_board']);
 
     const schema = tools.create_note_board?.inputSchema as unknown as {
       getJsonSchema(): { properties: Record<string, unknown> };
     };
-    expect(Object.keys(schema.getJsonSchema().properties)).not.toContain('personal');
+    expect(Object.keys(schema.getJsonSchema().properties)).not.toContain('visibility');
 
     // Asking for it anyway does not make the board the agent's own.
-    await run(tools, 'create_note_board', { name: 'Ideas', personal: true });
+    await run(tools, 'create_note_board', { name: 'Ideas', visibility: 'private' });
     const boards = await asOwner.projects({ projectKey: 'MKT' })['note-boards'].get({ query: {} });
     expect(boards.data).toEqual([expect.objectContaining({ name: 'Ideas', ownerUserId: null })]);
   });

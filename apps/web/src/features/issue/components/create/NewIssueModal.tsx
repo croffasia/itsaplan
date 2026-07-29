@@ -3,6 +3,7 @@ import { type Editor } from '@tiptap/react';
 import { MoreHorizontal } from 'lucide-react';
 import { type IssueFieldValueInput, type ProjectDetail } from '@/lib/api';
 import { type NewIssueDefaults } from '@/utils/project';
+import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useCustomFieldsQuery } from '@/services/customFields.service';
@@ -71,6 +72,7 @@ export default function NewIssueModal({
   const [labelIds, setLabelIds] = useState<number[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
   // Custom fields for the selected type (global + type-scoped). Fields flagged
   // "show in main info" render below the description; the rest are added on
@@ -152,6 +154,10 @@ export default function NewIssueModal({
   const activeDefs = propertyDefs.filter((d) => activeFieldIds.includes(d.id));
   const availableDefs = propertyDefs.filter((d) => !activeFieldIds.includes(d.id));
 
+  let descriptionHeight = 'min-h-24';
+  if (fullscreen) descriptionHeight = 'min-h-48 flex-1';
+  else if (bodyDefs.length > 0) descriptionHeight = 'min-h-14';
+
   function toggleLabel(id: number) {
     setLabelIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
   }
@@ -218,8 +224,19 @@ export default function NewIssueModal({
   }
 
   return (
-    <Modal title="New issue" projectKey={project.project.key} onClose={onClose} wide>
-      <div onDragOver={onModalDragOver} onDrop={onModalDrop}>
+    <Modal
+      title="New issue"
+      projectKey={project.project.key}
+      onClose={onClose}
+      wide
+      fullscreen={fullscreen}
+      onToggleFullscreen={() => setFullscreen((v) => !v)}
+    >
+      <div
+        className={cn(fullscreen && 'flex min-h-0 flex-1 flex-col overflow-y-auto')}
+        onDragOver={onModalDragOver}
+        onDrop={onModalDrop}
+      >
         <input
           className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground"
           placeholder="Issue title"
@@ -228,7 +245,7 @@ export default function NewIssueModal({
           autoFocus
         />
         <IssueMarkdownEditor
-          className={`mt-3 ${bodyDefs.length > 0 ? 'min-h-14' : 'min-h-24'}`}
+          className={cn('mt-3', descriptionHeight)}
           defaultValue={description}
           onChange={setDescription}
           onReady={setDescEditor}

@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { Maximize2, Minimize2, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,13 +13,15 @@ import { cn } from '@/lib/utils';
 // Thin wrapper over shadcn Dialog that keeps the mount/unmount call style used
 // across the app: callers render `{show && <Modal .../>}`, so the dialog is
 // always open while mounted and onClose fires when Radix requests a close
-// (overlay click, Escape, or the built-in close button).
+// (overlay click or Escape).
 // Width step: default, wide, or "xl" for a two-column body.
 const MAX_WIDTH = {
   false: 'sm:max-w-[440px]',
   true: 'sm:max-w-[640px]',
   xl: 'sm:max-w-[860px]',
 } as const;
+
+const CONTROL_CLASS = 'size-7 text-muted-foreground hover:text-foreground';
 
 export default function Modal({
   title,
@@ -26,6 +30,8 @@ export default function Modal({
   onClose,
   children,
   wide = false,
+  fullscreen = false,
+  onToggleFullscreen,
 }: {
   title: string;
   description?: string;
@@ -33,10 +39,29 @@ export default function Modal({
   onClose: () => void;
   children: ReactNode;
   wide?: boolean | 'xl';
+  // Controlled by the caller: in fullscreen the content is a flex column, so the
+  // caller's body has to claim the leftover space itself.
+  fullscreen?: boolean;
+  onToggleFullscreen?: () => void;
 }) {
+  const FullscreenIcon = fullscreen ? Minimize2 : Maximize2;
+  const fullscreenLabel = fullscreen ? 'Exit fullscreen' : 'Fullscreen';
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className={cn('max-h-[85vh] overflow-y-auto', MAX_WIDTH[`${wide}`])}>
+      <DialogContent
+        showCloseButton={false}
+        className={cn(
+          // DialogContent sets only transition-duration, so every property
+          // transitions (transition-property defaults to `all`). Toggling
+          // fullscreen would then slide the dialog, unevenly: height and
+          // max-width switch to/from `auto`/`none` and do not interpolate.
+          'transition-none',
+          fullscreen
+            ? 'top-0 left-0 flex h-screen w-screen max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 sm:max-w-none'
+            : cn('max-h-[85vh] overflow-y-auto', MAX_WIDTH[`${wide}`]),
+        )}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {projectKey && (
@@ -52,6 +77,35 @@ export default function Modal({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {children}
+        {/* After the body: Radix focuses the first tabbable node on open, which
+            should be a field of the body, not a control. */}
+        <div className="absolute top-3 right-3 flex items-center gap-1">
+          {onToggleFullscreen && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className={CONTROL_CLASS}
+              aria-label={fullscreenLabel}
+              title={fullscreenLabel}
+              // Toggling only swaps classes, so keeping the click from moving
+              // focus leaves the caret in the field the user was editing.
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={onToggleFullscreen}
+            >
+              <FullscreenIcon />
+            </Button>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className={CONTROL_CLASS}
+            aria-label="Close"
+            title="Close"
+            onClick={onClose}
+          >
+            <X />
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -152,14 +152,19 @@ describe('agent schedules', () => {
     });
   });
 
-  it('deletes a schedule and 404s on it afterwards', async () => {
+  it('deletes a schedule with its runs and 404s on it afterwards', async () => {
     const { asOwner } = await setup();
     const agentId = await createAgent(asOwner);
     const scheduleId = (await createSchedule(asOwner, agentId)).data!.id;
+    await schedules(asOwner)({ scheduleId }).run.post();
+    const agentRuns = () =>
+      asOwner.projects({ projectKey: 'MKT' })['ai-agents']({ agentId }).runs.get({ query: {} });
+    expect((await agentRuns()).data?.items).toHaveLength(1);
 
     expect((await schedules(asOwner)({ scheduleId }).delete()).status).toBe(204);
     expect((await schedules(asOwner).get()).data).toEqual([]);
     expect((await schedules(asOwner)({ scheduleId }).delete()).status).toBe(404);
+    expect((await agentRuns()).data?.items).toEqual([]);
   });
 
   it('404s on an unknown schedule', async () => {

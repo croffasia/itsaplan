@@ -421,7 +421,7 @@ export const agentRun = pgTable(
       .notNull()
       .references(() => aiAgent.id, { onDelete: 'cascade' }),
     issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
-    scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'set null' }),
+    scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'cascade' }),
     trigger: text('trigger').notNull().default('delegation'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
     // The comment that mentioned the agent, kept for traceability. The prompt is

@@ -21,7 +21,7 @@ const params = t.Object({
   scheduleId: t.Numeric({ description: 'Schedule id from list_agent_schedules.' }),
 });
 const status = t.UnionEnum(['active', 'paused'], {
-  description: "'active' runs on the cron, 'paused' stops it until it is set back to 'active'.",
+  description: "'active' runs on the cron, 'paused' does not run until it is set back to 'active'.",
 });
 const scheduleBody = t.Object({
   agentId: t.Number({ description: 'Internal agent id from list_ai_agents that runs the task.' }),
@@ -96,9 +96,7 @@ export const agentScheduleRoutes = new Elysia({
     },
     detail: {
       summary: 'List agent schedules',
-      description:
-        "List the project's agent schedules: which internal agent runs which task on which cron, " +
-        'with the next and last run.',
+      description: "List the project's agent schedules with their cron, next run, and last run.",
       ...mcpTool('list_agent_schedules'),
     },
   })
@@ -131,9 +129,7 @@ export const agentScheduleRoutes = new Elysia({
       },
       detail: {
         summary: 'Create an agent schedule',
-        description:
-          'Create a schedule that sends a task to an internal agent on a cron. It starts active ' +
-          "unless status is 'paused'.",
+        description: 'Create a schedule that sends a task to an internal agent on a cron.',
         ...mcpTool('create_agent_schedule'),
       },
     },
@@ -173,9 +169,7 @@ export const agentScheduleRoutes = new Elysia({
       },
       detail: {
         summary: 'Update an agent schedule',
-        description:
-          "Update a schedule's agent, task, or cron, and pause or resume it through status. " +
-          'Resuming and a new cron both move the next run to the next matching time.',
+        description: "Update a schedule's agent, task, cron, or status.",
         ...mcpTool('update_agent_schedule'),
       },
     },
@@ -200,9 +194,7 @@ export const agentScheduleRoutes = new Elysia({
       },
       detail: {
         summary: 'Delete an agent schedule',
-        description:
-          'Delete a schedule with its run history and the conversation its runs shared. ' +
-          'Irreversible; pause it instead to keep it.',
+        description: 'Delete a schedule with its run history. Irreversible.',
         ...mcpTool('delete_agent_schedule'),
       },
     },
@@ -228,9 +220,8 @@ export const agentScheduleRoutes = new Elysia({
       detail: {
         summary: 'Run an agent schedule now',
         description:
-          'Queue a run of the schedule right away, without waiting for its cron, and return the ' +
-          "run id. The run is executed in the background: read its status and the agent's answer " +
-          'with list_agent_schedule_runs.',
+          'Queue a run of the schedule now and return its run id. It runs in the background; ' +
+          'read the result with list_agent_schedule_runs.',
         ...mcpTool('run_agent_schedule'),
       },
     },
@@ -255,8 +246,7 @@ export const agentScheduleRoutes = new Elysia({
       detail: {
         summary: 'List agent schedule runs',
         description:
-          "The schedule's last 50 runs, newest first, each with its status, the agent's answer " +
-          'in output, and the error of a failed run.',
+          "The schedule's last 50 runs, newest first, with their status, output, and error.",
         ...mcpTool('list_agent_schedule_runs'),
       },
     },

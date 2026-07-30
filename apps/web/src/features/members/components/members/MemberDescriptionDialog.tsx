@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import type { MemberRow } from '@/lib/api';
+import Avatar from '@/components/common/Avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,9 +40,12 @@ export default function MemberDescriptionDialog({
     }
   }
 
+  // "Role" is taken by the member's permission role in this same list, so the
+  // question asks what the person does instead.
   const question = self
-    ? 'What do you do and what are you responsible for in this project?'
-    : 'What does this member do and what are they responsible for in this project?';
+    ? 'What do you do in this project?'
+    : 'What does this person do in this project?';
+  const displayName = member.name || member.email;
 
   return (
     <>
@@ -63,9 +67,18 @@ export default function MemberDescriptionDialog({
         <DialogContent className="inset-0 top-0 left-0 h-screen w-full max-w-none translate-x-0 translate-y-0 gap-0 rounded-none border-0 bg-background p-0 sm:max-w-none">
           <div className="flex h-full w-full flex-col items-center justify-center px-6 py-16">
             <div className="flex w-full max-w-2xl flex-col items-center gap-10">
-              <DialogTitle className="max-w-[20ch] text-center text-3xl leading-tight font-semibold tracking-tight text-balance text-foreground sm:text-4xl">
-                {question}
-              </DialogTitle>
+              <div className="flex flex-col items-center gap-5">
+                <DialogTitle className="max-w-[32ch] text-center text-2xl leading-tight font-medium tracking-tight text-balance text-foreground sm:text-3xl">
+                  {question}
+                </DialogTitle>
+                <div className="flex min-w-0 items-center gap-2.5">
+                  <Avatar name={displayName} image={member.image} className="size-9 text-xs" />
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate text-sm font-medium">{displayName}</span>
+                    <span className="truncate text-xs text-muted-foreground">{member.email}</span>
+                  </div>
+                </div>
+              </div>
               <div className="flex w-full flex-col items-end gap-5">
                 <Textarea
                   autoFocus

@@ -59,7 +59,7 @@ export default function Modal({
           'transition-none',
           fullscreen
             ? 'top-0 left-0 flex h-screen w-screen max-w-none translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 sm:max-w-none'
-            : cn('max-h-[85vh] overflow-y-auto', MAX_WIDTH[`${wide}`]),
+            : cn('max-h-[85vh] overflow-hidden', MAX_WIDTH[`${wide}`]),
         )}
       >
         <DialogHeader>
@@ -76,7 +76,16 @@ export default function Modal({
           </DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
-        {children}
+        {/* The body scrolls, not the dialog: the dialog stays the positioned
+            ancestor a body-wide overlay can cover without scrolling away. */}
+        <div
+          className={cn(
+            'min-h-0',
+            fullscreen ? 'flex flex-1 flex-col overflow-hidden' : 'overflow-y-auto',
+          )}
+        >
+          {children}
+        </div>
         {/* After the body: Radix focuses the first tabbable node on open, which
             should be a field of the body, not a control. */}
         <div className="absolute top-3 right-3 flex items-center gap-1">

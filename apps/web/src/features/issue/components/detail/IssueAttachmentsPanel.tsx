@@ -1,21 +1,15 @@
 import { useRef, useState, type DragEvent } from 'react';
-import Image from 'next/image';
-import {
-  Download,
-  FileIcon,
-  GripVertical,
-  HelpCircle,
-  Paperclip,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Download, GripVertical, HelpCircle, Paperclip, Plus, Trash2 } from 'lucide-react';
 import { type Attachment } from '@/lib/api';
+import { useFileDragZone } from '../../hooks/useFileDragZone';
 import {
   useAttachmentsQuery,
   useDeleteAttachment,
   useUploadAttachment,
 } from '../../services/attachments.service';
 import { attachmentHtml, isImage, isVideo } from '../../utils/attachmentEmbed';
+import { formatSize } from '../../utils/fileSize';
+import IssueAttachmentThumb from '../IssueAttachmentThumb';
 import { useStorageSettingsQuery } from '@/services/storage.service';
 import { attachmentAccept, attachmentError, attachmentLimitHint } from '@/utils/uploadLimits';
 import { Button } from '@/components/ui/button';
@@ -29,32 +23,6 @@ import {
   AttachmentTitle,
 } from '@/components/ui/attachment';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
-// The card's leading thumbnail: images and videos preview themselves, every
-// other type falls back to a generic file glyph.
-function AttachmentThumb({ a }: { a: Attachment }) {
-  if (isImage(a))
-    return (
-      <Image
-        src={a.url}
-        alt={a.filename}
-        fill
-        // The thumbnail is w-10 (40px) in every card size used here.
-        sizes="40px"
-        draggable={false}
-        className="object-cover"
-      />
-    );
-  if (isVideo(a))
-    return <video src={a.url} className="size-full object-cover" muted draggable={false} />;
-  return <FileIcon className="text-muted-foreground" />;
-}
 
 function onDragStart(e: DragEvent<HTMLElement>, a: Attachment) {
   e.dataTransfer.setData('text/html', attachmentHtml(a));
@@ -81,11 +49,7 @@ export default function IssueAttachmentsPanel({
   const deleteAttachment = useDeleteAttachment(issueId);
   const limits = useStorageSettingsQuery().data;
   const [error, setError] = useState<string | null>(null);
-  const [dropActive, setDropActive] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
-  // dragenter/dragleave fire for every child; count them so the overlay only
-  // clears when the pointer actually leaves the panel.
-  const dragDepth = useRef(0);
 
   const uploading = uploadAttachment.isPending;
 
@@ -110,47 +74,10 @@ export default function IssueAttachmentsPanel({
     }
   }
 
-  // Only external files trigger the upload drop zone; dragging an attachment
-  // card (which carries text/html, not Files) must not.
-  const isFileDrag = (e: DragEvent) => e.dataTransfer.types.includes('Files');
-
-  function onDragEnter(e: DragEvent) {
-    if (!isFileDrag(e)) return;
-    dragDepth.current += 1;
-    setDropActive(true);
-  }
-
-  function onDragOver(e: DragEvent) {
-    if (!isFileDrag(e)) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
-  }
-
-  function onDragLeave(e: DragEvent) {
-    if (!isFileDrag(e)) return;
-    dragDepth.current -= 1;
-    if (dragDepth.current <= 0) {
-      dragDepth.current = 0;
-      setDropActive(false);
-    }
-  }
-
-  function onDrop(e: DragEvent) {
-    if (!isFileDrag(e)) return;
-    e.preventDefault();
-    dragDepth.current = 0;
-    setDropActive(false);
-    void onFilesPicked(e.dataTransfer.files);
-  }
+  const { draggedFiles, dragHandlers } = useFileDragZone((files) => void onFilesPicked(files));
 
   return (
-    <div
-      className="relative mt-6 border-t pt-5"
-      onDragEnter={onDragEnter}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-    >
+    <div className="relative mt-6 border-t pt-5" {...dragHandlers}>
       <div className="mb-3 flex items-center justify-between">
         <h3 className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
           <Paperclip className="size-3.5" />
@@ -210,7 +137,7 @@ export default function IssueAttachmentsPanel({
               </span>
 
               <AttachmentMedia variant={isImage(a) || isVideo(a) ? 'image' : 'icon'}>
-                <AttachmentThumb a={a} />
+                <IssueAttachmentThumb attachment={a} />
               </AttachmentMedia>
 
               <AttachmentContent>
@@ -250,7 +177,7 @@ export default function IssueAttachmentsPanel({
         </div>
       )}
 
-      {dropActive && (
+      {draggedFiles !== null && (
         <div className="pointer-events-none absolute inset-0 top-5 z-30 flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-primary bg-background/80 text-primary backdrop-blur-sm">
           <Download className="size-6" />
           <span className="text-sm font-medium">Drop files to upload</span>

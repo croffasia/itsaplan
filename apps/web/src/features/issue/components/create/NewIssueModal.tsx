@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type DragEvent } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { MoreHorizontal } from 'lucide-react';
 import { type IssueFieldValueInput, type ProjectDetail } from '@/lib/api';
@@ -7,9 +7,18 @@ import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useCustomFieldsQuery } from '@/services/customFields.service';
-import { useUploadAttachment } from '../../services/attachments.service';
-import { attachmentHtml } from '../../utils/attachmentEmbed';
+import { useFileDragZone } from '../../hooks/useFileDragZone';
+import { useNewIssueAttachments } from '../../hooks/useNewIssueAttachments';
+import {
+  attachmentHtml,
+  removeEmbed,
+  stripEmbed,
+  type Embeddable,
+} from '../../utils/attachmentEmbed';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
+import NewIssueAttachButton from './NewIssueAttachButton';
+import NewIssueAttachmentList from './NewIssueAttachmentList';
+import NewIssueDropOverlay from './NewIssueDropOverlay';
 import Modal from '@/components/common/overlay/Modal';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
@@ -86,58 +95,64 @@ export default function NewIssueModal({
   const createIssue = useCreateIssue();
   const updateIssue = useUpdateIssue(project.project.key);
   const setFieldValueMutation = useSetFieldValue(project.project.key);
-  const uploadAttachment = useUploadAttachment();
+  const attachments = useNewIssueAttachments();
 
-  // Files pasted or dropped into the description before the issue exists.
-  // Attachments upload against an issue id, which we only have after creation,
-  // so each file is shown inline via a local blob: URL and held here; on submit
-  // they are uploaded for real and their blob: URLs rewritten to the stored URL.
-  const pendingFilesRef = useRef(new Map<string, File>());
-  const uploadFile = async (file: File) => {
-    const url = URL.createObjectURL(file);
-    pendingFilesRef.current.set(url, file);
-    return { url, contentType: file.type, filename: file.name };
-  };
-
-  // Revoke any object URLs still pending when the modal unmounts (closed without
-  // submitting); the submit path revokes the ones it consumes.
-  useEffect(() => {
-    const pending = pendingFilesRef.current;
-    return () => {
-      for (const url of pending.keys()) URL.revokeObjectURL(url);
-    };
-  }, []);
-
-  // The description editor instance, so a file dropped anywhere on the modal
-  // (not just onto the small editor box) can be inserted at the cursor.
+  // The description editor instance, so a file dropped or pasted anywhere on the
+  // modal (not just onto the small editor box) can be inserted at the cursor.
   const [descEditor, setDescEditor] = useState<Editor | null>(null);
 
-  const dropFilesIntoDescription = (files: FileList) => {
+  // The markdown editors of the body custom fields, so an attachment removed
+  // from the list takes its embeds with it wherever they were inserted.
+  const fieldEditors = useRef(new Map<number, Editor>());
+
+  function insertIntoDescription(a: Embeddable) {
+    descEditor?.chain().focus().insertContent(attachmentHtml(a)).run();
+  }
+
+  function removeAttachment(id: number) {
+    const item = attachments.remove(id);
+    if (!item) return;
+    if (descEditor) removeEmbed(descEditor, item.url);
+    for (const editor of fieldEditors.current.values()) removeEmbed(editor, item.url);
+  }
+
+  function insertFilesIntoDescription(files: FileList) {
     if (!descEditor) return;
     let pos = descEditor.state.selection.to;
     void (async () => {
       for (const file of Array.from(files)) {
-        const a = await uploadFile(file).catch(() => null);
-        if (!a || !descEditor) continue;
+        const a = await attachments.uploadFile(file).catch(() => null);
+        if (!a) continue;
         descEditor.chain().insertContentAt(pos, attachmentHtml(a)).focus().run();
         pos = descEditor.state.selection.to;
       }
     })();
-  };
-
-  function onModalDragOver(e: DragEvent<HTMLDivElement>) {
-    if (e.dataTransfer.types.includes('Files')) e.preventDefault();
   }
 
-  function onModalDrop(e: DragEvent<HTMLDivElement>) {
-    // A drop landing on the editor box is already handled by tiptap, which
-    // calls preventDefault; only handle drops elsewhere on the modal here.
-    if (e.defaultPrevented) return;
-    const files = e.dataTransfer.files;
-    if (!files || files.length === 0) return;
-    e.preventDefault();
-    dropFilesIntoDescription(files);
-  }
+  const { draggedFiles, dragHandlers } = useFileDragZone(insertFilesIntoDescription);
+
+  // Read through a ref: the paste listener below is registered once, while the
+  // insert closes over the editor and the upload limits, which both arrive after
+  // the first render.
+  const insertFilesRef = useRef(insertFilesIntoDescription);
+  insertFilesRef.current = insertFilesIntoDescription;
+
+  // A paste carrying files lands in the description unless a markdown editor has
+  // the focus, in which case tiptap has already inserted it there. The listener
+  // is on the document because the focus may sit on the dialog itself, above the
+  // modal body.
+  useEffect(() => {
+    function onPaste(e: ClipboardEvent) {
+      const files = e.clipboardData?.files;
+      if (!files || files.length === 0) return;
+      const target = e.target;
+      if (target instanceof Element && target.closest('.ProseMirror')) return;
+      e.preventDefault();
+      insertFilesRef.current(files);
+    }
+    document.addEventListener('paste', onPaste);
+    return () => document.removeEventListener('paste', onPaste);
+  }, []);
 
   const [addFieldOpen, setAddFieldOpen] = useState(false);
 
@@ -149,6 +164,7 @@ export default function NewIssueModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fieldsQuery.data]);
 
+  const errorMessage = error ?? attachments.error;
   const bodyDefs = fieldDefs.filter((d) => d.showInBody);
   const propertyDefs = fieldDefs.filter((d) => !d.showInBody);
   const activeDefs = propertyDefs.filter((d) => activeFieldIds.includes(d.id));
@@ -186,23 +202,20 @@ export default function NewIssueModal({
           labelIds,
         },
       });
-      // Upload files pasted/dropped into the description, then rewrite their
-      // blob: URLs to the stored attachment URLs. A failed upload drops its
-      // placeholder rather than leaving a dead blob: link.
-      const pending = pendingFilesRef.current;
-      if (pending.size > 0) {
-        let body = description;
-        for (const [blobUrl, file] of pending) {
-          const a = await uploadAttachment
-            .mutateAsync({ issueId: created.id, file })
-            .catch(() => null);
-          body = body.replaceAll(blobUrl, a ? a.url : '');
-          URL.revokeObjectURL(blobUrl);
+      // Upload the pending files, then point every embed at its stored URL
+      // instead of the local blob: one.
+      const storedUrls = await attachments.uploadAll(created.id);
+      const rewrite = (markdown: string) => {
+        let out = markdown;
+        for (const [blobUrl, url] of storedUrls) {
+          out = url ? out.replaceAll(blobUrl, url) : stripEmbed(out, blobUrl);
         }
-        pending.clear();
-        if (body !== description) {
-          await updateIssue.mutateAsync({ id: created.id, patch: { description: body.trim() } });
-        }
+        return out;
+      };
+
+      const body = rewrite(description);
+      if (body !== description) {
+        await updateIssue.mutateAsync({ id: created.id, patch: { description: body.trim() } });
       }
 
       // Set custom field values on the freshly created issue. Body fields are
@@ -213,7 +226,8 @@ export default function NewIssueModal({
         if (!v) continue;
         const hasValue = (v.optionIds?.length ?? 0) > 0 || (v.value != null && v.value !== '');
         if (!hasValue) continue;
-        await setFieldValueMutation.mutateAsync({ issueId: created.id, fieldId: def.id, value: v });
+        const value = typeof v.value === 'string' ? { ...v, value: rewrite(v.value) } : v;
+        await setFieldValueMutation.mutateAsync({ issueId: created.id, fieldId: def.id, value });
       }
       onCreated();
     } catch (err) {
@@ -234,9 +248,11 @@ export default function NewIssueModal({
     >
       <div
         className={cn(fullscreen && 'flex min-h-0 flex-1 flex-col overflow-y-auto')}
-        onDragOver={onModalDragOver}
-        onDrop={onModalDrop}
+        {...dragHandlers}
       >
+        {/* Not inside a relative box on purpose: the dialog itself is the
+            positioned ancestor, so the overlay covers the whole modal. */}
+        {draggedFiles !== null && <NewIssueDropOverlay count={draggedFiles} />}
         <input
           className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground"
           placeholder="Issue title"
@@ -249,7 +265,7 @@ export default function NewIssueModal({
           defaultValue={description}
           onChange={setDescription}
           onReady={setDescEditor}
-          uploadFile={uploadFile}
+          uploadFile={attachments.uploadFile}
         />
 
         {bodyDefs.length > 0 && (
@@ -264,6 +280,11 @@ export default function NewIssueModal({
                     defaultValue={(fieldValues[def.id]?.value as string) ?? ''}
                     placeholder="Empty"
                     onChange={(md) => setFieldValue(def.id, { value: md })}
+                    onReady={(editor) => {
+                      if (editor) fieldEditors.current.set(def.id, editor);
+                      else fieldEditors.current.delete(def.id);
+                    }}
+                    uploadFile={attachments.uploadFile}
                   />
                 ) : (
                   <IssueCustomFieldPill
@@ -382,9 +403,16 @@ export default function NewIssueModal({
           )}
         </div>
 
-        {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
+        <NewIssueAttachmentList
+          items={attachments.pending}
+          onInsert={insertIntoDescription}
+          onRemove={removeAttachment}
+        />
 
-        <div className="mt-4 flex items-center justify-end border-t pt-3">
+        {errorMessage && <p className="mt-3 text-xs text-destructive">{errorMessage}</p>}
+
+        <div className="mt-4 flex items-center justify-between border-t pt-3">
+          <NewIssueAttachButton onPick={attachments.attach} />
           <Button disabled={saving || !title.trim()} onClick={submit}>
             Create issue
           </Button>

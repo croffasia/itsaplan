@@ -21,6 +21,14 @@ async function setup() {
 
 const agents = (api: Api) => api.projects({ projectKey: 'MKT' })['ai-agents'];
 
+async function createCredential(api: Api, projectKey = 'MKT'): Promise<number> {
+  const res = await api.projects({ projectKey }).integrations.post({
+    integrationKey: 'openai',
+    credential: { apiKey: 'sk-secret-1234' },
+  });
+  return res.data!.id;
+}
+
 describe('ai agents', () => {
   beforeEach(async () => {
     await resetDb();
@@ -110,6 +118,97 @@ describe('ai agents', () => {
     // but nobody outside has to hold it, so the secret is never returned.
     expect(res.data?.apiKey).toBeNull();
     expect(res.data?.agent.apiKeyStart).toBeTruthy();
+  });
+
+  it('binds a model credential of the project to an internal agent', async () => {
+    const { asOwner } = await setup();
+    const credentialId = await createCredential(asOwner);
+    const res = await agents(asOwner).post({
+      name: 'Bot',
+      username: 'bot',
+      kind: 'internal',
+      modelCredentialId: credentialId,
+    });
+    expect(res.status).toBe(201);
+    expect(res.data?.agent).toMatchObject({
+      modelCredentialId: credentialId,
+      modelProvider: 'openai',
+    });
+  });
+
+  it('rejects an unknown model credential with 400 on create', async () => {
+    const { asOwner } = await setup();
+    const res = await agents(asOwner).post({
+      name: 'Bot',
+      username: 'bot',
+      kind: 'internal',
+      modelCredentialId: 999999,
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it("rejects another project's model credential with 400", async () => {
+    const { asOwner } = await setup();
+    await asOwner.projects.post({ key: 'ENG', name: 'Engineering' });
+    const foreignCredentialId = await createCredential(asOwner, 'ENG');
+    const res = await agents(asOwner).post({
+      name: 'Bot',
+      username: 'bot',
+      kind: 'internal',
+      modelCredentialId: foreignCredentialId,
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects a tool credential as the model credential with 400', async () => {
+    const { asOwner } = await setup();
+    const created = await asOwner.projects({ projectKey: 'MKT' }).integrations.post({
+      integrationKey: 'jina',
+      credential: { apiKey: 'jina_secret' },
+    });
+    const res = await agents(asOwner).post({
+      name: 'Bot',
+      username: 'bot',
+      kind: 'internal',
+      modelCredentialId: created.data!.id,
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an unknown model credential with 400 on update and keeps the stored one', async () => {
+    const { asOwner } = await setup();
+    const credentialId = await createCredential(asOwner);
+    const created = await agents(asOwner).post({
+      name: 'Bot',
+      username: 'bot',
+      kind: 'internal',
+      modelCredentialId: credentialId,
+    });
+    const agentId = created.data!.agent.id;
+    const res = await agents(asOwner)({ agentId }).patch({
+      name: 'Renamed',
+      modelCredentialId: 999999,
+    });
+    expect(res.status).toBe(400);
+    expect((await agents(asOwner)({ agentId }).get()).data).toMatchObject({
+      name: 'Bot',
+      modelCredentialId: credentialId,
+    });
+  });
+
+  it('clears the model credential with null', async () => {
+    const { asOwner } = await setup();
+    const created = await agents(asOwner).post({
+      name: 'Bot',
+      username: 'bot',
+      kind: 'internal',
+      modelCredentialId: await createCredential(asOwner),
+    });
+    const res = await agents(asOwner)({ agentId: created.data!.agent.id }).patch({
+      modelCredentialId: null,
+    });
+    expect(res.status).toBe(200);
+    expect(res.data).toMatchObject({ modelCredentialId: null, modelProvider: null });
   });
 
   it('stores conversation memory config on an internal agent', async () => {

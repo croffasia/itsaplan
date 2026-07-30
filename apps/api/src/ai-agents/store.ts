@@ -10,7 +10,9 @@ import {
 } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
-import { iso, rethrowDuplicate } from '../shared/lib';
+import { iso, HttpError, rethrowDuplicate } from '../shared/lib';
+import { getCredentialById } from '../integrations/store';
+import { isLlmIntegration } from '../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
@@ -237,6 +239,23 @@ export async function isAgentUser(userId: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+// An unknown, foreign, or non-LLM credential id would otherwise be stored and only
+// surface later, as a run that fails to start.
+async function assertModelCredential(
+  projectId: number,
+  credentialId: number | null | undefined,
+): Promise<void> {
+  if (credentialId == null) return;
+  const credential = await getCredentialById(credentialId, projectId);
+  if (!credential) throw new HttpError(400, 'Credential not found');
+  if (!isLlmIntegration(credential.integrationKey)) {
+    throw new HttpError(
+      400,
+      `A model needs an LLM provider credential, not ${credential.integrationKey}.`,
+    );
+  }
+}
+
 export interface NewAgentInput {
   name: string;
   username: string;
@@ -278,6 +297,7 @@ export async function createAgent(
   const userId = crypto.randomUUID();
   const email = `${userId}@agents.local`;
   const isInternal = input.kind === 'internal';
+  if (isInternal) await assertModelCredential(projectId, input.modelCredentialId);
 
   // Every agent acts under a project role and so needs a project_member row for the
   // permission checks to apply to its requests. roleId names the role; NULL falls
@@ -418,6 +438,7 @@ export async function updateAgent(
 ): Promise<AiAgentRow | null> {
   const agent = await getAgentById(id, projectId);
   if (!agent) return null;
+  await assertModelCredential(projectId, patch.modelCredentialId);
 
   // The display name lives on the bot user.
   if (patch.name !== undefined) {

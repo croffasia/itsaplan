@@ -68,3 +68,9 @@ const BY_KEY = new Map(INTEGRATION_CATALOG.map((i) => [i.key, i]));
 export function credentialSchemaFor(key: string): ConfigField[] | undefined {
   return BY_KEY.get(key)?.credentialSchema;
 }
+
+// Whether the integration is an LLM provider, i.e. its credential can back an agent's
+// model.
+export function isLlmIntegration(key: string): boolean {
+  return BY_KEY.get(key)?.kind === 'llm';
+}

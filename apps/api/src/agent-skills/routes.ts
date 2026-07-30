@@ -4,6 +4,7 @@ import { guards } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
+import { mcpTool } from '../mcp/generate';
 import { MAX_SKILL_BYTES, importGithubSkill, discoverGithubSkills } from './skill-format';
 import {
   listSkills,
@@ -22,8 +23,18 @@ import {
   agentInProject,
 } from './store';
 
-const skillParams = t.Object({ projectKey: t.String(), skillId: t.Numeric() });
-const agentParams = t.Object({ projectKey: t.String(), agentId: t.Numeric() });
+const skillParams = t.Object({
+  projectKey: t.String(),
+  skillId: t.Numeric({ description: 'Skill id from list_agent_skills.' }),
+});
+const agentParams = t.Object({
+  projectKey: t.String(),
+  agentId: t.Numeric({ description: 'Agent id from list_ai_agents.' }),
+});
+
+const refPath = t.String({
+  description: "Reference file path from the skill's files, e.g. 'refs/example.md'.",
+});
 
 const SkillRefSchema = t.Object({
   path: t.String(),
@@ -61,7 +72,11 @@ export const agentSkillRoutes = new Elysia({
       403: ErrorResponse,
       404: ErrorResponse,
     },
-    detail: { summary: 'List agent skills', description: "List the project's skill library." },
+    detail: {
+      summary: 'List agent skills',
+      description: "List the project's skill library, each skill with its reference files.",
+      ...mcpTool('list_agent_skills'),
+    },
   })
 
   .get(
@@ -80,7 +95,12 @@ export const agentSkillRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: 'Get an agent skill', description: "Get a skill's metadata and files." },
+      detail: {
+        summary: 'Get an agent skill',
+        description:
+          "Get a skill's metadata and reference files. The SKILL.md text comes from get_agent_skill_markdown.",
+        ...mcpTool('get_agent_skill'),
+      },
     },
   )
 
@@ -100,12 +120,15 @@ export const agentSkillRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: 'Get skill markdown', description: "Get a skill's SKILL.md content." },
+      detail: {
+        summary: 'Get skill markdown',
+        description: "Get a skill's SKILL.md content.",
+        ...mcpTool('get_agent_skill_markdown'),
+      },
     },
   )
 
-  // The text content of one reference file, for the editor. Addressed by its
-  // relative path (the same `path` carried in the skill's files list).
+  // The text content of one reference file, for the editor.
   .get(
     '/projects/:projectKey/agent-skills/:skillId/references/content',
     async ({ params, project, query }) => {
@@ -114,7 +137,7 @@ export const agentSkillRoutes = new Elysia({
     },
     {
       params: skillParams,
-      query: t.Object({ path: t.String() }),
+      query: t.Object({ path: refPath }),
       permission: ['agent_skills', 'read'],
       response: {
         200: t.Object({ content: t.String() }),
@@ -124,19 +147,20 @@ export const agentSkillRoutes = new Elysia({
       },
       detail: {
         summary: 'Get reference file content',
-        description: "Get one of a skill's reference files by path.",
+        description: "Get the text of one of a skill's reference files by path.",
+        ...mcpTool('get_agent_skill_reference'),
       },
     },
   )
 
-  // Lists the skills found at a GitHub URL (a repo, a folder, or a file) without
-  // importing anything, so the UI can let the user pick which ones to add. Each
-  // result carries a ready-to-import URL for that single skill.
+  // Feeds the import picker: the caller chooses which of the found skills to add.
   .post(
     '/projects/:projectKey/agent-skills/github/discover',
     ({ body }) => discoverGithubSkills(body.url),
     {
-      body: t.Object({ url: t.String() }),
+      body: t.Object({
+        url: t.String({ description: 'GitHub URL of a repo, a folder, or a SKILL.md file.' }),
+      }),
       permission: ['agent_skills', 'create'],
       response: {
         200: t.Array(
@@ -155,20 +179,17 @@ export const agentSkillRoutes = new Elysia({
       },
       detail: {
         summary: 'Discover GitHub skills',
-        description: 'List the skills at a GitHub URL (repo, folder, or file) without importing.',
+        description:
+          'List the skills at a GitHub URL (repo, folder, or file) without importing. Each result carries the URL that imports that one skill through create_agent_skill.',
+        // A lookup on GitHub: it stores nothing and reaches outside this tracker.
+        ...mcpTool('discover_github_skills', { readOnlyHint: true, openWorldHint: true }),
       },
     },
   )
 
-  // Creates a skill. For source "inline"/"upload" the SKILL.md text is passed in
-  // `markdown`; for "github" the SKILL.md and its markdown references are fetched
-  // from `sourceUrl`. name and description default to the SKILL.md frontmatter when
-  // omitted.
   .post(
     '/projects/:projectKey/agent-skills',
     async ({ project, body, set }) => {
-      // GitHub import: the SKILL.md and its markdown reference files are fetched from
-      // the folder and stored together.
       if (body.source === 'github') {
         if (!body.sourceUrl)
           throw new HttpError(400, 'A GitHub URL is required for a github skill');
@@ -202,11 +223,29 @@ export const agentSkillRoutes = new Elysia({
     },
     {
       body: t.Object({
-        source: t.Union([t.Literal('upload'), t.Literal('inline'), t.Literal('github')]),
-        name: t.Optional(t.Nullable(t.String())),
-        description: t.Optional(t.Nullable(t.String())),
-        markdown: t.Optional(t.String()),
-        sourceUrl: t.Optional(t.Nullable(t.String())),
+        source: t.Union([t.Literal('upload'), t.Literal('inline'), t.Literal('github')], {
+          description:
+            "'inline' for markdown written here, 'upload' for markdown from a file, 'github' to import from sourceUrl.",
+        }),
+        name: t.Optional(
+          t.Nullable(t.String({ description: 'Defaults to the SKILL.md frontmatter name.' })),
+        ),
+        description: t.Optional(
+          t.Nullable(
+            t.String({ description: 'Defaults to the SKILL.md frontmatter description.' }),
+          ),
+        ),
+        markdown: t.Optional(
+          t.String({ description: "SKILL.md content; required unless source is 'github'." }),
+        ),
+        sourceUrl: t.Optional(
+          t.Nullable(
+            t.String({
+              description:
+                "GitHub URL of one skill folder or SKILL.md, from discover_github_skills; required for source 'github'.",
+            }),
+          ),
+        ),
       }),
       permission: ['agent_skills', 'create'],
       response: {
@@ -221,7 +260,9 @@ export const agentSkillRoutes = new Elysia({
       },
       detail: {
         summary: 'Create an agent skill',
-        description: 'Create a skill from inline markdown or a GitHub URL.',
+        description:
+          'Create a skill from markdown or by importing a GitHub URL. A GitHub import also brings the markdown reference files next to the SKILL.md.',
+        ...mcpTool('create_agent_skill'),
       },
     },
   )
@@ -238,9 +279,11 @@ export const agentSkillRoutes = new Elysia({
     },
     {
       body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        description: t.Optional(t.String()),
-        markdown: t.Optional(t.String()),
+        name: t.Optional(t.String({ minLength: 1, description: 'New skill name.' })),
+        description: t.Optional(
+          t.String({ description: 'New one-line description of what the skill is for.' }),
+        ),
+        markdown: t.Optional(t.String({ description: 'Replaces the SKILL.md content whole.' })),
       }),
       params: skillParams,
       permission: ['agent_skills', 'edit'],
@@ -255,7 +298,8 @@ export const agentSkillRoutes = new Elysia({
       },
       detail: {
         summary: 'Update an agent skill',
-        description: "Update a skill's name, description, or markdown.",
+        description: "Update a skill's name, description, or SKILL.md content.",
+        ...mcpTool('update_agent_skill'),
       },
     },
   )
@@ -276,7 +320,11 @@ export const agentSkillRoutes = new Elysia({
         403: ErrorResponse,
         404: ErrorResponse,
       },
-      detail: { summary: 'Delete an agent skill', description: 'Delete a skill and its files.' },
+      detail: {
+        summary: 'Delete an agent skill',
+        description: 'Delete a skill, its reference files, and its links to agents.',
+        ...mcpTool('delete_agent_skill'),
+      },
     },
   )
 
@@ -319,7 +367,7 @@ export const agentSkillRoutes = new Elysia({
     },
   )
 
-  // Overwrites the text content of an existing reference file (the editor's save).
+  // The editor's save of a reference file.
   .patch(
     '/projects/:projectKey/agent-skills/:skillId/references/content',
     async ({ params, project, body }) => {
@@ -336,7 +384,7 @@ export const agentSkillRoutes = new Elysia({
       return skill;
     },
     {
-      body: t.Object({ path: t.String(), content: t.String() }),
+      body: t.Object({ path: refPath, content: t.String({ description: 'The new file text.' }) }),
       params: skillParams,
       permission: ['agent_skills', 'edit'],
       response: {
@@ -349,7 +397,8 @@ export const agentSkillRoutes = new Elysia({
       },
       detail: {
         summary: 'Update reference file content',
-        description: "Update a skill's reference file by path.",
+        description: "Replace the text of a skill's existing reference file, addressed by path.",
+        ...mcpTool('update_agent_skill_reference'),
       },
     },
   )
@@ -363,7 +412,7 @@ export const agentSkillRoutes = new Elysia({
     },
     {
       params: skillParams,
-      query: t.Object({ path: t.String() }),
+      query: t.Object({ path: refPath }),
       permission: ['agent_skills', 'edit'],
       response: {
         200: SkillResponse,
@@ -374,11 +423,11 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: 'Delete a reference file',
         description: "Delete a skill's reference file by path.",
+        ...mcpTool('delete_agent_skill_reference'),
       },
     },
   )
 
-  // Which skills are enabled on an agent.
   .get(
     '/projects/:projectKey/ai-agents/:agentId/skills',
     async ({ params, project }) => {
@@ -399,11 +448,11 @@ export const agentSkillRoutes = new Elysia({
       detail: {
         summary: "List an agent's enabled skills",
         description: 'List the skills enabled on an agent.',
+        ...mcpTool('list_ai_agent_skills'),
       },
     },
   )
 
-  // Replaces the set of skills enabled on an agent.
   .put(
     '/projects/:projectKey/ai-agents/:agentId/skills',
     async ({ params, project, body }) => {
@@ -414,7 +463,12 @@ export const agentSkillRoutes = new Elysia({
       return listAgentSkills(params.agentId);
     },
     {
-      body: t.Object({ skillIds: t.Array(t.Number()) }),
+      body: t.Object({
+        skillIds: t.Array(t.Number(), {
+          description:
+            'Skill ids from list_agent_skills. Replaces the whole set, so send every skill that stays enabled.',
+        }),
+      }),
       params: agentParams,
       permission: ['agent_skills', 'edit'],
       response: {
@@ -426,7 +480,9 @@ export const agentSkillRoutes = new Elysia({
       },
       detail: {
         summary: "Set an agent's enabled skills",
-        description: 'Replace the set of skills enabled on an agent.',
+        description:
+          'Replace the set of skills enabled on an agent. Ids that are not skills of this project are ignored.',
+        ...mcpTool('set_ai_agent_skills'),
       },
     },
   );

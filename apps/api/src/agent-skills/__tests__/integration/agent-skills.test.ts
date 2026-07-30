@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { routeTools } from '../../../mcp/generate';
+import { getMcpApp } from '../../../mcp/app-ref';
 
 // The project skill library: SKILL.md documents (plus optional reference files) given
 // to internal agents. Content lives in the object store; the row holds metadata.
@@ -163,6 +165,18 @@ describe('agent skills', () => {
     // Replacing with an empty set unlinks all skills.
     const clear = await agents(asOwner)({ agentId }).skills.put({ skillIds: [] });
     expect(clear.data).toHaveLength(0);
+  });
+
+  // A skill library is managed over MCP, so every route here is tagged except the file
+  // upload: an MCP call carries JSON, and uploading files is left to the UI.
+  it('exposes every skill route to MCP', () => {
+    const app = getMcpApp();
+    const tagged = new Set(routeTools(app).map((tool) => `${tool.method} ${tool.path}`));
+    const untagged = app.routes
+      .map((route) => `${route.method} ${route.path}`)
+      .filter((route) => route.includes('agent-skills') || route.endsWith('/skills'))
+      .filter((route) => !tagged.has(route));
+    expect(untagged).toEqual(['POST /projects/:projectKey/agent-skills/:skillId/references']);
   });
 
   it('denies a non-member', async () => {

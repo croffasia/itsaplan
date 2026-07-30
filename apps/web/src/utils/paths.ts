@@ -49,6 +49,17 @@ export const agentSkillsPath = (key: string) => `${projectPath(key)}/agent-skill
 
 export const agentToolsPath = (key: string) => `${projectPath(key)}/agent-tools`;
 
+// The AI configuration sections (see AI_SECTIONS) keyed by slug. Each is its own
+// top-level route rather than a /settings/:slug page.
+const AI_SECTION_PATH: Record<string, (key: string) => string> = {
+  'ai-agents': aiAgentsPath,
+  integrations: integrationsPath,
+  'agent-skills': agentSkillsPath,
+  'agent-tools': agentToolsPath,
+};
+
+export const aiSectionPath = (key: string, slug: string) => AI_SECTION_PATH[slug](key);
+
 export const mcpServerPath = (key: string) => `${projectPath(key)}/mcp`;
 
 export const apiDocsPath = (key: string) => `${projectPath(key)}/api`;

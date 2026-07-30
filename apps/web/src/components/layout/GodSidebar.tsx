@@ -1,9 +1,9 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { ArrowLeft, Plug, Shield } from 'lucide-react';
 import { godPath } from '@/utils/paths';
-import { GOD_GROUPS, godSectionsIn } from '@/utils/godSections';
+import { GOD_GROUPS, godIntegrationsIn, godSectionsIn } from '@/utils/godSections';
 import {
   Sidebar,
   SidebarContent,
@@ -18,14 +18,14 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import IntegrationsNav from '@/components/layout/IntegrationsNav';
 import SidebarNavItem from '@/components/layout/SidebarNavItem';
+import SidebarNavSubmenu from '@/components/layout/SidebarNavSubmenu';
 import SidebarBrandFooter from '@/components/brand/SidebarBrandFooter';
 
 // The sidebar in god mode. It mirrors the project settings sidebar — a list of
-// sections plus a way back, with the integration sections folded into a collapsible
-// item — but the header shows a static "God mode" badge instead of the project
-// switcher: nothing here is scoped to a project.
+// sections plus a way back, with the integration sections folded into one item —
+// but the header shows a static "God mode" badge instead of the project switcher:
+// nothing here is scoped to a project.
 export default function GodSidebar() {
   const pathname = usePathname();
 
@@ -64,26 +64,37 @@ export default function GodSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {GOD_GROUPS.map((group) => (
-          <SidebarGroup key={group}>
-            <SidebarGroupLabel>{group}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {godSectionsIn(group).map((section) => (
-                  <SidebarNavItem
-                    key={section.slug}
-                    href={godPath(section.slug)}
-                    icon={section.icon}
-                    label={section.label}
-                    active={pathname.startsWith(`/god/${section.slug}`)}
-                    disabled={false}
-                  />
-                ))}
-                <IntegrationsNav group={group} pathname={pathname} />
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {GOD_GROUPS.map((group) => {
+          const integrations = godIntegrationsIn(group).map((section) => ({
+            key: section.slug,
+            href: godPath(section.slug),
+            icon: section.icon,
+            label: section.label,
+            active: pathname.startsWith(`/god/${section.slug}`),
+          }));
+          return (
+            <SidebarGroup key={group}>
+              <SidebarGroupLabel>{group}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {godSectionsIn(group).map((section) => (
+                    <SidebarNavItem
+                      key={section.slug}
+                      href={godPath(section.slug)}
+                      icon={section.icon}
+                      label={section.label}
+                      active={pathname.startsWith(`/god/${section.slug}`)}
+                      disabled={false}
+                    />
+                  ))}
+                  {integrations.length > 0 && (
+                    <SidebarNavSubmenu icon={Plug} label="Integrations" items={integrations} />
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       <SidebarFooter>

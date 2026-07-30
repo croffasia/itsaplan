@@ -53,8 +53,8 @@ export default function AppSidebar({
   const isGod = mounted && session?.user.role === 'god';
 
   // Settings mode is on whenever the route matches one of the settings nav items.
-  // Members and the AI Team Schedules page are not in those groups, so they keep
-  // the main sidebar.
+  // Members and the AI Team pages are not in those groups, so they keep the main
+  // sidebar.
   const settingsNav = useSettingsNavGroups(currentProjectKey);
   const settingsMode = settingsNav.groups.some((g) => g.items.some((i) => i.active));
   const onApiDocs = pathname.endsWith('/api');

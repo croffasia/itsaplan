@@ -19,8 +19,9 @@ import type { PermissionResource } from '@/lib/api';
 
 // The sidebar group a section is listed under: the project-level general
 // settings, workflow configuration, automation/integrations, or the AI section
-// (agents, providers, skills). 'ai-team' sections are listed in the main sidebar's
-// AI Team group next to the chat, not in the project settings sidebar.
+// (agents, providers, skills). 'ai-team' and 'ai' sections are listed in the main
+// sidebar's AI Team group — 'ai-team' next to the chat, 'ai' inside the
+// "Configure" item — not in the project settings sidebar.
 export type SettingsGroup = 'general' | 'configuration' | 'automation' | 'ai' | 'ai-team';
 
 // The project settings sections, each mounted as its own page at
@@ -123,9 +124,9 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   },
 ];
 
-// The AI section items are their own nav routes (not /settings/:section pages), but
-// reuse the SettingsSection shape for their page header and permission resource.
-// They sit in the AI sidebar group and are all gated by the ai_agents resource.
+// The AI configuration items are their own nav routes (not /settings/:section
+// pages), but reuse the SettingsSection shape for their page header and permission
+// resource. They sit in the "Configure" item of the main sidebar's AI Team group.
 export const AI_AGENTS_SECTION: SettingsSection = {
   slug: 'ai-agents',
   label: 'Agents',
@@ -163,10 +164,10 @@ export const AGENT_TOOLS_SECTION: SettingsSection = {
   group: 'ai',
 };
 
-// The AI section's nav items, in sidebar order.
+// The "Configure" nav items, in sidebar order.
 export const AI_SECTIONS: SettingsSection[] = [
-  AI_AGENTS_SECTION,
   INTEGRATIONS_SECTION,
+  AI_AGENTS_SECTION,
   AGENT_SKILLS_SECTION,
   AGENT_TOOLS_SECTION,
 ];

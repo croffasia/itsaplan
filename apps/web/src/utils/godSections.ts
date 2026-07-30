@@ -14,7 +14,7 @@ import {
 // (one slug per page under /god/<slug>), so adding one is an entry here plus a page.
 // `group` is the sidebar heading a section sits under; GOD_GROUPS gives the order.
 // A section with `integration: true` is not listed under its group directly: it sits
-// inside the collapsible "Integrations" item at the end of the group.
+// inside the "Integrations" item at the end of the group.
 
 export const GOD_GROUPS = ['Management', 'Instance'] as const;
 export type GodGroup = (typeof GOD_GROUPS)[number];

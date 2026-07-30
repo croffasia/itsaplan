@@ -15,6 +15,7 @@ import {
 import { useSession } from '@/lib/auth-client';
 import {
   aiChatPath,
+  aiSectionPath,
   aiTeamPath,
   apiDocsPath,
   dashboardsPath,
@@ -28,7 +29,7 @@ import {
   projectPath,
 } from '@/utils/paths';
 import { ACCOUNT_SECTIONS, accountPath } from '@/utils/accountSections';
-import { AI_TEAM_SECTIONS } from '@/utils/settingsSections';
+import { AI_SECTIONS, AI_TEAM_SECTIONS } from '@/utils/settingsSections';
 import { GOD_SECTIONS } from '@/utils/godSections';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
@@ -68,6 +69,16 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
     for (const s of AI_TEAM_SECTIONS) {
       if (can(s.resource, 'read'))
         add(`nav.ai-team.${s.slug}`, s.label, <s.icon />, aiTeamPath(key, s.slug), 'ai team');
+    }
+    for (const s of AI_SECTIONS) {
+      if (can(s.resource, 'read'))
+        add(
+          `nav.ai.${s.slug}`,
+          s.label,
+          <s.icon />,
+          aiSectionPath(key, s.slug),
+          'ai team configure',
+        );
     }
     add('nav.members', 'Members', <Users />, membersPath(key), 'team people invite');
     add(

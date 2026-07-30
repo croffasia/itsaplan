@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { format, parseISO } from 'date-fns';
+import { useState, type ReactNode } from 'react';
 import { Calendar as CalendarIcon } from 'lucide-react';
+import { formatDate, parseDate, toDateStr } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -8,23 +8,26 @@ import { Pill } from './Pill';
 import ReadOnlyPill from './ReadOnlyPill';
 
 // A date value as a "MMM d, yyyy" pill opening a calendar. Value is a
-// "YYYY-MM-DD" string or null; onChange(null) clears it.
+// "YYYY-MM-DD" string or null; onChange(null) clears it. `trigger` replaces the
+// pill where a caller needs its own (the filter condition pills).
 export default function DatePill({
   value,
   placeholder,
   onChange,
   readOnly,
+  trigger,
 }: {
   value: string | null;
-  placeholder: string;
+  placeholder?: string;
   onChange: (v: string | null) => void;
   readOnly?: boolean;
+  trigger?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const pill = (
+  const pill = trigger ?? (
     <Pill active={!!value}>
       <CalendarIcon />
-      {value ? format(parseISO(value), 'MMM d, yyyy') : placeholder}
+      {value ? formatDate(value) : placeholder}
     </Pill>
   );
   if (readOnly) return <ReadOnlyPill>{pill}</ReadOnlyPill>;
@@ -34,9 +37,9 @@ export default function DatePill({
       <PopoverContent className="w-auto p-0" align="start">
         <Calendar
           mode="single"
-          selected={value ? parseISO(value) : undefined}
+          selected={parseDate(value) ?? undefined}
           onSelect={(d) => {
-            onChange(d ? format(d, 'yyyy-MM-dd') : null);
+            onChange(d ? toDateStr(d) : null);
             setOpen(false);
           }}
           autoFocus

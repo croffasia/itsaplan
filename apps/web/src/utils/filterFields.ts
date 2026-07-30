@@ -1,4 +1,5 @@
 import type { ProjectDetail, CustomField } from '@/lib/api';
+import { formatDate } from '@/utils/dates';
 import { PRIORITY_OPTIONS, STATE_TYPE_OPTIONS } from '@/utils/fieldOptions';
 import type { FilterCondition, FilterOperator, FilterSet, FilterValue } from '@/utils/filters';
 import { customFieldKey } from '@/utils/viewSettings';
@@ -153,6 +154,9 @@ export function valuesLabel(spec: FieldSpec, cond: FilterCondition): string {
     const opts = spec.kind === 'boolean' ? BOOLEAN_OPTIONS : (spec.options ?? []);
     const labels = cond.values.map((v) => opts.find((o) => o.value === v)?.label ?? String(v));
     return labels.length <= 2 ? labels.join(', ') : `${labels.length} selected`;
+  }
+  if (spec.kind === 'date' && typeof cond.values[0] === 'string') {
+    return formatDate(cond.values[0]);
   }
   return String(cond.values[0] ?? '');
 }

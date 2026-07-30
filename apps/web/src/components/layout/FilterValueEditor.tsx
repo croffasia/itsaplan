@@ -5,6 +5,7 @@ import { BOOLEAN_OPTIONS, valuesLabel, type FieldSpec } from '@/utils/filterFiel
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import DatePill from '@/components/common/fields/DatePill';
 import LabelPicker from '@/components/common/fields/LabelPicker';
 
 // The value editor inside a condition pill, chosen by field kind. Presence
@@ -24,6 +25,12 @@ export default function FilterValueEditor({
 
   if (cond.op === 'is_set' || cond.op === 'is_not_set') return null;
 
+  const trigger = (
+    <button type="button" className="max-w-40 truncate rounded px-1 text-xs hover:bg-accent">
+      {valuesLabel(spec, cond)}
+    </button>
+  );
+
   // The labels field uses the shared grouped picker (submenus per label group),
   // toggling label ids in the condition's values.
   if (spec.field === 'labels') {
@@ -36,25 +43,14 @@ export default function FilterValueEditor({
         groups={project.labelGroups}
         selected={selected}
         onToggle={toggleLabel}
-        trigger={
-          <button type="button" className="max-w-40 truncate rounded px-1 text-xs hover:bg-accent">
-            {valuesLabel(spec, cond)}
-          </button>
-        }
+        trigger={trigger}
       />
     );
   }
 
   if (spec.kind === 'date') {
-    const current = typeof cond.values[0] === 'string' ? (cond.values[0] as string) : '';
-    return (
-      <Input
-        type="date"
-        value={current}
-        onChange={(e) => onChange(e.target.value ? [e.target.value] : [])}
-        className="h-6 w-36 px-1.5 py-0 text-xs"
-      />
-    );
+    const current = typeof cond.values[0] === 'string' ? (cond.values[0] as string) : null;
+    return <DatePill value={current} onChange={(v) => onChange(v ? [v] : [])} trigger={trigger} />;
   }
 
   if (spec.kind === 'text') {
@@ -90,11 +86,7 @@ export default function FilterValueEditor({
   };
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <button type="button" className="max-w-40 truncate rounded px-1 text-xs hover:bg-accent">
-          {valuesLabel(spec, cond)}
-        </button>
-      </PopoverTrigger>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
       <PopoverContent align="start" className="max-h-72 w-56 overflow-auto p-1">
         {options.map((o) => {
           const checked = cond.values.some((v) => v === o.value);

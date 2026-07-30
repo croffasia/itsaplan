@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.5.0](https://github.com/croffasia/itsaplan/compare/v0.4.0...v0.5.0) (2026-07-30)
+
+
+### Features
+
+* **api:** expose the agent skill library over MCP ([#58](https://github.com/croffasia/itsaplan/issues/58)) ([80cf2b1](https://github.com/croffasia/itsaplan/commit/80cf2b12be5187a255603c32bb729ce52080ba0e))
+* **api:** give agents the note board actions ([#48](https://github.com/croffasia/itsaplan/issues/48)) ([3b11a0d](https://github.com/croffasia/itsaplan/commit/3b11a0d59e117f3d62ee491d3f966f172cf9de90))
+* **api:** manage agent schedules over MCP ([#61](https://github.com/croffasia/itsaplan/issues/61)) ([3d635ac](https://github.com/croffasia/itsaplan/commit/3d635acd332af6257dd1c6d3468f844f25a24a8a))
+* **api:** manage internal agents fully over MCP ([#59](https://github.com/croffasia/itsaplan/issues/59)) ([6cb16bc](https://github.com/croffasia/itsaplan/commit/6cb16bca2af3aaf969fea193f525418d451263d2))
+* gate note boards by permissions and record the board creator ([#49](https://github.com/croffasia/itsaplan/issues/49)) ([cfe5dba](https://github.com/croffasia/itsaplan/commit/cfe5dba0692da8577359d2459c9ef52018bcd7f7))
+* require a signed CLA from contributors ([#64](https://github.com/croffasia/itsaplan/issues/64)) ([4b53081](https://github.com/croffasia/itsaplan/commit/4b53081e47b9ce39015f437d3915e9f3aa32fe6f))
+* share a private note board with picked members ([#50](https://github.com/croffasia/itsaplan/issues/50)) ([de33870](https://github.com/croffasia/itsaplan/commit/de338700eb8e2595a4ae55553b913b4f7ed48034))
+* **web:** attach files in the new issue modal ([#52](https://github.com/croffasia/itsaplan/issues/52)) ([fc3769e](https://github.com/croffasia/itsaplan/commit/fc3769ec3e4ba360c7f18f594b6ab4507b29f850))
+* **web:** convert a sticky note into an issue ([#47](https://github.com/croffasia/itsaplan/issues/47)) ([2b72f54](https://github.com/croffasia/itsaplan/commit/2b72f540dd00c3c2d3d80a0db04ad70b11b9d2fd))
+* **web:** expand the new issue modal to fullscreen ([#51](https://github.com/croffasia/itsaplan/issues/51)) ([6fcf05d](https://github.com/croffasia/itsaplan/commit/6fcf05dd21502c307691ec7bcb185187053f87e9))
+* **web:** move AI configuration into the AI Team sidebar group ([#63](https://github.com/croffasia/itsaplan/issues/63)) ([32a1a96](https://github.com/croffasia/itsaplan/commit/32a1a9631d16e5bc91c73dee250c1fac17d336f0))
+* **web:** reorder the initiative tabs and open the first non-empty one ([#56](https://github.com/croffasia/itsaplan/issues/56)) ([a333388](https://github.com/croffasia/itsaplan/commit/a333388b7208459443fdb1ccf35b76a1ec9f1af1))
+* **web:** show the member in the description dialog and shorten its question ([#57](https://github.com/croffasia/itsaplan/issues/57)) ([6620673](https://github.com/croffasia/itsaplan/commit/6620673b7c1612178aa0056b4129905bb5994367))
+
+
+### Bug Fixes
+
+* add healthchecks to the deployed services ([#46](https://github.com/croffasia/itsaplan/issues/46)) ([c78694a](https://github.com/croffasia/itsaplan/commit/c78694a6c72acf7c38c285fd97c8bdf9a4a778a9))
+* **api:** validate an agent's model credential belongs to the project ([#60](https://github.com/croffasia/itsaplan/issues/60)) ([446ff35](https://github.com/croffasia/itsaplan/commit/446ff359ef33a07e68d877bbaf300d964368619b))
+* delete an agent schedule's runs with it ([#62](https://github.com/croffasia/itsaplan/issues/62)) ([c8d7d86](https://github.com/croffasia/itsaplan/commit/c8d7d86624a9d6b62a80acd8f997729c1ec44515))
+* **web:** use the shadcn calendar in the filter bar date editor ([#53](https://github.com/croffasia/itsaplan/issues/53)) ([1b41119](https://github.com/croffasia/itsaplan/commit/1b41119c72fa8dd63a0a19fe0cb5f0e8aff6c305))
+
+
+### CI
+
+* push the release branch by its full refname ([#44](https://github.com/croffasia/itsaplan/issues/44)) ([e180e6d](https://github.com/croffasia/itsaplan/commit/e180e6d19326d8f7c31fb03c035002ccda0f3a48))
+
 ## [0.4.0](https://github.com/croffasia/itsaplan/compare/v0.3.0...v0.4.0) (2026-07-27)
 
 

@@ -64,9 +64,10 @@ export const issuePath = (key: string, sequenceNumber: number) =>
 
 export const initiativesPath = (key: string) => `${projectPath(key)}/initiatives`;
 
-// The status tabs of the initiatives list are routes of their own, so a reload or a
-// shared link reopens the tab the user was on. "All" is the tab at the list path;
-// the page and the sorting stay in the query string.
+// Every status tab of the initiatives list is a route of its own, "All" included,
+// so a reload or a shared link reopens the tab the user was on. The list path
+// itself holds no tab: it redirects to the first tab with initiatives in it (see
+// InitiativesRedirect). The page and the sorting stay in the query string.
 const INITIATIVES_TABS = ['all', 'proposed', 'planned', 'active', 'completed'] as const;
 
 export type InitiativesTab = (typeof INITIATIVES_TABS)[number];
@@ -75,7 +76,7 @@ export const isInitiativesTab = (value: string): value is InitiativesTab =>
   (INITIATIVES_TABS as readonly string[]).includes(value);
 
 export const initiativesTabPath = (key: string, tab: InitiativesTab) =>
-  tab === 'all' ? initiativesPath(key) : `${initiativesPath(key)}/${tab}`;
+  `${initiativesPath(key)}/${tab}`;
 
 // The initiative detail tabs are routes of their own too. They sit under /details/
 // so the tab segment of the list above stays unambiguous.

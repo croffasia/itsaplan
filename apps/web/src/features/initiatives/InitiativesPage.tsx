@@ -2,67 +2,44 @@
 
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
+import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativeCountsQuery, useInitiativesQuery } from '@/services/initiatives.service';
-import {
-  INITIATIVE_SORTS,
-  type InitiativeCounts,
-  type InitiativeSort,
-  type InitiativeStatus,
-} from '@/lib/api';
+import { INITIATIVE_SORTS, type InitiativeSort } from '@/lib/api';
+import { useStripSortSensors } from '@/lib/dnd';
 import { initiativesTabPath, type InitiativesTab } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList } from '@/components/ui/tabs';
 import InitiativesList from './components/list/InitiativesList';
 import InitiativesPagination from './components/list/InitiativesPagination';
 import CreateInitiativeDialog from './components/list/CreateInitiativeDialog';
-import InitiativeTabCount from './components/list/InitiativeTabCount';
+import InitiativeTabTrigger from './components/list/InitiativeTabTrigger';
+import { useInitiativeTabOrder } from './hooks/useInitiativeTabOrder';
+import { INITIATIVE_TABS, tabCount } from './utils/tabs';
 
 const PAGE_SIZE = 25;
-
-// One tab per lifecycle status, except the terminal statuses share a "Completed"
-// tab. `statuses: undefined` means the tab takes every status.
-const TABS: { value: InitiativesTab; label: string; statuses: InitiativeStatus[] | undefined }[] = [
-  { value: 'all', label: 'All initiatives', statuses: undefined },
-  { value: 'proposed', label: 'Proposed', statuses: ['proposed'] },
-  { value: 'planned', label: 'Planned', statuses: ['planned'] },
-  { value: 'active', label: 'Active', statuses: ['active'] },
-  { value: 'completed', label: 'Completed', statuses: ['completed', 'canceled'] },
-];
-
-// The "Completed" tab groups the two terminal statuses, so its count sums them.
-function tabCount(counts: InitiativeCounts | undefined, tab: InitiativesTab): number | undefined {
-  if (!counts) return undefined;
-  switch (tab) {
-    case 'all':
-      return counts.total;
-    case 'proposed':
-      return counts.proposed;
-    case 'planned':
-      return counts.planned;
-    case 'active':
-      return counts.active;
-    case 'completed':
-      return counts.completed + counts.canceled;
-  }
-}
 
 // A project's initiatives, one status tab at a time. The open tab is a route of its
 // own and the page and sorting are query parameters, so the list reopens as it was
 // after a reload and can be shared as a link. Each tab loads its own page from the
 // server, sorted and paged there; the tab counts come from a separate aggregate so
-// they stay correct regardless of the current page.
+// they stay correct regardless of the current page. The tab strip is sortable by
+// drag, and its order is a preference of the browser (see useInitiativeTabOrder).
 export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
   const { project } = useShell();
   const { can } = usePermissions();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [creating, setCreating] = useState(false);
+  const { order, reorder } = useInitiativeTabOrder();
+  const sensors = useStripSortSensors();
 
   const projectKey = project?.project.key ?? null;
-  const activeTab = TABS.find((t) => t.value === tab)!;
+  const activeTab = INITIATIVE_TABS.find((t) => t.value === tab)!;
+  const orderedTabs = order.map((value) => INITIATIVE_TABS.find((t) => t.value === value)!);
 
   const pageParam = Number(searchParams.get('page'));
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
@@ -115,6 +92,12 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
     pushQuery(params);
   };
 
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    if (over && active.id !== over.id) {
+      reorder(active.id as InitiativesTab, over.id as InitiativesTab);
+    }
+  };
+
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
       <div className="flex items-center justify-between px-4 py-3">
@@ -128,14 +111,28 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
       </div>
 
       <div className="px-4 pb-2">
-        <Tabs value={tab} onValueChange={(v) => changeTab(v as InitiativesTab)}>
+        {/* The open tab comes from the route, and each trigger navigates on click
+            (see InitiativeTabTrigger), so Radix drives no selection of its own:
+            manual activation keeps focus from switching tabs mid-drag. */}
+        <Tabs value={tab} activationMode="manual">
           <TabsList variant="line">
-            {TABS.map((t) => (
-              <TabsTrigger key={t.value} value={t.value}>
-                {t.label}
-                <InitiativeTabCount value={tabCount(counts, t.value)} />
-              </TabsTrigger>
-            ))}
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext items={order} strategy={horizontalListSortingStrategy}>
+                {orderedTabs.map((t) => (
+                  <InitiativeTabTrigger
+                    key={t.value}
+                    value={t.value}
+                    label={t.label}
+                    count={tabCount(counts, t.value)}
+                    onSelect={() => changeTab(t.value)}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </TabsList>
         </Tabs>
       </div>

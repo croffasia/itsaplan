@@ -38,10 +38,15 @@ jobs:
       #
       # `release_created` is set only when a release was cut; it has no `false`
       # value, so an unset output makes the condition skip the steps.
+      # `fetch-depth: 0` because the default shallow clone has no object for the
+      # current `release` head, and git then rejects the push with
+      # `! [rejected] HEAD -> release (fetch first)`: it cannot prove the update
+      # is a fast-forward without that commit locally.
       - uses: actions/checkout@v7
         if: ${{ steps.release.outputs.release_created }}
         with:
           ref: ${{ steps.release.outputs.tag_name }}
+          fetch-depth: 0
 
       # The destination is fully qualified: `HEAD:release` makes git resolve the
       # destination against the remote, which fails while the branch does not

@@ -68,6 +68,16 @@ async function seedThread(
   });
 }
 
+// Moves a seeded thread a minute into the past. Threads seeded one after another are
+// stamped with the same millisecond, and the history list orders by updatedAt, so
+// without this the expected order is not the only one the endpoint may return.
+async function backdateThread(threadId: string): Promise<void> {
+  const memory = buildMemory(20);
+  const thread = (await memory.getThreadById({ threadId }))!;
+  const at = new Date(thread.updatedAt.getTime() - 60_000);
+  await memory.saveThread({ thread: { ...thread, createdAt: at, updatedAt: at } });
+}
+
 // Whether the thread is still in the memory store. Deletion has no read endpoint of
 // its own for a thread the caller does not own, so it is checked through the store.
 async function threadExists(threadId: string): Promise<boolean> {
@@ -92,6 +102,7 @@ describe('agent chat history', () => {
     const { owner, asOwner } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
     await seedThread('t-old', owner.userId, agent, 'older question');
+    await backdateThread('t-old');
     await seedThread('t-new', owner.userId, agent, 'newer question');
 
     const res = await agents(asOwner)({ agentId: agent.id }).threads.get();

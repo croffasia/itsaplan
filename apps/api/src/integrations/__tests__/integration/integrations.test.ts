@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { untaggedRoutes } from '../../../__tests__/helpers/mcp';
 
 // Integration credentials for a project: one store for LLM provider keys (kind 'llm')
 // and tool credentials (kind 'tool'). The secret is stored encrypted and never
@@ -119,6 +120,17 @@ describe('integrations', () => {
     const del = await integrations(asOwner)({ credentialId: created.data!.id }).delete();
     expect(del.status).toBe(204);
     expect((await integrations(asOwner).get()).data).toHaveLength(0);
+  });
+
+  // An agent's provider and model are picked over MCP, so the reads are tagged. The
+  // writes are not: a credential body carries the provider's secret in plain text.
+  it('exposes the credential reads to MCP, not the writes', () => {
+    const untagged = untaggedRoutes((route) => route.includes('integrations'));
+    expect(untagged).toEqual([
+      'POST /projects/:projectKey/integrations',
+      'PATCH /projects/:projectKey/integrations/:credentialId',
+      'DELETE /projects/:projectKey/integrations/:credentialId',
+    ]);
   });
 
   it('denies a non-member', async () => {

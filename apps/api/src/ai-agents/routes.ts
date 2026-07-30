@@ -21,7 +21,10 @@ import { listAgentRuns } from './run-queue';
 import { listChatThreads, getChatThreadMessages, deleteChatThread } from './runtime/memory';
 import { isOwnChatThread } from './runtime/thread-ids';
 
-const agentParams = t.Object({ projectKey: t.String(), agentId: t.Numeric() });
+const agentParams = t.Object({
+  projectKey: t.String(),
+  agentId: t.Numeric({ description: 'Agent id from list_ai_agents.' }),
+});
 const threadParams = t.Object({
   projectKey: t.String(),
   agentId: t.Numeric(),
@@ -32,8 +35,10 @@ const threadParams = t.Object({
 // agent has memory enabled; omit it to start a new thread (the id used is returned in
 // the response).
 const runBody = t.Object({
-  prompt: t.String({ minLength: 1 }),
-  threadId: t.Optional(t.String()),
+  prompt: t.String({ minLength: 1, description: 'Message to send the agent.' }),
+  threadId: t.Optional(
+    t.String({ description: 'Thread id from an earlier run, to continue that conversation.' }),
+  ),
 });
 
 // Run options for an interactive chat run (the test chat): the caller owns the memory
@@ -66,12 +71,29 @@ const username = t.String({
 // over time. Ignored (stored as null/empty) for an external agent.
 const configFields = {
   modelCredentialId: t.Optional(
-    t.Nullable(t.Number({ description: 'Integration credential id for the LLM provider.' })),
+    t.Nullable(
+      t.Number({
+        description:
+          'Credential id of the LLM provider, from list_integration_credentials. Required for an ' +
+          'internal agent to run.',
+      }),
+    ),
   ),
-  model: t.Optional(t.Nullable(t.String({ description: 'Model id, e.g. claude-sonnet-5.' }))),
+  model: t.Optional(
+    t.Nullable(
+      t.String({
+        description:
+          "Model id the provider offers, from list_provider_models, e.g. 'claude-sonnet-5'.",
+      }),
+    ),
+  ),
   instructions: t.Optional(t.Nullable(t.String({ description: 'System prompt for the agent.' }))),
   tools: t.Optional(
-    t.Array(t.String(), { description: 'Granted tool keys from list_ai_agent_tools.' }),
+    t.Array(t.String(), {
+      description:
+        'Built-in action keys from list_ai_agent_tools the agent is granted. Tools on an ' +
+        'integration are granted separately, through set_ai_agent_configured_tools.',
+    }),
   ),
   temperature: t.Optional(t.Nullable(t.Number({ description: 'Sampling temperature.' }))),
   maxSteps: t.Optional(t.Nullable(t.Integer({ description: 'Max tool-call steps per run.' }))),
@@ -85,7 +107,11 @@ const configFields = {
   triggerOnAssign: t.Optional(t.Boolean({ description: 'Run when assigned to an issue.' })),
   roleId: t.Optional(
     t.Nullable(
-      t.Integer({ description: 'project_role the bot acts under; null uses the default role.' }),
+      t.Integer({
+        description:
+          'Role from list_roles the bot acts under, capping what its tools may do; null uses the ' +
+          'default role.',
+      }),
     ),
   ),
 };
@@ -378,9 +404,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
   )
 
-  // Runs an internal agent against a prompt and returns its generated text. The
-  // agent is built from its stored model configuration (Mastra). External agents
-  // have no config and return 400.
+  // The agent is built from its stored model configuration (Mastra).
   .post(
     '/projects/:projectKey/ai-agents/:agentId/run',
     async ({ params, project, body, user }) =>
@@ -403,7 +427,9 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       },
       detail: {
         summary: 'Run an AI agent',
-        description: 'Run an internal AI agent with a prompt and return its text.',
+        description:
+          'Send a prompt to an internal AI agent and return its answer. Only an internal agent ' +
+          'runs here; an external one has no model config and returns 400.',
         ...mcpTool('run_ai_agent'),
       },
     },

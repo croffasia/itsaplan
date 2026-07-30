@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { untaggedRoutes } from '../../../__tests__/helpers/mcp';
 
 // Configured tools for a project: a catalog tool bound to an integration credential.
 // The secret lives on the credential, so a configured tool carries no secret. Access
@@ -113,6 +114,18 @@ describe('agent tools', () => {
 
     const clear = await agents(asOwner)({ agentId })['tool-configs'].put({ agentToolIds: [] });
     expect(clear.data).toHaveLength(0);
+  });
+
+  // Over MCP a configured tool can be read and enabled on an agent, but binding one to
+  // a credential stays in the UI, where the credential is added.
+  it('exposes reading and enabling configured tools to MCP, not binding one', () => {
+    const untagged = untaggedRoutes(
+      (route) => route.includes('agent-tools') || route.includes('tool-configs'),
+    );
+    expect(untagged).toEqual([
+      'POST /projects/:projectKey/agent-tools',
+      'DELETE /projects/:projectKey/agent-tools/:agentToolId',
+    ]);
   });
 
   it('denies a non-member', async () => {

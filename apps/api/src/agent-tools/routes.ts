@@ -16,7 +16,10 @@ import {
 } from './store';
 
 const toolParams = t.Object({ projectKey: t.String(), agentToolId: t.Numeric() });
-const agentParams = t.Object({ projectKey: t.String(), agentId: t.Numeric() });
+const agentParams = t.Object({
+  projectKey: t.String(),
+  agentId: t.Numeric({ description: 'Agent id from list_ai_agents.' }),
+});
 
 // A built-in agent action in the catalog (ToolMeta from ai-agents/runtime/tools).
 // `always` marks the read-only actions granted unconditionally, that cannot be
@@ -43,10 +46,10 @@ const AgentToolResponse = t.Object({
 
 // Two tool systems live under this tag. Built-in agent actions (create_issue,
 // search_issues, ...) are the catalog an internal agent is granted through its
-// `tools` field; the catalog route is read-only, ai_agents-gated, and exposed over
-// MCP. Configured tools bind an external tool to an integration credential; those
-// reference secrets, so they are session-only (not MCP tools) and gated under the
-// agent_tools resource.
+// `tools` field; the catalog route is read-only and ai_agents-gated. Configured tools
+// bind an external tool to an integration credential and are gated under the
+// agent_tools resource; binding one to a credential is done in the UI, so only reading
+// them and enabling them on an agent are exposed over MCP.
 export const agentToolRoutes = new Elysia({
   name: 'agent-tools',
   detail: { tags: ['Agent Tools'] },
@@ -83,7 +86,11 @@ export const agentToolRoutes = new Elysia({
     },
     detail: {
       summary: 'List configured tools',
-      description: "List a project's tools configured on integration credentials.",
+      description:
+        "List a project's tools configured on integration credentials. An id here is what " +
+        'set_ai_agent_configured_tools takes to enable a tool on an agent. Separate from the ' +
+        'built-in actions in list_ai_agent_tools.',
+      ...mcpTool('list_configured_tools'),
     },
   })
 
@@ -131,7 +138,6 @@ export const agentToolRoutes = new Elysia({
     },
   )
 
-  // Which configured tools are enabled on an agent.
   .get(
     '/projects/:projectKey/ai-agents/:agentId/tool-configs',
     async ({ params, project }) => {
@@ -152,11 +158,11 @@ export const agentToolRoutes = new Elysia({
       detail: {
         summary: "List an agent's enabled tools",
         description: 'List the configured tools enabled on an agent.',
+        ...mcpTool('list_ai_agent_configured_tools'),
       },
     },
   )
 
-  // Replaces the set of configured tools enabled on an agent.
   .put(
     '/projects/:projectKey/ai-agents/:agentId/tool-configs',
     async ({ params, project, body }) => {
@@ -167,7 +173,11 @@ export const agentToolRoutes = new Elysia({
       return listAgentToolLinks(params.agentId);
     },
     {
-      body: t.Object({ agentToolIds: t.Array(t.Number()) }),
+      body: t.Object({
+        agentToolIds: t.Array(t.Number(), {
+          description: 'Configured tool ids from list_configured_tools.',
+        }),
+      }),
       params: agentParams,
       permission: ['agent_tools', 'edit'],
       response: {
@@ -179,7 +189,10 @@ export const agentToolRoutes = new Elysia({
       },
       detail: {
         summary: "Set an agent's enabled tools",
-        description: 'Replace the set of configured tools enabled on an agent.',
+        description:
+          'Replace the set of configured tools enabled on an agent. Send the full set: a tool ' +
+          'left out is disabled.',
+        ...mcpTool('set_ai_agent_configured_tools'),
       },
     },
   );

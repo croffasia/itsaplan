@@ -4,6 +4,7 @@ import { guards } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
+import { mcpTool } from '../mcp/generate';
 import { INTEGRATION_CATALOG } from './catalog';
 import { listModelsForProvider } from './models';
 import { listCredentials, createCredential, updateCredential, deleteCredential } from './store';
@@ -46,8 +47,9 @@ const IntegrationResponse = t.Object({
 
 const ProviderModelResponse = t.Object({ id: t.String(), name: t.String() });
 
-// Integration credentials carry secrets, so these routes are managed only through the
-// session UI and are not exposed as MCP tools. Gated under the integrations resource.
+// Gated under the integrations resource. The reads are exposed as MCP tools, so an
+// internal agent's provider and model can be picked without the UI; the writes are
+// not, because a credential body carries the provider's secret in plain text.
 export const integrationRoutes = new Elysia({
   name: 'integrations',
   detail: { tags: ['Integrations'] },
@@ -55,8 +57,7 @@ export const integrationRoutes = new Elysia({
   .use(authContext)
   .use(guards)
 
-  // The catalog of integrations (LLM providers + tool integrations). The frontend
-  // builds the credential form from credentialSchema.
+  // The frontend builds the credential form from credentialSchema.
   .get('/projects/:projectKey/integrations/catalog', () => INTEGRATION_CATALOG, {
     permission: ['integrations', 'read'],
     response: {
@@ -67,17 +68,25 @@ export const integrationRoutes = new Elysia({
     },
     detail: {
       summary: 'List available integrations',
-      description: 'List the integration catalog: LLM providers and tool integrations.',
+      description:
+        "List the integration catalog: LLM providers (kind 'llm') and tool integrations " +
+        "(kind 'tool'). A provider key here is what list_provider_models takes.",
+      ...mcpTool('list_integrations'),
     },
   })
 
   // The models an LLM provider offers, from the models.dev registry. Backs the model
-  // select in the agent config UI. Empty when the registry is unavailable.
+  // select in the agent config UI.
   .get(
     '/projects/:projectKey/integrations/models/:provider',
     ({ params }) => listModelsForProvider(params.provider),
     {
-      params: t.Object({ projectKey: t.String(), provider: t.String() }),
+      params: t.Object({
+        projectKey: t.String(),
+        provider: t.String({
+          description: "LLM provider key from list_integrations, e.g. 'anthropic'.",
+        }),
+      }),
       permission: ['integrations', 'read'],
       response: {
         200: t.Array(ProviderModelResponse),
@@ -87,7 +96,11 @@ export const integrationRoutes = new Elysia({
       },
       detail: {
         summary: "List a provider's models",
-        description: 'List the models an LLM provider offers.',
+        description:
+          'List the models an LLM provider offers. An id here is what the model field on ' +
+          'create_ai_agent / update_ai_agent takes. Empty when the model registry is unreachable.',
+        // The list comes from models.dev, the one route here that reads outside the tracker.
+        ...mcpTool('list_provider_models', { openWorldHint: true }),
       },
     },
   )
@@ -102,7 +115,11 @@ export const integrationRoutes = new Elysia({
     },
     detail: {
       summary: 'List credentials',
-      description: "List a project's integration credentials (secrets redacted).",
+      description:
+        "List a project's integration credentials, secrets redacted. The id of a credential " +
+        'on an LLM provider is what modelCredentialId on create_ai_agent / update_ai_agent takes. ' +
+        'A credential is added in the UI, not here.',
+      ...mcpTool('list_integration_credentials'),
     },
   })
 

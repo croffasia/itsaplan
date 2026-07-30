@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { untaggedRoutes } from '../../../__tests__/helpers/mcp';
 
 // AI agents attached to a project. Each agent is backed by a hidden bot user, owns a
 // better-auth API key, and is a project member acting under a project role. An
@@ -363,5 +364,19 @@ describe('ai agents', () => {
     const created = await agents(asOwner).post({ name: 'Bot', username: 'bot', kind: 'internal' });
     const res = await agents(asOwner)({ agentId: created.data!.agent.id }).run.post({ prompt: '' });
     expect(res.status).toBe(400);
+  });
+
+  // An agent is set up and talked to entirely over MCP. What stays out serves the chat
+  // UI: the streamed run and the caller's own thread history, plus this agent's run
+  // history — the analytics routes carry the project-wide run feed MCP reads instead.
+  it('exposes agent management and the run to MCP', () => {
+    const untagged = untaggedRoutes((route) => route.includes('/ai-agents'));
+    expect(untagged).toEqual([
+      'GET /projects/:projectKey/ai-agents/:agentId/runs',
+      'POST /projects/:projectKey/ai-agents/:agentId/run/stream',
+      'GET /projects/:projectKey/ai-agents/:agentId/threads',
+      'GET /projects/:projectKey/ai-agents/:agentId/threads/:threadId/messages',
+      'DELETE /projects/:projectKey/ai-agents/:agentId/threads/:threadId',
+    ]);
   });
 });

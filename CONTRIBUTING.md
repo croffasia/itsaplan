@@ -130,6 +130,22 @@ docker compose -f docker-compose.test.yml up --build \
    screenshots for UI changes.
 6. CI must be green before review.
 
-## Licence
+## Sign the Contributor License Agreement
 
-Contributions are licensed under [AGPL-3.0](LICENSE), the same licence as the project.
+Every contributor signs the [ICLA](ICLA.md) before their first pull request is merged. It
+gives the project a broad licence to the contribution; you keep the copyright and stay
+free to use your own work elsewhere. If you write the code on company time, get your
+employer's permission first — section 4 of the ICLA is what you are agreeing to.
+
+Signing happens on the pull request itself: a bot comments and asks you to reply with
+
+```
+I have read the CLA Document and I hereby sign the CLA
+```
+
+The signature is recorded in `signatures/version1/cla.json` on the `cla-signatures`
+branch. You sign once, later pull requests need no action.
+
+In return, section 9 of the agreement commits the project to releasing every version it
+ships under [AGPL-3.0](LICENSE) or another OSI-approved licence. The same code is also
+licensed commercially and run as a paid hosted service, which is what funds the work.

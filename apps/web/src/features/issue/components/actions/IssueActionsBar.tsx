@@ -23,25 +23,19 @@ import ShareDialog from '@/components/common/share/ShareDialog';
 
 // The issue detail Actions: the manual actions whose condition matches this
 // issue, plus Copy Prompt and a delete button. Owns the delete/apply
-// confirmations and the mutations they run. The 'section' variant is a standalone
-// block; the 'header' variant is the bare button row placed in the side panel's
-// header. The confirm dialogs render through a portal, so their position in the
-// tree does not matter.
+// confirmations and the mutations they run. The confirm dialogs render through a
+// portal, so their position in the tree does not matter.
 export default function IssueActionsBar({
   project,
   issue,
-  hasSidebar,
-  variant = 'section',
+  variant = 'row',
   onDeleted,
 }: {
   project: ProjectDetail;
   issue: IssueDetailRow;
-  // True when the host renders Properties in a sidebar, which the 'section'
-  // variant follows with a bare right-aligned button row instead of a titled block.
-  hasSidebar: boolean;
-  // 'section' is the standalone block (page sidebar card / panel body). 'header'
-  // renders just the action buttons inline, for the side-panel header row.
-  variant?: 'section' | 'header';
+  // 'row' wraps the buttons in a right-aligned row of its own. 'header' renders
+  // them bare, at the smaller size the side panel's header row uses.
+  variant?: 'row' | 'header';
   onDeleted?: () => void;
 }) {
   const { can } = usePermissions();
@@ -89,7 +83,7 @@ export default function IssueActionsBar({
   }
 
   // In the panel header the action buttons sit next to the size-7 expand/close
-  // buttons, so they match that size; the standalone block uses the roomier size.
+  // buttons, so they match that size; the row uses the roomier size.
   const btnSize = variant === 'header' ? 'icon-xs' : 'icon-sm';
 
   const buttons = (
@@ -198,24 +192,9 @@ export default function IssueActionsBar({
     </div>
   );
 
-  function layout() {
-    if (variant === 'header') return buttons;
-    // Above a Properties sidebar the actions are a bare button row: no card
-    // border, no "Actions" heading, right-aligned.
-    if (hasSidebar) return <div className="mb-3 flex justify-end px-1">{buttons}</div>;
-    return (
-      <div className="mt-6 border-t pt-5">
-        <h3 className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Actions
-        </h3>
-        {buttons}
-      </div>
-    );
-  }
-
   return (
     <>
-      {layout()}
+      {variant === 'header' ? buttons : <div className="mb-3 flex justify-end px-1">{buttons}</div>}
 
       {confirmingDelete && (
         <DeleteIssueDialog

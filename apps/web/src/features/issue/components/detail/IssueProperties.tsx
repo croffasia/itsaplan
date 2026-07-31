@@ -33,7 +33,7 @@ function PropertyRow({ label, children }: { label: string; children: ReactNode }
 
 // The Properties grid of the issue detail: built-in fields (status, assignee,
 // priority, type, dates, labels) and non-markdown custom fields, each editable
-// inline. In the page layout it is a bordered card; in the panel a plain block.
+// inline. Always a bordered card, in the sidebar and in the single column alike.
 export default function IssueProperties({
   project,
   issue,
@@ -43,7 +43,6 @@ export default function IssueProperties({
   onToggleLabel,
   uploadFile,
   imageAttachments,
-  hasSidebar,
   readOnly,
 }: {
   project: ProjectDetail;
@@ -54,7 +53,6 @@ export default function IssueProperties({
   onToggleLabel: (id: number) => void;
   uploadFile?: (file: File) => Promise<Embeddable>;
   imageAttachments?: Embeddable[];
-  hasSidebar: boolean;
   // When true every control is a non-interactive display of its value (public
   // shared page). The onPatch/onSetField/onToggleLabel callbacks are never called.
   readOnly?: boolean;
@@ -201,26 +199,10 @@ export default function IssueProperties({
     </>
   );
 
-  const inner = (
-    <>
-      <h3
-        className={`text-xs font-medium text-muted-foreground ${hasSidebar ? 'mb-2.5' : 'mb-3 tracking-wide uppercase'}`}
-      >
-        Properties
-      </h3>
-      <div
-        className={`grid ${hasSidebar ? 'grid-cols-[72px_1fr] gap-x-2' : 'grid-cols-[110px_1fr] gap-x-3'} items-start gap-y-2.5`}
-      >
-        {rows}
-      </div>
-    </>
-  );
-
-  // In the page layout the properties become a bordered card in the right
-  // sidebar; in the panel they stay a plain block under the content.
-  return hasSidebar ? (
-    <div className="rounded-lg border bg-card/50 p-3.5">{inner}</div>
-  ) : (
-    <div className="mt-6 border-t pt-5">{inner}</div>
+  return (
+    <div className="rounded-lg border bg-card/50 p-3.5">
+      <h3 className="mb-2.5 text-xs font-medium text-muted-foreground">Properties</h3>
+      <div className="grid grid-cols-[72px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
+    </div>
   );
 }

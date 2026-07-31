@@ -66,7 +66,6 @@ export default function ReadOnlyIssueDetail({
       onPatch={noop}
       onSetField={noop}
       onToggleLabel={noop}
-      hasSidebar
       readOnly
     />
   );

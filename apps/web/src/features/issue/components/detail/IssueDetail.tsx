@@ -44,7 +44,6 @@ export default function IssueDetail({
                 <IssueActionsBar
                   project={project}
                   issue={issue}
-                  hasSidebar={false}
                   variant="header"
                   onDeleted={onClose}
                 />

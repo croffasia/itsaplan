@@ -28,8 +28,9 @@ export default function IssueDetailContent({
   onDeleted?: () => void;
   // 'panel' stacks everything in one column (side panel). 'page' puts the
   // Properties in a right sidebar fixed to the viewport edge (Linear full-page
-  // layout). 'split' is the same two-column shape but in normal flow (no fixed
-  // positioning), so it fits inside a narrower container like the inbox pane.
+  // layout), and stacks them into the column below xl. 'split' is the same
+  // two-column shape but in normal flow (no fixed positioning), so it fits
+  // inside a narrower container like the inbox pane.
   layout?: 'panel' | 'page' | 'split';
 }) {
   const {
@@ -47,10 +48,6 @@ export default function IssueDetailContent({
   if (!issue) {
     return <div className="py-6 text-sm text-muted-foreground">Loading…</div>;
   }
-
-  const isPage = layout === 'page';
-  // Both the full page and the split view show Properties in a right sidebar.
-  const hasSidebar = layout !== 'panel';
 
   const body = (
     <>
@@ -114,18 +111,10 @@ export default function IssueDetailContent({
       onToggleLabel={toggleLabel}
       uploadFile={uploadFile}
       imageAttachments={imageAttachments}
-      hasSidebar={hasSidebar}
     />
   );
 
-  const actions = (
-    <IssueActionsBar
-      project={project}
-      issue={issue}
-      hasSidebar={hasSidebar}
-      onDeleted={onDeleted}
-    />
-  );
+  const actions = <IssueActionsBar project={project} issue={issue} onDeleted={onDeleted} />;
 
   // A feed entry stores the author's name, not their picture, so the uploaded avatar
   // comes from the project's candidate list by actor id. An author who is no longer a
@@ -148,16 +137,28 @@ export default function IssueDetailContent({
     </>
   );
 
-  if (isPage) {
-    // The issue content is left-aligned; the Properties panel is fixed to the
-    // right edge (out of flow), so it never shifts the content.
+  if (layout === 'page') {
+    // From xl the issue content is left-aligned and the actions with Properties
+    // are fixed to the right edge (out of flow), so they never shift the content;
+    // the right margin reserves their width so the two do not overlap. Below xl
+    // there is no room for two columns, so the same two blocks are shown inside
+    // the content column instead — the actions above the title, Properties under
+    // the description.
     return (
       <>
-        <div className="max-w-3xl">
+        <div className="max-w-3xl xl:mr-[340px]">
+          {/* Stuck to the top of the scrolling page, with the same translucent,
+              blurred backdrop the side panel's header uses. The negative top
+              margin cancels the page's padding so the row starts where the title
+              would. */}
+          <div className="sticky top-0 z-10 -mt-6 bg-background/85 pt-6 pb-3 backdrop-blur-md xl:hidden">
+            {actions}
+          </div>
           {body}
+          <div className="mt-6 xl:hidden">{properties}</div>
           {activity}
         </div>
-        <aside className="fixed top-16 right-6 max-h-[calc(100vh-5.5rem)] w-[340px] overflow-y-auto">
+        <aside className="hidden xl:fixed xl:top-16 xl:right-6 xl:block xl:max-h-[calc(100vh-5.5rem)] xl:w-[340px] xl:overflow-y-auto">
           {actions}
           {properties}
         </aside>
@@ -184,11 +185,11 @@ export default function IssueDetailContent({
   }
 
   // The panel renders the actions in its header row (see IssueDetail), so the
-  // panel body omits them; the page keeps them in the sticky sidebar above.
+  // panel body omits them.
   return (
     <>
       {body}
-      {properties}
+      <div className="mt-6">{properties}</div>
       {activity}
     </>
   );

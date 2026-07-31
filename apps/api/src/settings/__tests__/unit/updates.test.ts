@@ -1,8 +1,15 @@
 import { describe, it, expect } from 'bun:test';
-import { parseVersion, compareVersions, parseReleasesAtom, parseChangelog } from '../../updates';
+import {
+  parseVersion,
+  compareVersions,
+  parseReleasesAtom,
+  parseChangelog,
+  mergeHistory,
+  type Release,
+} from '../../updates';
 
-// Version handling and the two note sources: the atom feed and the changelog of the
-// build. No network or DB — the fetch itself reads the live feed.
+// Version handling, the two note sources — the atom feed and the changelog of the
+// build — and how they merge. No network or DB: the fetch itself reads the live feed.
 
 describe('parseVersion', () => {
   it('reads a tag with and without the leading v', () => {
@@ -140,5 +147,40 @@ describe('parseChangelog', () => {
 
   it('returns an empty list when the file holds no releases', () => {
     expect(parseChangelog('# Changelog\n\nNothing released yet.\n')).toEqual([]);
+  });
+});
+
+describe('mergeHistory', () => {
+  function release(version: string, notesFormat: Release['notesFormat']): Release {
+    return {
+      tag: `v${version}`,
+      version,
+      publishedAt: '2026-07-23T00:00:00Z',
+      url: notesFormat === 'html' ? `https://example.com/releases/tag/v${version}` : null,
+      notes: `notes of ${version}`,
+      notesFormat,
+    };
+  }
+
+  it('takes the feed entry over the changelog section of the same version', () => {
+    const merged = mergeHistory([release('0.2.0', 'html')], [release('0.2.0', 'markdown')]);
+    expect(merged).toEqual([release('0.2.0', 'html')]);
+  });
+
+  it('keeps the changelog releases the feed window does not reach, newest first', () => {
+    const merged = mergeHistory(
+      [release('0.3.0', 'html'), release('0.2.0', 'html')],
+      [release('0.2.0', 'markdown'), release('0.1.0', 'markdown')],
+    );
+    expect(merged.map((r) => [r.version, r.notesFormat])).toEqual([
+      ['0.3.0', 'html'],
+      ['0.2.0', 'html'],
+      ['0.1.0', 'markdown'],
+    ]);
+  });
+
+  it('falls back to the changelog alone when the feed could not be read', () => {
+    const local = [release('0.2.0', 'markdown'), release('0.1.0', 'markdown')];
+    expect(mergeHistory([], local)).toEqual(local);
   });
 });

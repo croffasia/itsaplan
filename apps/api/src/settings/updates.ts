@@ -2,9 +2,10 @@ import { t } from 'elysia';
 import { getSetting, setSetting } from '@repo/db';
 import pkg from '../../../../package.json';
 
-// Whether a newer release is published, plus the notes to show. Two sources split
-// by version: the CHANGELOG.md of this build up to the running version, the
-// repository's releases atom feed above it.
+// Whether a newer release is published, plus the notes to show. The repository's
+// releases atom feed is the source of the history; the CHANGELOG.md of this build
+// covers the releases older than the feed's window and stands alone when the feed
+// cannot be read.
 //
 // The feed is github.com web content, not the REST API, so no token and no
 // 60/hour limit (agent-skills/skill-format.ts reads github.com atom the same way).
@@ -224,6 +225,14 @@ function usable(cache: UpdateCache | null): cache is UpdateCache {
   return cache.releases.every(usableRelease);
 }
 
+// Newest first, a feed entry preferred over the changelog section of the same version.
+export function mergeHistory(published: Release[], local: Release[]): Release[] {
+  const fromFeed = new Set(published.map((r) => r.version));
+  return [...published, ...local.filter((r) => !fromFeed.has(r.version))].sort((a, b) =>
+    compareVersions(b.version, a.version),
+  );
+}
+
 // Refreshes an expired cache, or always when `force` is set ("check now").
 export async function getUpdateStatus(force = false): Promise<UpdateStatus> {
   const stored = await getSetting<UpdateCache>(UPDATES_CACHE_KEY);
@@ -236,12 +245,11 @@ export async function getUpdateStatus(force = false): Promise<UpdateStatus> {
   const currentVersion = getAppVersion();
   const published = cache?.releases ?? [];
   const latestVersion = published[0]?.version ?? null;
-  const newer = published.filter((r) => compareVersions(r.version, currentVersion) > 0);
   return {
     currentVersion,
     latestVersion,
-    updateAvailable: newer.length > 0,
+    updateAvailable: published.some((r) => compareVersions(r.version, currentVersion) > 0),
     checkedAt: cache?.checkedAt ?? null,
-    releases: [...newer, ...(await localHistory())],
+    releases: mergeHistory(published, await localHistory()),
   };
 }

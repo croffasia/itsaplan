@@ -322,6 +322,76 @@ describe('issue activity', () => {
     });
   });
 
+  // The same entries as the feed, split into the stretches the issue spent in one
+  // status and paged the same way (GET /issues/:issueId/feed/grouped).
+  describe('grouped feed', () => {
+    function grouped(client: Api, issueId: number, query: Record<string, string> = {}) {
+      return client.issues({ issueId }).feed.grouped.get({ query });
+    }
+
+    it('splits a page into the stretches its entries were written in', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+      const names = new Map(view.data!.columns.map((c) => [c.id, c.name]));
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'before the move' });
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnIds[1] });
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'after the move' });
+
+      const res = await grouped(asOwner, issue.id);
+      expect(res.status).toBe(200);
+      // Newest first, so the stretch the issue is in now comes first and stays open.
+      expect(res.data!.groups.map((g) => g.status)).toEqual([
+        names.get(columnIds[1])!,
+        names.get(columnId)!,
+      ]);
+      expect(res.data!.groups[0]!.to).toBeNull();
+      const bodies = res.data!.groups.map((g) =>
+        g.items.filter((i) => i.kind === 'comment').map((i) => i.body),
+      );
+      expect(bodies).toEqual([['after the move'], ['before the move']]);
+    });
+
+    it('marks a status the issue had already been in as a repeat', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnIds[1] });
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId });
+
+      const res = await grouped(asOwner, issue.id);
+      expect(res.data!.groups.map((g) => g.repeat)).toEqual([true, false, false]);
+    });
+
+    it('pages with limit and cursor, continuing a stretch across the boundary', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      for (const body of ['a', 'b', 'c']) {
+        await asOwner.issues({ issueId: issue.id }).comments.post({ body });
+      }
+
+      const first = await grouped(asOwner, issue.id, { limit: '2' });
+      expect(first.data!.groups.length).toBe(1);
+      expect(first.data!.groups[0]!.items.map((i) => i.body)).toEqual(['c', 'b']);
+      expect(first.data!.nextCursor).not.toBeNull();
+
+      const second = await grouped(asOwner, issue.id, {
+        limit: '2',
+        cursor: JSON.stringify(first.data!.nextCursor),
+      });
+      // The one stretch spans both pages, under the same start, and no entry repeats.
+      expect(second.data!.groups[0]!.from).toEqual(first.data!.groups[0]!.from);
+      expect(second.data!.groups[0]!.items.map((i) => i.body)).toContain('a');
+      const firstIds = first.data!.groups.flatMap((g) => g.items.map((i) => i.id));
+      const secondIds = second.data!.groups.flatMap((g) => g.items.map((i) => i.id));
+      expect(secondIds.some((id) => firstIds.includes(id))).toBe(false);
+    });
+
+    it('returns 404 for a missing issue', async () => {
+      const { asOwner } = await setupProject();
+      expect((await grouped(asOwner, 999999)).status).toBe(404);
+    });
+  });
+
   describe('access', () => {
     it('denies a non-member on the feed, timeline and comment routes', async () => {
       const { asOwner, columnId } = await setupProject();
@@ -333,6 +403,9 @@ describe('issue activity', () => {
       expect((await outsider.issues({ issueId: issue.id }).feed.get({ query: {} })).status).toBe(
         403,
       );
+      expect(
+        (await outsider.issues({ issueId: issue.id }).feed.grouped.get({ query: {} })).status,
+      ).toBe(403);
       expect((await outsider.issues({ issueId: issue.id }).timeline.get()).status).toBe(403);
       expect(
         (

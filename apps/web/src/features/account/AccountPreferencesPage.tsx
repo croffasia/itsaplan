@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { toast } from 'sonner';
 import type {
   AccountPreferencesPatch,
+  IssueActivityView,
   IssueOpenMode,
   IssueStatsView,
   StartPage,
@@ -38,6 +39,11 @@ const ISSUE_STATS_VIEW_OPTIONS: { value: IssueStatsView; label: string }[] = [
   { value: 'timeline', label: 'Timeline' },
 ];
 
+const ISSUE_ACTIVITY_VIEW_OPTIONS: { value: IssueActivityView; label: string }[] = [
+  { value: 'flat', label: 'Flat' },
+  { value: 'grouped', label: 'Grouped by status' },
+];
+
 const START_PAGE_OPTIONS: { value: StartPage; label: string }[] = [
   { value: 'work-items', label: 'Work items' },
   { value: 'inbox', label: 'Inbox' },
@@ -55,18 +61,16 @@ export default function AccountPreferencesPage() {
   // Only the first load blocks the controls. A save in flight is reported in the
   // header instead of freezing the page, so two changes in a row are possible.
   const disabled = isPending;
-  // The moment of the last successful save, which the header reports back.
-  const [savedAt, setSavedAt] = useState<number | null>(null);
 
   const save = (patch: AccountPreferencesPatch) =>
-    update.mutate(patch, { onSuccess: () => setSavedAt(Date.now()) });
+    update.mutate(patch, { onSuccess: () => toast.success('Preferences saved') });
 
   return (
     <FullPageView
       label="Preferences"
       title="Preferences"
       description="How the app looks and behaves for you. Every change saves right away and applies wherever you sign in."
-      actions={<AccountPreferencesSaveState saving={update.isPending} savedAt={savedAt} />}
+      actions={<AccountPreferencesSaveState saving={update.isPending} />}
     >
       <AccountPreferencesSection title="Appearance">
         <AccountPreferenceRow
@@ -124,12 +128,12 @@ export default function AccountPreferencesPage() {
       </AccountPreferencesSection>
 
       <AccountPreferencesSection
-        title="Issue stats"
-        description="The section above an issue's activity that shows how long it spent in each status. Switching it while an issue is open does not change these."
+        title="Issue settings"
+        description="How the stats and the activity log of an issue start out. Switching them while an issue is open does not change these."
       >
         <AccountPreferenceRow
           label="Show stats"
-          description="Whether the section starts expanded when you open an issue."
+          description="Whether the stats section starts expanded when you open an issue."
         >
           <Switch
             checked={prefs.issueStatsOpen}
@@ -138,13 +142,24 @@ export default function AccountPreferencesPage() {
           />
         </AccountPreferenceRow>
         <AccountPreferenceRow
-          label="Show as"
+          label="Show stats as"
           description="Compact is one bar with a share per status; Timeline gives each status its own lane on a time axis."
         >
           <AccountPreferenceSelect
             value={prefs.issueStatsView}
             options={ISSUE_STATS_VIEW_OPTIONS}
             onChange={(issueStatsView) => save({ issueStatsView })}
+            disabled={disabled}
+          />
+        </AccountPreferenceRow>
+        <AccountPreferenceRow
+          label="Show activity as"
+          description="Flat is every entry newest first; Grouped splits the log by the status the issue was in."
+        >
+          <AccountPreferenceSelect
+            value={prefs.issueActivityView}
+            options={ISSUE_ACTIVITY_VIEW_OPTIONS}
+            onChange={(issueActivityView) => save({ issueActivityView })}
             disabled={disabled}
           />
         </AccountPreferenceRow>

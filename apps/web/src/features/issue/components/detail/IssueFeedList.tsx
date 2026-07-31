@@ -1,6 +1,6 @@
 import { type FeedItem } from '@/lib/api';
 import { useFeedQuery } from '../../services/comments.service';
-import { Button } from '@/components/ui/button';
+import ShowMoreButton from '@/components/common/ShowMoreButton';
 import ActivityItemList from './ActivityItemList';
 
 // The flat activity list, newest first, paged 25 at a time by "Show more". The feed
@@ -38,16 +38,10 @@ export default function IssueFeedList({
     <>
       <ActivityItemList items={items} imageByUserId={imageByUserId} />
       {feedQuery.hasNextPage && (
-        <div className="mt-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={feedQuery.isFetchingNextPage}
-            onClick={() => void feedQuery.fetchNextPage()}
-          >
-            {feedQuery.isFetchingNextPage ? 'Loading…' : 'Show more'}
-          </Button>
-        </div>
+        <ShowMoreButton
+          loading={feedQuery.isFetchingNextPage}
+          onClick={() => void feedQuery.fetchNextPage()}
+        />
       )}
     </>
   );

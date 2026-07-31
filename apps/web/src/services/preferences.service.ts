@@ -16,6 +16,7 @@ export const PREFERENCE_DEFAULTS: AccountPreferences = {
   showChatByDefault: false,
   issueStatsOpen: true,
   issueStatsView: 'compact',
+  issueActivityView: 'flat',
   lastProjectId: null,
   hotkeys: {},
 };

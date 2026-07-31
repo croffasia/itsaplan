@@ -216,6 +216,61 @@ export async function listFeedRange(
   return rows.map(mapFeedItem);
 }
 
+// One stretch of the grouped feed: the status the issue was in, and the entries of
+// this page that were written while it was there.
+export interface FeedGroup {
+  status: string | null;
+  from: string;
+  to: string | null;
+  durationMs: number;
+  // The issue had already been in this status before this stretch.
+  repeat: boolean;
+  items: FeedItemRow[];
+}
+
+export interface GroupedFeedPage {
+  groups: FeedGroup[];
+  nextCursor: FeedCursor | null;
+}
+
+// The feed split into the stretches the issue spent in one column, newest first. The
+// page is the window of entries listFeed serves, under the same keyset cursor, so a
+// long history is read page by page rather than whole; a stretch that spans a page
+// boundary is served in both, each time with the entries of that page. A stretch in
+// which nothing was written carries no entries and so gets no group.
+export async function listGroupedFeed(
+  issueId: number,
+  opts: { before?: FeedCursor | null; limit?: number } = {},
+): Promise<GroupedFeedPage> {
+  const page = await listFeed(issueId, opts);
+  const timeline = page.items.length ? await listStatusTimeline(issueId) : [];
+  if (timeline.length === 0) return { groups: [], nextCursor: page.nextCursor };
+
+  const seen = new Set<string | null>();
+  const segments = timeline.map((segment) => {
+    const repeat = seen.has(segment.status);
+    seen.add(segment.status);
+    return { ...segment, repeat };
+  });
+
+  const groups: FeedGroup[] = [];
+  // The entries run newest first and the segments oldest first, so the segment the
+  // walk sits on only ever moves back towards the start.
+  let index = segments.length - 1;
+  for (const item of page.items) {
+    const at = Date.parse(item.createdAt);
+    while (index > 0 && Date.parse(segments[index].from) > at) index--;
+    const segment = segments[index];
+    const open = groups[groups.length - 1];
+    if (open && open.from === segment.from) {
+      open.items.push(item);
+      continue;
+    }
+    groups.push({ ...segment, items: [item] });
+  }
+  return { groups, nextCursor: page.nextCursor };
+}
+
 export async function createComment(input: {
   issueId: number;
   actorUserId?: string | null;

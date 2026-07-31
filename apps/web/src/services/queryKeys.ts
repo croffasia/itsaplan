@@ -85,6 +85,8 @@ export const qk = {
   // Resolving an issue by its project-scoped number (the identifier-based URL).
   issueBySeq: (projectKey: string, seq: number) => ['issueBySeq', projectKey, seq] as const,
   feed: (id: number) => ['feed', id] as const,
+  // The same feed split by status, paged on its own.
+  groupedFeed: (id: number) => ['feed', id, 'grouped'] as const,
   // The status stretches of the timeline view, and the entries of one stretch read
   // when it is opened. Both keyed under the feed, so every existing feed
   // invalidation refreshes them too.

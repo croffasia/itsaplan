@@ -1,0 +1,2 @@
+ALTER TABLE "user_preference" ADD COLUMN "issue_activity_view" text DEFAULT 'flat' NOT NULL;--> statement-breakpoint
+ALTER TABLE "user_preference" ADD CONSTRAINT "user_preference_issue_activity_view_check" CHECK ("user_preference"."issue_activity_view" IN ('flat', 'grouped'));

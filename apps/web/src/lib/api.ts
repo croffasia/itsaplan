@@ -883,6 +883,7 @@ export type ThemePreference = 'light' | 'dark' | 'system';
 export type IssueOpenMode = 'panel' | 'page';
 export type StartPage = 'inbox' | 'dashboard' | 'work-items' | 'initiatives' | 'ai-chat';
 export type IssueStatsView = 'compact' | 'timeline';
+export type IssueActivityView = 'flat' | 'grouped';
 
 export interface AccountPreferences {
   timezone: string;
@@ -890,11 +891,12 @@ export interface AccountPreferences {
   issueOpenMode: IssueOpenMode;
   startPage: StartPage;
   showChatByDefault: boolean;
-  // How the status stats section of an issue starts out: expanded or collapsed, and
-  // in the compact bar or the full timeline. Switching it on an issue is not saved —
-  // it lasts as long as that issue stays open.
+  // How the status stats section of an issue starts out, and the shape its activity
+  // log starts in. Switching either on an issue is not saved — it lasts as long as
+  // that issue stays open.
   issueStatsOpen: boolean;
   issueStatsView: IssueStatsView;
+  issueActivityView: IssueActivityView;
   lastProjectId: number | null;
   // The keyboard shortcuts this user rebound, as { commandId: combo }. Only the
   // changed ones; the rest come from the instance settings, then the built-in
@@ -1306,6 +1308,35 @@ export interface FeedCursor {
 export interface FeedPage {
   items: FeedItem[];
   nextCursor: FeedCursor | null;
+}
+
+// One stretch of the grouped feed: the status the issue was in, and the entries of
+// this page written while it was there. `to` is null for the stretch it is in now,
+// and `repeat` marks a status the issue had already been in earlier.
+export interface FeedGroup {
+  status: string | null;
+  from: string;
+  to: string | null;
+  durationMs: number;
+  repeat: boolean;
+  items: FeedItem[];
+}
+
+// A page of the feed split into stretches. Paged by the same cursor as FeedPage, so a
+// stretch that spans a page boundary arrives in both, each time with that page's
+// entries.
+export interface GroupedFeedPage {
+  groups: FeedGroup[];
+  nextCursor: FeedCursor | null;
+}
+
+// The query string both feed reads take, empty for the first page.
+function feedPageQuery(params: { cursor?: FeedCursor | null; limit?: number }): string {
+  const q = new URLSearchParams();
+  if (params.limit) q.set('limit', String(params.limit));
+  if (params.cursor) q.set('cursor', JSON.stringify(params.cursor));
+  const qs = q.toString();
+  return qs ? `?${qs}` : '';
 }
 
 // One stretch the issue spent in a single column. `status` is the column-name
@@ -1943,13 +1974,11 @@ export const api = {
   deleteAttachment: (publicId: string) =>
     request<void>(`/attachments/${publicId}`, { method: 'DELETE' }),
 
-  listFeed: (issueId: number, params: { cursor?: FeedCursor | null; limit?: number } = {}) => {
-    const q = new URLSearchParams();
-    if (params.limit) q.set('limit', String(params.limit));
-    if (params.cursor) q.set('cursor', JSON.stringify(params.cursor));
-    const qs = q.toString();
-    return request<FeedPage>(`/issues/${issueId}/feed${qs ? `?${qs}` : ''}`);
-  },
+  listFeed: (issueId: number, params: { cursor?: FeedCursor | null; limit?: number } = {}) =>
+    request<FeedPage>(`/issues/${issueId}/feed${feedPageQuery(params)}`),
+  // The same page, split into the stretches the issue spent in one status.
+  listGroupedFeed: (issueId: number, params: { cursor?: FeedCursor | null; limit?: number } = {}) =>
+    request<GroupedFeedPage>(`/issues/${issueId}/feed/grouped${feedPageQuery(params)}`),
   listTimeline: (issueId: number) => request<TimelineSegment[]>(`/issues/${issueId}/timeline`),
   // The entries of one stretch of the timeline: [from, to), open-ended without `to`.
   listTimelineItems: (issueId: number, from: string, to: string | null) => {

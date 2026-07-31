@@ -24,6 +24,7 @@ describe('user preferences', () => {
       showChatByDefault: false,
       issueStatsOpen: true,
       issueStatsView: 'compact',
+      issueActivityView: 'flat',
       lastProjectId: null,
       hotkeys: {},
     });
@@ -41,6 +42,7 @@ describe('user preferences', () => {
       showChatByDefault: true,
       issueStatsOpen: false,
       issueStatsView: 'timeline',
+      issueActivityView: 'grouped',
       hotkeys: { 'issue.new': 'i' },
     });
 
@@ -54,6 +56,7 @@ describe('user preferences', () => {
       showChatByDefault: true,
       issueStatsOpen: false,
       issueStatsView: 'timeline',
+      issueActivityView: 'grouped',
       lastProjectId: null,
       hotkeys: { 'issue.new': 'i' },
     });
@@ -93,6 +96,16 @@ describe('user preferences', () => {
 
     const res = await authedApi(u.cookie).account.preferences.patch({
       issueStatsView: 'lanes' as 'timeline',
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an unknown issue activity view', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({
+      issueActivityView: 'stacked' as 'grouped',
     });
 
     expect(res.status).toBe(400);

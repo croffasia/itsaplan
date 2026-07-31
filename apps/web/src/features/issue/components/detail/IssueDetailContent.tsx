@@ -142,6 +142,7 @@ export default function IssueDetailContent({
       <IssueActivityFeed
         issueId={issue.id}
         assignees={project.assignees}
+        columns={project.columns}
         imageByUserId={imageByUserId}
       />
     </>

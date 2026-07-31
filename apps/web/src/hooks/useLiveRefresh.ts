@@ -32,9 +32,10 @@ export function useLiveRefresh(opts: {
     queryFn: fetchRev,
     enabled,
     refetchInterval: intervalMs,
-    // The marker is a live signal, not cacheable data.
+    // Never served as fresh, but kept for one interval: with gcTime 0 a remount in
+    // the same tick drops the in-flight read and fires a second one.
     staleTime: 0,
-    gcTime: 0,
+    gcTime: intervalMs,
   });
 
   const rev = data?.rev ?? null;

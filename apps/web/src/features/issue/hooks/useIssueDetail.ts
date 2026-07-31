@@ -11,8 +11,9 @@ import {
 import { useIssueQuery, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { qk } from '@/services/queryKeys';
+import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
-import { useFeedQuery, useTimelineQuery } from '../services/comments.service';
+import { useFeedQuery, useGroupedFeedQuery, useTimelineQuery } from '../services/comments.service';
 import { attachmentMarkdown, isImage } from '../utils/attachmentEmbed';
 import { fieldDefsForType } from '../utils/fieldDefs';
 
@@ -28,10 +29,15 @@ export function useIssueDetail(
   const fieldDefs = fieldDefsForType(project.customFields, issue?.typeId ?? null);
 
   // Started here, not in the components that read them: those mount only after the
-  // issue arrives, which would put these reads in a second wave after it.
+  // issue arrives, which would put these reads in a second wave after it. Only the
+  // activity shape the preference opens with is read; the other one waits for a switch.
   const attachmentsQuery = useAttachmentsQuery(issueId);
+  // Undefined until the preferences arrive — the saved shape is read, never the
+  // default standing in for it, so neither feed is fetched to be thrown away.
+  const activityView = useAccountPreferencesQuery().data?.issueActivityView;
   useTimelineQuery(issueId);
-  useFeedQuery(issueId);
+  useFeedQuery(issueId, activityView === 'flat');
+  useGroupedFeedQuery(issueId, activityView === 'grouped');
 
   // What the markdown editors' image picker offers.
   const imageAttachments = (attachmentsQuery.data ?? []).filter(isImage);

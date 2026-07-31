@@ -31,7 +31,14 @@ import {
   getIssueFieldValues,
   issueRev,
 } from './store';
-import { listFeed, listFeedRange, listStatusTimeline, createComment } from './activity';
+import {
+  listFeed,
+  listFeedRange,
+  listGroupedFeed,
+  listStatusTimeline,
+  createComment,
+  type FeedCursor,
+} from './activity';
 
 // Numeric path params are validated (and coerced string -> number) with t.Numeric,
 // so a non-numeric id is rejected with a 400 before reaching the store.
@@ -124,11 +131,46 @@ const FeedItemResponse = t.Object({
   createdAt: t.String(),
 });
 
+const FeedCursorResponse = t.Nullable(t.Object({ ts: t.String(), id: t.Number() }));
+
 // FeedPage from activity.ts: one page of the feed with the keyset cursor.
 const FeedPageResponse = t.Object({
   items: t.Array(FeedItemResponse),
-  nextCursor: t.Nullable(t.Object({ ts: t.String(), id: t.Number() })),
+  nextCursor: FeedCursorResponse,
 });
+
+// GroupedFeedPage from activity.ts: the same page, split into the stretches the issue
+// spent in one column.
+const GroupedFeedPageResponse = t.Object({
+  groups: t.Array(
+    t.Object({
+      status: t.Nullable(t.String()),
+      from: t.String(),
+      to: t.Nullable(t.String()),
+      durationMs: t.Number(),
+      repeat: t.Boolean(),
+      items: t.Array(FeedItemResponse),
+    }),
+  ),
+  nextCursor: FeedCursorResponse,
+});
+
+// Both feed routes are paged the same way: a limit and the previous page's cursor.
+const feedPageQuery = t.Object({
+  limit: t.Optional(t.Numeric({ description: 'Max items per page (1-100). Default 25.' })),
+  cursor: t.Optional(t.String({ description: 'nextCursor from the previous page, for paging.' })),
+});
+
+// The cursor travels as JSON in the query string. A malformed one is ignored, which
+// serves the first page.
+function feedCursor(raw?: string): FeedCursor | null {
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as FeedCursor;
+  } catch {
+    return null;
+  }
+}
 
 // TimelineSegment from activity.ts: one stretch the issue spent in a column.
 const TimelineSegmentResponse = t.Object({
@@ -783,27 +825,11 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // pagination; the response is { items, nextCursor }, nextCursor null at the end.
   .get(
     '/issues/:issueId/feed',
-    async ({ params, query }) => {
-      const issueId = params.issueId;
-      const limit = query.limit ?? 25;
-      let before = null;
-      if (query.cursor) {
-        try {
-          before = JSON.parse(query.cursor);
-        } catch {
-          // Ignore a malformed cursor and serve the first page.
-        }
-      }
-      return listFeed(issueId, { before, limit });
-    },
+    async ({ params, query }) =>
+      listFeed(params.issueId, { before: feedCursor(query.cursor), limit: query.limit }),
     {
       params: issueParams,
-      query: t.Object({
-        limit: t.Optional(t.Numeric({ description: 'Max items per page (1-100). Default 25.' })),
-        cursor: t.Optional(
-          t.String({ description: 'nextCursor from the previous page, for paging.' }),
-        ),
-      }),
+      query: feedPageQuery,
       workItem: 'read',
       response: {
         200: FeedPageResponse,
@@ -816,6 +842,31 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Get an issue feed',
         description: "Get an issue's activity feed by its numeric id.",
         ...mcpTool('list_issue_activity'),
+      },
+    },
+  )
+
+  // The same page, split into the stretches the issue spent in one column: the
+  // grouped shape of the activity log reads this instead of grouping client-side.
+  .get(
+    '/issues/:issueId/feed/grouped',
+    async ({ params, query }) =>
+      listGroupedFeed(params.issueId, { before: feedCursor(query.cursor), limit: query.limit }),
+    {
+      params: issueParams,
+      query: feedPageQuery,
+      workItem: 'read',
+      response: {
+        200: GroupedFeedPageResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Get an issue feed grouped by status',
+        description:
+          "Get a page of an issue's activity feed, split into the stretches it spent in one status.",
       },
     },
   )

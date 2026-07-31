@@ -13,12 +13,26 @@ import { qk } from '@/services/queryKeys';
 
 // The issue's timeline (comments + activity), paged newest first. Each page is
 // 25 items; getNextPageParam yields the server's cursor until it returns null.
-export function useFeedQuery(id: number) {
+export function useFeedQuery(id: number, enabled = true) {
   return useInfiniteQuery({
     queryKey: qk.feed(id),
     queryFn: ({ pageParam }) => api.listFeed(id, { cursor: pageParam, limit: 25 }),
     initialPageParam: null as FeedCursor | null,
     getNextPageParam: (last) => last.nextCursor,
+    enabled,
+  });
+}
+
+// The same entries as useFeedQuery, split by the status the issue was in when each
+// was written. Paged the same way, and by the same cursor: a stretch that spans a page
+// boundary comes back in both pages, and the feed joins the halves.
+export function useGroupedFeedQuery(id: number, enabled = true) {
+  return useInfiniteQuery({
+    queryKey: qk.groupedFeed(id),
+    queryFn: ({ pageParam }) => api.listGroupedFeed(id, { cursor: pageParam, limit: 25 }),
+    initialPageParam: null as FeedCursor | null,
+    getNextPageParam: (last) => last.nextCursor,
+    enabled,
   });
 }
 

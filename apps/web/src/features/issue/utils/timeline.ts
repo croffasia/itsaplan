@@ -70,7 +70,7 @@ export function durationLabel(ms: number | null): string {
 // in the project's own order.
 function columnResolver(columns: Column[]) {
   const byName = new Map(columns.map((column, index) => [column.name, { column, index }]));
-  return (segment: TimelineSegment) => (segment.status ? byName.get(segment.status) : undefined);
+  return (status: string | null) => (status ? byName.get(status) : undefined);
 }
 
 // The lead and cycle time of the compact view.
@@ -79,7 +79,7 @@ export function buildLifecycleMetrics(
   columns: Column[],
 ): LifecycleMetrics {
   const columnOf = columnResolver(columns);
-  const stateOf = (segment: TimelineSegment) => columnOf(segment)?.column.stateType;
+  const stateOf = (segment: TimelineSegment) => columnOf(segment.status)?.column.stateType;
 
   const completed = segments.find((segment) => stateOf(segment) === 'completed');
   const started = segments.find((segment) => stateOf(segment) === 'started');
@@ -94,6 +94,12 @@ export function buildLifecycleMetrics(
   };
 }
 
+// The color to mark a status with, for the views that carry a name snapshot rather
+// than a column (the grouped activity log).
+export function statusColor(columns: Column[], status: string | null): string {
+  return columnResolver(columns)(status)?.column.color || FALLBACK_COLOR;
+}
+
 export function buildTimelineLayout(
   segments: TimelineSegment[],
   columns: Column[],
@@ -104,7 +110,7 @@ export function buildTimelineLayout(
   const last = segments[segments.length - 1];
   // The stretch the issue sits in after the work is over has no end and grows every
   // day, so it is drawn at a fixed width and the axis stops where it began.
-  const fixedTail = columnOf(last)?.column.stateType === 'completed' ? last : null;
+  const fixedTail = columnOf(last.status)?.column.stateType === 'completed' ? last : null;
   const startMs = Date.parse(segments[0].from);
   let endMs: number;
   if (fixedTail) endMs = Date.parse(fixedTail.from);
@@ -119,7 +125,7 @@ export function buildTimelineLayout(
   for (const segment of segments) {
     let lane = laneByStatus.get(segment.status);
     if (!lane) {
-      const found = columnOf(segment);
+      const found = columnOf(segment.status);
       lane = {
         label: segment.status ?? 'Unknown status',
         color: found?.column.color || FALLBACK_COLOR,

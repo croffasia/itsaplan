@@ -1,7 +1,7 @@
 'use client';
 
 import { useInitiativeFeedQuery } from '@/services/initiatives.service';
-import { Button } from '@/components/ui/button';
+import ShowMoreButton from '@/components/common/ShowMoreButton';
 import InitiativeFeedRow from './InitiativeFeedRow';
 
 // The initiative's activity: its own events plus its linked issues' activity, one
@@ -34,16 +34,10 @@ export default function InitiativeActivityFeed({
         ))}
       </ul>
       {feed.hasNextPage && (
-        <div className="mt-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={feed.isFetchingNextPage}
-            onClick={() => void feed.fetchNextPage()}
-          >
-            {feed.isFetchingNextPage ? 'Loading…' : 'Show more'}
-          </Button>
-        </div>
+        <ShowMoreButton
+          loading={feed.isFetchingNextPage}
+          onClick={() => void feed.fetchNextPage()}
+        />
       )}
     </>
   );

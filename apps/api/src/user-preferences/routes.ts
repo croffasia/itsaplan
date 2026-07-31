@@ -18,6 +18,7 @@ const StartPage = t.Union([
 ]);
 
 const IssueStatsView = t.Union([t.Literal('compact'), t.Literal('timeline')]);
+const IssueActivityView = t.Union([t.Literal('flat'), t.Literal('grouped')]);
 
 const PreferenceResponse = t.Object({
   timezone: t.String(),
@@ -27,6 +28,7 @@ const PreferenceResponse = t.Object({
   showChatByDefault: t.Boolean(),
   issueStatsOpen: t.Boolean(),
   issueStatsView: IssueStatsView,
+  issueActivityView: IssueActivityView,
   lastProjectId: t.Nullable(t.Number()),
   hotkeys: HotkeyCombosSchema,
 });
@@ -39,6 +41,7 @@ const PreferencePatch = t.Object({
   showChatByDefault: t.Optional(t.Boolean()),
   issueStatsOpen: t.Optional(t.Boolean()),
   issueStatsView: t.Optional(IssueStatsView),
+  issueActivityView: t.Optional(IssueActivityView),
   lastProjectId: t.Optional(t.Nullable(t.Number())),
   // The full set of the user's overrides: a shortcut left out falls back to the
   // instance binding.

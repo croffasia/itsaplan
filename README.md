@@ -72,91 +72,21 @@ stable release.
 
 ## Getting started
 
-### Local development
-
-Requirements: [Bun](https://bun.sh) 1.3+, Docker.
-
-```bash
-bun install
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env
-
-docker compose -f docker-compose.dev.yml up -d   # Postgres + MinIO only
-bun run db:migrate
-bun run dev                                      # api + web together, via Turborepo
-```
-
-api on <http://localhost:3000>, web on <http://localhost:3001>. `bun run dev` runs the
-whole workspace in watch mode from the repo root; the dev compose brings up only the
-backing services and the apps run on the host.
-
-If host port 5432 is taken, set another and update `DATABASE_URL` in `.env`:
-
-```bash
-POSTGRES_PORT=5433 docker compose -f docker-compose.dev.yml up -d
-```
-
-### Running tests
-
-Tests run against a real test Postgres, not mocks. Prepare a dedicated `*_test`
-database once, then run the suite from the repo root:
-
-```bash
-cp .env.test.example .env.test   # DATABASE_URL must name a *_test database
-bun run db:migrate:test          # migrate the test database
-bun run test                     # run all suites via Turborepo
-```
-
-The dev compose (`docker-compose.dev.yml`) provides Postgres and MinIO for these tests;
-the attachments suite needs the MinIO bucket it creates.
-
-Alternatively, run the same gate CI uses — the suite against a throwaway Postgres in a
-container built from the production image:
-
-```bash
-docker compose -f docker-compose.test.yml build
-docker compose -f docker-compose.test.yml run --rm api-test
-```
-
-`run` starts the dependencies, runs the suite, and exits with its code.
-
-### Deploy on Coolify
-
-Create a **Git Based** resource pointing at the public repository, with **Docker Compose**
-as the build pack and `docker-compose.coolify.yml` as the compose file. Set the branch to
-`release` and the commit SHA to `HEAD`.
-
-`release` is a mirror branch that the release workflow moves to each published release, so
-the deploy runs released versions only. It appears with the first published release; until
-then there is nothing to deploy from.
-
-Coolify supplies the secrets and domains through its own generated variables; nothing else
-to configure.
-
-### Self-hosting (production)
-
 Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
 
 ```bash
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
-cp .env.example .env
-# Set the public origins: API_URL, APP_URL
-# Generate each secret with `openssl rand -base64 32`:
-#   POSTGRES_PASSWORD, BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY,
-#   WORKER_INTERNAL_TOKEN, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY
-
+cp .env.example .env      # set API_URL, APP_URL, and the secrets
 docker compose up -d --build
 ```
 
-One command brings up the whole stack: Postgres, MinIO, api, worker, bot, and web. Every
-service is built from this checkout; web bakes `API_URL` into its bundle because Next.js
-inlines `NEXT_PUBLIC_*` at build time. The API applies migrations on startup, and the
+One command brings up the whole stack: Postgres, MinIO, api, worker, bot, and web. The
 first account registered becomes the instance admin.
 
-After an update, rebuild: `git pull` then `docker compose up -d --build`.
-
-[CONTRIBUTING.md](CONTRIBUTING.md) covers the commands, the layout, and the conventions.
+- [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates
+- [Deploy on Coolify](docs/coolify.md) — the same stack on a Coolify instance
+- [Local development](docs/development.md) — running the apps on the host, and the tests
 
 ## Built with
 

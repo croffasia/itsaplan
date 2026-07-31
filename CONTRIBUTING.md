@@ -16,41 +16,8 @@ By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Development setup
 
-Requirements: [Bun](https://bun.sh) 1.3+, Docker, Git.
-
-```bash
-git clone https://github.com/croffasia/itsaplan.git
-cd itsaplan
-bun install
-
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env
-
-# BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY, WORKER_INTERNAL_TOKEN in .env:
-openssl rand -base64 32
-
-# Postgres and MinIO for local development
-docker compose -f docker-compose.dev.yml up -d
-# If host port 5432 is taken, use another one and update DATABASE_URL in .env:
-#   POSTGRES_PORT=5433 docker compose -f docker-compose.dev.yml up -d
-
-bun run db:migrate
-bun run dev
-```
-
-The apps run on: web `:3001`, api `:3000`, MinIO console `:9001`.
-
-Run everything from the repository root through Turborepo. Use `bun`, never npm, yarn,
-or pnpm: the lockfile is `bun.lock`.
-
-| Command               | Purpose                                      |
-| --------------------- | -------------------------------------------- |
-| `bun run dev`         | all apps in watch mode                       |
-| `bun run typecheck`   | `tsc --noEmit` across the workspace          |
-| `bun run lint`        | ESLint                                       |
-| `bun run format`      | Prettier, writes                             |
-| `bun run db:generate` | generate a migration from the Drizzle schema |
-| `bun run db:migrate`  | apply migrations                             |
+[docs/development.md](docs/development.md) covers the requirements, the setup, and the
+commands you run from the repository root.
 
 ## Project layout
 
@@ -97,21 +64,8 @@ run `bun run auth:generate` first, then generate the migration.
 ### Tests
 
 `apps/api` has an integration suite that runs against a real Postgres, not mocks. See
-`apps/api/AGENTS.md` for how to write one.
-
-```bash
-cp .env.test.example .env.test
-bun run db:migrate:test
-bun run test
-```
-
-CI runs the same suite through `docker-compose.test.yml` against a throwaway database.
-You can run the full gate locally:
-
-```bash
-docker compose -f docker-compose.test.yml up --build \
-  --abort-on-container-exit --exit-code-from api-test
-```
+`apps/api/AGENTS.md` for how to write one, and
+[docs/development.md](docs/development.md#tests) for how to run the suite and the CI gate.
 
 ## Pull requests
 

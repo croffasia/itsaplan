@@ -1,0 +1,34 @@
+# Self-hosting
+
+Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
+
+```bash
+git clone https://github.com/croffasia/itsaplan.git
+cd itsaplan
+cp .env.example .env
+# Set the public origins: API_URL, APP_URL
+# Generate each secret with `openssl rand -base64 32`:
+#   POSTGRES_PASSWORD, BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY,
+#   WORKER_INTERNAL_TOKEN, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY
+
+docker compose up -d --build
+```
+
+One command brings up the whole stack: Postgres, MinIO, api, worker, bot, and web. Every
+service is built from this checkout; web bakes `API_URL` into its bundle because Next.js
+inlines `NEXT_PUBLIC_*` at build time. The API applies migrations on startup, and the first
+account registered becomes the instance admin.
+
+`.env.example` documents every variable, including the optional ones: legal document URLs,
+passkey and cookie settings, telemetry opt-out, and worker tuning.
+
+## Updating
+
+```bash
+git pull
+docker compose up -d --build
+```
+
+Changing `API_URL` needs a rebuild too, for the same build-time inlining reason.
+
+For a Coolify instance, see [coolify.md](coolify.md).

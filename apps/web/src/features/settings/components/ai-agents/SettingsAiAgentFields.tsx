@@ -26,9 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { type SectionNavItem } from '@/components/common/page/SectionNav';
 import { type AgentFormValue, grantedToolCount } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
-import { type AgentNavSection } from './AgentSectionNav';
 import AgentExpandedLayout from './AgentExpandedLayout';
 import AgentModelSection from './AgentModelSection';
 import AgentActionsSection from './AgentActionsSection';
@@ -356,7 +356,7 @@ export default function SettingsAiAgentFields({
   // column of borderless sections on the right, inside this component's own scroll
   // container so the nav's scroll spy can track which section is in view.
   if (expanded && value.kind === 'internal') {
-    const navSections: AgentNavSection[] = [
+    const navSections: SectionNavItem[] = [
       { id: 'basics', label: 'Basics', icon: IdCard },
       { id: 'model', label: 'Model', icon: Cpu },
       { id: 'triggers', label: 'Triggers', icon: Zap },

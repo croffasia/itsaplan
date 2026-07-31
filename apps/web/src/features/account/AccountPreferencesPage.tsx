@@ -21,6 +21,7 @@ import AccountPreferenceSelect from './components/preferences/AccountPreferenceS
 import AccountPreferencesSection from './components/preferences/AccountPreferencesSection';
 import AccountPreferencesTimezone from './components/preferences/AccountPreferencesTimezone';
 import AccountHotkeys from './components/preferences/AccountHotkeys';
+import AccountPreferencesNav from './components/preferences/AccountPreferencesNav';
 import AccountPreferencesSaveState from './components/preferences/AccountPreferencesSaveState';
 
 const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
@@ -71,8 +72,9 @@ export default function AccountPreferencesPage() {
       title="Preferences"
       description="How the app looks and behaves for you. Every change saves right away and applies wherever you sign in."
       actions={<AccountPreferencesSaveState saving={update.isPending} />}
+      nav={<AccountPreferencesNav />}
     >
-      <AccountPreferencesSection title="Appearance">
+      <AccountPreferencesSection id="appearance" title="Appearance">
         <AccountPreferenceRow
           label="Theme"
           description="Match system follows your operating system setting."
@@ -87,6 +89,7 @@ export default function AccountPreferencesPage() {
       </AccountPreferencesSection>
 
       <AccountPreferencesSection
+        id="date-and-time"
         title="Date and time"
         description="Timestamps are stored in UTC and shown in the zone you pick here."
       >
@@ -100,6 +103,7 @@ export default function AccountPreferencesPage() {
       </AccountPreferencesSection>
 
       <AccountPreferencesSection
+        id="navigation"
         title="Navigation"
         description="Where the app takes you, and how issues open."
       >
@@ -128,6 +132,7 @@ export default function AccountPreferencesPage() {
       </AccountPreferencesSection>
 
       <AccountPreferencesSection
+        id="issue-settings"
         title="Issue settings"
         description="How the stats and the activity log of an issue start out. Switching them while an issue is open does not change these."
       >
@@ -165,7 +170,7 @@ export default function AccountPreferencesPage() {
         </AccountPreferenceRow>
       </AccountPreferencesSection>
 
-      <AccountPreferencesSection title="AI chat">
+      <AccountPreferencesSection id="ai-chat" title="AI chat">
         <AccountPreferenceRow
           label="Show chat by default"
           description="The chat button stays on screen in a project. The chat window opens only when you click it."
@@ -179,6 +184,7 @@ export default function AccountPreferencesPage() {
       </AccountPreferencesSection>
 
       <AccountPreferencesSection
+        id="shortcuts"
         title="Keyboard shortcuts"
         description="Press Change, then the keys you want. Reset takes a shortcut back to the one set for this instance."
       >

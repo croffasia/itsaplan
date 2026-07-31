@@ -5,16 +5,19 @@ import type { ReactNode } from 'react';
 // page separates its blocks; the rows carry no box of their own, so every control
 // lines up down the page instead of sitting in stacked cards.
 export default function AccountPreferencesSection({
+  id,
   title,
   description,
   children,
 }: {
+  // The anchor the section rail scrolls to.
+  id: string;
   title: string;
   description?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="border-t py-8 first:border-t-0 first:pt-0">
+    <section id={id} className="scroll-mt-4 border-t py-8 first:border-t-0 first:pt-0">
       <div className="mb-1">
         <h2 className="text-sm font-medium">{title}</h2>
         {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}

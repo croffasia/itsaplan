@@ -45,88 +45,104 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Tailwind's default line-heights are tuned for prose at 16px; the app runs on
+     text-xs/text-sm, where they leave multi-line text cramped. Body sizes get 1.5+,
+     headings tighten as they grow. */
+  --text-xs--line-height: 1.5;
+  --text-sm--line-height: 1.5;
+  --text-base--line-height: 1.6;
+  --text-lg--line-height: 1.55;
+  --text-xl--line-height: 1.4;
+  --text-2xl--line-height: 1.25;
+  --text-2xl--letter-spacing: -0.01em;
+  --text-3xl--line-height: 1.15;
+  --text-3xl--letter-spacing: -0.02em;
+  --text-4xl--line-height: 1.1;
+  --text-4xl--letter-spacing: -0.025em;
 }
 
+/* Grayscale ramps with no hue, and the page never sits on pure white or pure black.
+   Text pairs are measured with APCA, not eyeballed: see DESIGN.md for the thresholds. */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.18 0 0);
+  --card: oklch(0.998 0 0);
+  --card-foreground: oklch(0.18 0 0);
+  --popover: oklch(0.998 0 0);
+  --popover-foreground: oklch(0.18 0 0);
+  --primary: oklch(0.22 0 0);
   --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --secondary: oklch(0.96 0 0);
+  --secondary-foreground: oklch(0.22 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.955 0 0);
+  --accent-foreground: oklch(0.22 0 0);
+  --destructive: oklch(0.505 0.21 27);
+  --border: oklch(0.905 0 0);
+  --input: oklch(0.88 0 0);
+  --ring: oklch(0.62 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar: oklch(0.972 0 0);
+  --sidebar-foreground: oklch(0.18 0 0);
+  --sidebar-primary: oklch(0.22 0 0);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar-accent: oklch(0.94 0 0);
+  --sidebar-accent-foreground: oklch(0.22 0 0);
+  --sidebar-border: oklch(0.905 0 0);
+  --sidebar-ring: oklch(0.62 0 0);
   --priority-low: #6b7280;
   --priority-medium: #eab308;
   --priority-high: #f97316;
   --priority-urgent: #f2683c;
-  --kanban-card: oklch(0.975 0 0);
-  --kanban-card-hover: oklch(0.945 0 0);
+  --kanban-card: oklch(0.965 0 0);
+  --kanban-card-hover: oklch(0.94 0 0);
   --kanban-card-selected: oklch(0.925 0.04 265);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
+  --background: oklch(0.155 0 0);
+  --foreground: oklch(0.965 0 0);
   --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --card-foreground: oklch(0.965 0 0);
+  --popover: oklch(0.215 0 0);
+  --popover-foreground: oklch(0.965 0 0);
+  --primary: oklch(0.93 0 0);
+  --primary-foreground: oklch(0.18 0 0);
+  --secondary: oklch(0.27 0 0);
+  --secondary-foreground: oklch(0.965 0 0);
+  --muted: oklch(0.27 0 0);
+  --muted-foreground: oklch(0.85 0 0);
+  --accent: oklch(0.28 0 0);
+  --accent-foreground: oklch(0.965 0 0);
+  --destructive: oklch(0.77 0.18 22);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 18%);
+  --ring: oklch(0.62 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar: oklch(0.185 0 0);
+  --sidebar-foreground: oklch(0.965 0 0);
+  --sidebar-primary: oklch(0.93 0 0);
+  --sidebar-primary-foreground: oklch(0.18 0 0);
+  --sidebar-accent: oklch(0.28 0 0);
+  --sidebar-accent-foreground: oklch(0.965 0 0);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: oklch(0.62 0 0);
   --priority-low: #9ca3af;
   --priority-medium: #eab308;
   --priority-high: #f97316;
   --priority-urgent: #f2683c;
-  --kanban-card: oklch(0.185 0 0);
-  --kanban-card-hover: oklch(0.225 0 0);
+  --kanban-card: oklch(0.195 0 0);
+  --kanban-card-hover: oklch(0.235 0 0);
   --kanban-card-selected: oklch(0.31 0.07 266);
 }
 
@@ -192,7 +208,7 @@
    has to read as plain text with light formatting, not a boxed widget. */
 .md-content {
   font-size: var(--text-sm);
-  line-height: 1.5;
+  line-height: 1.6;
 }
 .md-content > * + * {
   margin-top: 0.5em;
@@ -208,7 +224,7 @@
 .md-content h2,
 .md-content h3 {
   font-weight: 600;
-  line-height: 1.3;
+  line-height: 1.25;
 }
 .md-content h1 {
   font-size: 1.25em;
@@ -391,17 +407,11 @@
 .sticker-note .md-content ul[data-type='taskList'] input[type='checkbox'] {
   accent-color: #000;
 }
-/* React Flow's default edge stroke is too dark on the dark canvas. On light it
-   matches the muted foreground; on dark that is still too dim against the near-black
-   canvas, so lift it to a brighter grey. */
+/* React Flow's default edge stroke is too dark on the canvas in both themes. */
 .react-flow__edge-path,
 .react-flow__connection-path {
   stroke: var(--muted-foreground);
   stroke-width: 1.5;
-}
-.dark .react-flow__edge-path,
-.dark .react-flow__connection-path {
-  stroke: oklch(0.85 0 0);
 }
 .md-content img {
   max-width: 100%;

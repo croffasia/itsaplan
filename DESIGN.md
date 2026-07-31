@@ -16,8 +16,9 @@ not aid comprehension.
 
 ## Tokens (intent-named; values live in `globals.css`)
 
-Colors are OKLCH neutral ramps with no brand hue. Light and dark are both first-class
-(`.dark` class toggles; the app ships a theme switch).
+Colors are OKLCH grayscale ramps with no brand hue; no surface sits on pure white or pure
+black. Light and dark are both first-class (`.dark` class toggles; the app ships a theme
+switch).
 
 - `background` / `foreground` — page base and primary text.
 - `card` / `card-foreground` — a raised surface (modals, popovers, kanban detail).
@@ -28,7 +29,8 @@ Colors are OKLCH neutral ramps with no brand hue. Light and dark are both first-
 - `border` — hairline; in dark it is `white / 10%`, i.e. a tint, never flat gray.
 - `primary` — high-contrast solid (primary buttons); near-black in light, near-white
   in dark.
-- `destructive` — error / overdue / delete only.
+- `destructive` — error / overdue / delete only. It serves two roles at once: `text-destructive`
+  on the page, and a fill under the white label of a destructive button or badge.
 - `ring` — focus ring (keyboard a11y).
 - `chart-1…5` — a neutral grayscale ramp for charts. For categorical series that need
   to be told apart (priority, assignee), widgets use their own small hue palette; for
@@ -40,6 +42,10 @@ Colors are OKLCH neutral ramps with no brand hue. Light and dark are both first-
 
 - **Type:** Inter Variable (`--font-sans`, also `--font-heading`). Weight and size carry
   hierarchy — do not add display faces. Body ≥ 14px in dense chrome, ≥ 16px for reading.
+- **Line-height:** the `--text-*--line-height` tokens in `globals.css` replace Tailwind's
+  defaults, which are tuned for 16px prose and leave `text-xs`/`text-sm` cramped. Body sizes
+  run 1.5–1.6; headings tighten as they grow (1.25 at `2xl` down to 1.1 at `4xl`) and take
+  negative tracking from `2xl` up.
 - **Radius:** base `--radius: 0.625rem`; scale `sm .6 · md .8 · lg 1 · xl 1.4 · 2xl 1.8`.
   Radius scales with element size; keep `padding ≥ radius`.
 - **Spacing:** 8pt grid (4 as half-step). Proximity encodes relationship: inside a group
@@ -55,7 +61,10 @@ Colors are OKLCH neutral ramps with no brand hue. Light and dark are both first-
 - **Depth over lines.** Raise a surface with a 3–5% background shift and a soft shadow,
   not a 1px border.
 - **Contrast is measured, not eyeballed** — APCA: body `Lc ≥ 75`, large/bold `≥ 45`,
-  non-text UI `≥ 30`.
+  non-text UI `≥ 30`. `destructive` in dark reaches only ~53 in each of its two roles: as it
+  lightens it reads better as text on the near-black page and worse under the white label of
+  a destructive button, so it sits where those two curves cross. Both roles are above the
+  large/bold threshold; red at that chroma cannot do better without splitting the token.
 - **Motion is restrained.** Hover 120–200ms, entrance 250–400ms; animate only
   `transform`/`opacity`; honor `prefers-reduced-motion`.
 

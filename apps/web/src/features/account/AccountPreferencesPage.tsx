@@ -173,11 +173,11 @@ export default function AccountPreferencesPage() {
       <AccountPreferencesSection
         id="notifications"
         title="Notifications"
-        description="Watching an issue is how you receive its comments and status changes. Being assigned or mentioned reaches you either way."
+        description="Watching an issue brings you its comments and status changes."
       >
         <AccountPreferenceRow
           label="Watch issues automatically"
-          description="Subscribes you to the issues you create, are assigned, comment on, or are mentioned in. You can always unwatch an issue — that sticks, even if you comment on it again."
+          description="The ones you create, get assigned, comment on, or are mentioned in."
         >
           <Switch
             checked={prefs.autoWatch}

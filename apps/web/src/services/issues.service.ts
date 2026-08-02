@@ -2,10 +2,10 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   api,
   type BulkIssuePatch,
-  type Issue,
   type IssueFieldValueInput,
   type IssuePatch,
   type NewIssueInput,
+  type BoardIssue,
   type BoardIssues,
 } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
@@ -68,7 +68,7 @@ export function useUpdateIssue(projectKey: string | null) {
       if (prev) {
         qc.setQueryData<BoardIssues>(key, {
           ...prev,
-          issues: prev.issues.map((t) => (t.id === id ? ({ ...t, ...patch } as Issue) : t)),
+          issues: prev.issues.map((t) => (t.id === id ? ({ ...t, ...patch } as BoardIssue) : t)),
         });
       }
       return { prev, key };
@@ -204,7 +204,9 @@ export function useBulkUpdateIssues(projectKey: string) {
         const idSet = new Set(ids);
         qc.setQueryData<BoardIssues>(key, {
           ...prev,
-          issues: prev.issues.map((t) => (idSet.has(t.id) ? ({ ...t, ...patch } as Issue) : t)),
+          issues: prev.issues.map((t) =>
+            idSet.has(t.id) ? ({ ...t, ...patch } as BoardIssue) : t,
+          ),
         });
       }
       return { prev, key };

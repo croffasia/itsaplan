@@ -9,11 +9,13 @@ import { iso } from '../shared/lib';
 // stores and returns the subscription.
 
 // The event types a subscription can listen to. Keep in sync with the events the
-// delivery side emits (issues/store.ts, issues/activity.ts) and the frontend list
-// (apps/web src/lib/api.ts). issue.updated fires on any field change; the granular
-// issue.assigned / issue.state_changed / issue.label_changed fire in addition,
-// only when that specific field changes on an existing issue. issue.state_changed
-// fires when the issue moves to a different state (column).
+// delivery side emits (issues/store.ts, issues/activity.ts, issues/links.ts) and
+// the frontend list (apps/web src/lib/api.ts). issue.updated fires on any field
+// change; the granular issue.assigned / issue.state_changed / issue.label_changed
+// fire in addition, only when that specific field changes on an existing issue.
+// issue.state_changed fires when the issue moves to a different state (column).
+// issue.link_changed fires for both issues of an added or removed relation, and
+// without issue.updated: no field of either issue changed.
 export const WEBHOOK_EVENT_TYPES = [
   'issue.created',
   'issue.updated',
@@ -21,6 +23,7 @@ export const WEBHOOK_EVENT_TYPES = [
   'issue.assigned',
   'issue.state_changed',
   'issue.label_changed',
+  'issue.link_changed',
   'comment.created',
 ] as const;
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];

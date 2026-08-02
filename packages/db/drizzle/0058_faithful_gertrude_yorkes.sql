@@ -1,0 +1,2 @@
+ALTER TABLE "issue_link" DROP CONSTRAINT "issue_link_source_issue_id_target_issue_id_kind_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "issue_link_pair_kind_idx" ON "issue_link" USING btree (least("source_issue_id", "target_issue_id"),greatest("source_issue_id", "target_issue_id"),"kind");

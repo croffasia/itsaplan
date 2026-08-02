@@ -5,8 +5,9 @@ export const qk = {
   projects: ['projects'] as const,
   // The board scaffold (columns/types/labels/fields/viewer) for a project.
   project: (projectKey: string) => ['workItems', projectKey] as const,
-  // The board's issues + change marker for a project. Split from the scaffold so
-  // issue writes and live-refresh touch only the issues, not the scaffold.
+  // The board's issues, their relations and the change marker for a project.
+  // Split from the scaffold so issue writes and live-refresh touch only the
+  // issues, not the scaffold.
   boardIssues: (projectKey: string) => ['boardIssues', projectKey] as const,
   // A project's archived issues and its auto-archive settings (the Archive section).
   archivedIssues: (projectKey: string) => ['archivedIssues', projectKey] as const,

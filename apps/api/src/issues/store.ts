@@ -4,6 +4,7 @@ import {
   issue,
   issueActivity,
   issueLabel,
+  issueLink,
   label,
   projectColumn,
   issueType,
@@ -534,17 +535,24 @@ async function loadSnapshot(id: number): Promise<(IssueSnapshot & { projectId: n
 }
 
 export async function getIssue(id: number): Promise<IssueRow | null> {
+  return (await getIssues([id]))[0] ?? null;
+}
+
+// Several issues at once, in no particular order. The per-issue enrichment is
+// batched, so this costs what a single getIssue does however many ids it is given
+// — which is what makes it worth using for the writes that touch two issues.
+export async function getIssues(ids: number[]): Promise<IssueRow[]> {
+  if (ids.length === 0) return [];
   const rows = await db
     .select({ issue, projectKey: projectTable.key })
     .from(issue)
     .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
-    .where(eq(issue.id, id));
-  if (!rows[0]) return null;
-  const mapped = mapIssue(rows[0].issue, rows[0].projectKey);
-  await attachLabels([mapped]);
-  await attachStatusSince([mapped]);
-  await attachInitiatives([mapped]);
-  return mapped;
+    .where(inArray(issue.id, ids));
+  const issues = rows.map((row) => mapIssue(row.issue, row.projectKey));
+  await attachLabels(issues);
+  await attachStatusSince(issues);
+  await attachInitiatives(issues);
+  return issues;
 }
 
 // Loads an issue by its project-scoped sequence number (the human number in a URL
@@ -987,6 +995,9 @@ export async function bulkDeleteIssues(
 // The board's marker: changes when any issue or initiative in the project is
 // created, updated, or deleted. Issue label changes bump updated_at too (see
 // setIssueLabels). Initiative metadata is part of the work-items board payload.
+// Links are part of it as well and change no issue's updated_at, so they carry
+// their own count and highest id: adding one raises the id, removing one lowers
+// the count.
 export async function projectBoardRev(projectId: number): Promise<string> {
   const [row] = await db
     .select({
@@ -1001,7 +1012,28 @@ export async function projectBoardRev(projectId: number): Promise<string> {
     // the count, which moves the marker and makes the board refetch it away.
     .from(issue)
     .where(and(eq(issue.projectId, projectId), isNull(issue.archivedAt)));
-  return `${row?.n ?? 0}:${row?.m ?? ''}:${row?.initiativeCount ?? 0}:${row?.initiativeMax ?? ''}`;
+
+  // Separate from the issue aggregate: joining the links onto it would multiply
+  // the issue rows, and a subquery over both tables cannot tell the two `id`
+  // columns apart (Drizzle writes an unqualified column into a raw fragment).
+  const [links] = await db
+    .select({ count: sql<number>`count(*)`, max: sql<number | null>`max(${issueLink.id})` })
+    .from(issueLink)
+    .where(
+      inArray(
+        issueLink.sourceIssueId,
+        db.select({ id: issue.id }).from(issue).where(eq(issue.projectId, projectId)),
+      ),
+    );
+
+  return [
+    row?.n ?? 0,
+    row?.m ?? '',
+    row?.initiativeCount ?? 0,
+    row?.initiativeMax ?? '',
+    links?.count ?? 0,
+    links?.max ?? '',
+  ].join(':');
 }
 
 // One issue's marker: changes on any edit or new timeline entry (comment or

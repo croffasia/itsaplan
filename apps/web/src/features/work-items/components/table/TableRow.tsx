@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useDndContext, useDraggable, useDroppable } from '@dnd-kit/core';
-import { type ProjectDetail, type Issue } from '@/lib/api';
+import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -10,6 +10,7 @@ import { DropLine } from '../shared/DropLine';
 import { columnKey, type OrderedColumn } from '../../utils/table';
 import { TableBuiltinCell } from './TableBuiltinCell';
 import { TableCustomCell } from './TableCustomCell';
+import { TableRowLinks } from './TableRowLinks';
 
 // A draggable, droppable table row. Dragging it starts a move; dropping another
 // row on it inserts before this one (onDrop). A click (no drag) opens it.
@@ -25,9 +26,10 @@ export function TableRow({
   dropDisabled,
   onDrop,
   onClick,
+  onOpenIssue,
 }: {
   project: ProjectDetail;
-  issue: Issue;
+  issue: BoardIssue;
   orderedColumns: OrderedColumn[];
   maps: Maps;
   showId: boolean;
@@ -42,6 +44,8 @@ export function TableRow({
   dropDisabled: boolean;
   onDrop: (draggedId: number) => void;
   onClick: () => void;
+  // Opens a linked issue from a sub-row.
+  onOpenIssue: (id: number) => void;
 }) {
   // Drag is disabled on phones so a touch scrolls the list instead of picking up
   // a row (see the `sm:touch-none` below), and without work_items edit (reordering
@@ -101,6 +105,8 @@ export function TableRow({
             <TableCustomCell key={columnKey(c)} field={c.field} issue={issue} />
           ),
         )}
+
+        <TableRowLinks links={issue.links} maps={maps} onOpenIssue={onOpenIssue} />
       </div>
     </IssueContextMenu>
   );

@@ -860,6 +860,42 @@ export const issueLabel = pgTable(
   (t) => [primaryKey({ columns: [t.issueId, t.labelId] })],
 );
 
+// A relation between two issues of the same project. One row per relation: the
+// inverse side ("blocked by" for 'blocks', "duplicated by" for 'duplicates') is
+// read from the same row by matching target_issue_id.
+export const issueLink = pgTable(
+  'issue_link',
+  {
+    id: serial('id').primaryKey(),
+    sourceIssueId: integer('source_issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    targetIssueId: integer('target_issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    kind: text('kind').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('issue_link_kind_check', sql`${t.kind} IN ('blocks', 'relates', 'duplicates')`),
+    check('issue_link_self_check', sql`${t.sourceIssueId} <> ${t.targetIssueId}`),
+    // A pair of issues carries a kind at most once, in either order: "A blocks B"
+    // and "B blocks A" are the same relation stated twice and contradict each
+    // other. Indexing the ordered pair makes the database reject the second one,
+    // which a read-then-insert in the application cannot do without a race.
+    uniqueIndex('issue_link_pair_kind_idx').on(
+      sql`least(${t.sourceIssueId}, ${t.targetIssueId})`,
+      sql`greatest(${t.sourceIssueId}, ${t.targetIssueId})`,
+      t.kind,
+    ),
+    // The pair index is on least/greatest, so it serves neither column on its
+    // own; these back the reads that match one side — an issue's own relations
+    // (either side) and the board's marker (the source side).
+    index('issue_link_source_idx').on(t.sourceIssueId),
+    index('issue_link_target_idx').on(t.targetIssueId),
+  ],
+);
+
 export const issueFieldValue = pgTable(
   'issue_field_value',
   {

@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { DRAG_ACTIVATION_DISTANCE } from '@/lib/dnd';
-import { type ProjectDetail, type Issue } from '@/lib/api';
+import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -24,7 +24,7 @@ export function BoardCard({
   readOnly,
 }: {
   project: ProjectDetail;
-  issue: Issue;
+  issue: BoardIssue;
   maps: Maps;
   properties: PropertyKey[];
   onOpen: (id: number) => void;
@@ -86,7 +86,7 @@ export function BoardCard({
           selected && 'kanban-card-selected',
         )}
       >
-        <IssueCardBody issue={issue} maps={maps} properties={properties} />
+        <IssueCardBody issue={issue} maps={maps} properties={properties} onOpen={onOpen} />
       </div>
     </IssueContextMenu>
   );

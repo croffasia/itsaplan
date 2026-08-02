@@ -17,6 +17,7 @@ import ViewTabs from '@/components/layout/ViewTabs';
 import ViewIconPicker from '@/components/layout/ViewIconPicker';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
+import { IssueLinksProvider } from './context/useIssueLinks';
 import KanbanBoard from './components/kanban/KanbanBoard';
 import TableView from './components/table/TableView';
 import TimelineView from './components/timeline/TimelineView';
@@ -122,6 +123,7 @@ export default function WorkItemsPage() {
             {...viewProps}
             collapsedGroups={collapsedTimelineGroups}
             onToggleGroup={toggleTimelineGroup}
+            viewId={editor.activeViewId}
           />
         );
       case 'calendar':
@@ -201,7 +203,11 @@ export default function WorkItemsPage() {
         </div>
       )}
 
-      <div className="relative flex-1 overflow-hidden">{renderView()}</div>
+      <div className="relative flex-1 overflow-hidden">
+        <IssueLinksProvider issues={project.issues} enabled={settings.showLinks}>
+          {renderView()}
+        </IssueLinksProvider>
+      </div>
     </>
   );
 }

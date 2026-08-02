@@ -77,7 +77,7 @@ export function issueColor(issue: Issue, maps: Maps): string {
 // no due date, …) always sort last, regardless of direction, matching Linear.
 // Ties fall back to the manual position so the order is stable. 'manual' returns
 // the input unchanged (already position-ordered by the API).
-export function sortIssues(issues: Issue[], sort: Sort, project: ProjectDetail): Issue[] {
+export function sortIssues<T extends Issue>(issues: T[], sort: Sort, project: ProjectDetail): T[] {
   if (sort.field === 'manual') return issues;
 
   const columnIndex = new Map(project.columns.map((c, i) => [c.id, i]));
@@ -268,12 +268,12 @@ export function groupKeyOf(issue: Issue, group: GroupField): string {
 // Issues bucketed by group key, preserving order. The map always has an (empty)
 // entry for every group in `groups`; a issue whose key is not among them (only
 // possible if the project data is inconsistent) is dropped.
-export function groupIssues(
+export function groupIssues<T extends Issue>(
   groups: IssueGroup[],
-  issues: Issue[],
+  issues: T[],
   group: GroupField,
-): Map<string, Issue[]> {
-  const byGroup = new Map<string, Issue[]>();
+): Map<string, T[]> {
+  const byGroup = new Map<string, T[]>();
   for (const g of groups) byGroup.set(g.key, []);
   for (const issue of issues) byGroup.get(groupKeyOf(issue, group))?.push(issue);
   return byGroup;
@@ -283,16 +283,16 @@ export function groupIssues(
 // preserved. Every subgroup/group cell from the inputs gets an (empty) entry, so
 // callers can iterate `subgroups` x `groups` without missing-key checks. Used by
 // the swimlane Project and the sub-sectioned Table.
-export function nestIssues(
+export function nestIssues<T extends Issue>(
   subgroups: IssueGroup[],
   groups: IssueGroup[],
-  issues: Issue[],
+  issues: T[],
   subgroup: GroupField,
   group: GroupField,
-): Map<string, Map<string, Issue[]>> {
-  const out = new Map<string, Map<string, Issue[]>>();
+): Map<string, Map<string, T[]>> {
+  const out = new Map<string, Map<string, T[]>>();
   for (const sg of subgroups) {
-    const inner = new Map<string, Issue[]>();
+    const inner = new Map<string, T[]>();
     for (const g of groups) inner.set(g.key, []);
     out.set(sg.key, inner);
   }

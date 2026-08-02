@@ -189,12 +189,13 @@ function matchCondition(
 }
 
 // Returns the issues that satisfy every effective condition in the set. An
-// empty or all-empty set returns the input unchanged.
-export function applyFilters(
-  issues: Issue[],
+// empty or all-empty set returns the input unchanged. Generic over the issue
+// shape so a board issue keeps its relations through the filter.
+export function applyFilters<T extends Issue>(
+  issues: T[],
   filters: FilterSet | null | undefined,
   project: ProjectDetail,
-): Issue[] {
+): T[] {
   if (!isActiveFilterSet(filters)) return issues;
   const columnStateType = new Map(project.columns.map((c) => [c.id, c.stateType]));
   const active = filters!.conditions.filter(isEffectiveCondition);

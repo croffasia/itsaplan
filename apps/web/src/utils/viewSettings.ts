@@ -88,6 +88,10 @@ export interface ViewSettings {
   // ever equals `group`.
   subgroup: GroupField;
   showEmptyGroups: boolean;
+  // The issues' relations: rows under a Kanban card, sub-rows under a Table or
+  // Timeline row. Off by default — the relations are an extra load, and most
+  // boards do not use them.
+  showLinks: boolean;
   properties: PropertyKey[];
   timelineScale: TimelineScale;
   // Initial Timeline group state. Individual group toggles are transient and do
@@ -113,6 +117,7 @@ const DEFAULT_SORT: Sort = { field: 'manual', dir: 'asc' };
 // Options shared by every view; group, subgroup and properties differ per view.
 const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> = {
   showEmptyGroups: true,
+  showLinks: false,
   timelineScale: 'week',
   timelineCollapseAll: false,
   calendarDateField: 'dueDate',
@@ -226,6 +231,7 @@ export function normalizeViewSettings(
     group,
     subgroup: rawSubgroup !== 'none' && rawSubgroup !== group ? rawSubgroup : 'none',
     showEmptyGroups: typeof s.showEmptyGroups === 'boolean' ? s.showEmptyGroups : d.showEmptyGroups,
+    showLinks: typeof s.showLinks === 'boolean' ? s.showLinks : d.showLinks,
     // Stored order is preserved as-is (it is the Table column order, reorderable
     // by drag); only unknown entries are dropped. A since-deleted custom field's
     // key stays until the next reorder, and is ignored when rendering.

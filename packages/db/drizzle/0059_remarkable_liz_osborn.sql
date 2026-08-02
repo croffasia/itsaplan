@@ -1,0 +1,1 @@
+CREATE INDEX "issue_link_source_idx" ON "issue_link" USING btree ("source_issue_id");

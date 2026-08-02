@@ -1,5 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
-import { type ProjectDetail, type Issue } from '@/lib/api';
+import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
@@ -23,7 +23,7 @@ export function SwimlaneCell({
   onMoveIssue,
 }: {
   project: ProjectDetail;
-  issues: Issue[];
+  issues: BoardIssue[];
   maps: Maps;
   properties: PropertyKey[];
   cellKey: string;

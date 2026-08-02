@@ -68,6 +68,18 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     always: false,
   },
   {
+    key: 'link_issues',
+    label: 'Link issues',
+    description: 'Mark an issue as blocking, blocked by, duplicating, or related to another one.',
+    always: false,
+  },
+  {
+    key: 'unlink_issues',
+    label: 'Unlink issues',
+    description: 'Remove a relation between two issues.',
+    always: false,
+  },
+  {
     key: 'add_attachment',
     label: 'Add attachments',
     description: 'Attach a file to an issue from a URL or inline content.',

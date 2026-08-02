@@ -142,6 +142,7 @@ export default function TableView({
             dropDisabled={!manualOrder && grouped}
             onDrop={(draggedId) => moveIssue(draggedId, item.assign, item.bucket, item.index)}
             onClick={() => onOpenIssue(item.issue.id)}
+            onOpenIssue={onOpenIssue}
           />
         );
     }

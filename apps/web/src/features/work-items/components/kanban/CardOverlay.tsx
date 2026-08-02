@@ -1,5 +1,5 @@
 import { DragOverlay } from '@dnd-kit/core';
-import { type Issue } from '@/lib/api';
+import { type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import type { PropertyKey } from '@/utils/viewSettings';
 import { IssueCardBody } from './IssueCardBody';
@@ -14,7 +14,7 @@ export function CardOverlay({
   properties,
 }: {
   activeId: number | null;
-  issues: Issue[];
+  issues: BoardIssue[];
   maps: Maps;
   properties: PropertyKey[];
 }) {

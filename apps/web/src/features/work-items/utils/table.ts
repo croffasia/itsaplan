@@ -1,4 +1,4 @@
-import { type CustomField, type Issue, type IssuePatch } from '@/lib/api';
+import { type BoardIssue, type CustomField, type Issue, type IssuePatch } from '@/lib/api';
 import { groupIssues, mergeAssign, nestIssues, type IssueGroup } from '@/utils/project';
 import {
   customFieldId,
@@ -66,7 +66,7 @@ export type FlatItem =
     }
   | {
       kind: 'row';
-      issue: Issue;
+      issue: BoardIssue;
       index: number;
       assign: IssuePatch | null;
       bucket: Issue[];
@@ -85,7 +85,7 @@ export function buildTableItems({
 }: {
   groups: IssueGroup[];
   subGroups: IssueGroup[];
-  sorted: Issue[];
+  sorted: BoardIssue[];
   settings: ViewSettings;
   collapsed: Set<string>;
 }): FlatItem[] {

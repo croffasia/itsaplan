@@ -1,14 +1,20 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
-import { buildTimeline, LABEL_W, SCALE_DAY_W } from '../../utils/timeline';
+import { useTimelineLabelWidth } from '../../hooks/useTimelineLabelWidth';
+import { buildTimeline, labelWidthKey, SCALE_DAY_W } from '../../utils/timeline';
 import { TimelineHeader } from './TimelineHeader';
+import { TimelineLabelResizer } from './TimelineLabelResizer';
 import { TimelineGroupRow } from './TimelineGroupRow';
 import { TimelineIssueRow } from './TimelineIssueRow';
+import { TimelineLinkRows } from './TimelineLinkRows';
 
 interface TimelineViewProps extends WorkItemsViewProps {
   collapsedGroups?: Set<string>;
   onToggleGroup?: (groupKey: string) => void;
+  // The saved view the timeline is open on, which scopes the label width. Absent
+  // where there are no view tabs (an initiative's issues, a public share).
+  viewId?: number | null;
 }
 
 export default function TimelineView({
@@ -17,6 +23,7 @@ export default function TimelineView({
   onOpenIssue,
   collapsedGroups,
   onToggleGroup,
+  viewId,
   readOnly,
 }: TimelineViewProps) {
   const [localCollapsedGroups, setLocalCollapsedGroups] = useState<Set<string>>(new Set());
@@ -32,6 +39,9 @@ export default function TimelineView({
       });
     });
   const DAY_W = SCALE_DAY_W[settings.timelineScale];
+  const { width: titleWidth, setWidth: setTitleWidth } = useTimelineLabelWidth(
+    labelWidthKey(project.project.key, viewId ?? null),
+  );
   const maps = buildMaps(project);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { preview, dropGroupKey, beginDrag } = useTimelineDrag({
@@ -55,8 +65,10 @@ export default function TimelineView({
     return () => ro.disconnect();
   }, []);
 
-  // Narrow the sticky label column on small screens so the day track is usable.
-  const labelW = viewportW < 640 ? 140 : LABEL_W;
+  // Narrow the sticky label column on small screens so the day track is usable;
+  // on wider ones it is the width the grip was dragged to.
+  const narrow = viewportW < 640;
+  const labelW = narrow ? 140 : titleWidth;
   const { rows, days, months, trackWidth, todayLeft, todayInRange, dayLines, spanToRect } =
     buildTimeline({
       project,
@@ -70,7 +82,7 @@ export default function TimelineView({
 
   return (
     <div ref={scrollRef} className="h-full overflow-auto">
-      <div style={{ width: labelW + trackWidth }}>
+      <div className="relative" style={{ width: labelW + trackWidth }}>
         <TimelineHeader
           labelW={labelW}
           trackWidth={trackWidth}
@@ -78,6 +90,7 @@ export default function TimelineView({
           months={months}
           days={days}
         />
+        {!narrow && <TimelineLabelResizer labelW={labelW} onResize={setTitleWidth} />}
 
         {rows.length === 0 && (
           <div className="p-8 text-center text-sm text-muted-foreground">
@@ -113,25 +126,38 @@ export default function TimelineView({
             active ? preview!.end : span.end,
           );
           return (
-            <TimelineIssueRow
-              key={issue.id}
-              project={project}
-              issue={issue}
-              span={span}
-              rect={rect}
-              color={issueColor(issue, maps)}
-              active={active}
-              isDrop={dropGroupKey === row.groupKey}
-              groupKey={row.groupKey}
-              labelW={labelW}
-              trackWidth={trackWidth}
-              dayLines={dayLines}
-              todayInRange={todayInRange}
-              todayLeft={todayLeft}
-              readOnly={readOnly}
-              onBeginDrag={beginDrag}
-              onOpen={onOpenIssue}
-            />
+            <Fragment key={issue.id}>
+              <TimelineIssueRow
+                project={project}
+                issue={issue}
+                span={span}
+                rect={rect}
+                color={issueColor(issue, maps)}
+                active={active}
+                isDrop={dropGroupKey === row.groupKey}
+                groupKey={row.groupKey}
+                labelW={labelW}
+                trackWidth={trackWidth}
+                dayLines={dayLines}
+                todayInRange={todayInRange}
+                todayLeft={todayLeft}
+                readOnly={readOnly}
+                onBeginDrag={beginDrag}
+                onOpen={onOpenIssue}
+              />
+              <TimelineLinkRows
+                links={issue.links}
+                groupKey={row.groupKey}
+                maps={maps}
+                labelW={labelW}
+                trackWidth={trackWidth}
+                dayLines={dayLines}
+                todayInRange={todayInRange}
+                todayLeft={todayLeft}
+                spanToRect={spanToRect}
+                onOpen={onOpenIssue}
+              />
+            </Fragment>
           );
         })}
       </div>

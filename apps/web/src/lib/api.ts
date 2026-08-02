@@ -1194,6 +1194,7 @@ export type WebhookEventType =
   | 'issue.assigned'
   | 'issue.state_changed'
   | 'issue.label_changed'
+  | 'issue.link_changed'
   | 'comment.created';
 
 export const WEBHOOK_EVENT_TYPES: WebhookEventType[] = [
@@ -1203,6 +1204,7 @@ export const WEBHOOK_EVENT_TYPES: WebhookEventType[] = [
   'issue.assigned',
   'issue.state_changed',
   'issue.label_changed',
+  'issue.link_changed',
   'comment.created',
 ];
 
@@ -1277,6 +1279,8 @@ export type ActivityAction =
   | 'due_date'
   | 'label_add'
   | 'label_remove'
+  | 'link_add'
+  | 'link_remove'
   | 'field'
   | 'archived'
   | 'restored';
@@ -1396,10 +1400,18 @@ export interface ProjectScaffold {
   permissions: Permissions;
 }
 
+// An issue as the board carries it: with its relations to the project's other
+// active issues. Only the board payload has them — a write response and a public
+// share bundle return a plain Issue.
+export interface BoardIssue extends Issue {
+  links: IssueLinkRef[];
+}
+
 // The board's issues plus its change marker, returned by getBoardIssues. Polled
-// for live refresh (rev matches getBoardIssuesRev).
+// for live refresh (rev matches getBoardIssuesRev, and moves on a link change
+// too — a relation changes no issue's updatedAt).
 export interface BoardIssues {
-  issues: Issue[];
+  issues: BoardIssue[];
   rev: string;
 }
 
@@ -1409,6 +1421,51 @@ export type ProjectDetail = ProjectScaffold & BoardIssues;
 
 export interface IssueDetail extends Issue {
   fields: IssueFieldValue[];
+}
+
+// A relation between two issues (mirrors apps/api issues/links.ts). 'blocks' and
+// 'duplicates' are directional and read differently on each end, which direction
+// selects: 'outward' is the side that blocks/duplicates, 'inward' the side that is
+// blocked/duplicated. On a symmetric 'relates' relation direction means nothing.
+export type IssueLinkKind = 'blocks' | 'relates' | 'duplicates';
+export type IssueLinkDirection = 'outward' | 'inward';
+
+// What linkIssues accepts: the stored kinds plus the inverse reading of the two
+// directional ones, so a relation can be stated from either end.
+export type IssueLinkInputKind = IssueLinkKind | 'blocked_by' | 'duplicated_by';
+
+export interface IssueLink {
+  id: number;
+  kind: IssueLinkKind;
+  direction: IssueLinkDirection;
+  // The issue on the other end of the relation.
+  issue: {
+    id: number;
+    sequenceNumber: number;
+    identifier: string;
+    title: string;
+    columnId: number;
+    typeId: number | null;
+    archived: boolean;
+  };
+}
+
+// One of an issue's relations as the board payload carries it: how the relation
+// reads from this issue, and the id of the issue on the other end. Both ends
+// carry it, each with its own reading; the views name the other end by looking
+// the id up among the board's issues, which is why a relation to an archived
+// issue is not sent.
+export interface IssueLinkRef {
+  id: number;
+  relation: IssueLinkInputKind;
+  issueId: number;
+}
+
+// The issue as the detail routes return it: with its relations. The public share
+// bundle carries an IssueDetail instead — a shared page does not expose the issues
+// on the other end of a relation.
+export interface IssueWithLinks extends IssueDetail {
+  links: IssueLink[];
 }
 
 // Public read-only share bundles, returned by the /share/* routes with no session.
@@ -1764,7 +1821,7 @@ export const api = {
     request<void>(`/projects/${projectKey}`, { method: 'DELETE' }),
   // The board scaffold (no issues). The issues come from getBoardIssues.
   getProject: (projectKey: string) => request<ProjectScaffold>(`/projects/${projectKey}`),
-  // The board's issues plus its change marker.
+  // The board's issues, their relations and the change marker.
   getBoardIssues: (projectKey: string) =>
     request<BoardIssues>(`/projects/${projectKey}/issues/board`),
   // Cheap change marker for the board issues — polled for live refresh, refetch
@@ -1887,7 +1944,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  getIssue: (id: number) => request<IssueDetail>(`/issues/${id}`),
+  getIssue: (id: number) => request<IssueWithLinks>(`/issues/${id}`),
 
   // Public read-only sharing. Enable returns the link token (idempotent); disable
   // revokes it. The getShared* reads need no session (public /share/* routes).
@@ -1903,7 +1960,7 @@ export const api = {
     request<SharedIssueBundle>(`/share/view/${token}/issues/${issueId}`),
   // Resolve an issue by its project-scoped number (the human "42" in the URL).
   getIssueBySeq: (projectKey: string, seq: number) =>
-    request<IssueDetail>(`/projects/${projectKey}/issues/${seq}`),
+    request<IssueWithLinks>(`/projects/${projectKey}/issues/${seq}`),
   // Cheap change marker for an issue's detail + feed — polled for live refresh.
   getIssueRev: (id: number) => request<{ rev: string }>(`/issues/${id}/rev`),
   updateIssue: (id: number, patch: IssuePatch) =>
@@ -1945,6 +2002,16 @@ export const api = {
     if (params.limit != null) qs.set('limit', String(params.limit));
     return request<IssueSearchHit[]>(`/projects/${projectKey}/issues/search?${qs.toString()}`);
   },
+  // Relations between issues. The relation reads from the issue in the path: it
+  // blocks / relates to / duplicates targetIssueId. Both ends show it.
+  linkIssues: (issueId: number, targetIssueId: number, kind: IssueLinkInputKind) =>
+    request<IssueLink>(`/issues/${issueId}/links`, {
+      method: 'POST',
+      body: JSON.stringify({ targetIssueId, kind }),
+    }),
+  unlinkIssues: (issueId: number, linkId: number) =>
+    request<void>(`/issues/${issueId}/links/${linkId}`, { method: 'DELETE' }),
+
   setFieldValue: (issueId: number, fieldId: number, input: IssueFieldValueInput) =>
     request<{ ok: boolean }>(`/issues/${issueId}/fields/${fieldId}`, {
       method: 'PUT',

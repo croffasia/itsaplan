@@ -329,6 +329,9 @@ export interface ActivityInput {
   toText?: string | null;
 }
 
+// What a write runs on: the pool, or the transaction the caller is inside.
+type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
 // Records the given events for an issue. actorUserId is the session user behind
 // the write (a member or an agent's bot user); it is null for a system write with
 // no user. actor_name is snapshotted from that user so the entry survives the user
@@ -338,35 +341,41 @@ export async function recordActivity(
   events: ActivityInput[],
   actorUserId?: string | null,
 ): Promise<{ id: number; action: string | null }[]> {
-  return insertActivity(
+  return recordActivityEntries(
     events.map((event) => ({ issueId, event })),
     actorUserId,
   );
 }
 
-// Records one event for a set of issues in a single insert, with the actor name
-// resolved once. For the writes that change many issues at once (deleting a column
-// reassigns all of its issues), where a recordActivity per issue would be a pair of
-// queries each.
+// Records one event for a set of issues in a single insert. For the writes that
+// change many issues at once (deleting a column reassigns all of its issues),
+// where a recordActivity per issue would be a query each.
 export async function recordActivityForIssues(
   issueIds: number[],
   event: ActivityInput,
   actorUserId?: string | null,
 ): Promise<void> {
-  await insertActivity(
+  await recordActivityEntries(
     issueIds.map((issueId) => ({ issueId, event })),
     actorUserId,
   );
 }
 
-async function insertActivity(
+// Records a set of (issue, event) pairs in one insert, for a write that logs a
+// different event on each of the issues it touches — linking two issues writes the
+// relation to both, each from its own side. `on` runs it inside the caller's
+// transaction. The actor name snapshot is a sub-select, so this stays one query.
+export async function recordActivityEntries(
   entries: { issueId: number; event: ActivityInput }[],
   actorUserId?: string | null,
+  on: Executor = db,
 ): Promise<{ id: number; action: string | null }[]> {
   if (!entries.length) return [];
   const resolvedActorId = actorUserId ?? null;
-  const actorName = await userName(resolvedActorId);
-  return db
+  const actorName = resolvedActorId
+    ? sql<string | null>`(select ${user.name} from ${user} where ${user.id} = ${resolvedActorId})`
+    : null;
+  return on
     .insert(issueActivity)
     .values(
       entries.map(({ issueId, event }) => ({

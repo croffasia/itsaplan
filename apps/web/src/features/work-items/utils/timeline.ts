@@ -1,5 +1,5 @@
 import { format, startOfDay } from 'date-fns';
-import { type Issue, type ProjectDetail } from '@/lib/api';
+import { type BoardIssue, type Issue, type ProjectDetail } from '@/lib/api';
 import { addDays, daysBetween, parseDate } from '@/utils/dates';
 import { buildGroups, groupIssues, type IssueGroup } from '@/utils/project';
 import type { GroupField, TimelineScale } from '@/utils/viewSettings';
@@ -9,7 +9,17 @@ import type { GroupField, TimelineScale } from '@/utils/viewSettings';
 export const SCALE_DAY_W: Record<TimelineScale, number> = { week: 32, month: 12, quarter: 5 };
 export const LABEL_W = 256; // px, the left issue-label column (matches w-64)
 export const ROW_H = 36; // px, an issue row
+export const LABEL_MIN_W = 160;
+export const LABEL_MAX_W = 640;
+export const LINK_ROW_H = 26; // px, a linked-issue sub-row under an issue row
 export const GROUP_H = 32; // px, a state group header row
+
+// The dragged label-column width is a client-only preference, kept per project
+// and per saved view (the tab the timeline is open on), so each of them keeps the
+// room its titles need. `null` is the project's unsaved "All" tab.
+export function labelWidthKey(projectKey: string, viewId: number | null): string {
+  return `timeline-label-width:${projectKey}:${viewId ?? 'all'}`;
+}
 
 // An issue's bar span. Effective start is its start date, or its creation date
 // when no start date is set (inferredStart) — normal Gantt practice so every
@@ -41,7 +51,7 @@ export type TimelineRow =
       collapsed: boolean;
       aggregateSpan: Span | null;
     }
-  | { kind: 'issue'; issue: Issue; span: Span; groupKey: string };
+  | { kind: 'issue'; issue: BoardIssue; span: Span; groupKey: string };
 
 // A consecutive same-month run, for the month labels above the day numbers.
 export interface MonthLabel {

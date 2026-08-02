@@ -2,7 +2,7 @@ import { useCallback, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ChevronsRightLeft, EyeOff, Plus } from 'lucide-react';
-import { type ProjectDetail, type Issue } from '@/lib/api';
+import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps, positionAt, type IssueGroup } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
@@ -36,7 +36,7 @@ export function BoardColumn({
 }: {
   project: ProjectDetail;
   group: IssueGroup;
-  issues: Issue[];
+  issues: BoardIssue[];
   maps: Maps;
   properties: PropertyKey[];
   // Whether the view is ordered manually. Cards can only be reordered within the

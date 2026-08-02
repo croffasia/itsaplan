@@ -1,6 +1,7 @@
 import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
+import IssueLinksPanel from './IssueLinksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
 import IssueStatusTimeline from './IssueStatusTimeline';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
@@ -98,6 +99,8 @@ export default function IssueDetailContent({
         ))}
 
       <IssueAttachmentsPanel issueId={issue.id} onInsert={insertAttachment} />
+
+      <IssueLinksPanel project={project} issueId={issue.id} links={issue.links} />
     </>
   );
 

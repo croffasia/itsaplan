@@ -3,7 +3,7 @@ import { DndContext } from '@dnd-kit/core';
 import { toast } from 'sonner';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { type Issue } from '@/lib/api';
+import { type BoardIssue, type Issue } from '@/lib/api';
 import {
   buildGroups,
   buildMaps,
@@ -30,7 +30,7 @@ interface SwimlaneRow {
   count: number;
   // Column groups paired with this swimlane's issues for each column, in
   // column display order.
-  cells: { column: IssueGroup; issues: Issue[] }[];
+  cells: { column: IssueGroup; issues: BoardIssue[] }[];
 }
 
 // Swimlane board: columns split into horizontal swimlanes. The swimlanes are the

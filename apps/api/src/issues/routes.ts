@@ -39,6 +39,7 @@ import {
   createComment,
   type FeedCursor,
 } from './activity';
+import { addIssueLink, attachBoardLinks, listIssueLinks, removeIssueLink } from './links';
 
 // Numeric path params are validated (and coerced string -> number) with t.Numeric,
 // so a non-numeric id is rejected with a 400 before reaching the store.
@@ -92,10 +93,65 @@ const IssueFieldValueRow = t.Object({
   optionIds: t.Array(t.Number()),
 });
 
-// GET /issues/:issueId returns the full issue plus its custom field values.
+// The kinds a relation is stored under (IssueLinkKind in links.ts).
+const StoredLinkKind = t.Union([
+  t.Literal('blocks'),
+  t.Literal('relates'),
+  t.Literal('duplicates'),
+]);
+
+// IssueLinkRow from links.ts: one relation to another issue, as it reads from the
+// issue it was loaded for.
+const IssueLinkResponse = t.Object({
+  id: t.Number(),
+  kind: StoredLinkKind,
+  direction: t.Union([t.Literal('outward'), t.Literal('inward')]),
+  issue: t.Object({
+    id: t.Number(),
+    sequenceNumber: t.Number(),
+    identifier: t.String(),
+    title: t.String(),
+    columnId: t.Number(),
+    typeId: t.Nullable(t.Number()),
+    archived: t.Boolean(),
+  }),
+});
+
+// A relation as one of its two issues reads it (IssueLinkInputKind in links.ts):
+// what a caller states when creating one, and what a board issue carries.
+const IssueLinkKindSchema = t.Union(
+  [
+    t.Literal('blocks'),
+    t.Literal('blocked_by'),
+    t.Literal('relates'),
+    t.Literal('duplicates'),
+    t.Literal('duplicated_by'),
+  ],
+  {
+    description:
+      'How one issue relates to the other: blocks, blocked_by, relates, duplicates, or duplicated_by.',
+  },
+);
+
+// BoardIssueLink from links.ts: one relation on the issue carrying it, with the
+// other end as an id.
+const BoardIssueLinkResponse = t.Object({
+  id: t.Number(),
+  relation: IssueLinkKindSchema,
+  issueId: t.Number(),
+});
+
+// GET /issues/:issueId returns the full issue plus its custom field values and
+// its relations to other issues.
 const IssueWithFieldsResponse = t.Composite([
   IssueResponse,
-  t.Object({ fields: t.Array(IssueFieldValueRow) }),
+  t.Object({ fields: t.Array(IssueFieldValueRow), links: t.Array(IssueLinkResponse) }),
+]);
+
+// The board carries each issue's relations on the issue itself.
+const BoardIssueResponse = t.Composite([
+  IssueResponse,
+  t.Object({ links: t.Array(BoardIssueLinkResponse) }),
 ]);
 
 // IssueSearchHit from the store: a light search result (no description/field values).
@@ -492,21 +548,22 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // The board's issue payload: every active issue with its labels and field
-  // values, plus the board change marker. The work-items UI loads this alongside
-  // the project scaffold (GET /projects/:projectKey) and polls the marker to
-  // refetch. Web-only (not an MCP tool): agents use list_issues / search_issues.
+  // The board's issue payload: every active issue with its labels, field values
+  // and relations, plus the board change marker. The work-items UI loads this
+  // alongside the project scaffold (GET /projects/:projectKey) and polls the
+  // marker to refetch. Web-only (not an MCP tool): agents use list_issues /
+  // search_issues, and read an issue's relations with the issue itself.
   .get(
     '/projects/:projectKey/issues/board',
     async ({ project }) => ({
-      issues: await listIssues(project),
+      issues: await attachBoardLinks(await listIssues(project), project.id),
       rev: await projectBoardRev(project.id),
     }),
     {
       params: t.Object({ projectKey: t.String() }),
       permission: ['work_items', 'read'],
       response: {
-        200: t.Object({ issues: t.Array(IssueResponse), rev: t.String() }),
+        200: t.Object({ issues: t.Array(BoardIssueResponse), rev: t.String() }),
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
@@ -562,7 +619,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const issue = await getIssueBySequence(project.id, params.sequenceNumber);
       if (!issue) throw new HttpError(404, 'Issue not found');
       const fields = await getIssueFieldValues(issue.id);
-      return { ...issue, fields };
+      const links = await listIssueLinks(issue.id);
+      return { ...issue, fields, links };
     },
     {
       params: t.Object({ projectKey: t.String(), sequenceNumber: t.Numeric() }),
@@ -599,7 +657,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         if (project) assertMcpEnabled(project, true);
       }
       const fields = await getIssueFieldValues(issue.id);
-      return { ...issue, fields };
+      const links = await listIssueLinks(issue.id);
+      return { ...issue, fields, links };
     },
     {
       params: issueParams,
@@ -815,6 +874,69 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Set a custom field value',
         description: 'Set a custom field value on an issue by its numeric id.',
         ...mcpTool('set_issue_field_value'),
+      },
+    },
+  )
+
+  // Links the issue in the path to another issue of the same project. The
+  // relation reads from the issue in the path (it blocks / relates to /
+  // duplicates the target); both issues show it, each from its own side. Reading
+  // the relations is part of the issue read, so there is no list route.
+  .post(
+    '/issues/:issueId/links',
+    async ({ params, body, user, set }) => {
+      set.status = 201;
+      return addIssueLink(params.issueId, body.targetIssueId, body.kind, requireUser(user).id);
+    },
+    {
+      body: t.Object({
+        targetIssueId: t.Integer({
+          description: 'Numeric id of the issue on the other end of the relation.',
+        }),
+        kind: IssueLinkKindSchema,
+      }),
+      params: issueParams,
+      workItem: 'edit',
+      response: {
+        201: IssueLinkResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+        409: ErrorResponse,
+      },
+      detail: {
+        summary: 'Link two issues',
+        description:
+          'Link an issue to another issue of the same project. kind states the relation as read from the issue in the path: it blocks, is blocked by, relates to, duplicates, or is duplicated by the target. Both issue ids are the internal numeric ids.',
+        ...mcpTool('link_issues'),
+      },
+    },
+  )
+
+  // Removes one relation. The link id comes from the issue's own links, so a link
+  // between two other issues cannot be removed through it.
+  .delete(
+    '/issues/:issueId/links/:linkId',
+    async ({ params, user }) => {
+      const removed = await removeIssueLink(params.issueId, params.linkId, requireUser(user).id);
+      if (!removed) throw new HttpError(404, 'Link not found');
+      return noContent();
+    },
+    {
+      params: t.Object({ issueId: t.Numeric(), linkId: t.Numeric() }),
+      workItem: 'edit',
+      response: {
+        204: t.Void(),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Unlink two issues',
+        description: "Remove one of an issue's relations by the link id.",
+        ...mcpTool('unlink_issues'),
       },
     },
   )

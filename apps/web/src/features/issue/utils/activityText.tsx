@@ -8,6 +8,7 @@ import {
   CircleDot,
   CirclePlus,
   FileText,
+  Link2,
   Pencil,
   Shapes,
   SignalHigh,
@@ -18,6 +19,7 @@ import {
 } from 'lucide-react';
 import { type ActivityAction, type FeedItem } from '@/lib/api';
 import { priorityLabel } from '@/utils/fieldOptions';
+import { linkPhrase } from '@/utils/issueLinks';
 
 // Renders one activity feed event as an icon plus a verb phrase. Kept out of the
 // feed component so the switch over action types stays isolated from the layout.
@@ -35,6 +37,8 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   due_date: Calendar,
   label_add: Tag,
   label_remove: Tag,
+  link_add: Link2,
+  link_remove: Link2,
   field: Pencil,
   archived: Archive,
   restored: ArchiveRestore,
@@ -110,6 +114,22 @@ export function describeActivity(a: FeedItem): { line: ReactNode; popover?: stri
       return { line: <>added label {strong(a.toText)}</> };
     case 'label_remove':
       return { line: <>removed label {strong(a.fromText)}</> };
+    case 'link_add':
+      return {
+        line: (
+          <>
+            marked this issue as {linkPhrase(a.subject)} {strong(a.toText)}
+          </>
+        ),
+      };
+    case 'link_remove':
+      return {
+        line: (
+          <>
+            no longer {linkPhrase(a.subject)} {strong(a.toText)}
+          </>
+        ),
+      };
     case 'field':
       if (isLong(a.toText)) return { line: <>updated {strong(a.subject)}</>, popover: a.toText };
       return a.toText

@@ -5,7 +5,8 @@ import type { Issue, Permissions, ProjectDetail, PublicScaffold } from '@/lib/ap
 // Properties grid). The public scaffold carries no viewer/permissions (a public
 // page has no session) and its assignees carry no email; this fills the shape with
 // an empty permission matrix (every can() check resolves false) and a placeholder
-// email.
+// email. Its issues carry no relations either — a shared page does not expose the
+// issues on the other end of one.
 export function toPublicProjectDetail(
   scaffold: PublicScaffold,
   issues: Issue[] = [],
@@ -20,7 +21,7 @@ export function toPublicProjectDetail(
     customFields: scaffold.customFields,
     viewer: { role: 'member' },
     permissions: {} as Permissions,
-    issues,
+    issues: issues.map((issue) => ({ ...issue, links: [] })),
     rev: '',
   };
 }

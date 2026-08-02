@@ -3,8 +3,8 @@ import { daysBetween } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { type MonthLabel } from '../../utils/timeline';
 
-// The sticky timeline header: an empty corner over the label column, month labels,
-// and the day-number row. Day numbers thin out as the day width shrinks.
+// The sticky timeline header: the label column's corner, month labels, and the
+// day-number row. Day numbers thin out as the day width shrinks.
 export function TimelineHeader({
   labelW,
   trackWidth,

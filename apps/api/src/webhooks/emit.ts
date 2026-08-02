@@ -15,6 +15,7 @@ const EVENT_SHAPE: Record<WebhookEventType, { action: string; type: string }> = 
   'issue.assigned': { action: 'update', type: 'Issue' },
   'issue.state_changed': { action: 'update', type: 'Issue' },
   'issue.label_changed': { action: 'update', type: 'Issue' },
+  'issue.link_changed': { action: 'update', type: 'Issue' },
   'comment.created': { action: 'create', type: 'Comment' },
 };
 
@@ -35,6 +36,19 @@ export async function emitWebhookEvent(
   eventType: WebhookEventType,
   data: unknown,
 ): Promise<void> {
+  await emitWebhookEvents(projectId, eventType, () => Promise.resolve([data]));
+}
+
+// Several events of one type at once, with the payloads assembled only once a
+// webhook turns out to be subscribed. For the writes whose payload costs its own
+// queries to build — linking two issues has to load both of them — so a project
+// with no webhook pays one indexed SELECT and nothing else. Each event gets its
+// own eventId; the deliveries go in as one insert.
+export async function emitWebhookEvents(
+  projectId: number,
+  eventType: WebhookEventType,
+  load: () => Promise<unknown[]>,
+): Promise<void> {
   const matching = await db
     .select({ id: webhook.id })
     .from(webhook)
@@ -48,26 +62,31 @@ export async function emitWebhookEvent(
     );
   if (matching.length === 0) return;
 
-  const eventId = randomUUID();
+  const payloads = await load();
+  if (payloads.length === 0) return;
+
   const { action, type } = EVENT_SHAPE[eventType];
   const now = new Date();
   const createdAt = now.toISOString();
   const webhookTimestamp = now.getTime();
 
   await db.insert(webhookDelivery).values(
-    matching.map((h) => ({
-      webhookId: h.id,
-      eventId,
-      eventType,
-      payload: {
-        action,
-        type,
-        event: eventType,
-        createdAt,
-        data,
-        webhookTimestamp,
+    payloads.flatMap((data) => {
+      const eventId = randomUUID();
+      return matching.map((h) => ({
         webhookId: h.id,
-      },
-    })),
+        eventId,
+        eventType,
+        payload: {
+          action,
+          type,
+          event: eventType,
+          createdAt,
+          data,
+          webhookTimestamp,
+          webhookId: h.id,
+        },
+      }));
+    }),
   );
 }

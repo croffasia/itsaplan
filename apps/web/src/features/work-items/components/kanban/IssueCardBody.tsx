@@ -1,5 +1,5 @@
 import { CalendarArrowUp, CalendarClock, Target, Timer } from 'lucide-react';
-import { type Issue } from '@/lib/api';
+import { type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
 import type { DisplayProperty, PropertyKey } from '@/utils/viewSettings';
@@ -13,16 +13,20 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
+import { IssueCardLinks } from './IssueCardLinks';
 
 // One board card's content. Which properties render is driven by `properties`.
+// onOpen opens an issue the card links to; the drag preview passes none.
 export function IssueCardBody({
   issue,
   maps,
   properties,
+  onOpen,
 }: {
-  issue: Issue;
+  issue: BoardIssue;
   maps: Maps;
   properties: PropertyKey[];
+  onOpen?: (id: number) => void;
 }) {
   const has = (p: DisplayProperty) => properties.includes(p);
   const type = issue.typeId != null ? maps.typeById.get(issue.typeId) : undefined;
@@ -158,6 +162,8 @@ export function IssueCardBody({
           </div>
         </div>
       )}
+
+      <IssueCardLinks links={issue.links} maps={maps} onOpen={onOpen} />
     </>
   );
 }

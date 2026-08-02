@@ -2,6 +2,7 @@ import { Hash } from 'lucide-react';
 import type { IssueSearchHit } from '@/lib/api';
 import { ISSUE_PREFIX } from '@/utils/commandFilter';
 import { CommandGroup, CommandItem, CommandSeparator } from '@/components/ui/command';
+import ArchivedBadge from '@/components/common/ArchivedBadge';
 
 // The palette's "Issues" group. The list comes from the server (already filtered
 // and ordered); the ISSUE_PREFIX value keeps cmdk from re-filtering it.
@@ -32,11 +33,7 @@ export default function CommandPaletteIssues({
           >
             <Hash />
             <span className="flex-1 truncate">{issue.title}</span>
-            {issue.archived && (
-              <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase">
-                Archived
-              </span>
-            )}
+            {issue.archived && <ArchivedBadge />}
             <span className="shrink-0 font-mono text-xs text-muted-foreground">
               {issue.identifier}
             </span>

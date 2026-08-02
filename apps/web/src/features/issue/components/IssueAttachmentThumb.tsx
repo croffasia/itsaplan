@@ -4,15 +4,22 @@ import { isImage, isVideo, type Embeddable } from '../utils/attachmentEmbed';
 
 // An attachment card's leading thumbnail: images and videos preview themselves,
 // every other type falls back to a generic file glyph.
-export default function IssueAttachmentThumb({ attachment }: { attachment: Embeddable }) {
+export default function IssueAttachmentThumb({
+  attachment,
+  sizes = '40px',
+}: {
+  attachment: Embeddable;
+  // The rendered width, for the image optimizer. The default is the w-10 (40px)
+  // thumbnail every card uses; a larger preview passes its own.
+  sizes?: string;
+}) {
   if (isImage(attachment))
     return (
       <Image
         src={attachment.url}
         alt={attachment.filename}
         fill
-        // The thumbnail is w-10 (40px) in every card size used here.
-        sizes="40px"
+        sizes={sizes}
         // A file picked in the new issue modal is previewed from a local blob:
         // URL, which the image optimizer cannot fetch.
         unoptimized={attachment.url.startsWith('blob:')}

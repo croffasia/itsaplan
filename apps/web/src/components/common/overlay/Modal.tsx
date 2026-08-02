@@ -32,6 +32,7 @@ export default function Modal({
   wide = false,
   fullscreen = false,
   onToggleFullscreen,
+  className,
 }: {
   title: string;
   description?: string;
@@ -39,6 +40,8 @@ export default function Modal({
   onClose: () => void;
   children: ReactNode;
   wide?: boolean | 'xl';
+  // On the dialog itself, for a caller that has to adjust its padding.
+  className?: string;
   // Controlled by the caller: in fullscreen the content is a flex column, so the
   // caller's body has to claim the leftover space itself.
   fullscreen?: boolean;
@@ -63,6 +66,7 @@ export default function Modal({
               // row keeps its content height under a capped container, so the body
               // never shrinks and never scrolls.
               cn('flex max-h-[85vh] flex-col overflow-hidden', MAX_WIDTH[`${wide}`]),
+          className,
         )}
       >
         <DialogHeader>
@@ -80,11 +84,13 @@ export default function Modal({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
         {/* The body scrolls, not the dialog: the dialog stays the positioned
-            ancestor a body-wide overlay can cover without scrolling away. */}
+            ancestor a body-wide overlay can cover without scrolling away. A flex
+            column either way, so a caller can hand the leftover height to one of
+            its parts. */}
         <div
           className={cn(
-            'min-h-0',
-            fullscreen ? 'flex flex-1 flex-col overflow-hidden' : 'overflow-y-auto',
+            'flex min-h-0 flex-col',
+            fullscreen ? 'flex-1 overflow-hidden' : 'overflow-y-auto',
           )}
         >
           {children}

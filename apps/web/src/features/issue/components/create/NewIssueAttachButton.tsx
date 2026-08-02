@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Attaches files to an issue being created; the picked files are listed by
-// NewIssueAttachmentList and uploaded once the issue exists.
+// NewIssueAttachmentStrip and uploaded once the issue exists.
 export default function NewIssueAttachButton({
   onPick,
 }: {

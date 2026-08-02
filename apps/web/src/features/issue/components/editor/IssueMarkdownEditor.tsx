@@ -93,9 +93,8 @@ export default function IssueMarkdownEditor({
     content: defaultValue,
     editorProps: {
       attributes: {
-        // min-h-full so the typing area covers a container taller than the text;
-        // with an auto-height container it resolves to 0 and changes nothing.
-        class: 'md-content min-h-full focus:outline-none',
+        // flex-1 so the typing area covers a container taller than the text.
+        class: 'md-content flex-1 focus:outline-none',
       },
       // Files dropped from the OS are uploaded, then inserted at the drop
       // position. Internal moves and attachment-card drags (which carry
@@ -136,7 +135,9 @@ export default function IssueMarkdownEditor({
   return (
     <div className={className}>
       {editable && <EditorSelectionMenu editor={editor} />}
-      <EditorContent editor={editor} className="h-full" />
+      {/* Grows with the text rather than being pinned to the container's height,
+          so a container that scrolls measures the overflow and shows a bar. */}
+      <EditorContent editor={editor} className="flex min-h-full flex-col" />
       {imageAttachments && (
         <EditorImagePicker
           open={imagePickerOpen}

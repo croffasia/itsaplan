@@ -1,0 +1,70 @@
+import { useState } from 'react';
+import { X } from 'lucide-react';
+import { type PendingAttachment } from '../../hooks/useNewIssueAttachments';
+import { type Embeddable } from '../../utils/attachmentEmbed';
+import { formatSize } from '../../utils/fileSize';
+import IssueAttachmentThumb from '../IssueAttachmentThumb';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
+// One pending file in the footer strip: the thumbnail opens a larger preview to
+// insert the file from, the corner button drops it. That button overhangs the
+// thumbnail by half its size, which the strip pads for.
+export default function NewIssueAttachmentChip({
+  item,
+  onInsert,
+  onRemove,
+}: {
+  item: PendingAttachment;
+  // Left out while no editor is open to insert into: the preview then only shows.
+  onInsert?: (attachment: Embeddable) => void;
+  onRemove: (id: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="group relative size-10 shrink-0">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            aria-label={`Preview ${item.filename}`}
+            className="relative flex size-full items-center justify-center overflow-hidden rounded-md border bg-muted hover:border-ring"
+          >
+            <IssueAttachmentThumb attachment={item} />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent side="top" align="start" className="w-64 space-y-2 p-2">
+          <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-md border bg-muted">
+            <IssueAttachmentThumb attachment={item} sizes="240px" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium">{item.filename}</p>
+            <p className="text-xs text-muted-foreground">{formatSize(item.file.size)}</p>
+          </div>
+          {onInsert && (
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={() => {
+                onInsert(item);
+                setOpen(false);
+              }}
+            >
+              Insert
+            </Button>
+          )}
+        </PopoverContent>
+      </Popover>
+      <button
+        type="button"
+        onClick={() => onRemove(item.id)}
+        aria-label={`Remove ${item.filename}`}
+        title="Remove"
+        className="absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full border bg-popover text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:text-destructive focus-visible:opacity-100"
+      >
+        <X className="size-3" />
+      </button>
+    </div>
+  );
+}

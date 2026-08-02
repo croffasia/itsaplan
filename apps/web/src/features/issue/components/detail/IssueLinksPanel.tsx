@@ -79,8 +79,7 @@ export default function IssueLinksPanel({
       {open &&
         (links.length === 0 ? (
           <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            No links. Use Add to mark this issue as blocked by, blocking, duplicating or related to
-            another one.
+            Use Add to link an issue that blocks, duplicates or relates to this one.
           </p>
         ) : (
           <div className="flex flex-col gap-3">

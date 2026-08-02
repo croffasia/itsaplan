@@ -15,12 +15,13 @@ import {
   stripEmbed,
   type Embeddable,
 } from '../../utils/attachmentEmbed';
+import { DESCRIPTION_TAB, OTHER_TAB, fieldTabId } from '../../utils/bodyTabs';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 import NewIssueAttachButton from './NewIssueAttachButton';
-import NewIssueAttachmentList from './NewIssueAttachmentList';
+import NewIssueAttachmentStrip from './NewIssueAttachmentStrip';
 import NewIssueDropOverlay from './NewIssueDropOverlay';
 import Modal from '@/components/common/overlay/Modal';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import NewIssueBody from './NewIssueBody';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
 import DelegateSelect from '../fields/DelegateSelect';
@@ -84,8 +85,8 @@ export default function NewIssueModal({
   const [fullscreen, setFullscreen] = useState(false);
 
   // Custom fields for the selected type (global + type-scoped). Fields flagged
-  // "show in main info" render below the description; the rest are added on
-  // demand from the "…" menu.
+  // "show in main info" get their own body tab; the rest are added on demand from
+  // the "…" menu.
   const fieldsQuery = useCustomFieldsQuery(project.project.key, typeId ?? undefined);
   const fieldDefs = fieldsQuery.data ?? [];
   const [activeFieldIds, setActiveFieldIds] = useState<number[]>([]);
@@ -98,15 +99,25 @@ export default function NewIssueModal({
   const attachments = useNewIssueAttachments();
 
   // The description editor instance, so a file dropped or pasted anywhere on the
-  // modal (not just onto the small editor box) can be inserted at the cursor.
+  // modal (not just onto the editor box) can be inserted at the cursor.
   const [descEditor, setDescEditor] = useState<Editor | null>(null);
 
   // The markdown editors of the body custom fields, so an attachment removed
-  // from the list takes its embeds with it wherever they were inserted.
+  // from the strip takes its embeds with it wherever they were inserted.
   const fieldEditors = useRef(new Map<number, Editor>());
 
-  function insertIntoDescription(a: Embeddable) {
-    descEditor?.chain().focus().insertContent(attachmentHtml(a)).run();
+  // Which of the body tabs is open, so an attachment lands in the editor the user
+  // is looking at.
+  const [bodyTab, setBodyTab] = useState(DESCRIPTION_TAB);
+
+  function activeBodyEditor(): Editor | null {
+    if (bodyTab === DESCRIPTION_TAB) return descEditor;
+    const fieldId = fieldTabId(bodyTab);
+    return fieldId === null ? null : (fieldEditors.current.get(fieldId) ?? null);
+  }
+
+  function insertIntoBody(a: Embeddable) {
+    activeBodyEditor()?.chain().focus().insertContent(attachmentHtml(a)).run();
   }
 
   function removeAttachment(id: number) {
@@ -116,29 +127,34 @@ export default function NewIssueModal({
     for (const editor of fieldEditors.current.values()) removeEmbed(editor, item.url);
   }
 
-  function insertFilesIntoDescription(files: FileList) {
-    if (!descEditor) return;
-    let pos = descEditor.state.selection.to;
+  function insertFilesIntoBody(files: FileList) {
+    const editor = activeBodyEditor();
+    // No editor on screen: still attach the files, they can be inserted later.
+    if (!editor) {
+      attachments.attach(files);
+      return;
+    }
+    let pos = editor.state.selection.to;
     void (async () => {
       for (const file of Array.from(files)) {
         const a = await attachments.uploadFile(file).catch(() => null);
         if (!a) continue;
-        descEditor.chain().insertContentAt(pos, attachmentHtml(a)).focus().run();
-        pos = descEditor.state.selection.to;
+        editor.chain().insertContentAt(pos, attachmentHtml(a)).focus().run();
+        pos = editor.state.selection.to;
       }
     })();
   }
 
-  const { draggedFiles, dragHandlers } = useFileDragZone(insertFilesIntoDescription);
+  const { draggedFiles, dragHandlers } = useFileDragZone(insertFilesIntoBody);
 
   // Read through a ref: the paste listener below is registered once, while the
   // insert closes over the editor and the upload limits, which both arrive after
   // the first render.
-  const insertFilesRef = useRef(insertFilesIntoDescription);
-  insertFilesRef.current = insertFilesIntoDescription;
+  const insertFilesRef = useRef(insertFilesIntoBody);
+  insertFilesRef.current = insertFilesIntoBody;
 
-  // A paste carrying files lands in the description unless a markdown editor has
-  // the focus, in which case tiptap has already inserted it there. The listener
+  // A paste carrying files lands in the open tab's editor unless a markdown editor
+  // has the focus, in which case tiptap has already inserted it there. The listener
   // is on the document because the focus may sit on the dialog itself, above the
   // modal body.
   useEffect(() => {
@@ -169,10 +185,6 @@ export default function NewIssueModal({
   const propertyDefs = fieldDefs.filter((d) => !d.showInBody);
   const activeDefs = propertyDefs.filter((d) => activeFieldIds.includes(d.id));
   const availableDefs = propertyDefs.filter((d) => !activeFieldIds.includes(d.id));
-
-  let descriptionHeight = 'min-h-24';
-  if (fullscreen) descriptionHeight = 'min-h-48 flex-1';
-  else if (bodyDefs.length > 0) descriptionHeight = 'min-h-14';
 
   function toggleLabel(id: number) {
     setLabelIds((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
@@ -245,9 +257,12 @@ export default function NewIssueModal({
       wide
       fullscreen={fullscreen}
       onToggleFullscreen={() => setFullscreen((v) => !v)}
+      // Halves the dialog's bottom padding: the footer then sits as far from the
+      // separator above it as from the dialog edge below.
+      className="pb-3"
     >
       <div
-        className={cn(fullscreen && 'flex min-h-0 flex-1 flex-col overflow-y-auto')}
+        className={cn('flex min-h-0 flex-col', fullscreen && 'flex-1 overflow-hidden')}
         {...dragHandlers}
       >
         {/* Not inside a relative box on purpose: the dialog itself is the
@@ -260,43 +275,27 @@ export default function NewIssueModal({
           onChange={(e) => setTitle(e.target.value)}
           autoFocus
         />
-        <IssueMarkdownEditor
-          className={cn('mt-3', descriptionHeight)}
-          defaultValue={description}
-          onChange={setDescription}
-          onReady={setDescEditor}
-          uploadFile={attachments.uploadFile}
-        />
-
-        {bodyDefs.length > 0 && (
-          <div className="mt-2 space-y-4">
-            {bodyDefs.map((def) => (
-              <div key={def.id}>
-                <h3 className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-                  {def.name}
-                </h3>
-                {def.fieldType === 'markdown' ? (
-                  <IssueMarkdownEditor
-                    defaultValue={(fieldValues[def.id]?.value as string) ?? ''}
-                    placeholder="Empty"
-                    onChange={(md) => setFieldValue(def.id, { value: md })}
-                    onReady={(editor) => {
-                      if (editor) fieldEditors.current.set(def.id, editor);
-                      else fieldEditors.current.delete(def.id);
-                    }}
-                    uploadFile={attachments.uploadFile}
-                  />
-                ) : (
-                  <IssueCustomFieldPill
-                    def={def}
-                    value={fieldValues[def.id]}
-                    onChange={(v) => setFieldValue(def.id, v)}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* The written content is the one part that gives up height, so the pills
+            and the footer stay in view however much of it there is. It scrolls
+            inside its editors, not here, which keeps the tab bar in place. */}
+        <div className={cn('flex min-h-0 flex-col overflow-hidden', fullscreen && 'flex-1')}>
+          <NewIssueBody
+            tab={bodyTab}
+            onTabChange={setBodyTab}
+            fullscreen={fullscreen}
+            description={description}
+            onDescriptionChange={setDescription}
+            onDescriptionReady={setDescEditor}
+            bodyDefs={bodyDefs}
+            fieldValues={fieldValues}
+            onFieldValue={setFieldValue}
+            onFieldEditorReady={(id, editor) => {
+              if (editor) fieldEditors.current.set(id, editor);
+              else fieldEditors.current.delete(id);
+            }}
+            uploadFile={attachments.uploadFile}
+          />
+        </div>
 
         <div
           className={`${bodyDefs.length > 0 ? 'mt-8' : 'mt-4'} flex flex-wrap items-center gap-2`}
@@ -403,17 +402,16 @@ export default function NewIssueModal({
           )}
         </div>
 
-        <NewIssueAttachmentList
-          items={attachments.pending}
-          onInsert={insertIntoDescription}
-          onRemove={removeAttachment}
-        />
-
         {errorMessage && <p className="mt-3 text-xs text-destructive">{errorMessage}</p>}
 
-        <div className="mt-4 flex items-center justify-between border-t pt-3">
+        <div className="mt-4 flex items-center gap-2 border-t pt-3">
           <NewIssueAttachButton onPick={attachments.attach} />
-          <Button disabled={saving || !title.trim()} onClick={submit}>
+          <NewIssueAttachmentStrip
+            items={attachments.pending}
+            onInsert={bodyTab === OTHER_TAB ? undefined : insertIntoBody}
+            onRemove={removeAttachment}
+          />
+          <Button className="ml-auto" disabled={saving || !title.trim()} onClick={submit}>
             Create issue
           </Button>
         </div>

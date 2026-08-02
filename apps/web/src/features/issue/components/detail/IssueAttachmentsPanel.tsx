@@ -120,7 +120,7 @@ export default function IssueAttachmentsPanel({
 
       {items.length === 0 ? (
         <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          No attachments. Drop files here or use Add to upload.
+          Drop files here, or use Add to upload.
         </p>
       ) : (
         <div className="flex flex-col gap-2">

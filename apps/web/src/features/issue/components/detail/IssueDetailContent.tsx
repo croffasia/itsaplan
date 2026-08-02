@@ -52,20 +52,31 @@ export default function IssueDetailContent({
 
   const body = (
     <>
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         {issue.archivedAt && (
-          <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
+          <span className="mt-1 shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
             Archived
           </span>
         )}
-        <input
-          className="min-w-0 flex-1 bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground"
+        {/* A textarea, not an input, so a long title wraps and is shown in full.
+            Its value stays single-line: Enter commits instead of inserting a
+            newline, and pasted line breaks are collapsed on blur. */}
+        <textarea
+          className="field-sizing-content min-w-0 flex-1 resize-none bg-transparent text-lg leading-snug font-semibold outline-none placeholder:text-muted-foreground"
+          rows={1}
           placeholder="Issue title"
           defaultValue={issue.title}
           key={`title-${issue.updatedAt}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              e.currentTarget.blur();
+            }
+          }}
           onBlur={(e) => {
-            if (e.target.value.trim() && e.target.value !== issue.title)
-              patch({ title: e.target.value.trim() });
+            const next = e.target.value.replace(/\s+/g, ' ').trim();
+            e.target.value = next;
+            if (next && next !== issue.title) patch({ title: next });
           }}
         />
       </div>

@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { type PendingAttachment } from '../../hooks/useNewIssueAttachments';
-import { type Embeddable } from '../../utils/attachmentEmbed';
+import { isImage, type Embeddable } from '../../utils/attachmentEmbed';
 import { formatSize } from '../../utils/fileSize';
+import { baseName } from '../../utils/filename';
 import IssueAttachmentThumb from '../IssueAttachmentThumb';
+import IssueImageAnnotator from '../IssueImageAnnotator';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -13,14 +15,17 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 export default function NewIssueAttachmentChip({
   item,
   onInsert,
+  onAnnotate,
   onRemove,
 }: {
   item: PendingAttachment;
   // Left out while no editor is open to insert into: the preview then only shows.
   onInsert?: (attachment: Embeddable) => void;
+  onAnnotate: (id: number, file: File) => void;
   onRemove: (id: number) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [annotating, setAnnotating] = useState(false);
 
   return (
     <div className="group relative size-10 shrink-0">
@@ -54,8 +59,35 @@ export default function NewIssueAttachmentChip({
               Insert
             </Button>
           )}
+          {isImage(item) && (
+            <Button
+              size="sm"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setOpen(false);
+                setAnnotating(true);
+              }}
+            >
+              Annotate
+            </Button>
+          )}
         </PopoverContent>
       </Popover>
+
+      {annotating && (
+        <IssueImageAnnotator
+          src={item.url}
+          savedName={baseName(item.filename)}
+          // Nothing is uploaded yet, so the marked-up image takes the place of the
+          // file it was drawn on instead of being added next to it.
+          onSave={(file) => {
+            setAnnotating(false);
+            onAnnotate(item.id, file);
+          }}
+          onClose={() => setAnnotating(false)}
+        />
+      )}
       <button
         type="button"
         onClick={() => onRemove(item.id)}

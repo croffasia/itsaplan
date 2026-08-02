@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
+import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
@@ -10,7 +12,7 @@ import IssueProperties from './IssueProperties';
 import IssueActionsBar from '../actions/IssueActionsBar';
 
 // The full editable body of a issue — title, description, markdown custom
-// fields, attachments, the Properties grid, and the activity feed. Shared by the
+// fields, the Properties grid, attachments, and the activity feed. Shared by the
 // side panel (IssueDetail) and the full-page view (IssueViewPage); each supplies
 // its own surrounding chrome (close button / breadcrumbs). Data loading and
 // mutations live in useIssueDetail; this component is layout only.
@@ -45,12 +47,17 @@ export default function IssueDetailContent({
     imageAttachments,
     setDescEditor,
   } = useIssueDetail(project, issueId, onIssueLoaded);
+  const properties = usePersistedOpen('issue-properties-open');
+  // A replaced attachment keeps its URL, so an <img> already in an editor is
+  // never requested again. Counting the replacements remounts the editors, which
+  // builds the element anew and lets the raw route revalidate it.
+  const [replacements, setReplacements] = useState(0);
 
   if (!issue) {
     return <div className="py-6 text-sm text-muted-foreground">Loading…</div>;
   }
 
-  const body = (
+  const heading = (
     <>
       <div className="flex items-start gap-2">
         {issue.archivedAt && (
@@ -84,7 +91,7 @@ export default function IssueDetailContent({
       <IssueMarkdownEditor
         className="mt-2"
         defaultValue={issue.description}
-        key={`desc-${issue.updatedAt}`}
+        key={`desc-${issue.updatedAt}-${replacements}`}
         onReady={setDescEditor}
         uploadFile={uploadFile}
         imageAttachments={imageAttachments}
@@ -102,20 +109,31 @@ export default function IssueDetailContent({
             key={def.id}
             def={def}
             current={issue.fields.find((f) => f.fieldId === def.id)}
-            saveKey={`${def.id}-${issue.updatedAt}`}
+            saveKey={`${def.id}-${issue.updatedAt}-${replacements}`}
             uploadFile={uploadFile}
             imageAttachments={imageAttachments}
             onSetField={setField}
           />
         ))}
+    </>
+  );
 
-      <IssueAttachmentsPanel issueId={issue.id} onInsert={insertAttachment} />
+  // The collapsible sections under the written content. Where the Properties are
+  // not a sidebar of their own they go between the two, so the sections stay at
+  // the bottom of the column.
+  const sections = (
+    <>
+      <IssueAttachmentsPanel
+        issueId={issue.id}
+        onInsert={insertAttachment}
+        onReplaced={() => setReplacements((n) => n + 1)}
+      />
 
       <IssueLinksPanel project={project} issueId={issue.id} links={issue.links} />
     </>
   );
 
-  const properties = (
+  const renderProperties = (className?: string) => (
     <IssueProperties
       project={project}
       issue={issue}
@@ -126,8 +144,14 @@ export default function IssueDetailContent({
       uploadFile={uploadFile}
       imageAttachments={imageAttachments}
       watchers={issue.watchers}
+      className={className}
+      open={properties.open}
+      onToggle={properties.toggle}
     />
   );
+  // In a sidebar the section follows the actions row, which needs less room above
+  // it than the content block it follows in a single column.
+  const sidebarProperties = renderProperties('mt-3 pt-4');
 
   const actions = <IssueActionsBar project={project} issue={issue} onDeleted={onDeleted} />;
 
@@ -169,13 +193,14 @@ export default function IssueDetailContent({
           <div className="sticky top-0 z-10 -mt-6 bg-background/85 pt-6 pb-3 backdrop-blur-md xl:hidden">
             {actions}
           </div>
-          {body}
-          <div className="mt-6 xl:hidden">{properties}</div>
+          {heading}
+          <div className="xl:hidden">{renderProperties()}</div>
+          {sections}
           {activity}
         </div>
         <aside className="hidden xl:fixed xl:top-16 xl:right-6 xl:block xl:max-h-[calc(100vh-5.5rem)] xl:w-[340px] xl:overflow-y-auto">
           {actions}
-          {properties}
+          {sidebarProperties}
         </aside>
       </>
     );
@@ -188,12 +213,13 @@ export default function IssueDetailContent({
     return (
       <div className="flex gap-8">
         <div className="min-w-0 flex-1">
-          {body}
+          {heading}
+          {sections}
           {activity}
         </div>
         <aside className="w-[320px] shrink-0">
           {actions}
-          {properties}
+          {sidebarProperties}
         </aside>
       </div>
     );
@@ -203,8 +229,9 @@ export default function IssueDetailContent({
   // panel body omits them.
   return (
     <>
-      {body}
-      <div className="mt-6">{properties}</div>
+      {heading}
+      {renderProperties()}
+      {sections}
       {activity}
     </>
   );

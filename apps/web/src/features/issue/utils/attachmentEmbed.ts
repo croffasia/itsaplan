@@ -37,6 +37,20 @@ export function stripEmbed(markdown: string, url: string): string {
     .replace(new RegExp(`<video[^>]*src="${quoted}"[^>]*>\\s*</video>`, 'g'), '');
 }
 
+// Points the embeds of `from` at `to` on a live editor. Used when a pending file
+// is swapped for an annotated copy, which lives at a new blob: URL. Only nodes
+// with a src are rewritten — an annotated file is an image, never a link.
+export function replaceEmbed(editor: Editor, from: string, to: string) {
+  if (editor.isDestroyed) return;
+  const { tr, doc } = editor.state;
+  doc.descendants((node, pos) => {
+    if (node.attrs.src !== from) return;
+    tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: to });
+    return false;
+  });
+  if (tr.docChanged) editor.view.dispatch(tr);
+}
+
 // The same removal on a live editor: the image or video node carrying `url` as
 // src, and a link pointing at it.
 export function removeEmbed(editor: Editor, url: string) {

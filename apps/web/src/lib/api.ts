@@ -1767,6 +1767,23 @@ function absolutizeAttachment(a: Attachment): Attachment {
   return { ...a, url: a.url.startsWith('http') ? a.url : `${API_URL}${a.url}` };
 }
 
+// Multipart upload — cannot use request(), which forces a JSON Content-Type; the
+// browser must set the multipart boundary itself, so no headers are set.
+async function sendAttachmentFile(
+  path: string,
+  method: 'POST' | 'PUT',
+  file: File,
+): Promise<Attachment> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${API_URL}${path}`, { method, credentials: 'include', body: form });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.error ?? `${res.status} ${res.statusText}`);
+  }
+  return absolutizeAttachment(await res.json());
+}
+
 // Inbox notifications. Each row is enriched with the issue and project it points at
 // so the list renders without extra calls.
 export type NotificationType = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
@@ -2040,22 +2057,12 @@ export const api = {
     request<Attachment[]>(`/issues/${issueId}/attachments`).then((rows) =>
       rows.map(absolutizeAttachment),
     ),
-  // Multipart upload — cannot use request(), which forces a JSON Content-Type;
-  // the browser must set the multipart boundary itself, so no headers are set.
-  uploadAttachment: async (issueId: number, file: File): Promise<Attachment> => {
-    const form = new FormData();
-    form.append('file', file);
-    const res = await fetch(`${API_URL}/issues/${issueId}/attachments`, {
-      method: 'POST',
-      credentials: 'include',
-      body: form,
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      throw new Error(body?.error ?? `${res.status} ${res.statusText}`);
-    }
-    return absolutizeAttachment(await res.json());
-  },
+  uploadAttachment: (issueId: number, file: File) =>
+    sendAttachmentFile(`/issues/${issueId}/attachments`, 'POST', file),
+  // Keeps the attachment's id and URL, so an embed of it in a description shows
+  // the new file.
+  replaceAttachment: (publicId: string, file: File) =>
+    sendAttachmentFile(`/attachments/${publicId}`, 'PUT', file),
   deleteAttachment: (publicId: string) =>
     request<void>(`/attachments/${publicId}`, { method: 'DELETE' }),
 
@@ -2358,8 +2365,8 @@ export const api = {
     }),
   deleteSkill: (projectKey: string, skillId: number) =>
     request<void>(`/projects/${projectKey}/agent-skills/${skillId}`, { method: 'DELETE' }),
-  // Multipart upload for a skill reference — see uploadAttachment for why request()
-  // cannot be used.
+  // Multipart upload for a skill reference — see sendAttachmentFile for why
+  // request() cannot be used.
   addSkillReference: async (
     projectKey: string,
     skillId: number,

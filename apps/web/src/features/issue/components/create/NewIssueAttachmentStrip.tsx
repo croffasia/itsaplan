@@ -9,11 +9,13 @@ import NewIssueAttachmentChip from './NewIssueAttachmentChip';
 export default function NewIssueAttachmentStrip({
   items,
   onInsert,
+  onAnnotate,
   onRemove,
 }: {
   items: PendingAttachment[];
   // Left out while no editor is open to insert into.
   onInsert?: (attachment: Embeddable) => void;
+  onAnnotate: (id: number, file: File) => void;
   onRemove: (id: number) => void;
 }) {
   if (items.length === 0) return null;
@@ -30,6 +32,7 @@ export default function NewIssueAttachmentStrip({
             key={item.id}
             item={item}
             onInsert={onInsert}
+            onAnnotate={onAnnotate}
             onRemove={onRemove}
           />
         ))}

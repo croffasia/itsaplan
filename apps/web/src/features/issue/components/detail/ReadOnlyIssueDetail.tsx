@@ -1,5 +1,6 @@
 import { type SharedIssueBundle } from '@/lib/api';
 import { toPublicProjectDetail } from '@/utils/publicProject';
+import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { fieldDefsForType } from '../../utils/fieldDefs';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
@@ -22,6 +23,7 @@ export default function ReadOnlyIssueDetail({
   layout?: 'page' | 'panel';
 }) {
   const { project: scaffold, issue, feed } = bundle;
+  const properties = usePersistedOpen('issue-properties-open');
   const project = toPublicProjectDetail(scaffold);
   const imageByUserId = new Map(scaffold.assignees.map((a) => [a.userId, a.image]));
 
@@ -58,7 +60,7 @@ export default function ReadOnlyIssueDetail({
     </>
   );
 
-  const properties = (
+  const renderProperties = (className?: string) => (
     <IssueProperties
       project={project}
       issue={issue}
@@ -67,6 +69,9 @@ export default function ReadOnlyIssueDetail({
       onSetField={noop}
       onToggleLabel={noop}
       readOnly
+      className={className}
+      open={properties.open}
+      onToggle={properties.toggle}
     />
   );
 
@@ -76,7 +81,7 @@ export default function ReadOnlyIssueDetail({
     return (
       <div>
         {body}
-        <div className="mt-6">{properties}</div>
+        {renderProperties()}
         {activity}
       </div>
     );
@@ -90,7 +95,9 @@ export default function ReadOnlyIssueDetail({
         {body}
         {activity}
       </div>
-      <aside className="w-[340px] shrink-0">{properties}</aside>
+      {/* Nothing sits above it in this column, so the section drops the room and
+          the separator it keeps for the block it follows in a single column. */}
+      <aside className="w-[340px] shrink-0">{renderProperties('mt-0 border-t-0 pt-0')}</aside>
     </div>
   );
 }

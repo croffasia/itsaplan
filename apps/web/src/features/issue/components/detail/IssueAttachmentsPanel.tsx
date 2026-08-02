@@ -1,59 +1,58 @@
-import { useRef, useState, type DragEvent } from 'react';
-import { Download, GripVertical, HelpCircle, Paperclip, Plus, Trash2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { Download, Plus } from 'lucide-react';
 import { type Attachment } from '@/lib/api';
 import { useFileDragZone } from '../../hooks/useFileDragZone';
+import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import {
   useAttachmentsQuery,
   useDeleteAttachment,
+  useReplaceAttachment,
   useUploadAttachment,
 } from '../../services/attachments.service';
-import { attachmentHtml, isImage, isVideo } from '../../utils/attachmentEmbed';
-import { formatSize } from '../../utils/fileSize';
-import IssueAttachmentThumb from '../IssueAttachmentThumb';
+import { baseName } from '../../utils/filename';
+import IssueImageAnnotator from '../IssueImageAnnotator';
+import IssueAttachmentCard from './IssueAttachmentCard';
+import IssueAttachmentViewer from './IssueAttachmentViewer';
+import IssueSectionHeading from './IssueSectionHeading';
 import { useStorageSettingsQuery } from '@/services/storage.service';
 import { attachmentAccept, attachmentError, attachmentLimitHint } from '@/utils/uploadLimits';
 import { Button } from '@/components/ui/button';
-import {
-  Attachment as AttachmentCard,
-  AttachmentAction,
-  AttachmentActions,
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentMedia,
-  AttachmentTitle,
-} from '@/components/ui/attachment';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-function onDragStart(e: DragEvent<HTMLElement>, a: Attachment) {
-  e.dataTransfer.setData('text/html', attachmentHtml(a));
-  e.dataTransfer.setData('text/plain', a.url);
-  e.dataTransfer.effectAllowed = 'copy';
-  // Drag the whole card as the ghost, not just the grabbed handle.
-  const card = e.currentTarget.closest('[data-slot="attachment"]');
-  if (card) e.dataTransfer.setDragImage(card, 0, 0);
-}
-
-// Attachments for one issue: upload, preview (image/video inline), download,
-// delete, and insert into the description. onInsert hands the attachment back to
-// the parent, which embeds it into the description via the live editor.
+// Attachments for one issue, as a grid of preview cards: upload, look at,
+// annotate, download, delete, and insert into the description. onInsert hands the
+// attachment back to the parent, which embeds it via the live editor.
 export default function IssueAttachmentsPanel({
   issueId,
   onInsert,
+  onReplaced,
 }: {
   issueId: number;
   onInsert: (attachment: Attachment) => void;
+  onReplaced: () => void;
 }) {
   const attachmentsQuery = useAttachmentsQuery(issueId);
   const items = attachmentsQuery.data ?? [];
   const uploadAttachment = useUploadAttachment();
+  const replaceAttachment = useReplaceAttachment(issueId);
   const deleteAttachment = useDeleteAttachment(issueId);
   const limits = useStorageSettingsQuery().data;
   const [error, setError] = useState<string | null>(null);
+  const [annotating, setAnnotating] = useState<Attachment | null>(null);
+  const [viewing, setViewing] = useState<Attachment | null>(null);
+  // A replaced attachment keeps its URL, which the image optimizer caches its
+  // thumbnail under. Stamping the ones replaced here tells the two versions apart.
+  const [replacedAt, setReplacedAt] = useState<Record<string, number>>({});
+  const { open, toggle } = usePersistedOpen('issue-attachments-open');
   const fileInput = useRef<HTMLInputElement>(null);
 
   const uploading = uploadAttachment.isPending;
 
-  async function onFilesPicked(files: FileList | null) {
+  function thumbnailUrl(a: Attachment): string {
+    const stamp = replacedAt[a.id];
+    return stamp ? `${a.url}?v=${stamp}` : a.url;
+  }
+
+  async function upload(files: FileList | null) {
     if (!files || files.length === 0) return;
     setError(null);
     try {
@@ -74,107 +73,87 @@ export default function IssueAttachmentsPanel({
     }
   }
 
-  const { draggedFiles, dragHandlers } = useFileDragZone((files) => void onFilesPicked(files));
+  const { draggedFiles, dragHandlers } = useFileDragZone((files) => void upload(files));
 
   return (
-    <div className="relative mt-6 border-t pt-5" {...dragHandlers}>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          <Paperclip className="size-3.5" />
-          Attachments
-          {limits && (
-            <Tooltip>
-              <TooltipTrigger
-                aria-label="Upload limits"
-                className="text-muted-foreground/60 hover:text-muted-foreground"
-              >
-                <HelpCircle className="size-3.5" />
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs normal-case">
-                {attachmentLimitHint(limits)}
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </h3>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 gap-1.5"
-          disabled={uploading}
-          onClick={() => fileInput.current?.click()}
-        >
-          <Plus className="size-4" />
-          {uploading ? 'Uploading…' : 'Add'}
-        </Button>
+    // Collapsed, the heading row is all there is, so the section pulls itself up
+    // the way the Links one below it does.
+    <div className={`relative mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`} {...dragHandlers}>
+      {/* Fixed height: the Add button only renders while the section is open, and
+          without it the row would shrink to the height of the heading text. */}
+      <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
+        <IssueSectionHeading label="Attachments" open={open} onToggle={toggle} />
+        {open && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5"
+            disabled={uploading}
+            title={attachmentLimitHint(limits)}
+            onClick={() => fileInput.current?.click()}
+          >
+            <Plus className="size-4" />
+            {uploading ? 'Uploading…' : 'Add'}
+          </Button>
+        )}
         <input
           ref={fileInput}
           type="file"
           multiple
           accept={attachmentAccept(limits)}
           className="hidden"
-          onChange={(e) => void onFilesPicked(e.target.files)}
+          onChange={(e) => void upload(e.target.files)}
         />
       </div>
 
       {error && <p className="mb-2 text-xs text-destructive">{error}</p>}
 
-      {items.length === 0 ? (
-        <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Drop files here, or use Add to upload.
-        </p>
-      ) : (
-        <div className="flex flex-col gap-2">
-          {items.map((a) => (
-            <AttachmentCard key={a.id} className="w-full">
-              <span
-                draggable
-                onDragStart={(e) => onDragStart(e, a)}
-                title="Drag into the description"
-                aria-label={`Drag ${a.filename} into the description`}
-                className="flex shrink-0 cursor-grab touch-none items-center self-stretch text-muted-foreground/40 hover:text-muted-foreground active:cursor-grabbing"
-              >
-                <GripVertical className="size-4" />
-              </span>
+      {open &&
+        (items.length === 0 ? (
+          <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+            Drop files here, or use Add to upload.
+          </p>
+        ) : (
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
+            {items.map((a) => (
+              <IssueAttachmentCard
+                key={a.id}
+                attachment={a}
+                thumbnailUrl={thumbnailUrl(a)}
+                onOpen={() => setViewing(a)}
+                onInsert={() => onInsert(a)}
+                onAnnotate={() => setAnnotating(a)}
+                onDelete={() => deleteAttachment.mutate(a.id)}
+              />
+            ))}
+          </div>
+        ))}
 
-              <AttachmentMedia variant={isImage(a) || isVideo(a) ? 'image' : 'icon'}>
-                <IssueAttachmentThumb attachment={a} />
-              </AttachmentMedia>
+      {viewing && <IssueAttachmentViewer attachment={viewing} onClose={() => setViewing(null)} />}
 
-              <AttachmentContent>
-                <AttachmentTitle>{a.filename}</AttachmentTitle>
-                <AttachmentDescription>{formatSize(a.sizeBytes)}</AttachmentDescription>
-              </AttachmentContent>
-
-              <AttachmentActions>
-                <AttachmentAction
-                  size="sm"
-                  onClick={() => onInsert(a)}
-                  title="Insert into description"
-                >
-                  Insert
-                </AttachmentAction>
-                <AttachmentAction asChild title="Download">
-                  <a
-                    href={`${a.url}?download=1`}
-                    download={a.filename}
-                    aria-label={`Download ${a.filename}`}
-                    draggable={false}
-                  >
-                    <Download />
-                  </a>
-                </AttachmentAction>
-                <AttachmentAction
-                  className="hover:text-destructive"
-                  onClick={() => deleteAttachment.mutate(a.id)}
-                  aria-label={`Delete ${a.filename}`}
-                  title="Delete"
-                >
-                  <Trash2 />
-                </AttachmentAction>
-              </AttachmentActions>
-            </AttachmentCard>
-          ))}
-        </div>
+      {annotating && (
+        <IssueImageAnnotator
+          src={annotating.url}
+          savedName={baseName(annotating.filename)}
+          // The marks become the attachment itself, so wherever it is already
+          // embedded now shows them; its id and URL do not change.
+          onSave={(file) => {
+            const publicId = annotating.id;
+            setError(null);
+            replaceAttachment.mutate(
+              { publicId, file },
+              {
+                onSuccess: () => {
+                  setReplacedAt((prev) => ({ ...prev, [publicId]: Date.now() }));
+                  onReplaced();
+                },
+                onError: (err) => setError(err.message),
+              },
+            );
+            setAnnotating(null);
+          }}
+          onClose={() => setAnnotating(null)}
+        />
       )}
 
       {draggedFiles !== null && (

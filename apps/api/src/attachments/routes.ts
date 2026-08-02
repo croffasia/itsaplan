@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { noContent } from '../shared/http';
 import { authContext } from '../shared/auth-context';
 import { entityGuard } from '../shared/guards';
@@ -14,6 +14,7 @@ import {
   createAttachment,
   listAttachments,
   getAttachmentByPublicId,
+  replaceAttachmentContent,
   deleteAttachmentByPublicId,
   removeAttachmentEmbeds,
   getProjectAttachmentBytes,
@@ -37,6 +38,8 @@ async function assertUploadAllowed(
   projectId: number,
   size: number,
   contentType: string,
+  // Bytes the new file takes the place of, which the quota gets back.
+  replacedBytes = 0,
 ): Promise<void> {
   if (size > limits.maxAttachmentMb * MB) {
     throw new HttpError(413, `File exceeds the ${limits.maxAttachmentMb} MB limit`);
@@ -45,13 +48,28 @@ async function assertUploadAllowed(
     throw new HttpError(400, `Files of type "${contentType}" are not accepted on this instance`);
   }
   if (limits.projectQuotaMb > 0) {
-    const used = await getProjectAttachmentBytes(projectId);
+    const used = (await getProjectAttachmentBytes(projectId)) - replacedBytes;
     if (used + size > limits.projectQuotaMb * MB) {
       throw new HttpError(
         413,
         `The project has used its ${limits.projectQuotaMb} MB storage quota. Delete attachments to free space.`,
       );
     }
+  }
+}
+
+// A failed write to the object store is nothing the caller can fix, so it is
+// logged with what it takes to find the object and reported as a bad gateway.
+async function storeObject(key: string, bytes: Buffer, contentType: string): Promise<void> {
+  try {
+    await putObject(key, bytes, contentType);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(
+      `[planner] object store PUT failed (bucket=${process.env.S3_BUCKET}, key=${key}, size=${bytes.length}):`,
+      err,
+    );
+    throw new HttpError(502, `Object store error: ${msg}`);
   }
 }
 
@@ -138,18 +156,7 @@ export const attachmentRoutes = new Elysia({
       await assertUploadAllowed(await getStorageSettings(), projectId, file.size, contentType);
 
       const key = attachmentKey(projectId, issueId, filename);
-      const bytes = Buffer.from(await file.arrayBuffer());
-
-      try {
-        await putObject(key, bytes, contentType);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(
-          `[planner] object store PUT failed (bucket=${process.env.S3_BUCKET}, key=${key}, size=${file.size}):`,
-          err,
-        );
-        throw new HttpError(502, `Object store error: ${msg}`);
-      }
+      await storeObject(key, Buffer.from(await file.arrayBuffer()), contentType);
 
       const row = await createAttachment({
         issueId,
@@ -226,13 +233,7 @@ export const attachmentRoutes = new Elysia({
       await assertUploadAllowed(limits, projectId, bytes.length, contentType);
 
       const key = attachmentKey(projectId, issueId, filename);
-      try {
-        await putObject(key, bytes, contentType);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        console.error(`[planner] object store PUT failed (key=${key}, size=${bytes.length}):`, err);
-        throw new HttpError(502, `Object store error: ${msg}`);
-      }
+      await storeObject(key, bytes, contentType);
 
       const row = await createAttachment({
         issueId,
@@ -267,6 +268,67 @@ export const attachmentRoutes = new Elysia({
         description: 'Attach a file to an issue without a multipart upload.',
         ...mcpTool('add_attachment'),
       },
+    },
+  )
+
+  // Swaps the bytes behind an attachment, keeping its publicId and so its URL:
+  // an edited image (annotated, cropped) stays the same attachment and every
+  // embed of it in a description shows the new version. The old object is
+  // dropped, and the raw route serves the new bytes because it revalidates.
+  .put(
+    '/attachments/:publicId',
+    async ({ params, body, projectId }) => {
+      const existing = await getAttachmentByPublicId(params.publicId);
+      if (!existing) throw new HttpError(404, 'Attachment not found');
+
+      const file = body.file;
+      if (!(file instanceof File)) throw new HttpError(400, 'No file uploaded (form field "file")');
+      if (file.size === 0) throw new HttpError(400, 'Uploaded file is empty');
+
+      const filename = file.name || existing.filename;
+      const contentType = file.type || 'application/octet-stream';
+      await assertUploadAllowed(
+        await getStorageSettings(),
+        projectId,
+        file.size,
+        contentType,
+        existing.sizeBytes,
+      );
+
+      const key = attachmentKey(projectId, existing.issueId, filename);
+      await storeObject(key, Buffer.from(await file.arrayBuffer()), contentType);
+
+      const row = await replaceAttachmentContent(params.publicId, {
+        s3Key: key,
+        filename,
+        contentType,
+        sizeBytes: file.size,
+      });
+      if (!row) throw new HttpError(404, 'Attachment not found');
+
+      // The row already points at the new object, so a failed delete only
+      // orphans the old bytes.
+      await deleteObject(existing.s3Key).catch((err) => {
+        console.error(
+          `[planner] failed to delete object ${existing.s3Key}:`,
+          err instanceof Error ? err.message : err,
+        );
+      });
+      return attachmentDto(row);
+    },
+    {
+      body: t.Object({ file: t.File() }),
+      attachment: 'edit',
+      response: {
+        200: AttachmentSchema,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+        413: ErrorResponse,
+        502: ErrorResponse,
+      },
+      detail: { summary: "Replace an attachment's file" },
     },
   )
 
@@ -309,9 +371,19 @@ export const attachmentRoutes = new Elysia({
   // uuid. `?download=1` forces a download instead of inline rendering.
   .get(
     '/attachments/:publicId/raw',
-    async ({ params, query }) => {
+    async ({ params, query, request }) => {
       const row = await getAttachmentByPublicId(params.publicId);
       if (!row) throw new HttpError(404, 'Attachment not found');
+
+      // The bytes behind a publicId can be replaced, so the response is
+      // revalidated instead of cached for good. Every write stores the file
+      // under a key with a fresh uuid, so a digest of the key changes with the
+      // bytes. It is the digest, not the key, because this route is public and
+      // the key carries the project id, the issue id and the stored filename.
+      const etag = `"${createHash('sha256').update(row.s3Key).digest('base64url').slice(0, 22)}"`;
+      if (request.headers.get('if-none-match') === etag) {
+        return new Response(null, { status: 304, headers: { ETag: etag } });
+      }
 
       let obj;
       try {
@@ -333,7 +405,8 @@ export const attachmentRoutes = new Elysia({
         'Content-Type': ct,
         'Content-Disposition': `${inline ? 'inline' : 'attachment'}; filename*=UTF-8''${encodeURIComponent(row.filename)}`,
         'X-Content-Type-Options': 'nosniff',
-        'Cache-Control': 'public, max-age=31536000, immutable',
+        'Cache-Control': 'no-cache',
+        ETag: etag,
       };
       if (obj.contentLength != null) headers['Content-Length'] = String(obj.contentLength);
       if (!inline) headers['Content-Security-Policy'] = "default-src 'none'; sandbox";

@@ -105,6 +105,80 @@ describe('attachments', () => {
     });
   });
 
+  describe('replace', () => {
+    it('serves the new bytes under the same id and url', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      const up = await uploadFile(asOwner, issueId, 'shot.png', 'image/png', 'before');
+      const publicId = up.data!.id;
+
+      const res = await asOwner.attachments({ publicId }).put({
+        file: new File(['after annotating'], 'shot.png', { type: 'image/png' }),
+      });
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ id: publicId, filename: 'shot.png', sizeBytes: 16 });
+      expect(res.data!.url).toBe(up.data!.url);
+
+      const raw = await api.attachments({ publicId }).raw.get();
+      expect(String(raw.data)).toBe('after annotating');
+
+      // Still one attachment: the row was updated, not added to.
+      const list = await asOwner.issues({ issueId }).attachments.get();
+      expect(list.data).toHaveLength(1);
+    });
+
+    it('serves the replaced bytes to a client holding the old entity tag', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      const up = await uploadFile(asOwner, issueId, 'shot.png', 'image/png', 'before');
+      const publicId = up.data!.id;
+      const first = await api.attachments({ publicId }).raw.get();
+      const etag = first.response.headers.get('etag')!;
+      expect(etag).not.toBeNull();
+
+      // Unchanged: the client may reuse what it has.
+      const cached = await api
+        .attachments({ publicId })
+        .raw.get({ headers: { 'if-none-match': etag } });
+      expect(cached.status).toBe(304);
+
+      await asOwner
+        .attachments({ publicId })
+        .put({ file: new File(['after'], 'shot.png', { type: 'image/png' }) });
+
+      const refetched = await api
+        .attachments({ publicId })
+        .raw.get({ headers: { 'if-none-match': etag } });
+      expect(refetched.status).toBe(200);
+      expect(String(refetched.data)).toBe('after');
+    });
+
+    it('rejects an empty file', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      const up = await uploadFile(asOwner, issueId, 'shot.png', 'image/png');
+      const res = await asOwner.attachments({ publicId: up.data!.id }).put({
+        file: new File([], 'shot.png', { type: 'image/png' }),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 404 for an unknown attachment', async () => {
+      const { asOwner } = await setupIssue();
+      const res = await asOwner
+        .attachments({ publicId: '00000000-0000-0000-0000-000000000000' })
+        .put({ file: new File(['x'], 'x.png', { type: 'image/png' }) });
+      expect(res.status).toBe(404);
+    });
+
+    it('denies a non-member replacing an attachment', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      const up = await uploadFile(asOwner, issueId, 'shot.png', 'image/png');
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      const res = await outsider
+        .attachments({ publicId: up.data!.id })
+        .put({ file: new File(['x'], 'x.png', { type: 'image/png' }) });
+      expect(res.status).toBe(403);
+    });
+  });
+
   describe('delete', () => {
     it('returns 404 when deleting a missing attachment', async () => {
       const { asOwner } = await setupIssue();

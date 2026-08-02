@@ -12,6 +12,7 @@ import { useNewIssueAttachments } from '../../hooks/useNewIssueAttachments';
 import {
   attachmentHtml,
   removeEmbed,
+  replaceEmbed,
   stripEmbed,
   type Embeddable,
 } from '../../utils/attachmentEmbed';
@@ -125,6 +126,15 @@ export default function NewIssueModal({
     if (!item) return;
     if (descEditor) removeEmbed(descEditor, item.url);
     for (const editor of fieldEditors.current.values()) removeEmbed(editor, item.url);
+  }
+
+  // The annotated image replaces the file it was drawn on, so wherever that file
+  // was already inserted now shows the annotated one.
+  function annotateAttachment(id: number, file: File) {
+    const urls = attachments.replace(id, file);
+    if (!urls) return;
+    if (descEditor) replaceEmbed(descEditor, urls.from, urls.to);
+    for (const editor of fieldEditors.current.values()) replaceEmbed(editor, urls.from, urls.to);
   }
 
   function insertFilesIntoBody(files: FileList) {
@@ -409,6 +419,7 @@ export default function NewIssueModal({
           <NewIssueAttachmentStrip
             items={attachments.pending}
             onInsert={bodyTab === OTHER_TAB ? undefined : insertIntoBody}
+            onAnnotate={annotateAttachment}
             onRemove={removeAttachment}
           />
           <Button className="ml-auto" disabled={saving || !title.trim()} onClick={submit}>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { type IssueLink, type IssueLinkInputKind, type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { useUnlinkIssues } from '../../services/links.service';
 import IssueLinkDialog from './IssueLinkDialog';
 import IssueLinkRow from './IssueLinkRow';
+import IssueSectionHeading from './IssueSectionHeading';
 
 // The issue's relations to other issues, grouped by how each reads from this
 // issue (Blocked by, Blocks, Duplicates, Duplicated by, Related). The links come
@@ -34,7 +35,6 @@ export default function IssueLinksPanel({
   const [adding, setAdding] = useState<IssueLinkInputKind | null>(null);
   const { open, toggle } = usePersistedOpen('issue-links-open');
   const unlinkIssues = useUnlinkIssues();
-  const Chevron = open ? ChevronDown : ChevronRight;
 
   const groups = LINK_RELATIONS.map((relation) => ({
     relation,
@@ -49,14 +49,7 @@ export default function IssueLinksPanel({
       {/* Fixed height: the Add button only renders while the section is open, and
           without it the row would shrink to the height of the heading text. */}
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <button
-          type="button"
-          className="flex items-center gap-1 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:text-foreground"
-          onClick={toggle}
-        >
-          <Chevron className="size-3.5" />
-          Links
-        </button>
+        <IssueSectionHeading label="Links" open={open} onToggle={toggle} />
         {open && canEdit && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -57,6 +57,30 @@ export function useNewIssueAttachments() {
     return item;
   }
 
+  // Swaps a pending file for another one, keeping its place in the list. The new
+  // file gets its own blob: URL, so the caller has to point the embeds of the old
+  // one at it; the old URL is also queued for stripping in case one is missed.
+  // Returns the old and the new URL, or null when the file is refused.
+  function replace(id: number, file: File): { from: string; to: string } | null {
+    const previous = pending.find((p) => p.id === id);
+    if (!previous) return null;
+    const reason = attachmentError(file, limits);
+    if (reason) {
+      setError(reason);
+      return null;
+    }
+    setError(null);
+    const url = URL.createObjectURL(file);
+    blobUrls.current.push(url);
+    removedUrls.current.push(previous.url);
+    setPending((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, file, url, contentType: file.type, filename: file.name } : p,
+      ),
+    );
+    return { from: previous.url, to: url };
+  }
+
   // Returns the removed attachment, so the caller can drop its embeds too.
   function remove(id: number): PendingAttachment | null {
     const item = pending.find((p) => p.id === id);
@@ -80,5 +104,5 @@ export function useNewIssueAttachments() {
     return urls;
   }
 
-  return { pending, error, attach, uploadFile, remove, uploadAll };
+  return { pending, error, attach, uploadFile, replace, remove, uploadAll };
 }

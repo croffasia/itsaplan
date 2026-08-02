@@ -19,6 +19,15 @@ export function useUploadAttachment() {
   });
 }
 
+export function useReplaceAttachment(issueId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ publicId, file }: { publicId: string; file: File }): Promise<Attachment> =>
+      api.replaceAttachment(publicId, file),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: qk.attachments(issueId) }),
+  });
+}
+
 export function useDeleteAttachment(issueId: number) {
   const qc = useQueryClient();
   return useMutation({

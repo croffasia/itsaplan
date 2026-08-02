@@ -21,7 +21,9 @@ import InitiativeSelect from '../fields/InitiativeSelect';
 import IssueCustomFieldControl from '../fields/IssueCustomFieldControl';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueWatchers from './IssueWatchers';
+import IssueSectionHeading from './IssueSectionHeading';
 import { type Embeddable } from '../../utils/attachmentEmbed';
+import { cn } from '@/lib/utils';
 
 // One property row in the two-column list: name on the left, control on the right.
 function PropertyRow({ label, children }: { label: string; children: ReactNode }) {
@@ -35,7 +37,9 @@ function PropertyRow({ label, children }: { label: string; children: ReactNode }
 
 // The Properties grid of the issue detail: built-in fields (status, assignee,
 // priority, type, dates, labels) and non-markdown custom fields, each editable
-// inline. Always a bordered card, in the sidebar and in the single column alike.
+// inline. Shaped like the Attachments and Links sections — same heading, same
+// separator above it, same collapsing — in the sidebar and in the single column
+// alike.
 export default function IssueProperties({
   project,
   issue,
@@ -47,6 +51,9 @@ export default function IssueProperties({
   imageAttachments,
   watchers,
   readOnly,
+  className,
+  open,
+  onToggle,
 }: {
   project: ProjectDetail;
   issue: IssueDetailRow;
@@ -62,6 +69,13 @@ export default function IssueProperties({
   // When true every control is a non-interactive display of its value (public
   // shared page). The onPatch/onSetField/onToggleLabel callbacks are never called.
   readOnly?: boolean;
+  // Spacing override for a sidebar, where the section follows the actions row
+  // rather than a block of content and needs less room above it.
+  className?: string;
+  // Held by the parent: the page layout renders this section twice — in the
+  // column below xl, in the sidebar from xl — and both have to agree.
+  open: boolean;
+  onToggle: () => void;
 }) {
   const hasMembers = project.assignees.some((a) => a.kind === 'member');
   const hasAgents = project.assignees.some((a) => a.kind === 'agent');
@@ -212,9 +226,18 @@ export default function IssueProperties({
   );
 
   return (
-    <div className="rounded-lg border bg-card/50 p-3.5">
-      <h3 className="mb-2.5 text-xs font-medium text-muted-foreground">Properties</h3>
-      <div className="grid grid-cols-[72px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
+    // Collapsed, the heading row is all there is, so the section pulls itself up
+    // against the one below it.
+    <div className={cn('mt-6 border-t pt-5', !open && '-mb-2', className)}>
+      <IssueSectionHeading
+        label="Properties"
+        open={open}
+        onToggle={onToggle}
+        className={cn('h-7', open && 'mb-3')}
+      />
+      {open && (
+        <div className="grid grid-cols-[72px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
+      )}
     </div>
   );
 }

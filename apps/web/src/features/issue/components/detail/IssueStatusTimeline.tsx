@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
 import { type Column } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
@@ -7,6 +6,7 @@ import { useTimelineQuery } from '../../services/comments.service';
 import { buildLifecycleMetrics, buildTimelineLayout } from '../../utils/timeline';
 import IssueTimelineCompact from './IssueTimelineCompact';
 import IssueTimelineLanes from './IssueTimelineLanes';
+import IssueSectionHeading from './IssueSectionHeading';
 
 // How the issue moved through the statuses, above the activity log. The compact bar
 // shows one share per status with the lifecycle metrics; the header button swaps in
@@ -44,7 +44,6 @@ export default function IssueStatusTimeline({
 
   const open = openHere ?? prefs.issueStatsOpen;
   const showTimeline = timelineHere ?? prefs.issueStatsView === 'timeline';
-  const Chevron = open ? ChevronDown : ChevronRight;
   return (
     // Collapsed, the row is all there is, so the section pulls itself up against the
     // activity log below: the heading would otherwise sit off-centre between the two
@@ -53,14 +52,7 @@ export default function IssueStatusTimeline({
       {/* Fixed height: the view button only renders while the section is open, and
           without it the row would shrink to the height of the heading text. */}
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-4' : ''}`}>
-        <button
-          type="button"
-          className="flex items-center gap-1 text-xs font-medium tracking-wide text-muted-foreground uppercase hover:text-foreground"
-          onClick={() => setOpenHere(!open)}
-        >
-          <Chevron className="size-3.5" />
-          Stats
-        </button>
+        <IssueSectionHeading label="Stats" open={open} onToggle={() => setOpenHere(!open)} />
         {open && (
           <Button
             variant="ghost"

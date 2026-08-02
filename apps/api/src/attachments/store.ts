@@ -78,6 +78,21 @@ export async function getAttachmentByPublicId(publicId: string): Promise<Attachm
   return rows[0] ? mapAttachment(rows[0]) : null;
 }
 
+// Points an attachment at new bytes, keeping its row and its publicId. An embed
+// of it in a description keeps working and shows the new file, which is what
+// makes editing an attachment in place possible. Returns null if no row matched.
+export async function replaceAttachmentContent(
+  publicId: string,
+  input: { s3Key: string; filename: string; contentType: string; sizeBytes: number },
+): Promise<AttachmentRow | null> {
+  const rows = await db
+    .update(issueAttachment)
+    .set(input)
+    .where(eq(issueAttachment.publicId, publicId))
+    .returning();
+  return rows[0] ? mapAttachment(rows[0]) : null;
+}
+
 // Deletes the row and returns it (with its s3Key) so the caller can remove the
 // object from the store. Returns null if no row matched.
 export async function deleteAttachmentByPublicId(publicId: string): Promise<AttachmentRow | null> {
@@ -89,8 +104,7 @@ export async function deleteAttachmentByPublicId(publicId: string): Promise<Atta
 }
 
 // An embed of a deleted attachment left in markdown would 404 once the object is
-// gone (or, worse, keep showing from the year-long immutable cache on the raw
-// route). Strip any construct whose URL carries this attachment's publicId: a
+// gone. Strip any construct whose URL carries this attachment's publicId: a
 // markdown image/link, or an inline <img>/<video>. The publicId is a uuid, so a
 // URL substring match is specific to this one attachment.
 function stripEmbeds(text: string, publicId: string): string {

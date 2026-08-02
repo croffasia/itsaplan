@@ -170,6 +170,23 @@ export default function AccountPreferencesPage() {
         </AccountPreferenceRow>
       </AccountPreferencesSection>
 
+      <AccountPreferencesSection
+        id="notifications"
+        title="Notifications"
+        description="Watching an issue is how you receive its comments and status changes. Being assigned or mentioned reaches you either way."
+      >
+        <AccountPreferenceRow
+          label="Watch issues automatically"
+          description="Subscribes you to the issues you create, are assigned, comment on, or are mentioned in. You can always unwatch an issue — that sticks, even if you comment on it again."
+        >
+          <Switch
+            checked={prefs.autoWatch}
+            onCheckedChange={(autoWatch) => save({ autoWatch })}
+            disabled={disabled}
+          />
+        </AccountPreferenceRow>
+      </AccountPreferencesSection>
+
       <AccountPreferencesSection id="ai-chat" title="AI chat">
         <AccountPreferenceRow
           label="Show chat by default"

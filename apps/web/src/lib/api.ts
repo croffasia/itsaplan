@@ -897,6 +897,9 @@ export interface AccountPreferences {
   issueStatsOpen: boolean;
   issueStatsView: IssueStatsView;
   issueActivityView: IssueActivityView;
+  // Whether the user is subscribed to the issues they create, are assigned, comment
+  // on or are mentioned in. Off means they only ever subscribe by hand.
+  autoWatch: boolean;
   lastProjectId: number | null;
   // The keyboard shortcuts this user rebound, as { commandId: combo }. Only the
   // changed ones; the rest come from the instance settings, then the built-in
@@ -1461,11 +1464,19 @@ export interface IssueLinkRef {
   issueId: number;
 }
 
-// The issue as the detail routes return it: with its relations. The public share
-// bundle carries an IssueDetail instead — a shared page does not expose the issues
-// on the other end of a relation.
+// A member following an issue: they receive every notification it produces.
+export interface IssueWatcher {
+  userId: string;
+  name: string;
+  image: string | null;
+}
+
+// The issue as the detail routes return it: with its relations and its watchers.
+// The public share bundle carries an IssueDetail instead — a shared page does not
+// expose the issues on the other end of a relation, nor who follows the issue.
 export interface IssueWithLinks extends IssueDetail {
   links: IssueLink[];
+  watchers: IssueWatcher[];
 }
 
 // Public read-only share bundles, returned by the /share/* routes with no session.
@@ -2011,6 +2022,13 @@ export const api = {
     }),
   unlinkIssues: (issueId: number, linkId: number) =>
     request<void>(`/issues/${issueId}/links/${linkId}`, { method: 'DELETE' }),
+
+  // Following an issue, for the signed-in user only. Both return the resulting
+  // watcher list.
+  watchIssue: (issueId: number) =>
+    request<IssueWatcher[]>(`/issues/${issueId}/watch`, { method: 'POST' }),
+  unwatchIssue: (issueId: number) =>
+    request<IssueWatcher[]>(`/issues/${issueId}/watch`, { method: 'DELETE' }),
 
   setFieldValue: (issueId: number, fieldId: number, input: IssueFieldValueInput) =>
     request<{ ok: boolean }>(`/issues/${issueId}/fields/${fieldId}`, {

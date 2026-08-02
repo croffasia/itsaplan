@@ -31,6 +31,9 @@ export interface UserPreferenceDto {
   issueStatsOpen: boolean;
   issueStatsView: IssueStatsView;
   issueActivityView: IssueActivityView;
+  // Whether the user is subscribed to the issues they create, are assigned, comment
+  // on or are mentioned in. Off means they only ever subscribe by hand.
+  autoWatch: boolean;
   // The project the user was in last, or null before they opened one. The app root
   // reopens it; a deleted project clears it through the FK.
   lastProjectId: number | null;
@@ -52,6 +55,7 @@ export function defaults(): UserPreferenceDto {
     issueStatsOpen: true,
     issueStatsView: 'compact',
     issueActivityView: 'flat',
+    autoWatch: true,
     lastProjectId: null,
     hotkeys: {},
   };
@@ -77,6 +81,7 @@ function toDto(row: {
   issueStatsOpen: boolean;
   issueStatsView: string;
   issueActivityView: string;
+  autoWatch: boolean;
   lastProjectId: number | null;
   hotkeys: Record<string, string> | null;
 }): UserPreferenceDto {
@@ -89,6 +94,7 @@ function toDto(row: {
     issueStatsOpen: row.issueStatsOpen,
     issueStatsView: row.issueStatsView as IssueStatsView,
     issueActivityView: row.issueActivityView as IssueActivityView,
+    autoWatch: row.autoWatch,
     lastProjectId: row.lastProjectId,
     hotkeys: row.hotkeys ?? {},
   };
@@ -106,6 +112,7 @@ export async function getPreferences(userId: string): Promise<UserPreferenceDto>
       issueStatsOpen: userPreference.issueStatsOpen,
       issueStatsView: userPreference.issueStatsView,
       issueActivityView: userPreference.issueActivityView,
+      autoWatch: userPreference.autoWatch,
       lastProjectId: userPreference.lastProjectId,
       hotkeys: userPreference.hotkeys,
     })

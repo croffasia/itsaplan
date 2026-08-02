@@ -40,6 +40,7 @@ import {
   type FeedCursor,
 } from './activity';
 import { addIssueLink, attachBoardLinks, listIssueLinks, removeIssueLink } from './links';
+import { listIssueWatchers, setIssueWatching } from './watchers';
 
 // Numeric path params are validated (and coerced string -> number) with t.Numeric,
 // so a non-numeric id is rejected with a 400 before reaching the store.
@@ -141,11 +142,22 @@ const BoardIssueLinkResponse = t.Object({
   issueId: t.Number(),
 });
 
-// GET /issues/:issueId returns the full issue plus its custom field values and
-// its relations to other issues.
+// IssueWatcherRow from watchers.ts: one member following the issue.
+const IssueWatcherResponse = t.Object({
+  userId: t.String(),
+  name: t.String(),
+  image: t.Nullable(t.String()),
+});
+
+// GET /issues/:issueId returns the full issue plus its custom field values, its
+// relations to other issues, and the members watching it.
 const IssueWithFieldsResponse = t.Composite([
   IssueResponse,
-  t.Object({ fields: t.Array(IssueFieldValueRow), links: t.Array(IssueLinkResponse) }),
+  t.Object({
+    fields: t.Array(IssueFieldValueRow),
+    links: t.Array(IssueLinkResponse),
+    watchers: t.Array(IssueWatcherResponse),
+  }),
 ]);
 
 // The board carries each issue's relations on the issue itself.
@@ -620,7 +632,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       if (!issue) throw new HttpError(404, 'Issue not found');
       const fields = await getIssueFieldValues(issue.id);
       const links = await listIssueLinks(issue.id);
-      return { ...issue, fields, links };
+      const watchers = await listIssueWatchers(project.id, issue.id);
+      return { ...issue, fields, links, watchers };
     },
     {
       params: t.Object({ projectKey: t.String(), sequenceNumber: t.Numeric() }),
@@ -658,7 +671,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       }
       const fields = await getIssueFieldValues(issue.id);
       const links = await listIssueLinks(issue.id);
-      return { ...issue, fields, links };
+      const watchers = await listIssueWatchers(issue.projectId, issue.id);
+      return { ...issue, fields, links, watchers };
     },
     {
       params: issueParams,
@@ -937,6 +951,58 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Unlink two issues',
         description: "Remove one of an issue's relations by the link id.",
         ...mcpTool('unlink_issues'),
+      },
+    },
+  )
+
+  // Follows the issue: the caller receives every notification it produces until
+  // they unwatch it. Only ever the caller — one member does not subscribe
+  // another. Reading the issue is enough, since watching adds no other access.
+  // Both routes return the resulting list, which the issue read also carries.
+  .post(
+    '/issues/:issueId/watch',
+    async ({ params, projectId, user }) => {
+      await setIssueWatching(params.issueId, requireUser(user).id, true);
+      return listIssueWatchers(projectId, params.issueId);
+    },
+    {
+      params: issueParams,
+      workItem: 'read',
+      response: {
+        200: t.Array(IssueWatcherResponse),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Watch an issue',
+        description: 'Subscribe the current user to an issue and return its watchers.',
+      },
+    },
+  )
+
+  // Stops following the issue. The unsubscription is recorded rather than
+  // forgotten, so commenting on the issue again does not silently re-subscribe.
+  .delete(
+    '/issues/:issueId/watch',
+    async ({ params, projectId, user }) => {
+      await setIssueWatching(params.issueId, requireUser(user).id, false);
+      return listIssueWatchers(projectId, params.issueId);
+    },
+    {
+      params: issueParams,
+      workItem: 'read',
+      response: {
+        200: t.Array(IssueWatcherResponse),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Unwatch an issue',
+        description: 'Unsubscribe the current user from an issue and return its watchers.',
       },
     },
   )

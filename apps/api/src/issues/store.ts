@@ -40,6 +40,7 @@ import {
   type ActivityInput,
   type IssueSnapshot,
 } from './activity';
+import { autoWatchIssue } from './watchers';
 import { mapAttachment, type AttachmentRow } from '../attachments/store';
 import { notifyIssueChange } from '../notifications/store';
 import { emitWebhookEvent } from '../webhooks/emit';
@@ -715,6 +716,9 @@ export async function createIssue(
   if (input.labelIds?.length)
     await setIssueLabels(project.id, issueId, input.labelIds, actorUserId, false);
   const created = (await getIssue(issueId))!;
+  // The author follows what they filed; the assignee is subscribed by the
+  // assignment notification below, the same as a later assignment does.
+  await autoWatchIssue(project.id, issueId, [actorUserId]);
   await emitWebhookEvent(project.id, 'issue.created', created);
   // An issue created already delegated to an agent enqueues a run, the same as
   // delegating one later does.

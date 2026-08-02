@@ -17,6 +17,7 @@ export const PREFERENCE_DEFAULTS: AccountPreferences = {
   issueStatsOpen: true,
   issueStatsView: 'compact',
   issueActivityView: 'flat',
+  autoWatch: true,
   lastProjectId: null,
   hotkeys: {},
 };

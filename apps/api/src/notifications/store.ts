@@ -1,24 +1,17 @@
-import {
-  db,
-  notification,
-  issueActivity,
-  projectMember,
-  user,
-  issue,
-  project,
-  projectColumn,
-} from '@repo/db';
+import { db, notification, projectMember, user, issue, project, projectColumn } from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
 import { parseMentions } from '../ai-agents/mentions';
+import { autoWatchIssue, watcherUserIds } from '../issues/watchers';
 import { iso } from '../shared/lib';
 import { enqueueOutbound } from './outbound';
 
 // Inbox notifications. A notification is one (recipient, event) row: a user is told
-// about an issue they are involved in. Recipients are derived from issue_activity
-// (assignee, delegate, and anyone who has acted on the issue) rather than a separate
-// subscription table. The actor is never notified about their own action, and only
-// project members receive notifications, so agent bot users (assigned via delegate,
-// not members) are excluded.
+// about an issue they are involved in. What happens on the issue ('commented',
+// 'state_changed') goes to its watchers (issue_watcher, see issues/watchers.ts);
+// what is addressed to one person ('assigned', 'mentioned') goes to them whether
+// they watch the issue or not, and subscribes them to it. The actor is never
+// notified about their own action, and only project members receive notifications,
+// so agent bot users (assigned via delegate, not members) are excluded.
 
 export type NotificationType = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
 
@@ -43,18 +36,6 @@ async function keepProjectMembers(projectId: number, ids: string[]): Promise<Set
   return new Set(rows.map((r) => r.userId));
 }
 
-// The members who should hear about activity on an issue: its assignee and delegate,
-// plus anyone who has previously acted on it (a comment or a logged change). Bot
-// users and non-members are dropped by keepProjectMembers.
-async function issueParticipants(projectId: number, issueId: number): Promise<Set<string>> {
-  const rows = await db
-    .selectDistinct({ actorUserId: issueActivity.actorUserId })
-    .from(issueActivity)
-    .where(and(eq(issueActivity.issueId, issueId), sql`${issueActivity.actorUserId} IS NOT NULL`));
-  const candidates = rows.map((r) => r.actorUserId as string);
-  return keepProjectMembers(projectId, candidates);
-}
-
 async function actorName(id: string | null): Promise<string | null> {
   if (id == null) return null;
   const rows = await db.select({ name: user.name }).from(user).where(eq(user.id, id));
@@ -74,9 +55,10 @@ async function insertNotifications(rows: NewNotificationRow[]): Promise<void> {
   }
 }
 
-// Fan out a new comment. Mentioned members get a 'mentioned' notification; the other
-// participants get 'commented'. A mentioned user gets only the 'mentioned' one. The
-// comment author is never notified.
+// Fan out a new comment. Mentioned members get a 'mentioned' notification; the
+// watchers get 'commented'. A mentioned user gets only the 'mentioned' one. The
+// comment author is never notified. Commenting and being mentioned both subscribe
+// to the issue, so the watchers are resolved after that.
 export async function notifyComment(
   projectId: number,
   comment: { issueId: number; id: number; actorUserId: string | null; body: string | null },
@@ -84,7 +66,8 @@ export async function notifyComment(
   const actor = comment.actorUserId;
   const mentionedIds = parseMentions(comment.body ?? '');
   const mentioned = await keepProjectMembers(projectId, mentionedIds);
-  const participants = await issueParticipants(projectId, comment.issueId);
+  await autoWatchIssue(projectId, comment.issueId, [actor, ...mentioned]);
+  const watchers = await watcherUserIds(projectId, comment.issueId);
 
   const rows: NewNotificationRow[] = [];
   for (const userId of mentioned) {
@@ -98,7 +81,7 @@ export async function notifyComment(
       actorUserId: actor,
     });
   }
-  for (const userId of participants) {
+  for (const userId of watchers) {
     if (userId === actor || mentioned.has(userId)) continue;
     rows.push({
       userId,
@@ -113,8 +96,9 @@ export async function notifyComment(
 }
 
 // Fan out issue field changes recorded by an update. A new assignee (if a member and
-// not the actor) gets 'assigned'; a status change notifies the issue's participants
-// with 'state_changed'. The actor is never notified.
+// not the actor) gets 'assigned'; a status change notifies the issue's watchers with
+// 'state_changed'. The actor is never notified. Being assigned subscribes to the
+// issue, and stays that way when the issue is later handed to someone else.
 export async function notifyIssueChange(input: {
   projectId: number;
   issueId: number;
@@ -127,24 +111,27 @@ export async function notifyIssueChange(input: {
   const { projectId, issueId, actorUserId: actor } = input;
   const rows: NewNotificationRow[] = [];
 
-  if (input.assignedUserId && input.assignedUserId !== actor) {
-    const members = await keepProjectMembers(projectId, [input.assignedUserId]);
-    if (members.has(input.assignedUserId)) {
-      rows.push({
-        userId: input.assignedUserId,
-        projectId,
-        issueId,
-        sourceActivityId: input.assignedActivityId ?? null,
-        type: 'assigned',
-        actorUserId: actor,
-      });
+  if (input.assignedUserId) {
+    await autoWatchIssue(projectId, issueId, [input.assignedUserId]);
+    if (input.assignedUserId !== actor) {
+      const members = await keepProjectMembers(projectId, [input.assignedUserId]);
+      if (members.has(input.assignedUserId)) {
+        rows.push({
+          userId: input.assignedUserId,
+          projectId,
+          issueId,
+          sourceActivityId: input.assignedActivityId ?? null,
+          type: 'assigned',
+          actorUserId: actor,
+        });
+      }
     }
   }
 
   if (input.statusChanged) {
     const assigned = input.assignedUserId ?? null;
-    const participants = await issueParticipants(projectId, issueId);
-    for (const userId of participants) {
+    const watchers = await watcherUserIds(projectId, issueId);
+    for (const userId of watchers) {
       // Skip the actor and anyone already told they were just assigned.
       if (userId === actor || userId === assigned) continue;
       rows.push({

@@ -125,6 +125,7 @@ export default function IssueDetailContent({
       onToggleLabel={toggleLabel}
       uploadFile={uploadFile}
       imageAttachments={imageAttachments}
+      watchers={issue.watchers}
     />
   );
 

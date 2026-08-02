@@ -29,6 +29,7 @@ const PreferenceResponse = t.Object({
   issueStatsOpen: t.Boolean(),
   issueStatsView: IssueStatsView,
   issueActivityView: IssueActivityView,
+  autoWatch: t.Boolean(),
   lastProjectId: t.Nullable(t.Number()),
   hotkeys: HotkeyCombosSchema,
 });
@@ -42,6 +43,7 @@ const PreferencePatch = t.Object({
   issueStatsOpen: t.Optional(t.Boolean()),
   issueStatsView: t.Optional(IssueStatsView),
   issueActivityView: t.Optional(IssueActivityView),
+  autoWatch: t.Optional(t.Boolean()),
   lastProjectId: t.Optional(t.Nullable(t.Number())),
   // The full set of the user's overrides: a shortcut left out falls back to the
   // instance binding.
@@ -50,10 +52,11 @@ const PreferencePatch = t.Object({
 
 // The session user's own interface preferences: timezone, theme, how a clicked issue
 // opens, which section the app root lands on, whether the floating AI chat starts
-// visible, how an issue's status stats section starts out, and the project they were
-// in last. Every route is self-scoped to the session user, so no project guard applies
-// — a user only ever reads or writes their own row. Not MCP tools: an agent has no
-// business changing a person's UI settings.
+// visible, how an issue's status stats section starts out, whether they are
+// subscribed to the issues they touch, and the project they were in last. Every
+// route is self-scoped to the session user, so no project guard applies — a user
+// only ever reads or writes their own row. Not MCP tools: an agent has no business
+// changing a person's UI settings.
 export const userPreferenceRoutes = new Elysia({
   name: 'user-preferences',
   detail: { tags: ['Settings'] },

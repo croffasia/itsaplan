@@ -101,7 +101,9 @@ export const projectSetting = pgTable(
 // 'timeline' (a lane per status on a time axis). issue_activity_view is how the
 // activity log below it starts out: 'flat' (every entry newest first) or 'grouped'
 // (a block per stretch the issue spent in a status). Switching either on an issue is
-// not stored — it lasts as long as that issue stays open.
+// not stored — it lasts as long as that issue stays open. auto_watch is whether the
+// user is subscribed to the issues they create, are assigned, comment on or are
+// mentioned in (see issue_watcher); off means they only ever subscribe by hand.
 export const userPreference = pgTable(
   'user_preference',
   {
@@ -116,6 +118,7 @@ export const userPreference = pgTable(
     issueStatsOpen: boolean('issue_stats_open').notNull().default(true),
     issueStatsView: text('issue_stats_view').notNull().default('compact'),
     issueActivityView: text('issue_activity_view').notNull().default('flat'),
+    autoWatch: boolean('auto_watch').notNull().default(true),
     // The user's own keyboard shortcut overrides, as { hotkeyId: combo }. Only the
     // bindings they changed are stored; the rest come from the instance defaults
     // (app_setting key 'hotkeys') and then the built-in ones.
@@ -896,6 +899,26 @@ export const issueLink = pgTable(
   ],
 );
 
+// Who follows an issue. A watcher receives every notification the issue produces;
+// the assignment and mention notifications are addressed to one person and reach
+// them whether they watch it or not. `subscribed` false is an unsubscription: the
+// row stays so the auto-subscribe rules (see watchers.ts) cannot put the member
+// back on the next comment they write.
+export const issueWatcher = pgTable(
+  'issue_watcher',
+  {
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    subscribed: boolean('subscribed').notNull().default(true),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.issueId, t.userId] })],
+);
+
 export const issueFieldValue = pgTable(
   'issue_field_value',
   {
@@ -1155,8 +1178,8 @@ export const webhookDelivery = pgTable(
 );
 
 // Per-user inbox notifications. One row per (recipient, event): a user is notified
-// about an issue they are involved in (assigned to them, mentioned, or a participant
-// on a comment/status change). The actor's own actions never notify the actor.
+// about an issue they are involved in (assigned to them, mentioned, or watching it
+// when it is commented on or moved). The actor's own actions never notify the actor.
 // project_id is denormalized from the issue so the inbox can filter and scope by
 // project. source_activity_id points at the issue_activity row that produced the
 // notification (set null if that entry is later removed). type selects the kind.

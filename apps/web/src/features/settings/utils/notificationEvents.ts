@@ -5,8 +5,8 @@ import type { NotificationEventToggles } from '@/lib/api';
 export const NOTIFICATION_EVENTS: { key: keyof NotificationEventToggles; label: string }[] = [
   { key: 'assigned', label: 'Assigned to an issue' },
   { key: 'mentioned', label: 'Mentioned in a comment' },
-  { key: 'commented', label: 'New comment on a followed issue' },
-  { key: 'state_changed', label: 'Issue state changed' },
+  { key: 'commented', label: 'New comment on an issue you watch' },
+  { key: 'state_changed', label: 'State changed on an issue you watch' },
 ];
 
 export function eventsEqual(a: NotificationEventToggles, b: NotificationEventToggles): boolean {

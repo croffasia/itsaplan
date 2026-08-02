@@ -67,16 +67,16 @@ describe('notifications', () => {
     expect(ownerInbox.data!.items).toHaveLength(0);
   });
 
-  it('notifies participants on a comment', async () => {
+  it('notifies watchers on a comment', async () => {
     const { owner, columnId } = await setup();
     const member = await addMember(owner);
 
-    // Owner creates the issue assigned to member (owner is now a participant via
-    // the create/assign activity; member via assignment).
+    // Owner creates the issue assigned to member, which subscribes both: the owner
+    // as its author, the member through the assignment.
     const issue = await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
     const issueId = issue.data!.id;
 
-    // Member comments -> owner (a participant) gets a 'commented' notification.
+    // Member comments -> owner (a watcher) gets a 'commented' notification.
     await owner.api.issues({ issueId }).comments.post({ body: 'looking into it' } as never);
     await member.api.issues({ issueId }).comments.post({ body: 'done' } as never);
 

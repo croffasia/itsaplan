@@ -25,6 +25,7 @@ describe('user preferences', () => {
       issueStatsOpen: true,
       issueStatsView: 'compact',
       issueActivityView: 'flat',
+      autoWatch: true,
       lastProjectId: null,
       hotkeys: {},
     });
@@ -43,6 +44,7 @@ describe('user preferences', () => {
       issueStatsOpen: false,
       issueStatsView: 'timeline',
       issueActivityView: 'grouped',
+      autoWatch: false,
       hotkeys: { 'issue.new': 'i' },
     });
 
@@ -57,6 +59,7 @@ describe('user preferences', () => {
       issueStatsOpen: false,
       issueStatsView: 'timeline',
       issueActivityView: 'grouped',
+      autoWatch: false,
       lastProjectId: null,
       hotkeys: { 'issue.new': 'i' },
     });

@@ -6,6 +6,7 @@ import {
   type IssueDetail as IssueDetailRow,
   type IssueFieldValueInput,
   type IssuePatch,
+  type IssueWatcher,
 } from '@/lib/api';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
@@ -19,6 +20,7 @@ import TypeSelect from '@/components/common/fields/TypeSelect';
 import InitiativeSelect from '../fields/InitiativeSelect';
 import IssueCustomFieldControl from '../fields/IssueCustomFieldControl';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
+import IssueWatchers from './IssueWatchers';
 import { type Embeddable } from '../../utils/attachmentEmbed';
 
 // One property row in the two-column list: name on the left, control on the right.
@@ -43,6 +45,7 @@ export default function IssueProperties({
   onToggleLabel,
   uploadFile,
   imageAttachments,
+  watchers,
   readOnly,
 }: {
   project: ProjectDetail;
@@ -53,6 +56,9 @@ export default function IssueProperties({
   onToggleLabel: (id: number) => void;
   uploadFile?: (file: File) => Promise<Embeddable>;
   imageAttachments?: Embeddable[];
+  // Who follows the issue. Absent on the public shared page, which does not expose
+  // them and has nobody to subscribe.
+  watchers?: IssueWatcher[];
   // When true every control is a non-interactive display of its value (public
   // shared page). The onPatch/onSetField/onToggleLabel callbacks are never called.
   readOnly?: boolean;
@@ -159,6 +165,12 @@ export default function IssueProperties({
             onToggle={onToggleLabel}
             readOnly={readOnly}
           />
+        </PropertyRow>
+      )}
+
+      {watchers && (
+        <PropertyRow label="Watching">
+          <IssueWatchers issueId={issue.id} watchers={watchers} />
         </PropertyRow>
       )}
 

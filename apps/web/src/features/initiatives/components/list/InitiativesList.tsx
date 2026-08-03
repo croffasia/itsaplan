@@ -67,7 +67,7 @@ export default function InitiativesList({
   }
 
   return (
-    <div className="px-4 pb-2">
+    <div className="min-w-0 px-4 pb-2">
       <Table className="min-w-[880px] table-fixed">
         <colgroup>
           <col className="w-[34%]" />

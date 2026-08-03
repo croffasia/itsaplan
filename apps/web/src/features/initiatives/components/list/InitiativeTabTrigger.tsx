@@ -31,7 +31,7 @@ export default function InitiativeTabTrigger({
       ref={setNodeRef}
       value={value}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className="cursor-grab"
+      className="shrink-0 cursor-grab"
       {...pointerListeners}
       onClick={onSelect}
     >

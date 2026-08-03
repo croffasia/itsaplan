@@ -2,12 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import { api, type Notification, type NotificationFilters, type ProjectDetail } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import { qk } from '@/services/queryKeys';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
-import IssueDetailContent from '@/features/issue/components/detail/IssueDetailContent';
+import { useIsMobile } from '@/hooks/use-mobile';
 import InboxToolbar from './InboxToolbar';
 import InboxList from './InboxList';
+import InboxDetail from './InboxDetail';
 import {
   useNotificationsQuery,
   useSetNotificationRead,
@@ -23,6 +25,7 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
 
   const [filters, setFilters] = useState<NotificationFilters>({});
   const [selected, setSelected] = useState<Notification | null>(null);
+  const isMobile = useIsMobile();
 
   const query = useNotificationsQuery(projectKey, projectId, filters);
   const unreadQuery = useInboxUnread(projectKey, projectId);
@@ -53,7 +56,12 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
 
   return (
     <div className="flex h-full min-h-0">
-      <div className="flex w-full max-w-sm min-w-0 flex-col border-r">
+      <div
+        className={cn(
+          'flex w-full min-w-0 flex-col md:max-w-sm md:border-r',
+          selected && 'hidden md:flex',
+        )}
+      >
         <InboxToolbar
           unread={unreadQuery.data ?? 0}
           filters={filters}
@@ -76,23 +84,20 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
         />
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {selected ? (
-          <div className="px-6 py-6 xl:px-10">
-            <IssueDetailContent
-              key={selected.issueId}
-              project={project}
-              issueId={selected.issueId}
-              layout="split"
-              onDeleted={() => setSelected(null)}
-            />
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            Select a notification
-          </div>
-        )}
-      </div>
+      {selected ? (
+        <InboxDetail
+          key={selected.issueId}
+          project={project}
+          issueId={selected.issueId}
+          isMobile={isMobile}
+          onBack={() => setSelected(null)}
+          onDeleted={() => setSelected(null)}
+        />
+      ) : (
+        <div className="hidden flex-1 items-center justify-center text-sm text-muted-foreground md:flex">
+          Select a notification
+        </div>
+      )}
     </div>
   );
 }

@@ -40,7 +40,7 @@ export default function AppHeader({
         type="button"
         onClick={onOpenCommand}
         title={`Search or run a command (${paletteKey})`}
-        className="ml-auto flex h-8 max-w-xs min-w-0 flex-1 items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground transition-colors hover:bg-accent"
+        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:bg-accent sm:w-auto sm:max-w-xs sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:gap-2 sm:px-3"
       >
         <Search className="size-4 shrink-0" />
         <span className="hidden truncate sm:inline">Search or run a command…</span>

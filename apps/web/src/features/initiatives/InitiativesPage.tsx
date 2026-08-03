@@ -110,12 +110,12 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
         )}
       </div>
 
-      <div className="px-4 pb-2">
+      <div className="min-w-0 px-4 pb-2">
         {/* The open tab comes from the route, and each trigger navigates on click
             (see InitiativeTabTrigger), so Radix drives no selection of its own:
             manual activation keeps focus from switching tabs mid-drag. */}
         <Tabs value={tab} activationMode="manual">
-          <TabsList variant="line">
+          <TabsList variant="line" className="overflow-x-auto">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}

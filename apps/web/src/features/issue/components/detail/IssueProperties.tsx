@@ -35,11 +35,10 @@ function PropertyRow({ label, children }: { label: string; children: ReactNode }
   );
 }
 
-// The Properties grid of the issue detail: built-in fields (status, assignee,
-// priority, type, dates, labels) and non-markdown custom fields, each editable
-// inline. Shaped like the Attachments and Links sections — same heading, same
-// separator above it, same collapsing — in the sidebar and in the single column
-// alike.
+// The Properties grid of the issue detail: built-in fields and non-markdown
+// custom fields, each editable inline. Shaped like the Attachments and Links
+// sections — same heading, same separator above it, same collapsing — in the
+// sidebar and in the single column alike.
 export default function IssueProperties({
   project,
   issue,
@@ -91,6 +90,14 @@ export default function IssueProperties({
         />
       </PropertyRow>
 
+      <PropertyRow label="Priority">
+        <PrioritySelect
+          value={issue.priority ?? ''}
+          onChange={(v) => onPatch({ priority: v || null })}
+          readOnly={readOnly}
+        />
+      </PropertyRow>
+
       {hasMembers && (
         <PropertyRow label="Assignee">
           <AssigneeSelect
@@ -113,13 +120,11 @@ export default function IssueProperties({
         </PropertyRow>
       )}
 
-      <PropertyRow label="Priority">
-        <PrioritySelect
-          value={issue.priority ?? ''}
-          onChange={(v) => onPatch({ priority: v || null })}
-          readOnly={readOnly}
-        />
-      </PropertyRow>
+      {watchers && (
+        <PropertyRow label="Watching">
+          <IssueWatchers issueId={issue.id} watchers={watchers} />
+        </PropertyRow>
+      )}
 
       {project.issueTypes.length > 0 && (
         <PropertyRow label="Type">
@@ -127,6 +132,18 @@ export default function IssueProperties({
             issueTypes={project.issueTypes}
             value={issue.typeId}
             onChange={(id) => onPatch({ typeId: id })}
+            readOnly={readOnly}
+          />
+        </PropertyRow>
+      )}
+
+      {project.labels.length > 0 && (
+        <PropertyRow label="Labels">
+          <LabelsSelect
+            labels={project.labels}
+            groups={project.labelGroups}
+            value={issue.labelIds}
+            onToggle={onToggleLabel}
             readOnly={readOnly}
           />
         </PropertyRow>
@@ -170,24 +187,6 @@ export default function IssueProperties({
           readOnly={readOnly}
         />
       </PropertyRow>
-
-      {project.labels.length > 0 && (
-        <PropertyRow label="Labels">
-          <LabelsSelect
-            labels={project.labels}
-            groups={project.labelGroups}
-            value={issue.labelIds}
-            onToggle={onToggleLabel}
-            readOnly={readOnly}
-          />
-        </PropertyRow>
-      )}
-
-      {watchers && (
-        <PropertyRow label="Watching">
-          <IssueWatchers issueId={issue.id} watchers={watchers} />
-        </PropertyRow>
-      )}
 
       {/* Custom fields not flagged "show in main info". A markdown field here
           spans both columns as a full-width block; the rest are property rows. */}

@@ -18,6 +18,7 @@ export const PERMISSION_RESOURCES = [
   'agent_skills',
   'agent_tools',
   'custom_fields',
+  'auto_archive',
   'actions',
   'webhooks',
   'note_boards',

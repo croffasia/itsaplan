@@ -109,22 +109,19 @@ export function useDeleteLabelGroup(projectKey: string) {
   return useProjectMutation(projectKey, (id: number) => api.deleteLabelGroup(projectKey, id));
 }
 
-// Archive section: the project's auto-archive thresholds, read from the project
-// settings resource and narrowed to the autoArchive part for this section.
+// Archive section: the project's auto-archive thresholds.
 export function useAutoArchiveQuery(projectKey: string) {
   return useQuery({
-    queryKey: qk.projectSettings(projectKey),
-    queryFn: () => api.getProjectSettings(projectKey),
-    select: (s) => s.autoArchive,
+    queryKey: qk.autoArchive(projectKey),
+    queryFn: () => api.getAutoArchive(projectKey),
   });
 }
 
 export function useUpdateAutoArchive(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: AutoArchiveSettings) =>
-      api.updateProjectSettings(projectKey, { autoArchive: input }),
-    onSuccess: (data) => qc.setQueryData(qk.projectSettings(projectKey), data),
+    mutationFn: (input: AutoArchiveSettings) => api.updateAutoArchive(projectKey, input),
+    onSuccess: (data) => qc.setQueryData(qk.autoArchive(projectKey), data),
   });
 }
 

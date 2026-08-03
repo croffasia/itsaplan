@@ -23,6 +23,18 @@ async function signUpClient() {
   return { user, api: authedApi(user.cookie) };
 }
 
+// Adds a member to project MKT through the invite flow, on the default member role
+// unless a custom one is named. Returns a Treaty client acting as them.
+async function addMember(owner: Api, roleId?: number) {
+  const user = await signUpTestUser();
+  const invite = await owner
+    .projects({ projectKey: 'MKT' })
+    .invites.post({ email: user.email, role: 'member', roleId });
+  const api = authedApi(user.cookie);
+  await api.invites({ token: invite.data!.token }).accept.post();
+  return api;
+}
+
 async function viewOf(client: Api, projectKey: string) {
   return client.projects({ projectKey }).get();
 }
@@ -565,16 +577,13 @@ describe('projects', () => {
   });
 
   describe('settings', () => {
-    it('defaults a new project to MCP off and the default auto-archive thresholds', async () => {
+    it('defaults a new project to MCP off', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
 
       const res = await api.projects({ projectKey: 'MKT' }).settings.get();
       expect(res.status).toBe(200);
-      expect(res.data).toMatchObject({
-        mcpEnabled: false,
-        autoArchive: { completedDays: 28, canceledDays: 7 },
-      });
+      expect(res.data).toMatchObject({ mcpEnabled: false });
     });
 
     it('starts a new project with every optional section enabled', async () => {
@@ -627,43 +636,13 @@ describe('projects', () => {
       expect(res.status).toBe(403);
     });
 
-    it('lets an owner set and read back the auto-archive thresholds', async () => {
-      const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
-
-      const patch = await api
-        .projects({ projectKey: 'MKT' })
-        .settings.patch({ autoArchive: { completedDays: 28, canceledDays: 7 } });
-      expect(patch.status).toBe(200);
-      expect(patch.data?.autoArchive).toMatchObject({ completedDays: 28, canceledDays: 7 });
-
-      const get = await api.projects({ projectKey: 'MKT' }).settings.get();
-      expect(get.data?.autoArchive).toMatchObject({ completedDays: 28, canceledDays: 7 });
-    });
-
-    it('stores null to disable a state group', async () => {
-      const { api } = await signUpClient();
-      await api.projects.post({ key: 'MKT', name: 'Marketing' });
-
-      const res = await api
-        .projects({ projectKey: 'MKT' })
-        .settings.patch({ autoArchive: { completedDays: 30, canceledDays: null } });
-      expect(res.status).toBe(200);
-      expect(res.data?.autoArchive).toMatchObject({ completedDays: 30, canceledDays: null });
-    });
-
     it('changes only the supplied field, leaving the other', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
-      await api
-        .projects({ projectKey: 'MKT' })
-        .settings.patch({ autoArchive: { completedDays: 14, canceledDays: 3 } });
+      await api.projects({ projectKey: 'MKT' }).settings.patch({ features: { notes: false } });
 
       const res = await api.projects({ projectKey: 'MKT' }).settings.patch({ mcpEnabled: true });
-      expect(res.data).toMatchObject({
-        mcpEnabled: true,
-        autoArchive: { completedDays: 14, canceledDays: 3 },
-      });
+      expect(res.data).toMatchObject({ mcpEnabled: true, features: { notes: false } });
     });
 
     it('denies writing settings to a non-owner (owner-only)', async () => {
@@ -673,8 +652,92 @@ describe('projects', () => {
       const outsider = await signUpClient();
       const res = await outsider.api
         .projects({ projectKey: 'MKT' })
-        .settings.patch({ autoArchive: { completedDays: 28, canceledDays: 7 } });
+        .settings.patch({ mcpEnabled: true });
       expect(res.status).toBe(403);
+    });
+  });
+
+  describe('auto-archive settings', () => {
+    const autoArchive = (client: Api) =>
+      client.projects({ projectKey: 'MKT' }).settings['auto-archive'];
+
+    it('defaults a new project to the default thresholds', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const res = await autoArchive(api).get();
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ completedDays: 28, canceledDays: 7 });
+    });
+
+    it('lets an owner set and read back the thresholds', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const patch = await autoArchive(api).patch({ completedDays: 14, canceledDays: 3 });
+      expect(patch.status).toBe(200);
+      expect(patch.data).toMatchObject({ completedDays: 14, canceledDays: 3 });
+
+      expect((await autoArchive(api).get()).data).toMatchObject({
+        completedDays: 14,
+        canceledDays: 3,
+      });
+    });
+
+    it('stores null to disable a state group', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const res = await autoArchive(api).patch({ completedDays: 30, canceledDays: null });
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ completedDays: 30, canceledDays: null });
+    });
+
+    it('rejects a day count below 1', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const res = await autoArchive(api).patch({ completedDays: 0, canceledDays: 7 });
+      expect(res.status).toBe(400);
+    });
+
+    it('holds the default member role out of the section', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const member = await addMember(owner.api);
+
+      expect((await autoArchive(member).get()).status).toBe(403);
+      expect((await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 })).status).toBe(
+        403,
+      );
+    });
+
+    it('lets a granted role read the thresholds but not change them without edit', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const role = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Reader', permissions: { auto_archive: { read: true } } });
+      const member = await addMember(owner.api, role.data!.id);
+
+      expect((await autoArchive(member).get()).status).toBe(200);
+      expect((await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 })).status).toBe(
+        403,
+      );
+    });
+
+    it('lets a role with edit change the thresholds', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const role = await owner.api.projects({ projectKey: 'MKT' }).roles.post({
+        name: 'Archivist',
+        permissions: { auto_archive: { read: true, edit: true } },
+      });
+      const member = await addMember(owner.api, role.data!.id);
+
+      const res = await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 });
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ completedDays: 14, canceledDays: 3 });
     });
   });
 });

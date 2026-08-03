@@ -555,7 +555,7 @@ export interface IssueSearchHit {
 
 // Per-project auto-archive thresholds: days an issue may sit inactive in a
 // completed/canceled column before the worker archives it. null disables archiving
-// for that state group. Both null by default (nothing is archived until enabled).
+// for that state group. A new project starts at 28 completed / 7 canceled days.
 export interface AutoArchiveSettings {
   completedDays: number | null;
   canceledDays: number | null;
@@ -569,12 +569,10 @@ export interface ProjectFeatures {
   notes: boolean;
 }
 
-// A project's settings: MCP reachability, the enabled sections and the
-// auto-archive thresholds.
+// A project's settings: MCP reachability and the enabled sections.
 export interface ProjectSettings {
   mcpEnabled: boolean;
   features: ProjectFeatures;
-  autoArchive: AutoArchiveSettings;
 }
 
 // Per-project notification provider credentials (owner-managed) plus a member's own
@@ -1676,6 +1674,7 @@ export type PermissionResource =
   | 'agent_skills'
   | 'agent_tools'
   | 'custom_fields'
+  | 'auto_archive'
   | 'actions'
   | 'webhooks'
   | 'note_boards'
@@ -2505,21 +2504,25 @@ export const api = {
       `/webhooks/${webhookId}/deliveries?limit=25${before ? `&before=${before}` : ''}`,
     ),
 
-  // Project settings: MCP reachability and auto-archive thresholds. Any member
-  // reads; owner writes. The PATCH takes only the fields being changed.
-  getProjectSettings: (projectKey: string) =>
-    request<ProjectSettings>(`/projects/${projectKey}/settings`),
+  // Project settings: MCP reachability and the enabled sections. Owner-only; the
+  // current state comes with the project payload (getProject), so there is no read
+  // here.
   updateProjectSettings: (
     projectKey: string,
-    patch: {
-      mcpEnabled?: boolean;
-      features?: Partial<ProjectFeatures>;
-      autoArchive?: AutoArchiveSettings;
-    },
+    patch: { mcpEnabled?: boolean; features?: Partial<ProjectFeatures> },
   ) =>
     request<ProjectSettings>(`/projects/${projectKey}/settings`, {
       method: 'PATCH',
       body: JSON.stringify(patch),
+    }),
+
+  // Auto-archive thresholds (auto_archive: read to view, edit to change).
+  getAutoArchive: (projectKey: string) =>
+    request<AutoArchiveSettings>(`/projects/${projectKey}/settings/auto-archive`),
+  updateAutoArchive: (projectKey: string, input: AutoArchiveSettings) =>
+    request<AutoArchiveSettings>(`/projects/${projectKey}/settings/auto-archive`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
     }),
 
   // Notification provider credentials (danger_zone: read to view, edit to change).

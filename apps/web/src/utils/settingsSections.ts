@@ -95,7 +95,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     label: 'Archive',
     description: 'Auto-archive stale completed and canceled issues so the board stays clear.',
     icon: Archive,
-    resource: 'work_items',
+    resource: 'auto_archive',
     group: 'configuration',
   },
   {

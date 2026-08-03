@@ -9,11 +9,12 @@ export const qk = {
   // Split from the scaffold so issue writes and live-refresh touch only the
   // issues, not the scaffold.
   boardIssues: (projectKey: string) => ['boardIssues', projectKey] as const,
-  // A project's archived issues and its auto-archive settings (the Archive section).
+  // A project's archived issues.
   archivedIssues: (projectKey: string) => ['archivedIssues', projectKey] as const,
   // Command-palette issue search, scoped to a project and the search term.
   issueSearch: (projectKey: string, q: string) => ['issueSearch', projectKey, q] as const,
-  projectSettings: (projectKey: string) => ['projectSettings', projectKey] as const,
+  // The project's auto-archive thresholds (the Archive settings section).
+  autoArchive: (projectKey: string) => ['autoArchive', projectKey] as const,
   // A project's notification delivery settings (the Notifications section).
   notificationSettings: (projectKey: string) => ['notificationSettings', projectKey] as const,
   notificationPreferences: (projectKey: string) => ['notificationPreferences', projectKey] as const,

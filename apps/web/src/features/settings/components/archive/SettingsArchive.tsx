@@ -2,7 +2,6 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import type { AutoArchiveForm } from '../../hooks/useAutoArchiveForm';
 
-// Only an owner may edit; others see the values read-only.
 export default function SettingsArchive({ form }: { form: AutoArchiveForm }) {
   return (
     <section className="flex flex-col gap-4">

@@ -173,12 +173,10 @@ const FeaturesResponse = t.Object({
   notes: t.Boolean(),
 });
 
-// The project's settings: MCP reachability, the enabled sections and the
-// auto-archive thresholds.
+// The project's settings: MCP reachability and the enabled sections.
 const ProjectSettingsResponse = t.Object({
   mcpEnabled: t.Boolean(),
   features: FeaturesResponse,
-  autoArchive: AutoArchiveResponse,
 });
 
 // The caller's own role in a project (from MemberContext in members/store). The
@@ -383,16 +381,13 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     },
   )
 
-  // Reads the project's settings: whether it is reachable over MCP, which optional
-  // sections are enabled, and the auto-archive thresholds (days of inactivity in a
-  // completed/canceled column before the worker archives an issue; null = off).
-  // Any member may read.
+  // Reads the project's settings: whether it is reachable over MCP and which
+  // optional sections are enabled. Any member may read.
   .get(
     '/projects/:projectKey/settings',
-    async ({ project }) => ({
+    ({ project }) => ({
       mcpEnabled: project.mcpEnabled,
       features: projectFeatures(project),
-      autoArchive: await getAutoArchiveSettings(project.id),
     }),
     {
       projectMember: true,
@@ -408,10 +403,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
 
   // Updates the project's settings. Each field is optional; only the supplied ones
   // change. mcpEnabled toggles MCP access to the project. features turns the
-  // optional sections (initiatives, dashboards, notes) on or off. autoArchive sets
-  // the day count per state group (positive integer) or disables it (null).
-  // Owner-only. Not an MCP tool: it governs MCP access, so an agent must not
-  // change it.
+  // optional sections (initiatives, dashboards, notes) on or off. Owner-only. Not
+  // an MCP tool: it governs MCP access, so an agent must not change it.
   .patch(
     '/projects/:projectKey/settings',
     async ({ project, body }) => {
@@ -426,11 +419,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         if (!updated) throw new HttpError(404, 'Project not found');
         current = updated;
       }
-      const autoArchive =
-        body.autoArchive !== undefined
-          ? await setAutoArchiveSettings(project.id, body.autoArchive)
-          : await getAutoArchiveSettings(project.id);
-      return { mcpEnabled: current.mcpEnabled, features: projectFeatures(current), autoArchive };
+      return { mcpEnabled: current.mcpEnabled, features: projectFeatures(current) };
     },
     {
       body: t.Object({
@@ -440,12 +429,6 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
             initiatives: t.Optional(t.Boolean()),
             dashboards: t.Optional(t.Boolean()),
             notes: t.Optional(t.Boolean()),
-          }),
-        ),
-        autoArchive: t.Optional(
-          t.Object({
-            completedDays: t.Nullable(t.Integer({ minimum: 1 })),
-            canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
           }),
         ),
       }),
@@ -458,6 +441,46 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         404: ErrorResponse,
       },
       detail: { summary: "Update a project's settings" },
+    },
+  )
+
+  // The thresholds are their own permission resource rather than part of the
+  // settings payload above: a granted role reads or changes them without being an
+  // owner.
+  .get(
+    '/projects/:projectKey/settings/auto-archive',
+    ({ project }) => getAutoArchiveSettings(project.id),
+    {
+      permission: ['auto_archive', 'read'],
+      response: {
+        200: AutoArchiveResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: { summary: "Get a project's auto-archive thresholds" },
+    },
+  )
+
+  // Sets both thresholds at once: a partial body would read as "leave the other
+  // group as it is", which this endpoint does not do.
+  .patch(
+    '/projects/:projectKey/settings/auto-archive',
+    ({ project, body }) => setAutoArchiveSettings(project.id, body),
+    {
+      body: t.Object({
+        completedDays: t.Nullable(t.Integer({ minimum: 1 })),
+        canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
+      }),
+      permission: ['auto_archive', 'edit'],
+      response: {
+        200: AutoArchiveResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: { summary: "Update a project's auto-archive thresholds" },
     },
   )
 

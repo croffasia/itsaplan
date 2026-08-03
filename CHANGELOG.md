@@ -1,5 +1,40 @@
 # Changelog
 
+## [0.6.0](https://github.com/croffasia/itsaplan/compare/v0.5.0...v0.6.0) (2026-08-03)
+
+
+### Features
+
+* add a grouped issue activity log with an account preference ([#69](https://github.com/croffasia/itsaplan/issues/69)) ([887957e](https://github.com/croffasia/itsaplan/commit/887957e59aa35939723a1cbb2910629a7c2a664b))
+* annotate image attachments and rework the issue detail sections ([#79](https://github.com/croffasia/itsaplan/issues/79)) ([e614f46](https://github.com/croffasia/itsaplan/commit/e614f467484e26692c5bd35f7ca1970d796308b2))
+* break an issue into subtasks ([#83](https://github.com/croffasia/itsaplan/issues/83)) ([ba3c352](https://github.com/croffasia/itsaplan/commit/ba3c352d24a263ad6ada3144505e075a7664eaff))
+* link issues as blocking, related or duplicate ([#75](https://github.com/croffasia/itsaplan/issues/75)) ([7815173](https://github.com/croffasia/itsaplan/commit/7815173f99c3af0f5e19077a5dc8f680ec1850ac))
+* read quick actions without the actions permission ([#80](https://github.com/croffasia/itsaplan/issues/80)) ([c1a3cbc](https://github.com/croffasia/itsaplan/commit/c1a3cbc6e8c1eb3d775858a4f04537b9420b6588))
+* watch issues to get their notifications ([#78](https://github.com/croffasia/itsaplan/issues/78)) ([c64c43a](https://github.com/croffasia/itsaplan/commit/c64c43a50ddbaaf5684649e5afd566953e73778c))
+* **web:** add a section rail to account preferences ([#71](https://github.com/croffasia/itsaplan/issues/71)) ([7721184](https://github.com/croffasia/itsaplan/commit/77211845cf26e80f50d6a26467fef652b015d7ca))
+* **web:** rework the new issue dialog body and footer ([#76](https://github.com/croffasia/itsaplan/issues/76)) ([09497fa](https://github.com/croffasia/itsaplan/commit/09497fa65a7d5b4ce8a1bd79defebe33788cff2a))
+
+
+### Bug Fixes
+
+* **api:** source the release history from the releases feed ([#74](https://github.com/croffasia/itsaplan/issues/74)) ([62fb86e](https://github.com/croffasia/itsaplan/commit/62fb86eb5d072969b212fca0daa48ead074ac816))
+* gate the archive settings section by its own permission ([#81](https://github.com/croffasia/itsaplan/issues/81)) ([09c0e90](https://github.com/croffasia/itsaplan/commit/09c0e90b881166ae00ce774a9de726832b451fa5))
+* **web:** raise text contrast and set line-height tokens ([#72](https://github.com/croffasia/itsaplan/issues/72)) ([58779e4](https://github.com/croffasia/itsaplan/commit/58779e43279571ab452535719b8d12b7895cc600))
+* **web:** render the issue detail read-only without work_items.edit ([#82](https://github.com/croffasia/itsaplan/issues/82)) ([913dcdd](https://github.com/croffasia/itsaplan/commit/913dcdd69afcf0b1368093912ce9fbb0f202ca15))
+* **web:** restore modal body scrolling ([#70](https://github.com/croffasia/itsaplan/issues/70)) ([31d471d](https://github.com/croffasia/itsaplan/commit/31d471d89a8a7c5efce80261c9b248d72b2fc012))
+* **web:** stack issue page properties below xl ([#73](https://github.com/croffasia/itsaplan/issues/73)) ([30a937a](https://github.com/croffasia/itsaplan/commit/30a937a600aa3cb37311dfaa4c19c86a25d40b90))
+* **web:** wrap the issue title instead of truncating it ([#77](https://github.com/croffasia/itsaplan/issues/77)) ([bab013d](https://github.com/croffasia/itsaplan/commit/bab013ddc94bcf9534cea99dcce75f3be9e18711))
+
+
+### Documentation
+
+* split install instructions out of the readme ([#67](https://github.com/croffasia/itsaplan/issues/67)) ([16edd51](https://github.com/croffasia/itsaplan/commit/16edd51badf62e4d8e8124f4df863b9d724e92a9))
+
+
+### CI
+
+* fetch full history before moving the release branch ([#65](https://github.com/croffasia/itsaplan/issues/65)) ([e91bae9](https://github.com/croffasia/itsaplan/commit/e91bae9bb2553dcfb7305c13a2998f646489cc55))
+
 ## [0.5.0](https://github.com/croffasia/itsaplan/compare/v0.4.0...v0.5.0) (2026-07-30)
 
 

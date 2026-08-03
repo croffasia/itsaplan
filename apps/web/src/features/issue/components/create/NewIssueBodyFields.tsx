@@ -1,8 +1,8 @@
 import { type CustomField, type IssueFieldValueInput } from '@/lib/api';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 
-// The body fields that are not markdown, gathered in the "Other" tab: a pill each
-// is too small to be worth a tab of its own.
+// The body fields that are not markdown, gathered in the "Other" section: a pill
+// each is too small to be worth a section of its own.
 export default function NewIssueBodyFields({
   defs,
   values,

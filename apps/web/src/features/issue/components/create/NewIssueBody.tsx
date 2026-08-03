@@ -1,20 +1,21 @@
 import { type Editor } from '@tiptap/react';
 import { type CustomField, type IssueFieldValueInput } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { type Embeddable } from '../../utils/attachmentEmbed';
-import { DESCRIPTION_TAB, OTHER_TAB, fieldTab } from '../../utils/bodyTabs';
+import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSection } from '../../utils/bodySections';
+import { hasFieldValue } from '../../utils/fieldValues';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import NewIssueBodyFields from './NewIssueBodyFields';
+import NewIssueBodySwitcher from './NewIssueBodySwitcher';
 
 // The written part of a new issue: the description, plus the custom fields the
-// project shows in the body. Each markdown field gets its own tab so only one
-// editor is on screen at a time — otherwise they stack up and the dialog turns
-// into one long scroll. Every tab stays mounted (forceMount), so switching away
-// keeps the editor instance the modal needs to strip an attachment's embeds.
+// project shows in the body. A switcher keeps one markdown field on screen at a
+// time — otherwise the editors stack up and the dialog turns into one long
+// scroll. The hidden sections stay mounted, so switching away keeps the editor
+// instance the modal needs to strip an attachment's embeds.
 export default function NewIssueBody({
-  tab,
-  onTabChange,
+  section,
+  onSectionChange,
   fullscreen,
   description,
   onDescriptionChange,
@@ -26,9 +27,9 @@ export default function NewIssueBody({
   uploadFile,
 }: {
   // Held by the modal: it inserts an attachment into whichever editor is on
-  // screen, so it has to know which tab that is.
-  tab: string;
-  onTabChange: (tab: string) => void;
+  // screen, so it has to know which section that is.
+  section: string;
+  onSectionChange: (section: string) => void;
   fullscreen: boolean;
   description: string;
   onDescriptionChange: (markdown: string) => void;
@@ -58,35 +59,43 @@ export default function NewIssueBody({
 
   if (bodyDefs.length === 0) return descriptionEditor;
 
-  // No flex-1 in compact: the tab is sized by its content there, but min-h-0
+  const sections = [
+    { value: DESCRIPTION_SECTION, label: 'Description', filled: description.trim() !== '' },
+    ...markdownDefs.map((def) => ({
+      value: fieldSection(def.id),
+      label: def.name,
+      filled: hasFieldValue(fieldValues[def.id]),
+    })),
+    ...(pillDefs.length > 0
+      ? [
+          {
+            value: OTHER_SECTION,
+            label: 'Other',
+            filled: pillDefs.some((def) => hasFieldValue(fieldValues[def.id])),
+          },
+        ]
+      : []),
+  ];
+
+  // Changing the issue type swaps the body fields, which can leave the selected
+  // section pointing at one that is gone.
+  const active = sections.some((s) => s.value === section) ? section : DESCRIPTION_SECTION;
+
+  // No flex-1 in compact: the section is sized by its content there, but min-h-0
   // still lets it give height back once the dialog runs out of it.
-  const contentClass = cn(
-    'flex min-h-0 flex-col data-[state=inactive]:hidden',
-    fullscreen && 'flex-1',
-  );
+  const sectionClass = (value: string) =>
+    cn('flex min-h-0 flex-col', fullscreen && 'flex-1', value !== active && 'hidden');
 
   return (
-    <Tabs
-      value={tab}
-      onValueChange={onTabChange}
-      className={cn('mt-3 flex min-h-0 flex-col', fullscreen && 'flex-1')}
-    >
-      <TabsList variant="line" className="shrink-0">
-        <TabsTrigger value={DESCRIPTION_TAB}>Description</TabsTrigger>
-        {markdownDefs.map((def) => (
-          <TabsTrigger key={def.id} value={fieldTab(def.id)}>
-            {def.name}
-          </TabsTrigger>
-        ))}
-        {pillDefs.length > 0 && <TabsTrigger value={OTHER_TAB}>Other</TabsTrigger>}
-      </TabsList>
+    <div className={cn('mt-3 flex min-h-0 flex-col gap-1.5', fullscreen && 'flex-1')}>
+      <div className="flex shrink-0 items-center">
+        <NewIssueBodySwitcher sections={sections} value={active} onChange={onSectionChange} />
+      </div>
 
-      <TabsContent value={DESCRIPTION_TAB} forceMount className={contentClass}>
-        {descriptionEditor}
-      </TabsContent>
+      <div className={sectionClass(DESCRIPTION_SECTION)}>{descriptionEditor}</div>
 
       {markdownDefs.map((def) => (
-        <TabsContent key={def.id} value={fieldTab(def.id)} forceMount className={contentClass}>
+        <div key={def.id} className={sectionClass(fieldSection(def.id))}>
           <IssueMarkdownEditor
             className={editorClass}
             defaultValue={(fieldValues[def.id]?.value as string) ?? ''}
@@ -95,14 +104,14 @@ export default function NewIssueBody({
             onReady={(editor) => onFieldEditorReady(def.id, editor)}
             uploadFile={uploadFile}
           />
-        </TabsContent>
+        </div>
       ))}
 
       {pillDefs.length > 0 && (
-        <TabsContent value={OTHER_TAB} className={cn(contentClass, 'overflow-y-auto')}>
+        <div className={cn(sectionClass(OTHER_SECTION), 'overflow-y-auto')}>
           <NewIssueBodyFields defs={pillDefs} values={fieldValues} onChange={onFieldValue} />
-        </TabsContent>
+        </div>
       )}
-    </Tabs>
+    </div>
   );
 }

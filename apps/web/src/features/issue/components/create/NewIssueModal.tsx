@@ -16,7 +16,8 @@ import {
   stripEmbed,
   type Embeddable,
 } from '../../utils/attachmentEmbed';
-import { DESCRIPTION_TAB, OTHER_TAB, fieldTabId } from '../../utils/bodyTabs';
+import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSectionId } from '../../utils/bodySections';
+import { hasFieldValue } from '../../utils/fieldValues';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 import NewIssueAttachButton from './NewIssueAttachButton';
 import NewIssueAttachmentStrip from './NewIssueAttachmentStrip';
@@ -86,7 +87,7 @@ export default function NewIssueModal({
   const [fullscreen, setFullscreen] = useState(false);
 
   // Custom fields for the selected type (global + type-scoped). Fields flagged
-  // "show in main info" get their own body tab; the rest are added on demand from
+  // "show in main info" get their own body section; the rest are added on demand from
   // the "…" menu.
   const fieldsQuery = useCustomFieldsQuery(project.project.key, typeId ?? undefined);
   const fieldDefs = fieldsQuery.data ?? [];
@@ -107,13 +108,13 @@ export default function NewIssueModal({
   // from the strip takes its embeds with it wherever they were inserted.
   const fieldEditors = useRef(new Map<number, Editor>());
 
-  // Which of the body tabs is open, so an attachment lands in the editor the user
-  // is looking at.
-  const [bodyTab, setBodyTab] = useState(DESCRIPTION_TAB);
+  // Which of the body sections is open, so an attachment lands in the editor the
+  // user is looking at.
+  const [bodySection, setBodySection] = useState(DESCRIPTION_SECTION);
 
   function activeBodyEditor(): Editor | null {
-    if (bodyTab === DESCRIPTION_TAB) return descEditor;
-    const fieldId = fieldTabId(bodyTab);
+    if (bodySection === DESCRIPTION_SECTION) return descEditor;
+    const fieldId = fieldSectionId(bodySection);
     return fieldId === null ? null : (fieldEditors.current.get(fieldId) ?? null);
   }
 
@@ -163,7 +164,7 @@ export default function NewIssueModal({
   const insertFilesRef = useRef(insertFilesIntoBody);
   insertFilesRef.current = insertFilesIntoBody;
 
-  // A paste carrying files lands in the open tab's editor unless a markdown editor
+  // A paste carrying files lands in the open section's editor unless a markdown editor
   // has the focus, in which case tiptap has already inserted it there. The listener
   // is on the document because the focus may sit on the dialog itself, above the
   // modal body.
@@ -246,9 +247,7 @@ export default function NewIssueModal({
       for (const def of fieldDefs) {
         if (!def.showInBody && !activeFieldIds.includes(def.id)) continue;
         const v = fieldValues[def.id];
-        if (!v) continue;
-        const hasValue = (v.optionIds?.length ?? 0) > 0 || (v.value != null && v.value !== '');
-        if (!hasValue) continue;
+        if (!hasFieldValue(v)) continue;
         const value = typeof v.value === 'string' ? { ...v, value: rewrite(v.value) } : v;
         await setFieldValueMutation.mutateAsync({ issueId: created.id, fieldId: def.id, value });
       }
@@ -288,11 +287,11 @@ export default function NewIssueModal({
         />
         {/* The written content is the one part that gives up height, so the pills
             and the footer stay in view however much of it there is. It scrolls
-            inside its editors, not here, which keeps the tab bar in place. */}
+            inside its editors, not here, which keeps the switcher in place. */}
         <div className={cn('flex min-h-0 flex-col overflow-hidden', fullscreen && 'flex-1')}>
           <NewIssueBody
-            tab={bodyTab}
-            onTabChange={setBodyTab}
+            section={bodySection}
+            onSectionChange={setBodySection}
             fullscreen={fullscreen}
             description={description}
             onDescriptionChange={setDescription}
@@ -419,7 +418,7 @@ export default function NewIssueModal({
           <NewIssueAttachButton onPick={attachments.attach} />
           <NewIssueAttachmentStrip
             items={attachments.pending}
-            onInsert={bodyTab === OTHER_TAB ? undefined : insertIntoBody}
+            onInsert={bodySection === OTHER_SECTION ? undefined : insertIntoBody}
             onAnnotate={annotateAttachment}
             onRemove={removeAttachment}
           />

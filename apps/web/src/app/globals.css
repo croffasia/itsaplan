@@ -103,6 +103,8 @@
   --kanban-card: oklch(0.965 0 0);
   --kanban-card-hover: oklch(0.94 0 0);
   --kanban-card-selected: oklch(0.925 0.04 265);
+  --overlay-shadow: 0 12px 28px -8px rgb(0 0 0 / 0.18), 0 4px 10px -4px rgb(0 0 0 / 0.1);
+  --modal-shadow: 0 32px 64px -16px rgb(0 0 0 / 0.28), 0 12px 24px -12px rgb(0 0 0 / 0.16);
 }
 
 .dark {
@@ -144,6 +146,30 @@
   --kanban-card: oklch(0.195 0 0);
   --kanban-card-hover: oklch(0.235 0 0);
   --kanban-card-selected: oklch(0.31 0.07 266);
+  --overlay-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.7), 0 6px 16px -6px rgb(0 0 0 / 0.55);
+  --modal-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.85), 0 16px 32px -16px rgb(0 0 0 / 0.7);
+}
+
+/* Every floating surface lifts off the page with the same shadow. It is set here
+   rather than per component: the shadcn components are kept as generated, and
+   `shadow-md` on a popover reads as nothing against a background of nearly the
+   same lightness. These rules sit outside @layer, so they win over the utility. */
+[data-slot='dropdown-menu-content'],
+[data-slot='dropdown-menu-sub-content'],
+[data-slot='context-menu-content'],
+[data-slot='context-menu-sub-content'],
+[data-slot='select-content'],
+[data-slot='popover-content'],
+[data-slot='combobox-content'],
+[data-slot='tooltip-content'] {
+  box-shadow: var(--overlay-shadow);
+}
+
+/* Dialogs and sheets cover a far larger area, so they carry a wider, deeper cast
+   than a menu. */
+[data-slot='dialog-content'],
+[data-slot='sheet-content'] {
+  box-shadow: var(--modal-shadow);
 }
 
 /* Kanban card surface — darker than the modal/detail --card, and it changes

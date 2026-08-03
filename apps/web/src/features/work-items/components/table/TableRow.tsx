@@ -7,10 +7,12 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { DropLine } from '../shared/DropLine';
+import { SubtaskProgress } from '../shared/SubtaskProgress';
 import { columnKey, type OrderedColumn } from '../../utils/table';
 import { TableBuiltinCell } from './TableBuiltinCell';
 import { TableCustomCell } from './TableCustomCell';
 import { TableRowLinks } from './TableRowLinks';
+import { TableRowSubtasks } from './TableRowSubtasks';
 
 // A draggable, droppable table row. Dragging it starts a move; dropping another
 // row on it inserts before this one (onDrop). A click (no drag) opens it.
@@ -96,6 +98,7 @@ export function TableRow({
             </span>
           )}
           <span className="truncate text-foreground">{issue.title}</span>
+          <SubtaskProgress issueId={issue.id} maps={maps} />
         </div>
 
         {orderedColumns.map((c) =>
@@ -106,6 +109,7 @@ export function TableRow({
           ),
         )}
 
+        <TableRowSubtasks issueId={issue.id} maps={maps} onOpenIssue={onOpenIssue} />
         <TableRowLinks links={issue.links} maps={maps} onOpenIssue={onOpenIssue} />
       </div>
     </IssueContextMenu>

@@ -6,16 +6,17 @@ import { type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativesQuery } from '@/services/initiatives.service';
 import { LINKABLE_STATUSES } from '@/utils/initiativeMeta';
+import { subtaskCount } from '@/utils/subtasks';
 import { cn } from '@/lib/utils';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { Button } from '@/components/ui/button';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { useSelection } from '../../context/useSelection';
 import { useBulkActions } from '../../hooks/useBulkActions';
 import { BarMenu } from './BarMenu';
+import { BulkRemovalDialog } from './BulkRemovalDialog';
 
 // Floating bar shown while the kanban board is in selection mode. Each control
 // applies one field to every selected issue at once; archive and delete run their
@@ -26,7 +27,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   const selection = useSelection();
   const { can } = usePermissions();
   const bulk = useBulkActions(project);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirming, setConfirming] = useState<'delete' | 'archive' | null>(null);
   // Initiatives are not in the board scaffold. The bulk picker fetches the first
   // page of linkable (open) initiatives only while selection is active, and only
   // while the project shows the Initiatives section (with none loaded the picker
@@ -42,6 +43,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   if (!selection.isSelecting) return null;
 
   const ids = [...selection.selected];
+  const subtasks = subtaskCount(project.issues, ids);
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
   const members = project.assignees.filter((a) => a.kind === 'member');
@@ -172,7 +174,11 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                 size="sm"
                 className="h-8 gap-1.5 px-2"
                 disabled={disabled}
-                onClick={() => void bulk.archiveAll(ids)}
+                onClick={() => {
+                  // Only an archive that has subtasks to ask about is confirmed.
+                  if (subtasks > 0) setConfirming('archive');
+                  else void bulk.archiveAll(ids);
+                }}
               >
                 <Archive className="size-4" />
                 Archive
@@ -186,7 +192,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
               size="sm"
               className="h-8 gap-1.5 px-2 text-destructive hover:text-destructive"
               disabled={disabled}
-              onClick={() => setConfirmingDelete(true)}
+              onClick={() => setConfirming('delete')}
             >
               <Trash2 className="size-4" />
               Delete
@@ -207,21 +213,19 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
         </div>
       </div>
 
-      {confirmingDelete && (
-        <ConfirmDialog
-          title="Delete issues"
-          confirmLabel={`Delete ${ids.length} issues`}
-          onConfirm={async () => {
-            await bulk.deleteAll(ids);
-            setConfirmingDelete(false);
-          }}
-          onClose={() => setConfirmingDelete(false)}
-        >
-          <p className="text-sm text-muted-foreground">
-            Delete {ids.length} selected issues? This removes them, their comments, activity and
-            attachments. This cannot be undone.
-          </p>
-        </ConfirmDialog>
+      {confirming && (
+        <BulkRemovalDialog
+          projectKey={project.project.key}
+          action={confirming}
+          ids={ids}
+          subtaskCount={subtasks}
+          onConfirm={(disposition) =>
+            confirming === 'delete'
+              ? bulk.deleteAll(ids, disposition)
+              : bulk.archiveAll(ids, disposition)
+          }
+          onClose={() => setConfirming(null)}
+        />
       )}
     </>
   );

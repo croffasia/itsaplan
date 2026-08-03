@@ -9,6 +9,7 @@ import { TimelineLabelResizer } from './TimelineLabelResizer';
 import { TimelineGroupRow } from './TimelineGroupRow';
 import { TimelineIssueRow } from './TimelineIssueRow';
 import { TimelineLinkRows } from './TimelineLinkRows';
+import { TimelineSubtaskRows } from './TimelineSubtaskRows';
 
 interface TimelineViewProps extends WorkItemsViewProps {
   collapsedGroups?: Set<string>;
@@ -133,6 +134,7 @@ export default function TimelineView({
               <TimelineIssueRow
                 project={project}
                 issue={issue}
+                maps={maps}
                 span={span}
                 rect={rect}
                 color={issueColor(issue, maps)}
@@ -146,6 +148,18 @@ export default function TimelineView({
                 todayLeft={todayLeft}
                 readOnly={barsReadOnly}
                 onBeginDrag={beginDrag}
+                onOpen={onOpenIssue}
+              />
+              <TimelineSubtaskRows
+                issueId={issue.id}
+                groupKey={row.groupKey}
+                maps={maps}
+                labelW={labelW}
+                trackWidth={trackWidth}
+                dayLines={dayLines}
+                todayInRange={todayInRange}
+                todayLeft={todayLeft}
+                spanToRect={spanToRect}
                 onOpen={onOpenIssue}
               />
               <TimelineLinkRows

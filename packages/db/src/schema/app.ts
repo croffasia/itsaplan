@@ -6,6 +6,7 @@ import {
   bigint,
   boolean,
   check,
+  type AnyPgColumn,
   date,
   doublePrecision,
   index,
@@ -813,6 +814,13 @@ export const issue = pgTable(
     columnId: integer('column_id')
       .notNull()
       .references(() => projectColumn.id),
+    // The issue this one is a subtask of (same project). One level deep: an issue
+    // with a parent cannot itself be a parent, which the API enforces. Deleting or
+    // archiving a parent asks what to do with its subtasks, so the ON DELETE here
+    // only covers the paths that bypass that choice (a deleted project).
+    parentId: integer('parent_id').references((): AnyPgColumn => issue.id, {
+      onDelete: 'set null',
+    }),
     assigneeUserId: text('assignee_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
@@ -847,6 +855,11 @@ export const issue = pgTable(
     index('issue_project_active_idx')
       .on(t.projectId, t.columnId)
       .where(sql`${t.archivedAt} IS NULL`),
+    // Backs reading a parent's subtasks, on the issue page and on every write that
+    // has to know whether an issue has any.
+    index('issue_parent_idx')
+      .on(t.parentId)
+      .where(sql`${t.parentId} IS NOT NULL`),
   ],
 );
 

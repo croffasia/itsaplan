@@ -24,7 +24,7 @@ export type NewIssueDefaults = Pick<
   NewIssueInput,
   'columnId' | 'typeId' | 'initiativeId' | 'assigneeUserId' | 'delegateUserId' | 'priority'
 > &
-  Partial<Pick<NewIssueInput, 'title' | 'description'>>;
+  Partial<Pick<NewIssueInput, 'title' | 'description' | 'parentId'>>;
 
 // Fallback dot/bar color for a group or issue whose status/type has no color.
 export const DEFAULT_COLOR = '#6b7280';

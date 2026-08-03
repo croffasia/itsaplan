@@ -5,6 +5,7 @@ import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
+import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
 import IssueStatusTimeline from './IssueStatusTimeline';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
@@ -142,6 +143,8 @@ export default function IssueDetailContent({
         onReplaced={() => setReplacements((n) => n + 1)}
         readOnly={!canEdit}
       />
+
+      <IssueSubtasksPanel project={project} issue={issue} />
 
       <IssueLinksPanel project={project} issueId={issue.id} links={issue.links} />
     </>

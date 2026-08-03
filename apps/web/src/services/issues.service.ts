@@ -7,8 +7,22 @@ import {
   type NewIssueInput,
   type BoardIssue,
   type BoardIssues,
+  type SubtaskDisposition,
 } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
+
+// Deleting or archiving one issue. `subtasks` says what happens to the subtasks
+// hanging under it, and is required whenever it has any.
+interface IssueRemoval {
+  id: number;
+  subtasks?: SubtaskDisposition;
+}
+
+// The same for a board multi-select, which removes many issues in one request.
+interface BulkRemoval {
+  ids: number[];
+  subtasks?: SubtaskDisposition;
+}
 
 export function useIssueQuery(id: number | null) {
   return useQuery({
@@ -99,8 +113,8 @@ function invalidateInitiatives(qc: ReturnType<typeof useQueryClient>) {
 export function useDeleteIssue(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteIssue(id),
-    onSuccess: async (_data, id) => {
+    mutationFn: ({ id, subtasks }: IssueRemoval) => api.deleteIssue(id, subtasks),
+    onSuccess: async (_data, { id }) => {
       if (projectKey) {
         // Cancel any project fetch already in flight before removing the issue
         // from the cache. Such a fetch was issued before the delete (e.g. an
@@ -127,8 +141,8 @@ export function useDeleteIssue(projectKey: string | null) {
 export function useArchiveIssue(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.archiveIssue(id),
-    onSuccess: async (_data, id) => {
+    mutationFn: ({ id, subtasks }: IssueRemoval) => api.archiveIssue(id, subtasks),
+    onSuccess: async (_data, { id }) => {
       if (projectKey) {
         await qc.cancelQueries({ queryKey: qk.boardIssues(projectKey) });
         qc.setQueryData<BoardIssues>(qk.boardIssues(projectKey), (prev) =>
@@ -254,11 +268,14 @@ export function useBulkAddLabels(projectKey: string) {
 // Archive and delete both drop the issues from the board immediately, then
 // reconcile. A project fetch already in flight is cancelled first so it cannot
 // re-add the removed issues (see the single-issue delete for the same reasoning).
-function useBulkRemoval(projectKey: string, run: (ids: number[]) => Promise<unknown>) {
+function useBulkRemoval(
+  projectKey: string,
+  run: (ids: number[], subtasks?: SubtaskDisposition) => Promise<unknown>,
+) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (ids: number[]) => run(ids),
-    onSuccess: async (_data, ids) => {
+    mutationFn: ({ ids, subtasks }: BulkRemoval) => run(ids, subtasks),
+    onSuccess: async (_data, { ids }) => {
       const idSet = new Set(ids);
       await qc.cancelQueries({ queryKey: qk.boardIssues(projectKey) });
       qc.setQueryData<BoardIssues>(qk.boardIssues(projectKey), (prev) =>
@@ -276,11 +293,15 @@ function useBulkRemoval(projectKey: string, run: (ids: number[]) => Promise<unkn
 }
 
 export function useBulkArchiveIssues(projectKey: string) {
-  return useBulkRemoval(projectKey, (ids) => api.bulkArchiveIssues(projectKey, ids));
+  return useBulkRemoval(projectKey, (ids, subtasks) =>
+    api.bulkArchiveIssues(projectKey, ids, subtasks),
+  );
 }
 
 export function useBulkDeleteIssues(projectKey: string) {
-  return useBulkRemoval(projectKey, (ids) => api.bulkDeleteIssues(projectKey, ids));
+  return useBulkRemoval(projectKey, (ids, subtasks) =>
+    api.bulkDeleteIssues(projectKey, ids, subtasks),
+  );
 }
 
 export function useCreateIssue() {

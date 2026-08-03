@@ -22,9 +22,9 @@ const GROUP_OPTIONS: { value: GroupField; label: string }[] = [
   { value: 'initiative', label: 'Initiative' },
 ];
 
-// The grouping, sub-grouping, ordering, empty-group and links rows. Which of
-// them show depends on the layout: Timeline groups but does not order, Calendar
-// does neither, and sub-grouping needs a primary group.
+// The grouping, sub-grouping, ordering, empty-group, links and subtasks rows.
+// Which of them show depends on the layout: Timeline groups but does not order,
+// Calendar does neither, and sub-grouping needs a primary group.
 export default function DisplayGroupingRows({
   view,
   settings,
@@ -107,12 +107,21 @@ export default function DisplayGroupingRows({
       )}
 
       {showsGrouping && (
-        <DisplaySettingsRow label="Show links">
-          <Checkbox
-            checked={settings.showLinks}
-            onCheckedChange={(c) => onChange({ showLinks: c === true })}
-          />
-        </DisplaySettingsRow>
+        <>
+          <DisplaySettingsRow label="Show links">
+            <Checkbox
+              checked={settings.showLinks}
+              onCheckedChange={(c) => onChange({ showLinks: c === true })}
+            />
+          </DisplaySettingsRow>
+
+          <DisplaySettingsRow label="Show subtasks">
+            <Checkbox
+              checked={settings.showSubtasks}
+              onCheckedChange={(c) => onChange({ showSubtasks: c === true })}
+            />
+          </DisplaySettingsRow>
+        </>
       )}
     </>
   );

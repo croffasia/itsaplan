@@ -1,0 +1,371 @@
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { authedApi, type Api } from '../../../__tests__/helpers/app';
+import { signUpTestUser } from '../../../__tests__/helpers/auth';
+import { resetDb } from '../../../__tests__/helpers/db';
+
+// Subtasks: an issue carries the id of the issue it hangs under (parentId), set on
+// create or through an update. The hierarchy is one level deep and stays inside one
+// project. An issue's parent and its subtasks come back with the issue read
+// (GET /issues/:issueId → `parent` / `subtasks`); deleting or archiving an issue
+// that has subtasks says what happens to them (cascade / detach / reassign) or is
+// rejected with a 409.
+
+interface Setup {
+  asOwner: Api;
+  columnId: number;
+}
+
+async function setupProject(): Promise<Setup> {
+  const owner = await signUpTestUser();
+  const asOwner = authedApi(owner.cookie);
+  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+  return { asOwner, columnId: view.data!.columns[0].id };
+}
+
+function createIssue(client: Api, columnId: number, title = 'Task') {
+  return client.projects({ projectKey: 'MKT' }).issues.post({ columnId, title });
+}
+
+// A parent with one subtask attached, the shape most of the tests start from.
+async function parentWithSubtask(client: Api, columnId: number) {
+  const parent = (await createIssue(client, columnId, 'Parent')).data!;
+  const subtask = (
+    await client.projects({ projectKey: 'MKT' }).issues.post({
+      columnId,
+      title: 'Subtask',
+      parentId: parent.id,
+    })
+  ).data!;
+  return { parent, subtask };
+}
+
+function setParent(client: Api, issueId: number, parentId: number | null) {
+  return client.issues({ issueId }).patch({ parentId });
+}
+
+async function read(client: Api, issueId: number) {
+  const res = await client.issues({ issueId }).get();
+  return res.data!;
+}
+
+// An issue of a second project, which no issue of the first one may hang under.
+async function foreignIssue(client: Api) {
+  await client.projects.post({ key: 'OPS', name: 'Operations' });
+  const view = await client.projects({ projectKey: 'OPS' }).get();
+  const res = await client
+    .projects({ projectKey: 'OPS' })
+    .issues.post({ columnId: view.data!.columns[0].id, title: 'Elsewhere' });
+  return res.data!;
+}
+
+describe('subtasks', () => {
+  beforeEach(async () => {
+    await resetDb();
+  });
+
+  describe('attach', () => {
+    it('creates an issue under a parent and shows the pair from both sides', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      expect(subtask.parentId).toBe(parent.id);
+      expect(await read(asOwner, parent.id)).toMatchObject({
+        parent: null,
+        subtasks: [{ id: subtask.id, identifier: subtask.identifier, title: 'Subtask' }],
+      });
+      expect(await read(asOwner, subtask.id)).toMatchObject({
+        parent: { id: parent.id, identifier: parent.identifier, title: 'Parent' },
+        subtasks: [],
+      });
+    });
+
+    it('attaches an existing issue through an update', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const parent = (await createIssue(asOwner, columnId, 'Parent')).data!;
+      const other = (await createIssue(asOwner, columnId, 'Other')).data!;
+
+      const res = await setParent(asOwner, other.id, parent.id);
+      expect(res.status).toBe(200);
+      expect(res.data!.parentId).toBe(parent.id);
+    });
+
+    it('detaches a subtask when its parent is cleared', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await setParent(asOwner, subtask.id, null);
+      expect(res.status).toBe(200);
+      expect(res.data!.parentId).toBe(null);
+      expect((await read(asOwner, parent.id)).subtasks).toEqual([]);
+    });
+
+    it('rejects an issue as its own parent with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await setParent(asOwner, issue.id, issue.id);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a parent in another project with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const outside = await foreignIssue(asOwner);
+
+      const res = await setParent(asOwner, issue.id, outside.id);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a missing parent with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await setParent(asOwner, issue.id, 999999);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a subtask as a parent with 400 (one level deep)', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { subtask } = await parentWithSubtask(asOwner, columnId);
+      const other = (await createIssue(asOwner, columnId, 'Other')).data!;
+
+      const res = await setParent(asOwner, other.id, subtask.id);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects making an issue that has subtasks a subtask with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent } = await parentWithSubtask(asOwner, columnId);
+      const other = (await createIssue(asOwner, columnId, 'Other')).data!;
+
+      const res = await setParent(asOwner, parent.id, other.id);
+      expect(res.status).toBe(400);
+    });
+
+    it('records the change on the subtask and on both parents', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      const next = (await createIssue(asOwner, columnId, 'Next parent')).data!;
+
+      await setParent(asOwner, subtask.id, next.id);
+
+      const subtaskFeed = await asOwner.issues({ issueId: subtask.id }).feed.get({ query: {} });
+      expect(subtaskFeed.data!.items).toContainEqual(
+        expect.objectContaining({
+          action: 'parent',
+          fromText: parent.identifier,
+          toText: next.identifier,
+        }),
+      );
+      const oldParentFeed = await asOwner.issues({ issueId: parent.id }).feed.get({ query: {} });
+      expect(oldParentFeed.data!.items).toContainEqual(
+        expect.objectContaining({ action: 'subtask_remove', fromText: subtask.identifier }),
+      );
+      const newParentFeed = await asOwner.issues({ issueId: next.id }).feed.get({ query: {} });
+      expect(newParentFeed.data!.items).toContainEqual(
+        expect.objectContaining({ action: 'subtask_add', toText: subtask.identifier }),
+      );
+    });
+
+    it('lists a parent’s subtasks by the parentId filter', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      await createIssue(asOwner, columnId, 'Unrelated');
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.get({ query: { parentId: parent.id } });
+      expect(res.data).toMatchObject([{ id: subtask.id, parentId: parent.id }]);
+    });
+  });
+
+  describe('board', () => {
+    it('counts an archived subtask on its parent', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      await asOwner.issues({ issueId: subtask.id }).archive.post();
+
+      const board = await asOwner.projects({ projectKey: 'MKT' }).issues.board.get();
+      expect(board.data!.issues).toContainEqual(
+        expect.objectContaining({ id: parent.id, subtaskCount: 1 }),
+      );
+    });
+  });
+
+  describe('delete', () => {
+    it('deletes the subtasks with the parent on cascade', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'cascade' },
+      });
+      expect(res.status).toBe(204);
+      expect((await asOwner.issues({ issueId: subtask.id }).get()).status).toBe(404);
+    });
+
+    it('keeps the subtasks as ordinary issues on detach', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'detach' },
+      });
+      expect(res.status).toBe(204);
+      expect(await read(asOwner, subtask.id)).toMatchObject({ parentId: null, parent: null });
+    });
+
+    it('moves the subtasks to the new parent on reassign', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      const next = (await createIssue(asOwner, columnId, 'Next parent')).data!;
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'reassign', newParentId: next.id },
+      });
+      expect(res.status).toBe(204);
+      expect((await read(asOwner, subtask.id)).parentId).toBe(next.id);
+    });
+
+    it('rejects a delete that does not say what happens to the subtasks with 409', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete();
+      expect(res.status).toBe(409);
+      expect((await asOwner.issues({ issueId: subtask.id }).get()).status).toBe(200);
+      expect((await asOwner.issues({ issueId: parent.id }).get()).status).toBe(200);
+    });
+
+    it('rejects reassigning the subtasks to the issue being deleted with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner.issues({ issueId: parent.id }).delete(undefined, {
+        query: { subtasks: 'reassign', newParentId: parent.id },
+      });
+      expect(res.status).toBe(400);
+      expect((await asOwner.issues({ issueId: parent.id }).get()).status).toBe(200);
+    });
+
+    it('deletes an issue without subtasks with no choice to make', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await asOwner.issues({ issueId: issue.id }).delete();
+      expect(res.status).toBe(204);
+    });
+  });
+
+  describe('archive', () => {
+    it('archives the subtasks with the parent on cascade', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner.issues({ issueId: parent.id }).archive.post({
+        subtasks: 'cascade',
+      });
+      expect(res.status).toBe(200);
+      expect((await read(asOwner, subtask.id)).archivedAt).not.toBe(null);
+    });
+
+    it('keeps the subtasks on the board on detach', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner.issues({ issueId: parent.id }).archive.post({
+        subtasks: 'detach',
+      });
+      expect(res.status).toBe(200);
+      expect(await read(asOwner, subtask.id)).toMatchObject({ parentId: null, archivedAt: null });
+    });
+
+    it('rejects an archive that does not say what happens to the subtasks with 409', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner.issues({ issueId: parent.id }).archive.post();
+      expect(res.status).toBe(409);
+      expect((await read(asOwner, parent.id)).archivedAt).toBe(null);
+    });
+
+    it('brings the subtasks back when the parent is restored', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      await asOwner.issues({ issueId: parent.id }).archive.post({ subtasks: 'cascade' });
+
+      const res = await asOwner.issues({ issueId: parent.id }).restore.post();
+      expect(res.status).toBe(200);
+      expect(await read(asOwner, subtask.id)).toMatchObject({ archivedAt: null });
+    });
+
+    it('archives an issue without subtasks with no choice to make', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await asOwner.issues({ issueId: issue.id }).archive.post();
+      expect(res.status).toBe(200);
+    });
+  });
+
+  describe('bulk', () => {
+    it('rejects a bulk archive that leaves the subtasks unsaid with 409', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.bulk.archive.post({ ids: [parent.id] });
+      expect(res.status).toBe(409);
+      expect((await read(asOwner, parent.id)).archivedAt).toBe(null);
+    });
+
+    it('leaves the subtasks of another project’s issue alone', async () => {
+      const { asOwner, columnId } = await setupProject();
+      await createIssue(asOwner, columnId, 'Anything');
+      const outside = await foreignIssue(asOwner);
+      const outsideSubtask = (
+        await asOwner.projects({ projectKey: 'OPS' }).issues.post({
+          columnId: outside.columnId,
+          title: 'Outside subtask',
+          parentId: outside.id,
+        })
+      ).data!;
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.bulk.delete.post({ ids: [outside.id], subtasks: 'cascade' });
+      expect(res.status).toBe(200);
+      expect((await asOwner.issues({ issueId: outsideSubtask.id }).get()).status).toBe(200);
+      expect((await read(asOwner, outsideSubtask.id)).parentId).toBe(outside.id);
+    });
+
+    it('rejects reassigning to an issue the same request removes with 400', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      const alsoRemoved = (await createIssue(asOwner, columnId, 'Also removed')).data!;
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).issues.bulk.delete.post({
+        ids: [parent.id, alsoRemoved.id],
+        subtasks: 'reassign',
+        newParentId: alsoRemoved.id,
+      });
+      expect(res.status).toBe(400);
+      expect((await read(asOwner, subtask.id)).parentId).toBe(parent.id);
+      expect((await asOwner.issues({ issueId: parent.id }).get()).status).toBe(200);
+      expect((await asOwner.issues({ issueId: alsoRemoved.id }).get()).status).toBe(200);
+    });
+
+    it('detaches the subtasks of a bulk delete', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.bulk.delete.post({ ids: [parent.id], subtasks: 'detach' });
+      expect(res.status).toBe(200);
+      expect(await read(asOwner, subtask.id)).toMatchObject({ parentId: null });
+    });
+  });
+});

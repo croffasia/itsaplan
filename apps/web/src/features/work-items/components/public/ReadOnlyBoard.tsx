@@ -3,7 +3,9 @@ import { applyFilters } from '@/utils/filters';
 import { defaultViewSettings } from '@/utils/viewSettings';
 import { type WorkItemsViewProps } from '@/utils/project';
 import { toPublicProjectDetail } from '@/utils/publicProject';
+import { withoutShownSubtasks } from '@/utils/subtasks';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
+import { SubtasksProvider } from '../../context/useSubtasks';
 import KanbanBoard from '../kanban/KanbanBoard';
 import TableView from '../table/TableView';
 import TimelineView from '../timeline/TimelineView';
@@ -23,9 +25,11 @@ export default function ReadOnlyBoard({
   onOpenIssue: (id: number) => void;
 }) {
   const project = toPublicProjectDetail(bundle.project, bundle.issues);
+  // Subtasks are rendered under their parent, so they are left out of the layouts'
+  // own rows here as well.
   const filteredProject = {
     ...project,
-    issues: applyFilters(project.issues, bundle.view.filters, project),
+    issues: withoutShownSubtasks(applyFilters(project.issues, bundle.view.filters, project)),
   };
 
   const layout = bundle.view.display.layout ?? 'kanban';
@@ -62,7 +66,11 @@ export default function ReadOnlyBoard({
         ticker={project.project.key}
         trailing={bundle.view.name}
       />
-      <div className="relative min-h-0 flex-1">{renderView()}</div>
+      <div className="relative min-h-0 flex-1">
+        <SubtasksProvider issues={project.issues} enabled={settings.showSubtasks}>
+          {renderView()}
+        </SubtasksProvider>
+      </div>
     </div>
   );
 }

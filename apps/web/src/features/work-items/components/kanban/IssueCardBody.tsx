@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { IssueCardLinks } from './IssueCardLinks';
+import { IssueCardSubtasks } from './IssueCardSubtasks';
 
 // One board card's content. Which properties render is driven by `properties`.
 // onOpen opens an issue the card links to; the drag preview passes none.
@@ -163,6 +164,7 @@ export function IssueCardBody({
         </div>
       )}
 
+      <IssueCardSubtasks issueId={issue.id} maps={maps} onOpen={onOpen} />
       <IssueCardLinks links={issue.links} maps={maps} onOpen={onOpen} />
     </>
   );

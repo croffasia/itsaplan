@@ -18,6 +18,7 @@ import ViewIconPicker from '@/components/layout/ViewIconPicker';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
 import { IssueLinksProvider } from './context/useIssueLinks';
+import { SubtasksProvider } from './context/useSubtasks';
 import KanbanBoard from './components/kanban/KanbanBoard';
 import TableView from './components/table/TableView';
 import TimelineView from './components/timeline/TimelineView';
@@ -205,7 +206,9 @@ export default function WorkItemsPage() {
 
       <div className="relative flex-1 overflow-hidden">
         <IssueLinksProvider issues={project.issues} enabled={settings.showLinks}>
-          {renderView()}
+          <SubtasksProvider issues={project.issues} enabled={settings.showSubtasks}>
+            {renderView()}
+          </SubtasksProvider>
         </IssueLinksProvider>
       </div>
     </>

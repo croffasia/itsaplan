@@ -515,6 +515,10 @@ export interface Issue {
   assigneeUserId: string | null;
   delegateUserId: string | null;
   columnId: number;
+  // The issue this one is a subtask of, or null when it stands on its own. The
+  // views render a subtask under its parent instead of on its own, so an issue
+  // with a parent never shows as a card or a row of its own.
+  parentId: number | null;
   title: string;
   description: string;
   priority: string | null;
@@ -545,6 +549,7 @@ export interface IssueSearchHit {
   columnId: number;
   typeId: number | null;
   initiativeId: number | null;
+  parentId: number | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
@@ -1282,6 +1287,9 @@ export type ActivityAction =
   | 'label_remove'
   | 'link_add'
   | 'link_remove'
+  | 'parent'
+  | 'subtask_add'
+  | 'subtask_remove'
   | 'field'
   | 'archived'
   | 'restored';
@@ -1406,6 +1414,10 @@ export interface ProjectScaffold {
 // share bundle return a plain Issue.
 export interface BoardIssue extends Issue {
   links: IssueLinkRef[];
+  // How many subtasks the issue has, archived ones included. The board carries
+  // only active issues, so an archived subtask shows up nowhere else — and a
+  // delete or an archive still has to ask about it.
+  subtaskCount: number;
 }
 
 // The board's issues plus its change marker, returned by getBoardIssues. Polled
@@ -1440,15 +1452,7 @@ export interface IssueLink {
   kind: IssueLinkKind;
   direction: IssueLinkDirection;
   // The issue on the other end of the relation.
-  issue: {
-    id: number;
-    sequenceNumber: number;
-    identifier: string;
-    title: string;
-    columnId: number;
-    typeId: number | null;
-    archived: boolean;
-  };
+  issue: IssueRef;
 }
 
 // One of an issue's relations as the board payload carries it: how the relation
@@ -1469,12 +1473,38 @@ export interface IssueWatcher {
   image: string | null;
 }
 
-// The issue as the detail routes return it: with its relations and its watchers.
-// The public share bundle carries an IssueDetail instead — a shared page does not
-// expose the issues on the other end of a relation, nor who follows the issue.
+// Another issue named with the state it is in: an issue's parent, one of its
+// subtasks, or the other end of a relation.
+export interface IssueRef {
+  id: number;
+  sequenceNumber: number;
+  identifier: string;
+  title: string;
+  columnId: number;
+  typeId: number | null;
+  archived: boolean;
+}
+
+// What a delete or an archive does with the issue's subtasks: they follow it
+// (deleted with a delete, archived with an archive), they are detached into
+// ordinary issues, or they move to another parent. Required whenever the issue
+// being removed has subtasks.
+export type SubtaskMode = 'cascade' | 'detach' | 'reassign';
+
+export interface SubtaskDisposition {
+  subtasks: SubtaskMode;
+  newParentId?: number;
+}
+
+// The issue as the detail routes return it: with its relations, its watchers, and
+// its place in the subtask hierarchy. The public share bundle carries an
+// IssueDetail instead — a shared page does not expose the issues on the other end
+// of a relation, nor who follows the issue.
 export interface IssueWithLinks extends IssueDetail {
   links: IssueLink[];
   watchers: IssueWatcher[];
+  parent: IssueRef | null;
+  subtasks: IssueRef[];
 }
 
 // Public read-only share bundles, returned by the /share/* routes with no session.
@@ -1502,6 +1532,7 @@ export interface NewIssueInput {
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   columnId: number;
+  parentId?: number | null;
   title: string;
   description?: string;
   priority?: string | null;
@@ -1527,6 +1558,7 @@ export interface IssuePatch {
   columnId?: number;
   position?: number;
   typeId?: number | null;
+  parentId?: number | null;
   initiativeId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
@@ -1823,6 +1855,15 @@ export interface NotificationFilters {
 
 export type NotificationDeleteScope = 'all' | 'read' | 'read-completed';
 
+// The subtask disposition as the delete route takes it: a query string, since a
+// DELETE carries no body.
+function subtaskQuery(disposition?: SubtaskDisposition): string {
+  if (!disposition) return '';
+  const qs = new URLSearchParams({ subtasks: disposition.subtasks });
+  if (disposition.newParentId != null) qs.set('newParentId', String(disposition.newParentId));
+  return `?${qs.toString()}`;
+}
+
 export const api = {
   listProjects: (opts?: { permissions?: boolean }) =>
     request<Project[]>(`/projects${opts?.permissions ? '?permissions=true' : ''}`),
@@ -1992,7 +2033,10 @@ export const api = {
   getIssueRev: (id: number) => request<{ rev: string }>(`/issues/${id}/rev`),
   updateIssue: (id: number, patch: IssuePatch) =>
     request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
-  deleteIssue: (id: number) => request<void>(`/issues/${id}`, { method: 'DELETE' }),
+  // An issue that has subtasks needs a disposition saying what happens to them;
+  // without one the server rejects the delete with a 409.
+  deleteIssue: (id: number, subtasks?: SubtaskDisposition) =>
+    request<void>(`/issues/${id}${subtaskQuery(subtasks)}`, { method: 'DELETE' }),
   // Board multi-select: apply one change to many issues in a single request. The
   // server filters the ids to the project and refetching happens once.
   bulkUpdateIssues: (projectKey: string, ids: number[], patch: BulkIssuePatch) =>
@@ -2005,19 +2049,23 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ ids, add }),
     }),
-  bulkArchiveIssues: (projectKey: string, ids: number[]) =>
+  bulkArchiveIssues: (projectKey: string, ids: number[], subtasks?: SubtaskDisposition) =>
     request<{ archived: number }>(`/projects/${projectKey}/issues/bulk/archive`, {
       method: 'POST',
-      body: JSON.stringify({ ids }),
+      body: JSON.stringify({ ids, ...subtasks }),
     }),
-  bulkDeleteIssues: (projectKey: string, ids: number[]) =>
+  bulkDeleteIssues: (projectKey: string, ids: number[], subtasks?: SubtaskDisposition) =>
     request<{ deleted: number }>(`/projects/${projectKey}/issues/bulk/delete`, {
       method: 'POST',
-      body: JSON.stringify({ ids }),
+      body: JSON.stringify({ ids, ...subtasks }),
     }),
   // Archive/restore: hide an issue from the board (kept, restorable) or bring it
   // back. The board excludes archived issues; the archive settings section lists them.
-  archiveIssue: (id: number) => request<Issue>(`/issues/${id}/archive`, { method: 'POST' }),
+  archiveIssue: (id: number, subtasks?: SubtaskDisposition) =>
+    request<Issue>(`/issues/${id}/archive`, {
+      method: 'POST',
+      body: JSON.stringify(subtasks ?? {}),
+    }),
   restoreIssue: (id: number) => request<Issue>(`/issues/${id}/restore`, { method: 'POST' }),
   listArchivedIssues: (projectKey: string) =>
     request<Issue[]>(`/projects/${projectKey}/issues/archived`),

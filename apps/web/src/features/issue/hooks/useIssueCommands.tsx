@@ -19,12 +19,7 @@ import type { ActionDef, IssuePatch, ProjectDetail } from '@/lib/api';
 import { actionIcon } from '@/utils/actionIcons';
 import { toDateStr } from '@/utils/dates';
 import { useActionsQuery } from '@/services/actions.service';
-import {
-  useArchiveIssue,
-  useIssueQuery,
-  useRestoreIssue,
-  useUpdateIssue,
-} from '@/services/issues.service';
+import { useIssueQuery, useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useSession } from '@/lib/auth-client';
 import { useShell } from '@/context/shellContext';
@@ -36,6 +31,7 @@ import {
   DeleteIssueDialog,
   matchedActions,
 } from '../components/actions/IssueActions';
+import { useArchiveAction } from './useArchiveAction';
 import { StateIcon } from '../components/shared/IssueIcons';
 import { dueDatePresets, formatPreset } from '../utils/dueDatePresets';
 import { buildIssuePrompt } from '../utils/issuePrompt';
@@ -57,7 +53,7 @@ export function useIssueCommands(
   const issueQuery = useIssueQuery(issueId);
   const issue = issueQuery.data ?? null;
   const updateIssue = useUpdateIssue(projectKey);
-  const archiveIssue = useArchiveIssue(projectKey);
+  const { archive, dialog: archiveDialog } = useArchiveAction(project, onDeleted);
   const restoreIssue = useRestoreIssue(projectKey);
   const actionsQuery = useActionsQuery(projectKey);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -82,6 +78,7 @@ export function useIssueCommands(
             onClose={() => setConfirmingAction(null)}
           />
         )}
+        {archiveDialog}
       </>
     ) : null;
 
@@ -325,10 +322,7 @@ export function useIssueCommands(
             id: 'issue.archive',
             label: 'Archive issue',
             icon: <Archive />,
-            run: () => {
-              archiveIssue.mutate(issue.id);
-              onDeleted?.();
-            },
+            run: () => archive(issue),
           },
     );
   }

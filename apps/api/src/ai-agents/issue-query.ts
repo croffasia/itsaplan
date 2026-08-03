@@ -22,6 +22,13 @@ export const issueQuerySchema = z.object({
     .describe(
       'Exact initiative id from list_initiatives, or null for issues without an initiative.',
     ),
+  parentId: z
+    .number()
+    .nullable()
+    .optional()
+    .describe(
+      'Exact parent issue id to list the subtasks of, or null for issues that are not subtasks.',
+    ),
   assigneeUserId: z
     .string()
     .nullable()

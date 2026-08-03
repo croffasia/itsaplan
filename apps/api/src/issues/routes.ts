@@ -40,11 +40,44 @@ import {
   type FeedCursor,
 } from './activity';
 import { addIssueLink, attachBoardLinks, listIssueLinks, removeIssueLink } from './links';
+import {
+  attachSubtaskCounts,
+  disposeSubtasksOf,
+  getParentRef,
+  listSubtasks,
+  restoreSubtasksOf,
+  type SubtaskDisposition,
+  type SubtaskMode,
+} from './subtasks';
 import { listIssueWatchers, setIssueWatching } from './watchers';
 
 // Numeric path params are validated (and coerced string -> number) with t.Numeric,
 // so a non-numeric id is rejected with a 400 before reaching the store.
 const issueParams = t.Object({ issueId: t.Numeric() });
+
+// The subtask choice a delete or archive request carries, or undefined when it
+// carries none.
+function disposition(
+  input?: { subtasks?: SubtaskMode; newParentId?: number } | null,
+): SubtaskDisposition | undefined {
+  if (!input?.subtasks) return undefined;
+  return { mode: input.subtasks, newParentId: input.newParentId };
+}
+
+// Removes the deleted issues' attachment objects. A failed object delete only
+// orphans bytes, so it does not fail the request.
+async function purgeObjects(attachments: { s3Key: string }[]): Promise<void> {
+  await Promise.all(
+    attachments.map((a) =>
+      deleteObject(a.s3Key).catch((err) => {
+        console.error(
+          `[planner] failed to delete object ${a.s3Key}:`,
+          err instanceof Error ? err.message : err,
+        );
+      }),
+    ),
+  );
+}
 
 // --- Response DTO schemas (mirror the store interfaces the handlers return) -------
 
@@ -69,6 +102,8 @@ const IssueResponse = t.Object({
   assigneeUserId: t.Nullable(t.String()),
   delegateUserId: t.Nullable(t.String()),
   columnId: t.Number(),
+  // The issue this one is a subtask of, or null. Set through create/update.
+  parentId: t.Nullable(t.Number()),
   title: t.String(),
   description: t.String(),
   priority: t.Nullable(t.String()),
@@ -94,6 +129,18 @@ const IssueFieldValueRow = t.Object({
   optionIds: t.Array(t.Number()),
 });
 
+// IssueRef from subtasks.ts: another issue named with the state it is in — an
+// issue's parent, one of its subtasks, or the other end of a relation.
+const IssueRefResponse = t.Object({
+  id: t.Number(),
+  sequenceNumber: t.Number(),
+  identifier: t.String(),
+  title: t.String(),
+  columnId: t.Number(),
+  typeId: t.Nullable(t.Number()),
+  archived: t.Boolean(),
+});
+
 // The kinds a relation is stored under (IssueLinkKind in links.ts).
 const StoredLinkKind = t.Union([
   t.Literal('blocks'),
@@ -107,15 +154,7 @@ const IssueLinkResponse = t.Object({
   id: t.Number(),
   kind: StoredLinkKind,
   direction: t.Union([t.Literal('outward'), t.Literal('inward')]),
-  issue: t.Object({
-    id: t.Number(),
-    sequenceNumber: t.Number(),
-    identifier: t.String(),
-    title: t.String(),
-    columnId: t.Number(),
-    typeId: t.Nullable(t.Number()),
-    archived: t.Boolean(),
-  }),
+  issue: IssueRefResponse,
 });
 
 // A relation as one of its two issues reads it (IssueLinkInputKind in links.ts):
@@ -142,6 +181,20 @@ const BoardIssueLinkResponse = t.Object({
   issueId: t.Number(),
 });
 
+// What a delete or an archive does with the issue's subtasks. Required when it has
+// any, ignored when it has none.
+const SubtaskModeSchema = t.Union(
+  [t.Literal('cascade'), t.Literal('detach'), t.Literal('reassign')],
+  {
+    description:
+      "What happens to the issue's subtasks: 'cascade' removes them with it, 'detach' turns them into ordinary issues, 'reassign' moves them to newParentId.",
+  },
+);
+
+const NewParentIdSchema = t.Integer({
+  description: "Numeric id of the issue the subtasks move to. Required by 'reassign'.",
+});
+
 // IssueWatcherRow from watchers.ts: one member following the issue.
 const IssueWatcherResponse = t.Object({
   userId: t.String(),
@@ -157,13 +210,20 @@ const IssueWithFieldsResponse = t.Composite([
     fields: t.Array(IssueFieldValueRow),
     links: t.Array(IssueLinkResponse),
     watchers: t.Array(IssueWatcherResponse),
+    parent: t.Nullable(IssueRefResponse),
+    subtasks: t.Array(IssueRefResponse),
   }),
 ]);
 
 // The board carries each issue's relations on the issue itself.
 const BoardIssueResponse = t.Composite([
   IssueResponse,
-  t.Object({ links: t.Array(BoardIssueLinkResponse) }),
+  t.Object({
+    links: t.Array(BoardIssueLinkResponse),
+    // How many subtasks the issue has, archived ones included — the board lists
+    // only active issues, so it cannot count them from the payload itself.
+    subtaskCount: t.Number(),
+  }),
 ]);
 
 // IssueSearchHit from the store: a light search result (no description/field values).
@@ -175,6 +235,7 @@ const IssueSearchHitResponse = t.Object({
   columnId: t.Number(),
   typeId: t.Nullable(t.Number()),
   initiativeId: t.Nullable(t.Number()),
+  parentId: t.Nullable(t.Number()),
   assigneeUserId: t.Nullable(t.String()),
   delegateUserId: t.Nullable(t.String()),
   priority: t.Nullable(t.String()),
@@ -293,6 +354,14 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           ),
         ),
         columnId: t.Integer({ description: 'Target column (state) id. From get_project.columns.' }),
+        parentId: t.Optional(
+          t.Nullable(
+            t.Integer({
+              description:
+                'Numeric id of the issue this one is a subtask of, or null. The parent must be in this project and must not be a subtask itself.',
+            }),
+          ),
+        ),
         title: t.String({ minLength: 1, description: 'Issue title.' }),
         description: t.Optional(
           t.String({ description: 'Issue description (plain text or markdown).' }),
@@ -399,13 +468,17 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .post(
     '/projects/:projectKey/issues/bulk/archive',
     async ({ project, body, user }) => {
-      const archived = await bulkArchiveIssues(project.id, body.ids, requireUser(user).id);
+      const actorUserId = requireUser(user).id;
+      await disposeSubtasksOf(project.id, body.ids, 'archive', disposition(body), actorUserId);
+      const archived = await bulkArchiveIssues(project.id, body.ids, actorUserId);
       return { archived };
     },
     {
       params: t.Object({ projectKey: t.String() }),
       body: t.Object({
         ids: t.Array(t.Integer(), { minItems: 1, description: 'Issue ids to archive.' }),
+        subtasks: t.Optional(SubtaskModeSchema),
+        newParentId: t.Optional(NewParentIdSchema),
       }),
       permission: ['work_items', 'edit'],
       response: {
@@ -414,6 +487,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
+        409: ErrorResponse,
       },
       detail: { summary: 'Bulk archive issues' },
     },
@@ -422,24 +496,24 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // Deletes every listed issue and removes their attachment objects.
   .post(
     '/projects/:projectKey/issues/bulk/delete',
-    async ({ project, body }) => {
-      const { deleted, attachments } = await bulkDeleteIssues(project.id, body.ids);
-      await Promise.all(
-        attachments.map((a) =>
-          deleteObject(a.s3Key).catch((err) => {
-            console.error(
-              `[planner] failed to delete object ${a.s3Key}:`,
-              err instanceof Error ? err.message : err,
-            );
-          }),
-        ),
+    async ({ project, body, user }) => {
+      const fromSubtasks = await disposeSubtasksOf(
+        project.id,
+        body.ids,
+        'delete',
+        disposition(body),
+        requireUser(user).id,
       );
+      const { deleted, attachments } = await bulkDeleteIssues(project.id, body.ids);
+      await purgeObjects([...fromSubtasks, ...attachments]);
       return { deleted };
     },
     {
       params: t.Object({ projectKey: t.String() }),
       body: t.Object({
         ids: t.Array(t.Integer(), { minItems: 1, description: 'Issue ids to delete.' }),
+        subtasks: t.Optional(SubtaskModeSchema),
+        newParentId: t.Optional(NewParentIdSchema),
       }),
       permission: ['work_items', 'delete'],
       response: {
@@ -448,6 +522,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
+        409: ErrorResponse,
       },
       detail: { summary: 'Bulk delete issues' },
     },
@@ -514,6 +589,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           columnId: posId(query.columnId),
           typeId: posId(query.typeId),
           initiativeId: posId(query.initiativeId),
+          parentId: posId(query.parentId),
           assigneeUserId: str(query.assigneeUserId),
           delegateUserId: str(query.delegateUserId),
           priority: str(query.priority),
@@ -531,6 +607,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         columnId: t.Optional(t.Numeric({ description: 'Exact column (state) id.' })),
         typeId: t.Optional(t.Numeric({ description: 'Exact issue type id.' })),
         initiativeId: t.Optional(t.Numeric({ description: 'Exact initiative id.' })),
+        parentId: t.Optional(
+          t.Numeric({ description: 'Parent issue id, to list that issue’s subtasks.' }),
+        ),
         assigneeUserId: t.Optional(t.String({ description: 'Exact assignee user id.' })),
         delegateUserId: t.Optional(t.String({ description: 'Exact delegate agent id.' })),
         priority: t.Optional(t.String({ description: 'Exact priority value.' })),
@@ -568,7 +647,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .get(
     '/projects/:projectKey/issues/board',
     async ({ project }) => ({
-      issues: await attachBoardLinks(await listIssues(project), project.id),
+      issues: await attachSubtaskCounts(
+        await attachBoardLinks(await listIssues(project), project.id),
+        project.id,
+      ),
       rev: await projectBoardRev(project.id),
     }),
     {
@@ -633,7 +715,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const fields = await getIssueFieldValues(issue.id);
       const links = await listIssueLinks(issue.id);
       const watchers = await listIssueWatchers(project.id, issue.id);
-      return { ...issue, fields, links, watchers };
+      const parent = await getParentRef(issue.parentId);
+      const subtasks = await listSubtasks(issue.id);
+      return { ...issue, fields, links, watchers, parent, subtasks };
     },
     {
       params: t.Object({ projectKey: t.String(), sequenceNumber: t.Numeric() }),
@@ -672,7 +756,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const fields = await getIssueFieldValues(issue.id);
       const links = await listIssueLinks(issue.id);
       const watchers = await listIssueWatchers(issue.projectId, issue.id);
-      return { ...issue, fields, links, watchers };
+      const parent = await getParentRef(issue.parentId);
+      const subtasks = await listSubtasks(issue.id);
+      return { ...issue, fields, links, watchers, parent, subtasks };
     },
     {
       params: issueParams,
@@ -714,6 +800,14 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         ),
         position: t.Optional(t.Number({ description: 'Ordering position within the column.' })),
         typeId: t.Optional(t.Nullable(t.Integer({ description: 'New issue type id, or null.' }))),
+        parentId: t.Optional(
+          t.Nullable(
+            t.Integer({
+              description:
+                'Make this issue a subtask of that issue id, or null to detach it. The parent must be in this project and must not be a subtask itself; an issue that has subtasks cannot become one.',
+            }),
+          ),
+        ),
         initiativeId: t.Optional(
           t.Nullable(
             t.Integer({
@@ -768,23 +862,25 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // the request.
   .delete(
     '/issues/:issueId',
-    async ({ params }) => {
+    async ({ params, query, user, projectId }) => {
+      const fromSubtasks = await disposeSubtasksOf(
+        projectId,
+        [params.issueId],
+        'delete',
+        disposition(query),
+        requireUser(user).id,
+      );
       const attachments = await deleteIssue(params.issueId);
       if (!attachments) throw new HttpError(404, 'Issue not found');
-      await Promise.all(
-        attachments.map((a) =>
-          deleteObject(a.s3Key).catch((err) => {
-            console.error(
-              `[planner] failed to delete object ${a.s3Key}:`,
-              err instanceof Error ? err.message : err,
-            );
-          }),
-        ),
-      );
+      await purgeObjects([...fromSubtasks, ...attachments]);
       return noContent();
     },
     {
       params: issueParams,
+      query: t.Object({
+        subtasks: t.Optional(SubtaskModeSchema),
+        newParentId: t.Optional(t.Numeric(NewParentIdSchema)),
+      }),
       workItem: 'delete',
       response: {
         204: t.Void(),
@@ -792,10 +888,12 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
+        409: ErrorResponse,
       },
       detail: {
         summary: 'Delete an issue',
-        description: 'Permanently delete an issue by its numeric id. Irreversible.',
+        description:
+          "Permanently delete an issue by its numeric id. Irreversible. An issue that has subtasks needs the subtasks parameter, which says whether they are deleted with it ('cascade'), detached into ordinary issues ('detach'), or moved to newParentId ('reassign').",
         ...mcpTool('delete_issue'),
       },
     },
@@ -806,13 +904,27 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // demand. Uses the work_items edit permission.
   .post(
     '/issues/:issueId/archive',
-    async ({ params, user }) => {
-      const issue = await archiveIssue(params.issueId, requireUser(user).id);
+    async ({ params, body, user, projectId }) => {
+      const actorUserId = requireUser(user).id;
+      await disposeSubtasksOf(
+        projectId,
+        [params.issueId],
+        'archive',
+        disposition(body),
+        actorUserId,
+      );
+      const issue = await archiveIssue(params.issueId, actorUserId);
       if (!issue) throw new HttpError(404, 'Issue not found');
       return issue;
     },
     {
       params: issueParams,
+      body: t.Optional(
+        t.Object({
+          subtasks: t.Optional(SubtaskModeSchema),
+          newParentId: t.Optional(NewParentIdSchema),
+        }),
+      ),
       workItem: 'edit',
       response: {
         200: IssueResponse,
@@ -820,21 +932,26 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
+        409: ErrorResponse,
       },
       detail: {
         summary: 'Archive an issue',
-        description: 'Archive an issue by its numeric id.',
+        description:
+          "Archive an issue by its numeric id. An issue that has subtasks needs the subtasks field, which says whether they are archived with it ('cascade'), detached into ordinary issues ('detach'), or moved to newParentId ('reassign').",
         ...mcpTool('archive_issue'),
       },
     },
   )
 
-  // Restores an archived issue back onto the board (clears archived_at).
+  // Restores an archived issue back onto the board (clears archived_at), together
+  // with its archived subtasks.
   .post(
     '/issues/:issueId/restore',
     async ({ params, user }) => {
-      const issue = await restoreIssue(params.issueId, requireUser(user).id);
+      const actorUserId = requireUser(user).id;
+      const issue = await restoreIssue(params.issueId, actorUserId);
       if (!issue) throw new HttpError(404, 'Issue not found');
+      await restoreSubtasksOf(issue.id, actorUserId);
       return issue;
     },
     {
@@ -849,7 +966,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       },
       detail: {
         summary: 'Restore an archived issue',
-        description: 'Restore an archived issue by its numeric id.',
+        description:
+          'Restore an archived issue by its numeric id. Its archived subtasks are restored with it.',
         ...mcpTool('restore_issue'),
       },
     },

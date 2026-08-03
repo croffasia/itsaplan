@@ -214,6 +214,7 @@ export default function NewIssueModal({
           title: title.trim(),
           description: description.trim() || undefined,
           columnId,
+          parentId: defaults.parentId ?? null,
           typeId,
           initiativeId,
           assigneeUserId,

@@ -1,8 +1,10 @@
 import { type ProjectDetail, type Issue } from '@/lib/api';
+import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
 import { ROW_H, type Span } from '../../utils/timeline';
+import { SubtaskProgress } from '../shared/SubtaskProgress';
 
 // One issue row: the sticky label on the left and its draggable bar on the day
 // track. The bar moves the issue (rewriting dates and, on a vertical move, the
@@ -10,6 +12,7 @@ import { ROW_H, type Span } from '../../utils/timeline';
 export function TimelineIssueRow({
   project,
   issue,
+  maps,
   span,
   rect,
   color,
@@ -27,6 +30,7 @@ export function TimelineIssueRow({
 }: {
   project: ProjectDetail;
   issue: Issue;
+  maps: Maps;
   span: Span;
   rect: { left: number; width: number };
   color: string;
@@ -63,6 +67,7 @@ export function TimelineIssueRow({
             {issue.identifier}
           </span>
           <span className="min-w-0 flex-1 truncate text-sm text-foreground">{issue.title}</span>
+          <SubtaskProgress issueId={issue.id} maps={maps} />
         </div>
       </IssueContextMenu>
       <div className="relative" style={{ width: trackWidth, ...dayLines }}>

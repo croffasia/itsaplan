@@ -13,7 +13,7 @@ import { LINK_RELATIONS, LINK_RELATION_LABELS, linkRelation, storedKind } from '
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { useUnlinkIssues } from '../../services/links.service';
 import IssueLinkDialog from './IssueLinkDialog';
-import IssueLinkRow from './IssueLinkRow';
+import IssueRefRow from './IssueRefRow';
 import IssueSectionHeading from './IssueSectionHeading';
 
 // The issue's relations to other issues, grouped by how each reads from this
@@ -82,10 +82,11 @@ export default function IssueLinksPanel({
                   {LINK_RELATION_LABELS[group.relation]}
                 </h4>
                 {group.links.map((link) => (
-                  <IssueLinkRow
+                  <IssueRefRow
                     key={link.id}
                     project={project}
-                    link={link}
+                    issue={link.issue}
+                    removeLabel={`Remove the link to ${link.issue.identifier}`}
                     onRemove={
                       canEdit
                         ? () =>

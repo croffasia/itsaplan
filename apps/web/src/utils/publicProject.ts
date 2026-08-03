@@ -6,7 +6,8 @@ import type { Issue, Permissions, ProjectDetail, PublicScaffold } from '@/lib/ap
 // page has no session) and its assignees carry no email; this fills the shape with
 // an empty permission matrix (every can() check resolves false) and a placeholder
 // email. Its issues carry no relations either — a shared page does not expose the
-// issues on the other end of one.
+// issues on the other end of one — and no subtask count, which only the removal
+// confirmations read.
 export function toPublicProjectDetail(
   scaffold: PublicScaffold,
   issues: Issue[] = [],
@@ -21,7 +22,7 @@ export function toPublicProjectDetail(
     customFields: scaffold.customFields,
     viewer: { role: 'member' },
     permissions: {} as Permissions,
-    issues: issues.map((issue) => ({ ...issue, links: [] })),
+    issues: issues.map((issue) => ({ ...issue, links: [], subtaskCount: 0 })),
     rev: '',
   };
 }

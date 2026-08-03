@@ -35,6 +35,7 @@ import type { ProjectRow } from '../projects/store';
 import { getCustomFieldById, type CustomFieldType } from '../custom-fields/store';
 import {
   recordActivity,
+  recordActivityEntries,
   logIssueUpdate,
   labelNames,
   type ActivityInput,
@@ -76,6 +77,9 @@ export interface IssueRow {
   assigneeUserId: string | null;
   delegateUserId: string | null;
   columnId: number;
+  // The issue this one is a subtask of, or null when it stands on its own. One
+  // level deep: an issue with a parent cannot itself have subtasks.
+  parentId: number | null;
   title: string;
   description: string;
   priority: string | null;
@@ -114,6 +118,7 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     assigneeUserId: row.assigneeUserId,
     delegateUserId: row.delegateUserId,
     columnId: row.columnId,
+    parentId: row.parentId,
     title: row.title,
     description: row.description,
     priority: row.priority,
@@ -220,6 +225,7 @@ export interface IssueSearchHit {
   columnId: number;
   typeId: number | null;
   initiativeId: number | null;
+  parentId: number | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
@@ -297,6 +303,10 @@ export async function searchIssues(
         ? isNull(issue.initiativeId)
         : eq(issue.initiativeId, filters.initiativeId),
     );
+  if (filters.parentId !== undefined)
+    conds.push(
+      filters.parentId === null ? isNull(issue.parentId) : eq(issue.parentId, filters.parentId),
+    );
   if (filters.assigneeUserId !== undefined)
     conds.push(
       filters.assigneeUserId === null
@@ -343,6 +353,7 @@ export async function searchIssues(
       sequenceNumber: issue.sequenceNumber,
       typeId: issue.typeId,
       initiativeId: issue.initiativeId,
+      parentId: issue.parentId,
       assigneeUserId: issue.assigneeUserId,
       delegateUserId: issue.delegateUserId,
       columnId: issue.columnId,
@@ -364,6 +375,7 @@ export async function searchIssues(
     columnId: r.columnId,
     typeId: r.typeId,
     initiativeId: r.initiativeId,
+    parentId: r.parentId,
     assigneeUserId: r.assigneeUserId,
     delegateUserId: r.delegateUserId,
     priority: r.priority,
@@ -514,11 +526,14 @@ async function attachFieldValues(issues: IssueRow[]): Promise<void> {
 // full load does. Used as the "before" state for the change-log diff, which
 // needs only these columns, plus the project id the update's scope checks run
 // against.
-async function loadSnapshot(id: number): Promise<(IssueSnapshot & { projectId: number }) | null> {
+async function loadSnapshot(
+  id: number,
+): Promise<(IssueSnapshot & { projectId: number; parentId: number | null }) | null> {
   const rows = await db
     .select({
       id: issue.id,
       projectId: issue.projectId,
+      parentId: issue.parentId,
       title: issue.title,
       description: issue.description,
       columnId: issue.columnId,
@@ -589,6 +604,7 @@ export interface NewIssueInput {
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   columnId: number;
+  parentId?: number | null;
   title: string;
   description?: string;
   priority?: string | null;
@@ -652,6 +668,41 @@ async function assertIssueType(
   if (rows.length === 0) throw new HttpError(400, 'Issue type must belong to this project');
 }
 
+// Enforces the rules a parent link has to hold: both issues in the same project,
+// no issue its own parent, and one level of nesting — the parent may not be a
+// subtask itself, and an issue that already has subtasks may not become one.
+// issueId is null when the issue is being created (it has no subtasks yet).
+// Throws 400 otherwise; clearing the parent is always allowed.
+async function assertParent(
+  projectId: number,
+  issueId: number | null,
+  parentId: number | null | undefined,
+): Promise<void> {
+  if (parentId == null) return;
+  if (parentId === issueId) throw new HttpError(400, 'An issue cannot be its own parent');
+  const rows = await db
+    .select({ projectId: issue.projectId, parentId: issue.parentId })
+    .from(issue)
+    .where(eq(issue.id, parentId));
+  if (rows.length === 0 || rows[0].projectId !== projectId)
+    throw new HttpError(400, 'Parent must belong to this project');
+  if (rows[0].parentId !== null)
+    throw new HttpError(400, 'A subtask cannot be the parent of another issue');
+  if (issueId !== null && (await hasSubtasks(issueId)))
+    throw new HttpError(400, 'An issue with subtasks cannot become a subtask');
+}
+
+// Whether the issue has subtasks, archived ones included: they stay attached to it
+// and are restored as subtasks.
+async function hasSubtasks(issueId: number): Promise<boolean> {
+  const rows = await db
+    .select({ id: issue.id })
+    .from(issue)
+    .where(eq(issue.parentId, issueId))
+    .limit(1);
+  return rows.length > 0;
+}
+
 // Enforces that every label belongs to the issue's project — the issue_label
 // foreign key only requires the label to exist somewhere. Throws 400 otherwise.
 async function assertIssueLabels(projectId: number, labelIds?: number[]): Promise<void> {
@@ -676,6 +727,7 @@ export async function createIssue(
   await assertInitiative(project.id, input.initiativeId);
   await assertColumn(project.id, input.columnId);
   await assertIssueType(project.id, input.typeId);
+  await assertParent(project.id, null, input.parentId);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
   const issueId = await db.transaction(async (tx) => {
@@ -699,6 +751,7 @@ export async function createIssue(
         assigneeUserId: input.assigneeUserId ?? null,
         delegateUserId: input.delegateUserId ?? null,
         columnId: input.columnId,
+        parentId: input.parentId ?? null,
         title: input.title,
         description: input.description ?? '',
         priority: input.priority ?? null,
@@ -711,6 +764,7 @@ export async function createIssue(
   });
 
   await recordActivity(issueId, [{ action: 'created' }], actorUserId);
+  if (input.parentId != null) await recordParentChange(issueId, null, input.parentId, actorUserId);
   // Suppress the label_changed event on creation — the initial labels are part of
   // the issue.created payload, so a separate change event would be redundant.
   if (input.labelIds?.length)
@@ -736,10 +790,54 @@ export async function createIssue(
   return created;
 }
 
+// The identifiers ("MKT-42") of the given issues, for the activity entries a parent
+// change writes. An id with no issue is absent from the map.
+async function identifiers(ids: number[]): Promise<Map<number, string>> {
+  const out = new Map<number, string>();
+  if (ids.length === 0) return out;
+  const rows = await db
+    .select({ id: issue.id, key: projectTable.key, seq: issue.sequenceNumber })
+    .from(issue)
+    .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
+    .where(inArray(issue.id, ids));
+  for (const row of rows) out.set(row.id, `${row.key}-${row.seq}`);
+  return out;
+}
+
+// Writes a parent change to the feeds of every issue it concerns: the subtask reads
+// which parent it moved between, each parent reads the subtask it gained or lost.
+async function recordParentChange(
+  childId: number,
+  before: number | null,
+  after: number | null,
+  actorUserId?: string | null,
+): Promise<void> {
+  const names = await identifiers(
+    [childId, before, after].filter((id): id is number => id !== null),
+  );
+  const child = names.get(childId) ?? null;
+  const entries: { issueId: number; event: ActivityInput }[] = [
+    {
+      issueId: childId,
+      event: {
+        action: 'parent',
+        fromText: before === null ? null : (names.get(before) ?? null),
+        toText: after === null ? null : (names.get(after) ?? null),
+      },
+    },
+  ];
+  if (before !== null)
+    entries.push({ issueId: before, event: { action: 'subtask_remove', fromText: child } });
+  if (after !== null)
+    entries.push({ issueId: after, event: { action: 'subtask_add', toText: child } });
+  await recordActivityEntries(entries, actorUserId);
+}
+
 export interface IssuePatch {
   columnId?: number;
   position?: number;
   typeId?: number | null;
+  parentId?: number | null;
   initiativeId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
@@ -762,11 +860,13 @@ export async function updateIssue(
   await assertInitiative(before.projectId, patch.initiativeId);
   await assertColumn(before.projectId, patch.columnId);
   await assertIssueType(before.projectId, patch.typeId);
+  await assertParent(before.projectId, id, patch.parentId);
 
   const set: Partial<typeof issue.$inferInsert> = {};
   if (patch.columnId !== undefined) set.columnId = patch.columnId;
   if (patch.position !== undefined) set.position = patch.position;
   if (patch.typeId !== undefined) set.typeId = patch.typeId;
+  if (patch.parentId !== undefined) set.parentId = patch.parentId;
   if (patch.initiativeId !== undefined) set.initiativeId = patch.initiativeId;
   if (patch.assigneeUserId !== undefined) set.assigneeUserId = patch.assigneeUserId;
   if (patch.delegateUserId !== undefined) set.delegateUserId = patch.delegateUserId;
@@ -784,6 +884,8 @@ export async function updateIssue(
   const after = await getIssue(id);
   if (after) {
     await logIssueUpdate(before, snapshot(after), actorUserId);
+    if (before.parentId !== after.parentId)
+      await recordParentChange(id, before.parentId, after.parentId, actorUserId);
     if (changed) {
       await emitWebhookEvent(after.projectId, 'issue.updated', after);
       // Granular events fire in addition to issue.updated when their field changed.

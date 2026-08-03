@@ -8,6 +8,7 @@ import {
 import { useViewsQuery } from '@/services/views.service';
 import { ApiError } from '@/lib/api';
 import { applyFilters } from '@/utils/filters';
+import { withoutShownSubtasks } from '@/utils/subtasks';
 import { viewPath } from '@/utils/paths';
 import { useViewEditor } from '@/hooks/useViewEditor';
 
@@ -56,11 +57,18 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   );
 
   // The project with the active filters applied to its issues: the active view's
-  // own conditions plus any ad-hoc ones.
+  // own conditions plus any ad-hoc ones. Subtasks are then left out of every
+  // layout's own rows — they are rendered under their parent instead — while the
+  // unfiltered project keeps them for those sub-rows to read.
   const filteredProject = useMemo(
     () =>
       project
-        ? { ...project, issues: applyFilters(project.issues, editor.effectiveFilters, project) }
+        ? {
+            ...project,
+            issues: withoutShownSubtasks(
+              applyFilters(project.issues, editor.effectiveFilters, project),
+            ),
+          }
         : null,
     [project, editor.effectiveFilters],
   );

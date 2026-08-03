@@ -1,4 +1,4 @@
-import { type BulkIssuePatch, type ProjectDetail } from '@/lib/api';
+import { type BulkIssuePatch, type ProjectDetail, type SubtaskDisposition } from '@/lib/api';
 import {
   useBulkAddLabels,
   useBulkArchiveIssues,
@@ -19,8 +19,12 @@ export function useBulkActions(project: ProjectDetail) {
   return {
     patch: (ids: number[], patch: BulkIssuePatch) => update.mutateAsync({ ids, patch }),
     addLabel: (ids: number[], labelId: number) => addLabels.mutateAsync({ ids, add: [labelId] }),
-    archiveAll: (ids: number[]) => archive.mutateAsync(ids),
-    deleteAll: (ids: number[]) => remove.mutateAsync(ids),
+    // Both removals carry what happens to the subtasks of the selected issues,
+    // which the API requires whenever the selection has any.
+    archiveAll: (ids: number[], subtasks?: SubtaskDisposition) =>
+      archive.mutateAsync({ ids, subtasks }),
+    deleteAll: (ids: number[], subtasks?: SubtaskDisposition) =>
+      remove.mutateAsync({ ids, subtasks }),
     pending: update.isPending || addLabels.isPending || archive.isPending || remove.isPending,
   };
 }

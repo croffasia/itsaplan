@@ -92,6 +92,10 @@ export interface ViewSettings {
   // Timeline row. Off by default — the relations are an extra load, and most
   // boards do not use them.
   showLinks: boolean;
+  // The issues' subtasks, rendered the same way under their parent. A subtask has
+  // no card or row of its own, so with this off it is only visible inside its
+  // parent issue.
+  showSubtasks: boolean;
   properties: PropertyKey[];
   timelineScale: TimelineScale;
   // Initial Timeline group state. Individual group toggles are transient and do
@@ -118,6 +122,7 @@ const DEFAULT_SORT: Sort = { field: 'manual', dir: 'asc' };
 const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> = {
   showEmptyGroups: true,
   showLinks: false,
+  showSubtasks: true,
   timelineScale: 'week',
   timelineCollapseAll: false,
   calendarDateField: 'dueDate',
@@ -232,6 +237,7 @@ export function normalizeViewSettings(
     subgroup: rawSubgroup !== 'none' && rawSubgroup !== group ? rawSubgroup : 'none',
     showEmptyGroups: typeof s.showEmptyGroups === 'boolean' ? s.showEmptyGroups : d.showEmptyGroups,
     showLinks: typeof s.showLinks === 'boolean' ? s.showLinks : d.showLinks,
+    showSubtasks: typeof s.showSubtasks === 'boolean' ? s.showSubtasks : d.showSubtasks,
     // Stored order is preserved as-is (it is the Table column order, reorderable
     // by drag); only unknown entries are dropped. A since-deleted custom field's
     // key stays until the next reorder, and is ignored when rendering.

@@ -9,6 +9,7 @@ import {
   CirclePlus,
   FileText,
   Link2,
+  ListTree,
   Pencil,
   Shapes,
   SignalHigh,
@@ -39,6 +40,9 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   label_remove: Tag,
   link_add: Link2,
   link_remove: Link2,
+  parent: ListTree,
+  subtask_add: ListTree,
+  subtask_remove: ListTree,
   field: Pencil,
   archived: Archive,
   restored: ArchiveRestore,
@@ -130,6 +134,21 @@ export function describeActivity(a: FeedItem): { line: ReactNode; popover?: stri
           </>
         ),
       };
+    case 'parent':
+      if (!a.toText) return { line: <>detached from {strong(a.fromText)}</> };
+      return {
+        line: a.fromText ? (
+          <>
+            moved from {strong(a.fromText)} to {strong(a.toText)}
+          </>
+        ) : (
+          <>made this a subtask of {strong(a.toText)}</>
+        ),
+      };
+    case 'subtask_add':
+      return { line: <>added subtask {strong(a.toText)}</> };
+    case 'subtask_remove':
+      return { line: <>removed subtask {strong(a.fromText)}</> };
     case 'field':
       if (isLong(a.toText)) return { line: <>updated {strong(a.subject)}</>, popover: a.toText };
       return a.toText

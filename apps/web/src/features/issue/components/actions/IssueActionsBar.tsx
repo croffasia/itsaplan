@@ -10,9 +10,10 @@ import {
 } from '@/lib/api';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
-import { useArchiveIssue, useRestoreIssue } from '@/services/issues.service';
+import { useRestoreIssue } from '@/services/issues.service';
 import { qk } from '@/services/queryKeys';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
 import { buildIssuePrompt } from '../../utils/issuePrompt';
 import { useSession } from '@/lib/auth-client';
@@ -44,7 +45,7 @@ export default function IssueActionsBar({
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
   const actionsQuery = useActionsQuery(project.project.key);
-  const archiveIssue = useArchiveIssue(project.project.key);
+  const { archive, dialog: archiveDialog } = useArchiveAction(project);
   const restoreIssue = useRestoreIssue(project.project.key);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
@@ -160,9 +161,7 @@ export default function IssueActionsBar({
               variant="ghost"
               size={btnSize}
               className="text-muted-foreground hover:text-foreground"
-              onClick={() =>
-                issue.archivedAt ? restoreIssue.mutate(issue.id) : archiveIssue.mutate(issue.id)
-              }
+              onClick={() => (issue.archivedAt ? restoreIssue.mutate(issue.id) : archive(issue))}
             >
               {issue.archivedAt ? (
                 <ArchiveRestore className="size-4" />
@@ -204,6 +203,8 @@ export default function IssueActionsBar({
           onDeleted={onDeleted}
         />
       )}
+
+      {archiveDialog}
 
       {confirmingAction && (
         <ApplyActionDialog

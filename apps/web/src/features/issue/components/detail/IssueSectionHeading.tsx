@@ -8,11 +8,14 @@ export default function IssueSectionHeading({
   label,
   open,
   onToggle,
+  tally,
   className,
 }: {
   label: string;
   open: boolean;
   onToggle: () => void;
+  // Free text shown after the label (the Subtasks section counts the done ones).
+  tally?: string;
   className?: string;
 }) {
   const Chevron = open ? ChevronDown : ChevronRight;
@@ -28,6 +31,7 @@ export default function IssueSectionHeading({
     >
       <Chevron className="size-3.5" />
       {label}
+      {tally && <span className="tabular-nums">{tally}</span>}
     </button>
   );
 }

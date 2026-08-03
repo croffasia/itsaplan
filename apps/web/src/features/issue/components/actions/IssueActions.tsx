@@ -1,8 +1,11 @@
-import type { ActionDef, ProjectDetail, Issue } from '@/lib/api';
+import { useState } from 'react';
+import type { ActionDef, ProjectDetail, Issue, SubtaskDisposition } from '@/lib/api';
 import { matchesFilterSet } from '@/utils/filters';
 import { describeEffect } from '@/utils/actions';
-import { useDeleteIssue, useUpdateIssue } from '@/services/issues.service';
+import { dispositionReady } from '@/utils/subtasks';
+import { useDeleteIssue, useIssueQuery, useUpdateIssue } from '@/services/issues.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import SubtaskDisposalChoice from './SubtaskDisposalChoice';
 
 // The project's manual actions whose condition matches this issue, in saved
 // order. Shared by the issue detail Actions block and the context menu.
@@ -51,12 +54,21 @@ export function DeleteIssueDialog({
   onDeleted?: () => void;
 }) {
   const deleteIssue = useDeleteIssue(project.project.key);
+  // The board carries only active issues, so an archived issue's subtasks are not
+  // countable from it. The detail read carries them, archived ones included; it is
+  // already cached on the issue page and fetched once when the dialog opens
+  // elsewhere, which is what holds the confirmation until the count is known.
+  const detail = useIssueQuery(issue.id);
+  const subtasks = detail.data?.subtasks.length ?? 0;
+  const [disposition, setDisposition] = useState<SubtaskDisposition | null>(null);
+
   return (
     <ConfirmDialog
       title="Delete issue"
       confirmLabel="Delete issue"
+      confirmDisabled={!detail.data || (subtasks > 0 && !dispositionReady(disposition))}
       onConfirm={async () => {
-        await deleteIssue.mutateAsync(issue.id);
+        await deleteIssue.mutateAsync({ id: issue.id, subtasks: disposition ?? undefined });
         onClose();
         onDeleted?.();
       }}
@@ -66,6 +78,16 @@ export function DeleteIssueDialog({
         Delete {issue.identifier}? This removes the issue, its comments, activity and attachments.
         This cannot be undone.
       </p>
+      {subtasks > 0 && (
+        <SubtaskDisposalChoice
+          projectKey={project.project.key}
+          action="delete"
+          count={subtasks}
+          removedIssueIds={[issue.id]}
+          value={disposition}
+          onChange={setDisposition}
+        />
+      )}
     </ConfirmDialog>
   );
 }

@@ -19,11 +19,12 @@ import {
 import type { ActionDef, ProjectDetail, Issue, IssuePatch } from '@/lib/api';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
-import { useArchiveIssue, useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
+import { useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
 import { useInitiativesQuery } from '@/services/initiatives.service';
 import { LINKABLE_STATUSES, STATUS_META } from '@/utils/initiativeMeta';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ShellCtx } from '@/context/shellContext';
+import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
 import { buildIssuePrompt } from '../../utils/issuePrompt';
 import { useSession } from '@/lib/auth-client';
@@ -74,7 +75,7 @@ export default function IssueContextMenu({
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
   const updateIssue = useUpdateIssue(project.project.key);
-  const archiveIssue = useArchiveIssue(project.project.key);
+  const { archive, dialog: archiveDialog } = useArchiveAction(project, onDeleted);
   const restoreIssue = useRestoreIssue(project.project.key);
   const actionsQuery = useActionsQuery(project.project.key);
   const [open, setOpen] = useState(false);
@@ -345,12 +346,7 @@ export default function IssueContextMenu({
                 Restore
               </ContextMenuItem>
             ) : (
-              <ContextMenuItem
-                onSelect={() => {
-                  archiveIssue.mutate(issue.id);
-                  onDeleted?.();
-                }}
-              >
+              <ContextMenuItem onSelect={() => archive(issue)}>
                 <Archive />
                 Archive
               </ContextMenuItem>
@@ -384,6 +380,8 @@ export default function IssueContextMenu({
           onClose={() => setConfirmingAction(null)}
         />
       )}
+
+      {archiveDialog}
     </>
   );
 }

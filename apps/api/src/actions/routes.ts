@@ -62,6 +62,29 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     },
   )
 
+  // The same list, readable by any project member. The issue quick actions (board
+  // context menu, issue detail) run off it, so a member who cannot manage actions
+  // still sees the ones that apply to an issue.
+  .get(
+    '/projects/:projectKey/actions/quick',
+    async ({ project }) => {
+      return listActions(project.id);
+    },
+    {
+      projectMember: true,
+      response: {
+        200: t.Array(ActionResponse),
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'List quick actions',
+        description: "List a project's actions for the issue quick actions.",
+      },
+    },
+  )
+
   .post(
     '/projects/:projectKey/actions',
     async ({ project, body, set }) => {

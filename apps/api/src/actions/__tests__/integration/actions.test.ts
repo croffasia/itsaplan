@@ -10,6 +10,17 @@ async function setupOwnerProject() {
   return { asOwner, projectId: project.data!.id };
 }
 
+// Adds a member on the default role, which grants no `actions` permission.
+async function addDefaultMember(asOwner: ReturnType<typeof authedApi>) {
+  const user = await signUpTestUser();
+  const invite = await asOwner
+    .projects({ projectKey: 'MKT' })
+    .invites.post({ email: user.email, role: 'member' });
+  const asMember = authedApi(user.cookie);
+  await asMember.invites({ token: invite.data!.token }).accept.post();
+  return asMember;
+}
+
 describe('actions', () => {
   beforeEach(async () => {
     await resetDb();
@@ -80,6 +91,41 @@ describe('actions', () => {
         { name: 'First', position: 0 },
         { name: 'Second', position: 1 },
       ]);
+    });
+  });
+
+  describe('quick list', () => {
+    it('lets a member without the actions permission read it, in saved order', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const a = (await asOwner.projects({ projectKey: 'MKT' }).actions.post({ name: 'A' })).data!;
+      const b = (await asOwner.projects({ projectKey: 'MKT' }).actions.post({ name: 'B' })).data!;
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .actions.reorder.put({ orderedIds: [b.id, a.id] });
+
+      const asMember = await addDefaultMember(asOwner);
+
+      const settingsList = await asMember.projects({ projectKey: 'MKT' }).actions.get();
+      expect(settingsList.status).toBe(403);
+
+      const quick = await asMember.projects({ projectKey: 'MKT' }).actions.quick.get();
+      expect(quick.status).toBe(200);
+      expect(quick.data?.map((r) => r.id)).toEqual([b.id, a.id]);
+    });
+
+    it('denies a non-member', async () => {
+      const { asOwner } = await setupOwnerProject();
+      await asOwner.projects({ projectKey: 'MKT' }).actions.post({ name: 'Secret' });
+
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      const quick = await outsider.projects({ projectKey: 'MKT' }).actions.quick.get();
+      expect(quick.status).toBe(403);
+    });
+
+    it('returns 404 for an unknown project', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const res = await asOwner.projects({ projectKey: 'NOPE' }).actions.quick.get();
+      expect(res.status).toBe(404);
     });
   });
 

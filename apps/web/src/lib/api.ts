@@ -2472,7 +2472,10 @@ export const api = {
   rejectInvite: (token: string) =>
     request<void>(`/invites/${encodeURIComponent(token)}/reject`, { method: 'POST' }),
 
-  listActions: (projectKey: string) => request<ActionDef[]>(`/projects/${projectKey}/actions`),
+  // The action list any project member may read; the permissioned list route is
+  // for API/MCP callers.
+  listQuickActions: (projectKey: string) =>
+    request<ActionDef[]>(`/projects/${projectKey}/actions/quick`),
   createAction: (projectKey: string, input: NewActionInput) =>
     request<ActionDef>(`/projects/${projectKey}/actions`, {
       method: 'POST',

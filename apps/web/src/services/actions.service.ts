@@ -16,10 +16,12 @@ export function normalizeAction(a: ActionDef): ActionDef {
   };
 }
 
+// Reads the member-accessible list, so the issue quick actions work for a member
+// without the `actions` read permission. Managing actions still requires it.
 export function useActionsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.actions(projectKey ?? ''),
-    queryFn: () => api.listActions(projectKey!),
+    queryFn: () => api.listQuickActions(projectKey!),
     enabled: projectKey != null,
     select: (rows) => rows.map(normalizeAction),
   });

@@ -228,17 +228,23 @@ export default function IssueDetailContent({
     // Two columns in normal flow: content on the left, Properties as a right
     // sidebar. Unlike 'page' the sidebar is not viewport-fixed, so it stays inside
     // a narrower host (the inbox detail pane) without overlapping the content.
+    // The breakpoint is the pane's own width, not the viewport's. The container
+    // wraps the flex row rather than being it — an element cannot query itself.
     return (
-      <div className="flex gap-8">
-        <div className="min-w-0 flex-1">
-          {heading}
-          {sections}
-          {activity}
+      <div className="@container">
+        <div className="flex gap-8">
+          <div className="min-w-0 flex-1">
+            <div className="@3xl:hidden">{actions}</div>
+            {heading}
+            <div className="@3xl:hidden">{renderProperties()}</div>
+            {sections}
+            {activity}
+          </div>
+          <aside className="hidden w-[320px] shrink-0 @3xl:block">
+            {actions}
+            {sidebarProperties}
+          </aside>
         </div>
-        <aside className="w-[320px] shrink-0">
-          {actions}
-          {sidebarProperties}
-        </aside>
       </div>
     );
   }

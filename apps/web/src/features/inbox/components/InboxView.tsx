@@ -1,13 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { api, type Notification, type NotificationFilters, type ProjectDetail } from '@/lib/api';
+import { api, type Notification, type ProjectDetail } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import IssueDetailContent from '@/features/issue/components/detail/IssueDetailContent';
 import InboxToolbar from './InboxToolbar';
 import InboxList from './InboxList';
+import { useInboxFilters } from '../hooks/useInboxFilters';
 import {
   useNotificationsQuery,
   useSetNotificationRead,
@@ -21,7 +22,7 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
   const projectKey = project.project.key;
   const projectId = project.project.id;
 
-  const [filters, setFilters] = useState<NotificationFilters>({});
+  const { filters, changeFilters } = useInboxFilters(projectKey);
   const [selected, setSelected] = useState<Notification | null>(null);
 
   const query = useNotificationsQuery(projectKey, projectId, filters);
@@ -57,7 +58,7 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
         <InboxToolbar
           unread={unreadQuery.data ?? 0}
           filters={filters}
-          onFiltersChange={setFilters}
+          onFiltersChange={changeFilters}
           onMarkAllRead={() => markAllRead.mutate()}
           onDeleteRead={() => deleteNotifications.mutate('read')}
           onDeleteReadCompleted={() => deleteNotifications.mutate('read-completed')}

@@ -40,6 +40,8 @@ const NotificationResponse = t.Object({
   projectId: t.Number(),
   projectKey: t.String(),
   projectName: t.String(),
+  fromState: t.Nullable(t.String()),
+  toState: t.Nullable(t.String()),
 });
 
 const NotificationPageResponse = t.Object({

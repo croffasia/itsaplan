@@ -1,4 +1,13 @@
-import { db, notification, projectMember, user, issue, project, projectColumn } from '@repo/db';
+import {
+  db,
+  notification,
+  projectMember,
+  user,
+  issue,
+  issueActivity,
+  project,
+  projectColumn,
+} from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
 import { parseMentions } from '../ai-agents/mentions';
 import { autoWatchIssue, watcherUserIds } from '../issues/watchers';
@@ -167,6 +176,9 @@ export interface NotificationRow {
   projectId: number;
   projectKey: string;
   projectName: string;
+  // Only a 'state_changed' event has them, and only while its activity row lives.
+  fromState: string | null;
+  toState: string | null;
 }
 
 export interface NotificationCursor {
@@ -202,7 +214,10 @@ function mapRow(r: {
   projectId: number;
   projectKey: string;
   projectName: string;
+  fromText: string | null;
+  toText: string | null;
 }): NotificationRow {
+  const stateChange = r.type === 'state_changed';
   return {
     id: r.id,
     type: r.type as NotificationType,
@@ -218,6 +233,8 @@ function mapRow(r: {
     projectId: r.projectId,
     projectKey: r.projectKey,
     projectName: r.projectName,
+    fromState: stateChange ? r.fromText : null,
+    toState: stateChange ? r.toText : null,
   };
 }
 
@@ -261,11 +278,14 @@ export async function listNotifications(
       projectId: project.id,
       projectKey: project.key,
       projectName: project.name,
+      fromText: issueActivity.fromText,
+      toText: issueActivity.toText,
     })
     .from(notification)
     .innerJoin(issue, eq(issue.id, notification.issueId))
     .innerJoin(project, eq(project.id, notification.projectId))
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
+    .leftJoin(issueActivity, eq(issueActivity.id, notification.sourceActivityId))
     .where(and(...conds))
     .orderBy(desc(notification.createdAt), desc(notification.id))
     .limit(limit + 1);

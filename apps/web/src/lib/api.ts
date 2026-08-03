@@ -1834,6 +1834,9 @@ export interface Notification {
   projectId: number;
   projectKey: string;
   projectName: string;
+  // Only a 'state_changed' notification has them.
+  fromState: string | null;
+  toState: string | null;
 }
 
 export interface NotificationCursor {

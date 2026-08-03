@@ -32,6 +32,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from '@/components/ui/context-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import InboxItemActions from './InboxItemActions';
 import InboxSnoozeCalendar from './InboxSnoozeCalendar';
 
@@ -53,7 +54,9 @@ function notificationText(n: Notification): string {
     case 'commented':
       return `${who} commented`;
     case 'state_changed':
-      return `${who} changed the status`;
+      return n.fromState && n.toState
+        ? `${who} changed the status from ${n.fromState} to ${n.toState}`
+        : `${who} changed the status`;
   }
 }
 
@@ -94,6 +97,7 @@ export default function InboxListItem({
 }) {
   const [pickOpen, setPickOpen] = useState(false);
   const Icon = TYPE_ICON[n.type];
+  const eventText = notificationText(n);
   const unread = n.readAt == null;
   const snoozed = n.snoozedUntil != null && new Date(n.snoozedUntil).getTime() > Date.now();
 
@@ -135,9 +139,15 @@ export default function InboxListItem({
             >
               {n.projectKey}-{n.issueSeq} {n.issueTitle}
             </span>
-            <span className="mt-0.5 flex items-center gap-1 truncate text-xs text-muted-foreground">
+            <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
               {snoozed && <Clock className="size-3 shrink-0" />}
-              {notificationText(n)}
+              {/* Truncating the flex row instead would drop the ellipsis. */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="truncate">{eventText}</span>
+                </TooltipTrigger>
+                <TooltipContent>{eventText}</TooltipContent>
+              </Tooltip>
             </span>
           </div>
           <div className="flex shrink-0 items-center gap-2 pt-0.5">

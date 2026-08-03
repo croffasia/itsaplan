@@ -8,5 +8,6 @@ import InboxView from './components/InboxView';
 export default function InboxPage() {
   const { project } = useShell();
   if (!project) return null;
-  return <InboxView project={project} />;
+  // Keyed by project: the stored filters are read on mount.
+  return <InboxView key={project.project.key} project={project} />;
 }

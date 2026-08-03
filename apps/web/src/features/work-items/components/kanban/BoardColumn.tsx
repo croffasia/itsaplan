@@ -16,6 +16,12 @@ import { SelectAllToggle } from './SelectAllToggle';
 import { useIsOverContainer } from '../../hooks/useIsOverContainer';
 import { COLUMN_WIDTH } from '../../utils/kanban';
 
+// The add button sits under the last card, outside the measured cards, so it
+// carries its own copy of the gap CardDropSlot puts above a card (pt-2).
+const ADD_BUTTON_GAP = 8;
+// The h-9 of an outline button.
+const ADD_BUTTON_HEIGHT = 36;
+
 // One flat-board column: a fixed header plus a vertically scrollable, virtualized
 // list of its cards. Only the cards in (and near) the viewport are in the DOM, so
 // a column with a large backlog stays fast. Card heights vary, so the virtualizer
@@ -76,6 +82,7 @@ export function BoardColumn({
     overscan: 8,
     getItemKey: (index) => issues[index].id,
   });
+  const cardsHeight = virtualizer.getTotalSize();
 
   return (
     <div
@@ -136,7 +143,7 @@ export function BoardColumn({
       >
         <div
           style={{
-            height: virtualizer.getTotalSize() + (canCreateIssue ? 36 : 0),
+            height: cardsHeight + (canCreateIssue ? ADD_BUTTON_GAP + ADD_BUTTON_HEIGHT : 0),
             position: 'relative',
             width: '100%',
           }}
@@ -181,13 +188,13 @@ export function BoardColumn({
           {/* Hovering the empty area below the cards appends, so the marker sits
               under the last one. */}
           {isOver && manualOrder && issues.length > 0 && (
-            <DropLine style={{ top: virtualizer.getTotalSize() + 3 }} />
+            <DropLine style={{ top: cardsHeight + 3 }} />
           )}
           {canCreateIssue && (
             <Button
               variant="outline"
               className="invisible absolute left-0 w-full text-muted-foreground opacity-0 group-focus-within/column:visible group-focus-within/column:opacity-100 group-hover/column:visible group-hover/column:opacity-100"
-              style={{ top: virtualizer.getTotalSize() }}
+              style={{ top: cardsHeight + ADD_BUTTON_GAP }}
               onClick={onAddIssue}
               title="New issue"
             >

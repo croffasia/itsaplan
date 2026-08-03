@@ -25,10 +25,13 @@ export default function IssueAttachmentsPanel({
   issueId,
   onInsert,
   onReplaced,
+  readOnly,
 }: {
   issueId: number;
   onInsert: (attachment: Attachment) => void;
   onReplaced: () => void;
+  // When true the files can only be viewed and downloaded.
+  readOnly?: boolean;
 }) {
   const attachmentsQuery = useAttachmentsQuery(issueId);
   const items = attachmentsQuery.data ?? [];
@@ -78,12 +81,15 @@ export default function IssueAttachmentsPanel({
   return (
     // Collapsed, the heading row is all there is, so the section pulls itself up
     // the way the Links one below it does.
-    <div className={`relative mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`} {...dragHandlers}>
+    <div
+      className={`relative mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}
+      {...(readOnly ? {} : dragHandlers)}
+    >
       {/* Fixed height: the Add button only renders while the section is open, and
           without it the row would shrink to the height of the heading text. */}
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
         <IssueSectionHeading label="Attachments" open={open} onToggle={toggle} />
-        {open && (
+        {open && !readOnly && (
           <Button
             variant="ghost"
             size="sm"
@@ -111,7 +117,7 @@ export default function IssueAttachmentsPanel({
       {open &&
         (items.length === 0 ? (
           <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            Drop files here, or use Add to upload.
+            {readOnly ? 'No attachments yet.' : 'Drop files here, or use Add to upload.'}
           </p>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-2">
@@ -124,6 +130,7 @@ export default function IssueAttachmentsPanel({
                 onInsert={() => onInsert(a)}
                 onAnnotate={() => setAnnotating(a)}
                 onDelete={() => deleteAttachment.mutate(a.id)}
+                readOnly={readOnly}
               />
             ))}
           </div>

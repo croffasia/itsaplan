@@ -13,8 +13,8 @@ function onDragStart(e: DragEvent<HTMLElement>, a: Attachment) {
 }
 
 // One attachment in the panel grid: a preview to recognise the file by, its name
-// and size, and the actions on top of the preview. The whole card is the drag
-// source, so it can be dropped into the description.
+// and size, and the actions on top of the preview. Unless read-only, the whole
+// card is the drag source, so it can be dropped into the description.
 export default function IssueAttachmentCard({
   attachment,
   thumbnailUrl,
@@ -22,6 +22,7 @@ export default function IssueAttachmentCard({
   onInsert,
   onAnnotate,
   onDelete,
+  readOnly,
 }: {
   attachment: Attachment;
   // The preview URL, which carries a version after the file was replaced.
@@ -30,15 +31,23 @@ export default function IssueAttachmentCard({
   onInsert: () => void;
   onAnnotate: () => void;
   onDelete: () => void;
+  readOnly?: boolean;
 }) {
   const viewable = isImage(attachment) || isVideo(attachment);
+  const dragProps = readOnly
+    ? {}
+    : {
+        draggable: true,
+        onDragStart: (e: DragEvent<HTMLElement>) => onDragStart(e, attachment),
+        title: 'Drag into the description',
+      };
 
   return (
     <div
-      draggable
-      onDragStart={(e) => onDragStart(e, attachment)}
-      title="Drag into the description"
-      className="group relative flex cursor-grab flex-col overflow-hidden rounded-lg border bg-card transition-colors hover:border-ring/40 active:cursor-grabbing"
+      {...dragProps}
+      className={`group relative flex flex-col overflow-hidden rounded-lg border bg-card transition-colors hover:border-ring/40 ${
+        readOnly ? '' : 'cursor-grab active:cursor-grabbing'
+      }`}
     >
       <div className="relative flex aspect-video items-center justify-center bg-muted [&_svg]:size-7">
         <IssueAttachmentThumb
@@ -61,27 +70,31 @@ export default function IssueAttachmentCard({
             screenshot as often as not, and icons alone drown in it. */}
         <div className="pointer-events-none absolute inset-0 bg-black/30 p-1.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-sm:opacity-100">
           <div className="pointer-events-auto mx-auto flex w-fit items-center gap-0.5 rounded-md border bg-popover p-0.5 shadow-lg shadow-black/30">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7"
-              title="Insert into the description"
-              aria-label={`Insert ${attachment.filename} into the description`}
-              onClick={onInsert}
-            >
-              <Plus />
-            </Button>
-            {isImage(attachment) && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7"
-                title="Annotate"
-                aria-label={`Annotate ${attachment.filename}`}
-                onClick={onAnnotate}
-              >
-                <PenLine />
-              </Button>
+            {!readOnly && (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  title="Insert into the description"
+                  aria-label={`Insert ${attachment.filename} into the description`}
+                  onClick={onInsert}
+                >
+                  <Plus />
+                </Button>
+                {isImage(attachment) && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7"
+                    title="Annotate"
+                    aria-label={`Annotate ${attachment.filename}`}
+                    onClick={onAnnotate}
+                  >
+                    <PenLine />
+                  </Button>
+                )}
+              </>
             )}
             <Button variant="ghost" size="icon" className="size-7" asChild title="Download">
               <a
@@ -93,16 +106,18 @@ export default function IssueAttachmentCard({
                 <Download />
               </a>
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-7 text-muted-foreground hover:text-destructive"
-              title="Delete"
-              aria-label={`Delete ${attachment.filename}`}
-              onClick={onDelete}
-            >
-              <Trash2 />
-            </Button>
+            {!readOnly && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-7 text-muted-foreground hover:text-destructive"
+                title="Delete"
+                aria-label={`Delete ${attachment.filename}`}
+                onClick={onDelete}
+              >
+                <Trash2 />
+              </Button>
+            )}
           </div>
         </div>
       </div>

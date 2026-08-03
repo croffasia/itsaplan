@@ -32,7 +32,7 @@ export default function IssueCustomFieldControl({
   onChange: (value: IssueFieldValueInput) => void;
   readOnly?: boolean;
 }) {
-  // Read-only (public share): show the current value statically, no editor.
+  // Read-only: show the current value statically, no editor.
   if (readOnly) {
     if (def.fieldType === 'select' || def.fieldType === 'multi_select') {
       const opts = (current?.optionIds ?? [])

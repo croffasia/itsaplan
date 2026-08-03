@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
@@ -11,11 +12,12 @@ import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
 import IssueActionsBar from '../actions/IssueActionsBar';
 
-// The full editable body of a issue — title, description, markdown custom
-// fields, the Properties grid, attachments, and the activity feed. Shared by the
-// side panel (IssueDetail) and the full-page view (IssueViewPage); each supplies
-// its own surrounding chrome (close button / breadcrumbs). Data loading and
-// mutations live in useIssueDetail; this component is layout only.
+// The body of a issue — title, description, markdown custom fields, the
+// Properties grid, attachments, and the activity feed. Shared by the side panel
+// (IssueDetail) and the full-page view (IssueViewPage); each supplies its own
+// surrounding chrome (close button / breadcrumbs). Without work_items edit every
+// part of it renders as a static value. Data loading and mutations live in
+// useIssueDetail; this component is layout only.
 export default function IssueDetailContent({
   project,
   issueId,
@@ -47,6 +49,7 @@ export default function IssueDetailContent({
     imageAttachments,
     setDescEditor,
   } = useIssueDetail(project, issueId, onIssueLoaded);
+  const canEdit = usePermissions(project).can('work_items', 'edit');
   const properties = usePersistedOpen('issue-properties-open');
   // A replaced attachment keeps its URL, so an <img> already in an editor is
   // never requested again. Counting the replacements remounts the editors, which
@@ -65,40 +68,49 @@ export default function IssueDetailContent({
             Archived
           </span>
         )}
-        {/* A textarea, not an input, so a long title wraps and is shown in full.
-            Its value stays single-line: Enter commits instead of inserting a
-            newline, and pasted line breaks are collapsed on blur. */}
-        <textarea
-          className="field-sizing-content min-w-0 flex-1 resize-none bg-transparent text-lg leading-snug font-semibold outline-none placeholder:text-muted-foreground"
-          rows={1}
-          placeholder="Issue title"
-          defaultValue={issue.title}
-          key={`title-${issue.updatedAt}`}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              e.currentTarget.blur();
-            }
-          }}
-          onBlur={(e) => {
-            const next = e.target.value.replace(/\s+/g, ' ').trim();
-            e.target.value = next;
-            if (next && next !== issue.title) patch({ title: next });
-          }}
-        />
+        {canEdit ? (
+          // A textarea, not an input, so a long title wraps and is shown in full.
+          // Its value stays single-line: Enter commits instead of inserting a
+          // newline, and pasted line breaks are collapsed on blur.
+          <textarea
+            className="field-sizing-content min-w-0 flex-1 resize-none bg-transparent text-lg leading-snug font-semibold outline-none placeholder:text-muted-foreground"
+            rows={1}
+            placeholder="Issue title"
+            defaultValue={issue.title}
+            key={`title-${issue.updatedAt}`}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.currentTarget.blur();
+              }
+            }}
+            onBlur={(e) => {
+              const next = e.target.value.replace(/\s+/g, ' ').trim();
+              e.target.value = next;
+              if (next && next !== issue.title) patch({ title: next });
+            }}
+          />
+        ) : (
+          <h1 className="min-w-0 flex-1 text-lg leading-snug font-semibold">{issue.title}</h1>
+        )}
       </div>
 
-      <IssueMarkdownEditor
-        className="mt-2"
-        defaultValue={issue.description}
-        key={`desc-${issue.updatedAt}-${replacements}`}
-        onReady={setDescEditor}
-        uploadFile={uploadFile}
-        imageAttachments={imageAttachments}
-        onBlur={(md) => {
-          if (md !== issue.description) patch({ description: md });
-        }}
-      />
+      {/* Read-only with nothing written is an empty block with a placeholder
+          inviting an edit that cannot happen. */}
+      {(canEdit || issue.description.trim() !== '') && (
+        <IssueMarkdownEditor
+          className="mt-2"
+          defaultValue={issue.description}
+          key={`desc-${issue.updatedAt}-${replacements}`}
+          editable={canEdit}
+          onReady={setDescEditor}
+          uploadFile={uploadFile}
+          imageAttachments={imageAttachments}
+          onBlur={(md) => {
+            if (md !== issue.description) patch({ description: md });
+          }}
+        />
+      )}
 
       {/* Custom fields flagged "show in main info" render below the description,
           each under its own heading, rather than as a Properties row. */}
@@ -113,6 +125,7 @@ export default function IssueDetailContent({
             uploadFile={uploadFile}
             imageAttachments={imageAttachments}
             onSetField={setField}
+            readOnly={!canEdit}
           />
         ))}
     </>
@@ -127,6 +140,7 @@ export default function IssueDetailContent({
         issueId={issue.id}
         onInsert={insertAttachment}
         onReplaced={() => setReplacements((n) => n + 1)}
+        readOnly={!canEdit}
       />
 
       <IssueLinksPanel project={project} issueId={issue.id} links={issue.links} />
@@ -144,6 +158,7 @@ export default function IssueDetailContent({
       uploadFile={uploadFile}
       imageAttachments={imageAttachments}
       watchers={issue.watchers}
+      readOnly={!canEdit}
       className={className}
       open={properties.open}
       onToggle={properties.toggle}

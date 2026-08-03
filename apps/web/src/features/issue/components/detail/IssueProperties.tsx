@@ -67,7 +67,8 @@ export default function IssueProperties({
   // them and has nobody to subscribe.
   watchers?: IssueWatcher[];
   // When true every control is a non-interactive display of its value (public
-  // shared page). The onPatch/onSetField/onToggleLabel callbacks are never called.
+  // shared page, or a member without work_items edit). The
+  // onPatch/onSetField/onToggleLabel callbacks are never called.
   readOnly?: boolean;
   // Spacing override for a sidebar, where the section follows the actions row
   // rather than a block of content and needs less room above it.

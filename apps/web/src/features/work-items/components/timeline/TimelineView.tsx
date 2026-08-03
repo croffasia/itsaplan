@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 import { useTimelineLabelWidth } from '../../hooks/useTimelineLabelWidth';
 import { buildTimeline, labelWidthKey, SCALE_DAY_W } from '../../utils/timeline';
@@ -26,6 +27,8 @@ export default function TimelineView({
   viewId,
   readOnly,
 }: TimelineViewProps) {
+  const { can } = usePermissions(project);
+  const barsReadOnly = readOnly || !can('work_items', 'edit');
   const [localCollapsedGroups, setLocalCollapsedGroups] = useState<Set<string>>(new Set());
   const activeCollapsedGroups = collapsedGroups ?? localCollapsedGroups;
   const toggleGroup =
@@ -141,7 +144,7 @@ export default function TimelineView({
                 dayLines={dayLines}
                 todayInRange={todayInRange}
                 todayLeft={todayLeft}
-                readOnly={readOnly}
+                readOnly={barsReadOnly}
                 onBeginDrag={beginDrag}
                 onOpen={onOpenIssue}
               />

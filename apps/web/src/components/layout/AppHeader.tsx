@@ -49,16 +49,17 @@ export default function AppHeader({
         </kbd>
       </button>
 
-      <Button
-        variant="outline"
-        size="icon"
-        className="size-8 shrink-0"
-        title={`New issue (${newIssueKey})`}
-        disabled={!canCreateIssue}
-        onClick={onNewIssue}
-      >
-        <Plus />
-      </Button>
+      {canCreateIssue && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-8 shrink-0"
+          title={`New issue (${newIssueKey})`}
+          onClick={onNewIssue}
+        >
+          <Plus />
+        </Button>
+      )}
 
       {canUseChat && (
         <Button

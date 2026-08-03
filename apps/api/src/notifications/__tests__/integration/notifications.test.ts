@@ -88,6 +88,24 @@ describe('notifications', () => {
     });
   });
 
+  it('a status change notification names the states it moved between', async () => {
+    const { owner, columnId, doneColumnId } = await setup();
+    const member = await addMember(owner);
+    const issue = await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+
+    await owner.api.issues({ issueId: issue.data!.id }).patch({ columnId: doneColumnId });
+
+    const view = await owner.api.projects({ projectKey: 'MKT' }).get();
+    const names = new Map(view.data!.columns.map((c) => [c.id, c.name]));
+    const inbox = await member.api.notifications.get({ query: { types: 'state_changed' } });
+    expect(inbox.data!.items).toHaveLength(1);
+    expect(inbox.data!.items[0]).toMatchObject({
+      type: 'state_changed',
+      fromState: names.get(columnId),
+      toState: names.get(doneColumnId),
+    });
+  });
+
   it('rev and unread count track reads', async () => {
     const { owner, columnId } = await setup();
     const member = await addMember(owner);

@@ -1,4 +1,4 @@
-import { db, notificationDelivery, issue, project, user } from '@repo/db';
+import { db, notificationDelivery, issue, issueActivity, project, user } from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
 import { getProjectEmailConfig } from '@repo/auth';
 import { emailSource, readRedactedSettings } from '../notification-settings/store';
@@ -49,6 +49,20 @@ function issueUrl(projectKey: string, seq: number): string | undefined {
   return base ? `${base}/project/${projectKey}/issue/${seq}` : undefined;
 }
 
+interface StateChange {
+  from: string;
+  to: string;
+}
+
+async function readStateChange(activityId: number): Promise<StateChange | null> {
+  const [row] = await db
+    .select({ fromText: issueActivity.fromText, toText: issueActivity.toText })
+    .from(issueActivity)
+    .where(eq(issueActivity.id, activityId));
+  if (!row?.fromText || !row.toText) return null;
+  return { from: row.fromText, to: row.toText };
+}
+
 // Email copy, addressed to the recipient in the second person.
 function emailPayload(
   type: NotificationType,
@@ -56,6 +70,7 @@ function emailPayload(
   title: string,
   actor: string,
   url: string | undefined,
+  stateChange: StateChange | null,
 ): DeliveryPayload {
   const line: Record<NotificationType, { subject: string; text: string }> = {
     assigned: { subject: `${ref}: assigned to you`, text: `${actor} assigned this issue to you.` },
@@ -65,8 +80,12 @@ function emailPayload(
     },
     commented: { subject: `${ref}: new comment`, text: `${actor} commented on this issue.` },
     state_changed: {
-      subject: `${ref}: status changed`,
-      text: `${actor} changed the status of this issue.`,
+      subject: stateChange
+        ? `${ref}: status changed to ${stateChange.to}`
+        : `${ref}: status changed`,
+      text: stateChange
+        ? `${actor} changed the status of this issue from ${stateChange.from} to ${stateChange.to}.`
+        : `${actor} changed the status of this issue.`,
     },
   };
   const { subject, text } = line[type];
@@ -82,12 +101,18 @@ function telegramPayload(
   title: string,
   actor: string,
   url: string | undefined,
+  stateChange: StateChange | null,
 ): DeliveryPayload {
   const meta: Record<NotificationType, { emoji: string; action: string }> = {
     assigned: { emoji: '📌', action: `Assigned by ${actor}` },
     mentioned: { emoji: '💬', action: `Mentioned by ${actor}` },
     commented: { emoji: '💬', action: `New comment by ${actor}` },
-    state_changed: { emoji: '🔄', action: `Status changed by ${actor}` },
+    state_changed: {
+      emoji: '🔄',
+      action: stateChange
+        ? `Status changed from ${stateChange.from} to ${stateChange.to} by ${actor}`
+        : `Status changed by ${actor}`,
+    },
   };
   const { emoji, action } = meta[type];
 
@@ -146,6 +171,10 @@ export async function enqueueOutbound(
   const ref = issueRef(projectRow.key, issueRow.seq);
   const url = issueUrl(projectRow.key, issueRow.seq);
   const actor = actorName ?? 'Someone';
+  // One issue event, so every 'state_changed' row points at the same activity row.
+  const statusActivityId =
+    notifications.find((n) => n.type === 'state_changed')?.sourceActivityId ?? null;
+  const stateChange = statusActivityId != null ? await readStateChange(statusActivityId) : null;
 
   const userIds = [...new Set(notifications.map((n) => n.userId))];
   const [users, prefsByUser, chatIdByUser] = await Promise.all([
@@ -167,7 +196,7 @@ export async function enqueueOutbound(
           projectId,
           channel: 'email',
           recipient: email,
-          payload: emailPayload(n.type, ref, issueRow.title, actor, url),
+          payload: emailPayload(n.type, ref, issueRow.title, actor, url, stateChange),
         });
       }
     }
@@ -180,7 +209,7 @@ export async function enqueueOutbound(
           projectId,
           channel: 'telegram',
           recipient: chatId,
-          payload: telegramPayload(n.type, ref, issueRow.title, actor, url),
+          payload: telegramPayload(n.type, ref, issueRow.title, actor, url, stateChange),
         });
       }
     }

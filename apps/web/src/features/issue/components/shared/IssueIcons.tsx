@@ -117,7 +117,7 @@ export function PriorityIcon({ priority, className }: { priority: string; classN
           width="2.5"
           height={b.h}
           rx="1"
-          fill={i < level ? 'var(--foreground)' : 'var(--muted-foreground)'}
+          fill={i < level ? `var(--priority-${priority})` : 'var(--muted-foreground)'}
           opacity={i < level ? 1 : 0.35}
         />
       ))}

@@ -2,14 +2,14 @@ import { CalendarClock } from 'lucide-react';
 import { type Issue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
+import { priorityLabel } from '@/utils/fieldOptions';
 import {
   AssigneeAvatar,
   DateBadge,
   DelegateAvatar,
   LabelBadge,
-  PriorityBadge,
 } from '@/features/issue/components/shared/IssueBadges';
-import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
+import { PriorityIcon, StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { type TableColumn } from '../../utils/table';
 
 const DASH = <span className="text-muted-foreground/40">—</span>;
@@ -46,8 +46,15 @@ export function TableBuiltinCell({
     }
     case 'priority':
       return (
-        <div className="flex items-center">
-          {issue.priority ? <PriorityBadge priority={issue.priority} /> : DASH}
+        <div className="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+          {issue.priority ? (
+            <>
+              <PriorityIcon priority={issue.priority} className="size-3.5 shrink-0" />
+              <span className="truncate">{priorityLabel(issue.priority)}</span>
+            </>
+          ) : (
+            DASH
+          )}
         </div>
       );
     case 'type': {

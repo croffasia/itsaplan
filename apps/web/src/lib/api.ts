@@ -2155,10 +2155,8 @@ export const api = {
       body: JSON.stringify(input),
     }),
 
-  // Checklists on an issue. The issue read already carries them, so listChecklists
-  // is for a refresh after a write rather than the first render. A reorder sends
-  // the ids in their new order and returns the reordered list.
-  listChecklists: (issueId: number) => request<Checklist[]>(`/issues/${issueId}/checklists`),
+  // Checklists on an issue. The issue read already carries them, so there is no
+  // list call of their own — a write refreshes that read.
   createChecklist: (issueId: number, title: string) =>
     request<Checklist>(`/issues/${issueId}/checklists`, {
       method: 'POST',

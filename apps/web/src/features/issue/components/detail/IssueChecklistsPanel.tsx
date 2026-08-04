@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
-import { type IssueWithLinks } from '@/lib/api';
+import { type IssueWithWatchers } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { useDndSensors } from '@/lib/dnd';
@@ -16,7 +16,7 @@ import IssueSectionHeading from './IssueSectionHeading';
 // The issue's checklists: lists of small steps that do not warrant subtasks of
 // their own. The tally counts every item of every checklist, so the heading says
 // how much of the card is done without expanding it.
-export default function IssueChecklistsPanel({ issue }: { issue: IssueWithLinks }) {
+export default function IssueChecklistsPanel({ issue }: { issue: IssueWithWatchers }) {
   const { can } = usePermissions();
   const canEdit = can('work_items', 'edit');
   const [adding, setAdding] = useState(false);

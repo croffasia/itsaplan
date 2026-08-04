@@ -4,7 +4,7 @@
 // on screen, and waiting for the round trip would make them feel broken.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, type Checklist, type IssueWithLinks } from '@/lib/api';
+import { api, type Checklist, type IssueWithWatchers } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 
 // Puts a list in the order given by ids. Ids that are not in the list are skipped,
@@ -47,9 +47,9 @@ function useOptimisticChecklistMutation<TVars extends { issueId: number }>(
     onMutate: async (vars: TVars) => {
       const key = qk.issue(vars.issueId);
       await qc.cancelQueries({ queryKey: key });
-      const previous = qc.getQueryData<IssueWithLinks>(key);
+      const previous = qc.getQueryData<IssueWithWatchers>(key);
       if (previous) {
-        qc.setQueryData<IssueWithLinks>(key, {
+        qc.setQueryData<IssueWithWatchers>(key, {
           ...previous,
           checklists: change(previous.checklists, vars),
         });

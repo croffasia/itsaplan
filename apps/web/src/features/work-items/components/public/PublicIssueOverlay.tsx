@@ -44,12 +44,7 @@ export default function PublicIssueOverlay({
           <p className="p-8 text-sm text-muted-foreground">This issue is not available.</p>
         )}
         {query.data && (
-          <ReadOnlyIssueDetail
-            bundle={query.data}
-            layout="page"
-            extended={extended}
-            onOpenIssue={onOpenIssue}
-          />
+          <ReadOnlyIssueDetail bundle={query.data} extended={extended} onOpenIssue={onOpenIssue} />
         )}
       </DialogContent>
     </Dialog>

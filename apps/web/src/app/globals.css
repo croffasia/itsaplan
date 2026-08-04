@@ -234,10 +234,24 @@
    has to read as plain text with light formatting, not a boxed widget. */
 .md-content {
   font-size: var(--text-sm);
-  line-height: 1.6;
+  line-height: 1.857; /* 26px on the 4px grid */
+}
+/* Table cells hold short lines, where the body leading reads as too loose. */
+.md-content.text-xs {
+  line-height: 1.667;
 }
 .md-content > * + * {
-  margin-top: 0.5em;
+  margin-top: 1em;
+}
+/* A heading belongs to the text under it: more space above than below. */
+.md-content > * + :is(h1, h2, h3) {
+  margin-top: 1.75em;
+}
+.md-content > :is(h1, h2, h3) + * {
+  margin-top: 0.4em;
+}
+.md-content li + li {
+  margin-top: 0.25em;
 }
 .md-content p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);

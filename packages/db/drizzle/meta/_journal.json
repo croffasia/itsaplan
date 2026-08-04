@@ -442,6 +442,13 @@
       "when": 1785869451604,
       "tag": "0062_black_marvel_zombies",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1785880921407,
+      "tag": "0063_solid_shatterstar",
+      "breakpoints": true
     }
   ]
 }

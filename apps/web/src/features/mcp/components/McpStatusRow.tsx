@@ -36,17 +36,17 @@ export default function McpStatusRow({
             </span>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">
-          {canManage
-            ? 'While on, agents with a personal API key can work with this project over MCP. Off makes this project unavailable through MCP.'
-            : 'Only a project owner can turn MCP on or off for this project.'}
-        </p>
+        {!canManage && (
+          <p className="text-sm text-muted-foreground">
+            Only a project owner can turn MCP access on or off.
+          </p>
+        )}
       </div>
       <Switch
         checked={enabled}
         disabled={!canManage || busy}
         onCheckedChange={(value) => update.mutate(value)}
-        aria-label="Toggle MCP access for this project"
+        aria-label="Toggle MCP access"
       />
     </div>
   );

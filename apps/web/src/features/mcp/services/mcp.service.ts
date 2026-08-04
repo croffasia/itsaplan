@@ -12,9 +12,7 @@ export function useUpdateProjectMcp(projectKey: string) {
       api.updateProjectSettings(projectKey, { mcpEnabled: enabled }),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: qk.project(projectKey) });
-      toast.success(
-        data.mcpEnabled ? 'MCP enabled for this project' : 'MCP disabled for this project',
-      );
+      toast.success(data.mcpEnabled ? 'MCP access enabled' : 'MCP access disabled');
     },
   });
 }

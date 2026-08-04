@@ -34,7 +34,7 @@ export const MCP_CLIENTS: McpClient[] = [
   {
     label: 'VS Code',
     file: '.vscode/mcp.json',
-    note: 'Needs GitHub Copilot. The root key is "servers", not "mcpServers".',
+    note: 'Needs GitHub Copilot.',
     code: `{
   "servers": {
     "plan": {
@@ -48,7 +48,6 @@ export const MCP_CLIENTS: McpClient[] = [
   {
     label: 'Windsurf',
     file: '~/.codeium/windsurf/mcp_config.json',
-    note: 'Windsurf uses "serverUrl", not "url".',
     code: `{
   "mcpServers": {
     "plan": {
@@ -61,7 +60,7 @@ export const MCP_CLIENTS: McpClient[] = [
   {
     label: 'Claude Desktop',
     file: 'claude_desktop_config.json',
-    note: 'Claude Desktop reaches remote servers through the mcp-remote bridge (needs Node.js).',
+    note: 'Claude Desktop reaches remote servers through the mcp-remote bridge. Needs Node.js.',
     code: `{
   "mcpServers": {
     "plan": {
@@ -76,7 +75,7 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     label: 'Other',
-    note: 'Any client that speaks MCP over Streamable HTTP works: point it at the endpoint and send an Authorization: Bearer <API_KEY> header.',
+    note: 'Any client that supports MCP over Streamable HTTP works. Point it at the endpoint and send an Authorization: Bearer <API_KEY> header.',
     code: MCP_URL,
   },
 ];

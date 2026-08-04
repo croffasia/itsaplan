@@ -17,8 +17,7 @@ export default function McpConnectionGuide() {
       </div>
 
       <p className="text-sm text-muted-foreground">
-        The server speaks MCP over Streamable HTTP. Authenticate with a personal API key as a Bearer
-        token. Create one on the{' '}
+        Create a personal key on the{' '}
         <Link
           href="/account/api-keys"
           className="font-medium text-foreground underline underline-offset-4"

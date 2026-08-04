@@ -13,7 +13,9 @@ export default function McpServerPage() {
   return (
     <SectionPageView
       title="MCP Server"
-      description="Let AI agents work with this project over the Model Context Protocol: every issue and board action they can reach with your access."
+      description="Connect AI agents to this project over the Model Context Protocol. An agent gets the access of the API key it uses."
+      wide
+      widthClassName="min-w-[600px] max-w-[60%]"
     >
       <div className="space-y-10">
         <McpStatusRow

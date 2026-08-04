@@ -17,6 +17,10 @@ export interface ViewRow {
   // Unguessable token for the public read-only share link, or null when the view
   // is not shared.
   shareToken: string | null;
+  // Whether the share link exposes the full issues (assignees, labels, custom
+  // fields, activity) or only their title, description, state, type, priority,
+  // dates, subtasks and links.
+  shareExtended: boolean;
   createdAt: string;
 }
 
@@ -30,6 +34,7 @@ function mapView(row: typeof projectView.$inferSelect): ViewRow {
     display: row.display,
     position: num(row.position),
     shareToken: row.shareToken,
+    shareExtended: row.shareExtended,
     createdAt: iso(row.createdAt),
   };
 }

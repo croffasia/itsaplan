@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type IssueLinkInputKind, type IssueWithLinks, type ProjectDetail } from '@/lib/api';
+import { type IssueLinkInputKind, type IssueRelations, type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
   LINK_RELATIONS,
@@ -22,17 +22,24 @@ import IssueSectionHeading from './IssueSectionHeading';
 // added either to an issue found through the search dialog or to one created on
 // the spot in the ordinary create modal. The heading collapses the section, the
 // same way the Stats one below it does; unlike Stats, which reads the account
-// preferences, this is a client-only choice.
+// preferences, this is a client-only choice. On a public share the section lists
+// the relations and nothing else, and stays off the page when there are none.
 export default function IssueLinksPanel({
   project,
   issue,
+  readOnly,
+  onOpenIssue,
 }: {
   project: ProjectDetail;
-  issue: IssueWithLinks;
+  issue: IssueRelations;
+  readOnly?: boolean;
+  // Where a public share opens the issue on the other end, which has no page of
+  // its own to link to.
+  onOpenIssue?: (id: number) => void;
 }) {
   const { can } = usePermissions();
-  const canEdit = can('work_items', 'edit');
-  const canCreate = can('work_items', 'create');
+  const canEdit = !readOnly && can('work_items', 'edit');
+  const canCreate = !readOnly && can('work_items', 'create');
   const [adding, setAdding] = useState<IssueLinkInputKind | null>(null);
   const [creating, setCreating] = useState<IssueLinkInputKind | null>(null);
   const { open, toggle } = usePersistedOpen('issue-links-open');
@@ -40,6 +47,8 @@ export default function IssueLinksPanel({
   const unlinkIssues = useUnlinkIssues();
 
   const links = issue.links;
+  if (readOnly && links.length === 0) return null;
+
   const groups = LINK_RELATIONS.map((relation) => ({
     relation,
     links: links.filter((link) => linkRelation(link) === relation),
@@ -81,6 +90,8 @@ export default function IssueLinksPanel({
                     project={project}
                     issue={link.issue}
                     removeLabel={`Remove the link to ${link.issue.identifier}`}
+                    readOnly={readOnly}
+                    onOpen={onOpenIssue && (() => onOpenIssue(link.issue.id))}
                     onRemove={
                       canEdit
                         ? () =>

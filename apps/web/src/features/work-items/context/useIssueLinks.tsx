@@ -12,8 +12,6 @@ export interface IssueLinkView {
   issue: Issue;
 }
 
-// The issues a relation's other end may be looked up in. Empty by default, so a
-// board rendered outside the provider (the public share) shows no relations.
 const IssueLookupContext = createContext<Map<number, Issue>>(new Map());
 
 const RELATION_ORDER = new Map(LINK_RELATIONS.map((relation, index) => [relation, index]));

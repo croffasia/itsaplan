@@ -42,6 +42,8 @@ export default function PublicBoardPage({ token }: { token: string }) {
       <PublicIssueOverlay
         token={token}
         issueId={openIssueId}
+        extended={query.data.view.extended}
+        onOpenIssue={setOpenIssueId}
         onClose={() => setOpenIssueId(null)}
       />
     </PublicShareFrame>

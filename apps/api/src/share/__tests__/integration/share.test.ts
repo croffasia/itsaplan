@@ -18,7 +18,7 @@ async function setup() {
   const issue = await asOwner
     .projects({ projectKey: 'MKT' })
     .issues.post({ columnId, title: 'Shared thing' });
-  return { asOwner, issueId: issue.data!.id, columnId };
+  return { asOwner, ownerId: owner.userId, issueId: issue.data!.id, columnId };
 }
 
 describe('share', () => {
@@ -57,11 +57,71 @@ describe('share', () => {
 
     it('strips member emails from the public scaffold', async () => {
       const { asOwner, issueId } = await setup();
-      const token = (await asOwner.issues({ issueId }).share.post()).data!.token;
+      const token = (await asOwner.issues({ issueId }).share.post({ extended: true })).data!.token;
       const shared = await api.share.issue({ token }).get();
+      expect(shared.data.project.assignees.length).toBeGreaterThan(0);
       for (const a of shared.data.project.assignees) {
         expect((a as Record<string, unknown>).email).toBeUndefined();
       }
+    });
+
+    // The same choice a shared board carries: a new link keeps the issue's own
+    // words and hides the people, labels, custom fields and activity around it.
+    it('hides the people and activity by default, and exposes them when extended', async () => {
+      const { asOwner, ownerId, issueId } = await setup();
+      const label = await asOwner.projects({ projectKey: 'MKT' }).labels.post({ name: 'urgent' });
+      await asOwner
+        .issues({ issueId })
+        .patch({ assigneeUserId: ownerId, labelIds: [label.data!.id] });
+
+      const token = (await asOwner.issues({ issueId }).share.post()).data!.token;
+      const plain = await api.share.issue({ token }).get();
+      expect(plain.data.issue).toMatchObject({
+        title: 'Shared thing',
+        assigneeUserId: null,
+        labelIds: [],
+      });
+      expect(plain.data.feed).toEqual([]);
+      expect(plain.data.project.labels).toEqual([]);
+
+      const same = (await asOwner.issues({ issueId }).share.post({ extended: true })).data!.token;
+      expect(same).toBe(token);
+      const full = await api.share.issue({ token }).get();
+      expect(full.data.issue.assigneeUserId).not.toBeNull();
+      expect(full.data.issue.labelIds).toHaveLength(1);
+      expect(full.data.feed.length).toBeGreaterThan(0);
+    });
+
+    it('starts a re-created link without the full issue', async () => {
+      const { asOwner, issueId } = await setup();
+      await asOwner.issues({ issueId }).share.post({ extended: true });
+      await asOwner.issues({ issueId }).share.delete();
+      const token = (await asOwner.issues({ issueId }).share.post()).data!.token;
+      const shared = await api.share.issue({ token }).get();
+      expect(shared.data.issue.shareExtended).toBe(false);
+    });
+
+    it('leaves a live link as it stands when the request omits the choice', async () => {
+      const { asOwner, issueId } = await setup();
+      await asOwner.issues({ issueId }).share.post({ extended: true });
+      const token = (await asOwner.issues({ issueId }).share.post()).data!.token;
+      const shared = await api.share.issue({ token }).get();
+      expect(shared.data.issue.shareExtended).toBe(true);
+    });
+
+    it('carries the issue relations', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const subtask = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Step one', parentId: issueId });
+      const token = (await asOwner.issues({ issueId }).share.post()).data!.token;
+
+      const shared = await api.share.issue({ token }).get();
+      expect(shared.data.issue.subtasks.map((s: { id: number }) => s.id)).toEqual([
+        subtask.data!.id,
+      ]);
+      expect(shared.data.issue.links).toEqual([]);
+      expect(shared.data.issue.parent).toBeNull();
     });
 
     it('rejects a malformed token', async () => {
@@ -147,6 +207,46 @@ describe('share', () => {
       expect(opened.status).toBe(404);
     });
 
+    it('leaves relations to issues the view filter hides out of the board and the opened issue', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const board = await asOwner.projects({ projectKey: 'MKT' }).get();
+      const hiddenColumn = board.data!.columns[1].id;
+      const hidden = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId: hiddenColumn, title: 'Hidden' });
+      await asOwner
+        .issues({ issueId })
+        .links.post({ targetIssueId: hidden.data!.id, kind: 'blocks' });
+      // A subtask the filter hides must not be counted on its parent's card either.
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId: hiddenColumn, title: 'Hidden step', parentId: issueId });
+      const view = await asOwner.projects({ projectKey: 'MKT' }).views.post({
+        name: 'Filtered',
+        filters: { conditions: [{ id: 'c1', field: 'status', op: 'is', values: [columnId] }] },
+      });
+      const token = (await asOwner.views({ viewId: view.data!.id }).share.post()).data!.token;
+
+      const shared = await api.share.view({ token }).get();
+      const card = shared.data.issues.find((i: { id: number }) => i.id === issueId);
+      expect(card.links).toEqual([]);
+      expect(card.subtaskCount).toBe(0);
+
+      const opened = await api.share.view({ token }).issues({ issueId }).get();
+      expect(opened.data.issue.links).toEqual([]);
+    });
+
+    it('keeps the view filters off the public bundle', async () => {
+      const { asOwner } = await setup();
+      const view = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .views.post({ name: 'Board', filters: { conditions: [] } });
+      const token = (await asOwner.views({ viewId: view.data!.id }).share.post()).data!.token;
+
+      const shared = await api.share.view({ token }).get();
+      expect(shared.data.view.filters).toBeUndefined();
+    });
+
     it('refuses to open an issue from another project via a board token', async () => {
       const { asOwner, token } = await sharedView();
       await asOwner.projects.post({ key: 'OPS', name: 'Operations' });
@@ -164,6 +264,101 @@ describe('share', () => {
       expect(del.status).toBe(204);
       const gone = await api.share.view({ token }).get();
       expect(gone.status).toBe(404);
+    });
+
+    // A board link exposes the issues in full only when it is enabled with
+    // extended: true. Without it the public payload keeps the issue's own words —
+    // title, description, state, type, priority, dates — and drops the people on
+    // it, its labels, its custom field values and its activity.
+    describe('what a board link exposes', () => {
+      async function withAssignedIssue() {
+        const { asOwner, ownerId, issueId } = await setup();
+        const label = await asOwner.projects({ projectKey: 'MKT' }).labels.post({ name: 'urgent' });
+        await asOwner
+          .issues({ issueId })
+          .patch({ assigneeUserId: ownerId, labelIds: [label.data!.id] });
+        const view = await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' });
+        return { asOwner, viewId: view.data!.id, issueId };
+      }
+
+      it('hides the people, labels and activity by default', async () => {
+        const { asOwner, viewId, issueId } = await withAssignedIssue();
+        const token = (await asOwner.views({ viewId }).share.post()).data!.token;
+
+        const shared = await api.share.view({ token }).get();
+        expect(shared.data.view.extended).toBe(false);
+        expect(shared.data.project.assignees).toEqual([]);
+        expect(shared.data.project.labels).toEqual([]);
+        expect(shared.data.issues[0]).toMatchObject({
+          title: 'Shared thing',
+          assigneeUserId: null,
+          labelIds: [],
+          fieldValues: [],
+        });
+
+        const opened = await api.share.view({ token }).issues({ issueId }).get();
+        expect(opened.data.issue).toMatchObject({ assigneeUserId: null, labelIds: [] });
+        expect(opened.data.feed).toEqual([]);
+      });
+
+      it('exposes them when the link is extended, keeping the same token', async () => {
+        const { asOwner, viewId, issueId } = await withAssignedIssue();
+        const first = (await asOwner.views({ viewId }).share.post()).data!.token;
+        const second = (await asOwner.views({ viewId }).share.post({ extended: true })).data!.token;
+        expect(second).toBe(first);
+
+        const shared = await api.share.view({ token: second }).get();
+        expect(shared.data.view.extended).toBe(true);
+        expect(shared.data.issues[0].assigneeUserId).not.toBeNull();
+        expect(shared.data.issues[0].labelIds).toHaveLength(1);
+
+        const opened = await api.share.view({ token: second }).issues({ issueId }).get();
+        expect(opened.data.feed.length).toBeGreaterThan(0);
+      });
+
+      it('starts a re-created link without the full issues', async () => {
+        const { asOwner, viewId } = await withAssignedIssue();
+        await asOwner.views({ viewId }).share.post({ extended: true });
+        await asOwner.views({ viewId }).share.delete();
+        const token = (await asOwner.views({ viewId }).share.post()).data!.token;
+        const shared = await api.share.view({ token }).get();
+        expect(shared.data.view.extended).toBe(false);
+      });
+
+      it('leaves a live link as it stands when the request omits the choice', async () => {
+        const { asOwner, viewId } = await withAssignedIssue();
+        await asOwner.views({ viewId }).share.post({ extended: true });
+        const token = (await asOwner.views({ viewId }).share.post()).data!.token;
+        const shared = await api.share.view({ token }).get();
+        expect(shared.data.view.extended).toBe(true);
+      });
+    });
+
+    it('carries relations and subtask counts on the board issues', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const other = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Blocker' });
+      await asOwner
+        .issues({ issueId })
+        .links.post({ targetIssueId: other.data!.id, kind: 'blocks' });
+      const subtask = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Step one', parentId: issueId });
+      const view = await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'Board' });
+      const token = (await asOwner.views({ viewId: view.data!.id }).share.post()).data!.token;
+
+      const shared = await api.share.view({ token }).get();
+      const card = shared.data.issues.find((i: { id: number }) => i.id === issueId);
+      expect(card.links).toHaveLength(1);
+      expect(card.subtaskCount).toBe(1);
+
+      const opened = await api.share.view({ token }).issues({ issueId }).get();
+      expect(opened.data.issue.links).toHaveLength(1);
+      expect(opened.data.issue.subtasks.map((s: { id: number }) => s.id)).toEqual([
+        subtask.data!.id,
+      ]);
+      expect(opened.data.issue.parent).toBeNull();
     });
 
     it('denies a non-member enabling view sharing', async () => {

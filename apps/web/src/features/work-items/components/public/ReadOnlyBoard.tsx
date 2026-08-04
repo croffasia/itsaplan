@@ -1,10 +1,10 @@
 import { type SharedViewBundle } from '@/lib/api';
-import { applyFilters } from '@/utils/filters';
 import { defaultViewSettings } from '@/utils/viewSettings';
 import { type WorkItemsViewProps } from '@/utils/project';
 import { toPublicProjectDetail } from '@/utils/publicProject';
 import { withoutShownSubtasks } from '@/utils/subtasks';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
+import { IssueLinksProvider } from '../../context/useIssueLinks';
 import { SubtasksProvider } from '../../context/useSubtasks';
 import KanbanBoard from '../kanban/KanbanBoard';
 import TableView from '../table/TableView';
@@ -14,9 +14,9 @@ import CalendarView from '../calendar/CalendarView';
 const noop = () => {};
 
 // Renders a shared saved view as a read-only board: the same layout components as
-// the authenticated board, in the view's configured layout with its filters,
-// grouping and sorting applied. Every mutation affordance is off (readOnly);
-// clicking an issue calls onOpenIssue.
+// the authenticated board, in the view's configured layout with its grouping and
+// sorting applied. Every mutation affordance is off (readOnly); clicking an issue
+// calls onOpenIssue.
 export default function ReadOnlyBoard({
   bundle,
   onOpenIssue,
@@ -25,11 +25,12 @@ export default function ReadOnlyBoard({
   onOpenIssue: (id: number) => void;
 }) {
   const project = toPublicProjectDetail(bundle.project, bundle.issues);
-  // Subtasks are rendered under their parent, so they are left out of the layouts'
-  // own rows here as well.
-  const filteredProject = {
+  // The server applied the view's filters: a link that hides labels and custom
+  // field values does not carry enough to re-run them here. Subtasks are rendered
+  // under their parent, so they are left out of the layouts' own rows.
+  const boardProject = {
     ...project,
-    issues: withoutShownSubtasks(applyFilters(project.issues, bundle.view.filters, project)),
+    issues: withoutShownSubtasks(project.issues),
   };
 
   const layout = bundle.view.display.layout ?? 'kanban';
@@ -37,7 +38,7 @@ export default function ReadOnlyBoard({
   const settings = { ...defaultViewSettings(layout), ...displaySettings };
 
   const viewProps: WorkItemsViewProps = {
-    project: filteredProject,
+    project: boardProject,
     customFields: project.customFields,
     settings,
     onSettingsChange: noop,
@@ -67,9 +68,11 @@ export default function ReadOnlyBoard({
         trailing={bundle.view.name}
       />
       <div className="relative min-h-0 flex-1">
-        <SubtasksProvider issues={project.issues} enabled={settings.showSubtasks}>
-          {renderView()}
-        </SubtasksProvider>
+        <IssueLinksProvider issues={project.issues} enabled={settings.showLinks}>
+          <SubtasksProvider issues={project.issues} enabled={settings.showSubtasks}>
+            {renderView()}
+          </SubtasksProvider>
+        </IssueLinksProvider>
       </div>
     </div>
   );

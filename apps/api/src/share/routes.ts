@@ -23,6 +23,20 @@ const tokenParams = t.Object({ token: t.String({ format: 'uuid' }) });
 // The share link's token, returned when sharing is enabled.
 const ShareTokenResponse = t.Object({ token: t.String() });
 
+// How much the link exposes, sent when enabling it. Enabling an already-shared
+// entity keeps its token and only changes this; leaving the field out keeps that
+// as it stands too, so fetching the link of a live share cannot downgrade it.
+const ShareExtendedBody = t.Optional(
+  t.Object({
+    extended: t.Optional(
+      t.Boolean({
+        description:
+          'Expose the full issues (assignees, labels, custom fields, activity) instead of their title, description, state, type, priority, dates, subtasks and links. Omit to leave it unchanged.',
+      }),
+    ),
+  }),
+);
+
 // The public read-only bundles mirror the store DTOs (project scaffold + entity),
 // which the read-only web pages type themselves. They are self-contained reads,
 // so the response is passed through rather than re-declaring the five feature DTOs
@@ -49,13 +63,14 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
 
   .post(
     '/issues/:issueId/share',
-    async ({ params }) => {
-      const token = await enableIssueShare(params.issueId);
+    async ({ params, body }) => {
+      const token = await enableIssueShare(params.issueId, body?.extended);
       if (!token) throw new HttpError(404, 'Issue not found');
       return { token };
     },
     {
       params: t.Object({ issueId: t.Numeric() }),
+      body: ShareExtendedBody,
       workItem: 'edit',
       response: {
         200: ShareTokenResponse,
@@ -91,13 +106,14 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
 
   .post(
     '/views/:viewId/share',
-    async ({ params }) => {
-      const token = await enableViewShare(params.viewId);
+    async ({ params, body }) => {
+      const token = await enableViewShare(params.viewId, body?.extended);
       if (!token) throw new HttpError(404, 'View not found');
       return { token };
     },
     {
       params: t.Object({ viewId: t.Numeric() }),
+      body: ShareExtendedBody,
       savedView: 'edit',
       response: {
         200: ShareTokenResponse,

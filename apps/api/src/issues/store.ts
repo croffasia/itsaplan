@@ -99,6 +99,10 @@ export interface IssueRow {
   // Unguessable token for the public read-only share link, or null when the issue
   // is not shared. Populated by mapIssue from the row.
   shareToken: string | null;
+  // Whether that link exposes the issue in full (assignees, labels, custom fields,
+  // activity) or only its title, description, state, type, priority, dates,
+  // subtasks and links.
+  shareExtended: boolean;
   labelIds: number[];
   // Custom field values set on this issue, one entry per field that has a scalar
   // value or selected options (unset fields are omitted). Included so the planner
@@ -130,6 +134,7 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     statusSince: iso(row.createdAt),
     shareToken: row.shareToken,
+    shareExtended: row.shareExtended,
     labelIds: [],
     fieldValues: [],
   };

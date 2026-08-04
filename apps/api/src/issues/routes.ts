@@ -128,6 +128,7 @@ const IssueResponse = t.Object({
   archivedAt: t.Nullable(t.String()),
   statusSince: t.String(),
   shareToken: t.Nullable(t.String()),
+  shareExtended: t.Boolean(),
   labelIds: t.Array(t.Number()),
   fieldValues: t.Array(IssueFieldValueEntry),
 });

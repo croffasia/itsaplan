@@ -8,11 +8,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
 
 // A generic public-share dialog for an issue or a saved view. It shows the current
 // state (shared with a copyable link, or not shared) and toggles it through the
@@ -24,6 +26,7 @@ export default function ShareDialog({
   onOpenChange,
   title,
   token,
+  extended,
   enable,
   disable,
   pathForToken,
@@ -32,7 +35,10 @@ export default function ShareDialog({
   onOpenChange: (open: boolean) => void;
   title: string;
   token: string | null;
-  enable: () => Promise<string>;
+  // How much the current link exposes.
+  extended: boolean;
+  // Creates the link, or changes how much a live one exposes; returns its token.
+  enable: (extended: boolean) => Promise<string>;
   disable: () => Promise<void>;
   pathForToken: (token: string) => string;
 }) {
@@ -50,28 +56,31 @@ export default function ShareDialog({
 
   const url = current ? shareUrl(pathForToken(current)) : '';
 
-  async function onEnable() {
+  async function run(operation: () => Promise<void>, failure: string) {
     setBusy(true);
     try {
-      setCurrent(await enable());
+      await operation();
     } catch {
-      toast.error('Could not create the share link');
+      toast.error(failure);
     } finally {
       setBusy(false);
     }
   }
 
-  async function onDisable() {
-    setBusy(true);
-    try {
+  const onEnable = () =>
+    run(async () => setCurrent(await enable(false)), 'Could not create the link. Try again.');
+
+  const onSetExtended = (next: boolean) =>
+    run(
+      async () => setCurrent(await enable(next)),
+      'Could not change what the link shows. Try again.',
+    );
+
+  const onDisable = () =>
+    run(async () => {
       await disable();
       setCurrent(null);
-    } catch {
-      toast.error('Could not stop sharing');
-    } finally {
-      setBusy(false);
-    }
-  }
+    }, 'Could not stop sharing. Try again.');
 
   async function copy() {
     try {
@@ -79,7 +88,7 @@ export default function ShareDialog({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error('Could not copy the link');
+      toast.error('Could not copy the link. Select it and copy by hand.');
     }
   }
 
@@ -89,7 +98,7 @@ export default function ShareDialog({
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Anyone with the link can view this in read-only mode, without signing in.
+            Anyone with the link can read it. No account needed.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,31 +108,51 @@ export default function ShareDialog({
               <Input
                 readOnly
                 value={url}
-                className="flex-1 text-sm"
+                aria-label="Share link"
+                className="h-9 flex-1 bg-muted/40 font-mono text-xs"
                 onFocus={(e) => e.target.select()}
               />
-              <Button type="button" variant="secondary" size="sm" onClick={copy}>
+              <Button type="button" variant="secondary" size="sm" className="h-9" onClick={copy}>
                 {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
                 {copied ? 'Copied' : 'Copy'}
               </Button>
             </div>
-            <div className="flex justify-end">
-              <Button type="button" variant="ghost" size="sm" disabled={busy} onClick={onDisable}>
+
+            <label className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5">
+              <span className="min-w-0">
+                <span className="block text-sm">Full issue details</span>
+                <span className="block text-xs text-muted-foreground">
+                  Assignees, labels, custom fields and activity.
+                </span>
+              </span>
+              <Switch
+                checked={extended}
+                disabled={busy}
+                onCheckedChange={(next) => void onSetExtended(next)}
+              />
+            </label>
+
+            <DialogFooter className="mt-1 sm:justify-start">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={busy}
+                onClick={() => void onDisable()}
+                className="text-muted-foreground hover:text-destructive"
+              >
                 {busy && <Loader2 className="size-4 animate-spin" />}
                 Stop sharing
               </Button>
-            </div>
+            </DialogFooter>
           </div>
         ) : (
-          <div className="flex flex-col items-start gap-3">
-            <p className="text-sm text-muted-foreground">
-              Sharing is off. Create a link to let anyone view this without an account.
-            </p>
-            <Button type="button" disabled={busy} onClick={onEnable}>
+          <DialogFooter>
+            <Button type="button" disabled={busy} onClick={() => void onEnable()}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Globe className="size-4" />}
-              Create share link
+              Create link
             </Button>
-          </div>
+          </DialogFooter>
         )}
       </DialogContent>
     </Dialog>

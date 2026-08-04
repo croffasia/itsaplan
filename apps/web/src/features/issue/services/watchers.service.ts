@@ -3,7 +3,7 @@
 // refetched.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, type IssueWithLinks } from '@/lib/api';
+import { api, type IssueWithWatchers } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 
 export function useSetIssueWatching() {
@@ -12,7 +12,7 @@ export function useSetIssueWatching() {
     mutationFn: ({ issueId, watching }: { issueId: number; watching: boolean }) =>
       watching ? api.watchIssue(issueId) : api.unwatchIssue(issueId),
     onSuccess: (watchers, { issueId }) => {
-      qc.setQueryData<IssueWithLinks>(qk.issue(issueId), (prev) =>
+      qc.setQueryData<IssueWithWatchers>(qk.issue(issueId), (prev) =>
         prev ? { ...prev, watchers } : prev,
       );
     },

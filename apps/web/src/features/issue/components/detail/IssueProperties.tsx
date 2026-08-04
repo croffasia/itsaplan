@@ -149,7 +149,7 @@ export default function IssueProperties({
         </PropertyRow>
       )}
 
-      {project.project.initiativesEnabled && (
+      {project.project.initiativesEnabled && (!readOnly || issue.initiative) && (
         <PropertyRow label="Initiative">
           {readOnly ? (
             // Read-only shows the linked initiative from the issue itself, avoiding

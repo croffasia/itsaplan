@@ -40,7 +40,7 @@ export default function PublicIssuePage({ token }: { token: string }) {
         name={query.data.project.project.name}
         ticker={query.data.project.project.key}
       />
-      <ReadOnlyIssueDetail bundle={query.data} />
+      <ReadOnlyIssueDetail bundle={query.data} extended={query.data.issue.shareExtended} />
     </PublicShareFrame>
   );
 }

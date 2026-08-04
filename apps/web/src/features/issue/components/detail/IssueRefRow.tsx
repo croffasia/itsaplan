@@ -9,30 +9,53 @@ import { StateIcon } from '../shared/IssueIcons';
 // One other issue in the Links or Subtasks panel — the far end of a relation, a
 // subtask, or the parent an issue hangs under — with its status, opening its page
 // on click. onRemove is absent when the member cannot edit; removeLabel names what
-// removing it does, for the screen reader.
+// removing it does, for the screen reader. A public share has no issue pages to
+// link to, so it passes onOpen and the row opens the issue where it stands; a
+// share that cannot open it at all (a single shared issue) passes neither and the
+// row only names it.
 export default function IssueRefRow({
   project,
   issue,
   removeLabel,
   onRemove,
+  onOpen,
+  readOnly,
 }: {
   project: ProjectDetail;
   issue: IssueRef;
   removeLabel: string;
   onRemove?: () => void;
+  onOpen?: () => void;
+  readOnly?: boolean;
 }) {
   const column = project.columns.find((c) => c.id === issue.columnId);
+  const label = (
+    <>
+      <span className="shrink-0 font-mono text-xs text-muted-foreground">{issue.identifier}</span>
+      <span className="truncate text-sm">{issue.title}</span>
+    </>
+  );
+  const labelClass = 'flex min-w-0 flex-1 items-center gap-2';
+
+  function renderName() {
+    if (onOpen)
+      return (
+        <button type="button" onClick={onOpen} className={`${labelClass} text-left`}>
+          {label}
+        </button>
+      );
+    if (readOnly) return <div className={labelClass}>{label}</div>;
+    return (
+      <Link href={issuePath(project.project.key, issue.sequenceNumber)} className={labelClass}>
+        {label}
+      </Link>
+    );
+  }
 
   return (
     <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent/50">
       {column && <StateIcon stateType={column.stateType} color={column.color} />}
-      <Link
-        href={issuePath(project.project.key, issue.sequenceNumber)}
-        className="flex min-w-0 flex-1 items-center gap-2"
-      >
-        <span className="shrink-0 font-mono text-xs text-muted-foreground">{issue.identifier}</span>
-        <span className="truncate text-sm">{issue.title}</span>
-      </Link>
+      {renderName()}
       {issue.archived && <ArchivedBadge />}
       {column && <span className="shrink-0 text-xs text-muted-foreground">{column.name}</span>}
       {onRemove && (

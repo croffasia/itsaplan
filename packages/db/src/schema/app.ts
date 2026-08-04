@@ -845,6 +845,8 @@ export const issue = pgTable(
     // Unguessable token for the public read-only share link. NULL means the issue
     // is not shared; setting it enables the link, clearing it revokes access.
     shareToken: uuid('share_token').unique(),
+    // How much the share link exposes, the same choice a shared view carries.
+    shareExtended: boolean('share_extended').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1078,6 +1080,11 @@ export const projectView = pgTable(
     // Unguessable token for the public read-only share link of this view. NULL
     // means not shared; setting it enables the link, clearing it revokes access.
     shareToken: uuid('share_token').unique(),
+    // How much of each issue the share link exposes. False keeps the public
+    // payload to the issue's title, description, state, type, priority, dates,
+    // subtasks and links; true adds the assignees, labels, custom fields and
+    // activity the members see.
+    shareExtended: boolean('share_extended').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('project_view_project_idx').on(t.projectId, t.position)],

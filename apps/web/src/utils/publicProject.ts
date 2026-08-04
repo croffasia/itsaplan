@@ -1,16 +1,14 @@
-import type { Issue, Permissions, ProjectDetail, PublicScaffold } from '@/lib/api';
+import type { BoardIssue, Permissions, ProjectDetail, PublicScaffold } from '@/lib/api';
 
 // Assembles a ProjectDetail from a public share bundle so the read-only pages can
 // reuse the same components as the authenticated app (the board layouts, the issue
 // Properties grid). The public scaffold carries no viewer/permissions (a public
 // page has no session) and its assignees carry no email; this fills the shape with
 // an empty permission matrix (every can() check resolves false) and a placeholder
-// email. Its issues carry no relations either — a shared page does not expose the
-// issues on the other end of one — and no subtask count, which only the removal
-// confirmations read.
+// email.
 export function toPublicProjectDetail(
   scaffold: PublicScaffold,
-  issues: Issue[] = [],
+  issues: BoardIssue[] = [],
 ): ProjectDetail {
   return {
     project: scaffold.project,
@@ -22,7 +20,7 @@ export function toPublicProjectDetail(
     customFields: scaffold.customFields,
     viewer: { role: 'member' },
     permissions: {} as Permissions,
-    issues: issues.map((issue) => ({ ...issue, links: [], subtaskCount: 0 })),
+    issues,
     rev: '',
   };
 }

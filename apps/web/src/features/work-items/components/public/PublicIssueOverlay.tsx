@@ -12,10 +12,18 @@ import ReadOnlyIssueDetail from '@/features/issue/components/detail/ReadOnlyIssu
 export default function PublicIssueOverlay({
   token,
   issueId,
+  extended,
+  onOpenIssue,
   onClose,
 }: {
   token: string;
   issueId: number | null;
+  // Whether the board's link exposes the full issues; without it the bundle
+  // carries no activity and no custom fields.
+  extended: boolean;
+  // Swaps the open issue for another one of the same board, so a subtask or the
+  // other end of a relation opens in place.
+  onOpenIssue: (id: number) => void;
   onClose: () => void;
 }) {
   const query = useQuery({
@@ -35,7 +43,14 @@ export default function PublicIssueOverlay({
         {(query.isError || (!query.isLoading && !query.data)) && (
           <p className="p-8 text-sm text-muted-foreground">This issue is not available.</p>
         )}
-        {query.data && <ReadOnlyIssueDetail bundle={query.data} layout="page" />}
+        {query.data && (
+          <ReadOnlyIssueDetail
+            bundle={query.data}
+            layout="page"
+            extended={extended}
+            onOpenIssue={onOpenIssue}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );

@@ -9,6 +9,13 @@ import { listCustomFields } from '../custom-fields/store';
 import { listAssigneeCandidates } from '../members/store';
 import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '../issues/store';
 import { listFeed, type FeedItemRow } from '../issues/activity';
+import {
+  attachBoardLinks,
+  listIssueLinks,
+  type BoardIssueLink,
+  type IssueLinkRow,
+} from '../issues/links';
+import { getParentRef, listSubtasks, type IssueRef } from '../issues/subtasks';
 import { applyFilters } from '../views/filters';
 
 // Public read-only sharing: an issue or a saved view carries an unguessable
@@ -38,24 +45,39 @@ export interface ShareScaffold {
 
 export interface SharedIssueBundle {
   project: ShareScaffold;
-  issue: IssueRow & { fields: Awaited<ReturnType<typeof getIssueFieldValues>> };
+  issue: IssueRow & {
+    fields: Awaited<ReturnType<typeof getIssueFieldValues>>;
+    links: IssueLinkRow[];
+    parent: IssueRef | null;
+    subtasks: IssueRef[];
+  };
   feed: FeedItemRow[];
 }
 
 export interface SharedViewBundle {
   project: ShareScaffold;
-  view: { name: string; icon: string | null; filters: unknown; display: unknown };
-  issues: IssueRow[];
+  view: {
+    name: string;
+    icon: string | null;
+    display: unknown;
+    // Whether the link exposes the full issues or only the reduced payload (see
+    // redactIssue).
+    extended: boolean;
+  };
+  issues: (IssueRow & { links: BoardIssueLink[]; subtaskCount: number })[];
 }
 
-async function buildScaffold(project: ProjectRow): Promise<ShareScaffold> {
+// The scaffold for a bundle. Without `extended` it carries only what the reduced
+// issue payload can reference — the columns and issue types — so a link that hides
+// the people, labels and custom fields does not name them in the scaffold either.
+async function buildScaffold(project: ProjectRow, extended: boolean): Promise<ShareScaffold> {
   const [columns, issueTypes, labels, labelGroups, assignees, customFields] = await Promise.all([
     listColumns(project.id),
     listIssueTypes(project.id),
-    listLabels(project.id),
-    listLabelGroups(project.id),
-    listAssigneeCandidates(project.id),
-    listCustomFields(project.id, { allTypes: true }),
+    extended ? listLabels(project.id) : [],
+    extended ? listLabelGroups(project.id) : [],
+    extended ? listAssigneeCandidates(project.id) : [],
+    extended ? listCustomFields(project.id, { allTypes: true }) : [],
   ]);
   return {
     project,
@@ -75,6 +97,20 @@ async function buildScaffold(project: ProjectRow): Promise<ShareScaffold> {
   };
 }
 
+// Cuts an issue down to what a non-extended share exposes: its title, description,
+// state, type, priority, dates, and its place among the other issues. The people on
+// it, its labels and its custom field values stay private.
+function redactIssue<T extends IssueRow>(row: T): T {
+  return {
+    ...row,
+    initiative: null,
+    assigneeUserId: null,
+    delegateUserId: null,
+    labelIds: [],
+    fieldValues: [],
+  };
+}
+
 // The read-only feed shows the newest activity; a public share never paginates,
 // so it is capped at the store's max page (100). An issue with more than that
 // shows its latest 100 entries.
@@ -87,37 +123,63 @@ async function issueFeed(issueId: number): Promise<FeedItemRow[]> {
 // a card opened from a shared board. keepShareToken keeps the issue's own share
 // token in the bundle; it is meaningful only on the shared-issue page and stripped
 // elsewhere, so a shared board never leaks its issues' individual tokens.
+// onlyIssueIds limits the relations and the subtask hierarchy to the issues a
+// shared board shows, so they cannot name one its filter excludes.
 async function issueBundle(
   issueRow: IssueRow,
-  keepShareToken: boolean,
+  {
+    keepShareToken,
+    extended,
+    onlyIssueIds,
+  }: { keepShareToken: boolean; extended: boolean; onlyIssueIds?: Set<number> },
 ): Promise<SharedIssueBundle> {
   const project = await getProjectById(issueRow.projectId);
   if (!project) throw new Error('project missing for shared issue');
-  const [scaffold, fields, feed] = await Promise.all([
-    buildScaffold(project),
-    getIssueFieldValues(issueRow.id),
-    issueFeed(issueRow.id),
+  const [scaffold, fields, feed, links, parent, subtasks] = await Promise.all([
+    buildScaffold(project, extended),
+    extended ? getIssueFieldValues(issueRow.id) : [],
+    extended ? issueFeed(issueRow.id) : [],
+    listIssueLinks(issueRow.id),
+    getParentRef(issueRow.parentId),
+    listSubtasks(issueRow.id),
   ]);
+  const shown = (id: number) => !onlyIssueIds || onlyIssueIds.has(id);
+  const visible = extended ? issueRow : redactIssue(issueRow);
   return {
     project: scaffold,
-    issue: { ...issueRow, shareToken: keepShareToken ? issueRow.shareToken : null, fields },
+    issue: {
+      ...visible,
+      shareToken: keepShareToken ? issueRow.shareToken : null,
+      shareExtended: keepShareToken && issueRow.shareExtended,
+      fields,
+      links: links.filter((link) => shown(link.issue.id)),
+      parent: parent && shown(parent.id) ? parent : null,
+      subtasks: subtasks.filter((subtask) => shown(subtask.id)),
+    },
     feed,
   };
 }
 
 // --- Enable / revoke ------------------------------------------------------------
 
-// Enables sharing for an issue. Idempotent: an already-shared issue keeps its
-// token. Returns the token, or null if the issue does not exist.
-export async function enableIssueShare(issueId: number): Promise<string | null> {
+// Enables sharing for an issue. An already-shared issue keeps its token, so the
+// same call also flips `extended` on a live link; omitting `extended` leaves how
+// much the link exposes as it stands. Returns the token, or null if the issue does
+// not exist.
+export async function enableIssueShare(
+  issueId: number,
+  extended?: boolean,
+): Promise<string | null> {
   const rows = await db
     .select({ token: issue.shareToken })
     .from(issue)
     .where(eq(issue.id, issueId));
   if (rows.length === 0) return null;
-  if (rows[0].token) return rows[0].token;
-  const token = randomUUID();
-  await db.update(issue).set({ shareToken: token }).where(eq(issue.id, issueId));
+  const token = rows[0].token ?? randomUUID();
+  await db
+    .update(issue)
+    .set({ shareToken: token, ...(extended === undefined ? {} : { shareExtended: extended }) })
+    .where(eq(issue.id, issueId));
   return token;
 }
 
@@ -125,28 +187,31 @@ export async function enableIssueShare(issueId: number): Promise<string | null> 
 export async function disableIssueShare(issueId: number): Promise<boolean> {
   const rows = await db
     .update(issue)
-    .set({ shareToken: null })
+    .set({ shareToken: null, shareExtended: false })
     .where(eq(issue.id, issueId))
     .returning({ id: issue.id });
   return rows.length > 0;
 }
 
-export async function enableViewShare(viewId: number): Promise<string | null> {
+// Enables sharing for a view, the same way enableIssueShare does for an issue.
+export async function enableViewShare(viewId: number, extended?: boolean): Promise<string | null> {
   const rows = await db
     .select({ token: projectView.shareToken })
     .from(projectView)
     .where(eq(projectView.id, viewId));
   if (rows.length === 0) return null;
-  if (rows[0].token) return rows[0].token;
-  const token = randomUUID();
-  await db.update(projectView).set({ shareToken: token }).where(eq(projectView.id, viewId));
+  const token = rows[0].token ?? randomUUID();
+  await db
+    .update(projectView)
+    .set({ shareToken: token, ...(extended === undefined ? {} : { shareExtended: extended }) })
+    .where(eq(projectView.id, viewId));
   return token;
 }
 
 export async function disableViewShare(viewId: number): Promise<boolean> {
   const rows = await db
     .update(projectView)
-    .set({ shareToken: null })
+    .set({ shareToken: null, shareExtended: false })
     .where(eq(projectView.id, viewId))
     .returning({ id: projectView.id });
   return rows.length > 0;
@@ -158,7 +223,10 @@ export async function disableViewShare(viewId: number): Promise<boolean> {
 export async function getSharedIssue(token: string): Promise<SharedIssueBundle | null> {
   const issueRow = await getIssue(await issueIdByToken(token));
   if (!issueRow) return null;
-  return issueBundle(issueRow, true);
+  return issueBundle(issueRow, {
+    keepShareToken: true,
+    extended: issueRow.shareExtended,
+  });
 }
 
 // The bundle for a shared view link, or null if no view carries the token.
@@ -168,16 +236,41 @@ export async function getSharedView(token: string): Promise<SharedViewBundle | n
   if (!view) return null;
   const project = await getProjectById(view.projectId);
   if (!project) return null;
-  const [scaffold, issues] = await Promise.all([buildScaffold(project), listIssues(project)]);
+  const [scaffold, issues] = await Promise.all([
+    buildScaffold(project, view.shareExtended),
+    listIssues(project),
+  ]);
   // Apply the view's own filters here so the bundle carries only the issues the
   // view shows, not the whole project. A public link must not expose issues the
   // filter excludes.
   const visible = applyFilters(issues, view.filters, scaffold.columns);
+  // The board renders relations and subtask counts on its cards, the same way the
+  // authenticated board does. Both are counted over the issues the view shows, so a
+  // card cannot name or count one its filter excludes.
+  const shown = new Set(visible.map((i) => i.id));
+  const subtaskCounts = new Map<number, number>();
+  for (const row of visible)
+    if (row.parentId !== null)
+      subtaskCounts.set(row.parentId, (subtaskCounts.get(row.parentId) ?? 0) + 1);
+  const cards = await attachBoardLinks(visible, project.id);
   return {
     project: scaffold,
-    view: { name: view.name, icon: view.icon, filters: view.filters, display: view.display },
+    // The filters stay on the server: they can name assignees, labels and custom
+    // field values a link without `extended` withholds, and the bundle already
+    // carries only the issues they match.
+    view: {
+      name: view.name,
+      icon: view.icon,
+      display: view.display,
+      extended: view.shareExtended,
+    },
     // A shared board never leaks its issues' own individual share tokens.
-    issues: visible.map((i) => ({ ...i, shareToken: null })),
+    issues: cards.map((i) => ({
+      ...(view.shareExtended ? i : redactIssue(i)),
+      shareToken: null,
+      links: i.links.filter((link) => shown.has(link.issueId)),
+      subtaskCount: subtaskCounts.get(i.id) ?? 0,
+    })),
   };
 }
 
@@ -191,16 +284,25 @@ export async function getSharedViewIssue(
   issueId: number,
 ): Promise<SharedIssueBundle | null> {
   const rows = await db
-    .select({ projectId: projectView.projectId, filters: projectView.filters })
+    .select({
+      projectId: projectView.projectId,
+      filters: projectView.filters,
+      extended: projectView.shareExtended,
+    })
     .from(projectView)
     .where(eq(projectView.shareToken, token));
   if (rows.length === 0) return null;
   const project = await getProjectById(rows[0].projectId);
   if (!project) return null;
   const [columns, issues] = await Promise.all([listColumns(project.id), listIssues(project)]);
-  const issueRow = applyFilters(issues, rows[0].filters, columns).find((i) => i.id === issueId);
+  const shown = applyFilters(issues, rows[0].filters, columns);
+  const issueRow = shown.find((i) => i.id === issueId);
   if (!issueRow) return null;
-  return issueBundle(issueRow, false);
+  return issueBundle(issueRow, {
+    keepShareToken: false,
+    extended: rows[0].extended,
+    onlyIssueIds: new Set(shown.map((i) => i.id)),
+  });
 }
 
 // Resolves an issue share token to its issue id, or 0 (never a real id) when

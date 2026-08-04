@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { type IssueWithLinks, type ProjectDetail } from '@/lib/api';
+import { type IssueRelations, type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { subtaskProgress } from '@/utils/subtasks';
 import { Button } from '@/components/ui/button';
@@ -21,23 +21,32 @@ import IssueRefRow from './IssueRefRow';
 // subtasks it has with how many of them are done. The two never show together —
 // the hierarchy is one level deep, so a subtask has no subtasks of its own. A new
 // subtask opens the ordinary create modal with the parent's properties prefilled;
-// an existing issue is attached through the search dialog.
+// an existing issue is attached through the search dialog. On a public share the
+// section lists the hierarchy and stays off the page when the issue has none.
 export default function IssueSubtasksPanel({
   project,
   issue,
+  readOnly,
+  onOpenIssue,
 }: {
   project: ProjectDetail;
-  issue: IssueWithLinks;
+  issue: IssueRelations;
+  readOnly?: boolean;
+  // Where a public share opens the parent or a subtask, which has no page of its
+  // own to link to.
+  onOpenIssue?: (id: number) => void;
 }) {
   const { can } = usePermissions();
-  const canEdit = can('work_items', 'edit');
-  const canCreate = can('work_items', 'create');
+  const canEdit = !readOnly && can('work_items', 'edit');
+  const canCreate = !readOnly && can('work_items', 'create');
   const [attaching, setAttaching] = useState(false);
   const [creating, setCreating] = useState(false);
   const { open, toggle } = usePersistedOpen('issue-subtasks-open');
   const setParent = useSetIssueParent();
 
   const parent = issue.parent;
+  if (readOnly && !parent && issue.subtasks.length === 0) return null;
+
   const progress = subtaskProgress(issue.subtasks, new Map(project.columns.map((c) => [c.id, c])));
   const done = progress.total > 0 ? `${progress.done}/${progress.total}` : undefined;
 
@@ -56,6 +65,8 @@ export default function IssueSubtasksPanel({
           project={project}
           issue={parent}
           removeLabel={`Detach from ${parent.identifier}`}
+          readOnly={readOnly}
+          onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
           onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
         />
       );
@@ -71,6 +82,8 @@ export default function IssueSubtasksPanel({
         project={project}
         issue={subtask}
         removeLabel={`Detach ${subtask.identifier}`}
+        readOnly={readOnly}
+        onOpen={onOpenIssue && (() => onOpenIssue(subtask.id))}
         onRemove={canEdit ? () => detach(subtask.id, issue.id) : undefined}
       />
     ));

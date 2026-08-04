@@ -5,22 +5,34 @@ import { fieldDefsForType } from '../../utils/fieldDefs';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
+import IssueSubtasksPanel from './IssueSubtasksPanel';
+import IssueLinksPanel from './IssueLinksPanel';
 import ReadOnlyActivityFeed from './ReadOnlyActivityFeed';
 
 const noop = () => {};
 
 // The full read-only body of a shared issue: title, description, markdown custom
-// fields, the Properties grid and the activity feed. Reuses the authenticated
-// detail components in read-only mode (no editing, no composer, no actions), fed
-// from a self-contained public bundle. Used by the shared-issue page and, in the
-// 'panel' layout, by a card opened from a shared board.
+// fields, the Properties grid, the subtask hierarchy, the relations and the
+// activity feed. Reuses the authenticated detail components in read-only mode (no
+// editing, no composer, no actions), fed from a self-contained public bundle. Used
+// by the shared-issue page and, in the 'panel' layout, by a card opened from a
+// shared board.
 export default function ReadOnlyIssueDetail({
   bundle,
   layout = 'page',
+  extended,
+  onOpenIssue,
 }: {
   bundle: SharedIssueBundle;
   // 'page' puts the Properties in a right column; 'panel' stacks everything.
   layout?: 'page' | 'panel';
+  // A link shared without the full issue carries no activity, so the page leaves
+  // the section out rather than showing it empty.
+  extended: boolean;
+  // Opens another issue of the same share (a subtask, a parent, the other end of a
+  // relation). A shared board passes it; a single shared issue has nowhere to go,
+  // so its rows only name the issue.
+  onOpenIssue?: (id: number) => void;
 }) {
   const { project: scaffold, issue, feed } = bundle;
   const properties = usePersistedOpen('issue-properties-open');
@@ -75,13 +87,23 @@ export default function ReadOnlyIssueDetail({
     />
   );
 
-  const activity = <ReadOnlyActivityFeed feed={feed} imageByUserId={imageByUserId} />;
+  const relations = (
+    <>
+      <IssueSubtasksPanel project={project} issue={issue} readOnly onOpenIssue={onOpenIssue} />
+      <IssueLinksPanel project={project} issue={issue} readOnly onOpenIssue={onOpenIssue} />
+    </>
+  );
+
+  const activity = extended ? (
+    <ReadOnlyActivityFeed feed={feed} imageByUserId={imageByUserId} />
+  ) : null;
 
   if (layout === 'panel') {
     return (
       <div>
         {body}
         {renderProperties()}
+        {relations}
         {activity}
       </div>
     );
@@ -93,6 +115,7 @@ export default function ReadOnlyIssueDetail({
     <div className="flex justify-between gap-8 px-8 py-8 xl:px-12">
       <div className="w-full max-w-3xl min-w-0">
         {body}
+        {relations}
         {activity}
       </div>
       {/* Nothing sits above it in this column, so the section drops the room and

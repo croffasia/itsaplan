@@ -20,6 +20,7 @@ const ViewResponse = t.Object({
   display: t.Any(),
   position: t.Number(),
   shareToken: t.Nullable(t.String()),
+  shareExtended: t.Boolean(),
   createdAt: t.String(),
 });
 

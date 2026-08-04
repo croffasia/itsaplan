@@ -38,9 +38,10 @@ export default function SavedViewTab({
   const qc = useQueryClient();
 
   // Enabling/revoking the public link refetches the views so the tab's shareToken
-  // (and the dialog on reopen) stays in sync.
-  async function enableShare() {
-    const { token } = await api.enableViewShare(view.id);
+  // and shareExtended (which the dialog reads) stay in sync. The same call creates
+  // the link and flips how much a live one exposes.
+  async function share(extended: boolean) {
+    const { token } = await api.enableViewShare(view.id, extended);
     await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     return token;
   }
@@ -124,9 +125,10 @@ export default function SavedViewTab({
       <ShareDialog
         open={sharing}
         onOpenChange={setSharing}
-        title="Share view"
+        title="Share board"
         token={view.shareToken}
-        enable={enableShare}
+        extended={view.shareExtended}
+        enable={share}
         disable={disableShare}
         pathForToken={shareViewPath}
       />

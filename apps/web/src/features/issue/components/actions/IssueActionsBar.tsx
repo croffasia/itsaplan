@@ -53,10 +53,11 @@ export default function IssueActionsBar({
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Enabling/revoking the public link refetches the issue so its shareToken (and
-  // the dialog's state on reopen) stays in sync.
-  async function enableShare() {
-    const { token } = await api.enableIssueShare(issue.id);
+  // Enabling/revoking the public link refetches the issue so its shareToken and
+  // shareExtended (which the dialog reads) stay in sync. The same call creates the
+  // link and flips how much a live one exposes.
+  async function share(extended: boolean) {
+    const { token } = await api.enableIssueShare(issue.id, extended);
     await qc.invalidateQueries({ queryKey: qk.issue(issue.id) });
     return token;
   }
@@ -220,7 +221,8 @@ export default function IssueActionsBar({
         onOpenChange={setSharing}
         title="Share issue"
         token={issue.shareToken}
-        enable={enableShare}
+        extended={issue.shareExtended}
+        enable={share}
         disable={disableShare}
         pathForToken={shareIssuePath}
       />

@@ -535,6 +535,10 @@ export interface Issue {
   statusSince: string;
   // Unguessable token for the public read-only share link, or null when not shared.
   shareToken: string | null;
+  // Whether that link exposes the issue in full (assignees, labels, custom fields,
+  // activity) or only its title, description, state, type, priority, dates,
+  // subtasks and links.
+  shareExtended: boolean;
   labelIds: number[];
   fieldValues: IssueFieldValueEntry[];
 }
@@ -929,6 +933,10 @@ export interface View {
   position: number;
   // Unguessable token for the public read-only share link, or null when not shared.
   shareToken: string | null;
+  // Whether the share link exposes the full issues (assignees, labels, custom
+  // fields, activity) or only their title, description, state, type, priority,
+  // dates, subtasks and links.
+  shareExtended: boolean;
   createdAt: string;
 }
 
@@ -1414,9 +1422,9 @@ export interface ProjectScaffold {
   permissions: Permissions;
 }
 
-// An issue as the board carries it: with its relations to the project's other
-// active issues. Only the board payload has them — a write response and a public
-// share bundle return a plain Issue.
+// An issue as a board carries it: with its relations to the project's other active
+// issues. The board payload and the public share bundle have them; a write response
+// returns a plain Issue.
 export interface BoardIssue extends Issue {
   links: IssueLinkRef[];
   // How many subtasks the issue has, archived ones included. The board carries
@@ -1518,15 +1526,18 @@ export interface Checklist {
   items: ChecklistItem[];
 }
 
-// The issue as the detail routes return it: with its relations, its watchers, its
-// place in the subtask hierarchy, and its checklists. The public share bundle
-// carries an IssueDetail instead — a shared page does not expose the issues on the
-// other end of a relation, nor who follows the issue.
-export interface IssueWithLinks extends IssueDetail {
+// The issue with its relations and its place in the subtask hierarchy. Shared
+// pages carry this much; the detail routes add the watchers and the checklists,
+// neither of which a public page exposes.
+export interface IssueRelations extends IssueDetail {
   links: IssueLink[];
-  watchers: IssueWatcher[];
   parent: IssueRef | null;
   subtasks: IssueRef[];
+}
+
+// The issue as the detail routes return it.
+export interface IssueWithWatchers extends IssueRelations {
+  watchers: IssueWatcher[];
   checklists: Checklist[];
 }
 
@@ -1539,14 +1550,24 @@ export type PublicScaffold = Omit<ProjectScaffold, 'viewer' | 'permissions' | 'a
 
 export interface SharedIssueBundle {
   project: PublicScaffold;
-  issue: IssueDetail;
+  issue: IssueRelations;
   feed: FeedItem[];
 }
 
 export interface SharedViewBundle {
   project: PublicScaffold;
-  view: { name: string; icon: string | null; filters: FilterSet; display: SavedViewDisplay };
-  issues: Issue[];
+  // The view's own filters stay on the server: it has already applied them to the
+  // issues below, and they can name assignees, labels and custom field values a
+  // link without `extended` withholds.
+  view: {
+    name: string;
+    icon: string | null;
+    display: SavedViewDisplay;
+    // Whether the link exposes the full issues or only their title, description,
+    // state, type, priority, dates, subtasks and links.
+    extended: boolean;
+  };
+  issues: BoardIssue[];
 }
 
 export interface NewIssueInput {
@@ -2038,15 +2059,23 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  getIssue: (id: number) => request<IssueWithLinks>(`/issues/${id}`),
+  getIssue: (id: number) => request<IssueWithWatchers>(`/issues/${id}`),
 
-  // Public read-only sharing. Enable returns the link token (idempotent); disable
-  // revokes it. The getShared* reads need no session (public /share/* routes).
-  enableIssueShare: (id: number) =>
-    request<{ token: string }>(`/issues/${id}/share`, { method: 'POST' }),
+  // Public read-only sharing. Enabling returns the link token and sets how much it
+  // exposes; calling it again on a shared entity keeps the link and only changes
+  // that. Disable revokes it. The getShared* reads need no session (public
+  // /share/* routes).
+  enableIssueShare: (id: number, extended: boolean) =>
+    request<{ token: string }>(`/issues/${id}/share`, {
+      method: 'POST',
+      body: JSON.stringify({ extended }),
+    }),
   disableIssueShare: (id: number) => request<void>(`/issues/${id}/share`, { method: 'DELETE' }),
-  enableViewShare: (id: number) =>
-    request<{ token: string }>(`/views/${id}/share`, { method: 'POST' }),
+  enableViewShare: (id: number, extended: boolean) =>
+    request<{ token: string }>(`/views/${id}/share`, {
+      method: 'POST',
+      body: JSON.stringify({ extended }),
+    }),
   disableViewShare: (id: number) => request<void>(`/views/${id}/share`, { method: 'DELETE' }),
   getSharedIssue: (token: string) => request<SharedIssueBundle>(`/share/issue/${token}`),
   getSharedView: (token: string) => request<SharedViewBundle>(`/share/view/${token}`),
@@ -2054,7 +2083,7 @@ export const api = {
     request<SharedIssueBundle>(`/share/view/${token}/issues/${issueId}`),
   // Resolve an issue by its project-scoped number (the human "42" in the URL).
   getIssueBySeq: (projectKey: string, seq: number) =>
-    request<IssueWithLinks>(`/projects/${projectKey}/issues/${seq}`),
+    request<IssueWithWatchers>(`/projects/${projectKey}/issues/${seq}`),
   // Cheap change marker for an issue's detail + feed — polled for live refresh.
   getIssueRev: (id: number) => request<{ rev: string }>(`/issues/${id}/rev`),
   updateIssue: (id: number, patch: IssuePatch) =>

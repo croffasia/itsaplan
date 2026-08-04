@@ -4,6 +4,7 @@ import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
+import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { DropLine } from '../shared/DropLine';
@@ -83,7 +84,8 @@ export function TableRow({
         {...listeners}
         onClick={onClick}
         className={cn(
-          'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors hover:bg-accent/40 sm:touch-none',
+          'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors sm:touch-none',
+          isBlocked(issue) ? 'row-blocked' : 'hover:bg-accent/40',
           alignTop ? 'items-start' : 'items-center',
           indented ? 'pl-9' : 'pl-4',
           isDragging && 'opacity-40',

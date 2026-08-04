@@ -102,6 +102,10 @@
   --priority-urgent: #f2683c;
   --kanban-card: oklch(0.965 0 0);
   --kanban-card-hover: oklch(0.94 0 0);
+  --kanban-card-blocked: oklch(0.962 0.008 25);
+  --kanban-card-blocked-hover: oklch(0.937 0.013 25);
+  --row-blocked: oklch(0.982 0.008 25);
+  --row-blocked-hover: oklch(0.968 0.013 25);
   --kanban-card-selected: oklch(0.925 0.04 265);
   --overlay-shadow: 0 12px 28px -8px rgb(0 0 0 / 0.18), 0 4px 10px -4px rgb(0 0 0 / 0.1);
   --modal-shadow: 0 32px 64px -16px rgb(0 0 0 / 0.28), 0 12px 24px -12px rgb(0 0 0 / 0.16);
@@ -145,6 +149,10 @@
   --priority-urgent: #f2683c;
   --kanban-card: oklch(0.195 0 0);
   --kanban-card-hover: oklch(0.235 0 0);
+  --kanban-card-blocked: oklch(0.202 0.012 25);
+  --kanban-card-blocked-hover: oklch(0.241 0.016 25);
+  --row-blocked: oklch(0.163 0.012 25);
+  --row-blocked-hover: oklch(0.2 0.016 25);
   --kanban-card-selected: oklch(0.31 0.07 266);
   --overlay-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.7), 0 6px 16px -6px rgb(0 0 0 / 0.55);
   --modal-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.85), 0 16px 32px -16px rgb(0 0 0 / 0.7);
@@ -180,6 +188,22 @@
 }
 .kanban-card:hover {
   background-color: var(--kanban-card-hover);
+}
+/* Held up by another issue: a red-tinted card surface, faint enough to read as a
+   shade of the card rather than an error. */
+.kanban-card-blocked {
+  background-color: var(--kanban-card-blocked);
+}
+.kanban-card-blocked:hover {
+  background-color: var(--kanban-card-blocked-hover);
+}
+
+/* The same reading for a table row, over the page background instead of a card. */
+.row-blocked {
+  background-color: var(--row-blocked);
+}
+.row-blocked:hover {
+  background-color: var(--row-blocked-hover);
 }
 /* Selected in the board multi-select: a blue-tinted card surface (Linear-style),
    overriding the base and hover fills. */

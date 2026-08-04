@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { MoreHorizontal } from 'lucide-react';
-import { type IssueFieldValueInput, type ProjectDetail } from '@/lib/api';
+import { type Issue, type IssueFieldValueInput, type ProjectDetail } from '@/lib/api';
 import { type NewIssueDefaults } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
@@ -47,13 +47,17 @@ import InitiativeSelect from '../fields/InitiativeSelect';
 export default function NewIssueModal({
   project,
   defaults,
+  crumb,
   onClose,
   onCreated,
 }: {
   project: ProjectDetail;
   defaults: NewIssueDefaults;
+  // What the issue is being created for, named in the header after the title
+  // ("Subtask of ISS-12", "Blocked by ISS-12").
+  crumb?: string;
   onClose: () => void;
-  onCreated: () => void;
+  onCreated: (created: Issue) => void;
 }) {
   const [title, setTitle] = useState(defaults.title ?? '');
   const [description, setDescription] = useState(defaults.description ?? '');
@@ -251,7 +255,7 @@ export default function NewIssueModal({
         const value = typeof v.value === 'string' ? { ...v, value: rewrite(v.value) } : v;
         await setFieldValueMutation.mutateAsync({ issueId: created.id, fieldId: def.id, value });
       }
-      onCreated();
+      onCreated(created);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -262,6 +266,7 @@ export default function NewIssueModal({
   return (
     <Modal
       title="New issue"
+      crumb={crumb}
       projectKey={project.project.key}
       onClose={onClose}
       wide

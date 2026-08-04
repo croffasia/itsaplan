@@ -146,7 +146,7 @@ export default function IssueDetailContent({
 
       <IssueSubtasksPanel project={project} issue={issue} />
 
-      <IssueLinksPanel project={project} issueId={issue.id} links={issue.links} />
+      <IssueLinksPanel project={project} issue={issue} />
     </>
   );
 

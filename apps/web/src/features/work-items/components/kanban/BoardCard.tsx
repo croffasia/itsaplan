@@ -5,6 +5,7 @@ import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
+import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
@@ -81,6 +82,7 @@ export function BoardCard({
           // also starting a native text selection across cards.
           'kanban-card cursor-grab rounded-md p-3 select-none sm:touch-none',
           isDragging && 'opacity-40',
+          isBlocked(issue) && 'kanban-card-blocked',
           // Selected cards read as a primary-tinted fill, like Linear — no border,
           // no checkbox (see .kanban-card-selected in globals.css).
           selected && 'kanban-card-selected',

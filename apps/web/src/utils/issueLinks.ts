@@ -1,5 +1,5 @@
 import { Ban, CircleSlash, Copy, Link2, type LucideIcon } from 'lucide-react';
-import type { IssueLink, IssueLinkInputKind, IssueLinkKind } from '@/lib/api';
+import type { BoardIssue, IssueLink, IssueLinkInputKind, IssueLinkKind } from '@/lib/api';
 
 // A relation reads differently from each of its two ends, and both the panel and
 // the activity feed name it from the end being looked at. That reading is the
@@ -14,8 +14,8 @@ export const LINK_RELATION_LABELS: Record<IssueLinkInputKind, string> = {
   relates: 'Related',
 };
 
-// Icon per relation, for the board card's link rows. The two duplicate readings
-// share one icon; the label next to it separates them.
+// Icon per relation. The two duplicate readings share one icon; the label next
+// to it separates them.
 export const LINK_RELATION_ICONS: Record<IssueLinkInputKind, LucideIcon> = {
   blocked_by: CircleSlash,
   blocks: Ban,
@@ -32,6 +32,10 @@ export const LINK_RELATIONS: IssueLinkInputKind[] = [
   'duplicated_by',
   'relates',
 ];
+
+// The relations offered when the other issue is created on the spot. A brand new
+// issue cannot duplicate anything, so the two duplicate readings are left out.
+export const CREATE_LINK_RELATIONS: IssueLinkInputKind[] = ['blocked_by', 'blocks', 'relates'];
 
 // The same relations as a sentence fragment, for the activity feed and the
 // picker's prompt. The feed stores the relation as the entry's subject.
@@ -54,6 +58,23 @@ export function linkRelation(link: IssueLink): IssueLinkInputKind {
   if (link.direction === 'outward') return link.kind;
   if (link.kind === 'blocks') return 'blocked_by';
   if (link.kind === 'duplicates') return 'duplicated_by';
+  return 'relates';
+}
+
+// Whether another issue holds this one up, which the board views tint the card
+// or row for. Read off the issue's own relations, so it holds whether or not the
+// Links display property is showing them.
+export function isBlocked(issue: BoardIssue): boolean {
+  return issue.links.some((link) => link.relation === 'blocked_by');
+}
+
+// The same relation read from the other end, for naming it on the issue on that
+// side. 'relates' reads the same from both.
+export function inverseRelation(relation: IssueLinkInputKind): IssueLinkInputKind {
+  if (relation === 'blocked_by') return 'blocks';
+  if (relation === 'blocks') return 'blocked_by';
+  if (relation === 'duplicates') return 'duplicated_by';
+  if (relation === 'duplicated_by') return 'duplicates';
   return 'relates';
 }
 

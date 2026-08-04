@@ -1,10 +1,14 @@
-import { type ProjectDetail, type Issue } from '@/lib/api';
+import { type BoardIssue, type ProjectDetail, type Issue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
+import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
 import { ROW_H, type Span } from '../../utils/timeline';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
+
+const BLOCKED_HATCH =
+  'repeating-linear-gradient(45deg, color-mix(in oklab, var(--destructive) 70%, transparent) 0 4px, transparent 4px 9px)';
 
 // One issue row: the sticky label on the left and its draggable bar on the day
 // track. The bar moves the issue (rewriting dates and, on a vertical move, the
@@ -29,7 +33,7 @@ export function TimelineIssueRow({
   onOpen,
 }: {
   project: ProjectDetail;
-  issue: Issue;
+  issue: BoardIssue;
   maps: Maps;
   span: Span;
   rect: { left: number; width: number };
@@ -48,6 +52,8 @@ export function TimelineIssueRow({
   onBeginDrag: (e: React.PointerEvent, issue: Issue, mode: TimelineDragMode) => void;
   onOpen: (id: number) => void;
 }) {
+  const blocked = isBlocked(issue);
+
   return (
     <div
       data-group-key={groupKey}
@@ -88,6 +94,11 @@ export function TimelineIssueRow({
             left: rect.left,
             width: rect.width,
             backgroundColor: color,
+            // Held up by another issue: red hatching over the fill and a ring
+            // around it. Hatched rather than filled, so the bar keeps showing
+            // the issue's status color underneath.
+            backgroundImage: blocked ? BLOCKED_HATCH : undefined,
+            boxShadow: blocked ? '0 0 0 1.5px var(--destructive)' : undefined,
             opacity: span.inferredStart ? 0.8 : 1,
             borderLeft: span.inferredStart ? '2px dashed rgba(255,255,255,0.75)' : undefined,
           }}

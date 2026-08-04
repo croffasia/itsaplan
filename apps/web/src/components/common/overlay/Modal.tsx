@@ -25,6 +25,7 @@ const CONTROL_CLASS = 'size-7 text-muted-foreground hover:text-foreground';
 
 export default function Modal({
   title,
+  crumb,
   description,
   projectKey,
   onClose,
@@ -35,6 +36,8 @@ export default function Modal({
   className,
 }: {
   title: string;
+  // Trailing breadcrumb naming what the dialog was opened for.
+  crumb?: string;
   description?: string;
   projectKey?: string;
   onClose: () => void;
@@ -80,6 +83,12 @@ export default function Modal({
               </>
             )}
             {title}
+            {crumb && (
+              <>
+                <span className="font-normal text-muted-foreground">›</span>
+                <span className="font-normal text-muted-foreground">{crumb}</span>
+              </>
+            )}
           </DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>

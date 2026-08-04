@@ -143,6 +143,7 @@ export default function IssueSubtasksPanel({
             delegateUserId: null,
             priority: issue.priority,
           }}
+          crumb={`Subtask of ${issue.identifier}`}
           onClose={() => setCreating(false)}
           onCreated={() => setCreating(false)}
         />

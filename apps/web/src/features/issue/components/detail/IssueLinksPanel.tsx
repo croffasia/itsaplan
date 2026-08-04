@@ -1,41 +1,45 @@
 import { useState } from 'react';
-import { Plus } from 'lucide-react';
-import { type IssueLink, type IssueLinkInputKind, type ProjectDetail } from '@/lib/api';
+import { type IssueLinkInputKind, type IssueWithLinks, type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
-import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { LINK_RELATIONS, LINK_RELATION_LABELS, linkRelation, storedKind } from '@/utils/issueLinks';
+  LINK_RELATIONS,
+  LINK_RELATION_LABELS,
+  inverseRelation,
+  linkRelation,
+  storedKind,
+} from '@/utils/issueLinks';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
-import { useUnlinkIssues } from '../../services/links.service';
+import { useLinkIssues, useUnlinkIssues } from '../../services/links.service';
+import NewIssueModal from '../create/NewIssueModal';
 import IssueLinkDialog from './IssueLinkDialog';
+import IssueLinksAddMenu from './IssueLinksAddMenu';
 import IssueRefRow from './IssueRefRow';
 import IssueSectionHeading from './IssueSectionHeading';
 
 // The issue's relations to other issues, grouped by how each reads from this
 // issue (Blocked by, Blocks, Duplicates, Duplicated by, Related). The links come
-// with the issue, so the panel takes them rather than fetching them. The heading
-// collapses the section, the same way the Stats one below it does; unlike Stats,
-// which reads the account preferences, this is a client-only choice.
+// with the issue, so the panel takes them rather than fetching them. A link is
+// added either to an issue found through the search dialog or to one created on
+// the spot in the ordinary create modal. The heading collapses the section, the
+// same way the Stats one below it does; unlike Stats, which reads the account
+// preferences, this is a client-only choice.
 export default function IssueLinksPanel({
   project,
-  issueId,
-  links,
+  issue,
 }: {
   project: ProjectDetail;
-  issueId: number;
-  links: IssueLink[];
+  issue: IssueWithLinks;
 }) {
   const { can } = usePermissions();
   const canEdit = can('work_items', 'edit');
+  const canCreate = can('work_items', 'create');
   const [adding, setAdding] = useState<IssueLinkInputKind | null>(null);
+  const [creating, setCreating] = useState<IssueLinkInputKind | null>(null);
   const { open, toggle } = usePersistedOpen('issue-links-open');
+  const linkIssues = useLinkIssues();
   const unlinkIssues = useUnlinkIssues();
 
+  const links = issue.links;
   const groups = LINK_RELATIONS.map((relation) => ({
     relation,
     links: links.filter((link) => linkRelation(link) === relation),
@@ -51,21 +55,11 @@ export default function IssueLinksPanel({
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
         <IssueSectionHeading label="Links" open={open} onToggle={toggle} />
         {open && canEdit && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 gap-1.5">
-                <Plus className="size-4" />
-                Add
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {LINK_RELATIONS.map((relation) => (
-                <DropdownMenuItem key={relation} onSelect={() => setAdding(relation)}>
-                  {LINK_RELATION_LABELS[relation]}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <IssueLinksAddMenu
+            canCreate={canCreate}
+            onLinkExisting={setAdding}
+            onCreateNew={setCreating}
+          />
         )}
       </div>
 
@@ -92,7 +86,7 @@ export default function IssueLinksPanel({
                         ? () =>
                             unlinkIssues.mutate({
                               projectKey: project.project.key,
-                              issueId,
+                              issueId: issue.id,
                               otherIssueId: link.issue.id,
                               linkId: link.id,
                             })
@@ -108,7 +102,7 @@ export default function IssueLinksPanel({
       {adding && (
         <IssueLinkDialog
           project={project}
-          issueId={issueId}
+          issueId={issue.id}
           relation={adding}
           linkedIssueIds={
             new Set(
@@ -116,6 +110,33 @@ export default function IssueLinksPanel({
             )
           }
           onClose={() => setAdding(null)}
+        />
+      )}
+
+      {creating && (
+        <NewIssueModal
+          project={project}
+          defaults={{
+            columnId: project.columns[0]?.id ?? 0,
+            typeId: issue.typeId,
+            initiativeId: issue.initiative?.id ?? null,
+            assigneeUserId: issue.assigneeUserId,
+            delegateUserId: null,
+            priority: issue.priority,
+          }}
+          // The crumb names the relation from the new issue's end, the way the
+          // subtask one does; the menu picked it from this issue's end.
+          crumb={`${LINK_RELATION_LABELS[inverseRelation(creating)]} ${issue.identifier}`}
+          onClose={() => setCreating(null)}
+          onCreated={(created) => {
+            linkIssues.mutate({
+              projectKey: project.project.key,
+              issueId: issue.id,
+              otherIssueId: created.id,
+              kind: creating,
+            });
+            setCreating(null);
+          }}
         />
       )}
     </div>

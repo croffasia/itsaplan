@@ -50,6 +50,19 @@ import {
   type SubtaskMode,
 } from './subtasks';
 import { listIssueWatchers, setIssueWatching } from './watchers';
+import {
+  createChecklist,
+  createChecklistItem,
+  deleteChecklist,
+  deleteChecklistItem,
+  getChecklistIssueId,
+  getChecklistItemIssueId,
+  listChecklists,
+  renameChecklist,
+  reorderChecklistItems,
+  reorderChecklists,
+  updateChecklistItem,
+} from './checklists';
 
 // Numeric path params are validated (and coerced string -> number) with t.Numeric,
 // so a non-numeric id is rejected with a 400 before reaching the store.
@@ -202,8 +215,44 @@ const IssueWatcherResponse = t.Object({
   image: t.Nullable(t.String()),
 });
 
+// ChecklistItemRow / ChecklistRow from checklists.ts.
+const ChecklistItemResponse = t.Object({
+  id: t.Number(),
+  content: t.String(),
+  done: t.Boolean(),
+  position: t.Number(),
+});
+
+const ChecklistResponse = t.Object({
+  id: t.Number(),
+  title: t.String(),
+  position: t.Number(),
+  items: t.Array(ChecklistItemResponse),
+});
+
+const ChecklistTitleSchema = t.String({
+  minLength: 1,
+  maxLength: 200,
+  description: 'Title of the checklist.',
+});
+
+const ChecklistItemContentSchema = t.String({
+  minLength: 1,
+  maxLength: 500,
+  description: 'Text of the checklist item.',
+});
+
+// A reorder sends the ids in their new order. Ids outside the parent in the path
+// are ignored, and ones left out keep their position after the listed ones.
+const OrderedIdsSchema = t.Object({
+  orderedIds: t.Array(t.Integer(), { minItems: 1 }),
+});
+
+const checklistParams = t.Object({ checklistId: t.Numeric() });
+const checklistItemParams = t.Object({ itemId: t.Numeric() });
+
 // GET /issues/:issueId returns the full issue plus its custom field values, its
-// relations to other issues, and the members watching it.
+// relations to other issues, the members watching it, and its checklists.
 const IssueWithFieldsResponse = t.Composite([
   IssueResponse,
   t.Object({
@@ -212,6 +261,7 @@ const IssueWithFieldsResponse = t.Composite([
     watchers: t.Array(IssueWatcherResponse),
     parent: t.Nullable(IssueRefResponse),
     subtasks: t.Array(IssueRefResponse),
+    checklists: t.Array(ChecklistResponse),
   }),
 ]);
 
@@ -312,12 +362,22 @@ const TimelineSegmentResponse = t.Object({
 export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues'] } })
   .use(authContext)
   .use(guards)
-  // Guard for routes that address an issue by its own id (no :projectKey in the
-  // path). Set `workItem: "<action>"` in the route options.
+  // Guards for routes that address an entity by its own id (no :projectKey in the
+  // path). Set `workItem` / `checklist` / `checklistItem` to the action in the
+  // route options. A checklist and its items are part of the issue they hang on,
+  // so all three resolve to the same work_items permission.
   .macro({
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
+    checklist: entityGuard('work_items', 'Checklist not found', async (p) => {
+      const issueId = await getChecklistIssueId(Number(p.checklistId));
+      return issueId == null ? null : getIssueProjectId(issueId);
+    }),
+    checklistItem: entityGuard('work_items', 'Checklist item not found', async (p) => {
+      const issueId = await getChecklistItemIssueId(Number(p.itemId));
+      return issueId == null ? null : getIssueProjectId(issueId);
+    }),
   })
   .post(
     '/projects/:projectKey/issues',
@@ -717,7 +777,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const watchers = await listIssueWatchers(project.id, issue.id);
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
-      return { ...issue, fields, links, watchers, parent, subtasks };
+      const checklists = await listChecklists(issue.id);
+      return { ...issue, fields, links, watchers, parent, subtasks, checklists };
     },
     {
       params: t.Object({ projectKey: t.String(), sequenceNumber: t.Numeric() }),
@@ -758,7 +819,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const watchers = await listIssueWatchers(issue.projectId, issue.id);
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
-      return { ...issue, fields, links, watchers, parent, subtasks };
+      const checklists = await listChecklists(issue.id);
+      return { ...issue, fields, links, watchers, parent, subtasks, checklists };
     },
     {
       params: issueParams,
@@ -1069,6 +1131,211 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Unlink two issues',
         description: "Remove one of an issue's relations by the link id.",
         ...mcpTool('unlink_issues'),
+      },
+    },
+  )
+
+  // Checklists on the issue: lists of small steps that do not warrant a subtask.
+  // The issue read already carries them, so this list route is for a refresh
+  // after a checklist write rather than the first render.
+  .get('/issues/:issueId/checklists', async ({ params }) => listChecklists(params.issueId), {
+    params: issueParams,
+    workItem: 'read',
+    response: {
+      200: t.Array(ChecklistResponse),
+      400: ErrorResponse,
+      401: ErrorResponse,
+      403: ErrorResponse,
+      404: ErrorResponse,
+    },
+    detail: {
+      summary: "List an issue's checklists",
+      description: 'Every checklist of an issue with its items, both in display order.',
+    },
+  })
+
+  .post(
+    '/issues/:issueId/checklists',
+    async ({ params, body, user, set }) => {
+      set.status = 201;
+      return createChecklist(params.issueId, body.title, requireUser(user).id);
+    },
+    {
+      body: t.Object({ title: ChecklistTitleSchema }),
+      params: issueParams,
+      workItem: 'edit',
+      response: {
+        201: ChecklistResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Add a checklist',
+        description: 'Add a checklist to an issue. It starts empty; add its items separately.',
+      },
+    },
+  )
+
+  // Registered before /checklists/:checklistId so the literal segment wins over
+  // the parameter.
+  .put(
+    '/issues/:issueId/checklists/reorder',
+    async ({ params, body }) => reorderChecklists(params.issueId, body.orderedIds),
+    {
+      body: OrderedIdsSchema,
+      params: issueParams,
+      workItem: 'edit',
+      response: {
+        200: t.Array(ChecklistResponse),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: "Reorder an issue's checklists",
+        description: "Set the display order of an issue's checklists.",
+      },
+    },
+  )
+
+  .patch(
+    '/checklists/:checklistId',
+    async ({ params, body, user }) =>
+      renameChecklist(params.checklistId, body.title, requireUser(user).id),
+    {
+      body: t.Object({ title: ChecklistTitleSchema }),
+      params: checklistParams,
+      checklist: 'edit',
+      response: {
+        200: ChecklistResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: { summary: 'Rename a checklist', description: "Change a checklist's title." },
+    },
+  )
+
+  // Deleting a checklist deletes its items with it.
+  .delete(
+    '/checklists/:checklistId',
+    async ({ params, user }) => {
+      const removed = await deleteChecklist(params.checklistId, requireUser(user).id);
+      if (!removed) throw new HttpError(404, 'Checklist not found');
+      return noContent();
+    },
+    {
+      params: checklistParams,
+      checklist: 'edit',
+      response: {
+        204: t.Void(),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Delete a checklist',
+        description: 'Delete a checklist and every item on it.',
+      },
+    },
+  )
+
+  .post(
+    '/checklists/:checklistId/items',
+    async ({ params, body, user, set }) => {
+      set.status = 201;
+      return createChecklistItem(params.checklistId, body.content, requireUser(user).id);
+    },
+    {
+      body: t.Object({ content: ChecklistItemContentSchema }),
+      params: checklistParams,
+      checklist: 'edit',
+      response: {
+        201: ChecklistItemResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Add a checklist item',
+        description: 'Append an item to a checklist.',
+      },
+    },
+  )
+
+  .put(
+    '/checklists/:checklistId/items/reorder',
+    async ({ params, body }) => reorderChecklistItems(params.checklistId, body.orderedIds),
+    {
+      body: OrderedIdsSchema,
+      params: checklistParams,
+      checklist: 'edit',
+      response: {
+        200: t.Array(ChecklistItemResponse),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Reorder checklist items',
+        description: 'Set the display order of the items within one checklist.',
+      },
+    },
+  )
+
+  // Edits the text, the checked state, or both. Checking a box is the most
+  // frequent write here, so it is deliberately not written to the activity feed.
+  .patch(
+    '/checklists/items/:itemId',
+    async ({ params, body }) => updateChecklistItem(params.itemId, body),
+    {
+      body: t.Object({
+        content: t.Optional(ChecklistItemContentSchema),
+        done: t.Optional(t.Boolean({ description: 'Whether the item is checked off.' })),
+      }),
+      params: checklistItemParams,
+      checklistItem: 'edit',
+      response: {
+        200: ChecklistItemResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Update a checklist item',
+        description: "Change a checklist item's text, its checked state, or both.",
+      },
+    },
+  )
+
+  .delete(
+    '/checklists/items/:itemId',
+    async ({ params, user }) => {
+      const removed = await deleteChecklistItem(params.itemId, requireUser(user).id);
+      if (!removed) throw new HttpError(404, 'Checklist item not found');
+      return noContent();
+    },
+    {
+      params: checklistItemParams,
+      checklistItem: 'edit',
+      response: {
+        204: t.Void(),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Delete a checklist item',
+        description: 'Remove one item from a checklist.',
       },
     },
   )

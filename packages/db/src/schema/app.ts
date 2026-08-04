@@ -986,6 +986,39 @@ export const issueAttachment = pgTable(
   (t) => [index('issue_attachment_issue_idx').on(t.issueId)],
 );
 
+// Checklists on an issue: a lightweight list of steps that does not warrant a
+// subtask of its own. An issue holds several checklists, each ordered by position
+// among the issue's checklists.
+export const issueChecklist = pgTable(
+  'issue_checklist',
+  {
+    id: serial('id').primaryKey(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    position: doublePrecision('position').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('issue_checklist_issue_idx').on(t.issueId, t.position)],
+);
+
+// One checkbox line of a checklist, ordered by position within its checklist.
+export const issueChecklistItem = pgTable(
+  'issue_checklist_item',
+  {
+    id: serial('id').primaryKey(),
+    checklistId: integer('checklist_id')
+      .notNull()
+      .references(() => issueChecklist.id, { onDelete: 'cascade' }),
+    content: text('content').notNull(),
+    done: boolean('done').notNull().default(false),
+    position: doublePrecision('position').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('issue_checklist_item_checklist_idx').on(t.checklistId, t.position)],
+);
+
 // Timeline of comments and change-log activity for issues and initiatives, in one
 // table. Each row belongs to exactly one owner: an issue (issue_id) or an
 // initiative (initiative_id) — enforced by owner_check. kind selects which payload

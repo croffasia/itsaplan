@@ -9,6 +9,7 @@ import {
   CirclePlus,
   FileText,
   Link2,
+  ListChecks,
   ListTree,
   Pencil,
   Shapes,
@@ -43,6 +44,11 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   parent: ListTree,
   subtask_add: ListTree,
   subtask_remove: ListTree,
+  checklist_add: ListChecks,
+  checklist_rename: ListChecks,
+  checklist_remove: ListChecks,
+  checklist_item_add: ListChecks,
+  checklist_item_remove: ListChecks,
   field: Pencil,
   archived: Archive,
   restored: ArchiveRestore,
@@ -149,6 +155,34 @@ export function describeActivity(a: FeedItem): { line: ReactNode; popover?: stri
       return { line: <>added subtask {strong(a.toText)}</> };
     case 'subtask_remove':
       return { line: <>removed subtask {strong(a.fromText)}</> };
+    case 'checklist_add':
+      return { line: <>added checklist {strong(`“${a.toText}”`)}</> };
+    case 'checklist_rename':
+      return {
+        line: (
+          <>
+            renamed checklist {strong(`“${a.fromText}”`)} to {strong(`“${a.toText}”`)}
+          </>
+        ),
+      };
+    case 'checklist_remove':
+      return { line: <>removed checklist {strong(`“${a.fromText}”`)}</> };
+    case 'checklist_item_add':
+      return {
+        line: (
+          <>
+            added {strong(`“${a.toText}”`)} to {strong(a.subject)}
+          </>
+        ),
+      };
+    case 'checklist_item_remove':
+      return {
+        line: (
+          <>
+            removed {strong(`“${a.fromText}”`)} from {strong(a.subject)}
+          </>
+        ),
+      };
     case 'field':
       if (isLong(a.toText)) return { line: <>updated {strong(a.subject)}</>, popover: a.toText };
       return a.toText

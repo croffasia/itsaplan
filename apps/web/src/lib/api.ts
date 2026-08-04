@@ -1290,6 +1290,11 @@ export type ActivityAction =
   | 'parent'
   | 'subtask_add'
   | 'subtask_remove'
+  | 'checklist_add'
+  | 'checklist_rename'
+  | 'checklist_remove'
+  | 'checklist_item_add'
+  | 'checklist_item_remove'
   | 'field'
   | 'archived'
   | 'restored';
@@ -1496,15 +1501,33 @@ export interface SubtaskDisposition {
   newParentId?: number;
 }
 
-// The issue as the detail routes return it: with its relations, its watchers, and
-// its place in the subtask hierarchy. The public share bundle carries an
-// IssueDetail instead — a shared page does not expose the issues on the other end
-// of a relation, nor who follows the issue.
+// One checkbox line of a checklist.
+export interface ChecklistItem {
+  id: number;
+  content: string;
+  done: boolean;
+  position: number;
+}
+
+// A checklist on an issue: steps too small to be subtasks of their own. Both the
+// checklists of an issue and the items of a checklist come back in display order.
+export interface Checklist {
+  id: number;
+  title: string;
+  position: number;
+  items: ChecklistItem[];
+}
+
+// The issue as the detail routes return it: with its relations, its watchers, its
+// place in the subtask hierarchy, and its checklists. The public share bundle
+// carries an IssueDetail instead — a shared page does not expose the issues on the
+// other end of a relation, nor who follows the issue.
 export interface IssueWithLinks extends IssueDetail {
   links: IssueLink[];
   watchers: IssueWatcher[];
   parent: IssueRef | null;
   subtasks: IssueRef[];
+  checklists: Checklist[];
 }
 
 // Public read-only share bundles, returned by the /share/* routes with no session.
@@ -2101,6 +2124,46 @@ export const api = {
     request<{ ok: boolean }>(`/issues/${issueId}/fields/${fieldId}`, {
       method: 'PUT',
       body: JSON.stringify(input),
+    }),
+
+  // Checklists on an issue. The issue read already carries them, so listChecklists
+  // is for a refresh after a write rather than the first render. A reorder sends
+  // the ids in their new order and returns the reordered list.
+  listChecklists: (issueId: number) => request<Checklist[]>(`/issues/${issueId}/checklists`),
+  createChecklist: (issueId: number, title: string) =>
+    request<Checklist>(`/issues/${issueId}/checklists`, {
+      method: 'POST',
+      body: JSON.stringify({ title }),
+    }),
+  renameChecklist: (checklistId: number, title: string) =>
+    request<Checklist>(`/checklists/${checklistId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title }),
+    }),
+  deleteChecklist: (checklistId: number) =>
+    request<void>(`/checklists/${checklistId}`, { method: 'DELETE' }),
+  reorderChecklists: (issueId: number, orderedIds: number[]) =>
+    request<Checklist[]>(`/issues/${issueId}/checklists/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ orderedIds }),
+    }),
+
+  createChecklistItem: (checklistId: number, content: string) =>
+    request<ChecklistItem>(`/checklists/${checklistId}/items`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
+  updateChecklistItem: (itemId: number, patch: { content?: string; done?: boolean }) =>
+    request<ChecklistItem>(`/checklists/items/${itemId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteChecklistItem: (itemId: number) =>
+    request<void>(`/checklists/items/${itemId}`, { method: 'DELETE' }),
+  reorderChecklistItems: (checklistId: number, orderedIds: number[]) =>
+    request<ChecklistItem[]>(`/checklists/${checklistId}/items/reorder`, {
+      method: 'PUT',
+      body: JSON.stringify({ orderedIds }),
     }),
 
   listAttachments: (issueId: number) =>

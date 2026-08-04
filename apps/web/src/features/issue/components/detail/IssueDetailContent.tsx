@@ -4,6 +4,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
+import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
@@ -145,6 +146,8 @@ export default function IssueDetailContent({
       />
 
       <IssueSubtasksPanel project={project} issue={issue} />
+
+      <IssueChecklistsPanel issue={issue} />
 
       <IssueLinksPanel project={project} issue={issue} />
     </>

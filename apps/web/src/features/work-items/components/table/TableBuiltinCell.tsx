@@ -99,6 +99,10 @@ export function TableBuiltinCell({
           {issue.initiative?.title ?? DASH}
         </div>
       );
+    case 'cycle':
+      return (
+        <div className="truncate text-xs text-muted-foreground">{issue.cycle?.name ?? DASH}</div>
+      );
     case 'labels':
       return (
         <div className="flex min-w-0 flex-wrap items-center gap-1 overflow-hidden">

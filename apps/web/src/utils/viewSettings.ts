@@ -24,6 +24,7 @@ export type DisplayProperty =
   | 'assignee'
   | 'delegate'
   | 'initiative'
+  | 'cycle'
   | 'labels'
   | 'startDate'
   | 'dueDate'
@@ -52,6 +53,7 @@ export const DISPLAY_PROPERTIES: { value: DisplayProperty; label: string }[] = [
   { value: 'assignee', label: 'Assignee' },
   { value: 'delegate', label: 'Delegate' },
   { value: 'initiative', label: 'Initiative' },
+  { value: 'cycle', label: 'Cycle' },
   { value: 'labels', label: 'Labels' },
   { value: 'startDate', label: 'Start date' },
   { value: 'dueDate', label: 'Due date' },
@@ -60,14 +62,30 @@ export const DISPLAY_PROPERTIES: { value: DisplayProperty; label: string }[] = [
   { value: 'statusAge', label: 'Time in status' },
 ];
 
-// The display properties a project offers: Initiative only while its Initiatives
-// section is on.
+// The grouping fields and display properties that name an optional section's
+// entity, with the section each one needs. Grouping by one while its section is off
+// would render columns for something the project does not show, and its property
+// would print a value from there.
+const SECTION_FIELDS: Partial<Record<GroupField | DisplayProperty, keyof ProjectFeatures>> = {
+  initiative: 'initiatives',
+  cycle: 'cycles',
+};
+
+// Whether a grouping field or display property applies to a project: the ones behind
+// an optional section only while it is on. A custom field key is never section-bound.
+export function isFieldEnabled(
+  field: GroupField | PropertyKey,
+  features: ProjectFeatures,
+): boolean {
+  const section = SECTION_FIELDS[field as GroupField];
+  return section === undefined || features[section];
+}
+
+// The display properties a project offers, without the ones whose section is off.
 export function offeredDisplayProperties(
-  initiativesEnabled: boolean,
+  features: ProjectFeatures,
 ): { value: DisplayProperty; label: string }[] {
-  return initiativesEnabled
-    ? DISPLAY_PROPERTIES
-    : DISPLAY_PROPERTIES.filter((p) => p.value !== 'initiative');
+  return DISPLAY_PROPERTIES.filter((p) => isFieldEnabled(p.value, features));
 }
 
 // Timeline zoom: how much horizontal space one day gets, which sets whether day
@@ -269,64 +287,45 @@ export function normalizeViewSettings(
   };
 }
 
-// The grouping fields that group by an optional section's entity, with the section
-// each one needs. Grouping by one while its section is off would render columns for
-// something the project does not show.
-const SECTION_GROUP_FIELDS: Partial<Record<GroupField, keyof ProjectFeatures>> = {
-  initiative: 'initiatives',
-  cycle: 'cycles',
-};
-
-// Whether a grouping field applies to a project: the ones behind an optional
-// section only while it is on.
-export function isGroupFieldEnabled(field: GroupField, features: ProjectFeatures): boolean {
-  const section = SECTION_GROUP_FIELDS[field];
-  return section === undefined || features[section];
-}
-
-// The same settings without the grouping and sub-grouping of a section the project
-// has turned off (and without the Initiative property): a display built while the
-// section was on then renders no dead column or lane.
+// The same settings without the grouping, sub-grouping and display properties of a
+// section the project has turned off: a display built while the section was on then
+// renders no dead column, lane or property.
 export function withoutHiddenSections(
   settings: ViewSettings,
   features: ProjectFeatures,
 ): ViewSettings {
   return {
     ...settings,
-    group: isGroupFieldEnabled(settings.group, features) ? settings.group : 'status',
-    subgroup: isGroupFieldEnabled(settings.subgroup, features) ? settings.subgroup : 'none',
-    properties: features.initiatives
-      ? settings.properties
-      : settings.properties.filter((p) => p !== 'initiative'),
+    group: isFieldEnabled(settings.group, features) ? settings.group : 'status',
+    subgroup: isFieldEnabled(settings.subgroup, features) ? settings.subgroup : 'none',
+    properties: settings.properties.filter((p) => isFieldEnabled(p, features)),
   };
 }
 
 // The counterpart of withoutHiddenSections: puts the stored choices of a hidden
-// section back into a display edited while it was off, the Initiative property at
-// the column position it had. The panel could not show them, so an edit made then
-// must not drop them — the display comes back as it was once the section is on
-// again. A value the user did change carries through, since it then differs from
-// what stripping left.
+// section back into a display edited while it was off, each property at the column
+// position it had. The panel could not show them, so an edit made then must not
+// drop them — the display comes back as it was once the section is on again. A
+// value the user did change carries through, since it then differs from what
+// stripping left.
 export function restoreHiddenSections(
   edited: ViewSettings,
   stored: ViewSettings,
   features: ProjectFeatures,
 ): ViewSettings {
-  const initiativeAt = features.initiatives ? -1 : stored.properties.indexOf('initiative');
-  const hidden = (field: GroupField) => !isGroupFieldEnabled(field, features);
+  const hidden = (field: GroupField | PropertyKey) => !isFieldEnabled(field, features);
+  // Stored order is ascending, so every insert lands at the index it had once the
+  // earlier hidden properties are back.
+  const properties = [...edited.properties];
+  stored.properties.forEach((p, index) => {
+    if (hidden(p)) properties.splice(index, 0, p);
+  });
   return {
     ...edited,
     group: hidden(stored.group) && edited.group === 'status' ? stored.group : edited.group,
     subgroup:
       hidden(stored.subgroup) && edited.subgroup === 'none' ? stored.subgroup : edited.subgroup,
-    properties:
-      initiativeAt === -1
-        ? edited.properties
-        : [
-            ...edited.properties.slice(0, initiativeAt),
-            'initiative',
-            ...edited.properties.slice(initiativeAt),
-          ],
+    properties,
   };
 }
 

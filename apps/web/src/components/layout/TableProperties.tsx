@@ -42,7 +42,7 @@ export default function TableProperties({
   const enabled = properties.filter((k) => labelFor(k) != null);
   const enabledSet = new Set(properties);
   const features = useProjectFeatures();
-  const disabledBuiltins = offeredDisplayProperties(features.initiatives).filter(
+  const disabledBuiltins = offeredDisplayProperties(features).filter(
     (p) => !enabledSet.has(p.value),
   );
 

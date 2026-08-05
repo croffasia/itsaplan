@@ -26,7 +26,7 @@ export default function DisplayPropertiesSection({
   issueTypes: IssueType[];
 }) {
   const features = useProjectFeatures();
-  const properties = offeredDisplayProperties(features.initiatives);
+  const properties = offeredDisplayProperties(features);
 
   // Enabling appends to the end (a new column shows on the right); disabling
   // removes. Order is otherwise preserved.

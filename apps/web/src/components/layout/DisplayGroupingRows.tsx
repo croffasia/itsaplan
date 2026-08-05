@@ -1,6 +1,6 @@
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 import { SORT_FIELDS, type SortField, type WorkItemsView } from '@/utils/viewTypes';
-import { isGroupFieldEnabled, type GroupField, type ViewSettings } from '@/utils/viewSettings';
+import { isFieldEnabled, type GroupField, type ViewSettings } from '@/utils/viewSettings';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -41,7 +41,7 @@ export default function DisplayGroupingRows({
 
   // Initiative and Cycle are only offered while the project shows their section.
   const features = useProjectFeatures();
-  const options = GROUP_OPTIONS.filter((o) => isGroupFieldEnabled(o.value, features));
+  const options = GROUP_OPTIONS.filter((o) => isFieldEnabled(o.value, features));
 
   const groupOptions =
     view === 'kanban' || view === 'timeline' ? options.filter((o) => o.value !== 'none') : options;

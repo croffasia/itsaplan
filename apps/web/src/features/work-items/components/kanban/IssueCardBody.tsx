@@ -1,4 +1,4 @@
-import { CalendarArrowUp, CalendarClock, Target, Timer } from 'lucide-react';
+import { CalendarArrowUp, CalendarClock, RefreshCw, Target, Timer } from 'lucide-react';
 import { type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
@@ -36,6 +36,7 @@ export function IssueCardBody({
   const delegate =
     issue.delegateUserId != null ? maps.assigneeById.get(issue.delegateUserId) : undefined;
   const initiative = issue.initiative ?? undefined;
+  const cycle = issue.cycle ?? undefined;
   const column = maps.columnById.get(issue.columnId);
   const metaShown =
     has('statusAge') ||
@@ -43,6 +44,7 @@ export function IssueCardBody({
     (has('startDate') && issue.startDate) ||
     (has('type') && type) ||
     (has('initiative') && initiative) ||
+    (has('cycle') && cycle) ||
     (has('labels') && issue.labelIds.length > 0);
   const footerShown =
     has('created') ||
@@ -125,6 +127,15 @@ export function IssueCardBody({
             >
               <Target className="size-2.5 shrink-0" />
               <span className="truncate">{initiative.title}</span>
+            </Badge>
+          )}
+          {has('cycle') && cycle && (
+            <Badge
+              variant="outline"
+              className="max-w-full rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
+            >
+              <RefreshCw className="size-2.5 shrink-0" />
+              <span className="truncate">{cycle.name}</span>
             </Badge>
           )}
           {has('labels') &&

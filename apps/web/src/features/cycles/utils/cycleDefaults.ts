@@ -42,7 +42,7 @@ export function cycleDefaults(cycles: Cycle[]): CycleDefaults {
   const today = new Date();
   const previousEnd = parseDate(cycles[cycles.length - 1]?.endDate ?? null);
   const start =
-    previousEnd && daysBetween(today, previousEnd) > 0
+    previousEnd && daysBetween(today, previousEnd) >= 0
       ? addDays(previousEnd, 1)
       : nextMonday(today);
   return {

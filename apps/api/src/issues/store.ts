@@ -75,10 +75,10 @@ export interface IssueRow {
   identifier: string;
   typeId: number | null;
   // The initiative this issue is linked to, expanded to id + title for rendering,
-  // or null. Filled by attachInitiatives; mapIssue alone leaves it null.
+  // or null. Filled by attachGroupings; mapIssue alone leaves it null.
   initiative: { id: number; title: string } | null;
   // The cycle this issue is planned into, expanded to id + name for rendering, or
-  // null. Filled by attachCycles; mapIssue alone leaves it null.
+  // null. Filled by attachGroupings; mapIssue alone leaves it null.
   cycle: { id: number; name: string } | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
@@ -206,8 +206,7 @@ export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
   await attachLabels(issues);
   await attachFieldValues(issues);
   await attachStatusSince(issues);
-  await attachInitiatives(issues);
-  await attachCycles(issues);
+  await attachGroupings(issues);
   return issues;
 }
 
@@ -223,8 +222,7 @@ export async function listArchivedIssues(project: ProjectRow): Promise<IssueRow[
   await attachLabels(issues);
   await attachFieldValues(issues);
   await attachStatusSince(issues);
-  await attachInitiatives(issues);
-  await attachCycles(issues);
+  await attachGroupings(issues);
   return issues;
 }
 
@@ -450,44 +448,39 @@ export async function restoreIssue(
   return getIssue(id);
 }
 
-// Expands each issue's linked initiative to { id, title } in place, in one query
-// joining the issue to its initiative. Issues with no initiative keep the null
-// mapIssue set. Rendering the initiative name on a board card needs no separate
-// scaffold lookup this way.
-async function attachInitiatives(issues: IssueRow[]): Promise<void> {
+// Expands what an issue is planned under — its initiative and its cycle — to
+// { id, title } / { id, name } in place. Both hang off the same issue rows, so one
+// query carries them; an issue linked to neither keeps the nulls mapIssue set.
+// Rendering those names on a board card needs no separate scaffold lookup this way.
+async function attachGroupings(issues: IssueRow[]): Promise<void> {
   if (issues.length === 0) return;
   const rows = await db
-    .select({ issueId: issue.id, id: initiative.id, title: initiative.title })
+    .select({
+      issueId: issue.id,
+      initiativeId: initiative.id,
+      initiativeTitle: initiative.title,
+      cycleId: cycle.id,
+      cycleName: cycle.name,
+    })
     .from(issue)
-    .innerJoin(initiative, eq(initiative.id, issue.initiativeId))
+    .leftJoin(initiative, eq(initiative.id, issue.initiativeId))
+    .leftJoin(cycle, eq(cycle.id, issue.cycleId))
     .where(
-      inArray(
-        issue.id,
-        issues.map((i) => i.id),
+      and(
+        inArray(
+          issue.id,
+          issues.map((i) => i.id),
+        ),
+        or(isNotNull(issue.initiativeId), isNotNull(issue.cycleId)),
       ),
     );
-  const byIssue = new Map<number, { id: number; title: string }>();
-  for (const r of rows) byIssue.set(r.issueId, { id: r.id, title: r.title });
-  for (const i of issues) i.initiative = byIssue.get(i.id) ?? null;
-}
-
-// Expands each issue's cycle to { id, name } in place, the same way
-// attachInitiatives expands its initiative.
-async function attachCycles(issues: IssueRow[]): Promise<void> {
-  if (issues.length === 0) return;
-  const rows = await db
-    .select({ issueId: issue.id, id: cycle.id, name: cycle.name })
-    .from(issue)
-    .innerJoin(cycle, eq(cycle.id, issue.cycleId))
-    .where(
-      inArray(
-        issue.id,
-        issues.map((i) => i.id),
-      ),
-    );
-  const byIssue = new Map<number, { id: number; name: string }>();
-  for (const r of rows) byIssue.set(r.issueId, { id: r.id, name: r.name });
-  for (const i of issues) i.cycle = byIssue.get(i.id) ?? null;
+  const byIssue = new Map(rows.map((r) => [r.issueId, r]));
+  for (const i of issues) {
+    const r = byIssue.get(i.id);
+    i.initiative =
+      r && r.initiativeId != null ? { id: r.initiativeId, title: r.initiativeTitle! } : null;
+    i.cycle = r && r.cycleId != null ? { id: r.cycleId, name: r.cycleName! } : null;
+  }
 }
 
 // Loads every issue's label ids and merges them onto the issues in place. Generic
@@ -609,8 +602,7 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
   const issues = rows.map((row) => mapIssue(row.issue, row.projectKey));
   await attachLabels(issues);
   await attachStatusSince(issues);
-  await attachInitiatives(issues);
-  await attachCycles(issues);
+  await attachGroupings(issues);
   return issues;
 }
 
@@ -630,8 +622,7 @@ export async function getIssueBySequence(
   const mapped = mapIssue(rows[0].issue, rows[0].projectKey);
   await attachLabels([mapped]);
   await attachStatusSince([mapped]);
-  await attachInitiatives([mapped]);
-  await attachCycles([mapped]);
+  await attachGroupings([mapped]);
   return mapped;
 }
 
@@ -1185,12 +1176,13 @@ export async function bulkDeleteIssues(
 // Clients poll these cheaply and refetch the heavy payload only when the marker
 // moved, so a live board / open issue stays current without constant full reads.
 
-// The board's marker: changes when any issue or initiative in the project is
-// created, updated, or deleted. Issue label changes bump updated_at too (see
-// setIssueLabels). Initiative metadata is part of the work-items board payload.
-// Links are part of it as well and change no issue's updated_at, so they carry
-// their own count and highest id: adding one raises the id, removing one lowers
-// the count.
+// The board's marker: changes when any issue, initiative or cycle in the project
+// is created, updated, or deleted. Issue label changes bump updated_at too (see
+// setIssueLabels). Initiative and cycle metadata is part of the work-items board
+// payload — each issue carries the name of the one it belongs to, so a rename has
+// to move the marker. Links are part of it as well and change no issue's
+// updated_at, so they carry their own count and highest id: adding one raises the
+// id, removing one lowers the count.
 export async function projectBoardRev(projectId: number): Promise<string> {
   const [row] = await db
     .select({
@@ -1200,6 +1192,10 @@ export async function projectBoardRev(projectId: number): Promise<string> {
       initiativeMax: sql<
         string | null
       >`(select max(${initiative.updatedAt})::text from ${initiative} where ${initiative.projectId} = ${projectId})`,
+      cycleCount: sql<number>`(select count(*) from ${cycle} where ${cycle.projectId} = ${projectId})`,
+      cycleMax: sql<
+        string | null
+      >`(select max(${cycle.updatedAt})::text from ${cycle} where ${cycle.projectId} = ${projectId})`,
     })
     // Only active issues count: archiving one (manual or the worker's sweep) drops
     // the count, which moves the marker and makes the board refetch it away.
@@ -1224,6 +1220,8 @@ export async function projectBoardRev(projectId: number): Promise<string> {
     row?.m ?? '',
     row?.initiativeCount ?? 0,
     row?.initiativeMax ?? '',
+    row?.cycleCount ?? 0,
+    row?.cycleMax ?? '',
     links?.count ?? 0,
     links?.max ?? '',
   ].join(':');

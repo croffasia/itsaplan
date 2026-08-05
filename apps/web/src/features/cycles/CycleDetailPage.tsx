@@ -10,10 +10,16 @@ import CycleIssuesBoard from './components/detail/CycleIssuesBoard';
 export default function CycleDetailPage({ cycleId }: { cycleId: number }) {
   const { project } = useShell();
   const projectKey = project?.project.key ?? null;
-  const cycle = useCycleQuery(cycleId).data;
+  const query = useCycleQuery(cycleId);
+  const cycle = query.data;
 
   if (!project || !projectKey) return null;
-  if (!cycle) return <Skeleton className="m-6 h-8 w-64" />;
+  if (!cycle)
+    return query.isLoading ? (
+      <Skeleton className="m-6 h-8 w-64" />
+    ) : (
+      <p className="px-6 py-8 text-sm text-muted-foreground">Cycle not found.</p>
+    );
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

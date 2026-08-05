@@ -1,5 +1,5 @@
 import { db, cycle, issue, projectColumn } from '@repo/db';
-import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ne, sql, type SQL } from 'drizzle-orm';
 import { HttpError, iso } from '../shared/lib';
 
 // Data access for cycles: a time-boxed period of work inside a project (a sprint).
@@ -36,36 +36,7 @@ function cycleStatus(startDate: string, endDate: string): CycleStatus {
   return 'active';
 }
 
-// Issue counts per cycle, grouped by the linked issues' state type. A cycle with no
-// issues is simply absent from the map.
-async function countsFor(cycleIds: number[]): Promise<Map<number, CycleProgress>> {
-  const out = new Map<number, CycleProgress>();
-  if (cycleIds.length === 0) return out;
-  const rows = await db
-    .select({
-      cycleId: issue.cycleId,
-      total: sql<number>`count(*)`,
-      completed: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'completed')`,
-      canceled: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'canceled')`,
-    })
-    .from(issue)
-    .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
-    .where(inArray(issue.cycleId, cycleIds))
-    .groupBy(issue.cycleId);
-  for (const r of rows) {
-    if (r.cycleId == null) continue;
-    out.set(r.cycleId, {
-      total: Number(r.total),
-      completed: Number(r.completed),
-      canceled: Number(r.canceled),
-    });
-  }
-  return out;
-}
-
-const EMPTY_PROGRESS: CycleProgress = { completed: 0, canceled: 0, total: 0 };
-
-function mapCycle(row: typeof cycle.$inferSelect, progress: CycleProgress): CycleRow {
+function toCycle(row: typeof cycle.$inferSelect, progress: CycleProgress): CycleRow {
   return {
     id: row.id,
     projectId: row.projectId,
@@ -80,9 +51,33 @@ function mapCycle(row: typeof cycle.$inferSelect, progress: CycleProgress): Cycl
   };
 }
 
-async function withProgress(rows: (typeof cycle.$inferSelect)[]): Promise<CycleRow[]> {
-  const counts = await countsFor(rows.map((r) => r.id));
-  return rows.map((row) => mapCycle(row, counts.get(row.id) ?? EMPTY_PROGRESS));
+// Cycles with their issue counts in one query: the issues hang off each cycle
+// through left joins, so a cycle with none stays in the result with zero counts.
+// total counts the joined issues, not the rows — `count(*)` would read that empty
+// join row as one issue.
+function selectCycles(where: SQL | undefined) {
+  return db
+    .select({
+      row: cycle,
+      total: sql<number>`count(${issue.id})`,
+      completed: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'completed')`,
+      canceled: sql<number>`count(*) filter (where ${projectColumn.stateType} = 'canceled')`,
+    })
+    .from(cycle)
+    .leftJoin(issue, eq(issue.cycleId, cycle.id))
+    .leftJoin(projectColumn, eq(projectColumn.id, issue.columnId))
+    .where(where)
+    .groupBy(cycle.id);
+}
+
+type CycleAggregate = Awaited<ReturnType<typeof selectCycles>>[number];
+
+function mapCycle(r: CycleAggregate): CycleRow {
+  return toCycle(r.row, {
+    total: Number(r.total),
+    completed: Number(r.completed),
+    canceled: Number(r.canceled),
+  });
 }
 
 // Today in UTC, the same boundary cycleStatus compares against.
@@ -90,24 +85,21 @@ const TODAY = sql`(now() at time zone 'utc')::date`;
 
 // Every cycle of a project, oldest first, so the list reads as a timeline.
 export async function listCycles(projectId: number): Promise<CycleRow[]> {
-  const rows = await db
-    .select()
-    .from(cycle)
-    .where(eq(cycle.projectId, projectId))
-    .orderBy(asc(cycle.startDate), asc(cycle.id));
-  return withProgress(rows);
+  const rows = await selectCycles(eq(cycle.projectId, projectId)).orderBy(
+    asc(cycle.startDate),
+    asc(cycle.id),
+  );
+  return rows.map(mapCycle);
 }
 
 // The cycles that have not finished yet — active and upcoming — oldest first. This
 // is what the cycles page opens with: it stays the same size as a project ages,
 // while the finished ones only accumulate and are paged separately.
 export async function listPlannedCycles(projectId: number): Promise<CycleRow[]> {
-  const rows = await db
-    .select()
-    .from(cycle)
-    .where(and(eq(cycle.projectId, projectId), sql`${cycle.endDate} >= ${TODAY}`))
-    .orderBy(asc(cycle.startDate), asc(cycle.id));
-  return withProgress(rows);
+  const rows = await selectCycles(
+    and(eq(cycle.projectId, projectId), sql`${cycle.endDate} >= ${TODAY}`),
+  ).orderBy(asc(cycle.startDate), asc(cycle.id));
+  return rows.map(mapCycle);
 }
 
 export interface CyclePage {
@@ -122,25 +114,22 @@ export async function listCompletedCycles(
   { limit, offset }: { limit: number; offset: number },
 ): Promise<CyclePage> {
   const where = and(eq(cycle.projectId, projectId), sql`${cycle.endDate} < ${TODAY}`);
-  const rows = await db
-    .select()
-    .from(cycle)
-    .where(where)
+  const rows = await selectCycles(where)
     .orderBy(desc(cycle.startDate), desc(cycle.id))
     .limit(limit)
     .offset(offset);
+  // Counted separately, not as a window over the page: a page past the end holds no
+  // row to carry the count, and the archive still has to say how many there are.
   const [counted] = await db
     .select({ total: sql<number>`count(*)` })
     .from(cycle)
     .where(where);
-  return { items: await withProgress(rows), total: Number(counted?.total ?? 0) };
+  return { items: rows.map(mapCycle), total: Number(counted?.total ?? 0) };
 }
 
 export async function getCycle(id: number): Promise<CycleRow | null> {
-  const rows = await db.select().from(cycle).where(eq(cycle.id, id));
-  if (!rows[0]) return null;
-  const counts = await countsFor([id]);
-  return mapCycle(rows[0], counts.get(id) ?? EMPTY_PROGRESS);
+  const [row] = await selectCycles(eq(cycle.id, id));
+  return row ? mapCycle(row) : null;
 }
 
 // The project a cycle belongs to, or null if it does not exist. Used by the access
@@ -192,8 +181,9 @@ export async function createCycle(projectId: number, input: NewCycleInput): Prom
       startDate: input.startDate,
       endDate: input.endDate,
     })
-    .returning({ id: cycle.id });
-  return (await getCycle(row.id))!;
+    .returning();
+  // A cycle nothing can point at yet, so its progress needs no reading back.
+  return toCycle(row, { completed: 0, canceled: 0, total: 0 });
 }
 
 export interface CyclePatch {

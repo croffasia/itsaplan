@@ -7,6 +7,7 @@ import {
   issueType,
   label,
   initiative,
+  cycle,
 } from '@repo/db';
 import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '../shared/lib';
@@ -418,6 +419,11 @@ async function initiativeName(id: number | null): Promise<string | null> {
     .where(eq(initiative.id, id));
   return rows[0]?.title ?? null;
 }
+async function cycleName(id: number | null): Promise<string | null> {
+  if (id == null) return null;
+  const rows = await db.select({ name: cycle.name }).from(cycle).where(eq(cycle.id, id));
+  return rows[0]?.name ?? null;
+}
 async function userName(id: string | null): Promise<string | null> {
   if (id == null) return null;
   const rows = await db.select({ name: user.name }).from(user).where(eq(user.id, id));
@@ -445,6 +451,7 @@ export interface IssueSnapshot {
   columnId: number;
   typeId: number | null;
   initiativeId: number | null;
+  cycleId: number | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
@@ -484,6 +491,12 @@ export async function logIssueUpdate(
       action: 'initiative',
       fromText: await initiativeName(before.initiativeId),
       toText: await initiativeName(after.initiativeId),
+    });
+  if (before.cycleId !== after.cycleId)
+    events.push({
+      action: 'cycle',
+      fromText: await cycleName(before.cycleId),
+      toText: await cycleName(after.cycleId),
     });
   if (before.assigneeUserId !== after.assigneeUserId)
     events.push({

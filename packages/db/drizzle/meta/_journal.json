@@ -449,6 +449,20 @@
       "when": 1785880921407,
       "tag": "0063_solid_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1785918404465,
+      "tag": "0064_gifted_taskmaster",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1785918411701,
+      "tag": "0065_backfill_cycles_permission",
+      "breakpoints": true
     }
   ]
 }

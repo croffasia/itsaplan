@@ -74,12 +74,18 @@ describe('share', () => {
         .issues({ issueId })
         .patch({ assigneeUserId: ownerId, labelIds: [label.data!.id] });
 
+      const cycle = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .cycles.post({ name: 'Sprint 1', startDate: '2026-01-05', endDate: '2026-01-18' });
+      await asOwner.issues({ issueId }).patch({ cycleId: cycle.data!.id });
+
       const token = (await asOwner.issues({ issueId }).share.post()).data!.token;
       const plain = await api.share.issue({ token }).get();
       expect(plain.data.issue).toMatchObject({
         title: 'Shared thing',
         assigneeUserId: null,
         labelIds: [],
+        cycle: null,
       });
       expect(plain.data.feed).toEqual([]);
       expect(plain.data.project.labels).toEqual([]);
@@ -89,6 +95,7 @@ describe('share', () => {
       const full = await api.share.issue({ token }).get();
       expect(full.data.issue.assigneeUserId).not.toBeNull();
       expect(full.data.issue.labelIds).toHaveLength(1);
+      expect(full.data.issue.cycle).toMatchObject({ name: 'Sprint 1' });
       expect(full.data.feed.length).toBeGreaterThan(0);
     });
 

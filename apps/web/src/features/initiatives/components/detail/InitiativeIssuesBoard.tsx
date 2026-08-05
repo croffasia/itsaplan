@@ -9,7 +9,10 @@ import KanbanBoard from '@/features/work-items/components/kanban/KanbanBoard';
 import TableView from '@/features/work-items/components/table/TableView';
 import TimelineView from '@/features/work-items/components/timeline/TimelineView';
 import CalendarView from '@/features/work-items/components/calendar/CalendarView';
-import { useInitiativeBoardSettings } from '../../hooks/useInitiativeBoardSettings';
+import { useLocalBoardSettings } from '@/hooks/useLocalBoardSettings';
+
+// Where this board's layout and display settings are kept, per initiative.
+const INITIATIVE_BOARD_STORE_KEY = 'planner_initiative_board_settings';
 
 // The initiative's issues rendered as the work items board (kanban/table/timeline/
 // calendar) with filters and display settings, but no saved views. The board is
@@ -17,7 +20,7 @@ import { useInitiativeBoardSettings } from '../../hooks/useInitiativeBoardSettin
 // real issues and the live board refresh keeps it current.
 export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: number }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
-  const board = useInitiativeBoardSettings(initiativeId);
+  const board = useLocalBoardSettings(INITIATIVE_BOARD_STORE_KEY, initiativeId);
 
   const viewProject = useMemo(() => {
     if (!project) return null;

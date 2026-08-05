@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, type ComponentProps, type ReactNode } from 'react';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { formatDate, parseDate, toDateStr } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
@@ -16,12 +16,20 @@ export default function DatePill({
   onChange,
   readOnly,
   trigger,
+  clearable = true,
+  disabled,
 }: {
   value: string | null;
   placeholder?: string;
   onChange: (v: string | null) => void;
   readOnly?: boolean;
   trigger?: ReactNode;
+  // False on a date the form requires, where offering to clear it would be an
+  // action the caller has to ignore.
+  clearable?: boolean;
+  // Days the caller cannot accept, as react-day-picker matchers ({ before }, { after },
+  // { from, to }, …). They render greyed out and cannot be selected.
+  disabled?: ComponentProps<typeof Calendar>['disabled'];
 }) {
   const [open, setOpen] = useState(false);
   const pill = trigger ?? (
@@ -38,13 +46,14 @@ export default function DatePill({
         <Calendar
           mode="single"
           selected={parseDate(value) ?? undefined}
+          disabled={disabled}
           onSelect={(d) => {
             onChange(d ? toDateStr(d) : null);
             setOpen(false);
           }}
           autoFocus
         />
-        {value && (
+        {value && clearable && (
           <div className="border-t p-2">
             <Button variant="ghost" size="sm" className="w-full" onClick={() => onChange(null)}>
               Clear

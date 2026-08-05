@@ -67,6 +67,7 @@ export const project = pgTable('project', {
   initiativesEnabled: boolean('initiatives_enabled').notNull().default(true),
   dashboardsEnabled: boolean('dashboards_enabled').notNull().default(true),
   notesEnabled: boolean('notes_enabled').notNull().default(true),
+  cyclesEnabled: boolean('cycles_enabled').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -795,6 +796,32 @@ export const initiativeLabel = pgTable(
   (t) => [primaryKey({ columns: [t.initiativeId, t.labelId] })],
 );
 
+// A time-boxed period of work inside a project (a sprint). Issues point at it
+// through issue.cycle_id. The state of a cycle — upcoming, active, completed — is
+// not stored: it follows from start_date/end_date against the current date, so a
+// cycle never has to be started or closed by hand. Cycles of one project may not
+// overlap, which is what makes at most one of them active; the API enforces that.
+export const cycle = pgTable(
+  'cycle',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // What the team commits to in this cycle (the sprint goal). Empty when unset.
+    goal: text('goal').notNull().default(''),
+    startDate: date('start_date').notNull(),
+    endDate: date('end_date').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('cycle_dates_check', sql`${t.endDate} >= ${t.startDate}`),
+    index('cycle_project_idx').on(t.projectId, t.startDate),
+  ],
+);
+
 export const issue = pgTable(
   'issue',
   {
@@ -809,6 +836,11 @@ export const issue = pgTable(
     // The initiative this issue belongs to (project-scoped). Nullable; deleting an
     // initiative unlinks its issues rather than deleting them (like type_id).
     initiativeId: integer('initiative_id').references(() => initiative.id, {
+      onDelete: 'set null',
+    }),
+    // The cycle this issue is planned into (project-scoped). Nullable; deleting a
+    // cycle unlinks its issues rather than deleting them.
+    cycleId: integer('cycle_id').references(() => cycle.id, {
       onDelete: 'set null',
     }),
     columnId: integer('column_id')

@@ -6,6 +6,7 @@
 export const PERMISSION_RESOURCES = [
   'work_items',
   'initiatives',
+  'cycles',
   'dashboards',
   'views',
   'members_invite',
@@ -53,6 +54,7 @@ export function defaultMemberPermissions(): Permissions {
   const p = emptyPermissions();
   p.work_items = fill(true);
   p.initiatives = fill(true);
+  p.cycles = fill(true);
   p.note_boards = fill(true);
   p.dashboards.read = true;
   p.views.read = true;

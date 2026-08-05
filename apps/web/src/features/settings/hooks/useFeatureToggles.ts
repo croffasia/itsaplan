@@ -20,7 +20,7 @@ export interface FeatureTogglesForm {
 export function useFeatureToggles(project: ProjectDetail): FeatureTogglesForm {
   const { isOwner } = usePermissions();
   const update = useUpdateProjectFeatures(project.project.key);
-  const { initiativesEnabled, dashboardsEnabled, notesEnabled } = project.project;
+  const { initiativesEnabled, cyclesEnabled, dashboardsEnabled, notesEnabled } = project.project;
 
   async function toggle(feature: keyof ProjectFeatures, enabled: boolean) {
     await update.mutateAsync({ [feature]: enabled });
@@ -30,6 +30,7 @@ export function useFeatureToggles(project: ProjectDetail): FeatureTogglesForm {
   return {
     features: {
       initiatives: initiativesEnabled,
+      cycles: cyclesEnabled,
       dashboards: dashboardsEnabled,
       notes: notesEnabled,
     },

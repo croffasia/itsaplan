@@ -72,6 +72,7 @@ const ProjectResponse = t.Object({
   initiativesEnabled: t.Boolean(),
   dashboardsEnabled: t.Boolean(),
   notesEnabled: t.Boolean(),
+  cyclesEnabled: t.Boolean(),
   createdAt: t.String(),
 });
 
@@ -171,6 +172,7 @@ const FeaturesResponse = t.Object({
   initiatives: t.Boolean(),
   dashboards: t.Boolean(),
   notes: t.Boolean(),
+  cycles: t.Boolean(),
 });
 
 // The project's settings: MCP reachability and the enabled sections.
@@ -429,6 +431,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
             initiatives: t.Optional(t.Boolean()),
             dashboards: t.Optional(t.Boolean()),
             notes: t.Optional(t.Boolean()),
+            cycles: t.Optional(t.Boolean()),
           }),
         ),
       }),

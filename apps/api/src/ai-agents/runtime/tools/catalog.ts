@@ -46,7 +46,7 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     key: 'update_issue',
     label: 'Update issues',
     description:
-      "Change an issue's state, type, initiative, assignee, delegate, details, priority, dates, or labels.",
+      "Change an issue's state, type, initiative, cycle, assignee, delegate, details, priority, dates, or labels.",
     always: false,
   },
   {
@@ -107,6 +107,30 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     key: 'delete_initiative',
     label: 'Delete initiatives',
     description: 'Permanently delete initiatives.',
+    always: false,
+  },
+  {
+    key: 'create_cycle',
+    label: 'Create cycles',
+    description: 'Create cycles in the project.',
+    always: false,
+  },
+  {
+    key: 'update_cycle',
+    label: 'Update cycles',
+    description: 'Change a cycle’s name, description, and dates.',
+    always: false,
+  },
+  {
+    key: 'delete_cycle',
+    label: 'Delete cycles',
+    description: 'Permanently delete cycles. Their issues stay, without a cycle.',
+    always: false,
+  },
+  {
+    key: 'transfer_cycle_issues',
+    label: 'Transfer cycle issues',
+    description: "Move a cycle's unfinished issues to another cycle, or off any cycle.",
     always: false,
   },
   {
@@ -211,6 +235,18 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     key: 'get_initiative',
     label: 'Read an initiative',
     description: 'View one initiative with its progress and health.',
+    always: true,
+  },
+  {
+    key: 'list_cycles',
+    label: 'List cycles',
+    description: 'View the cycles of the project with their progress.',
+    always: true,
+  },
+  {
+    key: 'get_cycle',
+    label: 'Read a cycle',
+    description: 'View one cycle with its dates and progress.',
     always: true,
   },
 ];

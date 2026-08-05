@@ -10,6 +10,7 @@ import type { FeatureTogglesForm } from '../../hooks/useFeatureToggles';
 const FEATURES: { key: keyof ProjectFeatures; description: string }[] = [
   { key: 'dashboards', description: 'Charts and metrics on saved dashboards.' },
   { key: 'initiatives', description: 'Groups of issues tracked as one piece of work.' },
+  { key: 'cycles', description: 'Time-boxed periods of work the issues are planned into.' },
   { key: 'notes', description: 'Freeform boards of sticky notes.' },
 ];
 

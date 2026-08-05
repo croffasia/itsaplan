@@ -66,6 +66,7 @@ export interface Project {
   initiativesEnabled: boolean;
   dashboardsEnabled: boolean;
   notesEnabled: boolean;
+  cyclesEnabled: boolean;
   createdAt: string;
   // The caller's role in this project. Only present on the /projects list
   // response (used to gate owner-only actions like deletion); absent on the
@@ -512,6 +513,9 @@ export interface Issue {
   // The initiative this issue is linked to, expanded to id + title for rendering,
   // or null. Set through updateIssue by initiativeId.
   initiative: InitiativeOption | null;
+  // The cycle this issue is planned into, expanded to id + name for rendering, or
+  // null. Set through updateIssue by cycleId.
+  cycle: CycleOption | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   columnId: number;
@@ -553,6 +557,7 @@ export interface IssueSearchHit {
   columnId: number;
   typeId: number | null;
   initiativeId: number | null;
+  cycleId: number | null;
   parentId: number | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
@@ -574,6 +579,7 @@ export interface AutoArchiveSettings {
 // hides its navigation entry and its section, keeping the rows behind it.
 export interface ProjectFeatures {
   initiatives: boolean;
+  cycles: boolean;
   dashboards: boolean;
   notes: boolean;
 }
@@ -1289,6 +1295,7 @@ export type ActivityAction =
   | 'delegate'
   | 'priority'
   | 'type'
+  | 'cycle'
   | 'start_date'
   | 'due_date'
   | 'label_add'
@@ -1403,6 +1410,11 @@ export interface ProjectViewer {
 export interface InitiativeOption {
   id: number;
   title: string;
+}
+
+export interface CycleOption {
+  id: number;
+  name: string;
 }
 
 // The board scaffold, returned by getProject: everything the work-items UI needs
@@ -1573,6 +1585,7 @@ export interface SharedViewBundle {
 export interface NewIssueInput {
   typeId?: number | null;
   initiativeId?: number | null;
+  cycleId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   columnId: number;
@@ -1591,6 +1604,7 @@ export interface BulkIssuePatch {
   columnId?: number;
   typeId?: number | null;
   initiativeId?: number | null;
+  cycleId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   priority?: string | null;
@@ -1604,6 +1618,7 @@ export interface IssuePatch {
   typeId?: number | null;
   parentId?: number | null;
   initiativeId?: number | null;
+  cycleId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   title?: string;
@@ -1643,6 +1658,44 @@ export interface Initiative {
   labelIds: number[];
   progress: InitiativeProgress;
   health: InitiativeHealth | null;
+}
+
+// A time-boxed period of work (a sprint). status follows from the dates against
+// today and progress from the linked issues' states — neither is stored.
+export type CycleStatus = 'upcoming' | 'active' | 'completed';
+
+export interface CycleProgress {
+  completed: number;
+  canceled: number;
+  total: number;
+}
+
+export interface Cycle {
+  id: number;
+  projectId: number;
+  name: string;
+  // What the team commits to in this cycle (the sprint goal). Empty when unset.
+  goal: string;
+  startDate: string;
+  endDate: string;
+  status: CycleStatus;
+  createdAt: string;
+  updatedAt: string;
+  progress: CycleProgress;
+}
+
+export interface NewCycleInput {
+  name: string;
+  goal?: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface CyclePatch {
+  name?: string;
+  goal?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // Columns the initiative list can be sorted by, server-side. progress and health
@@ -1738,6 +1791,7 @@ export type PermissionAction = 'create' | 'edit' | 'read' | 'delete';
 export type PermissionResource =
   | 'work_items'
   | 'initiatives'
+  | 'cycles'
   | 'dashboards'
   | 'views'
   | 'members_invite'
@@ -2257,6 +2311,24 @@ export const api = {
     const qs = q.toString();
     return request<InitiativeFeedPage>(`/initiatives/${id}/feed${qs ? `?${qs}` : ''}`);
   },
+
+  // Cycles — same shape as initiatives: the list takes projectKey, ops on one cycle
+  // take its own id and hit /cycles/:id.
+  listCycles: (projectKey: string) => request<Cycle[]>(`/projects/${projectKey}/cycles`),
+  getCycle: (id: number) => request<Cycle>(`/cycles/${id}`),
+  createCycle: (projectKey: string, input: NewCycleInput) =>
+    request<Cycle>(`/projects/${projectKey}/cycles`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateCycle: (id: number, patch: CyclePatch) =>
+    request<Cycle>(`/cycles/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteCycle: (id: number) => request<void>(`/cycles/${id}`, { method: 'DELETE' }),
+  transferCycleIssues: (id: number, targetCycleId: number | null) =>
+    request<{ moved: number }>(`/cycles/${id}/transfer`, {
+      method: 'POST',
+      body: JSON.stringify({ targetCycleId }),
+    }),
 
   listViews: (projectKey: string) => request<View[]>(`/projects/${projectKey}/views`),
   createView: (projectKey: string, input: NewViewInput) =>

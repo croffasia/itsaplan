@@ -112,6 +112,9 @@ const IssueResponse = t.Object({
   // The linked initiative expanded to id + title (for rendering), or null. Set
   // through create/update by initiativeId.
   initiative: t.Nullable(t.Object({ id: t.Number(), title: t.String() })),
+  // The cycle this issue is planned into, expanded to id + name, or null. Set
+  // through create/update by cycleId.
+  cycle: t.Nullable(t.Object({ id: t.Number(), name: t.String() })),
   assigneeUserId: t.Nullable(t.String()),
   delegateUserId: t.Nullable(t.String()),
   columnId: t.Number(),
@@ -286,6 +289,7 @@ const IssueSearchHitResponse = t.Object({
   columnId: t.Number(),
   typeId: t.Nullable(t.Number()),
   initiativeId: t.Nullable(t.Number()),
+  cycleId: t.Nullable(t.Number()),
   parentId: t.Nullable(t.Number()),
   assigneeUserId: t.Nullable(t.String()),
   delegateUserId: t.Nullable(t.String()),
@@ -398,6 +402,13 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
             }),
           ),
         ),
+        cycleId: t.Optional(
+          t.Nullable(
+            t.Integer({
+              description: 'Cycle id to plan this issue into, or null. From list_cycles.',
+            }),
+          ),
+        ),
         assigneeUserId: t.Optional(
           t.Nullable(
             t.String({
@@ -481,6 +492,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           columnId: t.Optional(t.Integer()),
           typeId: t.Optional(t.Nullable(t.Integer())),
           initiativeId: t.Optional(t.Nullable(t.Integer())),
+          cycleId: t.Optional(t.Nullable(t.Integer())),
           assigneeUserId: t.Optional(t.Nullable(t.String())),
           delegateUserId: t.Optional(t.Nullable(t.String())),
           priority: t.Optional(t.Nullable(t.String())),
@@ -650,6 +662,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           columnId: posId(query.columnId),
           typeId: posId(query.typeId),
           initiativeId: posId(query.initiativeId),
+          cycleId: posId(query.cycleId),
           parentId: posId(query.parentId),
           assigneeUserId: str(query.assigneeUserId),
           delegateUserId: str(query.delegateUserId),
@@ -668,6 +681,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         columnId: t.Optional(t.Numeric({ description: 'Exact column (state) id.' })),
         typeId: t.Optional(t.Numeric({ description: 'Exact issue type id.' })),
         initiativeId: t.Optional(t.Numeric({ description: 'Exact initiative id.' })),
+        cycleId: t.Optional(t.Numeric({ description: 'Exact cycle id.' })),
         parentId: t.Optional(
           t.Numeric({ description: 'Parent issue id, to list that issue’s subtasks.' }),
         ),
@@ -876,6 +890,14 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
             t.Integer({
               description:
                 'Link this issue to an initiative id, or null to unlink. From list_initiatives.',
+            }),
+          ),
+        ),
+        cycleId: t.Optional(
+          t.Nullable(
+            t.Integer({
+              description:
+                'Plan this issue into a cycle id, or null to unplan it. From list_cycles.',
             }),
           ),
         ),

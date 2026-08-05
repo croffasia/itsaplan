@@ -305,6 +305,7 @@ describe('projects', () => {
       const settings = await api.projects({ projectKey: 'DST' }).settings.get();
       expect(settings.data?.features).toEqual({
         initiatives: true,
+        cycles: true,
         dashboards: false,
         notes: false,
       });

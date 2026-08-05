@@ -32,6 +32,7 @@ export interface ProjectRow {
   initiativesEnabled: boolean;
   dashboardsEnabled: boolean;
   notesEnabled: boolean;
+  cyclesEnabled: boolean;
   createdAt: string;
 }
 
@@ -41,6 +42,7 @@ export interface ProjectFeatures {
   initiatives: boolean;
   dashboards: boolean;
   notes: boolean;
+  cycles: boolean;
 }
 
 // A project in the caller's list, carrying the caller's own role in it. The list
@@ -63,6 +65,7 @@ function mapProject(row: typeof project.$inferSelect): ProjectRow {
     initiativesEnabled: row.initiativesEnabled,
     dashboardsEnabled: row.dashboardsEnabled,
     notesEnabled: row.notesEnabled,
+    cyclesEnabled: row.cyclesEnabled,
     createdAt: iso(row.createdAt),
   };
 }
@@ -88,6 +91,7 @@ export async function listProjects(
       initiativesEnabled: project.initiativesEnabled,
       dashboardsEnabled: project.dashboardsEnabled,
       notesEnabled: project.notesEnabled,
+      cyclesEnabled: project.cyclesEnabled,
       createdAt: project.createdAt,
       role: projectMember.role,
       rolePermissions: projectRole.permissions,
@@ -285,6 +289,7 @@ export function projectFeatures(row: ProjectRow): ProjectFeatures {
     initiatives: row.initiativesEnabled,
     dashboards: row.dashboardsEnabled,
     notes: row.notesEnabled,
+    cycles: row.cyclesEnabled,
   };
 }
 
@@ -298,6 +303,7 @@ export async function setProjectFeatures(
   if (patch.initiatives !== undefined) values.initiativesEnabled = patch.initiatives;
   if (patch.dashboards !== undefined) values.dashboardsEnabled = patch.dashboards;
   if (patch.notes !== undefined) values.notesEnabled = patch.notes;
+  if (patch.cycles !== undefined) values.cyclesEnabled = patch.cycles;
   if (Object.keys(values).length === 0) return getProjectById(projectId);
   const [row] = await db.update(project).set(values).where(eq(project.id, projectId)).returning();
   return row ? mapProject(row) : null;

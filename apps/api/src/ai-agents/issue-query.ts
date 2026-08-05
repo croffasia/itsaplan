@@ -22,6 +22,11 @@ export const issueQuerySchema = z.object({
     .describe(
       'Exact initiative id from list_initiatives, or null for issues without an initiative.',
     ),
+  cycleId: z
+    .number()
+    .nullable()
+    .optional()
+    .describe('Exact cycle id from list_cycles, or null for issues outside any cycle.'),
   parentId: z
     .number()
     .nullable()

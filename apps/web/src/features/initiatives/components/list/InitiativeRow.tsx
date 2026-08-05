@@ -10,7 +10,7 @@ import { colorDot } from '@/components/common/fields/colorDot';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { STATUS_META } from '@/utils/initiativeMeta';
 import HealthBadge from '../shared/HealthBadge';
-import ProgressBar from '../shared/ProgressBar';
+import ProgressBar from '@/components/common/ProgressBar';
 
 // The whole row navigates to the detail page; the title is also a real anchor so
 // middle/cmd-click opens it in a new tab.

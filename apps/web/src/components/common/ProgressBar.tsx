@@ -1,8 +1,11 @@
-import type { InitiativeProgress } from '@/lib/api';
-
 // Issue progress as a thin bar plus a "completed/total" count. Canceled issues are
-// excluded from the denominator so the bar reflects deliverable work.
-export default function ProgressBar({ progress }: { progress: InitiativeProgress }) {
+// excluded from the denominator so the bar reflects deliverable work. Shared by the
+// groupings that track it: initiatives and cycles.
+export default function ProgressBar({
+  progress,
+}: {
+  progress: { completed: number; canceled: number; total: number };
+}) {
   const denom = progress.total - progress.canceled;
   const pct = denom > 0 ? Math.round((progress.completed / denom) * 100) : 0;
   return (

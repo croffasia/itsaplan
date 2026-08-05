@@ -10,9 +10,10 @@ import type { ProjectFeatures } from '@/lib/api';
 // the same way usePermissions grants nothing until the project is there.
 export function useProjectFeatures(): ProjectFeatures {
   const project = useContext(ShellCtx)?.project ?? null;
-  if (!project) return { initiatives: false, dashboards: false, notes: false };
+  if (!project) return { initiatives: false, cycles: false, dashboards: false, notes: false };
   return {
     initiatives: project.project.initiativesEnabled,
+    cycles: project.project.cyclesEnabled,
     dashboards: project.project.dashboardsEnabled,
     notes: project.project.notesEnabled,
   };

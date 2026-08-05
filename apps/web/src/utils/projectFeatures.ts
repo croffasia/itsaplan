@@ -5,6 +5,7 @@ import type { ProjectFeatures } from '@/lib/api';
 // while it is off, so it is named the same everywhere.
 export const FEATURE_LABEL: Record<keyof ProjectFeatures, string> = {
   initiatives: 'Initiatives',
+  cycles: 'Cycles',
   dashboards: 'Dashboards',
   notes: 'Notes',
 };

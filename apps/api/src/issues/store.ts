@@ -14,6 +14,7 @@ import {
   customField,
   customFieldOption,
   initiative,
+  cycle,
 } from '@repo/db';
 import {
   and,
@@ -25,6 +26,7 @@ import {
   isNotNull,
   isNull,
   lte,
+  notInArray,
   or,
   sql,
   type SQL,
@@ -48,6 +50,7 @@ import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '../ai-agents/store';
 import { deleteThreadsWhere } from '../ai-agents/runtime/memory';
 import { getInitiativeProjectId } from '../initiatives/store';
+import { getCycleProjectId } from '../cycles/store';
 import { getMembership } from '../members/store';
 import { enqueueAgentRun } from '../ai-agents/run-queue';
 
@@ -74,6 +77,9 @@ export interface IssueRow {
   // The initiative this issue is linked to, expanded to id + title for rendering,
   // or null. Filled by attachInitiatives; mapIssue alone leaves it null.
   initiative: { id: number; title: string } | null;
+  // The cycle this issue is planned into, expanded to id + name for rendering, or
+  // null. Filled by attachCycles; mapIssue alone leaves it null.
+  cycle: { id: number; name: string } | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   columnId: number;
@@ -119,6 +125,7 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     identifier: `${projectKey}-${row.sequenceNumber}`,
     typeId: row.typeId,
     initiative: null,
+    cycle: null,
     assigneeUserId: row.assigneeUserId,
     delegateUserId: row.delegateUserId,
     columnId: row.columnId,
@@ -180,6 +187,7 @@ function snapshot(row: IssueRow): IssueSnapshot {
     columnId: row.columnId,
     typeId: row.typeId,
     initiativeId: row.initiative?.id ?? null,
+    cycleId: row.cycle?.id ?? null,
     assigneeUserId: row.assigneeUserId,
     delegateUserId: row.delegateUserId,
     priority: row.priority,
@@ -199,6 +207,7 @@ export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
   await attachFieldValues(issues);
   await attachStatusSince(issues);
   await attachInitiatives(issues);
+  await attachCycles(issues);
   return issues;
 }
 
@@ -215,6 +224,7 @@ export async function listArchivedIssues(project: ProjectRow): Promise<IssueRow[
   await attachFieldValues(issues);
   await attachStatusSince(issues);
   await attachInitiatives(issues);
+  await attachCycles(issues);
   return issues;
 }
 
@@ -230,6 +240,7 @@ export interface IssueSearchHit {
   columnId: number;
   typeId: number | null;
   initiativeId: number | null;
+  cycleId: number | null;
   parentId: number | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
@@ -308,6 +319,10 @@ export async function searchIssues(
         ? isNull(issue.initiativeId)
         : eq(issue.initiativeId, filters.initiativeId),
     );
+  if (filters.cycleId !== undefined)
+    conds.push(
+      filters.cycleId === null ? isNull(issue.cycleId) : eq(issue.cycleId, filters.cycleId),
+    );
   if (filters.parentId !== undefined)
     conds.push(
       filters.parentId === null ? isNull(issue.parentId) : eq(issue.parentId, filters.parentId),
@@ -358,6 +373,7 @@ export async function searchIssues(
       sequenceNumber: issue.sequenceNumber,
       typeId: issue.typeId,
       initiativeId: issue.initiativeId,
+      cycleId: issue.cycleId,
       parentId: issue.parentId,
       assigneeUserId: issue.assigneeUserId,
       delegateUserId: issue.delegateUserId,
@@ -380,6 +396,7 @@ export async function searchIssues(
     columnId: r.columnId,
     typeId: r.typeId,
     initiativeId: r.initiativeId,
+    cycleId: r.cycleId,
     parentId: r.parentId,
     assigneeUserId: r.assigneeUserId,
     delegateUserId: r.delegateUserId,
@@ -452,6 +469,25 @@ async function attachInitiatives(issues: IssueRow[]): Promise<void> {
   const byIssue = new Map<number, { id: number; title: string }>();
   for (const r of rows) byIssue.set(r.issueId, { id: r.id, title: r.title });
   for (const i of issues) i.initiative = byIssue.get(i.id) ?? null;
+}
+
+// Expands each issue's cycle to { id, name } in place, the same way
+// attachInitiatives expands its initiative.
+async function attachCycles(issues: IssueRow[]): Promise<void> {
+  if (issues.length === 0) return;
+  const rows = await db
+    .select({ issueId: issue.id, id: cycle.id, name: cycle.name })
+    .from(issue)
+    .innerJoin(cycle, eq(cycle.id, issue.cycleId))
+    .where(
+      inArray(
+        issue.id,
+        issues.map((i) => i.id),
+      ),
+    );
+  const byIssue = new Map<number, { id: number; name: string }>();
+  for (const r of rows) byIssue.set(r.issueId, { id: r.id, name: r.name });
+  for (const i of issues) i.cycle = byIssue.get(i.id) ?? null;
 }
 
 // Loads every issue's label ids and merges them onto the issues in place. Generic
@@ -544,6 +580,7 @@ async function loadSnapshot(
       columnId: issue.columnId,
       typeId: issue.typeId,
       initiativeId: issue.initiativeId,
+      cycleId: issue.cycleId,
       assigneeUserId: issue.assigneeUserId,
       delegateUserId: issue.delegateUserId,
       priority: issue.priority,
@@ -573,6 +610,7 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
   await attachLabels(issues);
   await attachStatusSince(issues);
   await attachInitiatives(issues);
+  await attachCycles(issues);
   return issues;
 }
 
@@ -593,6 +631,7 @@ export async function getIssueBySequence(
   await attachLabels([mapped]);
   await attachStatusSince([mapped]);
   await attachInitiatives([mapped]);
+  await attachCycles([mapped]);
   return mapped;
 }
 
@@ -606,6 +645,7 @@ export async function getIssueProjectId(id: number): Promise<number | null> {
 export interface NewIssueInput {
   typeId?: number | null;
   initiativeId?: number | null;
+  cycleId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   columnId: number;
@@ -645,6 +685,14 @@ async function assertInitiative(
   if (initiativeId == null) return;
   if ((await getInitiativeProjectId(initiativeId)) !== projectId)
     throw new HttpError(400, 'Initiative must belong to this project');
+}
+
+// Enforces that a linked cycle belongs to the same project. Only checks when set to
+// a non-null value (clearing the link is always allowed). Throws 400 otherwise.
+async function assertCycle(projectId: number, cycleId: number | null | undefined): Promise<void> {
+  if (cycleId == null) return;
+  if ((await getCycleProjectId(cycleId)) !== projectId)
+    throw new HttpError(400, 'Cycle must belong to this project');
 }
 
 // Enforces that a column belongs to the issue's project — issue.column_id only
@@ -730,6 +778,7 @@ export async function createIssue(
 ): Promise<IssueRow> {
   await assertAssignments(project.id, input);
   await assertInitiative(project.id, input.initiativeId);
+  await assertCycle(project.id, input.cycleId);
   await assertColumn(project.id, input.columnId);
   await assertIssueType(project.id, input.typeId);
   await assertParent(project.id, null, input.parentId);
@@ -753,6 +802,7 @@ export async function createIssue(
         sequenceNumber,
         typeId: input.typeId ?? null,
         initiativeId: input.initiativeId ?? null,
+        cycleId: input.cycleId ?? null,
         assigneeUserId: input.assigneeUserId ?? null,
         delegateUserId: input.delegateUserId ?? null,
         columnId: input.columnId,
@@ -844,6 +894,7 @@ export interface IssuePatch {
   typeId?: number | null;
   parentId?: number | null;
   initiativeId?: number | null;
+  cycleId?: number | null;
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   title?: string;
@@ -863,6 +914,7 @@ export async function updateIssue(
 
   await assertAssignments(before.projectId, patch);
   await assertInitiative(before.projectId, patch.initiativeId);
+  await assertCycle(before.projectId, patch.cycleId);
   await assertColumn(before.projectId, patch.columnId);
   await assertIssueType(before.projectId, patch.typeId);
   await assertParent(before.projectId, id, patch.parentId);
@@ -873,6 +925,7 @@ export async function updateIssue(
   if (patch.typeId !== undefined) set.typeId = patch.typeId;
   if (patch.parentId !== undefined) set.parentId = patch.parentId;
   if (patch.initiativeId !== undefined) set.initiativeId = patch.initiativeId;
+  if (patch.cycleId !== undefined) set.cycleId = patch.cycleId;
   if (patch.assigneeUserId !== undefined) set.assigneeUserId = patch.assigneeUserId;
   if (patch.delegateUserId !== undefined) set.delegateUserId = patch.delegateUserId;
   if (patch.title !== undefined) set.title = patch.title;
@@ -1021,6 +1074,35 @@ async function issuesInProject(projectId: number, ids: number[]): Promise<number
     .from(issue)
     .where(and(eq(issue.projectId, projectId), inArray(issue.id, ids)));
   return rows.map((r) => r.id);
+}
+
+// Moves a cycle's unfinished issues — the ones outside a completed or canceled
+// column — to another cycle, or off any cycle when targetCycleId is null. What the
+// cycle finished stays on it, so it keeps recording what it delivered. Runs the
+// single-issue update per issue, so each move lands in the feed like a hand-made
+// one. Returns how many issues moved.
+export async function transferCycleIssues(
+  projectId: number,
+  cycleId: number,
+  targetCycleId: number | null,
+  actorUserId?: string | null,
+): Promise<number> {
+  if (targetCycleId === cycleId) throw new HttpError(400, 'Target cycle must be a different cycle');
+  await assertCycle(projectId, targetCycleId);
+
+  const rows = await db
+    .select({ id: issue.id })
+    .from(issue)
+    .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
+    .where(
+      and(
+        eq(issue.cycleId, cycleId),
+        isNull(issue.archivedAt),
+        notInArray(projectColumn.stateType, ['completed', 'canceled']),
+      ),
+    );
+  for (const row of rows) await updateIssue(row.id, { cycleId: targetCycleId }, actorUserId);
+  return rows.length;
 }
 
 // Applies the same patch to every listed issue. Returns how many were updated.

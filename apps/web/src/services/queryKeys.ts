@@ -108,6 +108,12 @@ export const qk = {
   anyInitiative: ['initiative'] as const,
   anyInitiativeFeed: ['initiativeFeed'] as const,
   anyInitiatives: ['initiatives'] as const,
+  // Cycles: a project's list and one cycle. Issue mutations invalidate the whole
+  // 'cycles' subtree, since planning an issue moves a cycle's progress.
+  cycles: (projectKey: string) => ['cycles', projectKey] as const,
+  cycle: (id: number) => ['cycle', id] as const,
+  anyCycles: ['cycles'] as const,
+  anyCycle: ['cycle'] as const,
   attachments: (id: number) => ['attachments', id] as const,
   // A project's inbox notifications (the list, scoped by the active filters) and the
   // project's unread count (the sidebar badge + live-refresh target).

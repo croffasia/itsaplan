@@ -102,6 +102,10 @@ export const initiativePath = (
   return tab === 'overview' ? base : `${base}/${tab}`;
 };
 
+export const cyclesPath = (key: string) => `${projectPath(key)}/cycles`;
+
+export const cyclePath = (key: string, cycleId: number) => `${cyclesPath(key)}/${cycleId}`;
+
 // Where the app root sends the user, from their start page preference. The section
 // opens in the project they were last in (see app/page.tsx).
 export const startPagePath = (key: string, startPage: StartPage) => {

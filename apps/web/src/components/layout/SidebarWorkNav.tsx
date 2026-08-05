@@ -1,6 +1,13 @@
 import { usePathname } from 'next/navigation';
-import { Inbox, LayoutDashboard, SquareKanban, StickyNote, Target } from 'lucide-react';
-import { dashboardsPath, inboxPath, initiativesPath, notesPath, projectPath } from '@/utils/paths';
+import { Inbox, LayoutDashboard, RefreshCw, SquareKanban, StickyNote, Target } from 'lucide-react';
+import {
+  cyclesPath,
+  dashboardsPath,
+  inboxPath,
+  initiativesPath,
+  notesPath,
+  projectPath,
+} from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
@@ -64,6 +71,15 @@ export default function SidebarWorkNav({
               icon={Target}
               label="Initiatives"
               active={pathname.includes('/initiatives')}
+              disabled={disabled}
+            />
+          )}
+          {features.cycles && can('cycles', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? cyclesPath(projectKey) : '#'}
+              icon={RefreshCw}
+              label="Cycles"
+              active={pathname.includes('/cycles')}
               disabled={disabled}
             />
           )}

@@ -72,6 +72,7 @@ export const app = new Elysia()
             name: 'Initiatives',
             description: 'Initiatives (issue groupings) and their activity feed',
           },
+          { name: 'Cycles', description: 'Cycles (time-boxed periods of work) and their issues' },
           { name: 'Attachments', description: 'Issue attachments and raw bytes' },
           { name: 'Avatars', description: "Current user's avatar image (upload and raw bytes)" },
           { name: 'Views', description: 'Saved work items views' },

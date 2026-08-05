@@ -11,7 +11,7 @@ import PrioritySelect from '@/components/common/fields/PrioritySelect';
 import InitiativeStatusSelect from '../shared/InitiativeStatusSelect';
 import HealthBadge from '../shared/HealthBadge';
 import HealthInfoPopover from '../shared/HealthInfoPopover';
-import ProgressBar from '../shared/ProgressBar';
+import ProgressBar from '@/components/common/ProgressBar';
 import InitiativeActions from './InitiativeActions';
 
 // The initiative detail header. The pills patch the initiative inline; title and

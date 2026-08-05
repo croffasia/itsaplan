@@ -12,6 +12,7 @@ import {
   ListChecks,
   ListTree,
   Pencil,
+  RefreshCw,
   Shapes,
   SignalHigh,
   Bot,
@@ -35,6 +36,7 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   delegate: Bot,
   priority: SignalHigh,
   type: Shapes,
+  cycle: RefreshCw,
   start_date: Calendar,
   due_date: Calendar,
   label_add: Tag,
@@ -112,6 +114,17 @@ export function describeActivity(a: FeedItem): { line: ReactNode; popover?: stri
         : { line: 'removed priority' };
     case 'type':
       return a.toText ? { line: <>set type to {strong(a.toText)}</> } : { line: 'removed type' };
+    case 'cycle':
+      if (!a.toText) return { line: <>removed from cycle {strong(a.fromText)}</> };
+      return {
+        line: a.fromText ? (
+          <>
+            moved from cycle {strong(a.fromText)} to {strong(a.toText)}
+          </>
+        ) : (
+          <>planned into cycle {strong(a.toText)}</>
+        ),
+      };
     case 'start_date':
       return a.toText
         ? { line: <>set start date to {strong(fmtDate(a.toText))}</> }

@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Target } from 'lucide-react';
+import { RefreshCw, Target } from 'lucide-react';
 import {
   type CustomField,
   type ProjectDetail,
@@ -18,6 +18,7 @@ import PrioritySelect from '@/components/common/fields/PrioritySelect';
 import StatusSelect from '@/components/common/fields/StatusSelect';
 import TypeSelect from '@/components/common/fields/TypeSelect';
 import InitiativeSelect from '../fields/InitiativeSelect';
+import CycleSelect from '../fields/CycleSelect';
 import IssueCustomFieldControl from '../fields/IssueCustomFieldControl';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueWatchers from './IssueWatchers';
@@ -165,6 +166,27 @@ export default function IssueProperties({
               projectKey={project.project.key}
               value={issue.initiative?.id ?? null}
               onChange={(id) => onPatch({ initiativeId: id })}
+            />
+          )}
+        </PropertyRow>
+      )}
+
+      {project.project.cyclesEnabled && (!readOnly || issue.cycle) && (
+        <PropertyRow label="Cycle">
+          {readOnly ? (
+            // Read-only shows the cycle from the issue itself, avoiding the
+            // authenticated cycles query the editable select runs.
+            <ReadOnlyPill>
+              <Pill active={!!issue.cycle}>
+                <RefreshCw />
+                {issue.cycle?.name ?? 'Cycle'}
+              </Pill>
+            </ReadOnlyPill>
+          ) : (
+            <CycleSelect
+              projectKey={project.project.key}
+              value={issue.cycle?.id ?? null}
+              onChange={(id) => onPatch({ cycleId: id })}
             />
           )}
         </PropertyRow>

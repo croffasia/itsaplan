@@ -22,7 +22,13 @@ export type { Sort, SortField } from '@/utils/viewTypes';
 
 export type NewIssueDefaults = Pick<
   NewIssueInput,
-  'columnId' | 'typeId' | 'initiativeId' | 'assigneeUserId' | 'delegateUserId' | 'priority'
+  | 'columnId'
+  | 'typeId'
+  | 'initiativeId'
+  | 'cycleId'
+  | 'assigneeUserId'
+  | 'delegateUserId'
+  | 'priority'
 > &
   Partial<Pick<NewIssueInput, 'title' | 'description' | 'parentId'>>;
 

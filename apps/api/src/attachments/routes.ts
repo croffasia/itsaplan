@@ -1,15 +1,16 @@
 import { Elysia, t } from 'elysia';
-import { randomUUID, createHash } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import { noContent } from '../shared/http';
 import { authContext } from '../shared/auth-context';
 import { entityGuard } from '../shared/guards';
 import { HttpError } from '../shared/lib';
-import { putObject, getObject, deleteObject } from '../shared/s3';
+import { getObject, deleteObject } from '../shared/s3';
+import { assertUploadAllowed, storeUploadedObject, uploadObjectKey } from '../shared/uploads';
 import { assertPublicHttpUrl } from '../shared/net';
 import { getIssueProjectId } from '../issues/store';
 import { mcpTool } from '../mcp/generate';
 import { ErrorResponse } from '../shared/responses';
-import { getStorageSettings, mimeAllowed, MB, type StorageSettings } from '../settings/storage';
+import { getStorageSettings, MB } from '../settings/storage';
 import {
   createAttachment,
   listAttachments,
@@ -17,7 +18,6 @@ import {
   replaceAttachmentContent,
   deleteAttachmentByPublicId,
   removeAttachmentEmbeds,
-  getProjectAttachmentBytes,
   type AttachmentRow,
 } from './store';
 
@@ -30,58 +30,6 @@ const AttachmentSchema = t.Object({
   createdAt: t.String(),
   url: t.String(),
 });
-
-// The upload limits are instance settings (see ../settings/storage.ts), read per
-// request so a change in god mode takes effect without a restart.
-async function assertUploadAllowed(
-  limits: StorageSettings,
-  projectId: number,
-  size: number,
-  contentType: string,
-  // Bytes the new file takes the place of, which the quota gets back.
-  replacedBytes = 0,
-): Promise<void> {
-  if (size > limits.maxAttachmentMb * MB) {
-    throw new HttpError(413, `File exceeds the ${limits.maxAttachmentMb} MB limit`);
-  }
-  if (!mimeAllowed(contentType, limits.attachmentMimeTypes)) {
-    throw new HttpError(400, `Files of type "${contentType}" are not accepted on this instance`);
-  }
-  if (limits.projectQuotaMb > 0) {
-    const used = (await getProjectAttachmentBytes(projectId)) - replacedBytes;
-    if (used + size > limits.projectQuotaMb * MB) {
-      throw new HttpError(
-        413,
-        `The project has used its ${limits.projectQuotaMb} MB storage quota. Delete attachments to free space.`,
-      );
-    }
-  }
-}
-
-// A failed write to the object store is nothing the caller can fix, so it is
-// logged with what it takes to find the object and reported as a bad gateway.
-async function storeObject(key: string, bytes: Buffer, contentType: string): Promise<void> {
-  try {
-    await putObject(key, bytes, contentType);
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error(
-      `[planner] object store PUT failed (bucket=${process.env.S3_BUCKET}, key=${key}, size=${bytes.length}):`,
-      err,
-    );
-    throw new HttpError(502, `Object store error: ${msg}`);
-  }
-}
-
-// Object keys are grouped by project so a project's bytes sit under one prefix in
-// the bucket, which is what makes per-project listing, cleanup, and policies
-// possible. Keys already stored keep their old form; the full key lives in the row.
-function attachmentKey(projectId: number, issueId: number, filename: string): string {
-  // Keep the original filename as the last key segment so the extension is visible
-  // in the bucket and to any tool that sniffs the key by suffix.
-  const safeName = filename.replace(/[^\w.-]+/g, '_').slice(-100);
-  return `projects/${projectId}/attachments/${issueId}/${randomUUID()}-${safeName}`;
-}
 
 // Public shape returned to the UI: never exposes the internal serial id or the
 // object key. `url` is the public, no-auth download route — it can be embedded in
@@ -153,10 +101,10 @@ export const attachmentRoutes = new Elysia({
 
       const filename = file.name || 'file';
       const contentType = file.type || 'application/octet-stream';
-      await assertUploadAllowed(await getStorageSettings(), projectId, file.size, contentType);
+      await assertUploadAllowed(projectId, file.size, contentType);
 
-      const key = attachmentKey(projectId, issueId, filename);
-      await storeObject(key, Buffer.from(await file.arrayBuffer()), contentType);
+      const key = uploadObjectKey(projectId, `attachments/${issueId}`, filename);
+      await storeUploadedObject(key, Buffer.from(await file.arrayBuffer()), contentType);
 
       const row = await createAttachment({
         issueId,
@@ -230,10 +178,10 @@ export const attachmentRoutes = new Elysia({
       }
 
       if (bytes.length === 0) throw new HttpError(400, 'The file is empty');
-      await assertUploadAllowed(limits, projectId, bytes.length, contentType);
+      await assertUploadAllowed(projectId, bytes.length, contentType);
 
-      const key = attachmentKey(projectId, issueId, filename);
-      await storeObject(key, bytes, contentType);
+      const key = uploadObjectKey(projectId, `attachments/${issueId}`, filename);
+      await storeUploadedObject(key, bytes, contentType);
 
       const row = await createAttachment({
         issueId,
@@ -287,16 +235,10 @@ export const attachmentRoutes = new Elysia({
 
       const filename = file.name || existing.filename;
       const contentType = file.type || 'application/octet-stream';
-      await assertUploadAllowed(
-        await getStorageSettings(),
-        projectId,
-        file.size,
-        contentType,
-        existing.sizeBytes,
-      );
+      await assertUploadAllowed(projectId, file.size, contentType, existing.sizeBytes);
 
-      const key = attachmentKey(projectId, existing.issueId, filename);
-      await storeObject(key, Buffer.from(await file.arrayBuffer()), contentType);
+      const key = uploadObjectKey(projectId, `attachments/${existing.issueId}`, filename);
+      await storeUploadedObject(key, Buffer.from(await file.arrayBuffer()), contentType);
 
       const row = await replaceAttachmentContent(params.publicId, {
         s3Key: key,

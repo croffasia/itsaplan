@@ -2,6 +2,8 @@ import Link from 'next/link';
 import { ChevronsUpDown, Plus, Settings2, SquareKanban } from 'lucide-react';
 import type { Project } from '@/lib/api';
 import { manageProjectsPath } from '@/utils/paths';
+import { cn } from '@/lib/utils';
+import VexolMark from '@/components/brand/VexolMark';
 import { Badge } from '@/components/ui/badge';
 import {
   DropdownMenu,
@@ -33,6 +35,7 @@ export default function ProjectSwitcher({
 }) {
   const { isMobile } = useSidebar();
   const current = projects.find((b) => b.key === currentProjectKey);
+  const isVexolProject = current?.name.trim().toLowerCase().startsWith('vexol') ?? false;
 
   return (
     <SidebarMenu>
@@ -44,8 +47,19 @@ export default function ProjectSwitcher({
               disabled={projects.length === 0}
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <SquareKanban className="size-4" />
+              <div
+                className={cn(
+                  'flex aspect-square size-8 items-center justify-center rounded-lg',
+                  isVexolProject
+                    ? 'bg-[#242424] text-white'
+                    : 'bg-sidebar-primary text-sidebar-primary-foreground',
+                )}
+              >
+                {isVexolProject ? (
+                  <VexolMark className="size-7" />
+                ) : (
+                  <SquareKanban className="size-4" />
+                )}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{current?.name ?? 'No projects yet'}</span>

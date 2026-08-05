@@ -23,6 +23,10 @@ export const dashboardPath = (key: string, dashboardId: number) =>
 
 export const notesPath = (key: string) => `${projectPath(key)}/notes`;
 
+export const filesPath = (key: string) => `${projectPath(key)}/files`;
+export const crmPath = (key: string) => `${projectPath(key)}/crm`;
+export const crmCustomerPath = (key: string, customerId: string) => `${crmPath(key)}/${customerId}`;
+
 export const notePath = (key: string, boardId: number) => `${notesPath(key)}/${boardId}`;
 
 export const settingsPath = (key: string, section: string) =>

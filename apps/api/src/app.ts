@@ -73,6 +73,8 @@ export const app = new Elysia()
             description: 'Initiatives (issue groupings) and their activity feed',
           },
           { name: 'Attachments', description: 'Issue attachments and raw bytes' },
+          { name: 'Files', description: 'Project files and protected downloads' },
+          { name: 'CRM', description: 'Project customers and relationship details' },
           { name: 'Avatars', description: "Current user's avatar image (upload and raw bytes)" },
           { name: 'Views', description: 'Saved work items views' },
           { name: 'Share', description: 'Public read-only sharing of issues and views' },

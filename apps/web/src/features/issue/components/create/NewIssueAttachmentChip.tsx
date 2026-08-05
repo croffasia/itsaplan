@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X } from 'lucide-react';
 import { type PendingAttachment } from '../../hooks/useNewIssueAttachments';
 import { isImage, type Embeddable } from '../../utils/attachmentEmbed';
-import { formatSize } from '../../utils/fileSize';
+import { formatFileSize } from '@/utils/fileSize';
 import { baseName } from '../../utils/filename';
 import IssueAttachmentThumb from '../IssueAttachmentThumb';
 import IssueImageAnnotator from '../IssueImageAnnotator';
@@ -45,7 +45,7 @@ export default function NewIssueAttachmentChip({
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{item.filename}</p>
-            <p className="text-xs text-muted-foreground">{formatSize(item.file.size)}</p>
+            <p className="text-xs text-muted-foreground">{formatFileSize(item.file.size)}</p>
           </div>
           {onInsert && (
             <Button

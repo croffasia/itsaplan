@@ -5,9 +5,8 @@ import {
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 
-// S3-compatible object store (MinIO) for issue attachments. Only the file
-// bytes live here; the metadata and object key are rows in issue_attachment
-// (see ../attachments/store.ts).
+// S3-compatible object store (MinIO) for uploaded files. Only the bytes live
+// here; metadata and object keys stay in PostgreSQL.
 //
 // Config comes from env. forcePathStyle is required for MinIO (and most
 // self-hosted S3 gateways) because they do not serve virtual-host-style buckets.

@@ -21,6 +21,8 @@ const RESOURCE_LABELS: Record<string, string> = {
   actions: 'Actions',
   webhooks: 'Webhooks',
   note_boards: 'Note boards',
+  files: 'Files',
+  crm: 'CRM',
   danger_zone: 'Danger zone',
 };
 
@@ -59,6 +61,8 @@ const GROUP_DEFS: PermissionGroup[] = [
   { title: 'Work items', resources: ['work_items', 'initiatives', 'views'] },
   { title: 'Dashboards', resources: ['dashboards'] },
   { title: 'Notes', resources: ['note_boards'] },
+  { title: 'Files', resources: ['files'] },
+  { title: 'CRM', resources: ['crm'] },
   { title: 'AI', resources: ['ai_agents', 'integrations', 'agent_skills', 'agent_tools'] },
   {
     title: 'Configuration',

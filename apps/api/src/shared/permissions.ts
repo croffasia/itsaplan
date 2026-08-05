@@ -22,6 +22,8 @@ export const PERMISSION_RESOURCES = [
   'actions',
   'webhooks',
   'note_boards',
+  'files',
+  'crm',
   'danger_zone',
 ] as const;
 export type PermissionResource = (typeof PERMISSION_RESOURCES)[number];
@@ -54,6 +56,8 @@ export function defaultMemberPermissions(): Permissions {
   p.work_items = fill(true);
   p.initiatives = fill(true);
   p.note_boards = fill(true);
+  p.files = fill(true);
+  p.crm = fill(true);
   p.dashboards.read = true;
   p.views.read = true;
   p.states.read = true;

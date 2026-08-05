@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useCustomFieldsQuery } from '@/services/customFields.service';
-import { useFileDragZone } from '../../hooks/useFileDragZone';
+import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { useNewIssueAttachments } from '../../hooks/useNewIssueAttachments';
 import {
   attachmentHtml,

@@ -30,9 +30,9 @@ services:
       timeout: 5s
       retries: 10
 
-  # S3-compatible object store for issue attachments (MinIO).
+  # S3-compatible object store for uploaded files (MinIO).
   # Both the S3 API (:9000) and the console (:9001) are internal only — the api
-  # streams attachment bytes over the internal network, so no port is published.
+  # streams file bytes over the internal network, so no port is published.
   # Administer through mc from inside the network or an SSH tunnel.
   minio:
     image: minio/minio:latest
@@ -50,7 +50,7 @@ services:
       retries: 5
       start_period: 20s
 
-  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  # One-shot: waits for MinIO, creates the upload bucket, then exits.
   # restart "no" is explicit: it exits 0 by design, and platforms that inject
   # restart: unless-stopped (e.g. Coolify) would otherwise loop it forever and
   # trip their restart-count limit, tearing the whole stack down.

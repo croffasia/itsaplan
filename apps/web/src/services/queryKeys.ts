@@ -109,6 +109,9 @@ export const qk = {
   anyInitiativeFeed: ['initiativeFeed'] as const,
   anyInitiatives: ['initiatives'] as const,
   attachments: (id: number) => ['attachments', id] as const,
+  projectFiles: (projectKey: string) => ['projectFiles', projectKey] as const,
+  crmCustomers: (projectKey: string) => ['crmCustomers', projectKey] as const,
+  crmCustomer: (customerId: string) => ['crmCustomer', customerId] as const,
   // A project's inbox notifications (the list, scoped by the active filters) and the
   // project's unread count (the sidebar badge + live-refresh target).
   notifications: (projectKey: string, filters?: unknown) =>

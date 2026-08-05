@@ -2,13 +2,16 @@ import { useRouter } from 'next/navigation';
 import {
   Bell,
   Braces,
+  ContactRound,
   FolderKanban,
+  Files,
   Inbox,
   LayoutDashboard,
   MessagesSquare,
   Server,
   Shield,
   SquareKanban,
+  StickyNote,
   Target,
   Users,
 } from 'lucide-react';
@@ -19,6 +22,8 @@ import {
   aiTeamPath,
   apiDocsPath,
   dashboardsPath,
+  crmPath,
+  filesPath,
   godPath,
   inboxPath,
   initiativesPath,
@@ -26,6 +31,7 @@ import {
   mcpServerPath,
   membersPath,
   notificationsPath,
+  notesPath,
   projectPath,
 } from '@/utils/paths';
 import { ACCOUNT_SECTIONS, accountPath } from '@/utils/accountSections';
@@ -64,6 +70,12 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
     add('nav.work-items', 'Work items', <SquareKanban />, projectPath(key), 'board issues kanban');
     if (features.initiatives && can('initiatives', 'read'))
       add('nav.initiatives', 'Initiatives', <Target />, initiativesPath(key), 'epics');
+    if (features.notes && can('note_boards', 'read'))
+      add('nav.notes', 'Notes', <StickyNote />, notesPath(key), 'boards sticky notes');
+    if (can('files', 'read'))
+      add('nav.files', 'Files', <Files />, filesPath(key), 'documents uploads');
+    if (can('crm', 'read'))
+      add('nav.crm', 'CRM', <ContactRound />, crmPath(key), 'customers companies sales');
     if (can('ai_agents', 'read'))
       add('nav.ai-chat', 'Chat with AI Team', <MessagesSquare />, aiChatPath(key), 'ai agents');
     for (const s of AI_TEAM_SECTIONS) {

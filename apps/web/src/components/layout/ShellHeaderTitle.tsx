@@ -10,6 +10,8 @@ function pageLabel(route: ShellRoute, projectName: string): string {
   if (sub === 'members') return 'Members';
   if (sub === 'dashboard') return 'Dashboards';
   if (sub === 'initiatives') return 'Initiatives';
+  if (sub === 'files') return 'Files';
+  if (sub === 'crm') return 'CRM';
   if (aiTeamCrumb) return aiTeamCrumb;
   if (sub === 'ai-agents') return 'AI agents';
   if (sub === 'api') return 'API';

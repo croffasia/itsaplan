@@ -59,17 +59,6 @@ export async function listAttachments(issueId: number): Promise<AttachmentRow[]>
   return rows.map(mapAttachment);
 }
 
-// Bytes currently stored for a project, across every issue in it. Read before an
-// upload to enforce the instance project quota.
-export async function getProjectAttachmentBytes(projectId: number): Promise<number> {
-  const rows = await db
-    .select({ total: sql<string>`coalesce(sum(${issueAttachment.sizeBytes}), 0)` })
-    .from(issueAttachment)
-    .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
-    .where(eq(issue.projectId, projectId));
-  return num(rows[0]?.total ?? 0);
-}
-
 export async function getAttachmentByPublicId(publicId: string): Promise<AttachmentRow | null> {
   const rows = await db
     .select()

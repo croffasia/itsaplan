@@ -30,7 +30,7 @@ services:
       timeout: 3s
       retries: 20
 
-  # Throwaway MinIO for the attachments feature test (object bytes). Ephemeral:
+  # Throwaway MinIO for uploaded-file tests (object bytes). Ephemeral:
   # /data is tmpfs, wiped when the run ends.
   minio-test:
     image: minio/minio:latest
@@ -41,7 +41,7 @@ services:
     tmpfs:
       - /data
 
-  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  # One-shot: waits for MinIO, creates the upload bucket, then exits.
   minio-test-init:
     image: minio/mc:latest
     depends_on:
@@ -75,7 +75,7 @@ services:
       APP_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVzLWxlbiE=
       API_URL: http://localhost:3000
       APP_URL: http://localhost:3001
-      # Object store for the attachments test (throwaway MinIO above).
+      # Object store for uploaded-file tests (throwaway MinIO above).
       S3_ENDPOINT: http://minio-test:9000
       S3_REGION: us-east-1
       S3_BUCKET: planner-attachments

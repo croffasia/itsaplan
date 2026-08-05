@@ -23,7 +23,7 @@ export interface StorageSettings {
   // Accepted attachment content types. An entry is a full type ('application/pdf')
   // or a wildcard ('image/*'). An empty list accepts any type.
   attachmentMimeTypes: string[];
-  // Total stored attachment bytes allowed per project, in MB. 0 means unlimited.
+  // Total stored file and attachment bytes allowed per project, in MB. 0 means unlimited.
   projectQuotaMb: number;
 }
 

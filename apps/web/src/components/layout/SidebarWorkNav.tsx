@@ -1,6 +1,22 @@
 import { usePathname } from 'next/navigation';
-import { Inbox, LayoutDashboard, SquareKanban, StickyNote, Target } from 'lucide-react';
-import { dashboardsPath, inboxPath, initiativesPath, notesPath, projectPath } from '@/utils/paths';
+import {
+  ContactRound,
+  Files,
+  Inbox,
+  LayoutDashboard,
+  SquareKanban,
+  StickyNote,
+  Target,
+} from 'lucide-react';
+import {
+  crmPath,
+  dashboardsPath,
+  filesPath,
+  inboxPath,
+  initiativesPath,
+  notesPath,
+  projectPath,
+} from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
@@ -73,6 +89,24 @@ export default function SidebarWorkNav({
               icon={StickyNote}
               label="Notes"
               active={pathname.includes('/notes')}
+              disabled={disabled}
+            />
+          )}
+          {can('files', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? filesPath(projectKey) : '#'}
+              icon={Files}
+              label="Files"
+              active={pathname.includes('/files')}
+              disabled={disabled}
+            />
+          )}
+          {can('crm', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? crmPath(projectKey) : '#'}
+              icon={ContactRound}
+              label="CRM"
+              active={pathname.includes('/crm')}
               disabled={disabled}
             />
           )}

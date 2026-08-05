@@ -1276,6 +1276,39 @@ export interface Attachment {
   url: string;
 }
 
+export interface ProjectFile {
+  id: string;
+  customerId: string | null;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedByName: string | null;
+  createdAt: string;
+}
+
+export type CrmCustomerStatus = 'prospect' | 'active' | 'inactive';
+
+export interface CrmCustomer {
+  id: string;
+  name: string;
+  status: CrmCustomerStatus;
+  service: string;
+  owner: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  projectStatus: string;
+  openTasks: string;
+  notes: string;
+  lastCommunication: string;
+  nextAction: string;
+  deadline: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CrmCustomerInput = Omit<CrmCustomer, 'id' | 'createdAt' | 'updatedAt'>;
+
 // `action` selects how the UI renders an activity row; from_text/to_text are
 // display-ready value snapshots (column/label/type/assignee name, raw priority,
 // ISO date, or the new text of a long field). `subject` names the changed
@@ -1754,6 +1787,8 @@ export type PermissionResource =
   | 'actions'
   | 'webhooks'
   | 'note_boards'
+  | 'files'
+  | 'crm'
   | 'danger_zone';
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;
@@ -1857,6 +1892,28 @@ async function sendAttachmentFile(
     throw new Error(body?.error ?? `${res.status} ${res.statusText}`);
   }
   return absolutizeAttachment(await res.json());
+}
+
+async function sendProjectFile(
+  projectKey: string,
+  file: File,
+  customerId?: string,
+): Promise<ProjectFile> {
+  const form = new FormData();
+  form.append('file', file);
+  const path = customerId
+    ? `/projects/${encodeURIComponent(projectKey)}/crm/customers/${encodeURIComponent(customerId)}/files`
+    : `/projects/${encodeURIComponent(projectKey)}/files`;
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+  }
+  return res.json();
 }
 
 // Inbox notifications. Each row is enriched with the issue and project it points at
@@ -2205,6 +2262,41 @@ export const api = {
     sendAttachmentFile(`/attachments/${publicId}`, 'PUT', file),
   deleteAttachment: (publicId: string) =>
     request<void>(`/attachments/${publicId}`, { method: 'DELETE' }),
+
+  listProjectFiles: (projectKey: string) =>
+    request<ProjectFile[]>(`/projects/${encodeURIComponent(projectKey)}/files`),
+  uploadProjectFile: (projectKey: string, file: File, customerId?: string) =>
+    sendProjectFile(projectKey, file, customerId),
+  downloadProjectFile: async (publicId: string) => {
+    const res = await fetch(`${API_URL}/files/${encodeURIComponent(publicId)}/raw`, {
+      credentials: 'include',
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+    }
+    return res.blob();
+  },
+  deleteProjectFile: (publicId: string) =>
+    request<void>(`/files/${encodeURIComponent(publicId)}`, { method: 'DELETE' }),
+
+  listCrmCustomers: (projectKey: string) =>
+    request<CrmCustomer[]>(`/projects/${encodeURIComponent(projectKey)}/crm/customers`),
+  getCrmCustomer: (customerId: string) =>
+    request<CrmCustomer>(`/crm/customers/${encodeURIComponent(customerId)}`),
+  createCrmCustomer: (projectKey: string, input: CrmCustomerInput) =>
+    request<CrmCustomer>(`/projects/${encodeURIComponent(projectKey)}/crm/customers`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateCrmCustomer: (customerId: string, patch: Partial<CrmCustomerInput>) =>
+    request<CrmCustomer>(`/crm/customers/${encodeURIComponent(customerId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteCrmCustomer: (customerId: string) =>
+    request<void>(`/crm/customers/${encodeURIComponent(customerId)}`, { method: 'DELETE' }),
 
   listFeed: (issueId: number, params: { cursor?: FeedCursor | null; limit?: number } = {}) =>
     request<FeedPage>(`/issues/${issueId}/feed${feedPageQuery(params)}`),

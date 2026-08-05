@@ -70,6 +70,62 @@ export const project = pgTable('project', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const crmCustomer = pgTable(
+  'crm_customer',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    status: text('status').notNull().default('prospect'),
+    service: text('service').notNull().default(''),
+    owner: text('owner').notNull().default(''),
+    contactName: text('contact_name').notNull().default(''),
+    contactEmail: text('contact_email').notNull().default(''),
+    contactPhone: text('contact_phone').notNull().default(''),
+    projectStatus: text('project_status').notNull().default(''),
+    openTasks: text('open_tasks').notNull().default(''),
+    notes: text('notes').notNull().default(''),
+    lastCommunication: text('last_communication').notNull().default(''),
+    nextAction: text('next_action').notNull().default(''),
+    deadline: date('deadline'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('crm_customer_project_idx').on(t.projectId, t.updatedAt),
+    check('crm_customer_status_check', sql`${t.status} in ('prospect', 'active', 'inactive')`),
+  ],
+);
+
+export const projectFile = pgTable(
+  'project_file',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    crmCustomerId: integer('crm_customer_id').references(() => crmCustomer.id, {
+      onDelete: 'set null',
+    }),
+    uploadedByUserId: text('uploaded_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    s3Key: text('s3_key').notNull(),
+    filename: text('filename').notNull(),
+    contentType: text('content_type').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('project_file_project_idx').on(t.projectId, t.createdAt),
+    index('project_file_crm_customer_idx').on(t.crmCustomerId, t.createdAt),
+  ],
+);
+
 // Per-project key-value settings, mirroring app_setting but scoped to a project.
 // The value is a jsonb blob owned by whatever feature reads the key, so one table
 // backs many project settings (e.g. auto-archive thresholds under key

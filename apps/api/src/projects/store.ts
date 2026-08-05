@@ -1,10 +1,13 @@
 import {
   db,
+  issue,
+  issueAttachment,
   issueType,
   project,
   projectColumn,
   projectMember,
   projectRole,
+  projectFile,
   projectSetting,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
@@ -17,6 +20,7 @@ import {
 } from '../shared/permissions';
 import { getProjectSetting, setProjectSetting } from '../settings/store';
 import { deleteThreadsWhere } from '../ai-agents/runtime/memory';
+import { deleteObjects } from '../shared/s3';
 
 // Data access for projects: the top-level container that groups its own columns,
 // issue types, labels, assignees, custom fields, issues, saved views, and
@@ -358,6 +362,18 @@ export async function setAutoArchiveSettings(
 // conversation threads of the project's agents are deleted first, since they live
 // outside those cascades.
 export async function deleteProject(projectId: number): Promise<void> {
+  const [attachmentKeys, fileKeys] = await Promise.all([
+    db
+      .select({ s3Key: issueAttachment.s3Key })
+      .from(issueAttachment)
+      .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
+      .where(eq(issue.projectId, projectId)),
+    db
+      .select({ s3Key: projectFile.s3Key })
+      .from(projectFile)
+      .where(eq(projectFile.projectId, projectId)),
+  ]);
   await deleteThreadsWhere({ projectId });
   await db.delete(project).where(eq(project.id, projectId));
+  await deleteObjects([...attachmentKeys, ...fileKeys].map((row) => row.s3Key));
 }

@@ -2,7 +2,7 @@ import { type DragEvent } from 'react';
 import { Download, PenLine, Plus, Trash2 } from 'lucide-react';
 import { type Attachment } from '@/lib/api';
 import { attachmentHtml, isImage, isVideo } from '../../utils/attachmentEmbed';
-import { formatSize } from '../../utils/fileSize';
+import { formatFileSize } from '@/utils/fileSize';
 import IssueAttachmentThumb from '../IssueAttachmentThumb';
 import { Button } from '@/components/ui/button';
 
@@ -126,7 +126,7 @@ export default function IssueAttachmentCard({
         <p className="truncate text-xs" title={attachment.filename}>
           {attachment.filename}
         </p>
-        <p className="text-[11px] text-muted-foreground">{formatSize(attachment.sizeBytes)}</p>
+        <p className="text-[11px] text-muted-foreground">{formatFileSize(attachment.sizeBytes)}</p>
       </div>
     </div>
   );

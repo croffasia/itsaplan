@@ -16,6 +16,8 @@ import { customFieldRoutes } from './custom-fields/routes';
 import { issueRoutes } from './issues/routes';
 import { initiativeRoutes } from './initiatives/routes';
 import { attachmentRoutes } from './attachments/routes';
+import { fileRoutes } from './files/routes';
+import { crmRoutes } from './crm/routes';
 import { avatarRoutes } from './avatars/routes';
 import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
@@ -85,6 +87,8 @@ export const planner = new Elysia({ name: 'planner' })
   .use(issueRoutes)
   .use(initiativeRoutes)
   .use(attachmentRoutes)
+  .use(fileRoutes)
+  .use(crmRoutes)
   .use(avatarRoutes)
   .use(viewRoutes)
   .use(shareRoutes)

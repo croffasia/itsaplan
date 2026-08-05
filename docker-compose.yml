@@ -34,9 +34,9 @@ services:
       timeout: 5s
       retries: 10
 
-  # S3-compatible object store for issue attachments.
+  # S3-compatible object store for uploaded files.
   # Both the S3 API (:9000) and the console (:9001) stay inside the compose
-  # network: the api streams attachment bytes through itself, so no port is
+  # network: the api streams file bytes through itself, so no port is
   # published. Administer through mc from inside the network or an SSH tunnel.
   minio:
     image: minio/minio:latest
@@ -54,7 +54,7 @@ services:
       retries: 5
       start_period: 20s
 
-  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  # One-shot: waits for MinIO, creates the upload bucket, then exits.
   minio-init:
     image: minio/mc:latest
     restart: 'no'

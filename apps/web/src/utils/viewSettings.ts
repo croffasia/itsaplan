@@ -4,13 +4,14 @@
 // shows only the controls that apply to the active view. Missing fields fall
 // back to per-view defaults, so the store grows new options without a migration.
 
+import type { ProjectFeatures } from '@/lib/api';
 import type { Sort, WorkItemsView } from '@/utils/viewTypes';
 
 // Field the Project columns / Table sections group by. 'none' is a single flat
 // list (Table only). Project always groups by something. `subgroup` (below) adds a
 // second level: Project swimlanes / Table sub-sections, and may be 'none'.
 export type GroupField =
-  'none' | 'status' | 'assignee' | 'delegate' | 'priority' | 'type' | 'initiative';
+  'none' | 'status' | 'assignee' | 'delegate' | 'priority' | 'type' | 'initiative' | 'cycle';
 
 // Issue properties that can be shown on a Project card or as a Table column.
 // 'id' is the issue identifier; 'status' the state; the rest map to issue
@@ -170,6 +171,7 @@ const GROUP_FIELDS: GroupField[] = [
   'priority',
   'type',
   'initiative',
+  'cycle',
 ];
 const DISPLAY_VALUES = DISPLAY_PROPERTIES.map((p) => p.value);
 const TIMELINE_SCALES: TimelineScale[] = ['week', 'month', 'quarter'];
@@ -267,36 +269,64 @@ export function normalizeViewSettings(
   };
 }
 
-// The same settings without the Initiative property, grouping and sub-grouping,
-// for a project with the Initiatives section turned off: a display built while it
-// was on then renders no dead column or lane.
-export function withoutInitiative(settings: ViewSettings): ViewSettings {
+// The grouping fields that group by an optional section's entity, with the section
+// each one needs. Grouping by one while its section is off would render columns for
+// something the project does not show.
+const SECTION_GROUP_FIELDS: Partial<Record<GroupField, keyof ProjectFeatures>> = {
+  initiative: 'initiatives',
+  cycle: 'cycles',
+};
+
+// Whether a grouping field applies to a project: the ones behind an optional
+// section only while it is on.
+export function isGroupFieldEnabled(field: GroupField, features: ProjectFeatures): boolean {
+  const section = SECTION_GROUP_FIELDS[field];
+  return section === undefined || features[section];
+}
+
+// The same settings without the grouping and sub-grouping of a section the project
+// has turned off (and without the Initiative property): a display built while the
+// section was on then renders no dead column or lane.
+export function withoutHiddenSections(
+  settings: ViewSettings,
+  features: ProjectFeatures,
+): ViewSettings {
   return {
     ...settings,
-    group: settings.group === 'initiative' ? 'status' : settings.group,
-    subgroup: settings.subgroup === 'initiative' ? 'none' : settings.subgroup,
-    properties: settings.properties.filter((p) => p !== 'initiative'),
+    group: isGroupFieldEnabled(settings.group, features) ? settings.group : 'status',
+    subgroup: isGroupFieldEnabled(settings.subgroup, features) ? settings.subgroup : 'none',
+    properties: features.initiatives
+      ? settings.properties
+      : settings.properties.filter((p) => p !== 'initiative'),
   };
 }
 
-// The counterpart of withoutInitiative: puts the stored Initiative choices back
-// into a display edited while the section was off, at the column position they
-// had. The panel could not show them, so an edit made then must not drop them —
-// the display comes back as it was once the section is on again. A value the user
-// did change carries through, since it then differs from what stripping left.
-export function restoreInitiative(edited: ViewSettings, stored: ViewSettings): ViewSettings {
-  const at = stored.properties.indexOf('initiative');
+// The counterpart of withoutHiddenSections: puts the stored choices of a hidden
+// section back into a display edited while it was off, the Initiative property at
+// the column position it had. The panel could not show them, so an edit made then
+// must not drop them — the display comes back as it was once the section is on
+// again. A value the user did change carries through, since it then differs from
+// what stripping left.
+export function restoreHiddenSections(
+  edited: ViewSettings,
+  stored: ViewSettings,
+  features: ProjectFeatures,
+): ViewSettings {
+  const initiativeAt = features.initiatives ? -1 : stored.properties.indexOf('initiative');
+  const hidden = (field: GroupField) => !isGroupFieldEnabled(field, features);
   return {
     ...edited,
-    group: stored.group === 'initiative' && edited.group === 'status' ? 'initiative' : edited.group,
+    group: hidden(stored.group) && edited.group === 'status' ? stored.group : edited.group,
     subgroup:
-      stored.subgroup === 'initiative' && edited.subgroup === 'none'
-        ? 'initiative'
-        : edited.subgroup,
+      hidden(stored.subgroup) && edited.subgroup === 'none' ? stored.subgroup : edited.subgroup,
     properties:
-      at === -1
+      initiativeAt === -1
         ? edited.properties
-        : [...edited.properties.slice(0, at), 'initiative', ...edited.properties.slice(at)],
+        : [
+            ...edited.properties.slice(0, initiativeAt),
+            'initiative',
+            ...edited.properties.slice(initiativeAt),
+          ],
   };
 }
 

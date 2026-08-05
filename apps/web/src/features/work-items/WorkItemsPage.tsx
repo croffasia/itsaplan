@@ -9,7 +9,11 @@ import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { api, type BoardIssues } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 import { buildGroups, groupIssues } from '@/utils/project';
-import { restoreInitiative, withoutInitiative, type ViewSettings } from '@/utils/viewSettings';
+import {
+  restoreHiddenSections,
+  withoutHiddenSections,
+  type ViewSettings,
+} from '@/utils/viewSettings';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,12 +68,12 @@ export default function WorkItemsPage() {
   // client-side); only persisting is gated.
   const canSaveView = can('views', editor.activeView ? 'edit' : 'create');
 
-  // With the Initiatives section off, its property and grouping are left out of
-  // what the layouts and the Display panel work with, and put back on the way out
-  // so the stored display keeps them for when the section is on again.
-  const settings = features.initiatives ? editor.settings : withoutInitiative(editor.settings);
+  // With an optional section off, its property and grouping are left out of what
+  // the layouts and the Display panel work with, and put back on the way out so the
+  // stored display keeps them for when the section is on again.
+  const settings = withoutHiddenSections(editor.settings, features);
   const changeSettings = (next: ViewSettings) =>
-    editor.changeSettings(features.initiatives ? next : restoreInitiative(next, editor.settings));
+    editor.changeSettings(restoreHiddenSections(next, editor.settings, features));
 
   const timelineGroups = buildGroups(filteredProject, settings.group);
   const timelineIssuesByGroup = groupIssues(timelineGroups, filteredProject.issues, settings.group);

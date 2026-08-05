@@ -1,6 +1,6 @@
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 import { SORT_FIELDS, type SortField, type WorkItemsView } from '@/utils/viewTypes';
-import type { GroupField, ViewSettings } from '@/utils/viewSettings';
+import { isGroupFieldEnabled, type GroupField, type ViewSettings } from '@/utils/viewSettings';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,6 +20,7 @@ const GROUP_OPTIONS: { value: GroupField; label: string }[] = [
   { value: 'priority', label: 'Priority' },
   { value: 'type', label: 'Type' },
   { value: 'initiative', label: 'Initiative' },
+  { value: 'cycle', label: 'Cycle' },
 ];
 
 // The grouping, sub-grouping, ordering, empty-group, links and subtasks rows.
@@ -38,11 +39,9 @@ export default function DisplayGroupingRows({
   const setGroup = (group: GroupField) =>
     onChange(group === settings.subgroup ? { group, subgroup: 'none' } : { group });
 
-  // Initiative is only offered while the project shows the Initiatives section.
+  // Initiative and Cycle are only offered while the project shows their section.
   const features = useProjectFeatures();
-  const options = features.initiatives
-    ? GROUP_OPTIONS
-    : GROUP_OPTIONS.filter((o) => o.value !== 'initiative');
+  const options = GROUP_OPTIONS.filter((o) => isGroupFieldEnabled(o.value, features));
 
   const groupOptions =
     view === 'kanban' || view === 'timeline' ? options.filter((o) => o.value !== 'none') : options;

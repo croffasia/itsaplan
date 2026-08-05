@@ -6,6 +6,7 @@ import {
   useProjectsQuery,
 } from '@/services/projects.service';
 import { useViewsQuery } from '@/services/views.service';
+import { usePlannedCyclesQuery } from '@/services/cycles.service';
 import { ApiError } from '@/lib/api';
 import { applyFilters } from '@/utils/filters';
 import { withoutShownSubtasks } from '@/utils/subtasks';
@@ -32,6 +33,16 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   const projectQuery = useProjectQuery(projectKey);
   const boardIssuesQuery = useBoardIssuesQuery(projectKey);
   const scaffold = projectQuery.data ?? null;
+  // The planned cycles join the composite so grouping by cycle can lay out a lane
+  // per cycle a board plans into, not only per cycle an issue is already in. The
+  // whole list is not loaded: it grows with every finished cycle, and a finished
+  // one only needs a lane while its issues name it. Fetched while the section is
+  // on and the viewer may read it.
+  const canReadCycles =
+    scaffold?.viewer.role === 'owner' || scaffold?.permissions.cycles?.read === true;
+  const cyclesQuery = usePlannedCyclesQuery(
+    scaffold?.project.cyclesEnabled && canReadCycles ? projectKey : null,
+  );
   const project = useMemo(
     () =>
       scaffold
@@ -39,9 +50,10 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
             ...scaffold,
             issues: boardIssuesQuery.data?.issues ?? [],
             rev: boardIssuesQuery.data?.rev ?? '',
+            plannedCycles: cyclesQuery.data ?? [],
           }
         : null,
-    [scaffold, boardIssuesQuery.data],
+    [scaffold, boardIssuesQuery.data, cyclesQuery.data],
   );
 
   const viewsQuery = useViewsQuery(projectKey);

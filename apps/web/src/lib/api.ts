@@ -1453,9 +1453,12 @@ export interface BoardIssues {
   rev: string;
 }
 
-// The scaffold composed with its issues, as the Shell assembles it and passes it
-// down. Downstream reads project.issues / project.rev off this composite.
-export type ProjectDetail = ProjectScaffold & BoardIssues;
+// The scaffold composed with its issues and the project's unfinished cycles, as
+// the Shell assembles it and passes it down. Downstream reads project.issues /
+// project.rev off this composite. `plannedCycles` is empty while the Cycles section
+// is off, on a public share (whose bundle carries no cycle list), and for a viewer
+// who may not read cycles.
+export type ProjectDetail = ProjectScaffold & BoardIssues & { plannedCycles: Cycle[] };
 
 export interface IssueDetail extends Issue {
   fields: IssueFieldValue[];

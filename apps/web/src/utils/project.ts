@@ -14,6 +14,7 @@ import type {
   IssueType,
   NewIssueInput,
 } from '@/lib/api';
+import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { PRIORITIES, PRIORITY_RANK } from '@/utils/fieldOptions';
 import type { GroupField, ViewSettings } from '@/utils/viewSettings';
 import type { Sort } from '@/utils/viewTypes';
@@ -245,6 +246,29 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
         .map(([id, title]) => ({ key: `i${id}`, name: title, assign: { initiativeId: id } }));
       return [...options, { key: 'i-none', name: 'No initiative', assign: { initiativeId: null } }];
     }
+    case 'cycle': {
+      // A column per cycle the board plans into — the unfinished ones the project
+      // carries, oldest first (the API orders them by start date) — and one per
+      // cycle only the issues name, so the work of a finished cycle stays reachable.
+      // Those come first: they ended before the unfinished ones start. A public
+      // share carries no cycle list, so all of its columns come from the issues.
+      const namedByIssues = new Map<number, string>();
+      for (const issue of project.issues)
+        if (issue.cycle) namedByIssues.set(issue.cycle.id, issue.cycle.name);
+      for (const c of project.plannedCycles) namedByIssues.delete(c.id);
+      return [
+        ...[...namedByIssues.entries()]
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([id, name]) => ({ key: `y${id}`, name, assign: { cycleId: id } })),
+        ...project.plannedCycles.map((c) => ({
+          key: `y${c.id}`,
+          name: c.name,
+          color: CYCLE_STATUS_META[c.status].color,
+          assign: { cycleId: c.id },
+        })),
+        { key: 'y-none', name: 'No cycle', assign: { cycleId: null } },
+      ];
+    }
     case 'none':
       return [{ key: 'all', name: '', assign: null }];
   }
@@ -266,6 +290,8 @@ export function groupKeyOf(issue: Issue, group: GroupField): string {
       return issue.typeId != null ? `t${issue.typeId}` : 't-none';
     case 'initiative':
       return issue.initiative != null ? `i${issue.initiative.id}` : 'i-none';
+    case 'cycle':
+      return issue.cycle != null ? `y${issue.cycle.id}` : 'y-none';
     case 'none':
       return 'all';
   }

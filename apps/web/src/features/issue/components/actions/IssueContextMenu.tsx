@@ -9,6 +9,7 @@ import {
   CircleDashed,
   ClipboardCopy,
   PanelRight,
+  RefreshCw,
   SquareArrowOutUpRight,
   Tag,
   Target,
@@ -22,6 +23,7 @@ import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
 import { useInitiativesQuery } from '@/services/initiatives.service';
 import { LINKABLE_STATUSES, STATUS_META } from '@/utils/initiativeMeta';
+import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ShellCtx } from '@/context/shellContext';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
@@ -51,8 +53,8 @@ function SelectedCheck({ selected }: { selected: boolean }) {
 }
 
 // Wraps a issue card/row (any single element) so a right-click opens a context
-// menu that changes its status, priority, assignee, initiative, labels or due
-// date, or deletes it. Shared by every project view (Kanban, Table, Calendar, Timeline).
+// menu that changes its status, priority, assignee, initiative, cycle, labels or
+// due date, or deletes it. Shared by every project view (Kanban, Table, Calendar, Timeline).
 // onDeleted lets a host that is showing this one issue (the detail panel/page)
 // leave after deletion; the project views leave it unset — the card just
 // disappears when the project cache updates.
@@ -249,6 +251,29 @@ export default function IssueContextMenu({
                         {colorDot(STATUS_META[it.status].color)}
                         <span className="flex-1 truncate">{it.title}</span>
                         <SelectedCheck selected={it.id === issue.initiative?.id} />
+                      </ContextMenuItem>
+                    ))}
+                  </ContextMenuSubContent>
+                </ContextMenuSub>
+              )}
+
+              {project.project.cyclesEnabled && (
+                <ContextMenuSub>
+                  <ContextMenuSubTrigger>
+                    {issue.cycle ? <RefreshCw /> : <CircleDashed />}
+                    Cycle
+                  </ContextMenuSubTrigger>
+                  <ContextMenuSubContent className="w-56">
+                    <ContextMenuItem onSelect={() => patch({ cycleId: null })}>
+                      <CircleDashed />
+                      <span className="flex-1">No cycle</span>
+                      <SelectedCheck selected={issue.cycle == null} />
+                    </ContextMenuItem>
+                    {project.plannedCycles.map((cycle) => (
+                      <ContextMenuItem key={cycle.id} onSelect={() => patch({ cycleId: cycle.id })}>
+                        {colorDot(CYCLE_STATUS_META[cycle.status].color)}
+                        <span className="flex-1 truncate">{cycle.name}</span>
+                        <SelectedCheck selected={cycle.id === issue.cycle?.id} />
                       </ContextMenuItem>
                     ))}
                   </ContextMenuSubContent>

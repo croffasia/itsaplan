@@ -1,11 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Archive, Bot, CircleDashed, Tag, Target, Trash2, User, X } from 'lucide-react';
+import { Archive, Bot, CircleDashed, RefreshCw, Tag, Target, Trash2, User, X } from 'lucide-react';
 import { type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativesQuery } from '@/services/initiatives.service';
 import { LINKABLE_STATUSES } from '@/utils/initiativeMeta';
+import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { subtaskCount } from '@/utils/subtasks';
 import { cn } from '@/lib/utils';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -146,6 +147,24 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                     >
                       <Target />
                       <span className="flex-1 truncate">{initiative.title}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </BarMenu>
+              )}
+
+              {project.plannedCycles.length > 0 && (
+                <BarMenu icon={<RefreshCw className="size-4" />} label="Cycle" disabled={disabled}>
+                  <DropdownMenuItem onSelect={() => void bulk.patch(ids, { cycleId: null })}>
+                    <CircleDashed />
+                    <span className="flex-1">No cycle</span>
+                  </DropdownMenuItem>
+                  {project.plannedCycles.map((cycle) => (
+                    <DropdownMenuItem
+                      key={cycle.id}
+                      onSelect={() => void bulk.patch(ids, { cycleId: cycle.id })}
+                    >
+                      {colorDot(CYCLE_STATUS_META[cycle.status].color)}
+                      <span className="flex-1 truncate">{cycle.name}</span>
                     </DropdownMenuItem>
                   ))}
                 </BarMenu>

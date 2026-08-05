@@ -894,6 +894,11 @@ export const issue = pgTable(
     index('issue_parent_idx')
       .on(t.parentId)
       .where(sql`${t.parentId} IS NOT NULL`),
+    // Backs the progress counts of a cycles list, the transfer of a cycle's issues,
+    // and the ON DELETE SET NULL a cycle delete runs.
+    index('issue_cycle_idx')
+      .on(t.cycleId)
+      .where(sql`${t.cycleId} IS NOT NULL`),
   ],
 );
 

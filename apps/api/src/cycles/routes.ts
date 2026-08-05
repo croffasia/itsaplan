@@ -9,6 +9,8 @@ import { ErrorResponse } from '../shared/responses';
 import { transferCycleIssues } from '../issues/store';
 import {
   listCycles,
+  listPlannedCycles,
+  listCompletedCycles,
   getCycle,
   getCycleProjectId,
   createCycle,
@@ -50,22 +52,77 @@ export const cycleRoutes = new Elysia({
     cycle: entityGuard('cycles', 'Cycle not found', (p) => getCycleProjectId(Number(p.cycleId))),
   })
 
-  .get('/projects/:projectKey/cycles', async ({ project }) => listCycles(project.id), {
-    params: t.Object({ projectKey: t.String() }),
-    permission: ['cycles', 'read'],
-    response: {
-      200: t.Array(CycleResponse),
-      400: ErrorResponse,
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
+  .get(
+    '/projects/:projectKey/cycles',
+    async ({ project, query }) =>
+      query.status === 'planned' ? listPlannedCycles(project.id) : listCycles(project.id),
+    {
+      params: t.Object({ projectKey: t.String() }),
+      query: t.Object({
+        status: t.Optional(
+          t.Literal('planned', {
+            description: 'Only the cycles that have not finished: active and upcoming.',
+          }),
+        ),
+      }),
+      permission: ['cycles', 'read'],
+      response: {
+        200: t.Array(CycleResponse),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'List cycles',
+        description: "A project's cycles, oldest first.",
+        ...mcpTool('list_cycles'),
+      },
     },
-    detail: {
-      summary: 'List cycles',
-      description: "A project's cycles, oldest first.",
-      ...mcpTool('list_cycles'),
+  )
+
+  .get(
+    '/projects/:projectKey/cycles/completed',
+    async ({ project, query }) => {
+      const page = query.page ?? 1;
+      const pageSize = query.pageSize ?? 25;
+      const { items, total } = await listCompletedCycles(project.id, {
+        limit: pageSize,
+        offset: (page - 1) * pageSize,
+      });
+      return { items, total, page, pageSize };
     },
-  })
+    {
+      params: t.Object({ projectKey: t.String() }),
+      query: t.Object({
+        page: t.Optional(t.Numeric({ minimum: 1, description: '1-based page. Default 1.' })),
+        pageSize: t.Optional(
+          t.Numeric({
+            minimum: 1,
+            maximum: 100,
+            description: 'Items per page (1-100). Default 25.',
+          }),
+        ),
+      }),
+      permission: ['cycles', 'read'],
+      response: {
+        200: t.Object({
+          items: t.Array(CycleResponse),
+          total: t.Number(),
+          page: t.Number(),
+          pageSize: t.Number(),
+        }),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'List completed cycles',
+        description: "A page of a project's finished cycles, newest first.",
+      },
+    },
+  )
 
   .post(
     '/projects/:projectKey/cycles',

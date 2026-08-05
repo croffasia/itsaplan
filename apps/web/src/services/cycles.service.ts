@@ -1,6 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api, type CyclePatch, type NewCycleInput } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
+
+// How many finished cycles the archive loads at a time.
+const COMPLETED_CYCLES_PAGE = 25;
 
 // Every cycle write changes the list and can change the cycle a detail page is
 // showing.
@@ -20,6 +23,30 @@ export function useCyclesQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.cycles(projectKey ?? ''),
     queryFn: () => api.listCycles(projectKey!),
+    enabled: projectKey != null,
+  });
+}
+
+// What the cycles page lists: the cycles that have not finished. The whole list
+// (useCyclesQuery) stays for the pickers and the form, which need the finished ones
+// too — to name a cycle after the last one and to keep dates off an existing range.
+export function usePlannedCyclesQuery(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.plannedCycles(projectKey ?? ''),
+    queryFn: () => api.listPlannedCycles(projectKey!),
+    enabled: projectKey != null,
+  });
+}
+
+// The finished cycles, newest first, a page at a time.
+export function useCompletedCyclesQuery(projectKey: string | null) {
+  return useInfiniteQuery({
+    queryKey: qk.completedCycles(projectKey ?? ''),
+    queryFn: ({ pageParam }) =>
+      api.listCompletedCycles(projectKey!, { page: pageParam, pageSize: COMPLETED_CYCLES_PAGE }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) =>
+      lastPage.page * lastPage.pageSize < lastPage.total ? lastPage.page + 1 : undefined,
     enabled: projectKey != null,
   });
 }

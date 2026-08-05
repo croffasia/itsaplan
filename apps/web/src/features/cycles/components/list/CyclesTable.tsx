@@ -2,20 +2,25 @@ import { Fragment } from 'react';
 import type { Cycle } from '@/lib/api';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { groupCycles } from '../../utils/cycleGroups';
+import type { CompletedCycles } from '../../hooks/useCompletedCycles';
 import CycleTableSection from './CycleTableSection';
 import CycleTableRow from './CycleTableRow';
+import CycleTableArchive from './CycleTableArchive';
 
 // The header row and every cycle row share this template, so the labels line up
 // with the cells below them.
 const GRID = 'minmax(200px,1fr) 200px 60px 56px 132px 32px';
 
-// The project's cycles as one table, grouped by the status their dates put them in.
-// Each group folds away, and which ones are folded is remembered per project.
+// The project's cycles as one table: the planned ones grouped by the status their
+// dates put them in, then the archive of the finished ones. Each planned group folds
+// away, and which ones are folded is remembered per project.
 export default function CyclesTable({
   cycles,
+  completed,
   projectKey,
 }: {
   cycles: Cycle[];
+  completed: CompletedCycles;
   projectKey: string;
 }) {
   const collapsed = usePersistedSet(`cycles-collapsed:${projectKey}`);
@@ -40,7 +45,9 @@ export default function CyclesTable({
           return (
             <Fragment key={group.status}>
               <CycleTableSection
-                group={group}
+                label={group.label}
+                color={group.color}
+                count={group.cycles.length}
                 collapsed={isCollapsed}
                 onToggle={() => collapsed.toggle(group.status)}
               />
@@ -56,6 +63,10 @@ export default function CyclesTable({
             </Fragment>
           );
         })}
+
+        {completed.total > 0 && (
+          <CycleTableArchive completed={completed} projectKey={projectKey} gridTemplate={GRID} />
+        )}
       </div>
     </div>
   );

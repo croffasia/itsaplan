@@ -109,8 +109,12 @@ export const qk = {
   anyInitiativeFeed: ['initiativeFeed'] as const,
   anyInitiatives: ['initiatives'] as const,
   // Cycles: a project's list and one cycle. Issue mutations invalidate the whole
-  // 'cycles' subtree, since planning an issue moves a cycle's progress.
+  // 'cycles' subtree, since planning an issue moves a cycle's progress. The list the
+  // page reads is split in two — what is still planned, and the paged archive —
+  // under the same prefix, so one invalidation covers all three.
   cycles: (projectKey: string) => ['cycles', projectKey] as const,
+  plannedCycles: (projectKey: string) => ['cycles', projectKey, 'planned'] as const,
+  completedCycles: (projectKey: string) => ['cycles', projectKey, 'completed'] as const,
   cycle: (id: number) => ['cycle', id] as const,
   anyCycles: ['cycles'] as const,
   anyCycle: ['cycle'] as const,

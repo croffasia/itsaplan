@@ -1,5 +1,5 @@
 import { db, cycle, issue, projectColumn } from '@repo/db';
-import { and, asc, eq, inArray, ne, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm';
 import { HttpError, iso } from '../shared/lib';
 
 // Data access for cycles: a time-boxed period of work inside a project (a sprint).
@@ -80,6 +80,14 @@ function mapCycle(row: typeof cycle.$inferSelect, progress: CycleProgress): Cycl
   };
 }
 
+async function withProgress(rows: (typeof cycle.$inferSelect)[]): Promise<CycleRow[]> {
+  const counts = await countsFor(rows.map((r) => r.id));
+  return rows.map((row) => mapCycle(row, counts.get(row.id) ?? EMPTY_PROGRESS));
+}
+
+// Today in UTC, the same boundary cycleStatus compares against.
+const TODAY = sql`(now() at time zone 'utc')::date`;
+
 // Every cycle of a project, oldest first, so the list reads as a timeline.
 export async function listCycles(projectId: number): Promise<CycleRow[]> {
   const rows = await db
@@ -87,8 +95,45 @@ export async function listCycles(projectId: number): Promise<CycleRow[]> {
     .from(cycle)
     .where(eq(cycle.projectId, projectId))
     .orderBy(asc(cycle.startDate), asc(cycle.id));
-  const counts = await countsFor(rows.map((r) => r.id));
-  return rows.map((row) => mapCycle(row, counts.get(row.id) ?? EMPTY_PROGRESS));
+  return withProgress(rows);
+}
+
+// The cycles that have not finished yet — active and upcoming — oldest first. This
+// is what the cycles page opens with: it stays the same size as a project ages,
+// while the finished ones only accumulate and are paged separately.
+export async function listPlannedCycles(projectId: number): Promise<CycleRow[]> {
+  const rows = await db
+    .select()
+    .from(cycle)
+    .where(and(eq(cycle.projectId, projectId), sql`${cycle.endDate} >= ${TODAY}`))
+    .orderBy(asc(cycle.startDate), asc(cycle.id));
+  return withProgress(rows);
+}
+
+export interface CyclePage {
+  items: CycleRow[];
+  total: number;
+}
+
+// One page of the finished cycles, newest first — the archive, read back from the
+// most recent. `total` counts all of them, not just the page.
+export async function listCompletedCycles(
+  projectId: number,
+  { limit, offset }: { limit: number; offset: number },
+): Promise<CyclePage> {
+  const where = and(eq(cycle.projectId, projectId), sql`${cycle.endDate} < ${TODAY}`);
+  const rows = await db
+    .select()
+    .from(cycle)
+    .where(where)
+    .orderBy(desc(cycle.startDate), desc(cycle.id))
+    .limit(limit)
+    .offset(offset);
+  const [counted] = await db
+    .select({ total: sql<number>`count(*)` })
+    .from(cycle)
+    .where(where);
+  return { items: await withProgress(rows), total: Number(counted?.total ?? 0) };
 }
 
 export async function getCycle(id: number): Promise<CycleRow | null> {

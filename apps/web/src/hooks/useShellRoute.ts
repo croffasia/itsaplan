@@ -20,6 +20,7 @@ export type ShellRoute = {
   // The project-scoped issue number from the URL, not the internal id.
   routeIssueSeq: number | null;
   routeInitiativeId: number | null;
+  routeCycleId: number | null;
   // The work items routes, where the layout and selection commands apply.
   onBoard: boolean;
 };
@@ -47,6 +48,8 @@ export function useShellRoute(): ShellRoute {
     // /initiatives/details/:id — the segment right after 'initiatives' is a list tab.
     routeInitiativeId:
       sub === 'initiatives' && segs[3] === 'details' && segs[4] ? Number(segs[4]) : null,
+    // /cycles/details/:id — the segment right after 'cycles' is a list layout.
+    routeCycleId: sub === 'cycles' && segs[3] === 'details' && segs[4] ? Number(segs[4]) : null,
     onBoard: sub == null || sub === 'view',
   };
 }

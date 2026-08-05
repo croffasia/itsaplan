@@ -1684,6 +1684,15 @@ export interface Cycle {
   progress: CycleProgress;
 }
 
+// One page of the finished cycles. `total` counts all of them, so the archive can
+// say how many there are without loading them.
+export interface CyclePage {
+  items: Cycle[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface NewCycleInput {
   name: string;
   goal?: string;
@@ -2315,6 +2324,12 @@ export const api = {
   // Cycles — same shape as initiatives: the list takes projectKey, ops on one cycle
   // take its own id and hit /cycles/:id.
   listCycles: (projectKey: string) => request<Cycle[]>(`/projects/${projectKey}/cycles`),
+  listPlannedCycles: (projectKey: string) =>
+    request<Cycle[]>(`/projects/${projectKey}/cycles?status=planned`),
+  listCompletedCycles: (projectKey: string, params: { page: number; pageSize: number }) =>
+    request<CyclePage>(
+      `/projects/${projectKey}/cycles/completed?page=${params.page}&pageSize=${params.pageSize}`,
+    ),
   getCycle: (id: number) => request<Cycle>(`/cycles/${id}`),
   createCycle: (projectKey: string, input: NewCycleInput) =>
     request<Cycle>(`/projects/${projectKey}/cycles`, {

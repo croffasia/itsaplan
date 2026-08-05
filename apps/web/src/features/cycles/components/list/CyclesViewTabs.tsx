@@ -1,27 +1,34 @@
 import { GanttChart, Table2, type LucideIcon } from 'lucide-react';
+import type { CyclesView } from '@/utils/paths';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import type { CyclesView } from '../../hooks/useCyclesView';
 
 const TABS: { value: CyclesView; label: string; icon: LucideIcon }[] = [
   { value: 'table', label: 'Table', icon: Table2 },
   { value: 'timeline', label: 'Timeline', icon: GanttChart },
 ];
 
-// The cycles list layout switcher: the grouped table or the day track.
+// The cycles list layout switcher: the grouped table or the day track. The open
+// layout comes from the route, so Radix drives no selection of its own and each
+// trigger navigates on click.
 export default function CyclesViewTabs({
   view,
-  onChange,
+  onSelect,
 }: {
   view: CyclesView;
-  onChange: (view: CyclesView) => void;
+  onSelect: (view: CyclesView) => void;
 }) {
   return (
-    <Tabs value={view} onValueChange={(v) => onChange(v as CyclesView)}>
-      <TabsList className="h-8">
+    <Tabs value={view}>
+      <TabsList variant="line" className="overflow-x-auto">
         {TABS.map(({ value, label, icon: Icon }) => (
-          <TabsTrigger key={value} value={value} title={label} className="gap-1.5 px-2">
+          <TabsTrigger
+            key={value}
+            value={value}
+            className="shrink-0 gap-1.5"
+            onClick={() => onSelect(value)}
+          >
             <Icon className="size-3.5" />
-            <span className="text-xs">{label}</span>
+            {label}
           </TabsTrigger>
         ))}
       </TabsList>

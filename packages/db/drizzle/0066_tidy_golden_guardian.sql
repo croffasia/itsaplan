@@ -1,0 +1,1 @@
+CREATE INDEX "issue_cycle_idx" ON "issue" USING btree ("cycle_id") WHERE "issue"."cycle_id" IS NOT NULL;

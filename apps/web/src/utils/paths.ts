@@ -104,7 +104,21 @@ export const initiativePath = (
 
 export const cyclesPath = (key: string) => `${projectPath(key)}/cycles`;
 
-export const cyclePath = (key: string, cycleId: number) => `${cyclesPath(key)}/${cycleId}`;
+// Each layout of the cycles list is a route of its own, so a reload or a shared
+// link reopens the one the user was on. The list path itself holds no layout: it
+// redirects to the one remembered for the project (see CyclesRedirect).
+const CYCLES_VIEWS = ['table', 'timeline'] as const;
+
+export type CyclesView = (typeof CYCLES_VIEWS)[number];
+
+export const isCyclesView = (value: string): value is CyclesView =>
+  (CYCLES_VIEWS as readonly string[]).includes(value);
+
+export const cyclesViewPath = (key: string, view: CyclesView) => `${cyclesPath(key)}/${view}`;
+
+// The cycle detail sits under /details/ so the layout segment of the list above
+// stays unambiguous.
+export const cyclePath = (key: string, cycleId: number) => `${cyclesPath(key)}/details/${cycleId}`;
 
 // Where the app root sends the user, from their start page preference. The section
 // opens in the project they were last in (see app/page.tsx).

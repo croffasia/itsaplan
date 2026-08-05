@@ -1,15 +1,19 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { colorDot } from '@/components/common/fields/colorDot';
-import type { CycleGroup } from '../../utils/cycleGroups';
 
 // A group header above the cycles of one status, collapsible like the work items
-// table sections.
+// table sections. `count` is how many cycles the group holds in all, which for the
+// archive is more than the rows loaded under it.
 export default function CycleTableSection({
-  group,
+  label,
+  color,
+  count,
   collapsed,
   onToggle,
 }: {
-  group: CycleGroup;
+  label: string;
+  color: string;
+  count: number;
   collapsed: boolean;
   onToggle: () => void;
 }) {
@@ -24,9 +28,9 @@ export default function CycleTableSection({
       ) : (
         <ChevronDown className="size-3.5 text-muted-foreground" />
       )}
-      {colorDot(group.color)}
-      {group.label}
-      <span className="text-muted-foreground">{group.cycles.length}</span>
+      {colorDot(color)}
+      {label}
+      <span className="text-muted-foreground">{count}</span>
     </button>
   );
 }

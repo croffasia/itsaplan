@@ -17,9 +17,12 @@ import CycleTimelineRow from './CycleTimelineRow';
 // bar rewrites the cycle's dates; the track opens scrolled to today.
 export default function CyclesTimeline({
   cycles,
+  finished,
   projectKey,
 }: {
   cycles: Cycle[];
+  // Not drawn, but a drag is clamped off them too.
+  finished: Cycle[];
   projectKey: string;
 }) {
   const router = useRouter();
@@ -43,7 +46,7 @@ export default function CyclesTimeline({
     buildCycleTimeline({ cycles, viewportW, labelW, dayW: CYCLE_DAY_W });
   const { preview, beginDrag } = useCycleDrag({
     projectKey,
-    cycles,
+    cycles: [...cycles, ...finished],
     dayW: CYCLE_DAY_W,
     onOpen: openCycle,
   });

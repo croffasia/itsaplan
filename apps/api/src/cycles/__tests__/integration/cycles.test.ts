@@ -126,6 +126,74 @@ describe('cycles', () => {
     });
   });
 
+  describe('list', () => {
+    // Two finished cycles, one running, one ahead — enough to tell the planned list
+    // and the archive apart, and to page the archive.
+    async function fourCycles(api: Api) {
+      await createCycle(api, { name: 'Old', startDate: day(-21), endDate: day(-15) });
+      await createCycle(api, { name: 'Last', startDate: day(-14), endDate: day(-8) });
+      await createCycle(api, { name: 'Current', startDate: day(-1), endDate: day(5) });
+      await createCycle(api, { name: 'Next', startDate: day(10), endDate: day(16) });
+    }
+
+    it('leaves the finished cycles out of the planned list', async () => {
+      const { asOwner } = await setup();
+      await fourCycles(asOwner);
+
+      const planned = await cycles(asOwner).get({ query: { status: 'planned' } });
+      expect(planned.data!.map((c) => c.name)).toEqual(['Current', 'Next']);
+    });
+
+    it('lists the finished cycles newest first, with how many there are', async () => {
+      const { asOwner } = await setup();
+      await fourCycles(asOwner);
+
+      const archive = await cycles(asOwner).completed.get({ query: {} });
+      expect(archive.data!.total).toBe(2);
+      expect(archive.data!.items.map((c) => c.name)).toEqual(['Last', 'Old']);
+    });
+
+    it('pages the finished cycles', async () => {
+      const { asOwner } = await setup();
+      await fourCycles(asOwner);
+
+      const first = await cycles(asOwner).completed.get({ query: { pageSize: 1 } });
+      expect(first.data).toMatchObject({ total: 2, page: 1, pageSize: 1 });
+      expect(first.data!.items.map((c) => c.name)).toEqual(['Last']);
+
+      const second = await cycles(asOwner).completed.get({ query: { page: 2, pageSize: 1 } });
+      expect(second.data!.items.map((c) => c.name)).toEqual(['Old']);
+
+      const past = await cycles(asOwner).completed.get({ query: { page: 3, pageSize: 1 } });
+      expect(past.data!.items).toEqual([]);
+      expect(past.data!.total).toBe(2);
+    });
+
+    it('reports an empty archive when nothing has finished', async () => {
+      const { asOwner } = await setup();
+      await createCycle(asOwner, { startDate: day(0), endDate: day(6) });
+
+      const archive = await cycles(asOwner).completed.get({ query: {} });
+      expect(archive.data).toMatchObject({ total: 0, items: [] });
+    });
+
+    it('rejects a page or page size outside its bounds', async () => {
+      const { asOwner } = await setup();
+      expect((await cycles(asOwner).completed.get({ query: { pageSize: 0 } })).status).toBe(400);
+      expect((await cycles(asOwner).completed.get({ query: { pageSize: 101 } })).status).toBe(400);
+      expect((await cycles(asOwner).completed.get({ query: { page: 0 } })).status).toBe(400);
+    });
+
+    it('denies a non-member the archive', async () => {
+      await setup();
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      const res = await outsider
+        .projects({ projectKey: 'MKT' })
+        .cycles.completed.get({ query: {} });
+      expect(res.status).toBe(403);
+    });
+  });
+
   describe('progress', () => {
     it('counts the linked issues by their state type', async () => {
       const { asOwner, columnId, startedColumnId, doneColumnId } = await setup();

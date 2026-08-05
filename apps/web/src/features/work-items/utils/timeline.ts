@@ -1,16 +1,14 @@
-import { format, startOfDay } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import { type BoardIssue, type Issue, type ProjectDetail } from '@/lib/api';
-import { addDays, daysBetween, parseDate } from '@/utils/dates';
+import { parseDate } from '@/utils/dates';
+import { buildDayTrack, type DayTrack } from '@/utils/timelineTrack';
 import { buildGroups, groupIssues, type IssueGroup } from '@/utils/project';
 import type { GroupField, TimelineScale } from '@/utils/viewSettings';
 
 // px per day at each zoom level. Wider days keep the per-day numbers legible;
 // narrower days fit longer ranges and fall back to weekly gridlines.
 export const SCALE_DAY_W: Record<TimelineScale, number> = { week: 32, month: 12, quarter: 5 };
-export const LABEL_W = 256; // px, the left issue-label column (matches w-64)
 export const ROW_H = 36; // px, an issue row
-export const LABEL_MIN_W = 160;
-export const LABEL_MAX_W = 640;
 export const LINK_ROW_H = 26; // px, a linked-issue sub-row under an issue row
 export const GROUP_H = 32; // px, a state group header row
 
@@ -53,26 +51,10 @@ export type TimelineRow =
     }
   | { kind: 'issue'; issue: BoardIssue; span: Span; groupKey: string };
 
-// A consecutive same-month run, for the month labels above the day numbers.
-export interface MonthLabel {
-  label: string;
-  left: number;
-  width: number;
-}
-
 // The whole timeline layout derived from the project and the current viewport:
-// the flattened rows, the day columns and their month labels, the track width
-// (extended with trailing days so it always fills the viewport), the today
-// marker, the gridline background, and a helper to place a span's bar.
-export interface TimelineModel {
+// the flattened rows plus the day track they are placed on.
+export interface TimelineModel extends DayTrack {
   rows: TimelineRow[];
-  days: Date[];
-  months: MonthLabel[];
-  trackWidth: number;
-  todayLeft: number;
-  todayInRange: boolean;
-  dayLines: { backgroundImage: string };
-  spanToRect: (start: Date, end: Date) => { left: number; width: number };
 }
 
 export function buildTimeline({
@@ -94,9 +76,8 @@ export function buildTimeline({
 }): TimelineModel {
   const groups = buildGroups(project, group);
   const issuesByGroup = groupIssues(groups, project.issues, group);
-  // Rows, and the date range that covers every bar (plus padding and today).
+  // Rows, and the date range that covers every bar.
   const rows: TimelineRow[] = [];
-  const today = startOfDay(new Date());
   let min: Date | null = null;
   let max: Date | null = null;
   for (const issueGroup of groups) {
@@ -121,37 +102,5 @@ export function buildTimeline({
     }
   }
 
-  const rangeStart = addDays(min ?? today, -3);
-  const rangeEnd = addDays(max ?? addDays(today, 28), 7);
-  // Extend the range on the right with trailing days so the track always fills
-  // the available width; the day size stays fixed.
-  const naturalDays = Math.max(1, daysBetween(rangeStart, rangeEnd) + 1);
-  const daysToFill = Math.ceil(Math.max(0, viewportW - labelW) / dayW);
-  const totalDays = Math.max(naturalDays, daysToFill);
-  const trackWidth = totalDays * dayW;
-  const days = Array.from({ length: totalDays }, (_, i) => addDays(rangeStart, i));
-
-  const months: MonthLabel[] = [];
-  for (let i = 0; i < days.length; i++) {
-    const label = format(days[i], 'MMMM yyyy');
-    const last = months[months.length - 1];
-    if (last && last.label === label) last.width += dayW;
-    else months.push({ label, left: i * dayW, width: dayW });
-  }
-
-  // Per-day gridlines when days are wide; weekly gridlines when zoomed out, so
-  // narrow days do not turn the track into solid lines.
-  const gridPeriod = dayW >= 20 ? dayW : dayW * 7;
-  const dayLines = {
-    backgroundImage: `repeating-linear-gradient(to right, transparent 0, transparent ${gridPeriod - 1}px, var(--border) ${gridPeriod - 1}px, var(--border) ${gridPeriod}px)`,
-  };
-  const todayLeft = daysBetween(rangeStart, today) * dayW;
-  const todayInRange = today >= rangeStart && today <= rangeEnd;
-
-  const spanToRect = (start: Date, end: Date) => ({
-    left: daysBetween(rangeStart, start) * dayW,
-    width: (daysBetween(start, end) + 1) * dayW,
-  });
-
-  return { rows, days, months, trackWidth, todayLeft, todayInRange, dayLines, spanToRect };
+  return { rows, ...buildDayTrack({ min, max, viewportW, labelW, dayW }) };
 }

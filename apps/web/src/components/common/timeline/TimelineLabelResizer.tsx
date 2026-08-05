@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 
-// The grip on the right edge of the Timeline's label column: dragging it sets
-// how much room the issue titles get. It spans the whole column, header to last
-// row, and sticks to the left edge so it stays reachable however far the timeline
-// is scrolled.
+// The grip on the right edge of a timeline's label column: dragging it sets how
+// much room the labels get. It spans the whole column, header to last row, and
+// sticks to the left edge so it stays reachable however far the timeline is
+// scrolled.
 export function TimelineLabelResizer({
   labelW,
   onResize,

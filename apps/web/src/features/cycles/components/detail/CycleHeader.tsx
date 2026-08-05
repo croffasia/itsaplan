@@ -5,7 +5,7 @@ import { formatShortDate } from '@/utils/dates';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { colorDot } from '@/components/common/fields/colorDot';
 import ProgressBar from '@/components/common/ProgressBar';
-import CycleActions from './CycleActions';
+import CycleActions from '../CycleActions';
 
 // The cycle detail header: name, the status its dates put it in, the range, and how
 // much of it is done. Editing happens in the overflow menu dialog.

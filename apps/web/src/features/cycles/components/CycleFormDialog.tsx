@@ -1,6 +1,6 @@
 import type { Cycle } from '@/lib/api';
 import { useCyclesQuery } from '@/services/cycles.service';
-import { cycleDefaults } from '../../utils/cycleDefaults';
+import { cycleDefaults } from '../utils/cycleDefaults';
 import CycleForm from './CycleForm';
 
 // Creating a cycle or editing one. A new cycle is filled in from the cycles the

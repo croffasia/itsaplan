@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { LABEL_MAX_W, LABEL_MIN_W, LABEL_W } from '../utils/timeline';
+import { LABEL_MAX_W, LABEL_MIN_W, LABEL_W } from '@/utils/timelineTrack';
 
-// Width of the Timeline's label column, dragged by the header's resize handle and
-// stored under `storageKey` (see labelWidthKey: one width per project and view).
-// Reloads when the key changes, so switching tabs picks up that tab's width.
+// Width of a timeline's label column, dragged by the header's resize handle and
+// stored under `storageKey` (see labelWidthKey and cycleLabelWidthKey: one width
+// per project and view). Reloads when the key changes, so switching tabs picks up
+// that tab's width.
 //
 // The stored value is read in an effect, not in the state initializer: the
 // initializer also runs in the server render, where a client-only value would not

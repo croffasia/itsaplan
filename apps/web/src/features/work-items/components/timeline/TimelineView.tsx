@@ -1,11 +1,13 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useElementWidth } from '@/hooks/useElementWidth';
+import { useTimelineLabelWidth } from '@/hooks/useTimelineLabelWidth';
+import { LABEL_NARROW_W } from '@/utils/timelineTrack';
+import { TimelineHeader } from '@/components/common/timeline/TimelineHeader';
+import { TimelineLabelResizer } from '@/components/common/timeline/TimelineLabelResizer';
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
-import { useTimelineLabelWidth } from '../../hooks/useTimelineLabelWidth';
 import { buildTimeline, labelWidthKey, SCALE_DAY_W } from '../../utils/timeline';
-import { TimelineHeader } from './TimelineHeader';
-import { TimelineLabelResizer } from './TimelineLabelResizer';
 import { TimelineGroupRow } from './TimelineGroupRow';
 import { TimelineIssueRow } from './TimelineIssueRow';
 import { TimelineLinkRows } from './TimelineLinkRows';
@@ -56,23 +58,12 @@ export default function TimelineView({
   });
   // Width of the scroll area, so the track can extend with trailing days until it
   // fills the viewport instead of leaving empty space on the right.
-  const [viewportW, setViewportW] = useState(() =>
-    typeof window !== 'undefined' ? window.innerWidth : 1200,
-  );
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => setViewportW(el.clientWidth));
-    ro.observe(el);
-    setViewportW(el.clientWidth);
-    return () => ro.disconnect();
-  }, []);
+  const viewportW = useElementWidth(scrollRef);
 
   // Narrow the sticky label column on small screens so the day track is usable;
   // on wider ones it is the width the grip was dragged to.
   const narrow = viewportW < 640;
-  const labelW = narrow ? 140 : titleWidth;
+  const labelW = narrow ? LABEL_NARROW_W : titleWidth;
   const { rows, days, months, trackWidth, todayLeft, todayInRange, dayLines, spanToRect } =
     buildTimeline({
       project,

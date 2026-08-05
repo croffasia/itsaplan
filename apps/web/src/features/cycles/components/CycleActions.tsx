@@ -14,7 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useDeleteCycle } from '@/services/cycles.service';
-import CycleFormDialog from '../list/CycleFormDialog';
+import CycleFormDialog from './CycleFormDialog';
 import TransferIssuesDialog from './TransferIssuesDialog';
 
 // The cycle's overflow menu. Deleting returns to the cycles list; the issues of a

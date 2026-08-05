@@ -26,6 +26,7 @@ async function setup() {
     owner,
     asOwner,
     columnId: columns[0].id,
+    startedColumnId: columns.find((c) => c.stateType === 'started')!.id,
     doneColumnId: columns.find((c) => c.stateType === 'completed')!.id,
   };
 }
@@ -127,14 +128,15 @@ describe('cycles', () => {
 
   describe('progress', () => {
     it('counts the linked issues by their state type', async () => {
-      const { asOwner, columnId, doneColumnId } = await setup();
+      const { asOwner, columnId, startedColumnId, doneColumnId } = await setup();
       const cycle = (await createCycle(asOwner, {})).data!;
       await createIssue(asOwner, columnId, { cycleId: cycle.id });
+      await createIssue(asOwner, startedColumnId, { cycleId: cycle.id });
       await createIssue(asOwner, doneColumnId, { cycleId: cycle.id });
       await createIssue(asOwner, columnId);
 
       const read = await asOwner.cycles({ cycleId: cycle.id }).get();
-      expect(read.data!.progress).toMatchObject({ total: 2, completed: 1, canceled: 0 });
+      expect(read.data!.progress).toMatchObject({ total: 3, completed: 1, canceled: 0 });
     });
   });
 

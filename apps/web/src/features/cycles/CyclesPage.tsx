@@ -6,11 +6,14 @@ import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { useCyclesQuery } from '@/services/cycles.service';
+import { useCyclesView } from './hooks/useCyclesView';
 import CyclesList from './components/list/CyclesList';
-import CycleFormDialog from './components/list/CycleFormDialog';
+import CyclesViewTabs from './components/list/CyclesViewTabs';
+import CycleFormDialog from './components/CycleFormDialog';
 
-// A project's cycles, grouped by the status their dates put them in. The list is
-// short by nature (a cycle is weeks long), so it loads in one request with no paging.
+// A project's cycles, grouped by the status their dates put them in, as a table or
+// on a timeline. The list is short by nature (a cycle is weeks long), so it loads in
+// one request with no paging.
 export default function CyclesPage() {
   const { project } = useShell();
   const { can } = usePermissions();
@@ -18,24 +21,31 @@ export default function CyclesPage() {
 
   const projectKey = project?.project.key ?? null;
   const query = useCyclesQuery(projectKey);
+  const { view, setView } = useCyclesView(projectKey ?? '');
 
   if (!project || !projectKey) return null;
 
+  const cycles = query.data ?? [];
+
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto">
-      <div className="flex items-center justify-between px-4 py-3">
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex items-center justify-between gap-2 px-4 py-3">
         <h1 className="text-lg font-semibold">Cycles</h1>
-        {can('cycles', 'create') && (
-          <Button size="sm" className="h-8 gap-1.5" onClick={() => setCreating(true)}>
-            <Plus className="size-3.5" />
-            New cycle
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {cycles.length > 0 && <CyclesViewTabs view={view} onChange={setView} />}
+          {can('cycles', 'create') && (
+            <Button size="sm" className="h-8 gap-1.5" onClick={() => setCreating(true)}>
+              <Plus className="size-3.5" />
+              New cycle
+            </Button>
+          )}
+        </div>
       </div>
 
       <CyclesList
-        cycles={query.data ?? []}
+        cycles={cycles}
         projectKey={projectKey}
+        view={view}
         isLoading={query.isLoading}
         canCreate={can('cycles', 'create')}
         onCreate={() => setCreating(true)}

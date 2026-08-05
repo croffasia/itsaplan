@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { CYCLE_LENGTHS } from '../../utils/cycleDefaults';
+import { CYCLE_LENGTHS } from '../utils/cycleDefaults';
 
 // The cycle length as one click per common option, so the end date rarely has to be
 // picked by hand. `days` is the length the two dates currently span, which

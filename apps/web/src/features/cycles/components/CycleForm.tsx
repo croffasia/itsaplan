@@ -9,8 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateCycle, useUpdateCycle } from '@/services/cycles.service';
-import type { CycleDefaults } from '../../utils/cycleDefaults';
-import { busyRanges, endLimit } from '../../utils/cycleRanges';
+import type { CycleDefaults } from '../utils/cycleDefaults';
+import { busyRanges, endLimit } from '../utils/cycleRanges';
 import CycleLengthPicker from './CycleLengthPicker';
 import FixedDate from './FixedDate';
 

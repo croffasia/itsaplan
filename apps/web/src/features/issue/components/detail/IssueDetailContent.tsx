@@ -3,6 +3,7 @@ import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/ap
 import { usePermissions } from '@/hooks/usePermissions';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { useFilePaste } from '../../hooks/useFilePaste';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
 import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
@@ -47,11 +48,13 @@ export default function IssueDetailContent({
     setField,
     toggleLabel,
     insertAttachment,
+    attachFiles,
     uploadFile,
     imageAttachments,
     setDescEditor,
   } = useIssueDetail(project, issueId, onIssueLoaded);
   const canEdit = usePermissions(project).can('work_items', 'edit');
+  useFilePaste(canEdit && issue ? (files) => void attachFiles(files) : null);
   const properties = usePersistedOpen('issue-properties-open');
   // A replaced attachment keeps its URL, so an <img> already in an editor is
   // never requested again. Counting the replacements remounts the editors, which

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { type Editor } from '@tiptap/react';
+import { toast } from 'sonner';
 import {
   api,
   type Attachment,
@@ -82,15 +83,36 @@ export function useIssueDetail(
     patch({ labelIds: next });
   }
 
-  // Appends an attachment to the description. Reads the description from the
-  // live editor so unsaved typing is preserved, then saves the combined text.
-  function insertAttachment(a: Attachment) {
+  // Appends markdown to the description. Reads the description from the live
+  // editor so unsaved typing is preserved, then saves the combined text.
+  function appendToDescription(snippet: string) {
     if (!issue) return;
-    const snippet = attachmentMarkdown(a);
     const current = (
       descEditor ? descEditor.storage.markdown.getMarkdown() : issue.description
     ).trim();
     patch({ description: current ? `${current}\n\n${snippet}` : snippet });
+  }
+
+  function insertAttachment(a: Attachment) {
+    appendToDescription(attachmentMarkdown(a));
+  }
+
+  // Files with no editor to insert them into: upload them all, then append them
+  // to the description in one save.
+  async function attachFiles(files: FileList) {
+    const embeds: string[] = [];
+    for (const file of Array.from(files)) {
+      const a = await uploadFile(file).catch(() => null);
+      if (a) embeds.push(attachmentMarkdown(a));
+    }
+    if (embeds.length > 0) {
+      appendToDescription(embeds.join('\n\n'));
+      toast.success(embeds.length === 1 ? '1 file attached' : `${embeds.length} files attached`);
+    }
+    const failed = files.length - embeds.length;
+    if (failed > 0) {
+      toast.error(failed === 1 ? 'Could not upload the file' : `Could not upload ${failed} files`);
+    }
   }
 
   return {
@@ -100,6 +122,7 @@ export function useIssueDetail(
     setField,
     toggleLabel,
     insertAttachment,
+    attachFiles,
     uploadFile,
     imageAttachments,
     setDescEditor,

@@ -8,6 +8,7 @@ import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useCustomFieldsQuery } from '@/services/customFields.service';
 import { useFileDragZone } from '../../hooks/useFileDragZone';
+import { useFilePaste } from '../../hooks/useFilePaste';
 import { useNewIssueAttachments } from '../../hooks/useNewIssueAttachments';
 import {
   attachmentHtml,
@@ -168,28 +169,7 @@ export default function NewIssueModal({
 
   const { draggedFiles, dragHandlers } = useFileDragZone(insertFilesIntoBody);
 
-  // Read through a ref: the paste listener below is registered once, while the
-  // insert closes over the editor and the upload limits, which both arrive after
-  // the first render.
-  const insertFilesRef = useRef(insertFilesIntoBody);
-  insertFilesRef.current = insertFilesIntoBody;
-
-  // A paste carrying files lands in the open section's editor unless a markdown editor
-  // has the focus, in which case tiptap has already inserted it there. The listener
-  // is on the document because the focus may sit on the dialog itself, above the
-  // modal body.
-  useEffect(() => {
-    function onPaste(e: ClipboardEvent) {
-      const files = e.clipboardData?.files;
-      if (!files || files.length === 0) return;
-      const target = e.target;
-      if (target instanceof Element && target.closest('.ProseMirror')) return;
-      e.preventDefault();
-      insertFilesRef.current(files);
-    }
-    document.addEventListener('paste', onPaste);
-    return () => document.removeEventListener('paste', onPaste);
-  }, []);
+  useFilePaste(insertFilesIntoBody);
 
   const [addFieldOpen, setAddFieldOpen] = useState(false);
 

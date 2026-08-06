@@ -1,5 +1,32 @@
 # Changelog
 
+## [0.7.0](https://github.com/croffasia/itsaplan/compare/v0.6.0...v0.7.0) (2026-08-06)
+
+
+### Features
+
+* add an extended mode to issue and board sharing ([#97](https://github.com/croffasia/itsaplan/issues/97)) ([807718e](https://github.com/croffasia/itsaplan/commit/807718e87d3b68425e67aef2f57daa169ec26e96))
+* add checklists to board cards ([#96](https://github.com/croffasia/itsaplan/issues/96)) ([4fc44c9](https://github.com/croffasia/itsaplan/commit/4fc44c9dbe89e092eac60b54173f69cec9233cbf))
+* add cycles (sprints) ([#98](https://github.com/croffasia/itsaplan/issues/98)) ([82d2b78](https://github.com/croffasia/itsaplan/commit/82d2b7847b40599d8c74fc2f449dea28df349df6))
+* name both states in a status-change notification ([#89](https://github.com/croffasia/itsaplan/issues/89)) ([26b8cbf](https://github.com/croffasia/itsaplan/commit/26b8cbf5fd96428c42c98c3e0c0e347e2a661fe4))
+* **web:** color priority icons by priority and name them in the table ([#93](https://github.com/croffasia/itsaplan/issues/93)) ([7e13c13](https://github.com/croffasia/itsaplan/commit/7e13c139f13c867cd84d02f5fc0f858397257801))
+* **web:** create a linked issue from the links panel and mark blocked ones ([#92](https://github.com/croffasia/itsaplan/issues/92)) ([77ecfb1](https://github.com/croffasia/itsaplan/commit/77ecfb1f1673f7f533ccbca4ed4fc3f0b44d5082))
+
+
+### Bug Fixes
+
+* **web:** fit the header, initiatives and inbox on a mobile screen ([#90](https://github.com/croffasia/itsaplan/issues/90)) ([fecce5f](https://github.com/croffasia/itsaplan/commit/fecce5ff1af7cc66b48dba7a2670635a857a422f))
+* **web:** give the kanban add button the same gap as the cards ([#87](https://github.com/croffasia/itsaplan/issues/87)) ([ca0984d](https://github.com/croffasia/itsaplan/commit/ca0984d980c85878c275741710786c3dd734781c))
+* **web:** increase the markdown line height and block spacing ([#91](https://github.com/croffasia/itsaplan/issues/91)) ([651fd09](https://github.com/croffasia/itsaplan/commit/651fd09469a0a4271a0228e9db82e3b4542f7eca))
+* **web:** reach every new issue body section from a dropdown ([#85](https://github.com/croffasia/itsaplan/issues/85)) ([1d13b6d](https://github.com/croffasia/itsaplan/commit/1d13b6dbb8e96f592417a580cbeb20ae7b02a828))
+* **web:** reorder the issue properties rows ([#88](https://github.com/croffasia/itsaplan/issues/88)) ([7a5f8fb](https://github.com/croffasia/itsaplan/commit/7a5f8fb3bcfe5d81c26ecc291598625ea23ba89b))
+* **web:** tighten the MCP server page copy and layout ([#95](https://github.com/croffasia/itsaplan/issues/95)) ([c861a41](https://github.com/croffasia/itsaplan/commit/c861a410afca6a4a816e3ea6b2857346117fd58d))
+
+
+### CI
+
+* move the release branch in its own job ([#84](https://github.com/croffasia/itsaplan/issues/84)) ([ccef872](https://github.com/croffasia/itsaplan/commit/ccef8723f0878cf9d81e2b2a8d55c682ebba90c4))
+
 ## [0.6.0](https://github.com/croffasia/itsaplan/compare/v0.5.0...v0.6.0) (2026-08-03)
 
 

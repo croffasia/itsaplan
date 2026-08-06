@@ -250,8 +250,9 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
       // A column per cycle the board plans into — the unfinished ones the project
       // carries, oldest first (the API orders them by start date) — and one per
       // cycle only the issues name, so the work of a finished cycle stays reachable.
-      // Those come first: they ended before the unfinished ones start. A public
-      // share carries no cycle list, so all of its columns come from the issues.
+      // Those come first: they ended before the unfinished ones start. They take no
+      // drop: a finished cycle records what it delivered. A public share carries no
+      // cycle list, so all of its columns come from the issues.
       const namedByIssues = new Map<number, string>();
       for (const issue of project.issues)
         if (issue.cycle) namedByIssues.set(issue.cycle.id, issue.cycle.name);
@@ -259,7 +260,7 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
       return [
         ...[...namedByIssues.entries()]
           .sort((a, b) => a[1].localeCompare(b[1]))
-          .map(([id, name]) => ({ key: `y${id}`, name, assign: { cycleId: id } })),
+          .map(([id, name]) => ({ key: `y${id}`, name, assign: null })),
         ...project.plannedCycles.map((c) => ({
           key: `y${c.id}`,
           name: c.name,

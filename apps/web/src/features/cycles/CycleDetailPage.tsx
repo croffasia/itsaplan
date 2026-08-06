@@ -24,7 +24,7 @@ export default function CycleDetailPage({ cycleId }: { cycleId: number }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <CycleHeader cycle={cycle} projectKey={projectKey} />
-      <CycleIssuesBoard cycleId={cycle.id} />
+      <CycleIssuesBoard cycle={cycle} />
     </div>
   );
 }

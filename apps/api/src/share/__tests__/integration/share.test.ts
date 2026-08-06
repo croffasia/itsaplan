@@ -74,9 +74,14 @@ describe('share', () => {
         .issues({ issueId })
         .patch({ assigneeUserId: ownerId, labelIds: [label.data!.id] });
 
-      const cycle = await asOwner
-        .projects({ projectKey: 'MKT' })
-        .cycles.post({ name: 'Sprint 1', startDate: '2026-01-05', endDate: '2026-01-18' });
+      // A cycle that starts today, since a completed one takes no new issues.
+      const start = new Date();
+      const end = new Date(start.getTime() + 13 * 24 * 60 * 60 * 1000);
+      const cycle = await asOwner.projects({ projectKey: 'MKT' }).cycles.post({
+        name: 'Sprint 1',
+        startDate: start.toISOString().slice(0, 10),
+        endDate: end.toISOString().slice(0, 10),
+      });
       await asOwner.issues({ issueId }).patch({ cycleId: cycle.data!.id });
 
       const token = (await asOwner.issues({ issueId }).share.post()).data!.token;

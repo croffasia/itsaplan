@@ -132,11 +132,22 @@ export async function getCycle(id: number): Promise<CycleRow | null> {
   return row ? mapCycle(row) : null;
 }
 
-// The project a cycle belongs to, or null if it does not exist. Used by the access
-// check on routes that address a cycle by its own id.
+// The project a cycle belongs to and the state its dates put it in, or null if it
+// does not exist. What the checks on a cycle referenced by its own id read.
+export async function getCycleRef(
+  id: number,
+): Promise<{ projectId: number; status: CycleStatus } | null> {
+  const rows = await db
+    .select({ projectId: cycle.projectId, startDate: cycle.startDate, endDate: cycle.endDate })
+    .from(cycle)
+    .where(eq(cycle.id, id));
+  const row = rows[0];
+  return row ? { projectId: row.projectId, status: cycleStatus(row.startDate, row.endDate) } : null;
+}
+
+// Used by the access check on routes that address a cycle by its own id.
 export async function getCycleProjectId(id: number): Promise<number | null> {
-  const rows = await db.select({ projectId: cycle.projectId }).from(cycle).where(eq(cycle.id, id));
-  return rows[0]?.projectId ?? null;
+  return (await getCycleRef(id))?.projectId ?? null;
 }
 
 // Cycles of one project may not overlap: that is what keeps at most one of them

@@ -50,7 +50,7 @@ import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '../ai-agents/store';
 import { deleteThreadsWhere } from '../ai-agents/runtime/memory';
 import { getInitiativeProjectId } from '../initiatives/store';
-import { getCycleProjectId } from '../cycles/store';
+import { getCycleRef } from '../cycles/store';
 import { getMembership } from '../members/store';
 import { enqueueAgentRun } from '../ai-agents/run-queue';
 
@@ -678,12 +678,21 @@ async function assertInitiative(
     throw new HttpError(400, 'Initiative must belong to this project');
 }
 
-// Enforces that a linked cycle belongs to the same project. Only checks when set to
-// a non-null value (clearing the link is always allowed). Throws 400 otherwise.
-async function assertCycle(projectId: number, cycleId: number | null | undefined): Promise<void> {
-  if (cycleId == null) return;
-  if ((await getCycleProjectId(cycleId)) !== projectId)
+// Enforces that a linked cycle belongs to the same project and has not finished: a
+// completed cycle is the record of what it delivered, so no issue is planned into it
+// after the fact. Only checks when the link changes to a non-null value — clearing
+// it, and keeping the cycle an issue is already on, stay allowed. Throws 400
+// otherwise.
+async function assertCycle(
+  projectId: number,
+  cycleId: number | null | undefined,
+  currentCycleId: number | null = null,
+): Promise<void> {
+  if (cycleId == null || cycleId === currentCycleId) return;
+  const ref = await getCycleRef(cycleId);
+  if (!ref || ref.projectId !== projectId)
     throw new HttpError(400, 'Cycle must belong to this project');
+  if (ref.status === 'completed') throw new HttpError(400, 'A completed cycle takes no new issues');
 }
 
 // Enforces that a column belongs to the issue's project — issue.column_id only
@@ -905,7 +914,7 @@ export async function updateIssue(
 
   await assertAssignments(before.projectId, patch);
   await assertInitiative(before.projectId, patch.initiativeId);
-  await assertCycle(before.projectId, patch.cycleId);
+  await assertCycle(before.projectId, patch.cycleId, before.cycleId);
   await assertColumn(before.projectId, patch.columnId);
   await assertIssueType(before.projectId, patch.typeId);
   await assertParent(before.projectId, id, patch.parentId);

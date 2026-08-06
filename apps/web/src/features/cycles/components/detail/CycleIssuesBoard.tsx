@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import type { Cycle } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
 import { useLocalBoardSettings } from '@/hooks/useLocalBoardSettings';
@@ -17,9 +18,11 @@ const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
 // The cycle's issues rendered as the work items board (kanban/table/timeline/
 // calendar) with filters and display settings, but no saved views. The board is fed
 // a project whose issues are just this cycle's, so drag/edit still hit the real
-// issues and the live board refresh keeps it current.
-export default function CycleIssuesBoard({ cycleId }: { cycleId: number }) {
+// issues and the live board refresh keeps it current. On a finished cycle a new
+// issue is created without one: nothing is planned into a cycle that has ended.
+export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
+  const cycleId = cycle.id;
   const board = useLocalBoardSettings(CYCLE_BOARD_STORE_KEY, cycleId);
 
   const viewProject = useMemo(() => {
@@ -37,7 +40,7 @@ export default function CycleIssuesBoard({ cycleId }: { cycleId: number }) {
     onSettingsChange: board.changeSettings,
     onOpenIssue,
     onAddIssue: (defaults: Parameters<typeof onAddIssue>[0]) =>
-      onAddIssue({ cycleId, ...defaults }),
+      onAddIssue(cycle.status === 'completed' ? defaults : { cycleId, ...defaults }),
   };
 
   let view;

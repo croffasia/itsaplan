@@ -185,8 +185,8 @@ export default function IssueProperties({
           ) : (
             <CycleSelect
               projectKey={project.project.key}
-              value={issue.cycle?.id ?? null}
-              onChange={(id) => onPatch({ cycleId: id })}
+              value={issue.cycle}
+              onChange={(cycle) => onPatch({ cycleId: cycle?.id ?? null })}
             />
           )}
         </PropertyRow>

@@ -27,9 +27,10 @@ export function useCyclesQuery(projectKey: string | null) {
   });
 }
 
-// What the cycles page lists: the cycles that have not finished. The whole list
-// (useCyclesQuery) stays for the pickers and the form, which need the finished ones
-// too — to name a cycle after the last one and to keep dates off an existing range.
+// What the cycles page lists, and what the pickers offer: the cycles that have not
+// finished. The whole list (useCyclesQuery) stays for the cycle form, which needs the
+// finished ones too — to name a cycle after the last one and to keep dates off an
+// existing range.
 export function usePlannedCyclesQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.plannedCycles(projectKey ?? ''),

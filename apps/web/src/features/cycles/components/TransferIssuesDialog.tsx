@@ -12,11 +12,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useCyclesQuery, useTransferCycleIssues } from '@/services/cycles.service';
+import { usePlannedCyclesQuery, useTransferCycleIssues } from '@/services/cycles.service';
 
-// Moves the cycle's unfinished issues elsewhere. The target is another cycle of the
-// project or "No cycle", which leaves them unplanned. Finished issues stay on this
-// cycle, so it keeps recording what it delivered.
+// Moves the cycle's unfinished issues elsewhere. The target is another cycle the
+// project has not finished yet, or "No cycle", which leaves them unplanned. Finished
+// issues stay on this cycle, so it keeps recording what it delivered.
 const NO_CYCLE = 'none';
 
 export default function TransferIssuesDialog({
@@ -30,7 +30,7 @@ export default function TransferIssuesDialog({
 }) {
   const [target, setTarget] = useState<string>(NO_CYCLE);
   const transfer = useTransferCycleIssues(projectKey);
-  const targets = (useCyclesQuery(projectKey).data ?? []).filter((c) => c.id !== cycle.id);
+  const targets = (usePlannedCyclesQuery(projectKey).data ?? []).filter((c) => c.id !== cycle.id);
 
   const submit = async () => {
     try {

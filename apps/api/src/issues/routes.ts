@@ -405,7 +405,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         cycleId: t.Optional(
           t.Nullable(
             t.Integer({
-              description: 'Cycle id to plan this issue into, or null. From list_cycles.',
+              description:
+                'Cycle id to plan this issue into, or null. From list_cycles; a completed cycle is rejected.',
             }),
           ),
         ),
@@ -897,7 +898,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           t.Nullable(
             t.Integer({
               description:
-                'Plan this issue into a cycle id, or null to unplan it. From list_cycles.',
+                'Plan this issue into a cycle id, or null to unplan it. From list_cycles; a completed cycle is rejected.',
             }),
           ),
         ),

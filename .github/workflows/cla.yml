@@ -31,6 +31,11 @@ jobs:
           path-to-signatures: signatures/version1/cla.json
           branch: cla-signatures
           allowlist: croffasia,dependabot[bot],renovate[bot]
+          # The action locks every merged pull request by default. release-please
+          # comments on its own release pull request right after tagging, and a
+          # locked conversation makes that comment fail, which leaves the pull
+          # request labelled `autorelease: pending` and blocks the next release.
+          lock-pullrequest-aftermerge: false
           custom-notsigned-prcomment: >
             Thanks for the pull request. Before it can be merged, please read the
             [Individual Contributor License Agreement](https://github.com/croffasia/itsaplan/blob/main/ICLA.md)

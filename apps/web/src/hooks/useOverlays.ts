@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import type { NewIssueDefaults } from '@/utils/project';
 
 // The project-level overlays: the new-project modal, the command palette, the
@@ -20,6 +21,13 @@ export function useOverlays(showChatByDefault: boolean) {
   // `anyOpen` so the chat does not suppress the keyboard shortcuts.
   const [chatEnabled, setChatEnabled] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
+  // The panel is not addressed by the URL, so a link inside it navigates the page
+  // behind it and leaves the panel standing over the new page.
+  const pathname = usePathname();
+  useEffect(() => {
+    setOpenIssueId(null);
+  }, [pathname]);
 
   // The preference arrives after the first render, so it is applied in an effect,
   // and only once — a manual toggle afterwards stays as the user left it.

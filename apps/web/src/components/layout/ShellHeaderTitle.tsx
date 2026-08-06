@@ -1,4 +1,5 @@
 import { SETTINGS_SECTIONS } from '@/utils/settingsSections';
+import type { IssueRef } from '@/lib/api';
 import type { ShellRoute } from '@/hooks/useShellRoute';
 import CycleBreadcrumb from '@/components/layout/CycleBreadcrumb';
 import InitiativeBreadcrumb from '@/components/layout/InitiativeBreadcrumb';
@@ -24,10 +25,12 @@ export default function ShellHeaderTitle({
   route,
   projectName,
   issueIdentifier,
+  issueParent,
 }: {
   route: ShellRoute;
   projectName: string;
   issueIdentifier: string | null;
+  issueParent: IssueRef | null;
 }) {
   if (route.routeIssueSeq != null) {
     return (
@@ -35,6 +38,7 @@ export default function ShellHeaderTitle({
         projectKey={route.projectKey}
         projectName={projectName}
         identifier={issueIdentifier}
+        parent={issueParent}
       />
     );
   }

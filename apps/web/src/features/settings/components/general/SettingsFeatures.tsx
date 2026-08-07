@@ -6,12 +6,16 @@ import SettingsRow from '@/components/common/page/SettingsRow';
 import { Switch } from '@/components/ui/switch';
 import type { FeatureTogglesForm } from '../../hooks/useFeatureToggles';
 
-// What each optional section holds, in the order the sidebar lists them.
+// What each optional section holds: the navigation sections in the order the
+// sidebar lists them, then the sections of an issue.
 const FEATURES: { key: keyof ProjectFeatures; description: string }[] = [
   { key: 'dashboards', description: 'Charts and metrics on saved dashboards.' },
   { key: 'initiatives', description: 'Groups of issues tracked as one piece of work.' },
   { key: 'cycles', description: 'Time-boxed periods of work the issues are planned into.' },
   { key: 'notes', description: 'Freeform boards of sticky notes.' },
+  { key: 'subtasks', description: 'Issues broken down into subtasks under a parent.' },
+  { key: 'checklists', description: 'Lists of steps tracked inside an issue.' },
+  { key: 'issueStats', description: 'How long an issue spent in each state.' },
 ];
 
 // The Features block of the General page. Each switch saves on its own. Only an

@@ -114,12 +114,14 @@ export default function DisplayGroupingRows({
             />
           </DisplaySettingsRow>
 
-          <DisplaySettingsRow label="Show subtasks">
-            <Checkbox
-              checked={settings.showSubtasks}
-              onCheckedChange={(c) => onChange({ showSubtasks: c === true })}
-            />
-          </DisplaySettingsRow>
+          {features.subtasks && (
+            <DisplaySettingsRow label="Show subtasks">
+              <Checkbox
+                checked={settings.showSubtasks}
+                onCheckedChange={(c) => onChange({ showSubtasks: c === true })}
+              />
+            </DisplaySettingsRow>
+          )}
         </>
       )}
     </>

@@ -2,7 +2,7 @@
 
 import { toast } from 'sonner';
 import type { ProjectDetail, ProjectFeatures } from '@/lib/api';
-import { FEATURE_LABEL } from '@/utils/projectFeatures';
+import { FEATURE_LABEL, projectFeatures } from '@/utils/projectFeatures';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useUpdateProjectFeatures } from '../services/settings.service';
 
@@ -14,13 +14,12 @@ export interface FeatureTogglesForm {
   toggle: (feature: keyof ProjectFeatures, enabled: boolean) => Promise<void>;
 }
 
-// The optional sections of the project (initiatives, dashboards, notes), read from
-// the project payload the Shell already loaded. Each switch saves on its own —
-// there is nothing to draft, so the General page's Save button does not cover it.
+// The optional sections of the project, read from the project payload the Shell
+// already loaded. Each switch saves on its own — there is nothing to draft, so the
+// General page's Save button does not cover it.
 export function useFeatureToggles(project: ProjectDetail): FeatureTogglesForm {
   const { isOwner } = usePermissions();
   const update = useUpdateProjectFeatures(project.project.key);
-  const { initiativesEnabled, cyclesEnabled, dashboardsEnabled, notesEnabled } = project.project;
 
   async function toggle(feature: keyof ProjectFeatures, enabled: boolean) {
     await update.mutateAsync({ [feature]: enabled });
@@ -28,12 +27,7 @@ export function useFeatureToggles(project: ProjectDetail): FeatureTogglesForm {
   }
 
   return {
-    features: {
-      initiatives: initiativesEnabled,
-      cycles: cyclesEnabled,
-      dashboards: dashboardsEnabled,
-      notes: notesEnabled,
-    },
+    features: projectFeatures(project.project),
     editable: isOwner,
     saving: update.isPending,
     toggle,

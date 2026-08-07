@@ -5,6 +5,7 @@ import type { ProjectDetail } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { settingsSection } from '@/utils/settingsSections';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { Button } from '@/components/ui/button';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import RequirePermission from '@/components/common/permissions/RequirePermission';
@@ -27,6 +28,7 @@ export default function SettingsConfigurationPage() {
 
 function ConfigurationPage({ project }: { project: ProjectDetail }) {
   const { can } = usePermissions();
+  const features = useProjectFeatures();
   const subtasks = useSubtaskAutomationForm(project.project.key);
   const archive = useAutoArchiveForm(project.project.key);
   const saving = subtasks.saving || archive.saving;
@@ -55,7 +57,7 @@ function ConfigurationPage({ project }: { project: ProjectDetail }) {
       <SettingsResourceProvider resource={section.resource}>
         <RequirePermission resource={section.resource} action="read">
           <div className="space-y-10">
-            <SettingsSubtaskAutomation form={subtasks} />
+            {features.subtasks && <SettingsSubtaskAutomation form={subtasks} />}
             <SettingsAutoArchive form={archive} />
           </div>
         </RequirePermission>

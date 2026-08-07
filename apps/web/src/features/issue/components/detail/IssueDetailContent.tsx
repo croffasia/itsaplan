@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { useFilePaste } from '../../hooks/useFilePaste';
@@ -54,6 +55,7 @@ export default function IssueDetailContent({
     setDescEditor,
   } = useIssueDetail(project, issueId, onIssueLoaded);
   const canEdit = usePermissions(project).can('work_items', 'edit');
+  const features = useProjectFeatures();
   useFilePaste(canEdit && issue ? (files) => void attachFiles(files) : null);
   const properties = usePersistedOpen('issue-properties-open');
   // A replaced attachment keeps its URL, so an <img> already in an editor is
@@ -148,9 +150,9 @@ export default function IssueDetailContent({
         readOnly={!canEdit}
       />
 
-      <IssueSubtasksPanel project={project} issue={issue} />
+      {features.subtasks && <IssueSubtasksPanel project={project} issue={issue} />}
 
-      <IssueChecklistsPanel issue={issue} />
+      {features.checklists && <IssueChecklistsPanel issue={issue} />}
 
       <IssueLinksPanel project={project} issue={issue} />
     </>
@@ -186,11 +188,13 @@ export default function IssueDetailContent({
 
   const activity = (
     <>
-      <IssueStatusTimeline
-        issueId={issue.id}
-        columns={project.columns}
-        imageByUserId={imageByUserId}
-      />
+      {features.issueStats && (
+        <IssueStatusTimeline
+          issueId={issue.id}
+          columns={project.columns}
+          imageByUserId={imageByUserId}
+        />
+      )}
       <IssueActivityFeed
         issueId={issue.id}
         assignees={project.assignees}

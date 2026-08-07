@@ -1,5 +1,6 @@
 import { useContext } from 'react';
 import { ShellCtx } from '@/context/shellContext';
+import { projectFeatures } from '@/utils/projectFeatures';
 import type { ProjectFeatures } from '@/lib/api';
 
 // Which optional sections the active project shows, read from the payload the
@@ -9,12 +10,5 @@ import type { ProjectFeatures } from '@/lib/api';
 // again once it is turned back on. Without a project every section reads as off,
 // the same way usePermissions grants nothing until the project is there.
 export function useProjectFeatures(): ProjectFeatures {
-  const project = useContext(ShellCtx)?.project ?? null;
-  if (!project) return { initiatives: false, cycles: false, dashboards: false, notes: false };
-  return {
-    initiatives: project.project.initiativesEnabled,
-    cycles: project.project.cyclesEnabled,
-    dashboards: project.project.dashboardsEnabled,
-    notes: project.project.notesEnabled,
-  };
+  return projectFeatures(useContext(ShellCtx)?.project?.project ?? null);
 }

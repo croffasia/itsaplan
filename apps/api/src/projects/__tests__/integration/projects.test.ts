@@ -308,6 +308,9 @@ describe('projects', () => {
         cycles: true,
         dashboards: false,
         notes: false,
+        subtasks: true,
+        checklists: true,
+        issueStats: true,
       });
     });
 
@@ -596,11 +599,17 @@ describe('projects', () => {
         initiatives: true,
         dashboards: true,
         notes: true,
+        subtasks: true,
+        checklists: true,
+        issueStats: true,
       });
       expect((await viewOf(api, 'MKT')).data?.project).toMatchObject({
         initiativesEnabled: true,
         dashboardsEnabled: true,
         notesEnabled: true,
+        subtasksEnabled: true,
+        checklistsEnabled: true,
+        issueStatsEnabled: true,
       });
     });
 
@@ -624,6 +633,26 @@ describe('projects', () => {
         .settings.patch({ features: { initiatives: true } });
       expect(on.data?.features).toMatchObject({ initiatives: true });
       expect((await viewOf(api, 'MKT')).data?.project.initiativesEnabled).toBe(true);
+    });
+
+    it('lets an owner turn off the sections of an issue', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const off = await api
+        .projects({ projectKey: 'MKT' })
+        .settings.patch({ features: { subtasks: false, checklists: false, issueStats: false } });
+      expect(off.status).toBe(200);
+      expect(off.data?.features).toMatchObject({
+        subtasks: false,
+        checklists: false,
+        issueStats: false,
+      });
+      expect((await viewOf(api, 'MKT')).data?.project).toMatchObject({
+        subtasksEnabled: false,
+        checklistsEnabled: false,
+        issueStatsEnabled: false,
+      });
     });
 
     it('denies turning a section off to a non-owner (owner-only)', async () => {

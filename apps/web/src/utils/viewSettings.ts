@@ -287,9 +287,9 @@ export function normalizeViewSettings(
   };
 }
 
-// The same settings without the grouping, sub-grouping and display properties of a
-// section the project has turned off: a display built while the section was on then
-// renders no dead column, lane or property.
+// The same settings without the grouping, sub-grouping, display properties and
+// subtask rows of a section the project has turned off: a display built while the
+// section was on then renders no dead column, lane, property or row.
 export function withoutHiddenSections(
   settings: ViewSettings,
   features: ProjectFeatures,
@@ -299,6 +299,7 @@ export function withoutHiddenSections(
     group: isFieldEnabled(settings.group, features) ? settings.group : 'status',
     subgroup: isFieldEnabled(settings.subgroup, features) ? settings.subgroup : 'none',
     properties: settings.properties.filter((p) => isFieldEnabled(p, features)),
+    showSubtasks: features.subtasks && settings.showSubtasks,
   };
 }
 
@@ -326,6 +327,7 @@ export function restoreHiddenSections(
     subgroup:
       hidden(stored.subgroup) && edited.subgroup === 'none' ? stored.subgroup : edited.subgroup,
     properties,
+    showSubtasks: features.subtasks ? edited.showSubtasks : stored.showSubtasks,
   };
 }
 

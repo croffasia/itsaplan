@@ -67,6 +67,9 @@ export interface Project {
   dashboardsEnabled: boolean;
   notesEnabled: boolean;
   cyclesEnabled: boolean;
+  subtasksEnabled: boolean;
+  checklistsEnabled: boolean;
+  issueStatsEnabled: boolean;
   createdAt: string;
   // The caller's role in this project. Only present on the /projects list
   // response (used to gate owner-only actions like deletion); absent on the
@@ -591,6 +594,9 @@ export interface ProjectFeatures {
   cycles: boolean;
   dashboards: boolean;
   notes: boolean;
+  subtasks: boolean;
+  checklists: boolean;
+  issueStats: boolean;
 }
 
 // A project's settings: MCP reachability and the enabled sections.

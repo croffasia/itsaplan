@@ -69,7 +69,9 @@ export default function ReadOnlyIssueDetail({
             />
           ))}
 
-        <IssueSubtasksPanel project={project} issue={issue} readOnly onOpenIssue={onOpenIssue} />
+        {scaffold.project.subtasksEnabled && (
+          <IssueSubtasksPanel project={project} issue={issue} readOnly onOpenIssue={onOpenIssue} />
+        )}
         <IssueLinksPanel project={project} issue={issue} readOnly onOpenIssue={onOpenIssue} />
 
         {extended && <ReadOnlyActivityFeed feed={feed} imageByUserId={imageByUserId} />}

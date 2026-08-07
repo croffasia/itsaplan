@@ -27,10 +27,13 @@ export default function ReadOnlyBoard({
   const project = toPublicProjectDetail(bundle.project, bundle.issues);
   // The server applied the view's filters: a link that hides labels and custom
   // field values does not carry enough to re-run them here. Subtasks are rendered
-  // under their parent, so they are left out of the layouts' own rows.
+  // under their parent, so they are left out of the layouts' own rows. With the
+  // Subtasks section off nothing renders the hierarchy, so a subtask keeps a row
+  // of its own.
+  const subtasksEnabled = bundle.project.project.subtasksEnabled;
   const boardProject = {
     ...project,
-    issues: withoutShownSubtasks(project.issues),
+    issues: subtasksEnabled ? withoutShownSubtasks(project.issues) : project.issues,
   };
 
   const layout = bundle.view.display.layout ?? 'kanban';
@@ -69,7 +72,10 @@ export default function ReadOnlyBoard({
       />
       <div className="relative min-h-0 flex-1">
         <IssueLinksProvider issues={project.issues} enabled={settings.showLinks}>
-          <SubtasksProvider issues={project.issues} enabled={settings.showSubtasks}>
+          <SubtasksProvider
+            issues={project.issues}
+            enabled={subtasksEnabled && settings.showSubtasks}
+          >
             {renderView()}
           </SubtasksProvider>
         </IssueLinksProvider>

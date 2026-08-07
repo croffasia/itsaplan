@@ -33,6 +33,9 @@ export interface ProjectRow {
   dashboardsEnabled: boolean;
   notesEnabled: boolean;
   cyclesEnabled: boolean;
+  subtasksEnabled: boolean;
+  checklistsEnabled: boolean;
+  issueStatsEnabled: boolean;
   createdAt: string;
 }
 
@@ -43,6 +46,9 @@ export interface ProjectFeatures {
   dashboards: boolean;
   notes: boolean;
   cycles: boolean;
+  subtasks: boolean;
+  checklists: boolean;
+  issueStats: boolean;
 }
 
 // A project in the caller's list, carrying the caller's own role in it. The list
@@ -66,6 +72,9 @@ function mapProject(row: typeof project.$inferSelect): ProjectRow {
     dashboardsEnabled: row.dashboardsEnabled,
     notesEnabled: row.notesEnabled,
     cyclesEnabled: row.cyclesEnabled,
+    subtasksEnabled: row.subtasksEnabled,
+    checklistsEnabled: row.checklistsEnabled,
+    issueStatsEnabled: row.issueStatsEnabled,
     createdAt: iso(row.createdAt),
   };
 }
@@ -92,6 +101,9 @@ export async function listProjects(
       dashboardsEnabled: project.dashboardsEnabled,
       notesEnabled: project.notesEnabled,
       cyclesEnabled: project.cyclesEnabled,
+      subtasksEnabled: project.subtasksEnabled,
+      checklistsEnabled: project.checklistsEnabled,
+      issueStatsEnabled: project.issueStatsEnabled,
       createdAt: project.createdAt,
       role: projectMember.role,
       rolePermissions: projectRole.permissions,
@@ -290,6 +302,9 @@ export function projectFeatures(row: ProjectRow): ProjectFeatures {
     dashboards: row.dashboardsEnabled,
     notes: row.notesEnabled,
     cycles: row.cyclesEnabled,
+    subtasks: row.subtasksEnabled,
+    checklists: row.checklistsEnabled,
+    issueStats: row.issueStatsEnabled,
   };
 }
 
@@ -304,6 +319,9 @@ export async function setProjectFeatures(
   if (patch.dashboards !== undefined) values.dashboardsEnabled = patch.dashboards;
   if (patch.notes !== undefined) values.notesEnabled = patch.notes;
   if (patch.cycles !== undefined) values.cyclesEnabled = patch.cycles;
+  if (patch.subtasks !== undefined) values.subtasksEnabled = patch.subtasks;
+  if (patch.checklists !== undefined) values.checklistsEnabled = patch.checklists;
+  if (patch.issueStats !== undefined) values.issueStatsEnabled = patch.issueStats;
   if (Object.keys(values).length === 0) return getProjectById(projectId);
   const [row] = await db.update(project).set(values).where(eq(project.id, projectId)).returning();
   return row ? mapProject(row) : null;

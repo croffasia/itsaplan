@@ -75,6 +75,9 @@ const ProjectResponse = t.Object({
   dashboardsEnabled: t.Boolean(),
   notesEnabled: t.Boolean(),
   cyclesEnabled: t.Boolean(),
+  subtasksEnabled: t.Boolean(),
+  checklistsEnabled: t.Boolean(),
+  issueStatsEnabled: t.Boolean(),
   createdAt: t.String(),
 });
 
@@ -181,6 +184,9 @@ const FeaturesResponse = t.Object({
   dashboards: t.Boolean(),
   notes: t.Boolean(),
   cycles: t.Boolean(),
+  subtasks: t.Boolean(),
+  checklists: t.Boolean(),
+  issueStats: t.Boolean(),
 });
 
 // The project's settings: MCP reachability and the enabled sections.
@@ -413,8 +419,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
 
   // Updates the project's settings. Each field is optional; only the supplied ones
   // change. mcpEnabled toggles MCP access to the project. features turns the
-  // optional sections (initiatives, dashboards, notes) on or off. Owner-only. Not
-  // an MCP tool: it governs MCP access, so an agent must not change it.
+  // optional sections on or off. Owner-only. Not an MCP tool: it governs MCP
+  // access, so an agent must not change it.
   .patch(
     '/projects/:projectKey/settings',
     async ({ project, body }) => {
@@ -440,6 +446,9 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
             dashboards: t.Optional(t.Boolean()),
             notes: t.Optional(t.Boolean()),
             cycles: t.Optional(t.Boolean()),
+            subtasks: t.Optional(t.Boolean()),
+            checklists: t.Optional(t.Boolean()),
+            issueStats: t.Optional(t.Boolean()),
           }),
         ),
       }),

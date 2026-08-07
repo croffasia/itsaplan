@@ -68,6 +68,9 @@ export const project = pgTable('project', {
   dashboardsEnabled: boolean('dashboards_enabled').notNull().default(true),
   notesEnabled: boolean('notes_enabled').notNull().default(true),
   cyclesEnabled: boolean('cycles_enabled').notNull().default(true),
+  subtasksEnabled: boolean('subtasks_enabled').notNull().default(true),
+  checklistsEnabled: boolean('checklists_enabled').notNull().default(true),
+  issueStatsEnabled: boolean('issue_stats_enabled').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

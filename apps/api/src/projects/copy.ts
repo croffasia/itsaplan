@@ -227,6 +227,9 @@ function mapProjectRow(row: typeof project.$inferSelect): ProjectRow {
     dashboardsEnabled: row.dashboardsEnabled,
     notesEnabled: row.notesEnabled,
     cyclesEnabled: row.cyclesEnabled,
+    subtasksEnabled: row.subtasksEnabled,
+    checklistsEnabled: row.checklistsEnabled,
+    issueStatsEnabled: row.issueStatsEnabled,
     createdAt: iso(row.createdAt),
   };
 }
@@ -281,6 +284,9 @@ export async function copyProject(
         dashboardsEnabled: project.dashboardsEnabled,
         notesEnabled: project.notesEnabled,
         cyclesEnabled: project.cyclesEnabled,
+        subtasksEnabled: project.subtasksEnabled,
+        checklistsEnabled: project.checklistsEnabled,
+        issueStatsEnabled: project.issueStatsEnabled,
       })
       .from(project)
       .where(eq(project.id, sourceProjectId));

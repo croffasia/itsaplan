@@ -477,6 +477,13 @@
       "when": 1785961218377,
       "tag": "0067_rename_auto_archive_permission",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786098521658,
+      "tag": "0068_careful_doctor_spectrum",
+      "breakpoints": true
     }
   ]
 }

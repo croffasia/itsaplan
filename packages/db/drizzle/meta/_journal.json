@@ -470,6 +470,13 @@
       "when": 1785961218376,
       "tag": "0066_tidy_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1785961218377,
+      "tag": "0067_rename_auto_archive_permission",
+      "breakpoints": true
     }
   ]
 }

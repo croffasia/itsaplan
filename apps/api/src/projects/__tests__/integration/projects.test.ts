@@ -718,7 +718,7 @@ describe('projects', () => {
       await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
       const role = await owner.api
         .projects({ projectKey: 'MKT' })
-        .roles.post({ name: 'Reader', permissions: { auto_archive: { read: true } } });
+        .roles.post({ name: 'Reader', permissions: { workflow_config: { read: true } } });
       const member = await addMember(owner.api, role.data!.id);
 
       expect((await autoArchive(member).get()).status).toBe(200);
@@ -732,13 +732,65 @@ describe('projects', () => {
       await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
       const role = await owner.api.projects({ projectKey: 'MKT' }).roles.post({
         name: 'Archivist',
-        permissions: { auto_archive: { read: true, edit: true } },
+        permissions: { workflow_config: { read: true, edit: true } },
       });
       const member = await addMember(owner.api, role.data!.id);
 
       const res = await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 });
       expect(res.status).toBe(200);
       expect(res.data).toMatchObject({ completedDays: 14, canceledDays: 3 });
+    });
+  });
+
+  describe('subtask automation settings', () => {
+    const subtasks = (client: Api) => client.projects({ projectKey: 'MKT' }).settings.subtasks;
+
+    it('defaults a new project to both automations off', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const res = await subtasks(api).get();
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ completeParent: false, closeSubtasks: false });
+    });
+
+    it('lets an owner set and read back the automations', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const patch = await subtasks(api).patch({ completeParent: true, closeSubtasks: false });
+      expect(patch.status).toBe(200);
+      expect(patch.data).toMatchObject({ completeParent: true, closeSubtasks: false });
+
+      expect((await subtasks(api).get()).data).toMatchObject({
+        completeParent: true,
+        closeSubtasks: false,
+      });
+    });
+
+    it('holds the default member role out of the section', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const member = await addMember(owner.api);
+
+      expect((await subtasks(member).get()).status).toBe(403);
+      expect(
+        (await subtasks(member).patch({ completeParent: true, closeSubtasks: true })).status,
+      ).toBe(403);
+    });
+
+    it('lets a granted role read the automations but not change them without edit', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const role = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Reader', permissions: { workflow_config: { read: true } } });
+      const member = await addMember(owner.api, role.data!.id);
+
+      expect((await subtasks(member).get()).status).toBe(200);
+      expect(
+        (await subtasks(member).patch({ completeParent: true, closeSubtasks: true })).status,
+      ).toBe(403);
     });
   });
 });

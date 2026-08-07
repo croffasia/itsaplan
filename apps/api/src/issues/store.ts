@@ -53,6 +53,7 @@ import { getInitiativeProjectId } from '../initiatives/store';
 import { getCycleRef } from '../cycles/store';
 import { getMembership } from '../members/store';
 import { enqueueAgentRun } from '../ai-agents/run-queue';
+import { applySubtaskAutomation } from './automation';
 
 // Data access for issues and their per-issue data: labels, custom field values,
 // and selected options. The human identifier (e.g. "MKT-42") is the project key
@@ -951,8 +952,10 @@ export async function updateIssue(
         await emitWebhookEvent(after.projectId, 'issue.assigned', after);
       if (before.delegateUserId !== after.delegateUserId)
         await enqueueDelegateRun(after, actorUserId);
-      if (before.columnId !== after.columnId)
+      if (before.columnId !== after.columnId) {
         await emitWebhookEvent(after.projectId, 'issue.state_changed', after);
+        await applySubtaskAutomation(after, actorUserId);
+      }
     }
   }
   return after;

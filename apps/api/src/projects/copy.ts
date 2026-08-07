@@ -48,7 +48,7 @@ export interface CopyProjectInclude {
   views: boolean;
   dashboards: boolean;
   actions: boolean;
-  archive: boolean;
+  configuration: boolean;
   roles: boolean;
   notificationProviders: boolean;
   webhooks: boolean;
@@ -67,7 +67,7 @@ export const COPY_INCLUDE_KEYS: (keyof CopyProjectInclude)[] = [
   'views',
   'dashboards',
   'actions',
-  'archive',
+  'configuration',
   'roles',
   'notificationProviders',
   'webhooks',
@@ -519,9 +519,10 @@ export async function copyProject(
       }
     }
 
-    // Project settings key/value rows (the Archive section's auto-archive thresholds,
-    // and any other project-scoped setting). Copied verbatim.
-    if (inc.archive) {
+    // Project settings key/value rows (the Configuration section's subtask
+    // automations and auto-archive thresholds, and any other project-scoped
+    // setting). Copied verbatim.
+    if (inc.configuration) {
       const settingRows = await tx
         .select()
         .from(projectSetting)

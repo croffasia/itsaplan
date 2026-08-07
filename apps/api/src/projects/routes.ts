@@ -18,6 +18,8 @@ import {
   setProjectFeatures,
   getAutoArchiveSettings,
   setAutoArchiveSettings,
+  getSubtaskAutomationSettings,
+  setSubtaskAutomationSettings,
   ISSUE_TYPE_PRESET_KEYS,
 } from './store';
 import { copyProject, COPY_INCLUDE_KEYS } from './copy';
@@ -165,6 +167,12 @@ const CustomFieldResponse = t.Object({
 const AutoArchiveResponse = t.Object({
   completedDays: t.Nullable(t.Number()),
   canceledDays: t.Nullable(t.Number()),
+});
+
+// The subtask automations (SubtaskAutomationSettings from the store).
+const SubtaskAutomationResponse = t.Object({
+  completeParent: t.Boolean(),
+  closeSubtasks: t.Boolean(),
 });
 
 // Which optional sections the project shows (ProjectFeatures from the store).
@@ -447,14 +455,14 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     },
   )
 
-  // The thresholds are their own permission resource rather than part of the
-  // settings payload above: a granted role reads or changes them without being an
-  // owner.
+  // The workflow configuration — the auto-archive thresholds and the subtask
+  // automations — is its own permission resource rather than part of the settings
+  // payload above: a granted role reads or changes it without being an owner.
   .get(
     '/projects/:projectKey/settings/auto-archive',
     ({ project }) => getAutoArchiveSettings(project.id),
     {
-      permission: ['auto_archive', 'read'],
+      permission: ['workflow_config', 'read'],
       response: {
         200: AutoArchiveResponse,
         401: ErrorResponse,
@@ -475,7 +483,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         completedDays: t.Nullable(t.Integer({ minimum: 1 })),
         canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
       }),
-      permission: ['auto_archive', 'edit'],
+      permission: ['workflow_config', 'edit'],
       response: {
         200: AutoArchiveResponse,
         400: ErrorResponse,
@@ -484,6 +492,42 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         404: ErrorResponse,
       },
       detail: { summary: "Update a project's auto-archive thresholds" },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/settings/subtasks',
+    ({ project }) => getSubtaskAutomationSettings(project.id),
+    {
+      permission: ['workflow_config', 'read'],
+      response: {
+        200: SubtaskAutomationResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: { summary: "Get a project's subtask automations" },
+    },
+  )
+
+  // Both automations are sent together, the same as the thresholds above.
+  .patch(
+    '/projects/:projectKey/settings/subtasks',
+    ({ project, body }) => setSubtaskAutomationSettings(project.id, body),
+    {
+      body: t.Object({
+        completeParent: t.Boolean(),
+        closeSubtasks: t.Boolean(),
+      }),
+      permission: ['workflow_config', 'edit'],
+      response: {
+        200: SubtaskAutomationResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: { summary: "Update a project's subtask automations" },
     },
   )
 

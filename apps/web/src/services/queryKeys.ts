@@ -13,8 +13,10 @@ export const qk = {
   archivedIssues: (projectKey: string) => ['archivedIssues', projectKey] as const,
   // Command-palette issue search, scoped to a project and the search term.
   issueSearch: (projectKey: string, q: string) => ['issueSearch', projectKey, q] as const,
-  // The project's auto-archive thresholds (the Archive settings section).
+  // The project's auto-archive thresholds and subtask automations (the
+  // Configuration settings section).
   autoArchive: (projectKey: string) => ['autoArchive', projectKey] as const,
+  subtaskAutomation: (projectKey: string) => ['subtaskAutomation', projectKey] as const,
   // A project's notification delivery settings (the Notifications section).
   notificationSettings: (projectKey: string) => ['notificationSettings', projectKey] as const,
   notificationPreferences: (projectKey: string) => ['notificationPreferences', projectKey] as const,

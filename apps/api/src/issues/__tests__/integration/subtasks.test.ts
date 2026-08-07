@@ -13,6 +13,8 @@ import { resetDb } from '../../../__tests__/helpers/db';
 interface Setup {
   asOwner: Api;
   columnId: number;
+  doneColumnId: number;
+  canceledColumnId: number;
 }
 
 async function setupProject(): Promise<Setup> {
@@ -20,7 +22,14 @@ async function setupProject(): Promise<Setup> {
   const asOwner = authedApi(owner.cookie);
   await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
-  return { asOwner, columnId: view.data!.columns[0].id };
+  const columns = view.data!.columns;
+  const byState = (stateType: string) => columns.find((c) => c.stateType === stateType)!.id;
+  return {
+    asOwner,
+    columnId: columns[0].id,
+    doneColumnId: byState('completed'),
+    canceledColumnId: byState('canceled'),
+  };
 }
 
 function createIssue(client: Api, columnId: number, title = 'Task') {
@@ -40,8 +49,20 @@ async function parentWithSubtask(client: Api, columnId: number) {
   return { parent, subtask };
 }
 
+function createSubtask(client: Api, columnId: number, parentId: number, title: string) {
+  return client.projects({ projectKey: 'MKT' }).issues.post({ columnId, title, parentId });
+}
+
 function setParent(client: Api, issueId: number, parentId: number | null) {
   return client.issues({ issueId }).patch({ parentId });
+}
+
+function move(client: Api, issueId: number, columnId: number) {
+  return client.issues({ issueId }).patch({ columnId });
+}
+
+function setAutomations(client: Api, input: { completeParent: boolean; closeSubtasks: boolean }) {
+  return client.projects({ projectKey: 'MKT' }).settings.subtasks.patch(input);
 }
 
 async function read(client: Api, issueId: number) {
@@ -366,6 +387,78 @@ describe('subtasks', () => {
         .issues.bulk.delete.post({ ids: [parent.id], subtasks: 'detach' });
       expect(res.status).toBe(200);
       expect(await read(asOwner, subtask.id)).toMatchObject({ parentId: null });
+    });
+  });
+
+  describe('close automations', () => {
+    it('leaves the hierarchy alone while both automations are off', async () => {
+      const { asOwner, columnId, doneColumnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+
+      await move(asOwner, subtask.id, doneColumnId);
+      expect((await read(asOwner, parent.id)).columnId).toBe(columnId);
+
+      await move(asOwner, parent.id, doneColumnId);
+      expect((await read(asOwner, subtask.id)).columnId).toBe(doneColumnId);
+      await move(asOwner, subtask.id, columnId);
+      expect((await read(asOwner, subtask.id)).columnId).toBe(columnId);
+    });
+
+    it('closes the parent in the column its last subtask landed in', async () => {
+      const { asOwner, columnId, doneColumnId, canceledColumnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      const second = (await createSubtask(asOwner, columnId, parent.id, 'Second')).data!;
+      await setAutomations(asOwner, { completeParent: true, closeSubtasks: false });
+
+      await move(asOwner, subtask.id, canceledColumnId);
+      expect((await read(asOwner, parent.id)).columnId).toBe(columnId);
+
+      await move(asOwner, second.id, doneColumnId);
+      expect((await read(asOwner, parent.id)).columnId).toBe(doneColumnId);
+    });
+
+    it('holds the parent open while a subtask is still open', async () => {
+      const { asOwner, columnId, doneColumnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      await createSubtask(asOwner, columnId, parent.id, 'Second');
+      await setAutomations(asOwner, { completeParent: true, closeSubtasks: false });
+
+      await move(asOwner, subtask.id, doneColumnId);
+      expect((await read(asOwner, parent.id)).columnId).toBe(columnId);
+    });
+
+    it('ignores an archived subtask when closing the parent', async () => {
+      const { asOwner, columnId, doneColumnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      const archived = (await createSubtask(asOwner, columnId, parent.id, 'Archived')).data!;
+      await asOwner.issues({ issueId: archived.id }).archive.post();
+      await setAutomations(asOwner, { completeParent: true, closeSubtasks: false });
+
+      await move(asOwner, subtask.id, doneColumnId);
+      expect((await read(asOwner, parent.id)).columnId).toBe(doneColumnId);
+    });
+
+    it('closes the open subtasks in the column the parent was closed in', async () => {
+      const { asOwner, columnId, doneColumnId, canceledColumnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      const alreadyClosed = (await createSubtask(asOwner, columnId, parent.id, 'Closed')).data!;
+      await move(asOwner, alreadyClosed.id, canceledColumnId);
+      await setAutomations(asOwner, { completeParent: false, closeSubtasks: true });
+
+      await move(asOwner, parent.id, doneColumnId);
+      expect((await read(asOwner, subtask.id)).columnId).toBe(doneColumnId);
+      expect((await read(asOwner, alreadyClosed.id)).columnId).toBe(canceledColumnId);
+    });
+
+    it('settles with both automations on', async () => {
+      const { asOwner, columnId, doneColumnId } = await setupProject();
+      const { parent, subtask } = await parentWithSubtask(asOwner, columnId);
+      await setAutomations(asOwner, { completeParent: true, closeSubtasks: true });
+
+      const res = await move(asOwner, parent.id, doneColumnId);
+      expect(res.status).toBe(200);
+      expect((await read(asOwner, parent.id)).columnId).toBe(doneColumnId);
+      expect((await read(asOwner, subtask.id)).columnId).toBe(doneColumnId);
     });
   });
 });

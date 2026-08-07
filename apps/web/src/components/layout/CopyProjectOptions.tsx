@@ -15,7 +15,7 @@ const REQUIRES: Record<CopyProjectIncludeKey, CopyProjectIncludeKey[]> = {
   views: ['states', 'issueTypes', 'labels', 'customFields'],
   dashboards: [],
   actions: ['states', 'issueTypes', 'labels'],
-  archive: [],
+  configuration: [],
   roles: [],
   notificationProviders: [],
   webhooks: [],
@@ -34,7 +34,7 @@ const LABELS: Record<CopyProjectIncludeKey, string> = {
   views: 'Views',
   dashboards: 'Dashboards',
   actions: 'Actions',
-  archive: 'Archive settings',
+  configuration: 'Configuration',
   roles: 'Roles',
   notificationProviders: 'Notification providers',
   webhooks: 'Webhooks',
@@ -50,7 +50,12 @@ type Group = { title: string; keys: CopyProjectIncludeKey[] };
 // Groups assigned to the four rendered columns by hand, keeping each column close
 // to the same number of rows.
 const COLUMNS: Group[][] = [
-  [{ title: 'Workflow', keys: ['states', 'issueTypes', 'labels', 'customFields', 'archive'] }],
+  [
+    {
+      title: 'Workflow',
+      keys: ['states', 'issueTypes', 'labels', 'customFields', 'configuration'],
+    },
+  ],
   [{ title: 'Automation', keys: ['actions', 'schedules', 'webhooks'] }],
   [{ title: 'AI Team', keys: ['agents', 'integrations', 'skills', 'tools'] }],
   [

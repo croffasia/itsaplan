@@ -1,6 +1,6 @@
 // React Query hooks for everything the settings feature reads and writes: the
 // project's structural entities (columns, issue types, labels and label groups,
-// custom fields), the auto-archive thresholds, the project notification delivery
+// custom fields), the workflow configuration, the project notification delivery
 // settings, and the session member's own notification preferences. Structural
 // writes go through useProjectMutation and invalidate the project detail; the
 // settings and notification writes return the stored result and put it straight
@@ -13,6 +13,7 @@ import {
   type NotificationSettingsPatch,
   type NotificationPreferences,
   type ProjectFeatures,
+  type SubtaskAutomationSettings,
 } from '@/lib/api';
 import { useInvalidateProject } from '@/services/projects.service';
 import { qk } from '@/services/queryKeys';
@@ -109,7 +110,8 @@ export function useDeleteLabelGroup(projectKey: string) {
   return useProjectMutation(projectKey, (id: number) => api.deleteLabelGroup(projectKey, id));
 }
 
-// Archive section: the project's auto-archive thresholds.
+// Configuration section: the project's auto-archive thresholds and subtask
+// automations.
 export function useAutoArchiveQuery(projectKey: string) {
   return useQuery({
     queryKey: qk.autoArchive(projectKey),
@@ -122,6 +124,22 @@ export function useUpdateAutoArchive(projectKey: string) {
   return useMutation({
     mutationFn: (input: AutoArchiveSettings) => api.updateAutoArchive(projectKey, input),
     onSuccess: (data) => qc.setQueryData(qk.autoArchive(projectKey), data),
+  });
+}
+
+export function useSubtaskAutomationQuery(projectKey: string) {
+  return useQuery({
+    queryKey: qk.subtaskAutomation(projectKey),
+    queryFn: () => api.getSubtaskAutomation(projectKey),
+  });
+}
+
+export function useUpdateSubtaskAutomation(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: SubtaskAutomationSettings) =>
+      api.updateSubtaskAutomation(projectKey, input),
+    onSuccess: (data) => qc.setQueryData(qk.subtaskAutomation(projectKey), data),
   });
 }
 

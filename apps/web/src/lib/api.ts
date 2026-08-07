@@ -88,7 +88,7 @@ export type CopyProjectIncludeKey =
   | 'views'
   | 'dashboards'
   | 'actions'
-  | 'archive'
+  | 'configuration'
   | 'roles'
   | 'notificationProviders'
   | 'webhooks'
@@ -573,6 +573,15 @@ export interface IssueSearchHit {
 export interface AutoArchiveSettings {
   completedDays: number | null;
   canceledDays: number | null;
+}
+
+// Per-project subtask automations, both off by default. completeParent closes a
+// parent once all its subtasks are closed; closeSubtasks closes the remaining
+// subtasks of a closed parent. Only closing is synchronized — an issue moving
+// between open states leaves the rest of the hierarchy alone.
+export interface SubtaskAutomationSettings {
+  completeParent: boolean;
+  closeSubtasks: boolean;
 }
 
 // Which optional sections a project shows. All on by default; turning one off
@@ -1816,7 +1825,7 @@ export type PermissionResource =
   | 'agent_skills'
   | 'agent_tools'
   | 'custom_fields'
-  | 'auto_archive'
+  | 'workflow_config'
   | 'actions'
   | 'webhooks'
   | 'note_boards'
@@ -2747,11 +2756,19 @@ export const api = {
       body: JSON.stringify(patch),
     }),
 
-  // Auto-archive thresholds (auto_archive: read to view, edit to change).
+  // The workflow configuration (workflow_config: read to view, edit to change):
+  // the auto-archive thresholds and the subtask automations.
   getAutoArchive: (projectKey: string) =>
     request<AutoArchiveSettings>(`/projects/${projectKey}/settings/auto-archive`),
   updateAutoArchive: (projectKey: string, input: AutoArchiveSettings) =>
     request<AutoArchiveSettings>(`/projects/${projectKey}/settings/auto-archive`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+  getSubtaskAutomation: (projectKey: string) =>
+    request<SubtaskAutomationSettings>(`/projects/${projectKey}/settings/subtasks`),
+  updateSubtaskAutomation: (projectKey: string, input: SubtaskAutomationSettings) =>
+    request<SubtaskAutomationSettings>(`/projects/${projectKey}/settings/subtasks`, {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),

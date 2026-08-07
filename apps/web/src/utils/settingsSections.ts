@@ -1,5 +1,4 @@
 import {
-  Archive,
   Bell,
   Bot,
   BookText,
@@ -10,6 +9,7 @@ import {
   ListPlus,
   type LucideIcon,
   Shapes,
+  SlidersHorizontal,
   Tags,
   Webhook,
   Wrench,
@@ -91,11 +91,11 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     group: 'configuration',
   },
   {
-    slug: 'archive',
-    label: 'Archive',
-    description: 'Auto-archive stale completed and canceled issues so the board stays clear.',
-    icon: Archive,
-    resource: 'auto_archive',
+    slug: 'configuration',
+    label: 'Configuration',
+    description: 'How subtasks close with their parent, and when stale issues are archived.',
+    icon: SlidersHorizontal,
+    resource: 'workflow_config',
     group: 'configuration',
   },
   {

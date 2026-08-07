@@ -354,6 +354,43 @@ export async function setAutoArchiveSettings(
   return next;
 }
 
+// The subtask automations, stored in project_setting under SUBTASK_AUTOMATION_KEY.
+// completeParent moves a parent into the column of its last closed subtask once
+// every subtask is closed; closeSubtasks moves the still-open subtasks of an issue
+// into the column the issue was closed in. Both off unless a project turns them on:
+// they rewrite states nobody asked to change. Applied in issues/automation.ts.
+const SUBTASK_AUTOMATION_KEY = 'subtask_automation';
+
+export interface SubtaskAutomationSettings {
+  completeParent: boolean;
+  closeSubtasks: boolean;
+}
+
+export async function getSubtaskAutomationSettings(
+  projectId: number,
+): Promise<SubtaskAutomationSettings> {
+  const stored = await getProjectSetting<Partial<SubtaskAutomationSettings>>(
+    projectId,
+    SUBTASK_AUTOMATION_KEY,
+  );
+  return {
+    completeParent: stored?.completeParent === true,
+    closeSubtasks: stored?.closeSubtasks === true,
+  };
+}
+
+export async function setSubtaskAutomationSettings(
+  projectId: number,
+  input: SubtaskAutomationSettings,
+): Promise<SubtaskAutomationSettings> {
+  const next: SubtaskAutomationSettings = {
+    completeParent: input.completeParent,
+    closeSubtasks: input.closeSubtasks,
+  };
+  await setProjectSetting(projectId, SUBTASK_AUTOMATION_KEY, next);
+  return next;
+}
+
 // Deletes a project and everything scoped to it. Every project-scoped foreign key
 // has ON DELETE CASCADE on project_id, so deleting the project row removes its
 // columns, issue types, labels, initiatives, issues, views, dashboards, and

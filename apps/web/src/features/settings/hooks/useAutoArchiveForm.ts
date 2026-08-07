@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { toast } from 'sonner';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAutoArchiveQuery, useUpdateAutoArchive } from '../services/settings.service';
 
@@ -12,6 +11,7 @@ const DEFAULT_CANCELED_DAYS = 7;
 // reseeds whenever they change (e.g. after a save).
 export interface AutoArchiveForm {
   editable: boolean;
+  loaded: boolean;
   saving: boolean;
   save: () => Promise<void>;
   completedOn: boolean;
@@ -49,11 +49,11 @@ export function useAutoArchiveForm(projectKey: string): AutoArchiveForm {
         : null,
       canceledDays: canceledOn ? Math.max(1, Number(canceledDays) || DEFAULT_CANCELED_DAYS) : null,
     });
-    toast.success('Auto-archive settings saved');
   }
 
   return {
-    editable: can('auto_archive', 'edit'),
+    editable: can('workflow_config', 'edit'),
+    loaded: settingsQuery.isSuccess,
     saving: updateSettings.isPending,
     save,
     completedOn,

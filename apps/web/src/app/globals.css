@@ -38,6 +38,7 @@
   --color-card: var(--card);
   --color-foreground: var(--foreground);
   --color-background: var(--background);
+  --color-kanban-column: var(--kanban-column);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -100,10 +101,11 @@
   --priority-medium: #eab308;
   --priority-high: #f97316;
   --priority-urgent: #f2683c;
-  --kanban-card: oklch(0.965 0 0);
-  --kanban-card-hover: oklch(0.94 0 0);
-  --kanban-card-blocked: oklch(0.962 0.008 25);
-  --kanban-card-blocked-hover: oklch(0.937 0.013 25);
+  --kanban-column: oklch(0.945 0 0);
+  --kanban-card: oklch(0.972 0 0);
+  --kanban-card-hover: oklch(0.995 0 0);
+  --kanban-card-blocked: oklch(0.969 0.008 25);
+  --kanban-card-blocked-hover: oklch(0.99 0.013 25);
   --row-blocked: oklch(0.982 0.008 25);
   --row-blocked-hover: oklch(0.968 0.013 25);
   --kanban-card-selected: oklch(0.925 0.04 265);
@@ -112,19 +114,19 @@
 }
 
 .dark {
-  --background: oklch(0.155 0 0);
+  --background: oklch(0.185 0 0);
   --foreground: oklch(0.965 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.225 0 0);
   --card-foreground: oklch(0.965 0 0);
-  --popover: oklch(0.215 0 0);
+  --popover: oklch(0.24 0 0);
   --popover-foreground: oklch(0.965 0 0);
   --primary: oklch(0.93 0 0);
   --primary-foreground: oklch(0.18 0 0);
-  --secondary: oklch(0.27 0 0);
+  --secondary: oklch(0.29 0 0);
   --secondary-foreground: oklch(0.965 0 0);
-  --muted: oklch(0.27 0 0);
+  --muted: oklch(0.29 0 0);
   --muted-foreground: oklch(0.85 0 0);
-  --accent: oklch(0.28 0 0);
+  --accent: oklch(0.3 0 0);
   --accent-foreground: oklch(0.965 0 0);
   --destructive: oklch(0.77 0.18 22);
   --border: oklch(1 0 0 / 12%);
@@ -135,11 +137,11 @@
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.185 0 0);
+  --sidebar: oklch(0.145 0 0);
   --sidebar-foreground: oklch(0.965 0 0);
   --sidebar-primary: oklch(0.93 0 0);
   --sidebar-primary-foreground: oklch(0.18 0 0);
-  --sidebar-accent: oklch(0.28 0 0);
+  --sidebar-accent: oklch(0.24 0 0);
   --sidebar-accent-foreground: oklch(0.965 0 0);
   --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.62 0 0);
@@ -147,12 +149,13 @@
   --priority-medium: #eab308;
   --priority-high: #f97316;
   --priority-urgent: #f2683c;
-  --kanban-card: oklch(0.195 0 0);
-  --kanban-card-hover: oklch(0.235 0 0);
-  --kanban-card-blocked: oklch(0.202 0.012 25);
-  --kanban-card-blocked-hover: oklch(0.241 0.016 25);
-  --row-blocked: oklch(0.163 0.012 25);
-  --row-blocked-hover: oklch(0.2 0.016 25);
+  --kanban-column: oklch(0.16 0 0);
+  --kanban-card: oklch(0.215 0 0);
+  --kanban-card-hover: oklch(0.25 0 0);
+  --kanban-card-blocked: oklch(0.222 0.012 25);
+  --kanban-card-blocked-hover: oklch(0.256 0.016 25);
+  --row-blocked: oklch(0.193 0.012 25);
+  --row-blocked-hover: oklch(0.23 0.016 25);
   --kanban-card-selected: oklch(0.31 0.07 266);
   --overlay-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.7), 0 6px 16px -6px rgb(0 0 0 / 0.55);
   --modal-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.85), 0 16px 32px -16px rgb(0 0 0 / 0.7);
@@ -180,8 +183,9 @@
   box-shadow: var(--modal-shadow);
 }
 
-/* Kanban card surface — darker than the modal/detail --card, and it changes
-   its own background on hover instead of highlighting the border. */
+/* Kanban card surface — it sits on --kanban-column, so it is lighter than the
+   column in both themes, and it changes its own background on hover instead of
+   highlighting the border. */
 .kanban-card {
   background-color: var(--kanban-card);
   transition: background-color 0.12s ease;

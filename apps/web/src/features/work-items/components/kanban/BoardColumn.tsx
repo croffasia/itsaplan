@@ -86,15 +86,12 @@ export function BoardColumn({
 
   return (
     <div
-      className="group/column flex h-full shrink-0 flex-col rounded-md"
+      className="group/column flex h-full shrink-0 flex-col rounded-md bg-kanban-column px-3 py-2"
       style={{ width: COLUMN_WIDTH }}
     >
       {/* Stop header clicks (select-all, collapse, hide, add) from reaching the
           board background, which clears the selection. */}
-      <div
-        className="mb-2 flex items-center justify-between px-1"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="mb-2 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
           <GroupDot group={group} />
           {group.name}
@@ -136,10 +133,7 @@ export function BoardColumn({
 
       <div
         ref={mergedRef}
-        className={cn(
-          'min-h-0 flex-1 overflow-y-auto rounded-md px-1 pb-2',
-          isOverColumn && 'bg-accent/40',
-        )}
+        className={cn('min-h-0 flex-1 overflow-y-auto rounded-md', isOverColumn && 'bg-accent/40')}
       >
         <div
           style={{

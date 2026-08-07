@@ -26,7 +26,7 @@ export function CardOverlay({
   return (
     <DragOverlay dropAnimation={null}>
       {issue ? (
-        <div className="kanban-card cursor-grabbing rounded-md p-3 opacity-85 shadow-lg">
+        <div className="kanban-card cursor-grabbing rounded-md p-2 opacity-85 shadow-lg">
           <IssueCardBody issue={issue} maps={maps} properties={properties} />
         </div>
       ) : null}

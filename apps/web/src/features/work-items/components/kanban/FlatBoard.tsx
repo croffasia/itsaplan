@@ -103,7 +103,7 @@ export default function FlatBoard({
       {/* A click that reaches the board background (not a card or control, which
           stop propagation) clears the selection, like Escape. */}
       <div
-        className="flex h-full gap-4 overflow-x-auto p-4"
+        className="flex h-full gap-3 overflow-x-auto p-4"
         onClick={() => selection.isSelecting && selection.clear()}
       >
         {visibleGroups.map((group) =>

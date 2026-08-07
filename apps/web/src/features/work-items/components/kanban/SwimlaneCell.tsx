@@ -45,7 +45,10 @@ export function SwimlaneCell({
   return (
     <div
       ref={setNodeRef}
-      className={cn('min-h-16 shrink-0 rounded-md pb-2', isOverCell && 'bg-accent/40')}
+      className={cn(
+        'min-h-16 shrink-0 rounded-md bg-kanban-column px-3 py-2',
+        isOverCell && 'bg-accent/40',
+      )}
       style={{ width: COLUMN_WIDTH }}
     >
       <div className="relative flex flex-col">

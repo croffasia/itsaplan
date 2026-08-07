@@ -128,8 +128,8 @@ export default function SwimlaneBoard({
   }
 
   // Inner width so the sticky header and every swimlane share one horizontal
-  // scroll; gap-4 (16px) between columns matches the flat board.
-  const innerWidth = columns.length * COLUMN_WIDTH + Math.max(0, columns.length - 1) * 16 + 32;
+  // scroll; gap-3 (12px) between columns matches the flat board.
+  const innerWidth = columns.length * COLUMN_WIDTH + Math.max(0, columns.length - 1) * 12 + 32;
 
   return (
     <DndContext
@@ -149,7 +149,7 @@ export default function SwimlaneBoard({
         <div style={{ width: innerWidth }}>
           {/* Column header row, sticky so it stays put while swimlanes scroll. */}
           <div
-            className="sticky top-0 z-10 flex gap-4 border-b bg-background px-4 py-2"
+            className="sticky top-0 z-10 flex gap-3 border-b bg-background px-4 py-2"
             onClick={(e) => e.stopPropagation()}
           >
             {columns.map((column) => (
@@ -204,7 +204,7 @@ export default function SwimlaneBoard({
                   </button>
 
                   {!isCollapsed && (
-                    <div className="flex gap-4 px-4 pt-2 pb-4">
+                    <div className="flex gap-3 px-4 pt-2 pb-4">
                       {row.cells.map(({ column, issues }) => (
                         <SwimlaneCell
                           key={column.key}

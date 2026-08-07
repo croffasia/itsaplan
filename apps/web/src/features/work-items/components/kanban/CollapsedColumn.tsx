@@ -24,7 +24,7 @@ export function CollapsedColumn({
   const { can } = usePermissions();
   const canCreateIssue = can('work_items', 'create') && !readOnly;
   return (
-    <div className="flex h-full w-10 shrink-0 flex-col items-center gap-2 rounded-md border py-2">
+    <div className="flex h-full w-10 shrink-0 flex-col items-center gap-2 rounded-md bg-kanban-column py-2">
       <Button
         variant="ghost"
         size="icon"

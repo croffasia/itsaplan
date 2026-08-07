@@ -23,6 +23,7 @@ jobs:
           # PULL_REQUEST_TEMPLATE.md.
           types: |
             feat
+            improvement
             fix
             docs
             refactor

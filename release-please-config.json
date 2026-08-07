@@ -10,6 +10,7 @@
       "changelog-path": "CHANGELOG.md",
       "changelog-sections": [
         { "type": "feat", "section": "Features" },
+        { "type": "improvement", "section": "Improvements" },
         { "type": "fix", "section": "Bug Fixes" },
         { "type": "perf", "section": "Performance" },
         { "type": "refactor", "section": "Refactoring" },

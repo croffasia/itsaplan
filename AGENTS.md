@@ -168,12 +168,36 @@ Images are not published to a registry: every deploy builds from source
 
 Versioning is automated by release-please (`release.yml`). It reads the
 Conventional Commit subjects that land on `main` and keeps an open release PR
-that accumulates the next version and `CHANGELOG.md`. `feat:` bumps the minor,
-`fix:` the patch, `!` (e.g. `feat!:`) the major — but while the version is
-`0.x`, a breaking change bumps the minor, not the major. Merging the release PR
+that accumulates the next version and `CHANGELOG.md`. Merging the release PR
 tags the commit and publishes the GitHub Release. PR titles are squash-merged
 into `main`, so the PR title is the commit subject release-please reads; it must
 be a valid Conventional Commit (enforced by `pr-title.yml`).
+
+The type in the subject picks the version bump, so pick it by what the change
+gives the user, not by how much code it touches:
+
+- **`feat:` — minor.** A capability that did not exist: a new entity, page,
+  integration, or a setting that unlocks behaviour. Reserve it for what would
+  earn a "Highlights" entry in the release notes.
+- **`improvement:` — patch.** A visible change to something that already exists:
+  a redesign, a reworked layout, a theme, an interaction that got better. Not a
+  bug fix, not a new capability.
+- **`fix:` — patch.** Behaviour that was wrong is now right.
+- **everything else (`perf`, `refactor`, `docs`, `build`, `ci`, `test`,
+  `chore`, `revert`) — patch.**
+
+The major is never automatic. While the version is `0.x`, `!` (e.g. `feat!:`)
+bumps the minor (`bump-minor-pre-major`), and `1.0.0` is cut deliberately with a
+`Release-As: 1.0.0` footer in the squash commit body. That footer overrides the
+computed version for any release; release-please reads it before the versioning
+strategy runs. After `1.0.0`, `!` bumps the major on its own.
+
+`improvement` is not in the Conventional Commits standard list. release-please
+bumps the patch for any type it does not recognise, and the entry reaches the
+changelog because `changelog-sections` in `release-please-config.json` maps it to
+an "Improvements" section — a type missing from that list is dropped from the
+notes. The list of types a PR title may use lives in `pr-title.yml`; the two
+have to stay in sync.
 
 The scope is the name of one app or package (`api`, `web`, `worker`, `bot`, `db`,
 `auth`, …). A change spanning several of them carries no scope.

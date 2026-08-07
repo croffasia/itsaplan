@@ -1,4 +1,9 @@
-<!-- Title format: type(scope): summary, e.g. feat(api): add issue templates -->
+<!--
+Title format: type(scope): summary, e.g. feat(api): add issue templates
+The type picks the released version: feat is a new capability (minor),
+improvement is a visible change to something that exists (patch), fix is wrong
+behaviour made right (patch). See CONTRIBUTING.md.
+-->
 
 ## What
 

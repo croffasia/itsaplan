@@ -73,7 +73,19 @@ run `bun run auth:generate` first, then generate the migration.
 2. Keep the change focused. One concern per pull request.
 3. Title follows [Conventional Commits](https://www.conventionalcommits.org/):
    `feat(web): add issue templates`, `fix(api): reject empty label names`,
-   `docs: ...`, `refactor: ...`, `chore: ...`.
+   `improvement(web): ...`, `docs: ...`, `refactor: ...`, `chore: ...`.
+   The title picks the released version, so choose the type by what the change
+   gives the user:
+
+   - `feat` — a capability that did not exist. Bumps the minor.
+   - `improvement` — a visible change to something that already exists: a
+     redesign, a reworked layout, a better interaction. Bumps the patch.
+   - `fix` — behaviour that was wrong is now right. Bumps the patch.
+   - `perf`, `refactor`, `docs`, `build`, `ci`, `test`, `chore`, `revert` — bump
+     the patch.
+
+   The full list of accepted types is in `.github/workflows/pr-title.yml`.
+
 4. Before pushing, make sure these pass:
 
    ```bash

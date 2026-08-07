@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.8.0](https://github.com/croffasia/itsaplan/compare/v0.7.0...v0.8.0) (2026-08-07)
+
+
+### Features
+
+* sync subtask and parent closing, move archive into workflow configuration ([#103](https://github.com/croffasia/itsaplan/issues/103)) ([e93fc89](https://github.com/croffasia/itsaplan/commit/e93fc89730e63d7751faebea54ea5965e9561f50))
+* toggle issue stats, checklists and subtasks per project ([#105](https://github.com/croffasia/itsaplan/issues/105)) ([bb7fcbf](https://github.com/croffasia/itsaplan/commit/bb7fcbfbfc5a2a8a28ad7cb28afec155a0b328cb))
+* **web:** add kanban column surface and rebalance dark theme ([#104](https://github.com/croffasia/itsaplan/issues/104)) ([ef56f0d](https://github.com/croffasia/itsaplan/commit/ef56f0d2742444ef612b4b3799d723d592ef3ca4))
+* **web:** paste files into an issue without focusing the editor ([#102](https://github.com/croffasia/itsaplan/issues/102)) ([f98b157](https://github.com/croffasia/itsaplan/commit/f98b157bdfb9b9163e07be10f5463a5afdf381bf))
+
+
+### Bug Fixes
+
+* **web:** show parent in subtask breadcrumb, close panel on navigation ([#101](https://github.com/croffasia/itsaplan/issues/101)) ([0f0a6f6](https://github.com/croffasia/itsaplan/commit/0f0a6f66bf1da275a1756a445f6d29cf6d274cad))
+
+
+### CI
+
+* define version bump rules and add the improvement commit type ([#106](https://github.com/croffasia/itsaplan/issues/106)) ([a49c8ef](https://github.com/croffasia/itsaplan/commit/a49c8ef3b11919ae6b902f962f98d51cf8eb63ca))
+* stop the CLA action locking the release pull request ([#99](https://github.com/croffasia/itsaplan/issues/99)) ([cc29b8f](https://github.com/croffasia/itsaplan/commit/cc29b8f5ea7819fb4bfa5cc21c659a03088f70d3))
+
 ## [0.7.0](https://github.com/croffasia/itsaplan/compare/v0.6.0...v0.7.0) (2026-08-06)
 
 

@@ -71,16 +71,16 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   // The project with the active filters applied to its issues: the active view's
   // own conditions plus any ad-hoc ones. Subtasks are then left out of every
   // layout's own rows — they are rendered under their parent instead — while the
-  // unfiltered project keeps them for those sub-rows to read. With the Subtasks
-  // section off nothing renders the hierarchy, so a subtask keeps a row of its own.
+  // unfiltered project keeps them for those sub-rows to read — unless the display
+  // asks for them separately, or the Subtasks section is off and nothing renders
+  // the hierarchy.
+  const separateSubtasks = editor.settings.separateSubtasks;
   const filteredProject = useMemo(() => {
     if (!project) return null;
     const filtered = applyFilters(project.issues, editor.effectiveFilters, project);
-    return {
-      ...project,
-      issues: project.project.subtasksEnabled ? withoutShownSubtasks(filtered) : filtered,
-    };
-  }, [project, editor.effectiveFilters]);
+    const hideSubtaskRows = project.project.subtasksEnabled && !separateSubtasks;
+    return { ...project, issues: hideSubtaskRows ? withoutShownSubtasks(filtered) : filtered };
+  }, [project, editor.effectiveFilters, separateSubtasks]);
 
   // Every custom field of the project comes with the board payload; consumers
   // filter by issueTypeId locally.

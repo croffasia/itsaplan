@@ -25,7 +25,9 @@ const GROUP_OPTIONS: { value: GroupField; label: string }[] = [
 
 // The grouping, sub-grouping, ordering, empty-group, links and subtasks rows.
 // Which of them show depends on the layout: Timeline groups but does not order,
-// Calendar does neither, and sub-grouping needs a primary group.
+// Calendar does neither, and sub-grouping needs a primary group. Nested subtasks
+// is a Display-properties chip on Project and Table; the Timeline has no chips, so
+// it carries that toggle as a row here.
 export default function DisplayGroupingRows({
   view,
   settings,
@@ -115,12 +117,29 @@ export default function DisplayGroupingRows({
           </DisplaySettingsRow>
 
           {features.subtasks && (
-            <DisplaySettingsRow label="Show subtasks">
-              <Checkbox
-                checked={settings.showSubtasks}
-                onCheckedChange={(c) => onChange({ showSubtasks: c === true })}
-              />
-            </DisplaySettingsRow>
+            <>
+              <DisplaySettingsRow
+                label={
+                  view === 'kanban'
+                    ? 'Show subtasks as separate cards'
+                    : 'Show subtasks as separate rows'
+                }
+              >
+                <Checkbox
+                  checked={settings.separateSubtasks}
+                  onCheckedChange={(c) => onChange({ separateSubtasks: c === true })}
+                />
+              </DisplaySettingsRow>
+
+              {view === 'timeline' && (
+                <DisplaySettingsRow label="Show nested subtasks">
+                  <Checkbox
+                    checked={settings.showSubtasks}
+                    onCheckedChange={(c) => onChange({ showSubtasks: c === true })}
+                  />
+                </DisplaySettingsRow>
+              )}
+            </>
           )}
         </>
       )}

@@ -11,7 +11,9 @@ import TableProperties from '@/components/layout/TableProperties';
 
 // The Display properties block. On the Table layout the chips are the column
 // list, sortable and extendable with custom fields; on Project they are plain
-// on/off chips for the built-in properties.
+// on/off chips for the built-in properties. The Nested subtasks chip is neither a
+// column nor a property — it toggles the subtask rows under a card or row — so it
+// sits after the property chips.
 export default function DisplayPropertiesSection({
   view,
   settings,
@@ -37,6 +39,14 @@ export default function DisplayPropertiesSection({
         : [...settings.properties, property],
     });
 
+  const subtasksChip = features.subtasks ? (
+    <PropertyChip
+      label="Nested subtasks"
+      on={settings.showSubtasks}
+      onClick={() => onChange({ showSubtasks: !settings.showSubtasks })}
+    />
+  ) : null;
+
   return (
     <div className="space-y-3 border-t pt-2">
       <p className="px-1 text-xs font-medium text-muted-foreground">Display properties</p>
@@ -47,16 +57,20 @@ export default function DisplayPropertiesSection({
             customFields={customFields}
             issueTypes={issueTypes}
             onChange={(properties) => onChange({ properties })}
+            trailing={subtasksChip}
           />
         ) : (
-          properties.map((p) => (
-            <PropertyChip
-              key={p.value}
-              label={p.label}
-              on={settings.properties.includes(p.value)}
-              onClick={() => toggleProperty(p.value)}
-            />
-          ))
+          <>
+            {properties.map((p) => (
+              <PropertyChip
+                key={p.value}
+                label={p.label}
+                on={settings.properties.includes(p.value)}
+                onClick={() => toggleProperty(p.value)}
+              />
+            ))}
+            {subtasksChip}
+          </>
         )}
       </div>
     </div>

@@ -111,10 +111,14 @@ export interface ViewSettings {
   // Timeline row. Off by default — the relations are an extra load, and most
   // boards do not use them.
   showLinks: boolean;
-  // The issues' subtasks, rendered the same way under their parent. A subtask has
-  // no card or row of its own, so with this off it is only visible inside its
-  // parent issue.
+  // The issues' subtasks, rendered the same way under their parent. Toggled by the
+  // Nested subtasks chip in Display properties, and by a row of its own on the
+  // Timeline, which has no chips.
   showSubtasks: boolean;
+  // Whether a subtask also gets a card or row of its own next to the other issues.
+  // Independent of showSubtasks: with both on it shows in both places, with both
+  // off it is only visible inside its parent issue.
+  separateSubtasks: boolean;
   properties: PropertyKey[];
   timelineScale: TimelineScale;
   // Initial Timeline group state. Individual group toggles are transient and do
@@ -142,6 +146,7 @@ const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> =
   showEmptyGroups: true,
   showLinks: false,
   showSubtasks: true,
+  separateSubtasks: false,
   timelineScale: 'week',
   timelineCollapseAll: false,
   calendarDateField: 'dueDate',
@@ -258,6 +263,8 @@ export function normalizeViewSettings(
     showEmptyGroups: typeof s.showEmptyGroups === 'boolean' ? s.showEmptyGroups : d.showEmptyGroups,
     showLinks: typeof s.showLinks === 'boolean' ? s.showLinks : d.showLinks,
     showSubtasks: typeof s.showSubtasks === 'boolean' ? s.showSubtasks : d.showSubtasks,
+    separateSubtasks:
+      typeof s.separateSubtasks === 'boolean' ? s.separateSubtasks : d.separateSubtasks,
     // Stored order is preserved as-is (it is the Table column order, reorderable
     // by drag); only unknown entries are dropped. A since-deleted custom field's
     // key stays until the next reorder, and is ignored when rendering.

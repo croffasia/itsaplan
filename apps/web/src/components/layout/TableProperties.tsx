@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import type { CustomField, IssueType } from '@/lib/api';
@@ -24,11 +25,15 @@ export default function TableProperties({
   customFields,
   issueTypes,
   onChange,
+  trailing,
 }: {
   properties: PropertyKey[];
   customFields: CustomField[];
   issueTypes: IssueType[];
   onChange: (properties: PropertyKey[]) => void;
+  // Chips that are not columns, rendered after the property list and before the
+  // custom-field picker, which stays last.
+  trailing?: ReactNode;
 }) {
   const sensors = useStripSortSensors();
   const fieldById = new Map(customFields.map((f) => [f.id, f]));
@@ -75,6 +80,7 @@ export default function TableProperties({
       {disabledBuiltins.map((p) => (
         <PropertyChip key={p.value} label={p.label} on={false} onClick={() => toggle(p.value)} />
       ))}
+      {trailing}
       <CustomFieldMenu
         customFields={customFields}
         issueTypes={issueTypes}

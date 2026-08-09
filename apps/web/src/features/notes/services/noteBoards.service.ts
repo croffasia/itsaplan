@@ -135,6 +135,12 @@ export function useSaveNoteCanvas(projectKey: string | null) {
   });
 }
 
+export function useUploadNoteBoardImage(projectKey: string, boardId: number) {
+  return useMutation({
+    mutationFn: (file: File) => api.uploadNoteBoardImage(projectKey, boardId, file),
+  });
+}
+
 // Flatten the switcher's paged result into a single board list, so a consumer can
 // read the boards without threading useInfiniteQuery's page shape.
 export function flattenBoardPages(pages: NoteBoardSummary[][] | undefined): NoteBoardSummary[] {

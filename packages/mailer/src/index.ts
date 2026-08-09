@@ -34,6 +34,8 @@ export interface EmailMessage {
   subject: string;
   text: string;
   html: string;
+  inReplyTo?: string;
+  references?: string[];
 }
 
 export interface SendResult {
@@ -56,14 +58,9 @@ function fromAddress(config: EmailConfig, provider: 'smtp' | 'resend'): string |
   return null;
 }
 
-async function sendSmtp(
-  smtp: SmtpConfig,
-  message: EmailMessage,
-  from: string,
-): Promise<SendResult> {
-  // The config stores the timeout in seconds, nodemailer takes milliseconds.
+function smtpTransport(smtp: SmtpConfig) {
   const timeoutMs = smtp.timeout ? smtp.timeout * 1000 : undefined;
-  const transporter = nodemailer.createTransport({
+  return nodemailer.createTransport({
     host: smtp.host,
     port: smtp.port ?? (smtp.encryption === 'ssl' ? 465 : 587),
     secure: smtp.encryption === 'ssl',
@@ -71,7 +68,16 @@ async function sendSmtp(
     auth: smtp.username ? { user: smtp.username, pass: smtp.password } : undefined,
     connectionTimeout: timeoutMs,
     greetingTimeout: timeoutMs,
+    socketTimeout: timeoutMs,
   });
+}
+
+async function sendSmtp(
+  smtp: SmtpConfig,
+  message: EmailMessage,
+  from: string,
+): Promise<SendResult> {
+  const transporter = smtpTransport(smtp);
   try {
     await transporter.sendMail({
       from,
@@ -79,6 +85,8 @@ async function sendSmtp(
       subject: message.subject,
       text: message.text,
       html: message.html,
+      inReplyTo: message.inReplyTo,
+      references: message.references,
     });
     return { ok: true };
   } catch (err) {
@@ -87,6 +95,24 @@ async function sendSmtp(
     const code = (err as { responseCode?: number }).responseCode;
     const retryable = !(typeof code === 'number' && code >= 500 && code < 600);
     return { ok: false, retryable, error: err instanceof Error ? err.message : 'smtp send failed' };
+  } finally {
+    transporter.close();
+  }
+}
+
+export async function verifySmtp(smtp: SmtpConfig): Promise<SendResult> {
+  const transporter = smtpTransport(smtp);
+  try {
+    await transporter.verify();
+    return { ok: true };
+  } catch (err) {
+    return {
+      ok: false,
+      retryable: false,
+      error: err instanceof Error ? err.message : 'smtp verification failed',
+    };
+  } finally {
+    transporter.close();
   }
 }
 

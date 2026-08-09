@@ -11,6 +11,7 @@ export function useFilesPage(projectKey: string, limits: StorageSettings | undef
   const deleteFile = useDeleteFile(projectKey);
   const [search, setSearch] = useState('');
   const [target, setTarget] = useState<ProjectFile | null>(null);
+  const [previewTarget, setPreviewTarget] = useState<ProjectFile | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
   const files = useMemo(() => {
@@ -71,8 +72,10 @@ export function useFilesPage(projectKey: string, limits: StorageSettings | undef
     dragZone,
     files,
     filesQuery,
+    previewTarget,
     search,
     setSearch,
+    setPreviewTarget,
     setTarget,
     target,
     upload: (selected: FileList) => void upload(selected),

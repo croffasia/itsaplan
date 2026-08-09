@@ -12,6 +12,7 @@ import { useIssueQuery, useSetFieldValue, useUpdateIssue } from '@/services/issu
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { qk } from '@/services/queryKeys';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
+import { stripMarkdownBreakMarkers } from '@/utils/markdown';
 import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
 import { useFeedQuery, useGroupedFeedQuery, useTimelineQuery } from '../services/comments.service';
 import { attachmentMarkdown, isImage } from '../utils/attachmentEmbed';
@@ -87,8 +88,8 @@ export function useIssueDetail(
   function insertAttachment(a: Attachment) {
     if (!issue) return;
     const snippet = attachmentMarkdown(a);
-    const current = (
-      descEditor ? descEditor.storage.markdown.getMarkdown() : issue.description
+    const current = stripMarkdownBreakMarkers(
+      descEditor ? descEditor.storage.markdown.getMarkdown() : issue.description,
     ).trim();
     patch({ description: current ? `${current}\n\n${snippet}` : snippet });
   }

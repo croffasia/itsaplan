@@ -463,6 +463,34 @@
       "when": 1785952103620,
       "tag": "0065_hesitant_silver_sable",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1786212010959,
+      "tag": "0066_charming_proudstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1786236562710,
+      "tag": "0067_white_iron_fist",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786243632823,
+      "tag": "0068_wooden_banshee",
+      "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1786298763537,
+      "tag": "0069_superb_micromax",
+      "breakpoints": true
     }
   ]
 }

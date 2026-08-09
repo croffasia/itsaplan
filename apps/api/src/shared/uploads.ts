@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { db, issue, issueAttachment, projectFile } from '@repo/db';
+import { db, issue, issueAttachment, noteBoard, noteBoardImage, projectFile } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
 import { deleteObject, putObject } from './s3';
 import { HttpError, num } from './lib';
 import { getStorageSettings, mimeAllowed, MB } from '../settings/storage';
 
 async function projectStorageBytes(projectId: number): Promise<number> {
-  const [attachmentRows, fileRows] = await Promise.all([
+  const [attachmentRows, fileRows, noteImageRows] = await Promise.all([
     db
       .select({ total: sql<string>`coalesce(sum(${issueAttachment.sizeBytes}), 0)` })
       .from(issueAttachment)
@@ -16,8 +16,17 @@ async function projectStorageBytes(projectId: number): Promise<number> {
       .select({ total: sql<string>`coalesce(sum(${projectFile.sizeBytes}), 0)` })
       .from(projectFile)
       .where(eq(projectFile.projectId, projectId)),
+    db
+      .select({ total: sql<string>`coalesce(sum(${noteBoardImage.sizeBytes}), 0)` })
+      .from(noteBoardImage)
+      .innerJoin(noteBoard, eq(noteBoard.id, noteBoardImage.boardId))
+      .where(eq(noteBoard.projectId, projectId)),
   ]);
-  return num(attachmentRows[0]?.total ?? 0) + num(fileRows[0]?.total ?? 0);
+  return (
+    num(attachmentRows[0]?.total ?? 0) +
+    num(fileRows[0]?.total ?? 0) +
+    num(noteImageRows[0]?.total ?? 0)
+  );
 }
 
 export async function assertUploadAllowed(

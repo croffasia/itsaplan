@@ -49,11 +49,20 @@ export const app = new Elysia()
           description: 'REST API for projects, issues, and their dependent entities.\n\n',
         },
         tags: [
-          { name: 'Projects', description: 'Projects and the full work items view' },
+          {
+            name: 'Projects',
+            description: 'Projects and the full work items view',
+          },
           { name: 'Members', description: 'Project membership and roles' },
           { name: 'Roles', description: 'Project roles and their permissions' },
-          { name: 'Invites', description: 'Project invites (create, accept, reject)' },
-          { name: 'Columns', description: 'Work items columns and their order' },
+          {
+            name: 'Invites',
+            description: 'Project invites (create, accept, reject)',
+          },
+          {
+            name: 'Columns',
+            description: 'Work items columns and their order',
+          },
           { name: 'Issue Types', description: 'Per-project issue types' },
           { name: 'Labels', description: 'Labels and label groups' },
           { name: 'AI Agents', description: 'AI agents attached to a project' },
@@ -61,29 +70,70 @@ export const app = new Elysia()
             name: 'Integrations',
             description: 'Stored integration credentials (LLM keys and tool creds)',
           },
-          { name: 'Agent Skills', description: 'Skill library given to internal agents' },
+          {
+            name: 'Agent Skills',
+            description: 'Skill library given to internal agents',
+          },
           {
             name: 'Agent Tools',
             description: 'Tools configured on a credential and given to agents',
           },
-          { name: 'Custom Fields', description: 'Global and type-scoped custom fields' },
-          { name: 'Issues', description: 'Issues, their fields, feed, and comments' },
+          {
+            name: 'Custom Fields',
+            description: 'Global and type-scoped custom fields',
+          },
+          {
+            name: 'Issues',
+            description: 'Issues, their fields, feed, and comments',
+          },
           {
             name: 'Initiatives',
             description: 'Initiatives (issue groupings) and their activity feed',
           },
-          { name: 'Attachments', description: 'Issue attachments and raw bytes' },
-          { name: 'Files', description: 'Project files and protected downloads' },
-          { name: 'CRM', description: 'Project customers and relationship details' },
-          { name: 'Avatars', description: "Current user's avatar image (upload and raw bytes)" },
+          {
+            name: 'Attachments',
+            description: 'Issue attachments and raw bytes',
+          },
+          {
+            name: 'Files',
+            description: 'Project files and protected downloads',
+          },
+          {
+            name: 'CRM',
+            description: 'Project customers and relationship details',
+          },
+          {
+            name: 'Finance',
+            description: 'Project finance and accounting transactions',
+          },
+          {
+            name: 'Avatars',
+            description: "Current user's avatar image (upload and raw bytes)",
+          },
           { name: 'Views', description: 'Saved work items views' },
-          { name: 'Share', description: 'Public read-only sharing of issues and views' },
+          {
+            name: 'Share',
+            description: 'Public read-only sharing of issues and views',
+          },
           { name: 'Actions', description: 'Project automation actions' },
           { name: 'Webhooks', description: 'Outgoing webhook subscriptions' },
-          { name: 'Agent Schedules', description: 'Recurring tasks for internal agents' },
+          {
+            name: 'Agent Schedules',
+            description: 'Recurring tasks for internal agents',
+          },
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
-          { name: 'Note boards', description: 'Freeform canvases of sticky notes' },
-          { name: 'Notifications', description: "The session user's inbox notifications" },
+          {
+            name: 'Note boards',
+            description: 'Freeform canvases of sticky notes',
+          },
+          {
+            name: 'Notifications',
+            description: "The session user's inbox notifications",
+          },
+          {
+            name: 'Mailbox',
+            description: 'Secure Zoho IMAP and SMTP mailbox access',
+          },
           {
             name: 'Telegram',
             description: "The session user's linked Telegram account",

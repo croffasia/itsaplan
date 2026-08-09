@@ -1,6 +1,8 @@
 import { usePathname } from 'next/navigation';
 import {
   ContactRound,
+  BadgeEuro,
+  BookOpenText,
   Files,
   Inbox,
   LayoutDashboard,
@@ -9,9 +11,11 @@ import {
   Target,
 } from 'lucide-react';
 import {
+  accountingPath,
   crmPath,
   dashboardsPath,
   filesPath,
+  financePath,
   inboxPath,
   initiativesPath,
   notesPath,
@@ -109,6 +113,24 @@ export default function SidebarWorkNav({
               active={pathname.includes('/crm')}
               disabled={disabled}
             />
+          )}
+          {can('finance', 'read') && (
+            <>
+              <SidebarNavItem
+                href={projectKey ? financePath(projectKey) : '#'}
+                icon={BadgeEuro}
+                label="Finance"
+                active={pathname.includes('/finance')}
+                disabled={disabled}
+              />
+              <SidebarNavItem
+                href={projectKey ? accountingPath(projectKey) : '#'}
+                icon={BookOpenText}
+                label="Accounting"
+                active={pathname.includes('/accounting')}
+                disabled={disabled}
+              />
+            </>
           )}
         </SidebarMenu>
       </SidebarGroupContent>

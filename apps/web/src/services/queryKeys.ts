@@ -112,11 +112,16 @@ export const qk = {
   projectFiles: (projectKey: string) => ['projectFiles', projectKey] as const,
   crmCustomers: (projectKey: string) => ['crmCustomers', projectKey] as const,
   crmCustomer: (customerId: string) => ['crmCustomer', customerId] as const,
+  financeTransactions: (projectKey: string) => ['financeTransactions', projectKey] as const,
   // A project's inbox notifications (the list, scoped by the active filters) and the
   // project's unread count (the sidebar badge + live-refresh target).
   notifications: (projectKey: string, filters?: unknown) =>
     ['notifications', projectKey, filters ?? {}] as const,
   notificationsUnread: (projectKey: string) => ['notificationsUnread', projectKey] as const,
+  mailboxSettings: (projectKey: string) => ['mailboxSettings', projectKey] as const,
+  mailboxMessages: (projectKey: string) => ['mailboxMessages', projectKey] as const,
+  mailboxMessage: (projectKey: string, uid: number) =>
+    ['mailboxMessages', projectKey, uid] as const,
   // The signed-in user's WebAuthn passkeys (account security page).
   passkeys: ['passkeys'] as const,
   // The signed-in user's connected external accounts (accounts page): the linked

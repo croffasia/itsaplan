@@ -1,9 +1,10 @@
 import { Maximize2, Minimize2, Plus } from 'lucide-react';
-import type { NoteBoardVisibility } from '@/lib/api';
+import type { NoteBoardVisibility, StorageSettings } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import NoteBoardAccessList from './NoteBoardAccessList';
 import NoteBoardAccessPicker from './NoteBoardAccessPicker';
+import NoteImageUploadButton from './NoteImageUploadButton';
 import { VISIBILITY_HINT, VISIBILITY_ICON } from '../utils/visibility';
 
 export default function NoteCanvasControls({
@@ -15,6 +16,9 @@ export default function NoteCanvasControls({
   canChangeVisibility,
   fullscreen,
   onAddNote,
+  imageLimits,
+  uploadingImage,
+  onAddImages,
   onChangeVisibility,
   onToggleFullscreen,
 }: {
@@ -26,6 +30,9 @@ export default function NoteCanvasControls({
   canChangeVisibility: boolean;
   fullscreen: boolean;
   onAddNote: () => void;
+  imageLimits: StorageSettings | undefined;
+  uploadingImage: boolean;
+  onAddImages: (files: FileList) => void;
   onChangeVisibility: (visibility: NoteBoardVisibility, memberIds?: string[]) => void;
   onToggleFullscreen: () => void;
 }) {
@@ -62,9 +69,16 @@ export default function NoteCanvasControls({
   return (
     <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
       {canEdit && (
-        <Button variant="secondary" size="sm" onClick={onAddNote}>
-          <Plus className="size-4" /> Add note
-        </Button>
+        <>
+          <Button variant="secondary" size="sm" onClick={onAddNote}>
+            <Plus className="size-4" /> Add note
+          </Button>
+          <NoteImageUploadButton
+            limits={imageLimits}
+            uploading={uploadingImage}
+            onFiles={onAddImages}
+          />
+        </>
       )}
       {renderAccess()}
       <Tooltip>

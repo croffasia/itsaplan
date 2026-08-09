@@ -304,7 +304,12 @@ export interface IntegrationMeta {
   label: string;
   kind: 'llm' | 'tool';
   credentialSchema: ConfigField[];
-  tools: { key: string; label: string; description: string; scopes?: string[] }[];
+  tools: {
+    key: string;
+    label: string;
+    description: string;
+    scopes?: string[];
+  }[];
 }
 
 // A model an LLM provider offers, from the models.dev registry.
@@ -633,6 +638,61 @@ export interface NotificationSettingsPatch {
   telegram?: { enabled: boolean; botToken?: string };
 }
 
+export type MailboxSmtpSecurity = 'ssl' | 'starttls';
+
+export interface MailboxSettings {
+  connected: boolean;
+  email: string;
+  username: string;
+  hasPassword: boolean;
+  imapHost: string;
+  smtpHost: string;
+  smtpPort: 465 | 587;
+  smtpSecurity: MailboxSmtpSecurity;
+}
+
+export interface MailboxSettingsInput {
+  email: string;
+  username: string;
+  password?: string;
+  imapHost: string;
+  smtpHost: string;
+  smtpPort: 465 | 587;
+  smtpSecurity: MailboxSmtpSecurity;
+}
+
+export interface MailAddress {
+  name: string;
+  address: string;
+}
+
+export interface MailMessageSummary {
+  uid: number;
+  messageId: string | null;
+  from: MailAddress[];
+  to: MailAddress[];
+  subject: string;
+  receivedAt: string;
+  unread: boolean;
+  size: number;
+}
+
+export interface MailMessage extends MailMessageSummary {
+  replyTo: MailAddress[];
+  body: string;
+  truncated: boolean;
+  attachments: { filename: string; contentType: string; size: number }[];
+  references: string[];
+}
+
+export interface SendMailboxMessageInput {
+  to: string[];
+  subject: string;
+  body: string;
+  inReplyTo?: string;
+  references?: string[];
+}
+
 // ── Storage limits ────────────────────────────────────────────────────────────
 
 // The instance upload limits. Readable by any signed-in user, because the upload UI
@@ -871,7 +931,11 @@ export interface NotificationPreferences {
 // user has not connected an account.
 export interface TelegramAccount {
   botUsername: string | null;
-  link: { username: string | null; firstName: string | null; linkedAt: string } | null;
+  link: {
+    username: string | null;
+    firstName: string | null;
+    linkedAt: string;
+  } | null;
 }
 
 // The deep link that completes a Telegram connection, and when its code expires.
@@ -990,9 +1054,13 @@ export type NoteSticker = {
   color: string;
 };
 
-// A React Flow node holding a sticker. Kept structurally compatible with React
-// Flow's Node so the canvas can use it directly.
-export interface NoteNode {
+export type NoteImage = {
+  imageId: string;
+  filename: string;
+  contentType: string;
+};
+
+export interface NoteStickerNode {
   id: string;
   type: 'sticker';
   position: { x: number; y: number };
@@ -1000,6 +1068,17 @@ export interface NoteNode {
   height?: number;
   data: NoteSticker;
 }
+
+export interface NoteImageNode {
+  id: string;
+  type: 'image';
+  position: { x: number; y: number };
+  width?: number;
+  height?: number;
+  data: NoteImage;
+}
+
+export type NoteNode = NoteStickerNode | NoteImageNode;
 
 // A connection between two stickers (React Flow edge).
 export interface NoteEdge {
@@ -1066,6 +1145,14 @@ export interface NoteBoardListParams {
   q?: string;
   limit?: number;
   offset?: number;
+}
+
+export interface NoteBoardImage {
+  id: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
 }
 
 // --- Analytics DTOs (project metrics behind the dashboard widgets) ---------------
@@ -1308,6 +1395,36 @@ export interface CrmCustomer {
 }
 
 export type CrmCustomerInput = Omit<CrmCustomer, 'id' | 'createdAt' | 'updatedAt'>;
+
+export type FinanceTransactionType = 'income' | 'expense';
+export type FinancePaymentStatus = 'open' | 'paid';
+export type FinanceVatRate = 0 | 9 | 21;
+
+export interface FinanceTransaction {
+  id: string;
+  type: FinanceTransactionType;
+  amountCents: number;
+  category: string;
+  description: string;
+  counterparty: string;
+  reference: string;
+  vatRate: FinanceVatRate;
+  vatAmountCents: number;
+  paymentStatus: FinancePaymentStatus;
+  transactionDate: string;
+  dueDate: string | null;
+  createdByName: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type FinanceTransactionInput = Pick<
+  FinanceTransaction,
+  'type' | 'amountCents' | 'category' | 'description' | 'transactionDate'
+> &
+  Partial<
+    Pick<FinanceTransaction, 'counterparty' | 'reference' | 'vatRate' | 'paymentStatus' | 'dueDate'>
+  >;
 
 // `action` selects how the UI renders an activity row; from_text/to_text are
 // display-ready value snapshots (column/label/type/assignee name, raw priority,
@@ -1789,6 +1906,8 @@ export type PermissionResource =
   | 'note_boards'
   | 'files'
   | 'crm'
+  | 'finance'
+  | 'mail'
   | 'danger_zone';
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;
@@ -1886,7 +2005,11 @@ async function sendAttachmentFile(
 ): Promise<Attachment> {
   const form = new FormData();
   form.append('file', file);
-  const res = await fetch(`${API_URL}${path}`, { method, credentials: 'include', body: form });
+  const res = await fetch(`${API_URL}${path}`, {
+    method,
+    credentials: 'include',
+    body: form,
+  });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new Error(body?.error ?? `${res.status} ${res.statusText}`);
@@ -1909,6 +2032,24 @@ async function sendProjectFile(
     credentials: 'include',
     body: form,
   });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+async function sendNoteBoardImage(
+  projectKey: string,
+  boardId: number,
+  file: File,
+): Promise<NoteBoardImage> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(
+    `${API_URL}/projects/${encodeURIComponent(projectKey)}/note-boards/${boardId}/images`,
+    { method: 'POST', credentials: 'include', body: form },
+  );
   if (!res.ok) {
     const body = await res.json().catch(() => null);
     throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
@@ -1972,7 +2113,10 @@ export const api = {
   listProjects: (opts?: { permissions?: boolean }) =>
     request<Project[]>(`/projects${opts?.permissions ? '?permissions=true' : ''}`),
   createProject: (input: { key: string; name: string; description?: string; preset?: string }) =>
-    request<Project>('/projects', { method: 'POST', body: JSON.stringify(input) }),
+    request<Project>('/projects', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
   copyProject: (
     projectKey: string,
     input: {
@@ -1988,7 +2132,10 @@ export const api = {
     }),
   // Update a project's name/description. The key is immutable, so it is not sent.
   updateProject: (projectKey: string, patch: { name?: string; description?: string }) =>
-    request<Project>(`/projects/${projectKey}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    request<Project>(`/projects/${projectKey}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
   deleteProject: (projectKey: string) =>
     request<void>(`/projects/${projectKey}`, { method: 'DELETE' }),
   // The board scaffold (no issues). The issues come from getBoardIssues.
@@ -2051,7 +2198,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteIssueType: (projectKey: string, typeId: number) =>
-    request<void>(`/projects/${projectKey}/issue-types/${typeId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/issue-types/${typeId}`, {
+      method: 'DELETE',
+    }),
 
   createLabel: (
     projectKey: string,
@@ -2071,7 +2220,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteLabel: (projectKey: string, labelId: number) =>
-    request<void>(`/projects/${projectKey}/labels/${labelId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/labels/${labelId}`, {
+      method: 'DELETE',
+    }),
 
   createLabelGroup: (projectKey: string, input: { name: string; color?: string }) =>
     request<LabelGroup>(`/projects/${projectKey}/label-groups`, {
@@ -2088,7 +2239,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteLabelGroup: (projectKey: string, groupId: number) =>
-    request<void>(`/projects/${projectKey}/label-groups/${groupId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/label-groups/${groupId}`, {
+      method: 'DELETE',
+    }),
 
   listCustomFields: (projectKey: string, issueTypeId?: number) =>
     request<CustomField[]>(
@@ -2109,7 +2262,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteCustomField: (projectKey: string, fieldId: number) =>
-    request<void>(`/projects/${projectKey}/custom-fields/${fieldId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/custom-fields/${fieldId}`, {
+      method: 'DELETE',
+    }),
 
   createIssue: (projectKey: string, input: NewIssueInput) =>
     request<Issue>(`/projects/${projectKey}/issues`, {
@@ -2144,11 +2299,16 @@ export const api = {
   // Cheap change marker for an issue's detail + feed — polled for live refresh.
   getIssueRev: (id: number) => request<{ rev: string }>(`/issues/${id}/rev`),
   updateIssue: (id: number, patch: IssuePatch) =>
-    request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    request<Issue>(`/issues/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
   // An issue that has subtasks needs a disposition saying what happens to them;
   // without one the server rejects the delete with a 409.
   deleteIssue: (id: number, subtasks?: SubtaskDisposition) =>
-    request<void>(`/issues/${id}${subtaskQuery(subtasks)}`, { method: 'DELETE' }),
+    request<void>(`/issues/${id}${subtaskQuery(subtasks)}`, {
+      method: 'DELETE',
+    }),
   // Board multi-select: apply one change to many issues in a single request. The
   // server filters the ids to the project and refetching happens once.
   bulkUpdateIssues: (projectKey: string, ids: number[], patch: BulkIssuePatch) =>
@@ -2279,7 +2439,9 @@ export const api = {
     return res.blob();
   },
   deleteProjectFile: (publicId: string) =>
-    request<void>(`/files/${encodeURIComponent(publicId)}`, { method: 'DELETE' }),
+    request<void>(`/files/${encodeURIComponent(publicId)}`, {
+      method: 'DELETE',
+    }),
 
   listCrmCustomers: (projectKey: string) =>
     request<CrmCustomer[]>(`/projects/${encodeURIComponent(projectKey)}/crm/customers`),
@@ -2296,7 +2458,28 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteCrmCustomer: (customerId: string) =>
-    request<void>(`/crm/customers/${encodeURIComponent(customerId)}`, { method: 'DELETE' }),
+    request<void>(`/crm/customers/${encodeURIComponent(customerId)}`, {
+      method: 'DELETE',
+    }),
+
+  listFinanceTransactions: (projectKey: string) =>
+    request<FinanceTransaction[]>(
+      `/projects/${encodeURIComponent(projectKey)}/finance/transactions`,
+    ),
+  createFinanceTransaction: (projectKey: string, input: FinanceTransactionInput) =>
+    request<FinanceTransaction>(
+      `/projects/${encodeURIComponent(projectKey)}/finance/transactions`,
+      { method: 'POST', body: JSON.stringify(input) },
+    ),
+  updateFinanceTransaction: (transactionId: string, patch: Partial<FinanceTransactionInput>) =>
+    request<FinanceTransaction>(`/finance/transactions/${encodeURIComponent(transactionId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteFinanceTransaction: (transactionId: string) =>
+    request<void>(`/finance/transactions/${encodeURIComponent(transactionId)}`, {
+      method: 'DELETE',
+    }),
 
   listFeed: (issueId: number, params: { cursor?: FeedCursor | null; limit?: number } = {}) =>
     request<FeedPage>(`/issues/${issueId}/feed${feedPageQuery(params)}`),
@@ -2338,7 +2521,10 @@ export const api = {
       body: JSON.stringify(input),
     }),
   updateInitiative: (id: number, patch: InitiativePatch) =>
-    request<Initiative>(`/initiatives/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    request<Initiative>(`/initiatives/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
   deleteInitiative: (id: number) => request<void>(`/initiatives/${id}`, { method: 'DELETE' }),
   // Cheap change marker for an initiative's detail + feed — polled for live refresh.
   getInitiativeRev: (id: number) => request<{ rev: string }>(`/initiatives/${id}/rev`),
@@ -2352,9 +2538,15 @@ export const api = {
 
   listViews: (projectKey: string) => request<View[]>(`/projects/${projectKey}/views`),
   createView: (projectKey: string, input: NewViewInput) =>
-    request<View>(`/projects/${projectKey}/views`, { method: 'POST', body: JSON.stringify(input) }),
+    request<View>(`/projects/${projectKey}/views`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
   updateView: (viewId: number, patch: ViewPatch) =>
-    request<View>(`/views/${viewId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    request<View>(`/views/${viewId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
   deleteView: (viewId: number) => request<void>(`/views/${viewId}`, { method: 'DELETE' }),
   reorderViews: (projectKey: string, orderedIds: number[]) =>
     request<View[]>(`/projects/${projectKey}/views/reorder`, {
@@ -2411,7 +2603,22 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteNoteBoard: (projectKey: string, boardId: number) =>
-    request<void>(`/projects/${projectKey}/note-boards/${boardId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/note-boards/${boardId}`, {
+      method: 'DELETE',
+    }),
+  uploadNoteBoardImage: (projectKey: string, boardId: number, file: File) =>
+    sendNoteBoardImage(projectKey, boardId, file),
+  downloadNoteBoardImage: async (projectKey: string, boardId: number, imageId: string) => {
+    const res = await fetch(
+      `${API_URL}/projects/${encodeURIComponent(projectKey)}/note-boards/${boardId}/images/${encodeURIComponent(imageId)}/raw`,
+      { credentials: 'include', cache: 'no-store' },
+    );
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+    }
+    return res.blob();
+  },
 
   // Analytics — read-only project metrics behind the dashboard widgets.
   getStats: (projectKey: string) =>
@@ -2506,7 +2713,9 @@ export const api = {
       method: 'POST',
     }),
   deleteAiAgent: (projectKey: string, agentId: number) =>
-    request<void>(`/projects/${projectKey}/ai-agents/${agentId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/ai-agents/${agentId}`, {
+      method: 'DELETE',
+    }),
   listAgentRuns: (projectKey: string, agentId: number, before?: number) =>
     request<AgentRunPage>(
       `/projects/${projectKey}/ai-agents/${agentId}/runs?limit=25${before ? `&before=${before}` : ''}`,
@@ -2528,7 +2737,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteAgentSchedule: (projectKey: string, scheduleId: number) =>
-    request<void>(`/projects/${projectKey}/agent-schedules/${scheduleId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/agent-schedules/${scheduleId}`, {
+      method: 'DELETE',
+    }),
   runAgentSchedule: (projectKey: string, scheduleId: number) =>
     request<{ runId: number }>(`/projects/${projectKey}/agent-schedules/${scheduleId}/run`, {
       method: 'POST',
@@ -2570,7 +2781,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteCredential: (projectKey: string, credentialId: number) =>
-    request<void>(`/projects/${projectKey}/integrations/${credentialId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/integrations/${credentialId}`, {
+      method: 'DELETE',
+    }),
 
   // Agent skills: the project skill library and the skills enabled on an agent.
   listSkills: (projectKey: string) => request<AgentSkill[]>(`/projects/${projectKey}/agent-skills`),
@@ -2596,7 +2809,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteSkill: (projectKey: string, skillId: number) =>
-    request<void>(`/projects/${projectKey}/agent-skills/${skillId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/agent-skills/${skillId}`, {
+      method: 'DELETE',
+    }),
   // Multipart upload for a skill reference — see sendAttachmentFile for why
   // request() cannot be used.
   addSkillReference: async (
@@ -2653,7 +2868,9 @@ export const api = {
       body: JSON.stringify(input),
     }),
   deleteConfiguredTool: (projectKey: string, agentToolId: number) =>
-    request<void>(`/projects/${projectKey}/agent-tools/${agentToolId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/agent-tools/${agentToolId}`, {
+      method: 'DELETE',
+    }),
   listAgentToolLinks: (projectKey: string, agentId: number) =>
     request<ConfiguredTool[]>(`/projects/${projectKey}/ai-agents/${agentId}/tool-configs`),
   setAgentTools: (projectKey: string, agentId: number, agentToolIds: number[]) =>
@@ -2667,7 +2884,10 @@ export const api = {
   getPermissionCatalog: () => request<PermissionCatalog>('/permission-catalog'),
   listRoles: (projectKey: string) => request<Role[]>(`/projects/${projectKey}/roles`),
   createRole: (projectKey: string, input: { name: string; permissions: Permissions }) =>
-    request<Role>(`/projects/${projectKey}/roles`, { method: 'POST', body: JSON.stringify(input) }),
+    request<Role>(`/projects/${projectKey}/roles`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
   updateRole: (
     projectKey: string,
     roleId: number,
@@ -2678,7 +2898,9 @@ export const api = {
       body: JSON.stringify(patch),
     }),
   deleteRole: (projectKey: string, roleId: number) =>
-    request<void>(`/projects/${projectKey}/roles/${roleId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/roles/${roleId}`, {
+      method: 'DELETE',
+    }),
 
   // Invites — owner side: create, list, and revoke a project's invite links.
   listInvites: (projectKey: string) => request<InviteRow[]>(`/projects/${projectKey}/invites`),
@@ -2691,7 +2913,9 @@ export const api = {
       body: JSON.stringify(input),
     }),
   deleteInvite: (projectKey: string, inviteId: number) =>
-    request<void>(`/projects/${projectKey}/invites/${inviteId}`, { method: 'DELETE' }),
+    request<void>(`/projects/${projectKey}/invites/${inviteId}`, {
+      method: 'DELETE',
+    }),
 
   // Invites — invitee side: open a link by token, then accept or reject it. The
   // session email must match the invite. Accept returns where to go next.
@@ -2702,7 +2926,9 @@ export const api = {
       { method: 'POST' },
     ),
   rejectInvite: (token: string) =>
-    request<void>(`/invites/${encodeURIComponent(token)}/reject`, { method: 'POST' }),
+    request<void>(`/invites/${encodeURIComponent(token)}/reject`, {
+      method: 'POST',
+    }),
 
   // The action list any project member may read; the permissioned list route is
   // for API/MCP callers.
@@ -2714,7 +2940,10 @@ export const api = {
       body: JSON.stringify(input),
     }),
   updateAction: (actionId: number, patch: ActionPatch) =>
-    request<ActionDef>(`/actions/${actionId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    request<ActionDef>(`/actions/${actionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
   deleteAction: (actionId: number) => request<void>(`/actions/${actionId}`, { method: 'DELETE' }),
   reorderActions: (projectKey: string, orderedIds: number[]) =>
     request<ActionDef[]>(`/projects/${projectKey}/actions/reorder`, {
@@ -2729,7 +2958,10 @@ export const api = {
       body: JSON.stringify(input),
     }),
   updateWebhook: (webhookId: number, patch: WebhookPatch) =>
-    request<Webhook>(`/webhooks/${webhookId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+    request<Webhook>(`/webhooks/${webhookId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
   deleteWebhook: (webhookId: number) =>
     request<void>(`/webhooks/${webhookId}`, { method: 'DELETE' }),
   listWebhookDeliveries: (webhookId: number, before?: number) =>
@@ -2819,7 +3051,10 @@ export const api = {
   getNotificationsRev: (projectId: number) =>
     request<{ rev: string; unread: number }>(`/notifications/rev?projectId=${projectId}`),
   setNotificationRead: (id: number, read: boolean) =>
-    request<void>(`/notifications/${id}/read`, { method: 'POST', body: JSON.stringify({ read }) }),
+    request<void>(`/notifications/${id}/read`, {
+      method: 'POST',
+      body: JSON.stringify({ read }),
+    }),
   snoozeNotification: (id: number, until: string | null) =>
     request<void>(`/notifications/${id}/snooze`, {
       method: 'POST',
@@ -2834,6 +3069,31 @@ export const api = {
   deleteNotifications: (scope: NotificationDeleteScope, projectId: number) =>
     request<{ count: number }>(`/notifications?scope=${scope}&projectId=${projectId}`, {
       method: 'DELETE',
+    }),
+
+  getMailboxSettings: (projectKey: string) =>
+    request<MailboxSettings>(`/projects/${projectKey}/mailbox/settings`),
+  updateMailboxSettings: (projectKey: string, input: MailboxSettingsInput) =>
+    request<MailboxSettings>(`/projects/${projectKey}/mailbox/settings`, {
+      method: 'PUT',
+      body: JSON.stringify(input),
+    }),
+  disconnectMailbox: (projectKey: string) =>
+    request<void>(`/projects/${projectKey}/mailbox/settings`, {
+      method: 'DELETE',
+    }),
+  listMailboxMessages: (projectKey: string) =>
+    request<MailMessageSummary[]>(`/projects/${projectKey}/mailbox/messages`),
+  getMailboxMessage: (projectKey: string, uid: number) =>
+    request<MailMessage>(`/projects/${projectKey}/mailbox/messages/${uid}`),
+  markMailboxMessageRead: (projectKey: string, uid: number) =>
+    request<void>(`/projects/${projectKey}/mailbox/messages/${uid}/read`, {
+      method: 'POST',
+    }),
+  sendMailboxMessage: (projectKey: string, input: SendMailboxMessageInput) =>
+    request<{ sent: boolean }>(`/projects/${projectKey}/mailbox/messages`, {
+      method: 'POST',
+      body: JSON.stringify(input),
     }),
 
   // Instance administration (god mode). Every route below is owner-only; a plain
@@ -2910,7 +3170,9 @@ export const api = {
   },
   getInstanceUser: (userId: string) => request<InstanceUserDetail>(`/god/users/${userId}`),
   verifyInstanceUserEmail: (userId: string) =>
-    request<InstanceUserDetail>(`/god/users/${userId}/verify-email`, { method: 'POST' }),
+    request<InstanceUserDetail>(`/god/users/${userId}/verify-email`, {
+      method: 'POST',
+    }),
   // `withProjects` takes down the projects the user owns alone; without it the API
   // refuses to delete an account that would leave a project ownerless.
   deleteInstanceUser: (userId: string, withProjects: boolean) =>

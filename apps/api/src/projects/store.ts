@@ -3,6 +3,8 @@ import {
   issue,
   issueAttachment,
   issueType,
+  noteBoard,
+  noteBoardImage,
   project,
   projectColumn,
   projectMember,
@@ -362,7 +364,7 @@ export async function setAutoArchiveSettings(
 // conversation threads of the project's agents are deleted first, since they live
 // outside those cascades.
 export async function deleteProject(projectId: number): Promise<void> {
-  const [attachmentKeys, fileKeys] = await Promise.all([
+  const [attachmentKeys, fileKeys, noteImageKeys] = await Promise.all([
     db
       .select({ s3Key: issueAttachment.s3Key })
       .from(issueAttachment)
@@ -372,8 +374,13 @@ export async function deleteProject(projectId: number): Promise<void> {
       .select({ s3Key: projectFile.s3Key })
       .from(projectFile)
       .where(eq(projectFile.projectId, projectId)),
+    db
+      .select({ s3Key: noteBoardImage.s3Key })
+      .from(noteBoardImage)
+      .innerJoin(noteBoard, eq(noteBoard.id, noteBoardImage.boardId))
+      .where(eq(noteBoard.projectId, projectId)),
   ]);
   await deleteThreadsWhere({ projectId });
   await db.delete(project).where(eq(project.id, projectId));
-  await deleteObjects([...attachmentKeys, ...fileKeys].map((row) => row.s3Key));
+  await deleteObjects([...attachmentKeys, ...fileKeys, ...noteImageKeys].map((row) => row.s3Key));
 }

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import FilesDropOverlay from './components/FilesDropOverlay';
 import FilesEmptyState from './components/FilesEmptyState';
+import FilesPreviewDialog from './components/FilesPreviewDialog';
 import FilesTable from './components/FilesTable';
 import FilesUploadButton from './components/FilesUploadButton';
 import { useFilesPage } from './hooks/useFilesPage';
@@ -77,6 +78,7 @@ export default function FilesPage() {
                 canDelete={can('files', 'delete')}
                 downloadingId={model.downloadingId}
                 onDownload={model.download}
+                onPreview={model.setPreviewTarget}
                 onDelete={model.setTarget}
               />
             ) : (
@@ -90,6 +92,12 @@ export default function FilesPage() {
 
       {model.dragZone.draggedFiles !== null && (
         <FilesDropOverlay count={model.dragZone.draggedFiles} />
+      )}
+      {model.previewTarget && (
+        <FilesPreviewDialog
+          file={model.previewTarget}
+          onClose={() => model.setPreviewTarget(null)}
+        />
       )}
       {model.target && (
         <ConfirmDialog

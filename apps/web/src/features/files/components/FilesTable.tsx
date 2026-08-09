@@ -7,12 +7,14 @@ export default function FilesTable({
   canDelete,
   downloadingId,
   onDownload,
+  onPreview,
   onDelete,
 }: {
   files: ProjectFile[];
   canDelete: boolean;
   downloadingId: string | null;
   onDownload: (file: ProjectFile) => void;
+  onPreview: (file: ProjectFile) => void;
   onDelete: (file: ProjectFile) => void;
 }) {
   return (
@@ -42,6 +44,7 @@ export default function FilesTable({
               canDelete={canDelete}
               downloading={downloadingId === file.id}
               onDownload={() => onDownload(file)}
+              onPreview={() => onPreview(file)}
               onDelete={() => onDelete(file)}
             />
           ))}

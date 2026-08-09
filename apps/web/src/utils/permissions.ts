@@ -23,6 +23,8 @@ const RESOURCE_LABELS: Record<string, string> = {
   note_boards: 'Note boards',
   files: 'Files',
   crm: 'CRM',
+  finance: 'Finance & accounting',
+  mail: 'Email',
   danger_zone: 'Danger zone',
 };
 
@@ -63,6 +65,8 @@ const GROUP_DEFS: PermissionGroup[] = [
   { title: 'Notes', resources: ['note_boards'] },
   { title: 'Files', resources: ['files'] },
   { title: 'CRM', resources: ['crm'] },
+  { title: 'Finance & accounting', resources: ['finance'] },
+  { title: 'Email', resources: ['mail'] },
   { title: 'AI', resources: ['ai_agents', 'integrations', 'agent_skills', 'agent_tools'] },
   {
     title: 'Configuration',

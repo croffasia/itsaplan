@@ -6,6 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight';
 import { Markdown } from 'tiptap-markdown';
+import { stripMarkdownBreakMarkers } from '@/utils/markdown';
 import { ResizableImage } from '../../utils/tiptap-image';
 import { SlashCommand } from '../../utils/tiptap-slash-command';
 import { Video } from '../../utils/tiptap-video';
@@ -90,7 +91,7 @@ export default function IssueMarkdownEditor({
       // separated by single \n — the same breaks:true semantics Plane/Linear use).
       Markdown.configure({ html: true, linkify: true, breaks: true }),
     ],
-    content: defaultValue,
+    content: stripMarkdownBreakMarkers(defaultValue),
     editorProps: {
       attributes: {
         // flex-1 so the typing area covers a container taller than the text.
@@ -104,7 +105,10 @@ export default function IssueMarkdownEditor({
         const files = event.dataTransfer?.files;
         if (!files || files.length === 0) return false;
         event.preventDefault();
-        const coords = view.posAtCoords({ left: event.clientX, top: event.clientY });
+        const coords = view.posAtCoords({
+          left: event.clientX,
+          top: event.clientY,
+        });
         insertFiles(files, coords?.pos ?? view.state.selection.to);
         return true;
       },
@@ -120,8 +124,10 @@ export default function IssueMarkdownEditor({
         return true;
       },
     },
-    onUpdate: ({ editor }) => onChange?.(editor.storage.markdown.getMarkdown()),
-    onBlur: ({ editor }) => onBlur?.(editor.storage.markdown.getMarkdown()),
+    onUpdate: ({ editor }) =>
+      onChange?.(stripMarkdownBreakMarkers(editor.storage.markdown.getMarkdown())),
+    onBlur: ({ editor }) =>
+      onBlur?.(stripMarkdownBreakMarkers(editor.storage.markdown.getMarkdown())),
   });
 
   useEffect(() => {

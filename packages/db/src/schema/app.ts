@@ -100,6 +100,44 @@ export const crmCustomer = pgTable(
   ],
 );
 
+export const financeTransaction = pgTable(
+  'finance_transaction',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    type: text('type').notNull(),
+    amountCents: bigint('amount_cents', { mode: 'number' }).notNull(),
+    category: text('category').notNull(),
+    description: text('description').notNull().default(''),
+    counterparty: text('counterparty').notNull().default(''),
+    reference: text('reference').notNull().default(''),
+    vatRate: integer('vat_rate').notNull().default(0),
+    vatAmountCents: bigint('vat_amount_cents', { mode: 'number' }).notNull().default(0),
+    paymentStatus: text('payment_status').notNull().default('paid'),
+    transactionDate: date('transaction_date').notNull(),
+    dueDate: date('due_date'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('finance_transaction_project_date_idx').on(t.projectId, t.transactionDate, t.id),
+    check('finance_transaction_type_check', sql`${t.type} in ('income', 'expense')`),
+    check('finance_transaction_amount_check', sql`${t.amountCents} > 0`),
+    check('finance_transaction_vat_rate_check', sql`${t.vatRate} in (0, 9, 21)`),
+    check(
+      'finance_transaction_vat_amount_check',
+      sql`${t.vatAmountCents} >= 0 and ${t.vatAmountCents} <= ${t.amountCents}`,
+    ),
+    check('finance_transaction_payment_status_check', sql`${t.paymentStatus} in ('open', 'paid')`),
+  ],
+);
+
 export const projectFile = pgTable(
   'project_file',
   {
@@ -427,7 +465,9 @@ export const aiAgent = pgTable(
     // carries its API key and is enforced by this role through the normal permission
     // checks — an external agent's HTTP calls and an internal agent's in-process tool
     // dispatch alike. NULL means the bot user has no membership yet and cannot act.
-    roleId: integer('role_id').references(() => projectRole.id, { onDelete: 'set null' }),
+    roleId: integer('role_id').references(() => projectRole.id, {
+      onDelete: 'set null',
+    }),
     // The agent's own API key, encrypted at rest (AES-256-GCM, see shared/crypto).
     // An internal agent replays it on every tool call, so unlike better-auth's
     // hashed apikey row it has to stay recoverable. Set for internal agents only:
@@ -487,8 +527,12 @@ export const agentRun = pgTable(
     agentId: integer('agent_id')
       .notNull()
       .references(() => aiAgent.id, { onDelete: 'cascade' }),
-    issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
-    scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'cascade' }),
+    issueId: integer('issue_id').references(() => issue.id, {
+      onDelete: 'cascade',
+    }),
+    scheduleId: integer('schedule_id').references(() => agentSchedule.id, {
+      onDelete: 'cascade',
+    }),
     trigger: text('trigger').notNull().default('delegation'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
     // The comment that mentioned the agent, kept for traceability. The prompt is
@@ -575,6 +619,20 @@ export const projectNotificationSetting = pgTable('project_notification_setting'
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+// One IMAP/SMTP mailbox connection per project. The complete Zoho configuration,
+// including its application password, is encrypted with APP_ENCRYPTION_KEY. The
+// redacted copy contains only the non-secret fields required by the Inbox UI.
+export const projectMailboxSetting = pgTable('project_mailbox_setting', {
+  projectId: integer('project_id')
+    .primaryKey()
+    .references(() => project.id, { onDelete: 'cascade' }),
+  ciphertext: text('ciphertext').notNull(),
+  iv: text('iv').notNull(),
+  authTag: text('auth_tag').notNull(),
+  redacted: jsonb('redacted').notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // A member's own notification preferences for one project: for each issue event
 // type, whether they want it by email and/or Telegram. One row per (user, project);
 // absent means the member has not opted in and receives nothing.
@@ -618,7 +676,9 @@ export const userTelegramAccount = pgTable(
     username: text('username'),
     firstName: text('first_name'),
     linkCode: text('link_code'),
-    linkCodeExpiresAt: timestamp('link_code_expires_at', { withTimezone: true }),
+    linkCodeExpiresAt: timestamp('link_code_expires_at', {
+      withTimezone: true,
+    }),
     linkedAt: timestamp('linked_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1178,8 +1238,12 @@ export const noteBoard = pgTable(
     projectId: integer('project_id')
       .notNull()
       .references(() => project.id, { onDelete: 'cascade' }),
-    ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'cascade' }),
-    createdByUserId: text('created_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+    ownerUserId: text('owner_user_id').references(() => user.id, {
+      onDelete: 'cascade',
+    }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
     name: text('name').notNull(),
     canvas: jsonb('canvas').notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -1187,6 +1251,26 @@ export const noteBoard = pgTable(
   },
   // Listed by updatedAt within a project; the index covers the project filter.
   (t) => [index('note_board_project_idx').on(t.projectId, t.updatedAt)],
+);
+
+export const noteBoardImage = pgTable(
+  'note_board_image',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    boardId: integer('board_id')
+      .notNull()
+      .references(() => noteBoard.id, { onDelete: 'cascade' }),
+    uploadedByUserId: text('uploaded_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    s3Key: text('s3_key').notNull(),
+    filename: text('filename').notNull(),
+    contentType: text('content_type').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('note_board_image_board_idx').on(t.boardId, t.createdAt)],
 );
 
 // The members granted access to a private board besides its owner. A private board

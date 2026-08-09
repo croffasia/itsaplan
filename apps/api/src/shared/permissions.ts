@@ -24,6 +24,8 @@ export const PERMISSION_RESOURCES = [
   'note_boards',
   'files',
   'crm',
+  'finance',
+  'mail',
   'danger_zone',
 ] as const;
 export type PermissionResource = (typeof PERMISSION_RESOURCES)[number];

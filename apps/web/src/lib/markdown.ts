@@ -1,5 +1,6 @@
 import { marked } from 'marked';
 import DOMPurify from 'isomorphic-dompurify';
+import { stripMarkdownBreakMarkers } from '@/utils/markdown';
 
 // Content that links away from the app (release notes) asks for newTabLinks, so a
 // link does not replace the app with GitHub.
@@ -33,6 +34,9 @@ export function sanitizeHtml(html: string, options?: HtmlOptions): string {
 // breaks:true so a single newline becomes a line break, matching the
 // MarkdownEditor used in the issue detail (tiptap-markdown breaks:true).
 export function renderMarkdown(value: string, options?: HtmlOptions): string {
-  const html = marked.parse(value, { async: false, breaks: true }) as string;
+  const html = marked.parse(stripMarkdownBreakMarkers(value), {
+    async: false,
+    breaks: true,
+  }) as string;
   return sanitizeHtml(html, options);
 }

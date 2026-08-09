@@ -31,6 +31,8 @@ describe('hasPermission', () => {
     expect(hasPermission(p, 'note_boards', 'delete')).toBe(true);
     expect(hasPermission(p, 'files', 'delete')).toBe(true);
     expect(hasPermission(p, 'crm', 'delete')).toBe(true);
+    expect(hasPermission(p, 'finance', 'read')).toBe(false);
+    expect(hasPermission(p, 'mail', 'read')).toBe(false);
     expect(hasPermission(p, 'dashboards', 'read')).toBe(true);
     expect(hasPermission(p, 'dashboards', 'edit')).toBe(false);
     expect(hasPermission(p, 'members_manage', 'read')).toBe(false);

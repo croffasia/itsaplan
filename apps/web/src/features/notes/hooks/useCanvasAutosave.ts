@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Edge } from '@xyflow/react';
 import { useSaveNoteCanvas } from '../services/noteBoards.service';
-import type { StickerNodeType } from '../components/StickerNode';
-import { toCanvas } from '../utils/noteCanvas';
+import { toCanvas, type NoteFlowNode } from '../utils/noteCanvas';
 
 // 'unsaved' — edits made, not yet persisted (waiting out the debounce);
 // 'saving' — the save request is in flight; 'saved'/'error' — its result.
@@ -18,7 +17,7 @@ const AUTOSAVE_DELAY = 2000;
 export function useCanvasAutosave(
   projectKey: string,
   boardId: number,
-  nodes: StickerNodeType[],
+  nodes: NoteFlowNode[],
   edges: Edge[],
   enabled: boolean,
 ): SaveStatus {

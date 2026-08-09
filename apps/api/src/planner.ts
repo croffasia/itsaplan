@@ -18,6 +18,7 @@ import { initiativeRoutes } from './initiatives/routes';
 import { attachmentRoutes } from './attachments/routes';
 import { fileRoutes } from './files/routes';
 import { crmRoutes } from './crm/routes';
+import { financeRoutes } from './finance/routes';
 import { avatarRoutes } from './avatars/routes';
 import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
@@ -25,11 +26,13 @@ import { actionRoutes } from './actions/routes';
 import { webhookRoutes } from './webhooks/routes';
 import { dashboardRoutes } from './dashboards/routes';
 import { noteBoardRoutes } from './note-boards/routes';
+import { noteBoardImageRoutes } from './note-board-images/routes';
 import { analyticsRoutes } from './analytics/routes';
 import { settingsRoutes } from './settings/routes';
 import { godRoutes } from './god/routes';
 import { agentScheduleRoutes } from './agent-schedules/routes';
 import { notificationRoutes } from './notifications/routes';
+import { mailboxRoutes } from './mailbox/routes';
 import { notificationSettingsRoutes } from './notification-settings/routes';
 import { notificationPreferenceRoutes } from './notification-preferences/routes';
 import { userPreferenceRoutes } from './user-preferences/routes';
@@ -89,6 +92,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(attachmentRoutes)
   .use(fileRoutes)
   .use(crmRoutes)
+  .use(financeRoutes)
   .use(avatarRoutes)
   .use(viewRoutes)
   .use(shareRoutes)
@@ -97,8 +101,10 @@ export const planner = new Elysia({ name: 'planner' })
   .use(agentScheduleRoutes)
   .use(dashboardRoutes)
   .use(noteBoardRoutes)
+  .use(noteBoardImageRoutes)
   .use(analyticsRoutes)
   .use(notificationRoutes)
+  .use(mailboxRoutes)
   .use(notificationSettingsRoutes)
   .use(notificationPreferenceRoutes)
   .use(userPreferenceRoutes)

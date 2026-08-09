@@ -9,16 +9,54 @@ import { ErrorResponse } from '../shared/responses';
 import {
   listNoteBoards,
   createNoteBoard,
-  getNoteBoard,
   updateNoteBoard,
   deleteNoteBoard,
   listNoteBoardAccessCandidates,
-  type NoteBoardRow,
 } from './store';
+import { requireAccessibleNoteBoard } from './access';
+import { deleteNoteBoardImage, listNoteBoardImageKeys } from '../note-board-images/store';
+import { discardUploadedObject } from '../shared/uploads';
 
 const boardParams = t.Object({ projectKey: t.String(), boardId: t.Numeric() });
 
 const Visibility = t.Union([t.Literal('public'), t.Literal('private'), t.Literal('restricted')]);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function canvasImageIds(canvas: unknown): Set<string> {
+  if (!canvas || typeof canvas !== 'object' || !('nodes' in canvas)) return new Set();
+  const nodes = (canvas as { nodes?: unknown }).nodes;
+  if (!Array.isArray(nodes)) return new Set();
+  return new Set(
+    nodes.flatMap((node) => {
+      if (!node || typeof node !== 'object' || !('type' in node) || !('data' in node)) return [];
+      const value = node as { type?: unknown; data?: { imageId?: unknown } };
+      return value.type === 'image' &&
+        typeof value.data?.imageId === 'string' &&
+        UUID_PATTERN.test(value.data.imageId)
+        ? [value.data.imageId]
+        : [];
+    }),
+  );
+}
+
+async function discardRemovedCanvasImages(
+  boardId: number,
+  previousCanvas: unknown,
+  nextCanvas: unknown,
+): Promise<void> {
+  const nextIds = canvasImageIds(nextCanvas);
+  const removedIds = [...canvasImageIds(previousCanvas)].filter((id) => !nextIds.has(id));
+  await Promise.all(
+    removedIds.map(async (id) => {
+      try {
+        const image = await deleteNoteBoardImage(boardId, id);
+        if (image) await discardUploadedObject(image.s3Key);
+      } catch (error) {
+        console.error(`[planner] failed to remove note board image ${id}:`, error);
+      }
+    }),
+  );
+}
 
 // A note board DTO (NoteBoardRow from the store). canvas is a jsonb blob owned by
 // the UI (React Flow nodes/edges) and returned verbatim, so it is typed t.Any().
@@ -45,27 +83,6 @@ const NoteBoardAccessCandidateResponse = t.Object({
   kind: t.Union([t.Literal('member'), t.Literal('agent')]),
   canAccess: t.Boolean(),
 });
-
-// Load a board that belongs to this project and that the user may access: a
-// public board is open to any member; a private one to its owner and the members
-// granted access. Anything else is a 404 so a private board's existence does not
-// leak.
-async function loadAccessibleBoard(
-  boardId: number,
-  projectId: number,
-  userId: string,
-): Promise<NoteBoardRow> {
-  const board = await getNoteBoard(boardId);
-  if (!board || board.projectId !== projectId) throw new HttpError(404, 'Board not found');
-  if (
-    board.ownerUserId !== null &&
-    board.ownerUserId !== userId &&
-    !board.memberIds.includes(userId)
-  ) {
-    throw new HttpError(404, 'Board not found');
-  }
-  return board;
-}
 
 // The members to grant access to: deduplicated, without the owner (who always has
 // access), and rejected when someone cannot be granted it — they are not in the
@@ -146,7 +163,7 @@ export const noteBoardRoutes = new Elysia({
   .get(
     '/projects/:projectKey/note-boards/:boardId',
     async ({ project, user, params }) => {
-      return loadAccessibleBoard(params.boardId, project.id, requireUser(user).id);
+      return requireAccessibleNoteBoard(params.boardId, project.id, requireUser(user).id);
     },
     {
       permission: ['note_boards', 'read'],
@@ -160,7 +177,7 @@ export const noteBoardRoutes = new Elysia({
       detail: {
         summary: 'Get a note board with its canvas',
         description:
-          'One board with its `canvas`, a React Flow graph `{ nodes, edges }`. A card (sticker, note) is a node: `{ id, type: "sticker", position: { x, y }, width, height, data: { title, body, color } }`, where `body` is markdown and `color` a hex string. A connection between two cards is an edge: `{ id, source, target }` of node ids. Cards exist only inside the canvas.',
+          'One board with its `canvas`, a React Flow graph `{ nodes, edges }`. A note is `{ id, type: "sticker", position: { x, y }, width, height, data: { title, body, color } }`; a photo is `{ id, type: "image", position, width, height, data: { imageId, filename, contentType } }`. A connection is an edge `{ id, source, target }` of node ids.',
         ...mcpTool('get_note_board'),
       },
     },
@@ -206,7 +223,7 @@ export const noteBoardRoutes = new Elysia({
     '/projects/:projectKey/note-boards/:boardId',
     async ({ project, user, params, body }) => {
       const userId = requireUser(user).id;
-      const current = await loadAccessibleBoard(params.boardId, project.id, userId);
+      const current = await requireAccessibleNoteBoard(params.boardId, project.id, userId);
       const patch: {
         name?: string;
         canvas?: unknown;
@@ -235,6 +252,9 @@ export const noteBoardRoutes = new Elysia({
 
       const board = await updateNoteBoard(params.boardId, patch);
       if (!board) throw new HttpError(404, 'Board not found');
+      if (body.canvas !== undefined) {
+        await discardRemovedCanvasImages(params.boardId, current.canvas, body.canvas);
+      }
       return board;
     },
     {
@@ -256,7 +276,7 @@ export const noteBoardRoutes = new Elysia({
       detail: {
         summary: 'Update a note board',
         description:
-          'Rename a board, change who sees it, or replace its `canvas`. `visibility` is "public" (every project member), "private" (the creator alone), or "restricted" (the creator plus the project members in `memberIds`, which replaces the granted list as a whole). Only the board creator can change either. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted.',
+          'Rename a board, change who sees it, or replace its `canvas`. `visibility` is "public" (every project member), "private" (the creator alone), or "restricted" (the creator plus the project members in `memberIds`, which replaces the granted list as a whole). Only the board creator can change either. The canvas is replaced as a whole: read the board first, then send every node and edge that must stay. Photo objects removed from the canvas are also removed from storage.',
         ...mcpTool('update_note_board'),
       },
     },
@@ -265,8 +285,10 @@ export const noteBoardRoutes = new Elysia({
   .delete(
     '/projects/:projectKey/note-boards/:boardId',
     async ({ project, user, params }) => {
-      await loadAccessibleBoard(params.boardId, project.id, requireUser(user).id);
+      await requireAccessibleNoteBoard(params.boardId, project.id, requireUser(user).id);
+      const imageKeys = await listNoteBoardImageKeys(params.boardId);
       await deleteNoteBoard(params.boardId);
+      await Promise.all(imageKeys.map(discardUploadedObject));
       return noContent();
     },
     {
@@ -280,7 +302,7 @@ export const noteBoardRoutes = new Elysia({
       },
       detail: {
         summary: 'Delete a note board',
-        description: 'Permanently delete a note board and every note on it.',
+        description: 'Permanently delete a note board and every note and photo on it.',
         ...mcpTool('delete_note_board'),
       },
     },

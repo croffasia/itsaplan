@@ -3,6 +3,7 @@ import type { AgentSkill, ProjectDetail } from '@/lib/api';
 import { useSkillsQuery, useDeleteSkill } from '@/services/agentSkills.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { SkillEditDialog } from './SkillEditDialog';
@@ -24,7 +25,9 @@ export default function SettingsAgentSkills({ project }: { project: ProjectDetai
 
   return (
     <>
-      {skills.length === 0 ? (
+      {skillsQuery.isPending ? (
+        <ListSkeleton rows={3} rowClassName="h-12" />
+      ) : skills.length === 0 ? (
         <EmptyState
           title="No skills yet"
           description="Write markdown, upload a file, or import from GitHub."

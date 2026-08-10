@@ -7,6 +7,7 @@ import {
   useDeleteWebhook,
 } from '@/services/webhooks.service';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsWebhookDialog, type WebhookFormValue } from './SettingsWebhookDialog';
 import { SettingsWebhooksTable } from './SettingsWebhooksTable';
@@ -57,7 +58,9 @@ export default function SettingsWebhooks({
 
   return (
     <>
-      {webhooks.length === 0 ? (
+      {webhooksQuery.isPending ? (
+        <ListSkeleton rows={3} rowClassName="h-12" />
+      ) : webhooks.length === 0 ? (
         <EmptyState
           title="No webhooks yet"
           description="Set a payload URL and choose which events to send."

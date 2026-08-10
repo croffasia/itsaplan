@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { PermissionCatalog, Permissions } from '@/lib/api';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import GodPermissionMatrix from './GodPermissionMatrix';
 
@@ -50,7 +51,7 @@ export default function GodAccessCard({
         {catalog ? (
           <GodPermissionMatrix catalog={catalog} permissions={permissions} />
         ) : (
-          <p className="text-xs text-muted-foreground">Loading permissions…</p>
+          <ListSkeleton rows={3} rowClassName="h-6" />
         )}
       </CollapsibleContent>
     </Collapsible>

@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import IssueDetailSkeleton from '@/features/issue/components/detail/IssueDetailSkeleton';
 import ReadOnlyIssueDetail from '@/features/issue/components/detail/ReadOnlyIssueDetail';
 
 // The read-only issue detail opened from a shared board card. It fetches the issue
@@ -39,7 +40,11 @@ export default function PublicIssueOverlay({
         <DialogHeader className="sr-only">
           <DialogTitle>Issue</DialogTitle>
         </DialogHeader>
-        {query.isLoading && <p className="p-8 text-sm text-muted-foreground">Loading…</p>}
+        {query.isLoading && (
+          <div className="px-8 py-2">
+            <IssueDetailSkeleton />
+          </div>
+        )}
         {(query.isError || (!query.isLoading && !query.data)) && (
           <p className="p-8 text-sm text-muted-foreground">This issue is not available.</p>
         )}

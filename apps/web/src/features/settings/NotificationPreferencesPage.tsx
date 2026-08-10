@@ -5,6 +5,7 @@ import type { NotificationPreferences as Prefs } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { Button } from '@/components/ui/button';
 import SectionPageView from '@/components/common/page/SectionPageView';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import NotificationPreferences from './components/notifications/NotificationPreferences';
 import { useNotificationPreferencesQuery } from './services/settings.service';
 import { useNotificationPreferencesForm } from './hooks/useNotificationPreferencesForm';
@@ -38,7 +39,7 @@ function PreferencesPage({ projectKey }: { projectKey: string }) {
   if (!query.data) {
     return (
       <Chrome>
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <ListSkeleton rows={5} rowClassName="h-12" />
       </Chrome>
     );
   }

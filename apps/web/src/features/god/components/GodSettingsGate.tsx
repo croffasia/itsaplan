@@ -1,6 +1,7 @@
 'use client';
 
 import { Fragment, type ReactNode } from 'react';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import GodSectionPage from './GodSectionPage';
 
 // Holds a settings page back until its stored state has loaded, then renders the form
@@ -18,7 +19,7 @@ export default function GodSettingsGate<T>({
   if (!data) {
     return (
       <GodSectionPage slug={slug}>
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <ListSkeleton rows={5} rowClassName="h-12" />
       </GodSectionPage>
     );
   }

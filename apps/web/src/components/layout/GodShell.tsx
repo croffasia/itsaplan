@@ -5,6 +5,7 @@ import { useSession } from '@/lib/auth-client';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from '@/components/theme-toggle';
+import GodPageSkeleton from '@/components/common/skeleton/GodPageSkeleton';
 import UserMenu from '@/components/layout/UserMenu';
 import GodSidebar from '@/components/layout/GodSidebar';
 
@@ -28,6 +29,7 @@ export default function GodShell({
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const isGod = mounted && session?.user.role === 'god';
+  const sessionSettled = mounted && !isPending;
 
   return (
     <SidebarProvider defaultOpen={defaultSidebarOpen} className="h-svh overflow-hidden">
@@ -45,11 +47,12 @@ export default function GodShell({
 
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
           {isGod && children}
-          {mounted && !isPending && !isGod && (
+          {!isGod && sessionSettled && (
             <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
               God mode is open to the instance owner only.
             </div>
           )}
+          {!isGod && !sessionSettled && <GodPageSkeleton />}
         </div>
       </SidebarInset>
     </SidebarProvider>

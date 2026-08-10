@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ReadOnlyBoard from './components/public/ReadOnlyBoard';
 import PublicIssueOverlay from './components/public/PublicIssueOverlay';
 
@@ -21,7 +22,11 @@ export default function PublicBoardPage({ token }: { token: string }) {
   if (query.isLoading) {
     return (
       <PublicShareFrame>
-        <p className="px-6 py-10 text-sm text-muted-foreground">Loading…</p>
+        <div className="flex gap-4 overflow-hidden p-6">
+          {Array.from({ length: 4 }, (_, i) => (
+            <ListSkeleton key={i} rows={3} className="w-72 shrink-0" rowClassName="h-24" />
+          ))}
+        </div>
       </PublicShareFrame>
     );
   }

@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
+import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
 import ReadOnlyIssueDetail from './components/detail/ReadOnlyIssueDetail';
 
 // The public read-only page for a shared issue (/share/issue/:token). Fetches the
@@ -19,7 +20,9 @@ export default function PublicIssuePage({ token }: { token: string }) {
   if (query.isLoading) {
     return (
       <PublicShareFrame>
-        <p className="px-6 py-10 text-sm text-muted-foreground">Loading…</p>
+        <div className="px-6 py-4">
+          <IssueDetailSkeleton />
+        </div>
       </PublicShareFrame>
     );
   }

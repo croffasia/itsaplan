@@ -97,6 +97,10 @@ export const GOD_SECTIONS: GodSection[] = [
   },
 ];
 
+// The content column a god page occupies. Shared with the skeletons that stand in
+// for a page, so a loading section is the width of the section that replaces it.
+export const GOD_COLUMN_CLASS = 'min-w-[600px] max-w-[60%]';
+
 export function godSection(slug: string): GodSection {
   const section = GOD_SECTIONS.find((s) => s.slug === slug);
   if (!section) throw new Error(`Unknown god section: ${slug}`);

@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { AgentSchedule, AgentScheduleRun } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { useAgentScheduleRuns } from '@/services/agentSchedules.service';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import {
   Sheet,
@@ -31,7 +32,7 @@ export function SettingsScheduleRunsSheet({
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto">
           {query.isLoading ? (
-            <p className="p-4 text-sm text-muted-foreground">Loading runs…</p>
+            <ListSkeleton rows={4} className="p-4" rowClassName="h-12" />
           ) : query.data?.length ? (
             <div className="divide-y divide-border/50">
               {query.data.map((run) => (

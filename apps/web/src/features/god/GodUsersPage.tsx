@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { InstanceUserKind } from '@/lib/api';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import GodSectionPage from './components/GodSectionPage';
 import GodUsersTable from './components/users/GodUsersTable';
 import GodUsersToolbar from './components/users/GodUsersToolbar';
@@ -43,7 +44,7 @@ export default function GodUsersPage() {
         />
 
         {usersQuery.isPending ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <ListSkeleton rows={6} rowClassName="h-12" />
         ) : users.length === 0 ? (
           <p className="text-sm text-muted-foreground">No accounts match these filters.</p>
         ) : (

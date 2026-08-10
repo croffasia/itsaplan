@@ -8,6 +8,7 @@ import { initiativePath, type InitiativeTab } from '@/utils/paths';
 import { qk } from '@/services/queryKeys';
 import { useInitiativeQuery } from '@/services/initiatives.service';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import PageSkeleton from '@/components/common/skeleton/PageSkeleton';
 import InitiativeHeader from './components/detail/InitiativeHeader';
 import InitiativeIssuesBoard from './components/detail/InitiativeIssuesBoard';
 import InitiativeOverview from './components/detail/InitiativeOverview';
@@ -45,10 +46,10 @@ export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: Initi
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      {!initiative ? (
-        <p className="px-6 py-8 text-sm text-muted-foreground">
-          {query.isLoading ? 'Loading…' : 'Initiative not found.'}
-        </p>
+      {query.isLoading ? (
+        <PageSkeleton className="mx-0 max-w-none px-6 py-8" />
+      ) : !initiative ? (
+        <p className="px-6 py-8 text-sm text-muted-foreground">Initiative not found.</p>
       ) : (
         <>
           <InitiativeHeader initiative={initiative} project={project} />

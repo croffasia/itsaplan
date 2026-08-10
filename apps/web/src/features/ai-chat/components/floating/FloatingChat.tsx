@@ -7,6 +7,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { AiChatThread } from '../shared/AiChatThread';
+import { AiChatThreadSkeleton } from '../shared/AiChatThreadSkeleton';
 import { FloatingChatHeader } from './FloatingChatHeader';
 import { FloatingChatHistory } from './FloatingChatHistory';
 import { useAiChatSelection } from '../../hooks/useAiChatSelection';
@@ -79,9 +80,7 @@ export function FloatingChat({
 
         <div className="relative min-h-0 flex-1">
           {isLoading ? (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-              Loading…
-            </div>
+            <AiChatThreadSkeleton />
           ) : selected ? (
             <AiChatThread
               key={`${selected.id}:${newChatNonce}`}

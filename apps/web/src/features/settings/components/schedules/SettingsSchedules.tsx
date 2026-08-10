@@ -4,6 +4,7 @@ import type { AgentSchedule, AgentScheduleInput, ProjectDetail } from '@/lib/api
 import { aiAgentsPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import {
   useAgentSchedules,
   useCreateAgentSchedule,
@@ -66,14 +67,7 @@ export default function SettingsSchedules({
   }
 
   if (agentsQuery.isLoading || schedulesQuery.isLoading) {
-    return (
-      <div
-        className="flex min-h-[320px] items-center justify-center text-sm text-muted-foreground"
-        aria-live="polite"
-      >
-        Loading schedules…
-      </div>
-    );
+    return <ListSkeleton rows={3} rowClassName="h-12" />;
   }
 
   if (agents.length === 0) {

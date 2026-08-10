@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/common/page/EmptyState';
 import { AiChatAgentRail } from './components/page/AiChatAgentRail';
 import { AiChatThreadRail } from './components/page/AiChatThreadRail';
 import { AiChatConversation } from './components/page/AiChatConversation';
+import { AiChatPageSkeleton } from './components/page/AiChatPageSkeleton';
 import { useAiChatSelection } from './hooks/useAiChatSelection';
 
 // The AI Chat page (/project/:projectKey/ai-team/chat): a full-page chat with the
@@ -40,13 +41,7 @@ export default function AiChatPage() {
     );
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
-  }
+  if (isLoading) return <AiChatPageSkeleton />;
 
   if (agents.length === 0) {
     return (

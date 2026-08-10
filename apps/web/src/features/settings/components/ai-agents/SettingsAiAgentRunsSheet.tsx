@@ -4,6 +4,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import type { AgentRun, AiAgent } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { useAgentRuns } from '@/services/aiAgents.service';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,7 +49,7 @@ function RunsList({ projectKey, agentId }: { projectKey: string; agentId: number
   const runs = query.data?.pages.flatMap((p) => p.items) ?? [];
 
   if (query.isLoading) {
-    return <p className="p-4 text-sm text-muted-foreground">Loading runs…</p>;
+    return <ListSkeleton rows={4} className="p-4" rowClassName="h-12" />;
   }
   if (runs.length === 0) {
     return (

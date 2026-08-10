@@ -10,6 +10,7 @@ import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
+import IssueDetailSkeleton from './IssueDetailSkeleton';
 import IssueStatusTimeline from './IssueStatusTimeline';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
@@ -63,9 +64,7 @@ export default function IssueDetailContent({
   // builds the element anew and lets the raw route revalidate it.
   const [replacements, setReplacements] = useState(0);
 
-  if (!issue) {
-    return <div className="py-6 text-sm text-muted-foreground">Loading…</div>;
-  }
+  if (!issue) return <IssueDetailSkeleton />;
 
   const heading = (
     <>

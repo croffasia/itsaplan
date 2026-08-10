@@ -2,6 +2,7 @@ import type { Cycle } from '@/lib/api';
 import type { CyclesView } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import type { CompletedCycles } from '../../hooks/useCompletedCycles';
 import CyclesTable from './CyclesTable';
 import CyclesTimeline from './CyclesTimeline';
@@ -27,7 +28,7 @@ export default function CyclesList({
   canCreate: boolean;
   onCreate: () => void;
 }) {
-  if (isLoading) return <p className="px-4 py-6 text-sm text-muted-foreground">Loading…</p>;
+  if (isLoading) return <ListSkeleton className="px-4 py-6" rowClassName="h-12" />;
 
   const newCycleButton = canCreate && (
     <Button size="sm" onClick={onCreate}>

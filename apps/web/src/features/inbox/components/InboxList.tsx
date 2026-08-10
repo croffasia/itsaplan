@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { type Notification } from '@/lib/api';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import InboxListItem from './InboxListItem';
 
 // The scrollable notification list. Empty and loading states render in place. New
@@ -46,13 +47,7 @@ export default function InboxList({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, onLoadMore]);
 
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
-  }
+  if (isLoading) return <ListSkeleton rows={6} className="p-3" rowClassName="h-16" />;
   if (items.length === 0) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
@@ -74,9 +69,7 @@ export default function InboxList({
         />
       ))}
       {hasNextPage && <div ref={sentinelRef} className="h-px" />}
-      {isFetchingNextPage && (
-        <div className="py-3 text-center text-xs text-muted-foreground">Loading…</div>
-      )}
+      {isFetchingNextPage && <ListSkeleton rows={2} className="p-3" rowClassName="h-16" />}
     </div>
   );
 }

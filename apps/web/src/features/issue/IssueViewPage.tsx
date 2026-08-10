@@ -6,6 +6,7 @@ import { projectPath } from '@/utils/paths';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { useIssueBySeqQuery } from '@/services/issues.service';
 import IssueDetailContent from './components/detail/IssueDetailContent';
+import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
 
 // The full-page issue view (/project/:projectKey/issue/:sequenceNumber), rendered
 // inside the Shell layout. The URL carries the project-scoped number, resolved to
@@ -37,10 +38,10 @@ export default function IssueViewPage() {
             layout="page"
             onDeleted={exit}
           />
+        ) : issueQuery.isLoading ? (
+          <IssueDetailSkeleton />
         ) : (
-          <div className="py-6 text-sm text-muted-foreground">
-            {issueQuery.isLoading ? 'Loading…' : 'Issue not found.'}
-          </div>
+          <div className="py-6 text-sm text-muted-foreground">Issue not found.</div>
         )}
       </div>
     </div>

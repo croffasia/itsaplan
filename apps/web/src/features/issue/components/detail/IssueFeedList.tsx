@@ -1,6 +1,7 @@
 import { type FeedItem } from '@/lib/api';
 import { useFeedQuery } from '../../services/comments.service';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ActivityItemList from './ActivityItemList';
 
 // The flat activity list, newest first, paged 25 at a time by "Show more". The feed
@@ -26,12 +27,10 @@ export default function IssueFeedList({
   }
   const items = [...byId.values()];
 
+  if (feedQuery.isLoading) return <ListSkeleton rows={3} rowClassName="h-12" />;
+
   if (items.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        {feedQuery.isLoading ? 'Loading…' : 'No activity yet.'}
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">No activity yet.</p>;
   }
 
   return (

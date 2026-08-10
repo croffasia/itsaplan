@@ -4,6 +4,7 @@ import { Users, X } from 'lucide-react';
 import type { InstanceProjectDetail } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/utils/dates';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { usePermissionCatalogQuery } from '@/services/roles.service';
@@ -95,7 +96,7 @@ export default function GodProjectDetailPanel({
 
         <div className="flex-1 space-y-8 overflow-y-auto px-6 py-6">
           {!project ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <ListSkeleton rows={5} rowClassName="h-12" />
           ) : (
             <>
               <section className="space-y-3">

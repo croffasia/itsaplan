@@ -7,6 +7,7 @@ import { type MemberRow } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import Avatar from '@/components/common/Avatar';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +46,7 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
   const roles = rolesQuery.data ?? [];
   const ownerCount = members.filter((m) => m.role === 'owner').length;
 
-  if (membersQuery.isPending) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (membersQuery.isPending) return <ListSkeleton className="mb-8" rowClassName="h-14" />;
 
   const targetIsSelf = target?.userId === currentUserId;
 

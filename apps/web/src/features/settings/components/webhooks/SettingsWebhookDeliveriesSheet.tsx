@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Webhook, WebhookDelivery } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { useWebhookDeliveries } from '@/services/webhooks.service';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,7 +43,7 @@ function DeliveriesList({ webhookId }: { webhookId: number }) {
   const deliveries = query.data?.pages.flatMap((p) => p.items) ?? [];
 
   if (query.isLoading) {
-    return <p className="p-4 text-sm text-muted-foreground">Loading deliveries…</p>;
+    return <ListSkeleton rows={4} className="p-4" rowClassName="h-12" />;
   }
   if (deliveries.length === 0) {
     return <p className="p-4 text-sm text-muted-foreground">No deliveries yet.</p>;

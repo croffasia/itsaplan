@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { godSection } from '@/utils/godSections';
+import { GOD_COLUMN_CLASS, godSection } from '@/utils/godSections';
 import SectionPageView from '@/components/common/page/SectionPageView';
 
 // The chrome shared by every god section page: title and description taken from the
@@ -8,7 +8,7 @@ import SectionPageView from '@/components/common/page/SectionPageView';
 export default function GodSectionPage({
   slug,
   actions,
-  widthClassName = 'min-w-[600px] max-w-[60%]',
+  widthClassName = GOD_COLUMN_CLASS,
   children,
 }: {
   slug: string;

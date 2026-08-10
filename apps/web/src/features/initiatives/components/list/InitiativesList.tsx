@@ -3,6 +3,7 @@ import type { Initiative, InitiativeSort, ProjectDetail } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import InitiativeRow from './InitiativeRow';
 
 // Columns in table order. A `sort` key marks the column as sortable; progress and
@@ -41,7 +42,7 @@ export default function InitiativesList({
 }) {
   const ownerById = new Map(project.assignees.map((a) => [a.userId, a]));
 
-  if (isLoading) return <p className="px-4 py-6 text-sm text-muted-foreground">Loading…</p>;
+  if (isLoading) return <ListSkeleton className="px-4 py-6" rowClassName="h-12" />;
 
   if (initiatives.length === 0) {
     if (statusLabel)

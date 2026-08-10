@@ -8,6 +8,7 @@ import {
 } from '@/services/actions.service';
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsActionDialog } from './SettingsActionDialog';
 import { SettingsActionsTable } from './SettingsActionsTable';
@@ -75,7 +76,9 @@ export default function SettingsActions({
 
   return (
     <>
-      {actions.length === 0 ? (
+      {actionsQuery.isPending ? (
+        <ListSkeleton rows={3} rowClassName="h-12" />
+      ) : actions.length === 0 ? (
         <EmptyState
           title="No actions yet"
           description="Pick which issues an action shows on, then what it sets."

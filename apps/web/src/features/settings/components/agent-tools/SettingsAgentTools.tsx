@@ -4,6 +4,7 @@ import { useConfiguredToolsQuery, useDeleteConfiguredTool } from '@/services/cus
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { ToolConfigRow } from './ToolConfigRow';
@@ -30,7 +31,9 @@ export default function SettingsAgentTools({ project }: { project: ProjectDetail
 
   return (
     <>
-      {tools.length === 0 ? (
+      {toolsQuery.isPending ? (
+        <ListSkeleton rows={3} rowClassName="h-12" />
+      ) : tools.length === 0 ? (
         <EmptyState
           title="No tools yet"
           description="Configure a tool once, then enable it on any agent."

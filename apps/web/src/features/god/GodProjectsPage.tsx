@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import GodSearchInput from './components/GodSearchInput';
 import GodSectionPage from './components/GodSectionPage';
 import GodPager, { PAGE_SIZES } from './components/GodPager';
@@ -38,7 +39,7 @@ export default function GodProjectsPage() {
         />
 
         {projectsQuery.isPending ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <ListSkeleton rows={6} rowClassName="h-12" />
         ) : projects.length === 0 ? (
           <p className="text-sm text-muted-foreground">No projects match this search.</p>
         ) : (

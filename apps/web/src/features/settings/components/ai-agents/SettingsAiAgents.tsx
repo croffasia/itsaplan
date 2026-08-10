@@ -8,6 +8,7 @@ import {
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsAiAgentRow } from './SettingsAiAgentRow';
 import AgentKeyRevealModal from './AgentKeyRevealModal';
@@ -51,7 +52,9 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
 
   return (
     <>
-      {agents.length === 0 ? (
+      {agentsQuery.isPending ? (
+        <ListSkeleton rows={3} rowClassName="h-12" />
+      ) : agents.length === 0 ? (
         <EmptyState
           title="No agents yet"
           description="An agent runs on the built-in runtime or through the API."

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import type { HotkeyOverrides } from '@/lib/api';
 import { DEFAULT_COMBOS } from '@/utils/hotkeys';
 import HotkeysEditor from '@/components/common/hotkeys/HotkeysEditor';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Button } from '@/components/ui/button';
 import GodSectionPage from './components/GodSectionPage';
 import {
@@ -43,7 +44,7 @@ export default function GodHotkeysPage() {
       }
     >
       {stored == null ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <ListSkeleton rows={8} rowClassName="h-9" />
       ) : (
         <HotkeysEditor base={DEFAULT_COMBOS} overrides={overrides} onChange={setDraft} />
       )}

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import BrandPanel from '@/components/common/page/BrandPanel';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useInviteQuery } from './services/invite.service';
@@ -20,7 +21,7 @@ export default function InviteAcceptPage({ token }: { token: string }) {
   // (e.g. an invalid link must not read "Accept your invitation").
   let title = 'Join the project';
   let subtitle = 'Accept your invitation to start collaborating';
-  let body = <p className="text-sm text-muted-foreground">Loading invite…</p>;
+  let body = <ListSkeleton rows={3} rowClassName="h-12" />;
 
   if (!inviteQuery.isPending && !invite) {
     title = 'Invite not found';

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import PageSkeleton from '@/components/common/skeleton/PageSkeleton';
 
 // The Shell's content area. It renders the routed page once the project is
 // loaded, and stands in for it while loading, when the account has no projects
@@ -26,8 +27,9 @@ export default function ShellBody({
     );
   }
   // The routed page reads the project from the Shell context, so it is mounted
-  // only once the project is there. A missing or failed project keeps the body on
-  // a message; the error itself is shown by the banner above.
+  // only once the project is there. A failed project keeps the body on a message;
+  // the error itself is shown by the banner above. A loading one gets a skeleton of
+  // the page it will become.
   if (!hasProject) {
     if (hasError)
       return (
@@ -35,13 +37,13 @@ export default function ShellBody({
           This project is not available.
         </div>
       );
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        {projectsLoaded && projectCount === 0
-          ? 'No projects yet, create one to get started.'
-          : 'Loading…'}
-      </div>
-    );
+    if (projectsLoaded && projectCount === 0)
+      return (
+        <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+          No projects yet, create one to get started.
+        </div>
+      );
+    return <PageSkeleton />;
   }
   return <>{children}</>;
 }

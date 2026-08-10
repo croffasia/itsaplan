@@ -8,6 +8,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import RequirePermission from '@/components/common/permissions/RequirePermission';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { SettingsResourceProvider } from './context/settingsPermission';
 import SettingsNotifications, {
   type NotificationTab,
@@ -52,7 +53,7 @@ function NotificationsPage({ project }: { project: ProjectDetail }) {
   if (!query.data) {
     return (
       <Chrome>
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <ListSkeleton rows={5} rowClassName="h-12" />
       </Chrome>
     );
   }

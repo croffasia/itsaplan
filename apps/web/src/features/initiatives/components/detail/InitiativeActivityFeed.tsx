@@ -2,6 +2,7 @@
 
 import { useInitiativeFeedQuery } from '@/services/initiatives.service';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import InitiativeFeedRow from './InitiativeFeedRow';
 
 // The initiative's activity: its own events plus its linked issues' activity, one
@@ -19,12 +20,9 @@ export default function InitiativeActivityFeed({
   const byId = new Map((feed.data?.pages ?? []).flatMap((p) => p.items).map((it) => [it.id, it]));
   const items = [...byId.values()];
 
-  if (items.length === 0)
-    return (
-      <p className="text-sm text-muted-foreground">
-        {feed.isLoading ? 'Loading…' : 'No activity yet.'}
-      </p>
-    );
+  if (feed.isLoading) return <ListSkeleton rows={3} rowClassName="h-12" />;
+
+  if (items.length === 0) return <p className="text-sm text-muted-foreground">No activity yet.</p>;
 
   return (
     <>

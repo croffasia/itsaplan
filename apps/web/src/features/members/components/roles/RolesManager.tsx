@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import type { Role } from '@/lib/api';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,7 +42,7 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
   return (
     <div>
       {rolesQuery.isPending ? (
-        <p className="py-4 text-sm text-muted-foreground">Loading…</p>
+        <ListSkeleton className="py-4" />
       ) : roles.length === 0 ? (
         <p className="py-4 text-sm text-muted-foreground">
           No roles yet. Create one to grant scoped access.

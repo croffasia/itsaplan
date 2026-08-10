@@ -43,7 +43,7 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
   let view;
   switch (board.view) {
     case 'table':
-      view = <TableView {...viewProps} />;
+      view = <TableView {...viewProps} widthScope="initiatives" />;
       break;
     case 'timeline':
       view = <TimelineView {...viewProps} />;

@@ -54,7 +54,7 @@ export default function ReadOnlyBoard({
   function renderView() {
     switch (layout) {
       case 'table':
-        return <TableView {...viewProps} />;
+        return <TableView {...viewProps} widthScope="all" />;
       case 'timeline':
         return <TimelineView {...viewProps} />;
       case 'calendar':

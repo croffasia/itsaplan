@@ -46,7 +46,7 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
   let view;
   switch (board.view) {
     case 'table':
-      view = <TableView {...viewProps} />;
+      view = <TableView {...viewProps} widthScope="cycles" />;
       break;
     case 'timeline':
       view = <TimelineView {...viewProps} />;

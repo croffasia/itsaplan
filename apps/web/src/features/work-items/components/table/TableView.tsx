@@ -13,14 +13,27 @@ import {
 import { useDndSensors } from '@/lib/dnd';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useUpdateIssue } from '@/services/issues.service';
+import { useTableColumnWidths } from '../../hooks/useTableColumnWidths';
 import { preferPrefix, sortedOrderMessage, type DropData } from '../../utils/dnd';
-import { buildTableItems, collapsedKey, resolveColumns, type FlatItem } from '../../utils/table';
+import {
+  buildTableItems,
+  collapsedKey,
+  columnWidthsKey,
+  resolveColumns,
+  type FlatItem,
+} from '../../utils/table';
 import { TableColumnHeader } from './TableColumnHeader';
 import { TableSectionHeader } from './TableSectionHeader';
 import { TableSubHeader } from './TableSubHeader';
 import { TableRow } from './TableRow';
 
 const tableCollision = preferPrefix('row:');
+
+interface TableViewProps extends WorkItemsViewProps {
+  // Which stored set of column widths this table uses: a saved view's own, the
+  // All tab's, or the single set every cycle / initiative board shares.
+  widthScope: string;
+}
 
 export default function TableView({
   project,
@@ -29,12 +42,16 @@ export default function TableView({
   onOpenIssue,
   onAddIssue,
   readOnly,
-}: WorkItemsViewProps) {
+  widthScope,
+}: TableViewProps) {
   const updateIssue = useUpdateIssue(project.project.key);
   const [activeId, setActiveId] = useState<number | null>(null);
   const sensors = useDndSensors(readOnly);
   const collapsed = usePersistedSet(
     collapsedKey(project.project.id, settings.group, settings.subgroup),
+  );
+  const { widths, setWidth, persistWidths } = useTableColumnWidths(
+    columnWidthsKey(project.project.key, widthScope),
   );
 
   const grouped = settings.group !== 'none';
@@ -47,6 +64,7 @@ export default function TableView({
   const { columns, gridTemplate, minWidth, alignTop } = resolveColumns(
     settings.properties,
     customFields,
+    widths,
   );
 
   const items = buildTableItems({
@@ -157,7 +175,13 @@ export default function TableView({
       onDragEnd={handleDragEnd}
     >
       <div ref={scrollRef} className="h-full overflow-y-auto">
-        <TableColumnHeader columns={columns} gridTemplate={gridTemplate} minWidth={minWidth} />
+        <TableColumnHeader
+          columns={columns}
+          gridTemplate={gridTemplate}
+          minWidth={minWidth}
+          onResize={setWidth}
+          onResizeEnd={persistWidths}
+        />
 
         <div
           style={{

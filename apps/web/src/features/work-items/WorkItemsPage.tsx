@@ -121,7 +121,12 @@ export default function WorkItemsPage() {
   function renderView() {
     switch (editor.view) {
       case 'table':
-        return <TableView {...viewProps} />;
+        return (
+          <TableView
+            {...viewProps}
+            widthScope={editor.activeViewId ? `view:${editor.activeViewId}` : 'all'}
+          />
+        );
       case 'timeline':
         return (
           <TimelineView

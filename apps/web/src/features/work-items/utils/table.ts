@@ -27,6 +27,22 @@ export const COLUMN_META: Record<TableColumn, { label: string; width: string }> 
   updated: { label: 'Updated', width: '96px' },
 };
 
+// A dragged width (px) per grid track, keyed by columnKey() — or by
+// TITLE_COLUMN_KEY for the title cell, which is a track like the others but has
+// no OrderedColumn. A hidden column keeps its entry, so showing it again brings
+// its last width back.
+export type ColumnWidths = Record<string, number>;
+export const TITLE_COLUMN_KEY = 'title';
+export const MIN_COLUMN_WIDTH = 56;
+export const MAX_COLUMN_WIDTH = 800;
+
+// Dragged widths are a client-only preference, kept per project and per scope:
+// each saved view has its own set, the All tab has one, and the cycle and
+// initiative boards share one set each across every cycle / initiative.
+export function columnWidthsKey(projectKey: string, scope: string): string {
+  return `table-column-widths:${projectKey}:${scope}`;
+}
+
 // Collapsed sections are a per-project, per-grouping client-only preference,
 // persisted so it survives reloads (same pattern as the project's hidden groups).
 // The sub-grouping field is part of the key so a different sub-grouping keeps its
@@ -182,9 +198,15 @@ const TITLE_COLUMN_WIDTH = 'minmax(220px,520px)';
 export type OrderedColumn =
   { kind: 'builtin'; col: TableColumn } | { kind: 'custom'; field: CustomField };
 export const columnKey = (c: OrderedColumn) => (c.kind === 'builtin' ? c.col : `cf${c.field.id}`);
-function columnWidth(c: OrderedColumn): string {
+function defaultColumnWidth(c: OrderedColumn): string {
   if (c.kind === 'builtin') return COLUMN_META[c.col].width;
   return c.field.fieldType === 'markdown' ? MARKDOWN_COLUMN_WIDTH : CUSTOM_COLUMN_WIDTH;
+}
+
+// A dragged width replaces the track's default, fixing it at that many pixels.
+function trackWidth(key: string, defaultWidth: string, widths: ColumnWidths): string {
+  const dragged = widths[key];
+  return dragged ? `${dragged}px` : defaultWidth;
 }
 
 // Floor width of a grid track: the fixed value, or the lower bound of a minmax().
@@ -201,11 +223,9 @@ function trackFloor(w: string): number {
 // than the viewport, so width:100% wins and nothing changes.
 const ROW_PADDING = 32; // px-4 both sides
 const COLUMN_GAP = 12; // gap-3
-function minTableWidth(columns: OrderedColumn[]): number {
-  const tracks =
-    trackFloor(TITLE_COLUMN_WIDTH) +
-    columns.reduce((sum, c) => sum + trackFloor(columnWidth(c)), 0);
-  return ROW_PADDING + COLUMN_GAP * columns.length + tracks;
+function minTableWidth(tracks: string[]): number {
+  const floors = tracks.reduce((sum, t) => sum + trackFloor(t), 0);
+  return ROW_PADDING + COLUMN_GAP * (tracks.length - 1) + floors;
 }
 
 // The table layout derived from the display settings: the ordered columns (each
@@ -223,6 +243,7 @@ interface TableLayout {
 export function resolveColumns(
   properties: PropertyKey[],
   customFields: CustomField[],
+  widths: ColumnWidths,
 ): TableLayout {
   const builtins = new Set<string>(Object.keys(COLUMN_META));
   const fieldById = new Map(customFields.map((f) => [f.id, f]));
@@ -233,8 +254,12 @@ export function resolveColumns(
     }
     return builtins.has(p) ? [{ kind: 'builtin', col: p as TableColumn }] : [];
   });
-  const gridTemplate = [TITLE_COLUMN_WIDTH, ...columns.map(columnWidth)].join(' ');
-  const minWidth = minTableWidth(columns);
+  const tracks = [
+    trackWidth(TITLE_COLUMN_KEY, TITLE_COLUMN_WIDTH, widths),
+    ...columns.map((c) => trackWidth(columnKey(c), defaultColumnWidth(c), widths)),
+  ];
+  const gridTemplate = tracks.join(' ');
+  const minWidth = minTableWidth(tracks);
   const alignTop = columns.some((c) => c.kind === 'custom' && c.field.fieldType === 'markdown');
   return { columns, gridTemplate, minWidth, alignTop };
 }

@@ -147,16 +147,20 @@ export function sortIssues<T extends Issue>(issues: T[], sort: Sort, project: Pr
   });
 }
 
-// Position of a issue dropped at `index` within `issuesInColumn` — the
-// midpoint of its new neighbors, so inserting never requires renumbering the
-// rest of the column (the same fractional-index trick Linear's sortOrder uses).
-export function positionAt(issuesInColumn: Issue[], index: number): number {
+// Positions for `count` issues dropped at `index` within `issuesInColumn`, in the
+// order they should end up — spread evenly between their new neighbors, so
+// inserting never requires renumbering the rest of the column (the same
+// fractional-index trick Linear's sortOrder uses).
+export function positionsAt(issuesInColumn: Issue[], index: number, count: number): number[] {
   const before = issuesInColumn[index - 1]?.position;
   const at = issuesInColumn[index]?.position;
-  if (before == null && at == null) return 1000;
-  if (before == null) return at! - 1000;
-  if (at == null) return before + 1000;
-  return (before + at) / 2;
+  // Room to stand in for a missing neighbor, wide enough to keep the steps 1000
+  // apart at either end of the column.
+  const gap = 1000 * (count + 1);
+  const lower = before ?? (at != null ? at - gap : 0);
+  const upper = at ?? lower + gap;
+  const step = (upper - lower) / (count + 1);
+  return Array.from({ length: count }, (_, n) => lower + step * (n + 1));
 }
 
 // Groups a project's issues by column id, preserving each column's ordering. The

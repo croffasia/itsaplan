@@ -3,7 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ChevronsRightLeft, EyeOff, Plus } from 'lucide-react';
 import { type ProjectDetail, type BoardIssue } from '@/lib/api';
-import { type Maps, positionAt, type IssueGroup } from '@/utils/project';
+import { type Maps, type IssueGroup } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -48,7 +48,9 @@ export function BoardColumn({
   // Whether the view is ordered manually. Cards can only be reordered within the
   // column then; otherwise the sort field decides their order.
   manualOrder: boolean;
-  onMoveIssue: (issueId: number, group: IssueGroup, position: number) => void;
+  // `index` is where in this column's issues the drop lands; the board turns it
+  // into positions for however many issues the drag carries.
+  onMoveIssue: (issueIds: number[], group: IssueGroup, index: number) => void;
   onOpenIssue: (id: number) => void;
   onAddIssue: () => void;
   onHide: () => void;
@@ -64,7 +66,7 @@ export function BoardColumn({
   const columnId = `col:${group.key}`;
   const { setNodeRef: dropRef, isOver } = useDroppable({
     id: columnId,
-    data: { onDrop: (id: number) => onMoveIssue(id, group, positionAt(issues, issues.length)) },
+    data: { onDrop: (ids: number[]) => onMoveIssue(ids, group, issues.length) },
   });
   const mergedRef = useCallback(
     (el: HTMLDivElement | null) => {
@@ -163,9 +165,7 @@ export function BoardColumn({
                 <CardDropSlot
                   issueId={issue.id}
                   disabled={!manualOrder}
-                  onDrop={(draggedId) =>
-                    onMoveIssue(draggedId, group, positionAt(issues, vi.index))
-                  }
+                  onDrop={(ids) => onMoveIssue(ids, group, vi.index)}
                 >
                   <BoardCard
                     project={project}

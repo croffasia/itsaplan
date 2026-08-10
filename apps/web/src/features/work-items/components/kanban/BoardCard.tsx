@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useDraggable } from '@dnd-kit/core';
+import { useDndContext, useDraggable } from '@dnd-kit/core';
 import { DRAG_ACTIVATION_DISTANCE } from '@/lib/dnd';
 import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
@@ -10,10 +10,12 @@ import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { useSelection } from '../../context/useSelection';
+import { draggedIds } from '../../utils/kanban';
 import { IssueCardBody } from './IssueCardBody';
 
 // A draggable board card. Dragging it starts a move; the drop target that inserts
-// before it is its wrapping CardDropSlot. A plain click opens it, but with a
+// before it is its wrapping CardDropSlot. Dragging a selected card moves the whole
+// selection, so the drag carries those ids. A plain click opens it, but with a
 // selection active (or a Shift/Cmd-click) the click toggles the card's selection
 // instead — the board's multi-select for bulk actions.
 export function BoardCard({
@@ -38,10 +40,14 @@ export function BoardCard({
   const { can } = usePermissions();
   const selection = useSelection();
   const selected = selection.isSelected(issue.id);
-  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
+  const { setNodeRef, attributes, listeners } = useDraggable({
     id: issue.id,
+    data: { issueIds: selected ? [...selection.selected] : [issue.id] },
     disabled: useIsPhone() || !can('work_items', 'edit'),
   });
+  // Every card that moves with the drag dims, not just the grabbed one.
+  const { active } = useDndContext();
+  const isDragging = draggedIds(active).includes(issue.id);
 
   // The browser still fires a click after a drag ends, which would open the issue
   // the moment it is dropped. Remember where the press started and ignore a click
@@ -66,11 +72,15 @@ export function BoardCard({
           listeners?.onPointerDown?.(e);
         }}
         onClick={(e) => {
-          if (!isClick(e)) return;
+          // Both stopPropagation calls keep the click off the board background,
+          // which would clear the selection — the one the drag has just moved, or
+          // the one this click is changing.
+          if (!isClick(e)) {
+            e.stopPropagation();
+            return;
+          }
           if (!readOnly && (selection.isSelecting || e.shiftKey || e.metaKey || e.ctrlKey)) {
             e.preventDefault();
-            // Don't let the click reach the board background, which clears the
-            // selection.
             e.stopPropagation();
             selection.toggle(issue.id);
           } else {

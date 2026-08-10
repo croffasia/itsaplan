@@ -5,13 +5,14 @@ import {
   buildGroups,
   buildMaps,
   groupIssues,
+  positionsAt,
   sortIssues,
   type WorkItemsViewProps,
   type IssueGroup,
 } from '@/utils/project';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
 import { useSelection } from '../../context/useSelection';
-import { boardCollision } from '../../utils/kanban';
+import { boardCollision, issuesToMove } from '../../utils/kanban';
 import { sortedOrderMessage } from '../../utils/dnd';
 import { Button } from '@/components/ui/button';
 import { GroupDot } from '../shared/GroupDot';
@@ -57,11 +58,8 @@ export default function FlatBoard({
     });
 
   const groups = buildGroups(project, settings.group);
-  const issuesByGroup = groupIssues(
-    groups,
-    sortIssues(project.issues, settings.sort, project),
-    settings.group,
-  );
+  const sorted = sortIssues(project.issues, settings.sort, project);
+  const issuesByGroup = groupIssues(groups, sorted, settings.group);
   const maps = buildMaps(project);
 
   // Empty groups drop out entirely when "Show empty columns" is off; manual hide
@@ -74,18 +72,23 @@ export default function FlatBoard({
   const groupNoun = settings.group === 'status' ? 'columns' : 'groups';
 
   // Reordering inside a column only holds when the view is ordered manually: with
-  // any other sort field the card would snap back to where the sort puts it. A drop
-  // that would reorder is refused and explained; a drop into another column still
-  // goes through, since it changes the grouping field rather than the order.
+  // any other sort field the card would snap back to where the sort puts it. Cards
+  // already in the target column are then skipped, and a drop left with nothing to
+  // move is refused and explained; a card from another column still goes through,
+  // since that changes the grouping field rather than the order.
   const manualOrder = settings.sort.field === 'manual';
 
-  function moveIssue(issueId: number, group: IssueGroup, position: number) {
-    if (!group.assign) return;
-    if (!manualOrder && (issuesByGroup.get(group.key) ?? []).some((i) => i.id === issueId)) {
+  function moveIssue(issueIds: number[], group: IssueGroup, index: number) {
+    const assign = group.assign;
+    if (!assign) return;
+    const target = issuesByGroup.get(group.key) ?? [];
+    const ids = issuesToMove(issueIds, sorted, target, manualOrder);
+    if (ids.length === 0) {
       toast.info(sortedOrderMessage(settings.sort.field));
       return;
     }
-    dnd.move(issueId, { ...group.assign, position });
+    const positions = positionsAt(target, index, ids.length);
+    ids.forEach((id, n) => dnd.move(id, { ...assign, position: positions[n] }));
   }
 
   function addIssueTo(group: IssueGroup) {
@@ -172,6 +175,7 @@ export default function FlatBoard({
 
       <CardOverlay
         activeId={dnd.activeId}
+        count={dnd.activeCount}
         issues={project.issues}
         maps={maps}
         properties={settings.properties}

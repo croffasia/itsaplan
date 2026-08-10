@@ -1,9 +1,10 @@
 import { pointerWithin, type CollisionDetection } from '@dnd-kit/core';
 import { SORT_FIELDS, type SortField } from '@/utils/viewTypes';
 
-// Data a drop target carries: the move to apply when an issue is dropped on it,
-// given the dragged issue id. Container targets (column, cell, section) append;
-// item targets (card, row) insert at that item's position.
+// Data a table drop target carries: the move to apply when an issue is dropped on
+// it, given the dragged issue id. Section targets append; row targets insert at
+// that row's position. The board's equivalent is BoardDropData, which carries a
+// list because a board drag can move a whole selection.
 export interface DropData {
   onDrop: (issueId: number) => void;
 }

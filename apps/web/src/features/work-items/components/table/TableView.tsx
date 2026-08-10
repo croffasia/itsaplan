@@ -6,7 +6,7 @@ import { type Issue, type IssuePatch } from '@/lib/api';
 import {
   buildGroups,
   buildMaps,
-  positionAt,
+  positionsAt,
   sortIssues,
   type WorkItemsViewProps,
 } from '@/utils/project';
@@ -82,7 +82,7 @@ export default function TableView({
       toast.info(sortedOrderMessage(settings.sort.field));
       return;
     }
-    const position = positionAt(bucket, index);
+    const [position] = positionsAt(bucket, index, 1);
     updateIssue.mutate({ id: issueId, patch: assign ? { ...assign, position } : { position } });
   }
 

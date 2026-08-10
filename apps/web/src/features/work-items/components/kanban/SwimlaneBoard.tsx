@@ -9,7 +9,7 @@ import {
   buildMaps,
   mergeAssign,
   nestIssues,
-  positionAt,
+  positionsAt,
   sortIssues,
   type WorkItemsViewProps,
   type IssueGroup,
@@ -21,7 +21,12 @@ import { GroupDot } from '../shared/GroupDot';
 import { SelectAllToggle } from './SelectAllToggle';
 import { CardOverlay } from './CardOverlay';
 import { SwimlaneCell } from './SwimlaneCell';
-import { boardCollision, COLUMN_WIDTH, collapsedSwimlanesKey } from '../../utils/kanban';
+import {
+  boardCollision,
+  COLUMN_WIDTH,
+  collapsedSwimlanesKey,
+  issuesToMove,
+} from '../../utils/kanban';
 import { sortedOrderMessage } from '../../utils/dnd';
 
 // One flattened swimlane block: its header, then a row of columns.
@@ -51,10 +56,11 @@ export default function SwimlaneBoard({
   const maps = buildMaps(project);
   const columnGroups = buildGroups(project, settings.group);
   const swimlaneGroups = buildGroups(project, settings.subgroup);
+  const sorted = sortIssues(project.issues, settings.sort, project);
   const nested = nestIssues(
     swimlaneGroups,
     columnGroups,
-    sortIssues(project.issues, settings.sort, project),
+    sorted,
     settings.subgroup,
     settings.group,
   );
@@ -106,25 +112,28 @@ export default function SwimlaneBoard({
   });
 
   // Reordering inside a cell only holds when the view is ordered manually: with any
-  // other sort field the card would snap back to where the sort puts it. A drop that
-  // would reorder is refused and explained; a drop into another cell still goes
-  // through, since it changes the grouping fields rather than the order.
+  // other sort field the card would snap back to where the sort puts it. Cards
+  // already in the target cell are then skipped, and a drop left with nothing to
+  // move is refused and explained; a card from another cell still goes through,
+  // since that changes the grouping fields rather than the order.
   const manualOrder = settings.sort.field === 'manual';
 
   function moveIssue(
     swimlane: IssueGroup,
     column: IssueGroup,
     cellIssues: Issue[],
-    issueId: number,
-    position: number,
+    issueIds: number[],
+    index: number,
   ) {
     const assign = mergeAssign(column.assign, swimlane.assign);
     if (!assign) return;
-    if (!manualOrder && cellIssues.some((i) => i.id === issueId)) {
+    const ids = issuesToMove(issueIds, sorted, cellIssues, manualOrder);
+    if (ids.length === 0) {
       toast.info(sortedOrderMessage(settings.sort.field));
       return;
     }
-    dnd.move(issueId, { ...assign, position });
+    const positions = positionsAt(cellIssues, index, ids.length);
+    ids.forEach((id, n) => dnd.move(id, { ...assign, position: positions[n] }));
   }
 
   // Inner width so the sticky header and every swimlane share one horizontal
@@ -216,14 +225,8 @@ export default function SwimlaneBoard({
                           manualOrder={manualOrder}
                           readOnly={readOnly}
                           onOpenIssue={onOpenIssue}
-                          onMoveIssue={(issueId, index) =>
-                            moveIssue(
-                              row.swimlane,
-                              column,
-                              issues,
-                              issueId,
-                              positionAt(issues, index),
-                            )
+                          onMoveIssue={(issueIds, index) =>
+                            moveIssue(row.swimlane, column, issues, issueIds, index)
                           }
                         />
                       ))}
@@ -238,6 +241,7 @@ export default function SwimlaneBoard({
 
       <CardOverlay
         activeId={dnd.activeId}
+        count={dnd.activeCount}
         issues={project.issues}
         maps={maps}
         properties={settings.properties}

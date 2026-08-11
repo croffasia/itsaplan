@@ -40,6 +40,8 @@ import {
   recordActivityEntries,
   logIssueUpdate,
   labelNames,
+  actorId,
+  type ActivityActor,
   type ActivityInput,
   type IssueSnapshot,
 } from './activity';
@@ -866,7 +868,7 @@ async function recordParentChange(
   childId: number,
   before: number | null,
   after: number | null,
-  actorUserId?: string | null,
+  actor?: ActivityActor,
 ): Promise<void> {
   const names = await identifiers(
     [childId, before, after].filter((id): id is number => id !== null),
@@ -886,7 +888,7 @@ async function recordParentChange(
     entries.push({ issueId: before, event: { action: 'subtask_remove', fromText: child } });
   if (after !== null)
     entries.push({ issueId: after, event: { action: 'subtask_add', toText: child } });
-  await recordActivityEntries(entries, actorUserId);
+  await recordActivityEntries(entries, actor);
 }
 
 export interface IssuePatch {
@@ -905,10 +907,15 @@ export interface IssuePatch {
   dueDate?: string | null;
 }
 
+// opts.onlyIfColumnId makes the write conditional: it applies only while the
+// issue still sits in that column, so an automation acting on a state it read
+// earlier cannot overwrite a concurrent move. A failed guard writes nothing and
+// returns the current row.
 export async function updateIssue(
   id: number,
   patch: IssuePatch,
-  actorUserId?: string | null,
+  actor?: ActivityActor,
+  opts?: { onlyIfColumnId?: number },
 ): Promise<IssueRow | null> {
   const before = await loadSnapshot(id);
   if (!before) return null;
@@ -938,23 +945,27 @@ export async function updateIssue(
   const changed = Object.keys(set).length > 0;
   if (changed) {
     set.updatedAt = sql`now()` as unknown as Date;
-    await db.update(issue).set(set).where(eq(issue.id, id));
+    const guard =
+      opts?.onlyIfColumnId == null
+        ? eq(issue.id, id)
+        : and(eq(issue.id, id), eq(issue.columnId, opts.onlyIfColumnId));
+    const updated = await db.update(issue).set(set).where(guard).returning({ id: issue.id });
+    if (updated.length === 0) return getIssue(id);
   }
   const after = await getIssue(id);
   if (after) {
-    await logIssueUpdate(before, snapshot(after), actorUserId);
+    await logIssueUpdate(before, snapshot(after), actor);
     if (before.parentId !== after.parentId)
-      await recordParentChange(id, before.parentId, after.parentId, actorUserId);
+      await recordParentChange(id, before.parentId, after.parentId, actor);
     if (changed) {
       await emitWebhookEvent(after.projectId, 'issue.updated', after);
       // Granular events fire in addition to issue.updated when their field changed.
       if (before.assigneeUserId !== after.assigneeUserId)
         await emitWebhookEvent(after.projectId, 'issue.assigned', after);
-      if (before.delegateUserId !== after.delegateUserId)
-        await enqueueDelegateRun(after, actorUserId);
+      if (before.delegateUserId !== after.delegateUserId) await enqueueDelegateRun(after, actor);
       if (before.columnId !== after.columnId) {
         await emitWebhookEvent(after.projectId, 'issue.state_changed', after);
-        await applySubtaskAutomation(after, actorUserId);
+        await applySubtaskAutomation(after, actor);
       }
     }
   }
@@ -965,9 +976,9 @@ export async function updateIssue(
 // run so it can act on the issue. Skipped when the agent delegated to itself (an
 // agent setting itself off). The LLM call happens later in the poller, so the write
 // is never blocked on it.
-async function enqueueDelegateRun(after: IssueRow, actorUserId?: string | null): Promise<void> {
+async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promise<void> {
   const delegate = after.delegateUserId;
-  if (!delegate || delegate === actorUserId) return;
+  if (!delegate || delegate === actorId(actor)) return;
   const agent = await getAssignTriggerAgent(delegate);
   if (!agent) return;
   await enqueueAgentRun({

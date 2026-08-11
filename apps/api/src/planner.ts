@@ -22,6 +22,7 @@ import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
 import { actionRoutes } from './actions/routes';
 import { webhookRoutes } from './webhooks/routes';
+import { githubSettingsRoutes } from './github/routes';
 import { dashboardRoutes } from './dashboards/routes';
 import { noteBoardRoutes } from './note-boards/routes';
 import { analyticsRoutes } from './analytics/routes';
@@ -92,6 +93,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(shareRoutes)
   .use(actionRoutes)
   .use(webhookRoutes)
+  .use(githubSettingsRoutes)
   .use(agentScheduleRoutes)
   .use(dashboardRoutes)
   .use(noteBoardRoutes)

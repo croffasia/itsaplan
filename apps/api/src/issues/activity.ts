@@ -330,21 +330,30 @@ export interface ActivityInput {
   toText?: string | null;
 }
 
+// The actor behind a write: the session user's id (a member or an agent's bot
+// user), null/undefined for an anonymous system write, or a named system actor
+// ({ system: 'GitHub' }) whose name is stored as the entry's actor_name without a
+// user behind it.
+export type ActivityActor = string | null | undefined | { system: string };
+
+// The user id of an actor, or null when it is a system write.
+export function actorId(actor: ActivityActor): string | null {
+  return typeof actor === 'string' ? actor : null;
+}
+
 // What a write runs on: the pool, or the transaction the caller is inside.
 type Executor = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Records the given events for an issue. actorUserId is the session user behind
-// the write (a member or an agent's bot user); it is null for a system write with
-// no user. actor_name is snapshotted from that user so the entry survives the user
-// being renamed or deleted.
+// Records the given events for an issue. actor_name is snapshotted from the actor
+// so the entry survives the user being renamed or deleted.
 export async function recordActivity(
   issueId: number,
   events: ActivityInput[],
-  actorUserId?: string | null,
+  actor?: ActivityActor,
 ): Promise<{ id: number; action: string | null }[]> {
   return recordActivityEntries(
     events.map((event) => ({ issueId, event })),
-    actorUserId,
+    actor,
   );
 }
 
@@ -354,11 +363,11 @@ export async function recordActivity(
 export async function recordActivityForIssues(
   issueIds: number[],
   event: ActivityInput,
-  actorUserId?: string | null,
+  actor?: ActivityActor,
 ): Promise<void> {
   await recordActivityEntries(
     issueIds.map((issueId) => ({ issueId, event })),
-    actorUserId,
+    actor,
   );
 }
 
@@ -368,14 +377,19 @@ export async function recordActivityForIssues(
 // transaction. The actor name snapshot is a sub-select, so this stays one query.
 export async function recordActivityEntries(
   entries: { issueId: number; event: ActivityInput }[],
-  actorUserId?: string | null,
+  actor?: ActivityActor,
   on: Executor = db,
 ): Promise<{ id: number; action: string | null }[]> {
   if (!entries.length) return [];
-  const resolvedActorId = actorUserId ?? null;
-  const actorName = resolvedActorId
-    ? sql<string | null>`(select ${user.name} from ${user} where ${user.id} = ${resolvedActorId})`
-    : null;
+  const resolvedActorId = actorId(actor);
+  const actorName =
+    actor && typeof actor === 'object'
+      ? actor.system
+      : resolvedActorId
+        ? sql<
+            string | null
+          >`(select ${user.name} from ${user} where ${user.id} = ${resolvedActorId})`
+        : null;
   return on
     .insert(issueActivity)
     .values(
@@ -467,7 +481,7 @@ export interface IssueSnapshot {
 export async function logIssueUpdate(
   before: IssueSnapshot,
   after: IssueSnapshot,
-  actorUserId?: string | null,
+  actor?: ActivityActor,
 ): Promise<void> {
   const events: ActivityInput[] = [];
   if (before.title !== after.title)
@@ -516,7 +530,7 @@ export async function logIssueUpdate(
     events.push({ action: 'start_date', fromText: before.startDate, toText: after.startDate });
   if (before.dueDate !== after.dueDate)
     events.push({ action: 'due_date', fromText: before.dueDate, toText: after.dueDate });
-  const inserted = await recordActivity(after.id, events, actorUserId);
+  const inserted = await recordActivity(after.id, events, actor);
 
   // Inbox notifications for the two events with a dedicated notification type: a new
   // assignee, and a status change. Both link back to their activity row.
@@ -532,7 +546,7 @@ export async function logIssueUpdate(
       await notifyIssueChange({
         projectId: row.projectId,
         issueId: after.id,
-        actorUserId: actorUserId ?? null,
+        actorUserId: actorId(actor),
         assignedUserId: assigneeChanged ? after.assigneeUserId : null,
         assignedActivityId: idByAction.get('assignee') ?? null,
         statusChanged,

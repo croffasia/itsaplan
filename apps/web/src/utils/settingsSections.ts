@@ -4,6 +4,7 @@ import {
   BookText,
   Clock3,
   Columns3,
+  Github,
   Info,
   KeyRound,
   ListPlus,
@@ -120,6 +121,14 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     description: 'Send project events to external URLs, signed with a per-webhook secret.',
     icon: Webhook,
     resource: 'webhooks',
+    group: 'automation',
+  },
+  {
+    slug: 'github',
+    label: 'GitHub',
+    description: 'Close issues automatically when their pull requests merge on GitHub.',
+    icon: Github,
+    resource: 'integrations',
     group: 'automation',
   },
 ];

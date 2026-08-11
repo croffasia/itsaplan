@@ -587,6 +587,23 @@ export interface SubtaskAutomationSettings {
   closeSubtasks: boolean;
 }
 
+// Per-project GitHub integration settings. webhookId is the path segment of the
+// payload URL registered on the GitHub repository; secret signs its deliveries
+// and is null for members who may read but not edit integrations. onMergeColumnId
+// is where an issue closed by a merged PR moves (null = the first completed
+// state); onOpenColumnId is where an issue moves when a linked PR is opened
+// (null = no action). lastEventAt/lastEventRepo reflect the most recent delivery
+// received.
+export interface GithubSettings {
+  enabled: boolean;
+  webhookId: string;
+  secret: string | null;
+  onMergeColumnId: number | null;
+  onOpenColumnId: number | null;
+  lastEventAt: string | null;
+  lastEventRepo: string | null;
+}
+
 // Which optional sections a project shows. All on by default; turning one off
 // hides its navigation entry and its section, keeping the rows behind it.
 export interface ProjectFeatures {
@@ -1327,7 +1344,8 @@ export type ActivityAction =
   | 'checklist_item_remove'
   | 'field'
   | 'archived'
-  | 'restored';
+  | 'restored'
+  | 'github_pr';
 
 // One entry in an issue's timeline. kind selects which payload fields are set:
 // a 'comment' carries body; an 'activity' carries action/subject/fromText/toText.
@@ -2777,6 +2795,22 @@ export const api = {
     request<SubtaskAutomationSettings>(`/projects/${projectKey}/settings/subtasks`, {
       method: 'PATCH',
       body: JSON.stringify(input),
+    }),
+
+  // The GitHub integration (integrations: read to view, edit to change).
+  getGithubSettings: (projectKey: string) =>
+    request<GithubSettings>(`/projects/${projectKey}/settings/github`),
+  updateGithubSettings: (
+    projectKey: string,
+    patch: { enabled?: boolean; onMergeColumnId?: number | null; onOpenColumnId?: number | null },
+  ) =>
+    request<GithubSettings>(`/projects/${projectKey}/settings/github`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  regenerateGithubSecret: (projectKey: string) =>
+    request<GithubSettings>(`/projects/${projectKey}/settings/github/secret`, {
+      method: 'POST',
     }),
 
   // Notification provider credentials (danger_zone: read to view, edit to change).

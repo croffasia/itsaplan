@@ -17,6 +17,8 @@ export const qk = {
   // Configuration settings section).
   autoArchive: (projectKey: string) => ['autoArchive', projectKey] as const,
   subtaskAutomation: (projectKey: string) => ['subtaskAutomation', projectKey] as const,
+  // The project's GitHub integration settings (the GitHub settings section).
+  githubSettings: (projectKey: string) => ['githubSettings', projectKey] as const,
   // A project's notification delivery settings (the Notifications section).
   notificationSettings: (projectKey: string) => ['notificationSettings', projectKey] as const,
   notificationPreferences: (projectKey: string) => ['notificationPreferences', projectKey] as const,

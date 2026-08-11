@@ -143,6 +143,31 @@ export function useUpdateSubtaskAutomation(projectKey: string) {
   });
 }
 
+// GitHub section: the inbound webhook connection and its PR automations.
+export function useGithubSettingsQuery(projectKey: string) {
+  return useQuery({
+    queryKey: qk.githubSettings(projectKey),
+    queryFn: () => api.getGithubSettings(projectKey),
+  });
+}
+
+export function useUpdateGithubSettings(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: Parameters<typeof api.updateGithubSettings>[1]) =>
+      api.updateGithubSettings(projectKey, patch),
+    onSuccess: (data) => qc.setQueryData(qk.githubSettings(projectKey), data),
+  });
+}
+
+export function useRegenerateGithubSecret(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.regenerateGithubSecret(projectKey),
+    onSuccess: (data) => qc.setQueryData(qk.githubSettings(projectKey), data),
+  });
+}
+
 // General section: which optional sections the project shows. The current state
 // comes with the project payload (getProject), so a write only invalidates it —
 // the navigation and the sections themselves read it from there.

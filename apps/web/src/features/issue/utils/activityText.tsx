@@ -8,6 +8,7 @@ import {
   CircleDot,
   CirclePlus,
   FileText,
+  GitPullRequest,
   Link2,
   ListChecks,
   ListTree,
@@ -54,6 +55,7 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   field: Pencil,
   archived: Archive,
   restored: ArchiveRestore,
+  github_pr: GitPullRequest,
 };
 
 const fmtDate = (v: string | null) => (v ? formatDate(v) : '');
@@ -211,6 +213,25 @@ export function describeActivity(a: FeedItem): { line: ReactNode; popover?: stri
       return { line: 'archived the issue' };
     case 'restored':
       return { line: 'restored the issue' };
+    case 'github_pr': {
+      // fromText is "owner/repo#42", toText the PR's URL on GitHub.
+      const pr = a.toText ? (
+        <a
+          href={a.toText}
+          target="_blank"
+          rel="noreferrer"
+          className="text-foreground/70 underline underline-offset-2 hover:text-foreground"
+        >
+          {a.fromText}
+        </a>
+      ) : (
+        strong(a.fromText)
+      );
+      return {
+        line:
+          a.subject === 'merged' ? <>merged pull request {pr}</> : <>opened pull request {pr}</>,
+      };
+    }
     default:
       return { line: a.action };
   }

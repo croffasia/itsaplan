@@ -103,6 +103,21 @@ export async function assertPermission(
   }
 }
 
+// Whether the user may perform the action, without throwing. For field-level
+// shaping inside a handler that is already access-gated (e.g. redacting a
+// secret for callers who may read but not edit).
+export async function checkPermission(
+  projectId: number,
+  user: AuthUser | undefined | null,
+  resource: PermissionResource,
+  action: PermissionAction,
+): Promise<boolean> {
+  if (!user) return false;
+  const ctx = await getMemberContext(projectId, user.id);
+  if (!ctx) return false;
+  return ctx.role === 'owner' || hasPermission(ctx.permissions, resource, action);
+}
+
 // Resolves the :projectKey path param to a project and asserts the given
 // permission in one step. Wrapped by the permission guard. Throws 404 for an
 // unknown project and 403 when the permission is missing.

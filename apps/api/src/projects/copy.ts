@@ -22,6 +22,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { iso } from '../shared/lib';
 import { defaultMemberPermissions } from '../shared/permissions';
 import { DEFAULT_COLUMNS, type ProjectRow } from './store';
+import { GITHUB_SETTING_KEY } from '../github/store';
 import { listAgents, createAgent, type NewAgentInput } from '../ai-agents/store';
 import {
   listSkills,
@@ -527,13 +528,18 @@ export async function copyProject(
 
     // Project settings key/value rows (the Configuration section's subtask
     // automations and auto-archive thresholds, and any other project-scoped
-    // setting). Copied verbatim.
+    // setting). Copied verbatim, except the GitHub integration: its value holds
+    // the webhook secret and routing id (the copy's owner must not receive the
+    // source's credential, and a duplicated id would make inbound routing
+    // ambiguous) plus column ids of the source project. The copy starts
+    // unconfigured instead.
     if (inc.configuration) {
       const settingRows = await tx
         .select()
         .from(projectSetting)
         .where(eq(projectSetting.projectId, sourceProjectId));
       for (const s of settingRows) {
+        if (s.key === GITHUB_SETTING_KEY) continue;
         await tx.insert(projectSetting).values({ projectId: proj.id, key: s.key, value: s.value });
       }
     }

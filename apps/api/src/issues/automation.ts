@@ -3,6 +3,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { getSubtaskAutomationSettings } from '../projects/store';
 import { listSubtasks } from './subtasks';
 import { updateIssue, type IssueRow } from './store';
+import type { ActivityActor } from './activity';
 
 // The subtask automations a column change triggers, both off unless the project
 // turns them on (projects/store.ts). A closed issue is one sitting in a column
@@ -18,7 +19,7 @@ const CLOSED_STATE_TYPES = ['completed', 'canceled'];
 
 export async function applySubtaskAutomation(
   after: IssueRow,
-  actorUserId?: string | null,
+  actorUserId?: ActivityActor,
 ): Promise<void> {
   const settings = await getSubtaskAutomationSettings(after.projectId);
   if (!settings.completeParent && !settings.closeSubtasks) return;
@@ -38,7 +39,7 @@ export async function applySubtaskAutomation(
 async function completeParent(
   parentId: number,
   subtask: IssueRow,
-  actorUserId?: string | null,
+  actorUserId?: ActivityActor,
 ): Promise<void> {
   const siblingColumnIds = (await listSubtasks(parentId))
     .filter((s) => !s.archived && s.id !== subtask.id)
@@ -52,7 +53,7 @@ async function completeParent(
 }
 
 // Moves the issue's still-open subtasks into the column it was just closed in.
-async function closeSubtasks(parent: IssueRow, actorUserId?: string | null): Promise<void> {
+async function closeSubtasks(parent: IssueRow, actorUserId?: ActivityActor): Promise<void> {
   const subtasks = (await listSubtasks(parent.id)).filter((s) => !s.archived);
   const closed = await closedColumnIds(subtasks.map((s) => s.columnId));
   for (const subtask of subtasks)

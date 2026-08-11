@@ -341,17 +341,6 @@ describe('initiatives', () => {
       expect(issueRow?.issueId).toBe(issue.id);
       expect(issueRow?.issueIdentifier).toMatch(/^MKT-\d+$/);
     });
-
-    it('exposes a change marker that moves after an edit', async () => {
-      const { asOwner } = await setup();
-      const initiative = (await createInitiative(asOwner, { title: 'Q3' })).data!;
-      const before = (await asOwner.initiatives({ initiativeId: initiative.id }).rev.get()).data!
-        .rev;
-      await asOwner.initiatives({ initiativeId: initiative.id }).patch({ status: 'active' });
-      const after = (await asOwner.initiatives({ initiativeId: initiative.id }).rev.get()).data!
-        .rev;
-      expect(after).not.toBe(before);
-    });
   });
 
   describe('access', () => {

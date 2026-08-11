@@ -51,7 +51,7 @@ export async function getMembership(projectId: number, userId: string): Promise<
   return rows[0] ? (rows[0].role as MemberRole) : null;
 }
 
-function toMemberContext(role: MemberRole, rolePermissions: unknown): MemberContext {
+export function toMemberContext(role: MemberRole, rolePermissions: unknown): MemberContext {
   if (role === 'owner') return { role, permissions: fullPermissions() };
   return {
     role,

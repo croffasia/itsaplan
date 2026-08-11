@@ -1316,3 +1316,25 @@ export const notification = pgTable(
       .where(sql`${t.readAt} IS NULL`),
   ],
 );
+
+// Change markers for live refresh: one counter per scope, bumped by the triggers
+// in migration 0070 on every write to the tables that scope covers. A scope names
+// what a screen watches — 'board:<projectId>', 'issue:<issueId>',
+// 'initiative:<initiativeId>', 'inbox:<projectId>:<userId>'. Clients poll the
+// counters they watch and refetch the matching queries when one moves; the value
+// itself is opaque to them, only equality matters.
+//
+// project_id carries no foreign key on purpose. Deleting a project cascades into
+// its issues, and each of those deletes fires a trigger that inserts a row here
+// for a project that is already gone — a foreign key would abort the delete. The
+// rows are removed by the trigger on project instead.
+export const revision = pgTable(
+  'revision',
+  {
+    scope: text('scope').primaryKey(),
+    projectId: integer('project_id').notNull(),
+    rev: bigint('rev', { mode: 'number' }).notNull().default(0),
+  },
+  // Backs both the project cleanup and the membership join the read does.
+  (t) => [index('revision_project_idx').on(t.projectId)],
+);

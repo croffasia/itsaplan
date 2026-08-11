@@ -6,7 +6,6 @@ import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
 import {
   listNotifications,
-  notificationsRev,
   unreadCount,
   setNotificationRead,
   markAllRead,
@@ -106,25 +105,20 @@ export const notificationRoutes = new Elysia({
     },
   )
 
-  // Cheap change marker for the inbox: clients poll this and refetch the list and
-  // badge only when it moves. Also returns the current unread count for the badge.
+  // The badge count. Refetched when the inbox scope of GET /sync/rev moves.
   .get(
-    '/notifications/rev',
+    '/notifications/unread',
     async ({ user, query }) => {
       const userId = requireUser(user).id;
       const projectId = query.projectId ? Number(query.projectId) : undefined;
-      const [rev, unread] = await Promise.all([
-        notificationsRev(userId, projectId),
-        unreadCount(userId, projectId),
-      ]);
-      return { rev, unread };
+      return { unread: await unreadCount(userId, projectId) };
     },
     {
       query: t.Object({
-        projectId: t.Optional(t.String({ description: 'Scope the marker to one project.' })),
+        projectId: t.Optional(t.String({ description: 'Scope the count to one project.' })),
       }),
-      response: { 200: t.Object({ rev: t.String(), unread: t.Number() }), 401: ErrorResponse },
-      detail: { summary: 'Get inbox revision and unread count' },
+      response: { 200: t.Object({ unread: t.Number() }), 401: ErrorResponse },
+      detail: { summary: 'Get unread notification count' },
     },
   )
 

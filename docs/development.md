@@ -70,3 +70,9 @@ docker compose -f docker-compose.test.yml run --rm api-test
 `run` starts the dependencies, runs the suite, and exits with its code.
 
 `apps/api` has the integration suite; `apps/api/AGENTS.md` covers how to write one.
+
+## Internals
+
+Descriptions of the mechanisms that span several apps live in [`docs/dev/`](dev/):
+
+- [The revision engine](dev/revision-engine.md) — how an open screen stays current.

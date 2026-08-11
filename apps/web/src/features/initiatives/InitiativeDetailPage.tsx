@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useShell } from '@/context/shellContext';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
-import { api } from '@/lib/api';
+import { revScope } from '@/utils/revScopes';
 import { initiativePath, type InitiativeTab } from '@/utils/paths';
 import { qk } from '@/services/queryKeys';
 import { useInitiativeQuery } from '@/services/initiatives.service';
@@ -26,18 +26,16 @@ export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: Initi
   const query = useInitiativeQuery(initiativeId);
   const projectKey = project?.project.key ?? '';
 
-  // Poll the initiative's change marker: refetch the initiative (progress/health),
-  // its feed, and the board issues when its linked issues or its own fields change.
+  // Refetch the initiative (progress/health), its feed, and the board issues when
+  // its linked issues or its own fields change.
   useLiveRefresh({
-    revKey: ['rev', 'initiative', initiativeId ?? 0],
-    fetchRev: () => api.getInitiativeRev(initiativeId!),
+    scope: initiativeId != null ? revScope.initiative(initiativeId) : null,
     targets: [
       qk.initiative(initiativeId ?? 0),
       qk.initiativeFeed(initiativeId ?? 0),
       qk.boardIssues(projectKey),
     ],
-    intervalMs: 12000,
-    enabled: initiativeId != null && !!projectKey,
+    enabled: !!projectKey,
   });
 
   if (!project || initiativeId == null) return null;

@@ -83,6 +83,7 @@ export const app = new Elysia()
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
           { name: 'Note boards', description: 'Freeform canvases of sticky notes' },
           { name: 'Notifications', description: "The session user's inbox notifications" },
+          { name: 'Sync', description: 'Change markers a client polls for live refresh' },
           {
             name: 'Telegram',
             description: "The session user's linked Telegram account",

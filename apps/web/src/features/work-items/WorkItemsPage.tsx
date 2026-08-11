@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
-import { api, type BoardIssues } from '@/lib/api';
+import { revScope } from '@/utils/revScopes';
 import { qk } from '@/services/queryKeys';
 import { buildGroups, groupIssues } from '@/utils/project';
 import {
@@ -41,24 +40,17 @@ export default function WorkItemsPage() {
     useShell();
   const { can } = usePermissions();
   const features = useProjectFeatures();
-  const qc = useQueryClient();
   const [timelineCollapseState, setTimelineCollapseState] = useState<TimelineCollapseState>({
     scope: '',
     groups: new Set(),
   });
 
-  // Live board: poll the board issues' change marker and refetch them when it
-  // moves, so another user's create/move/edit shows without a manual reload. On
-  // mount the first marker is compared against the cached issues' own marker, so
-  // entering the section with a stale cache refetches at once.
+  // Live board: refetch the issues when anything on the board changes, so another
+  // user's create/move/edit shows without a manual reload.
   const projectKey = project?.project.key ?? '';
   useLiveRefresh({
-    revKey: ['rev', 'boardIssues', projectKey],
-    fetchRev: () => api.getBoardIssuesRev(projectKey),
+    scope: project ? revScope.board(project.project.id) : null,
     targets: [qk.boardIssues(projectKey)],
-    intervalMs: 12000,
-    enabled: !!projectKey,
-    getCachedRev: () => qc.getQueryData<BoardIssues>(qk.boardIssues(projectKey))?.rev ?? null,
   });
 
   if (!project || !filteredProject) return null;

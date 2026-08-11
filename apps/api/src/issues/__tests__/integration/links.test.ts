@@ -261,29 +261,6 @@ describe('issue links', () => {
       const res = await asOwner.projects({ projectKey: 'OPS' }).issues.board.get();
       expect(res.data!.issues.find((row) => row.id === foreign.id)!.links).toEqual([]);
     });
-
-    it('moves the change marker when a relation is added', async () => {
-      const { asOwner, columnId } = await setupProject();
-      const { first, second } = await twoIssues(asOwner, columnId);
-      const board = asOwner.projects({ projectKey: 'MKT' }).issues.board;
-      const before = (await board.get()).data!.rev;
-
-      await link(asOwner, first.id, second.id, 'blocks');
-
-      expect((await board.get()).data!.rev).not.toBe(before);
-    });
-
-    it('moves the change marker when a relation is removed', async () => {
-      const { asOwner, columnId } = await setupProject();
-      const { first, second } = await twoIssues(asOwner, columnId);
-      const created = (await link(asOwner, first.id, second.id, 'blocks')).data!;
-      const board = asOwner.projects({ projectKey: 'MKT' }).issues.board;
-      const before = (await board.get()).data!.rev;
-
-      await unlink(asOwner, first.id, created.id);
-
-      expect((await board.get()).data!.rev).not.toBe(before);
-    });
   });
 
   describe('remove', () => {

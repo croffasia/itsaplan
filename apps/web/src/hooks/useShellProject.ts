@@ -28,8 +28,8 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
   // The board loads as two queries: the scaffold (columns/types/labels/fields/
-  // viewer) and the issues + change marker. They are composed into one project
-  // object here so every child reads project.issues / project.rev as before.
+  // viewer) and the issues. They are composed into one project object here so every
+  // child reads project.issues as before.
   const projectQuery = useProjectQuery(projectKey);
   const boardIssuesQuery = useBoardIssuesQuery(projectKey);
   const scaffold = projectQuery.data ?? null;
@@ -49,7 +49,6 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
         ? {
             ...scaffold,
             issues: boardIssuesQuery.data?.issues ?? [],
-            rev: boardIssuesQuery.data?.rev ?? '',
             plannedCycles: cyclesQuery.data ?? [],
           }
         : null,

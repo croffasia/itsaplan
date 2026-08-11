@@ -1,62 +1,29 @@
 import { useEffect, useRef } from 'react';
-import { useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
+import type { QueryKey } from '@tanstack/react-query';
+import { useSyncSubscribe, type ScopeWatcher } from '@/context/syncContext';
 
-// Cheap live refresh. Polls a small "change marker" (rev) on an interval and, when
-// the marker changes, invalidates the given heavy queries so they refetch once. The
-// frequent request is tiny (a couple of columns); the full list/detail is fetched
-// only on an actual change. Polling pauses while the tab is unfocused (TanStack's
-// refetchIntervalInBackground defaults to false) and stops when this hook unmounts,
-// so nothing runs for a screen that is closed.
+// Keeps a screen live: while it is mounted, the given queries are refetched
+// whenever the scope's change marker moves. The polling itself belongs to
+// SyncProvider — every screen shares one request — so a call site only names what
+// it watches (see @/utils/revScopes) and what to refresh.
 export function useLiveRefresh(opts: {
-  // Query key for the rev poll itself — distinct from the heavy query's key.
-  revKey: QueryKey;
-  // Fetches the current marker.
-  fetchRev: () => Promise<{ rev: string }>;
-  // Heavy query keys to invalidate when the marker changes.
+  scope: string | null;
   targets: QueryKey[];
-  intervalMs: number;
   enabled?: boolean;
-  // Returns the marker embedded in the cached heavy data, or null if none is
-  // cached. When given, the first observed marker is compared against it: a
-  // stale cache (cached marker != live marker) refetches immediately on mount
-  // instead of waiting for the next change. Without it, the first marker is
-  // skipped (the cache is assumed fresh on mount).
-  getCachedRev?: () => string | null;
 }) {
-  const { revKey, fetchRev, targets, intervalMs, enabled = true, getCachedRev } = opts;
-  const qc = useQueryClient();
-  const lastRev = useRef<string | null>(null);
+  const { scope, targets, enabled = true } = opts;
+  const subscribe = useSyncSubscribe();
+  const watcher = useRef<ScopeWatcher>({ scope: scope ?? '', targets });
 
-  const { data } = useQuery({
-    queryKey: revKey,
-    queryFn: fetchRev,
-    enabled,
-    refetchInterval: intervalMs,
-    // Never served as fresh, but kept for one interval: with gcTime 0 a remount in
-    // the same tick drops the in-flight read and fires a second one.
-    staleTime: 0,
-    gcTime: intervalMs,
+  // The targets are rebuilt on every render; the registered watcher is one object,
+  // so it carries the latest ones.
+  useEffect(() => {
+    watcher.current.targets = targets;
   });
 
-  const rev = data?.rev ?? null;
   useEffect(() => {
-    if (rev == null) return;
-    // First observed value. Compare against the marker in the cached heavy data
-    // when available: if the cache is stale (or absent), invalidate so mount
-    // gets a fresh read; otherwise assume the cache is fresh and just record it.
-    if (lastRev.current === null) {
-      lastRev.current = rev;
-      const cachedRev = getCachedRev?.();
-      if (cachedRev != null && cachedRev !== rev) {
-        for (const key of targets) void qc.invalidateQueries({ queryKey: key });
-      }
-      return;
-    }
-    if (rev !== lastRev.current) {
-      lastRev.current = rev;
-      for (const key of targets) void qc.invalidateQueries({ queryKey: key });
-    }
-    // targets/qc are stable enough; the marker value is the real trigger.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [rev]);
+    if (!enabled || !scope) return;
+    watcher.current.scope = scope;
+    return subscribe(watcher.current);
+  }, [scope, enabled, subscribe]);
 }

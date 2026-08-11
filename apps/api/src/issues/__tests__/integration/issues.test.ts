@@ -664,11 +664,8 @@ describe('issues', () => {
     });
   });
 
-  // GET /issues/:issueId/rev is the cheap change marker clients poll for live
-  // refresh: an opaque string that must move whenever the issue's detail or feed
-  // changes (an edit or a new timeline entry) and stay put otherwise.
   describe('board', () => {
-    it('returns the active issues and a string change marker for a member', async () => {
+    it('returns the active issues for a member', async () => {
       const { asOwner, columnId } = await setupProject();
       await createIssue(asOwner, columnId, { title: 'Task' });
 
@@ -676,34 +673,6 @@ describe('issues', () => {
       expect(res.status).toBe(200);
       expect(res.data?.issues).toHaveLength(1);
       expect(res.data?.issues[0]).toMatchObject({ title: 'Task' });
-      expect(typeof res.data?.rev).toBe('string');
-    });
-
-    it('changes the marker when an issue is added', async () => {
-      const { asOwner, columnId } = await setupProject();
-      const board = asOwner.projects({ projectKey: 'MKT' }).issues.board;
-      const before = (await board.get()).data!.rev;
-
-      await createIssue(asOwner, columnId, { title: 'Task' });
-
-      expect((await board.get()).data!.rev).not.toBe(before);
-    });
-
-    it('changes the marker when an initiative is added', async () => {
-      const { asOwner } = await setupProject();
-      const board = asOwner.projects({ projectKey: 'MKT' }).issues.board;
-      const before = (await board.get()).data!.rev;
-
-      await asOwner.projects({ projectKey: 'MKT' }).initiatives.post({ title: 'Q3 Launch' });
-
-      expect((await board.get()).data!.rev).not.toBe(before);
-    });
-
-    it('exposes the same marker through the rev endpoint', async () => {
-      const { asOwner } = await setupProject();
-      const board = (await asOwner.projects({ projectKey: 'MKT' }).issues.board.get()).data!;
-      const rev = (await asOwner.projects({ projectKey: 'MKT' }).issues.rev.get()).data!.rev;
-      expect(board.rev).toBe(rev);
     });
 
     it('denies a non-member with 403', async () => {
@@ -711,51 +680,6 @@ describe('issues', () => {
       const outsider = authedApi((await signUpTestUser()).cookie);
       const res = await outsider.projects({ projectKey: 'MKT' }).issues.board.get();
       expect(res.status).toBe(403);
-    });
-  });
-
-  describe('rev', () => {
-    it('returns a change marker for the issue', async () => {
-      const { asOwner, columnId } = await setupProject();
-      const issue = (await createIssue(asOwner, columnId)).data!;
-
-      const res = await asOwner.issues({ issueId: issue.id }).rev.get();
-      expect(res.status).toBe(200);
-      expect(typeof res.data?.rev).toBe('string');
-    });
-
-    it('changes the marker after the issue is updated', async () => {
-      const { asOwner, columnId } = await setupProject();
-      const issue = (await createIssue(asOwner, columnId)).data!;
-      const before = (await asOwner.issues({ issueId: issue.id }).rev.get()).data!.rev;
-
-      await asOwner.issues({ issueId: issue.id }).patch({ title: 'Renamed' });
-
-      const after = (await asOwner.issues({ issueId: issue.id }).rev.get()).data!.rev;
-      expect(after).not.toBe(before);
-    });
-
-    it('changes the marker after a comment is added', async () => {
-      const { asOwner, columnId } = await setupProject();
-      const issue = (await createIssue(asOwner, columnId)).data!;
-      const before = (await asOwner.issues({ issueId: issue.id }).rev.get()).data!.rev;
-
-      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'note' });
-
-      const after = (await asOwner.issues({ issueId: issue.id }).rev.get()).data!.rev;
-      expect(after).not.toBe(before);
-    });
-
-    it('returns 404 for a missing issue', async () => {
-      const { asOwner } = await setupProject();
-      const res = await asOwner.issues({ issueId: 999999 }).rev.get();
-      expect(res.status).toBe(404);
-    });
-
-    it('rejects a non-numeric issue id', async () => {
-      const { asOwner } = await setupProject();
-      const res = await asOwner.issues({ issueId: 'abc' as unknown as number }).rev.get();
-      expect(res.status).toBe(400);
     });
   });
 
@@ -1139,7 +1063,6 @@ describe('issues', () => {
       expect((await outsider.issues({ issueId: issue.id }).get()).status).toBe(403);
       expect((await outsider.issues({ issueId: issue.id }).patch({ title: 'X' })).status).toBe(403);
       expect((await outsider.issues({ issueId: issue.id }).delete()).status).toBe(403);
-      expect((await outsider.issues({ issueId: issue.id }).rev.get()).status).toBe(403);
     });
   });
 });

@@ -148,8 +148,8 @@ export async function removeAttachmentEmbeds(issueId: number, publicId: string):
     }
   }
 
-  // issueRev is derived from issue.updatedAt; bump it so an open detail view
-  // refetches the cleaned description and field values.
+  // Stripping an embed is an edit of the issue, and sorting by "recently updated"
+  // has to place it accordingly.
   if (changed) {
     await db
       .update(issue)

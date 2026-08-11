@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { toast } from 'sonner';
 import {
-  api,
   type Attachment,
   type ProjectDetail,
   type IssueDetail as IssueDetailRow,
@@ -11,6 +10,7 @@ import {
 } from '@/lib/api';
 import { useIssueQuery, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
+import { revScope } from '@/utils/revScopes';
 import { qk } from '@/services/queryKeys';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
@@ -48,14 +48,11 @@ export function useIssueDetail(
   const uploadAttachment = useUploadAttachment();
   const [descEditor, setDescEditor] = useState<Editor | null>(null);
 
-  // Live detail: poll the issue's change marker and refetch the issue + feed when it
-  // moves, so edits and new comments (including an agent's reply to a mention) show
-  // without a manual reload.
+  // Live detail: refetch the issue and its feed on any change, so edits and new
+  // comments (including an agent's reply to a mention) show without a manual reload.
   useLiveRefresh({
-    revKey: ['rev', 'issue', issueId],
-    fetchRev: () => api.getIssueRev(issueId),
+    scope: revScope.issue(issueId),
     targets: [qk.issue(issueId), qk.feed(issueId)],
-    intervalMs: 5000,
   });
 
   // Upload a file dropped onto a markdown editor. Returns the attachment so the

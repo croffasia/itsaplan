@@ -382,8 +382,7 @@ export async function deleteInitiative(id: number): Promise<void> {
 }
 
 // Replaces the initiative's full label set (not an add/remove diff) and logs the
-// added/removed labels to the activity feed. Bumps updated_at so initiativeRev
-// moves.
+// added/removed labels to the activity feed.
 async function setInitiativeLabels(
   projectId: number,
   initiativeId: number,
@@ -421,20 +420,4 @@ async function setInitiativeLabels(
   for (const labelId of removed)
     events.push({ action: 'label_remove', fromText: names.get(labelId) ?? null });
   await recordActivity(initiativeId, events, actorUserId);
-}
-
-// One initiative's change marker: moves on any initiative-level event, any
-// activity of a linked issue, and any in-place edit (updated_at). Clients poll
-// this and refetch the detail/feed only when it changes.
-export async function initiativeRev(id: number): Promise<string> {
-  const [row] = await db
-    .select({
-      a: sql<
-        number | null
-      >`(select max(id) from issue_activity where initiative_id = ${id} or issue_id in (select id from issue where initiative_id = ${id}))`,
-      u: sql<string>`${initiative.updatedAt}::text`,
-    })
-    .from(initiative)
-    .where(eq(initiative.id, id));
-  return row ? `${row.a ?? 0}:${row.u}` : '0:';
 }

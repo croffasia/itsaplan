@@ -53,6 +53,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
 
 - Prefer Server Components and server-side data fetching; reach for client components only for
   interactivity/hooks.
+- A screen that has to stay live calls `useLiveRefresh({ scope, targets })` with a scope from
+  `@/utils/revScopes` — never its own polling. `SyncProvider` polls every registered scope in one
+  request and invalidates the targets of the ones that moved.
 - Call the backend over HTTP at the API origin. `lib/api.ts` reads `NEXT_PUBLIC_API_URL`
   from `apps/web/.env` (same value as the root `API_URL`), inlined at build time.
 - Add shadcn components with `bunx shadcn@latest add <name>` (config in `components.json`).

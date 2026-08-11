@@ -315,23 +315,6 @@ export async function unreadCount(userId: string, projectId?: number): Promise<n
   return row?.n ?? 0;
 }
 
-// Cheap change marker for live refresh: total count, max id, and unread count,
-// optionally scoped to one project. It moves on a new notification (max id), a
-// delete (total), and a read/unread toggle (unread).
-export async function notificationsRev(userId: string, projectId?: number): Promise<string> {
-  const conds = [eq(notification.userId, userId)];
-  if (projectId != null) conds.push(eq(notification.projectId, projectId));
-  const [row] = await db
-    .select({
-      total: sql<number>`count(*)::int`,
-      maxId: sql<number>`coalesce(max(${notification.id}), 0)::int`,
-      unread: sql<number>`count(*) filter (where ${notification.readAt} is null)::int`,
-    })
-    .from(notification)
-    .where(and(...conds));
-  return `${row?.total ?? 0}:${row?.maxId ?? 0}:${row?.unread ?? 0}`;
-}
-
 // Marks one of the user's notifications read or unread. Returns false if no such
 // notification belongs to the user.
 export async function setNotificationRead(

@@ -22,6 +22,31 @@ See root `AGENTS.md` for monorepo-wide rules.
 Migrations only — never `drizzle-kit push`. Every schema change goes through a
 committed migration in `drizzle/`.
 
+## Revision engine
+
+`revision` holds one counter per scope — the change markers the clients poll through
+`GET /sync/rev`. Nothing in the application writes them: the triggers in
+`drizzle/0070_revision_triggers.sql` do, so a write moves the marker whichever
+process it came from.
+
+To make a new table move an existing scope, add one line to a migration:
+
+```sql
+CREATE TRIGGER issue_reaction_rev AFTER INSERT OR UPDATE OR DELETE ON issue_reaction
+  FOR EACH ROW EXECUTE FUNCTION rev_issue_child('issue_id', 'detail');
+```
+
+`rev_issue_child` takes the column holding the issue id, and `board` or `detail` —
+whether the board shows the change or only the issue screen does. Tables that reach
+their owner differently get their own function next to the ones in 0070; keep the
+order in which they take the scopes (board, then issue, then initiative, and two of
+one kind in id order), which is what stops two writers from deadlocking on the
+counters.
+
+A new scope kind also needs its entry in `apps/api/src/sync/store.ts` — its name and
+the resource a watcher must be allowed to read — and the mirror in
+`apps/web/src/utils/revScopes.ts`.
+
 ## Conventions
 
 - Explicit snake_case column names (`text("created_at")`) — matches the generated auth schema; no `casing` option.

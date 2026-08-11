@@ -1,10 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { api, type Notification, type ProjectDetail } from '@/lib/api';
+import { type Notification, type ProjectDetail } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { qk } from '@/services/queryKeys';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
+import { revScope } from '@/utils/revScopes';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { useIsMobile } from '@/hooks/use-mobile';
 import InboxToolbar from './InboxToolbar';
@@ -38,11 +38,10 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
 
   const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
 
+  // The unread count refreshes itself through useInboxUnread; this covers the list.
   useLiveRefresh({
-    revKey: ['rev', 'notifications', projectKey],
-    fetchRev: () => api.getNotificationsRev(projectId),
-    targets: [['notifications', projectKey], qk.notificationsUnread(projectKey)],
-    intervalMs: 10000,
+    scope: revScope.inbox(projectId),
+    targets: [['notifications', projectKey]],
   });
 
   const onSelect = (n: Notification) => {

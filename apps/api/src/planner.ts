@@ -33,6 +33,7 @@ import { notificationSettingsRoutes } from './notification-settings/routes';
 import { notificationPreferenceRoutes } from './notification-preferences/routes';
 import { userPreferenceRoutes } from './user-preferences/routes';
 import { telegramRoutes } from './telegram/routes';
+import { syncRoutes } from './sync/routes';
 
 // The planner API: projects and their columns, issue types, labels, AI agents,
 // custom fields, issues, attachments, saved views, and actions. Mounted on the
@@ -101,5 +102,6 @@ export const planner = new Elysia({ name: 'planner' })
   .use(notificationPreferenceRoutes)
   .use(userPreferenceRoutes)
   .use(telegramRoutes)
+  .use(syncRoutes)
   .use(settingsRoutes)
   .use(godRoutes);

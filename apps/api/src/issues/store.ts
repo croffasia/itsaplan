@@ -4,7 +4,6 @@ import {
   issue,
   issueActivity,
   issueLabel,
-  issueLink,
   label,
   projectColumn,
   issueType,
@@ -1038,8 +1037,8 @@ export async function setIssueLabels(
   const added = next.filter((x) => !before.includes(x));
   const removed = before.filter((x) => !next.includes(x));
 
-  // Labels show on the board card, so a label change must bump the issue's
-  // updated_at: the board's change marker (projectBoardRev) is derived from it.
+  // A label change is an edit of the issue, and sorting by "recently updated" has
+  // to place it accordingly.
   if (added.length > 0 || removed.length > 0) {
     await db
       .update(issue)
@@ -1181,76 +1180,6 @@ export async function bulkDeleteIssues(
     if (rows) attachments.push(...rows);
   }
   return { deleted: valid.length, attachments };
-}
-
-// --- Change markers (cheap watermarks for live refresh) --------------------------
-// Opaque strings that change whenever the corresponding view's data changes.
-// Clients poll these cheaply and refetch the heavy payload only when the marker
-// moved, so a live board / open issue stays current without constant full reads.
-
-// The board's marker: changes when any issue, initiative or cycle in the project
-// is created, updated, or deleted. Issue label changes bump updated_at too (see
-// setIssueLabels). Initiative and cycle metadata is part of the work-items board
-// payload — each issue carries the name of the one it belongs to, so a rename has
-// to move the marker. Links are part of it as well and change no issue's
-// updated_at, so they carry their own count and highest id: adding one raises the
-// id, removing one lowers the count.
-export async function projectBoardRev(projectId: number): Promise<string> {
-  const [row] = await db
-    .select({
-      n: sql<number>`count(*)`,
-      m: sql<string | null>`max(${issue.updatedAt})::text`,
-      initiativeCount: sql<number>`(select count(*) from ${initiative} where ${initiative.projectId} = ${projectId})`,
-      initiativeMax: sql<
-        string | null
-      >`(select max(${initiative.updatedAt})::text from ${initiative} where ${initiative.projectId} = ${projectId})`,
-      cycleCount: sql<number>`(select count(*) from ${cycle} where ${cycle.projectId} = ${projectId})`,
-      cycleMax: sql<
-        string | null
-      >`(select max(${cycle.updatedAt})::text from ${cycle} where ${cycle.projectId} = ${projectId})`,
-    })
-    // Only active issues count: archiving one (manual or the worker's sweep) drops
-    // the count, which moves the marker and makes the board refetch it away.
-    .from(issue)
-    .where(and(eq(issue.projectId, projectId), isNull(issue.archivedAt)));
-
-  // Separate from the issue aggregate: joining the links onto it would multiply
-  // the issue rows, and a subquery over both tables cannot tell the two `id`
-  // columns apart (Drizzle writes an unqualified column into a raw fragment).
-  const [links] = await db
-    .select({ count: sql<number>`count(*)`, max: sql<number | null>`max(${issueLink.id})` })
-    .from(issueLink)
-    .where(
-      inArray(
-        issueLink.sourceIssueId,
-        db.select({ id: issue.id }).from(issue).where(eq(issue.projectId, projectId)),
-      ),
-    );
-
-  return [
-    row?.n ?? 0,
-    row?.m ?? '',
-    row?.initiativeCount ?? 0,
-    row?.initiativeMax ?? '',
-    row?.cycleCount ?? 0,
-    row?.cycleMax ?? '',
-    links?.count ?? 0,
-    links?.max ?? '',
-  ].join(':');
-}
-
-// One issue's marker: changes on any edit or new timeline entry (comment or
-// activity), including an agent's reply. max(activity.id) covers the feed and every
-// logged edit; updated_at covers in-place field edits.
-export async function issueRev(issueId: number): Promise<string> {
-  const [row] = await db
-    .select({
-      a: sql<number | null>`(select max(id) from issue_activity where issue_id = ${issueId})`,
-      u: sql<string>`${issue.updatedAt}::text`,
-    })
-    .from(issue)
-    .where(eq(issue.id, issueId));
-  return row ? `${row.a ?? 0}:${row.u}` : '0:';
 }
 
 // --- Custom field values on an issue ---------------------------------------------

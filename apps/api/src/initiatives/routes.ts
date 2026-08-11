@@ -14,7 +14,6 @@ import {
   createInitiative,
   updateInitiative,
   deleteInitiative,
-  initiativeRev,
 } from './store';
 import { listFeed } from './activity';
 
@@ -366,22 +365,5 @@ export const initiativeRoutes = new Elysia({
         description: "Get an initiative's activity feed by its numeric id.",
         ...mcpTool('list_initiative_activity'),
       },
-    },
-  )
-
-  .get(
-    '/initiatives/:initiativeId/rev',
-    async ({ params }) => ({ rev: await initiativeRev(params.initiativeId) }),
-    {
-      params: initiativeParams,
-      initiative: 'read',
-      response: {
-        200: t.Object({ rev: t.String() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
-      detail: { summary: 'Get initiative revision' },
     },
   );

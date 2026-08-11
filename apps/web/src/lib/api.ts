@@ -1460,19 +1460,15 @@ export interface BoardIssue extends Issue {
   subtaskCount: number;
 }
 
-// The board's issues plus its change marker, returned by getBoardIssues. Polled
-// for live refresh (rev matches getBoardIssuesRev, and moves on a link change
-// too — a relation changes no issue's updatedAt).
 export interface BoardIssues {
   issues: BoardIssue[];
-  rev: string;
 }
 
 // The scaffold composed with its issues and the project's unfinished cycles, as
-// the Shell assembles it and passes it down. Downstream reads project.issues /
-// project.rev off this composite. `plannedCycles` is empty while the Cycles section
-// is off, on a public share (whose bundle carries no cycle list), and for a viewer
-// who may not read cycles.
+// the Shell assembles it and passes it down. Downstream reads project.issues off
+// this composite. `plannedCycles` is empty while the Cycles section is off, on a
+// public share (whose bundle carries no cycle list), and for a viewer who may not
+// read cycles.
 export type ProjectDetail = ProjectScaffold & BoardIssues & { plannedCycles: Cycle[] };
 
 export interface IssueDetail extends Issue {
@@ -2017,13 +2013,13 @@ export const api = {
     request<void>(`/projects/${projectKey}`, { method: 'DELETE' }),
   // The board scaffold (no issues). The issues come from getBoardIssues.
   getProject: (projectKey: string) => request<ProjectScaffold>(`/projects/${projectKey}`),
-  // The board's issues, their relations and the change marker.
+  // The board's issues and their relations.
   getBoardIssues: (projectKey: string) =>
     request<BoardIssues>(`/projects/${projectKey}/issues/board`),
-  // Cheap change marker for the board issues — polled for live refresh, refetch
-  // getBoardIssues only when rev changes.
-  getBoardIssuesRev: (projectKey: string) =>
-    request<{ rev: string }>(`/projects/${projectKey}/issues/rev`),
+  // The change markers of every scope the client is watching, in one request.
+  // Polled by the sync provider; see utils/revScopes.
+  getRevs: (scopes: string[]) =>
+    request<{ revs: Record<string, string> }>(`/sync/rev?scopes=${scopes.join(',')}`),
 
   createColumn: (
     projectKey: string,
@@ -2165,8 +2161,6 @@ export const api = {
   // Resolve an issue by its project-scoped number (the human "42" in the URL).
   getIssueBySeq: (projectKey: string, seq: number) =>
     request<IssueWithWatchers>(`/projects/${projectKey}/issues/${seq}`),
-  // Cheap change marker for an issue's detail + feed — polled for live refresh.
-  getIssueRev: (id: number) => request<{ rev: string }>(`/issues/${id}/rev`),
   updateIssue: (id: number, patch: IssuePatch) =>
     request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   // An issue that has subtasks needs a disposition saying what happens to them;
@@ -2329,8 +2323,6 @@ export const api = {
   updateInitiative: (id: number, patch: InitiativePatch) =>
     request<Initiative>(`/initiatives/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteInitiative: (id: number) => request<void>(`/initiatives/${id}`, { method: 'DELETE' }),
-  // Cheap change marker for an initiative's detail + feed — polled for live refresh.
-  getInitiativeRev: (id: number) => request<{ rev: string }>(`/initiatives/${id}/rev`),
   listInitiativeFeed: (id: number, params: { cursor?: FeedCursor | null; limit?: number } = {}) => {
     const q = new URLSearchParams();
     if (params.limit) q.set('limit', String(params.limit));
@@ -2835,10 +2827,9 @@ export const api = {
     if (f.includeSnoozed) q.set('includeSnoozed', 'true');
     return request<NotificationPage>(`/notifications?${q.toString()}`);
   },
-  // Change marker + unread count for one project's inbox, for live refresh and the
-  // sidebar badge.
-  getNotificationsRev: (projectId: number) =>
-    request<{ rev: string; unread: number }>(`/notifications/rev?projectId=${projectId}`),
+  // Unread count for the sidebar badge, refetched when the inbox scope moves.
+  getUnreadCount: (projectId: number) =>
+    request<{ unread: number }>(`/notifications/unread?projectId=${projectId}`),
   setNotificationRead: (id: number, read: boolean) =>
     request<void>(`/notifications/${id}/read`, { method: 'POST', body: JSON.stringify({ read }) }),
   snoozeNotification: (id: number, until: string | null) =>

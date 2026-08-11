@@ -5,6 +5,7 @@ import { useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/api';
 import { HotkeysProvider } from '@/context/useHotkeys';
+import { SyncProvider } from '@/context/syncContext';
 import { Toaster } from '@/components/ui/sonner';
 import PreferencesSync from '@/components/preferences-sync';
 import SessionScope from '@/components/session-scope';
@@ -48,7 +49,9 @@ export function Providers({ children }: { children: ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <SessionScope />
       <PreferencesSync />
-      <HotkeysProvider>{children}</HotkeysProvider>
+      <SyncProvider>
+        <HotkeysProvider>{children}</HotkeysProvider>
+      </SyncProvider>
       <Toaster position="bottom-right" richColors />
     </QueryClientProvider>
   );

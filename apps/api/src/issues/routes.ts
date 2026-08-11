@@ -14,7 +14,6 @@ import {
   searchIssues,
   listIssues,
   listArchivedIssues,
-  projectBoardRev,
   getIssue,
   getIssueBySequence,
   getIssueProjectId,
@@ -29,7 +28,6 @@ import {
   setIssueLabels,
   setIssueFieldValue,
   getIssueFieldValues,
-  issueRev,
 } from './store';
 import {
   listFeed,
@@ -716,9 +714,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   )
 
   // The board's issue payload: every active issue with its labels, field values
-  // and relations, plus the board change marker. The work-items UI loads this
-  // alongside the project scaffold (GET /projects/:projectKey) and polls the
-  // marker to refetch. Web-only (not an MCP tool): agents use list_issues /
+  // and relations. The work-items UI loads this alongside the project scaffold
+  // (GET /projects/:projectKey) and refetches it when the board scope of
+  // GET /sync/rev moves. Web-only (not an MCP tool): agents use list_issues /
   // search_issues, and read an issue's relations with the issue itself.
   .get(
     '/projects/:projectKey/issues/board',
@@ -727,38 +725,17 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         await attachBoardLinks(await listIssues(project), project.id),
         project.id,
       ),
-      rev: await projectBoardRev(project.id),
     }),
     {
       params: t.Object({ projectKey: t.String() }),
       permission: ['work_items', 'read'],
       response: {
-        200: t.Object({ issues: t.Array(BoardIssueResponse), rev: t.String() }),
+        200: t.Object({ issues: t.Array(BoardIssueResponse) }),
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
       },
       detail: { summary: 'Get board issues' },
-    },
-  )
-
-  // Cheap change marker for the board's issues. Clients poll this and refetch the
-  // board issues only when it moves (live refresh without constant heavy reads).
-  .get(
-    '/projects/:projectKey/issues/rev',
-    async ({ project }) => ({
-      rev: await projectBoardRev(project.id),
-    }),
-    {
-      params: t.Object({ projectKey: t.String() }),
-      permission: ['work_items', 'read'],
-      response: {
-        200: t.Object({ rev: t.String() }),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
-      detail: { summary: 'Get board revision' },
     },
   )
 
@@ -1514,22 +1491,6 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       },
     },
   )
-
-  // Cheap change marker for the issue's detail + feed. Clients poll this and
-  // refetch the full issue/feed only when it changes (live refresh without
-  // constant heavy reads). Same read permission as the feed.
-  .get('/issues/:issueId/rev', async ({ params }) => ({ rev: await issueRev(params.issueId) }), {
-    params: issueParams,
-    workItem: 'read',
-    response: {
-      200: t.Object({ rev: t.String() }),
-      400: ErrorResponse,
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
-    detail: { summary: 'Get issue revision' },
-  })
 
   // Post a comment on an issue. The author is the session user (a member or an
   // agent's bot user).

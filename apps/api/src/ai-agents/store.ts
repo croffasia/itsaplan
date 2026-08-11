@@ -12,7 +12,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
 import { iso, HttpError, rethrowDuplicate } from '../shared/lib';
 import { getCredentialById } from '../integrations/store';
-import { isLlmIntegration } from '../integrations/catalog';
+import { integrationKind } from '../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
@@ -248,7 +248,7 @@ async function assertModelCredential(
   if (credentialId == null) return;
   const credential = await getCredentialById(credentialId, projectId);
   if (!credential) throw new HttpError(400, 'Credential not found');
-  if (!isLlmIntegration(credential.integrationKey)) {
+  if (integrationKind(credential.integrationKey) !== 'llm') {
     throw new HttpError(
       400,
       `A model needs an LLM provider credential, not ${credential.integrationKey}.`,

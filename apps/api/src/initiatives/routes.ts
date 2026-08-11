@@ -8,6 +8,7 @@ import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
 import {
   listInitiatives,
+  listInitiativeOptions,
   initiativeStatusCounts,
   getInitiative,
   getInitiativeProjectId,
@@ -160,6 +161,36 @@ export const initiativeRoutes = new Elysia({
         summary: 'List initiatives',
         description: "List a project's initiatives, filtered, sorted and paged.",
         ...mcpTool('list_initiatives'),
+      },
+    },
+  )
+
+  // Fills the initiative picker on an issue. Read under work items: linking an issue
+  // needs the titles, not the initiative pages the `initiatives` resource gates.
+  .get(
+    '/projects/:projectKey/initiatives/options',
+    async ({ project, query }) => listInitiativeOptions(project.id, query),
+    {
+      params: t.Object({ projectKey: t.String() }),
+      query: t.Object({
+        search: t.Optional(t.String({ description: 'Match by title.' })),
+        include: t.Optional(
+          t.Numeric({
+            description: 'Keep this initiative in the list even when it is closed.',
+          }),
+        ),
+      }),
+      permission: ['work_items', 'read'],
+      response: {
+        200: t.Array(t.Object({ id: t.Number(), title: t.String(), status: t.String() })),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'List initiative options',
+        description: 'The initiatives an issue can be linked to: id, title and status.',
       },
     },
   )

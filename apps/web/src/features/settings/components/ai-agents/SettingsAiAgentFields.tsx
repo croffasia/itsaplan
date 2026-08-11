@@ -9,13 +9,7 @@ import {
   Wrench,
   Zap,
 } from 'lucide-react';
-import type {
-  AgentTool,
-  IntegrationCredential,
-  IntegrationMeta,
-  ProviderModel,
-  Role,
-} from '@/lib/api';
+import type { AgentTool, IntegrationMeta, IntegrationOption, ProviderModel, Role } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
@@ -77,7 +71,7 @@ export default function SettingsAiAgentFields({
   toolsLoading: boolean;
   kindLocked: boolean;
   expanded?: boolean;
-  credentials: IntegrationCredential[];
+  credentials: IntegrationOption[];
   catalog: IntegrationMeta[];
   models: ProviderModel[];
   modelsLoading: boolean;

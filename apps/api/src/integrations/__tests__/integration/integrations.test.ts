@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { addProjectMember } from '../../../__tests__/helpers/members';
 import { untaggedRoutes } from '../../../__tests__/helpers/mcp';
 
 // Integration credentials for a project: one store for LLM provider keys (kind 'llm')
@@ -17,6 +18,7 @@ async function setup() {
 }
 
 const integrations = (api: Api) => api.projects({ projectKey: 'MKT' }).integrations;
+const options = (api: Api) => integrations(api).options;
 
 describe('integrations', () => {
   beforeEach(async () => {
@@ -124,13 +126,67 @@ describe('integrations', () => {
 
   // An agent's provider and model are picked over MCP, so the reads are tagged. The
   // writes are not: a credential body carries the provider's secret in plain text.
+  // The options route is untagged too — it is what the UI pickers read, and the
+  // credential list already covers the same ground for an agent.
   it('exposes the credential reads to MCP, not the writes', () => {
     const untagged = untaggedRoutes((route) => route.includes('integrations'));
     expect(untagged).toEqual([
+      'GET /projects/:projectKey/integrations/options',
       'POST /projects/:projectKey/integrations',
       'PATCH /projects/:projectKey/integrations/:credentialId',
       'DELETE /projects/:projectKey/integrations/:credentialId',
     ]);
+  });
+
+  describe('options', () => {
+    it('lists the connected integrations without any credential fields', async () => {
+      const { asOwner } = await setup();
+      await integrations(asOwner).post({
+        integrationKey: 'openai',
+        label: 'Team',
+        credential: { apiKey: 'sk-secret-1234' },
+      });
+      await integrations(asOwner).post({
+        integrationKey: 'jina',
+        credential: { apiKey: 'jina-secret-1234' },
+      });
+
+      const res = await options(asOwner).get();
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ integrationKey: 'openai', kind: 'llm', label: 'Team' }),
+          expect.objectContaining({ integrationKey: 'jina', kind: 'tool', label: null }),
+        ]),
+      );
+      expect(JSON.stringify(res.data)).not.toContain('••••');
+
+      const llm = await options(asOwner).get({ query: { kind: 'llm' } });
+      expect(llm.data!.map((o) => o.integrationKey)).toEqual(['openai']);
+    });
+
+    it('opens the options and the catalog to a member whose role has no integrations access', async () => {
+      const { asOwner } = await setup();
+      await integrations(asOwner).post({
+        integrationKey: 'openai',
+        credential: { apiKey: 'sk-secret-1234' },
+      });
+      const role = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Agents only', permissions: { ai_agents: { read: true } } });
+      const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+
+      expect((await options(asMember).get()).status).toBe(200);
+      expect((await integrations(asMember).catalog.get()).status).toBe(200);
+      // The credential list stays behind the integrations resource.
+      expect((await integrations(asMember).get()).status).toBe(403);
+    });
+
+    it('denies a non-member', async () => {
+      await setup();
+      const asOutsider = authedApi((await signUpTestUser({ name: 'Outsider' })).cookie);
+      expect((await options(asOutsider).get()).status).toBe(403);
+    });
   });
 
   it('denies a non-member', async () => {

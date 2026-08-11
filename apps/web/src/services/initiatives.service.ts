@@ -26,6 +26,21 @@ export function useInitiativesQuery(projectKey: string | null, params: Initiativ
   });
 }
 
+// The initiatives an issue can be linked to. Read under work items, so the picker
+// works for a role without access to the initiatives pages. `include` keeps the
+// linked initiative listed after it closes.
+export function useInitiativeOptionsQuery(
+  projectKey: string | null,
+  params: { search?: string; include?: number } = {},
+) {
+  return useQuery({
+    queryKey: qk.initiativeOptions(projectKey ?? '', params),
+    queryFn: () => api.listInitiativeOptions(projectKey!, params),
+    enabled: projectKey != null,
+    placeholderData: keepPreviousData,
+  });
+}
+
 // Per-status counts for the list's status tabs, independent of the current page.
 export function useInitiativeCountsQuery(projectKey: string | null) {
   return useQuery({

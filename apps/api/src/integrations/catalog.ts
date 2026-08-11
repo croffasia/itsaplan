@@ -69,8 +69,7 @@ export function credentialSchemaFor(key: string): ConfigField[] | undefined {
   return BY_KEY.get(key)?.credentialSchema;
 }
 
-// Whether the integration is an LLM provider, i.e. its credential can back an agent's
-// model.
-export function isLlmIntegration(key: string): boolean {
-  return BY_KEY.get(key)?.kind === 'llm';
+// The kind of an integration, or undefined for a key the catalog no longer carries.
+export function integrationKind(key: string): IntegrationKind | undefined {
+  return BY_KEY.get(key)?.kind;
 }

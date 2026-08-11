@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { addProjectMember } from '../../../__tests__/helpers/members';
 
 // Cycles are time-boxed periods of work inside a project (sprints). Issues link to
 // one through issue.cycleId. The status (upcoming/active/completed) follows from the
@@ -438,6 +439,40 @@ describe('cycles', () => {
         .cycles({ cycleId: cycle.id })
         .transfer.post({ targetCycleId: foreign.id });
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('options', () => {
+    it('offers the cycles that have not finished', async () => {
+      const { asOwner } = await setup();
+      await createCycle(asOwner, { name: 'Current', startDate: day(0), endDate: day(6) });
+      await createCycle(asOwner, { name: 'Past', startDate: day(-20), endDate: day(-14) });
+
+      const res = await cycles(asOwner).options.get();
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual([{ id: expect.any(Number), name: 'Current', status: 'active' }]);
+    });
+
+    it('reads under work items, so a role without cycle access can plan an issue', async () => {
+      const { asOwner } = await setup();
+      await createCycle(asOwner, { name: 'Current' });
+      const role = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Issues only', permissions: { work_items: { read: true } } });
+      const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+
+      expect((await cycles(asMember).options.get()).status).toBe(200);
+      // The cycles pages stay behind the cycles resource.
+      expect((await cycles(asMember).get()).status).toBe(403);
+    });
+
+    it('denies a role without work item access', async () => {
+      const { asOwner } = await setup();
+      const role = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Nothing', permissions: {} });
+      const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+      expect((await cycles(asMember).options.get()).status).toBe(403);
     });
   });
 

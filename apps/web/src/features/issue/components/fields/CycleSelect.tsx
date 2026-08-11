@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check, CircleDashed, RefreshCw } from 'lucide-react';
-import type { Cycle } from '@/lib/api';
-import { usePlannedCyclesQuery } from '@/services/cycles.service';
+import type { CycleRef } from '@/lib/api';
+import { useCycleOptionsQuery } from '@/services/cycles.service';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import {
@@ -15,8 +15,6 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Pill } from '@/components/common/fields/Pill';
 
-export type CycleOption = Pick<Cycle, 'id' | 'name'>;
-
 // A Pill trigger opening the cycles an issue can be planned into: the ones that have
 // not finished. A completed cycle is not offered — it records what it delivered — but
 // the one the issue already sits on stays listed, so it can be read and unplanned.
@@ -26,18 +24,18 @@ export default function CycleSelect({
   onChange,
 }: {
   projectKey: string;
-  value: CycleOption | null;
-  onChange: (cycle: CycleOption | null) => void;
+  value: CycleRef | null;
+  onChange: (cycle: CycleRef | null) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const { data } = usePlannedCyclesQuery(projectKey);
+  const { data } = useCycleOptionsQuery(projectKey);
   const planned = data ?? [];
   const cycles =
     value && !planned.some((c) => c.id === value.id)
       ? [{ ...value, status: 'completed' as const }, ...planned]
       : planned;
 
-  const select = (cycle: CycleOption | null) => {
+  const select = (cycle: CycleRef | null) => {
     onChange(cycle);
     setOpen(false);
   };

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
-import type { IntegrationCredential } from '@/lib/api';
+import type { IntegrationOption } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -15,21 +15,9 @@ import { useCreateConfiguredTool } from '@/services/customTools.service';
 import { IntegrationIcon } from '../integrations/IntegrationIcon';
 import type { ToolOption } from './ToolConfigDialog';
 
-// The masked secret fields of a credential joined into one line (e.g. "••••dmoT"), so
-// several credentials of the same integration can be told apart.
-const credMasked = (c: IntegrationCredential) =>
-  Object.values(c.redacted)
-    .map((v) => String(v))
-    .filter(Boolean)
-    .join(' · ');
-
-// A credential's display text: its label if set, otherwise its masked secret, with the
-// masked secret shown as a suffix when a label takes the primary slot.
-function credLabel(c: IntegrationCredential): string {
-  const masked = credMasked(c);
-  const name = c.label ?? (masked || `Credential #${c.id}`);
-  return c.label && masked ? `${name} · ${masked}` : name;
-}
+// The id is the fallback so several unlabelled credentials of the same integration
+// can still be told apart.
+const credLabel = (c: IntegrationOption) => c.label ?? `Credential #${c.id}`;
 
 // Step two of adding a tool: pick the credential the tool runs on. The credential list
 // is narrowed to the tool's integration; if none exists yet, the user is pointed at the
@@ -43,7 +31,7 @@ export function ToolCredentialStep({
 }: {
   projectKey: string;
   tool: ToolOption;
-  credentials: IntegrationCredential[];
+  credentials: IntegrationOption[];
   onBack: () => void;
   onDone: () => void;
 }) {

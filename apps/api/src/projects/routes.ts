@@ -320,6 +320,10 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
   // items UI needs in one call. Assignee options come from the project's members
   // and AI agents, fetched separately. The web app gates its UI off `viewer`; the
   // API still enforces the same matrix on every request.
+  //
+  // Open to any project member: the payload is the project's own naming (columns,
+  // types, labels, fields) plus the caller's own access, not the work items
+  // themselves. A role without work item access still needs it to open any page.
   .get(
     '/projects/:projectKey',
     async ({ project, user }) => {
@@ -349,7 +353,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       };
     },
     {
-      permission: ['work_items', 'read'],
+      projectMember: true,
       response: {
         200: ProjectBoardResponse,
         401: ErrorResponse,

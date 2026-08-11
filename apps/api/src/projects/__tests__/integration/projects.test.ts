@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { addProjectMember } from '../../../__tests__/helpers/members';
 
 // Full integration flow: a real session against the real (test) database.
 // Requires the test DB to be up and migrated:
@@ -21,18 +22,6 @@ const DEFAULT_COLUMN_NAMES = ['Backlog', 'Todo', 'In Progress', 'Done', 'Cancele
 async function signUpClient() {
   const user = await signUpTestUser();
   return { user, api: authedApi(user.cookie) };
-}
-
-// Adds a member to project MKT through the invite flow, on the default member role
-// unless a custom one is named. Returns a Treaty client acting as them.
-async function addMember(owner: Api, roleId?: number) {
-  const user = await signUpTestUser();
-  const invite = await owner
-    .projects({ projectKey: 'MKT' })
-    .invites.post({ email: user.email, role: 'member', roleId });
-  const api = authedApi(user.cookie);
-  await api.invites({ token: invite.data!.token }).accept.post();
-  return api;
 }
 
 async function viewOf(client: Api, projectKey: string) {
@@ -232,6 +221,21 @@ describe('projects', () => {
       const outsider = await signUpClient();
       const res = await viewOf(outsider.api, 'MKT');
       expect(res.status).toBe(403);
+    });
+
+    it('opens to a member whose role grants nothing, so any role can enter the project', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const role = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Notes only', permissions: { note_boards: { read: true } } });
+      const member = await addProjectMember(owner.api, 'MKT', role.data!.id);
+
+      const res = await viewOf(member, 'MKT');
+      expect(res.status).toBe(200);
+      expect(res.data!.permissions.work_items.read).toBe(false);
+      // The issues themselves stay behind the work items resource.
+      expect((await member.projects({ projectKey: 'MKT' }).issues.board.get()).status).toBe(403);
     });
   });
 
@@ -734,7 +738,7 @@ describe('projects', () => {
     it('holds the default member role out of the section', async () => {
       const owner = await signUpClient();
       await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
-      const member = await addMember(owner.api);
+      const member = await addProjectMember(owner.api, 'MKT');
 
       expect((await autoArchive(member).get()).status).toBe(403);
       expect((await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 })).status).toBe(
@@ -748,7 +752,7 @@ describe('projects', () => {
       const role = await owner.api
         .projects({ projectKey: 'MKT' })
         .roles.post({ name: 'Reader', permissions: { workflow_config: { read: true } } });
-      const member = await addMember(owner.api, role.data!.id);
+      const member = await addProjectMember(owner.api, 'MKT', role.data!.id);
 
       expect((await autoArchive(member).get()).status).toBe(200);
       expect((await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 })).status).toBe(
@@ -763,7 +767,7 @@ describe('projects', () => {
         name: 'Archivist',
         permissions: { workflow_config: { read: true, edit: true } },
       });
-      const member = await addMember(owner.api, role.data!.id);
+      const member = await addProjectMember(owner.api, 'MKT', role.data!.id);
 
       const res = await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 });
       expect(res.status).toBe(200);
@@ -800,7 +804,7 @@ describe('projects', () => {
     it('holds the default member role out of the section', async () => {
       const owner = await signUpClient();
       await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
-      const member = await addMember(owner.api);
+      const member = await addProjectMember(owner.api, 'MKT');
 
       expect((await subtasks(member).get()).status).toBe(403);
       expect(
@@ -814,7 +818,7 @@ describe('projects', () => {
       const role = await owner.api
         .projects({ projectKey: 'MKT' })
         .roles.post({ name: 'Reader', permissions: { workflow_config: { read: true } } });
-      const member = await addMember(owner.api, role.data!.id);
+      const member = await addProjectMember(owner.api, 'MKT', role.data!.id);
 
       expect((await subtasks(member).get()).status).toBe(200);
       expect(

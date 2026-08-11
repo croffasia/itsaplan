@@ -5,7 +5,7 @@ import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
-import { INTEGRATION_CATALOG } from './catalog';
+import { INTEGRATION_CATALOG, integrationKind } from './catalog';
 import { listModelsForProvider } from './models';
 import { listCredentials, createCredential, updateCredential, deleteCredential } from './store';
 
@@ -47,9 +47,20 @@ const IntegrationResponse = t.Object({
 
 const ProviderModelResponse = t.Object({ id: t.String(), name: t.String() });
 
-// Gated under the integrations resource. The reads are exposed as MCP tools, so an
-// internal agent's provider and model can be picked without the UI; the writes are
-// not, because a credential body carries the provider's secret in plain text.
+// A connected integration as a picker option: what it is and what it is called.
+// Carries no credential fields, redacted or otherwise.
+const IntegrationOptionResponse = t.Object({
+  id: t.Number(),
+  integrationKey: t.String(),
+  kind: t.Union([t.Literal('llm'), t.Literal('tool')]),
+  label: t.Nullable(t.String()),
+});
+
+// The credential store is gated under the integrations resource; the catalog, the
+// provider models and the picker options carry no project secrets and are open to
+// any member. The reads are exposed as MCP tools, so an internal agent's provider
+// and model can be picked without the UI; the writes are not, because a credential
+// body carries the provider's secret in plain text.
 export const integrationRoutes = new Elysia({
   name: 'integrations',
   detail: { tags: ['Integrations'] },
@@ -57,9 +68,10 @@ export const integrationRoutes = new Elysia({
   .use(authContext)
   .use(guards)
 
-  // The frontend builds the credential form from credentialSchema.
+  // The frontend builds the credential form from credentialSchema. Open to any
+  // project member: the catalog is a constant in this codebase, not project data.
   .get('/projects/:projectKey/integrations/catalog', () => INTEGRATION_CATALOG, {
-    permission: ['integrations', 'read'],
+    projectMember: true,
     response: {
       200: t.Array(IntegrationResponse),
       401: ErrorResponse,
@@ -76,7 +88,8 @@ export const integrationRoutes = new Elysia({
   })
 
   // The models an LLM provider offers, from the models.dev registry. Backs the model
-  // select in the agent config UI.
+  // select in the agent config UI. Open to any project member: the list comes from a
+  // public registry and holds no project data.
   .get(
     '/projects/:projectKey/integrations/models/:provider',
     ({ params }) => listModelsForProvider(params.provider),
@@ -87,7 +100,7 @@ export const integrationRoutes = new Elysia({
           description: "LLM provider key from list_integrations, e.g. 'anthropic'.",
         }),
       }),
-      permission: ['integrations', 'read'],
+      projectMember: true,
       response: {
         200: t.Array(ProviderModelResponse),
         401: ErrorResponse,
@@ -101,6 +114,44 @@ export const integrationRoutes = new Elysia({
           'create_ai_agent / update_ai_agent takes. Empty when the model registry is unreachable.',
         // The list comes from models.dev, the one route here that reads outside the tracker.
         ...mcpTool('list_provider_models', { openWorldHint: true }),
+      },
+    },
+  )
+
+  // Fills the credential selects in the agent and tool forms. Open to any project
+  // member, and deliberately separate from the credential list above: that one is
+  // the integrations admin view and may grow fields this one must not carry.
+  .get(
+    '/projects/:projectKey/integrations/options',
+    async ({ project, query }) => {
+      const credentials = await listCredentials(project.id);
+      return credentials.flatMap((c) => {
+        const kind = integrationKind(c.integrationKey);
+        if (!kind || (query.kind && kind !== query.kind)) return [];
+        return [{ id: c.id, integrationKey: c.integrationKey, kind, label: c.label }];
+      });
+    },
+    {
+      params: t.Object({ projectKey: t.String() }),
+      query: t.Object({
+        kind: t.Optional(
+          t.Union([t.Literal('llm'), t.Literal('tool')], {
+            description: 'Only the integrations of this kind.',
+          }),
+        ),
+      }),
+      projectMember: true,
+      response: {
+        200: t.Array(IntegrationOptionResponse),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'List integration options',
+        description:
+          "The project's connected integrations as picker options: id, key, kind and label.",
       },
     },
   )

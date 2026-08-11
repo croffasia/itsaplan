@@ -300,13 +300,15 @@ export interface ConfigField {
   help?: string;
 }
 
-// An integration the project can store a credential for (server-side catalog). `kind`
 // 'llm' is an AI provider (its models an agent runs on, no tools); 'tool' is a tool
 // integration whose `tools` are configured on a credential.
+export type IntegrationKind = 'llm' | 'tool';
+
+// An integration the project can store a credential for (server-side catalog).
 export interface IntegrationMeta {
   key: string;
   label: string;
-  kind: 'llm' | 'tool';
+  kind: IntegrationKind;
   credentialSchema: ConfigField[];
   tools: { key: string; label: string; description: string; scopes?: string[] }[];
 }
@@ -326,6 +328,15 @@ export interface IntegrationCredential {
   label: string | null;
   redacted: Record<string, unknown>;
   createdAt: string;
+}
+
+// A connected integration as a picker option: what it is and what it is called,
+// with none of the credential fields the admin list carries.
+export interface IntegrationOption {
+  id: number;
+  integrationKey: string;
+  kind: IntegrationKind;
+  label: string | null;
 }
 
 export interface NewCredentialInput {
@@ -515,10 +526,10 @@ export interface Issue {
   typeId: number | null;
   // The initiative this issue is linked to, expanded to id + title for rendering,
   // or null. Set through updateIssue by initiativeId.
-  initiative: InitiativeOption | null;
+  initiative: InitiativeRef | null;
   // The cycle this issue is planned into, expanded to id + name for rendering, or
   // null. Set through updateIssue by cycleId.
-  cycle: CycleOption | null;
+  cycle: CycleRef | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   columnId: number;
@@ -1440,12 +1451,14 @@ export interface ProjectViewer {
   role: MemberRole;
 }
 
-export interface InitiativeOption {
+// How an issue carries the initiative and the cycle it belongs to: the id plus
+// what to render. The picker lists are InitiativeOption / CycleOption.
+export interface InitiativeRef {
   id: number;
   title: string;
 }
 
-export interface CycleOption {
+export interface CycleRef {
   id: number;
   name: string;
 }
@@ -1484,10 +1497,9 @@ export interface BoardIssues {
 
 // The scaffold composed with its issues and the project's unfinished cycles, as
 // the Shell assembles it and passes it down. Downstream reads project.issues off
-// this composite. `plannedCycles` is empty while the Cycles section is off, on a
-// public share (whose bundle carries no cycle list), and for a viewer who may not
-// read cycles.
-export type ProjectDetail = ProjectScaffold & BoardIssues & { plannedCycles: Cycle[] };
+// this composite. `plannedCycles` is empty while the Cycles section is off and on a
+// public share (whose bundle carries no cycle list).
+export type ProjectDetail = ProjectScaffold & BoardIssues & { plannedCycles: CycleOption[] };
 
 export interface IssueDetail extends Issue {
   fields: IssueFieldValue[];
@@ -1692,9 +1704,23 @@ export interface Initiative {
   health: InitiativeHealth | null;
 }
 
+// An initiative as a picker option, for linking an issue to one.
+export interface InitiativeOption {
+  id: number;
+  title: string;
+  status: InitiativeStatus;
+}
+
 // A time-boxed period of work (a sprint). status follows from the dates against
 // today and progress from the linked issues' states — neither is stored.
 export type CycleStatus = 'upcoming' | 'active' | 'completed';
+
+// A cycle as a picker option, for planning an issue into one.
+export interface CycleOption {
+  id: number;
+  name: string;
+  status: CycleStatus;
+}
 
 export interface CycleProgress {
   completed: number;
@@ -2128,10 +2154,6 @@ export const api = {
   deleteLabelGroup: (projectKey: string, groupId: number) =>
     request<void>(`/projects/${projectKey}/label-groups/${groupId}`, { method: 'DELETE' }),
 
-  listCustomFields: (projectKey: string, issueTypeId?: number) =>
-    request<CustomField[]>(
-      `/projects/${projectKey}/custom-fields${issueTypeId != null ? `?issueTypeId=${issueTypeId}` : ''}`,
-    ),
   createCustomField: (projectKey: string, input: NewCustomFieldInput) =>
     request<CustomField>(`/projects/${projectKey}/custom-fields`, {
       method: 'POST',
@@ -2330,6 +2352,15 @@ export const api = {
     const qs = q.toString();
     return request<InitiativePage>(`/projects/${projectKey}/initiatives${qs ? `?${qs}` : ''}`);
   },
+  listInitiativeOptions: (projectKey: string, params: { search?: string; include?: number }) => {
+    const q = new URLSearchParams();
+    if (params.search) q.set('search', params.search);
+    if (params.include) q.set('include', String(params.include));
+    const qs = q.toString();
+    return request<InitiativeOption[]>(
+      `/projects/${projectKey}/initiatives/options${qs ? `?${qs}` : ''}`,
+    );
+  },
   initiativeCounts: (projectKey: string) =>
     request<InitiativeCounts>(`/projects/${projectKey}/initiatives/counts`),
   getInitiative: (id: number) => request<Initiative>(`/initiatives/${id}`),
@@ -2354,6 +2385,8 @@ export const api = {
   listCycles: (projectKey: string) => request<Cycle[]>(`/projects/${projectKey}/cycles`),
   listPlannedCycles: (projectKey: string) =>
     request<Cycle[]>(`/projects/${projectKey}/cycles?status=planned`),
+  listCycleOptions: (projectKey: string) =>
+    request<CycleOption[]>(`/projects/${projectKey}/cycles/options`),
   listCompletedCycles: (projectKey: string, params: { page: number; pageSize: number }) =>
     request<CyclePage>(
       `/projects/${projectKey}/cycles/completed?page=${params.page}&pageSize=${params.pageSize}`,
@@ -2582,6 +2615,10 @@ export const api = {
     ),
   listCredentials: (projectKey: string) =>
     request<IntegrationCredential[]>(`/projects/${projectKey}/integrations`),
+  listIntegrationOptions: (projectKey: string, kind?: IntegrationKind) =>
+    request<IntegrationOption[]>(
+      `/projects/${projectKey}/integrations/options${kind ? `?kind=${kind}` : ''}`,
+    ),
   createCredential: (projectKey: string, input: NewCredentialInput) =>
     request<IntegrationCredential>(`/projects/${projectKey}/integrations`, {
       method: 'POST',

@@ -1,12 +1,17 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { MoreHorizontal } from 'lucide-react';
-import { type Issue, type IssueFieldValueInput, type ProjectDetail } from '@/lib/api';
+import {
+  type CycleRef,
+  type Issue,
+  type IssueFieldValueInput,
+  type ProjectDetail,
+} from '@/lib/api';
 import { type NewIssueDefaults } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
-import { useCustomFieldsQuery } from '@/services/customFields.service';
+import { fieldDefsForType } from '../../utils/fieldDefs';
 import { useFileDragZone } from '../../hooks/useFileDragZone';
 import { useFilePaste } from '../../hooks/useFilePaste';
 import { useNewIssueAttachments } from '../../hooks/useNewIssueAttachments';
@@ -44,7 +49,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Pill } from '@/components/common/fields/Pill';
 import InitiativeSelect from '../fields/InitiativeSelect';
-import CycleSelect, { type CycleOption } from '../fields/CycleSelect';
+import CycleSelect from '../fields/CycleSelect';
 
 export default function NewIssueModal({
   project,
@@ -72,7 +77,7 @@ export default function NewIssueModal({
   const [initiativeId, setInitiativeId] = useState<number | null>(defaults.initiativeId ?? null);
   // A default cycle that is not among the planned ones has finished, and nothing new
   // is planned into it — the issue is created without a cycle instead.
-  const [cycle, setCycle] = useState<CycleOption | null>(
+  const [cycle, setCycle] = useState<CycleRef | null>(
     () => project.plannedCycles.find((c) => c.id === defaults.cycleId) ?? null,
   );
   const { data: session } = useSession();
@@ -97,11 +102,13 @@ export default function NewIssueModal({
   const [saving, setSaving] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
 
-  // Custom fields for the selected type (global + type-scoped). Fields flagged
-  // "show in main info" get their own body section; the rest are added on demand from
-  // the "…" menu.
-  const fieldsQuery = useCustomFieldsQuery(project.project.key, typeId ?? undefined);
-  const fieldDefs = fieldsQuery.data ?? [];
+  // Custom fields for the selected type (project-wide + type-scoped), off the
+  // scaffold every member already loads. Fields flagged "show in main info" get their
+  // own body section; the rest are added on demand from the "…" menu.
+  const fieldDefs = useMemo(
+    () => fieldDefsForType(project.customFields, typeId),
+    [project.customFields, typeId],
+  );
   const [activeFieldIds, setActiveFieldIds] = useState<number[]>([]);
   const [fieldValues, setFieldValues] = useState<Record<number, IssueFieldValueInput>>({});
   const [justAddedId, setJustAddedId] = useState<number | null>(null);
@@ -178,8 +185,7 @@ export default function NewIssueModal({
   useEffect(() => {
     const valid = new Set(fieldDefs.filter((d) => !d.showInBody).map((d) => d.id));
     setActiveFieldIds((prev) => prev.filter((id) => valid.has(id)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fieldsQuery.data]);
+  }, [fieldDefs]);
 
   const errorMessage = error ?? attachments.error;
   const bodyDefs = fieldDefs.filter((d) => d.showInBody);

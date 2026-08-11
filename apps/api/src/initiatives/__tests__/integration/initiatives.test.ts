@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
+import { addProjectMember } from '../../../__tests__/helpers/members';
 
 // Initiatives are a project-scoped grouping of issues. Issues link to one through
 // issue.initiativeId. status is a fixed lifecycle enum; progress and health are
@@ -340,6 +341,69 @@ describe('initiatives', () => {
       expect(issueRow?.source).toBe('issue');
       expect(issueRow?.issueId).toBe(issue.id);
       expect(issueRow?.issueIdentifier).toMatch(/^MKT-\d+$/);
+    });
+  });
+
+  describe('options', () => {
+    it('lists the linkable initiatives, filtered by the search', async () => {
+      const { asOwner } = await setup();
+      await createInitiative(asOwner, { title: 'Q3 Launch' });
+      await createInitiative(asOwner, { title: 'Billing rework' });
+      await createInitiative(asOwner, { title: 'Old plan', status: 'completed' });
+
+      const all = await initiatives(asOwner).options.get();
+      expect(all.status).toBe(200);
+      expect(all.data!.map((o) => o.title).sort()).toEqual(['Billing rework', 'Q3 Launch']);
+      expect(all.data![0]).toMatchObject({ status: expect.any(String) });
+
+      const search = await initiatives(asOwner).options.get({ query: { search: 'bill' } });
+      expect(search.data!.map((o) => o.title)).toEqual(['Billing rework']);
+    });
+
+    it('keeps the initiative an issue already links to, closed or off the search', async () => {
+      const { asOwner } = await setup();
+      const closed = (await createInitiative(asOwner, { title: 'Old plan', status: 'completed' }))
+        .data!;
+
+      const res = await initiatives(asOwner).options.get({
+        query: { search: 'nothing matches', include: closed.id },
+      });
+      expect(res.data!.map((o) => o.id)).toEqual([closed.id]);
+    });
+
+    it('puts the included initiative first, so the row cap cannot drop it', async () => {
+      const { asOwner } = await setup();
+      await createInitiative(asOwner, { title: 'Q3 Launch' });
+      const closed = (await createInitiative(asOwner, { title: 'Old plan', status: 'completed' }))
+        .data!;
+
+      const res = await initiatives(asOwner).options.get({ query: { include: closed.id } });
+      expect(res.data![0]!.id).toBe(closed.id);
+    });
+
+    it('reads under work items, so a role without initiative access can link an issue', async () => {
+      const { asOwner } = await setup();
+      await createInitiative(asOwner, { title: 'Q3 Launch' });
+      const role = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Issues only', permissions: { work_items: { read: true } } });
+      const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+
+      const options = await initiatives(asMember).options.get();
+      expect(options.status).toBe(200);
+      expect(options.data).toHaveLength(1);
+
+      // The initiative pages stay behind the initiatives resource.
+      expect((await initiatives(asMember).get()).status).toBe(403);
+    });
+
+    it('denies a role without work item access', async () => {
+      const { asOwner } = await setup();
+      const role = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .roles.post({ name: 'Nothing', permissions: {} });
+      const asMember = await addProjectMember(asOwner, 'MKT', role.data!.id);
+      expect((await initiatives(asMember).options.get()).status).toBe(403);
     });
   });
 

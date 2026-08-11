@@ -21,8 +21,8 @@ import type { ActionDef, ProjectDetail, Issue, IssuePatch } from '@/lib/api';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
-import { useInitiativesQuery } from '@/services/initiatives.service';
-import { LINKABLE_STATUSES, STATUS_META } from '@/utils/initiativeMeta';
+import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
+import { STATUS_META } from '@/utils/initiativeMeta';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { usePermissions } from '@/hooks/usePermissions';
 import { ShellCtx } from '@/context/shellContext';
@@ -85,9 +85,8 @@ export default function IssueContextMenu({
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
   // Initiatives are not in the board scaffold, so they are fetched here — only
   // while this menu is open, as every card on the board mounts one.
-  const initiativesQuery = useInitiativesQuery(
+  const initiativesQuery = useInitiativeOptionsQuery(
     open && project.project.initiativesEnabled ? project.project.key : null,
-    { statuses: LINKABLE_STATUSES, pageSize: 50 },
   );
 
   // No Shell (public share): render the card as-is, without the right-click menu.
@@ -117,7 +116,7 @@ export default function IssueContextMenu({
     PRIORITY_FIELDS.find((p) => p.value === (issue.priority ?? '')) ?? PRIORITY_FIELDS[0];
   const members = project.assignees.filter((a) => a.kind === 'member');
   const agents = project.assignees.filter((a) => a.kind === 'agent');
-  const initiatives = initiativesQuery.data?.items ?? [];
+  const initiatives = initiativesQuery.data ?? [];
 
   return (
     <>

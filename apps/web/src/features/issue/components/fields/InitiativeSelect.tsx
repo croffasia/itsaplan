@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { Check, CircleDashed, Target } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useInitiativeQuery, useInitiativesQuery } from '@/services/initiatives.service';
-import type { Initiative } from '@/lib/api';
-import { qk } from '@/services/queryKeys';
+import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { colorDot } from '@/components/common/fields/colorDot';
-import { LINKABLE_STATUSES, STATUS_META } from '@/utils/initiativeMeta';
+import { STATUS_META } from '@/utils/initiativeMeta';
 import {
   Command,
   CommandEmpty,
@@ -16,10 +13,6 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Pill } from '@/components/common/fields/Pill';
-
-// The dropdown shows at most this many initiatives at once; the rest are reached by
-// typing, which the server matches by title.
-const PAGE_SIZE = 15;
 
 // A Pill trigger opening the project's initiatives, for linking an issue to one.
 // Lives in the shared layer so the issue detail can use it without depending on
@@ -35,23 +28,18 @@ export default function InitiativeSelect({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const qc = useQueryClient();
 
-  // The linked initiative may fall outside the first page, so fetch it directly to
-  // label the trigger. The list query only runs while the dropdown is open.
-  const current = useInitiativeQuery(value).data;
-  const { data } = useInitiativesQuery(open ? projectKey : null, {
-    statuses: LINKABLE_STATUSES,
+  // The linked initiative is asked for by id alongside the search, so it labels the
+  // trigger and stays listed even once it is closed.
+  const { data } = useInitiativeOptionsQuery(projectKey, {
     search: query.trim() || undefined,
-    pageSize: PAGE_SIZE,
+    include: value ?? undefined,
   });
-  const options = data?.items ?? [];
+  const options = data ?? [];
+  const current = options.find((it) => it.id === value) ?? null;
 
-  // Seed the single-initiative cache on pick so the trigger labels immediately,
-  // without waiting for its own fetch.
-  const select = (initiative: Initiative | null) => {
-    if (initiative) qc.setQueryData(qk.initiative(initiative.id), initiative);
-    onChange(initiative?.id ?? null);
+  const select = (id: number | null) => {
+    onChange(id);
     setOpen(false);
   };
 
@@ -83,7 +71,7 @@ export default function InitiativeSelect({
                 </CommandItem>
               )}
               {options.map((it) => (
-                <CommandItem key={it.id} value={it.title} onSelect={() => select(it)}>
+                <CommandItem key={it.id} value={it.title} onSelect={() => select(it.id)}>
                   {colorDot(STATUS_META[it.status].color)}
                   <span className="flex-1 truncate">{it.title}</span>
                   {it.id === value && <Check className="ml-auto" />}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { IntegrationCredential, IntegrationMeta } from '@/lib/api';
+import type { IntegrationMeta, IntegrationOption } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import { ToolPicker } from './ToolPicker';
 import { ToolCredentialStep } from './ToolCredentialStep';
@@ -26,7 +26,7 @@ export function ToolConfigDialog({
 }: {
   projectKey: string;
   catalog: IntegrationMeta[];
-  credentials: IntegrationCredential[];
+  credentials: IntegrationOption[];
   onClose: () => void;
 }) {
   const toolOptions = useMemo<ToolOption[]>(

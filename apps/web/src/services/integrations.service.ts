@@ -1,11 +1,26 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type NewCredentialInput, type CredentialPatch } from '@/lib/api';
+import {
+  api,
+  type CredentialPatch,
+  type IntegrationKind,
+  type NewCredentialInput,
+} from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 
 export function useCredentialsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.integrationCredentials(projectKey ?? ''),
     queryFn: () => api.listCredentials(projectKey!),
+    enabled: projectKey != null,
+  });
+}
+
+// The connected integrations as picker options, for the agent and tool forms. Open
+// to any project member, unlike the credential list above.
+export function useIntegrationOptionsQuery(projectKey: string | null, kind?: IntegrationKind) {
+  return useQuery({
+    queryKey: qk.integrationOptions(projectKey ?? '', kind),
+    queryFn: () => api.listIntegrationOptions(projectKey!, kind),
     enabled: projectKey != null,
   });
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { ArrowUpRight, Cpu } from 'lucide-react';
-import type { IntegrationCredential, IntegrationMeta, ProviderModel } from '@/lib/api';
+import type { IntegrationMeta, IntegrationOption, ProviderModel } from '@/lib/api';
 import { integrationsPath } from '@/utils/paths';
 import {
   Select,
@@ -35,12 +35,12 @@ export default function AgentModelSection({
   value: AgentFormValue;
   onChange: (patch: Partial<AgentFormValue>) => void;
   projectKey: string;
-  credentials: IntegrationCredential[];
+  credentials: IntegrationOption[];
   catalog: IntegrationMeta[];
   models: ProviderModel[];
   modelsLoading: boolean;
 }) {
-  const credentialLabel = (c: IntegrationCredential) => {
+  const credentialLabel = (c: IntegrationOption) => {
     const integration = integrationLabel(catalog, c.integrationKey);
     return c.label ? `${integration} · ${c.label}` : integration;
   };

@@ -6,7 +6,7 @@ import {
   useProjectsQuery,
 } from '@/services/projects.service';
 import { useViewsQuery } from '@/services/views.service';
-import { usePlannedCyclesQuery } from '@/services/cycles.service';
+import { useCycleOptionsQuery } from '@/services/cycles.service';
 import { ApiError } from '@/lib/api';
 import { applyFilters } from '@/utils/filters';
 import { withoutShownSubtasks } from '@/utils/subtasks';
@@ -33,16 +33,11 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   const projectQuery = useProjectQuery(projectKey);
   const boardIssuesQuery = useBoardIssuesQuery(projectKey);
   const scaffold = projectQuery.data ?? null;
-  // The planned cycles join the composite so grouping by cycle can lay out a lane
+  // The cycle options join the composite so grouping by cycle can lay out a lane
   // per cycle a board plans into, not only per cycle an issue is already in. The
   // whole list is not loaded: it grows with every finished cycle, and a finished
-  // one only needs a lane while its issues name it. Fetched while the section is
-  // on and the viewer may read it.
-  const canReadCycles =
-    scaffold?.viewer.role === 'owner' || scaffold?.permissions.cycles?.read === true;
-  const cyclesQuery = usePlannedCyclesQuery(
-    scaffold?.project.cyclesEnabled && canReadCycles ? projectKey : null,
-  );
+  // one only needs a lane while its issues name it.
+  const cyclesQuery = useCycleOptionsQuery(scaffold?.project.cyclesEnabled ? projectKey : null);
   const project = useMemo(
     () =>
       scaffold
@@ -92,8 +87,15 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   const canCreateIssue =
     !!viewer && (viewer.role === 'owner' || project?.permissions.work_items?.create === true);
 
+  // The scaffold is the membership check; the issues and the views carry their own
+  // resource. A 403 on one of those is a role that does not grant it, not a project
+  // out of reach, so it is dropped here and the pages the role does grant still open.
+  const roleDenied = (e: unknown) => (e instanceof ApiError && e.status === 403 ? null : e);
   const error =
-    projectsQuery.error ?? projectQuery.error ?? boardIssuesQuery.error ?? viewsQuery.error;
+    projectsQuery.error ??
+    projectQuery.error ??
+    roleDenied(boardIssuesQuery.error) ??
+    roleDenied(viewsQuery.error);
 
   return {
     projects,
@@ -105,9 +107,9 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
     customFields,
     canCreateIssue,
     errorMsg: errorMessage(error),
-    // A 403 means the session is valid but the user is not a member of this
-    // project. Shown as an access message instead of the generic error banner
+    // A 403 on the scaffold means the session is valid but the user is not a member
+    // of this project. Shown as an access message instead of the generic error banner
     // (and never as a login bounce — the middleware owns the no-session case).
-    forbidden: error instanceof ApiError && error.status === 403,
+    forbidden: projectQuery.error instanceof ApiError && projectQuery.error.status === 403,
   };
 }

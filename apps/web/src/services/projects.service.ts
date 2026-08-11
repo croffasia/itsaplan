@@ -32,11 +32,9 @@ export function useBoardIssuesQuery(projectKey: string | null) {
 
 // Returns a callback that invalidates a project's detail query. Used by the
 // settings service mutations to refresh the project after a structural write.
-// Passing `withCustomFields` also refreshes the custom-field lists (the Custom
-// fields tab edits those).
 export function useInvalidateProject(projectKey: string | null) {
   const qc = useQueryClient();
-  return (withCustomFields = false) => {
+  return () => {
     if (projectKey) {
       void qc.invalidateQueries({ queryKey: qk.project(projectKey) });
       // A structural change (deleted/renamed label, type, column, custom field) can
@@ -48,7 +46,6 @@ export function useInvalidateProject(projectKey: string | null) {
     // from the issue query, not the project — so refresh any open issue too. Only
     // the active (open) issue actually refetches.
     void qc.invalidateQueries({ queryKey: qk.anyIssue });
-    if (withCustomFields) void qc.invalidateQueries({ queryKey: qk.anyCustomFields });
   };
 }
 

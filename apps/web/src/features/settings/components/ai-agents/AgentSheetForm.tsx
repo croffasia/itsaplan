@@ -6,9 +6,9 @@ import {
   useAgentToolsQuery,
 } from '@/services/aiAgents.service';
 import {
-  useCredentialsQuery,
   useIntegrationCatalogQuery,
   useIntegrationModelsQuery,
+  useIntegrationOptionsQuery,
 } from '@/services/integrations.service';
 import { useRolesQuery } from '@/services/roles.service';
 import {
@@ -75,14 +75,9 @@ export function AgentSheetForm({
   const toolsQuery = useAgentToolsQuery(projectKey);
   const catalogQuery = useIntegrationCatalogQuery(projectKey);
   const catalog = catalogQuery.data ?? [];
-  const credentialsQuery = useCredentialsQuery(projectKey);
-  const credentials = credentialsQuery.data ?? [];
-  // Only LLM-provider credentials can back a model.
-  const llmCredentials = credentials.filter(
-    (c) => catalog.find((i) => i.key === c.integrationKey)?.kind === 'llm',
-  );
+  const llmCredentials = useIntegrationOptionsQuery(projectKey, 'llm').data ?? [];
   const selectedProvider =
-    credentials.find((c) => c.id === value.modelCredentialId)?.integrationKey ?? null;
+    llmCredentials.find((c) => c.id === value.modelCredentialId)?.integrationKey ?? null;
   const providerModelsQuery = useIntegrationModelsQuery(
     projectKey,
     value.kind === 'internal' ? selectedProvider : null,

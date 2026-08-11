@@ -1,5 +1,5 @@
 import { db, initiative, initiativeLabel, issue, label, projectColumn, user } from '@repo/db';
-import { and, asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
 import { labelNames } from '../issues/activity';
 import { getMembership } from '../members/store';
 import { HttpError, iso, num } from '../shared/lib';
@@ -189,6 +189,44 @@ export async function listInitiatives(
     ),
     total: Number(total),
   };
+}
+
+export interface InitiativeOption {
+  id: number;
+  title: string;
+  status: string;
+}
+
+// The statuses an issue can be linked to. A completed or canceled initiative is not
+// offered, but stays listed through `include` when an issue already links to it.
+const LINKABLE_STATUSES = ['proposed', 'planned', 'active'];
+
+// The initiatives as picker options: title and status only, without the progress and
+// health the list computes per row.
+export async function listInitiativeOptions(
+  projectId: number,
+  { search, include }: { search?: string; include?: number },
+): Promise<InitiativeOption[]> {
+  const title = search?.trim();
+  const linkable = and(
+    inArray(initiative.status, LINKABLE_STATUSES),
+    title ? ilike(initiative.title, `%${title}%`) : undefined,
+  );
+  // The included one is ordered first so the row cap can never drop it: it is what
+  // labels the picker trigger.
+  const order = [asc(initiative.position), desc(initiative.id)];
+  if (include) order.unshift(desc(sql`${initiative.id} = ${include}`));
+  return db
+    .select({ id: initiative.id, title: initiative.title, status: initiative.status })
+    .from(initiative)
+    .where(
+      and(
+        eq(initiative.projectId, projectId),
+        include ? or(linkable, eq(initiative.id, include)) : linkable,
+      ),
+    )
+    .orderBy(...order)
+    .limit(50);
 }
 
 export interface InitiativeStatusCounts {

@@ -2,7 +2,10 @@
 
 import { useShell } from '@/context/shellContext';
 import { AGENT_TOOLS_SECTION } from '@/utils/settingsSections';
-import { useIntegrationCatalogQuery, useCredentialsQuery } from '@/services/integrations.service';
+import {
+  useIntegrationCatalogQuery,
+  useIntegrationOptionsQuery,
+} from '@/services/integrations.service';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import RequirePermission from '@/components/common/permissions/RequirePermission';
 import { SettingsResourceProvider } from './context/settingsPermission';
@@ -18,7 +21,7 @@ export default function SettingsAgentToolsPage() {
   const { project } = useShell();
   const key = project?.project.key ?? null;
   const catalog = useIntegrationCatalogQuery(key).data ?? [];
-  const credentials = useCredentialsQuery(key).data ?? [];
+  const credentials = useIntegrationOptionsQuery(key, 'tool').data ?? [];
   if (!project) return null;
   const projectKey = project.project.key;
   return (

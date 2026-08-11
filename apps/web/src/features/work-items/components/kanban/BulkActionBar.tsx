@@ -4,8 +4,7 @@ import { useState } from 'react';
 import { Archive, Bot, CircleDashed, RefreshCw, Tag, Target, Trash2, User, X } from 'lucide-react';
 import { type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useInitiativesQuery } from '@/services/initiatives.service';
-import { LINKABLE_STATUSES } from '@/utils/initiativeMeta';
+import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { subtaskCount } from '@/utils/subtasks';
 import { cn } from '@/lib/utils';
@@ -29,17 +28,13 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   const { can } = usePermissions();
   const bulk = useBulkActions(project);
   const [confirming, setConfirming] = useState<'delete' | 'archive' | null>(null);
-  // Initiatives are not in the board scaffold. The bulk picker fetches the first
-  // page of linkable (open) initiatives only while selection is active, and only
-  // while the project shows the Initiatives section (with none loaded the picker
-  // is left out).
+  // Initiatives are not in the board scaffold. The bulk picker fetches the linkable
+  // (open) ones only while selection is active, and only while the project shows the
+  // Initiatives section (with none loaded the picker is left out).
   const initiativesKey =
     selection.isSelecting && project.project.initiativesEnabled ? project.project.key : null;
-  const { data } = useInitiativesQuery(initiativesKey, {
-    statuses: LINKABLE_STATUSES,
-    pageSize: 50,
-  });
-  const initiatives = data?.items ?? [];
+  const { data } = useInitiativeOptionsQuery(initiativesKey);
+  const initiatives = data ?? [];
 
   if (!selection.isSelecting) return null;
 

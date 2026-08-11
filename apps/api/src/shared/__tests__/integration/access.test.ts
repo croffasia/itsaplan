@@ -57,9 +57,9 @@ describe('shared access', () => {
         .actions.post({ name: 'Auto-close' });
       expect(ownerCreate.status).toBe(201);
 
-      // Default member: granted work_items (the project view) ...
-      const view = await member.api.projects({ projectKey: 'MKT' }).get();
-      expect(view.status).toBe(200);
+      // Default member: granted work_items, so the board issues load ...
+      const board = await member.api.projects({ projectKey: 'MKT' }).issues.board.get();
+      expect(board.status).toBe(200);
 
       // ... but denied on actions, which the default role does not grant.
       const list = await member.api.projects({ projectKey: 'MKT' }).actions.get();

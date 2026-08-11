@@ -25,7 +25,7 @@ function useProjectMutation<TArgs>(
   mutationFn: (args: TArgs) => Promise<unknown>,
 ) {
   const invalidate = useInvalidateProject(projectKey);
-  return useMutation({ mutationFn, onSuccess: () => invalidate(true) });
+  return useMutation({ mutationFn, onSuccess: () => invalidate() });
 }
 
 export function useCreateColumn(projectKey: string) {

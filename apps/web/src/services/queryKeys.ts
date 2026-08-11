@@ -43,11 +43,6 @@ export const qk = {
   analytics: (projectKey: string, kind: string, params?: unknown) =>
     ['analytics', projectKey, kind, params ?? {}] as const,
   analyticsForProject: (projectKey: string) => ['analytics', projectKey] as const,
-  // Custom fields are project-scoped; typeId narrows to one issue type's fields,
-  // 'all' is the project's full list.
-  customFields: (projectKey: string, typeId?: number | null) =>
-    ['customFields', projectKey, typeId ?? 'all'] as const,
-  anyCustomFields: ['customFields'] as const,
   // Project membership, invite links, and custom roles (the Members section). The
   // permission catalog is app-static, so it is not project-scoped.
   members: (projectKey: string) => ['members', projectKey] as const,
@@ -79,6 +74,10 @@ export const qk = {
   integrationCatalog: (projectKey: string) => ['integrations', projectKey, 'catalog'] as const,
   integrationModels: (projectKey: string, provider: string) =>
     ['integrations', projectKey, 'models', provider] as const,
+  // The connected integrations as picker options, under the same prefix so a
+  // credential mutation refreshes them too.
+  integrationOptions: (projectKey: string, kind?: string) =>
+    ['integrations', projectKey, 'options', kind ?? 'all'] as const,
   // The project skill library (the Skills page).
   agentSkills: (projectKey: string) => ['agentSkills', projectKey] as const,
   // Configured tools (the Tools page) and the tools enabled on one agent (the agent
@@ -104,6 +103,9 @@ export const qk = {
   initiatives: (projectKey: string, params?: Record<string, unknown>) =>
     ['initiatives', projectKey, params ?? {}] as const,
   initiativesForProject: (projectKey: string) => ['initiatives', projectKey] as const,
+  // The linkable initiatives behind the issue picker, narrowed by the typed search.
+  initiativeOptions: (projectKey: string, params: Record<string, unknown>) =>
+    ['initiatives', projectKey, 'options', params] as const,
   initiativeCounts: (projectKey: string) => ['initiativeCounts', projectKey] as const,
   initiative: (id: number) => ['initiative', id] as const,
   initiativeFeed: (id: number) => ['initiativeFeed', id] as const,
@@ -118,6 +120,7 @@ export const qk = {
   // under the same prefix, so one invalidation covers all three.
   cycles: (projectKey: string) => ['cycles', projectKey] as const,
   plannedCycles: (projectKey: string) => ['cycles', projectKey, 'planned'] as const,
+  cycleOptions: (projectKey: string) => ['cycles', projectKey, 'options'] as const,
   completedCycles: (projectKey: string) => ['cycles', projectKey, 'completed'] as const,
   cycle: (id: number) => ['cycle', id] as const,
   anyCycles: ['cycles'] as const,

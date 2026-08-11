@@ -81,6 +81,31 @@ export const cycleRoutes = new Elysia({
     },
   )
 
+  // Fills the cycle picker on an issue and the cycle lanes on the board. Read under
+  // work items: planning an issue needs the names, not the cycle pages the `cycles`
+  // resource gates.
+  .get(
+    '/projects/:projectKey/cycles/options',
+    async ({ project }) => {
+      const cycles = await listPlannedCycles(project.id);
+      return cycles.map((c) => ({ id: c.id, name: c.name, status: c.status }));
+    },
+    {
+      params: t.Object({ projectKey: t.String() }),
+      permission: ['work_items', 'read'],
+      response: {
+        200: t.Array(t.Object({ id: t.Number(), name: t.String(), status: t.String() })),
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'List cycle options',
+        description: 'The cycles an issue can be planned into: id, name and status.',
+      },
+    },
+  )
+
   .get(
     '/projects/:projectKey/cycles/completed',
     async ({ project, query }) => {

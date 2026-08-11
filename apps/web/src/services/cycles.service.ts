@@ -39,6 +39,16 @@ export function usePlannedCyclesQuery(projectKey: string | null) {
   });
 }
 
+// The cycles an issue can be planned into. Read under work items, so the picker and
+// the board's cycle lanes work for a role without access to the cycles pages.
+export function useCycleOptionsQuery(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.cycleOptions(projectKey ?? ''),
+    queryFn: () => api.listCycleOptions(projectKey!),
+    enabled: projectKey != null,
+  });
+}
+
 // The finished cycles, newest first, a page at a time.
 export function useCompletedCyclesQuery(projectKey: string | null) {
   return useInfiniteQuery({

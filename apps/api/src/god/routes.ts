@@ -375,16 +375,16 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     detail: {
       summary: 'Get the update status',
       description:
-        'Get the running version, the newest published one, and the release notes. The upstream check is cached for six hours.',
+        'Get the running version, the newest published one, and the release notes. Every call reads the published releases upstream.',
     },
   })
 
-  .post('/god/updates/check', () => getUpdateStatus(true), {
+  .post('/god/updates/check', () => getUpdateStatus(), {
     response: { 200: UpdateStatusSchema, 401: ErrorResponse, 403: ErrorResponse },
     detail: {
       summary: 'Check for updates now',
       description:
-        'Read the published releases again, ignoring the cache. Returns the update status either way: a failed check answers from the previous result.',
+        'Read the published releases on demand. Returns the update status either way: a failed check answers from the release history of this build.',
     },
   })
 

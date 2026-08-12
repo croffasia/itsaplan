@@ -37,7 +37,7 @@ describe('god updates', () => {
   });
 
   describe('status — GET /god/updates', () => {
-    it('offers no update while no check has succeeded', async () => {
+    it('offers no update when the feed cannot be read', async () => {
       const { god } = await setup();
 
       const res = await god.api.god.updates.get();

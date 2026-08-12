@@ -1,5 +1,4 @@
 import { t } from 'elysia';
-import { getSetting, setSetting } from '@repo/db';
 import pkg from '../../../../package.json';
 
 // Whether a newer release is published, plus the notes to show. The repository's
@@ -9,13 +8,10 @@ import pkg from '../../../../package.json';
 //
 // The feed is github.com web content, not the REST API, so no token and no
 // 60/hour limit (agent-skills/skill-format.ts reads github.com atom the same way).
-// Its result is cached in app_setting for CACHE_TTL_MS and refreshed on read, so an
-// instance makes one outbound request per interval whatever the number of tabs and
-// whether or not the feed can be read. A failed check keeps the previous result and
-// leaves the local history intact.
+// The result is not stored on the server: every read fetches the feed, and the
+// browser holds it behind a stale time (web services/updates.service.ts).
+// A failed check leaves the local history intact.
 
-const UPDATES_CACHE_KEY = 'updates.latest';
-const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const FETCH_TIMEOUT_MS = 10_000;
 
 // Fixed: an instance checks the project it is built from, so there is nothing to
@@ -37,9 +33,10 @@ export interface Release {
 
 export interface UpdateStatus {
   currentVersion: string;
-  // The newest published version, or null when no check has succeeded yet.
+  // The newest published version, or null when the feed could not be read.
   latestVersion: string | null;
   updateAvailable: boolean;
+  // When the feed was read, null when it could not be.
   checkedAt: string | null;
   // Newest first.
   releases: Release[];
@@ -61,14 +58,6 @@ export const UpdateStatusSchema = t.Object({
   checkedAt: t.Nullable(t.String()),
   releases: t.Array(ReleaseSchema),
 });
-
-interface UpdateCache {
-  // When a check last ran, successful or not — the TTL is measured against this.
-  attemptedAt: string;
-  // Null while no check has succeeded.
-  checkedAt: string | null;
-  releases: Release[];
-}
 
 export function getAppVersion(): string {
   return pkg.version;
@@ -161,9 +150,6 @@ async function localHistory(): Promise<Release[]> {
   return changelog;
 }
 
-// One refresh at a time: concurrent readers of an expired cache share the request.
-let inFlight: Promise<UpdateCache | null> | null = null;
-
 async function readFeed(): Promise<Release[]> {
   const res = await fetch(FEED_URL, {
     headers: { 'User-Agent': 'itsaplan' },
@@ -173,56 +159,18 @@ async function readFeed(): Promise<Release[]> {
   return parseReleasesAtom(await res.text());
 }
 
-// A failed attempt is stored too, so an unreachable feed costs one connection per
-// interval rather than one per read.
-async function check(previous: UpdateCache | null): Promise<UpdateCache | null> {
+// Null when the feed cannot be read, so the caller answers from the local history
+// alone instead of reporting a check that did not happen.
+async function publishedReleases(): Promise<Release[] | null> {
   // The suite must not depend on github.com being reachable, and the same
   // NODE_ENV already gates the db reset helper.
   if (process.env.NODE_ENV === 'test') return null;
-  const attemptedAt = new Date().toISOString();
-  let cache: UpdateCache = {
-    attemptedAt,
-    checkedAt: previous?.checkedAt ?? null,
-    releases: previous?.releases ?? [],
-  };
   try {
-    cache = { attemptedAt, checkedAt: attemptedAt, releases: await readFeed() };
+    return await readFeed();
   } catch (err) {
     console.error('[updates] check failed:', err);
+    return null;
   }
-  try {
-    await setSetting(UPDATES_CACHE_KEY, cache);
-  } catch (err) {
-    console.error('[updates] cache write failed:', err);
-  }
-  return cache;
-}
-
-function refresh(previous: UpdateCache | null): Promise<UpdateCache | null> {
-  inFlight ??= check(previous).finally(() => {
-    inFlight = null;
-  });
-  return inFlight;
-}
-
-// Every field UpdateStatusSchema requires: a row that would fail response validation
-// is re-checked instead of served as a 500.
-function usableRelease(r: Release): boolean {
-  return (
-    typeof r.tag === 'string' &&
-    typeof r.version === 'string' &&
-    typeof r.publishedAt === 'string' &&
-    (r.url === null || typeof r.url === 'string') &&
-    typeof r.notes === 'string' &&
-    (r.notesFormat === 'html' || r.notesFormat === 'markdown')
-  );
-}
-
-function usable(cache: UpdateCache | null): cache is UpdateCache {
-  if (!cache || typeof cache.attemptedAt !== 'string') return false;
-  if (cache.checkedAt !== null && typeof cache.checkedAt !== 'string') return false;
-  if (!Array.isArray(cache.releases)) return false;
-  return cache.releases.every(usableRelease);
 }
 
 // Newest first, a feed entry preferred over the changelog section of the same version.
@@ -233,23 +181,15 @@ export function mergeHistory(published: Release[], local: Release[]): Release[] 
   );
 }
 
-// Refreshes an expired cache, or always when `force` is set ("check now").
-export async function getUpdateStatus(force = false): Promise<UpdateStatus> {
-  const stored = await getSetting<UpdateCache>(UPDATES_CACHE_KEY);
-  const cached = usable(stored) ? stored : null;
-  // Negated so an unreadable timestamp counts as expired instead of fresh forever,
-  // which is what comparing NaN would do.
-  const expired = !cached || !(Date.now() - Date.parse(cached.attemptedAt) < CACHE_TTL_MS);
-  const cache = force || expired ? ((await refresh(cached)) ?? cached) : cached;
-
+export async function getUpdateStatus(): Promise<UpdateStatus> {
+  const feed = await publishedReleases();
+  const published = feed ?? [];
   const currentVersion = getAppVersion();
-  const published = cache?.releases ?? [];
-  const latestVersion = published[0]?.version ?? null;
   return {
     currentVersion,
-    latestVersion,
+    latestVersion: published[0]?.version ?? null,
     updateAvailable: published.some((r) => compareVersions(r.version, currentVersion) > 0),
-    checkedAt: cache?.checkedAt ?? null,
+    checkedAt: feed ? new Date().toISOString() : null,
     releases: mergeHistory(published, await localHistory()),
   };
 }

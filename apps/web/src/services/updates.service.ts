@@ -27,8 +27,8 @@ export function useUpdateStatusQuery(enabled: boolean) {
     queryKey: qk.updateStatus,
     queryFn: () => api.getUpdateStatus(),
     enabled,
-    // The api caches the upstream check for six hours; refetching sooner would only
-    // re-read the same cached answer.
+    // Every call reads the upstream feed, so this is the only thing keeping a
+    // session from doing it on each navigation. "Check now" refetches regardless.
     staleTime: 30 * 60_000,
   });
 }

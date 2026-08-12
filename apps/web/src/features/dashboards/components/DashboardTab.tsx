@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { LayoutDashboard, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Dashboard } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,6 +24,8 @@ export default function DashboardTab({
   onRename: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('dashboards');
+  const tCommon = useTranslations('common');
   const [menuOpen, setMenuOpen] = useState(false);
   // Reordering tabs is a dashboards edit; disable dragging without it.
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -56,7 +59,7 @@ export default function DashboardTab({
           <PopoverTrigger asChild>
             <button
               type="button"
-              title="Dashboard options"
+              title={t('options')}
               className="mr-1.5 rounded p-0.5 hover:bg-accent-foreground/10"
             >
               <MoreHorizontal className="size-3.5" />
@@ -72,7 +75,7 @@ export default function DashboardTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
               >
-                <Pencil className="size-3.5" /> Rename
+                <Pencil className="size-3.5" /> {t('rename')}
               </button>
             )}
             {canDelete && (
@@ -84,7 +87,7 @@ export default function DashboardTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm text-destructive hover:bg-destructive/10"
               >
-                <Trash2 className="size-3.5" /> Delete
+                <Trash2 className="size-3.5" /> {tCommon('delete')}
               </button>
             )}
           </PopoverContent>

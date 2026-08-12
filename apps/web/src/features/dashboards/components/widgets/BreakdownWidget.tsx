@@ -1,16 +1,13 @@
 import { Cell, Pie, PieChart } from 'recharts';
+import { useTranslations } from 'next-intl';
 import type { BreakdownBy, WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useBreakdownQuery } from '../../services/analytics.service';
 
-export const BY_OPTIONS: { value: BreakdownBy; label: string }[] = [
-  { value: 'status', label: 'State' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'type', label: 'Type' },
-  { value: 'assignee', label: 'Assignee' },
-  { value: 'delegate', label: 'Delegate' },
-];
+// The dimensions the counts can be grouped by, in picker order. Their labels are
+// messages under `dashboards.breakdown.by`.
+export const BY_OPTIONS: BreakdownBy[] = ['status', 'priority', 'type', 'assignee', 'delegate'];
 
 // Fallback slice colors for categories without their own color (priority,
 // assignee). Status and type carry their entity color and use it directly.
@@ -35,6 +32,7 @@ export default function BreakdownWidget({
   projectKey: string;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards.breakdown');
   const by = config.by ?? 'status';
   const { data, isLoading } = useBreakdownQuery(projectKey, by);
   // An empty status bucket is still a board column, so keep it; other dimensions drop zeros.
@@ -49,7 +47,7 @@ export default function BreakdownWidget({
   function chart() {
     if (isLoading) return <Skeleton className="mx-auto h-[160px] w-[160px] rounded-full" />;
     if (total === 0) {
-      return <p className="py-10 text-center text-sm text-muted-foreground">No issues yet.</p>;
+      return <p className="py-10 text-center text-sm text-muted-foreground">{t('empty')}</p>;
     }
     return (
       <div className="flex flex-col items-center gap-3 sm:flex-row">
@@ -78,9 +76,7 @@ export default function BreakdownWidget({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">
-        By {BY_OPTIONS.find((o) => o.value === by)?.label.toLowerCase() ?? by}
-      </p>
+      <p className="text-xs text-muted-foreground">{t(`caption.${by}`)}</p>
       {chart()}
     </div>
   );

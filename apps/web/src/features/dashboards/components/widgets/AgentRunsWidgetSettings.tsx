@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import {
   Select,
@@ -17,6 +18,7 @@ export default function AgentRunsWidgetSettings({
   config: WidgetConfig;
   onConfigChange: (config: WidgetConfig) => void;
 }) {
+  const t = useTranslations('dashboards.agentRuns');
   const status = config.runStatus ?? null;
   const limit = config.limit ?? 20;
   return (
@@ -31,9 +33,9 @@ export default function AgentRunsWidgetSettings({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {STATUS_FILTER.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
+          {STATUS_FILTER.map((option) => (
+            <SelectItem key={option} value={option}>
+              {t(`filters.${option}`)}
             </SelectItem>
           ))}
         </SelectContent>

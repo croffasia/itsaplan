@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import {
   Select,
@@ -17,6 +18,7 @@ export default function ThroughputWidgetSettings({
   config: WidgetConfig;
   onConfigChange: (config: WidgetConfig) => void;
 }) {
+  const t = useTranslations('dashboards.throughput');
   const weeks = config.weeks ?? 12;
   return (
     <Select value={String(weeks)} onValueChange={(v) => onConfigChange({ weeks: Number(v) })}>
@@ -26,7 +28,7 @@ export default function ThroughputWidgetSettings({
       <SelectContent>
         {WEEK_OPTIONS.map((w) => (
           <SelectItem key={w} value={String(w)}>
-            Last {w} weeks
+            {t('lastWeeks', { weeks: w })}
           </SelectItem>
         ))}
       </SelectContent>

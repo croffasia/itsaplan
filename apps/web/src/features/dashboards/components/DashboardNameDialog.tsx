@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,6 +24,8 @@ export default function DashboardNameDialog({
   onClose: () => void;
   onSubmit: (name: string) => void;
 }) {
+  const t = useTranslations('dashboards');
+  const tCommon = useTranslations('common');
   const [name, setName] = useState(initial);
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
@@ -41,14 +44,14 @@ export default function DashboardNameDialog({
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Dashboard name"
+            placeholder={t('namePlaceholder')}
           />
           <DialogFooter className="mt-4">
             <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button type="submit" disabled={!name.trim()}>
-              Save
+              {tCommon('save')}
             </Button>
           </DialogFooter>
         </form>

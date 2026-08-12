@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { issuePath } from '@/utils/paths';
 import { formatShortDate } from '@/utils/dates';
-import { priorityLabel } from '@/utils/fieldOptions';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { EMPTY_FILTER_SET, applyFilters, isActiveFilterSet, type FilterSet } from '@/utils/filters';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -21,6 +22,8 @@ export default function RecentIssuesWidget({
   projectKey: string;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards.recentIssues');
+  const priorityLabel = usePriorityLabel();
   const { project } = useShell();
   const sort = config.sort ?? 'created';
   const limit = config.limit ?? 10;
@@ -44,10 +47,9 @@ export default function RecentIssuesWidget({
 
   if (!project) return <Skeleton className="h-40 w-full" />;
 
-  const filterCount = filters.conditions.length;
   const caption = [
-    sort === 'updated' ? 'Recently updated' : 'Newest first',
-    isActiveFilterSet(filters) ? `${filterCount} filter${filterCount === 1 ? '' : 's'}` : null,
+    sort === 'updated' ? t('captionUpdated') : t('captionCreated'),
+    isActiveFilterSet(filters) ? t('filterCount', { count: filters.conditions.length }) : null,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -57,9 +59,7 @@ export default function RecentIssuesWidget({
       <p className="text-xs text-muted-foreground">{caption}</p>
 
       {issues.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          No issues match this filter.
-        </p>
+        <p className="py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>
       ) : (
         <ul className="space-y-0.5">
           {issues.map((issue) => {

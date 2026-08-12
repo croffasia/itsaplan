@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useWebhookStatsQuery } from '../../services/analytics.service';
@@ -14,6 +15,7 @@ export default function WebhookHealthWidget({
   projectKey: string;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards');
   const days = config.days ?? 30;
   const { data, isLoading } = useWebhookStatsQuery(projectKey, days);
 
@@ -21,18 +23,22 @@ export default function WebhookHealthWidget({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">Last {days} days</p>
+      <p className="text-xs text-muted-foreground">{t('lastDays', { days })}</p>
       <div className="text-4xl font-semibold tracking-tight tabular-nums">{data.total}</div>
-      <p className="text-xs text-muted-foreground">deliveries</p>
+      <p className="text-xs text-muted-foreground">{t('webhookHealth.deliveries')}</p>
       <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground tabular-nums">
-        {data.failed > 0 && <span className="text-destructive">{data.failed} failed</span>}
-        {data.pending > 0 && <span>{data.pending} pending</span>}
-        {data.failed === 0 && data.pending === 0 && <span>all delivered</span>}
+        {data.failed > 0 && (
+          <span className="text-destructive">
+            {t('webhookHealth.failed', { count: data.failed })}
+          </span>
+        )}
+        {data.pending > 0 && <span>{t('webhookHealth.pending', { count: data.pending })}</span>}
+        {data.failed === 0 && data.pending === 0 && <span>{t('webhookHealth.allDelivered')}</span>}
       </div>
       {data.disabledWebhooks > 0 && (
         <p className="flex items-center gap-1 text-xs text-destructive">
           <AlertTriangle className="size-3.5 shrink-0" />
-          {data.disabledWebhooks} disabled endpoint{data.disabledWebhooks === 1 ? '' : 's'}
+          {t('webhookHealth.disabled', { count: data.disabledWebhooks })}
         </p>
       )}
     </div>

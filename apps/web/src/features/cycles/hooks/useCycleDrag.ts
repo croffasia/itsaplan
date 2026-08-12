@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { ApiError, type Cycle, type CyclePatch } from '@/lib/api';
 import { addDays, daysBetween, toDateStr } from '@/utils/dates';
 import { useUpdateCycle } from '@/services/cycles.service';
@@ -29,6 +30,7 @@ export function useCycleDrag({
   dayW: number;
   onOpen: (id: number) => void;
 }) {
+  const t = useTranslations('cycles');
   const update = useUpdateCycle(projectKey);
   const [preview, setPreview] = useState<{ cycleId: number; start: Date; end: Date } | null>(null);
 
@@ -95,8 +97,7 @@ export function useCycleDrag({
       update.mutate(
         { id: cycle.id, patch },
         {
-          onError: (err) =>
-            toast.error(err instanceof ApiError ? err.message : 'Could not move the cycle'),
+          onError: (err) => toast.error(err instanceof ApiError ? err.message : t('dragFailed')),
         },
       );
     };

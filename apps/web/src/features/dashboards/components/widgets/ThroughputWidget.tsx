@@ -1,5 +1,6 @@
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
 import { format, parseISO } from 'date-fns';
+import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -12,10 +13,7 @@ import {
 } from '@/components/ui/chart';
 import { useThroughputQuery } from '../../services/analytics.service';
 
-const CHART_CONFIG: ChartConfig = {
-  created: { label: 'Created', color: '#6366f1' },
-  closed: { label: 'Closed', color: '#22c55e' },
-};
+const SERIES_COLOR = { created: '#6366f1', closed: '#22c55e' };
 
 // Created vs closed issues per week, as grouped bars. "Closed" is a status change
 // into a completed column (from the activity log); see the analytics store. The
@@ -28,22 +26,23 @@ export default function ThroughputWidget({
   projectKey: string;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards.throughput');
   const weeks = config.weeks ?? 12;
   const { data, isLoading } = useThroughputQuery(projectKey, weeks);
 
+  const chartConfig: ChartConfig = {
+    created: { label: t('created'), color: SERIES_COLOR.created },
+    closed: { label: t('closed'), color: SERIES_COLOR.closed },
+  };
   const chartData = (data ?? []).map((w) => ({ ...w, label: format(parseISO(w.week), 'MMM d') }));
 
   function chart() {
     if (isLoading) return <Skeleton className="h-[180px] w-full" />;
     if (chartData.length === 0) {
-      return (
-        <p className="py-10 text-center text-sm text-muted-foreground">
-          No activity in this period.
-        </p>
-      );
+      return <p className="py-10 text-center text-sm text-muted-foreground">{t('empty')}</p>;
     }
     return (
-      <ChartContainer config={CHART_CONFIG} className="h-[180px] w-full">
+      <ChartContainer config={chartConfig} className="h-[180px] w-full">
         <BarChart data={chartData}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />
@@ -58,7 +57,7 @@ export default function ThroughputWidget({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">Last {weeks} weeks</p>
+      <p className="text-xs text-muted-foreground">{t('lastWeeks', { weeks })}</p>
       {chart()}
     </div>
   );

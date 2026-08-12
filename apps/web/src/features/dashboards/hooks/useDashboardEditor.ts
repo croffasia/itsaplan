@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
+import { useTranslations } from 'next-intl';
 import type { Dashboard } from '@/lib/api';
 import {
-  DEFAULT_DASHBOARD_LAYOUT,
   createWidget,
+  defaultDashboardLayout,
+  type DefaultStatKey,
   normalizeLayout,
   type DashboardLayout,
   type WidgetInstance,
@@ -27,6 +29,8 @@ export function useDashboardEditor(
   activeDashboardId: number | null,
   onSelectDashboard: (id: number | null) => void,
 ) {
+  const t = useTranslations('dashboards');
+  const defaultLayout = defaultDashboardLayout((key: DefaultStatKey) => t(`defaultWidgets.${key}`));
   const createM = useCreateDashboard(projectKey);
   const updateM = useUpdateDashboard(projectKey);
   const deleteM = useDeleteDashboard(projectKey);
@@ -34,9 +38,7 @@ export function useDashboardEditor(
 
   const active = dashboards.find((d) => d.id === activeDashboardId) ?? null;
   const isVirtual = active == null;
-  const baseLayout: DashboardLayout = active
-    ? normalizeLayout(active.layout)
-    : DEFAULT_DASHBOARD_LAYOUT;
+  const baseLayout: DashboardLayout = active ? normalizeLayout(active.layout) : defaultLayout;
 
   // A draft is scoped to one dashboard (keyed by its id, or 'default' for the
   // virtual one). Navigating to another dashboard changes the key, so the draft
@@ -84,7 +86,7 @@ export function useDashboardEditor(
   // first one (from the default) when the virtual dashboard is on screen.
   const save = async () => {
     if (isVirtual) {
-      const created = await createM.mutateAsync({ input: { name: 'Overview', layout } });
+      const created = await createM.mutateAsync({ input: { name: t('defaultName'), layout } });
       setDraft(null);
       onSelectDashboard(created.id);
     } else {
@@ -97,7 +99,7 @@ export function useDashboardEditor(
 
   const createDashboard = async (name: string) => {
     const created = await createM.mutateAsync({
-      input: { name, layout: DEFAULT_DASHBOARD_LAYOUT },
+      input: { name, layout: defaultLayout },
     });
     onSelectDashboard(created.id);
   };

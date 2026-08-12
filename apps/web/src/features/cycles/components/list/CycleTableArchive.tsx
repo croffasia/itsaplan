@@ -1,4 +1,7 @@
+'use client';
+
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import type { CompletedCycles } from '../../hooks/useCompletedCycles';
@@ -19,13 +22,14 @@ export default function CycleTableArchive({
   projectKey: string;
   gridTemplate: string;
 }) {
+  const t = useTranslations('cycles');
   const [collapsed, setCollapsed] = useState(true);
-  const { label, color } = CYCLE_STATUS_META.completed;
+  const { color } = CYCLE_STATUS_META.completed;
 
   return (
     <>
       <CycleTableSection
-        label={label}
+        label={t('status.completed')}
         color={color}
         count={completed.total}
         collapsed={collapsed}

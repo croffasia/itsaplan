@@ -1,6 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
@@ -17,6 +18,7 @@ import InitiativeOverview from './components/detail/InitiativeOverview';
 // tab (the work items board over its linked issues). Each tab is its own route, so
 // the open tab survives a reload; the route that mounts this page passes it.
 export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: InitiativeTab }) {
+  const t = useTranslations('initiatives');
   const { project } = useShell();
   const router = useRouter();
   const params = useParams();
@@ -47,7 +49,7 @@ export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: Initi
       {query.isLoading ? (
         <PageSkeleton className="mx-0 max-w-none px-6 py-8" />
       ) : !initiative ? (
-        <p className="px-6 py-8 text-sm text-muted-foreground">Initiative not found.</p>
+        <p className="px-6 py-8 text-sm text-muted-foreground">{t('notFound')}</p>
       ) : (
         <>
           <InitiativeHeader initiative={initiative} project={project} />
@@ -60,8 +62,8 @@ export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: Initi
           >
             <div className="px-6 pt-3">
               <TabsList variant="line">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="issues">Issues</TabsTrigger>
+                <TabsTrigger value="overview">{t('detailTabs.overview')}</TabsTrigger>
+                <TabsTrigger value="issues">{t('detailTabs.issues')}</TabsTrigger>
               </TabsList>
             </div>
             <TabsContent value="overview" className="mt-0 flex-1 overflow-y-auto">

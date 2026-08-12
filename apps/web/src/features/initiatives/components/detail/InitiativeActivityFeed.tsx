@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useInitiativeFeedQuery } from '@/services/initiatives.service';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -14,6 +15,7 @@ export default function InitiativeActivityFeed({
   initiativeId: number;
   projectKey: string;
 }) {
+  const t = useTranslations('initiatives');
   const feed = useInitiativeFeedQuery(initiativeId);
 
   // Pages can overlap when new activity shifts the offset, so drop repeated ids.
@@ -22,7 +24,7 @@ export default function InitiativeActivityFeed({
 
   if (feed.isLoading) return <ListSkeleton rows={3} rowClassName="h-12" />;
 
-  if (items.length === 0) return <p className="text-sm text-muted-foreground">No activity yet.</p>;
+  if (items.length === 0) return <p className="text-sm text-muted-foreground">{t('noActivity')}</p>;
 
   return (
     <>

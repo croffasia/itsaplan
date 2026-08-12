@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import type { PulseUnit } from '@/lib/api';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
@@ -14,13 +15,10 @@ const FILL_COLORS = ['#9be9a8', '#40c463', '#30a14e', '#216e39'];
 // Per-unit heatmap geometry. `rows` cells stack per column (a day column is 24
 // hours, a week column is 7 days, a week is one cell); cell/gap size the grid,
 // maxColumns matches the server cap.
-const GRID: Record<
-  PulseUnit,
-  { cell: number; gap: number; rows: number; maxColumns: number; unitLabel: string }
-> = {
-  hour: { cell: 11, gap: 2, rows: 24, maxColumns: 140, unitLabel: 'By hour' },
-  day: { cell: 15, gap: 3, rows: 7, maxColumns: 160, unitLabel: 'By day' },
-  week: { cell: 15, gap: 3, rows: 4, maxColumns: 130, unitLabel: 'By week' },
+const GRID: Record<PulseUnit, { cell: number; gap: number; rows: number; maxColumns: number }> = {
+  hour: { cell: 11, gap: 2, rows: 24, maxColumns: 140 },
+  day: { cell: 15, gap: 3, rows: 7, maxColumns: 160 },
+  week: { cell: 15, gap: 3, rows: 4, maxColumns: 130 },
 };
 
 // Fetch a few columns beyond what is drawn so a small resize can grow the graph
@@ -47,6 +45,7 @@ export default function PulseWidget({
   projectKey: string;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards.pulse');
   const unit = config.granularity ?? 'day';
   const geo = GRID[unit];
   const step = geo.cell + geo.gap;
@@ -93,7 +92,7 @@ export default function PulseWidget({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">{geo.unitLabel}</p>
+      <p className="text-xs text-muted-foreground">{t(`caption.${unit}`)}</p>
 
       {/* Full-width measuring wrapper; the grid draws only what fits (no scroll). */}
       <div ref={containerRef} className="w-full overflow-hidden">
@@ -135,15 +134,15 @@ export default function PulseWidget({
 
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
         <span>
-          {total} {total === 1 ? 'event' : 'events'} · {active} active
+          {t('events', { count: total })} · {t('active', { count: active })}
         </span>
         <span className="flex items-center gap-1">
-          Less
+          {t('less')}
           <span className="size-3 rounded-[2px] bg-muted" />
           {FILL_COLORS.map((c) => (
             <span key={c} className="size-3 rounded-[2px]" style={{ backgroundColor: c }} />
           ))}
-          More
+          {t('more')}
         </span>
       </div>
 
@@ -157,7 +156,7 @@ export default function PulseWidget({
           >
             <span className="font-medium">{tip.count}</span>{' '}
             <span className="text-muted-foreground">
-              event{tip.count === 1 ? '' : 's'} · {tip.label}
+              {t('eventNoun', { count: tip.count })} · {tip.label}
             </span>
           </div>,
           document.body,

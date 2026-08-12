@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { GripVertical, MoreHorizontal, SlidersHorizontal } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { WidgetInstance } from '@/utils/dashboardWidgets';
 import {
   DropdownMenu,
@@ -8,7 +9,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { WIDGET_META } from '../utils/widgetCatalog';
 
 // A borderless widget section: a quiet header (title + edit affordances) over a
 // hairline divider, then the body directly on the page. No card box — surfaces are
@@ -33,9 +33,12 @@ export default function WidgetFrame({
   onRemove: () => void;
   children: ReactNode;
 }) {
+  const t = useTranslations('dashboards');
   // A saved layout is stored as an opaque jsonb blob, so its widget type is not
-  // guaranteed to be in the catalog; fall back to the raw type instead of throwing.
-  const defaultTitle = WIDGET_META[widget.type]?.label ?? widget.type;
+  // guaranteed to be in the catalog; fall back to the raw type instead of rendering
+  // a key path.
+  const labelKey = `widgets.${widget.type}.label` as const;
+  const defaultTitle = t.has(labelKey) ? t(labelKey) : widget.type;
   const title = widget.title || defaultTitle;
   return (
     <section className="flex h-full flex-col">
@@ -43,7 +46,7 @@ export default function WidgetFrame({
         {editing && (
           <button
             type="button"
-            title="Drag to move"
+            title={t('dragToMove')}
             className="widget-drag-handle -ml-1 cursor-grab touch-none text-muted-foreground/60 hover:text-foreground"
           >
             <GripVertical className="size-4" />
@@ -54,7 +57,7 @@ export default function WidgetFrame({
             value={widget.title ?? ''}
             onChange={(e) => onRename(e.target.value)}
             placeholder={defaultTitle}
-            aria-label="Widget name"
+            aria-label={t('widgetName')}
             className="min-w-0 flex-1 rounded-md bg-transparent px-1 py-0.5 text-sm font-semibold tracking-tight text-foreground outline-none placeholder:text-muted-foreground/60 focus:bg-accent/50"
           />
         ) : (
@@ -67,7 +70,7 @@ export default function WidgetFrame({
             <PopoverTrigger asChild>
               <button
                 type="button"
-                title="Widget settings"
+                title={t('widgetSettings')}
                 className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground"
               >
                 <SlidersHorizontal className="size-4" />
@@ -83,7 +86,7 @@ export default function WidgetFrame({
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                title="Widget options"
+                title={t('widgetOptions')}
                 className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground"
               >
                 <MoreHorizontal className="size-4" />
@@ -91,7 +94,7 @@ export default function WidgetFrame({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem variant="destructive" onClick={onRemove}>
-                Remove widget
+                {t('removeWidget')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -4,17 +4,17 @@ import type { InitiativesTab } from '@/utils/paths';
 // One tab per lifecycle status, except the terminal statuses share a "Completed"
 // tab. `statuses: undefined` means the tab takes every status. The array order is
 // the default tab order; a user can reorder the strip by drag (see
-// useInitiativeTabOrder).
+// useInitiativeTabOrder). The label of a tab is a message under
+// `initiatives.tabs`.
 export const INITIATIVE_TABS: {
   value: InitiativesTab;
-  label: string;
   statuses: InitiativeStatus[] | undefined;
 }[] = [
-  { value: 'active', label: 'Active', statuses: ['active'] },
-  { value: 'planned', label: 'Planned', statuses: ['planned'] },
-  { value: 'proposed', label: 'Proposed', statuses: ['proposed'] },
-  { value: 'completed', label: 'Completed', statuses: ['completed', 'canceled'] },
-  { value: 'all', label: 'All initiatives', statuses: undefined },
+  { value: 'active', statuses: ['active'] },
+  { value: 'planned', statuses: ['planned'] },
+  { value: 'proposed', statuses: ['proposed'] },
+  { value: 'completed', statuses: ['completed', 'canceled'] },
+  { value: 'all', statuses: undefined },
 ];
 
 // The "Completed" tab groups the two terminal statuses, so its count sums them.

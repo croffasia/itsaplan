@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { dashboardPath, dashboardsPath } from '@/utils/paths';
@@ -18,6 +19,8 @@ import AddWidgetDialog from './components/AddWidgetDialog';
 // saved dashboard shows, or a built-in default when the project has none. Layout
 // edits are local until saved (see useDashboardEditor).
 export default function DashboardsPage() {
+  const t = useTranslations('dashboards');
+  const tCommon = useTranslations('common');
   const { project } = useShell();
   const { can } = usePermissions();
   const params = useParams<{ projectKey: string; dashboardId?: string }>();
@@ -48,7 +51,7 @@ export default function DashboardsPage() {
   if (!can('dashboards', 'read')) {
     return (
       <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-        You do not have access to dashboards.
+        {t('noAccess')}
       </div>
     );
   }
@@ -57,8 +60,8 @@ export default function DashboardsPage() {
   const canEditLayout = can('dashboards', 'edit');
 
   function saveLabel() {
-    if (editor.saving) return 'Saving…';
-    return editor.isVirtual ? 'Save dashboard' : 'Save changes';
+    if (editor.saving) return tCommon('saving');
+    return editor.isVirtual ? t('saveDashboard') : t('saveChanges');
   }
 
   function layoutActions() {
@@ -66,7 +69,7 @@ export default function DashboardsPage() {
     if (!editing) {
       return (
         <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-          Edit layout
+          {t('editLayout')}
         </Button>
       );
     }
@@ -81,7 +84,7 @@ export default function DashboardsPage() {
               disabled={editor.saving}
               onClick={() => editor.discard()}
             >
-              Discard
+              {t('discard')}
             </Button>
             <Button size="sm" disabled={editor.saving} onClick={() => void editor.save()}>
               {saveLabel()}
@@ -89,7 +92,7 @@ export default function DashboardsPage() {
           </>
         ) : (
           <Button variant="secondary" size="sm" onClick={() => setEditing(false)}>
-            Done
+            {tCommon('done')}
           </Button>
         )}
       </>

@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ArrowRight, Info } from 'lucide-react';
 import type { Cycle } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
@@ -19,6 +22,7 @@ export default function CycleInfoPopover({
   cycle: Cycle;
   projectKey: string;
 }) {
+  const t = useTranslations('cycles');
   const status = CYCLE_STATUS_META[cycle.status];
 
   return (
@@ -27,7 +31,7 @@ export default function CycleInfoPopover({
         <button
           type="button"
           className="group/name flex w-full min-w-0 items-center gap-2 text-left"
-          title="Cycle details"
+          title={t('details')}
         >
           {colorDot(status.color)}
           <span className="min-w-0 flex-1 truncate text-sm">{cycle.name}</span>
@@ -41,7 +45,7 @@ export default function CycleInfoPopover({
             <span className="truncate font-medium">{cycle.name}</span>
             <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
               {colorDot(status.color)}
-              {status.label}
+              {t(`status.${cycle.status}`)}
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
@@ -51,14 +55,14 @@ export default function CycleInfoPopover({
         </div>
 
         <div className="border-t border-border px-3.5 py-3">
-          <p className="text-xs font-medium text-muted-foreground">Goal</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('goal')}</p>
           <p className="mt-1 text-xs leading-snug whitespace-pre-wrap">
-            {cycle.goal || <span className="text-muted-foreground">No goal set.</span>}
+            {cycle.goal || <span className="text-muted-foreground">{t('noGoal')}</span>}
           </p>
         </div>
 
         <div className="border-t border-border px-3.5 py-3">
-          <p className="text-xs font-medium text-muted-foreground">Progress</p>
+          <p className="text-xs font-medium text-muted-foreground">{t('progress')}</p>
           <div className="mt-2">
             <ProgressBar progress={cycle.progress} wide />
           </div>
@@ -68,7 +72,7 @@ export default function CycleInfoPopover({
           href={cyclePath(projectKey, cycle.id)}
           className="flex items-center justify-between border-t border-border px-3.5 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground"
         >
-          Open cycle
+          {t('openCycle')}
           <ArrowRight className="size-3.5" />
         </Link>
       </PopoverContent>

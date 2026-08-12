@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { CYCLE_LENGTHS } from '../utils/cycleDefaults';
 
@@ -11,6 +14,8 @@ export default function CycleLengthPicker({
   days: number;
   onChange: (days: number) => void;
 }) {
+  const t = useTranslations('cycles');
+
   return (
     <div className="flex items-center gap-1.5">
       {CYCLE_LENGTHS.map((length) => (
@@ -22,7 +27,7 @@ export default function CycleLengthPicker({
           className="h-7 px-2.5 text-xs font-normal"
           onClick={() => onChange(length)}
         >
-          {length / 7} {length === 7 ? 'week' : 'weeks'}
+          {t('weeks', { count: length / 7 })}
         </Button>
       ))}
     </div>

@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import type { Cycle } from '@/lib/api';
 import type { CyclesView } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
@@ -28,20 +31,19 @@ export default function CyclesList({
   canCreate: boolean;
   onCreate: () => void;
 }) {
+  const t = useTranslations('cycles');
+
   if (isLoading) return <ListSkeleton className="px-4 py-6" rowClassName="h-12" />;
 
   const newCycleButton = canCreate && (
     <Button size="sm" onClick={onCreate}>
-      New cycle
+      {t('newCycle')}
     </Button>
   );
 
   if (cycles.length === 0 && completed.total === 0) {
     return (
-      <EmptyState
-        title="No cycles yet"
-        description="A cycle is a time-boxed period the team plans its issues into."
-      >
+      <EmptyState title={t('emptyTitle')} description={t('emptyDescription')}>
         {newCycleButton}
       </EmptyState>
     );
@@ -53,10 +55,7 @@ export default function CyclesList({
 
   if (cycles.length === 0) {
     return (
-      <EmptyState
-        title="Nothing planned"
-        description="The timeline shows active and upcoming cycles. Finished ones are in the table."
-      >
+      <EmptyState title={t('nothingPlannedTitle')} description={t('nothingPlannedDescription')}>
         {newCycleButton}
       </EmptyState>
     );

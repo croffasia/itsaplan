@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { InitiativeStatus } from '@/lib/api';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -16,14 +17,14 @@ export default function InitiativeStatusSelect({
   value: InitiativeStatus;
   onChange: (status: InitiativeStatus) => void;
 }) {
+  const t = useTranslations('initiatives.status');
   const [open, setOpen] = useState(false);
-  const meta = STATUS_META[value];
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Pill active>
-          {colorDot(meta.color)}
-          {meta.label}
+          {colorDot(STATUS_META[value].color)}
+          {t(value)}
         </Pill>
       </PopoverTrigger>
       <PopoverContent className="w-48 p-0" align="start">
@@ -33,14 +34,14 @@ export default function InitiativeStatusSelect({
               {STATUS_ORDER.map((s) => (
                 <CommandItem
                   key={s}
-                  value={STATUS_META[s].label}
+                  value={t(s)}
                   onSelect={() => {
                     onChange(s);
                     setOpen(false);
                   }}
                 >
                   {colorDot(STATUS_META[s].color)}
-                  <span className="flex-1">{STATUS_META[s].label}</span>
+                  <span className="flex-1">{t(s)}</span>
                   {s === value && <Check className="ml-auto" />}
                 </CommandItem>
               ))}

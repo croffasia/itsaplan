@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Plus, Search, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { WidgetType } from '@/utils/dashboardWidgets';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,12 +12,13 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { WIDGET_GROUPS, WIDGET_META } from '../utils/widgetCatalog';
+import { WIDGET_GROUPS, WIDGET_ICON } from '../utils/widgetCatalog';
 
 // Picks a widget type from the catalog and adds it to the current dashboard. Widgets
 // are grouped by subject and filtered by a case-insensitive search over the label and
 // description, matching the tool picker and GitHub skill import dialogs.
 export default function AddWidgetDialog({ onAdd }: { onAdd: (type: WidgetType) => void }) {
+  const t = useTranslations('dashboards');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -25,17 +27,16 @@ export default function AddWidgetDialog({ onAdd }: { onAdd: (type: WidgetType) =
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
     return WIDGET_GROUPS.map((g) => ({
-      label: g.label,
+      key: g.key,
       types: q
-        ? g.types.filter((t) => {
-            const meta = WIDGET_META[t];
-            return (
-              meta.label.toLowerCase().includes(q) || meta.description.toLowerCase().includes(q)
-            );
-          })
+        ? g.types.filter(
+            (type) =>
+              t(`widgets.${type}.label`).toLowerCase().includes(q) ||
+              t(`widgets.${type}.description`).toLowerCase().includes(q),
+          )
         : g.types,
     })).filter((g) => g.types.length > 0);
-  }, [query]);
+  }, [query, t]);
 
   function add(type: WidgetType) {
     onAdd(type);
@@ -53,13 +54,13 @@ export default function AddWidgetDialog({ onAdd }: { onAdd: (type: WidgetType) =
     >
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
-          <Plus className="size-4" /> Add widget
+          <Plus className="size-4" /> {t('addWidget')}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a widget</DialogTitle>
-          <DialogDescription>Pick a widget to add to this dashboard.</DialogDescription>
+          <DialogTitle>{t('addWidgetTitle')}</DialogTitle>
+          <DialogDescription>{t('addWidgetDescription')}</DialogDescription>
         </DialogHeader>
 
         <div className="relative">
@@ -68,7 +69,7 @@ export default function AddWidgetDialog({ onAdd }: { onAdd: (type: WidgetType) =
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search widgets"
+            placeholder={t('searchWidgets')}
             className="pr-9 pl-9"
           />
           {query && (
@@ -76,7 +77,7 @@ export default function AddWidgetDialog({ onAdd }: { onAdd: (type: WidgetType) =
               type="button"
               onClick={() => setQuery('')}
               className="absolute top-1/2 right-3 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Clear search"
+              aria-label={t('clearSearch')}
             >
               <X className="size-4" />
             </button>
@@ -86,18 +87,17 @@ export default function AddWidgetDialog({ onAdd }: { onAdd: (type: WidgetType) =
         <div className="max-h-[55vh] space-y-5 overflow-y-auto pr-1">
           {groups.length === 0 && (
             <p className="py-6 text-center text-sm text-muted-foreground">
-              No widget matches &ldquo;{query.trim()}&rdquo;.
+              {t('noWidgetMatches', { query: query.trim() })}
             </p>
           )}
           {groups.map((group) => (
-            <div key={group.label} className="space-y-1.5">
+            <div key={group.key} className="space-y-1.5">
               <h3 className="px-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                {group.label}
+                {t(`widgetGroups.${group.key}`)}
               </h3>
               <div className="grid gap-2 sm:grid-cols-2">
                 {group.types.map((type) => {
-                  const meta = WIDGET_META[type];
-                  const Icon = meta.icon;
+                  const Icon = WIDGET_ICON[type];
                   return (
                     <button
                       key={type}
@@ -107,9 +107,11 @@ export default function AddWidgetDialog({ onAdd }: { onAdd: (type: WidgetType) =
                     >
                       <Icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
                       <span className="min-w-0">
-                        <span className="block text-sm font-medium">{meta.label}</span>
+                        <span className="block text-sm font-medium">
+                          {t(`widgets.${type}.label`)}
+                        </span>
                         <span className="block text-xs text-muted-foreground">
-                          {meta.description}
+                          {t(`widgets.${type}.description`)}
                         </span>
                       </span>
                     </button>

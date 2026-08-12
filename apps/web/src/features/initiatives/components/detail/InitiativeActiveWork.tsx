@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
@@ -15,6 +16,7 @@ export default function InitiativeActiveWork({
   project: ProjectDetail;
   initiativeId: number;
 }) {
+  const t = useTranslations('initiatives');
   const { onOpenIssue } = useShell();
 
   const rows = useMemo(() => {
@@ -32,7 +34,7 @@ export default function InitiativeActiveWork({
   return (
     <div className="mt-8">
       <h3 className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        In progress <span className="tabular-nums">· {rows.length}</span>
+        {t('inProgress')} <span className="tabular-nums">· {rows.length}</span>
       </h3>
       <ul className="divide-border overflow-hidden rounded-lg border">
         {rows.map(({ issue, column }) => {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Initiative } from '@/lib/api';
 import { useUpdateInitiative } from '@/services/initiatives.service';
 import Modal from '@/components/common/overlay/Modal';
@@ -19,6 +20,8 @@ export default function EditInitiativeDialog({
   projectKey: string;
   onClose: () => void;
 }) {
+  const t = useTranslations('initiatives');
+  const tCommon = useTranslations('common');
   const [title, setTitle] = useState(initiative.title);
   const [description, setDescription] = useState(initiative.description);
   const update = useUpdateInitiative(projectKey);
@@ -34,10 +37,10 @@ export default function EditInitiativeDialog({
   };
 
   return (
-    <Modal title="Edit initiative" projectKey={projectKey} onClose={onClose}>
+    <Modal title={t('form.editTitle')} projectKey={projectKey} onClose={onClose}>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="edit-initiative-title">Title</Label>
+          <Label htmlFor="edit-initiative-title">{t('form.title')}</Label>
           <Input
             id="edit-initiative-title"
             value={title}
@@ -47,21 +50,21 @@ export default function EditInitiativeDialog({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="edit-initiative-description">Description</Label>
+          <Label htmlFor="edit-initiative-description">{t('form.description')}</Label>
           <Textarea
             id="edit-initiative-description"
             value={description}
-            placeholder="What is this initiative about?"
+            placeholder={t('form.descriptionPlaceholder')}
             className="min-h-32"
             onChange={(e) => setDescription(e.target.value)}
           />
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button disabled={!title.trim() || update.isPending} onClick={() => void submit()}>
-            {update.isPending ? 'Saving…' : 'Save changes'}
+            {update.isPending ? tCommon('saving') : t('form.save')}
           </Button>
         </div>
       </div>

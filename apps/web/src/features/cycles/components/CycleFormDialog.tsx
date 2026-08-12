@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import type { Cycle } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import { useCyclesQuery } from '@/services/cycles.service';
@@ -17,12 +20,18 @@ export default function CycleFormDialog({
   cycle?: Cycle;
   onClose: () => void;
 }) {
+  const t = useTranslations('cycles');
+  const tCommon = useTranslations('common');
   const { data: cycles } = useCyclesQuery(projectKey);
 
   if (!cycles) {
     return (
-      <Modal title={cycle ? 'Edit cycle' : 'New cycle'} projectKey={projectKey} onClose={onClose}>
-        <p className="text-sm text-muted-foreground">Loading…</p>
+      <Modal
+        title={cycle ? t('form.editTitle') : t('form.newTitle')}
+        projectKey={projectKey}
+        onClose={onClose}
+      >
+        <p className="text-sm text-muted-foreground">{tCommon('loading')}</p>
       </Modal>
     );
   }
@@ -32,7 +41,7 @@ export default function CycleFormDialog({
       projectKey={projectKey}
       cycle={cycle}
       cycles={cycles}
-      defaults={cycleDefaults(cycles)}
+      defaults={cycleDefaults(cycles, (n) => t('defaultName', { n }))}
       onClose={onClose}
     />
   );

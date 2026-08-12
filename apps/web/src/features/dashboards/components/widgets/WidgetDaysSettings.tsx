@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import {
   Select,
@@ -17,6 +18,7 @@ export default function WidgetDaysSettings({
   config: WidgetConfig;
   onConfigChange: (config: WidgetConfig) => void;
 }) {
+  const t = useTranslations('dashboards');
   const days = config.days ?? 30;
   return (
     <Select value={String(days)} onValueChange={(v) => onConfigChange({ days: Number(v) })}>
@@ -26,7 +28,7 @@ export default function WidgetDaysSettings({
       <SelectContent>
         {DAYS_OPTIONS.map((n) => (
           <SelectItem key={n} value={String(n)}>
-            Last {n} days
+            {t('lastDays', { days: n })}
           </SelectItem>
         ))}
       </SelectContent>

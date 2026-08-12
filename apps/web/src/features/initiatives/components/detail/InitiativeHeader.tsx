@@ -1,6 +1,7 @@
 'use client';
 
 import { Info } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Initiative, InitiativePatch, ProjectDetail } from '@/lib/api';
 import { useUpdateInitiative } from '@/services/initiatives.service';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,6 +24,7 @@ export default function InitiativeHeader({
   initiative: Initiative;
   project: ProjectDetail;
 }) {
+  const t = useTranslations('initiatives');
   const update = useUpdateInitiative(project.project.key);
   const hasDescription = initiative.description.trim().length > 0;
 
@@ -45,7 +47,7 @@ export default function InitiativeHeader({
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  aria-label="Show description"
+                  aria-label={t('showDescription')}
                   className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground"
                 >
                   <Info className="size-3.5" />
@@ -71,7 +73,7 @@ export default function InitiativeHeader({
           assignees={project.assignees}
           value={initiative.ownerUserId}
           onChange={(ownerUserId) => patch({ ownerUserId })}
-          placeholder="No owner"
+          placeholder={t('noOwner')}
         />
         <PrioritySelect
           value={initiative.priority ?? ''}
@@ -79,7 +81,7 @@ export default function InitiativeHeader({
         />
         <DatePill
           value={initiative.targetDate}
-          placeholder="Target date"
+          placeholder={t('targetDate')}
           onChange={(v) => patch({ targetDate: v })}
         />
         <LabelsSelect

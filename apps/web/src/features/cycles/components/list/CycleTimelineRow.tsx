@@ -8,6 +8,7 @@ import type { CycleDragMode } from '../../hooks/useCycleDrag';
 import { cycleLength, movableEnds } from '../../utils/cycleDates';
 import { CYCLE_ROW_H } from '../../utils/cycleTimeline';
 import CycleInfoPopover from './CycleInfoPopover';
+import { useTranslations } from 'next-intl';
 
 // One cycle row: the sticky label on the left and its bar on the day track. The bar
 // moves the cycle or resizes one end, within what the cycle's status still allows.
@@ -40,6 +41,7 @@ export default function CycleTimelineRow({
   onBeginDrag: (e: React.PointerEvent, cycle: Cycle, mode: CycleDragMode) => void;
   onOpen: (id: number) => void;
 }) {
+  const t = useTranslations('cycles');
   const color = CYCLE_STATUS_META[cycle.status].color;
   const ends = movableEnds(cycle.status);
   const canMove = canEdit && ends.move;
@@ -93,12 +95,12 @@ export default function CycleTimelineRow({
           className="pointer-events-none absolute top-1/2 flex -translate-y-1/2 items-center gap-2.5 text-[11px] whitespace-nowrap text-muted-foreground tabular-nums"
           style={{ left: rect.left + rect.width + 8 }}
         >
-          <span className="flex items-center gap-1" title="Length">
+          <span className="flex items-center gap-1" title={t('columns.length')}>
             <CalendarRange className="size-3" />
             {cycleLength(cycle)}d
           </span>
           {cycle.progress.total > 0 && (
-            <span className="flex items-center gap-1" title="Issues done">
+            <span className="flex items-center gap-1" title={t('issuesDone')}>
               <CircleDashed className="size-3" />
               {cycle.progress.completed}/{cycle.progress.total - cycle.progress.canceled}
             </span>

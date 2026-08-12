@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import {
   Select,
   SelectContent,
@@ -16,6 +17,7 @@ export default function LimitSelect({
   value: number;
   onChange: (limit: number) => void;
 }) {
+  const t = useTranslations('dashboards');
   return (
     <Select value={String(value)} onValueChange={(v) => onChange(Number(v))}>
       <SelectTrigger size="sm" className="w-[110px]">
@@ -24,7 +26,7 @@ export default function LimitSelect({
       <SelectContent>
         {LIMIT_OPTIONS.map((n) => (
           <SelectItem key={n} value={String(n)}>
-            Show {n}
+            {t('showRows', { count: n })}
           </SelectItem>
         ))}
       </SelectContent>

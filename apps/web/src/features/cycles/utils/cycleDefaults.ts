@@ -18,12 +18,12 @@ export interface CycleDefaults {
 // Cycles are numbered rather than named, so the next one follows the last one:
 // "Sprint 12" gives "Sprint 13", and any prefix works the same way ("Q3 W4" →
 // "Q3 W5"). A last cycle whose name ends in no number, or no cycles at all, falls
-// back to counting them.
-function nextName(cycles: Cycle[]): string {
+// back to `fallbackName`, which numbers them from the count.
+function nextName(cycles: Cycle[], fallbackName: (n: number) => string): string {
   const last = cycles[cycles.length - 1];
   const numbered = last?.name.match(/^(.*?)(\d+)\s*$/);
   if (numbered) return `${numbered[1]}${Number(numbered[2]) + 1}`;
-  return `Sprint ${cycles.length + 1}`;
+  return fallbackName(cycles.length + 1);
 }
 
 // The next Monday after `from`, never `from` itself — cycles are planned ahead, so
@@ -38,7 +38,7 @@ function nextMonday(from: Date): Date {
 // never overlapping, which the API rejects. With nothing ahead (the last cycle is
 // over, or there is none) the new cycle starts on the coming Monday rather than
 // mid-week.
-export function cycleDefaults(cycles: Cycle[]): CycleDefaults {
+export function cycleDefaults(cycles: Cycle[], fallbackName: (n: number) => string): CycleDefaults {
   const today = new Date();
   const previousEnd = parseDate(cycles[cycles.length - 1]?.endDate ?? null);
   const start =
@@ -46,7 +46,7 @@ export function cycleDefaults(cycles: Cycle[]): CycleDefaults {
       ? addDays(previousEnd, 1)
       : nextMonday(today);
   return {
-    name: nextName(cycles),
+    name: nextName(cycles, fallbackName),
     startDate: toDateStr(start),
     endDate: toDateStr(addDays(start, DEFAULT_LENGTH - 1)),
   };

@@ -1,4 +1,7 @@
+'use client';
+
 import { Fragment } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Cycle } from '@/lib/api';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { groupCycles } from '../../utils/cycleGroups';
@@ -23,6 +26,7 @@ export default function CyclesTable({
   completed: CompletedCycles;
   projectKey: string;
 }) {
+  const t = useTranslations('cycles');
   const collapsed = usePersistedSet(`cycles-collapsed:${projectKey}`);
 
   return (
@@ -32,11 +36,11 @@ export default function CyclesTable({
           className="sticky top-0 z-10 grid items-center gap-3 border-b bg-background px-4 py-2 text-xs font-medium text-muted-foreground"
           style={{ gridTemplateColumns: GRID }}
         >
-          <span>Name</span>
-          <span>Dates</span>
-          <span>Length</span>
-          <span>Issues</span>
-          <span>Progress</span>
+          <span>{t('columns.name')}</span>
+          <span>{t('columns.dates')}</span>
+          <span>{t('columns.length')}</span>
+          <span>{t('columns.issues')}</span>
+          <span>{t('columns.progress')}</span>
           <span />
         </div>
 
@@ -45,7 +49,7 @@ export default function CyclesTable({
           return (
             <Fragment key={group.status}>
               <CycleTableSection
-                label={group.label}
+                label={t(`status.${group.status}`)}
                 color={group.color}
                 count={group.cycles.length}
                 collapsed={isCollapsed}

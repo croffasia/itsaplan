@@ -3,7 +3,6 @@ import { CYCLE_STATUS_META, CYCLE_STATUS_ORDER } from '@/utils/cycleMeta';
 
 export interface CycleGroup {
   status: CycleStatus;
-  label: string;
   color: string;
   cycles: Cycle[];
 }

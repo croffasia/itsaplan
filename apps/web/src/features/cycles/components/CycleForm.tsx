@@ -1,5 +1,8 @@
+'use client';
+
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { ApiError, type Cycle } from '@/lib/api';
 import { addDays, daysBetween, parseDate, toDateStr } from '@/utils/dates';
 import Modal from '@/components/common/overlay/Modal';
@@ -31,6 +34,8 @@ export default function CycleForm({
   defaults: CycleDefaults;
   onClose: () => void;
 }) {
+  const t = useTranslations('cycles');
+  const tCommon = useTranslations('common');
   const [name, setName] = useState(cycle?.name ?? defaults.name);
   const [goal, setGoal] = useState(cycle?.goal ?? '');
   const [startDate, setStartDate] = useState(cycle?.startDate ?? defaults.startDate);
@@ -80,15 +85,19 @@ export default function CycleForm({
       else await create.mutateAsync(input);
       onClose();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Could not save the cycle');
+      toast.error(err instanceof ApiError ? err.message : t('form.saveFailed'));
     }
   };
 
   return (
-    <Modal title={cycle ? 'Edit cycle' : 'New cycle'} projectKey={projectKey} onClose={onClose}>
+    <Modal
+      title={cycle ? t('form.editTitle') : t('form.newTitle')}
+      projectKey={projectKey}
+      onClose={onClose}
+    >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="cycle-name">Name</Label>
+          <Label htmlFor="cycle-name">{t('form.name')}</Label>
           <Input
             id="cycle-name"
             value={name}
@@ -98,23 +107,23 @@ export default function CycleForm({
           />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="cycle-goal">Goal</Label>
+          <Label htmlFor="cycle-goal">{t('form.goal')}</Label>
           <Textarea
             id="cycle-goal"
             value={goal}
-            placeholder="What should this cycle deliver?"
+            placeholder={t('form.goalPlaceholder')}
             onChange={(e) => setGoal(e.target.value)}
           />
         </div>
         {!endLocked && (
           <div className="flex flex-col gap-1.5">
-            <Label>Length</Label>
+            <Label>{t('form.length')}</Label>
             <CycleLengthPicker days={length} onChange={changeLength} />
           </div>
         )}
         <div className="flex items-center gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label>Starts</Label>
+            <Label>{t('form.starts')}</Label>
             {startLocked ? (
               <FixedDate value={startDate} />
             ) : (
@@ -127,7 +136,7 @@ export default function CycleForm({
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Ends</Label>
+            <Label>{t('form.ends')}</Label>
             {endLocked ? (
               <FixedDate value={endDate} />
             ) : (
@@ -145,10 +154,10 @@ export default function CycleForm({
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button disabled={!name.trim() || saving} onClick={() => void submit()}>
-            {saving ? 'Saving…' : cycle ? 'Save' : 'Create cycle'}
+            {saving ? tCommon('saving') : cycle ? tCommon('save') : t('form.create')}
           </Button>
         </div>
       </div>

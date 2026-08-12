@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 
 // The page numbers to show: always the first and last page, the current page and
@@ -28,6 +29,7 @@ export default function InitiativesPagination({
   total: number;
   onPage: (page: number) => void;
 }) {
+  const t = useTranslations('initiatives.pagination');
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   if (pageCount <= 1) return null;
 
@@ -37,7 +39,7 @@ export default function InitiativesPagination({
   return (
     <div className="flex items-center justify-between px-4 pt-2 pb-6">
       <span className="text-xs text-muted-foreground tabular-nums">
-        {from}–{to} of {total}
+        {t('range', { from, to, total })}
       </span>
       <div className="flex items-center gap-1">
         <Button
@@ -45,7 +47,7 @@ export default function InitiativesPagination({
           size="icon-sm"
           disabled={page <= 1}
           onClick={() => onPage(page - 1)}
-          aria-label="Previous page"
+          aria-label={t('previous')}
         >
           <ChevronLeft className="size-4" />
         </Button>
@@ -71,7 +73,7 @@ export default function InitiativesPagination({
           size="icon-sm"
           disabled={page >= pageCount}
           onClick={() => onPage(page + 1)}
-          aria-label="Next page"
+          aria-label={t('next')}
         >
           <ChevronRight className="size-4" />
         </Button>

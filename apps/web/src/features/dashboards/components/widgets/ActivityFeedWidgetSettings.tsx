@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
@@ -20,6 +21,7 @@ export default function ActivityFeedWidgetSettings({
   config: WidgetConfig;
   onConfigChange: (config: WidgetConfig) => void;
 }) {
+  const t = useTranslations('dashboards.activityFeed');
   const { project, customFields } = useShell();
   const filters: FilterSet = config.filters ?? EMPTY_FILTER_SET;
   const action = config.action ?? null;
@@ -35,9 +37,9 @@ export default function ActivityFeedWidgetSettings({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {ACTION_FILTER.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
+          {ACTION_FILTER.map((option) => (
+            <SelectItem key={option} value={option}>
+              {t(`actions.${option}`)}
             </SelectItem>
           ))}
         </SelectContent>

@@ -1,6 +1,7 @@
 'use client';
 
 import { parseISO, differenceInCalendarDays } from 'date-fns';
+import { useTranslations } from 'next-intl';
 import type { Initiative } from '@/lib/api';
 import { formatDate } from '@/utils/dates';
 import HealthBadge from '../shared/HealthBadge';
@@ -13,13 +14,8 @@ import InitiativeTimelineMeter from './InitiativeTimelineMeter';
 
 const clamp01 = (v: number) => Math.min(Math.max(v, 0), 1);
 
-function remainingLabel(daysLeft: number): string {
-  if (daysLeft < 0) return `${-daysLeft}d overdue`;
-  if (daysLeft === 0) return 'Due today';
-  return `${daysLeft}d left`;
-}
-
 export default function InitiativeTimeline({ initiative }: { initiative: Initiative }) {
+  const t = useTranslations('initiatives.timeline');
   const { startDate, targetDate, createdAt, progress } = initiative;
   const start = startDate ?? createdAt;
   const denom = progress.total - progress.canceled;
@@ -36,12 +32,18 @@ export default function InitiativeTimeline({ initiative }: { initiative: Initiat
     daysLeft = differenceInCalendarDays(parseISO(targetDate), now);
   }
 
+  const remaining = (days: number) => {
+    if (days < 0) return t('overdue', { days: -days });
+    if (days === 0) return t('dueToday');
+    return t('left', { days });
+  };
+
   return (
     <div>
       <div className="mb-2.5 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1">
           <h4 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-            Timeline
+            {t('title')}
           </h4>
           <HealthInfoPopover />
         </div>
@@ -51,31 +53,31 @@ export default function InitiativeTimeline({ initiative }: { initiative: Initiat
       <dl className="mb-3 flex flex-col gap-1.5 text-sm">
         {startDate && (
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Started</dt>
+            <dt className="text-muted-foreground">{t('started')}</dt>
             <dd>{formatDate(startDate)}</dd>
           </div>
         )}
         {targetDate && (
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Target</dt>
+            <dt className="text-muted-foreground">{t('target')}</dt>
             <dd>{formatDate(targetDate)}</dd>
           </div>
         )}
         {daysLeft != null && (
           <div className="flex justify-between">
-            <dt className="text-muted-foreground">Remaining</dt>
-            <dd className={daysLeft < 0 ? 'text-destructive' : ''}>{remainingLabel(daysLeft)}</dd>
+            <dt className="text-muted-foreground">{t('remaining')}</dt>
+            <dd className={daysLeft < 0 ? 'text-destructive' : ''}>{remaining(daysLeft)}</dd>
           </div>
         )}
       </dl>
 
       {targetDate ? (
         <div className="flex flex-col gap-2.5">
-          <InitiativeTimelineMeter label="Time elapsed" pct={elapsed ?? 0} />
-          <InitiativeTimelineMeter label="Work done" pct={work} />
+          <InitiativeTimelineMeter label={t('timeElapsed')} pct={elapsed ?? 0} />
+          <InitiativeTimelineMeter label={t('workDone')} pct={work} />
         </div>
       ) : (
-        <p className="text-sm text-muted-foreground">Set a target date to track pace.</p>
+        <p className="text-sm text-muted-foreground">{t('noTargetDate')}</p>
       )}
     </div>
   );

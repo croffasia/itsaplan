@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { formatDateTime } from '@/utils/dates';
 import { issuePath } from '@/utils/paths';
 import type { AgentRunFeedItem } from '@/lib/api';
@@ -7,12 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAgentRunsQuery } from '../../services/analytics.service';
 
-export const STATUS_FILTER: { value: string; label: string }[] = [
-  { value: 'all', label: 'All runs' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'pending', label: 'Queued' },
-  { value: 'success', label: 'Succeeded' },
-];
+// The run statuses the feed can be narrowed to. Their labels are messages under
+// `dashboards.agentRuns.filters`.
+export const STATUS_FILTER = ['all', 'failed', 'pending', 'success'] as const;
 
 function statusVariant(status: AgentRunFeedItem['status']) {
   switch (status) {
@@ -25,13 +23,6 @@ function statusVariant(status: AgentRunFeedItem['status']) {
   }
 }
 
-function triggerLabel(trigger: AgentRunFeedItem['trigger']): string {
-  if (trigger === 'mention') return 'ran on mention in';
-  if (trigger === 'delegation') return 'ran on delegation of';
-  if (trigger === 'manual') return 'ran manually';
-  return 'ran on schedule';
-}
-
 // Project-wide feed of AI agent runs, newest first, optionally narrowed to one
 // status. Issue-triggered rows link to the issue; scheduled rows show their
 // trigger. A failed run shows its error.
@@ -42,12 +33,13 @@ export default function AgentRunsWidget({
   projectKey: string;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards.agentRuns');
   const status = config.runStatus ?? null;
   const limit = config.limit ?? 20;
   const { data, isLoading } = useAgentRunsQuery(projectKey, { status, limit });
   const items = data ?? [];
 
-  const caption = STATUS_FILTER.find((o) => o.value === (status ?? 'all'))?.label ?? 'All runs';
+  const caption = t(`filters.${STATUS_FILTER.find((o) => o === (status ?? 'all')) ?? 'all'}`);
 
   function feed() {
     if (isLoading) {
@@ -60,18 +52,18 @@ export default function AgentRunsWidget({
       );
     }
     if (items.length === 0) {
-      return <p className="py-6 text-center text-sm text-muted-foreground">No agent runs yet.</p>;
+      return <p className="py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>;
     }
     return (
       <ul className="space-y-2">
         {items.map((r) => (
           <li key={r.id} className="flex items-start gap-2 text-sm">
-            <Badge variant={statusVariant(r.status)} className="mt-0.5 shrink-0 capitalize">
-              {r.status === 'pending' ? 'queued' : r.status}
+            <Badge variant={statusVariant(r.status)} className="mt-0.5 shrink-0">
+              {t(`status.${r.status}`)}
             </Badge>
             <div className="min-w-0 flex-1">
               <span className="text-foreground/80">{r.agentName}</span>{' '}
-              <span className="text-muted-foreground">{triggerLabel(r.trigger)}</span>{' '}
+              <span className="text-muted-foreground">{t(`trigger.${r.trigger}`)}</span>{' '}
               {r.issueId != null && r.issueSequence != null && (
                 <Link href={issuePath(projectKey, r.issueSequence)} className="hover:underline">
                   {projectKey}-{r.issueSequence}

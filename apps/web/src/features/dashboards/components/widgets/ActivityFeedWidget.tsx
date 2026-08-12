@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { formatDateTime } from '@/utils/dates';
 import type { ProjectDetail } from '@/lib/api';
 import { issuePath } from '@/utils/paths';
@@ -8,31 +9,29 @@ import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useActivityFeedQuery } from '../../services/analytics.service';
 
-// Short verb per activity action, plus comment. Each phrase ends where the issue
-// link follows, so a row reads "Ann changed the status of IAP-12". Enough to read
-// the feed at a glance; the full change detail lives on the issue page.
-const VERB: Record<string, string> = {
-  created: 'created',
-  title: 'renamed',
-  description: 'updated the description of',
-  status: 'changed the status of',
-  assignee: 'changed the assignee of',
-  priority: 'changed the priority of',
-  type: 'changed the type of',
-  start_date: 'changed the start date of',
-  due_date: 'changed the due date of',
-  label_add: 'added a label to',
-  label_remove: 'removed a label from',
-  field: 'updated a field on',
-};
+// The actions that get their own verb phrase, as messages under
+// `dashboards.activityFeed.verbs`. Each phrase ends where the issue link follows,
+// so a row reads "Ann changed the status of IAP-12". Enough to read the feed at a
+// glance; the full change detail lives on the issue page. Anything else falls back
+// to `verbs.other`.
+const VERB_ACTIONS = [
+  'created',
+  'title',
+  'description',
+  'status',
+  'assignee',
+  'priority',
+  'type',
+  'start_date',
+  'due_date',
+  'label_add',
+  'label_remove',
+  'field',
+] as const;
 
-export const ACTION_FILTER: { value: string; label: string }[] = [
-  { value: 'all', label: 'All activity' },
-  { value: 'status', label: 'Status changes' },
-  { value: 'assignee', label: 'Assignments' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'created', label: 'Created' },
-];
+// The action kinds the feed can be narrowed to. Their labels are messages under
+// `dashboards.activityFeed.actions`.
+export const ACTION_FILTER = ['all', 'status', 'assignee', 'priority', 'created'] as const;
 
 // The resolved issue ids travel in the request's query string, so a broad filter on
 // a large project would build a URL past what proxies accept. Scope the feed to the
@@ -54,6 +53,7 @@ export default function ActivityFeedWidget({
   project: ProjectDetail;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards.activityFeed');
   const filters: FilterSet = config.filters ?? EMPTY_FILTER_SET;
   const action = config.action ?? null;
   const limit = config.limit ?? 20;
@@ -73,15 +73,20 @@ export default function ActivityFeedWidget({
   const { data, isLoading } = useActivityFeedQuery(projectKey, { action, issueIds, limit });
   const items = data?.items ?? [];
 
-  const actionLabel =
-    ACTION_FILTER.find((o) => o.value === (action ?? 'all'))?.label ?? 'All activity';
-  const filterCount = filters.conditions.length;
+  const selected = ACTION_FILTER.find((o) => o === (action ?? 'all')) ?? 'all';
   const caption = [
-    actionLabel,
-    isActiveFilterSet(filters) ? `${filterCount} filter${filterCount === 1 ? '' : 's'}` : null,
+    t(`actions.${selected}`),
+    isActiveFilterSet(filters) ? t('filterCount', { count: filters.conditions.length }) : null,
   ]
     .filter(Boolean)
     .join(' · ');
+
+  // A comment carries no action; an action outside the listed ones reads as a
+  // generic update.
+  function verb(kind: string, action: string | null) {
+    if (kind === 'comment') return t('verbs.comment');
+    return t(`verbs.${VERB_ACTIONS.find((v) => v === action) ?? 'other'}`);
+  }
 
   function feed() {
     if (isLoading) {
@@ -94,11 +99,7 @@ export default function ActivityFeedWidget({
       );
     }
     if (items.length === 0) {
-      return (
-        <p className="py-6 text-center text-sm text-muted-foreground">
-          No activity matches this filter.
-        </p>
-      );
+      return <p className="py-6 text-center text-sm text-muted-foreground">{t('empty')}</p>;
     }
     return (
       <ul className="space-y-2">
@@ -106,10 +107,8 @@ export default function ActivityFeedWidget({
           <li key={a.id} className="flex items-start gap-2 text-sm">
             <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-muted-foreground/40" />
             <div className="min-w-0 flex-1">
-              <span className="text-foreground/80">{a.actorName ?? 'Someone'}</span>{' '}
-              <span className="text-muted-foreground">
-                {a.kind === 'comment' ? 'commented on' : (VERB[a.action ?? ''] ?? 'updated')}
-              </span>{' '}
+              <span className="text-foreground/80">{a.actorName ?? t('someone')}</span>{' '}
+              <span className="text-muted-foreground">{verb(a.kind, a.action)}</span>{' '}
               <Link href={issuePath(projectKey, a.issueSequence)} className="hover:underline">
                 {projectKey}-{a.issueSequence}
               </Link>

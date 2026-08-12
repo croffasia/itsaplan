@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { Cycle } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
@@ -10,6 +11,7 @@ import CycleActions from '../CycleActions';
 // The cycle detail header: name, the status its dates put it in, the range, and how
 // much of it is done. Editing happens in the overflow menu dialog.
 export default function CycleHeader({ cycle, projectKey }: { cycle: Cycle; projectKey: string }) {
+  const t = useTranslations('cycles');
   const status = CYCLE_STATUS_META[cycle.status];
 
   return (
@@ -18,7 +20,7 @@ export default function CycleHeader({ cycle, projectKey }: { cycle: Cycle; proje
         <span className="text-sm font-semibold">{cycle.name}</span>
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           {colorDot(status.color)}
-          {status.label}
+          {t(`status.${cycle.status}`)}
         </span>
         <span className="text-xs text-muted-foreground">
           {formatShortDate(cycle.startDate)} – {formatShortDate(cycle.endDate)}

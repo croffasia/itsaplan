@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { Initiative, ProjectDetail } from '@/lib/api';
 import InitiativeActivityFeed from './InitiativeActivityFeed';
 import InitiativeActiveWork from './InitiativeActiveWork';
@@ -15,6 +16,7 @@ export default function InitiativeOverview({
   initiative: Initiative;
   project: ProjectDetail;
 }) {
+  const t = useTranslations('initiatives');
   const projectKey = project.project.key;
   const hasDescription = initiative.description.trim().length > 0;
 
@@ -27,7 +29,7 @@ export default function InitiativeOverview({
             {initiative.description}
           </p>
         ) : (
-          <p className="mt-4 text-sm text-muted-foreground/60 italic">No description.</p>
+          <p className="mt-4 text-sm text-muted-foreground/60 italic">{t('noDescription')}</p>
         )}
 
         <div className="mt-8 grid gap-8 sm:grid-cols-2 sm:gap-10">
@@ -40,7 +42,7 @@ export default function InitiativeOverview({
 
       <aside className="min-w-0 lg:w-1/3">
         <h3 className="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          Activity
+          {t('activity')}
         </h3>
         <InitiativeActivityFeed initiativeId={initiative.id} projectKey={projectKey} />
       </aside>

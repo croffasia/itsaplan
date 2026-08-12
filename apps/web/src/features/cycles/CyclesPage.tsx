@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ import CycleFormDialog from './components/CycleFormDialog';
 // handful of cycles however old the project is; the finished ones only accumulate,
 // so they are a paged archive of their own.
 export default function CyclesPage({ view }: { view: CyclesView }) {
+  const t = useTranslations('cycles');
   const { project } = useShell();
   const { can } = usePermissions();
   const router = useRouter();
@@ -41,11 +43,11 @@ export default function CyclesPage({ view }: { view: CyclesView }) {
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-2 px-4 py-3">
-        <h1 className="text-lg font-semibold">Cycles</h1>
+        <h1 className="text-lg font-semibold">{t('title')}</h1>
         {can('cycles', 'create') && (
           <Button size="sm" className="h-8 gap-1.5" onClick={() => setCreating(true)}>
             <Plus className="size-3.5" />
-            New cycle
+            {t('newCycle')}
           </Button>
         )}
       </div>

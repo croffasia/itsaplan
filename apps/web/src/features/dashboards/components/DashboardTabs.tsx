@@ -8,6 +8,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { LayoutDashboard, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Dashboard } from '@/lib/api';
 import { useStripSortSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -39,6 +40,7 @@ export default function DashboardTabs({
   onDelete: (d: Dashboard) => void;
   onReorder: (draggedId: number, targetId: number) => void;
 }) {
+  const t = useTranslations('dashboards');
   const { can } = usePermissions();
   const canCreate = can('dashboards', 'create');
   const canEdit = can('dashboards', 'edit');
@@ -62,7 +64,7 @@ export default function DashboardTabs({
         {dashboards.length === 0 ? (
           <span className="flex shrink-0 items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-sm font-medium text-foreground">
             <LayoutDashboard className="size-3.5" />
-            Overview
+            {t('defaultName')}
           </span>
         ) : (
           <DndContext
@@ -107,7 +109,7 @@ export default function DashboardTabs({
             className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <Plus className="size-3.5" />
-            New dashboard
+            {t('newDashboard')}
           </button>
         )}
       </div>
@@ -117,7 +119,7 @@ export default function DashboardTabs({
       <DashboardNameDialog
         key={renaming?.id ?? (dialog === 'new' ? 'new' : 'closed')}
         open={dialog != null}
-        title={renaming ? 'Rename dashboard' : 'New dashboard'}
+        title={renaming ? t('renameDashboard') : t('newDashboard')}
         initial={renaming?.name ?? ''}
         onClose={() => setDialog(null)}
         onSubmit={(name) => {

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import GridLayout, { useContainerWidth, verticalCompactor, type Layout } from 'react-grid-layout';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import {
@@ -30,6 +31,7 @@ export default function WidgetGrid({
   editor: DashboardEditor;
   editing: boolean;
 }) {
+  const t = useTranslations('dashboards');
   const { layout } = editor;
   // useContainerWidth starts at a sane default width and refines it after mount,
   // so the grid can render immediately — child charts always measure a nonzero
@@ -53,7 +55,7 @@ export default function WidgetGrid({
   if (layout.length === 0) {
     return (
       <p className="rounded-lg border border-dashed py-16 text-center text-sm text-muted-foreground">
-        No widgets yet. Add one to build this dashboard.
+        {t('noWidgets')}
       </p>
     );
   }

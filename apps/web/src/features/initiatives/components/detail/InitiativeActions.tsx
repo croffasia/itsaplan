@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Initiative } from '@/lib/api';
 import { initiativesPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -24,6 +25,8 @@ export default function InitiativeActions({
   initiative: Initiative;
   projectKey: string;
 }) {
+  const t = useTranslations('initiatives');
+  const tCommon = useTranslations('common');
   const { can } = usePermissions();
   const del = useDeleteInitiative(projectKey);
   const router = useRouter();
@@ -44,7 +47,7 @@ export default function InitiativeActions({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            aria-label="Initiative options"
+            aria-label={t('options')}
             className="rounded p-0.5 text-muted-foreground/60 hover:text-foreground"
           >
             <MoreHorizontal className="size-4" />
@@ -54,14 +57,14 @@ export default function InitiativeActions({
           {canEdit && (
             <DropdownMenuItem onClick={() => setEditing(true)}>
               <Pencil className="size-4" />
-              Edit
+              {tCommon('edit')}
             </DropdownMenuItem>
           )}
           {canEdit && canDelete && <DropdownMenuSeparator />}
           {canDelete && (
             <DropdownMenuItem variant="destructive" onClick={() => void remove()}>
               <Trash2 className="size-4" />
-              Delete
+              {tCommon('delete')}
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>

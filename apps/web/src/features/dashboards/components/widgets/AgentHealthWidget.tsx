@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAgentRunStatsQuery } from '../../services/analytics.service';
@@ -13,6 +14,7 @@ export default function AgentHealthWidget({
   projectKey: string;
   config: WidgetConfig;
 }) {
+  const t = useTranslations('dashboards');
   const days = config.days ?? 30;
   const { data, isLoading } = useAgentRunStatsQuery(projectKey, days);
 
@@ -23,19 +25,23 @@ export default function AgentHealthWidget({
 
   return (
     <div className="space-y-2">
-      <p className="text-xs text-muted-foreground">Last {days} days</p>
+      <p className="text-xs text-muted-foreground">{t('lastDays', { days })}</p>
       {data.total === 0 ? (
-        <p className="py-3 text-sm text-muted-foreground">No agent runs.</p>
+        <p className="py-3 text-sm text-muted-foreground">{t('agentHealth.empty')}</p>
       ) : (
         <>
           <div className="text-4xl font-semibold tracking-tight tabular-nums">
             {rate == null ? '—' : `${rate}%`}
           </div>
-          <p className="text-xs text-muted-foreground">success rate</p>
+          <p className="text-xs text-muted-foreground">{t('agentHealth.successRate')}</p>
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground tabular-nums">
-            <span>{data.total} runs</span>
-            {data.failed > 0 && <span className="text-destructive">{data.failed} failed</span>}
-            {data.pending > 0 && <span>{data.pending} queued</span>}
+            <span>{t('agentHealth.runs', { count: data.total })}</span>
+            {data.failed > 0 && (
+              <span className="text-destructive">
+                {t('agentHealth.failed', { count: data.failed })}
+              </span>
+            )}
+            {data.pending > 0 && <span>{t('agentHealth.queued', { count: data.pending })}</span>}
           </div>
         </>
       )}

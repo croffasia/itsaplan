@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { colorDot } from '@/components/common/fields/colorDot';
 import type { CycleGroup } from '../../utils/cycleGroups';
 import { CYCLE_GROUP_H } from '../../utils/cycleTimeline';
@@ -13,6 +16,8 @@ export default function CycleTimelineGroupRow({
   labelW: number;
   trackWidth: number;
 }) {
+  const t = useTranslations('cycles');
+
   return (
     <div className="flex border-b bg-muted/40" style={{ height: CYCLE_GROUP_H }}>
       <div
@@ -20,7 +25,7 @@ export default function CycleTimelineGroupRow({
         style={{ width: labelW }}
       >
         {colorDot(group.color)}
-        <span className="truncate">{group.label}</span>
+        <span className="truncate">{t(`status.${group.status}`)}</span>
         <span className="text-muted-foreground">{group.cycles.length}</span>
       </div>
       <div style={{ width: trackWidth }} />

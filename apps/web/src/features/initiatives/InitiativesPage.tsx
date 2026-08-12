@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativeCountsQuery, useInitiativesQuery } from '@/services/initiatives.service';
@@ -29,6 +30,7 @@ const PAGE_SIZE = 25;
 // they stay correct regardless of the current page. The tab strip is sortable by
 // drag, and its order is a preference of the browser (see useInitiativeTabOrder).
 export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
+  const t = useTranslations('initiatives');
   const { project } = useShell();
   const { can } = usePermissions();
   const router = useRouter();
@@ -38,8 +40,8 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
   const sensors = useStripSortSensors();
 
   const projectKey = project?.project.key ?? null;
-  const activeTab = INITIATIVE_TABS.find((t) => t.value === tab)!;
-  const orderedTabs = order.map((value) => INITIATIVE_TABS.find((t) => t.value === value)!);
+  const activeTab = INITIATIVE_TABS.find((item) => item.value === tab)!;
+  const orderedTabs = order.map((value) => INITIATIVE_TABS.find((item) => item.value === value)!);
 
   const pageParam = Number(searchParams.get('page'));
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
@@ -101,11 +103,11 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
       <div className="flex items-center justify-between px-4 py-3">
-        <h1 className="text-lg font-semibold">Initiatives</h1>
+        <h1 className="text-lg font-semibold">{t('title')}</h1>
         {can('initiatives', 'create') && (
           <Button size="sm" className="h-8 gap-1.5" onClick={() => setCreating(true)}>
             <Plus className="size-3.5" />
-            New initiative
+            {t('newInitiative')}
           </Button>
         )}
       </div>
@@ -122,13 +124,13 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={order} strategy={horizontalListSortingStrategy}>
-                {orderedTabs.map((t) => (
+                {orderedTabs.map((item) => (
                   <InitiativeTabTrigger
-                    key={t.value}
-                    value={t.value}
-                    label={t.label}
-                    count={tabCount(counts, t.value)}
-                    onSelect={() => changeTab(t.value)}
+                    key={item.value}
+                    value={item.value}
+                    label={t(`tabs.${item.value}`)}
+                    count={tabCount(counts, item.value)}
+                    onSelect={() => changeTab(item.value)}
                   />
                 ))}
               </SortableContext>
@@ -143,7 +145,7 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
         isLoading={query.isLoading}
         canCreate={can('initiatives', 'create')}
         onCreate={() => setCreating(true)}
-        statusLabel={activeTab.statuses ? activeTab.label : undefined}
+        statusTab={activeTab.value === 'all' ? undefined : activeTab.value}
         sort={sort}
         dir={dir}
         onSort={changeSort}

@@ -1,10 +1,13 @@
+'use client';
+
 import { GanttChart, Table2, type LucideIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { CyclesView } from '@/utils/paths';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const TABS: { value: CyclesView; label: string; icon: LucideIcon }[] = [
-  { value: 'table', label: 'Table', icon: Table2 },
-  { value: 'timeline', label: 'Timeline', icon: GanttChart },
+const TABS: { value: CyclesView; icon: LucideIcon }[] = [
+  { value: 'table', icon: Table2 },
+  { value: 'timeline', icon: GanttChart },
 ];
 
 // The cycles list layout switcher: the grouped table or the day track. The open
@@ -17,10 +20,12 @@ export default function CyclesViewTabs({
   view: CyclesView;
   onSelect: (view: CyclesView) => void;
 }) {
+  const t = useTranslations('cycles.views');
+
   return (
     <Tabs value={view}>
       <TabsList variant="line" className="overflow-x-auto">
-        {TABS.map(({ value, label, icon: Icon }) => (
+        {TABS.map(({ value, icon: Icon }) => (
           <TabsTrigger
             key={value}
             value={value}
@@ -28,7 +33,7 @@ export default function CyclesViewTabs({
             onClick={() => onSelect(value)}
           >
             <Icon className="size-3.5" />
-            {label}
+            {t(value)}
           </TabsTrigger>
         ))}
       </TabsList>

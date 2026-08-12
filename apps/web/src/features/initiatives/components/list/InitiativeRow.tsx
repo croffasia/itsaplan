@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Minus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Initiative, Assignee } from '@/lib/api';
 import { initiativePath } from '@/utils/paths';
 import { formatShortDate } from '@/utils/dates';
 import { AssigneeAvatar } from '@/features/issue/components/shared/IssueBadges';
 import { PriorityIcon } from '@/features/issue/components/shared/IssueIcons';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { STATUS_META } from '@/utils/initiativeMeta';
@@ -23,6 +25,8 @@ export default function InitiativeRow({
   projectKey: string;
   owner: Assignee | null;
 }) {
+  const t = useTranslations('initiatives');
+  const priorityLabel = usePriorityLabel();
   const router = useRouter();
   const href = initiativePath(projectKey, initiative.id);
 
@@ -52,7 +56,7 @@ export default function InitiativeRow({
         {initiative.priority ? (
           <span className="flex items-center gap-1.5 text-sm">
             <PriorityIcon priority={initiative.priority} className="size-3.5" />
-            <span className="text-muted-foreground capitalize">{initiative.priority}</span>
+            <span className="text-muted-foreground">{priorityLabel(initiative.priority)}</span>
           </span>
         ) : (
           <Minus className="size-3.5 text-muted-foreground" />
@@ -66,7 +70,7 @@ export default function InitiativeRow({
             <span className="truncate text-muted-foreground">{owner.name}</span>
           </span>
         ) : (
-          <span className="text-sm text-muted-foreground">Unassigned</span>
+          <span className="text-sm text-muted-foreground">{t('noOwner')}</span>
         )}
       </TableCell>
 

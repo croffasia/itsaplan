@@ -1,5 +1,8 @@
+'use client';
+
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { ApiError, type Cycle } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import Modal from '@/components/common/overlay/Modal';
@@ -28,6 +31,8 @@ export default function TransferIssuesDialog({
   projectKey: string;
   onClose: () => void;
 }) {
+  const t = useTranslations('cycles.transfer');
+  const tCommon = useTranslations('common');
   const [target, setTarget] = useState<string>(NO_CYCLE);
   const transfer = useTransferCycleIssues(projectKey);
   const targets = (usePlannedCyclesQuery(projectKey).data ?? []).filter((c) => c.id !== cycle.id);
@@ -38,30 +43,30 @@ export default function TransferIssuesDialog({
         id: cycle.id,
         targetCycleId: target === NO_CYCLE ? null : Number(target),
       });
-      toast.success(moved === 1 ? '1 issue moved' : `${moved} issues moved`);
+      toast.success(t('moved', { count: moved }));
       onClose();
     } catch (err) {
-      toast.error(err instanceof ApiError ? err.message : 'Could not move the issues');
+      toast.error(err instanceof ApiError ? err.message : t('failed'));
     }
   };
 
   return (
     <Modal
-      title="Transfer unfinished issues"
+      title={t('title')}
       crumb={cycle.name}
-      description="Issues that are not completed or canceled move to the cycle you pick. The rest stay here."
+      description={t('description')}
       projectKey={projectKey}
       onClose={onClose}
     >
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-1.5">
-          <Label htmlFor="transfer-target">Move to</Label>
+          <Label htmlFor="transfer-target">{t('moveTo')}</Label>
           <Select value={target} onValueChange={setTarget}>
             <SelectTrigger id="transfer-target">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={NO_CYCLE}>No cycle</SelectItem>
+              <SelectItem value={NO_CYCLE}>{t('noCycle')}</SelectItem>
               {targets.map((c) => (
                 <SelectItem key={c.id} value={String(c.id)}>
                   {c.name} ({formatShortDate(c.startDate)} – {formatShortDate(c.endDate)})
@@ -72,10 +77,10 @@ export default function TransferIssuesDialog({
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button disabled={transfer.isPending} onClick={() => void submit()}>
-            {transfer.isPending ? 'Moving…' : 'Move issues'}
+            {transfer.isPending ? t('moving') : t('submit')}
           </Button>
         </div>
       </div>

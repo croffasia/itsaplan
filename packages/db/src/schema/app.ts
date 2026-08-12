@@ -94,6 +94,9 @@ export const projectSetting = pgTable(
 // A user's own interface preferences, held per account rather than per project so
 // the same choices apply on every device. timezone is an IANA zone name used by the
 // web app to render stored UTC timestamps; the API keeps storing and returning UTC.
+// locale is the interface language, also used for the emails and the Telegram bot
+// messages this user receives; it has no CHECK, unlike the columns below, so adding a
+// language costs no migration.
 // theme is 'light' | 'dark' | 'system', issue_open_mode is 'panel' | 'page' (how a
 // clicked issue opens), start_page is the section the app root lands on. Absent row
 // means the user has not changed anything and the defaults below apply.
@@ -116,6 +119,7 @@ export const userPreference = pgTable(
       .primaryKey()
       .references(() => user.id, { onDelete: 'cascade' }),
     timezone: text('timezone').notNull().default('UTC'),
+    locale: text('locale').notNull().default('en'),
     theme: text('theme').notNull().default('system'),
     issueOpenMode: text('issue_open_mode').notNull().default('panel'),
     startPage: text('start_page').notNull().default('work-items'),

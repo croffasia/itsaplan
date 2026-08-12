@@ -498,6 +498,20 @@
       "when": 1786401369000,
       "tag": "0070_revision_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1786457359419,
+      "tag": "0071_little_omega_red",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1786497730861,
+      "tag": "0072_amused_magik",
+      "breakpoints": true
     }
   ]
 }

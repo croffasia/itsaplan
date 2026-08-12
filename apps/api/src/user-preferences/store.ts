@@ -6,12 +6,14 @@ import { eq, sql } from 'drizzle-orm';
 // defaults below apply, so a read never fails. Timestamps stay UTC everywhere in the
 // API — `timezone` only tells the web app which zone to render them in.
 
+export const LOCALES = ['en', 'uk'] as const;
 export const THEMES = ['light', 'dark', 'system'] as const;
 export const ISSUE_OPEN_MODES = ['panel', 'page'] as const;
 export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat'] as const;
 export const ISSUE_STATS_VIEWS = ['compact', 'timeline'] as const;
 export const ISSUE_ACTIVITY_VIEWS = ['flat', 'grouped'] as const;
 
+export type Locale = (typeof LOCALES)[number];
 export type Theme = (typeof THEMES)[number];
 export type IssueOpenMode = (typeof ISSUE_OPEN_MODES)[number];
 export type StartPage = (typeof START_PAGES)[number];
@@ -20,6 +22,8 @@ export type IssueActivityView = (typeof ISSUE_ACTIVITY_VIEWS)[number];
 
 export interface UserPreferenceDto {
   timezone: string;
+  // The interface language, also used for this user's emails and bot messages.
+  locale: Locale;
   theme: Theme;
   issueOpenMode: IssueOpenMode;
   startPage: StartPage;
@@ -48,6 +52,7 @@ export type UserPreferencePatch = Partial<UserPreferenceDto>;
 export function defaults(): UserPreferenceDto {
   return {
     timezone: 'UTC',
+    locale: 'en',
     theme: 'system',
     issueOpenMode: 'panel',
     startPage: 'work-items',
@@ -74,6 +79,7 @@ export function isValidTimezone(value: string): boolean {
 
 function toDto(row: {
   timezone: string;
+  locale: string;
   theme: string;
   issueOpenMode: string;
   startPage: string;
@@ -87,6 +93,7 @@ function toDto(row: {
 }): UserPreferenceDto {
   return {
     timezone: row.timezone,
+    locale: row.locale as Locale,
     theme: row.theme as Theme,
     issueOpenMode: row.issueOpenMode as IssueOpenMode,
     startPage: row.startPage as StartPage,
@@ -105,6 +112,7 @@ export async function getPreferences(userId: string): Promise<UserPreferenceDto>
   const rows = await db
     .select({
       timezone: userPreference.timezone,
+      locale: userPreference.locale,
       theme: userPreference.theme,
       issueOpenMode: userPreference.issueOpenMode,
       startPage: userPreference.startPage,

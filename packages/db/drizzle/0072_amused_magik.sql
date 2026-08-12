@@ -1,0 +1,1 @@
+ALTER TABLE "user_preference" DROP CONSTRAINT "user_preference_locale_check";

@@ -18,6 +18,7 @@ describe('user preferences', () => {
     expect(res.status).toBe(200);
     expect(res.data).toEqual({
       timezone: 'UTC',
+      locale: 'en',
       theme: 'system',
       issueOpenMode: 'panel',
       startPage: 'work-items',
@@ -37,6 +38,7 @@ describe('user preferences', () => {
 
     const res = await client.account.preferences.patch({
       timezone: 'Europe/Berlin',
+      locale: 'uk',
       theme: 'dark',
       issueOpenMode: 'page',
       startPage: 'inbox',
@@ -52,6 +54,7 @@ describe('user preferences', () => {
     const stored = await client.account.preferences.get();
     expect(stored.data).toEqual({
       timezone: 'Europe/Berlin',
+      locale: 'uk',
       theme: 'dark',
       issueOpenMode: 'page',
       startPage: 'inbox',
@@ -89,6 +92,16 @@ describe('user preferences', () => {
 
     const res = await authedApi(u.cookie).account.preferences.patch({
       theme: 'sepia' as 'dark',
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an unsupported locale', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie).account.preferences.patch({
+      locale: 'de' as 'uk',
     });
 
     expect(res.status).toBe(400);

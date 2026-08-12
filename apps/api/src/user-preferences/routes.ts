@@ -7,6 +7,7 @@ import { ErrorResponse } from '../shared/responses';
 import { HotkeyCombosSchema } from '../settings/hotkeys';
 import { getPreferences, isValidTimezone, updatePreferences } from './store';
 
+const Locale = t.Union([t.Literal('en'), t.Literal('uk')]);
 const Theme = t.Union([t.Literal('light'), t.Literal('dark'), t.Literal('system')]);
 const IssueOpenMode = t.Union([t.Literal('panel'), t.Literal('page')]);
 const StartPage = t.Union([
@@ -22,6 +23,7 @@ const IssueActivityView = t.Union([t.Literal('flat'), t.Literal('grouped')]);
 
 const PreferenceResponse = t.Object({
   timezone: t.String(),
+  locale: Locale,
   theme: Theme,
   issueOpenMode: IssueOpenMode,
   startPage: StartPage,
@@ -36,6 +38,7 @@ const PreferenceResponse = t.Object({
 
 const PreferencePatch = t.Object({
   timezone: t.Optional(t.String({ minLength: 1, maxLength: 64 })),
+  locale: t.Optional(Locale),
   theme: t.Optional(Theme),
   issueOpenMode: t.Optional(IssueOpenMode),
   startPage: t.Optional(StartPage),
@@ -50,7 +53,7 @@ const PreferencePatch = t.Object({
   hotkeys: t.Optional(HotkeyCombosSchema),
 });
 
-// The session user's own interface preferences: timezone, theme, how a clicked issue
+// The session user's own interface preferences: timezone, language, theme, how a clicked issue
 // opens, which section the app root lands on, whether the floating AI chat starts
 // visible, how an issue's status stats section starts out, whether they are
 // subscribed to the issues they touch, and the project they were in last. Every

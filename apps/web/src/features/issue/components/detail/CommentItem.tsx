@@ -1,6 +1,7 @@
 import { formatDistanceToNow, parseISO } from 'date-fns';
 import { type FeedItem } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
+import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';
 import { mentionsToChips } from '../../utils/mentions';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import { useTranslations } from 'next-intl';
@@ -12,6 +13,7 @@ import { useTranslations } from 'next-intl';
 
 export default function CommentItem({ item, image }: { item: FeedItem; image: string | null }) {
   const t = useTranslations('issue.comments');
+  const locale = useDateFnsLocale();
   const author = item.actorName ?? t('unknownAuthor');
   return (
     <li className="flex gap-3">
@@ -20,7 +22,7 @@ export default function CommentItem({ item, image }: { item: FeedItem; image: st
         <div className="flex items-baseline gap-2">
           <span className="text-sm font-medium">{author}</span>
           <span className="text-xs text-muted-foreground">
-            {formatDistanceToNow(parseISO(item.createdAt), { addSuffix: true })}
+            {formatDistanceToNow(parseISO(item.createdAt), { addSuffix: true, locale })}
           </span>
         </div>
         <IssueMarkdownEditor

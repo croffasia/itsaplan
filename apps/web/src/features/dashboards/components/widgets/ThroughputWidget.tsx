@@ -1,7 +1,7 @@
 import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
-import { format, parseISO } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
+import { formatShortDate } from '@/utils/dates';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   ChartContainer,
@@ -34,7 +34,7 @@ export default function ThroughputWidget({
     created: { label: t('created'), color: SERIES_COLOR.created },
     closed: { label: t('closed'), color: SERIES_COLOR.closed },
   };
-  const chartData = (data ?? []).map((w) => ({ ...w, label: format(parseISO(w.week), 'MMM d') }));
+  const chartData = (data ?? []).map((w) => ({ ...w, label: formatShortDate(w.week) }));
 
   function chart() {
     if (isLoading) return <Skeleton className="h-[180px] w-full" />;

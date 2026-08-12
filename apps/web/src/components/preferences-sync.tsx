@@ -9,7 +9,7 @@ import {
   useUpdateAccountPreferences,
 } from '@/services/preferences.service';
 import { setLocaleCookie } from '@/i18n/cookie';
-import { canonicalTimezone, setDisplayTimezone } from '@/utils/dates';
+import { canonicalTimezone, setDisplayLocale, setDisplayTimezone } from '@/utils/dates';
 
 // Applies the account preferences that are read app-wide rather than at one call
 // site: the theme (handed to next-themes), the display timezone (handed to the date
@@ -28,6 +28,13 @@ export default function PreferencesSync() {
   const timezone = prefs?.timezone;
   const theme = prefs?.theme;
   const locale = prefs?.locale;
+
+  // The language the date formatters render in. Set while rendering, not in an
+  // effect: this component renders before the tree that formats dates, so the first
+  // paint already comes out in the rendered language instead of the default one.
+  // Browser only — the formatters hold it in a module variable, which on the server
+  // is one value shared by every request being rendered at that moment.
+  if (typeof window !== 'undefined') setDisplayLocale(renderedLocale);
 
   useEffect(() => {
     if (timezone) setDisplayTimezone(timezone);

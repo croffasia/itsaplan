@@ -1,5 +1,5 @@
-import { format, startOfDay } from 'date-fns';
-import { addDays, daysBetween } from '@/utils/dates';
+import { startOfDay } from 'date-fns';
+import { addDays, daysBetween, formatMonthYear } from '@/utils/dates';
 
 // The day track the date-laid-out views place their bars on: the work items
 // timeline and the cycles timeline. Holds the geometry only — which rows exist and
@@ -58,7 +58,7 @@ export function buildDayTrack({
 
   const months: MonthLabel[] = [];
   for (let i = 0; i < days.length; i++) {
-    const label = format(days[i], 'MMMM yyyy');
+    const label = formatMonthYear(days[i]);
     const last = months[months.length - 1];
     if (last && last.label === label) last.width += dayW;
     else months.push({ label, left: i * dayW, width: dayW });

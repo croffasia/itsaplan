@@ -1,8 +1,23 @@
 import type { StateType } from '@/lib/api';
+import { DEFAULT_LOCALE } from '@/i18n/locales';
 
 // Date helpers shared by the project views. Kept separate from project grouping so
 // components that only need date math (Calendar, Timeline, cards) do not pull in
 // the sorting/grouping code.
+
+// The language dates are rendered in. A module variable for the same reason as the
+// timezone below; PreferencesSync sets it in the browser while rendering, before the
+// tree that formats dates. A server render keeps the default, so the value never
+// crosses between requests.
+let displayLocale: string = DEFAULT_LOCALE;
+
+export function setDisplayLocale(locale: string): void {
+  displayLocale = locale;
+}
+
+export function getDisplayLocale(): string {
+  return displayLocale;
+}
 
 // The zone timestamps are rendered in, from the user's account preferences. The API
 // stores and returns UTC; only the display side applies a zone. Held in a module
@@ -49,7 +64,7 @@ export function formatShortDate(value: string): string {
   const dateOnly = value.length <= 10;
   const date = new Date(dateOnly ? `${value}T00:00:00` : value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(displayLocale, {
     month: 'short',
     day: 'numeric',
     ...(dateOnly ? {} : zoneOption()),
@@ -62,7 +77,7 @@ export function formatDate(value: string): string {
   const dateOnly = value.length <= 10;
   const date = new Date(dateOnly ? `${value}T00:00:00` : value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(displayLocale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -74,7 +89,7 @@ export function formatDate(value: string): string {
 export function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString('en-US', {
+  return date.toLocaleString(displayLocale, {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -88,7 +103,7 @@ export function formatDateTime(value: string): string {
 export function formatLongDate(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString(displayLocale, {
     month: 'long',
     day: 'numeric',
     year: 'numeric',
@@ -100,7 +115,17 @@ export function formatLongDate(value: string): string {
 export function formatTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', ...zoneOption() });
+  return date.toLocaleTimeString(displayLocale, {
+    hour: 'numeric',
+    minute: '2-digit',
+    ...zoneOption(),
+  });
+}
+
+// "July 2026" for a calendar date the caller already built in local time (the
+// timeline's month band), so no zone is applied.
+export function formatMonthYear(date: Date): string {
+  return date.toLocaleDateString(displayLocale, { month: 'long', year: 'numeric' });
 }
 
 // The calendar day a moment falls on in the user's zone, as "YYYY-MM-DD". Used to

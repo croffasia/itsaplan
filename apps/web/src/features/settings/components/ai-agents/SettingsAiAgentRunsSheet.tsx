@@ -4,6 +4,7 @@ import { formatDistanceToNow, parseISO } from 'date-fns';
 import type { AgentRun, AiAgent } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { useAgentRuns } from '@/services/aiAgents.service';
+import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -95,6 +96,7 @@ function runSubject(r: AgentRun, t: ReturnType<typeof useTranslations<'settings.
 
 function RunItem({ run: r }: { run: AgentRun }) {
   const t = useTranslations('settings.agents');
+  const locale = useDateFnsLocale();
   const [open, setOpen] = useState(false);
   const subject = runSubject(r, t);
   const outcome = r.status === 'failed' ? (r.lastError ?? t('failed')) : '';
@@ -119,7 +121,7 @@ function RunItem({ run: r }: { run: AgentRun }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <span className="ml-auto shrink-0 text-muted-foreground">
-              {formatDistanceToNow(parseISO(r.createdAt), { addSuffix: true })}
+              {formatDistanceToNow(parseISO(r.createdAt), { addSuffix: true, locale })}
             </span>
           </TooltipTrigger>
           <TooltipContent>{formatDateTime(r.createdAt)}</TooltipContent>

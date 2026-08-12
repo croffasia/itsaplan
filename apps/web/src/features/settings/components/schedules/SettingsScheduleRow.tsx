@@ -11,6 +11,7 @@ import {
   Zap,
 } from 'lucide-react';
 import type { AgentSchedule } from '@/lib/api';
+import { getDisplayLocale } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -187,7 +188,7 @@ export function SettingsScheduleRow({
 }
 
 function formatUtc(value: string): string {
-  return `${new Intl.DateTimeFormat(undefined, {
+  return `${new Intl.DateTimeFormat(getDisplayLocale(), {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'UTC',

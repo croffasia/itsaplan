@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronRight, Plus } from 'lucide-react';
 import { type CustomField, type NewCustomFieldInput, type ProjectDetail } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -11,7 +12,7 @@ import {
   useDeleteCustomField,
   useUpdateCustomField,
 } from '../../services/settings.service';
-import { SettingsCustomFieldForm, FIELD_TYPE_LABELS } from './SettingsCustomFieldForm';
+import { SettingsCustomFieldForm, useFieldTypeLabel } from './SettingsCustomFieldForm';
 
 // Which group's inline add form is open: 'global' for the project-wide field group,
 // or a issue type id for a type-scoped group. null when no form is open.
@@ -25,6 +26,8 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
   // Groups the user has collapsed, keyed by scope; every group is expanded by default.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
+  const t = useTranslations('settings.customFields');
+  const fieldTypeLabel = useFieldTypeLabel();
   const can = useSettingsCan();
   const createCustomField = useCreateCustomField(projectKey);
   const updateCustomField = useUpdateCustomField(projectKey);
@@ -34,13 +37,13 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
   const groups: { scope: AddScope; label: string; fields: CustomField[] }[] = [
     {
       scope: 'global',
-      label: 'Global (all types)',
+      label: t('global'),
       fields: fields.filter((f) => f.issueTypeId == null),
     },
-    ...project.issueTypes.map((t) => ({
-      scope: t.id as AddScope,
-      label: t.name,
-      fields: fields.filter((f) => f.issueTypeId === t.id),
+    ...project.issueTypes.map((type) => ({
+      scope: type.id as AddScope,
+      label: type.name,
+      fields: fields.filter((f) => f.issueTypeId === type.id),
     })),
   ];
 
@@ -96,8 +99,8 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
       );
     }
     const meta = [
-      FIELD_TYPE_LABELS[f.fieldType],
-      f.showInBody ? 'main info' : null,
+      fieldTypeLabel(f.fieldType),
+      f.showInBody ? t('mainInfoMeta') : null,
       f.options.length ? f.options.map((o) => o.value).join(', ') : null,
     ]
       .filter(Boolean)
@@ -108,8 +111,8 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
         className="h-11 pl-9"
         title={f.name}
         meta={meta}
-        editTitle="Edit field"
-        deleteTitle="Delete field"
+        editTitle={t('editField')}
+        deleteTitle={t('deleteField')}
         onEdit={() => startEdit(f)}
         onDelete={() => setDeleting(f)}
       />
@@ -152,8 +155,8 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
                     variant="ghost"
                     size="icon"
                     className="size-7 text-muted-foreground hover:text-foreground"
-                    title="Add field"
-                    aria-label={`Add field to ${g.label}`}
+                    title={t('addField')}
+                    aria-label={t('addFieldTo', { group: g.label })}
                     onClick={() => openAdd(g.scope)}
                   >
                     <Plus className="size-4" />
@@ -174,7 +177,7 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
                     </div>
                   )}
                   {g.fields.length === 0 && !adding && (
-                    <p className="py-3 pl-9 text-xs text-muted-foreground">No fields yet.</p>
+                    <p className="py-3 pl-9 text-xs text-muted-foreground">{t('noFields')}</p>
                   )}
                 </div>
               )}
@@ -185,13 +188,9 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title={`Delete field "${deleting.name}"`}
-          confirmLabel="Delete field"
-          message={
-            <>
-              This field and any values set for it on issues will be removed. This cannot be undone.
-            </>
-          }
+          title={t('deleteTitle', { name: deleting.name })}
+          confirmLabel={t('deleteField')}
+          message={t('deleteMessage')}
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
             await deleteCustomField.mutateAsync(deleting.id);

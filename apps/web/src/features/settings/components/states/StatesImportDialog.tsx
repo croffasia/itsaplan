@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { colorDot } from '@/components/common/fields/colorDot';
 import Modal from '@/components/common/overlay/Modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCreateColumn, useUpdateColumn } from '../../services/settings.service';
 import type { PlannedState } from '../../utils/statesTransfer';
-import { transferActionLabel } from '../../utils/transferAction';
+import { useTransferActionLabel } from '../../utils/transferAction';
 
 // Confirms a states paste before applying it: lists each incoming state, its group,
 // and whether it is created or updates an existing state's color. On confirm, new
@@ -22,6 +23,10 @@ export default function StatesImportDialog({
   planned: PlannedState[];
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.states');
+  const tCommon = useTranslations('common');
+  const tStateType = useTranslations('display.stateTypes');
+  const actionLabel = useTransferActionLabel();
   const createColumn = useCreateColumn(projectKey);
   const updateColumn = useUpdateColumn(projectKey);
   const [busy, setBusy] = useState(false);
@@ -46,7 +51,7 @@ export default function StatesImportDialog({
           updated += 1;
         }
       }
-      toast.success(`Applied states: ${created} created, ${updated} updated.`);
+      toast.success(t('imported', { created, updated }));
       onClose();
     } catch {
       // The failed mutation is toasted by the global handler; keep the dialog open.
@@ -55,11 +60,10 @@ export default function StatesImportDialog({
   }
 
   return (
-    <Modal title="Apply states from clipboard" onClose={onClose} wide>
+    <Modal title={t('importTitle')} onClose={onClose} wide>
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          {applicable.length} state{applicable.length === 1 ? '' : 's'} will be applied. A matching
-          state keeps its group; only its color is updated.
+          {t('importSummary', { count: applicable.length })}
         </p>
         <div className="max-h-[50vh] divide-y divide-border/60 overflow-y-auto rounded-md border border-border/60">
           {planned.map((state) => (
@@ -69,25 +73,24 @@ export default function StatesImportDialog({
             >
               {colorDot(state.color)}
               <span className="min-w-0 flex-1 truncate text-sm font-medium">{state.name}</span>
-              <span className="shrink-0 text-xs text-muted-foreground capitalize">
-                {state.stateType}
+              <span className="shrink-0 text-xs text-muted-foreground">
+                {tStateType(state.stateType)}
               </span>
               <Badge
                 variant={state.action === 'unchanged' ? 'outline' : 'secondary'}
                 className="shrink-0 px-1.5 py-0 text-[10px] font-normal"
               >
-                {transferActionLabel(state.action)}
+                {actionLabel(state.action)}
               </Badge>
             </div>
           ))}
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button onClick={apply} disabled={busy || applicable.length === 0}>
-            Apply {applicable.length > 0 ? applicable.length : ''} state
-            {applicable.length === 1 ? '' : 's'}
+            {t('importApply', { count: applicable.length })}
           </Button>
         </div>
       </div>

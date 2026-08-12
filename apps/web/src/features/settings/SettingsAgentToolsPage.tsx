@@ -2,6 +2,7 @@
 
 import { useShell } from '@/context/shellContext';
 import { AGENT_TOOLS_SECTION } from '@/utils/settingsSections';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import {
   useIntegrationCatalogQuery,
   useIntegrationOptionsQuery,
@@ -12,12 +13,15 @@ import { SettingsResourceProvider } from './context/settingsPermission';
 import { SettingsCreateAction } from './components/crud/SettingsCreateAction';
 import SettingsAgentTools from './components/agent-tools/SettingsAgentTools';
 import { ToolConfigDialog } from './components/agent-tools/ToolConfigDialog';
+import { useTranslations } from 'next-intl';
 
 const section = AGENT_TOOLS_SECTION;
 
 // The custom tools page (/project/:projectKey/agent-tools): external integrations
 // internal agents can call, configured once per project.
 export default function SettingsAgentToolsPage() {
+  const t = useTranslations('settings.tools');
+  const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
   const key = project?.project.key ?? null;
   const catalog = useIntegrationCatalogQuery(key).data ?? [];
@@ -26,10 +30,10 @@ export default function SettingsAgentToolsPage() {
   const projectKey = project.project.key;
   return (
     <SectionPageView
-      title={section.label}
-      description={section.description}
+      title={sectionText.label}
+      description={sectionText.description}
       actions={
-        <SettingsCreateAction resource={section.resource} label="Add tool">
+        <SettingsCreateAction resource={section.resource} label={t('add')}>
           {({ open, close }) =>
             open && (
               <ToolConfigDialog

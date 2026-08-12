@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { colorDot } from '@/components/common/fields/colorDot';
 import Modal from '@/components/common/overlay/Modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCreateIssueType, useUpdateIssueType } from '../../services/settings.service';
 import type { PlannedIssueType } from '../../utils/issueTypesTransfer';
-import { transferActionLabel } from '../../utils/transferAction';
+import { useTransferActionLabel } from '../../utils/transferAction';
 
 // Confirms an issue types paste before applying it: lists each incoming type and
 // whether it is created or updates an existing type's color. On confirm, new types are
@@ -22,6 +23,9 @@ export default function IssueTypesImportDialog({
   planned: PlannedIssueType[];
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.issueTypes');
+  const tCommon = useTranslations('common');
+  const actionLabel = useTransferActionLabel();
   const createIssueType = useCreateIssueType(projectKey);
   const updateIssueType = useUpdateIssueType(projectKey);
   const [busy, setBusy] = useState(false);
@@ -47,7 +51,7 @@ export default function IssueTypesImportDialog({
           updated += 1;
         }
       }
-      toast.success(`Applied issue types: ${created} created, ${updated} updated.`);
+      toast.success(t('imported', { created, updated }));
       onClose();
     } catch {
       // The failed mutation is toasted by the global handler; keep the dialog open.
@@ -56,11 +60,10 @@ export default function IssueTypesImportDialog({
   }
 
   return (
-    <Modal title="Apply issue types from clipboard" onClose={onClose} wide>
+    <Modal title={t('importTitle')} onClose={onClose} wide>
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          {applicable.length} issue type{applicable.length === 1 ? '' : 's'} will be applied. A
-          matching type only has its color updated.
+          {t('importSummary', { count: applicable.length })}
         </p>
         <div className="max-h-[50vh] divide-y divide-border/60 overflow-y-auto rounded-md border border-border/60">
           {planned.map((type) => (
@@ -71,18 +74,17 @@ export default function IssueTypesImportDialog({
                 variant={type.action === 'unchanged' ? 'outline' : 'secondary'}
                 className="shrink-0 px-1.5 py-0 text-[10px] font-normal"
               >
-                {transferActionLabel(type.action)}
+                {actionLabel(type.action)}
               </Badge>
             </div>
           ))}
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button onClick={apply} disabled={busy || applicable.length === 0}>
-            Apply {applicable.length > 0 ? applicable.length : ''} type
-            {applicable.length === 1 ? '' : 's'}
+            {t('importApply', { count: applicable.length })}
           </Button>
         </div>
       </div>

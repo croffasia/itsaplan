@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, Copy, Eye, EyeOff, History, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import type { Webhook } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +28,7 @@ export function SettingsWebhookRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('settings.webhooks');
   const can = useSettingsCan();
   const [revealed, setRevealed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -50,7 +52,7 @@ export function SettingsWebhookRow({
               'mt-1.5 size-2 shrink-0 rounded-full',
               webhook.isActive ? 'bg-emerald-500' : 'bg-muted-foreground/40',
             )}
-            title={webhook.isActive ? 'Active' : 'Disabled'}
+            title={t(webhook.isActive ? 'active' : 'disabled')}
           />
           <div className="min-w-0 space-y-1.5">
             <span className="block truncate text-sm font-medium" title={webhook.url}>
@@ -64,7 +66,7 @@ export function SettingsWebhookRow({
                 variant="ghost"
                 size="icon"
                 className="size-6 shrink-0"
-                title={revealed ? 'Hide secret' : 'Reveal secret'}
+                title={t(revealed ? 'hideSecret' : 'revealSecret')}
                 onClick={() => setRevealed((r) => !r)}
               >
                 {revealed ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
@@ -73,7 +75,7 @@ export function SettingsWebhookRow({
                 variant="ghost"
                 size="icon"
                 className="size-6 shrink-0"
-                title="Copy secret"
+                title={t('copySecret')}
                 onClick={copySecret}
               >
                 {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -93,7 +95,7 @@ export function SettingsWebhookRow({
       </TableCell>
       <TableCell className="px-3 py-3 align-top">
         <div className="flex items-center justify-end gap-1">
-          <SettingsIconButton title="Delivery history" onClick={onShowDeliveries}>
+          <SettingsIconButton title={t('deliveryHistory')} onClick={onShowDeliveries}>
             <History className="size-4" />
           </SettingsIconButton>
           {(can('edit') || can('delete')) && (
@@ -110,13 +112,13 @@ export function SettingsWebhookRow({
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
-                <TooltipContent>More actions</TooltipContent>
+                <TooltipContent>{t('moreActions')}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end">
                 {can('edit') && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onEdit}>
                     <Pencil />
-                    Edit webhook
+                    {t('edit')}
                   </DropdownMenuItem>
                 )}
                 {can('delete') && can('edit') && <DropdownMenuSeparator />}
@@ -127,7 +129,7 @@ export function SettingsWebhookRow({
                     onSelect={onDelete}
                   >
                     <Trash2 />
-                    Delete webhook
+                    {t('delete')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

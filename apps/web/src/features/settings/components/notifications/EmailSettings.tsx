@@ -13,22 +13,20 @@ import EnabledSwitch from '@/components/common/inputs/EnabledSwitch';
 import ProviderToggle from '@/components/common/inputs/ProviderToggle';
 import SecretInput from '@/components/common/inputs/SecretInput';
 import type { EmailForm } from '../../hooks/useEmailForm';
+import { useTranslations } from 'next-intl';
 
-const ENCRYPTION_OPTIONS: { value: NotificationEncryption; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'ssl', label: 'SSL' },
-  { value: 'tls', label: 'TLS' },
-];
+const ENCRYPTION_OPTIONS: NotificationEncryption[] = ['none', 'ssl', 'tls'];
 
 // The instance provider or one of the project's own (SMTP or Resend). Non-secret
 // fields prefill from the stored config; secrets start blank and are sent only when
 // changed.
 export default function EmailSettings({ form }: { form: EmailForm }) {
+  const t = useTranslations('settings.notifications');
   const { settings, editable } = form;
   return (
     <SettingsSection
-      title="Email provider"
-      description="Send through the system provider or one of your own. Credentials are stored encrypted."
+      title={t('emailProvider')}
+      description={t('emailProviderHint')}
       action={
         editable && (
           <EnabledSwitch checked={form.enabled} onChange={form.setEnabled} disabled={!editable} />
@@ -44,14 +42,12 @@ export default function EmailSettings({ form }: { form: EmailForm }) {
 
       {form.provider === 'system' ? (
         <p className="text-sm text-muted-foreground">
-          {settings.systemAvailable
-            ? 'Notifications are sent through the provider configured for this instance. No credentials needed here.'
-            : 'The instance provider is not available. Ask the administrator to configure it and share it with projects, or set up a provider for this project.'}
+          {settings.systemAvailable ? t('systemAvailable') : t('systemUnavailable')}
         </p>
       ) : form.provider === 'smtp' ? (
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label htmlFor="smtp-host">Host</Label>
+            <Label htmlFor="smtp-host">{t('host')}</Label>
             <Input
               id="smtp-host"
               value={form.host}
@@ -61,7 +57,7 @@ export default function EmailSettings({ form }: { form: EmailForm }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="smtp-port">Port</Label>
+            <Label htmlFor="smtp-port">{t('port')}</Label>
             <Input
               id="smtp-port"
               type="number"
@@ -73,7 +69,7 @@ export default function EmailSettings({ form }: { form: EmailForm }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="smtp-encryption">Encryption</Label>
+            <Label htmlFor="smtp-encryption">{t('encryption')}</Label>
             <Select
               value={form.encryption}
               onValueChange={(v) => form.setEncryption(v as NotificationEncryption)}
@@ -84,15 +80,15 @@ export default function EmailSettings({ form }: { form: EmailForm }) {
               </SelectTrigger>
               <SelectContent>
                 {ENCRYPTION_OPTIONS.map((o) => (
-                  <SelectItem key={o.value} value={o.value}>
-                    {o.label}
+                  <SelectItem key={o} value={o}>
+                    {t(`encryptionOptions.${o}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="smtp-username">Username</Label>
+            <Label htmlFor="smtp-username">{t('username')}</Label>
             <Input
               id="smtp-username"
               value={form.username}
@@ -103,18 +99,18 @@ export default function EmailSettings({ form }: { form: EmailForm }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="smtp-password">Password</Label>
+            <Label htmlFor="smtp-password">{t('password')}</Label>
             <SecretInput
               id="smtp-password"
               value={form.password}
               onChange={form.setPassword}
               hasStored={settings.smtp.hasPassword}
               editable={editable}
-              placeholder="SMTP password"
+              placeholder={t('passwordPlaceholder')}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="smtp-timeout">Timeout (s)</Label>
+            <Label htmlFor="smtp-timeout">{t('timeout')}</Label>
             <Input
               id="smtp-timeout"
               type="number"
@@ -122,13 +118,13 @@ export default function EmailSettings({ form }: { form: EmailForm }) {
               value={form.timeout}
               onChange={(e) => form.setTimeout(e.target.value)}
               disabled={!editable}
-              placeholder="Optional"
+              placeholder={t('optional')}
             />
           </div>
         </div>
       ) : (
         <div className="space-y-1.5 sm:max-w-md">
-          <Label htmlFor="resend-api-key">API key</Label>
+          <Label htmlFor="resend-api-key">{t('apiKey')}</Label>
           <SecretInput
             id="resend-api-key"
             value={form.apiKey}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type Column, type ProjectDetail, type StateType } from '@/lib/api';
 import { useDndSensors } from '@/lib/dnd';
 import { STATE_TYPES } from '@/utils/fieldOptions';
@@ -30,6 +31,9 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState(DEFAULT_COLOR);
   const [deleting, setDeleting] = useState<Column | null>(null);
+  const t = useTranslations('settings.states');
+  const tCommon = useTranslations('common');
+  const tStateType = useTranslations('display.stateTypes');
   const sensors = useDndSensors();
   const can = useSettingsCan();
   const createColumn = useCreateColumn(project.project.key);
@@ -106,26 +110,26 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
             return (
               <div key={s} className="mb-8 last:mb-0">
                 <div className="mb-1 flex items-center justify-between border-b pb-1">
-                  <span className="text-xs font-medium text-muted-foreground capitalize">{s}</span>
+                  <span className="text-xs font-medium text-muted-foreground">{tStateType(s)}</span>
                   {can('create') && (
                     <Button
                       variant="ghost"
                       size="sm"
                       className="-mr-2 h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-                      title={`Add ${s} state`}
+                      title={t('addState', { type: tStateType(s) })}
                       onClick={() => startAdd(s)}
                     >
                       <Plus className="size-3.5" />
-                      New
+                      {tCommon('new')}
                     </Button>
                   )}
                 </div>
                 <ItemGroup>
                   {group.length === 0 && addingType !== s && (
                     <SettingsEmpty
-                      title={`No ${s} states`}
-                      description="Add a workflow state for this group."
-                      addLabel="New state"
+                      title={t('emptyTitle', { type: tStateType(s) })}
+                      description={t('emptyHint')}
+                      addLabel={t('newState')}
                       onAdd={() => startAdd(s)}
                     />
                   )}
@@ -139,8 +143,8 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
                           key={c.id}
                           name={editName}
                           onNameChange={setEditName}
-                          placeholder="State name"
-                          submitLabel="Save"
+                          placeholder={t('namePlaceholder')}
+                          submitLabel={tCommon('save')}
                           onSubmit={() => void saveEdit(c)}
                           onCancel={() => setEditingId(null)}
                           leading={<SettingsColorField value={editColor} onChange={setEditColor} />}
@@ -159,8 +163,8 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
                     <SettingsInlineEditForm
                       name={name}
                       onNameChange={setName}
-                      placeholder="State name"
-                      submitLabel="Add"
+                      placeholder={t('namePlaceholder')}
+                      submitLabel={tCommon('add')}
                       onSubmit={() => void add(s)}
                       onCancel={() => setAddingType(null)}
                       leading={<SettingsColorField value={color} onChange={setColor} />}

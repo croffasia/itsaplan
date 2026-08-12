@@ -1,9 +1,11 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import type { NotificationSettings, ProjectDetail } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { settingsSection } from '@/utils/settingsSections';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import SectionPageView from '@/components/common/page/SectionPageView';
@@ -31,10 +33,11 @@ export default function SettingsNotificationsPage() {
 }
 
 function Chrome({ actions, children }: { actions?: ReactNode; children: ReactNode }) {
+  const sectionText = useSettingsSectionText()(section.slug);
   return (
     <SectionPageView
-      title={section.label}
-      description={section.description}
+      title={sectionText.label}
+      description={sectionText.description}
       wide
       widthClassName="min-w-[600px] max-w-[60%]"
       actions={actions}
@@ -67,6 +70,7 @@ function NotificationsLoaded({
   projectKey: string;
   settings: NotificationSettings;
 }) {
+  const t = useTranslations('common');
   const { can } = usePermissions();
   const editable = can(section.resource, 'edit');
   const [tab, setTab] = useState<NotificationTab>('email');
@@ -83,7 +87,7 @@ function NotificationsLoaded({
             onClick={() => void active.save()}
             disabled={!active.dirty || active.saving}
           >
-            Save
+            {t('save')}
           </Button>
         ) : undefined
       }

@@ -3,6 +3,7 @@
 import { type ReactNode, useRef } from 'react';
 import { SectionNav, type SectionNavItem } from '@/components/common/page/SectionNav';
 import { useSectionScrollSpy } from '@/hooks/useSectionScrollSpy';
+import { useTranslations } from 'next-intl';
 
 // Content width of the full-width internal editor. The sheet sizes its footer to
 // match, so the two must stay in sync.
@@ -23,6 +24,7 @@ export default function AgentExpandedLayout({
   onExpand: (id: string) => void;
   children: ReactNode;
 }) {
+  const t = useTranslations('settings.agents');
   const containerRef = useRef<HTMLDivElement>(null);
   const { activeId, setActiveId } = useSectionScrollSpy(
     navSections.map((s) => s.id),
@@ -47,7 +49,7 @@ export default function AgentExpandedLayout({
         <SectionNav
           sections={navSections}
           activeId={activeId}
-          label="Agent settings"
+          label={t('agentSettings')}
           onJump={jump}
         />
         <div className="min-w-0 flex-1 space-y-8">{children}</div>

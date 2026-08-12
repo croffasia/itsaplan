@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ClipboardPaste, Copy, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { IssueType, PermissionResource } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useIsMac } from '@/context/useHotkeys';
+import { useTransferErrorMessage } from '../../hooks/useTransferErrorMessage';
 import { SettingsHeaderAddButton } from '../crud/SettingsHeaderAddButton';
 import IssueTypesImportDialog from './IssueTypesImportDialog';
 import {
@@ -36,40 +38,41 @@ export default function IssueTypesToolbar({
   types: IssueType[];
   onAdd: () => void;
 }) {
+  const t = useTranslations('settings.issueTypes');
+  const tTransfer = useTranslations('settings.transfer');
+  const transferError = useTransferErrorMessage();
   const { can } = usePermissions();
   const mod = useIsMac() ? '⌘' : 'Ctrl';
   const [importing, setImporting] = useState<PlannedIssueType[] | null>(null);
 
   const copyTypes = useCallback(async () => {
     if (types.length === 0) {
-      toast.info('No issue types to copy.');
+      toast.info(t('nothingToCopy'));
       return;
     }
     try {
       await navigator.clipboard.writeText(serializeIssueTypes(types));
-      toast.success(`Copied ${types.length} issue type${types.length === 1 ? '' : 's'}.`);
+      toast.success(t('copied', { count: types.length }));
     } catch {
-      toast.error('Could not copy to the clipboard.');
+      toast.error(tTransfer('copyFailed'));
     }
-  }, [types]);
+  }, [types, t, tTransfer]);
 
   const pasteTypes = useCallback(async () => {
     let text: string;
     try {
       text = await navigator.clipboard.readText();
     } catch {
-      toast.error('Could not read the clipboard.');
+      toast.error(tTransfer('readFailed'));
       return;
     }
     try {
       const parsed = parseIssueTypesText(text);
       setImporting(planIssueTypesImport(parsed, types));
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Could not read issue types from the clipboard.',
-      );
+      toast.error(transferError(err, t('parseFailed')));
     }
-  }, [types]);
+  }, [types, t, tTransfer, transferError]);
 
   // Cmd/Ctrl+C copies, Cmd/Ctrl+V pastes — but only on this page, not while typing,
   // and Cmd+C only when no text is selected (so an intentional text copy still works).
@@ -108,7 +111,7 @@ export default function IssueTypesToolbar({
               variant="ghost"
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
-              aria-label="Issue type import and export"
+              aria-label={t('menu')}
             >
               <MoreHorizontal className="size-4" />
             </Button>
@@ -116,19 +119,19 @@ export default function IssueTypesToolbar({
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={() => void copyTypes()} disabled={types.length === 0}>
               <Copy className="size-4" />
-              Copy issue types
+              {t('copy')}
               <DropdownMenuShortcut>{mod}C</DropdownMenuShortcut>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => void pasteTypes()}>
               <ClipboardPaste className="size-4" />
-              Paste issue types
+              {t('paste')}
               <DropdownMenuShortcut>{mod}V</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       )}
 
-      <SettingsHeaderAddButton resource={resource} label="Add type" onClick={onAdd} />
+      <SettingsHeaderAddButton resource={resource} label={t('add')} onClick={onAdd} />
 
       {importing && (
         <IssueTypesImportDialog

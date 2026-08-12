@@ -9,6 +9,7 @@ import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import NotificationPreferences from './components/notifications/NotificationPreferences';
 import { useNotificationPreferencesQuery } from './services/settings.service';
 import { useNotificationPreferencesForm } from './hooks/useNotificationPreferencesForm';
+import { useTranslations } from 'next-intl';
 
 // The member's own notification preferences (/project/:projectKey/notifications).
 // A main-nav Configuration destination, open to any member: choose which issue events
@@ -21,10 +22,11 @@ export default function NotificationPreferencesPage() {
 }
 
 function Chrome({ actions, children }: { actions?: ReactNode; children: ReactNode }) {
+  const t = useTranslations('settings.notifications');
   return (
     <SectionPageView
-      title="Notifications"
-      description="Choose which issue events you get and where. Email goes to your account address; Telegram to the chat id you set below."
+      title={t('title')}
+      description={t('description')}
       wide
       widthClassName="min-w-[600px] max-w-[60%]"
       actions={actions}
@@ -47,12 +49,13 @@ function PreferencesPage({ projectKey }: { projectKey: string }) {
 }
 
 function PreferencesLoaded({ projectKey, initial }: { projectKey: string; initial: Prefs }) {
+  const t = useTranslations('common');
   const form = useNotificationPreferencesForm(projectKey, initial);
   return (
     <Chrome
       actions={
         <Button size="sm" onClick={() => void form.save()} disabled={!form.dirty || form.saving}>
-          Save
+          {t('save')}
         </Button>
       }
     >

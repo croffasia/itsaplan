@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ACTION_ICON_KEYS, ACTION_ICONS, actionIcon } from '@/utils/actionIcons';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ export function SettingsActionIconPicker({
   value: string;
   onChange: (key: string) => void;
 }) {
+  const t = useTranslations('settings.actions');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const Current = actionIcon(value);
@@ -35,7 +37,7 @@ export function SettingsActionIconPicker({
           variant="ghost"
           size="icon"
           className="size-9 shrink-0 text-muted-foreground hover:text-foreground"
-          aria-label="Action icon"
+          aria-label={t('icon')}
         >
           <Current className="size-4" />
         </Button>
@@ -45,7 +47,7 @@ export function SettingsActionIconPicker({
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search icons"
+          placeholder={t('searchIcons')}
           className="mb-2 h-8"
         />
         <div className="grid max-h-56 grid-cols-8 gap-1 overflow-y-auto">
@@ -73,7 +75,7 @@ export function SettingsActionIconPicker({
           })}
           {keys.length === 0 && (
             <p className="col-span-8 py-4 text-center text-xs text-muted-foreground">
-              No icons found
+              {t('noIcons')}
             </p>
           )}
         </div>

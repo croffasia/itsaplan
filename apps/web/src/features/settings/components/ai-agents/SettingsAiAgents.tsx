@@ -15,6 +15,7 @@ import AgentKeyRevealModal from './AgentKeyRevealModal';
 import { SettingsAiAgentSheet } from './SettingsAiAgentSheet';
 import { SettingsAiAgentRunsSheet } from './SettingsAiAgentRunsSheet';
 import { integrationLabel } from '../../utils/integrationLabels';
+import { useTranslations } from 'next-intl';
 
 // Project settings tab for AI agents: bot users that issues can be delegated to.
 // An external agent is driven through the API; an internal agent runs on the
@@ -23,6 +24,8 @@ import { integrationLabel } from '../../utils/integrationLabels';
 // its key once, inline, then stays open to keep editing. Regenerating a key (an
 // existing external agent only) reveals the new plaintext secret once.
 export default function SettingsAiAgents({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('settings.agents');
+  const tCommon = useTranslations('common');
   const projectKey = project.project.key;
   const agentsQuery = useAiAgentsQuery(projectKey);
   const agents = agentsQuery.data ?? [];
@@ -55,10 +58,7 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
       {agentsQuery.isPending ? (
         <ListSkeleton rows={3} rowClassName="h-12" />
       ) : agents.length === 0 ? (
-        <EmptyState
-          title="No agents yet"
-          description="An agent runs on the built-in runtime or through the API."
-        />
+        <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
           <Table className="min-w-[1000px] table-fixed">
@@ -70,15 +70,17 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
             </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">Agent</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">
-                  Triggers
+                  {t('agent')}
                 </TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">
-                  Configuration
+                  {t('columns.triggers')}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  {t('columns.configuration')}
                 </TableHead>
                 <TableHead className="text-right text-xs font-medium text-muted-foreground">
-                  Actions
+                  {tCommon('actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -115,15 +117,12 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
 
       {regenerating && (
         <SettingsConfirmDeleteDialog
-          title="Regenerate API key"
-          confirmLabel="Regenerate key"
-          message={
-            <>
-              A new key will be issued for <span className="font-medium">{regenerating.name}</span>{' '}
-              and the current one will stop working immediately. Every existing connection using it
-              will break until it is updated with the new key.
-            </>
-          }
+          title={t('regenerateTitle')}
+          confirmLabel={t('regenerateConfirm')}
+          message={t.rich('regenerateMessage', {
+            name: regenerating.name,
+            v: (chunks) => <span className="font-medium">{chunks}</span>,
+          })}
           onClose={() => setRegenerating(null)}
           onConfirm={async () => {
             const agent = regenerating;
@@ -135,7 +134,7 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
 
       {regeneratedKey !== null && (
         <AgentKeyRevealModal
-          title="Key regenerated"
+          title={t('keyRegenerated')}
           apiKey={regeneratedKey}
           onClose={() => setRegeneratedKey(null)}
         />
@@ -143,15 +142,12 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title="Delete agent"
-          confirmLabel="Delete agent"
-          message={
-            <>
-              <span className="font-medium">{deleting.name}</span> and its API key will be removed,
-              and it will be cleared from any issues it was assigned or delegated to. This cannot be
-              undone.
-            </>
-          }
+          title={t('delete')}
+          confirmLabel={t('delete')}
+          message={t.rich('deleteMessage', {
+            name: deleting.name,
+            v: (chunks) => <span className="font-medium">{chunks}</span>,
+          })}
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
             await deleteAgent.mutateAsync(deleting.id);

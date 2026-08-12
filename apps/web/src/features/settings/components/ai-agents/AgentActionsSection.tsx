@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { grantedToolCount } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
+import { useTranslations } from 'next-intl';
 
 // What the agent may do in the project. Read-only tools are always granted; the rest
 // are opt-in. The counter shows the tools the agent actually has (the granted ones
@@ -25,6 +26,7 @@ export default function AgentActionsSection({
   selected: string[];
   onChange: (keys: string[]) => void;
 }) {
+  const t = useTranslations('settings.agents');
   const grantable = tools.filter((t) => !t.always);
   const activeCount = grantedToolCount(tools, selected);
   const allGranted = grantable.length > 0 && selected.length >= grantable.length;
@@ -42,13 +44,13 @@ export default function AgentActionsSection({
       open={open}
       onOpenChange={onOpenChange}
       icon={ListChecks}
-      title="Actions"
-      hint="What the agent can do in the project"
+      title={t('actions')}
+      hint={t('actionsHint')}
       headerRight={tools.length > 0 ? `${activeCount} / ${tools.length}` : undefined}
     >
       {toolsLoading && <p className="text-xs text-muted-foreground">Loading actions…</p>}
       {!toolsLoading && tools.length === 0 && (
-        <p className="text-xs text-muted-foreground">No actions available.</p>
+        <p className="text-xs text-muted-foreground">{t('noActions')}</p>
       )}
       {!toolsLoading && tools.length > 0 && (
         <>
@@ -59,7 +61,7 @@ export default function AgentActionsSection({
                 onClick={() => onChange(allGranted ? [] : grantable.map((t) => t.key))}
                 className="text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                {allGranted ? 'Clear all' : 'Select all'}
+                {allGranted ? t('clearAll') : t('selectAll')}
               </button>
             </div>
           )}
@@ -78,9 +80,7 @@ export default function AgentActionsSection({
                       </span>
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    Read-only access is always on and can&apos;t be turned off.
-                  </TooltipContent>
+                  <TooltipContent>{t('readOnlyAlwaysOn')}</TooltipContent>
                 </Tooltip>
               ) : (
                 <label key={tool.key} className="flex cursor-pointer items-start gap-2">

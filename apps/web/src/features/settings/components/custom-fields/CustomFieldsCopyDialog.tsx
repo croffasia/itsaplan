@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 
@@ -16,19 +17,19 @@ export default function CustomFieldsCopyDialog({
   onChoose: (includeTypeScoped: boolean) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.customFields');
+
   return (
-    <Modal title="Copy custom fields" onClose={onClose}>
+    <Modal title={t('copyTitle')} onClose={onClose}>
       <div className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          This project has {scopedCount} field{scopedCount === 1 ? '' : 's'} scoped to an issue
-          type. Copy those too, or only the {globalCount} global field
-          {globalCount === 1 ? '' : 's'}?
+          {t('copyQuestion', { scoped: scopedCount, global: globalCount })}
         </p>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={() => onChoose(false)} disabled={globalCount === 0}>
-            Global only
+            {t('copyGlobalOnly')}
           </Button>
-          <Button onClick={() => onChoose(true)}>Include type-scoped</Button>
+          <Button onClick={() => onChoose(true)}>{t('copyIncludeScoped')}</Button>
         </div>
       </div>
     </Modal>

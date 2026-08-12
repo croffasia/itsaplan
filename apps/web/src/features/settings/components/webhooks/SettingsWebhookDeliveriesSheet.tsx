@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { Webhook, WebhookDelivery } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
@@ -25,11 +26,13 @@ export function SettingsWebhookDeliveriesSheet({
   webhook: Webhook | null;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.webhooks');
+
   return (
     <Sheet open={webhook != null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
         <SheetHeader className="border-b">
-          <SheetTitle>Delivery history</SheetTitle>
+          <SheetTitle>{t('deliveryHistory')}</SheetTitle>
           <SheetDescription className="truncate font-mono text-xs">{webhook?.url}</SheetDescription>
         </SheetHeader>
         {webhook && <DeliveriesList webhookId={webhook.id} />}
@@ -39,6 +42,8 @@ export function SettingsWebhookDeliveriesSheet({
 }
 
 function DeliveriesList({ webhookId }: { webhookId: number }) {
+  const t = useTranslations('settings.webhooks');
+  const tCommon = useTranslations('common');
   const query = useWebhookDeliveries(webhookId);
   const deliveries = query.data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -46,7 +51,7 @@ function DeliveriesList({ webhookId }: { webhookId: number }) {
     return <ListSkeleton rows={4} className="p-4" rowClassName="h-12" />;
   }
   if (deliveries.length === 0) {
-    return <p className="p-4 text-sm text-muted-foreground">No deliveries yet.</p>;
+    return <p className="p-4 text-sm text-muted-foreground">{t('noDeliveries')}</p>;
   }
 
   return (
@@ -65,25 +70,24 @@ function DeliveriesList({ webhookId }: { webhookId: number }) {
             disabled={query.isFetchingNextPage}
             onClick={() => query.fetchNextPage()}
           >
-            {query.isFetchingNextPage ? 'Loading…' : 'Load 25 more'}
+            {query.isFetchingNextPage ? tCommon('loading') : t('loadMore')}
           </Button>
         ) : (
-          <p className="text-center text-xs text-muted-foreground">End of history</p>
+          <p className="text-center text-xs text-muted-foreground">{t('endOfHistory')}</p>
         )}
       </div>
     </div>
   );
 }
 
-function outcomeText(d: WebhookDelivery): string {
-  if (d.responseStatus != null) return `HTTP ${d.responseStatus}`;
-  if (d.lastError != null) return d.lastError;
-  return d.status === 'pending' ? 'Queued' : '';
-}
-
 function DeliveryItem({ delivery: d }: { delivery: WebhookDelivery }) {
+  const t = useTranslations('settings.webhooks');
   const [open, setOpen] = useState(false);
-  const outcome = outcomeText(d);
+  // What came back: the response status, the error, or that it is still queued.
+  const outcome =
+    d.responseStatus != null
+      ? `HTTP ${d.responseStatus}`
+      : (d.lastError ?? (d.status === 'pending' ? t('queued') : ''));
   return (
     <div>
       <button
@@ -98,7 +102,9 @@ function DeliveryItem({ delivery: d }: { delivery: WebhookDelivery }) {
         )}
         <StatusBadge status={d.status} />
         <span className="font-mono">{d.eventType}</span>
-        {d.attempts > 1 && <span className="text-muted-foreground">·{d.attempts} attempts</span>}
+        {d.attempts > 1 && (
+          <span className="text-muted-foreground">{t('attempts', { count: d.attempts })}</span>
+        )}
         <span className="truncate text-muted-foreground">{outcome}</span>
         <span className="ml-auto shrink-0 text-muted-foreground">
           {formatDateTime(d.createdAt)}
@@ -106,9 +112,13 @@ function DeliveryItem({ delivery: d }: { delivery: WebhookDelivery }) {
       </button>
       {open && (
         <div className="space-y-3 px-4 pb-3">
-          <DetailBlock label="Sent" value={d.payload} />
+          <DetailBlock label={t('sent')} value={d.payload} />
           <DetailBlock
-            label={`Response${d.responseStatus != null ? ` · HTTP ${d.responseStatus}` : ''}`}
+            label={
+              d.responseStatus != null
+                ? t('responseWithStatus', { status: d.responseStatus })
+                : t('response')
+            }
             value={d.responseBody ?? d.lastError}
           />
         </div>
@@ -118,13 +128,14 @@ function DeliveryItem({ delivery: d }: { delivery: WebhookDelivery }) {
 }
 
 function DetailBlock({ label, value }: { label: string; value: unknown }) {
+  const t = useTranslations('settings.webhooks');
   return (
     <div className="space-y-1">
       <div className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
         {label}
       </div>
       {value == null || value === '' ? (
-        <p className="text-xs text-muted-foreground">(no response)</p>
+        <p className="text-xs text-muted-foreground">{t('noResponse')}</p>
       ) : (
         <JsonViewer value={value} />
       )}
@@ -139,9 +150,10 @@ const STATUS_VARIANT: Record<WebhookDelivery['status'], 'secondary' | 'destructi
 };
 
 function StatusBadge({ status }: { status: WebhookDelivery['status'] }) {
+  const t = useTranslations('settings.webhooks');
   return (
-    <Badge variant={STATUS_VARIANT[status]} className="shrink-0 capitalize">
-      {status}
+    <Badge variant={STATUS_VARIANT[status]} className="shrink-0">
+      {t(`statuses.${status}`)}
     </Badge>
   );
 }

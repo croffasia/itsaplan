@@ -74,11 +74,11 @@ export function parseCustomFieldsText(text: string): FieldTransfer[] {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error('Clipboard does not contain valid JSON.');
+    throw new Error('invalidJson');
   }
   const env = data as Partial<CustomFieldsEnvelope>;
   if (!env || env.type !== PAYLOAD_TYPE || !Array.isArray(env.fields)) {
-    throw new Error('Clipboard does not contain a custom fields export.');
+    throw new Error('wrongPayload');
   }
   const fields: FieldTransfer[] = [];
   for (const raw of env.fields) {
@@ -95,7 +95,7 @@ export function parseCustomFieldsText(text: string): FieldTransfer[] {
       type,
     });
   }
-  if (fields.length === 0) throw new Error('The custom fields export is empty.');
+  if (fields.length === 0) throw new Error('empty');
   return fields;
 }
 

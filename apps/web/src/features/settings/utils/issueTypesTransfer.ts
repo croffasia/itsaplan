@@ -42,11 +42,11 @@ export function parseIssueTypesText(text: string): IssueTypeTransfer[] {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error('Clipboard does not contain valid JSON.');
+    throw new Error('invalidJson');
   }
   const env = data as Partial<IssueTypesEnvelope>;
   if (!env || env.type !== PAYLOAD_TYPE || !Array.isArray(env.issueTypes)) {
-    throw new Error('Clipboard does not contain an issue types export.');
+    throw new Error('wrongPayload');
   }
   const types: IssueTypeTransfer[] = [];
   const seen = new Set<string>();
@@ -62,7 +62,7 @@ export function parseIssueTypesText(text: string): IssueTypeTransfer[] {
       color: typeof raw?.color === 'string' ? raw.color : DEFAULT_COLOR,
     });
   }
-  if (types.length === 0) throw new Error('The issue types export is empty.');
+  if (types.length === 0) throw new Error('empty');
   return types;
 }
 

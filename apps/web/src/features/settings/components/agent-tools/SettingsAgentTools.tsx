@@ -9,11 +9,14 @@ import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { ToolConfigRow } from './ToolConfigRow';
 import { integrationLabel } from '../../utils/integrationLabels';
+import { useTranslations } from 'next-intl';
 
 // Project settings for configured tools: a catalog tool bound to an integration
 // credential. Adding picks a tool and a credential of its integration; deleting
 // confirms first. Enabling a configured tool on an agent is done on the agent editor.
 export default function SettingsAgentTools({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('settings.tools');
+  const tCommon = useTranslations('common');
   const projectKey = project.project.key;
   const toolsQuery = useConfiguredToolsQuery(projectKey);
   const tools = toolsQuery.data ?? [];
@@ -34,10 +37,7 @@ export default function SettingsAgentTools({ project }: { project: ProjectDetail
       {toolsQuery.isPending ? (
         <ListSkeleton rows={3} rowClassName="h-12" />
       ) : tools.length === 0 ? (
-        <EmptyState
-          title="No tools yet"
-          description="Configure a tool once, then enable it on any agent."
-        />
+        <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
           <Table className="min-w-[760px] table-fixed">
@@ -48,10 +48,14 @@ export default function SettingsAgentTools({ project }: { project: ProjectDetail
             </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">Tool</TableHead>
-                <TableHead className="text-xs font-medium text-muted-foreground">Scopes</TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  {t('tool')}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  {t('scopes')}
+                </TableHead>
                 <TableHead className="text-right text-xs font-medium text-muted-foreground">
-                  Actions
+                  {tCommon('actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -74,13 +78,9 @@ export default function SettingsAgentTools({ project }: { project: ProjectDetail
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title="Delete tool"
-          confirmLabel="Delete tool"
-          message={
-            <>
-              Remove {toolLabel(deleting.toolKey)}? Agents using it will lose access to this tool.
-            </>
-          }
+          title={t('delete')}
+          confirmLabel={t('delete')}
+          message={<>{t('deleteMessage', { tool: toolLabel(deleting.toolKey) })}</>}
           onConfirm={async () => {
             await deleteTool.mutateAsync(deleting.id);
             setDeleting(null);

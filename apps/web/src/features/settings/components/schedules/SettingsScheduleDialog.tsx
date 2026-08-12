@@ -14,6 +14,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { parseScheduleInput } from '../../utils/cronSchedule';
 import { SettingsScheduleInput } from './SettingsScheduleInput';
+import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleDialog({
   projectKey,
@@ -30,6 +31,8 @@ export function SettingsScheduleDialog({
   onSave: (value: AgentScheduleInput) => Promise<void>;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.schedules');
+  const tCommon = useTranslations('common');
   const [agentId, setAgentId] = useState(String(initial?.agentId ?? agents[0]?.id ?? ''));
   const [name, setName] = useState(initial?.name ?? '');
   const [prompt, setPrompt] = useState(initial?.prompt ?? '');
@@ -55,13 +58,13 @@ export function SettingsScheduleDialog({
     });
   }
 
-  const actionLabel = initial ? 'Save schedule' : 'Create schedule';
-  const pendingLabel = initial ? 'Saving…' : 'Creating…';
+  const actionLabel = initial ? t('save') : t('create');
+  const pendingLabel = initial ? tCommon('saving') : t('creating');
 
   return (
     <Modal
-      title={initial ? 'Edit schedule' : 'New schedule'}
-      description="Choose an agent, describe the task, and set when it should run."
+      title={initial ? t('editTitle') : t('newTitle')}
+      description={t('dialogDescription')}
       projectKey={projectKey}
       onClose={onClose}
       wide
@@ -74,7 +77,7 @@ export function SettingsScheduleDialog({
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field htmlFor="schedule-name" label="Name">
+          <Field htmlFor="schedule-name" label={tCommon('name')}>
             <Input
               id="schedule-name"
               autoFocus
@@ -82,13 +85,13 @@ export function SettingsScheduleDialog({
               maxLength={120}
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Daily task review"
+              placeholder={t('namePlaceholder')}
             />
           </Field>
-          <Field htmlFor="schedule-agent" label="Agent">
+          <Field htmlFor="schedule-agent" label={t('agent')}>
             <Select value={agentId} onValueChange={setAgentId}>
               <SelectTrigger id="schedule-agent" className="w-full" aria-required="true">
-                <SelectValue placeholder="Select agent" />
+                <SelectValue placeholder={t('selectAgent')} />
               </SelectTrigger>
               <SelectContent>
                 {agents.map((agent) => (
@@ -101,23 +104,21 @@ export function SettingsScheduleDialog({
           </Field>
         </div>
 
-        <Field htmlFor="schedule-task" label="Task">
+        <Field htmlFor="schedule-task" label={t('task')}>
           <Textarea
             id="schedule-task"
             required
             maxLength={20_000}
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
-            placeholder="Review open tasks and update anything that needs attention."
+            placeholder={t('taskPlaceholder')}
             className="min-h-32 resize-y"
           />
-          <p className="text-xs text-muted-foreground">
-            The agent receives this task on every run.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('taskHint')}</p>
         </Field>
 
         <div className="border-t border-border/50 pt-4">
-          <Field htmlFor="schedule-input" label="Schedule (UTC)">
+          <Field htmlFor="schedule-input" label={t('scheduleUtc')}>
             <SettingsScheduleInput
               id="schedule-input"
               value={scheduleInput}
@@ -128,7 +129,7 @@ export function SettingsScheduleDialog({
 
         <div className="flex justify-end gap-2 border-t border-border/50 pt-4">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button type="submit" disabled={!isValid || saving}>
             {saving ? pendingLabel : actionLabel}

@@ -16,6 +16,7 @@ import {
   useDeleteSkillReference,
 } from '@/services/agentSkills.service';
 import { SkillFileList, type SkillFileEntry } from './SkillFileList';
+import { useTranslations } from 'next-intl';
 
 // The key used for the SKILL.md file in the explorer and the drafts map. Reference
 // files use their own relative path.
@@ -36,6 +37,8 @@ export function SkillEditDialog({
   canEdit: boolean;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.skills');
+  const tCommon = useTranslations('common');
   const skillId = initialSkill.id;
   // Read the live skill from the list so the file explorer reflects add/delete
   // immediately; fall back to the snapshot passed in.
@@ -130,7 +133,7 @@ export function SkillEditDialog({
           </DialogTitle>
           {canEdit && (
             <Button size="sm" onClick={save} disabled={busy || !dirty || name.trim() === ''}>
-              {busy ? 'Saving…' : 'Save'}
+              {busy ? tCommon('saving') : tCommon('save')}
             </Button>
           )}
           <Button
@@ -138,7 +141,7 @@ export function SkillEditDialog({
             size="icon"
             className="size-8"
             onClick={onClose}
-            aria-label="Close"
+            aria-label={tCommon('close')}
           >
             <X className="size-4" />
           </Button>
@@ -147,15 +150,15 @@ export function SkillEditDialog({
         <div className="grid min-h-0 grid-cols-[minmax(0,17rem)_1fr]">
           <aside className="flex min-h-0 flex-col gap-5 overflow-y-auto border-r border-border/60 p-4">
             <div className="space-y-1.5">
-              <Label>Name</Label>
+              <Label>{tCommon('name')}</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} disabled={!canEdit} />
             </div>
             <div className="space-y-1.5">
-              <Label>Description</Label>
+              <Label>{t('description')}</Label>
               <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Shown to the agent to decide when to load this skill"
+                placeholder={t('descriptionPlaceholder')}
                 disabled={!canEdit}
               />
             </div>
@@ -182,7 +185,7 @@ export function SkillEditDialog({
               onChange={(e) => edit(e.target.value)}
               disabled={!canEdit || loading}
               spellCheck={false}
-              placeholder={loading ? 'Loading…' : ''}
+              placeholder={loading ? tCommon('loading') : ''}
               className={cn(
                 'h-full w-full resize-none bg-transparent px-5 py-4 focus-visible:ring-ring/40',
                 'font-mono text-xs leading-relaxed outline-none focus-visible:ring-2 focus-visible:ring-inset',

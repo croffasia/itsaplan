@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { NotificationSettings } from '@/lib/api';
 import { useUpdateNotificationSettings } from '../services/settings.service';
 
@@ -25,6 +26,7 @@ export function useTelegramForm(
   settings: NotificationSettings,
   editable: boolean,
 ): TelegramForm {
+  const t = useTranslations('settings.notifications');
   const update = useUpdateNotificationSettings(projectKey);
   const [enabled, setEnabled] = useState(settings.telegram.enabled);
   const [botToken, setBotToken] = useState('');
@@ -39,7 +41,7 @@ export function useTelegramForm(
       },
     });
     setBotToken('');
-    toast.success('Telegram provider saved');
+    toast.success(t('telegramSaved'));
   }
 
   return {

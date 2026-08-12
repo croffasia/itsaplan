@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ActionEffect, ProjectDetail, CustomField } from '@/lib/api';
 import { isActiveFilterSet, type FilterSet } from '@/utils/filters';
 import { isEmptyEffect } from '@/utils/actions';
@@ -43,6 +44,8 @@ export function SettingsActionDialog({
   }) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.actions');
+  const tCommon = useTranslations('common');
   const [name, setName] = useState(initialName);
   const [icon, setIcon] = useState(initialIcon);
   const [condition, setCondition] = useState<FilterSet>(initialCondition);
@@ -55,13 +58,13 @@ export function SettingsActionDialog({
     onSave({ name: name.trim(), icon, condition, effect });
   }
 
-  const actionLabel = mode === 'edit' ? 'Save action' : 'Create action';
-  const pendingLabel = mode === 'edit' ? 'Saving…' : 'Creating…';
+  const actionLabel = mode === 'edit' ? t('save') : t('create');
+  const pendingLabel = mode === 'edit' ? tCommon('saving') : t('creating');
 
   return (
     <Modal
-      title={mode === 'edit' ? 'Edit action' : 'New action'}
-      description="Pick an icon, name the action, and set which issues it applies to and what it changes."
+      title={t(mode === 'edit' ? 'dialogEdit' : 'dialogNew')}
+      description={t('dialogHint')}
       projectKey={projectKey}
       onClose={onClose}
       wide
@@ -74,7 +77,7 @@ export function SettingsActionDialog({
         }}
       >
         <div className="space-y-1.5">
-          <Label htmlFor="action-name">Name</Label>
+          <Label htmlFor="action-name">{tCommon('name')}</Label>
           <div className="flex gap-2">
             <SettingsActionIconPicker value={icon} onChange={setIcon} />
             <Input
@@ -83,14 +86,14 @@ export function SettingsActionDialog({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Action name (e.g. Approve)"
+              placeholder={t('namePlaceholder')}
               className="h-9"
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <Label>Available when</Label>
+          <Label>{t('availableWhen')}</Label>
           <FilterBar
             filters={condition}
             onChange={setCondition}
@@ -98,18 +101,18 @@ export function SettingsActionDialog({
             customFields={customFields}
           />
           {!isActiveFilterSet(condition) && (
-            <p className="text-sm text-muted-foreground">No conditions. Always available.</p>
+            <p className="text-sm text-muted-foreground">{t('noConditions')}</p>
           )}
         </div>
 
         <div className="space-y-2.5">
-          <Label>Then set</Label>
+          <Label>{t('thenSet')}</Label>
           <SettingsEffectEditor effect={effect} project={project} onChange={setEffect} />
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border/50 pt-4">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button type="submit" disabled={!isValid || saving}>
             {saving ? pendingLabel : actionLabel}

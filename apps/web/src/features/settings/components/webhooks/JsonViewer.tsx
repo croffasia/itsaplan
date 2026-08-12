@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check, ChevronDown, ChevronRight, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 // on the fly); a non-JSON string is shown as raw text. A copy button copies the
 // pretty-printed JSON.
 export function JsonViewer({ value }: { value: unknown }) {
+  const t = useTranslations('common');
   const { data, isJson } = normalize(value);
   const [copied, setCopied] = useState(false);
 
@@ -26,7 +28,7 @@ export function JsonViewer({ value }: { value: unknown }) {
         variant="ghost"
         size="icon"
         className="absolute top-1.5 right-1.5 z-10 size-6 text-muted-foreground opacity-0 group-hover/json:opacity-100 hover:text-foreground"
-        title="Copy"
+        title={t('copy')}
         onClick={copy}
       >
         {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}

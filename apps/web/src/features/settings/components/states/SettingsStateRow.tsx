@@ -1,6 +1,7 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type Column } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,7 @@ export function SettingsStateRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('settings.states');
   const can = useSettingsCan();
   // Reordering is a states edit; disable dragging and hide the grip without it.
   const canEdit = can('edit');
@@ -44,7 +46,7 @@ export function SettingsStateRow({
           {...attributes}
           {...listeners}
           className="-ml-1 cursor-grab touch-none text-muted-foreground/50 group-hover/item:text-muted-foreground"
-          title="Drag to reorder"
+          title={t('dragToReorder')}
         >
           <GripVertical className="size-4" />
         </button>
@@ -61,7 +63,7 @@ export function SettingsStateRow({
             variant="ghost"
             size="icon"
             className="size-6 text-muted-foreground hover:text-foreground"
-            title="Edit state"
+            title={t('edit')}
             onClick={onEdit}
           >
             <Pencil className="size-4" />
@@ -72,7 +74,7 @@ export function SettingsStateRow({
             variant="ghost"
             size="icon"
             className="size-6 text-muted-foreground hover:text-destructive"
-            title="Delete state"
+            title={t('delete')}
             onClick={onDelete}
           >
             <Trash2 className="size-4" />

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { type ProjectDetail, type Column } from '@/lib/api';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,6 +24,8 @@ export default function SettingsDeleteStateDialog({
   issueCount: number;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.states');
+  const tStateType = useTranslations('display.stateTypes');
   const otherColumns = project.columns.filter((c) => c.id !== column.id);
   const [action, setAction] = useState<'move' | 'delete'>(otherColumns.length ? 'move' : 'delete');
   const [targetColumnId, setTargetColumnId] = useState<number | undefined>(otherColumns[0]?.id);
@@ -39,22 +42,17 @@ export default function SettingsDeleteStateDialog({
 
   return (
     <ConfirmDialog
-      title={`Delete state "${column.name}"`}
-      confirmLabel={action === 'move' && issueCount > 0 ? 'Move & delete state' : 'Delete state'}
+      title={t('deleteTitle', { name: column.name })}
+      confirmLabel={action === 'move' && issueCount > 0 ? t('moveAndDelete') : t('deleteConfirm')}
       confirmDisabled={action === 'move' && issueCount > 0 && targetColumnId == null}
       onConfirm={confirm}
       onClose={onClose}
     >
       {issueCount === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          This state has no issues. It will be removed.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('deleteNoIssues')}</p>
       ) : (
         <div className="space-y-3">
-          <p className="text-sm">
-            This state has {issueCount} issue{issueCount === 1 ? '' : 's'}. Choose what happens to
-            them.
-          </p>
+          <p className="text-sm">{t('deleteHasIssues', { count: issueCount })}</p>
           <div className="space-y-2">
             <Label>
               <Checkbox
@@ -62,7 +60,7 @@ export default function SettingsDeleteStateDialog({
                 disabled={otherColumns.length === 0}
                 onCheckedChange={(v) => v === true && setAction('move')}
               />
-              Move issues to another state
+              {t('moveIssues')}
             </Label>
             {action === 'move' && (
               <Select
@@ -70,12 +68,12 @@ export default function SettingsDeleteStateDialog({
                 onValueChange={(v) => setTargetColumnId(Number(v))}
               >
                 <SelectTrigger className="ml-6 w-[calc(100%-1.5rem)]">
-                  <SelectValue placeholder="Select a state" />
+                  <SelectValue placeholder={t('selectState')} />
                 </SelectTrigger>
                 <SelectContent>
                   {otherColumns.map((c) => (
                     <SelectItem key={c.id} value={String(c.id)}>
-                      {c.name} ({c.stateType})
+                      {t('stateOption', { name: c.name, type: tStateType(c.stateType) })}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -86,7 +84,7 @@ export default function SettingsDeleteStateDialog({
                 checked={action === 'delete'}
                 onCheckedChange={(v) => v === true && setAction('delete')}
               />
-              <span className="text-destructive">Delete issues permanently</span>
+              <span className="text-destructive">{t('deleteIssues')}</span>
             </Label>
           </div>
         </div>

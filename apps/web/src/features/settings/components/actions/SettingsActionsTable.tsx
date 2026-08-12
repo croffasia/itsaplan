@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { ActionDef, CustomField, ProjectDetail } from '@/lib/api';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingsActionRow } from './SettingsActionRow';
@@ -19,6 +20,9 @@ export function SettingsActionsTable({
   onDuplicate,
   onDelete,
 }: SettingsActionsTableProps) {
+  const t = useTranslations('settings.actions');
+  const tCommon = useTranslations('common');
+
   return (
     <Table className="min-w-[680px] table-fixed">
       <colgroup>
@@ -28,10 +32,14 @@ export function SettingsActionsTable({
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="text-xs font-medium text-muted-foreground">Action</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Then set</TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.action')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.thenSet')}
+          </TableHead>
           <TableHead className="text-right text-xs font-medium text-muted-foreground">
-            Actions
+            {tCommon('actions')}
           </TableHead>
         </TableRow>
       </TableHeader>

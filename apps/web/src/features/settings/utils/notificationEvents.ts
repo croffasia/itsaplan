@@ -1,12 +1,13 @@
 import type { NotificationEventToggles } from '@/lib/api';
 
-// The issue events a channel can send, matching the inbox notification types, with a
-// display label. Shared by the email and telegram event sections.
-export const NOTIFICATION_EVENTS: { key: keyof NotificationEventToggles; label: string }[] = [
-  { key: 'assigned', label: 'Assigned to an issue' },
-  { key: 'mentioned', label: 'Mentioned in a comment' },
-  { key: 'commented', label: 'New comment on an issue you watch' },
-  { key: 'state_changed', label: 'State changed on an issue you watch' },
+// The issue events a channel can send, matching the inbox notification types.
+// Shared by the email and telegram event sections; the label of an event is a
+// message under `settings.notifications.events`.
+export const NOTIFICATION_EVENTS: (keyof NotificationEventToggles)[] = [
+  'assigned',
+  'mentioned',
+  'commented',
+  'state_changed',
 ];
 
 export function eventsEqual(a: NotificationEventToggles, b: NotificationEventToggles): boolean {

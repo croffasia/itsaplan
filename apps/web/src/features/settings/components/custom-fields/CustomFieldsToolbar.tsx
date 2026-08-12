@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ClipboardPaste, Copy, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { CustomField, IssueType, PermissionResource } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useIsMac } from '@/context/useHotkeys';
+import { useTransferErrorMessage } from '../../hooks/useTransferErrorMessage';
 import CustomFieldsCopyDialog from './CustomFieldsCopyDialog';
 import CustomFieldsImportDialog from './CustomFieldsImportDialog';
 import {
@@ -36,6 +38,9 @@ export default function CustomFieldsToolbar({
   fields: CustomField[];
   types: IssueType[];
 }) {
+  const t = useTranslations('settings.customFields');
+  const tTransfer = useTranslations('settings.transfer');
+  const transferError = useTransferErrorMessage();
   const { can } = usePermissions();
   const mod = useIsMac() ? '⌘' : 'Ctrl';
   const [copyChoice, setCopyChoice] = useState(false);
@@ -51,19 +56,18 @@ export default function CustomFieldsToolbar({
         await navigator.clipboard.writeText(
           serializeCustomFields(fields, typeNameById, includeTypeScoped),
         );
-        const n = includeTypeScoped ? fields.length : globalCount;
-        toast.success(`Copied ${n} field${n === 1 ? '' : 's'}.`);
+        toast.success(t('copied', { count: includeTypeScoped ? fields.length : globalCount }));
       } catch {
-        toast.error('Could not copy to the clipboard.');
+        toast.error(tTransfer('copyFailed'));
       }
       setCopyChoice(false);
     },
-    [fields, typeNameById, globalCount],
+    [fields, typeNameById, globalCount, t, tTransfer],
   );
 
   const copyFields = useCallback(async () => {
     if (fields.length === 0) {
-      toast.info('No custom fields to copy.');
+      toast.info(t('nothingToCopy'));
       return;
     }
     // Only ask when there are type-scoped fields to decide about.
@@ -72,25 +76,23 @@ export default function CustomFieldsToolbar({
       return;
     }
     await doCopy(true);
-  }, [fields.length, scopedCount, doCopy]);
+  }, [fields.length, scopedCount, doCopy, t]);
 
   const pasteFields = useCallback(async () => {
     let text: string;
     try {
       text = await navigator.clipboard.readText();
     } catch {
-      toast.error('Could not read the clipboard.');
+      toast.error(tTransfer('readFailed'));
       return;
     }
     try {
       const parsed = parseCustomFieldsText(text);
       setImporting(planCustomFieldsImport(parsed, types, fields));
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : 'Could not read custom fields from the clipboard.',
-      );
+      toast.error(transferError(err, t('parseFailed')));
     }
-  }, [types, fields]);
+  }, [types, fields, t, tTransfer, transferError]);
 
   // Cmd/Ctrl+C copies, Cmd/Ctrl+V pastes — but only on this page, not while typing,
   // and Cmd+C only when no text is selected (so an intentional text copy still works).
@@ -130,7 +132,7 @@ export default function CustomFieldsToolbar({
             variant="ghost"
             size="icon"
             className="size-8 text-muted-foreground hover:text-foreground"
-            aria-label="Custom field import and export"
+            aria-label={t('menu')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -138,12 +140,12 @@ export default function CustomFieldsToolbar({
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem onClick={() => void copyFields()} disabled={fields.length === 0}>
             <Copy className="size-4" />
-            Copy custom fields
+            {t('copy')}
             <DropdownMenuShortcut>{mod}C</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void pasteFields()}>
             <ClipboardPaste className="size-4" />
-            Paste custom fields
+            {t('paste')}
             <DropdownMenuShortcut>{mod}V</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>

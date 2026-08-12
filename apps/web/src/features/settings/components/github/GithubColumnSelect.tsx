@@ -1,4 +1,5 @@
 import { CircleDashed } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Column } from '@/lib/api';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { Pill } from '@/components/common/fields/Pill';
@@ -19,6 +20,7 @@ export default function GithubColumnSelect({
   readOnly?: boolean;
   onChange: (id: number | null) => void;
 }) {
+  const t = useTranslations('settings.github');
   const column = value == null ? undefined : columns.find((c) => c.id === value);
   return (
     <PopoverPick
@@ -29,8 +31,8 @@ export default function GithubColumnSelect({
           <span className="whitespace-nowrap">{column?.name ?? noneLabel}</span>
         </Pill>
       }
-      inputPlaceholder="Change state…"
-      emptyText="No state."
+      inputPlaceholder={t('changeState')}
+      emptyText={t('noState')}
       items={[
         {
           key: 'none',

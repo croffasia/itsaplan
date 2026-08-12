@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { IssueType } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCreateCustomField, useCreateIssueType } from '../../services/settings.service';
-import { FIELD_TYPE_LABELS } from './SettingsCustomFieldForm';
+import { useFieldTypeLabel } from './SettingsCustomFieldForm';
 import type { CustomFieldsImportPlan } from '../../utils/customFieldsTransfer';
 
 // Confirms a custom fields paste before applying it. Lists any issue types that will be
@@ -25,6 +26,9 @@ export default function CustomFieldsImportDialog({
   existingTypes: IssueType[];
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.customFields');
+  const tCommon = useTranslations('common');
+  const fieldTypeLabel = useFieldTypeLabel();
   const createIssueType = useCreateIssueType(projectKey);
   const createCustomField = useCreateCustomField(projectKey);
   const [busy, setBusy] = useState(false);
@@ -35,7 +39,7 @@ export default function CustomFieldsImportDialog({
     setBusy(true);
     try {
       const typeIdByName = new Map<string, number>(
-        existingTypes.map((t) => [t.name.toLowerCase(), t.id]),
+        existingTypes.map((type) => [type.name.toLowerCase(), type.id]),
       );
       for (const name of plan.newTypeNames) {
         const row = (await createIssueType.mutateAsync({ name })) as IssueType;
@@ -54,8 +58,12 @@ export default function CustomFieldsImportDialog({
         });
       }
       toast.success(
-        `Applied custom fields: ${toCreate.length} created` +
-          (plan.newTypeNames.length ? `, ${plan.newTypeNames.length} issue type(s) added` : ''),
+        plan.newTypeNames.length
+          ? t('importedWithTypes', {
+              created: toCreate.length,
+              types: plan.newTypeNames.length,
+            })
+          : t('imported', { created: toCreate.length }),
       );
       onClose();
     } catch {
@@ -65,13 +73,16 @@ export default function CustomFieldsImportDialog({
   }
 
   return (
-    <Modal title="Apply custom fields from clipboard" onClose={onClose} wide>
+    <Modal title={t('importTitle')} onClose={onClose} wide>
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          {toCreate.length} field{toCreate.length === 1 ? '' : 's'} will be added
           {plan.newTypeNames.length > 0
-            ? `, and ${plan.newTypeNames.length} new issue type${plan.newTypeNames.length === 1 ? '' : 's'} created: ${plan.newTypeNames.join(', ')}.`
-            : '.'}
+            ? t('importSummaryWithTypes', {
+                count: toCreate.length,
+                types: plan.newTypeNames.length,
+                names: plan.newTypeNames.join(', '),
+              })
+            : t('importSummary', { count: toCreate.length })}
         </p>
         <div className="max-h-[50vh] divide-y divide-border/60 overflow-y-auto rounded-md border border-border/60">
           {plan.fields.map((field) => (
@@ -81,27 +92,26 @@ export default function CustomFieldsImportDialog({
             >
               <span className="min-w-0 flex-1 truncate text-sm font-medium">{field.name}</span>
               <span className="shrink-0 text-xs text-muted-foreground">
-                {FIELD_TYPE_LABELS[field.fieldType]}
+                {fieldTypeLabel(field.fieldType)}
               </span>
               <span className="w-28 shrink-0 truncate text-right text-xs text-muted-foreground">
-                {field.type ?? 'Global'}
+                {field.type ?? t('globalShort')}
               </span>
               <Badge
                 variant={field.action === 'skip' ? 'outline' : 'secondary'}
                 className="w-14 shrink-0 justify-center px-1.5 py-0 text-[10px] font-normal"
               >
-                {field.action === 'create' ? 'New' : 'Exists'}
+                {t(field.action === 'create' ? 'actionNew' : 'actionExists')}
               </Badge>
             </div>
           ))}
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button onClick={apply} disabled={busy || toCreate.length === 0}>
-            Apply {toCreate.length > 0 ? toCreate.length : ''} field
-            {toCreate.length === 1 ? '' : 's'}
+            {t('importApply', { count: toCreate.length })}
           </Button>
         </div>
       </div>

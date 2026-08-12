@@ -3,17 +3,19 @@ import SettingsSection from '@/components/common/page/SettingsSection';
 import EnabledSwitch from '@/components/common/inputs/EnabledSwitch';
 import SecretInput from '@/components/common/inputs/SecretInput';
 import type { TelegramForm } from '../../hooks/useTelegramForm';
+import { useTranslations } from 'next-intl';
 
 // The bot this project delivers through. The token is optional: left empty, the
 // project sends through the instance bot that members connect their Telegram account
 // to. Members do not enter a chat anywhere, it comes from that connected account.
 // The token is sent only when changed.
 export default function TelegramSettings({ form }: { form: TelegramForm }) {
+  const t = useTranslations('settings.notifications');
   const { settings, editable } = form;
   return (
     <SettingsSection
-      title="Telegram bot"
-      description="The bot that delivers notifications. Members choose their own chat in their preferences. The token is stored encrypted."
+      title={t('telegramBot')}
+      description={t('telegramBotHint')}
       action={
         editable && (
           <EnabledSwitch checked={form.enabled} onChange={form.setEnabled} disabled={!editable} />
@@ -21,7 +23,7 @@ export default function TelegramSettings({ form }: { form: TelegramForm }) {
       }
     >
       <div className="space-y-1.5 sm:max-w-md">
-        <Label htmlFor="telegram-token">Bot API token (optional)</Label>
+        <Label htmlFor="telegram-token">{t('botToken')}</Label>
         <SecretInput
           id="telegram-token"
           value={form.botToken}

@@ -1,9 +1,11 @@
 'use client';
 
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { settingsSection } from '@/utils/settingsSections';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { Button } from '@/components/ui/button';
@@ -27,6 +29,9 @@ export default function SettingsConfigurationPage() {
 }
 
 function ConfigurationPage({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('settings.configuration');
+  const tCommon = useTranslations('common');
+  const sectionText = useSettingsSectionText()(section.slug);
   const { can } = usePermissions();
   const features = useProjectFeatures();
   const subtasks = useSubtaskAutomationForm(project.project.key);
@@ -37,19 +42,19 @@ function ConfigurationPage({ project }: { project: ProjectDetail }) {
   async function save() {
     await subtasks.save();
     await archive.save();
-    toast.success('Changes saved');
+    toast.success(t('saved'));
   }
 
   return (
     <SectionPageView
-      title={section.label}
-      description={section.description}
+      title={sectionText.label}
+      description={sectionText.description}
       wide
       widthClassName="min-w-[600px] max-w-[60%]"
       actions={
         can(section.resource, 'edit') ? (
           <Button size="sm" onClick={() => void save()} disabled={saving || !loaded}>
-            Save
+            {tCommon('save')}
           </Button>
         ) : undefined
       }

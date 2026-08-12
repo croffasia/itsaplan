@@ -1,6 +1,8 @@
 import { Copy, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ActionDef, CustomField, ProjectDetail } from '@/lib/api';
-import { describeConditions } from '@/utils/filterFields';
+import { useFilterFields } from '@/hooks/useFilterFields';
+import { useEffectText } from '@/hooks/useEffectText';
 import { describeEffect } from '@/utils/actions';
 import { actionIcon } from '@/utils/actionIcons';
 import { Badge } from '@/components/ui/badge';
@@ -23,9 +25,12 @@ export function SettingsActionRow({
   onDuplicate: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('settings.actions');
   const can = useSettingsCan();
+  const { describeConditions } = useFilterFields();
+  const effectText = useEffectText();
   const conditions = describeConditions(action.condition, project, customFields);
-  const effects = describeEffect(action.effect, project);
+  const effects = describeEffect(action.effect, project, effectText);
   const Icon = actionIcon(action.icon);
   return (
     <TableRow className="group/item">
@@ -38,7 +43,7 @@ export function SettingsActionRow({
             <span className="truncate text-sm font-medium">{action.name}</span>
             {conditions.length > 0 ? (
               <div className="flex flex-wrap items-center gap-1">
-                <span className="text-xs text-muted-foreground">When</span>
+                <span className="text-xs text-muted-foreground">{t('when')}</span>
                 {conditions.map((text, i) => (
                   <Badge key={i} variant="secondary" className="font-normal">
                     {text}
@@ -46,7 +51,7 @@ export function SettingsActionRow({
                 ))}
               </div>
             ) : (
-              <span className="text-xs text-muted-foreground">Always available</span>
+              <span className="text-xs text-muted-foreground">{t('alwaysAvailable')}</span>
             )}
           </div>
         </div>
@@ -61,23 +66,23 @@ export function SettingsActionRow({
             ))}
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">No changes</span>
+          <span className="text-xs text-muted-foreground">{t('noChanges')}</span>
         )}
       </TableCell>
       <TableCell className="px-3 py-2 pt-3 align-top">
         <div className="flex items-center justify-end gap-1">
           {can('edit') && (
-            <SettingsIconButton title="Edit action" onClick={onEdit}>
+            <SettingsIconButton title={t('edit')} onClick={onEdit}>
               <Pencil className="size-4" />
             </SettingsIconButton>
           )}
           {can('create') && (
-            <SettingsIconButton title="Duplicate action" onClick={onDuplicate}>
+            <SettingsIconButton title={t('duplicate')} onClick={onDuplicate}>
               <Copy className="size-4" />
             </SettingsIconButton>
           )}
           {can('delete') && (
-            <SettingsIconButton title="Delete action" destructive onClick={onDelete}>
+            <SettingsIconButton title={t('delete')} destructive onClick={onDelete}>
               <Trash2 className="size-4" />
             </SettingsIconButton>
           )}

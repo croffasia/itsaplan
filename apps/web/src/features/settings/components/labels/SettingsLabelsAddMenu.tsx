@@ -1,4 +1,5 @@
 import { FolderPlus, Plus, Tag } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +17,8 @@ export function SettingsLabelsAddMenu({
   onAddLabel: () => void;
   onAddGroup: () => void;
 }) {
+  const t = useTranslations('settings.labels');
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -26,17 +29,17 @@ export function SettingsLabelsAddMenu({
           disabled={disabled}
         >
           <Plus className="size-3.5" />
-          Add
+          {t('add')}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-40">
         <DropdownMenuItem onClick={onAddLabel}>
           <Tag className="size-4" />
-          New label
+          {t('newLabel')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={onAddGroup}>
           <FolderPlus className="size-4" />
-          New group
+          {t('newGroup')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

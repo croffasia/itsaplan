@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react';
 import { useDroppable } from '@dnd-kit/core';
+import { useTranslations } from 'next-intl';
 import { type LabelGroup } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -41,12 +42,13 @@ export function SettingsLabelGroupSection({
   onDeleteGroup?: () => void;
   children: ReactNode;
 }) {
+  const t = useTranslations('settings.labels');
   const can = useSettingsCan();
   const { setNodeRef, isOver } = useDroppable({
     id: group ? `group:${group.id}` : 'ungrouped',
     data: { groupId: group?.id ?? null },
   });
-  const name = group?.name ?? 'Ungrouped';
+  const name = group?.name ?? t('ungrouped');
   const wrapperClass = cn(
     'rounded-lg transition-colors',
     dragging && 'outline-1 -outline-offset-2 outline-border/60 outline-dashed',
@@ -68,7 +70,7 @@ export function SettingsLabelGroupSection({
                 isOver ? 'text-primary' : 'text-muted-foreground/70',
               )}
             >
-              Drop a label here to remove it from its group
+              {t('dropToUngroup')}
             </p>
           )}
         </div>
@@ -101,14 +103,16 @@ export function SettingsLabelGroupSection({
             {count > 0 && (
               <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
             )}
-            {isOver && <span className="ml-2 text-xs font-medium text-primary">Drop here</span>}
+            {isOver && (
+              <span className="ml-2 text-xs font-medium text-primary">{t('dropHere')}</span>
+            )}
           </button>
           {onEditGroup && can('edit') && (
             <Button
               variant="ghost"
               size="icon"
               className="size-7 text-muted-foreground opacity-0 group-hover/gh:opacity-100 hover:text-foreground"
-              title="Edit group"
+              title={t('editGroup')}
               onClick={onEditGroup}
             >
               <Pencil className="size-4" />
@@ -119,7 +123,7 @@ export function SettingsLabelGroupSection({
               variant="ghost"
               size="icon"
               className="size-7 text-muted-foreground opacity-0 group-hover/gh:opacity-100 hover:text-destructive"
-              title="Delete group"
+              title={t('deleteGroup')}
               onClick={onDeleteGroup}
             >
               <Trash2 className="size-4" />
@@ -130,8 +134,8 @@ export function SettingsLabelGroupSection({
               variant="ghost"
               size="icon"
               className="size-7 text-muted-foreground hover:text-foreground"
-              title="Add label"
-              aria-label={`Add label to ${name}`}
+              title={t('addLabel')}
+              aria-label={t('addLabelTo', { name })}
               onClick={onAddLabel}
             >
               <Plus className="size-4" />
@@ -151,7 +155,7 @@ export function SettingsLabelGroupSection({
                 isOver ? 'text-primary' : 'text-muted-foreground/70',
               )}
             >
-              {dragging ? `Drop a label here to add it to ${name}` : 'No labels'}
+              {dragging ? t('dropToGroup', { name }) : t('noLabels')}
             </p>
           )}
         </div>

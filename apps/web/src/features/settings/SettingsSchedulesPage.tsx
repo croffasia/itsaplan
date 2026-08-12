@@ -3,26 +3,30 @@
 import { useState } from 'react';
 import { useShell } from '@/context/shellContext';
 import { settingsSection } from '@/utils/settingsSections';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import RequirePermission from '@/components/common/permissions/RequirePermission';
 import { SettingsResourceProvider } from './context/settingsPermission';
 import { useInternalAgents } from './hooks/useInternalAgents';
 import { SettingsHeaderAddButton } from './components/crud/SettingsHeaderAddButton';
 import SettingsSchedules from './components/schedules/SettingsSchedules';
+import { useTranslations } from 'next-intl';
 
 const section = settingsSection('schedules');
 
 // The Schedules page (/project/:projectKey/ai-team/schedules), listed in the main
 // sidebar's AI Team group.
 export default function SettingsSchedulesPage() {
+  const t = useTranslations('settings.schedules');
+  const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
   const [addNew, setAddNew] = useState(false);
   const { agents } = useInternalAgents(project?.project.key ?? null);
   if (!project) return null;
   return (
     <SectionPageView
-      title={section.label}
-      description={section.description}
+      title={sectionText.label}
+      description={sectionText.description}
       wide
       actions={
         // Without an internal agent there is nothing to schedule, so the add action
@@ -30,7 +34,7 @@ export default function SettingsSchedulesPage() {
         agents.length > 0 ? (
           <SettingsHeaderAddButton
             resource={section.resource}
-            label="New schedule"
+            label={t('newTitle')}
             onClick={() => setAddNew(true)}
           />
         ) : null

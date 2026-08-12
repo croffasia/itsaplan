@@ -16,6 +16,7 @@ import { integrationLabel } from '../../utils/integrationLabels';
 import { AgentFormSection } from './AgentFormSection';
 import { AgentInstructionsField } from './AgentInstructionsField';
 import AgentModelField from './AgentModelField';
+import { useTranslations } from 'next-intl';
 
 // Which provider key the agent runs on, which model of that provider, and the system
 // prompt. Only internal agents have it.
@@ -40,6 +41,7 @@ export default function AgentModelSection({
   models: ProviderModel[];
   modelsLoading: boolean;
 }) {
+  const t = useTranslations('settings.agents');
   const credentialLabel = (c: IntegrationOption) => {
     const integration = integrationLabel(catalog, c.integrationKey);
     return c.label ? `${integration} · ${c.label}` : integration;
@@ -51,23 +53,21 @@ export default function AgentModelSection({
       open={open}
       onOpenChange={onOpenChange}
       icon={Cpu}
-      title="Model"
-      hint="Provider, model, and system prompt"
+      title={t('model')}
+      hint={t('modelHint')}
     >
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
-          <span className="text-sm font-medium">Credential</span>
+          <span className="text-sm font-medium">{t('credential')}</span>
           {credentials.length === 0 ? (
             <div className="space-y-2 rounded-md bg-muted/60 px-3 py-2.5">
-              <p className="text-xs font-medium">Add an AI provider key first</p>
-              <p className="text-xs text-muted-foreground">
-                The agent needs a provider key to pick a model.
-              </p>
+              <p className="text-xs font-medium">{t('noCredential')}</p>
+              <p className="text-xs text-muted-foreground">{t('noCredentialHint')}</p>
               <Link
                 href={integrationsPath(projectKey)}
                 className="inline-flex items-center gap-1 text-xs font-medium hover:underline"
               >
-                Add a key on Integrations
+                {t('addKey')}
                 <ArrowUpRight className="size-3.5" />
               </Link>
             </div>
@@ -85,7 +85,7 @@ export default function AgentModelSection({
               }}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Choose a credential" />
+                <SelectValue placeholder={t('chooseCredential')} />
               </SelectTrigger>
               <SelectContent>
                 {credentials.map((c) => (
@@ -98,7 +98,7 @@ export default function AgentModelSection({
           )}
         </div>
         <div className="space-y-1.5">
-          <span className="text-sm font-medium">Model</span>
+          <span className="text-sm font-medium">{t('model')}</span>
           <AgentModelField
             value={value.model}
             onChange={(model) => onChange({ model })}

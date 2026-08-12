@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
@@ -17,11 +18,13 @@ export default function GithubCopyField({
   masked?: boolean;
   action?: ReactNode;
 }) {
+  const t = useTranslations('settings.github');
+  const tCommon = useTranslations('common');
   const [revealed, setRevealed] = useState(false);
 
   async function copy() {
     await navigator.clipboard.writeText(value);
-    toast.success(`${label} copied`);
+    toast.success(t('copied', { label }));
   }
 
   return (
@@ -35,7 +38,7 @@ export default function GithubCopyField({
           onFocus={() => setRevealed(true)}
         />
         <Button variant="outline" size="sm" onClick={() => void copy()}>
-          Copy
+          {tCommon('copy')}
         </Button>
         {action}
       </div>

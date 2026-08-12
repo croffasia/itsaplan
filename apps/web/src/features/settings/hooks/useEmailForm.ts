@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { NotificationEncryption, NotificationSettings } from '@/lib/api';
 import { useUpdateNotificationSettings } from '../services/settings.service';
 import type { EmailProvider } from '@/components/common/inputs/ProviderToggle';
@@ -41,6 +42,7 @@ export function useEmailForm(
   settings: NotificationSettings,
   editable: boolean,
 ): EmailForm {
+  const t = useTranslations('settings.notifications');
   const update = useUpdateNotificationSettings(projectKey);
 
   // The project's own provider wins when it configured one; otherwise it sends
@@ -96,7 +98,7 @@ export function useEmailForm(
     });
     setPassword('');
     setApiKey('');
-    toast.success('Email provider saved');
+    toast.success(t('emailSaved'));
   }
 
   return {

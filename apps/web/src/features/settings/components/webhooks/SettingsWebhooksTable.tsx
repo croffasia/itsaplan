@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { Webhook } from '@/lib/api';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingsWebhookRow } from './SettingsWebhookRow';
@@ -15,6 +16,9 @@ export function SettingsWebhooksTable({
   onEdit,
   onDelete,
 }: SettingsWebhooksTableProps) {
+  const t = useTranslations('settings.webhooks');
+  const tCommon = useTranslations('common');
+
   return (
     <Table className="min-w-[820px] table-fixed">
       <colgroup>
@@ -24,10 +28,14 @@ export function SettingsWebhooksTable({
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="text-xs font-medium text-muted-foreground">Endpoint</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Events</TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.endpoint')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.events')}
+          </TableHead>
           <TableHead className="text-right text-xs font-medium text-muted-foreground">
-            Actions
+            {tCommon('actions')}
           </TableHead>
         </TableRow>
       </TableHeader>

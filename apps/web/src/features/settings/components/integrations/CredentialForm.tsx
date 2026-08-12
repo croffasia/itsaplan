@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useCreateCredential, useUpdateCredential } from '@/services/integrations.service';
 import { IntegrationIcon } from './IntegrationIcon';
+import { useTranslations } from 'next-intl';
 
 type FieldValue = string | boolean;
 
@@ -52,6 +53,8 @@ export function CredentialForm({
   onBack?: () => void;
   onDone: () => void;
 }) {
+  const t = useTranslations('settings.integrations');
+  const tCommon = useTranslations('common');
   const isEdit = existing != null;
   const [label, setLabel] = useState(existing?.label ?? '');
   const [values, setValues] = useState<Record<string, FieldValue>>(() =>
@@ -120,7 +123,7 @@ export function CredentialForm({
             size="icon"
             className="size-8 shrink-0"
             onClick={onBack}
-            aria-label="Back to integrations"
+            aria-label={t('back')}
           >
             <ChevronLeft className="size-4" />
           </Button>
@@ -163,23 +166,21 @@ export function CredentialForm({
       ))}
 
       <div className="space-y-1.5">
-        <Label>Label (optional)</Label>
+        <Label>{t('label')}</Label>
         <Input
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="e.g. Team account"
+          placeholder={t('labelPlaceholder')}
         />
-        <p className="text-xs text-muted-foreground">
-          Helps tell apart credentials of the same integration. Secrets are stored encrypted.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('labelHint')}</p>
       </div>
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onDone} disabled={busy}>
-          Cancel
+          {tCommon('cancel')}
         </Button>
         <Button onClick={submit} disabled={!canSubmit}>
-          {isEdit ? 'Save' : 'Add credential'}
+          {isEdit ? tCommon('save') : t('add')}
         </Button>
       </div>
     </div>

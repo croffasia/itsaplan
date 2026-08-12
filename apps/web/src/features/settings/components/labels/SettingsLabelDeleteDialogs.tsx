@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { type Label as LabelRow, type LabelGroup } from '@/lib/api';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 
@@ -12,18 +13,12 @@ export function SettingsLabelDeleteDialog({
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }) {
+  const t = useTranslations('settings.labels');
   return (
     <SettingsConfirmDeleteDialog
-      title={`Delete label "${label.name}"`}
-      confirmLabel="Delete label"
-      message={
-        <>
-          {issueCount > 0
-            ? `This label is on ${issueCount} issue${issueCount === 1 ? '' : 's'} and will be removed from ${issueCount === 1 ? 'it' : 'them'}.`
-            : 'No issues use this label.'}{' '}
-          This cannot be undone.
-        </>
-      }
+      title={t('deleteLabelTitle', { name: label.name })}
+      confirmLabel={t('deleteLabel')}
+      message={t('deleteLabelMessage', { count: issueCount })}
       onClose={onClose}
       onConfirm={onConfirm}
     />
@@ -41,18 +36,12 @@ export function SettingsLabelGroupDeleteDialog({
   onClose: () => void;
   onConfirm: () => Promise<void>;
 }) {
+  const t = useTranslations('settings.labels');
   return (
     <SettingsConfirmDeleteDialog
-      title={`Delete group "${group.name}"`}
-      confirmLabel="Delete group"
-      message={
-        <>
-          {labelCount > 0
-            ? `${labelCount} label${labelCount === 1 ? '' : 's'} will be ungrouped but kept.`
-            : 'This group has no labels.'}{' '}
-          This cannot be undone.
-        </>
-      }
+      title={t('deleteGroupTitle', { name: group.name })}
+      confirmLabel={t('deleteGroup')}
+      message={t('deleteGroupMessage', { count: labelCount })}
       onClose={onClose}
       onConfirm={onConfirm}
     />

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ActionDef, ActionEffect, ProjectDetail, CustomField } from '@/lib/api';
 import {
   useActionsQuery,
@@ -30,6 +31,7 @@ export default function SettingsActions({
   requestNew: boolean;
   onNewHandled: () => void;
 }) {
+  const t = useTranslations('settings.actions');
   const projectKey = project.project.key;
   const actionsQuery = useActionsQuery(projectKey);
   const actions = actionsQuery.data ?? [];
@@ -52,7 +54,7 @@ export default function SettingsActions({
 
   function startDuplicate(action: ActionDef) {
     setNewSeed({
-      name: `${action.name} copy`,
+      name: t('copySuffix', { name: action.name }),
       icon: action.icon,
       condition: action.condition,
       effect: action.effect,
@@ -79,10 +81,7 @@ export default function SettingsActions({
       {actionsQuery.isPending ? (
         <ListSkeleton rows={3} rowClassName="h-12" />
       ) : actions.length === 0 ? (
-        <EmptyState
-          title="No actions yet"
-          description="Pick which issues an action shows on, then what it sets."
-        />
+        <EmptyState title={t('emptyTitle')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
           <SettingsActionsTable
@@ -115,9 +114,9 @@ export default function SettingsActions({
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title={`Delete action "${deleting.name}"`}
-          confirmLabel="Delete action"
-          message="This action will be removed from every issue. This cannot be undone."
+          title={t('deleteTitle', { name: deleting.name })}
+          confirmLabel={t('delete')}
+          message={t('deleteMessage')}
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
             await deleteAction.mutateAsync(deleting.id);

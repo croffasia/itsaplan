@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { DndContext, DragOverlay, type DragEndEvent } from '@dnd-kit/core';
 import { type Label as LabelRow, type LabelGroup, type ProjectDetail } from '@/lib/api';
 import { useDndSensors } from '@/lib/dnd';
@@ -47,6 +48,8 @@ export default function SettingsLabels({ project }: { project: ProjectDetail }) 
   const [deletingGroup, setDeletingGroup] = useState<LabelGroup | null>(null);
 
   const [activeId, setActiveId] = useState<number | null>(null);
+  const t = useTranslations('settings.labels');
+  const tCommon = useTranslations('common');
   const can = useSettingsCan();
   const sensors = useDndSensors();
 
@@ -156,8 +159,8 @@ export default function SettingsLabels({ project }: { project: ProjectDetail }) 
     <SettingsInlineForm
       name={lName}
       onNameChange={setLName}
-      placeholder="Label name"
-      submitLabel={labelForm?.mode === 'edit' ? 'Save' : 'Add'}
+      placeholder={t('namePlaceholder')}
+      submitLabel={labelForm?.mode === 'edit' ? tCommon('save') : tCommon('add')}
       onSubmit={() => void submitLabel()}
       onCancel={() => setLabelForm(null)}
       leading={<SettingsColorField value={lColor} onChange={setLColor} />}
@@ -179,7 +182,7 @@ export default function SettingsLabels({ project }: { project: ProjectDetail }) 
         key={l.id}
         label={l}
         draggable={hasGroups}
-        meta={count === 0 ? undefined : `${count} ${count === 1 ? 'issue' : 'issues'}`}
+        meta={count === 0 ? undefined : t('issueCount', { count })}
         onEdit={() => openLabelEdit(l)}
         onDelete={() => setDeletingLabel(l)}
       />
@@ -190,8 +193,8 @@ export default function SettingsLabels({ project }: { project: ProjectDetail }) 
     <SettingsInlineForm
       name={gName}
       onNameChange={setGName}
-      placeholder="Group name"
-      submitLabel={groupForm?.mode === 'edit' ? 'Save' : 'Add'}
+      placeholder={t('groupNamePlaceholder')}
+      submitLabel={groupForm?.mode === 'edit' ? tCommon('save') : tCommon('add')}
       onSubmit={() => void submitGroup()}
       onCancel={() => setGroupForm(null)}
       leading={<SettingsColorField value={gColor} onChange={setGColor} />}

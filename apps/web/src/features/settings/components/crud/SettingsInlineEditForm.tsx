@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -21,6 +22,8 @@ export function SettingsInlineEditForm({
   leading?: ReactNode;
   trailing?: ReactNode;
 }) {
+  const t = useTranslations('common');
+
   return (
     <div className="flex items-center gap-2 px-3 py-1.5">
       {leading}
@@ -40,7 +43,7 @@ export function SettingsInlineEditForm({
         {submitLabel}
       </Button>
       <Button variant="ghost" size="sm" className="h-7" onClick={onCancel}>
-        Cancel
+        {t('cancel')}
       </Button>
     </div>
   );

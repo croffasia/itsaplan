@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleRunsSheet({
   projectKey,
@@ -22,12 +23,13 @@ export function SettingsScheduleRunsSheet({
   schedule: AgentSchedule | null;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.schedules');
   const query = useAgentScheduleRuns(projectKey, schedule?.id ?? null);
   return (
     <Sheet open={schedule != null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
         <SheetHeader className="border-b">
-          <SheetTitle>Run history</SheetTitle>
+          <SheetTitle>{t('runHistory')}</SheetTitle>
           <SheetDescription>{schedule?.name}</SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -40,7 +42,7 @@ export function SettingsScheduleRunsSheet({
               ))}
             </div>
           ) : (
-            <p className="p-4 text-sm text-muted-foreground">No runs yet.</p>
+            <p className="p-4 text-sm text-muted-foreground">{t('noRuns')}</p>
           )}
         </div>
       </SheetContent>
@@ -49,6 +51,7 @@ export function SettingsScheduleRunsSheet({
 }
 
 function RunRow({ run }: { run: AgentScheduleRun }) {
+  const t = useTranslations('settings.schedules');
   const [open, setOpen] = useState(false);
   const contentId = useId();
   const variant =
@@ -69,10 +72,10 @@ function RunRow({ run }: { run: AgentScheduleRun }) {
       </button>
       {open && (
         <div id={contentId} className="space-y-3 px-4 pb-4 text-xs">
-          <Block label="Task" value={run.prompt} />
+          <Block label={t('task')} value={run.prompt} />
           <Block
-            label={run.lastError ? 'Error' : 'Result'}
-            value={run.lastError ?? run.output ?? 'No output'}
+            label={run.lastError ? t('error') : t('result')}
+            value={run.lastError ?? run.output ?? t('noOutput')}
           />
         </div>
       )}

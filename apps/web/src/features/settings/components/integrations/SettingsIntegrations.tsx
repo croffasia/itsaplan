@@ -11,11 +11,14 @@ import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { CredentialDialog } from './CredentialDialog';
 import { CredentialRow } from './CredentialRow';
+import { useTranslations } from 'next-intl';
 
 // Project settings for integration credentials: the API keys of AI providers and the
 // credentials of tool integrations. Secrets are write-only, so the list shows only a
 // masked view. Adding and editing happen in a dialog; deleting confirms first.
 export default function SettingsIntegrations({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('settings.integrations');
+  const tCommon = useTranslations('common');
   const projectKey = project.project.key;
   const credentialsQuery = useCredentialsQuery(projectKey);
   const credentials = credentialsQuery.data ?? [];
@@ -33,10 +36,7 @@ export default function SettingsIntegrations({ project }: { project: ProjectDeta
   return (
     <>
       {credentials.length === 0 ? (
-        <EmptyState
-          title="No credentials yet"
-          description="Agents can't use an AI provider or a tool without one."
-        />
+        <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
           <Table className="min-w-[720px] table-fixed">
@@ -48,13 +48,13 @@ export default function SettingsIntegrations({ project }: { project: ProjectDeta
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-medium text-muted-foreground">
-                  Integration
+                  {t('columns.integration')}
                 </TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">
-                  Credentials
+                  {t('columns.credentials')}
                 </TableHead>
                 <TableHead className="text-right text-xs font-medium text-muted-foreground">
-                  Actions
+                  {tCommon('actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -86,13 +86,10 @@ export default function SettingsIntegrations({ project }: { project: ProjectDeta
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title="Delete credential"
-          confirmLabel="Delete credential"
+          title={t('delete')}
+          confirmLabel={t('delete')}
           message={
-            <>
-              Delete the {integrationLabel(deleting.integrationKey)} credential? Agents and tools
-              using it will stop working until you add a new one.
-            </>
+            <>{t('deleteMessage', { integration: integrationLabel(deleting.integrationKey) })}</>
           }
           onConfirm={async () => {
             await deleteCredential.mutateAsync(deleting.id);

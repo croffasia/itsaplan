@@ -43,11 +43,11 @@ export function parseStatesText(text: string): StateTransfer[] {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error('Clipboard does not contain valid JSON.');
+    throw new Error('invalidJson');
   }
   const env = data as Partial<StatesEnvelope>;
   if (!env || env.type !== PAYLOAD_TYPE || !Array.isArray(env.states)) {
-    throw new Error('Clipboard does not contain a states export.');
+    throw new Error('wrongPayload');
   }
   const states: StateTransfer[] = [];
   const seen = new Set<string>();
@@ -61,7 +61,7 @@ export function parseStatesText(text: string): StateTransfer[] {
     const color = typeof raw?.color === 'string' ? raw.color : DEFAULT_COLOR;
     states.push({ name, stateType: stateType as StateType, color });
   }
-  if (states.length === 0) throw new Error('The states export is empty.');
+  if (states.length === 0) throw new Error('empty');
   return states;
 }
 

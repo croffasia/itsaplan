@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { SettingsSuggestionsInput, type InputSuggestion } from './SettingsSuggestionsInput';
 import { parseScheduleInput } from '../../utils/cronSchedule';
+import { useTranslations } from 'next-intl';
 
 const scheduleSuggestions: InputSuggestion[] = [
   { value: 'Every 15 minutes', label: 'Every 15 minutes', description: '*/15 * * * *' },
@@ -22,6 +23,7 @@ export function SettingsScheduleInput({
   value: string;
   onChange: (value: string) => void;
 }) {
+  const t = useTranslations('settings.schedules');
   const result = parseScheduleInput(value);
   const messageId = useId();
 
@@ -34,8 +36,8 @@ export function SettingsScheduleInput({
         value={value}
         suggestions={scheduleSuggestions}
         onValueChange={onChange}
-        triggerLabel="Show preset schedules"
-        placeholder="Every weekday at 9:00 AM or 0 9 * * 1-5"
+        triggerLabel={t('showPresets')}
+        placeholder={t('inputPlaceholder')}
         aria-invalid={!result.ok}
         aria-describedby={messageId}
       />
@@ -46,7 +48,7 @@ export function SettingsScheduleInput({
         }
         aria-live="polite"
       >
-        {result.ok ? successMessage(result) : result.error}
+        {result.ok ? successMessage(result, t) : result.error}
       </span>
     </>
   );
@@ -54,11 +56,13 @@ export function SettingsScheduleInput({
 
 function successMessage(
   result: Extract<ReturnType<typeof parseScheduleInput>, { ok: true }>,
+  t: ReturnType<typeof useTranslations<'settings.schedules'>>,
 ): React.ReactNode {
-  if (result.source === 'cron') return `Runs: ${result.description} UTC`;
+  if (result.source === 'cron') return t('runs', { description: result.description });
   return (
     <>
-      Cron: <code className="font-mono">{result.cron}</code> · {result.description} UTC
+      {t('cronLabel')} <code className="font-mono">{result.cron}</code> ·{' '}
+      {t('runsSuffix', { description: result.description })}
     </>
   );
 }

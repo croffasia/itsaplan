@@ -1,6 +1,7 @@
 import type { AgentSchedule } from '@/lib/api';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingsScheduleRow } from './SettingsScheduleRow';
+import { useTranslations } from 'next-intl';
 
 interface SettingsSchedulesTableProps {
   schedules: AgentSchedule[];
@@ -21,6 +22,8 @@ export function SettingsSchedulesTable({
   onEdit,
   onDelete,
 }: SettingsSchedulesTableProps) {
+  const t = useTranslations('settings.schedules');
+  const tCommon = useTranslations('common');
   return (
     <Table className="min-w-[960px] table-fixed">
       <colgroup>
@@ -32,12 +35,18 @@ export function SettingsSchedulesTable({
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="text-xs font-medium text-muted-foreground">Task</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Schedule</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Next run</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Last run</TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">{t('task')}</TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('schedule')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('nextRun')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('lastRun')}
+          </TableHead>
           <TableHead className="text-right text-xs font-medium text-muted-foreground">
-            Actions
+            {tCommon('actions')}
           </TableHead>
         </TableRow>
       </TableHeader>

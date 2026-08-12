@@ -15,6 +15,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTranslations } from 'next-intl';
 
 // Run history for an agent, in a right-side sidebar. Shows the triggered runs (a
 // mention or a delegation) queued for the agent, newest first, 25 at a time. Each run
@@ -29,13 +30,14 @@ export function SettingsAiAgentRunsSheet({
   agent: AiAgent | null;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.agents');
   return (
     <Sheet open={agent != null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
         <SheetHeader className="border-b">
-          <SheetTitle>Run history</SheetTitle>
+          <SheetTitle>{t('runHistory')}</SheetTitle>
           <SheetDescription className="truncate text-xs">
-            {agent ? `@${agent.username} · mention and delegation runs` : ''}
+            {agent ? t('runsSubtitle', { username: agent.username }) : ''}
           </SheetDescription>
         </SheetHeader>
         {agent && <RunsList projectKey={projectKey} agentId={agent.id} />}
@@ -45,6 +47,8 @@ export function SettingsAiAgentRunsSheet({
 }
 
 function RunsList({ projectKey, agentId }: { projectKey: string; agentId: number }) {
+  const t = useTranslations('settings.agents');
+  const tCommon = useTranslations('common');
   const query = useAgentRuns(projectKey, agentId);
   const runs = query.data?.pages.flatMap((p) => p.items) ?? [];
 
@@ -52,12 +56,7 @@ function RunsList({ projectKey, agentId }: { projectKey: string; agentId: number
     return <ListSkeleton rows={4} className="p-4" rowClassName="h-12" />;
   }
   if (runs.length === 0) {
-    return (
-      <p className="p-4 text-sm text-muted-foreground">
-        No runs yet. Runs appear here when the agent is mentioned in a comment or an issue is
-        delegated to it.
-      </p>
-    );
+    return <p className="p-4 text-sm text-muted-foreground">{t('noRuns')}</p>;
   }
 
   return (
@@ -76,10 +75,10 @@ function RunsList({ projectKey, agentId }: { projectKey: string; agentId: number
             disabled={query.isFetchingNextPage}
             onClick={() => query.fetchNextPage()}
           >
-            {query.isFetchingNextPage ? 'Loading…' : 'Load 25 more'}
+            {query.isFetchingNextPage ? tCommon('loading') : t('loadMore')}
           </Button>
         ) : (
-          <p className="text-center text-xs text-muted-foreground">End of history</p>
+          <p className="text-center text-xs text-muted-foreground">{t('endOfHistory')}</p>
         )}
       </div>
     </div>
@@ -88,16 +87,17 @@ function RunsList({ projectKey, agentId }: { projectKey: string; agentId: number
 
 // What the run was about: the issue it targeted, or how it was started when it
 // targeted none.
-function runSubject(r: AgentRun): string {
-  if (r.issueId == null) return r.trigger === 'manual' ? 'Manual task' : 'Scheduled task';
+function runSubject(r: AgentRun, t: ReturnType<typeof useTranslations<'settings.agents'>>): string {
+  if (r.issueId == null) return r.trigger === 'manual' ? t('manualTask') : t('scheduledTask');
   if (!r.issueIdentifier) return `issue #${r.issueId}`;
   return `${r.issueIdentifier}${r.issueTitle ? ` · ${r.issueTitle}` : ''}`;
 }
 
 function RunItem({ run: r }: { run: AgentRun }) {
+  const t = useTranslations('settings.agents');
   const [open, setOpen] = useState(false);
-  const subject = runSubject(r);
-  const outcome = r.status === 'failed' ? (r.lastError ?? 'Failed') : '';
+  const subject = runSubject(r, t);
+  const outcome = r.status === 'failed' ? (r.lastError ?? t('failed')) : '';
   return (
     <div>
       <button
@@ -127,13 +127,13 @@ function RunItem({ run: r }: { run: AgentRun }) {
       </button>
       {open && (
         <div className="space-y-3 px-4 pb-3">
-          <DetailBlock label="Task" value={r.prompt} />
+          <DetailBlock label={t('task')} value={r.prompt} />
           {r.status === 'failed' && r.lastError && (
-            <DetailBlock label="Error" value={r.lastError} />
+            <DetailBlock label={t('error')} value={r.lastError} />
           )}
           {r.status === 'pending' && (
             <DetailBlock
-              label="Queue"
+              label={t('queue')}
               value={`Attempts: ${r.attempts}. Next attempt: ${formatDateTime(r.nextAttemptAt)}.`}
             />
           )}

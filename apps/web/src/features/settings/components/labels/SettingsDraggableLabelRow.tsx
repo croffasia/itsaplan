@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
 import { GripVertical } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type Label as LabelRow } from '@/lib/api';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { SettingsRow } from '../crud/SettingsRow';
@@ -22,6 +23,7 @@ export function SettingsDraggableLabelRow({
   // Moving a label between groups is a labels edit; disable dragging and hide the
   // grip without it.
   const canEdit = useSettingsCan()('edit');
+  const t = useTranslations('settings.labels');
   const { setNodeRef, listeners, attributes, isDragging } = useDraggable({
     id: label.id,
     disabled: !canEdit,
@@ -32,8 +34,8 @@ export function SettingsDraggableLabelRow({
         ref={setNodeRef}
         {...listeners}
         {...attributes}
-        title="Drag to a group"
-        aria-label="Drag label"
+        title={t('dragToGroup')}
+        aria-label={t('dragLabel')}
         className="flex size-6 shrink-0 cursor-grab touch-none items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground active:cursor-grabbing"
       >
         <GripVertical className="size-4" />
@@ -47,8 +49,8 @@ export function SettingsDraggableLabelRow({
       media={colorDot(label.color)}
       title={label.name}
       meta={meta}
-      editTitle="Edit label"
-      deleteTitle="Delete label"
+      editTitle={t('editLabel')}
+      deleteTitle={t('deleteLabel')}
       onEdit={onEdit}
       onDelete={onDelete}
     />

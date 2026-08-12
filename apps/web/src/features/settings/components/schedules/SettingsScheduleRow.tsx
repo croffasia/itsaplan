@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import SettingsIconButton from '../SettingsIconButton';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { parseScheduleInput } from '../../utils/cronSchedule';
+import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleRow({
   schedule,
@@ -44,6 +45,7 @@ export function SettingsScheduleRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('settings.schedules');
   const can = useSettingsCan();
   const parsedSchedule = parseScheduleInput(schedule.cron);
   const scheduleDescription = parsedSchedule.ok ? parsedSchedule.description : schedule.cron;
@@ -53,7 +55,7 @@ export function SettingsScheduleRow({
         <div className="flex min-w-0 items-start gap-2.5">
           <span
             className={cn('mt-[7px] size-2 shrink-0 rounded-full', statusDotClass(schedule.status))}
-            title={schedule.status === 'active' ? 'Active' : 'Paused'}
+            title={schedule.status === 'active' ? t('statusActive') : t('statusPaused')}
           />
           <Popover>
             <Tooltip>
@@ -70,10 +72,10 @@ export function SettingsScheduleRow({
                   </Button>
                 </PopoverTrigger>
               </TooltipTrigger>
-              <TooltipContent>View task</TooltipContent>
+              <TooltipContent>{t('viewTask')}</TooltipContent>
             </Tooltip>
             <PopoverContent align="start" className="w-80">
-              <p className="text-xs font-medium text-muted-foreground">Task</p>
+              <p className="text-xs font-medium text-muted-foreground">{t('task')}</p>
               <p className="mt-1.5 text-sm whitespace-pre-wrap">{schedule.prompt}</p>
             </PopoverContent>
           </Popover>
@@ -102,7 +104,7 @@ export function SettingsScheduleRow({
               <span
                 className={cn('size-2 shrink-0 rounded-full', runDotClass(schedule.lastRunStatus))}
               />
-              <span className="text-sm">{runStatusLabel(schedule.lastRunStatus)}</span>
+              <span className="text-sm">{t(`runStatus.${schedule.lastRunStatus}`)}</span>
             </div>
             {schedule.lastRunAt && (
               <p className="text-xs whitespace-nowrap text-muted-foreground tabular-nums">
@@ -111,14 +113,14 @@ export function SettingsScheduleRow({
             )}
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">No runs yet</span>
+          <span className="text-xs text-muted-foreground">{t('noRunsShort')}</span>
         )}
       </TableCell>
       <TableCell className="px-3 py-3 align-top">
         <div className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
           {can('edit') && (
             <SettingsIconButton
-              title={schedule.status === 'active' ? 'Pause schedule' : 'Resume schedule'}
+              title={schedule.status === 'active' ? t('pause') : t('resume')}
               onClick={onToggle}
             >
               {schedule.status === 'active' ? (
@@ -128,7 +130,7 @@ export function SettingsScheduleRow({
               )}
             </SettingsIconButton>
           )}
-          <SettingsIconButton title="Run history" onClick={onHistory}>
+          <SettingsIconButton title={t('runHistory')} onClick={onHistory}>
             <History className="size-4" />
           </SettingsIconButton>
           {(can('edit') || can('delete')) && (
@@ -145,7 +147,7 @@ export function SettingsScheduleRow({
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
-                <TooltipContent>More actions</TooltipContent>
+                <TooltipContent>{t('moreActions')}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end">
                 {can('edit') && (
@@ -155,13 +157,13 @@ export function SettingsScheduleRow({
                     onSelect={onRun}
                   >
                     {running ? <RotateCw className="animate-spin" /> : <Zap />}
-                    Run now
+                    {t('runNow')}
                   </DropdownMenuItem>
                 )}
                 {can('edit') && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onEdit}>
                     <Pencil />
-                    Edit schedule
+                    {t('edit')}
                   </DropdownMenuItem>
                 )}
                 {can('delete') && can('edit') && <DropdownMenuSeparator />}
@@ -172,7 +174,7 @@ export function SettingsScheduleRow({
                     onSelect={onDelete}
                   >
                     <Trash2 />
-                    Delete schedule
+                    {t('delete')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -190,12 +192,6 @@ function formatUtc(value: string): string {
     timeStyle: 'short',
     timeZone: 'UTC',
   }).format(new Date(value))} UTC`;
-}
-
-function runStatusLabel(status: NonNullable<AgentSchedule['lastRunStatus']>): string {
-  if (status === 'success') return 'Succeeded';
-  if (status === 'failed') return 'Failed';
-  return 'Pending';
 }
 
 function statusDotClass(status: AgentSchedule['status']): string {

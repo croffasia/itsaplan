@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { IntegrationIcon } from '../integrations/IntegrationIcon';
 import type { ToolOption } from './ToolConfigDialog';
+import { useTranslations } from 'next-intl';
 
 // Step one of adding a tool: pick the tool. The catalog tools are grouped by their
 // integration (Jina, Firecrawl, Telegram) in a full-width searchable list, matching the
@@ -15,6 +16,7 @@ export function ToolPicker({
   options: ToolOption[];
   onSelect: (toolKey: string) => void;
 }) {
+  const t = useTranslations('settings.tools');
   const [query, setQuery] = useState('');
 
   const matches = useMemo(() => {
@@ -44,7 +46,7 @@ export function ToolPicker({
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search tools"
+          placeholder={t('search')}
           className="pl-9"
         />
       </div>
@@ -52,7 +54,7 @@ export function ToolPicker({
       <div className="max-h-[55vh] space-y-5 overflow-y-auto pr-1">
         {matches.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            No tool matches “{query.trim()}”.
+            {t('noMatches', { query: query.trim() })}
           </p>
         )}
         {groups.map((integrationKey) => {
@@ -82,7 +84,7 @@ export function ToolPicker({
                     {o.scopes.length > 0 && (
                       <span className="mt-1.5 flex flex-wrap items-center gap-1">
                         <span className="text-[10px] tracking-wide text-muted-foreground uppercase">
-                          Scopes
+                          {t('scopesUpper')}
                         </span>
                         {o.scopes.map((s) => (
                           <Badge

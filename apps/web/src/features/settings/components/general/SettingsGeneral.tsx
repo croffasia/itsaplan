@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,15 +10,18 @@ import type { GeneralForm } from '../../hooks/useGeneralForm';
 // every issue and cannot change. Only an owner may edit; others see the values
 // read-only.
 export default function SettingsGeneral({ form }: { form: GeneralForm }) {
+  const t = useTranslations('settings.general');
+  const tCommon = useTranslations('common');
+
   return (
-    <SettingsSection title="Project" description="The key prefixes every issue and cannot change.">
+    <SettingsSection title={t('project')} description={t('projectHint')}>
       <SettingsCard className="space-y-4 p-4">
         <div className="space-y-1.5">
-          <Label htmlFor="project-key">Key</Label>
+          <Label htmlFor="project-key">{t('key')}</Label>
           <Input id="project-key" value={form.key} disabled readOnly />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="project-name">Name</Label>
+          <Label htmlFor="project-name">{tCommon('name')}</Label>
           <Input
             id="project-name"
             value={form.name}
@@ -26,7 +30,7 @@ export default function SettingsGeneral({ form }: { form: GeneralForm }) {
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="project-description">Description</Label>
+          <Label htmlFor="project-description">{tCommon('description')}</Label>
           <Textarea
             id="project-description"
             rows={3}

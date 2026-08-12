@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ClipboardPaste, Copy, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { Column } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useIsMac } from '@/context/useHotkeys';
+import { useTransferErrorMessage } from '../../hooks/useTransferErrorMessage';
 import StatesImportDialog from './StatesImportDialog';
 import {
   parseStatesText,
@@ -32,38 +34,41 @@ export default function StatesToolbar({
   projectKey: string;
   columns: Column[];
 }) {
+  const t = useTranslations('settings.states');
+  const tTransfer = useTranslations('settings.transfer');
+  const transferError = useTransferErrorMessage();
   const { can } = usePermissions();
   const mod = useIsMac() ? '⌘' : 'Ctrl';
   const [importing, setImporting] = useState<PlannedState[] | null>(null);
 
   const copyStates = useCallback(async () => {
     if (columns.length === 0) {
-      toast.info('No states to copy.');
+      toast.info(t('nothingToCopy'));
       return;
     }
     try {
       await navigator.clipboard.writeText(serializeStates(columns));
-      toast.success(`Copied ${columns.length} state${columns.length === 1 ? '' : 's'}.`);
+      toast.success(t('copied', { count: columns.length }));
     } catch {
-      toast.error('Could not copy to the clipboard.');
+      toast.error(tTransfer('copyFailed'));
     }
-  }, [columns]);
+  }, [columns, t, tTransfer]);
 
   const pasteStates = useCallback(async () => {
     let text: string;
     try {
       text = await navigator.clipboard.readText();
     } catch {
-      toast.error('Could not read the clipboard.');
+      toast.error(tTransfer('readFailed'));
       return;
     }
     try {
       const parsed = parseStatesText(text);
       setImporting(planStatesImport(parsed, columns));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not read states from the clipboard.');
+      toast.error(transferError(err, t('parseFailed')));
     }
-  }, [columns]);
+  }, [columns, t, tTransfer, transferError]);
 
   // Cmd/Ctrl+C copies, Cmd/Ctrl+V pastes — but only on this page, not while typing,
   // and Cmd+C only when no text is selected (so an intentional text copy still works).
@@ -102,7 +107,7 @@ export default function StatesToolbar({
             variant="ghost"
             size="icon"
             className="size-8 text-muted-foreground hover:text-foreground"
-            aria-label="State import and export"
+            aria-label={t('menu')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -110,12 +115,12 @@ export default function StatesToolbar({
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={() => void copyStates()} disabled={columns.length === 0}>
             <Copy className="size-4" />
-            Copy states
+            {t('copy')}
             <DropdownMenuShortcut>{mod}C</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void pasteStates()}>
             <ClipboardPaste className="size-4" />
-            Paste states
+            {t('paste')}
             <DropdownMenuShortcut>{mod}V</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>

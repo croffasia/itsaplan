@@ -3,6 +3,7 @@ import type { IntegrationCredential, IntegrationMeta } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import { IntegrationPicker } from './IntegrationPicker';
 import { CredentialForm } from './CredentialForm';
+import { useTranslations } from 'next-intl';
 
 // Add or edit an integration credential. Adding is two steps: pick the integration from
 // the searchable, grouped catalog (IntegrationPicker), then fill its credential form
@@ -19,6 +20,7 @@ export function CredentialDialog({
   existing: IntegrationCredential | null;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.integrations');
   const isEdit = existing != null;
   const [integrationKey, setIntegrationKey] = useState<string | null>(
     existing?.integrationKey ?? null,
@@ -27,7 +29,7 @@ export function CredentialDialog({
 
   if (!isEdit && !meta) {
     return (
-      <Modal title="Add credential" projectKey={projectKey} onClose={onClose} wide>
+      <Modal title={t('add')} projectKey={projectKey} onClose={onClose} wide>
         <IntegrationPicker catalog={catalog} onSelect={setIntegrationKey} />
       </Modal>
     );
@@ -37,11 +39,7 @@ export function CredentialDialog({
   if (!meta) return null;
 
   return (
-    <Modal
-      title={isEdit ? 'Edit credential' : 'Add credential'}
-      projectKey={projectKey}
-      onClose={onClose}
-    >
+    <Modal title={isEdit ? t('edit') : t('add')} projectKey={projectKey} onClose={onClose}>
       <CredentialForm
         projectKey={projectKey}
         meta={meta}

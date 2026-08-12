@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail, Webhook } from '@/lib/api';
 import {
   useWebhooksQuery,
@@ -25,6 +26,7 @@ export default function SettingsWebhooks({
   requestNew: boolean;
   onNewHandled: () => void;
 }) {
+  const t = useTranslations('settings.webhooks');
   const projectKey = project.project.key;
   const webhooksQuery = useWebhooksQuery(projectKey);
   const webhooks = webhooksQuery.data ?? [];
@@ -61,10 +63,7 @@ export default function SettingsWebhooks({
       {webhooksQuery.isPending ? (
         <ListSkeleton rows={3} rowClassName="h-12" />
       ) : webhooks.length === 0 ? (
-        <EmptyState
-          title="No webhooks yet"
-          description="Set a payload URL and choose which events to send."
-        />
+        <EmptyState title={t('emptyTitle')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
           <SettingsWebhooksTable
@@ -89,14 +88,12 @@ export default function SettingsWebhooks({
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title="Delete webhook"
-          confirmLabel="Delete webhook"
-          message={
-            <>
-              Deliveries to <span className="font-medium">{deleting.url}</span> will stop. This
-              cannot be undone.
-            </>
-          }
+          title={t('deleteTitle')}
+          confirmLabel={t('delete')}
+          message={t.rich('deleteMessage', {
+            url: deleting.url,
+            v: (chunks) => <span className="font-medium">{chunks}</span>,
+          })}
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
             await deleteWebhook.mutateAsync(deleting.id);

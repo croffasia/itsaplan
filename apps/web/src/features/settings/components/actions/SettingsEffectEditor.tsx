@@ -1,12 +1,9 @@
 import { Fragment, useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ActionEffect, ProjectDetail } from '@/lib/api';
-import {
-  EFFECT_FIELD_KEYS,
-  EFFECT_FIELD_LABELS,
-  effectFieldKeys,
-  type EffectFieldKey,
-} from '@/utils/actions';
+import { EFFECT_FIELD_KEYS, effectFieldKeys, type EffectFieldKey } from '@/utils/actions';
+import { useEffectText } from '@/hooks/useEffectText';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
@@ -45,6 +42,7 @@ function EffectValue({
   project: ProjectDetail;
   onChange: (v: ActionEffect[EffectFieldKey]) => void;
 }) {
+  const t = useTranslations('settings.actions');
   switch (fieldKey) {
     case 'columnId':
       return (
@@ -74,10 +72,12 @@ function EffectValue({
       );
     case 'startDate':
       return (
-        <DatePill value={effect.startDate ?? null} placeholder="Set date" onChange={onChange} />
+        <DatePill value={effect.startDate ?? null} placeholder={t('setDate')} onChange={onChange} />
       );
     case 'dueDate':
-      return <DatePill value={effect.dueDate ?? null} placeholder="Set date" onChange={onChange} />;
+      return (
+        <DatePill value={effect.dueDate ?? null} placeholder={t('setDate')} onChange={onChange} />
+      );
     case 'labelIds': {
       const ids = effect.labelIds ?? [];
       const toggle = (id: number) =>
@@ -103,6 +103,8 @@ export function SettingsEffectEditor({
   project: ProjectDetail;
   onChange: (e: ActionEffect) => void;
 }) {
+  const t = useTranslations('settings.actions');
+  const effectText = useEffectText();
   const [addOpen, setAddOpen] = useState(false);
   const setKeys = effectFieldKeys(effect);
   const available = EFFECT_FIELD_KEYS.filter((k) => !(k in effect));
@@ -125,7 +127,7 @@ export function SettingsEffectEditor({
         <div className="grid grid-cols-[110px_1fr] items-center gap-x-3 gap-y-2.5">
           {setKeys.map((key) => (
             <Fragment key={key}>
-              <div className="text-sm text-muted-foreground">{EFFECT_FIELD_LABELS[key]}</div>
+              <div className="text-sm text-muted-foreground">{effectText.field(key)}</div>
               <div className="flex items-center gap-1.5">
                 <EffectValue
                   effect={effect}
@@ -136,7 +138,7 @@ export function SettingsEffectEditor({
                 <button
                   type="button"
                   onClick={() => removeKey(key)}
-                  title="Remove field"
+                  title={t('removeField')}
                   className="rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
                 >
                   <X className="size-4" />
@@ -155,7 +157,7 @@ export function SettingsEffectEditor({
               className={`h-8 gap-1.5 px-2 text-muted-foreground hover:text-foreground ${setKeys.length > 0 ? 'mt-2' : ''}`}
             >
               <Plus className="size-4" />
-              Add field
+              {t('addField')}
             </Button>
           </PopoverTrigger>
           <PopoverContent align="start" className="w-44 p-1">
@@ -166,7 +168,7 @@ export function SettingsEffectEditor({
                 onClick={() => addKey(key)}
                 className="w-full truncate rounded px-2 py-1.5 text-left text-sm hover:bg-accent"
               >
-                {EFFECT_FIELD_LABELS[key]}
+                {effectText.field(key)}
               </button>
             ))}
           </PopoverContent>

@@ -3,13 +3,13 @@ import { Search } from 'lucide-react';
 import type { IntegrationMeta } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { IntegrationIcon } from './IntegrationIcon';
+import { useTranslations } from 'next-intl';
 
 // The groups the catalog is split into, in display order. LLM providers first, tool
 // integrations second.
-const GROUPS: { kind: IntegrationMeta['kind']; title: string; hint: string }[] = [
-  { kind: 'llm', title: 'AI providers', hint: 'The model an internal agent runs on' },
-  { kind: 'tool', title: 'Tools', hint: 'Integrations an agent can call as tools' },
-];
+// The two kinds of integration, in picker order. Their name and blurb are
+// messages under `settings.integrations.groups`.
+const GROUPS: { kind: IntegrationMeta['kind'] }[] = [{ kind: 'llm' }, { kind: 'tool' }];
 
 // Step one of adding a credential: pick the integration. The catalog is long (~150 LLM
 // providers), so it is a full-width searchable list grouped by kind rather than a
@@ -21,6 +21,7 @@ export function IntegrationPicker({
   catalog: IntegrationMeta[];
   onSelect: (key: string) => void;
 }) {
+  const t = useTranslations('settings.integrations');
   const [query, setQuery] = useState('');
 
   const matches = useMemo(() => {
@@ -39,7 +40,7 @@ export function IntegrationPicker({
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search integrations"
+          placeholder={t('search')}
           className="pl-9"
         />
       </div>
@@ -47,19 +48,19 @@ export function IntegrationPicker({
       <div className="max-h-[55vh] space-y-5 overflow-y-auto pr-1">
         {matches.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            No integration matches “{query.trim()}”.
+            {t('noMatches', { query: query.trim() })}
           </p>
         )}
-        {GROUPS.map(({ kind, title, hint }) => {
+        {GROUPS.map(({ kind }) => {
           const items = matches.filter((c) => c.kind === kind);
           if (items.length === 0) return null;
           return (
             <div key={kind} className="space-y-1.5">
               <div className="flex items-baseline gap-2 px-1">
                 <h3 className="text-xs font-semibold tracking-wide text-foreground uppercase">
-                  {title}
+                  {t(`groups.${kind}.title`)}
                 </h3>
-                <span className="text-xs text-muted-foreground">{hint}</span>
+                <span className="text-xs text-muted-foreground">{t(`groups.${kind}.hint`)}</span>
               </div>
               <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {items.map((integration) => (

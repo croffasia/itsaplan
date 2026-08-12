@@ -22,6 +22,7 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { AgentMetaRow, AgentTriggers } from './AgentMetaRow';
+import { useTranslations } from 'next-intl';
 
 // One agent as a table row: the Agent cell holds the name, @username, kind badge,
 // and created date; the Configuration cell shows an internal agent's meta line
@@ -46,6 +47,7 @@ export function SettingsAiAgentRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('settings.agents');
   const can = useSettingsCan();
   const canHistory = agent.kind === 'internal' && can('read');
   const canChat = canHistory;
@@ -71,7 +73,7 @@ export function SettingsAiAgentRow({
               </Badge>
             </div>
             <span className="text-xs text-muted-foreground/80">
-              Created {formatShortDate(agent.createdAt)}
+              {t('createdOn', { date: formatShortDate(agent.createdAt) })}
             </span>
           </div>
         </div>
@@ -88,19 +90,19 @@ export function SettingsAiAgentRow({
           <AgentMetaRow agent={agent} providerLabel={providerLabel} />
         ) : (
           <span className="text-xs text-muted-foreground">
-            {agent.apiKeyStart ? `API key ${agent.apiKeyStart}…` : 'API key'}
+            {agent.apiKeyStart ? t('apiKeyValue', { start: agent.apiKeyStart }) : t('apiKey')}
           </span>
         )}
       </TableCell>
       <TableCell className="px-3 py-2 pt-3 align-top">
         <div className="flex items-center justify-end gap-1">
           {canHistory && (
-            <IconButton title="Run history" onClick={onRuns}>
+            <IconButton title={t('runHistory')} onClick={onRuns}>
               <History className="size-4" />
             </IconButton>
           )}
           {can('edit') && (
-            <IconButton title="Edit agent" onClick={onEdit}>
+            <IconButton title={t('edit')} onClick={onEdit}>
               <Pencil className="size-4" />
             </IconButton>
           )}
@@ -118,19 +120,19 @@ export function SettingsAiAgentRow({
                     </Button>
                   </DropdownMenuTrigger>
                 </TooltipTrigger>
-                <TooltipContent>More actions</TooltipContent>
+                <TooltipContent>{t('moreActions')}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end">
                 {canChat && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onChat}>
                     <MessageSquare />
-                    Test chat
+                    {t('testChat')}
                   </DropdownMenuItem>
                 )}
                 {canRegenerate && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onRegenerate}>
                     <KeyRound />
-                    Regenerate key
+                    {t('regenerateConfirm')}
                   </DropdownMenuItem>
                 )}
                 {can('delete') && (canChat || canRegenerate) && <DropdownMenuSeparator />}
@@ -141,7 +143,7 @@ export function SettingsAiAgentRow({
                     onSelect={onDelete}
                   >
                     <Trash2 />
-                    Delete agent
+                    {t('delete')}
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>

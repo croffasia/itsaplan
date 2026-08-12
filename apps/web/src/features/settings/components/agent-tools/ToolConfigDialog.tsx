@@ -3,6 +3,7 @@ import type { IntegrationMeta, IntegrationOption } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import { ToolPicker } from './ToolPicker';
 import { ToolCredentialStep } from './ToolCredentialStep';
+import { useTranslations } from 'next-intl';
 
 // One catalog tool tagged with the integration it belongs to.
 export interface ToolOption {
@@ -29,6 +30,7 @@ export function ToolConfigDialog({
   credentials: IntegrationOption[];
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.tools');
   const toolOptions = useMemo<ToolOption[]>(
     () =>
       catalog
@@ -50,7 +52,7 @@ export function ToolConfigDialog({
   const tool = toolOptions.find((t) => t.toolKey === toolKey);
 
   return (
-    <Modal title="Add tool" projectKey={projectKey} onClose={onClose} wide>
+    <Modal title={t('add')} projectKey={projectKey} onClose={onClose} wide>
       {tool ? (
         <ToolCredentialStep
           projectKey={projectKey}

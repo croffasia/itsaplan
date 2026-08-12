@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { NotificationEventToggles, NotificationPreferences } from '@/lib/api';
 import { useUpdateNotificationPreferences } from '../services/settings.service';
 import { eventsEqual } from '../utils/notificationEvents';
@@ -22,6 +23,7 @@ export function useNotificationPreferencesForm(
   projectKey: string,
   initial: NotificationPreferences,
 ): NotificationPreferencesForm {
+  const t = useTranslations('settings.notifications');
   const update = useUpdateNotificationPreferences(projectKey);
   const [emailEvents, setEmailEvents] = useState<NotificationEventToggles>(initial.emailEvents);
   const [telegramEvents, setTelegramEvents] = useState<NotificationEventToggles>(
@@ -34,7 +36,7 @@ export function useNotificationPreferencesForm(
 
   async function save() {
     await update.mutateAsync({ emailEvents, telegramEvents });
-    toast.success('Notification preferences saved');
+    toast.success(t('preferencesSaved'));
   }
 
   return {

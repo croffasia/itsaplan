@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useCreateSkill, useDiscoverGithubSkills } from '@/services/agentSkills.service';
+import { useTranslations } from 'next-intl';
 
 type Source = 'inline' | 'upload' | 'github';
 
@@ -39,6 +40,8 @@ export function SkillCreateDialog({
   projectKey: string;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.skills');
+  const tCommon = useTranslations('common');
   const [source, setSource] = useState<Source>('inline');
   const [markdown, setMarkdown] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
@@ -150,19 +153,19 @@ export function SkillCreateDialog({
   const nameAndCreate = (
     <>
       <div className="space-y-1.5">
-        <Label>Name (optional)</Label>
+        <Label>{t('name')}</Label>
         <Input
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Defaults to the SKILL.md frontmatter name"
+          placeholder={t('namePlaceholder')}
         />
       </div>
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onClose} disabled={busy}>
-          Cancel
+          {tCommon('cancel')}
         </Button>
         <Button onClick={submitInline} disabled={busy || markdown.trim() === ''}>
-          Create skill
+          {t('create')}
         </Button>
       </div>
     </>
@@ -171,26 +174,18 @@ export function SkillCreateDialog({
   // The GitHub selection step replaces the rest of the form once skills are found.
   if (source === 'github' && candidates) {
     return (
-      <Modal title="Import skills from GitHub" projectKey={projectKey} onClose={onClose} wide>
+      <Modal title={t('importTitle')} projectKey={projectKey} onClose={onClose} wide>
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <p className="text-sm text-muted-foreground">
-              {query.trim() ? (
-                <>
-                  {filteredCandidates.length} of {candidates.length} skill
-                  {candidates.length === 1 ? '' : 's'} match
-                </>
-              ) : (
-                <>
-                  Found {candidates.length} skill{candidates.length === 1 ? '' : 's'}. Pick which to
-                  import.
-                </>
-              )}
+              {query.trim()
+                ? t('matchCount', { shown: filteredCandidates.length, total: candidates.length })
+                : t('foundCount', { count: candidates.length })}
             </p>
             {filteredCandidates.length > 1 && (
               <label className="flex shrink-0 cursor-pointer items-center gap-2 text-sm">
                 <Checkbox checked={allFilteredSelected} onCheckedChange={toggleAllFiltered} />
-                Select all
+                {t('selectAll')}
               </label>
             )}
           </div>
@@ -201,7 +196,7 @@ export function SkillCreateDialog({
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search by name or description"
+                placeholder={t('searchPlaceholder')}
                 className="pr-9 pl-9"
                 autoFocus
               />
@@ -210,7 +205,7 @@ export function SkillCreateDialog({
                   type="button"
                   onClick={() => setQuery('')}
                   className="absolute top-1/2 right-3 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label="Clear search"
+                  aria-label={tCommon('clearSearch')}
                 >
                   <X className="size-4" />
                 </button>
@@ -221,7 +216,7 @@ export function SkillCreateDialog({
           <div className="max-h-80 space-y-1 overflow-y-auto">
             {filteredCandidates.length === 0 ? (
               <p className="py-10 text-center text-sm text-muted-foreground">
-                No skills match &ldquo;{query.trim()}&rdquo;.
+                {t('noMatches', { query: query.trim() })}
               </p>
             ) : (
               filteredCandidates.map((c) => (
@@ -251,15 +246,14 @@ export function SkillCreateDialog({
           </div>
           <div className="flex justify-between gap-2">
             <Button variant="ghost" onClick={() => setCandidates(null)} disabled={busy}>
-              Back
+              {tCommon('back')}
             </Button>
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose} disabled={busy}>
-                Cancel
+                {tCommon('cancel')}
               </Button>
               <Button onClick={importSelected} disabled={busy || selected.size === 0}>
-                Import {selected.size > 0 ? selected.size : ''} skill
-                {selected.size === 1 ? '' : 's'}
+                {t('importCount', { count: selected.size })}
               </Button>
             </div>
           </div>
@@ -269,12 +263,12 @@ export function SkillCreateDialog({
   }
 
   return (
-    <Modal title="New skill" projectKey={projectKey} onClose={onClose} wide>
+    <Modal title={t('newSkill')} projectKey={projectKey} onClose={onClose} wide>
       <Tabs value={source} onValueChange={(v) => setSource(v as Source)}>
         <TabsList variant="line">
-          <TabsTrigger value="inline">Write markdown</TabsTrigger>
-          <TabsTrigger value="upload">Upload a file</TabsTrigger>
-          <TabsTrigger value="github">Import from GitHub</TabsTrigger>
+          <TabsTrigger value="inline">{t('tabInline')}</TabsTrigger>
+          <TabsTrigger value="upload">{t('tabUpload')}</TabsTrigger>
+          <TabsTrigger value="github">{t('tabGithub')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="inline" className="mt-2 space-y-4">
@@ -295,13 +289,15 @@ export function SkillCreateDialog({
 
         <TabsContent value="upload" className="mt-2 space-y-4">
           <div className="space-y-1.5">
-            <Label>SKILL.md file</Label>
+            <Label>{t('skillFile')}</Label>
             <Input
               type="file"
               accept=".md,.markdown,.txt,text/markdown,text/plain"
               onChange={(e) => onFile(e.target.files?.[0])}
             />
-            {fileName && <p className="text-xs text-muted-foreground">Loaded {fileName}</p>}
+            {fileName && (
+              <p className="text-xs text-muted-foreground">{t('loaded', { file: fileName })}</p>
+            )}
           </div>
           {nameAndCreate}
         </TabsContent>
@@ -310,32 +306,30 @@ export function SkillCreateDialog({
           <div className="flex gap-2.5 rounded-md border border-amber-500/30 bg-amber-500/10 p-3 text-amber-700 dark:text-amber-300">
             <TriangleAlert className="mt-px size-4 shrink-0" />
             <div className="space-y-1.5 text-xs leading-relaxed">
-              <p className="font-medium">Import only skills you trust</p>
+              <p className="font-medium">{t('trustWarning')}</p>
               <ul className="list-disc space-y-0.5 pl-4 text-amber-700/90 dark:text-amber-300/90">
-                <li>A skill becomes instructions your agents follow. Review the source first.</li>
-                <li>
-                  Only SKILL.md and its markdown references are imported. Scripts are skipped.
-                </li>
+                <li>{t('trustWarning1')}</li>
+                <li>{t('trustWarning2')}</li>
               </ul>
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <Label>GitHub URL</Label>
+            <Label>{t('githubUrl')}</Label>
             <Input
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
-              placeholder="https://github.com/owner/repo or a skill folder"
+              placeholder={t('githubUrlPlaceholder')}
             />
-            <p className="text-xs text-muted-foreground">A repository, a folder, or a SKILL.md.</p>
+            <p className="text-xs text-muted-foreground">{t('githubUrlHint')}</p>
           </div>
 
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={onClose} disabled={busy}>
-              Cancel
+              {tCommon('cancel')}
             </Button>
             <Button onClick={runDiscover} disabled={busy || sourceUrl.trim() === ''}>
-              Find skills
+              {t('findSkills')}
             </Button>
           </div>
         </TabsContent>

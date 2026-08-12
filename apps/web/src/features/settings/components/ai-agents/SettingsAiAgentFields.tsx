@@ -26,6 +26,7 @@ import { AgentFormSection } from './AgentFormSection';
 import AgentExpandedLayout from './AgentExpandedLayout';
 import AgentModelSection from './AgentModelSection';
 import AgentActionsSection from './AgentActionsSection';
+import { useTranslations } from 'next-intl';
 
 // Sentinel select value for "no explicit role" (falls back to the project default).
 const DEFAULT_ROLE_VALUE = '__default__';
@@ -85,6 +86,8 @@ export default function SettingsAiAgentFields({
   // used by the full-width internal layout which owns its own scroll container.
   banner?: ReactNode;
 }) {
+  const t = useTranslations('settings.agents');
+  const tCommon = useTranslations('common');
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(DEFAULT_OPEN);
   const sectionProps = (id: string) => ({
     id,
@@ -93,10 +96,10 @@ export default function SettingsAiAgentFields({
   });
 
   const basicsSection = (
-    <AgentFormSection key="basics" {...sectionProps('basics')} icon={IdCard} title="Basics">
+    <AgentFormSection key="basics" {...sectionProps('basics')} icon={IdCard} title={t('basics')}>
       {!kindLocked && (
         <div className="space-y-1.5">
-          <span className="text-sm font-medium">Kind</span>
+          <span className="text-sm font-medium">{t('kind')}</span>
           <div className="grid grid-cols-2 gap-2">
             {(['external', 'internal'] as const).map((k) => (
               <button
@@ -109,10 +112,8 @@ export default function SettingsAiAgentFields({
                     : 'bg-muted/50 hover:bg-accent/60'
                 }`}
               >
-                <span className="font-medium capitalize">{k}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {k === 'external' ? 'Driven through the API' : 'Run by the built-in runtime'}
-                </span>
+                <span className="font-medium">{t(`kindLabel.${k}`)}</span>
+                <span className="block text-xs text-muted-foreground">{t(`kindHint.${k}`)}</span>
               </button>
             ))}
           </div>
@@ -121,12 +122,12 @@ export default function SettingsAiAgentFields({
 
       <div className="space-y-1.5">
         <label htmlFor="agent-name" className="text-sm font-medium">
-          Name
+          {tCommon('name')}
         </label>
         <Input
           id="agent-name"
           autoFocus
-          placeholder="e.g. Triage bot"
+          placeholder={t('namePlaceholder')}
           value={value.name}
           onChange={(e) => onChange({ name: e.target.value })}
         />
@@ -134,17 +135,15 @@ export default function SettingsAiAgentFields({
 
       <div className="space-y-1.5">
         <label htmlFor="agent-username" className="text-sm font-medium">
-          Username
+          {t('username')}
         </label>
         <Input
           id="agent-username"
-          placeholder="e.g. triage-bot"
+          placeholder={t('usernamePlaceholder')}
           value={value.username}
           onChange={(e) => onChange({ username: e.target.value })}
         />
-        <p className="text-xs text-muted-foreground">
-          Letters, digits, dots, dashes, and underscores. Up to 64 characters.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('usernameHint')}</p>
       </div>
     </AgentFormSection>
   );
@@ -154,20 +153,20 @@ export default function SettingsAiAgentFields({
       key="access"
       {...sectionProps('access')}
       icon={Shield}
-      title="Access"
-      hint="The permissions the agent acts under"
+      title={t('access')}
+      hint={t('accessHint')}
     >
       <div className="space-y-1.5">
-        <span className="text-sm font-medium">Role</span>
+        <span className="text-sm font-medium">{t('role')}</span>
         <Select
           value={value.roleId != null ? String(value.roleId) : DEFAULT_ROLE_VALUE}
           onValueChange={(v) => onChange({ roleId: v === DEFAULT_ROLE_VALUE ? null : Number(v) })}
         >
           <SelectTrigger>
-            <SelectValue placeholder="Choose a role" />
+            <SelectValue placeholder={t('chooseRole')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value={DEFAULT_ROLE_VALUE}>Default role</SelectItem>
+            <SelectItem value={DEFAULT_ROLE_VALUE}>{t('defaultRole')}</SelectItem>
             {roles.map((r) => (
               <SelectItem key={r.id} value={String(r.id)}>
                 {r.name}
@@ -176,9 +175,7 @@ export default function SettingsAiAgentFields({
           </SelectContent>
         </Select>
         <p className="text-xs text-muted-foreground">
-          {value.kind === 'external'
-            ? "The agent's API requests are limited to what this role permits."
-            : 'The agent can only do what both this role and its actions allow. An action the role denies fails at runtime.'}
+          {value.kind === 'external' ? t('roleHintExternal') : t('roleHintInternal')}
         </p>
       </div>
     </AgentFormSection>
@@ -216,15 +213,13 @@ export default function SettingsAiAgentFields({
       key="triggers"
       {...sectionProps('triggers')}
       icon={Zap}
-      title="Triggers"
-      hint="When the agent runs on its own"
+      title={t('triggers')}
+      hint={t('triggersHint')}
     >
       <label className="flex cursor-pointer items-center justify-between gap-2">
         <span>
-          <span className="text-sm">React to mentions</span>
-          <span className="block text-xs text-muted-foreground">
-            Run when @-mentioned in a comment.
-          </span>
+          <span className="text-sm">{t('onMention')}</span>
+          <span className="block text-xs text-muted-foreground">{t('onMentionHint')}</span>
         </span>
         <Switch
           checked={value.triggerOnMention}
@@ -233,10 +228,8 @@ export default function SettingsAiAgentFields({
       </label>
       <label className="flex cursor-pointer items-center justify-between gap-2">
         <span>
-          <span className="text-sm">React to delegation</span>
-          <span className="block text-xs text-muted-foreground">
-            Run when set as an issue&apos;s delegate.
-          </span>
+          <span className="text-sm">{t('onDelegation')}</span>
+          <span className="block text-xs text-muted-foreground">{t('onDelegationHint')}</span>
         </span>
         <Switch
           checked={value.triggerOnAssign}
@@ -252,8 +245,8 @@ export default function SettingsAiAgentFields({
         key="skills"
         {...sectionProps('skills')}
         icon={Sparkles}
-        title="Skills"
-        hint="Reusable instructions the agent can load"
+        title={t('skills')}
+        hint={t('skillsHint')}
       >
         {skillsContent}
       </AgentFormSection>
@@ -265,8 +258,8 @@ export default function SettingsAiAgentFields({
         key="tools"
         {...sectionProps('tools')}
         icon={Wrench}
-        title="Tools"
-        hint="External integrations the agent can call"
+        title={t('tools')}
+        hint={t('toolsHint')}
       >
         {toolsContent}
       </AgentFormSection>
@@ -277,13 +270,13 @@ export default function SettingsAiAgentFields({
       key="advanced"
       {...sectionProps('advanced')}
       icon={SlidersHorizontal}
-      title="Advanced"
-      hint="Sampling, step limit, and memory"
+      title={t('advanced')}
+      hint={t('advancedHint')}
     >
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
           <label htmlFor="agent-temperature" className="text-sm font-medium">
-            Temperature
+            {t('temperature')}
           </label>
           <Input
             id="agent-temperature"
@@ -291,21 +284,21 @@ export default function SettingsAiAgentFields({
             step="0.1"
             min="0"
             max="2"
-            placeholder="Optional"
+            placeholder={t('optional')}
             value={value.temperature}
             onChange={(e) => onChange({ temperature: e.target.value })}
           />
         </div>
         <div className="space-y-1.5">
           <label htmlFor="agent-max-steps" className="text-sm font-medium">
-            Max steps
+            {t('maxSteps')}
           </label>
           <Input
             id="agent-max-steps"
             type="number"
             step="1"
             min="1"
-            placeholder="Optional"
+            placeholder={t('optional')}
             value={value.maxSteps}
             onChange={(e) => onChange({ maxSteps: e.target.value })}
           />
@@ -320,23 +313,21 @@ export default function SettingsAiAgentFields({
             onCheckedChange={(v) => onChange({ memoryEnabled: v === true })}
           />
           <span>
-            <span className="text-sm font-medium">Conversation memory</span>
-            <span className="block text-xs text-muted-foreground">
-              Recall recent messages within a conversation thread.
-            </span>
+            <span className="text-sm font-medium">{t('memory')}</span>
+            <span className="block text-xs text-muted-foreground">{t('memoryHint')}</span>
           </span>
         </label>
         {value.memoryEnabled && (
           <div className="space-y-1.5 pl-6">
             <label htmlFor="agent-memory-n" className="text-sm font-medium">
-              Remember last N messages
+              {t('memoryCount')}
             </label>
             <Input
               id="agent-memory-n"
               type="number"
               step="1"
               min="1"
-              placeholder="e.g. 20"
+              placeholder={t('memoryCountPlaceholder')}
               value={value.memoryLastMessages}
               onChange={(e) => onChange({ memoryLastMessages: e.target.value })}
             />
@@ -351,18 +342,18 @@ export default function SettingsAiAgentFields({
   // container so the nav's scroll spy can track which section is in view.
   if (expanded && value.kind === 'internal') {
     const navSections: SectionNavItem[] = [
-      { id: 'basics', label: 'Basics', icon: IdCard },
-      { id: 'model', label: 'Model', icon: Cpu },
-      { id: 'triggers', label: 'Triggers', icon: Zap },
+      { id: 'basics', label: t('basics'), icon: IdCard },
+      { id: 'model', label: t('model'), icon: Cpu },
+      { id: 'triggers', label: t('triggers'), icon: Zap },
       {
         id: 'actions',
-        label: 'Actions',
+        label: t('actions'),
         icon: ListChecks,
         badge: tools.length > 0 ? `${activeCount}/${tools.length}` : undefined,
       },
-      ...(skillsSection ? [{ id: 'skills', label: 'Skills', icon: Sparkles }] : []),
-      ...(toolsSection ? [{ id: 'tools', label: 'Tools', icon: Wrench }] : []),
-      { id: 'advanced', label: 'Advanced', icon: SlidersHorizontal },
+      ...(skillsSection ? [{ id: 'skills', label: t('skills'), icon: Sparkles }] : []),
+      ...(toolsSection ? [{ id: 'tools', label: t('tools'), icon: Wrench }] : []),
+      { id: 'advanced', label: t('advanced'), icon: SlidersHorizontal },
     ];
 
     return (

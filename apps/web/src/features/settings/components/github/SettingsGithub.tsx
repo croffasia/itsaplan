@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsCard from '@/components/common/page/SettingsCard';
@@ -12,6 +13,7 @@ import GithubAutomationsCard from './GithubAutomationsCard';
 // connection and the pull request automations. Every control writes immediately;
 // there is no form-level save.
 export default function SettingsGithub({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('settings.github');
   const projectKey = project.project.key;
   const { can } = usePermissions();
   const settingsQuery = useGithubSettingsQuery(projectKey);
@@ -26,8 +28,8 @@ export default function SettingsGithub({ project }: { project: ProjectDetail }) 
     <div className="space-y-10">
       <SettingsCard>
         <SettingsRow
-          title="Enable GitHub integration"
-          description="A pull request that mentions an issue, like “Closes KEY-123”, is linked to it."
+          title={t('enable')}
+          description={t('enableHint')}
           control={
             <Switch
               checked={settings.enabled}

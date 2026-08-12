@@ -3,6 +3,7 @@ import type { ConfiguredTool } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useTranslations } from 'next-intl';
 
 // One configured tool as a table row: the tool name with the integration and
 // credential it runs on below, the token permissions it needs as badges, and a
@@ -22,6 +23,7 @@ export function ToolConfigRow({
   canDelete: boolean;
   onDelete: () => void;
 }) {
+  const t = useTranslations('settings.tools');
   const on = tool.credentialLabel
     ? `${integrationLabel} · ${tool.credentialLabel}`
     : integrationLabel;
@@ -48,7 +50,7 @@ export function ToolConfigRow({
             ))}
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">No scopes</span>
+          <span className="text-xs text-muted-foreground">{t('noScopes')}</span>
         )}
       </TableCell>
       <TableCell className="px-3 py-2 pt-3 align-top">
@@ -59,7 +61,7 @@ export function ToolConfigRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
-              aria-label="Delete tool"
+              aria-label={t('delete')}
             >
               <Trash2 className="size-4" />
             </Button>

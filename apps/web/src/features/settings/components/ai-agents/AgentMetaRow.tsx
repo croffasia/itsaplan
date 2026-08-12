@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import { AtSign, BookOpen, Sparkles, UserRoundCheck, Wrench, Zap } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // A single meta chip: an icon plus a short value. `accent` tints it for the enabled
 // triggers so they stand out from the neutral counts.
@@ -27,8 +28,6 @@ function MetaChip({
   );
 }
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
 // The configuration chips for an internal agent: its model and provider, and the counts
 // of granted actions, configured tools, and enabled skills. `providerLabel` maps the
 // provider key to a readable label from the integration catalog.
@@ -39,16 +38,17 @@ export function AgentMetaRow({
   agent: AiAgent;
   providerLabel: (key: string) => string;
 }) {
+  const t = useTranslations('settings.agents');
   const model = agent.model
     ? `${agent.model}${agent.modelProvider ? ` · ${providerLabel(agent.modelProvider)}` : ''}`
-    : 'No model set';
+    : t('noModel');
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <MetaChip icon={Sparkles}>{model}</MetaChip>
-      <MetaChip icon={Zap}>{plural(agent.actionCount, 'action', 'actions')}</MetaChip>
-      <MetaChip icon={Wrench}>{plural(agent.toolCount, 'tool', 'tools')}</MetaChip>
-      <MetaChip icon={BookOpen}>{plural(agent.skillCount, 'skill', 'skills')}</MetaChip>
+      <MetaChip icon={Zap}>{t('actionCount', { count: agent.actionCount })}</MetaChip>
+      <MetaChip icon={Wrench}>{t('toolCount', { count: agent.toolCount })}</MetaChip>
+      <MetaChip icon={BookOpen}>{t('skillCount', { count: agent.skillCount })}</MetaChip>
     </div>
   );
 }
@@ -56,19 +56,20 @@ export function AgentMetaRow({
 // The enabled run triggers for an internal agent (mention, delegation), or a muted
 // dash when none are on.
 export function AgentTriggers({ agent }: { agent: AiAgent }) {
+  const t = useTranslations('settings.agents');
   if (!agent.triggerOnMention && !agent.triggerOnAssign) {
-    return <span className="text-xs text-muted-foreground">None</span>;
+    return <span className="text-xs text-muted-foreground">{t('triggersNone')}</span>;
   }
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {agent.triggerOnMention && (
         <MetaChip icon={AtSign} accent>
-          Mention
+          {t('triggerMention')}
         </MetaChip>
       )}
       {agent.triggerOnAssign && (
         <MetaChip icon={UserRoundCheck} accent>
-          Delegation
+          {t('triggerDelegation')}
         </MetaChip>
       )}
     </div>

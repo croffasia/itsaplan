@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useTranslations } from 'next-intl';
 
 // One selectable capability row (a skill or a configured tool), normalized so the
 // list renders skills and tools the same way. `search` is the lowercased haystack the
@@ -27,6 +28,8 @@ export function AgentCapabilityList({
   onToggle: (id: number, on: boolean) => void;
   searchPlaceholder: string;
 }) {
+  const t = useTranslations('settings.agents');
+  const tCommon = useTranslations('common');
   const [query, setQuery] = useState('');
 
   const matches = useMemo(() => {
@@ -53,7 +56,7 @@ export function AgentCapabilityList({
               type="button"
               onClick={() => setQuery('')}
               className="absolute top-1/2 right-3 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
-              aria-label="Clear search"
+              aria-label={tCommon('clearSearch')}
             >
               <X className="size-4" />
             </button>
@@ -64,7 +67,7 @@ export function AgentCapabilityList({
       <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
         {matches.length === 0 ? (
           <p className="py-4 text-center text-xs text-muted-foreground">
-            No match for &ldquo;{query.trim()}&rdquo;.
+            {t('noMatch', { query: query.trim() })}
           </p>
         ) : (
           matches.map((item) => (

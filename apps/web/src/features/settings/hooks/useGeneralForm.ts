@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import { useUpdateProject } from '@/services/projects.service';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -23,6 +24,7 @@ export interface GeneralForm {
 // key is read-only. Shared between the header Save button and the body fields, so
 // it lives in a hook and is threaded into both.
 export function useGeneralForm(project: ProjectDetail): GeneralForm {
+  const t = useTranslations('settings.general');
   const { isOwner } = usePermissions();
   const { key, name: savedName, description: savedDescription } = project.project;
   const updateProject = useUpdateProject();
@@ -39,7 +41,7 @@ export function useGeneralForm(project: ProjectDetail): GeneralForm {
       projectKey: key,
       patch: { name: trimmedName, description },
     });
-    toast.success('Project updated');
+    toast.success(t('saved'));
   }
 
   return {

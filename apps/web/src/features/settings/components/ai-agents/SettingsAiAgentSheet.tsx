@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { AgentChatPanel } from '@/components/common/agent-chat/AgentChatPanel';
 import { useAgentChat } from '@/hooks/useAgentChat';
 import { AgentSheetForm } from './AgentSheetForm';
+import { useTranslations } from 'next-intl';
 
 // Full-width sheet for one agent. Opened for create (agent null) or to edit an
 // existing one. Create and edit share the same form (AgentSheetForm): on create the
@@ -58,6 +59,8 @@ function SheetBody({
   projectKey: string;
   initialAgent: AiAgent | null;
 }) {
+  const t = useTranslations('settings.agents');
+  const tCommon = useTranslations('common');
   // The agent just created in this sheet, if any. Once set, the form switches from
   // create to edit for it without remounting.
   const [createdAgent, setCreatedAgent] = useState<AiAgent | null>(null);
@@ -87,9 +90,11 @@ function SheetBody({
         </div>
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <div className="min-w-0">
-            <SheetTitle className="truncate text-sm">{agent ? agent.name : 'New agent'}</SheetTitle>
+            <SheetTitle className="truncate text-sm">
+              {agent ? agent.name : t('newAgent')}
+            </SheetTitle>
             <SheetDescription className="truncate text-xs">
-              {agent ? `@${agent.username}` : 'A bot user you can delegate issues to'}
+              {agent ? `@${agent.username}` : t('sheetSubtitle')}
             </SheetDescription>
           </div>
           {agent && (
@@ -104,7 +109,7 @@ function SheetBody({
             variant="ghost"
             size="icon"
             className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
-            aria-label="Close"
+            aria-label={tCommon('close')}
           >
             <X className="size-4" />
           </Button>

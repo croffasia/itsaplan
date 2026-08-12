@@ -3,6 +3,7 @@ import EmailSettings from './EmailSettings';
 import TelegramSettings from './TelegramSettings';
 import type { EmailForm } from '../../hooks/useEmailForm';
 import type { TelegramForm } from '../../hooks/useTelegramForm';
+import { useTranslations } from 'next-intl';
 
 export type NotificationTab = 'email' | 'telegram';
 
@@ -19,6 +20,7 @@ export default function SettingsNotifications({
   emailForm: EmailForm;
   telegramForm: TelegramForm;
 }) {
+  const t = useTranslations('settings.notifications');
   return (
     <Tabs
       value={tab}
@@ -26,8 +28,8 @@ export default function SettingsNotifications({
       className="flex flex-col gap-8"
     >
       <TabsList variant="line">
-        <TabsTrigger value="email">Email</TabsTrigger>
-        <TabsTrigger value="telegram">Telegram</TabsTrigger>
+        <TabsTrigger value="email">{t('email')}</TabsTrigger>
+        <TabsTrigger value="telegram">{t('telegram')}</TabsTrigger>
       </TabsList>
 
       <TabsContent value="email" className="mt-0">

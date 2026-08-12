@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { LabelGroup } from '@/lib/api';
 import { colorDot } from '@/components/common/fields/colorDot';
 import Modal from '@/components/common/overlay/Modal';
@@ -14,7 +15,7 @@ import {
   useUpdateLabelGroup,
 } from '../../services/settings.service';
 import type { LabelsImportPlan, PlannedGroup, PlannedLabel } from '../../utils/labelsTransfer';
-import { transferActionLabel } from '../../utils/transferAction';
+import { useTransferActionLabel } from '../../utils/transferAction';
 
 function ItemRow({
   color,
@@ -27,6 +28,7 @@ function ItemRow({
   meta?: string;
   action: 'create' | 'update' | 'unchanged';
 }) {
+  const actionLabel = useTransferActionLabel();
   return (
     <div className="flex items-center gap-3 px-3 py-2.5">
       {colorDot(color)}
@@ -36,7 +38,7 @@ function ItemRow({
         variant={action === 'unchanged' ? 'outline' : 'secondary'}
         className="shrink-0 px-1.5 py-0 text-[10px] font-normal"
       >
-        {transferActionLabel(action)}
+        {actionLabel(action)}
       </Badge>
     </div>
   );
@@ -56,6 +58,8 @@ export default function LabelsImportDialog({
   existingGroups: LabelGroup[];
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.labels');
+  const tCommon = useTranslations('common');
   const createGroup = useCreateLabelGroup(projectKey);
   const updateGroup = useUpdateLabelGroup(projectKey);
   const createLabel = useCreateLabel(projectKey);
@@ -103,7 +107,7 @@ export default function LabelsImportDialog({
         }
       }
 
-      toast.success(`Applied labels: ${created} created, ${updated} updated.`);
+      toast.success(t('imported', { created, updated }));
       onClose();
     } catch {
       // The failed mutation is toasted by the global handler; keep the dialog open.
@@ -112,17 +116,14 @@ export default function LabelsImportDialog({
   }
 
   return (
-    <Modal title="Apply labels from clipboard" onClose={onClose} wide>
+    <Modal title={t('importTitle')} onClose={onClose} wide>
       <div className="space-y-4">
-        <p className="text-xs text-muted-foreground">
-          {applicable} item{applicable === 1 ? '' : 's'} will be applied. A matching label keeps its
-          group; only its color is updated.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('importSummary', { count: applicable })}</p>
 
         {plan.groups.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-              Groups
+              {t('groups')}
             </p>
             <div className="divide-y divide-border/60 overflow-hidden rounded-md border border-border/60">
               {plan.groups.map((g) => (
@@ -135,7 +136,7 @@ export default function LabelsImportDialog({
         {plan.labels.length > 0 && (
           <div className="space-y-1.5">
             <p className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-              Labels
+              {t('labels')}
             </p>
             <div className="max-h-[40vh] divide-y divide-border/60 overflow-y-auto rounded-md border border-border/60">
               {plan.labels.map((l) => (
@@ -143,7 +144,7 @@ export default function LabelsImportDialog({
                   key={l.name}
                   color={l.color}
                   name={l.name}
-                  meta={l.group ?? 'Ungrouped'}
+                  meta={l.group ?? t('ungrouped')}
                   action={l.action}
                 />
               ))}
@@ -153,10 +154,10 @@ export default function LabelsImportDialog({
 
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button onClick={apply} disabled={busy || applicable === 0}>
-            Apply {applicable > 0 ? applicable : ''} item{applicable === 1 ? '' : 's'}
+            {t('importApply', { count: applicable })}
           </Button>
         </div>
       </div>

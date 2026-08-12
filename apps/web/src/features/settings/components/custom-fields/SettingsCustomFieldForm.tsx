@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { Check } from 'lucide-react';
 import { type CustomFieldType } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -27,17 +28,11 @@ const FIELD_TYPES: CustomFieldType[] = [
 ];
 
 // Display labels for the field types. The stored value stays the enum key; a few
-// read as jargon when shown raw, so they map to plain words here.
-export const FIELD_TYPE_LABELS: Record<CustomFieldType, string> = {
-  text: 'text',
-  markdown: 'markdown',
-  url: 'url',
-  number: 'number',
-  boolean: 'checkbox',
-  date: 'date',
-  select: 'select',
-  multi_select: 'multi-select',
-};
+// read as jargon when shown raw, so they map to plain words in the messages.
+export function useFieldTypeLabel() {
+  const t = useTranslations('settings.customFields.fieldTypes');
+  return (fieldType: CustomFieldType) => t(fieldType);
+}
 
 export interface FieldFormValues {
   name: string;
@@ -107,6 +102,9 @@ export function SettingsCustomFieldForm({
   onSubmit: (values: FieldFormValues) => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations('settings.customFields');
+  const tCommon = useTranslations('common');
+  const fieldTypeLabel = useFieldTypeLabel();
   const [name, setName] = useState(initial?.name ?? '');
   const [fieldType, setFieldType] = useState<CustomFieldType>(initial?.fieldType ?? 'text');
   const [showInBody, setShowInBody] = useState(initial?.showInBody ?? false);
@@ -142,7 +140,7 @@ export function SettingsCustomFieldForm({
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="Field name"
+          placeholder={t('namePlaceholder')}
           className="h-8 flex-1 bg-background"
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !needsOptions) submit();
@@ -150,10 +148,10 @@ export function SettingsCustomFieldForm({
           }}
         />
         <Button size="sm" className="h-8" disabled={!name.trim()} onClick={submit}>
-          {mode === 'add' ? 'Add' : 'Save'}
+          {mode === 'add' ? tCommon('add') : tCommon('save')}
         </Button>
         <Button variant="ghost" size="sm" className="h-8 text-muted-foreground" onClick={onCancel}>
-          Cancel
+          {tCommon('cancel')}
         </Button>
       </div>
 
@@ -161,38 +159,38 @@ export function SettingsCustomFieldForm({
         <Input
           value={options}
           onChange={(e) => setOptions(e.target.value)}
-          placeholder="Options: Low, Medium, High"
+          placeholder={t('optionsPlaceholder')}
           className="h-8 bg-background"
         />
       )}
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-muted-foreground">Type</span>
+          <span className="text-xs text-muted-foreground">{t('type')}</span>
           {mode === 'add' ? (
             <Select value={fieldType} onValueChange={(v) => changeType(v as CustomFieldType)}>
               <SelectTrigger className="h-7 w-32 bg-background">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {FIELD_TYPES.map((t) => (
-                  <SelectItem key={t} value={t}>
-                    {FIELD_TYPE_LABELS[t]}
+                {FIELD_TYPES.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {fieldTypeLabel(option)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           ) : (
-            <span className="text-xs text-foreground">{FIELD_TYPE_LABELS[fieldType]}</span>
+            <span className="text-xs text-foreground">{fieldTypeLabel(fieldType)}</span>
           )}
         </div>
         <div className="flex items-center gap-1">
           <Toggle
             active={showInBody}
             onClick={() => setShowInBody((v) => !v)}
-            tooltip="Shows in the issue body, not Properties"
+            tooltip={t('mainInfoTooltip')}
           >
-            Main info
+            {t('mainInfo')}
           </Toggle>
         </div>
       </div>

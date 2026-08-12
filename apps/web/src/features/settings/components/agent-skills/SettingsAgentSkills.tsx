@@ -8,12 +8,15 @@ import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { SkillEditDialog } from './SkillEditDialog';
 import { SkillRow } from './SkillRow';
+import { useTranslations } from 'next-intl';
 
 // Project settings for the agent skill library: reusable instructions given to
 // internal agents. A skill is a SKILL.md plus optional reference files; it can be
 // written inline, uploaded, or imported from GitHub. Creating opens a dialog;
 // editing opens a separate dialog that also manages reference files.
 export default function SettingsAgentSkills({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('settings.skills');
+  const tCommon = useTranslations('common');
   const projectKey = project.project.key;
   const skillsQuery = useSkillsQuery(projectKey);
   const skills = skillsQuery.data ?? [];
@@ -28,10 +31,7 @@ export default function SettingsAgentSkills({ project }: { project: ProjectDetai
       {skillsQuery.isPending ? (
         <ListSkeleton rows={3} rowClassName="h-12" />
       ) : skills.length === 0 ? (
-        <EmptyState
-          title="No skills yet"
-          description="Write markdown, upload a file, or import from GitHub."
-        />
+        <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
           <Table className="min-w-[820px] table-fixed">
@@ -42,12 +42,14 @@ export default function SettingsAgentSkills({ project }: { project: ProjectDetai
             </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="text-xs font-medium text-muted-foreground">Skill</TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">
-                  Description
+                  {t('skill')}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  {t('description')}
                 </TableHead>
                 <TableHead className="text-right text-xs font-medium text-muted-foreground">
-                  Actions
+                  {tCommon('actions')}
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -78,8 +80,8 @@ export default function SettingsAgentSkills({ project }: { project: ProjectDetai
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title="Delete skill"
-          confirmLabel="Delete skill"
+          title={t('delete')}
+          confirmLabel={t('delete')}
           message={
             <>
               Delete the skill “{deleting.name}”? It will be removed from every agent that uses it.

@@ -3,6 +3,7 @@ import { Check, Copy } from 'lucide-react';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from 'next-intl';
 
 // One-time reveal of an agent's plaintext API key, shown right after create or
 // regenerate. The secret is passed in and never stored in list state — it is only
@@ -16,6 +17,8 @@ export default function AgentKeyRevealModal({
   apiKey: string;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.agents');
+  const tCommon = useTranslations('common');
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -31,9 +34,7 @@ export default function AgentKeyRevealModal({
   return (
     <Modal title={title} onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Copy this key now. For security, it is shown only once and cannot be retrieved later.
-        </p>
+        <p className="text-sm text-muted-foreground">{t('keyWarning')}</p>
         <div className="flex items-center gap-2">
           <Input
             readOnly
@@ -45,14 +46,14 @@ export default function AgentKeyRevealModal({
             variant="outline"
             size="icon"
             className="shrink-0"
-            title="Copy key"
+            title={t('copyKey')}
             onClick={copy}
           >
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
           </Button>
         </div>
         <div className="flex justify-end">
-          <Button onClick={onClose}>Done</Button>
+          <Button onClick={onClose}>{tCommon('done')}</Button>
         </div>
       </div>
     </Modal>

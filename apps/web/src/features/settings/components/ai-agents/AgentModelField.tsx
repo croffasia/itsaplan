@@ -11,6 +11,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useTranslations } from 'next-intl';
 
 // Model picker for an agent: a searchable list of the selected provider's models
 // (from the models.dev registry) that also accepts a model id typed by hand, so a
@@ -28,6 +29,7 @@ export default function AgentModelField({
   loading: boolean;
   disabled: boolean;
 }) {
+  const t = useTranslations('settings.agents');
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -53,18 +55,14 @@ export default function AgentModelField({
           className="w-full justify-between font-normal"
         >
           <span className={value ? 'truncate' : 'truncate text-muted-foreground'}>
-            {value || 'Choose a model'}
+            {value || t('chooseModel')}
           </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
         <Command>
-          <CommandInput
-            placeholder="Search or type a model id"
-            value={search}
-            onValueChange={setSearch}
-          />
+          <CommandInput placeholder={t('searchModel')} value={search} onValueChange={setSearch} />
           <CommandList
             className="max-h-[16rem]"
             // The field lives inside a Radix Sheet whose scroll lock blocks wheel
@@ -75,12 +73,12 @@ export default function AgentModelField({
           >
             {!loading && !showCustom && <CommandEmpty>No models found.</CommandEmpty>}
             {loading && (
-              <div className="px-3 py-2 text-sm text-muted-foreground">Loading models…</div>
+              <div className="px-3 py-2 text-sm text-muted-foreground">{t('loadingModels')}</div>
             )}
             {showCustom && (
               <CommandGroup>
                 <CommandItem value={query} onSelect={() => select(query)}>
-                  Use &quot;{query}&quot;
+                  {t('useCustomModel', { query })}
                 </CommandItem>
               </CommandGroup>
             )}

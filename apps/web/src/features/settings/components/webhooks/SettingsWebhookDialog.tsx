@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { WEBHOOK_EVENT_TYPES, type Webhook, type WebhookEventType } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,8 @@ export function SettingsWebhookDialog({
   onSave: (value: WebhookFormValue) => Promise<void>;
   onClose: () => void;
 }) {
+  const t = useTranslations('settings.webhooks');
+  const tCommon = useTranslations('common');
   const [url, setUrl] = useState(initial?.url ?? '');
   const [events, setEvents] = useState<Set<WebhookEventType>>(new Set(initial?.events ?? []));
   const [isActive, setIsActive] = useState(initial?.isActive ?? true);
@@ -48,13 +51,13 @@ export function SettingsWebhookDialog({
     await onSave({ url: url.trim(), events: [...events], isActive });
   }
 
-  const actionLabel = initial ? 'Save webhook' : 'Create webhook';
-  const pendingLabel = initial ? 'Saving…' : 'Creating…';
+  const actionLabel = initial ? t('save') : t('create');
+  const pendingLabel = initial ? tCommon('saving') : t('creating');
 
   return (
     <Modal
-      title={initial ? 'Edit webhook' : 'New webhook'}
-      description="Set the payload URL and choose which project events to send."
+      title={t(initial ? 'dialogEdit' : 'dialogNew')}
+      description={t('dialogHint')}
       projectKey={projectKey}
       onClose={onClose}
       wide
@@ -67,7 +70,7 @@ export function SettingsWebhookDialog({
         }}
       >
         <div className="space-y-1.5">
-          <Label htmlFor="webhook-url">Payload URL</Label>
+          <Label htmlFor="webhook-url">{t('payloadUrl')}</Label>
           <Input
             id="webhook-url"
             autoFocus
@@ -79,7 +82,7 @@ export function SettingsWebhookDialog({
         </div>
 
         <div className="space-y-1.5">
-          <span className="text-sm font-medium">Events</span>
+          <span className="text-sm font-medium">{t('events')}</span>
           <div className="grid gap-2 sm:grid-cols-2">
             {WEBHOOK_EVENT_TYPES.map((event) => (
               <label key={event} className="flex cursor-pointer items-center gap-2">
@@ -96,13 +99,13 @@ export function SettingsWebhookDialog({
         <div className="border-t border-border/50 pt-4">
           <label className="flex w-fit cursor-pointer items-center gap-2 text-sm">
             <Checkbox checked={isActive} onCheckedChange={(v) => setIsActive(v === true)} />
-            <span>Active</span>
+            <span>{t('active')}</span>
           </label>
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border/50 pt-4">
           <Button type="button" variant="ghost" onClick={onClose} disabled={saving}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button type="submit" disabled={!valid || saving}>
             {saving ? pendingLabel : actionLabel}

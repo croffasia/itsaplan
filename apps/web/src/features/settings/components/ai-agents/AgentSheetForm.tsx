@@ -36,6 +36,7 @@ import {
   type AgentFormValue,
 } from '../../utils/agentForm';
 import { integrationLabel } from '../../utils/integrationLabels';
+import { useTranslations } from 'next-intl';
 
 // The Edit tab of the agent sheet, used for both create and edit. With no agent it
 // creates one; once created (onCreated lifts it to the sheet) the same form switches
@@ -58,6 +59,8 @@ export function AgentSheetForm({
   revealedKey: string | null;
   onDismissKey: () => void;
 }) {
+  const t = useTranslations('settings.agents');
+  const tCommon = useTranslations('common');
   const [value, setValue] = useState<AgentFormValue>(() => initialAgentValue(agent ?? undefined));
   const isCreate = agent == null;
   // While creating, the username is derived from the name until the user edits it.
@@ -193,18 +196,16 @@ export function AgentSheetForm({
   // skill library the agent may load.
   const skillsContent = showSkills ? (
     skillsLibrary.length === 0 ? (
-      <p className="text-xs text-muted-foreground">
-        No skills in the library yet. Add one on the Skills page.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('noSkills')}</p>
     ) : (
       <AgentCapabilityList
-        searchPlaceholder="Search skills"
+        searchPlaceholder={t('searchSkills')}
         onToggle={toggleSkill}
         items={skillsLibrary.map((skill) => ({
           id: skill.id,
           checked: selectedSkills.includes(skill.id),
           title: skill.name,
-          subtitle: skill.description || 'No description',
+          subtitle: skill.description || t('noDescription'),
           search: `${skill.name} ${skill.description ?? ''}`.toLowerCase(),
         }))}
       />
@@ -217,12 +218,10 @@ export function AgentSheetForm({
   // The Tools section body: the configured custom tools the agent may call.
   const toolsContent = showTools ? (
     toolsLibrary.length === 0 ? (
-      <p className="text-xs text-muted-foreground">
-        No tools configured yet. Add one on the Tools page.
-      </p>
+      <p className="text-xs text-muted-foreground">{t('noTools')}</p>
     ) : (
       <AgentCapabilityList
-        searchPlaceholder="Search tools"
+        searchPlaceholder={t('searchTools')}
         onToggle={toggleTool}
         items={toolsLibrary.map((tool) => {
           const toolLabel =
@@ -299,7 +298,7 @@ export function AgentSheetForm({
             className={expanded ? 'min-w-40' : 'w-full'}
             disabled={!isAgentFormValid(value) || saving}
           >
-            {saving ? 'Saving…' : isCreate ? 'Create agent' : 'Save agent'}
+            {saving ? tCommon('saving') : isCreate ? t('create') : t('save')}
           </Button>
         </div>
       </div>

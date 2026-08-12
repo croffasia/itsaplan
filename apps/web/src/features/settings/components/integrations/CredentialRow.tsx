@@ -3,6 +3,7 @@ import type { IntegrationCredential } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
+import { useTranslations } from 'next-intl';
 
 // One credential as a table row: the integration name and optional account label,
 // the redacted fields as badges, and edit/delete actions gated by permission.
@@ -21,6 +22,7 @@ export function CredentialRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('settings.integrations');
   const fields = Object.entries(credential.redacted);
   return (
     <TableRow className="group/item">
@@ -47,7 +49,7 @@ export function CredentialRow({
             ))}
           </div>
         ) : (
-          <span className="text-xs text-muted-foreground">No fields</span>
+          <span className="text-xs text-muted-foreground">{t('noFields')}</span>
         )}
       </TableCell>
       <TableCell className="px-3 py-2 pt-3 align-top">
@@ -58,7 +60,7 @@ export function CredentialRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-foreground"
               onClick={onEdit}
-              aria-label="Edit credential"
+              aria-label={t('edit')}
             >
               <Pencil className="size-4" />
             </Button>
@@ -69,7 +71,7 @@ export function CredentialRow({
               size="icon"
               className="size-8 text-muted-foreground hover:text-destructive"
               onClick={onDelete}
-              aria-label="Delete credential"
+              aria-label={t('delete')}
             >
               <Trash2 className="size-4" />
             </Button>

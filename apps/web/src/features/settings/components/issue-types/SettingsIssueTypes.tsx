@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type IssueType, type ProjectDetail } from '@/lib/api';
 import { DEFAULT_COLOR } from '@/utils/project';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -41,13 +42,16 @@ export default function SettingsIssueTypes({
   const [color, setColor] = useState(DEFAULT_COLOR);
   const [isDefault, setIsDefault] = useState(false);
   const [deleting, setDeleting] = useState<IssueType | null>(null);
+  const t = useTranslations('settings.issueTypes');
+  const tCommon = useTranslations('common');
   const can = useSettingsCan();
   const createIssueType = useCreateIssueType(project.project.key);
   const updateIssueType = useUpdateIssueType(project.project.key);
   const deleteIssueType = useDeleteIssueType(project.project.key);
 
   const types = project.issueTypes;
-  const issueCount = (typeId: number) => project.issues.filter((t) => t.typeId === typeId).length;
+  const issueCount = (typeId: number) =>
+    project.issues.filter((issue) => issue.typeId === typeId).length;
 
   useEffect(() => {
     if (adding) {
@@ -58,12 +62,12 @@ export default function SettingsIssueTypes({
     }
   }, [adding]);
 
-  function startEdit(t: IssueType) {
+  function startEdit(type: IssueType) {
     onAddingChange(false);
-    setEditingId(t.id);
-    setName(t.name);
-    setColor(t.color);
-    setIsDefault(t.isDefault);
+    setEditingId(type.id);
+    setName(type.name);
+    setColor(type.color);
+    setIsDefault(type.isDefault);
   }
 
   async function add() {
@@ -72,9 +76,12 @@ export default function SettingsIssueTypes({
     onAddingChange(false);
   }
 
-  async function saveEdit(t: IssueType) {
+  async function saveEdit(type: IssueType) {
     if (!name.trim()) return;
-    await updateIssueType.mutateAsync({ id: t.id, patch: { name: name.trim(), color, isDefault } });
+    await updateIssueType.mutateAsync({
+      id: type.id,
+      patch: { name: name.trim(), color, isDefault },
+    });
     setEditingId(null);
   }
 
@@ -84,7 +91,7 @@ export default function SettingsIssueTypes({
     <div className="flex items-center gap-1.5">
       <Checkbox id={id} checked={isDefault} onCheckedChange={(v) => setIsDefault(v === true)} />
       <Label htmlFor={id} className="text-xs whitespace-nowrap text-muted-foreground">
-        Default
+        {t('default')}
       </Label>
     </div>
   );
@@ -95,12 +102,7 @@ export default function SettingsIssueTypes({
   const deletingCount = deleting ? issueCount(deleting.id) : 0;
 
   if (showEmpty) {
-    return (
-      <EmptyState
-        title="No issue types yet"
-        description="Add the kinds of issues this project can hold, each with its own fields."
-      />
-    );
+    return <EmptyState title={t('emptyTitle')} description={t('emptyHint')} />;
   }
 
   const inlineForm = (
@@ -112,7 +114,7 @@ export default function SettingsIssueTypes({
     <SettingsInlineForm
       name={name}
       onNameChange={setName}
-      placeholder="Type name"
+      placeholder={t('namePlaceholder')}
       submitLabel={submitLabel}
       onSubmit={onSubmit}
       onCancel={onCancel}
@@ -131,43 +133,45 @@ export default function SettingsIssueTypes({
         </colgroup>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="text-xs font-medium text-muted-foreground">Type</TableHead>
-            <TableHead className="text-xs font-medium text-muted-foreground">Issues</TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('columns.type')}
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('columns.issues')}
+            </TableHead>
             <TableHead className="text-right text-xs font-medium text-muted-foreground">
-              Actions
+              {tCommon('actions')}
             </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {types.map((t) =>
-            editingId === t.id ? (
-              <TableRow key={t.id} className="hover:bg-transparent">
+          {types.map((type) =>
+            editingId === type.id ? (
+              <TableRow key={type.id} className="hover:bg-transparent">
                 <TableCell colSpan={3} className="px-3 py-2">
                   {inlineForm(
-                    'Save',
-                    () => void saveEdit(t),
+                    tCommon('save'),
+                    () => void saveEdit(type),
                     () => setEditingId(null),
-                    `type-default-edit-${t.id}`,
+                    `type-default-edit-${type.id}`,
                   )}
                 </TableCell>
               </TableRow>
             ) : (
-              <TableRow key={t.id} className="group/item">
+              <TableRow key={type.id} className="group/item">
                 <TableCell className="px-3 py-3 align-middle">
                   <div className="flex min-w-0 items-center gap-2">
-                    {colorDot(t.color)}
-                    <span className="truncate text-sm font-medium">{t.name}</span>
-                    {t.isDefault && (
+                    {colorDot(type.color)}
+                    <span className="truncate text-sm font-medium">{type.name}</span>
+                    {type.isDefault && (
                       <span className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-secondary-foreground">
-                        Default
+                        {t('default')}
                       </span>
                     )}
                   </div>
                 </TableCell>
                 <TableCell className="px-3 py-3 align-middle text-sm text-muted-foreground tabular-nums">
-                  {issueCount(t.id) === 0
-                    ? 'No issues'
-                    : `${issueCount(t.id)} ${issueCount(t.id) === 1 ? 'issue' : 'issues'}`}
+                  {t('issueCount', { count: issueCount(type.id) })}
                 </TableCell>
                 <TableCell className="px-3 py-2 align-middle">
                   <div className="flex items-center justify-end gap-1">
@@ -176,9 +180,9 @@ export default function SettingsIssueTypes({
                         variant="ghost"
                         size="icon"
                         className="size-8 text-muted-foreground hover:text-foreground"
-                        title="Edit issue type"
-                        aria-label="Edit issue type"
-                        onClick={() => startEdit(t)}
+                        title={t('edit')}
+                        aria-label={t('edit')}
+                        onClick={() => startEdit(type)}
                       >
                         <Pencil className="size-4" />
                       </Button>
@@ -188,9 +192,9 @@ export default function SettingsIssueTypes({
                         variant="ghost"
                         size="icon"
                         className="size-8 text-muted-foreground hover:text-destructive"
-                        title="Delete issue type"
-                        aria-label="Delete issue type"
-                        onClick={() => setDeleting(t)}
+                        title={t('delete')}
+                        aria-label={t('delete')}
+                        onClick={() => setDeleting(type)}
                       >
                         <Trash2 className="size-4" />
                       </Button>
@@ -204,7 +208,7 @@ export default function SettingsIssueTypes({
             <TableRow className="hover:bg-transparent">
               <TableCell colSpan={3} className="px-3 py-2">
                 {inlineForm(
-                  'Add',
+                  tCommon('add'),
                   () => void add(),
                   () => onAddingChange(false),
                   'type-default-new',
@@ -217,16 +221,9 @@ export default function SettingsIssueTypes({
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title={`Delete type "${deleting.name}"`}
-          confirmLabel="Delete type"
-          message={
-            <>
-              {deletingCount > 0
-                ? `${deletingCount} issue${deletingCount === 1 ? '' : 's'} ${deletingCount === 1 ? 'uses' : 'use'} this type and will no longer have a type.`
-                : 'No issues use this type.'}{' '}
-              Custom fields specific to this type are also removed. This cannot be undone.
-            </>
-          }
+          title={t('deleteTitle', { name: deleting.name })}
+          confirmLabel={t('deleteConfirm')}
+          message={t('deleteMessage', { count: deletingCount })}
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
             await deleteIssueType.mutateAsync(deleting.id);

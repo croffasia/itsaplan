@@ -1,4 +1,5 @@
 import { type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 
 // Confirmation before an irreversible delete. The caller supplies the warning
@@ -6,7 +7,7 @@ import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 export default function SettingsConfirmDeleteDialog({
   title,
   message,
-  confirmLabel = 'Delete',
+  confirmLabel,
   onConfirm,
   onClose,
 }: {
@@ -16,10 +17,11 @@ export default function SettingsConfirmDeleteDialog({
   onConfirm: () => Promise<void>;
   onClose: () => void;
 }) {
+  const t = useTranslations('common');
   return (
     <ConfirmDialog
       title={title}
-      confirmLabel={confirmLabel}
+      confirmLabel={confirmLabel ?? t('delete')}
       onConfirm={onConfirm}
       onClose={onClose}
     >

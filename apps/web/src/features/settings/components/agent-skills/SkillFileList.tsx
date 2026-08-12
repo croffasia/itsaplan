@@ -1,5 +1,6 @@
 import { FileText, Trash2, Upload } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // One entry in the skill's file explorer. SKILL.md is pinned and cannot be
 // deleted; reference files carry a size and a delete action.
@@ -30,10 +31,11 @@ export function SkillFileList({
   onDelete: (path: string) => void;
   onAddFile: (file: File) => void;
 }) {
+  const t = useTranslations('settings.skills');
   return (
     <div className="flex min-h-0 flex-col">
       <div className="px-1 pb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-        Files
+        {t('files')}
       </div>
       <div className="flex-1 space-y-0.5 overflow-y-auto">
         {files.map((f) => {
@@ -58,7 +60,7 @@ export function SkillFileList({
                 {dirtyPaths.has(f.path) && (
                   <span
                     className="size-1.5 shrink-0 rounded-full bg-primary"
-                    aria-label="Unsaved changes"
+                    aria-label={t('unsaved')}
                   />
                 )}
               </button>
@@ -84,7 +86,7 @@ export function SkillFileList({
       {canEdit && (
         <label className="mt-2 flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-border py-2 text-xs text-muted-foreground hover:border-foreground/30 hover:text-foreground">
           <Upload className="size-3.5" />
-          Add reference
+          {t('addReference')}
           <input
             type="file"
             className="hidden"

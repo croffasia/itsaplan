@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ClipboardPaste, Copy, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { Label, LabelGroup, PermissionResource } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useIsMac } from '@/context/useHotkeys';
+import { useTransferErrorMessage } from '../../hooks/useTransferErrorMessage';
 import LabelsImportDialog from './LabelsImportDialog';
 import {
   parseLabelsText,
@@ -37,6 +39,9 @@ export default function LabelsToolbar({
   labels: Label[];
 }) {
   const { can } = usePermissions();
+  const t = useTranslations('settings.labels');
+  const tTransfer = useTranslations('settings.transfer');
+  const transferError = useTransferErrorMessage();
   const mod = useIsMac() ? '⌘' : 'Ctrl';
   const [importing, setImporting] = useState<LabelsImportPlan | null>(null);
 
@@ -44,32 +49,32 @@ export default function LabelsToolbar({
 
   const copyLabels = useCallback(async () => {
     if (total === 0) {
-      toast.info('No labels to copy.');
+      toast.info(t('nothingToCopy'));
       return;
     }
     try {
       await navigator.clipboard.writeText(serializeLabels(groups, labels));
-      toast.success(`Copied ${labels.length} label${labels.length === 1 ? '' : 's'}.`);
+      toast.success(t('copied', { count: labels.length }));
     } catch {
-      toast.error('Could not copy to the clipboard.');
+      toast.error(tTransfer('copyFailed'));
     }
-  }, [groups, labels, total]);
+  }, [groups, labels, total, t, tTransfer]);
 
   const pasteLabels = useCallback(async () => {
     let text: string;
     try {
       text = await navigator.clipboard.readText();
     } catch {
-      toast.error('Could not read the clipboard.');
+      toast.error(tTransfer('readFailed'));
       return;
     }
     try {
       const parsed = parseLabelsText(text);
       setImporting(planLabelsImport(parsed, groups, labels));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not read labels from the clipboard.');
+      toast.error(transferError(err, t('parseFailed')));
     }
-  }, [groups, labels]);
+  }, [groups, labels, t, tTransfer, transferError]);
 
   // Cmd/Ctrl+C copies, Cmd/Ctrl+V pastes — but only on this page, not while typing,
   // and Cmd+C only when no text is selected (so an intentional text copy still works).
@@ -109,7 +114,7 @@ export default function LabelsToolbar({
             variant="ghost"
             size="icon"
             className="size-8 text-muted-foreground hover:text-foreground"
-            aria-label="Label import and export"
+            aria-label={t('menu')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -117,12 +122,12 @@ export default function LabelsToolbar({
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={() => void copyLabels()} disabled={total === 0}>
             <Copy className="size-4" />
-            Copy labels
+            {t('copy')}
             <DropdownMenuShortcut>{mod}C</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void pasteLabels()}>
             <ClipboardPaste className="size-4" />
-            Paste labels
+            {t('paste')}
             <DropdownMenuShortcut>{mod}V</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>

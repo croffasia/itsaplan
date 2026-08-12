@@ -18,6 +18,7 @@ import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsScheduleDialog } from './SettingsScheduleDialog';
 import { SettingsScheduleRunsSheet } from './SettingsScheduleRunsSheet';
 import { SettingsSchedulesTable } from './SettingsSchedulesTable';
+import { useTranslations } from 'next-intl';
 
 export default function SettingsSchedules({
   project,
@@ -28,6 +29,7 @@ export default function SettingsSchedules({
   requestNew: boolean;
   onNewHandled: () => void;
 }) {
+  const t = useTranslations('settings.schedules');
   const projectKey = project.project.key;
   const can = useSettingsCan();
   const schedulesQuery = useAgentSchedules(projectKey);
@@ -51,16 +53,13 @@ export default function SettingsSchedules({
 
   if (agentsQuery.isError || schedulesQuery.isError) {
     return (
-      <EmptyState
-        title="Couldn't load schedules"
-        description="Check your connection and try again."
-      >
+      <EmptyState title={t('loadFailed')} description={t('loadFailedHint')}>
         <Button
           size="sm"
           variant="outline"
           onClick={() => void Promise.all([agentsQuery.refetch(), schedulesQuery.refetch()])}
         >
-          Try again
+          {t('tryAgain')}
         </Button>
       </EmptyState>
     );
@@ -72,13 +71,10 @@ export default function SettingsSchedules({
 
   if (agents.length === 0) {
     return (
-      <EmptyState
-        title="No agents to schedule"
-        description="A schedule runs a task for one of your internal agents."
-      >
+      <EmptyState title={t('noAgents')} description={t('noAgentsHint')}>
         {can('edit') && (
           <Button size="sm" asChild>
-            <Link href={aiAgentsPath(projectKey)}>Create an agent</Link>
+            <Link href={aiAgentsPath(projectKey)}>{t('createAgent')}</Link>
           </Button>
         )}
       </EmptyState>
@@ -102,10 +98,7 @@ export default function SettingsSchedules({
   return (
     <>
       {schedules.length === 0 ? (
-        <EmptyState
-          title="No schedules yet"
-          description="Pick an agent, a task, and how often it runs."
-        />
+        <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
           <SettingsSchedulesTable
@@ -139,14 +132,12 @@ export default function SettingsSchedules({
 
       {deleting && (
         <SettingsConfirmDeleteDialog
-          title="Delete schedule"
-          confirmLabel="Delete schedule"
-          message={
-            <>
-              The schedule <span className="font-medium">{deleting.name}</span> and its run history
-              will be removed. This cannot be undone.
-            </>
-          }
+          title={t('delete')}
+          confirmLabel={t('delete')}
+          message={t.rich('deleteMessage', {
+            name: deleting.name,
+            v: (chunks) => <span className="font-medium">{chunks}</span>,
+          })}
           onClose={() => setDeleting(null)}
           onConfirm={async () => {
             await deleteSchedule.mutateAsync(deleting.id);

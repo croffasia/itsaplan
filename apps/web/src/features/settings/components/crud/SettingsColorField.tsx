@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -41,6 +42,7 @@ export default function SettingsColorField({
   onChange: (hex: string) => void;
   className?: string;
 }) {
+  const t = useTranslations('common');
   const [open, setOpen] = useState(false);
   const selected = value.trim().toLowerCase();
   return (
@@ -48,7 +50,7 @@ export default function SettingsColorField({
       <PopoverTrigger asChild>
         <button
           type="button"
-          aria-label="Pick color"
+          aria-label={t('pickColor')}
           className={cn(
             'size-6 shrink-0 cursor-pointer rounded-full border border-input shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50',
             className,

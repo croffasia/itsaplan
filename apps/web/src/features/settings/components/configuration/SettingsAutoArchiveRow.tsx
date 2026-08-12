@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import SettingsRow from '@/components/common/page/SettingsRow';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
@@ -22,6 +23,8 @@ export default function SettingsAutoArchiveRow({
   onToggle: (v: boolean) => void;
   onDays: (v: string) => void;
 }) {
+  const t = useTranslations('settings.configuration');
+
   return (
     <SettingsRow
       title={title}
@@ -36,7 +39,7 @@ export default function SettingsAutoArchiveRow({
             disabled={!editable || !on}
             className="h-8 w-20"
           />
-          <span className="text-xs text-muted-foreground">days</span>
+          <span className="text-xs text-muted-foreground">{t('days')}</span>
           <Switch checked={on} onCheckedChange={onToggle} disabled={!editable} />
         </div>
       }

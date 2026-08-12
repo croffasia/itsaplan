@@ -29,7 +29,7 @@ export function SettingsSuggestionsInput({
   value,
   suggestions,
   onValueChange,
-  triggerLabel = 'Show suggestions',
+  triggerLabel,
   ...inputProps
 }: SuggestionsInputProps) {
   const listId = useId();

@@ -5,6 +5,7 @@ import SettingsSection from '@/components/common/page/SettingsSection';
 import NotificationTelegramAccount from './NotificationTelegramAccount';
 import { NOTIFICATION_EVENTS } from '../../utils/notificationEvents';
 import type { NotificationPreferencesForm } from '../../hooks/useNotificationPreferencesForm';
+import { useTranslations } from 'next-intl';
 
 // A member's own notification preferences for the project: for each issue event, a
 // checkbox per channel (email, Telegram). Visible to every member (each edits only
@@ -16,25 +17,26 @@ import type { NotificationPreferencesForm } from '../../hooks/useNotificationPre
 const COLS = 'grid grid-cols-[1fr_5rem_5rem] items-center';
 
 export default function NotificationPreferences({ form }: { form: NotificationPreferencesForm }) {
+  const t = useTranslations('settings.notifications');
   const { emailEvents, setEmailEvents, telegramEvents, setTelegramEvents } = form;
   return (
     <div className="flex flex-col gap-10">
-      <SettingsSection title="Events">
+      <SettingsSection title={t('eventsTitle')}>
         <div className="max-w-xl">
           <div className={`${COLS} px-3 pb-1`}>
             <span />
-            <ChannelHeader icon={<Mail className="size-3.5" />} label="Email" />
-            <ChannelHeader icon={<Send className="size-3.5" />} label="Telegram" />
+            <ChannelHeader icon={<Mail className="size-3.5" />} label={t('email')} />
+            <ChannelHeader icon={<Send className="size-3.5" />} label={t('telegram')} />
           </div>
           <div className="flex flex-col">
             {NOTIFICATION_EVENTS.map((event) => (
               <ChannelRow
-                key={event.key}
-                label={event.label}
-                emailChecked={emailEvents[event.key]}
-                telegramChecked={telegramEvents[event.key]}
-                onEmail={(v) => setEmailEvents({ ...emailEvents, [event.key]: v })}
-                onTelegram={(v) => setTelegramEvents({ ...telegramEvents, [event.key]: v })}
+                key={event}
+                label={t(`events.${event}`)}
+                emailChecked={emailEvents[event]}
+                telegramChecked={telegramEvents[event]}
+                onEmail={(v) => setEmailEvents({ ...emailEvents, [event]: v })}
+                onTelegram={(v) => setTelegramEvents({ ...telegramEvents, [event]: v })}
               />
             ))}
           </div>

@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useCreateConfiguredTool } from '@/services/customTools.service';
 import { IntegrationIcon } from '../integrations/IntegrationIcon';
 import type { ToolOption } from './ToolConfigDialog';
+import { useTranslations } from 'next-intl';
 
 // The id is the fallback so several unlabelled credentials of the same integration
 // can still be told apart.
@@ -35,6 +36,8 @@ export function ToolCredentialStep({
   onBack: () => void;
   onDone: () => void;
 }) {
+  const t = useTranslations('settings.tools');
+  const tCommon = useTranslations('common');
   const matching = credentials.filter((c) => c.integrationKey === tool.integrationKey);
   const [credentialId, setCredentialId] = useState<number | null>(matching[0]?.id ?? null);
   const [busy, setBusy] = useState(false);
@@ -61,7 +64,7 @@ export function ToolCredentialStep({
           size="icon"
           className="size-8 shrink-0"
           onClick={onBack}
-          aria-label="Back to tools"
+          aria-label={t('back')}
         >
           <ChevronLeft className="size-4" />
         </Button>
@@ -79,7 +82,7 @@ export function ToolCredentialStep({
 
       {tool.scopes.length > 0 && (
         <div className="space-y-1.5">
-          <Label>Required token permissions</Label>
+          <Label>{t('scopesLabel')}</Label>
           <div className="flex flex-wrap gap-1">
             {tool.scopes.map((s) => (
               <Badge key={s} variant="secondary" className="font-mono text-[10px] font-normal">
@@ -91,10 +94,10 @@ export function ToolCredentialStep({
       )}
 
       <div className="space-y-1.5">
-        <Label>Credential</Label>
+        <Label>{t('credential')}</Label>
         {matching.length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            No {tool.integrationLabel} credential yet. Add one on the Integrations page first.
+            {t('noCredential', { integration: tool.integrationLabel })}
           </p>
         ) : (
           <Select
@@ -102,7 +105,7 @@ export function ToolCredentialStep({
             onValueChange={(v) => setCredentialId(Number(v))}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Choose a credential" />
+              <SelectValue placeholder={t('chooseCredential')} />
             </SelectTrigger>
             <SelectContent>
               {matching.map((c) => (
@@ -117,10 +120,10 @@ export function ToolCredentialStep({
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onDone} disabled={busy}>
-          Cancel
+          {tCommon('cancel')}
         </Button>
         <Button onClick={submit} disabled={!canSubmit}>
-          Add tool
+          {t('add')}
         </Button>
       </div>
     </div>

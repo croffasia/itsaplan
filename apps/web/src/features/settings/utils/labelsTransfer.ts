@@ -69,7 +69,7 @@ export function parseLabelsText(text: string): {
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error('Clipboard does not contain valid JSON.');
+    throw new Error('invalidJson');
   }
   const env = data as Partial<LabelsEnvelope>;
   if (
@@ -78,7 +78,7 @@ export function parseLabelsText(text: string): {
     !Array.isArray(env.labels) ||
     !Array.isArray(env.groups)
   ) {
-    throw new Error('Clipboard does not contain a labels export.');
+    throw new Error('wrongPayload');
   }
 
   const groups: LabelGroupTransfer[] = [];
@@ -100,7 +100,7 @@ export function parseLabelsText(text: string): {
     labels.push({ name, color: typeof raw?.color === 'string' ? raw.color : DEFAULT_COLOR, group });
   }
 
-  if (groups.length === 0 && labels.length === 0) throw new Error('The labels export is empty.');
+  if (groups.length === 0 && labels.length === 0) throw new Error('empty');
   return { groups, labels };
 }
 

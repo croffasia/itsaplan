@@ -1,6 +1,7 @@
 'use client';
 
 import { Bot } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { AiChatThread } from '../shared/AiChatThread';
@@ -21,6 +22,8 @@ export function AiChatConversation({
   threadId: string | null;
   onThreadCreated: (threadId: string) => void;
 }) {
+  const t = useTranslations('aiChat');
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center gap-3 border-b px-5 py-3">
@@ -32,12 +35,12 @@ export function AiChatConversation({
             <span className="truncate text-sm font-medium">{agent.name}</span>
             {!agent.memoryEnabled && (
               <Badge variant="secondary" className="shrink-0">
-                Memory off
+                {t('memoryOff')}
               </Badge>
             )}
           </div>
           <div className="truncate text-xs text-muted-foreground">
-            @{agent.username} · {agentModelLabel(agent, providerLabel)}
+            @{agent.username} · {agentModelLabel(agent, providerLabel, t('noModel'))}
           </div>
         </div>
       </div>

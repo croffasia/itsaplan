@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -27,6 +30,7 @@ export default function NoteBoardBar({
 }) {
   // 'create' to open the new-board dialog, an MRU entry to rename, or null (closed).
   const [dialog, setDialog] = useState<'create' | MruEntry | null>(null);
+  const t = useTranslations('notes');
   const renaming = dialog && typeof dialog === 'object' ? dialog : null;
   const { can } = usePermissions();
   const canCreate = can('note_boards', 'create');
@@ -42,7 +46,7 @@ export default function NoteBoardBar({
       {canCreate && (
         <button
           type="button"
-          aria-label="New board"
+          aria-label={t('newBoard')}
           onClick={() => setDialog('create')}
           className="flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
         >
@@ -68,8 +72,8 @@ export default function NoteBoardBar({
       <NoteBoardNameDialog
         key={dialogKey()}
         open={dialog != null}
-        title={renaming ? 'Rename board' : 'New board'}
-        description={renaming ? undefined : 'A freeform canvas for sticky notes.'}
+        title={renaming ? t('renameBoard') : t('newBoard')}
+        description={renaming ? undefined : t('newBoardDescription')}
         projectKey={projectKey}
         initial={renaming?.name ?? ''}
         withVisibility={dialog === 'create'}

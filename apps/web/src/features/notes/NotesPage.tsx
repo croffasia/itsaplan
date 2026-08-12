@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useShell } from '@/context/shellContext';
@@ -38,6 +39,7 @@ export default function NotesPage() {
   const router = useRouter();
   const qc = useQueryClient();
   const projectKey = params.projectKey;
+  const t = useTranslations('notes');
   const { can } = usePermissions();
 
   const { entries: mru, record, remove: removeMru } = useNoteBoardMru(projectKey);
@@ -98,7 +100,7 @@ export default function NotesPage() {
   if (!can('note_boards', 'read')) {
     return (
       <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-        You do not have access to notes.
+        {t('noAccess')}
       </div>
     );
   }

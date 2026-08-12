@@ -1,6 +1,7 @@
 'use client';
 
 import { MessageCircle, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { formatShortDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,8 @@ export function AiChatThreadItem({
   onSelect: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('aiChat');
+
   return (
     <div className="group relative">
       <button
@@ -37,7 +40,7 @@ export function AiChatThreadItem({
           )}
         />
         <div className="min-w-0 flex-1">
-          <div className="truncate text-sm">{thread.title ?? 'New conversation'}</div>
+          <div className="truncate text-sm">{thread.title ?? t('untitledThread')}</div>
           <div className="text-xs text-muted-foreground">{formatShortDate(thread.updatedAt)}</div>
         </div>
       </button>
@@ -45,12 +48,12 @@ export function AiChatThreadItem({
       <Button
         variant="ghost"
         size="icon"
-        title="Delete conversation"
+        title={t('deleteThread')}
         onClick={onDelete}
         className="absolute top-1/2 right-1 size-7 -translate-y-1/2 text-muted-foreground opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
       >
         <Trash2 className="size-3.5" />
-        <span className="sr-only">Delete conversation</span>
+        <span className="sr-only">{t('deleteThread')}</span>
       </Button>
     </div>
   );

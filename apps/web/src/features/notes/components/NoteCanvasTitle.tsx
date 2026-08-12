@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import type { NoteBoard } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
@@ -5,13 +8,6 @@ import Avatar from '@/components/common/Avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { SaveStatus } from '../hooks/useCanvasAutosave';
-
-const SAVE_STATUS_LABEL: Record<SaveStatus, string> = {
-  unsaved: 'Unsaved changes',
-  saving: 'Saving…',
-  saved: 'Saved',
-  error: 'Save failed',
-};
 
 // The canvas label overlay. A board created before the creator was recorded (the
 // column is newer than the feature) shows no avatar.
@@ -23,6 +19,7 @@ export default function NoteCanvasTitle({
   saveStatus: SaveStatus;
 }) {
   const { project } = useShell();
+  const t = useTranslations('notes');
   const creator = project?.assignees.find((a) => a.userId === board.createdByUserId);
 
   // The status stays visible while there are unsaved edits, a save is in flight, or
@@ -44,7 +41,7 @@ export default function NoteCanvasTitle({
           <TooltipTrigger asChild>
             <Avatar name={creator.name} image={creator.image} />
           </TooltipTrigger>
-          <TooltipContent>Created by {creator.name}</TooltipContent>
+          <TooltipContent>{t('createdBy', { name: creator.name })}</TooltipContent>
         </Tooltip>
       )}
       <span className="text-sm leading-none font-medium text-foreground">{board.name}</span>
@@ -55,7 +52,7 @@ export default function NoteCanvasTitle({
             saveStatus === 'error' ? 'text-destructive' : 'text-muted-foreground',
           )}
         >
-          {SAVE_STATUS_LABEL[saveStatus]}
+          {t(`save.${saveStatus}`)}
         </span>
       )}
     </div>

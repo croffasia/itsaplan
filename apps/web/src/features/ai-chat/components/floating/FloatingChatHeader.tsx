@@ -1,6 +1,7 @@
 'use client';
 
 import { Bot, Check, ChevronDown, History, MessageSquarePlus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,6 +34,8 @@ export function FloatingChatHeader({
   onNewChat: () => void;
   onMinimize: () => void;
 }) {
+  const t = useTranslations('aiChat');
+
   return (
     <div className="flex items-center gap-1 border-b px-2.5 py-2">
       <DropdownMenu>
@@ -46,17 +49,17 @@ export function FloatingChatHeader({
             </div>
             <div className="min-w-0 flex-1">
               <div className="truncate text-sm leading-tight font-medium">
-                {selected?.name ?? 'No agents'}
+                {selected?.name ?? t('noAgents')}
               </div>
               <div className="truncate text-xs leading-tight text-muted-foreground">
-                {selected ? `@${selected.username}` : 'Add an internal agent'}
+                {selected ? `@${selected.username}` : t('addInternalAgent')}
               </div>
             </div>
             {selected && <ChevronDown className="size-4 shrink-0 text-muted-foreground" />}
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-64">
-          <DropdownMenuLabel>Agents</DropdownMenuLabel>
+          <DropdownMenuLabel>{t('agents')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {agents.map((agent) => (
             <DropdownMenuItem
@@ -68,7 +71,7 @@ export function FloatingChatHeader({
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm">{agent.name}</div>
                 <div className="truncate text-xs text-muted-foreground">
-                  {agentModelLabel(agent, providerLabel)}
+                  {agentModelLabel(agent, providerLabel, t('noModel'))}
                 </div>
               </div>
               {agent.id === selected?.id && <Check className="size-4 shrink-0" />}
@@ -81,33 +84,33 @@ export function FloatingChatHeader({
         variant="ghost"
         size="icon"
         className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
-        title="History"
+        title={t('history')}
         disabled={!selected}
         onClick={onShowHistory}
       >
         <History />
-        <span className="sr-only">History</span>
+        <span className="sr-only">{t('history')}</span>
       </Button>
       <Button
         variant="ghost"
         size="icon"
         className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
-        title="New chat"
+        title={t('newChat')}
         disabled={!selected}
         onClick={onNewChat}
       >
         <MessageSquarePlus />
-        <span className="sr-only">New chat</span>
+        <span className="sr-only">{t('newChat')}</span>
       </Button>
       <Button
         variant="ghost"
         size="icon"
         className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
-        title="Minimize"
+        title={t('minimize')}
         onClick={onMinimize}
       >
         <ChevronDown />
-        <span className="sr-only">Minimize chat</span>
+        <span className="sr-only">{t('minimizeChat')}</span>
       </Button>
     </div>
   );

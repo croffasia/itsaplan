@@ -1,6 +1,7 @@
 'use client';
 
 import { Bot, Sparkles } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { agentModelLabel } from '../../utils/agentModelLabel';
@@ -17,12 +18,14 @@ export function AiChatAgentRail({
   onSelect: (id: number) => void;
   providerLabel: (key: string) => string;
 }) {
+  const t = useTranslations('aiChat');
+
   return (
     <div className="flex w-72 shrink-0 flex-col border-r bg-muted/30">
       <div className="border-b px-4 py-3">
-        <div className="text-sm font-semibold">Agents</div>
+        <div className="text-sm font-semibold">{t('agents')}</div>
         <div className="text-xs text-muted-foreground">
-          {agents.length} {agents.length === 1 ? 'agent' : 'agents'} available
+          {t('agentsAvailable', { count: agents.length })}
         </div>
       </div>
       <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
@@ -54,7 +57,9 @@ export function AiChatAgentRail({
                 <div className="truncate text-xs text-muted-foreground">@{agent.username}</div>
                 <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground/80">
                   <Sparkles className="size-3 shrink-0" />
-                  <span className="truncate">{agentModelLabel(agent, providerLabel)}</span>
+                  <span className="truncate">
+                    {agentModelLabel(agent, providerLabel, t('noModel'))}
+                  </span>
                 </div>
               </div>
             </button>

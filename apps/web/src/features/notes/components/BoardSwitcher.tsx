@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { useState, type UIEvent } from 'react';
 import { Check, ChevronsUpDown, Layers, Loader2 } from 'lucide-react';
 import type { NoteBoardSummary, NoteBoardVisibility } from '@/lib/api';
@@ -12,7 +15,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useNoteBoardSearch, flattenBoardPages } from '../services/noteBoards.service';
-import { boardListIcon, VISIBILITY_LABEL } from '../utils/visibility';
+import { boardListIcon } from '../utils/visibility';
 
 // Load the next page when the list is scrolled near the bottom.
 const SCROLL_THRESHOLD = 48;
@@ -34,6 +37,7 @@ export default function BoardSwitcher({
   onSelect: (id: number) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations('notes');
   const [query, setQuery] = useState('');
   const debounced = useDebouncedValue(query, 250);
   const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } = useNoteBoardSearch(
@@ -78,16 +82,16 @@ export default function BoardSwitcher({
       }}
     >
       <PopoverTrigger
-        aria-label="All boards"
+        aria-label={t('allBoards')}
         className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
       >
         <Layers className="size-3.5" />
-        <span className="hidden sm:inline">All boards</span>
+        <span className="hidden sm:inline">{t('allBoards')}</span>
         <ChevronsUpDown className="size-3.5" />
       </PopoverTrigger>
       <PopoverContent align="start" className="w-72 p-0">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Search boards…" value={query} onValueChange={setQuery} />
+          <CommandInput placeholder={t('searchBoards')} value={query} onValueChange={setQuery} />
           <CommandList onScroll={onScroll}>
             {isLoading ? (
               <div className="flex items-center justify-center py-6 text-muted-foreground">
@@ -95,12 +99,12 @@ export default function BoardSwitcher({
               </div>
             ) : (
               <>
-                <CommandEmpty>No boards found.</CommandEmpty>
+                <CommandEmpty>{t('noBoardsFound')}</CommandEmpty>
                 {GROUPS.map((visibility) => {
                   const group = boards.filter((b) => b.visibility === visibility);
                   if (group.length === 0) return null;
                   return (
-                    <CommandGroup key={visibility} heading={VISIBILITY_LABEL[visibility]}>
+                    <CommandGroup key={visibility} heading={t(`visibility.${visibility}`)}>
                       {group.map(renderRow)}
                     </CommandGroup>
                   );

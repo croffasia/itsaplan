@@ -5,6 +5,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import { Markdown } from 'tiptap-markdown';
+import { useTranslations } from 'next-intl';
 
 // The markdown body of a sticky note. Unlike the issue editor there is no bubble
 // menu — a persistent toolbar (StickerToolbar) drives the commands — and task
@@ -21,11 +22,12 @@ export default function StickerEditor({
   onReady?: (editor: Editor | null) => void;
   editable: boolean;
 }) {
+  const t = useTranslations('notes');
   const editor = useEditor({
     editable,
     extensions: [
       StarterKit,
-      Placeholder.configure({ placeholder: 'Write a note…' }),
+      Placeholder.configure({ placeholder: t('notePlaceholder') }),
       TaskList,
       TaskItem.configure({ nested: true }),
       Markdown.configure({ html: false, breaks: true }),

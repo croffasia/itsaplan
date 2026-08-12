@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -16,19 +19,17 @@ export default function NotesEmptyState({
   onCreate: (name: string, visibility: NewBoardVisibility) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations('notes');
   const { can } = usePermissions();
   const canCreate = can('note_boards', 'create');
 
   return (
     <>
-      <EmptyState
-        title="No boards yet"
-        description="A board is a freeform canvas for sticky notes."
-      >
+      <EmptyState title={t('emptyTitle')} description={t('emptyDescription')}>
         {canCreate && (
           <Button size="sm" onClick={() => setOpen(true)}>
             <Plus className="size-3.5" />
-            New board
+            {t('newBoard')}
           </Button>
         )}
       </EmptyState>
@@ -36,8 +37,8 @@ export default function NotesEmptyState({
       <NoteBoardNameDialog
         key={open ? 'open' : 'closed'}
         open={open}
-        title="New board"
-        description="A freeform canvas for sticky notes."
+        title={t('newBoard')}
+        description={t('newBoardDescription')}
         projectKey={projectKey}
         initial=""
         withVisibility

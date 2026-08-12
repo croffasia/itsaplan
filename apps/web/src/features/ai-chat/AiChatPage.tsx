@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { aiAgentsPath } from '@/utils/paths';
@@ -15,6 +16,7 @@ import { useAiChatSelection } from './hooks/useAiChatSelection';
 // The AI Chat page (/project/:projectKey/ai-team/chat): a full-page chat with the
 // project's internal agents.
 export default function AiChatPage() {
+  const t = useTranslations('aiChat');
   const { project } = useShell();
   const { can } = usePermissions();
   const {
@@ -36,7 +38,7 @@ export default function AiChatPage() {
   if (!can('ai_agents', 'read')) {
     return (
       <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-        You do not have access to AI agents in this project.
+        {t('noAccess')}
       </div>
     );
   }
@@ -46,13 +48,10 @@ export default function AiChatPage() {
   if (agents.length === 0) {
     return (
       <div className="flex h-full">
-        <EmptyState
-          title="No agents to chat with"
-          description="Only internal agents can chat here, in test mode."
-        >
+        <EmptyState title={t('emptyTitle')} description={t('emptyDescription')}>
           {can('ai_agents', 'edit') && (
             <Button asChild size="sm">
-              <Link href={aiAgentsPath(project.project.key)}>Create an agent</Link>
+              <Link href={aiAgentsPath(project.project.key)}>{t('createAgent')}</Link>
             </Button>
           )}
         </EmptyState>

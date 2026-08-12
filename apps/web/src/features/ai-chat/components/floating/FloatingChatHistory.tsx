@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { AiChatThreadList } from '../shared/AiChatThreadList';
 
@@ -20,6 +21,9 @@ export function FloatingChatHistory({
   onDeleted: (threadId: string) => void;
   onBack: () => void;
 }) {
+  const t = useTranslations('aiChat');
+  const tCommon = useTranslations('common');
+
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center gap-2 border-b px-2.5 py-2">
@@ -27,13 +31,13 @@ export function FloatingChatHistory({
           variant="ghost"
           size="icon"
           className="size-7 shrink-0"
-          title="Back"
+          title={tCommon('back')}
           onClick={onBack}
         >
           <ChevronLeft />
-          <span className="sr-only">Back to chat</span>
+          <span className="sr-only">{t('backToChat')}</span>
         </Button>
-        <div className="text-sm font-medium">History</div>
+        <div className="text-sm font-medium">{t('history')}</div>
       </div>
 
       <AiChatThreadList

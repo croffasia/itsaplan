@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useAgentThreadsQuery, useDeleteAgentThread } from '@/services/aiAgents.service';
 import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
@@ -26,6 +27,8 @@ export function AiChatThreadList({
   onSelect: (threadId: string) => void;
   onDeleted: (threadId: string) => void;
 }) {
+  const t = useTranslations('aiChat');
+  const tCommon = useTranslations('common');
   const threadsQuery = useAgentThreadsQuery(projectKey, agentId);
   const threads = threadsQuery.data ?? [];
   const deleteThread = useDeleteAgentThread(projectKey, agentId);
@@ -57,7 +60,7 @@ export function AiChatThreadList({
   if (threads.length === 0) {
     return (
       <div className="min-h-0 flex-1 px-4 py-6 text-center text-xs text-muted-foreground">
-        No conversations yet. Send a message to start one.
+        {t('noThreads')}
       </div>
     );
   }
@@ -78,13 +81,13 @@ export function AiChatThreadList({
 
       {pending && (
         <ConfirmDialog
-          title="Delete conversation"
-          confirmLabel="Delete"
+          title={t('deleteThread')}
+          confirmLabel={tCommon('delete')}
           onConfirm={confirmDelete}
           onClose={() => setPending(null)}
         >
           <div className="text-sm text-muted-foreground">
-            “{pending.title ?? 'New conversation'}” and its messages are deleted permanently.
+            {t('deleteThreadConfirm', { title: pending.title ?? t('untitledThread') })}
           </div>
         </ConfirmDialog>
       )}

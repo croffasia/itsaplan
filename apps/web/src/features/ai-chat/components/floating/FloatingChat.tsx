@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MessagesSquare, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
@@ -24,6 +25,7 @@ export function FloatingChat({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const t = useTranslations('aiChat');
   const { project } = useShell();
   const { can } = usePermissions();
   const {
@@ -91,7 +93,7 @@ export function FloatingChat({
             />
           ) : (
             <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
-              No internal agents to chat with yet.
+              {t('noInternalAgents')}
             </div>
           )}
 
@@ -115,12 +117,12 @@ export function FloatingChat({
       <Button
         size="icon"
         className="size-12 shrink-0 rounded-full shadow-lg"
-        title={open ? 'Hide chat' : 'Open chat'}
+        title={open ? t('hideChat') : t('openChat')}
         aria-expanded={open}
         onClick={() => onOpenChange(!open)}
       >
         {open ? <X className="size-5" /> : <MessagesSquare className="size-5" />}
-        <span className="sr-only">{open ? 'Hide chat' : 'Open chat'}</span>
+        <span className="sr-only">{open ? t('hideChat') : t('openChat')}</span>
       </Button>
     </div>
   );

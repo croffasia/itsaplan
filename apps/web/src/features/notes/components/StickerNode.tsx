@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { GripHorizontal } from 'lucide-react';
@@ -29,6 +32,7 @@ export default function StickerNode({ id, data, selected }: NodeProps<StickerNod
   const canCreateIssue = can('work_items', 'create');
   const canEdit = can('note_boards', 'edit');
   const [editor, setEditor] = useState<Editor | null>(null);
+  const t = useTranslations('notes');
 
   const update = (patch: Partial<NoteSticker>) => {
     setNodes((nodes) =>
@@ -61,13 +65,13 @@ export default function StickerNode({ id, data, selected }: NodeProps<StickerNod
           value={data.title}
           onChange={(e) => update({ title: e.target.value })}
           readOnly={!canEdit}
-          placeholder="Title"
+          placeholder={t('noteTitlePlaceholder')}
           className="nodrag min-w-0 flex-1 cursor-text bg-transparent text-base font-semibold outline-none placeholder:text-black/40"
         />
         {canEdit && (
           <span
             className="sticker-drag cursor-grab text-black/30 hover:text-black/60 active:cursor-grabbing"
-            title="Drag note"
+            title={t('dragNote')}
           >
             <GripHorizontal className="size-4" />
           </span>

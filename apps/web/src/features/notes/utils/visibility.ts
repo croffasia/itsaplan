@@ -5,24 +5,13 @@ import type { NoteBoardVisibility } from '@/lib/api';
 // on the board itself.
 export type NewBoardVisibility = Exclude<NoteBoardVisibility, 'restricted'>;
 
-// How the three board states are labelled wherever a board is shown: the tab and
-// switcher icons, and the access picker on the canvas.
+// The icons of the three board states, shown on the tab, in the switcher and in
+// the access picker on the canvas. Their labels and hints are messages under
+// `notes.visibility` and `notes.visibilityHint`.
 export const VISIBILITY_ICON: Record<NoteBoardVisibility, LucideIcon> = {
   public: Globe,
   private: Lock,
   restricted: Users,
-};
-
-export const VISIBILITY_LABEL: Record<NoteBoardVisibility, string> = {
-  public: 'Public',
-  private: 'Private',
-  restricted: 'Restricted',
-};
-
-export const VISIBILITY_HINT: Record<NoteBoardVisibility, string> = {
-  public: 'Every project member can see this board',
-  private: 'Only its creator can see this board',
-  restricted: 'Only its creator and the chosen members can see this board',
 };
 
 // The icon for a board in the tab strip and the switcher, where a public board is

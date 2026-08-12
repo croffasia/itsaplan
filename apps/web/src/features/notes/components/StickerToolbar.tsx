@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { type Editor } from '@tiptap/react';
 import { Bold, Italic, ListChecks, SquarePlus, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -54,6 +57,7 @@ export default function StickerToolbar({
   onDelete: () => void;
   canEdit: boolean;
 }) {
+  const t = useTranslations('notes');
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-0.5">
@@ -61,21 +65,21 @@ export default function StickerToolbar({
           <>
             <StickerColorPicker value={color} onChange={onColorChange} />
             <ToolbarButton
-              label="Bold"
+              label={t('bold')}
               active={editor?.isActive('bold')}
               onClick={() => editor?.chain().focus().toggleBold().run()}
             >
               <Bold />
             </ToolbarButton>
             <ToolbarButton
-              label="Italic"
+              label={t('italic')}
               active={editor?.isActive('italic')}
               onClick={() => editor?.chain().focus().toggleItalic().run()}
             >
               <Italic />
             </ToolbarButton>
             <ToolbarButton
-              label="Checklist"
+              label={t('checklist')}
               active={editor?.isActive('taskList')}
               onClick={() => editor?.chain().focus().toggleTaskList().run()}
             >
@@ -86,12 +90,12 @@ export default function StickerToolbar({
       </div>
       <div className="flex items-center gap-0.5">
         {onConvert && (
-          <ToolbarButton label="Convert to issue" onClick={onConvert}>
+          <ToolbarButton label={t('convertToIssue')} onClick={onConvert}>
             <SquarePlus />
           </ToolbarButton>
         )}
         {canEdit && (
-          <ToolbarButton label="Delete note" onClick={onDelete}>
+          <ToolbarButton label={t('deleteNote')} onClick={onDelete}>
             <Trash2 />
           </ToolbarButton>
         )}

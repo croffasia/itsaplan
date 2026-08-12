@@ -1,9 +1,12 @@
+'use client';
+
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { VISIBILITY_HINT, VISIBILITY_ICON, type NewBoardVisibility } from '../utils/visibility';
+import { VISIBILITY_ICON, type NewBoardVisibility } from '../utils/visibility';
 
 // A name prompt used for creating and renaming a note board. When `withVisibility`
 // is set (creating), it also picks whether the board is public or private.
@@ -26,6 +29,8 @@ export default function NoteBoardNameDialog({
   onClose: () => void;
   onSubmit: (name: string, visibility: NewBoardVisibility) => void;
 }) {
+  const t = useTranslations('notes');
+  const tCommon = useTranslations('common');
   const [name, setName] = useState(initial);
   const [visibility, setVisibility] = useState<NewBoardVisibility>('public');
 
@@ -44,13 +49,13 @@ export default function NoteBoardNameDialog({
         }}
       >
         <div className="space-y-1.5">
-          <Label htmlFor="board-name">Name</Label>
+          <Label htmlFor="board-name">{t('boardName')}</Label>
           <div className="flex gap-2">
             {withVisibility && (
               <button
                 type="button"
-                aria-label={visibility === 'private' ? 'Make public' : 'Make private'}
-                title={VISIBILITY_HINT[visibility]}
+                aria-label={visibility === 'private' ? t('makePublic') : t('makePrivate')}
+                title={t(`visibilityHint.${visibility}`)}
                 onClick={() => setVisibility((v) => (v === 'private' ? 'public' : 'private'))}
                 className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
               >
@@ -63,7 +68,7 @@ export default function NoteBoardNameDialog({
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Board name"
+              placeholder={t('boardNamePlaceholder')}
               className="h-9"
             />
           </div>
@@ -71,18 +76,16 @@ export default function NoteBoardNameDialog({
 
         {withVisibility && (
           <p className="text-sm text-muted-foreground">
-            {visibility === 'private'
-              ? 'Only you can see this board. You can share it with picked members later.'
-              : 'Everyone in the project can see this board.'}
+            {visibility === 'private' ? t('privateHint') : t('publicHint')}
           </p>
         )}
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onClose}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button type="submit" disabled={!isValid}>
-            {withVisibility ? 'Create board' : 'Save'}
+            {withVisibility ? t('createBoard') : tCommon('save')}
           </Button>
         </div>
       </form>

@@ -1,21 +1,24 @@
 import type { Metadata } from 'next';
 import { ThemeProvider } from 'next-themes';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getTranslations } from 'next-intl/server';
 import { Providers } from '@/components/providers';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: "It's a Plan: issue tracking for people and agents",
-  description:
-    'A self-hosted, open-source issue tracker with AI agents built in. Assign work to people or agents, and drive it through the API, webhooks and MCP.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('meta');
+  return { title: t('title'), description: t('description') };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider
           attribute="class"
@@ -27,7 +30,9 @@ export default function RootLayout({
           // apps fight over the value through cross-tab storage events.
           storageKey="itsaplan-theme"
         >
-          <Providers>{children}</Providers>
+          <NextIntlClientProvider>
+            <Providers>{children}</Providers>
+          </NextIntlClientProvider>
         </ThemeProvider>
       </body>
     </html>

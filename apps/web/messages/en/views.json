@@ -7,7 +7,8 @@
   "options": "View options",
   "share": "Share",
   "shared": "Shared",
-  "editView": "Edit view",
+  "favorite": "Add to favorites",
+  "unfavorite": "Remove from favorites",
   "shareBoard": "Share board",
   "newViewHint": "Create a view from the current filters and display",
   "filter": "Filter"

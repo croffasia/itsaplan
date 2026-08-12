@@ -237,15 +237,15 @@ export function useViewEditor(
   }
 
   // Moves the dragged view to the dropped-on view's slot and persists the full
-  // tab order. The dragged view is removed then reinserted at the target's index
-  // in the original list, so dropping onto the first tab moves it to the front
-  // (next to the fixed All tab) and onto the last moves it to the end.
-  function reorderView(draggedId: number, targetId: number) {
+  // order; a null target means the front (the drop on the fixed All tab). The move
+  // applies to the stored order, not to the tab row — favorites are pinned to the
+  // front for the caller only, while position is shared by the project.
+  function reorderView(draggedId: number, targetId: number | null) {
     if (draggedId === targetId) return;
-    const from = views.findIndex((v) => v.id === draggedId);
-    const to = views.findIndex((v) => v.id === targetId);
-    if (from < 0 || to < 0) return;
-    const next = [...views];
+    const next = [...views].sort((a, b) => a.position - b.position || a.id - b.id);
+    const from = next.findIndex((v) => v.id === draggedId);
+    const to = targetId == null ? 0 : next.findIndex((v) => v.id === targetId);
+    if (from < 0 || to < 0 || from === to) return;
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
     reorderViewsMutation.mutate(next.map((v) => v.id));

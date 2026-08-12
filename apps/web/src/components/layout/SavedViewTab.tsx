@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Globe, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { Globe, MoreHorizontal, Pencil, Star, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { api, type View } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
+import { useSetViewFavorite } from '@/services/views.service';
 import { cn } from '@/lib/utils';
 import { shareViewPath } from '@/utils/paths';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,7 +15,7 @@ import ViewTabLabel from '@/components/layout/ViewTabLabel';
 import ShareDialog from '@/components/common/share/ShareDialog';
 
 // A saved view tab. Sortable (drag to reorder); when active it shows a "…" menu
-// with Share / Edit view / Delete.
+// with Favorite / Share / Edit / Delete.
 export default function SavedViewTab({
   view,
   projectKey,
@@ -39,6 +40,7 @@ export default function SavedViewTab({
   const [menuOpen, setMenuOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const qc = useQueryClient();
+  const setFavorite = useSetViewFavorite(projectKey);
 
   // Enabling/revoking the public link refetches the views so the tab's shareToken
   // and shareExtended (which the dialog reads) stay in sync. The same call creates
@@ -58,7 +60,6 @@ export default function SavedViewTab({
     disabled: !canEdit,
   });
   const style = { transform: CSS.Transform.toString(transform), transition };
-  const showMenu = active && (canEdit || canDelete);
 
   return (
     <ViewTabChrome
@@ -72,7 +73,8 @@ export default function SavedViewTab({
       <button type="button" onClick={onSelect} className="flex items-center gap-1.5 py-1 pr-1 pl-2">
         <ViewTabLabel view={view} />
       </button>
-      {showMenu ? (
+      {/* Favoriting is personal and needs no permission, so an active tab always has a menu. */}
+      {active ? (
         <Popover open={menuOpen} onOpenChange={setMenuOpen}>
           <PopoverTrigger asChild>
             <button
@@ -83,7 +85,20 @@ export default function SavedViewTab({
               <MoreHorizontal className="size-3.5" />
             </button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-40 p-1">
+          <PopoverContent align="start" className="w-60 p-1">
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                setFavorite.mutate({ id: view.id, favorite: !view.favorite });
+              }}
+              className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
+            >
+              <Star
+                className={cn('size-3.5 shrink-0', view.favorite && 'fill-current text-amber-500')}
+              />
+              {view.favorite ? t('unfavorite') : t('favorite')}
+            </button>
             {canEdit && (
               <button
                 type="button"
@@ -93,7 +108,7 @@ export default function SavedViewTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
               >
-                <Globe className="size-3.5" /> {view.shareToken ? t('shared') : t('share')}
+                <Globe className="size-3.5 shrink-0" /> {view.shareToken ? t('shared') : t('share')}
               </button>
             )}
             {canEdit && (
@@ -105,7 +120,7 @@ export default function SavedViewTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
               >
-                <Pencil className="size-3.5" /> {t('editView')}
+                <Pencil className="size-3.5 shrink-0" /> {tCommon('edit')}
               </button>
             )}
             {canDelete && (
@@ -117,7 +132,7 @@ export default function SavedViewTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm text-destructive hover:bg-destructive/10"
               >
-                <Trash2 className="size-3.5" /> {tCommon('delete')}
+                <Trash2 className="size-3.5 shrink-0" /> {tCommon('delete')}
               </button>
             )}
           </PopoverContent>

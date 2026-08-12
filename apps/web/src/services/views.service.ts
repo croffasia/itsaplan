@@ -22,7 +22,10 @@ export function useViewsQuery(projectKey: string | null) {
     queryKey: qk.views(projectKey ?? ''),
     queryFn: () => api.listViews(projectKey!),
     enabled: projectKey != null,
-    select: (rows) => rows.map(normalizeView),
+    // The caller's favorites are pinned to the front of the tab row; the rest keep
+    // their stored order.
+    select: (rows) =>
+      rows.map(normalizeView).sort((a, b) => Number(b.favorite) - Number(a.favorite)),
   });
 }
 
@@ -52,6 +55,17 @@ export function useDeleteView(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => api.deleteView(id),
+    onSuccess: () => {
+      if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
+    },
+  });
+}
+
+export function useSetViewFavorite(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, favorite }: { id: number; favorite: boolean }) =>
+      api.setViewFavorite(id, favorite),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     },

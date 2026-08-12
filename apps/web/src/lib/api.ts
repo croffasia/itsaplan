@@ -974,8 +974,8 @@ export type HotkeyOverrides = Record<string, string>;
 export type AccountPreferencesPatch = Partial<AccountPreferences>;
 
 // A saved view (a tab above the work items view): a named filter set plus a display
-// snapshot (layout + that layout's settings). Shared across clients — there is
-// no per-user identity. filters/display are stored as jsonb.
+// snapshot (layout + that layout's settings). The view itself is shared by the
+// project; only `favorite` is per user. filters/display are stored as jsonb.
 export interface View {
   id: number;
   projectId: number;
@@ -990,6 +990,9 @@ export interface View {
   // fields, activity) or only their title, description, state, type, priority,
   // dates, subtasks and links.
   shareExtended: boolean;
+  // Whether the current user marked the view as a favorite: it pins the tab to the
+  // front and lists the view under Work items in the sidebar.
+  favorite: boolean;
   createdAt: string;
 }
 
@@ -2416,6 +2419,8 @@ export const api = {
   updateView: (viewId: number, patch: ViewPatch) =>
     request<View>(`/views/${viewId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   deleteView: (viewId: number) => request<void>(`/views/${viewId}`, { method: 'DELETE' }),
+  setViewFavorite: (viewId: number, favorite: boolean) =>
+    request<void>(`/views/${viewId}/favorite`, { method: favorite ? 'PUT' : 'DELETE' }),
   reorderViews: (projectKey: string, orderedIds: number[]) =>
     request<View[]>(`/projects/${projectKey}/views/reorder`, {
       method: 'PUT',

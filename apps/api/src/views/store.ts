@@ -1,4 +1,4 @@
-import { db, projectView } from '@repo/db';
+import { db, projectView, projectViewFavorite } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
 import { iso, num } from '../shared/lib';
 
@@ -39,13 +39,43 @@ function mapView(row: typeof projectView.$inferSelect): ViewRow {
   };
 }
 
-export async function listViews(projectId: number): Promise<ViewRow[]> {
+// A view as one user sees it: the favorite flag is personal.
+export interface UserViewRow extends ViewRow {
+  favorite: boolean;
+}
+
+export async function listViews(projectId: number, userId: string): Promise<UserViewRow[]> {
   const rows = await db
-    .select()
+    .select({ row: projectView, favoriteUserId: projectViewFavorite.userId })
     .from(projectView)
+    .leftJoin(
+      projectViewFavorite,
+      and(eq(projectViewFavorite.viewId, projectView.id), eq(projectViewFavorite.userId, userId)),
+    )
     .where(eq(projectView.projectId, projectId))
     .orderBy(projectView.position, projectView.id);
-  return rows.map(mapView);
+  return rows.map(({ row, favoriteUserId }) => ({
+    ...mapView(row),
+    favorite: favoriteUserId !== null,
+  }));
+}
+
+export async function isFavoriteView(viewId: number, userId: string): Promise<boolean> {
+  const rows = await db
+    .select({ viewId: projectViewFavorite.viewId })
+    .from(projectViewFavorite)
+    .where(and(eq(projectViewFavorite.viewId, viewId), eq(projectViewFavorite.userId, userId)));
+  return rows.length > 0;
+}
+
+export async function addFavoriteView(viewId: number, userId: string): Promise<void> {
+  await db.insert(projectViewFavorite).values({ viewId, userId }).onConflictDoNothing();
+}
+
+export async function removeFavoriteView(viewId: number, userId: string): Promise<void> {
+  await db
+    .delete(projectViewFavorite)
+    .where(and(eq(projectViewFavorite.viewId, viewId), eq(projectViewFavorite.userId, userId)));
 }
 
 // New views go to the end of the tab row (max position + 1). filters/display are
@@ -102,7 +132,11 @@ export async function deleteView(id: number): Promise<void> {
 
 // Sets each view's position to its index in orderedIds, in one transaction, so
 // the tab order the UI sends is stored exactly. Ids not on the project are ignored.
-export async function reorderViews(projectId: number, orderedIds: number[]): Promise<ViewRow[]> {
+export async function reorderViews(
+  projectId: number,
+  orderedIds: number[],
+  userId: string,
+): Promise<UserViewRow[]> {
   await db.transaction(async (tx) => {
     for (const [position, id] of orderedIds.entries()) {
       await tx
@@ -111,5 +145,5 @@ export async function reorderViews(projectId: number, orderedIds: number[]): Pro
         .where(and(eq(projectView.id, id), eq(projectView.projectId, projectId)));
     }
   });
-  return listViews(projectId);
+  return listViews(projectId, userId);
 }

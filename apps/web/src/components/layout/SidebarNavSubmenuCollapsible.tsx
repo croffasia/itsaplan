@@ -25,7 +25,7 @@ export default function SidebarNavSubmenuCollapsible({
     <Collapsible asChild defaultOpen={items.some((i) => i.active)} className="group/collapsible">
       <SidebarMenuItem>
         <CollapsibleTrigger asChild>
-          <SidebarMenuButton>
+          <SidebarMenuButton isActive={items.some((i) => i.active)}>
             <Icon />
             <span>{label}</span>
             <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />

@@ -37,9 +37,13 @@ export const VIEW_ICONS: Record<string, LucideIcon> = {
 
 export const VIEW_ICON_NAMES = Object.keys(VIEW_ICONS);
 
-// Renders a view's icon, falling back to the generic list icon for an unknown or
+// A view's icon component, falling back to the generic list icon for an unknown or
 // null name.
+export function viewIcon(name: string | null): LucideIcon {
+  return (name && VIEW_ICONS[name]) || List;
+}
+
 export function ViewIcon({ name, className }: { name: string | null; className?: string }) {
-  const Icon = (name && VIEW_ICONS[name]) || List;
+  const Icon = viewIcon(name);
   return <Icon className={className} />;
 }

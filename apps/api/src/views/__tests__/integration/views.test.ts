@@ -220,6 +220,85 @@ describe('views', () => {
     });
   });
 
+  describe('favorites', () => {
+    it('marks a view favorite for the caller and clears it again', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const id = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'V' })).data!.id;
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data?.[0]).toMatchObject({
+        favorite: false,
+      });
+
+      const added = await asOwner.views({ viewId: id }).favorite.put();
+      expect(added.status).toBe(204);
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data?.[0]).toMatchObject({
+        favorite: true,
+      });
+      expect(await asOwner.views({ viewId: id }).patch({})).toMatchObject({
+        data: { favorite: true },
+      });
+
+      const removed = await asOwner.views({ viewId: id }).favorite.delete();
+      expect(removed.status).toBe(204);
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data?.[0]).toMatchObject({
+        favorite: false,
+      });
+    });
+
+    it('keeps one row when the same view is favorited twice', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const id = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'V' })).data!.id;
+
+      await asOwner.views({ viewId: id }).favorite.put();
+      const again = await asOwner.views({ viewId: id }).favorite.put();
+      expect(again.status).toBe(204);
+
+      await asOwner.views({ viewId: id }).favorite.delete();
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data?.[0]).toMatchObject({
+        favorite: false,
+      });
+    });
+
+    it('unfavoriting a view that is not a favorite succeeds', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const id = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'V' })).data!.id;
+
+      const res = await asOwner.views({ viewId: id }).favorite.delete();
+      expect(res.status).toBe(204);
+    });
+
+    it('is personal: another member does not see the owner favorite', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const id = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'V' })).data!.id;
+      await asOwner.views({ viewId: id }).favorite.put();
+
+      const member = await signUpTestUser();
+      const invite = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: member.email, role: 'member' });
+      const asMember = authedApi(member.cookie);
+      await asMember.invites({ token: invite.data!.token }).accept.post();
+
+      expect((await asMember.projects({ projectKey: 'MKT' }).views.get()).data?.[0]).toMatchObject({
+        favorite: false,
+      });
+      expect((await asOwner.projects({ projectKey: 'MKT' }).views.get()).data?.[0]).toMatchObject({
+        favorite: true,
+      });
+    });
+
+    it('returns 404 for a missing view and 403 for a non-member', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const id = (await asOwner.projects({ projectKey: 'MKT' }).views.post({ name: 'V' })).data!.id;
+
+      const missing = await asOwner.views({ viewId: 999999 }).favorite.put();
+      expect(missing.status).toBe(404);
+
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      expect((await outsider.views({ viewId: id }).favorite.put()).status).toBe(403);
+      expect((await outsider.views({ viewId: id }).favorite.delete()).status).toBe(403);
+    });
+  });
+
   describe('validation', () => {
     it('rejects a view with an empty name', async () => {
       const { asOwner } = await setupOwnerProject();

@@ -7,7 +7,8 @@
   "options": "视图选项",
   "share": "共享",
   "shared": "已共享",
-  "editView": "编辑视图",
+  "favorite": "添加到收藏",
+  "unfavorite": "从收藏移除",
   "shareBoard": "共享看板",
   "newViewHint": "根据当前筛选条件和显示设置创建视图",
   "filter": "筛选"

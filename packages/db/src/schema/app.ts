@@ -1134,6 +1134,22 @@ export const projectView = pgTable(
   (t) => [index('project_view_project_idx').on(t.projectId, t.position)],
 );
 
+// The saved views a user marked as favorite. Favorites are personal: they pin the
+// view's tab to the front of the tab row and list it under Work items in the
+// sidebar, for that user only.
+export const projectViewFavorite = pgTable(
+  'project_view_favorite',
+  {
+    viewId: integer('view_id')
+      .notNull()
+      .references(() => projectView.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.viewId, t.userId] })],
+);
+
 // Saved dashboards (the analytics tabs of a project). layout is a jsonb blob
 // owned by the UI: an ordered list of widget entries, each carrying its type,
 // width, title, and widget-specific config. The server stores and returns it

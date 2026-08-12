@@ -43,7 +43,7 @@ export default function ViewTabs({
   onNewView: () => void;
   onEdit: (view: View) => void;
   onDelete: (view: View) => void;
-  onReorder: (draggedId: number, targetId: number) => void;
+  onReorder: (draggedId: number, targetId: number | null) => void;
   onToggleFilter: () => void;
   displayControl: ReactNode;
 }) {
@@ -63,8 +63,9 @@ export default function ViewTabs({
     if (!over) return;
     const draggedId = Number(active.id);
     if (over.id === ALL_DROP_ID) {
-      // Move to the front (next to the fixed All tab).
-      if (views[0] && views[0].id !== draggedId) onReorder(draggedId, views[0].id);
+      // Move to the front of the stored order. The tab row is not that order —
+      // favorites are pinned ahead of it — so the front cannot be named by a tab.
+      onReorder(draggedId, null);
       return;
     }
     if (over.id !== active.id) onReorder(draggedId, Number(over.id));

@@ -1,25 +1,32 @@
 'use client';
 
 import { Bell, Bot, Clock, Compass, Keyboard, ListChecks, Palette } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { SectionNav, type SectionNavItem } from '@/components/common/page/SectionNav';
 import { useSectionScrollSpy } from '@/hooks/useSectionScrollSpy';
 
 // The blocks of the preferences page, in the order they are rendered. The ids match
 // the ones the page gives its sections.
-const SECTIONS: SectionNavItem[] = [
-  { id: 'appearance', label: 'Appearance', icon: Palette },
-  { id: 'date-and-time', label: 'Date and time', icon: Clock },
-  { id: 'navigation', label: 'Navigation', icon: Compass },
-  { id: 'issue-settings', label: 'Issue settings', icon: ListChecks },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'ai-chat', label: 'AI chat', icon: Bot },
-  { id: 'shortcuts', label: 'Keyboard shortcuts', icon: Keyboard },
-];
+const SECTIONS = [
+  { id: 'appearance', labelKey: 'appearance', icon: Palette },
+  { id: 'date-and-time', labelKey: 'dateAndTime', icon: Clock },
+  { id: 'navigation', labelKey: 'navigation', icon: Compass },
+  { id: 'issue-settings', labelKey: 'issueSettings', icon: ListChecks },
+  { id: 'notifications', labelKey: 'notifications', icon: Bell },
+  { id: 'ai-chat', labelKey: 'aiChat', icon: Bot },
+  { id: 'shortcuts', labelKey: 'shortcuts', icon: Keyboard },
+] as const;
 
 // The section rail for the preferences page: it follows the page scroll and jumps
 // to a block on click.
 export default function AccountPreferencesNav() {
+  const t = useTranslations('account.preferences');
   const { activeId, setActiveId } = useSectionScrollSpy(SECTIONS.map((s) => s.id));
+  const sections: SectionNavItem[] = SECTIONS.map(({ id, labelKey, icon }) => ({
+    id,
+    label: t(`sections.${labelKey}`),
+    icon,
+  }));
 
   function jump(id: string) {
     setActiveId(id);
@@ -28,9 +35,9 @@ export default function AccountPreferencesNav() {
 
   return (
     <SectionNav
-      sections={SECTIONS}
+      sections={sections}
       activeId={activeId}
-      label="Preferences"
+      label={t('label')}
       onJump={jump}
       // The page scrolls under a static top bar, so the rail keeps a margin of its
       // own once it pins.

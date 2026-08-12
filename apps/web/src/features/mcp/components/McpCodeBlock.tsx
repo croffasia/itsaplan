@@ -3,14 +3,16 @@
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 
 export default function McpCodeBlock({ code }: { code: string }) {
+  const t = useTranslations('mcp');
   const [copied, setCopied] = useState(false);
 
   const copy = async () => {
     await navigator.clipboard.writeText(code);
     setCopied(true);
-    toast.success('Copied to clipboard');
+    toast.success(t('copied'));
     setTimeout(() => setCopied(false), 1500);
   };
 
@@ -21,7 +23,7 @@ export default function McpCodeBlock({ code }: { code: string }) {
       </pre>
       <button
         type="button"
-        aria-label="Copy"
+        aria-label={t('copyAria')}
         onClick={copy}
         className="absolute top-2 right-2 grid size-7 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >

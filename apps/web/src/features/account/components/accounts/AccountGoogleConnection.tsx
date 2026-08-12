@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import GoogleIcon from '@/components/common/GoogleIcon';
@@ -15,6 +16,7 @@ import {
 // is refused while Google is the only way left to sign in, since it would lock the
 // account out.
 export default function AccountGoogleConnection() {
+  const t = useTranslations('account.accounts');
   const { data: accounts } = useLinkedAccountsQuery();
   const disconnect = useDisconnectProvider();
   const [connecting, setConnecting] = useState(false);
@@ -28,9 +30,9 @@ export default function AccountGoogleConnection() {
   async function onConnect() {
     setConnecting(true);
     try {
-      await connectGoogle();
+      await connectGoogle(t('connectFailed'));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not connect Google.');
+      toast.error(err instanceof Error ? err.message : t('googleConnectFailed'));
     } finally {
       // Normally the browser has left for Google by now; releasing the button
       // anyway keeps a call that returned without navigating from locking it.
@@ -42,16 +44,16 @@ export default function AccountGoogleConnection() {
     <AccountConnectionRow
       icon={<GoogleIcon className="size-4" />}
       name="Google"
-      description="Sign in with your Google account."
-      connectedTo={google ? 'Connected' : null}
+      description={t('googleDescription')}
+      connectedTo={google ? t('connected') : null}
       busy={connecting || disconnect.isPending}
-      disconnectHint={onlyWayIn ? 'Set a password first' : undefined}
+      disconnectHint={onlyWayIn ? t('setPasswordFirst') : undefined}
       onConnect={() => void onConnect()}
       onDisconnect={() => {
         if (!google) return;
         disconnect.mutate(
           { providerId: 'google', accountId: google.accountId },
-          { onSuccess: () => toast.success('Google disconnected') },
+          { onSuccess: () => toast.success(t('googleDisconnected')) },
         );
       }}
     />

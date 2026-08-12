@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 // One external account: the service on the left with what it is connected to, and
 // the connect or disconnect action on the right.
@@ -27,11 +28,12 @@ export default function AccountConnectionRow({
   onConnect: () => void;
   onDisconnect: () => void;
 }) {
+  const t = useTranslations('account.accounts');
   function action() {
     if (!connectedTo) {
       return (
         <Button size="sm" disabled={busy} onClick={onConnect}>
-          Connect
+          {t('connect')}
         </Button>
       );
     }
@@ -40,7 +42,7 @@ export default function AccountConnectionRow({
     }
     return (
       <Button variant="outline" size="sm" disabled={busy} onClick={onDisconnect}>
-        Disconnect
+        {t('disconnect')}
       </Button>
     );
   }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import SectionPageView from '@/components/common/page/SectionPageView';
@@ -7,13 +8,14 @@ import McpStatusRow from './components/McpStatusRow';
 import McpConnectionGuide from './components/McpConnectionGuide';
 
 export default function McpServerPage() {
+  const t = useTranslations('mcp');
   const { project } = useShell();
   const { isOwner } = usePermissions();
 
   return (
     <SectionPageView
-      title="MCP Server"
-      description="Connect AI agents to this project over the Model Context Protocol. An agent gets the access of the API key it uses."
+      title={t('title')}
+      description={t('description')}
       wide
       widthClassName="min-w-[600px] max-w-[60%]"
     >

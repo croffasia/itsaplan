@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { type Notification, type ProjectDetail } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
@@ -21,6 +22,7 @@ import {
 } from '../services/notifications.service';
 
 export default function InboxView({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('inbox');
   const projectKey = project.project.key;
   const projectId = project.project.id;
 
@@ -95,7 +97,7 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
         />
       ) : (
         <div className="hidden flex-1 items-center justify-center text-sm text-muted-foreground md:flex">
-          Select a notification
+          {t('selectNotification')}
         </div>
       )}
     </div>

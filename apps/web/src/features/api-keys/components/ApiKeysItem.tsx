@@ -1,6 +1,7 @@
 'use client';
 
 import { KeyRound, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { formatShortDate } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import {
@@ -20,6 +21,8 @@ export default function ApiKeysItem({
   apiKey: ApiKeyRow;
   onDelete: () => void;
 }) {
+  const t = useTranslations('apiKeys');
+
   return (
     <Item
       size="sm"
@@ -29,9 +32,10 @@ export default function ApiKeysItem({
         <KeyRound className="size-4" />
       </ItemMedia>
       <ItemContent>
-        <ItemTitle>{apiKey.name ?? 'API key'}</ItemTitle>
+        <ItemTitle>{apiKey.name ?? t('fallbackName')}</ItemTitle>
         <ItemDescription>
-          {apiKey.start ? `${apiKey.start}… · ` : ''}Created {formatShortDate(apiKey.createdAt)}
+          {apiKey.start ? `${apiKey.start}… · ` : ''}
+          {t('createdAt', { date: formatShortDate(apiKey.createdAt) })}
         </ItemDescription>
       </ItemContent>
       <ItemActions>
@@ -39,7 +43,7 @@ export default function ApiKeysItem({
           variant="ghost"
           size="icon"
           className="size-7 text-muted-foreground hover:text-destructive"
-          title="Delete API key"
+          title={t('deleteAction')}
           onClick={onDelete}
         >
           <Trash2 className="size-4" />

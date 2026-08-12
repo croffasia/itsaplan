@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { InstanceEmailSettings } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import GodEmailSettings from './components/email/GodEmailSettings';
@@ -20,12 +21,14 @@ export default function GodEmailPage() {
 }
 
 function EmailForm({ settings }: { settings: InstanceEmailSettings }) {
+  const t = useTranslations('god.email');
+  const tCommon = useTranslations('common');
   const form = useGodEmailForm(settings);
 
   async function save() {
     try {
       await form.save();
-      toast.success('Email provider saved');
+      toast.success(t('saved'));
     } catch {
       // The failure already surfaced through the global mutation error toast.
     }
@@ -36,7 +39,7 @@ function EmailForm({ settings }: { settings: InstanceEmailSettings }) {
       slug="email"
       actions={
         <Button size="sm" onClick={() => void save()} disabled={!form.dirty || form.saving}>
-          {form.saving ? 'Saving…' : 'Save'}
+          {form.saving ? tCommon('saving') : tCommon('save')}
         </Button>
       }
     >

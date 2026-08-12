@@ -1,6 +1,7 @@
 'use client';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -28,15 +29,16 @@ export default function GodPager({
   onOffsetChange: (offset: number) => void;
   onLimitChange: (limit: number) => void;
 }) {
+  const t = useTranslations('god.pager');
   const first = total === 0 ? 0 : offset + 1;
   const last = Math.min(offset + limit, total);
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <span>Per page</span>
+        <span>{t('perPage')}</span>
         <Select value={String(limit)} onValueChange={(v) => onLimitChange(Number(v))}>
-          <SelectTrigger size="sm" className="w-[72px]" aria-label="Rows per page">
+          <SelectTrigger size="sm" className="w-[72px]" aria-label={t('rowsPerPage')}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -50,15 +52,13 @@ export default function GodPager({
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="text-xs text-muted-foreground">
-          {first}-{last} of {total}
-        </span>
+        <span className="text-xs text-muted-foreground">{t('range', { first, last, total })}</span>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
             className="size-8"
-            aria-label="Previous page"
+            aria-label={t('previous')}
             disabled={offset === 0}
             onClick={() => onOffsetChange(Math.max(0, offset - limit))}
           >
@@ -68,7 +68,7 @@ export default function GodPager({
             variant="ghost"
             size="icon"
             className="size-8"
-            aria-label="Next page"
+            aria-label={t('next')}
             disabled={last >= total}
             onClick={() => onOffsetChange(offset + limit)}
           >

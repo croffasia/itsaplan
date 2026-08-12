@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Role } from '@/lib/api';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -26,6 +27,7 @@ import { PermissionsPopover } from '@/components/common/permissions/PermissionsP
 // Owner-only — the API rejects a non-owner's writes, so a member sees a notice. The
 // default role cannot be deleted (no delete action on it).
 export default function RolesManager({ projectKey }: { projectKey: string }) {
+  const t = useTranslations('members.roles');
   const { isOwner } = usePermissions();
   const rolesQuery = useRolesQuery(projectKey, isOwner);
   const catalogQuery = usePermissionCatalogQuery();
@@ -33,8 +35,7 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
   const [editing, setEditing] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState<Role | null>(null);
 
-  if (!isOwner)
-    return <p className="text-sm text-muted-foreground">Only project owners can manage roles.</p>;
+  if (!isOwner) return <p className="text-sm text-muted-foreground">{t('ownerOnly')}</p>;
 
   const roles = rolesQuery.data ?? [];
   const catalog = catalogQuery.data ?? null;
@@ -44,9 +45,7 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
       {rolesQuery.isPending ? (
         <ListSkeleton className="py-4" />
       ) : roles.length === 0 ? (
-        <p className="py-4 text-sm text-muted-foreground">
-          No roles yet. Create one to grant scoped access.
-        </p>
+        <p className="py-4 text-sm text-muted-foreground">{t('empty')}</p>
       ) : (
         <Table className="min-w-[640px] table-fixed">
           <colgroup>
@@ -56,12 +55,14 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
           </colgroup>
           <TableHeader>
             <TableRow className="hover:bg-transparent">
-              <TableHead className="text-xs font-medium text-muted-foreground">Role</TableHead>
               <TableHead className="text-xs font-medium text-muted-foreground">
-                Permissions
+                {t('columns.role')}
+              </TableHead>
+              <TableHead className="text-xs font-medium text-muted-foreground">
+                {t('columns.permissions')}
               </TableHead>
               <TableHead className="text-right text-xs font-medium text-muted-foreground">
-                Actions
+                {t('columns.actions')}
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -73,7 +74,7 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
                     <span className="truncate text-sm font-medium">{role.name}</span>
                     {role.isDefault && (
                       <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
-                        Default
+                        {t('default')}
                       </Badge>
                     )}
                   </div>
@@ -90,13 +91,13 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
                           size="icon"
                           className="size-8 text-muted-foreground hover:text-foreground"
                           disabled={!catalog}
-                          aria-label="Edit role"
+                          aria-label={t('editAction')}
                           onClick={() => setEditing(role)}
                         >
                           <Pencil className="size-4" />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Edit role</TooltipContent>
+                      <TooltipContent>{t('editAction')}</TooltipContent>
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -106,7 +107,7 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
                             size="icon"
                             className="size-8 text-muted-foreground hover:text-destructive"
                             disabled={role.isDefault}
-                            aria-label="Delete role"
+                            aria-label={t('deleteAction')}
                             onClick={() => setDeleting(role)}
                           >
                             <Trash2 className="size-4" />
@@ -114,7 +115,7 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
                         </span>
                       </TooltipTrigger>
                       <TooltipContent>
-                        {role.isDefault ? 'The default role cannot be deleted' : 'Delete role'}
+                        {role.isDefault ? t('defaultUndeletable') : t('deleteAction')}
                       </TooltipContent>
                     </Tooltip>
                   </div>
@@ -136,17 +137,15 @@ export default function RolesManager({ projectKey }: { projectKey: string }) {
 
       {deleting && (
         <ConfirmDialog
-          title={`Delete role "${deleting.name}"`}
-          confirmLabel="Delete role"
+          title={t('deleteTitle', { name: deleting.name })}
+          confirmLabel={t('deleteAction')}
           onConfirm={async () => {
             await deleteRole.mutateAsync(deleting.id);
             setDeleting(null);
           }}
           onClose={() => setDeleting(null)}
         >
-          <div className="text-sm text-muted-foreground">
-            Members with this role will be moved to the default role. This cannot be undone.
-          </div>
+          <div className="text-sm text-muted-foreground">{t('deleteDescription')}</div>
         </ConfirmDialog>
       )}
     </div>

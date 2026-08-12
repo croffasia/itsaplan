@@ -1,6 +1,7 @@
 'use client';
 
 import { Bot } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { InstanceProjectMember, PermissionCatalog } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import Avatar from '@/components/common/Avatar';
@@ -15,6 +16,9 @@ export default function GodProjectMemberCard({
   member: InstanceProjectMember;
   catalog: PermissionCatalog | undefined;
 }) {
+  const t = useTranslations('god.access');
+  const tCommon = useTranslations('common');
+  const tUsers = useTranslations('god.users');
   const isOwner = member.role === 'owner';
 
   return (
@@ -34,17 +38,17 @@ export default function GodProjectMemberCard({
           {member.isAgent && (
             <Badge variant="secondary" className="gap-1 px-1.5 py-0 text-[10px] font-medium">
               <Bot className="size-3" />
-              Agent
+              {tUsers('agent')}
             </Badge>
           )}
           <Badge
             variant={isOwner ? 'default' : 'secondary'}
             className="px-1.5 py-0 text-[10px] font-medium"
           >
-            {isOwner ? 'Owner' : (member.roleName ?? 'Member')}
+            {isOwner ? tCommon('owner') : (member.roleName ?? tCommon('member'))}
           </Badge>
           <span className="text-xs text-muted-foreground">
-            joined {formatShortDate(member.joinedAt)}
+            {t('joined', { date: formatShortDate(member.joinedAt) })}
           </span>
         </>
       }

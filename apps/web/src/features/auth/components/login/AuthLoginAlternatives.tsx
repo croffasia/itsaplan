@@ -1,6 +1,7 @@
 'use client';
 
 import { KeyRound, Lock, Mail } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/field';
 import GoogleIcon from '@/components/common/GoogleIcon';
@@ -21,6 +22,7 @@ export default function AuthLoginAlternatives({
   onGoogle: () => void;
   onPasskey: () => void;
 }) {
+  const t = useTranslations('auth.login');
   const authConfig = useAuthConfig();
 
   // One Field for all of them so they sit together as a group — a Field each would
@@ -31,18 +33,18 @@ export default function AuthLoginAlternatives({
       {authConfig?.magicLink && (
         <Button type="button" variant="outline" disabled={pending} onClick={onToggleMethod}>
           {signingInWithLink ? <Lock /> : <Mail />}
-          {signingInWithLink ? 'Sign in with a password' : 'Email me a sign-in link'}
+          {signingInWithLink ? t('withPassword') : t('withLink')}
         </Button>
       )}
       {authConfig?.google && (
         <Button type="button" variant="outline" onClick={onGoogle} disabled={pending}>
           <GoogleIcon className="size-4" />
-          Continue with Google
+          {t('withGoogle')}
         </Button>
       )}
       <Button type="button" variant="outline" onClick={onPasskey} disabled={pending}>
         <KeyRound />
-        Sign in with passkey
+        {t('withPasskey')}
       </Button>
     </Field>
   );

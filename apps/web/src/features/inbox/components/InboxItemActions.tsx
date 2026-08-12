@@ -1,5 +1,8 @@
+'use client';
+
 import { type ElementType } from 'react';
 import { CalendarClock, Clock, MailOpen, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 // The menu primitives to render with. DropdownMenu and ContextMenu expose the same
 // component API, so the same item list backs both the "…" button and the row's
@@ -31,32 +34,34 @@ export default function InboxItemActions({
   onPickDate: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('inbox.actions');
+  const tCommon = useTranslations('common');
   const { Item, Separator, Sub, SubTrigger, SubContent } = menu;
   return (
     <>
       <Item onSelect={() => onToggleRead(unread)}>
         <MailOpen />
-        {unread ? 'Mark as read' : 'Mark as unread'}
+        {unread ? t('markRead') : t('markUnread')}
       </Item>
       <Separator />
       {snoozed ? (
         <Item onSelect={() => onSnooze(null)}>
           <Clock />
-          Unsnooze
+          {t('unsnooze')}
         </Item>
       ) : (
         <Sub>
           <SubTrigger>
             <Clock />
-            Snooze
+            {t('snooze')}
           </SubTrigger>
           <SubContent>
-            <Item onSelect={() => onSnooze(daysFromNow(1))}>Tomorrow</Item>
-            <Item onSelect={() => onSnooze(daysFromNow(7))}>In a week</Item>
+            <Item onSelect={() => onSnooze(daysFromNow(1))}>{t('tomorrow')}</Item>
+            <Item onSelect={() => onSnooze(daysFromNow(7))}>{t('inAWeek')}</Item>
             <Separator />
             <Item onSelect={onPickDate}>
               <CalendarClock />
-              Pick a date…
+              {t('pickDate')}
             </Item>
           </SubContent>
         </Sub>
@@ -64,7 +69,7 @@ export default function InboxItemActions({
       <Separator />
       <Item variant="destructive" onSelect={onDelete}>
         <Trash2 />
-        Delete
+        {tCommon('delete')}
       </Item>
     </>
   );

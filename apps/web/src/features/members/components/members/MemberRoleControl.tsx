@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { MemberRow, Role } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -31,13 +32,15 @@ export default function MemberRoleControl({
   canManage: boolean;
   isLastOwner: boolean;
 }) {
+  const t = useTranslations('members');
+  const tCommon = useTranslations('common');
   const setMemberRole = useSetMemberRole(projectKey);
   const isOwnerRow = member.role === 'owner';
 
   // A null roleId means the member uses the project's default role.
   const defaultRole = roles.find((r) => r.isDefault) ?? null;
   const currentId = member.roleId ?? defaultRole?.id ?? null;
-  const currentName = member.roleName ?? defaultRole?.name ?? 'Member';
+  const currentName = member.roleName ?? defaultRole?.name ?? tCommon('member');
 
   if (!canManage) {
     return (
@@ -45,7 +48,7 @@ export default function MemberRoleControl({
         variant={isOwnerRow ? 'secondary' : 'outline'}
         className="px-1.5 py-0 text-[10px] font-normal"
       >
-        {isOwnerRow ? 'Owner' : currentName}
+        {isOwnerRow ? tCommon('owner') : currentName}
       </Badge>
     );
   }
@@ -67,9 +70,9 @@ export default function MemberRoleControl({
       <SelectTrigger
         size="sm"
         className="h-7 w-36 text-xs"
-        title={isOwnerRow && isLastOwner ? 'A project must keep at least one owner' : undefined}
+        title={isOwnerRow && isLastOwner ? t('lastOwner') : undefined}
       >
-        <SelectValue placeholder="Select role" />
+        <SelectValue placeholder={t('selectRole')} />
       </SelectTrigger>
       <SelectContent>
         {roles.map((r) => (
@@ -77,7 +80,7 @@ export default function MemberRoleControl({
             {r.name}
           </SelectItem>
         ))}
-        <SelectItem value={OWNER_VALUE}>Owner</SelectItem>
+        <SelectItem value={OWNER_VALUE}>{tCommon('owner')}</SelectItem>
       </SelectContent>
     </Select>
   );

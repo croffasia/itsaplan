@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bot, LogOut, UserMinus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type MemberRow } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import Avatar from '@/components/common/Avatar';
@@ -31,6 +32,7 @@ import MemberDescriptionDialog from './MemberDescriptionDialog';
 // a member can only leave (remove themselves). The last owner is protected — the
 // API rejects it and the action is disabled here too.
 export default function MembersList({ projectKey }: { projectKey: string }) {
+  const t = useTranslations('members');
   const membersQuery = useMembersQuery(projectKey);
   const { can, isOwner } = usePermissions();
   const { data: session } = useSession();
@@ -72,10 +74,14 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
         </colgroup>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <TableHead className="text-xs font-medium text-muted-foreground">Member</TableHead>
-            <TableHead className="text-xs font-medium text-muted-foreground">Role</TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('columns.member')}
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('columns.role')}
+            </TableHead>
             <TableHead className="text-right text-xs font-medium text-muted-foreground">
-              Actions
+              {t('columns.actions')}
             </TableHead>
           </TableRow>
         </TableHeader>
@@ -87,7 +93,7 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
             const canRemove = !m.isAgent && (self || can('members_manage', 'delete'));
             const canEditDescription = !m.isAgent && (isOwner || self);
             const lastOwner = m.role === 'owner' && ownerCount === 1;
-            const removeLabel = self ? 'Leave project' : 'Revoke access';
+            const removeLabel = self ? t('leaveProject') : t('revokeAccess');
             return (
               <TableRow key={m.userId} className="group/item">
                 <TableCell className="px-3 py-3 align-top whitespace-normal">
@@ -101,7 +107,9 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
                       <span className="flex items-center gap-2 text-sm font-medium">
                         <span className="truncate">{m.name || m.email}</span>
                         {self && (
-                          <span className="text-xs font-normal text-muted-foreground">(you)</span>
+                          <span className="text-xs font-normal text-muted-foreground">
+                            {t('you')}
+                          </span>
                         )}
                       </span>
                       <span className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
@@ -111,12 +119,12 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
                             className="gap-1 px-1.5 py-0 text-[10px] font-medium"
                           >
                             <Bot className="size-3" />
-                            AI Agent
+                            {t('aiAgent')}
                           </Badge>
                         ) : (
                           <span className="truncate">{m.email}</span>
                         )}
-                        <span>· joined {formatShortDate(m.createdAt)}</span>
+                        <span>{t('joined', { date: formatShortDate(m.createdAt) })}</span>
                       </span>
                       <MemberDescription member={m} />
                     </div>
@@ -154,9 +162,7 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
                             )}
                           </Button>
                         </TooltipTrigger>
-                        <TooltipContent>
-                          {lastOwner ? 'A project must keep at least one owner' : removeLabel}
-                        </TooltipContent>
+                        <TooltipContent>{lastOwner ? t('lastOwner') : removeLabel}</TooltipContent>
                       </Tooltip>
                     )}
                   </div>
@@ -170,16 +176,16 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
       {target && (
         <ConfirmDialog
           title={
-            targetIsSelf ? 'Leave this project' : `Revoke access for ${target.name || target.email}`
+            targetIsSelf ? t('leaveTitle') : t('revokeTitle', { name: target.name || target.email })
           }
-          confirmLabel={targetIsSelf ? 'Leave project' : 'Revoke access'}
+          confirmLabel={targetIsSelf ? t('leaveProject') : t('revokeAccess')}
           onConfirm={confirmRemove}
           onClose={() => setTarget(null)}
         >
           <div className="text-sm text-muted-foreground">
             {targetIsSelf
-              ? 'You will lose access to this project and its issues. An owner can invite you back later.'
-              : `${target.name || target.email} will lose access to this project. They can be invited back later.`}
+              ? t('leaveDescription')
+              : t('revokeDescription', { name: target.name || target.email })}
           </div>
         </ConfirmDialog>
       )}

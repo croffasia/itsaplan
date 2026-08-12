@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 import { type Notification } from '@/lib/api';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import InboxListItem from './InboxListItem';
@@ -31,6 +32,7 @@ export default function InboxList({
   isFetchingNextPage: boolean;
   onLoadMore: () => void;
 }) {
+  const t = useTranslations('inbox');
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export default function InboxList({
   if (items.length === 0) {
     return (
       <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
-        No notifications
+        {t('empty')}
       </div>
     );
   }

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import type { NotificationEncryption } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -15,22 +16,20 @@ import ProviderToggle from '@/components/common/inputs/ProviderToggle';
 import SecretInput from '@/components/common/inputs/SecretInput';
 import type { GodEmailForm } from '../../hooks/useGodEmailForm';
 
-const ENCRYPTION_OPTIONS: { value: NotificationEncryption; label: string }[] = [
-  { value: 'none', label: 'None' },
-  { value: 'ssl', label: 'SSL' },
-  { value: 'tls', label: 'TLS' },
-];
+const ENCRYPTION_OPTIONS: NotificationEncryption[] = ['none', 'ssl', 'tls'];
 
 // The instance mail provider, one of SMTP or Resend. Everything the instance sends
 // (password resets, address confirmation, sign-in links) goes through it, which is
 // why the sign-in options on the Authentication page stay off until it is set.
 export default function GodEmailSettings({ form }: { form: GodEmailForm }) {
+  const t = useTranslations('god.email');
+
   return (
     <div className="space-y-8">
       <ProviderSection form={form} />
       <SettingsSection
-        title="Project notifications"
-        description="Let projects deliver their notifications through this provider instead of configuring one of their own. Each project still chooses whether to use it."
+        title={t('projectNotifications')}
+        description={t('projectNotificationsHint')}
         action={
           <EnabledSwitch
             checked={form.allowProjects}
@@ -44,11 +43,12 @@ export default function GodEmailSettings({ form }: { form: GodEmailForm }) {
 }
 
 function ProviderSection({ form }: { form: GodEmailForm }) {
+  const t = useTranslations('god.email');
   const { settings } = form;
   return (
     <SettingsSection
-      title="Email provider"
-      description="Choose one provider. Credentials are stored encrypted."
+      title={t('provider')}
+      description={t('providerHint')}
       action={
         <EnabledSwitch checked={form.enabled} onChange={form.setEnabled} disabled={form.saving} />
       }
@@ -57,22 +57,20 @@ function ProviderSection({ form }: { form: GodEmailForm }) {
         <ProviderToggle value={form.provider} onChange={form.setProvider} disabled={form.saving} />
 
         <div className="space-y-1.5 sm:max-w-md">
-          <Label htmlFor="email-from">From address</Label>
+          <Label htmlFor="email-from">{t('from')}</Label>
           <Input
             id="email-from"
             value={form.from}
             onChange={(e) => form.setFrom(e.target.value)}
             placeholder={"It's a Plan <noreply@example.com>"}
           />
-          <p className="text-xs text-muted-foreground">
-            Required for Resend. With SMTP it defaults to the username.
-          </p>
+          <p className="text-xs text-muted-foreground">{t('fromHint')}</p>
         </div>
 
         {form.provider === 'smtp' ? (
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-1.5">
-              <Label htmlFor="smtp-host">Host</Label>
+              <Label htmlFor="smtp-host">{t('host')}</Label>
               <Input
                 id="smtp-host"
                 value={form.host}
@@ -81,7 +79,7 @@ function ProviderSection({ form }: { form: GodEmailForm }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="smtp-port">Port</Label>
+              <Label htmlFor="smtp-port">{t('port')}</Label>
               <Input
                 id="smtp-port"
                 type="number"
@@ -92,7 +90,7 @@ function ProviderSection({ form }: { form: GodEmailForm }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="smtp-encryption">Encryption</Label>
+              <Label htmlFor="smtp-encryption">{t('encryption')}</Label>
               <Select
                 value={form.encryption}
                 onValueChange={(v) => form.setEncryption(v as NotificationEncryption)}
@@ -102,15 +100,15 @@ function ProviderSection({ form }: { form: GodEmailForm }) {
                 </SelectTrigger>
                 <SelectContent>
                   {ENCRYPTION_OPTIONS.map((o) => (
-                    <SelectItem key={o.value} value={o.value}>
-                      {o.label}
+                    <SelectItem key={o} value={o}>
+                      {t(`encryptionOptions.${o}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="smtp-username">Username</Label>
+              <Label htmlFor="smtp-username">{t('username')}</Label>
               <Input
                 id="smtp-username"
                 value={form.username}
@@ -120,31 +118,31 @@ function ProviderSection({ form }: { form: GodEmailForm }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="smtp-password">Password</Label>
+              <Label htmlFor="smtp-password">{t('password')}</Label>
               <SecretInput
                 id="smtp-password"
                 value={form.password}
                 onChange={form.setPassword}
                 hasStored={settings.smtp.hasPassword}
                 editable
-                placeholder="SMTP password"
+                placeholder={t('passwordPlaceholder')}
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="smtp-timeout">Timeout (s)</Label>
+              <Label htmlFor="smtp-timeout">{t('timeout')}</Label>
               <Input
                 id="smtp-timeout"
                 type="number"
                 min={1}
                 value={form.timeout}
                 onChange={(e) => form.setTimeout(e.target.value)}
-                placeholder="Optional"
+                placeholder={t('optional')}
               />
             </div>
           </div>
         ) : (
           <div className="space-y-1.5 sm:max-w-md">
-            <Label htmlFor="resend-api-key">API key</Label>
+            <Label htmlFor="resend-api-key">{t('apiKey')}</Label>
             <SecretInput
               id="resend-api-key"
               value={form.apiKey}

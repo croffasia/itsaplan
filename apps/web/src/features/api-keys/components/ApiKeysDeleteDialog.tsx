@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { apiKey } from '@/lib/auth-client';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import type { ApiKeyRow } from '../services/apiKeys.service';
@@ -14,10 +15,12 @@ export default function ApiKeysDeleteDialog({
   onClose: () => void;
   onDeleted: () => void | Promise<void>;
 }) {
+  const t = useTranslations('apiKeys');
+
   return (
     <ConfirmDialog
-      title="Delete API key?"
-      confirmLabel="Delete key"
+      title={t('deleteDialog.title')}
+      confirmLabel={t('deleteDialog.confirm')}
       onClose={onClose}
       onConfirm={async () => {
         // API key delete is a better-auth call, not a React Query mutation, so the
@@ -25,7 +28,7 @@ export default function ApiKeysDeleteDialog({
         // to keep the dialog open.
         const { error } = await apiKey.delete({ keyId: target.id });
         if (error) {
-          const message = error.message ?? 'Could not delete API key.';
+          const message = error.message ?? t('deleteDialog.error');
           toast.error(message);
           throw new Error(message);
         }
@@ -33,12 +36,10 @@ export default function ApiKeysDeleteDialog({
       }}
     >
       <p className="text-sm">
-        <span className="font-medium text-foreground">{target.name ?? 'API key'}</span>
+        <span className="font-medium text-foreground">{target.name ?? t('fallbackName')}</span>
         {target.start && <span className="text-muted-foreground"> · {target.start}…</span>}
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Any request using this key will stop working immediately. This cannot be undone.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{t('deleteDialog.description')}</p>
     </ConfirmDialog>
   );
 }

@@ -3,9 +3,12 @@
 export const MCP_URL = `${process.env.NEXT_PUBLIC_API_URL}/mcp`;
 
 interface McpClient {
+  // Product names stay as they are written by their makers; only the generic entry
+  // carries a key instead (labelKey), and the prose notes are translated by key.
   label: string;
+  labelKey?: 'other';
   file?: string;
-  note?: string;
+  noteKey?: 'claudeCode' | 'vscode' | 'claudeDesktop' | 'other';
   code: string;
 }
 
@@ -15,7 +18,7 @@ interface McpClient {
 export const MCP_CLIENTS: McpClient[] = [
   {
     label: 'Claude Code',
-    note: 'Run this in your terminal.',
+    noteKey: 'claudeCode',
     code: `claude mcp add --transport http plan ${MCP_URL} \\
   --header "Authorization: Bearer <API_KEY>"`,
   },
@@ -34,7 +37,7 @@ export const MCP_CLIENTS: McpClient[] = [
   {
     label: 'VS Code',
     file: '.vscode/mcp.json',
-    note: 'Needs GitHub Copilot.',
+    noteKey: 'vscode',
     code: `{
   "servers": {
     "plan": {
@@ -60,7 +63,7 @@ export const MCP_CLIENTS: McpClient[] = [
   {
     label: 'Claude Desktop',
     file: 'claude_desktop_config.json',
-    note: 'Claude Desktop reaches remote servers through the mcp-remote bridge. Needs Node.js.',
+    noteKey: 'claudeDesktop',
     code: `{
   "mcpServers": {
     "plan": {
@@ -75,7 +78,8 @@ export const MCP_CLIENTS: McpClient[] = [
   },
   {
     label: 'Other',
-    note: 'Any client that supports MCP over Streamable HTTP works. Point it at the endpoint and send an Authorization: Bearer <API_KEY> header.',
+    labelKey: 'other',
+    noteKey: 'other',
     code: MCP_URL,
   },
 ];

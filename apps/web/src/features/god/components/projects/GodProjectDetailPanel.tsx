@@ -1,6 +1,7 @@
 'use client';
 
 import { Users, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { InstanceProjectDetail } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/utils/dates';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
@@ -15,8 +16,9 @@ import GodProjectMemberCard from './GodProjectMemberCard';
 // One number from the project, with a quiet label under it. The counts read as a
 // grid so the size of a project is one glance rather than a list of sentences.
 function Stat({ label, value }: { label: string; value: number }) {
+  const t = useTranslations('god.projectPanel');
   return (
-    <div className="rounded-lg bg-muted/40 px-3 py-2.5" title={`${label}: ${value}`}>
+    <div className="rounded-lg bg-muted/40 px-3 py-2.5" title={t('statTitle', { label, value })}>
       <div className="text-lg font-semibold tabular-nums">{compactCount(value)}</div>
       <div className="text-xs text-muted-foreground">{label}</div>
     </div>
@@ -25,20 +27,18 @@ function Stat({ label, value }: { label: string; value: number }) {
 
 // The counts of a project, in the order they matter: the work first, then what is
 // configured around it.
-function stats(project: InstanceProjectDetail): { label: string; value: number }[] {
-  return [
-    { label: 'Issues', value: project.issueCount },
-    { label: 'Archived issues', value: project.archivedIssueCount },
-    { label: 'Initiatives', value: project.initiativeCount },
-    { label: 'Members', value: project.memberCount },
-    { label: 'Dashboards', value: project.dashboardCount },
-    { label: 'Views', value: project.viewCount },
-    { label: 'AI agents', value: project.agentCount },
-    { label: 'Skills', value: project.skillCount },
-    { label: 'Tools', value: project.toolCount },
-    { label: 'Integrations', value: project.integrationCount },
-  ];
-}
+const STATS = [
+  { key: 'issues', count: (p: InstanceProjectDetail) => p.issueCount },
+  { key: 'archivedIssues', count: (p: InstanceProjectDetail) => p.archivedIssueCount },
+  { key: 'initiatives', count: (p: InstanceProjectDetail) => p.initiativeCount },
+  { key: 'members', count: (p: InstanceProjectDetail) => p.memberCount },
+  { key: 'dashboards', count: (p: InstanceProjectDetail) => p.dashboardCount },
+  { key: 'views', count: (p: InstanceProjectDetail) => p.viewCount },
+  { key: 'agents', count: (p: InstanceProjectDetail) => p.agentCount },
+  { key: 'skills', count: (p: InstanceProjectDetail) => p.skillCount },
+  { key: 'tools', count: (p: InstanceProjectDetail) => p.toolCount },
+  { key: 'integrations', count: (p: InstanceProjectDetail) => p.integrationCount },
+] as const;
 
 // One project in a right-hand side panel (the same surface the user directory uses):
 // what the project holds, and every member with the permissions their membership
@@ -50,6 +50,8 @@ export default function GodProjectDetailPanel({
   projectId: number;
   onClose: () => void;
 }) {
+  const t = useTranslations('god.projectPanel');
+  const tCommon = useTranslations('common');
   const projectQuery = useInstanceProjectQuery(projectId);
   const catalogQuery = usePermissionCatalogQuery();
   const project = projectQuery.data;
@@ -69,7 +71,7 @@ export default function GodProjectDetailPanel({
                 {project?.key ?? '…'}
               </span>
               <h2 className="truncate text-base font-semibold">
-                {project ? project.name : 'Loading…'}
+                {project ? project.name : tCommon('loading')}
               </h2>
             </div>
             {project?.description && (
@@ -81,15 +83,21 @@ export default function GodProjectDetailPanel({
                   variant={project.mcpEnabled ? 'secondary' : 'outline'}
                   className="px-1.5 py-0 text-[10px] font-medium"
                 >
-                  MCP {project.mcpEnabled ? 'enabled' : 'off'}
+                  {t(project.mcpEnabled ? 'mcpEnabled' : 'mcpOff')}
                 </Badge>
                 <span className="text-xs text-muted-foreground">
-                  created {formatDate(project.createdAt)}
+                  {t('created', { date: formatDate(project.createdAt) })}
                 </span>
               </div>
             )}
           </div>
-          <Button variant="ghost" size="icon" className="size-7" onClick={onClose} title="Close">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={onClose}
+            title={tCommon('close')}
+          >
             <X />
           </Button>
         </div>
@@ -101,19 +109,22 @@ export default function GodProjectDetailPanel({
             <>
               <section className="space-y-3">
                 <div className="text-xs text-muted-foreground">
-                  Last activity:{' '}
-                  {project.lastActivityAt ? formatDateTime(project.lastActivityAt) : 'none yet'}
+                  {t('lastActivity', {
+                    value: project.lastActivityAt
+                      ? formatDateTime(project.lastActivityAt)
+                      : t('noActivity'),
+                  })}
                 </div>
                 <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                  {stats(project).map((s) => (
-                    <Stat key={s.label} label={s.label} value={s.value} />
+                  {STATS.map((s) => (
+                    <Stat key={s.key} label={t(`stats.${s.key}`)} value={s.count(project)} />
                   ))}
                 </div>
               </section>
 
               <section className="space-y-3">
                 <div className="flex items-baseline gap-2">
-                  <h3 className="text-sm font-medium">Members</h3>
+                  <h3 className="text-sm font-medium">{t('members')}</h3>
                   {project.members.length > 0 && (
                     <span className="text-xs text-muted-foreground">{project.members.length}</span>
                   )}
@@ -121,9 +132,9 @@ export default function GodProjectDetailPanel({
                 {project.members.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/30 px-6 py-10 text-center">
                     <Users className="size-5 text-muted-foreground" />
-                    <p className="text-sm font-medium">No members</p>
+                    <p className="text-sm font-medium">{t('noMembersTitle')}</p>
                     <p className="max-w-[36ch] text-xs text-muted-foreground">
-                      Nobody can reach this project until someone is invited to it.
+                      {t('noMembersHint')}
                     </p>
                   </div>
                 ) : (

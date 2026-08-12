@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
@@ -16,6 +17,7 @@ import AccountSecurityDeletePasskeyDialog from './components/security/AccountSec
 // Owns the passkey list query and the delete target; the child components refresh
 // the list through the callbacks after a change.
 export default function AccountSecurityPage() {
+  const t = useTranslations('account.security');
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState<PasskeyRow | null>(null);
@@ -25,20 +27,17 @@ export default function AccountSecurityPage() {
 
   return (
     <FullPageView
-      label="Security"
-      title="Security"
-      description={`How you sign in to ${session?.user.email ?? '…'}.`}
+      label={t('label')}
+      title={t('title')}
+      description={t('description', { email: session?.user.email ?? '…' })}
     >
-      <AccountSection
-        title="Password"
-        description="Changing your password signs out your other sessions."
-      >
+      <AccountSection title={t('passwordTitle')} description={t('passwordDescription')}>
         <AccountSecurityPasswordForm />
       </AccountSection>
 
       <AccountSection
-        title="Passkeys"
-        description="Sign in without a password using Touch ID, Windows Hello, or a security key."
+        title={t('passkeysTitle')}
+        description={t('passkeysDescription')}
         actions={<AccountSecurityAddPasskey onAdded={invalidate} />}
       >
         <AccountSecurityPasskeyList

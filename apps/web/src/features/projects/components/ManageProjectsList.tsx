@@ -1,6 +1,7 @@
 'use client';
 
 import { Copy, LogOut, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,6 +29,8 @@ export default function ManageProjectsList({
   onDelete: (project: Project) => void;
   onLeave: (project: Project) => void;
 }) {
+  const t = useTranslations('projects');
+
   if (isPending) {
     return (
       <div className="space-y-2 py-3">
@@ -38,9 +41,7 @@ export default function ManageProjectsList({
   }
 
   if (projects.length === 0) {
-    return (
-      <p className="py-6 text-sm text-muted-foreground">You are not a member of any project yet.</p>
-    );
+    return <p className="py-6 text-sm text-muted-foreground">{t('empty')}</p>;
   }
 
   return (
@@ -53,11 +54,17 @@ export default function ManageProjectsList({
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="text-xs font-medium text-muted-foreground">Project</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Role</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Permissions</TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.project')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.role')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.permissions')}
+          </TableHead>
           <TableHead className="text-right text-xs font-medium text-muted-foreground">
-            Actions
+            {t('columns.actions')}
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -78,11 +85,16 @@ export default function ManageProjectsList({
               </div>
             </TableCell>
             <TableCell className="px-3 py-3 align-top">
-              <span className="text-sm capitalize">{project.role ?? 'member'}</span>
+              <span className="text-sm">
+                {project.role === 'owner' ? t('roles.owner') : t('roles.member')}
+              </span>
             </TableCell>
             <TableCell className="px-3 py-3 align-top">
               {project.permissions ? (
-                <PermissionsPopover permissions={project.permissions} label="Your permissions" />
+                <PermissionsPopover
+                  permissions={project.permissions}
+                  label={t('yourPermissions')}
+                />
               ) : (
                 <span className="text-xs text-muted-foreground">—</span>
               )}
@@ -91,20 +103,20 @@ export default function ManageProjectsList({
               <div className="flex items-center justify-end gap-1">
                 <ManageProjectsRowAction
                   icon={Copy}
-                  label="Copy project"
+                  label={t('copyAction')}
                   onClick={() => onCopy(project)}
                 />
                 {project.role === 'owner' ? (
                   <ManageProjectsRowAction
                     icon={Trash2}
-                    label="Delete project"
+                    label={t('deleteAction')}
                     destructive
                     onClick={() => onDelete(project)}
                   />
                 ) : (
                   <ManageProjectsRowAction
                     icon={LogOut}
-                    label="Leave project"
+                    label={t('leaveAction')}
                     destructive
                     onClick={() => onLeave(project)}
                   />

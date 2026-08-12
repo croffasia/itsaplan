@@ -2,18 +2,11 @@
 
 import { useState, type ReactNode } from 'react';
 import { ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { PermissionCatalog, Permissions } from '@/lib/api';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import GodPermissionMatrix from './GodPermissionMatrix';
-
-// Where the permissions on show come from, in words. An owner bypasses the matrix
-// entirely, so its rows are all on and this says why.
-function sourceLabel(isOwner: boolean, roleName: string | null): string {
-  if (isOwner) return 'An owner has full access: the role matrix is not consulted.';
-  if (roleName) return `Resolved from the "${roleName}" role.`;
-  return 'No role assigned: the default member permissions apply.';
-}
 
 // One membership, from either side of it: a project the user can reach, or a member
 // of the project. `header` is what the row states about that side; the matrix behind
@@ -31,7 +24,12 @@ export default function GodAccessCard({
   permissions: Permissions;
   catalog: PermissionCatalog | undefined;
 }) {
+  const t = useTranslations('god.access');
   const [open, setOpen] = useState(false);
+
+  // Where the permissions on show come from, in words. An owner bypasses the matrix
+  // entirely, so its rows are all on and this says why.
+  const source = isOwner ? t('owner') : roleName ? t('role', { role: roleName }) : t('default');
 
   return (
     <Collapsible
@@ -47,7 +45,7 @@ export default function GodAccessCard({
       </CollapsibleTrigger>
 
       <CollapsibleContent className="border-t border-border/50 bg-background/40 px-3 py-3">
-        <p className="mb-2 text-xs text-muted-foreground">{sourceLabel(isOwner, roleName)}</p>
+        <p className="mb-2 text-xs text-muted-foreground">{source}</p>
         {catalog ? (
           <GodPermissionMatrix catalog={catalog} permissions={permissions} />
         ) : (

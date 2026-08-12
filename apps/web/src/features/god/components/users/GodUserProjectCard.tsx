@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { InstanceUserProject, PermissionCatalog } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +14,8 @@ export default function GodUserProjectCard({
   project: InstanceUserProject;
   catalog: PermissionCatalog | undefined;
 }) {
+  const t = useTranslations('god.access');
+  const tCommon = useTranslations('common');
   const isOwner = project.role === 'owner';
 
   return (
@@ -31,10 +34,10 @@ export default function GodUserProjectCard({
             variant={isOwner ? 'default' : 'secondary'}
             className="px-1.5 py-0 text-[10px] font-medium"
           >
-            {isOwner ? 'Owner' : (project.roleName ?? 'Member')}
+            {isOwner ? tCommon('owner') : (project.roleName ?? tCommon('member'))}
           </Badge>
           <span className="text-xs text-muted-foreground">
-            joined {formatShortDate(project.joinedAt)}
+            {t('joined', { date: formatShortDate(project.joinedAt) })}
           </span>
         </>
       }

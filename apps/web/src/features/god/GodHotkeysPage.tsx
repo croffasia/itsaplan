@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { HotkeyOverrides } from '@/lib/api';
 import { DEFAULT_COMBOS } from '@/utils/hotkeys';
 import HotkeysEditor from '@/components/common/hotkeys/HotkeysEditor';
@@ -16,6 +17,8 @@ import {
 // The instance keyboard shortcuts. What is stored is the set of commands rebound
 // away from their built-in key; a row reset to the default drops out of the map.
 export default function GodHotkeysPage() {
+  const t = useTranslations('god.hotkeys');
+  const tCommon = useTranslations('common');
   const query = useInstanceHotkeySettingsQuery();
   const update = useUpdateInstanceHotkeySettings();
   const [draft, setDraft] = useState<HotkeyOverrides | null>(null);
@@ -28,7 +31,7 @@ export default function GodHotkeysPage() {
     try {
       await update.mutateAsync(overrides);
       setDraft(null);
-      toast.success('Keyboard shortcuts saved');
+      toast.success(t('saved'));
     } catch {
       // The failure already surfaced through the global mutation error toast.
     }
@@ -39,7 +42,7 @@ export default function GodHotkeysPage() {
       slug="hotkeys"
       actions={
         <Button size="sm" disabled={!dirty || update.isPending} onClick={() => void save()}>
-          {update.isPending ? 'Saving…' : 'Save'}
+          {update.isPending ? tCommon('saving') : tCommon('save')}
         </Button>
       }
     >

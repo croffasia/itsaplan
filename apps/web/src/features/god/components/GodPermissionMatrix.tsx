@@ -3,7 +3,9 @@
 import { Fragment, useMemo } from 'react';
 import { Check, Minus } from 'lucide-react';
 import type { PermissionCatalog, Permissions } from '@/lib/api';
-import { actionLabel, groupResources, orderActions, resourceLabel } from '@/utils/permissions';
+import { useTranslations } from 'next-intl';
+import { groupResources, orderActions } from '@/utils/permissions';
+import { usePermissionLabels } from '@/hooks/usePermissionLabels';
 
 // A read-only permission matrix: resources down, actions across, a check where the
 // membership grants it. The role editor owns the editable version; this one only
@@ -15,6 +17,8 @@ export default function GodPermissionMatrix({
   catalog: PermissionCatalog;
   permissions: Permissions;
 }) {
+  const t = useTranslations('permissions');
+  const { actionLabel, resourceLabel, groupLabel } = usePermissionLabels();
   const groups = useMemo(() => groupResources(catalog.resources), [catalog.resources]);
   const actions = useMemo(() => orderActions(catalog.actions), [catalog.actions]);
 
@@ -23,7 +27,7 @@ export default function GodPermissionMatrix({
       <thead>
         <tr className="border-b">
           <th className="py-1.5 pr-2 text-left text-[11px] font-medium text-muted-foreground">
-            Resource
+            {t('resourceColumn')}
           </th>
           {actions.map((action) => (
             <th
@@ -37,10 +41,10 @@ export default function GodPermissionMatrix({
       </thead>
       <tbody>
         {groups.map((group) => (
-          <Fragment key={group.title}>
+          <Fragment key={group.key}>
             <tr className="border-b bg-muted/40">
               <td className="py-1 pr-2 text-xs font-medium" colSpan={actions.length + 1}>
-                {group.title}
+                {groupLabel(group.key)}
               </td>
             </tr>
             {group.resources.map((resource) => (
@@ -49,11 +53,11 @@ export default function GodPermissionMatrix({
                 {actions.map((action) => (
                   <td key={action} className="px-1 py-1.5 text-center">
                     {permissions[resource]?.[action] ? (
-                      <Check className="mx-auto size-3.5 text-primary" aria-label="allowed" />
+                      <Check className="mx-auto size-3.5 text-primary" aria-label={t('allowed')} />
                     ) : (
                       <Minus
                         className="mx-auto size-3.5 text-muted-foreground/40"
-                        aria-label="not allowed"
+                        aria-label={t('notAllowed')}
                       />
                     )}
                   </td>

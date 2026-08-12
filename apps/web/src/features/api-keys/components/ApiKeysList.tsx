@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { ItemGroup } from '@/components/ui/item';
 import { Skeleton } from '@/components/ui/skeleton';
 import ApiKeysItem from './ApiKeysItem';
@@ -14,6 +15,8 @@ export default function ApiKeysList({
   isPending: boolean;
   onDelete: (apiKey: ApiKeyRow) => void;
 }) {
+  const t = useTranslations('apiKeys');
+
   if (isPending) {
     return (
       <div className="space-y-2 py-3">
@@ -24,11 +27,7 @@ export default function ApiKeysList({
   }
 
   if (apiKeys.length === 0) {
-    return (
-      <p className="py-6 text-sm text-muted-foreground">
-        No API keys yet. Create one to authenticate requests to the API.
-      </p>
-    );
+    return <p className="py-6 text-sm text-muted-foreground">{t('empty')}</p>;
   }
 
   return (

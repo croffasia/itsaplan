@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useQuery } from '@tanstack/react-query';
 import { authClient } from '@/lib/auth-client';
 import { qk } from '@/services/queryKeys';
@@ -15,9 +16,9 @@ export type ApiKeyRow = {
 // Goes through the auth client, not plain fetch, so better-auth's baseURL and the
 // session cookie are reused. The endpoint returns a paginated
 // `{ apiKeys, total, ... }` shape.
-async function fetchApiKeys(): Promise<ApiKeyRow[]> {
+async function fetchApiKeys(loadFailed: string): Promise<ApiKeyRow[]> {
   const { data, error } = await authClient.apiKey.list();
-  if (error) throw new Error(error.message ?? 'Could not load API keys.');
+  if (error) throw new Error(error.message ?? loadFailed);
   return (data?.apiKeys ?? []).map((key) => ({
     id: key.id,
     name: key.name,
@@ -27,5 +28,6 @@ async function fetchApiKeys(): Promise<ApiKeyRow[]> {
 }
 
 export function useApiKeysQuery() {
-  return useQuery({ queryKey: qk.apiKeys, queryFn: fetchApiKeys });
+  const t = useTranslations('apiKeys');
+  return useQuery({ queryKey: qk.apiKeys, queryFn: () => fetchApiKeys(t('loadFailed')) });
 }

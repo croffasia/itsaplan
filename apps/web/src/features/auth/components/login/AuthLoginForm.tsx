@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -27,7 +28,7 @@ import {
 } from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';
-import { redirectErrorMessage } from '../../utils/redirectErrors';
+import { useRedirectError } from '../../hooks/useRedirectError';
 
 // How the visitor is signing in. The screen holds one method at a time: with a
 // password, or with a link mailed to the address. Passkeys stay available in both,
@@ -35,6 +36,7 @@ import { redirectErrorMessage } from '../../utils/redirectErrors';
 type Method = 'password' | 'link';
 
 export default function AuthLoginForm() {
+  const t = useTranslations('auth');
   const [method, setMethod] = useState<Method>('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -53,6 +55,7 @@ export default function AuthLoginForm() {
   // A Google sign-in or a confirmation link that could not complete comes back here
   // as a redirect rather than as a rejected promise, so its reason arrives in the
   // query string.
+  const redirectErrorMessage = useRedirectError();
   const redirectError = redirectErrorMessage(params.get('error'), params.get('error_description'));
   // The confirmation link carries ?verified=1 and adds ?error=… when it failed, so
   // the success line only stands while there is no error next to it.
@@ -91,8 +94,8 @@ export default function AuthLoginForm() {
   if (linkSentTo) {
     return (
       <AuthMessagePanel
-        title="Check your email"
-        description={`We sent a sign-in link to ${linkSentTo}. Open it to sign in.`}
+        title={t('login.linkSentTitle')}
+        description={t('login.linkSentDescription', { email: linkSentTo })}
         footer={
           <button
             type="button"
@@ -102,7 +105,7 @@ export default function AuthLoginForm() {
               switchTo('password');
             }}
           >
-            Back to sign in
+            {t('login.backToSignIn')}
           </button>
         }
       />
@@ -112,28 +115,28 @@ export default function AuthLoginForm() {
   const signingInWithLink = method === 'link';
 
   function subtitle() {
-    if (justVerified) return 'Your email is confirmed. Sign in to continue.';
-    if (justReset) return 'Your password is changed. Sign in with it.';
-    if (signingInWithLink) return 'We will email you a link that signs you in';
-    return 'Sign in with your email and password';
+    if (justVerified) return t('login.subtitleVerified');
+    if (justReset) return t('login.subtitleReset');
+    if (signingInWithLink) return t('login.subtitleLink');
+    return t('login.subtitlePassword');
   }
 
   function submitLabel() {
-    if (signingInWithLink) return pending ? 'Sending…' : 'Send sign-in link';
-    return pending ? 'Signing in…' : 'Sign in';
+    if (signingInWithLink) return pending ? t('login.sendLinkPending') : t('login.sendLink');
+    return pending ? t('login.submitPending') : t('login.submit');
   }
 
   return (
     <form onSubmit={onSubmit} className="p-6 md:p-8">
       <FieldGroup>
-        <AuthFormHeader title="Welcome back" description={subtitle()} />
+        <AuthFormHeader title={t('login.title')} description={subtitle()} />
 
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel htmlFor="email">{t('fields.email')}</FieldLabel>
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
+            placeholder={t('fields.emailPlaceholder')}
             autoComplete="email"
             required
             value={email}
@@ -145,13 +148,13 @@ export default function AuthLoginForm() {
         {!signingInWithLink && (
           <Field>
             <div className="flex items-center justify-between">
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel htmlFor="password">{t('fields.password')}</FieldLabel>
               {authConfig?.emailEnabled && (
                 <Link
                   href="/forgot-password"
                   className="text-sm text-muted-foreground underline-offset-4 hover:underline"
                 >
-                  Forgot password?
+                  {t('login.forgotPassword')}
                 </Link>
               )}
             </div>
@@ -193,23 +196,23 @@ export default function AuthLoginForm() {
           </Button>
         </Field>
 
-        <FieldSeparator>Or</FieldSeparator>
+        <FieldSeparator>{t('login.or')}</FieldSeparator>
 
         <AuthLoginAlternatives
           signingInWithLink={signingInWithLink}
           pending={pending}
           onToggleMethod={() => switchTo(signingInWithLink ? 'password' : 'link')}
           onGoogle={() => run(signInWithGoogle, { redirect: false })}
-          onPasskey={() => run(signInWithPasskey)}
+          onPasskey={() => run(signInWithPasskey, { fallback: t('errors.passkey') })}
         />
 
         {/* Only when anyone can register. An invite-only instance hands out links
             directly, and a closed one has nowhere to send the visitor. */}
         {authConfig?.registration === 'open' && (
           <FieldDescription className="text-center">
-            Don&apos;t have an account?{' '}
+            {t('login.noAccount')}{' '}
             <Link href="/register" className="underline underline-offset-4">
-              Sign up
+              {t('login.signUp')}
             </Link>
           </FieldDescription>
         )}

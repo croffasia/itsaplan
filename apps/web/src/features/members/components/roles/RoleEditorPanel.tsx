@@ -2,6 +2,7 @@
 
 import { Fragment, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type {
   PermissionAction,
   PermissionCatalog,
@@ -15,7 +16,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useCreateRole, useUpdateRole } from '@/services/roles.service';
 import { MatrixCheckbox } from './MatrixCheckbox';
-import { actionLabel, groupResources, orderActions, resourceLabel } from '@/utils/permissions';
+import { groupResources, orderActions } from '@/utils/permissions';
+import { usePermissionLabels } from '@/hooks/usePermissionLabels';
 
 // A full permission matrix over the catalog, seeded from an existing role (edit)
 // or all-false (create). Building from the catalog keeps the grid in sync with the
@@ -53,6 +55,9 @@ export default function RoleEditorPanel({
   catalog: PermissionCatalog;
   onClose: () => void;
 }) {
+  const t = useTranslations('members.roles');
+  const tCommon = useTranslations('common');
+  const { actionLabel, resourceLabel, groupLabel } = usePermissionLabels();
   const [name, setName] = useState(role?.name ?? '');
   const [matrix, setMatrix] = useState<Permissions>(() => seedMatrix(catalog, role));
   const createRole = useCreateRole(projectKey);
@@ -104,28 +109,36 @@ export default function RoleEditorPanel({
       <div className="ml-auto flex h-full w-full flex-col border-l bg-card sm:w-[680px] sm:max-w-[92vw]">
         <div className="flex shrink-0 items-center justify-between border-b px-6 py-4">
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-medium">{role ? 'Edit role' : 'New role'}</h2>
+            <h2 className="truncate text-sm font-medium">
+              {role ? t('editorTitleEdit') : t('editorTitleNew')}
+            </h2>
             <p className="text-xs text-muted-foreground">
               <span className="rounded bg-secondary px-1.5 py-0.5 font-medium text-secondary-foreground">
                 {projectKey}
               </span>{' '}
-              role permissions
+              {t('editorSubtitle')}
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="size-7" onClick={onClose} title="Close">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={onClose}
+            title={tCommon('close')}
+          >
             <X />
           </Button>
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-6 py-4">
           <div className="space-y-1.5">
-            <Label htmlFor="role-name">Name</Label>
+            <Label htmlFor="role-name">{tCommon('name')}</Label>
             <Input
               id="role-name"
               autoFocus
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Contributor"
+              placeholder={t('namePlaceholder')}
               className="h-9"
             />
           </div>
@@ -133,7 +146,7 @@ export default function RoleEditorPanel({
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b">
-                <th className="py-2 pr-2 text-left text-xs font-medium">Resource</th>
+                <th className="py-2 pr-2 text-left text-xs font-medium">{t('resourceColumn')}</th>
                 {actions.map((action) => {
                   const state = triState(cellsFor(catalog.resources, [action]));
                   return (
@@ -145,8 +158,8 @@ export default function RoleEditorPanel({
                         <MatrixCheckbox
                           checked={state}
                           onCheckedChange={() => apply(catalog.resources, [action], state !== true)}
-                          title={`Toggle ${actionLabel(action)} for all resources`}
-                          aria-label={`Toggle ${actionLabel(action)} for all resources`}
+                          title={t('toggleActionAll', { action: actionLabel(action) })}
+                          aria-label={t('toggleActionAll', { action: actionLabel(action) })}
                         />
                       </div>
                     </th>
@@ -158,7 +171,7 @@ export default function RoleEditorPanel({
               {groups.map((group) => {
                 const groupState = triState(cellsFor(group.resources, actions));
                 return (
-                  <Fragment key={group.title}>
+                  <Fragment key={group.key}>
                     <tr className="border-b bg-muted/40">
                       <td className="py-1.5 pr-2">
                         <div className="flex items-center gap-2">
@@ -167,10 +180,10 @@ export default function RoleEditorPanel({
                             onCheckedChange={() =>
                               apply(group.resources, actions, groupState !== true)
                             }
-                            title={`Toggle all ${group.title} permissions`}
-                            aria-label={`Toggle all ${group.title} permissions`}
+                            title={t('toggleGroupAll', { group: groupLabel(group.key) })}
+                            aria-label={t('toggleGroupAll', { group: groupLabel(group.key) })}
                           />
-                          <span className="text-xs font-medium">{group.title}</span>
+                          <span className="text-xs font-medium">{groupLabel(group.key)}</span>
                         </div>
                       </td>
                       {actions.map((action) => {
@@ -182,8 +195,14 @@ export default function RoleEditorPanel({
                               onCheckedChange={() =>
                                 apply(group.resources, [action], state !== true)
                               }
-                              title={`Toggle ${actionLabel(action)} for ${group.title}`}
-                              aria-label={`Toggle ${actionLabel(action)} for ${group.title}`}
+                              title={t('toggleActionGroup', {
+                                action: actionLabel(action),
+                                group: groupLabel(group.key),
+                              })}
+                              aria-label={t('toggleActionGroup', {
+                                action: actionLabel(action),
+                                group: groupLabel(group.key),
+                              })}
                             />
                           </td>
                         );
@@ -199,7 +218,10 @@ export default function RoleEditorPanel({
                               onCheckedChange={() =>
                                 apply([resource], [action], !matrix[resource][action])
                               }
-                              aria-label={`${resourceLabel(resource)}: ${actionLabel(action)}`}
+                              aria-label={t('cellAria', {
+                                resource: resourceLabel(resource),
+                                action: actionLabel(action),
+                              })}
                             />
                           </td>
                         ))}
@@ -214,10 +236,10 @@ export default function RoleEditorPanel({
 
         <div className="flex shrink-0 items-center justify-end gap-2 border-t px-6 py-3">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button onClick={save} disabled={busy || !name.trim()}>
-            {role ? 'Save role' : 'Create role'}
+            {role ? t('saveRole') : t('createRole')}
           </Button>
         </div>
       </div>

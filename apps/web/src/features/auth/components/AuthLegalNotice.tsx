@@ -1,3 +1,6 @@
+'use client';
+
+import { useTranslations } from 'next-intl';
 import { PRIVACY_POLICY_URL, TERMS_URL } from '@/utils/app';
 
 const linkClass = 'underline underline-offset-4 hover:text-foreground';
@@ -7,24 +10,31 @@ const linkClass = 'underline underline-offset-4 hover:text-foreground';
 // starts, so this stays visible next to the "Continue with Google" button. An
 // instance that does not configure the URLs (apps/web/.env) renders nothing.
 export default function AuthLegalNotice() {
-  const terms = TERMS_URL ? (
-    <a href={TERMS_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
-      Terms of Service
-    </a>
-  ) : null;
-  const privacy = PRIVACY_POLICY_URL ? (
-    <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
-      Privacy Policy
-    </a>
-  ) : null;
+  const t = useTranslations('auth.legal');
 
-  if (!terms && !privacy) return null;
+  if (!TERMS_URL && !PRIVACY_POLICY_URL) return null;
+
+  const key = TERMS_URL && PRIVACY_POLICY_URL ? 'both' : TERMS_URL ? 'termsOnly' : 'privacyOnly';
 
   return (
     <p className="text-center text-xs text-muted-foreground">
-      By continuing you agree to our {terms}
-      {terms && privacy ? ' and ' : null}
-      {privacy}.
+      {t.rich(key, {
+        terms: (chunks) => (
+          <a href={TERMS_URL} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {chunks}
+          </a>
+        ),
+        privacy: (chunks) => (
+          <a
+            href={PRIVACY_POLICY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={linkClass}
+          >
+            {chunks}
+          </a>
+        ),
+      })}
     </p>
   );
 }

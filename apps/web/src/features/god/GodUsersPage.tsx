@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { InstanceUserKind } from '@/lib/api';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -20,6 +21,7 @@ import { withOffsetReset } from './utils/paging';
 // Search, the kind filter and paging all run on the server: the query carries them
 // and gets back one page plus the total, so the list never holds every account.
 export default function GodUsersPage() {
+  const t = useTranslations('god.users');
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState<InstanceUserKind>('human');
   const [limit, setLimit] = useState<number>(PAGE_SIZES[1]);
@@ -46,7 +48,7 @@ export default function GodUsersPage() {
         {usersQuery.isPending ? (
           <ListSkeleton rows={6} rowClassName="h-12" />
         ) : users.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No accounts match these filters.</p>
+          <p className="text-sm text-muted-foreground">{t('empty')}</p>
         ) : (
           <>
             <GodUsersTable users={users} onSelect={setSelected} />

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -14,6 +15,7 @@ import { useAuthAction } from '../../hooks/useAuthAction';
 // The screen the reset link opens. better-auth redirects here with ?token= when the
 // token is valid, and with ?error= when it expired or was already used.
 export default function AuthResetPasswordForm() {
+  const t = useTranslations('auth');
   const params = useSearchParams();
   const router = useRouter();
   const token = params.get('token') ?? '';
@@ -27,7 +29,7 @@ export default function AuthResetPasswordForm() {
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (password !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('errors.passwordsDoNotMatch'));
       return;
     }
     run(
@@ -43,11 +45,11 @@ export default function AuthResetPasswordForm() {
   if (!token || linkError) {
     return (
       <AuthMessagePanel
-        title="This link no longer works"
-        description="Reset links expire and can be used once. Request a new one."
+        title={t('resetPassword.deadLinkTitle')}
+        description={t('resetPassword.deadLinkDescription')}
         footer={
           <Link href="/forgot-password" className="underline underline-offset-4">
-            Send a new link
+            {t('resetPassword.sendNewLink')}
           </Link>
         }
       />
@@ -58,12 +60,12 @@ export default function AuthResetPasswordForm() {
     <form onSubmit={onSubmit} className="p-6 md:p-8">
       <FieldGroup>
         <AuthFormHeader
-          title="Set a new password"
-          description="Choose a password you have not used here before"
+          title={t('resetPassword.title')}
+          description={t('resetPassword.subtitle')}
         />
 
         <Field>
-          <FieldLabel htmlFor="password">New password</FieldLabel>
+          <FieldLabel htmlFor="password">{t('fields.newPassword')}</FieldLabel>
           <Input
             id="password"
             type="password"
@@ -74,11 +76,11 @@ export default function AuthResetPasswordForm() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={pending}
           />
-          <FieldDescription>Must be at least 8 characters long.</FieldDescription>
+          <FieldDescription>{t('fields.passwordHint')}</FieldDescription>
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="confirm-password">Confirm password</FieldLabel>
+          <FieldLabel htmlFor="confirm-password">{t('fields.confirmPassword')}</FieldLabel>
           <Input
             id="confirm-password"
             type="password"
@@ -95,7 +97,7 @@ export default function AuthResetPasswordForm() {
 
         <Field>
           <Button type="submit" disabled={pending}>
-            {pending ? 'Saving…' : 'Set new password'}
+            {pending ? t('resetPassword.submitPending') : t('resetPassword.submit')}
           </Button>
         </Field>
       </FieldGroup>

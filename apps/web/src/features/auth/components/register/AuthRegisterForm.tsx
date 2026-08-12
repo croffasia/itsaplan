@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   Field,
@@ -20,6 +21,7 @@ import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';
 
 export default function AuthRegisterForm() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -32,7 +34,7 @@ export default function AuthRegisterForm() {
   function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (password !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('errors.passwordsDoNotMatch'));
       return;
     }
     // With confirmation required, sign-up still opens a session (autoSignIn), so it
@@ -55,11 +57,11 @@ export default function AuthRegisterForm() {
   if (awaitingConfirmation) {
     return (
       <AuthMessagePanel
-        title="Confirm your email"
-        description={`We sent a link to ${email}. Open it to finish creating your account.`}
+        title={t('register.confirmTitle')}
+        description={t('register.confirmDescription', { email })}
         footer={
           <Link href="/login" className="underline underline-offset-4">
-            Back to sign in
+            {t('register.backToSignIn')}
           </Link>
         }
       />
@@ -71,13 +73,13 @@ export default function AuthRegisterForm() {
   if (authConfig?.registration === 'closed') {
     return (
       <AuthMessagePanel
-        title="Registration is closed"
-        description="This instance is not accepting new accounts."
+        title={t('register.closedTitle')}
+        description={t('register.closedDescription')}
         footer={
           <>
-            Already have an account?{' '}
+            {t('register.haveAccount')}{' '}
             <Link href="/login" className="underline underline-offset-4">
-              Sign in
+              {t('register.signIn')}
             </Link>
           </>
         }
@@ -89,20 +91,16 @@ export default function AuthRegisterForm() {
     <form onSubmit={onSubmit} className="p-6 md:p-8">
       <FieldGroup>
         <AuthFormHeader
-          title="Create your account"
-          description={
-            inviteOnly
-              ? 'This instance is invite only. Use the address you were invited with.'
-              : 'Sign up with your email and password'
-          }
+          title={t('register.title')}
+          description={inviteOnly ? t('register.subtitleInviteOnly') : t('register.subtitle')}
         />
 
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel htmlFor="email">{t('fields.email')}</FieldLabel>
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
+            placeholder={t('fields.emailPlaceholder')}
             autoComplete="email"
             required
             value={email}
@@ -112,7 +110,7 @@ export default function AuthRegisterForm() {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <FieldLabel htmlFor="password">{t('fields.password')}</FieldLabel>
           <Input
             id="password"
             type="password"
@@ -123,11 +121,11 @@ export default function AuthRegisterForm() {
             onChange={(e) => setPassword(e.target.value)}
             disabled={pending}
           />
-          <FieldDescription>Must be at least 8 characters long.</FieldDescription>
+          <FieldDescription>{t('fields.passwordHint')}</FieldDescription>
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="confirm-password">Confirm password</FieldLabel>
+          <FieldLabel htmlFor="confirm-password">{t('fields.confirmPassword')}</FieldLabel>
           <Input
             id="confirm-password"
             type="password"
@@ -144,7 +142,7 @@ export default function AuthRegisterForm() {
 
         <Field>
           <Button type="submit" disabled={pending}>
-            {pending ? 'Creating account…' : 'Create account'}
+            {pending ? t('register.submitPending') : t('register.submit')}
           </Button>
         </Field>
 
@@ -152,7 +150,7 @@ export default function AuthRegisterForm() {
             to the same registration mode as the form above. */}
         {authConfig?.google && (
           <>
-            <FieldSeparator>Or</FieldSeparator>
+            <FieldSeparator>{t('register.or')}</FieldSeparator>
             <Field>
               <Button
                 type="button"
@@ -161,16 +159,16 @@ export default function AuthRegisterForm() {
                 disabled={pending}
               >
                 <GoogleIcon className="size-4" />
-                Continue with Google
+                {t('register.withGoogle')}
               </Button>
             </Field>
           </>
         )}
 
         <FieldDescription className="text-center">
-          Already have an account?{' '}
+          {t('register.haveAccount')}{' '}
           <Link href="/login" className="underline underline-offset-4">
-            Sign in
+            {t('register.signIn')}
           </Link>
         </FieldDescription>
       </FieldGroup>

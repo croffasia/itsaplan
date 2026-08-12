@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Check, Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { apiKey } from '@/lib/auth-client';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,8 @@ export default function ApiKeysCreateDialog({
   onCreated: () => void;
   onClose: () => void;
 }) {
+  const t = useTranslations('apiKeys');
+  const tCommon = useTranslations('common');
   const [name, setName] = useState('');
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -26,7 +29,7 @@ export default function ApiKeysCreateDialog({
     meta: { suppressErrorToast: true },
     mutationFn: async () => {
       const { data, error } = await apiKey.create({ name: name.trim() });
-      if (error) throw new Error(error.message ?? 'Could not create API key.');
+      if (error) throw new Error(error.message ?? t('createDialog.error'));
       return data;
     },
     onSuccess: (data) => {
@@ -48,11 +51,9 @@ export default function ApiKeysCreateDialog({
 
   if (createdKey !== null) {
     return (
-      <Modal title="API key created" onClose={onClose}>
+      <Modal title={t('createdDialog.title')} onClose={onClose}>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Copy your key now. For security, it is shown only once and cannot be retrieved later.
-          </p>
+          <p className="text-sm text-muted-foreground">{t('createdDialog.description')}</p>
           <div className="flex items-center gap-2">
             <Input
               readOnly
@@ -64,14 +65,14 @@ export default function ApiKeysCreateDialog({
               variant="outline"
               size="icon"
               className="shrink-0"
-              title="Copy key"
+              title={t('createdDialog.copy')}
               onClick={copy}
             >
               {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
             </Button>
           </div>
           <div className="flex justify-end">
-            <Button onClick={onClose}>Done</Button>
+            <Button onClick={onClose}>{tCommon('done')}</Button>
           </div>
         </div>
       </Modal>
@@ -81,7 +82,7 @@ export default function ApiKeysCreateDialog({
   const trimmed = name.trim();
 
   return (
-    <Modal title="Create API key" onClose={onClose}>
+    <Modal title={t('createDialog.title')} onClose={onClose}>
       <form
         className="space-y-4"
         onSubmit={(e) => {
@@ -91,16 +92,16 @@ export default function ApiKeysCreateDialog({
       >
         <div className="space-y-1.5">
           <label htmlFor="api-key-name" className="text-sm font-medium">
-            Name
+            {t('createDialog.nameLabel')}
           </label>
           <Input
             id="api-key-name"
             autoFocus
-            placeholder="e.g. CI pipeline"
+            placeholder={t('createDialog.namePlaceholder')}
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
-          <p className="text-xs text-muted-foreground">A label to recognize this key later.</p>
+          <p className="text-xs text-muted-foreground">{t('createDialog.nameHint')}</p>
         </div>
 
         {createMutation.error && (
@@ -114,10 +115,10 @@ export default function ApiKeysCreateDialog({
             onClick={onClose}
             disabled={createMutation.isPending}
           >
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button type="submit" disabled={!trimmed || createMutation.isPending}>
-            {createMutation.isPending ? 'Creating…' : 'Create key'}
+            {createMutation.isPending ? t('createDialog.submitPending') : t('createDialog.submit')}
           </Button>
         </div>
       </form>

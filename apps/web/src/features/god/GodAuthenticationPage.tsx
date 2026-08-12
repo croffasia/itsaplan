@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { InstanceAuthSettings } from '@/lib/api';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
@@ -26,6 +27,8 @@ export default function GodAuthenticationPage() {
 // The registration policy and the sign-in options. The provider credentials live
 // under Integrations (Email provider, Auth provider).
 function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettings }) {
+  const t = useTranslations('god.authentication');
+  const tCommon = useTranslations('common');
   const policy = useGodPolicyForm(authSettings);
 
   // The options that send mail need a configured provider; the API rejects them
@@ -35,7 +38,7 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
   async function save() {
     try {
       await policy.save();
-      toast.success('Authentication settings saved');
+      toast.success(t('saved'));
     } catch {
       // The failure already surfaced through the global mutation error toast.
     }
@@ -46,15 +49,12 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
       slug="authentication"
       actions={
         <Button size="sm" onClick={() => void save()} disabled={!policy.dirty || policy.saving}>
-          {policy.saving ? 'Saving…' : 'Save'}
+          {policy.saving ? tCommon('saving') : tCommon('save')}
         </Button>
       }
     >
       <div className="space-y-10">
-        <SettingsSection
-          title="Registration"
-          description="Who may create an account on this instance."
-        >
+        <SettingsSection title={t('registration')} description={t('registrationHint')}>
           <SettingsCard className="divide-y divide-border/60">
             <RegistrationModePicker
               value={policy.registration}
@@ -64,17 +64,12 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
           </SettingsCard>
         </SettingsSection>
 
-        <SettingsSection
-          title="Sign-in options"
-          description="Options that need outbound mail. They stay off until a provider is configured."
-        >
+        <SettingsSection title={t('signIn')} description={t('signInHint')}>
           <SettingsCard className="divide-y divide-border/60">
             <SettingsRow
-              title="Require email confirmation"
-              description="A new account must confirm its address before it can sign in."
-              note={
-                needsProvider ? 'Set up the Email provider under Integrations first.' : undefined
-              }
+              title={t('requireVerification')}
+              description={t('requireVerificationHint')}
+              note={needsProvider ? t('needsProvider') : undefined}
               control={
                 <Switch
                   checked={policy.requireEmailVerification}
@@ -84,11 +79,9 @@ function AuthenticationForm({ authSettings }: { authSettings: InstanceAuthSettin
               }
             />
             <SettingsRow
-              title="Sign-in links"
-              description="Offer signing in with a link sent by email, alongside the password."
-              note={
-                needsProvider ? 'Set up the Email provider under Integrations first.' : undefined
-              }
+              title={t('magicLink')}
+              description={t('magicLinkHint')}
+              note={needsProvider ? t('needsProvider') : undefined}
               control={
                 <Switch
                   checked={policy.magicLink}

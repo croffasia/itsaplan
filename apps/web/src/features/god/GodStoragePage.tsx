@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { StorageSettings } from '@/lib/api';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
@@ -45,6 +46,8 @@ function settingsToForm(settings: StorageSettings): FormState {
 }
 
 function StorageForm({ settings }: { settings: FormState }) {
+  const t = useTranslations('god.storage');
+  const tCommon = useTranslations('common');
   const update = useUpdateInstanceStorageSettings();
   const [form, setForm] = useState(settings);
 
@@ -74,7 +77,7 @@ function StorageForm({ settings }: { settings: FormState }) {
           .map((line) => line.trim())
           .filter(Boolean),
       });
-      toast.success('Storage settings saved');
+      toast.success(t('saved'));
     } catch {
       // The failure already surfaced through the global mutation error toast.
     }
@@ -89,18 +92,15 @@ function StorageForm({ settings }: { settings: FormState }) {
           onClick={() => void save()}
           disabled={!dirty || !valid || update.isPending}
         >
-          {update.isPending ? 'Saving…' : 'Save'}
+          {update.isPending ? tCommon('saving') : tCommon('save')}
         </Button>
       }
     >
       <div className="space-y-8">
-        <SettingsSection
-          title="File size"
-          description="The largest single file an upload may carry. A bigger file is refused before it is stored."
-        >
+        <SettingsSection title={t('fileSize')} description={t('fileSizeHint')}>
           <SettingsCard className="grid gap-6 p-4 sm:grid-cols-2">
             <div className="space-y-1.5">
-              <Label htmlFor="storage-attachment-mb">Attachment size (MB)</Label>
+              <Label htmlFor="storage-attachment-mb">{t('attachmentMb')}</Label>
               <Input
                 id="storage-attachment-mb"
                 type="number"
@@ -109,14 +109,11 @@ function StorageForm({ settings }: { settings: FormState }) {
                 value={form.maxAttachmentMb}
                 onChange={(e) => set({ maxAttachmentMb: e.target.value })}
               />
-              <p className="text-xs text-muted-foreground">
-                Applies to issue attachments, files pasted into a description, and attachments added
-                by agents.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('attachmentHint')}</p>
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="storage-avatar-mb">Avatar size (MB)</Label>
+              <Label htmlFor="storage-avatar-mb">{t('avatarMb')}</Label>
               <Input
                 id="storage-avatar-mb"
                 type="number"
@@ -125,17 +122,12 @@ function StorageForm({ settings }: { settings: FormState }) {
                 value={form.maxAvatarMb}
                 onChange={(e) => set({ maxAvatarMb: e.target.value })}
               />
-              <p className="text-xs text-muted-foreground">
-                The profile picture people upload for their account.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('avatarHint')}</p>
             </div>
           </SettingsCard>
         </SettingsSection>
 
-        <SettingsSection
-          title="Accepted attachment types"
-          description="One content type per line. Leave empty to accept any file."
-        >
+        <SettingsSection title={t('mimeTypes')} description={t('mimeTypesHint')}>
           <SettingsCard className="space-y-2 p-4">
             <Textarea
               id="storage-mime-types"
@@ -146,20 +138,14 @@ function StorageForm({ settings }: { settings: FormState }) {
               value={form.attachmentMimeTypes}
               onChange={(e) => set({ attachmentMimeTypes: e.target.value })}
             />
-            <p className="text-xs text-muted-foreground">
-              A line is a full type (application/pdf) or a wildcard (image/*). Files already stored
-              are kept whatever the list says.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('mimeTypesNote')}</p>
           </SettingsCard>
         </SettingsSection>
 
-        <SettingsSection
-          title="Project quota"
-          description="Total attachment storage one project may use. 0 means no limit."
-        >
+        <SettingsSection title={t('quota')} description={t('quotaHint')}>
           <SettingsCard className="space-y-2 p-4">
             <div className="space-y-1.5 sm:max-w-xs">
-              <Label htmlFor="storage-project-quota-mb">Storage per project (MB)</Label>
+              <Label htmlFor="storage-project-quota-mb">{t('quotaMb')}</Label>
               <Input
                 id="storage-project-quota-mb"
                 type="number"
@@ -168,10 +154,7 @@ function StorageForm({ settings }: { settings: FormState }) {
                 onChange={(e) => set({ projectQuotaMb: e.target.value })}
               />
             </div>
-            <p className="text-xs text-muted-foreground">
-              Once a project reaches the quota, new uploads are refused until someone deletes
-              attachments.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('quotaNote')}</p>
           </SettingsCard>
         </SettingsSection>
       </div>

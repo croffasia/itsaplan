@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { type InviteView } from '@/lib/api';
 import { signOut, useSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,8 @@ import InviteNotice from './InviteNotice';
 // current session: sign in / register, accept or reject, or sign out of the
 // account the invite was not sent to.
 export default function InviteStep({ token, invite }: { token: string; invite: InviteView }) {
+  const t = useTranslations('invite');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { data: session, isPending: sessionPending } = useSession();
 
@@ -23,16 +26,16 @@ export default function InviteStep({ token, invite }: { token: string; invite: I
 
   if (invite.status !== 'pending') {
     return (
-      <InviteNotice message={`This invite has already been ${invite.status}.`}>
+      <InviteNotice message={t('alreadyHandled', { status: invite.status })}>
         <Button asChild variant="outline">
-          <Link href="/">Go to the app</Link>
+          <Link href="/">{t('goToApp')}</Link>
         </Button>
       </InviteNotice>
     );
   }
 
   if (sessionPending) {
-    return <p className="text-sm text-muted-foreground">Loading…</p>;
+    return <p className="text-sm text-muted-foreground">{tCommon('loading')}</p>;
   }
 
   if (!session) {
@@ -46,17 +49,15 @@ export default function InviteStep({ token, invite }: { token: string; invite: I
 
   return (
     <InviteNotice
-      message={
-        <>
-          This invite was sent to{' '}
-          <span className="font-medium text-foreground">{invite.email}</span>, but you are signed in
-          as <span className="font-medium text-foreground">{sessionEmail}</span>. Sign out to accept
-          it with the invited email.
-        </>
-      }
+      message={t.rich('wrongAccount', {
+        email: invite.email,
+        sessionEmail,
+        invited: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+        current: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+      })}
     >
       <Button variant="outline" onClick={switchAccount}>
-        Sign out
+        {tCommon('signOut')}
       </Button>
     </InviteNotice>
   );

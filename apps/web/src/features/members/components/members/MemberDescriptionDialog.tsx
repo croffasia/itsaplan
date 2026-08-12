@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { MemberRow } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -22,6 +23,8 @@ export default function MemberDescriptionDialog({
   member: MemberRow;
   self: boolean;
 }) {
+  const t = useTranslations('members');
+  const tCommon = useTranslations('common');
   const setDescription = useSetMemberDescription(projectKey);
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(member.description);
@@ -42,9 +45,7 @@ export default function MemberDescriptionDialog({
 
   // "Role" is taken by the member's permission role in this same list, so the
   // question asks what the person does instead.
-  const question = self
-    ? 'What do you do in this project?'
-    : 'What does this person do in this project?';
+  const question = self ? t('descriptionQuestionSelf') : t('descriptionQuestionOther');
   const displayName = member.name || member.email;
 
   return (
@@ -56,12 +57,12 @@ export default function MemberDescriptionDialog({
             size="icon"
             className="size-8 text-muted-foreground hover:text-foreground"
             onClick={openDialog}
-            aria-label="Edit description"
+            aria-label={t('editDescription')}
           >
             <Pencil className="size-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Edit description</TooltipContent>
+        <TooltipContent>{t('editDescription')}</TooltipContent>
       </Tooltip>
       <Dialog open={open} onOpenChange={(next) => !next && setOpen(false)}>
         <DialogContent className="inset-0 top-0 left-0 h-screen w-full max-w-none translate-x-0 translate-y-0 gap-0 rounded-none border-0 bg-background p-0 sm:max-w-none">
@@ -84,7 +85,7 @@ export default function MemberDescriptionDialog({
                   autoFocus
                   maxLength={500}
                   value={value}
-                  placeholder="e.g. Backend engineer, owns the API and integrations"
+                  placeholder={t('descriptionPlaceholder')}
                   onChange={(e) => setValue(e.target.value)}
                   onKeyDown={(e) => {
                     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') void save();
@@ -97,7 +98,7 @@ export default function MemberDescriptionDialog({
                   onClick={save}
                   disabled={setDescription.isPending}
                 >
-                  {setDescription.isPending ? 'Saving…' : 'Save'}
+                  {setDescription.isPending ? tCommon('saving') : tCommon('save')}
                 </Button>
               </div>
             </div>

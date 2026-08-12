@@ -1,11 +1,12 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { Send } from 'lucide-react';
 import AccountConnectionRow from './AccountConnectionRow';
 import {
-  telegramAccountLabel,
+  useTelegramAccountLabel,
   useDisconnectTelegram,
   useStartTelegramLink,
   useTelegramAccountQuery,
@@ -22,6 +23,8 @@ const POLL_INTERVAL_MS = 2000;
 const POLL_TIMEOUT_MS = 3 * 60_000;
 
 export default function AccountTelegramConnection() {
+  const t = useTranslations('account.accounts');
+  const accountLabel = useTelegramAccountLabel();
   const [waiting, setWaiting] = useState(false);
   const { data } = useTelegramAccountQuery(waiting ? POLL_INTERVAL_MS : undefined);
   const start = useStartTelegramLink();
@@ -33,12 +36,12 @@ export default function AccountTelegramConnection() {
     if (!waiting) return;
     if (link) {
       setWaiting(false);
-      toast.success('Telegram connected');
+      toast.success(t('telegramConnected'));
       return;
     }
     const stop = setTimeout(() => setWaiting(false), POLL_TIMEOUT_MS);
     return () => clearTimeout(stop);
-  }, [waiting, link]);
+  }, [waiting, link, t]);
 
   async function onConnect() {
     // The tab is opened inside the click handler: opening it after the request
@@ -64,16 +67,12 @@ export default function AccountTelegramConnection() {
     <AccountConnectionRow
       icon={<Send className="size-4" />}
       name="Telegram"
-      description={
-        waiting
-          ? 'Waiting for you to press Start in the bot chat…'
-          : 'Receive notifications in Telegram.'
-      }
-      connectedTo={link ? telegramAccountLabel(link) : null}
+      description={waiting ? t('telegramWaiting') : t('telegramDescription')}
+      connectedTo={link ? accountLabel(link) : null}
       busy={start.isPending || disconnect.isPending}
       onConnect={() => void onConnect()}
       onDisconnect={() =>
-        disconnect.mutate(undefined, { onSuccess: () => toast.success('Telegram disconnected') })
+        disconnect.mutate(undefined, { onSuccess: () => toast.success(t('telegramDisconnected')) })
       }
     />
   );

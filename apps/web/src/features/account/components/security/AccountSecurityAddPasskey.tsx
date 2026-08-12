@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Plus } from 'lucide-react';
@@ -8,18 +9,19 @@ import { APP_NAME } from '@/utils/app';
 import { Button } from '@/components/ui/button';
 
 export default function AccountSecurityAddPasskey({ onAdded }: { onAdded: () => void }) {
+  const t = useTranslations('account.security');
   const { data: session } = useSession();
   const [error, setError] = useState<string | null>(null);
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      if (!session) throw new Error('Not signed in');
+      if (!session) throw new Error(t('notSignedIn'));
       // The name becomes the WebAuthn userName shown in the OS/browser picker.
       const result = await passkey.addPasskey({ name: `${APP_NAME} · ${session.user.email}` });
-      if (result?.error) throw new Error(result.error.message ?? 'Could not add passkey.');
+      if (result?.error) throw new Error(result.error.message ?? t('addPasskeyFailed'));
     },
     onSuccess: onAdded,
-    onError: (err) => setError(err instanceof Error ? err.message : 'Could not add passkey.'),
+    onError: (err) => setError(err instanceof Error ? err.message : t('addPasskeyFailed')),
   });
 
   return (
@@ -35,7 +37,7 @@ export default function AccountSecurityAddPasskey({ onAdded }: { onAdded: () => 
         disabled={addMutation.isPending}
       >
         <Plus className="size-3.5" />
-        {addMutation.isPending ? 'Waiting for passkey…' : 'Add passkey'}
+        {addMutation.isPending ? t('waitingForPasskey') : t('addPasskey')}
       </Button>
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>

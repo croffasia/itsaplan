@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import { useAuthAction } from '../../hooks/useAuthAction';
 // Asks for the address and mails a reset link. The answer is the same whether or not
 // an account exists, so this screen never tells the visitor which it was.
 export default function AuthForgotPasswordForm() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const { error, pending, run } = useAuthAction();
@@ -31,11 +33,11 @@ export default function AuthForgotPasswordForm() {
   if (sent) {
     return (
       <AuthMessagePanel
-        title="Check your email"
-        description={`If an account exists for ${email}, a reset link is on its way.`}
+        title={t('forgotPassword.sentTitle')}
+        description={t('forgotPassword.sentDescription', { email })}
         footer={
           <Link href="/login" className="underline underline-offset-4">
-            Back to sign in
+            {t('forgotPassword.backToSignIn')}
           </Link>
         }
       />
@@ -46,16 +48,16 @@ export default function AuthForgotPasswordForm() {
     <form onSubmit={onSubmit} className="p-6 md:p-8">
       <FieldGroup>
         <AuthFormHeader
-          title="Reset your password"
-          description="We will email you a link to set a new one"
+          title={t('forgotPassword.title')}
+          description={t('forgotPassword.subtitle')}
         />
 
         <Field>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel htmlFor="email">{t('fields.email')}</FieldLabel>
           <Input
             id="email"
             type="email"
-            placeholder="m@example.com"
+            placeholder={t('fields.emailPlaceholder')}
             autoComplete="email"
             required
             value={email}
@@ -68,14 +70,14 @@ export default function AuthForgotPasswordForm() {
 
         <Field>
           <Button type="submit" disabled={pending}>
-            {pending ? 'Sending…' : 'Send reset link'}
+            {pending ? t('forgotPassword.submitPending') : t('forgotPassword.submit')}
           </Button>
         </Field>
 
         <FieldDescription className="text-center">
-          Remembered it?{' '}
+          {t('forgotPassword.remembered')}{' '}
           <Link href="/login" className="underline underline-offset-4">
-            Sign in
+            {t('forgotPassword.signIn')}
           </Link>
         </FieldDescription>
       </FieldGroup>

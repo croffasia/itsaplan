@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type { InstanceTelegramSettings } from '@/lib/api';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import EnabledSwitch from '@/components/common/inputs/EnabledSwitch';
@@ -27,6 +28,8 @@ export default function GodTelegramPage() {
 }
 
 function TelegramForm({ settings }: { settings: InstanceTelegramSettings }) {
+  const t = useTranslations('god.telegram');
+  const tCommon = useTranslations('common');
   const update = useUpdateInstanceTelegramSettings();
   const [enabled, setEnabled] = useState(settings.enabled);
   const [botToken, setBotToken] = useState('');
@@ -41,7 +44,7 @@ function TelegramForm({ settings }: { settings: InstanceTelegramSettings }) {
         ...(botToken.length > 0 ? { botToken } : {}),
       });
       setBotToken('');
-      toast.success('Telegram settings saved');
+      toast.success(t('saved'));
     } catch {
       // The failure already surfaced through the global mutation error toast. A token
       // Telegram rejects comes back as a 400 with what it said.
@@ -53,17 +56,13 @@ function TelegramForm({ settings }: { settings: InstanceTelegramSettings }) {
       slug="telegram"
       actions={
         <Button size="sm" onClick={() => void save()} disabled={!dirty || update.isPending}>
-          {update.isPending ? 'Saving…' : 'Save'}
+          {update.isPending ? tCommon('saving') : tCommon('save')}
         </Button>
       }
     >
       <SettingsSection
-        title="Bot"
-        description={
-          hasToken
-            ? 'People connect their Telegram account by opening a chat with this bot from their profile.'
-            : 'Create a bot with @BotFather in Telegram and paste its token here.'
-        }
+        title={t('bot')}
+        description={t(hasToken ? 'botConfigured' : 'botMissing')}
         action={
           <EnabledSwitch
             checked={enabled}
@@ -74,7 +73,7 @@ function TelegramForm({ settings }: { settings: InstanceTelegramSettings }) {
       >
         <SettingsCard className="space-y-6 p-4">
           <div className="space-y-1.5 sm:max-w-md">
-            <Label htmlFor="telegram-bot-token">Bot token</Label>
+            <Label htmlFor="telegram-bot-token">{t('botToken')}</Label>
             <SecretInput
               id="telegram-bot-token"
               value={botToken}
@@ -83,19 +82,14 @@ function TelegramForm({ settings }: { settings: InstanceTelegramSettings }) {
               editable
               placeholder="123456789:AA…"
             />
-            <p className="text-xs text-muted-foreground">
-              The token is verified with Telegram when you save, so a wrong one is refused here
-              rather than failing silently later.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('botTokenHint')}</p>
           </div>
 
           {settings.botUsername && (
             <div className="space-y-1 border-t border-border/60 pt-4">
-              <div className="text-sm font-medium">Bot</div>
+              <div className="text-sm font-medium">{t('bot')}</div>
               <p className="font-mono text-xs">@{settings.botUsername}</p>
-              <p className="text-xs text-muted-foreground">
-                Resolved from the token. This is the bot people will see when connecting.
-              </p>
+              <p className="text-xs text-muted-foreground">{t('resolvedHint')}</p>
             </div>
           )}
         </SettingsCard>

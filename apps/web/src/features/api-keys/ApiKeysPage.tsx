@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { useSession } from '@/lib/auth-client';
 import { qk } from '@/services/queryKeys';
 import FullPageView from '@/components/common/page/FullPageView';
@@ -14,6 +15,7 @@ import ApiKeysDeleteDialog from './components/ApiKeysDeleteDialog';
 // delete target; the child components refresh the list through the callbacks
 // after a change.
 export default function ApiKeysPage() {
+  const t = useTranslations('apiKeys');
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState<ApiKeyRow | null>(null);
@@ -23,9 +25,9 @@ export default function ApiKeysPage() {
 
   return (
     <FullPageView
-      label="API keys"
-      title="API keys"
-      description={`Personal API keys authenticate requests to the API as your account (${session?.user.email}). A key's value is shown only once, when you create it.`}
+      label={t('label')}
+      title={t('title')}
+      description={t('description', { email: session?.user.email ?? '' })}
     >
       <ApiKeysCreateSection onCreated={invalidate} />
       <ApiKeysList apiKeys={apiKeys ?? []} isPending={isPending} onDelete={setDeleting} />

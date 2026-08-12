@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { Bot, FolderOpen, MailWarning, Shield, Trash2, TriangleAlert, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { formatDate, formatDateTime } from '@/utils/dates';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import Avatar from '@/components/common/Avatar';
@@ -13,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { usePermissionCatalogQuery } from '@/services/roles.service';
 import { useDeleteInstanceUser, useInstanceUserQuery } from '../../services/god.service';
-import { providerList } from '../../utils/providers';
+import { useProviderList } from '../../hooks/useProviderList';
 import GodUserProjectCard from './GodUserProjectCard';
 import GodUserVerifyButton from './GodUserVerifyButton';
 
@@ -38,6 +39,9 @@ export default function GodUserDetailPanel({
   userId: string;
   onClose: () => void;
 }) {
+  const t = useTranslations('god.userPanel');
+  const tCommon = useTranslations('common');
+  const providerList = useProviderList();
   const userQuery = useInstanceUserQuery(userId);
   const catalogQuery = usePermissionCatalogQuery();
   const deleteUser = useDeleteInstanceUser();
@@ -48,7 +52,6 @@ export default function GodUserDetailPanel({
   // Projects this user owns alone. Deleting the account leaves them without anyone
   // who can manage them, so the API refuses unless they are deleted along with it.
   const soleOwned = (user?.projects ?? []).filter((p) => p.role === 'owner' && p.ownerCount === 1);
-  const one = soleOwned.length === 1;
 
   // Escape closes the confirm dialog first; the panel stays until it is gone.
   useExitOnEscape(() => {
@@ -62,7 +65,7 @@ export default function GodUserDetailPanel({
   async function confirmDelete() {
     await deleteUser.mutateAsync({ userId, withProjects });
     setConfirming(false);
-    toast.success(withProjects ? 'Account and its projects deleted' : 'Account deleted');
+    toast.success(t(withProjects ? 'deletedWithProjects' : 'deleted'));
     onClose();
   }
 
@@ -81,7 +84,7 @@ export default function GodUserDetailPanel({
             />
             <div className="min-w-0 space-y-1.5">
               <h2 className="truncate text-base font-semibold">
-                {user ? user.name || user.email : 'Loading…'}
+                {user ? user.name || user.email : tCommon('loading')}
               </h2>
               <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
               {user && (
@@ -89,11 +92,11 @@ export default function GodUserDetailPanel({
                   {user.role === 'god' ? (
                     <Badge className="gap-1 px-1.5 py-0 text-[10px] font-medium">
                       <Shield className="size-3" />
-                      Instance owner
+                      {t('instanceOwner')}
                     </Badge>
                   ) : (
                     <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-medium">
-                      User
+                      {t('user')}
                     </Badge>
                   )}
                   {user.isAgent && (
@@ -102,19 +105,25 @@ export default function GodUserDetailPanel({
                       className="gap-1 px-1.5 py-0 text-[10px] font-medium"
                     >
                       <Bot className="size-3" />
-                      AI agent
+                      {t('aiAgent')}
                     </Badge>
                   )}
                   {user.emailVerified && (
                     <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-medium">
-                      Email verified
+                      {t('emailVerified')}
                     </Badge>
                   )}
                 </div>
               )}
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="size-7" onClick={onClose} title="Close">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7"
+            onClick={onClose}
+            title={tCommon('close')}
+          >
             <X />
           </Button>
         </div>
@@ -128,43 +137,41 @@ export default function GodUserDetailPanel({
                 <div className="flex items-start gap-3 rounded-lg bg-muted/60 p-4">
                   <MailWarning className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1 space-y-0.5">
-                    <p className="text-sm font-medium">Email address not confirmed</p>
-                    <p className="text-xs text-muted-foreground">
-                      Confirm it here when the link never reached them.
-                    </p>
+                    <p className="text-sm font-medium">{t('unconfirmedTitle')}</p>
+                    <p className="text-xs text-muted-foreground">{t('unconfirmedHint')}</p>
                   </div>
                   <GodUserVerifyButton userId={user.id} />
                 </div>
               )}
 
               <section className="grid grid-cols-2 gap-x-6 gap-y-5">
-                <Fact label="Sign-in methods">
+                <Fact label={t('signInMethods')}>
                   {user.providers.length ? (
                     providerList(user.providers)
                   ) : (
-                    <span className="text-muted-foreground">None linked</span>
+                    <span className="text-muted-foreground">{t('noProviders')}</span>
                   )}
                 </Fact>
-                <Fact label="Projects">
+                <Fact label={t('projects')}>
                   {user.projectCount === 0 ? (
-                    <span className="text-muted-foreground">None</span>
+                    <span className="text-muted-foreground">{t('noProjects')}</span>
                   ) : (
                     user.projectCount
                   )}
                 </Fact>
-                <Fact label="Registered">{formatDate(user.createdAt)}</Fact>
-                <Fact label="Last seen">
+                <Fact label={t('registered')}>{formatDate(user.createdAt)}</Fact>
+                <Fact label={t('lastSeen')}>
                   {user.lastSeenAt ? (
                     formatDateTime(user.lastSeenAt)
                   ) : (
-                    <span className="text-muted-foreground">Never signed in</span>
+                    <span className="text-muted-foreground">{t('neverSignedIn')}</span>
                   )}
                 </Fact>
               </section>
 
               <section className="space-y-3">
                 <div className="flex items-baseline gap-2">
-                  <h3 className="text-sm font-medium">Project access</h3>
+                  <h3 className="text-sm font-medium">{t('projectAccess')}</h3>
                   {user.projects.length > 0 && (
                     <span className="text-xs text-muted-foreground">{user.projects.length}</span>
                   )}
@@ -172,9 +179,9 @@ export default function GodUserDetailPanel({
                 {user.projects.length === 0 ? (
                   <div className="flex flex-col items-center gap-2 rounded-lg bg-muted/30 px-6 py-10 text-center">
                     <FolderOpen className="size-5 text-muted-foreground" />
-                    <p className="text-sm font-medium">No project access</p>
+                    <p className="text-sm font-medium">{t('noAccessTitle')}</p>
                     <p className="max-w-[36ch] text-xs text-muted-foreground">
-                      This account reaches nothing until someone invites it to a project.
+                      {t('noAccessHint')}
                     </p>
                   </div>
                 ) : (
@@ -195,9 +202,7 @@ export default function GodUserDetailPanel({
 
         {removable && (
           <div className="flex shrink-0 items-center justify-between gap-4 bg-muted/30 px-6 py-3">
-            <p className="text-xs text-muted-foreground">
-              Issues and comments stay, with the author unassigned.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('deleteHint')}</p>
             <Button
               variant="ghost"
               size="sm"
@@ -208,7 +213,7 @@ export default function GodUserDetailPanel({
               }}
             >
               <Trash2 />
-              Delete
+              {tCommon('delete')}
             </Button>
           </div>
         )}
@@ -216,9 +221,11 @@ export default function GodUserDetailPanel({
 
       {confirming && user && (
         <ConfirmDialog
-          title="Delete account"
+          title={t('deleteTitle')}
           confirmLabel={
-            withProjects ? `Delete account and ${one ? 'project' : 'projects'}` : 'Delete account'
+            withProjects
+              ? t('deleteConfirmWithProjects', { count: soleOwned.length })
+              : t('deleteConfirm')
           }
           confirmDisabled={soleOwned.length > 0 && !withProjects}
           onConfirm={confirmDelete}
@@ -226,9 +233,10 @@ export default function GodUserDetailPanel({
         >
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{user.name || user.email}</span> loses
-              access to this instance. Issues and comments they wrote stay, with the author
-              unassigned. This cannot be undone.
+              {t.rich('deleteMessage', {
+                name: user.name || user.email,
+                strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+              })}
             </p>
 
             {soleOwned.length > 0 && (
@@ -237,7 +245,7 @@ export default function GodUserDetailPanel({
                   <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" />
                   <div className="min-w-0 space-y-2">
                     <p className="text-sm font-medium">
-                      Only owner of {one ? 'a project' : `${soleOwned.length} projects`}
+                      {t('soleOwnerTitle', { count: soleOwned.length })}
                     </p>
                     <div className="flex flex-wrap gap-1">
                       {soleOwned.map((p) => (
@@ -250,7 +258,7 @@ export default function GodUserDetailPanel({
                       ))}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Once the account is gone, nobody can manage {one ? 'it' : 'them'}.
+                      {t('soleOwnerHint', { count: soleOwned.length })}
                     </p>
                   </div>
                 </div>
@@ -263,12 +271,10 @@ export default function GodUserDetailPanel({
                   />
                   <span className="space-y-0.5">
                     <span className="block text-sm">
-                      Delete {one ? 'the project' : 'the projects'} with the account
+                      {t('deleteWithProjects', { count: soleOwned.length })}
                     </span>
                     <span className="block text-xs text-muted-foreground">
-                      {withProjects
-                        ? 'Everything inside goes too.'
-                        : 'Or cancel and add a second owner first.'}
+                      {t(withProjects ? 'deleteWithProjectsOn' : 'deleteWithProjectsOff')}
                     </span>
                   </span>
                 </label>

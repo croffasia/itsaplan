@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { projectPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
@@ -27,6 +28,7 @@ export default function InviteAuthForm({
   email: string;
   hasAccount: boolean;
 }) {
+  const t = useTranslations('invite');
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(hasAccount ? 'signin' : 'register');
   const [password, setPassword] = useState('');
@@ -50,17 +52,22 @@ export default function InviteAuthForm({
     setError(null);
     setNotice(null);
     if (isRegister && password !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('passwordsDoNotMatch'));
       return;
     }
     setPending(true);
     try {
       if (isRegister) {
-        const result = await registerAndAccept({ email, password, token });
+        const result = await registerAndAccept({
+          email,
+          password,
+          token,
+          registerFailed: t('registerFailed'),
+        });
         router.push(projectPath(result.projectKey));
         router.refresh();
       } else {
-        await signInForInvite({ email, password });
+        await signInForInvite({ email, password, signInFailed: t('signInFailed') });
         router.refresh();
       }
     } catch (err) {
@@ -68,9 +75,9 @@ export default function InviteAuthForm({
       // here — switch to sign-in and keep the password the invitee already typed.
       if (isRegister && isExistingAccountError(err)) {
         switchMode('signin');
-        setNotice('This email already has an account. Sign in with your password.');
+        setNotice(t('existingAccountNotice'));
       } else {
-        setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+        setError(err instanceof Error ? err.message : t('genericError'));
       }
       setPending(false);
     }
@@ -78,22 +85,22 @@ export default function InviteAuthForm({
 
   let submitLabel;
   if (isRegister) {
-    submitLabel = pending ? 'Creating account…' : 'Create account & join';
+    submitLabel = pending ? t('registering') : t('register');
   } else {
-    submitLabel = pending ? 'Signing in…' : 'Sign in';
+    submitLabel = pending ? t('signingIn') : t('signIn');
   }
 
   return (
     <form onSubmit={onSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="invite-email">Email</FieldLabel>
+          <FieldLabel htmlFor="invite-email">{t('emailLabel')}</FieldLabel>
           <Input id="invite-email" type="email" value={email} readOnly disabled />
-          <FieldDescription>The invite is tied to this email.</FieldDescription>
+          <FieldDescription>{t('emailHint')}</FieldDescription>
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="invite-password">Password</FieldLabel>
+          <FieldLabel htmlFor="invite-password">{t('passwordLabel')}</FieldLabel>
           <Input
             id="invite-password"
             type="password"
@@ -104,12 +111,12 @@ export default function InviteAuthForm({
             onChange={(e) => setPassword(e.target.value)}
             disabled={pending}
           />
-          {isRegister && <FieldDescription>Must be at least 8 characters long.</FieldDescription>}
+          {isRegister && <FieldDescription>{t('passwordHint')}</FieldDescription>}
         </Field>
 
         {isRegister && (
           <Field>
-            <FieldLabel htmlFor="invite-confirm">Confirm password</FieldLabel>
+            <FieldLabel htmlFor="invite-confirm">{t('confirmPasswordLabel')}</FieldLabel>
             <Input
               id="invite-confirm"
               type="password"
@@ -133,14 +140,14 @@ export default function InviteAuthForm({
         </Field>
 
         <FieldDescription className="text-center">
-          {isRegister ? 'Already have an account?' : 'Need a new account?'}{' '}
+          {isRegister ? t('haveAccount') : t('needAccount')}{' '}
           <button
             type="button"
             className="underline underline-offset-4"
             onClick={() => switchMode(isRegister ? 'signin' : 'register')}
             disabled={pending}
           >
-            {isRegister ? 'Sign in' : 'Create one'}
+            {isRegister ? t('switchToSignIn') : t('switchToRegister')}
           </button>
         </FieldDescription>
       </FieldGroup>

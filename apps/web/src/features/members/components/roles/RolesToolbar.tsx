@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ClipboardPaste, Copy, MoreHorizontal, Plus } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ import {
 // nothing here (the table below shows the access notice). Self-contained — it shares
 // the roles/catalog queries with the table through React Query.
 export default function RolesToolbar({ projectKey }: { projectKey: string }) {
+  const t = useTranslations('members.roles');
   const { isOwner } = usePermissions();
   const mod = useIsMac() ? '⌘' : 'Ctrl';
   const rolesQuery = useRolesQuery(projectKey, isOwner);
@@ -42,16 +44,16 @@ export default function RolesToolbar({ projectKey }: { projectKey: string }) {
   // Copies the project's non-default roles to the clipboard as JSON.
   const copyRoles = useCallback(async () => {
     if (customRoleCount === 0) {
-      toast.info('No custom roles to copy.');
+      toast.info(t('nothingToCopy'));
       return;
     }
     try {
       await navigator.clipboard.writeText(serializeRoles(roles));
-      toast.success(`Copied ${customRoleCount} role${customRoleCount === 1 ? '' : 's'}.`);
+      toast.success(t('copiedRoles', { count: customRoleCount }));
     } catch {
-      toast.error('Could not copy to the clipboard.');
+      toast.error(t('copyFailed'));
     }
-  }, [roles, customRoleCount]);
+  }, [roles, customRoleCount, t]);
 
   // Reads roles from the clipboard, then opens the confirmation dialog.
   const pasteRoles = useCallback(async () => {
@@ -60,16 +62,21 @@ export default function RolesToolbar({ projectKey }: { projectKey: string }) {
     try {
       text = await navigator.clipboard.readText();
     } catch {
-      toast.error('Could not read the clipboard.');
+      toast.error(t('readFailed'));
       return;
     }
     try {
       const parsed = parseRolesText(text, catalog);
       setImporting(planRolesImport(parsed, roles));
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Could not read roles from the clipboard.');
+      // parseRolesText rejects with the key of the reason it refused; anything else
+      // reaching here has no key of its own.
+      const key = (err instanceof Error ? `transferErrors.${err.message}` : '') as Parameters<
+        typeof t.has
+      >[0];
+      toast.error(t.has(key) ? t(key) : t('parseFailed'));
     }
-  }, [catalog, roles]);
+  }, [catalog, roles, t]);
 
   // Cmd/Ctrl+C copies, Cmd/Ctrl+V pastes — but only on this page, not while typing,
   // not while a dialog or the role editor is open (it can be opened from the table
@@ -111,7 +118,7 @@ export default function RolesToolbar({ projectKey }: { projectKey: string }) {
             variant="ghost"
             size="icon"
             className="size-8 text-muted-foreground hover:text-foreground"
-            aria-label="Role import and export"
+            aria-label={t('importExport')}
           >
             <MoreHorizontal className="size-4" />
           </Button>
@@ -119,12 +126,12 @@ export default function RolesToolbar({ projectKey }: { projectKey: string }) {
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onClick={() => void copyRoles()} disabled={customRoleCount === 0}>
             <Copy className="size-4" />
-            Copy roles
+            {t('copyRoles')}
             <DropdownMenuShortcut>{mod}C</DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void pasteRoles()} disabled={!catalog}>
             <ClipboardPaste className="size-4" />
-            Paste roles
+            {t('pasteRoles')}
             <DropdownMenuShortcut>{mod}V</DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -136,7 +143,7 @@ export default function RolesToolbar({ projectKey }: { projectKey: string }) {
         onClick={() => setCreating(true)}
       >
         <Plus className="size-3.5" />
-        New role
+        {t('newRole')}
       </Button>
 
       {creating && catalog && (

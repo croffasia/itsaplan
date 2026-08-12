@@ -1,4 +1,7 @@
+'use client';
+
 import { CheckCheck, ListFilter, MoreHorizontal, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type NotificationFilters, type NotificationType } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
@@ -11,12 +14,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-const TYPE_LABELS: { value: NotificationType; label: string }[] = [
-  { value: 'assigned', label: 'Assigned' },
-  { value: 'mentioned', label: 'Mentioned' },
-  { value: 'commented', label: 'Commented' },
-  { value: 'state_changed', label: 'Status changed' },
-];
+const TYPES: NotificationType[] = ['assigned', 'mentioned', 'commented', 'state_changed'];
 
 // The inbox list header: title with unread count, a type filter, display toggles
 // (show read / snoozed), and the bulk-action menu.
@@ -35,6 +33,8 @@ export default function InboxToolbar({
   onDeleteRead: () => void;
   onDeleteReadCompleted: () => void;
 }) {
+  const t = useTranslations('inbox');
+  const tCommon = useTranslations('common');
   const selectedTypes = filters.types ?? [];
 
   const toggleType = (type: NotificationType) => {
@@ -47,26 +47,26 @@ export default function InboxToolbar({
   return (
     <div className="flex items-center justify-between border-b px-4 py-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold">Inbox</span>
+        <span className="text-sm font-semibold">{t('title')}</span>
         {unread > 0 && <span className="text-xs text-muted-foreground">{unread}</span>}
       </div>
       <div className="flex items-center gap-1">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-7" title="Filter">
+            <Button variant="ghost" size="icon" className="size-7" title={t('filter')}>
               <ListFilter />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Notification type</DropdownMenuLabel>
-            {TYPE_LABELS.map((t) => (
+            <DropdownMenuLabel>{t('notificationType')}</DropdownMenuLabel>
+            {TYPES.map((type) => (
               <DropdownMenuCheckboxItem
-                key={t.value}
-                checked={selectedTypes.includes(t.value)}
-                onCheckedChange={() => toggleType(t.value)}
+                key={type}
+                checked={selectedTypes.includes(type)}
+                onCheckedChange={() => toggleType(type)}
                 onSelect={(e) => e.preventDefault()}
               >
-                {t.label}
+                {t(`types.${type}`)}
               </DropdownMenuCheckboxItem>
             ))}
           </DropdownMenuContent>
@@ -74,7 +74,7 @@ export default function InboxToolbar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-7" title="Display">
+            <Button variant="ghost" size="icon" className="size-7" title={t('display')}>
               <SlidersHorizontal />
             </Button>
           </DropdownMenuTrigger>
@@ -84,37 +84,37 @@ export default function InboxToolbar({
               onCheckedChange={(v) => onFiltersChange({ ...filters, includeRead: v })}
               onSelect={(e) => e.preventDefault()}
             >
-              Show read
+              {t('showRead')}
             </DropdownMenuCheckboxItem>
             <DropdownMenuCheckboxItem
               checked={filters.includeSnoozed === true}
               onCheckedChange={(v) => onFiltersChange({ ...filters, includeSnoozed: v })}
               onSelect={(e) => e.preventDefault()}
             >
-              Show snoozed
+              {t('showSnoozed')}
             </DropdownMenuCheckboxItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-7" title="More">
+            <Button variant="ghost" size="icon" className="size-7" title={tCommon('more')}>
               <MoreHorizontal />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onSelect={onMarkAllRead}>
               <CheckCheck />
-              Mark all as read
+              {t('markAllRead')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onSelect={onDeleteRead}>
               <Trash2 />
-              Delete all read
+              {t('deleteAllRead')}
             </DropdownMenuItem>
             <DropdownMenuItem onSelect={onDeleteReadCompleted}>
               <Trash2 />
-              Delete all read for completed issues
+              {t('deleteAllReadCompleted')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

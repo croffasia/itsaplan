@@ -1,4 +1,7 @@
+'use client';
+
 import { ChevronLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import IssueDetailContent from '@/features/issue/components/detail/IssueDetailContent';
@@ -19,13 +22,15 @@ export default function InboxDetail({
   onBack: () => void;
   onDeleted: () => void;
 }) {
+  const t = useTranslations('inbox');
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {isMobile && (
         <div className="flex h-11 shrink-0 items-center border-b px-2">
           <Button variant="ghost" size="sm" className="gap-1.5" onClick={onBack}>
             <ChevronLeft className="size-4" />
-            Inbox
+            {t('backToList')}
           </Button>
         </div>
       )}

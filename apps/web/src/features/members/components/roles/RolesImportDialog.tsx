@@ -2,18 +2,13 @@
 
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import Modal from '@/components/common/overlay/Modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PermissionsPopover } from '@/components/common/permissions/PermissionsPopover';
 import { useCreateRole, useUpdateRole } from '@/services/roles.service';
 import type { PlannedRole } from '../../utils/rolesTransfer';
-
-const ACTION_LABEL: Record<PlannedRole['action'], string> = {
-  create: 'New',
-  update: 'Overwrite',
-  skip: 'Skip (default)',
-};
 
 // Confirms a roles paste before applying it: lists each incoming role, whether it is
 // created or overwrites an existing one, and a preview of its permission matrix. On
@@ -28,6 +23,8 @@ export default function RolesImportDialog({
   planned: PlannedRole[];
   onClose: () => void;
 }) {
+  const t = useTranslations('members.roles.import');
+  const tCommon = useTranslations('common');
   const createRole = useCreateRole(projectKey);
   const updateRole = useUpdateRole(projectKey);
   const [busy, setBusy] = useState(false);
@@ -52,8 +49,7 @@ export default function RolesImportDialog({
         }
       }
       const skipped = planned.length - applicable.length;
-      const skippedNote = skipped > 0 ? `, ${skipped} skipped` : '';
-      toast.success(`Applied roles: ${created} created, ${updated} updated${skippedNote}.`);
+      toast.success(t('applied', { created, updated, skipped }));
       onClose();
     } catch {
       // The failed mutation is toasted by the global handler; keep the dialog open.
@@ -62,11 +58,10 @@ export default function RolesImportDialog({
   }
 
   return (
-    <Modal title="Apply roles from clipboard" onClose={onClose} wide>
+    <Modal title={t('title')} onClose={onClose} wide>
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          {applicable.length} role{applicable.length === 1 ? '' : 's'} will be applied. Overwriting
-          a role replaces its permission matrix; members keep the role.
+          {t('summary', { count: applicable.length })}
         </p>
         <div className="max-h-[50vh] divide-y divide-border/60 overflow-y-auto rounded-md border border-border/60">
           {planned.map((role) => (
@@ -76,19 +71,18 @@ export default function RolesImportDialog({
                 variant={role.action === 'skip' ? 'outline' : 'secondary'}
                 className="shrink-0 px-1.5 py-0 text-[10px] font-normal"
               >
-                {ACTION_LABEL[role.action]}
+                {t(`actions.${role.action}`)}
               </Badge>
-              <PermissionsPopover permissions={role.permissions} label="Preview permissions" />
+              <PermissionsPopover permissions={role.permissions} label={t('preview')} />
             </div>
           ))}
         </div>
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {tCommon('cancel')}
           </Button>
           <Button onClick={apply} disabled={busy || applicable.length === 0}>
-            Apply {applicable.length > 0 ? applicable.length : ''} role
-            {applicable.length === 1 ? '' : 's'}
+            {t('apply', { count: applicable.length })}
           </Button>
         </div>
       </div>

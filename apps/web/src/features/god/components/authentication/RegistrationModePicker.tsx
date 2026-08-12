@@ -1,24 +1,9 @@
 import { Check } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { RegistrationMode } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
-const OPTIONS: { value: RegistrationMode; label: string; description: string }[] = [
-  {
-    value: 'open',
-    label: 'Open',
-    description: 'Anyone who reaches the sign-up page can create an account.',
-  },
-  {
-    value: 'invite',
-    label: 'Invite only',
-    description: 'An account can only be created through an invite link.',
-  },
-  {
-    value: 'closed',
-    label: 'Closed',
-    description: 'No new accounts. Existing ones keep signing in.',
-  },
-];
+const MODES: RegistrationMode[] = ['open', 'invite', 'closed'];
 
 // Picks how the instance handles registration. One choice of three, each with a
 // sentence explaining what it means for someone opening the sign-up page. Renders bare
@@ -32,18 +17,20 @@ export default function RegistrationModePicker({
   onChange: (value: RegistrationMode) => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations('god.authentication.modes');
+
   return (
     <div role="radiogroup">
-      {OPTIONS.map((option) => {
-        const active = value === option.value;
+      {MODES.map((mode) => {
+        const active = value === mode;
         return (
           <button
-            key={option.value}
+            key={mode}
             type="button"
             role="radio"
             aria-checked={active}
             disabled={disabled}
-            onClick={() => onChange(option.value)}
+            onClick={() => onChange(mode)}
             className={cn(
               'flex w-full items-start gap-3 p-4 text-left transition-colors',
               '-outline-offset-1 focus-visible:outline-1 focus-visible:outline-ring disabled:pointer-events-none disabled:opacity-50',
@@ -61,8 +48,10 @@ export default function RegistrationModePicker({
               {active && <Check className="size-3" />}
             </span>
             <span className="space-y-0.5">
-              <span className="block text-sm font-medium">{option.label}</span>
-              <span className="block text-xs text-muted-foreground">{option.description}</span>
+              <span className="block text-sm font-medium">{t(`${mode}.label`)}</span>
+              <span className="block text-xs text-muted-foreground">
+                {t(`${mode}.description`)}
+              </span>
             </span>
           </button>
         );

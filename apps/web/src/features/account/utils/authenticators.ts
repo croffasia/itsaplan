@@ -15,7 +15,11 @@ const AUTHENTICATOR_NAMES: Record<string, string> = {
 
 // The label shown for a passkey: the provider when the AAGUID is known, else the
 // name the passkey was registered with.
-export function passkeyLabel(passkey: { aaguid?: string | null; name?: string | null }): string {
+export function passkeyLabel(
+  passkey: { aaguid?: string | null; name?: string | null },
+  // What a passkey with no known authenticator and no name reads as.
+  fallback: string,
+): string {
   const provider = passkey.aaguid ? AUTHENTICATOR_NAMES[passkey.aaguid.toLowerCase()] : undefined;
-  return provider ?? passkey.name ?? 'Passkey';
+  return provider ?? passkey.name ?? fallback;
 }

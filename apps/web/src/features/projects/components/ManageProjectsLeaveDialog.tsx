@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api';
 import { useLeaveProject } from '@/services/projects.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
@@ -13,12 +14,13 @@ export default function ManageProjectsLeaveDialog({
   userId: string;
   onClose: () => void;
 }) {
+  const t = useTranslations('projects.leaveDialog');
   const leaveProject = useLeaveProject();
 
   return (
     <ConfirmDialog
-      title={`Leave ${project.name}?`}
-      confirmLabel="Leave project"
+      title={t('title', { name: project.name })}
+      confirmLabel={t('confirm')}
       onClose={onClose}
       onConfirm={async () => {
         await leaveProject.mutateAsync({ projectKey: project.key, userId });
@@ -26,8 +28,10 @@ export default function ManageProjectsLeaveDialog({
       }}
     >
       <p className="text-sm text-muted-foreground">
-        You will lose access to <span className="font-medium text-foreground">{project.name}</span>{' '}
-        and its work items. To join again you need a new invite from an owner.
+        {t.rich('description', {
+          name: project.name,
+          strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
+        })}
       </p>
     </ConfirmDialog>
   );

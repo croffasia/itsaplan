@@ -1,3 +1,5 @@
+'use client';
+
 import { useState } from 'react';
 import {
   AtSign,
@@ -8,6 +10,7 @@ import {
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type Notification, type NotificationType } from '@/lib/api';
 import { formatDurationShort } from '@/utils/dates';
 import { cn } from '@/lib/utils';
@@ -42,23 +45,6 @@ const TYPE_ICON: Record<NotificationType, LucideIcon> = {
   commented: MessageSquare,
   state_changed: CircleDot,
 };
-
-// The verb phrase for a notification, addressed to the reader ("you").
-function notificationText(n: Notification): string {
-  const who = n.actorName ?? 'Someone';
-  switch (n.type) {
-    case 'assigned':
-      return `${who} assigned the issue to you`;
-    case 'mentioned':
-      return `${who} mentioned you`;
-    case 'commented':
-      return `${who} commented`;
-    case 'state_changed':
-      return n.fromState && n.toState
-        ? `${who} changed the status from ${n.fromState} to ${n.toState}`
-        : `${who} changed the status`;
-  }
-}
 
 const dropdownMenu = {
   Item: DropdownMenuItem,
@@ -95,9 +81,18 @@ export default function InboxListItem({
   onSnooze: (until: string | null) => void;
   onDelete: () => void;
 }) {
+  const tCommon = useTranslations('common');
+  const te = useTranslations('inbox.event');
   const [pickOpen, setPickOpen] = useState(false);
   const Icon = TYPE_ICON[n.type];
-  const eventText = notificationText(n);
+  const who = n.actorName ?? te('someone');
+  // The verb phrase for a notification, addressed to the reader ("you").
+  const eventText =
+    n.type === 'state_changed'
+      ? n.fromState && n.toState
+        ? te('stateChanged', { who, from: n.fromState, to: n.toState })
+        : te('stateChangedPlain', { who })
+      : te(n.type, { who });
   const unread = n.readAt == null;
   const snoozed = n.snoozedUntil != null && new Date(n.snoozedUntil).getTime() > Date.now();
 
@@ -162,7 +157,7 @@ export default function InboxListItem({
                   size="icon"
                   className="hidden size-6 group-hover:flex data-[state=open]:flex"
                   onClick={(e) => e.stopPropagation()}
-                  title="More"
+                  title={tCommon('more')}
                 >
                   <MoreHorizontal />
                 </Button>

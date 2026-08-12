@@ -71,11 +71,11 @@ export function parseRolesText(text: string, catalog: PermissionCatalog): RoleTr
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error('Clipboard does not contain valid JSON.');
+    throw new Error('invalidJson');
   }
   const env = data as Partial<RolesEnvelope>;
   if (!env || env.type !== PAYLOAD_TYPE || !Array.isArray(env.roles)) {
-    throw new Error('Clipboard does not contain a roles export.');
+    throw new Error('notAnExport');
   }
   const roles: RoleTransfer[] = [];
   const seen = new Set<string>();
@@ -87,7 +87,7 @@ export function parseRolesText(text: string, catalog: PermissionCatalog): RoleTr
     seen.add(key);
     roles.push({ name, permissions: normalizeMatrix(raw.permissions, catalog) });
   }
-  if (roles.length === 0) throw new Error('The roles export is empty.');
+  if (roles.length === 0) throw new Error('empty');
   return roles;
 }
 

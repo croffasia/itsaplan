@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -18,6 +19,8 @@ const ACCEPT = 'image/png,image/jpeg,image/gif,image/webp,image/avif';
 // thing left here is to read the session again — that is what every avatar in the
 // app renders from.
 export default function AccountProfileAvatar() {
+  const t = useTranslations('account.profile');
+  const tCommon = useTranslations('common');
   const { data: session, refetch: refetchSession } = useSession();
   const inputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -29,25 +32,25 @@ export default function AccountProfileAvatar() {
     mutationFn: (file: File) => uploadAvatar(file),
     onSuccess: async () => {
       await refetchSession();
-      toast.success('Avatar updated');
+      toast.success(t('avatarUpdated'));
     },
-    onError: (err) => setError(err instanceof Error ? err.message : 'Could not upload avatar.'),
+    onError: (err) => setError(err instanceof Error ? err.message : t('avatarUploadFailed')),
   });
 
   const removeMutation = useMutation({
     mutationFn: () => removeAvatar(),
     onSuccess: async () => {
       await refetchSession();
-      toast.success('Avatar removed');
+      toast.success(t('avatarRemoved'));
     },
-    onError: (err) => setError(err instanceof Error ? err.message : 'Could not remove avatar.'),
+    onError: (err) => setError(err instanceof Error ? err.message : t('avatarRemoveFailed')),
   });
 
   const busy = uploadMutation.isPending || removeMutation.isPending;
 
   function uploadLabel() {
-    if (uploadMutation.isPending) return 'Uploading…';
-    return image ? 'Change' : 'Upload';
+    if (uploadMutation.isPending) return t('uploading');
+    return image ? t('change') : t('upload');
   }
 
   function onPick(e: ChangeEvent<HTMLInputElement>) {
@@ -56,7 +59,7 @@ export default function AccountProfileAvatar() {
     if (!file) return;
     setError(null);
     if (maxAvatarMb && file.size > maxAvatarMb * 1024 * 1024) {
-      setError(`Image exceeds the ${maxAvatarMb} MB limit`);
+      setError(t('avatarTooLarge', { mb: maxAvatarMb }));
       return;
     }
     uploadMutation.mutate(file);
@@ -90,12 +93,13 @@ export default function AccountProfileAvatar() {
               }}
             >
               <Trash2 className="size-3.5" />
-              Remove
+              {tCommon('delete')}
             </Button>
           )}
         </div>
         <p className="text-xs text-muted-foreground">
-          PNG, JPEG, GIF, WebP, or AVIF.{maxAvatarMb ? ` Up to ${maxAvatarMb} MB.` : ''}
+          {t('avatarFormats')}
+          {maxAvatarMb ? ` ${t('avatarMaxSize', { mb: maxAvatarMb })}` : ''}
         </p>
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>

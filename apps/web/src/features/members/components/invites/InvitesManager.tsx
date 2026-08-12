@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { type InviteRow as Invite } from '@/lib/api';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { ItemGroup } from '@/components/ui/item';
@@ -14,6 +15,7 @@ import InviteRow from './InviteRow';
 // permission — the form to invite someone by email. Gated by the members_invite
 // matrix: without read it renders nothing.
 export default function InvitesManager({ projectKey }: { projectKey: string }) {
+  const t = useTranslations('members.invites');
   const { can } = usePermissions();
   const canRead = can('members_invite', 'read');
   const canCreate = can('members_invite', 'create');
@@ -33,7 +35,7 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
       {pending.length > 0 && (
         <div className="mb-8">
           <div className="mb-1 border-b pb-1 text-xs font-medium text-muted-foreground">
-            {pending.length} pending invite{pending.length === 1 ? '' : 's'}
+            {t('pendingCount', { count: pending.length })}
           </div>
           <ItemGroup>
             {pending.map((invite) => (
@@ -45,17 +47,15 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
 
       {target && (
         <ConfirmDialog
-          title={`Revoke invite for ${target.email}`}
-          confirmLabel="Revoke invite"
+          title={t('revokeTitle', { email: target.email })}
+          confirmLabel={t('revokeConfirm')}
           onConfirm={async () => {
             await deleteInvite.mutateAsync(target.id);
             setTarget(null);
           }}
           onClose={() => setTarget(null)}
         >
-          <div className="text-sm text-muted-foreground">
-            The invite link will stop working. You can invite this email again later.
-          </div>
+          <div className="text-sm text-muted-foreground">{t('revokeDescription')}</div>
         </ConfirmDialog>
       )}
     </div>

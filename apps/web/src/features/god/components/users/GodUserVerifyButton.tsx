@@ -2,18 +2,20 @@
 
 import { MailCheck } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { useVerifyInstanceUserEmail } from '../../services/god.service';
 
 // Confirms an account's email address on the owner's behalf, for a user who cannot
 // open the confirmation link (no mail provider, a lost message, a manual signup).
 export default function GodUserVerifyButton({ userId }: { userId: string }) {
+  const t = useTranslations('god.userPanel');
   const verify = useVerifyInstanceUserEmail();
 
   async function run() {
     try {
       await verify.mutateAsync(userId);
-      toast.success('Email address confirmed');
+      toast.success(t('verifyDone'));
     } catch {
       // The failure already surfaced through the global mutation error toast.
     }
@@ -30,7 +32,7 @@ export default function GodUserVerifyButton({ userId }: { userId: string }) {
       }}
     >
       <MailCheck />
-      {verify.isPending ? 'Confirming…' : 'Mark verified'}
+      {verify.isPending ? t('verifying') : t('verify')}
     </Button>
   );
 }

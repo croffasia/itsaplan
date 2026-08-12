@@ -39,26 +39,33 @@ export function isExistingAccountError(err: unknown): boolean {
 // Create an account for the invited email, then accept. autoSignIn (set in
 // @repo/auth) signs the new user in during sign-up, so the accept call that
 // follows carries their session.
-export async function registerAndAccept(input: { email: string; password: string; token: string }) {
+export async function registerAndAccept(input: {
+  email: string;
+  password: string;
+  token: string;
+  // What to say when better-auth reports no message of its own.
+  registerFailed: string;
+}) {
   const result = await signUp.email({
     email: input.email,
     password: input.password,
     name: input.email.split('@')[0] || input.email,
   });
   if (result.error) {
-    throw new InviteAuthError(
-      result.error.message ?? 'Could not create your account.',
-      result.error.code,
-    );
+    throw new InviteAuthError(result.error.message ?? input.registerFailed, result.error.code);
   }
   return api.acceptInvite(input.token);
 }
 
 // Sign in to an existing account. Does not accept: after the session updates the
 // page shows the accept/reject step for the invitee to decide.
-export async function signInForInvite(input: { email: string; password: string }): Promise<void> {
+export async function signInForInvite(input: {
+  email: string;
+  password: string;
+  signInFailed: string;
+}): Promise<void> {
   const result = await signIn.email({ email: input.email, password: input.password });
   if (result.error) {
-    throw new InviteAuthError(result.error.message ?? 'Could not sign you in.', result.error.code);
+    throw new InviteAuthError(result.error.message ?? input.signInFailed, result.error.code);
   }
 }

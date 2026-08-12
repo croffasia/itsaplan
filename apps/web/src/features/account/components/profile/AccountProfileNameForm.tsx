@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -11,6 +12,8 @@ import { Label } from '@/components/ui/label';
 // Saves through better-auth updateUser, which refreshes the session so every
 // avatar and name in the app picks the change up.
 export default function AccountProfileNameForm() {
+  const t = useTranslations('account.profile');
+  const tCommon = useTranslations('common');
   const { data: session } = useSession();
   const currentName = session?.user.name ?? '';
   const [name, setName] = useState(currentName);
@@ -22,10 +25,10 @@ export default function AccountProfileNameForm() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       const res = await updateUser({ name: trimmed });
-      if (res.error) throw new Error(res.error.message ?? 'Could not update name.');
+      if (res.error) throw new Error(res.error.message ?? t('nameUpdateFailed'));
     },
-    onSuccess: () => toast.success('Name updated'),
-    onError: (err) => setError(err instanceof Error ? err.message : 'Could not update name.'),
+    onSuccess: () => toast.success(t('nameUpdated')),
+    onError: (err) => setError(err instanceof Error ? err.message : t('nameUpdateFailed')),
   });
 
   // The session loads after mount; fill the field once the name arrives.
@@ -44,7 +47,7 @@ export default function AccountProfileNameForm() {
       }}
     >
       <div className="flex flex-col gap-2">
-        <Label htmlFor="profile-name">Display name</Label>
+        <Label htmlFor="profile-name">{t('displayName')}</Label>
         <Input
           id="profile-name"
           value={name}
@@ -56,7 +59,7 @@ export default function AccountProfileNameForm() {
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div>
         <Button type="submit" size="sm" disabled={!dirty || saveMutation.isPending}>
-          {saveMutation.isPending ? 'Saving…' : 'Save'}
+          {saveMutation.isPending ? tCommon('saving') : tCommon('save')}
         </Button>
       </div>
     </form>

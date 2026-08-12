@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { qk } from '@/services/queryKeys';
 import { useAuthConfigQuery } from '@/services/authConfig.service';
@@ -18,11 +19,12 @@ export interface LinkedAccount {
 }
 
 export function useLinkedAccountsQuery() {
+  const t = useTranslations('account.accounts');
   return useQuery({
     queryKey: qk.linkedAccounts,
     queryFn: async (): Promise<LinkedAccount[]> => {
       const { data, error } = await listAccounts();
-      if (error) throw new Error(error.message ?? 'Could not load connected accounts.');
+      if (error) throw new Error(error.message ?? t('loadFailed'));
       return (data ?? []) as LinkedAccount[];
     },
   });
@@ -30,20 +32,21 @@ export function useLinkedAccountsQuery() {
 
 // Sends the browser to Google and back. The callback returns to this page, so the
 // user lands where they started with the new connection visible.
-export async function connectGoogle(): Promise<void> {
+export async function connectGoogle(connectFailed: string): Promise<void> {
   const { error } = await linkSocial({
     provider: 'google',
     callbackURL: `${window.location.origin}/account/accounts`,
   });
-  if (error) throw new Error(error.message ?? 'Could not connect Google.');
+  if (error) throw new Error(error.message ?? connectFailed);
 }
 
 export function useDisconnectProvider() {
+  const t = useTranslations('account.accounts');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { providerId: string; accountId: string }) => {
       const { error } = await unlinkAccount(input);
-      if (error) throw new Error(error.message ?? 'Could not disconnect this account.');
+      if (error) throw new Error(error.message ?? t('disconnectFailed'));
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.linkedAccounts }),
   });

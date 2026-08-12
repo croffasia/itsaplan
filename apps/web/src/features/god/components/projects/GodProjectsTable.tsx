@@ -1,6 +1,7 @@
 'use client';
 
 import { Pencil } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { InstanceProject } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,9 @@ export default function GodProjectsTable({
   projects: InstanceProject[];
   onSelect: (projectId: number) => void;
 }) {
+  const t = useTranslations('god.projects');
+  const tCommon = useTranslations('common');
+
   return (
     <Table className="min-w-[900px] table-fixed">
       <colgroup>
@@ -38,14 +42,26 @@ export default function GodProjectsTable({
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
-          <TableHead className="text-xs font-medium text-muted-foreground">Project</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Members</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Issues</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Agents</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">Last activity</TableHead>
-          <TableHead className="text-xs font-medium text-muted-foreground">MCP</TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.project')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.members')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.issues')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.agents')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.lastActivity')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.mcp')}
+          </TableHead>
           <TableHead className="text-right text-xs font-medium text-muted-foreground">
-            Actions
+            {tCommon('actions')}
           </TableHead>
         </TableRow>
       </TableHeader>
@@ -55,7 +71,7 @@ export default function GodProjectsTable({
             key={p.id}
             className="cursor-pointer"
             onClick={() => onSelect(p.id)}
-            title="Show project details"
+            title={t('showDetails')}
           >
             <TableCell className="px-3 py-3 align-top whitespace-normal">
               <div className="flex min-w-0 flex-col gap-0.5">
@@ -66,7 +82,7 @@ export default function GodProjectsTable({
                   <span className="truncate text-sm font-medium">{p.name}</span>
                 </div>
                 <span className="text-xs text-muted-foreground">
-                  created {formatShortDate(p.createdAt)}
+                  {t('created', { date: formatShortDate(p.createdAt) })}
                 </span>
               </div>
             </TableCell>
@@ -86,9 +102,9 @@ export default function GodProjectsTable({
                 {p.archivedIssueCount > 0 && (
                   <span
                     className="text-xs text-muted-foreground"
-                    title={`${p.archivedIssueCount} archived`}
+                    title={t('archived', { count: p.archivedIssueCount })}
                   >
-                    {compactCount(p.archivedIssueCount)} archived
+                    {t('archived', { count: compactCount(p.archivedIssueCount) })}
                   </span>
                 )}
               </div>
@@ -102,17 +118,17 @@ export default function GodProjectsTable({
             </TableCell>
 
             <TableCell className="px-3 py-3 align-top text-xs text-muted-foreground">
-              {p.lastActivityAt ? formatShortDate(p.lastActivityAt) : 'never'}
+              {p.lastActivityAt ? formatShortDate(p.lastActivityAt) : t('neverActive')}
             </TableCell>
 
             <TableCell className="px-3 py-3 align-top">
               {p.mcpEnabled ? (
                 <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-medium">
-                  Enabled
+                  {t('mcpEnabled')}
                 </Badge>
               ) : (
                 <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-medium">
-                  Off
+                  {t('mcpOff')}
                 </Badge>
               )}
             </TableCell>
@@ -122,8 +138,8 @@ export default function GodProjectsTable({
                 variant="ghost"
                 size="icon"
                 className="size-8 text-muted-foreground"
-                aria-label="Open project"
-                title="Open project"
+                aria-label={t('open')}
+                title={t('open')}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSelect(p.id);

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { GOD_COLUMN_CLASS, godSection } from '@/utils/godSections';
+import { GOD_COLUMN_CLASS } from '@/utils/godSections';
+import { useGodSectionText } from '@/hooks/useSectionLabels';
 import SectionPageView from '@/components/common/page/SectionPageView';
 
 // The chrome shared by every god section page: title and description taken from the
@@ -16,7 +17,7 @@ export default function GodSectionPage({
   widthClassName?: string;
   children: ReactNode;
 }) {
-  const section = godSection(slug);
+  const section = useGodSectionText().section(slug);
   return (
     <SectionPageView
       title={section.label}

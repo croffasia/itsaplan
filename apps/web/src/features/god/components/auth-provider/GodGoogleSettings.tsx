@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import type { GodGoogleForm } from '../../hooks/useGodGoogleForm';
 // redirect URI is derived from the API origin and shown read-only, since it has to be
 // registered on the OAuth client for the round trip to work at all.
 export default function GodGoogleSettings({ form }: { form: GodGoogleForm }) {
+  const t = useTranslations('god.authProvider');
   const [copied, setCopied] = useState(false);
 
   async function copyRedirectUri() {
@@ -27,12 +29,8 @@ export default function GodGoogleSettings({ form }: { form: GodGoogleForm }) {
 
   return (
     <SettingsSection
-      title="Google"
-      description={
-        form.hasCredentials
-          ? 'An address without an account gets one; an address that already has a confirmed account signs into it.'
-          : 'Add the client ID and secret first.'
-      }
+      title={t('google')}
+      description={t(form.hasCredentials ? 'googleConfigured' : 'googleMissing')}
       action={
         <EnabledSwitch
           checked={form.enabled}
@@ -44,7 +42,7 @@ export default function GodGoogleSettings({ form }: { form: GodGoogleForm }) {
       <SettingsCard className="space-y-6 p-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="google-client-id">Client ID</Label>
+            <Label htmlFor="google-client-id">{t('clientId')}</Label>
             <Input
               id="google-client-id"
               value={form.clientId}
@@ -54,7 +52,7 @@ export default function GodGoogleSettings({ form }: { form: GodGoogleForm }) {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="google-client-secret">Client secret</Label>
+            <Label htmlFor="google-client-secret">{t('clientSecret')}</Label>
             <SecretInput
               id="google-client-secret"
               value={form.clientSecret}
@@ -70,19 +68,16 @@ export default function GodGoogleSettings({ form }: { form: GodGoogleForm }) {
             in. It is not part of the form and never saved. */}
         <div className="flex items-start justify-between gap-4 border-t border-border/60 pt-4">
           <div className="min-w-0 space-y-1">
-            <div className="text-sm font-medium">Redirect URI</div>
+            <div className="text-sm font-medium">{t('redirectUri')}</div>
             <p className="truncate font-mono text-xs">{form.settings.redirectUri}</p>
-            <p className="text-xs text-muted-foreground">
-              Register this on the OAuth client in the Google Cloud console. Google refuses the
-              sign-in if it does not match exactly.
-            </p>
+            <p className="text-xs text-muted-foreground">{t('redirectUriHint')}</p>
           </div>
           <Button
             type="button"
             variant="outline"
             size="icon"
             className="shrink-0"
-            title="Copy redirect URI"
+            title={t('copyRedirectUri')}
             onClick={() => void copyRedirectUri()}
           >
             {copied ? <Check className="size-4" /> : <Copy className="size-4" />}

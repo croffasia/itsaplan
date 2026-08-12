@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -23,6 +24,8 @@ const OWNER_VALUE = 'owner';
 // email is a 409, toasted by the global handler. On success the form clears so
 // the owner can add another.
 export default function InviteCreateForm({ projectKey }: { projectKey: string }) {
+  const t = useTranslations('members.invites');
+  const tCommon = useTranslations('common');
   const [email, setEmail] = useState('');
   const [roleValue, setRoleValue] = useState('');
   const rolesQuery = useRolesQuery(projectKey);
@@ -56,7 +59,7 @@ export default function InviteCreateForm({ projectKey }: { projectKey: string })
       <div className="flex items-center gap-2">
         <Input
           type="email"
-          placeholder="name@example.com"
+          placeholder={t('emailPlaceholder')}
           autoComplete="off"
           required
           value={email}
@@ -66,7 +69,7 @@ export default function InviteCreateForm({ projectKey }: { projectKey: string })
         />
         <Select value={selected} onValueChange={setRoleValue} disabled={createInvite.isPending}>
           <SelectTrigger className="h-9 w-40">
-            <SelectValue placeholder="Role" />
+            <SelectValue placeholder={t('rolePlaceholder')} />
           </SelectTrigger>
           <SelectContent>
             {roles.map((r) => (
@@ -74,7 +77,7 @@ export default function InviteCreateForm({ projectKey }: { projectKey: string })
                 {r.name}
               </SelectItem>
             ))}
-            <SelectItem value={OWNER_VALUE}>Owner</SelectItem>
+            <SelectItem value={OWNER_VALUE}>{tCommon('owner')}</SelectItem>
           </SelectContent>
         </Select>
         <Button
@@ -83,7 +86,7 @@ export default function InviteCreateForm({ projectKey }: { projectKey: string })
           className="h-9 gap-1.5"
         >
           <Plus className="size-4" />
-          {createInvite.isPending ? 'Inviting…' : 'Invite'}
+          {createInvite.isPending ? t('inviting') : t('invite')}
         </Button>
       </div>
     </form>

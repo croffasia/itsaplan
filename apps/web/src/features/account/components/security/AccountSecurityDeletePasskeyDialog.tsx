@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { passkey } from '@/lib/auth-client';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
@@ -17,10 +18,11 @@ export default function AccountSecurityDeletePasskeyDialog({
   onClose: () => void;
   onDeleted: () => void | Promise<void>;
 }) {
+  const t = useTranslations('account.security');
   return (
     <ConfirmDialog
-      title="Remove passkey?"
-      confirmLabel="Remove passkey"
+      title={t('removePasskeyTitle')}
+      confirmLabel={t('removePasskey')}
       onClose={onClose}
       onConfirm={async () => {
         // Passkey delete is a better-auth call, not a React Query mutation, so the
@@ -28,7 +30,7 @@ export default function AccountSecurityDeletePasskeyDialog({
         // to keep the dialog open.
         const result = await passkey.deletePasskey({ id: target.id });
         if (result?.error) {
-          const message = result.error.message ?? 'Could not remove passkey.';
+          const message = result.error.message ?? t('removePasskeyFailed');
           toast.error(message);
           throw new Error(message);
         }
@@ -36,12 +38,12 @@ export default function AccountSecurityDeletePasskeyDialog({
       }}
     >
       <p className="text-sm">
-        <span className="font-medium text-foreground">{passkeyLabel(target)}</span>
+        <span className="font-medium text-foreground">
+          {passkeyLabel(target, t('passkeyFallback'))}
+        </span>
         {accountEmail && <span className="text-muted-foreground"> · {accountEmail}</span>}
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        You will no longer be able to sign in with this passkey. This cannot be undone.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{t('deleteWarning')}</p>
     </ConfirmDialog>
   );
 }

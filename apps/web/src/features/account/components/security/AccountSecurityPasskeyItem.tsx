@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { KeyRound, Trash2 } from 'lucide-react';
 import { formatDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,7 @@ export default function AccountSecurityPasskeyItem({
   passkey: PasskeyRow;
   onDelete: () => void;
 }) {
+  const t = useTranslations('account.security');
   return (
     <Item
       size="sm"
@@ -32,10 +34,10 @@ export default function AccountSecurityPasskeyItem({
       </ItemMedia>
       <ItemContent>
         <ItemTitle className="flex items-center gap-2">
-          {passkeyLabel(passkey)}
+          {passkeyLabel(passkey, t('passkeyFallback'))}
           {passkey.deviceType === 'singleDevice' && (
             <Badge variant="secondary" className="px-1.5 py-0 text-[10px] font-normal">
-              This device
+              {t('thisDevice')}
             </Badge>
           )}
         </ItemTitle>
@@ -48,7 +50,7 @@ export default function AccountSecurityPasskeyItem({
           variant="ghost"
           size="icon"
           className="size-7 text-muted-foreground hover:text-destructive"
-          title="Remove passkey"
+          title={t('removePasskey')}
           onClick={onDelete}
         >
           <Trash2 className="size-4" />

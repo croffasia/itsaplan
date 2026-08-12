@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import BrandPanel from '@/components/common/page/BrandPanel';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Button } from '@/components/ui/button';
@@ -14,29 +15,30 @@ import InviteStep from './components/InviteStep';
 // a logged-out invitee registers or signs in here and joins in one step; a
 // logged-in one accepts or rejects directly. Styled like the auth screens.
 export default function InviteAcceptPage({ token }: { token: string }) {
+  const t = useTranslations('invite');
   const inviteQuery = useInviteQuery(token);
   const invite = inviteQuery.data;
 
   // The heading reflects the invite state so the copy never contradicts the body
   // (e.g. an invalid link must not read "Accept your invitation").
-  let title = 'Join the project';
-  let subtitle = 'Accept your invitation to start collaborating';
+  let title = t('title');
+  let subtitle = t('subtitle');
   let body = <ListSkeleton rows={3} rowClassName="h-12" />;
 
   if (!inviteQuery.isPending && !invite) {
-    title = 'Invite not found';
-    subtitle = 'This link is invalid or no longer active';
+    title = t('notFoundTitle');
+    subtitle = t('notFoundSubtitle');
     body = (
-      <InviteNotice message="This invite link is invalid or has been revoked.">
+      <InviteNotice message={t('notFoundMessage')}>
         <Button asChild variant="outline">
-          <Link href="/login">Go to sign in</Link>
+          <Link href="/login">{t('goToSignIn')}</Link>
         </Button>
       </InviteNotice>
     );
   } else if (invite) {
     if (invite.status !== 'pending') {
-      title = 'Invitation closed';
-      subtitle = `This invite was already ${invite.status}`;
+      title = t('closedTitle');
+      subtitle = t('closedSubtitle', { status: invite.status });
     }
     body = (
       <div className="flex flex-col gap-6">
@@ -58,7 +60,7 @@ export default function InviteAcceptPage({ token }: { token: string }) {
               </div>
               {body}
             </div>
-            <BrandPanel subtitle="You have been invited to collaborate on a project." />
+            <BrandPanel subtitle={t('brandSubtitle')} />
           </CardContent>
         </Card>
       </div>

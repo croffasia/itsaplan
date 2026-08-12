@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api';
 import { useSession } from '@/lib/auth-client';
 import { useProjectsQuery } from '@/services/projects.service';
@@ -15,6 +16,7 @@ import ManageProjectsLeaveDialog from './components/ManageProjectsLeaveDialog';
 // The delete/leave mutations drop the project from the cached list, so the row
 // disappears without a manual refetch.
 export default function ManageProjectsPage() {
+  const t = useTranslations('projects');
   const { data: projects, isPending } = useProjectsQuery();
   const { data: session } = useSession();
   const router = useRouter();
@@ -23,11 +25,7 @@ export default function ManageProjectsPage() {
   const [leaving, setLeaving] = useState<Project | null>(null);
 
   return (
-    <FullPageView
-      label="Manage projects"
-      title="Manage projects"
-      description="Every project you belong to, with your permissions in each. Copy one to start a new project from its setup. Owners can delete a project; members can leave one. Deleting permanently removes the project and everything in it."
-    >
+    <FullPageView label={t('label')} title={t('title')} description={t('description')}>
       <ManageProjectsList
         projects={projects ?? []}
         isPending={isPending}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import { canonicalTimezone } from '@/utils/dates';
 import {
@@ -16,16 +17,17 @@ import {
 
 // The regions IANA zone names start with, in the order they are listed. A zone whose
 // prefix is not one of these (UTC, GMT, legacy aliases) falls into "Other".
+// The region names themselves are messages under `account.preferences.timezoneGroups`.
 const REGIONS = [
-  { prefix: 'America', label: 'Americas' },
-  { prefix: 'Europe', label: 'Europe' },
-  { prefix: 'Africa', label: 'Africa' },
-  { prefix: 'Asia', label: 'Asia' },
-  { prefix: 'Australia', label: 'Australia' },
-  { prefix: 'Pacific', label: 'Pacific' },
-  { prefix: 'Atlantic', label: 'Atlantic' },
-  { prefix: 'Indian', label: 'Indian Ocean' },
-  { prefix: 'Antarctica', label: 'Antarctica' },
+  'America',
+  'Europe',
+  'Africa',
+  'Asia',
+  'Australia',
+  'Pacific',
+  'Atlantic',
+  'Indian',
+  'Antarctica',
 ] as const;
 
 // Every zone the browser's own Intl data knows, so the list matches what the runtime
@@ -62,14 +64,18 @@ function zoneLabel(zone: string): string {
   return offset ? `(${offset}) ${city}` : city;
 }
 
-function groupZones(zones: string[]): { value: string; items: string[] }[] {
-  const groups = REGIONS.map((r) => ({
-    value: r.label,
-    items: zones.filter((z) => z.startsWith(`${r.prefix}/`)),
+type ZoneRegion = (typeof REGIONS)[number] | 'Other';
+
+function groupZones(zones: string[]): { value: ZoneRegion; items: string[] }[] {
+  const groups = REGIONS.map((prefix) => ({
+    value: prefix as ZoneRegion,
+    items: zones.filter((z) => z.startsWith(`${prefix}/`)),
   }));
   const grouped = new Set(groups.flatMap((g) => g.items));
   const other = zones.filter((z) => !grouped.has(z));
-  return [...groups, { value: 'Other', items: other }].filter((g) => g.items.length > 0);
+  return [...groups, { value: 'Other' as ZoneRegion, items: other }].filter(
+    (g) => g.items.length > 0,
+  );
 }
 
 // Timezone picker: every zone the runtime knows, grouped by region and searchable by
@@ -83,6 +89,7 @@ export default function AccountPreferencesTimezone({
   onChange: (timezone: string) => void;
   disabled: boolean;
 }) {
+  const t = useTranslations('account.preferences');
   const groups = useMemo(() => groupZones(zoneList()), []);
   // A label costs an Intl.DateTimeFormat and the list asks for one on every render
   // and every keystroke in the search field, so each is built on first use and kept.
@@ -108,16 +115,16 @@ export default function AccountPreferencesTimezone({
       {/* The input shows the selected zone, so select it on focus: typing then
           replaces it instead of appending to it. */}
       <ComboboxInput
-        placeholder="Select a timezone"
+        placeholder={t('timezonePlaceholder')}
         className="w-full sm:w-44"
         onFocus={(e) => e.currentTarget.select()}
       />
       <ComboboxContent>
-        <ComboboxEmpty>No timezones found.</ComboboxEmpty>
+        <ComboboxEmpty>{t('timezoneEmpty')}</ComboboxEmpty>
         <ComboboxList>
-          {(group: { value: string; items: string[] }) => (
+          {(group: { value: ZoneRegion; items: string[] }) => (
             <ComboboxGroup key={group.value} items={group.items}>
-              <ComboboxLabel>{group.value}</ComboboxLabel>
+              <ComboboxLabel>{t(`timezoneGroups.${group.value}`)}</ComboboxLabel>
               <ComboboxCollection>
                 {(zone: string) => (
                   <ComboboxItem key={zone} value={zone}>

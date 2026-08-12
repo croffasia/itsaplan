@@ -1,6 +1,7 @@
 'use client';
 
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import type {
   AccountPreferencesPatch,
   IssueActivityView,
@@ -9,6 +10,7 @@ import type {
   StartPage,
   ThemePreference,
 } from '@/lib/api';
+import { LOCALES, LOCALE_LABELS } from '@/i18n/locales';
 import {
   useAccountPreferencesQuery,
   useUpdateAccountPreferences,
@@ -24,38 +26,16 @@ import AccountHotkeys from './components/preferences/AccountHotkeys';
 import AccountPreferencesNav from './components/preferences/AccountPreferencesNav';
 import AccountPreferencesSaveState from './components/preferences/AccountPreferencesSaveState';
 
-const THEME_OPTIONS: { value: ThemePreference; label: string }[] = [
-  { value: 'system', label: 'Match system' },
-  { value: 'light', label: 'Light' },
-  { value: 'dark', label: 'Dark' },
-];
-
-const ISSUE_OPEN_OPTIONS: { value: IssueOpenMode; label: string }[] = [
-  { value: 'panel', label: 'Side panel' },
-  { value: 'page', label: 'Full page' },
-];
-
-const ISSUE_STATS_VIEW_OPTIONS: { value: IssueStatsView; label: string }[] = [
-  { value: 'compact', label: 'Compact bar' },
-  { value: 'timeline', label: 'Timeline' },
-];
-
-const ISSUE_ACTIVITY_VIEW_OPTIONS: { value: IssueActivityView; label: string }[] = [
-  { value: 'flat', label: 'Flat' },
-  { value: 'grouped', label: 'Grouped by status' },
-];
-
-const START_PAGE_OPTIONS: { value: StartPage; label: string }[] = [
-  { value: 'work-items', label: 'Work items' },
-  { value: 'inbox', label: 'Inbox' },
-  { value: 'dashboard', label: 'Dashboards' },
-  { value: 'initiatives', label: 'Initiatives' },
-  { value: 'ai-chat', label: 'AI chat' },
-];
+const THEMES: ThemePreference[] = ['system', 'light', 'dark'];
+const ISSUE_OPEN_MODES: IssueOpenMode[] = ['panel', 'page'];
+const ISSUE_STATS_VIEWS: IssueStatsView[] = ['compact', 'timeline'];
+const ISSUE_ACTIVITY_VIEWS: IssueActivityView[] = ['flat', 'grouped'];
+const START_PAGES: StartPage[] = ['work-items', 'inbox', 'dashboard', 'initiatives', 'ai-chat'];
 
 // Personal interface preferences (/account/preferences). Each choice saves as soon
 // as it is made and applies on every device the user signs in from.
 export default function AccountPreferencesPage() {
+  const t = useTranslations('account.preferences');
   const { data, isPending } = useAccountPreferencesQuery();
   const update = useUpdateAccountPreferences();
   const prefs = data ?? PREFERENCE_DEFAULTS;
@@ -64,25 +44,33 @@ export default function AccountPreferencesPage() {
   const disabled = isPending;
 
   const save = (patch: AccountPreferencesPatch) =>
-    update.mutate(patch, { onSuccess: () => toast.success('Preferences saved') });
+    update.mutate(patch, { onSuccess: () => toast.success(t('saved')) });
+
+  // The language list names each language in itself, so it is not translated.
+  const localeOptions = LOCALES.map((value) => ({ value, label: LOCALE_LABELS[value] }));
 
   return (
     <FullPageView
-      label="Preferences"
-      title="Preferences"
-      description="How the app looks and behaves for you. Every change saves right away and applies wherever you sign in."
+      label={t('label')}
+      title={t('title')}
+      description={t('description')}
       actions={<AccountPreferencesSaveState saving={update.isPending} />}
       nav={<AccountPreferencesNav />}
     >
-      <AccountPreferencesSection id="appearance" title="Appearance">
-        <AccountPreferenceRow
-          label="Theme"
-          description="Match system follows your operating system setting."
-        >
+      <AccountPreferencesSection id="appearance" title={t('sections.appearance')}>
+        <AccountPreferenceRow label={t('theme')} description={t('themeDescription')}>
           <AccountPreferenceSelect
             value={prefs.theme}
-            options={THEME_OPTIONS}
+            options={THEMES.map((value) => ({ value, label: t(`themeOptions.${value}`) }))}
             onChange={(theme) => save({ theme })}
+            disabled={disabled}
+          />
+        </AccountPreferenceRow>
+        <AccountPreferenceRow label={t('language')} description={t('languageDescription')}>
+          <AccountPreferenceSelect
+            value={prefs.locale}
+            options={localeOptions}
+            onChange={(locale) => save({ locale })}
             disabled={disabled}
           />
         </AccountPreferenceRow>
@@ -90,10 +78,10 @@ export default function AccountPreferencesPage() {
 
       <AccountPreferencesSection
         id="date-and-time"
-        title="Date and time"
-        description="Timestamps are stored in UTC and shown in the zone you pick here."
+        title={t('sections.dateAndTime')}
+        description={t('sections.dateAndTimeDescription')}
       >
-        <AccountPreferenceRow label="Timezone" description="Pick the zone you work in.">
+        <AccountPreferenceRow label={t('timezone')} description={t('timezoneDescription')}>
           <AccountPreferencesTimezone
             value={prefs.timezone}
             onChange={(timezone) => save({ timezone })}
@@ -104,27 +92,30 @@ export default function AccountPreferencesPage() {
 
       <AccountPreferencesSection
         id="navigation"
-        title="Navigation"
-        description="Where the app takes you, and how issues open."
+        title={t('sections.navigation')}
+        description={t('sections.navigationDescription')}
       >
         <AccountPreferenceRow
-          label="Open issues in"
-          description="What happens when you click an issue on a board, table, calendar, or timeline."
+          label={t('issueOpenMode')}
+          description={t('issueOpenModeDescription')}
         >
           <AccountPreferenceSelect
             value={prefs.issueOpenMode}
-            options={ISSUE_OPEN_OPTIONS}
+            options={ISSUE_OPEN_MODES.map((value) => ({
+              value,
+              label: t(`issueOpenModeOptions.${value}`),
+            }))}
             onChange={(issueOpenMode) => save({ issueOpenMode })}
             disabled={disabled}
           />
         </AccountPreferenceRow>
-        <AccountPreferenceRow
-          label="Start page"
-          description="The section that opens when you enter the app, in your last active project."
-        >
+        <AccountPreferenceRow label={t('startPage')} description={t('startPageDescription')}>
           <AccountPreferenceSelect
             value={prefs.startPage}
-            options={START_PAGE_OPTIONS}
+            options={START_PAGES.map((value) => ({
+              value,
+              label: t(`startPageOptions.${value}`),
+            }))}
             onChange={(startPage) => save({ startPage })}
             disabled={disabled}
           />
@@ -133,37 +124,34 @@ export default function AccountPreferencesPage() {
 
       <AccountPreferencesSection
         id="issue-settings"
-        title="Issue settings"
-        description="How the stats and the activity log of an issue start out. Switching them while an issue is open does not change these."
+        title={t('sections.issueSettings')}
+        description={t('sections.issueSettingsDescription')}
       >
-        <AccountPreferenceRow
-          label="Show stats"
-          description="Whether the stats section starts expanded when you open an issue."
-        >
+        <AccountPreferenceRow label={t('showStats')} description={t('showStatsDescription')}>
           <Switch
             checked={prefs.issueStatsOpen}
             onCheckedChange={(issueStatsOpen) => save({ issueStatsOpen })}
             disabled={disabled}
           />
         </AccountPreferenceRow>
-        <AccountPreferenceRow
-          label="Show stats as"
-          description="Compact is one bar with a share per status; Timeline gives each status its own lane on a time axis."
-        >
+        <AccountPreferenceRow label={t('statsView')} description={t('statsViewDescription')}>
           <AccountPreferenceSelect
             value={prefs.issueStatsView}
-            options={ISSUE_STATS_VIEW_OPTIONS}
+            options={ISSUE_STATS_VIEWS.map((value) => ({
+              value,
+              label: t(`statsViewOptions.${value}`),
+            }))}
             onChange={(issueStatsView) => save({ issueStatsView })}
             disabled={disabled}
           />
         </AccountPreferenceRow>
-        <AccountPreferenceRow
-          label="Show activity as"
-          description="Flat is every entry newest first; Grouped splits the log by the status the issue was in."
-        >
+        <AccountPreferenceRow label={t('activityView')} description={t('activityViewDescription')}>
           <AccountPreferenceSelect
             value={prefs.issueActivityView}
-            options={ISSUE_ACTIVITY_VIEW_OPTIONS}
+            options={ISSUE_ACTIVITY_VIEWS.map((value) => ({
+              value,
+              label: t(`activityViewOptions.${value}`),
+            }))}
             onChange={(issueActivityView) => save({ issueActivityView })}
             disabled={disabled}
           />
@@ -172,13 +160,10 @@ export default function AccountPreferencesPage() {
 
       <AccountPreferencesSection
         id="notifications"
-        title="Notifications"
-        description="Watching an issue brings you its comments and status changes."
+        title={t('sections.notifications')}
+        description={t('sections.notificationsDescription')}
       >
-        <AccountPreferenceRow
-          label="Watch issues automatically"
-          description="The ones you create, get assigned, comment on, or are mentioned in."
-        >
+        <AccountPreferenceRow label={t('autoWatch')} description={t('autoWatchDescription')}>
           <Switch
             checked={prefs.autoWatch}
             onCheckedChange={(autoWatch) => save({ autoWatch })}
@@ -187,10 +172,10 @@ export default function AccountPreferencesPage() {
         </AccountPreferenceRow>
       </AccountPreferencesSection>
 
-      <AccountPreferencesSection id="ai-chat" title="AI chat">
+      <AccountPreferencesSection id="ai-chat" title={t('sections.aiChat')}>
         <AccountPreferenceRow
-          label="Show chat by default"
-          description="The chat button stays on screen in a project. The chat window opens only when you click it."
+          label={t('showChatByDefault')}
+          description={t('showChatByDefaultDescription')}
         >
           <Switch
             checked={prefs.showChatByDefault}
@@ -202,8 +187,8 @@ export default function AccountPreferencesPage() {
 
       <AccountPreferencesSection
         id="shortcuts"
-        title="Keyboard shortcuts"
-        description="Press Change, then the keys you want. Reset takes a shortcut back to the one set for this instance."
+        title={t('sections.shortcuts')}
+        description={t('sections.shortcutsDescription')}
       >
         {/* Only once the saved overrides are known: a rebinding recorded before they
             arrive would be built on an empty map and drop the ones already stored. */}

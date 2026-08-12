@@ -14,9 +14,8 @@ const appUrl = (path: string) =>
   typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
 
 // Each call throws with the API message on failure; on success the session cookie
-// is set and the middleware lets the user into the planner.
-
-const GENERIC_ERROR = 'Something went wrong. Please try again.';
+// is set and the middleware lets the user into the planner. A failure without a
+// message throws an empty one, and the caller (useAuthAction) words it.
 
 // Sign-in was refused because the address is not confirmed yet. The only 403 the
 // sign-in endpoint raises is the verification gate in @repo/auth, so the status is
@@ -26,7 +25,7 @@ export class EmailNotConfirmedError extends Error {}
 export async function signInWithEmail(input: { email: string; password: string }): Promise<void> {
   const result = await signIn.email(input);
   if (!result.error) return;
-  const message = result.error.message ?? GENERIC_ERROR;
+  const message = result.error.message ?? '';
   if (result.error.status === 403) throw new EmailNotConfirmedError(message);
   throw new Error(message);
 }
@@ -43,7 +42,7 @@ export async function signUpWithEmail(input: { email: string; password: string }
     name: input.email.split('@')[0] || input.email,
     callbackURL: appUrl('/login?verified=1'),
   });
-  if (result.error) throw new Error(result.error.message ?? GENERIC_ERROR);
+  if (result.error) throw new Error(result.error.message ?? '');
 }
 
 // Sends the password reset link. The address is not confirmed to exist: better-auth
@@ -57,7 +56,7 @@ export async function sendPasswordResetEmail(email: string): Promise<void> {
     email,
     redirectTo: appUrl(`/reset-password?email=${encodeURIComponent(email)}`),
   });
-  if (result.error) throw new Error(result.error.message ?? GENERIC_ERROR);
+  if (result.error) throw new Error(result.error.message ?? '');
 }
 
 // Consumes the token from the reset link, sets the new password, and signs the user
@@ -69,7 +68,7 @@ export async function setNewPassword(input: {
   newPassword: string;
 }): Promise<{ signedIn: boolean }> {
   const result = await resetPassword({ token: input.token, newPassword: input.newPassword });
-  if (result.error) throw new Error(result.error.message ?? GENERIC_ERROR);
+  if (result.error) throw new Error(result.error.message ?? '');
   if (!input.email) return { signedIn: false };
   const attempt = await signIn.email({ email: input.email, password: input.newPassword });
   return { signedIn: !attempt.error };
@@ -79,7 +78,7 @@ export async function setNewPassword(input: {
 // links turned off.
 export async function sendMagicLink(email: string): Promise<void> {
   const result = await signIn.magicLink({ email, callbackURL: appUrl('/') });
-  if (result.error) throw new Error(result.error.message ?? GENERIC_ERROR);
+  if (result.error) throw new Error(result.error.message ?? '');
 }
 
 // Sends the address confirmation link again, for someone held back at sign-in.
@@ -88,7 +87,7 @@ export async function resendVerificationEmail(email: string): Promise<void> {
     email,
     callbackURL: appUrl('/login?verified=1'),
   });
-  if (result.error) throw new Error(result.error.message ?? GENERIC_ERROR);
+  if (result.error) throw new Error(result.error.message ?? '');
 }
 
 // Drops the session created by autoSignIn right after sign-up, used when the
@@ -111,13 +110,10 @@ export async function signInWithGoogle(): Promise<void> {
     callbackURL: appUrl('/'),
     errorCallbackURL: appUrl('/login'),
   });
-  if (result.error) throw new Error(result.error.message ?? GENERIC_ERROR);
+  if (result.error) throw new Error(result.error.message ?? '');
 }
 
 export async function signInWithPasskey(): Promise<void> {
   const result = await signIn.passkey();
-  if (result?.error)
-    throw new Error(
-      result.error.message ?? 'Could not sign in with your passkey. Please try again.',
-    );
+  if (result?.error) throw new Error(result.error.message ?? '');
 }

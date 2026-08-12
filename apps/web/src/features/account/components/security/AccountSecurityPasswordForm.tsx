@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -14,6 +15,7 @@ const MIN_LENGTH = 8;
 // Changes the account password. Requires the current password, and revokes other
 // sessions so a leaked old password stops working elsewhere.
 export default function AccountSecurityPasswordForm() {
+  const t = useTranslations('account.security');
   const [current, setCurrent] = useState('');
   const [next, setNext] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -32,13 +34,13 @@ export default function AccountSecurityPasswordForm() {
         newPassword: next,
         revokeOtherSessions: true,
       });
-      if (res.error) throw new Error(res.error.message ?? 'Could not change password.');
+      if (res.error) throw new Error(res.error.message ?? t('passwordChangeFailed'));
     },
     onSuccess: () => {
-      toast.success('Password changed');
+      toast.success(t('passwordChanged'));
       reset();
     },
-    onError: (err) => setError(err instanceof Error ? err.message : 'Could not change password.'),
+    onError: (err) => setError(err instanceof Error ? err.message : t('passwordChangeFailed')),
   });
 
   const valid = current.length > 0 && next.length >= MIN_LENGTH && confirm.length > 0;
@@ -50,7 +52,7 @@ export default function AccountSecurityPasswordForm() {
         e.preventDefault();
         setError(null);
         if (next !== confirm) {
-          setError('New passwords do not match');
+          setError(t('passwordsDoNotMatch'));
           return;
         }
         if (!valid) return;
@@ -58,7 +60,7 @@ export default function AccountSecurityPasswordForm() {
       }}
     >
       <div className="flex flex-col gap-2">
-        <Label htmlFor="current-password">Current password</Label>
+        <Label htmlFor="current-password">{t('currentPassword')}</Label>
         <Input
           id="current-password"
           type="password"
@@ -68,7 +70,7 @@ export default function AccountSecurityPasswordForm() {
         />
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="new-password">New password</Label>
+        <Label htmlFor="new-password">{t('newPassword')}</Label>
         <Input
           id="new-password"
           type="password"
@@ -79,7 +81,7 @@ export default function AccountSecurityPasswordForm() {
         <p className="text-xs text-muted-foreground">At least {MIN_LENGTH} characters.</p>
       </div>
       <div className="flex flex-col gap-2">
-        <Label htmlFor="confirm-password">Confirm new password</Label>
+        <Label htmlFor="confirm-password">{t('confirmNewPassword')}</Label>
         <Input
           id="confirm-password"
           type="password"
@@ -91,7 +93,7 @@ export default function AccountSecurityPasswordForm() {
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div>
         <Button type="submit" size="sm" disabled={!valid || saveMutation.isPending}>
-          {saveMutation.isPending ? 'Changing…' : 'Change password'}
+          {saveMutation.isPending ? t('changing') : t('changePassword')}
         </Button>
       </div>
     </form>

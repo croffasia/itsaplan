@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import type { InstanceUserKind } from '@/lib/api';
 import {
   Select,
@@ -23,23 +24,25 @@ export default function GodUsersToolbar({
   kind: InstanceUserKind;
   onKindChange: (value: InstanceUserKind) => void;
 }) {
+  const t = useTranslations('god.users');
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       <GodSearchInput
         value={search}
         onChange={onSearchChange}
-        placeholder="Search by name or email"
+        placeholder={t('searchPlaceholder')}
         className="min-w-[240px] flex-1"
       />
 
       <Select value={kind} onValueChange={(v) => onKindChange(v as InstanceUserKind)}>
-        <SelectTrigger className="h-9 w-[160px]" aria-label="Account kind">
+        <SelectTrigger className="h-9 w-[160px]" aria-label={t('kind')}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="human">Humans</SelectItem>
-          <SelectItem value="agent">AI bots</SelectItem>
-          <SelectItem value="all">All accounts</SelectItem>
+          <SelectItem value="human">{t('kinds.human')}</SelectItem>
+          <SelectItem value="agent">{t('kinds.agent')}</SelectItem>
+          <SelectItem value="all">{t('kinds.all')}</SelectItem>
         </SelectContent>
       </Select>
     </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import GodSearchInput from './components/GodSearchInput';
@@ -16,6 +17,7 @@ import { withOffsetReset } from './utils/paging';
 // the user directory, search and paging run on the server, so the list never holds
 // every project.
 export default function GodProjectsPage() {
+  const t = useTranslations('god.projects');
   const [search, setSearch] = useState('');
   const [limit, setLimit] = useState<number>(PAGE_SIZES[1]);
   const [offset, setOffset] = useState(0);
@@ -34,14 +36,14 @@ export default function GodProjectsPage() {
         <GodSearchInput
           value={search}
           onChange={withOffsetReset(setOffset, setSearch)}
-          placeholder="Search by key or name"
+          placeholder={t('searchPlaceholder')}
           className="max-w-md min-w-[240px]"
         />
 
         {projectsQuery.isPending ? (
           <ListSkeleton rows={6} rowClassName="h-12" />
         ) : projects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No projects match this search.</p>
+          <p className="text-sm text-muted-foreground">{t('empty')}</p>
         ) : (
           <>
             <GodProjectsTable projects={projects} onSelect={setSelected} />

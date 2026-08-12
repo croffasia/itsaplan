@@ -49,6 +49,24 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   files carry a `.service.ts` suffix (`passkeys.service.ts`). Other non-component files use plain
   descriptive names (the folder gives the context).
 
+## Translations
+
+next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segment.
+`messages/<locale>/<namespace>.json`, one file per namespace, namespaces are domains
+(`issue`, `settings`) not pages.
+
+- English is the source: `src/i18n/messages.ts` imports it statically, merges the chosen
+  language over it, and types every `t('…')`. A new key goes there first or typecheck fails;
+  an untranslated one renders its English text.
+- A new namespace needs its file in every language plus an entry in `defaultMessages`.
+- A new language: `messages/<code>/`, `src/i18n/locales.ts`, `src/hooks/useDateFnsLocale.ts`,
+  and `LOCALES`/`Locale` in `apps/api/src/user-preferences/`. No migration — the `locale`
+  column has no CHECK.
+- Don't subset messages per route with `pick()`: a missing namespace then fails at runtime
+  instead of at typecheck.
+
+`docs/dev/i18n.md` has the whole picture, including how a switch reaches the server render.
+
 ## Rules
 
 - Prefer Server Components and server-side data fetching; reach for client components only for

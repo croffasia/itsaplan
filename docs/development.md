@@ -76,3 +76,4 @@ docker compose -f docker-compose.test.yml run --rm api-test
 Descriptions of the mechanisms that span several apps live in [`docs/dev/`](dev/):
 
 - [The revision engine](dev/revision-engine.md) — how an open screen stays current.
+- [Languages](dev/i18n.md) — how the interface language is resolved, and how to add one.

@@ -3,6 +3,7 @@ import type { Label, LabelGroup } from '@/lib/api';
 import { Pill } from './Pill';
 import ReadOnlyPill from './ReadOnlyPill';
 import LabelPicker from './LabelPicker';
+import { useTranslations } from 'next-intl';
 
 export default function LabelsSelect({
   labels,
@@ -17,6 +18,7 @@ export default function LabelsSelect({
   onToggle: (id: number) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.fieldSelects');
   const selected = labels.filter((l) => value.includes(l.id));
   const trigger = (
     <Pill active={selected.length > 0}>
@@ -33,7 +35,7 @@ export default function LabelsSelect({
       ) : (
         <Tag />
       )}
-      {selected.length > 0 ? `${selected.length} label${selected.length > 1 ? 's' : ''}` : 'Labels'}
+      {selected.length > 0 ? t('labelCount', { count: selected.length }) : t('labels')}
     </Pill>
   );
   if (readOnly) return <ReadOnlyPill>{trigger}</ReadOnlyPill>;

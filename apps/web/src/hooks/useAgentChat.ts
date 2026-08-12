@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ApiError, streamAiAgentRun } from '@/lib/api';
 import type { AiChatMessage } from '@/lib/api';
+import { useTranslations } from 'next-intl';
 
 export type ChatMessage = AiChatMessage;
 
@@ -19,6 +20,7 @@ export type ChatStatus = 'ready' | 'streaming';
 // history list. loadThread() restores a past conversation; newChat() starts a fresh
 // one. threadId is null while a new conversation has not produced its first reply.
 export function useAgentChat(projectKey: string, agentId: number) {
+  const t = useTranslations('common.agentChat');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [status, setStatus] = useState<ChatStatus>('ready');
   const [activeTool, setActiveTool] = useState<string | null>(null);
@@ -72,9 +74,7 @@ export function useAgentChat(projectKey: string, agentId: number) {
           }
         }
       } catch (err) {
-        toast.error(
-          err instanceof ApiError ? err.message : 'Could not reach the agent. Try again.',
-        );
+        toast.error(err instanceof ApiError ? err.message : t('unreachable'));
       } finally {
         setStatus('ready');
         setActiveTool(null);
@@ -83,7 +83,7 @@ export function useAgentChat(projectKey: string, agentId: number) {
         setMessages((m) => m.filter((msg) => !(msg.id === assistantId && msg.text === '')));
       }
     },
-    [projectKey, agentId, status],
+    [projectKey, agentId, status, t],
   );
 
   // Restores a past conversation: shows its transcript and continues its thread.

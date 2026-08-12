@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { Braces, Server, Shield } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api';
 import { useSession } from '@/lib/auth-client';
 import { apiDocsPath, godPath, mcpServerPath } from '@/utils/paths';
@@ -39,6 +40,7 @@ export default function AppSidebar({
   onSelectProject: (key: string) => void;
   onNewProject: () => void;
 }) {
+  const t = useTranslations('nav');
   const pathname = usePathname();
   const disabled = !currentProjectKey;
   const projectId = projects.find((p) => p.key === currentProjectKey)?.id ?? null;
@@ -86,14 +88,14 @@ export default function AppSidebar({
               <SidebarNavItem
                 href={currentProjectKey ? apiDocsPath(currentProjectKey) : '#'}
                 icon={Braces}
-                label="API docs"
+                label={t('apiDocs')}
                 active={onApiDocs}
                 disabled={disabled}
               />
               <SidebarNavItem
                 href={currentProjectKey ? mcpServerPath(currentProjectKey) : '#'}
                 icon={Server}
-                label="MCP Server"
+                label={t('mcpServer')}
                 active={onMcp}
                 disabled={disabled}
               />
@@ -103,7 +105,7 @@ export default function AppSidebar({
                 <SidebarNavItem
                   href={godPath(GOD_SECTIONS[0]!.slug)}
                   icon={Shield}
-                  label="God mode"
+                  label={t('godMode')}
                   active={false}
                   disabled={false}
                 />

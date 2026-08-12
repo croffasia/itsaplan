@@ -1,4 +1,5 @@
 import { ArrowLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { projectPath } from '@/utils/paths';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
 import {
@@ -13,6 +14,7 @@ import SidebarNavItem from '@/components/layout/SidebarNavItem';
 // Configuration groups (AI Team, Workflow) as flat lists under their labels —
 // every item reachable directly, no collapsing.
 export default function SidebarSettingsNav({ projectKey }: { projectKey: string | null }) {
+  const t = useTranslations('nav');
   const disabled = !projectKey;
   const { groups } = useSettingsNavGroups(projectKey);
 
@@ -24,7 +26,7 @@ export default function SidebarSettingsNav({ projectKey }: { projectKey: string 
             <SidebarNavItem
               href={projectKey ? projectPath(projectKey) : '#'}
               icon={ArrowLeft}
-              label="Back to project"
+              label={t('backToProject')}
               active={false}
               disabled={disabled}
             />

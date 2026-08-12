@@ -3,6 +3,7 @@ import { RotateCcw } from 'lucide-react';
 import { comboFromEvent, formatCombo, type HotkeyDef } from '@/utils/hotkeys';
 import { useIsMac } from '@/context/useHotkeys';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 // One shortcut in the editor: what it does, the combination in effect, and the
 // controls to rebind or reset it. Pressing "Change" listens for the next key press
@@ -20,11 +21,13 @@ export default function HotkeysEditorRow({
   combo: string;
   // True when this row's binding comes from the layer being edited, not below it.
   overridden: boolean;
-  // The label of the command already using this combination, if any.
+  // What the command already using this combination does, if any.
   conflictWith: string | null;
   onRecord: (combo: string) => void;
   onReset: () => void;
 }) {
+  const tCommon = useTranslations('common');
+  const t = useTranslations('common.hotkeys');
   const isMac = useIsMac();
   const [recording, setRecording] = useState(false);
 
@@ -50,9 +53,11 @@ export default function HotkeysEditorRow({
   return (
     <div className="flex items-center gap-4 py-2">
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm">{def.label}</p>
+        <p className="truncate text-sm">{t(`commands.${def.id}`)}</p>
         {conflictWith && (
-          <p className="mt-0.5 text-xs text-destructive">Already used by {conflictWith}</p>
+          <p className="mt-0.5 text-xs text-destructive">
+            {t('conflict', { command: conflictWith })}
+          </p>
         )}
       </div>
       <kbd
@@ -60,20 +65,20 @@ export default function HotkeysEditorRow({
           recording ? 'bg-accent text-accent-foreground' : 'bg-muted text-foreground'
         }`}
       >
-        {recording ? 'Press keys' : formatCombo(combo, isMac)}
+        {recording ? t('pressKeys') : formatCombo(combo, isMac)}
       </kbd>
       {def.fixed ? (
-        <span className="w-28 shrink-0 text-right text-xs text-muted-foreground">Fixed</span>
+        <span className="w-28 shrink-0 text-right text-xs text-muted-foreground">{t('fixed')}</span>
       ) : (
         <div className="flex w-28 shrink-0 justify-end gap-1">
           <Button variant="ghost" size="sm" onClick={() => setRecording((r) => !r)}>
-            {recording ? 'Cancel' : 'Change'}
+            {recording ? tCommon('cancel') : tCommon('change')}
           </Button>
           <Button
             variant="ghost"
             size="icon"
             className="size-8"
-            aria-label="Reset this shortcut"
+            aria-label={t('resetShortcut')}
             disabled={!overridden}
             onClick={onReset}
           >

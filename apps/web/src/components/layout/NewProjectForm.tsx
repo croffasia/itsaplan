@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { KEY_MAX_LENGTH } from '@/utils/projectKey';
 import type { PresetKey } from '@/utils/projectPresets';
 import { Input } from '@/components/ui/input';
@@ -26,17 +27,19 @@ export default function NewProjectForm({
   onDescriptionChange: (value: string) => void;
   onPresetChange: (value: PresetKey) => void;
 }) {
+  const t = useTranslations('newProject');
+
   return (
     <div className="grid gap-6 sm:grid-cols-[1.15fr_1fr]">
       {/* The description field takes the leftover height so both columns end on
           the same line. */}
       <div className="flex flex-col gap-3">
         <div className="space-y-1.5">
-          <Label>Name</Label>
+          <Label>{t('name')}</Label>
           <Input autoFocus value={name} onChange={(e) => onNameChange(e.target.value)} />
         </div>
         <div className="space-y-1.5">
-          <Label>Key (short, e.g. MKT)</Label>
+          <Label>{t('key')}</Label>
           <Input
             value={projectKey}
             onChange={(e) => onKeyChange(e.target.value)}
@@ -44,7 +47,7 @@ export default function NewProjectForm({
           />
         </div>
         <div className="flex flex-1 flex-col space-y-1.5">
-          <Label>Description</Label>
+          <Label>{t('description')}</Label>
           <Textarea
             rows={2}
             className="min-h-20 flex-1 resize-none"

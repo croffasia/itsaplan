@@ -12,6 +12,7 @@ import {
   Target,
   Users,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useSession } from '@/lib/auth-client';
 import {
   aiChatPath,
@@ -34,6 +35,11 @@ import { GOD_SECTIONS } from '@/utils/godSections';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
+import {
+  useAccountSectionLabel,
+  useGodSectionText,
+  useSettingsSectionText,
+} from '@/hooks/useSectionLabels';
 import type { Command, CommandSection } from '@/utils/commands';
 
 // Every place the palette can navigate to, filtered by what the viewer may read.
@@ -43,6 +49,10 @@ import type { Command, CommandSection } from '@/utils/commands';
 // under one "Sections" heading so a search separates them from commands and
 // issues.
 export function useNavigationCommands(projectKey: string | null): CommandSection | null {
+  const t = useTranslations('nav');
+  const sectionText = useSettingsSectionText();
+  const godText = useGodSectionText();
+  const accountLabel = useAccountSectionLabel();
   const router = useRouter();
   const { can } = usePermissions();
   const features = useProjectFeatures();
@@ -58,32 +68,44 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
 
   if (projectKey) {
     const key = projectKey;
-    add('nav.inbox', 'Inbox', <Inbox />, inboxPath(key), 'notifications unread');
+    add('nav.inbox', t('inbox'), <Inbox />, inboxPath(key), 'notifications unread');
     if (features.dashboards && can('dashboards', 'read'))
-      add('nav.dashboards', 'Dashboards', <LayoutDashboard />, dashboardsPath(key), 'charts');
-    add('nav.work-items', 'Work items', <SquareKanban />, projectPath(key), 'board issues kanban');
+      add('nav.dashboards', t('dashboards'), <LayoutDashboard />, dashboardsPath(key), 'charts');
+    add(
+      'nav.work-items',
+      t('workItems'),
+      <SquareKanban />,
+      projectPath(key),
+      'board issues kanban',
+    );
     if (features.initiatives && can('initiatives', 'read'))
-      add('nav.initiatives', 'Initiatives', <Target />, initiativesPath(key), 'epics');
+      add('nav.initiatives', t('initiatives'), <Target />, initiativesPath(key), 'epics');
     if (can('ai_agents', 'read'))
-      add('nav.ai-chat', 'Chat with AI Team', <MessagesSquare />, aiChatPath(key), 'ai agents');
+      add('nav.ai-chat', t('chatWithAiTeam'), <MessagesSquare />, aiChatPath(key), 'ai agents');
     for (const s of AI_TEAM_SECTIONS) {
       if (can(s.resource, 'read'))
-        add(`nav.ai-team.${s.slug}`, s.label, <s.icon />, aiTeamPath(key, s.slug), 'ai team');
+        add(
+          `nav.ai-team.${s.slug}`,
+          sectionText(s.slug).label,
+          <s.icon />,
+          aiTeamPath(key, s.slug),
+          'ai team',
+        );
     }
     for (const s of AI_SECTIONS) {
       if (can(s.resource, 'read'))
         add(
           `nav.ai.${s.slug}`,
-          s.label,
+          sectionText(s.slug).label,
           <s.icon />,
           aiSectionPath(key, s.slug),
           'ai team configure',
         );
     }
-    add('nav.members', 'Members', <Users />, membersPath(key), 'team people invite');
+    add('nav.members', t('members'), <Users />, membersPath(key), 'team people invite');
     add(
       'nav.notifications',
-      'Notification preferences',
+      t('notificationPreferences'),
       <Bell />,
       notificationsPath(key),
       'email telegram',
@@ -102,19 +124,19 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
         });
       }
     }
-    add('nav.api', 'API docs', <Braces />, apiDocsPath(key), 'rest openapi');
-    add('nav.mcp', 'MCP Server', <Server />, mcpServerPath(key), 'model context protocol');
+    add('nav.api', t('apiDocs'), <Braces />, apiDocsPath(key), 'rest openapi');
+    add('nav.mcp', t('mcpServer'), <Server />, mcpServerPath(key), 'model context protocol');
   }
 
   add(
     'nav.manage-projects',
-    'Manage projects',
+    t('manageProjects'),
     <FolderKanban />,
     manageProjectsPath(),
     'account leave delete copy',
   );
   for (const s of ACCOUNT_SECTIONS) {
-    add(`nav.account.${s.slug}`, s.label, <s.icon />, accountPath(s.slug), 'account');
+    add(`nav.account.${s.slug}`, accountLabel(s.slug), <s.icon />, accountPath(s.slug), 'account');
   }
 
   // Instance administration, owner account only. The API enforces the same, so
@@ -123,7 +145,7 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
     for (const s of GOD_SECTIONS) {
       add(
         `nav.god.${s.slug}`,
-        `God mode: ${s.label}`,
+        t('godModeSection', { section: godText.section(s.slug).label }),
         <Shield />,
         godPath(s.slug),
         'instance admin',
@@ -132,5 +154,5 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   }
 
   if (items.length === 0) return null;
-  return { id: 'sections', heading: 'Sections', items };
+  return { id: 'sections', heading: t('sections'), items };
 }

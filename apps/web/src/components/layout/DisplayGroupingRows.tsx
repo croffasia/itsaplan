@@ -1,6 +1,8 @@
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { SORT_FIELDS, type SortField, type WorkItemsView } from '@/utils/viewTypes';
 import { isFieldEnabled, type GroupField, type ViewSettings } from '@/utils/viewSettings';
+import { byKey } from '@/utils/messageKey';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,16 +13,17 @@ import DisplaySettingsSelect from '@/components/layout/DisplaySettingsSelect';
 // Timeline and Calendar ignore it.
 const ORDERING_VIEWS: WorkItemsView[] = ['kanban', 'table'];
 
-// Grouping options. Project always groups by something, so it drops 'none'.
-const GROUP_OPTIONS: { value: GroupField; label: string }[] = [
-  { value: 'none', label: 'No grouping' },
-  { value: 'status', label: 'State' },
-  { value: 'assignee', label: 'Assignee' },
-  { value: 'delegate', label: 'Delegate' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'type', label: 'Type' },
-  { value: 'initiative', label: 'Initiative' },
-  { value: 'cycle', label: 'Cycle' },
+// Grouping fields, in menu order. Project always groups by something, so it drops
+// 'none'.
+const GROUP_FIELDS: GroupField[] = [
+  'none',
+  'status',
+  'assignee',
+  'delegate',
+  'priority',
+  'type',
+  'initiative',
+  'cycle',
 ];
 
 // The grouping, sub-grouping, ordering, empty-group, links and subtasks rows.
@@ -37,25 +40,33 @@ export default function DisplayGroupingRows({
   settings: ViewSettings;
   onChange: (patch: Partial<ViewSettings>) => void;
 }) {
+  const t = useTranslations('display.rows');
+  const groupLabel = byKey(useTranslations('display.groupFields'));
+  const sortLabel = byKey(useTranslations('display.sortFields'));
+
   // Changing the primary group clears a sub-group that would now duplicate it.
   const setGroup = (group: GroupField) =>
     onChange(group === settings.subgroup ? { group, subgroup: 'none' } : { group });
 
   // Initiative and Cycle are only offered while the project shows their section.
   const features = useProjectFeatures();
-  const options = GROUP_OPTIONS.filter((o) => isFieldEnabled(o.value, features));
+  const fields = GROUP_FIELDS.filter((f) => isFieldEnabled(f, features));
+  const toOptions = (values: GroupField[]) =>
+    values.map((value) => ({ value, label: groupLabel(value) }));
 
-  const groupOptions =
-    view === 'kanban' || view === 'timeline' ? options.filter((o) => o.value !== 'none') : options;
+  const groupOptions = toOptions(
+    view === 'kanban' || view === 'timeline' ? fields.filter((f) => f !== 'none') : fields,
+  );
   // The sub-group never offers the field already used by the primary group.
-  const subgroupOptions = options.filter((o) => o.value !== settings.group);
+  const subgroupOptions = toOptions(fields.filter((f) => f !== settings.group));
+  const sortOptions = SORT_FIELDS.map((value) => ({ value, label: sortLabel(value) }));
   const showsGrouping = view === 'kanban' || view === 'table' || view === 'timeline';
   const showsSubgrouping = (view === 'kanban' || view === 'table') && settings.group !== 'none';
 
   return (
     <>
       {showsGrouping && (
-        <DisplaySettingsRow label={view === 'kanban' ? 'Columns' : 'Grouping'}>
+        <DisplaySettingsRow label={view === 'kanban' ? t('columns') : t('grouping')}>
           <DisplaySettingsSelect
             value={settings.group}
             onChange={(v) => setGroup(v as GroupField)}
@@ -65,7 +76,7 @@ export default function DisplayGroupingRows({
       )}
 
       {showsSubgrouping && (
-        <DisplaySettingsRow label={view === 'kanban' ? 'Swimlanes' : 'Sub-grouping'}>
+        <DisplaySettingsRow label={view === 'kanban' ? t('swimlanes') : t('subGrouping')}>
           <DisplaySettingsSelect
             value={settings.subgroup}
             onChange={(v) => onChange({ subgroup: v as GroupField })}
@@ -75,13 +86,13 @@ export default function DisplayGroupingRows({
       )}
 
       {ORDERING_VIEWS.includes(view) && (
-        <DisplaySettingsRow label="Ordering">
+        <DisplaySettingsRow label={t('ordering')}>
           <Button
             variant="outline"
             size="icon"
             className="size-8 shrink-0"
             disabled={settings.sort.field === 'manual'}
-            title={settings.sort.dir === 'asc' ? 'Ascending' : 'Descending'}
+            title={settings.sort.dir === 'asc' ? t('ascending') : t('descending')}
             onClick={() =>
               onChange({
                 sort: { ...settings.sort, dir: settings.sort.dir === 'asc' ? 'desc' : 'asc' },
@@ -93,13 +104,15 @@ export default function DisplayGroupingRows({
           <DisplaySettingsSelect
             value={settings.sort.field}
             onChange={(v) => onChange({ sort: { ...settings.sort, field: v as SortField } })}
-            options={SORT_FIELDS}
+            options={sortOptions}
           />
         </DisplaySettingsRow>
       )}
 
       {showsGrouping && settings.group !== 'none' && (
-        <DisplaySettingsRow label={view === 'kanban' ? 'Show empty columns' : 'Show empty groups'}>
+        <DisplaySettingsRow
+          label={view === 'kanban' ? t('showEmptyColumns') : t('showEmptyGroups')}
+        >
           <Checkbox
             checked={settings.showEmptyGroups}
             onCheckedChange={(c) => onChange({ showEmptyGroups: c === true })}
@@ -109,7 +122,7 @@ export default function DisplayGroupingRows({
 
       {showsGrouping && (
         <>
-          <DisplaySettingsRow label="Show links">
+          <DisplaySettingsRow label={t('showLinks')}>
             <Checkbox
               checked={settings.showLinks}
               onCheckedChange={(c) => onChange({ showLinks: c === true })}
@@ -119,11 +132,7 @@ export default function DisplayGroupingRows({
           {features.subtasks && (
             <>
               <DisplaySettingsRow
-                label={
-                  view === 'kanban'
-                    ? 'Show subtasks as separate cards'
-                    : 'Show subtasks as separate rows'
-                }
+                label={view === 'kanban' ? t('separateSubtaskCards') : t('separateSubtaskRows')}
               >
                 <Checkbox
                   checked={settings.separateSubtasks}
@@ -132,7 +141,7 @@ export default function DisplayGroupingRows({
               </DisplaySettingsRow>
 
               {view === 'timeline' && (
-                <DisplaySettingsRow label="Show nested subtasks">
+                <DisplaySettingsRow label={t('showNestedSubtasks')}>
                   <Checkbox
                     checked={settings.showSubtasks}
                     onCheckedChange={(c) => onChange({ showSubtasks: c === true })}

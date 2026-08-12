@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { CustomField, IssueType } from '@/lib/api';
 import type { ViewSettings } from '@/utils/viewSettings';
 import type { WorkItemsView } from '@/utils/viewTypes';
@@ -24,13 +25,14 @@ export default function DisplayPopover({
   customFields: CustomField[];
   issueTypes: IssueType[];
 }) {
+  const t = useTranslations('display');
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          title="Display"
+          title={t('title')}
           className={cn(
             'rounded-md p-1.5 hover:bg-accent hover:text-foreground',
             open ? 'bg-accent text-foreground' : 'text-muted-foreground',

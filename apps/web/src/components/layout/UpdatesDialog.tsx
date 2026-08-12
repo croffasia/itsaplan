@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronRight, ExternalLink, RefreshCw } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { UpdateStatus } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import ReleaseNotes from '@/components/layout/ReleaseNotes';
@@ -11,18 +12,6 @@ import { useCheckForUpdates } from '@/services/updates.service';
 import { formatDateTime } from '@/utils/dates';
 import { isNewerVersion } from '@/utils/version';
 import { cn } from '@/lib/utils';
-
-// Without a successful check, calling the running version the latest would claim
-// more than is known.
-function summary(status: UpdateStatus): string {
-  if (status.updateAvailable) {
-    return `You're running ${status.currentVersion}. Latest is ${status.latestVersion}.`;
-  }
-  if (!status.latestVersion) {
-    return `You're running ${status.currentVersion}. Latest release unknown.`;
-  }
-  return `You're running ${status.currentVersion}, the latest release.`;
-}
 
 // The release notes behind the sidebar version. With a newer release published,
 // the ones above the running version are expanded and the history sits behind a
@@ -34,8 +23,17 @@ export default function UpdatesDialog({
   status: UpdateStatus;
   onClose: () => void;
 }) {
+  const t = useTranslations('updates');
   const check = useCheckForUpdates();
   const [showEarlier, setShowEarlier] = useState(false);
+
+  // Without a successful check, calling the running version the latest would claim
+  // more than is known.
+  const summary = status.updateAvailable
+    ? t('runningOutdated', { current: status.currentVersion, latest: status.latestVersion ?? '' })
+    : status.latestVersion
+      ? t('runningLatest', { current: status.currentVersion })
+      : t('runningUnknown', { current: status.currentVersion });
 
   const newer = status.releases.filter((r) => isNewerVersion(r.version, status.currentVersion));
   const earlier = status.releases.filter((r) => !isNewerVersion(r.version, status.currentVersion));
@@ -48,24 +46,24 @@ export default function UpdatesDialog({
     <ReleaseNotes
       key={release.tag}
       release={release}
-      badge={release.version === status.currentVersion ? 'Running' : undefined}
+      badge={release.version === status.currentVersion ? t('badgeRunning') : undefined}
     />
   ));
 
   return (
     <Modal
-      title={status.updateAvailable ? 'Update available' : 'Release history'}
-      description={summary(status)}
+      title={t(status.updateAvailable ? 'updateAvailable' : 'releaseHistory')}
+      description={summary}
       onClose={onClose}
       wide
     >
       <div className="space-y-4">
         {status.releases.length === 0 && (
-          <p className="text-sm text-muted-foreground">No release notes shipped with this build.</p>
+          <p className="text-sm text-muted-foreground">{t('noReleases')}</p>
         )}
 
         {newer.map((release) => (
-          <ReleaseNotes key={release.tag} release={release} badge="New" />
+          <ReleaseNotes key={release.tag} release={release} badge={t('badgeNew')} />
         ))}
 
         {newer.length > 0 && earlier.length > 0 ? (
@@ -74,7 +72,7 @@ export default function UpdatesDialog({
               <ChevronRight
                 className={cn('size-4 transition-transform', showEarlier && 'rotate-90')}
               />
-              Earlier releases
+              {t('earlier')}
             </CollapsibleTrigger>
             <CollapsibleContent className="mt-4 space-y-4">{earlierList}</CollapsibleContent>
           </Collapsible>
@@ -92,11 +90,11 @@ export default function UpdatesDialog({
             disabled={check.isPending}
           >
             <RefreshCw className={cn('size-4', check.isPending && 'animate-spin')} />
-            {check.isPending ? 'Checking' : 'Check for updates'}
+            {t(check.isPending ? 'checking' : 'check')}
           </Button>
           {status.checkedAt && (
             <span className="text-xs text-muted-foreground">
-              Last checked {formatDateTime(status.checkedAt)}
+              {t('lastChecked', { date: formatDateTime(status.checkedAt) })}
             </span>
           )}
         </div>
@@ -107,7 +105,7 @@ export default function UpdatesDialog({
             rel="noreferrer"
             className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
           >
-            All releases
+            {t('allReleases')}
             <ExternalLink className="size-3.5" />
           </a>
         )}

@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Globe, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { api, type View } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 import { cn } from '@/lib/utils';
@@ -33,6 +34,8 @@ export default function SavedViewTab({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('views');
+  const tCommon = useTranslations('common');
   const [menuOpen, setMenuOpen] = useState(false);
   const [sharing, setSharing] = useState(false);
   const qc = useQueryClient();
@@ -74,7 +77,7 @@ export default function SavedViewTab({
           <PopoverTrigger asChild>
             <button
               type="button"
-              title="View options"
+              title={t('options')}
               className="mr-1.5 rounded p-0.5 hover:bg-accent-foreground/10"
             >
               <MoreHorizontal className="size-3.5" />
@@ -90,7 +93,7 @@ export default function SavedViewTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
               >
-                <Globe className="size-3.5" /> {view.shareToken ? 'Shared' : 'Share'}
+                <Globe className="size-3.5" /> {view.shareToken ? t('shared') : t('share')}
               </button>
             )}
             {canEdit && (
@@ -102,7 +105,7 @@ export default function SavedViewTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent"
               >
-                <Pencil className="size-3.5" /> Edit view
+                <Pencil className="size-3.5" /> {t('editView')}
               </button>
             )}
             {canDelete && (
@@ -114,7 +117,7 @@ export default function SavedViewTab({
                 }}
                 className="flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm text-destructive hover:bg-destructive/10"
               >
-                <Trash2 className="size-3.5" /> Delete
+                <Trash2 className="size-3.5" /> {tCommon('delete')}
               </button>
             )}
           </PopoverContent>
@@ -125,7 +128,7 @@ export default function SavedViewTab({
       <ShareDialog
         open={sharing}
         onOpenChange={setSharing}
-        title="Share board"
+        title={t('shareBoard')}
         token={view.shareToken}
         extended={view.shareExtended}
         enable={share}

@@ -3,6 +3,7 @@
 
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 import { useInvalidateProject } from '@/services/projects.service';
@@ -79,13 +80,14 @@ export function useAgentToolsQuery(projectKey: string | null) {
 }
 
 export function useCreateAiAgent(projectKey: string | null) {
+  const t = useTranslations('settings.agents');
   const qc = useQueryClient();
   const invalidateProject = useInvalidateProject(projectKey);
   return useMutation({
     mutationFn: (input: Parameters<typeof api.createAiAgent>[1]) =>
       api.createAiAgent(projectKey!, input),
     onSuccess: (res) => {
-      toast.success(`Agent @${res.agent.username} created`);
+      toast.success(t('created', { username: res.agent.username }));
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.aiAgents(projectKey) });
       invalidateProject();
     },
@@ -93,13 +95,14 @@ export function useCreateAiAgent(projectKey: string | null) {
 }
 
 export function useUpdateAiAgent(projectKey: string | null) {
+  const t = useTranslations('settings.agents');
   const qc = useQueryClient();
   const invalidateProject = useInvalidateProject(projectKey);
   return useMutation({
     mutationFn: ({ id, patch }: { id: number; patch: Parameters<typeof api.updateAiAgent>[2] }) =>
       api.updateAiAgent(projectKey!, id, patch),
     onSuccess: (agent) => {
-      toast.success(`Agent @${agent.username} saved`);
+      toast.success(t('saved', { username: agent.username }));
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.aiAgents(projectKey) });
       invalidateProject();
     },

@@ -2,8 +2,10 @@
 
 import { Fragment } from 'react';
 import { Check, ListChecks } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { PermissionResource, Permissions } from '@/lib/api';
-import { ACTION_ORDER, actionLabel, groupResources, resourceLabel } from '@/utils/permissions';
+import { ACTION_ORDER, groupResources } from '@/utils/permissions';
+import { usePermissionLabels } from '@/hooks/usePermissionLabels';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
@@ -11,19 +13,21 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 // `label` overrides the trigger's tooltip and aria-label.
 export function PermissionsPopover({
   permissions,
-  label = 'View permissions',
+  label,
 }: {
   permissions: Permissions;
   label?: string;
 }) {
+  const t = useTranslations('permissions');
+  const { actionLabel, resourceLabel, groupLabel } = usePermissionLabels();
+  const triggerLabel = label ?? t('viewPermissions');
   const resources = Object.keys(permissions) as PermissionResource[];
   const total = resources.reduce(
     (sum, r) => sum + ACTION_ORDER.filter((a) => permissions[r]?.[a]).length,
     0,
   );
 
-  if (total === 0)
-    return <span className="text-xs text-muted-foreground">No permissions granted</span>;
+  if (total === 0) return <span className="text-xs text-muted-foreground">{t('none')}</span>;
 
   const groups = groupResources(resources);
 
@@ -37,13 +41,13 @@ export function PermissionsPopover({
                 variant="ghost"
                 size="icon"
                 className="size-7 text-muted-foreground hover:text-foreground"
-                aria-label={label}
+                aria-label={triggerLabel}
               >
                 <ListChecks className="size-4" />
               </Button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <TooltipContent>{label}</TooltipContent>
+          <TooltipContent>{triggerLabel}</TooltipContent>
         </Tooltip>
         <PopoverContent align="start" className="max-h-96 w-[22rem] overflow-auto p-0">
           <table className="w-full border-collapse text-xs">
@@ -59,13 +63,13 @@ export function PermissionsPopover({
             </thead>
             <tbody>
               {groups.map((g) => (
-                <Fragment key={g.title}>
+                <Fragment key={g.key}>
                   <tr>
                     <td
                       colSpan={ACTION_ORDER.length + 1}
                       className="px-3 pt-3 pb-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase"
                     >
-                      {g.title}
+                      {groupLabel(g.key)}
                     </td>
                   </tr>
                   {g.resources.map((r) => (
@@ -88,9 +92,7 @@ export function PermissionsPopover({
           </table>
         </PopoverContent>
       </Popover>
-      <span className="text-xs text-muted-foreground">
-        {total} permission{total === 1 ? '' : 's'} granted
-      </span>
+      <span className="text-xs text-muted-foreground">{t('grantedCount', { count: total })}</span>
     </div>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
 
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/api';
 import { HotkeysProvider } from '@/context/useHotkeys';
@@ -12,13 +13,19 @@ import SessionScope from '@/components/session-scope';
 
 // The message shown for a failed mutation: the API's `{ error }` text (carried by
 // ApiError) when present, otherwise a generic fallback.
-function errorMessage(error: unknown): string {
+function errorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiError) return error.message;
   if (error instanceof Error && error.message) return error.message;
-  return 'Something went wrong';
+  return fallback;
 }
 
 export function Providers({ children }: { children: ReactNode }) {
+  const t = useTranslations('common');
+  // The cache is built once, so the toast reads the fallback through a ref the
+  // render refreshes; switching locale then reaches errors too.
+  const fallback = useRef(t('genericError'));
+  fallback.current = t('genericError');
+
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -29,7 +36,7 @@ export function Providers({ children }: { children: ReactNode }) {
         mutationCache: new MutationCache({
           onError: (error, _vars, _ctx, mutation) => {
             if (mutation.meta?.suppressErrorToast) return;
-            toast.error(errorMessage(error));
+            toast.error(errorMessage(error, fallback.current));
           },
         }),
         defaultOptions: {

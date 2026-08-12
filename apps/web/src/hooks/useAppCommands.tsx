@@ -1,6 +1,8 @@
 import { LayoutGrid, ListChecks, Plus, SquarePlus } from 'lucide-react';
 import type { Project } from '@/lib/api';
+import { useTranslations } from 'next-intl';
 import { VIEWS, type WorkItemsView } from '@/utils/viewTypes';
+import { byKey } from '@/utils/messageKey';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useHotkeyFormatter } from '@/context/useHotkeys';
 import type { Command, CommandSection } from '@/utils/commands';
@@ -36,15 +38,18 @@ export function useAppCommands({
   general: CommandSection | null;
   projects: CommandSection | null;
 } {
+  const t = useTranslations('display');
+  const tPalette = useTranslations('palette');
+  const layout = byKey(useTranslations('display.layouts'));
   const { can } = usePermissions();
   const hotkey = useHotkeyFormatter();
 
   const boardItems: Command[] = [];
   if (hasProject && onBoard) {
-    for (const { value, label, icon: Icon, hotkey: id } of VIEWS) {
+    for (const { value, icon: Icon, hotkey: id } of VIEWS) {
       boardItems.push({
         id: `board.view.${value}`,
-        label: `${label} layout`,
+        label: t('layoutCommand', { layout: layout(value) }),
         icon: <Icon />,
         keywords: 'view layout switch',
         shortcut: hotkey(id) ?? undefined,
@@ -55,7 +60,7 @@ export function useAppCommands({
     if (view === 'kanban') {
       boardItems.push({
         id: 'board.select-all',
-        label: 'Select all issues',
+        label: tPalette('selectAllIssues'),
         icon: <ListChecks />,
         keywords: 'selection multi',
         shortcut: hotkey('board.select-all') ?? undefined,
@@ -68,7 +73,7 @@ export function useAppCommands({
   if (hasProject && can('work_items', 'create')) {
     generalItems.push({
       id: 'general.new-issue',
-      label: 'New issue',
+      label: tPalette('newIssue'),
       icon: <Plus />,
       keywords: 'create add task',
       shortcut: hotkey('issue.new') ?? undefined,
@@ -77,7 +82,7 @@ export function useAppCommands({
   }
   generalItems.push({
     id: 'general.new-project',
-    label: 'New project',
+    label: tPalette('newProject'),
     icon: <SquarePlus />,
     keywords: 'create add',
     shortcut: hotkey('project.new') ?? undefined,
@@ -96,12 +101,15 @@ export function useAppCommands({
   }));
 
   return {
-    board: boardItems.length > 0 ? { id: 'board', heading: 'Board', items: boardItems } : null,
+    board:
+      boardItems.length > 0 ? { id: 'board', heading: tPalette('board'), items: boardItems } : null,
     general:
-      generalItems.length > 0 ? { id: 'general', heading: 'Commands', items: generalItems } : null,
+      generalItems.length > 0
+        ? { id: 'general', heading: tPalette('commands'), items: generalItems }
+        : null,
     projects:
       projectItems.length > 0
-        ? { id: 'projects', heading: 'Switch project', items: projectItems }
+        ? { id: 'projects', heading: tPalette('switchProject'), items: projectItems }
         : null,
   };
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { CustomField, IssueType } from '@/lib/api';
 import type { PropertyKey } from '@/utils/viewSettings';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -19,6 +20,7 @@ export default function CustomFieldMenu({
   selected: Set<string>;
   onToggle: (key: PropertyKey) => void;
 }) {
+  const t = useTranslations('display.rows');
   const [open, setOpen] = useState(false);
   const [expandedType, setExpandedType] = useState<number | null>(null);
 
@@ -34,7 +36,7 @@ export default function CustomFieldMenu({
       <PopoverTrigger asChild>
         <button
           type="button"
-          title="Add custom field"
+          title={t('addCustomField')}
           className="flex items-center rounded-full border px-2 py-1 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <MoreHorizontal className="size-3.5" />

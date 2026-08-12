@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import type { FilterCondition, FilterValue } from '@/utils/filters';
-import { BOOLEAN_OPTIONS, valuesLabel, type FieldSpec } from '@/utils/filterFields';
+import type { FieldSpec } from '@/utils/filterFields';
+import { useFilterFields } from '@/hooks/useFilterFields';
 import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,6 +23,8 @@ export default function FilterValueEditor({
   onChange: (values: FilterValue[]) => void;
   project: ProjectDetail;
 }) {
+  const t = useTranslations('filters');
+  const { booleanOptions, valuesLabel } = useFilterFields();
   const [open, setOpen] = useState(false);
 
   if (cond.op === 'is_set' || cond.op === 'is_not_set') return null;
@@ -58,7 +62,7 @@ export default function FilterValueEditor({
     return (
       <Input
         value={current}
-        placeholder="value"
+        placeholder={t('valuePlaceholder')}
         onChange={(e) => onChange(e.target.value ? [e.target.value] : [])}
         className="h-6 w-36 px-1.5 py-0 text-xs"
       />
@@ -71,7 +75,7 @@ export default function FilterValueEditor({
       <Input
         type="number"
         value={current}
-        placeholder="value"
+        placeholder={t('valuePlaceholder')}
         onChange={(e) => onChange(e.target.value === '' ? [] : [Number(e.target.value)])}
         className="h-6 w-24 px-1.5 py-0 text-xs"
       />
@@ -79,7 +83,7 @@ export default function FilterValueEditor({
   }
 
   // set / boolean — a popover with a checkbox list; multiple values OR together.
-  const options = spec.kind === 'boolean' ? BOOLEAN_OPTIONS : (spec.options ?? []);
+  const options = spec.kind === 'boolean' ? booleanOptions : (spec.options ?? []);
   const toggle = (value: FilterValue) => {
     const has = cond.values.some((v) => v === value);
     onChange(has ? cond.values.filter((v) => v !== value) : [...cond.values, value]);
@@ -114,7 +118,7 @@ export default function FilterValueEditor({
           );
         })}
         {options.length === 0 && (
-          <p className="px-2 py-1 text-sm text-muted-foreground">No options</p>
+          <p className="px-2 py-1 text-sm text-muted-foreground">{t('noOptions')}</p>
         )}
       </PopoverContent>
     </Popover>

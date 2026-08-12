@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslations } from 'next-intl';
 
 // Stands in for a list, a table or a feed while its query loads: one bar per row.
 // `className` styles the stack (its padding inside the surrounding container),
@@ -15,9 +16,10 @@ export default function ListSkeleton({
   className?: string;
   rowClassName?: string;
 }) {
+  const t = useTranslations('common');
   return (
     <div className={cn('flex flex-col gap-2', className)} role="status" aria-busy>
-      <span className="sr-only">Loading…</span>
+      <span className="sr-only">{t('loading')}</span>
       {Array.from({ length: rows }, (_, i) => (
         <Skeleton key={i} className={cn('h-10 w-full', rowClassName)} />
       ))}

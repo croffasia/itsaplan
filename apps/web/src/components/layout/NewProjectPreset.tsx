@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { PRESETS, type PresetKey } from '@/utils/projectPresets';
 
 // Picks the set of issue types a new project starts with and previews the result.
@@ -10,15 +11,16 @@ export default function NewProjectPreset({
   value: PresetKey;
   onChange: (next: PresetKey) => void;
 }) {
+  const t = useTranslations('newProject');
   const selected = PRESETS.find((p) => p.key === value) ?? PRESETS[0];
 
   return (
     <div className="space-y-2">
-      <span className="block text-sm font-medium">Issue types</span>
+      <span className="block text-sm font-medium">{t('issueTypes')}</span>
 
       <div
         role="radiogroup"
-        aria-label="Issue types"
+        aria-label={t('issueTypes')}
         className="grid grid-cols-2 gap-x-2 gap-y-0.5"
       >
         {PRESETS.map((preset) => (
@@ -34,7 +36,7 @@ export default function NewProjectPreset({
                 : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
             }`}
           >
-            {preset.label}
+            {t(`presets.${preset.key}`)}
           </button>
         ))}
       </div>
@@ -43,8 +45,7 @@ export default function NewProjectPreset({
           the block keeps its height when the selection changes. */}
       <div className="space-y-2 rounded-lg bg-muted/60 p-3">
         <p className="text-xs text-muted-foreground">
-          {selected.types.length} issue {selected.types.length === 1 ? 'type' : 'types'} will be
-          created
+          {t('typesCreated', { count: selected.types.length })}
         </p>
         <div className="flex min-h-11 flex-wrap content-start gap-x-3 gap-y-1 text-sm">
           {selected.types.map((type) => (
@@ -58,7 +59,7 @@ export default function NewProjectPreset({
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          New issues get {selected.types[0].name} by default. Types are editable in settings.
+          {t('defaultType', { type: selected.types[0].name })}
         </p>
       </div>
     </div>

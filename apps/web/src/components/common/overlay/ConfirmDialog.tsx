@@ -1,6 +1,7 @@
 import { type ReactNode, useState } from 'react';
 import Modal from './Modal';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 // A modal with a destructive confirm button that owns the busy state and the
 // try/catch around the action. Callers put the dialog-specific body in `children`
@@ -22,6 +23,7 @@ export default function ConfirmDialog({
   onConfirm: () => Promise<void>;
   onClose: () => void;
 }) {
+  const t = useTranslations('common');
   const [busy, setBusy] = useState(false);
 
   async function confirm() {
@@ -41,7 +43,7 @@ export default function ConfirmDialog({
         {children}
         <div className="flex justify-end gap-2">
           <Button variant="outline" onClick={onClose} disabled={busy}>
-            Cancel
+            {t('cancel')}
           </Button>
           <Button variant="destructive" onClick={confirm} disabled={busy || confirmDisabled}>
             {confirmLabel}

@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import PageHeader from './PageHeader';
+import { useTranslations } from 'next-intl';
 
 // The chrome for a standalone full-height page rendered outside the app shell:
 // its own top bar with a back link and a label, and a centered column with a
@@ -26,10 +27,11 @@ export default function FullPageView({
   nav?: ReactNode;
   children: ReactNode;
 }) {
+  const t = useTranslations('common');
   return (
     <div className="min-h-svh bg-background">
       <header className="flex h-12 items-center gap-2 border-b px-4">
-        <Button asChild variant="ghost" size="icon" className="size-8" title="Back">
+        <Button asChild variant="ghost" size="icon" className="size-8" title={t('back')}>
           <Link href="/">
             <ArrowLeft />
           </Link>

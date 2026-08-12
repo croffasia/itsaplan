@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Check, ChevronDown, Layers, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { ViewIcon } from '@/utils/viewIcons';
@@ -30,6 +31,7 @@ export default function MobileViewSwitcher({
   onSelect: (id: number | null) => void;
   onNewView: () => void;
 }) {
+  const t = useTranslations('views');
   const [open, setOpen] = useState(false);
   const active = activeViewId != null ? (views.find((v) => v.id === activeViewId) ?? null) : null;
   return (
@@ -37,7 +39,7 @@ export default function MobileViewSwitcher({
       <PopoverTrigger asChild>
         <button
           type="button"
-          title="Switch view"
+          title={t('switchView')}
           className="flex h-8 min-w-0 items-center gap-1.5 rounded-md border px-3 text-sm whitespace-nowrap transition-colors hover:bg-accent"
         >
           {active ? (
@@ -45,19 +47,19 @@ export default function MobileViewSwitcher({
           ) : (
             <Layers className="size-4 shrink-0" />
           )}
-          <span className="truncate font-medium">{active ? active.name : 'All'}</span>
+          <span className="truncate font-medium">{active ? active.name : t('all')}</span>
           <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-56 p-0">
         <Command>
-          <CommandInput placeholder="Search views…" />
+          <CommandInput placeholder={t('searchViews')} />
           <CommandList>
-            <CommandEmpty>No views found.</CommandEmpty>
+            <CommandEmpty>{t('noViews')}</CommandEmpty>
             <CommandGroup>
               <CommandItem
                 value="__all__"
-                keywords={['All']}
+                keywords={[t('all')]}
                 onSelect={() => {
                   onSelect(null);
                   setOpen(false);
@@ -65,7 +67,7 @@ export default function MobileViewSwitcher({
                 className={cn(activeViewId === null && 'bg-accent/50')}
               >
                 <Layers className="size-4" />
-                <span className="min-w-0 flex-1 truncate">All</span>
+                <span className="min-w-0 flex-1 truncate">{t('all')}</span>
                 {activeViewId === null && <Check className="size-4 shrink-0" />}
               </CommandItem>
               {views.map((v) => (
@@ -88,14 +90,14 @@ export default function MobileViewSwitcher({
             {canCreate && (
               <CommandGroup>
                 <CommandItem
-                  value="New view"
+                  value={t('newView')}
                   onSelect={() => {
                     onNewView();
                     setOpen(false);
                   }}
                 >
                   <Plus className="size-4" />
-                  New view
+                  {t('newView')}
                 </CommandItem>
               </CommandGroup>
             )}

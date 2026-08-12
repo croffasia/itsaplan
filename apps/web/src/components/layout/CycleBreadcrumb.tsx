@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cyclesPath } from '@/utils/paths';
 import { useCycleQuery } from '@/services/cycles.service';
 
@@ -14,6 +15,7 @@ export default function CycleBreadcrumb({
   projectKey: string | null;
   cycleId: number;
 }) {
+  const t = useTranslations('nav');
   const name = useCycleQuery(cycleId).data?.name;
 
   return (
@@ -22,7 +24,7 @@ export default function CycleBreadcrumb({
         href={projectKey ? cyclesPath(projectKey) : '/'}
         className="truncate text-muted-foreground hover:text-foreground"
       >
-        Cycles
+        {t('cycles')}
       </Link>
       <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
       <span className="truncate font-medium">{name ?? '…'}</span>

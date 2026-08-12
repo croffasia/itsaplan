@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { PermissionAction, PermissionResource } from '@/lib/api';
 
@@ -11,7 +12,7 @@ import type { PermissionAction, PermissionResource } from '@/lib/api';
 export default function RequirePermission({
   resource,
   action,
-  message = 'You do not have access to this section.',
+  message,
   children,
 }: {
   resource: PermissionResource;
@@ -19,9 +20,10 @@ export default function RequirePermission({
   message?: string;
   children: ReactNode;
 }) {
+  const t = useTranslations('common');
   const { can } = usePermissions();
   if (!can(resource, action)) {
-    return <p className="text-sm text-muted-foreground">{message}</p>;
+    return <p className="text-sm text-muted-foreground">{message ?? t('noSectionAccess')}</p>;
   }
   return <>{children}</>;
 }

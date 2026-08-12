@@ -3,6 +3,7 @@
 // NEXT_PUBLIC_API_URL. The planner routes require a better-auth session, so every
 // request sends credentials (the session cookie).
 
+import type { Locale } from '@/i18n/locales';
 import type { FilterSet } from '@/utils/filters';
 import type { SavedViewDisplay } from '@/utils/viewSettings';
 import type { DashboardLayout, BreakdownBy } from '@/utils/dashboardWidgets';
@@ -943,6 +944,9 @@ export type IssueActivityView = 'flat' | 'grouped';
 
 export interface AccountPreferences {
   timezone: string;
+  // The interface language. Mirrored into the NEXT_LOCALE cookie, which is what the
+  // server renders with; also the language of this user's emails and bot messages.
+  locale: Locale;
   theme: ThemePreference;
   issueOpenMode: IssueOpenMode;
   startPage: StartPage;

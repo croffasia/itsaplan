@@ -1,5 +1,6 @@
 import { usePathname } from 'next/navigation';
 import { Shield, type LucideIcon } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { rolesPath, settingsPath } from '@/utils/paths';
 import {
   AUTOMATION_SECTIONS,
@@ -8,6 +9,7 @@ import {
   type SettingsSection,
 } from '@/utils/settingsSections';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import type { ProjectDetail } from '@/lib/api';
 
 // The project settings sidebar (the "Project settings" mode) lists the
@@ -39,6 +41,8 @@ export function useSettingsNavGroups(
   groups: SettingsNavGroup[];
   firstHref: string | null;
 } {
+  const t = useTranslations('nav');
+  const sectionText = useSettingsSectionText();
   const pathname = usePathname();
   const { can, isOwner } = usePermissions(project);
 
@@ -50,7 +54,7 @@ export function useSettingsNavGroups(
         key: s.slug,
         href: projectKey ? settingsPath(projectKey, s.slug) : '#',
         icon: s.icon,
-        label: s.label,
+        label: sectionText(s.slug).label,
         active: pathname.endsWith(`/settings/${s.slug}`),
       }));
 
@@ -66,16 +70,16 @@ export function useSettingsNavGroups(
           key: 'roles',
           href: projectKey ? rolesPath(projectKey) : '#',
           icon: Shield,
-          label: 'Roles',
+          label: t('roles'),
           active: pathname.endsWith('/members/roles'),
         },
       ]
     : [];
 
   const groups: SettingsNavGroup[] = [
-    { key: 'general', label: 'Project', items: [...generalItems, ...rolesItems] },
-    { key: 'workflow', label: 'Workflow', items: workflowItems },
-    { key: 'automation', label: 'Automation', items: automationItems },
+    { key: 'general', label: t('groups.project'), items: [...generalItems, ...rolesItems] },
+    { key: 'workflow', label: t('groups.workflow'), items: workflowItems },
+    { key: 'automation', label: t('groups.automation'), items: automationItems },
   ].filter((g) => g.items.length > 0);
 
   const firstHref = groups[0]?.items[0]?.href ?? null;

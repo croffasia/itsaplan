@@ -33,25 +33,26 @@ export type WorkItemsView = 'kanban' | 'table' | 'timeline' | 'calendar';
 
 // Each layout names its hotkey id rather than a key, so the switcher, the global
 // key layer and the command palette all read the same binding (see lib/hotkeys).
-export const VIEWS: { value: WorkItemsView; label: string; icon: LucideIcon; hotkey: HotkeyId }[] =
-  [
-    { value: 'kanban', label: 'Kanban', icon: Columns3, hotkey: 'view.kanban' },
-    { value: 'table', label: 'Table', icon: Table2, hotkey: 'view.table' },
-    { value: 'timeline', label: 'Timeline', icon: GanttChart, hotkey: 'view.timeline' },
-    { value: 'calendar', label: 'Calendar', icon: CalendarDays, hotkey: 'view.calendar' },
-  ];
+// The name of a layout is a message under `display.layouts`.
+export const VIEWS: { value: WorkItemsView; icon: LucideIcon; hotkey: HotkeyId }[] = [
+  { value: 'kanban', icon: Columns3, hotkey: 'view.kanban' },
+  { value: 'table', icon: Table2, hotkey: 'view.table' },
+  { value: 'timeline', icon: GanttChart, hotkey: 'view.timeline' },
+  { value: 'calendar', icon: CalendarDays, hotkey: 'view.calendar' },
+];
 
-// Fields the project can be ordered by, in the order shown in the menu.
-export const SORT_FIELDS: { value: SortField; label: string }[] = [
-  { value: 'manual', label: 'Manual' },
-  { value: 'title', label: 'Title' },
-  { value: 'identifier', label: 'Issue number' },
-  { value: 'status', label: 'State' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'assignee', label: 'Assignee' },
-  { value: 'type', label: 'Type' },
-  { value: 'startDate', label: 'Start date' },
-  { value: 'dueDate', label: 'Due date' },
-  { value: 'created', label: 'Created' },
-  { value: 'updated', label: 'Updated' },
+// Fields the project can be ordered by, in the order shown in the menu. The name
+// of a field is a message under `display.sortFields`.
+export const SORT_FIELDS: SortField[] = [
+  'manual',
+  'title',
+  'identifier',
+  'status',
+  'priority',
+  'assignee',
+  'type',
+  'startDate',
+  'dueDate',
+  'created',
+  'updated',
 ];

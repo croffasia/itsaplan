@@ -8,6 +8,7 @@ import {
 } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { Filter, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api';
 import { useStripSortSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -46,6 +47,7 @@ export default function ViewTabs({
   onToggleFilter: () => void;
   displayControl: ReactNode;
 }) {
+  const t = useTranslations('views');
   const { can } = usePermissions();
   const canCreateView = can('views', 'create');
   const canEditView = can('views', 'edit');
@@ -127,11 +129,11 @@ export default function ViewTabs({
           <button
             type="button"
             onClick={onNewView}
-            title="Create a view from the current filters and display"
+            title={t('newViewHint')}
             className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
           >
             <Plus className="size-3.5" />
-            New view
+            {t('newView')}
           </button>
         )}
       </div>
@@ -140,7 +142,7 @@ export default function ViewTabs({
         <button
           type="button"
           onClick={onToggleFilter}
-          title="Filter"
+          title={t('filter')}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
         >
           <Filter className="size-4" />

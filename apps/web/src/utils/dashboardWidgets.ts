@@ -160,60 +160,76 @@ const UNASSIGNED_FILTER: FilterSet = {
 };
 
 // The built-in layout shown when a project has no saved dashboards. Saving it
-// persists it as the project's first real dashboard. The top row is small metric
-// tiles (each a filtered count), then the charts, pulse, and the two lists.
-export const DEFAULT_DASHBOARD_LAYOUT: DashboardLayout = [
-  {
-    id: 'default-open',
-    type: 'stat',
-    x: 0,
-    y: 0,
-    w: 3,
-    h: 3,
-    title: 'Open',
-    config: { filters: OPEN_FILTER },
-  },
-  {
-    id: 'default-progress',
-    type: 'stat',
-    x: 3,
-    y: 0,
-    w: 3,
-    h: 3,
-    title: 'In progress',
-    config: { filters: IN_PROGRESS_FILTER },
-  },
-  {
-    id: 'default-backlog',
-    type: 'stat',
-    x: 6,
-    y: 0,
-    w: 3,
-    h: 3,
-    title: 'Backlog',
-    config: { filters: BACKLOG_FILTER },
-  },
-  {
-    id: 'default-unassigned',
-    type: 'stat',
-    x: 9,
-    y: 0,
-    w: 3,
-    h: 3,
-    title: 'Unassigned',
-    config: { filters: UNASSIGNED_FILTER },
-  },
-  { id: 'default-throughput', type: 'throughput', x: 0, y: 3, w: 6, h: 6, config: { weeks: 12 } },
-  { id: 'default-breakdown', type: 'breakdown', x: 6, y: 3, w: 6, h: 6, config: { by: 'status' } },
-  { id: 'default-pulse', type: 'pulse', x: 0, y: 9, w: 12, h: 5, config: { granularity: 'day' } },
-  {
-    id: 'default-recent',
-    type: 'recent_issues',
-    x: 0,
-    y: 14,
-    w: 6,
-    h: 7,
-    config: { sort: 'created', limit: 10 },
-  },
-  { id: 'default-activity', type: 'activity_feed', x: 6, y: 14, w: 6, h: 7, config: {} },
-];
+// persists it as the project's first real dashboard, so the tile names are taken
+// in the reader's language (messages under `dashboards.defaultWidgets`). The top
+// row is small metric tiles (each a filtered count), then the charts, pulse, and
+// the two lists.
+export type DefaultStatKey = 'open' | 'inProgress' | 'backlog' | 'unassigned';
+
+export function defaultDashboardLayout(
+  statTitle: (key: DefaultStatKey) => string,
+): DashboardLayout {
+  return [
+    {
+      id: 'default-open',
+      type: 'stat',
+      x: 0,
+      y: 0,
+      w: 3,
+      h: 3,
+      title: statTitle('open'),
+      config: { filters: OPEN_FILTER },
+    },
+    {
+      id: 'default-progress',
+      type: 'stat',
+      x: 3,
+      y: 0,
+      w: 3,
+      h: 3,
+      title: statTitle('inProgress'),
+      config: { filters: IN_PROGRESS_FILTER },
+    },
+    {
+      id: 'default-backlog',
+      type: 'stat',
+      x: 6,
+      y: 0,
+      w: 3,
+      h: 3,
+      title: statTitle('backlog'),
+      config: { filters: BACKLOG_FILTER },
+    },
+    {
+      id: 'default-unassigned',
+      type: 'stat',
+      x: 9,
+      y: 0,
+      w: 3,
+      h: 3,
+      title: statTitle('unassigned'),
+      config: { filters: UNASSIGNED_FILTER },
+    },
+    { id: 'default-throughput', type: 'throughput', x: 0, y: 3, w: 6, h: 6, config: { weeks: 12 } },
+    {
+      id: 'default-breakdown',
+      type: 'breakdown',
+      x: 6,
+      y: 3,
+      w: 6,
+      h: 6,
+      config: { by: 'status' },
+    },
+    { id: 'default-pulse', type: 'pulse', x: 0, y: 9, w: 12, h: 5, config: { granularity: 'day' } },
+    {
+      id: 'default-recent',
+      type: 'recent_issues',
+      x: 0,
+      y: 14,
+      w: 6,
+      h: 7,
+      config: { sort: 'created', limit: 10 },
+    },
+    { id: 'default-activity', type: 'activity_feed', x: 6, y: 14, w: 6, h: 7, config: {} },
+  ];
+}

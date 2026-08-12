@@ -14,15 +14,14 @@ import {
 // (one slug per page under /god/<slug>), so adding one is an entry here plus a page.
 // `group` is the sidebar heading a section sits under; GOD_GROUPS gives the order.
 // A section with `integration: true` is not listed under its group directly: it sits
-// inside the "Integrations" item at the end of the group.
+// inside the "Integrations" item at the end of the group. The name and the blurb of
+// a section, and the name of a group, are messages under `sections.god`.
 
-export const GOD_GROUPS = ['Management', 'Instance'] as const;
+export const GOD_GROUPS = ['management', 'instance'] as const;
 export type GodGroup = (typeof GOD_GROUPS)[number];
 
 export interface GodSection {
   slug: string;
-  label: string;
-  description: string;
   group: GodGroup;
   icon: LucideIcon;
   integration?: true;
@@ -31,67 +30,44 @@ export interface GodSection {
 export const GOD_SECTIONS: GodSection[] = [
   {
     slug: 'users',
-    label: 'Users',
-    description:
-      'Every account on this instance: the global role, whether the address is confirmed, and the projects each user can reach.',
-    group: 'Management',
+    group: 'management',
     icon: Users,
   },
   {
     slug: 'projects',
-    label: 'Projects',
-    description:
-      'Every project on this instance: what each one holds, when it was last active, and who can reach it.',
-    group: 'Management',
+    group: 'management',
     icon: FolderKanban,
   },
   {
     slug: 'authentication',
-    label: 'Authentication',
-    description:
-      'Who may register on this instance, how accounts are confirmed, and the providers people sign in with.',
-    group: 'Instance',
+    group: 'instance',
     icon: KeyRound,
   },
   {
     slug: 'hotkeys',
-    label: 'Keyboard shortcuts',
-    description:
-      'The key each command is bound to for everyone on this instance. Each person can rebind a shortcut for their own account in their preferences.',
-    group: 'Instance',
+    group: 'instance',
     icon: Keyboard,
   },
   {
     slug: 'storage',
-    label: 'Storage',
-    description:
-      'How much people may upload: the size of a single file, the attachment types accepted, and the storage each project gets.',
-    group: 'Instance',
+    group: 'instance',
     icon: HardDrive,
   },
   {
     slug: 'telegram',
-    label: 'Telegram',
-    description:
-      'The bot people connect their Telegram account to, and the one that delivers Telegram notifications for projects that set no bot of their own.',
-    group: 'Instance',
+    group: 'instance',
     icon: Send,
     integration: true,
   },
   {
     slug: 'email',
-    label: 'Email provider',
-    description:
-      'The mail provider the instance sends through: password resets, address confirmation, and sign-in links.',
-    group: 'Instance',
+    group: 'instance',
     icon: Mail,
     integration: true,
   },
   {
     slug: 'auth-provider',
-    label: 'Auth provider',
-    description: 'The external accounts people may sign in with.',
-    group: 'Instance',
+    group: 'instance',
     icon: KeyRound,
     integration: true,
   },

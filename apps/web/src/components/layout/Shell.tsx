@@ -20,6 +20,7 @@ import CommandLayer from '@/components/layout/CommandLayer';
 import ShellBody from '@/components/layout/ShellBody';
 import ShellHeaderTitle from '@/components/layout/ShellHeaderTitle';
 import ShellOverlays from '@/components/layout/ShellOverlays';
+import { useTranslations } from 'next-intl';
 
 // The layout for /project/:projectKey and its children (the work items view and the
 // settings pages). It owns the project data, the view editor and the
@@ -32,6 +33,7 @@ export default function Shell({
   children: ReactNode;
   defaultSidebarOpen?: boolean;
 }) {
+  const t = useTranslations('nav');
   const router = useRouter();
   const route = useShellRoute();
   const { projectKey, routeIssueSeq } = route;
@@ -126,7 +128,7 @@ export default function Shell({
             title={
               <ShellHeaderTitle
                 route={route}
-                projectName={project?.project.name ?? 'Project'}
+                projectName={project?.project.name ?? t('project')}
                 issueIdentifier={issueQuery.data?.identifier ?? null}
                 issueParent={issueQuery.data?.parent ?? null}
               />

@@ -1,4 +1,5 @@
 import { Hash } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { IssueSearchHit } from '@/lib/api';
 import { ISSUE_PREFIX } from '@/utils/commandFilter';
 import { CommandGroup, CommandItem, CommandSeparator } from '@/components/ui/command';
@@ -15,14 +16,15 @@ export default function CommandPaletteIssues({
   fetching: boolean;
   onOpenIssue: (sequenceNumber: number) => void;
 }) {
+  const t = useTranslations('palette');
   return (
     <>
       <CommandSeparator />
-      <CommandGroup heading="Issues">
+      <CommandGroup heading={t('issues')}>
         {hits.length === 0 && fetching && (
           <CommandItem value={`${ISSUE_PREFIX}0`} disabled>
             <Hash />
-            <span className="text-muted-foreground">Searching…</span>
+            <span className="text-muted-foreground">{t('searching')}</span>
           </CommandItem>
         )}
         {hits.map((issue, i) => (

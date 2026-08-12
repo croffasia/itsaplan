@@ -1,8 +1,10 @@
 import { usePathname } from 'next/navigation';
 import { MessagesSquare, SlidersHorizontal } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { aiChatPath, aiSectionPath, aiTeamPath } from '@/utils/paths';
 import { AI_SECTIONS, AI_TEAM_SECTIONS } from '@/utils/settingsSections';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,6 +18,8 @@ import SidebarNavSubmenu from '@/components/layout/SidebarNavSubmenu';
 // and the "Configure" item holding the AI configuration sections. Renders nothing
 // when none of them are readable.
 export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | null }) {
+  const t = useTranslations('nav');
+  const sectionText = useSettingsSectionText();
   const pathname = usePathname();
   const { can } = usePermissions();
   const disabled = !projectKey;
@@ -25,7 +29,7 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
     key: s.slug,
     href: projectKey ? aiSectionPath(projectKey, s.slug) : '#',
     icon: s.icon,
-    label: s.label,
+    label: sectionText(s.slug).label,
     active: pathname.endsWith(`/${s.slug}`),
   }));
   const canChat = can('ai_agents', 'read');
@@ -33,14 +37,14 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>AI Team</SidebarGroupLabel>
+      <SidebarGroupLabel>{t('aiTeam')}</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {canChat && (
             <SidebarNavItem
               href={projectKey ? aiChatPath(projectKey) : '#'}
               icon={MessagesSquare}
-              label="Chat"
+              label={t('chat')}
               active={pathname.endsWith('/ai-team/chat')}
               disabled={disabled}
             />
@@ -50,13 +54,17 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
               key={s.slug}
               href={projectKey ? aiTeamPath(projectKey, s.slug) : '#'}
               icon={s.icon}
-              label={s.label}
+              label={sectionText(s.slug).label}
               active={pathname.endsWith(`/ai-team/${s.slug}`)}
               disabled={disabled}
             />
           ))}
           {configureItems.length > 0 && (
-            <SidebarNavSubmenu icon={SlidersHorizontal} label="Configure" items={configureItems} />
+            <SidebarNavSubmenu
+              icon={SlidersHorizontal}
+              label={t('configure')}
+              items={configureItems}
+            />
           )}
         </SidebarMenu>
       </SidebarGroupContent>

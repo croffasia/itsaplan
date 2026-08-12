@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
+import { useTranslations } from 'next-intl';
+import { byKey } from '@/utils/messageKey';
 import type { CustomField, IssueType } from '@/lib/api';
 import { useStripSortSensors } from '@/lib/dnd';
 import {
@@ -35,21 +37,20 @@ export default function TableProperties({
   // custom-field picker, which stays last.
   trailing?: ReactNode;
 }) {
+  const t = byKey(useTranslations('display.properties'));
   const sensors = useStripSortSensors();
   const fieldById = new Map(customFields.map((f) => [f.id, f]));
-  const builtinLabels = new Map(DISPLAY_PROPERTIES.map((p) => [p.value as PropertyKey, p.label]));
-  const labelFor = (key: PropertyKey): string | null =>
-    isCustomFieldKey(key)
-      ? (fieldById.get(customFieldId(key))?.name ?? null)
-      : (builtinLabels.get(key) ?? null);
+  const builtins = new Set<PropertyKey>(DISPLAY_PROPERTIES);
+  const labelFor = (key: PropertyKey): string | null => {
+    if (isCustomFieldKey(key)) return fieldById.get(customFieldId(key))?.name ?? null;
+    return builtins.has(key) ? t(key) : null;
+  };
 
   // Enabled keys in display order, dropping any stale (deleted custom field) key.
   const enabled = properties.filter((k) => labelFor(k) != null);
   const enabledSet = new Set(properties);
   const features = useProjectFeatures();
-  const disabledBuiltins = offeredDisplayProperties(features).filter(
-    (p) => !enabledSet.has(p.value),
-  );
+  const disabledBuiltins = offeredDisplayProperties(features).filter((p) => !enabledSet.has(p));
 
   const toggle = (key: PropertyKey) =>
     onChange(enabledSet.has(key) ? properties.filter((p) => p !== key) : [...properties, key]);
@@ -78,7 +79,7 @@ export default function TableProperties({
         </SortableContext>
       </DndContext>
       {disabledBuiltins.map((p) => (
-        <PropertyChip key={p.value} label={p.label} on={false} onClick={() => toggle(p.value)} />
+        <PropertyChip key={p} label={t(p)} on={false} onClick={() => toggle(p)} />
       ))}
       {trailing}
       <CustomFieldMenu

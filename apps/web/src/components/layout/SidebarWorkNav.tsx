@@ -1,4 +1,5 @@
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Inbox, LayoutDashboard, RefreshCw, SquareKanban, StickyNote, Target } from 'lucide-react';
 import {
   cyclesPath,
@@ -23,6 +24,7 @@ export default function SidebarWorkNav({
   projectKey: string | null;
   projectId: number | null;
 }) {
+  const t = useTranslations('nav');
   const pathname = usePathname();
   const { can } = usePermissions();
   const features = useProjectFeatures();
@@ -44,7 +46,7 @@ export default function SidebarWorkNav({
           <SidebarNavItem
             href={projectKey ? inboxPath(projectKey) : '#'}
             icon={Inbox}
-            label="Inbox"
+            label={t('inbox')}
             active={pathname.endsWith('/inbox')}
             disabled={disabled}
             badge={inboxUnread}
@@ -53,7 +55,7 @@ export default function SidebarWorkNav({
             <SidebarNavItem
               href={projectKey ? dashboardsPath(projectKey) : '#'}
               icon={LayoutDashboard}
-              label="Dashboards"
+              label={t('dashboards')}
               active={pathname.includes('/dashboard')}
               disabled={disabled}
             />
@@ -61,7 +63,7 @@ export default function SidebarWorkNav({
           <SidebarNavItem
             href={projectKey ? projectPath(projectKey) : '#'}
             icon={SquareKanban}
-            label="Work items"
+            label={t('workItems')}
             active={onWorkItems}
             disabled={disabled}
           />
@@ -69,7 +71,7 @@ export default function SidebarWorkNav({
             <SidebarNavItem
               href={projectKey ? initiativesPath(projectKey) : '#'}
               icon={Target}
-              label="Initiatives"
+              label={t('initiatives')}
               active={pathname.includes('/initiatives')}
               disabled={disabled}
             />
@@ -78,7 +80,7 @@ export default function SidebarWorkNav({
             <SidebarNavItem
               href={projectKey ? cyclesPath(projectKey) : '#'}
               icon={RefreshCw}
-              label="Cycles"
+              label={t('cycles')}
               active={pathname.includes('/cycles')}
               disabled={disabled}
             />
@@ -87,7 +89,7 @@ export default function SidebarWorkNav({
             <SidebarNavItem
               href={projectKey ? notesPath(projectKey) : '#'}
               icon={StickyNote}
-              label="Notes"
+              label={t('notes')}
               active={pathname.includes('/notes')}
               disabled={disabled}
             />

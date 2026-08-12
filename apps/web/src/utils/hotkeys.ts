@@ -20,6 +20,10 @@ export type HotkeyId =
   | 'project.settings'
   | 'board.select-all';
 
+// The heading a shortcut is listed under in the editor. The name of a group, and
+// what a shortcut does, are messages under `common.hotkeys`.
+export type HotkeyGroup = 'general' | 'workItems';
+
 // `scope` decides when the binding is live. A 'global' one fires even while the
 // user types or an overlay is open; an 'app' one is suppressed then, because its
 // combination is a plain key that would land in the text being typed.
@@ -27,12 +31,14 @@ export type HotkeyId =
 // than a single combination.
 export type HotkeyDef = {
   id: HotkeyId;
-  label: string;
-  group: string;
+  group: HotkeyGroup;
   combo: string;
   scope: 'global' | 'app';
   fixed?: true;
 };
+
+// The groups in the order the editor lists them.
+export const HOTKEY_GROUPS: HotkeyGroup[] = ['general', 'workItems'];
 
 // A combo is written as lowercase tokens joined by '+': the modifiers 'mod'
 // (⌘ on macOS, Ctrl elsewhere), 'shift' and 'alt', then the key. The key 'digit'
@@ -40,15 +46,13 @@ export type HotkeyDef = {
 export const HOTKEYS: HotkeyDef[] = [
   {
     id: 'palette.toggle',
-    label: 'Open the command palette',
-    group: 'General',
+    group: 'general',
     combo: 'mod+k',
     scope: 'global',
   },
   {
     id: 'project.switch',
-    label: 'Switch to project 1–9',
-    group: 'General',
+    group: 'general',
     combo: 'mod+digit',
     scope: 'global',
     fixed: true,
@@ -58,29 +62,26 @@ export const HOTKEYS: HotkeyDef[] = [
   // rebindable for that reason.
   {
     id: 'sidebar.toggle',
-    label: 'Show or hide the sidebar',
-    group: 'General',
+    group: 'general',
     combo: 'mod+b',
     scope: 'global',
     fixed: true,
   },
-  { id: 'issue.new', label: 'New issue', group: 'General', combo: 'n', scope: 'app' },
-  { id: 'project.new', label: 'New project', group: 'General', combo: 'b', scope: 'app' },
+  { id: 'issue.new', group: 'general', combo: 'n', scope: 'app' },
+  { id: 'project.new', group: 'general', combo: 'b', scope: 'app' },
   {
     id: 'project.settings',
-    label: 'Open project settings',
-    group: 'General',
+    group: 'general',
     combo: 's',
     scope: 'app',
   },
-  { id: 'view.kanban', label: 'Board layout', group: 'Work items', combo: '1', scope: 'app' },
-  { id: 'view.table', label: 'Table layout', group: 'Work items', combo: '2', scope: 'app' },
-  { id: 'view.timeline', label: 'Timeline layout', group: 'Work items', combo: '3', scope: 'app' },
-  { id: 'view.calendar', label: 'Calendar layout', group: 'Work items', combo: '4', scope: 'app' },
+  { id: 'view.kanban', group: 'workItems', combo: '1', scope: 'app' },
+  { id: 'view.table', group: 'workItems', combo: '2', scope: 'app' },
+  { id: 'view.timeline', group: 'workItems', combo: '3', scope: 'app' },
+  { id: 'view.calendar', group: 'workItems', combo: '4', scope: 'app' },
   {
     id: 'board.select-all',
-    label: 'Select all issues on the board',
-    group: 'Work items',
+    group: 'workItems',
     combo: 'mod+a',
     scope: 'app',
   },

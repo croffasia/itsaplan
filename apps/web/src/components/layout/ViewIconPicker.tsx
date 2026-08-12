@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { ViewIcon, VIEW_ICON_NAMES, VIEW_ICONS } from '@/utils/viewIcons';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -12,13 +13,14 @@ export default function ViewIconPicker({
   icon: string | null;
   onChange: (icon: string | null) => void;
 }) {
+  const t = useTranslations('display.rows');
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
-          title="View icon"
+          title={t('viewIcon')}
           className="flex size-7 items-center justify-center rounded-md bg-secondary text-foreground hover:bg-secondary/80"
         >
           <ViewIcon name={icon} className="size-4" />

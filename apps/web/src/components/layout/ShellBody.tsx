@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import PageSkeleton from '@/components/common/skeleton/PageSkeleton';
 
 // The Shell's content area. It renders the routed page once the project is
@@ -19,10 +20,11 @@ export default function ShellBody({
   projectCount: number;
   children: ReactNode;
 }) {
+  const t = useTranslations('shell');
   if (forbidden) {
     return (
       <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-        You do not have access to this project.
+        {t('noProjectAccess')}
       </div>
     );
   }
@@ -34,13 +36,13 @@ export default function ShellBody({
     if (hasError)
       return (
         <div className="flex h-full items-center justify-center px-4 text-center text-sm text-muted-foreground">
-          This project is not available.
+          {t('projectUnavailable')}
         </div>
       );
     if (projectsLoaded && projectCount === 0)
       return (
         <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-          No projects yet, create one to get started.
+          {t('noProjects')}
         </div>
       );
     return <PageSkeleton />;

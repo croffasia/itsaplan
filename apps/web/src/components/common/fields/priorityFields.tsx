@@ -1,6 +1,6 @@
 import { type ReactNode } from 'react';
 import { Minus, SignalHigh, SignalLow, SignalMedium, TriangleAlert } from 'lucide-react';
-import { PRIORITIES } from '@/utils/fieldOptions';
+import { PRIORITY_ORDER } from '@/utils/fieldOptions';
 
 // Accent icon per priority value (plus the "unset" choice keyed by '').
 const PRIORITY_ICON: Record<string, ReactNode> = {
@@ -13,8 +13,8 @@ const PRIORITY_ICON: Record<string, ReactNode> = {
 
 // Priority selector rows: the "No priority" choice first, then the canonical
 // priorities, each with its accent icon. Value is the priority string, '' for
-// none.
-export const PRIORITY_FIELDS: { value: string; label: string; icon: ReactNode }[] = [
-  { value: '', label: 'No priority', icon: PRIORITY_ICON[''] },
-  ...PRIORITIES.map((p) => ({ value: p.value, label: p.label, icon: PRIORITY_ICON[p.value] })),
+// none; its label comes from usePriorityLabel.
+export const PRIORITY_FIELDS: { value: string; icon: ReactNode }[] = [
+  { value: '', icon: PRIORITY_ICON[''] },
+  ...PRIORITY_ORDER.map((value) => ({ value: value as string, icon: PRIORITY_ICON[value] })),
 ];

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from 'next-intl';
 
 // A masked input for a secret (SMTP password, API key, bot token). The stored value
 // is never sent to the client, so the field starts empty: when a value is already
@@ -21,6 +22,7 @@ export default function SecretInput({
   editable: boolean;
   placeholder?: string;
 }) {
+  const t = useTranslations('common');
   const [reveal, setReveal] = useState(false);
   return (
     <div className="relative">
@@ -38,7 +40,7 @@ export default function SecretInput({
         type="button"
         onClick={() => setReveal((r) => !r)}
         className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
-        aria-label={reveal ? 'Hide' : 'Show'}
+        aria-label={reveal ? t('hide') : t('show')}
         tabIndex={-1}
       >
         {reveal ? <EyeOff className="size-4" /> : <Eye className="size-4" />}

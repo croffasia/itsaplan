@@ -3,6 +3,7 @@ import type { Column } from '@/lib/api';
 import { colorDot } from './colorDot';
 import { Pill } from './Pill';
 import PopoverPick from './PopoverPick';
+import { useTranslations } from 'next-intl';
 
 export default function StatusSelect({
   columns,
@@ -15,6 +16,7 @@ export default function StatusSelect({
   onChange: (id: number) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.fieldSelects');
   const column = columns.find((c) => c.id === value);
   return (
     <PopoverPick
@@ -22,11 +24,11 @@ export default function StatusSelect({
       trigger={
         <Pill active>
           {column ? colorDot(column.color) : <CircleDashed />}
-          {column?.name ?? 'State'}
+          {column?.name ?? t('state')}
         </Pill>
       }
-      inputPlaceholder="Change state…"
-      emptyText="No state."
+      inputPlaceholder={t('changeState')}
+      emptyText={t('noState')}
       items={columns.map((c) => ({
         key: String(c.id),
         search: c.name,

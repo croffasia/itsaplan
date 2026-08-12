@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
+import { useTranslations } from 'next-intl';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUpdateAccountPreferences } from '@/services/preferences.service';
@@ -12,6 +13,7 @@ import { useUpdateAccountPreferences } from '@/services/preferences.service';
 // icon is rendered only after mount so the server and client markup match (the
 // resolved theme is unknown during SSR).
 export function ThemeToggle() {
+  const t = useTranslations('common');
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const update = useUpdateAccountPreferences();
@@ -24,8 +26,8 @@ export function ThemeToggle() {
       variant="outline"
       size="icon"
       className="size-8 shrink-0"
-      title="Toggle theme"
-      aria-label="Toggle theme"
+      title={t('toggleTheme')}
+      aria-label={t('toggleTheme')}
       onClick={() => {
         const next = isDark ? 'light' : 'dark';
         setTheme(next);

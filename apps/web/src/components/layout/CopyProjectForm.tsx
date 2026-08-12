@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { KEY_MAX_LENGTH } from '@/utils/projectKey';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,15 +27,17 @@ export default function CopyProjectForm({
   onDescriptionChange: (value: string) => void;
   onIncludeChange: (value: CopyInclude) => void;
 }) {
+  const t = useTranslations('newProject');
+
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
         <div className="space-y-1.5">
-          <Label>Name</Label>
+          <Label>{t('name')}</Label>
           <Input autoFocus value={name} onChange={(e) => onNameChange(e.target.value)} />
         </div>
         <div className="space-y-1.5 sm:w-40">
-          <Label>Key</Label>
+          <Label>{t('copyKey')}</Label>
           <Input
             value={projectKey}
             onChange={(e) => onKeyChange(e.target.value)}
@@ -43,7 +46,7 @@ export default function CopyProjectForm({
         </div>
       </div>
       <div className="space-y-1.5">
-        <Label>Description</Label>
+        <Label>{t('description')}</Label>
         <Textarea
           rows={2}
           className="resize-none"

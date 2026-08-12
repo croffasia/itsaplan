@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { initiativesPath } from '@/utils/paths';
 import InitiativeBreadcrumbName from '@/components/layout/InitiativeBreadcrumbName';
 
@@ -11,13 +12,14 @@ export default function InitiativeBreadcrumb({
   projectKey: string | null;
   initiativeId: number;
 }) {
+  const t = useTranslations('nav');
   return (
     <span className="flex min-w-0 items-center gap-1.5">
       <Link
         href={projectKey ? initiativesPath(projectKey) : '/'}
         className="truncate text-muted-foreground hover:text-foreground"
       >
-        Initiatives
+        {t('initiatives')}
       </Link>
       <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
       {projectKey && (

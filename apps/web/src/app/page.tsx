@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Plus, SquareKanban } from 'lucide-react';
 import { useProjectsQuery } from '@/services/projects.service';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
@@ -22,6 +23,8 @@ import {
 // the project list and the preferences before deciding so it does not flash the
 // wrong destination. With no projects at all, offers to create the first one.
 export default function Home() {
+  const t = useTranslations('shell');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const { data: projects } = useProjectsQuery();
   const { data: prefs, isPending: prefsPending } = useAccountPreferencesQuery();
@@ -46,15 +49,13 @@ export default function Home() {
             <EmptyMedia variant="icon">
               <SquareKanban />
             </EmptyMedia>
-            <EmptyTitle>No projects yet</EmptyTitle>
-            <EmptyDescription>
-              Create your first project to start planning issues on a board.
-            </EmptyDescription>
+            <EmptyTitle>{t('noProjectsTitle')}</EmptyTitle>
+            <EmptyDescription>{t('noProjectsHint')}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
             <Button onClick={() => setCreating(true)}>
               <Plus />
-              Create project
+              {t('createProject')}
             </Button>
           </EmptyContent>
         </Empty>
@@ -74,7 +75,7 @@ export default function Home() {
 
   return (
     <div className="flex h-svh items-center justify-center bg-background text-sm text-muted-foreground">
-      Loading…
+      {tCommon('loading')}
     </div>
   );
 }

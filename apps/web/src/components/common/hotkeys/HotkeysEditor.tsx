@@ -1,5 +1,12 @@
+import { useTranslations } from 'next-intl';
 import type { HotkeyOverrides } from '@/lib/api';
-import { HOTKEYS, type HotkeyCombos, type HotkeyDef, type HotkeyId } from '@/utils/hotkeys';
+import {
+  HOTKEYS,
+  HOTKEY_GROUPS,
+  type HotkeyCombos,
+  type HotkeyDef,
+  type HotkeyId,
+} from '@/utils/hotkeys';
 import HotkeysEditorRow from './HotkeysEditorRow';
 
 // The shortcut list, grouped as the hotkey map declares. `base` is what applies
@@ -16,6 +23,7 @@ export default function HotkeysEditor({
   overrides: HotkeyOverrides;
   onChange: (overrides: HotkeyOverrides) => void;
 }) {
+  const t = useTranslations('common.hotkeys');
   const effective = (id: HotkeyId) => overrides[id] ?? base[id];
 
   // The command already bound to a combination, so a duplicate is visible before it
@@ -23,10 +31,8 @@ export default function HotkeysEditor({
   const conflictFor = (def: HotkeyDef): string | null => {
     const combo = effective(def.id);
     const other = HOTKEYS.find((h) => h.id !== def.id && effective(h.id) === combo);
-    return other ? other.label : null;
+    return other ? t(`commands.${other.id}`) : null;
   };
-
-  const groups = [...new Set(HOTKEYS.map((h) => h.group))];
 
   function record(id: HotkeyId, combo: string) {
     onChange({ ...overrides, [id]: combo });
@@ -40,9 +46,9 @@ export default function HotkeysEditor({
 
   return (
     <div className="space-y-6">
-      {groups.map((group) => (
+      {HOTKEY_GROUPS.map((group) => (
         <div key={group}>
-          <p className="mb-1 text-xs font-medium text-muted-foreground">{group}</p>
+          <p className="mb-1 text-xs font-medium text-muted-foreground">{t(`groups.${group}`)}</p>
           <div className="divide-y divide-border/60">
             {HOTKEYS.filter((h) => h.group === group).map((def) => (
               <HotkeysEditorRow

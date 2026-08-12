@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { type CopyProjectIncludeKey } from '@/lib/api';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -26,41 +27,26 @@ const REQUIRES: Record<CopyProjectIncludeKey, CopyProjectIncludeKey[]> = {
   schedules: ['agents'],
 };
 
-const LABELS: Record<CopyProjectIncludeKey, string> = {
-  states: 'States',
-  issueTypes: 'Issue types',
-  labels: 'Labels',
-  customFields: 'Custom fields',
-  views: 'Views',
-  dashboards: 'Dashboards',
-  actions: 'Actions',
-  configuration: 'Configuration',
-  roles: 'Roles',
-  notificationProviders: 'Notification providers',
-  webhooks: 'Webhooks',
-  integrations: 'Integrations',
-  tools: 'Tools',
-  skills: 'Skills',
-  agents: 'Agents',
-  schedules: 'Schedules',
+// The name of a group, and of each entity, are messages under `newProject`.
+type Group = {
+  title: 'workflow' | 'automation' | 'aiTeam' | 'project' | 'views';
+  keys: CopyProjectIncludeKey[];
 };
-
-type Group = { title: string; keys: CopyProjectIncludeKey[] };
 
 // Groups assigned to the four rendered columns by hand, keeping each column close
 // to the same number of rows.
 const COLUMNS: Group[][] = [
   [
     {
-      title: 'Workflow',
+      title: 'workflow',
       keys: ['states', 'issueTypes', 'labels', 'customFields', 'configuration'],
     },
   ],
-  [{ title: 'Automation', keys: ['actions', 'schedules', 'webhooks'] }],
-  [{ title: 'AI Team', keys: ['agents', 'integrations', 'skills', 'tools'] }],
+  [{ title: 'automation', keys: ['actions', 'schedules', 'webhooks'] }],
+  [{ title: 'aiTeam', keys: ['agents', 'integrations', 'skills', 'tools'] }],
   [
-    { title: 'Project', keys: ['roles', 'notificationProviders'] },
-    { title: 'Views', keys: ['views', 'dashboards'] },
+    { title: 'project', keys: ['roles', 'notificationProviders'] },
+    { title: 'views', keys: ['views', 'dashboards'] },
   ],
 ];
 
@@ -106,6 +92,7 @@ export default function CopyProjectOptions({
   value: CopyInclude;
   onChange: (next: CopyInclude) => void;
 }) {
+  const t = useTranslations('newProject');
   const total = ALL_KEYS.length;
   const selectedCount = ALL_KEYS.filter((k) => value[k]).length;
   const allOn = selectedCount === total;
@@ -114,7 +101,7 @@ export default function CopyProjectOptions({
     <div className="space-y-2">
       <div className="flex items-baseline justify-between">
         <span className="text-sm font-medium">
-          Copy configuration{' '}
+          {t('copyConfiguration')}{' '}
           <span className="text-xs font-normal text-muted-foreground tabular-nums">
             {selectedCount}/{total}
           </span>
@@ -124,7 +111,7 @@ export default function CopyProjectOptions({
           className="text-xs text-muted-foreground hover:text-foreground"
           onClick={() => onChange(selectAll(!allOn))}
         >
-          {allOn ? 'Clear all' : 'Select all'}
+          {t(allOn ? 'clearAll' : 'selectAll')}
         </button>
       </div>
       <div className="grid grid-cols-2 gap-x-4 sm:grid-cols-4">
@@ -132,7 +119,7 @@ export default function CopyProjectOptions({
           <div key={i} className="space-y-3">
             {column.map((group) => (
               <div key={group.title} className="space-y-1">
-                <p className="text-xs text-muted-foreground">{group.title}</p>
+                <p className="text-xs text-muted-foreground">{t(`copyGroups.${group.title}`)}</p>
                 {group.keys.map((key) => (
                   <label
                     key={key}
@@ -142,7 +129,7 @@ export default function CopyProjectOptions({
                       checked={value[key]}
                       onCheckedChange={(c) => onChange(applyToggle(value, key, c === true))}
                     />
-                    {LABELS[key]}
+                    {t(`copyItems.${key}`)}
                   </label>
                 ))}
               </div>

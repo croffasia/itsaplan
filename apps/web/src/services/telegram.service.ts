@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
@@ -34,10 +35,8 @@ export function useDisconnectTelegram() {
 
 // How to name a connected account: the @username when Telegram has one, otherwise
 // the first name, otherwise a plain statement that it is connected.
-export function telegramAccountLabel(link: {
-  username: string | null;
-  firstName: string | null;
-}): string {
-  if (link.username) return `@${link.username}`;
-  return link.firstName ?? 'Connected';
+export function useTelegramAccountLabel() {
+  const t = useTranslations('account.accounts');
+  return (link: { username: string | null; firstName: string | null }) =>
+    link.username ? `@${link.username}` : (link.firstName ?? t('telegramConnectedLabel'));
 }

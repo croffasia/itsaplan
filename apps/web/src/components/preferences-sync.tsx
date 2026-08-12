@@ -1,16 +1,19 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
+import { useLocale } from 'next-intl';
 import {
   useAccountPreferencesQuery,
   useUpdateAccountPreferences,
 } from '@/services/preferences.service';
+import { setLocaleCookie } from '@/i18n/cookie';
 import { canonicalTimezone, setDisplayTimezone } from '@/utils/dates';
 
 // Applies the account preferences that are read app-wide rather than at one call
-// site: the theme (handed to next-themes) and the display timezone (handed to the
-// date formatters). Renders nothing.
+// site: the theme (handed to next-themes), the display timezone (handed to the date
+// formatters) and the interface language. Renders nothing.
 //
 // The timezone starts as 'UTC' for an account that never set one, which is rarely
 // what the person means, so the first load detects the browser zone and saves it.
@@ -19,9 +22,12 @@ export default function PreferencesSync() {
   const { data: prefs } = useAccountPreferencesQuery();
   const { setTheme } = useTheme();
   const update = useUpdateAccountPreferences();
+  const renderedLocale = useLocale();
+  const router = useRouter();
 
   const timezone = prefs?.timezone;
   const theme = prefs?.theme;
+  const locale = prefs?.locale;
 
   useEffect(() => {
     if (timezone) setDisplayTimezone(timezone);
@@ -40,6 +46,15 @@ export default function PreferencesSync() {
       setTheme(theme);
     }
   }, [theme, setTheme]);
+
+  // The server rendered in the cookie's language. When the account says otherwise —
+  // first load on a new device, or another device changing it — write the cookie and
+  // re-render from the server; the next pass sees them agree and stops.
+  useEffect(() => {
+    if (!locale || locale === renderedLocale) return;
+    setLocaleCookie(locale);
+    router.refresh();
+  }, [locale, renderedLocale, router]);
 
   useEffect(() => {
     if (timezone !== 'UTC') return;

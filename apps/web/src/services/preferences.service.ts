@@ -10,6 +10,7 @@ import { qk } from '@/services/queryKeys';
 
 export const PREFERENCE_DEFAULTS: AccountPreferences = {
   timezone: 'UTC',
+  locale: 'en',
   theme: 'system',
   issueOpenMode: 'panel',
   startPage: 'work-items',

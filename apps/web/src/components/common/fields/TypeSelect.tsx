@@ -3,6 +3,7 @@ import type { IssueType } from '@/lib/api';
 import { colorDot } from './colorDot';
 import { Pill } from './Pill';
 import PopoverPick from './PopoverPick';
+import { useTranslations } from 'next-intl';
 
 export default function TypeSelect({
   issueTypes,
@@ -15,6 +16,7 @@ export default function TypeSelect({
   onChange: (id: number | null) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.fieldSelects');
   const type = issueTypes.find((t) => t.id === value);
   return (
     <PopoverPick
@@ -22,16 +24,16 @@ export default function TypeSelect({
       trigger={
         <Pill active={!!type}>
           {type ? colorDot(type.color) : <CircleDashed />}
-          {type?.name ?? 'Type'}
+          {type?.name ?? t('type')}
         </Pill>
       }
-      inputPlaceholder="Change type…"
+      inputPlaceholder={t('changeType')}
       items={[
         {
           key: 'none',
-          search: 'No type',
+          search: t('noType'),
           icon: <CircleDashed />,
-          label: 'No type',
+          label: t('noType'),
           selected: value == null,
           onSelect: () => onChange(null),
         },

@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // Thin wrapper over shadcn Dialog that keeps the mount/unmount call style used
 // across the app: callers render `{show && <Modal .../>}`, so the dialog is
@@ -50,8 +51,9 @@ export default function Modal({
   fullscreen?: boolean;
   onToggleFullscreen?: () => void;
 }) {
+  const t = useTranslations('common');
   const FullscreenIcon = fullscreen ? Minimize2 : Maximize2;
-  const fullscreenLabel = fullscreen ? 'Exit fullscreen' : 'Fullscreen';
+  const fullscreenLabel = fullscreen ? t('exitFullscreen') : t('fullscreen');
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -126,8 +128,8 @@ export default function Modal({
             variant="ghost"
             size="icon"
             className={CONTROL_CLASS}
-            aria-label="Close"
-            title="Close"
+            aria-label={t('close')}
+            title={t('close')}
             onClick={onClose}
           >
             <X />

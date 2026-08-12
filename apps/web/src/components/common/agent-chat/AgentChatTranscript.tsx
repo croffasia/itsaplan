@@ -14,6 +14,7 @@ import {
   MessageScrollerItem,
   MessageScrollerViewport,
 } from '@/components/ui/message-scroller';
+import { useTranslations } from 'next-intl';
 
 const loadThreshold = 48;
 
@@ -32,6 +33,7 @@ export function AgentChatTranscript({
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
 }) {
+  const t = useTranslations('common.agentChat');
   const loadLocked = useRef(false);
   const hasLeftStart = useRef(false);
 
@@ -66,11 +68,11 @@ export function AgentChatTranscript({
           role="status"
           className="absolute top-3 left-1/2 z-10 w-auto -translate-x-1/2 rounded-full border bg-background/90 px-3 py-1 shadow-sm backdrop-blur-sm"
         >
-          <MarkerContent className="shimmer">Loading earlier messages…</MarkerContent>
+          <MarkerContent className="shimmer">{t('loadingEarlier')}</MarkerContent>
         </Marker>
       )}
       <MessageScrollerViewport
-        aria-label="Conversation messages"
+        aria-label={t('messages')}
         onScroll={handleScroll}
         onWheel={handleWheel}
       >
@@ -93,7 +95,7 @@ export function AgentChatTranscript({
             <MessageScrollerItem messageId="stream-status">
               <Marker role="status">
                 <MarkerContent className="shimmer">
-                  {activeTool ? `Using ${activeTool}…` : 'Thinking…'}
+                  {activeTool ? t('usingTool', { tool: activeTool }) : t('thinking')}
                 </MarkerContent>
               </Marker>
             </MessageScrollerItem>

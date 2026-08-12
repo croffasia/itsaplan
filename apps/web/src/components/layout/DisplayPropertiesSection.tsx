@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl';
+import { byKey } from '@/utils/messageKey';
 import type { CustomField, IssueType } from '@/lib/api';
 import {
   offeredDisplayProperties,
@@ -27,6 +29,8 @@ export default function DisplayPropertiesSection({
   customFields: CustomField[];
   issueTypes: IssueType[];
 }) {
+  const t = useTranslations('display');
+  const property = byKey(useTranslations('display.properties'));
   const features = useProjectFeatures();
   const properties = offeredDisplayProperties(features);
 
@@ -41,7 +45,7 @@ export default function DisplayPropertiesSection({
 
   const subtasksChip = features.subtasks ? (
     <PropertyChip
-      label="Nested subtasks"
+      label={t('rows.nestedSubtasks')}
       on={settings.showSubtasks}
       onClick={() => onChange({ showSubtasks: !settings.showSubtasks })}
     />
@@ -49,7 +53,9 @@ export default function DisplayPropertiesSection({
 
   return (
     <div className="space-y-3 border-t pt-2">
-      <p className="px-1 text-xs font-medium text-muted-foreground">Display properties</p>
+      <p className="px-1 text-xs font-medium text-muted-foreground">
+        {t('rows.displayProperties')}
+      </p>
       <div className="flex flex-wrap items-center gap-1 px-1">
         {view === 'table' ? (
           <TableProperties
@@ -63,10 +69,10 @@ export default function DisplayPropertiesSection({
           <>
             {properties.map((p) => (
               <PropertyChip
-                key={p.value}
-                label={p.label}
-                on={settings.properties.includes(p.value)}
-                onClick={() => toggleProperty(p.value)}
+                key={p}
+                label={property(p)}
+                on={settings.properties.includes(p)}
+                onClick={() => toggleProperty(p)}
               />
             ))}
             {subtasksChip}

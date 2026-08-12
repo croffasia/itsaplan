@@ -13,15 +13,15 @@ export type PresetKey =
   | 'support'
   | 'recruiting';
 
+// The name of a preset is a message under `newProject.presets`; the type names are
+// what the project is seeded with, so they are values, not display text.
 export const PRESETS: {
   key: PresetKey;
-  label: string;
   types: { name: string; color: string }[];
 }[] = [
-  { key: 'general', label: 'General', types: [{ name: 'Task', color: '#0ea5e9' }] },
+  { key: 'general', types: [{ name: 'Task', color: '#0ea5e9' }] },
   {
     key: 'software',
-    label: 'Software',
     types: [
       { name: 'Feature', color: '#8b5cf6' },
       { name: 'Bug', color: '#e11d48' },
@@ -32,7 +32,6 @@ export const PRESETS: {
   },
   {
     key: 'product',
-    label: 'Product',
     types: [
       { name: 'Epic', color: '#8b5cf6' },
       { name: 'Feature', color: '#0ea5e9' },
@@ -42,7 +41,6 @@ export const PRESETS: {
   },
   {
     key: 'content',
-    label: 'Content',
     types: [
       { name: 'Article', color: '#0ea5e9' },
       { name: 'Video', color: '#e11d48' },
@@ -53,7 +51,6 @@ export const PRESETS: {
   },
   {
     key: 'marketing',
-    label: 'Marketing',
     types: [
       { name: 'Campaign', color: '#8b5cf6' },
       { name: 'Landing', color: '#0ea5e9' },
@@ -64,7 +61,6 @@ export const PRESETS: {
   },
   {
     key: 'design',
-    label: 'Design',
     types: [
       { name: 'Screen', color: '#0ea5e9' },
       { name: 'Component', color: '#8b5cf6' },
@@ -74,7 +70,6 @@ export const PRESETS: {
   },
   {
     key: 'sales',
-    label: 'Sales',
     types: [
       { name: 'Lead', color: '#0ea5e9' },
       { name: 'Deal', color: '#22c55e' },
@@ -84,7 +79,6 @@ export const PRESETS: {
   },
   {
     key: 'operations',
-    label: 'Operations',
     types: [
       { name: 'Request', color: '#0ea5e9' },
       { name: 'Process', color: '#8b5cf6' },
@@ -94,7 +88,6 @@ export const PRESETS: {
   },
   {
     key: 'support',
-    label: 'Support',
     types: [
       { name: 'Incident', color: '#e11d48' },
       { name: 'Request', color: '#0ea5e9' },
@@ -104,7 +97,6 @@ export const PRESETS: {
   },
   {
     key: 'recruiting',
-    label: 'Recruiting',
     types: [
       { name: 'Candidate', color: '#0ea5e9' },
       { name: 'Onboarding', color: '#22c55e' },

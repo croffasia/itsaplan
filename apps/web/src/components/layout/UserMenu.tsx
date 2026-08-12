@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { LogOut } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { signOut, useSession } from '@/lib/auth-client';
 import { ACCOUNT_SECTIONS, accountPath } from '@/utils/accountSections';
+import { useAccountSectionLabel } from '@/hooks/useSectionLabels';
 import Avatar from '@/components/common/Avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -23,6 +25,9 @@ import {
 // Signing out clears the session and the middleware sends the browser back to
 // the login page.
 export default function UserMenu() {
+  const t = useTranslations('nav');
+  const tCommon = useTranslations('common');
+  const sectionLabel = useAccountSectionLabel();
   const router = useRouter();
   const { data: session, isPending } = useSession();
 
@@ -55,21 +60,21 @@ export default function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex flex-col gap-1">
           <span className="truncate text-sm font-medium">{user.email}</span>
-          <span className="text-xs text-muted-foreground capitalize">Role: {role}</span>
+          <span className="text-xs text-muted-foreground capitalize">{t('role', { role })}</span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {ACCOUNT_SECTIONS.map(({ slug, label, icon: Icon }) => (
+        {ACCOUNT_SECTIONS.map(({ slug, icon: Icon }) => (
           <DropdownMenuItem key={slug} asChild>
             <Link href={accountPath(slug)}>
               <Icon />
-              {label}
+              {sectionLabel(slug)}
             </Link>
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={onSignOut}>
           <LogOut />
-          Sign out
+          {tCommon('signOut')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

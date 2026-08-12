@@ -1,3 +1,5 @@
+import { useTranslations } from 'next-intl';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { Pill } from './Pill';
 import { PRIORITY_FIELDS } from './priorityFields';
 import PopoverPick from './PopoverPick';
@@ -12,6 +14,8 @@ export default function PrioritySelect({
   onChange: (v: string) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('common.priority');
+  const priorityLabel = usePriorityLabel();
   const prio = PRIORITY_FIELDS.find((p) => p.value === value) ?? PRIORITY_FIELDS[0];
   return (
     <PopoverPick
@@ -19,15 +23,15 @@ export default function PrioritySelect({
       trigger={
         <Pill active={!!value}>
           {prio.icon}
-          {value ? prio.label : 'Priority'}
+          {value ? priorityLabel(value) : t('label')}
         </Pill>
       }
-      inputPlaceholder="Set priority to…"
+      inputPlaceholder={t('setTo')}
       items={PRIORITY_FIELDS.map((p) => ({
         key: p.value || 'none',
-        search: p.label,
+        search: priorityLabel(p.value),
         icon: p.icon,
-        label: p.label,
+        label: priorityLabel(p.value),
         selected: p.value === value,
         onSelect: () => onChange(p.value),
       }))}

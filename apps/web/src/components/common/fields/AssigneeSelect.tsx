@@ -4,6 +4,7 @@ import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from './Pill';
 import PopoverPick, { type PickItem } from './PopoverPick';
+import { useTranslations } from 'next-intl';
 
 // The assignee of an issue is a project member. `assignees` is the project's full
 // candidate list (members and agents); this control filters it to members. Agents
@@ -13,7 +14,7 @@ export default function AssigneeSelect({
   assignees,
   value,
   onChange,
-  placeholder = 'No assignee',
+  placeholder,
   readOnly,
 }: {
   assignees: Assignee[];
@@ -22,6 +23,8 @@ export default function AssigneeSelect({
   placeholder?: string;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.fieldSelects');
+  const none = t('noAssignee');
   const { data: session } = useSession();
   const currentUserId = session?.user.id ?? null;
   const members = assignees.filter((a) => a.kind === 'member');
@@ -48,24 +51,24 @@ export default function AssigneeSelect({
           ) : (
             <CircleDashed />
           )}
-          {assignee?.name ?? placeholder}
+          {assignee?.name ?? placeholder ?? none}
         </Pill>
       }
-      inputPlaceholder="Assign to…"
-      emptyText="No members."
+      inputPlaceholder={t('assignTo')}
+      emptyText={t('noMembers')}
       items={[
         {
           key: 'none',
-          search: 'No assignee',
+          search: none,
           icon: <CircleDashed />,
-          label: 'No assignee',
+          label: none,
           selected: value == null,
           onSelect: () => onChange(null),
         },
       ]}
       groups={[
-        ...(me ? [{ heading: 'Team me', items: [toItem(me)] }] : []),
-        { heading: 'Members', items: others.map(toItem) },
+        ...(me ? [{ heading: t('you'), items: [toItem(me)] }] : []),
+        { heading: t('members'), items: others.map(toItem) },
       ]}
     />
   );

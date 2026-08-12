@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useIssueSearchQuery } from '@/services/issues.service';
 import type { Command, CommandPage, CommandSection } from '@/utils/commands';
@@ -36,6 +37,7 @@ export default function CommandPalette({
   hasProject: boolean;
   onOpenIssue: (sequenceNumber: number) => void;
 }) {
+  const t = useTranslations('palette');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState<CommandPage | null>(null);
 
@@ -78,7 +80,7 @@ export default function CommandPalette({
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange} filter={substringFilter}>
       <CommandInput
-        placeholder={page ? page.placeholder : 'Type a command or search…'}
+        placeholder={page ? page.placeholder : t('placeholder')}
         value={query}
         onValueChange={setQuery}
         // Backspace on an empty input leaves the submenu, the way a nested menu
@@ -91,7 +93,7 @@ export default function CommandPalette({
         }}
       />
       <CommandList>
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>{t('noResults')}</CommandEmpty>
         {page ? (
           <CommandGroup heading={page.heading}>
             {page.items.map((command) => (

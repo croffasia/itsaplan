@@ -15,7 +15,7 @@ import type {
   NewIssueInput,
 } from '@/lib/api';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
-import { PRIORITIES, PRIORITY_RANK } from '@/utils/fieldOptions';
+import { PRIORITY_ORDER, PRIORITY_RANK } from '@/utils/fieldOptions';
 import type { GroupField, ViewSettings } from '@/utils/viewSettings';
 import type { Sort } from '@/utils/viewTypes';
 
@@ -184,10 +184,27 @@ export interface IssueGroup {
   assign: IssuePatch | null;
 }
 
+// The names a grouping needs beyond the project's own entities: the "No …" group
+// of each nullable field, and the priority values. Supplied by useGroupLabels so
+// they read in the reader's language.
+export interface GroupLabels {
+  noAssignee: string;
+  noDelegate: string;
+  noPriority: string;
+  noType: string;
+  noInitiative: string;
+  noCycle: string;
+  priority: (value: string) => string;
+}
+
 // The groups for a project under the chosen grouping field, in display order.
 // Includes a trailing "No …" group for the nullable fields so an unset issue
 // still has a home (and a drop target that clears the field).
-export function buildGroups(project: ProjectDetail, group: GroupField): IssueGroup[] {
+export function buildGroups(
+  project: ProjectDetail,
+  group: GroupField,
+  labels: GroupLabels,
+): IssueGroup[] {
   switch (group) {
     case 'status':
       return project.columns.map((c) => ({
@@ -206,7 +223,7 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
             name: a.name,
             assign: { assigneeUserId: a.userId },
           })),
-        { key: 'a-none', name: 'No assignee', assign: { assigneeUserId: null } },
+        { key: 'a-none', name: labels.noAssignee, assign: { assigneeUserId: null } },
       ];
     case 'delegate':
       return [
@@ -217,16 +234,16 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
             name: a.name,
             assign: { delegateUserId: a.userId },
           })),
-        { key: 'd-none', name: 'No delegate', assign: { delegateUserId: null } },
+        { key: 'd-none', name: labels.noDelegate, assign: { delegateUserId: null } },
       ];
     case 'priority':
       return [
-        ...PRIORITIES.map((p) => ({
-          key: `p${p.value}`,
-          name: p.label,
-          assign: { priority: p.value },
+        ...PRIORITY_ORDER.map((value) => ({
+          key: `p${value}`,
+          name: labels.priority(value),
+          assign: { priority: value },
         })),
-        { key: 'p-none', name: 'No priority', assign: { priority: null } },
+        { key: 'p-none', name: labels.noPriority, assign: { priority: null } },
       ];
     case 'type':
       return [
@@ -236,7 +253,7 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
           color: t.color,
           assign: { typeId: t.id },
         })),
-        { key: 't-none', name: 'No type', assign: { typeId: null } },
+        { key: 't-none', name: labels.noType, assign: { typeId: null } },
       ];
     case 'initiative': {
       // Lanes come from the initiatives the loaded issues are linked to (each issue
@@ -248,7 +265,10 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
       const options = [...seen.entries()]
         .sort((a, b) => a[1].localeCompare(b[1]))
         .map(([id, title]) => ({ key: `i${id}`, name: title, assign: { initiativeId: id } }));
-      return [...options, { key: 'i-none', name: 'No initiative', assign: { initiativeId: null } }];
+      return [
+        ...options,
+        { key: 'i-none', name: labels.noInitiative, assign: { initiativeId: null } },
+      ];
     }
     case 'cycle': {
       // A column per cycle the board plans into — the unfinished ones the project
@@ -271,7 +291,7 @@ export function buildGroups(project: ProjectDetail, group: GroupField): IssueGro
           color: CYCLE_STATUS_META[c.status].color,
           assign: { cycleId: c.id },
         })),
-        { key: 'y-none', name: 'No cycle', assign: { cycleId: null } },
+        { key: 'y-none', name: labels.noCycle, assign: { cycleId: null } },
       ];
     }
     case 'none':

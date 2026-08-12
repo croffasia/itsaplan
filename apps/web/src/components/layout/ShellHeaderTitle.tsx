@@ -1,23 +1,11 @@
+import { useTranslations } from 'next-intl';
 import { SETTINGS_SECTIONS } from '@/utils/settingsSections';
 import type { IssueRef } from '@/lib/api';
 import type { ShellRoute } from '@/hooks/useShellRoute';
+import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import CycleBreadcrumb from '@/components/layout/CycleBreadcrumb';
 import InitiativeBreadcrumb from '@/components/layout/InitiativeBreadcrumb';
 import IssueBreadcrumb from '@/components/layout/IssueBreadcrumb';
-
-// The label on the pages that are not an issue, initiative or cycle detail.
-function pageLabel(route: ShellRoute, projectName: string): string {
-  const { sub, section, aiTeamCrumb } = route;
-  if (section) return SETTINGS_SECTIONS.find((s) => s.slug === section)?.label ?? 'Settings';
-  if (sub === 'members') return 'Members';
-  if (sub === 'dashboard') return 'Dashboards';
-  if (sub === 'initiatives') return 'Initiatives';
-  if (sub === 'cycles') return 'Cycles';
-  if (aiTeamCrumb) return aiTeamCrumb;
-  if (sub === 'ai-agents') return 'AI agents';
-  if (sub === 'api') return 'API';
-  return projectName;
-}
 
 // The header title: a breadcrumb on an issue, initiative or cycle page, otherwise
 // the page's own label.
@@ -32,6 +20,26 @@ export default function ShellHeaderTitle({
   issueIdentifier: string | null;
   issueParent: IssueRef | null;
 }) {
+  const t = useTranslations('nav');
+  const sectionText = useSettingsSectionText();
+
+  // The label on the pages that are not an issue, initiative or cycle detail. An
+  // /ai-team route names its section, except the chat, which has no section entry.
+  function pageLabel(): string {
+    const { sub, section, aiTeamSection } = route;
+    const known = (slug: string) => SETTINGS_SECTIONS.some((s) => s.slug === slug);
+    if (section) return known(section) ? sectionText(section).label : t('projectSettings');
+    if (sub === 'members') return t('members');
+    if (sub === 'dashboard') return t('dashboards');
+    if (sub === 'initiatives') return t('initiatives');
+    if (sub === 'cycles') return t('cycles');
+    if (aiTeamSection === 'chat') return t('chatWithAiTeam');
+    if (aiTeamSection) return known(aiTeamSection) ? sectionText(aiTeamSection).label : t('aiTeam');
+    if (sub === 'ai-agents') return t('aiAgents');
+    if (sub === 'api') return t('api');
+    return projectName;
+  }
+
   if (route.routeIssueSeq != null) {
     return (
       <IssueBreadcrumb
@@ -50,5 +58,5 @@ export default function ShellHeaderTitle({
   if (route.routeCycleId != null) {
     return <CycleBreadcrumb projectKey={route.projectKey} cycleId={route.routeCycleId} />;
   }
-  return <>{pageLabel(route, projectName)}</>;
+  return <>{pageLabel()}</>;
 }

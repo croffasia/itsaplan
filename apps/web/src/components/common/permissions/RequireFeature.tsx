@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import type { ProjectFeatures } from '@/lib/api';
 import { settingsPath } from '@/utils/paths';
-import { FEATURE_LABEL } from '@/utils/projectFeatures';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
+import { useFeatureLabel } from '@/hooks/useFeatureLabel';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/common/page/EmptyState';
+import { useTranslations } from 'next-intl';
 
 // Gates a section that an owner can turn off for the project (Settings ->
 // General). With the feature on it renders the section; with it off it explains
@@ -22,6 +23,8 @@ export default function RequireFeature({
   feature: keyof ProjectFeatures;
   children: ReactNode;
 }) {
+  const t = useTranslations('common');
+  const featureLabel = useFeatureLabel();
   const features = useProjectFeatures();
   const { isOwner } = usePermissions();
   const params = useParams<{ projectKey: string }>();
@@ -30,12 +33,12 @@ export default function RequireFeature({
 
   return (
     <EmptyState
-      title={`${FEATURE_LABEL[feature]} are turned off`}
-      description="An owner can turn this section back on in General settings."
+      title={t('featureOffTitle', { feature: featureLabel(feature) })}
+      description={t('featureOffHint')}
     >
       {isOwner && params.projectKey && (
         <Button size="sm" asChild>
-          <Link href={settingsPath(params.projectKey, 'general')}>Open General settings</Link>
+          <Link href={settingsPath(params.projectKey, 'general')}>{t('openGeneralSettings')}</Link>
         </Button>
       )}
     </EmptyState>

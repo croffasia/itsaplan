@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import type { Release } from '@/lib/api';
 import { renderMarkdown, sanitizeHtml } from '@/lib/markdown';
 import { formatDate } from '@/utils/dates';
@@ -7,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 // One release in the updates dialog. Feed notes arrive as rendered HTML, changelog
 // notes as markdown; both end up sanitized.
 export default function ReleaseNotes({ release, badge }: { release: Release; badge?: string }) {
+  const t = useTranslations('updates');
   const html = useMemo(() => {
     const options = { newTabLinks: true };
     return release.notesFormat === 'html'
@@ -37,7 +39,7 @@ export default function ReleaseNotes({ release, badge }: { release: Release; bad
       {html ? (
         <div className="md-content" dangerouslySetInnerHTML={{ __html: html }} />
       ) : (
-        <p className="text-sm text-muted-foreground">This release has no notes.</p>
+        <p className="text-sm text-muted-foreground">{t('noNotes')}</p>
       )}
     </section>
   );

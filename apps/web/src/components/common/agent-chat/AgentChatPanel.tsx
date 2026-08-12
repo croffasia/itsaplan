@@ -19,6 +19,7 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from '@/components/ui/input-group';
+import { useTranslations } from 'next-intl';
 
 // The running transcript and the composer for one agent conversation. The
 // conversation state lives above this panel (in the agent chat host), so it is
@@ -46,6 +47,7 @@ export function AgentChatPanel({
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
 }) {
+  const t = useTranslations('common.agentChat');
   const [input, setInput] = useState('');
   const isStreaming = status === 'streaming';
 
@@ -75,10 +77,8 @@ export function AgentChatPanel({
                 <EmptyMedia variant="icon">
                   <Bot />
                 </EmptyMedia>
-                <EmptyTitle>Chat with {agent.name}</EmptyTitle>
-                <EmptyDescription>
-                  Send a message to test how this agent replies and which tools it uses.
-                </EmptyDescription>
+                <EmptyTitle>{t('title', { agent: agent.name })}</EmptyTitle>
+                <EmptyDescription>{t('emptyHint')}</EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
@@ -113,7 +113,7 @@ export function AgentChatPanel({
                     submit();
                   }
                 }}
-                placeholder={`Message ${agent.name}…`}
+                placeholder={t('messagePlaceholder', { agent: agent.name })}
                 disabled={isStreaming}
                 rows={1}
               />
@@ -124,12 +124,12 @@ export function AgentChatPanel({
                     variant="ghost"
                     size="icon-sm"
                     className="rounded-lg text-muted-foreground hover:text-foreground"
-                    title="Reset conversation"
+                    title={t('reset')}
                     disabled={isStreaming || messages.length === 0}
                     onClick={onReset}
                   >
                     <RotateCw />
-                    <span className="sr-only">Reset conversation</span>
+                    <span className="sr-only">{t('reset')}</span>
                   </InputGroupButton>
                 )}
                 <InputGroupButton
@@ -140,7 +140,7 @@ export function AgentChatPanel({
                   disabled={!input.trim() || isStreaming}
                 >
                   <ArrowUp />
-                  <span className="sr-only">Send</span>
+                  <span className="sr-only">{t('send')}</span>
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>

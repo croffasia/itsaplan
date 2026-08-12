@@ -1,7 +1,9 @@
 import { X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import type { FilterCondition, FilterOperator, FilterValue } from '@/utils/filters';
-import { OPERATOR_LABELS, OPERATORS_BY_KIND, type FieldSpec } from '@/utils/filterFields';
+import { OPERATORS_BY_KIND, type FieldSpec } from '@/utils/filterFields';
+import { useFilterFields } from '@/hooks/useFilterFields';
 import {
   Select,
   SelectContent,
@@ -28,6 +30,8 @@ export default function FilterConditionPill({
   onValuesChange: (values: FilterValue[]) => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations('filters');
+  const { operatorLabel } = useFilterFields();
   return (
     <div className="flex items-center gap-1 rounded-md border bg-muted/60 py-0.5 pr-0.5 pl-2 text-xs">
       <span className="font-medium text-foreground">{spec.label}</span>
@@ -41,7 +45,7 @@ export default function FilterConditionPill({
         <SelectContent>
           {OPERATORS_BY_KIND[spec.kind].map((op) => (
             <SelectItem key={op} value={op}>
-              {OPERATOR_LABELS[op]}
+              {operatorLabel(op)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -50,7 +54,7 @@ export default function FilterConditionPill({
       <button
         type="button"
         onClick={onRemove}
-        title="Remove filter"
+        title={t('remove')}
         className="rounded p-0.5 hover:bg-accent"
       >
         <X className="size-3.5" />

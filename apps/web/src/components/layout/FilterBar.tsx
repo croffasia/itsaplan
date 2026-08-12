@@ -1,8 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { ProjectDetail, CustomField } from '@/lib/api';
 import type { FilterCondition, FilterSet } from '@/utils/filters';
-import { buildFieldSpecs, newCondition, type FieldSpec } from '@/utils/filterFields';
+import type { FieldSpec } from '@/utils/filterFields';
+import { newCondition, useFilterFields } from '@/hooks/useFilterFields';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import FilterConditionPill from '@/components/layout/FilterConditionPill';
@@ -20,9 +22,11 @@ export default function FilterBar({
   project: ProjectDetail;
   customFields: CustomField[];
 }) {
+  const t = useTranslations('filters');
+  const { fieldSpecs } = useFilterFields();
   const [addOpen, setAddOpen] = useState(false);
-  const specs = useMemo(() => buildFieldSpecs(project, customFields), [project, customFields]);
-  const specByField = useMemo(() => new Map(specs.map((s) => [s.field, s])), [specs]);
+  const specs = fieldSpecs(project, customFields);
+  const specByField = new Map(specs.map((s) => [s.field, s]));
 
   const update = (id: string, patch: Partial<FilterCondition>) =>
     onChange({ conditions: filters.conditions.map((c) => (c.id === id ? { ...c, ...patch } : c)) });
@@ -55,7 +59,7 @@ export default function FilterBar({
 
       <Popover open={addOpen} onOpenChange={setAddOpen}>
         <PopoverTrigger asChild>
-          <Button variant="ghost" size="icon" className="size-6" title="Add filter">
+          <Button variant="ghost" size="icon" className="size-6" title={t('add')}>
             <Plus className="size-3.5" />
           </Button>
         </PopoverTrigger>

@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { useTranslations } from 'next-intl';
 
 // A generic public-share dialog for an issue or a saved view. It shows the current
 // state (shared with a copyable link, or not shared) and toggles it through the
@@ -42,6 +43,7 @@ export default function ShareDialog({
   disable: () => Promise<void>;
   pathForToken: (token: string) => string;
 }) {
+  const t = useTranslations('common.share');
   const [current, setCurrent] = useState<string | null>(token);
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -67,20 +69,16 @@ export default function ShareDialog({
     }
   }
 
-  const onEnable = () =>
-    run(async () => setCurrent(await enable(false)), 'Could not create the link. Try again.');
+  const onEnable = () => run(async () => setCurrent(await enable(false)), t('createFailed'));
 
   const onSetExtended = (next: boolean) =>
-    run(
-      async () => setCurrent(await enable(next)),
-      'Could not change what the link shows. Try again.',
-    );
+    run(async () => setCurrent(await enable(next)), t('changeFailed'));
 
   const onDisable = () =>
     run(async () => {
       await disable();
       setCurrent(null);
-    }, 'Could not stop sharing. Try again.');
+    }, t('stopFailed'));
 
   async function copy() {
     try {
@@ -88,7 +86,7 @@ export default function ShareDialog({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      toast.error('Could not copy the link. Select it and copy by hand.');
+      toast.error(t('copyFailed'));
     }
   }
 
@@ -97,9 +95,7 @@ export default function ShareDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>
-            Anyone with the link can read it. No account needed.
-          </DialogDescription>
+          <DialogDescription>{t('hint')}</DialogDescription>
         </DialogHeader>
 
         {current ? (
@@ -108,22 +104,20 @@ export default function ShareDialog({
               <Input
                 readOnly
                 value={url}
-                aria-label="Share link"
+                aria-label={t('shareLink')}
                 className="h-9 flex-1 bg-muted/40 font-mono text-xs"
                 onFocus={(e) => e.target.select()}
               />
               <Button type="button" variant="secondary" size="sm" className="h-9" onClick={copy}>
                 {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-                {copied ? 'Copied' : 'Copy'}
+                {copied ? t('copied') : t('copy')}
               </Button>
             </div>
 
             <label className="flex items-center justify-between gap-4 rounded-md border px-3 py-2.5">
               <span className="min-w-0">
-                <span className="block text-sm">Full issue details</span>
-                <span className="block text-xs text-muted-foreground">
-                  Assignees, labels, custom fields and activity.
-                </span>
+                <span className="block text-sm">{t('fullDetails')}</span>
+                <span className="block text-xs text-muted-foreground">{t('fullDetailsHint')}</span>
               </span>
               <Switch
                 checked={extended}
@@ -142,7 +136,7 @@ export default function ShareDialog({
                 className="text-muted-foreground hover:text-destructive"
               >
                 {busy && <Loader2 className="size-4 animate-spin" />}
-                Stop sharing
+                {t('stopSharing')}
               </Button>
             </DialogFooter>
           </div>
@@ -150,7 +144,7 @@ export default function ShareDialog({
           <DialogFooter>
             <Button type="button" disabled={busy} onClick={() => void onEnable()}>
               {busy ? <Loader2 className="size-4 animate-spin" /> : <Globe className="size-4" />}
-              Create link
+              {t('createLink')}
             </Button>
           </DialogFooter>
         )}

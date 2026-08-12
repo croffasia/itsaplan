@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { type Project } from '@/lib/api';
 import { useCreateProject } from '@/services/projects.service';
 import { normalizeKey, suggestKey } from '@/utils/projectKey';
@@ -21,7 +22,8 @@ export default function NewProjectModal({
   onCreated: (projectKey: string) => void;
   copyFrom?: Project;
 }) {
-  const initialName = copyFrom ? `${copyFrom.name} copy` : '';
+  const t = useTranslations('newProject');
+  const initialName = copyFrom ? t('copyName', { name: copyFrom.name }) : '';
   const [key, setKey] = useState(() => suggestKey(initialName));
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(copyFrom?.description ?? '');
@@ -62,7 +64,7 @@ export default function NewProjectModal({
 
   return (
     <Modal
-      title={copyFrom ? `Copy project "${copyFrom.name}"` : 'New project'}
+      title={copyFrom ? t('copyTitle', { name: copyFrom.name }) : t('title')}
       onClose={onClose}
       wide="xl"
     >
@@ -99,7 +101,7 @@ export default function NewProjectModal({
           disabled={createProject.isPending || !key.trim() || !name.trim()}
           onClick={submit}
         >
-          {copyFrom ? 'Copy project' : 'Create project'}
+          {t(copyFrom ? 'copyAction' : 'create')}
         </Button>
       </div>
     </Modal>

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { api, type MemberRole } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 
@@ -22,6 +23,7 @@ export function useRemoveMember(projectKey: string) {
 // Set a member's role (owner-only on the API). role 'owner' promotes to owner;
 // role 'member' assigns a custom role by roleId (null resets to the default role).
 export function useSetMemberRole(projectKey: string) {
+  const t = useTranslations('members');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -35,20 +37,21 @@ export function useSetMemberRole(projectKey: string) {
     }) => api.setMemberRole(projectKey, userId, { role, roleId }),
     onSuccess: (_data, { role }) => {
       qc.invalidateQueries({ queryKey: qk.members(projectKey) });
-      toast.success(role === 'owner' ? 'Member promoted to owner' : 'Member role updated');
+      toast.success(t(role === 'owner' ? 'promoted' : 'roleUpdated'));
     },
   });
 }
 
 // Set what a member does in the project (owner-only on the API).
 export function useSetMemberDescription(projectKey: string) {
+  const t = useTranslations('members');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, description }: { userId: string; description: string }) =>
       api.setMemberDescription(projectKey, userId, description),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.members(projectKey) });
-      toast.success('Member description updated');
+      toast.success(t('descriptionUpdated'));
     },
   });
 }

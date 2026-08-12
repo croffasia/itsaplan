@@ -12,6 +12,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import ArchivedBadge from '@/components/common/ArchivedBadge';
+import { useTranslations } from 'next-intl';
 
 // Picks one of the project's issues, searched server-side (archived included).
 // `exclude` drops the issues this particular pick cannot accept, so only the
@@ -31,6 +32,7 @@ export default function IssuePickerDialog({
   onPick: (hit: IssueSearchHit) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations('issue.linkDialog');
   const [query, setQuery] = useState('');
 
   // One request per burst of keystrokes, as in the command palette.
@@ -50,9 +52,7 @@ export default function IssuePickerDialog({
     >
       <CommandInput placeholder={prompt} value={query} onValueChange={setQuery} />
       <CommandList>
-        <CommandEmpty>
-          {query.trim() ? 'No issues match.' : 'Type to search this project’s issues.'}
-        </CommandEmpty>
+        <CommandEmpty>{query.trim() ? t('noMatches') : t('typeToSearch')}</CommandEmpty>
         <CommandGroup>
           {hits.map((hit) => (
             <CommandItem key={hit.id} value={String(hit.id)} onSelect={() => onPick(hit)}>

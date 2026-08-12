@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
 import { Layers } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import ViewTabChrome from '@/components/layout/ViewTabChrome';
 
@@ -17,6 +18,7 @@ export default function AllViewTab({
   dragging: boolean;
   onClick: () => void;
 }) {
+  const t = useTranslations('views');
   const { setNodeRef, isOver } = useDroppable({ id: ALL_DROP_ID });
   return (
     <ViewTabChrome
@@ -30,7 +32,7 @@ export default function AllViewTab({
         className="flex items-center gap-1.5 py-1 pr-2 pl-2"
       >
         <Layers className="size-3.5" />
-        All
+        {t('all')}
       </button>
     </ViewTabChrome>
   );

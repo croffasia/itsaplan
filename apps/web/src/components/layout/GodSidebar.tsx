@@ -2,8 +2,10 @@
 
 import { usePathname } from 'next/navigation';
 import { ArrowLeft, Plug, Shield } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { godPath } from '@/utils/paths';
 import { GOD_GROUPS, godIntegrationsIn, godSectionsIn } from '@/utils/godSections';
+import { useGodSectionText } from '@/hooks/useSectionLabels';
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +29,8 @@ import SidebarBrandFooter from '@/components/brand/SidebarBrandFooter';
 // but the header shows a static "God mode" badge instead of the project switcher:
 // nothing here is scoped to a project.
 export default function GodSidebar() {
+  const t = useTranslations('nav');
+  const god = useGodSectionText();
   const pathname = usePathname();
 
   return (
@@ -40,8 +44,10 @@ export default function GodSidebar() {
                   <Shield className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left leading-tight">
-                  <span className="truncate text-sm font-semibold">God mode</span>
-                  <span className="truncate text-xs text-muted-foreground">Instance settings</span>
+                  <span className="truncate text-sm font-semibold">{t('godMode')}</span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {t('instanceSettings')}
+                  </span>
                 </div>
               </div>
             </SidebarMenuButton>
@@ -56,7 +62,7 @@ export default function GodSidebar() {
               <SidebarNavItem
                 href="/"
                 icon={ArrowLeft}
-                label="Back to app"
+                label={t('backToApp')}
                 active={false}
                 disabled={false}
               />
@@ -69,12 +75,12 @@ export default function GodSidebar() {
             key: section.slug,
             href: godPath(section.slug),
             icon: section.icon,
-            label: section.label,
+            label: god.section(section.slug).label,
             active: pathname.startsWith(`/god/${section.slug}`),
           }));
           return (
             <SidebarGroup key={group}>
-              <SidebarGroupLabel>{group}</SidebarGroupLabel>
+              <SidebarGroupLabel>{god.group(group)}</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
                   {godSectionsIn(group).map((section) => (
@@ -82,13 +88,13 @@ export default function GodSidebar() {
                       key={section.slug}
                       href={godPath(section.slug)}
                       icon={section.icon}
-                      label={section.label}
+                      label={god.section(section.slug).label}
                       active={pathname.startsWith(`/god/${section.slug}`)}
                       disabled={false}
                     />
                   ))}
                   {integrations.length > 0 && (
-                    <SidebarNavSubmenu icon={Plug} label="Integrations" items={integrations} />
+                    <SidebarNavSubmenu icon={Plug} label={t('integrations')} items={integrations} />
                   )}
                 </SidebarMenu>
               </SidebarGroupContent>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { ChevronsUpDown, Plus, Settings2, SquareKanban } from 'lucide-react';
 import type { Project } from '@/lib/api';
 import { manageProjectsPath } from '@/utils/paths';
@@ -31,6 +32,7 @@ export default function ProjectSwitcher({
   onSelectProject: (key: string) => void;
   onNewProject: () => void;
 }) {
+  const t = useTranslations('nav');
   const { isMobile } = useSidebar();
   const current = projects.find((b) => b.key === currentProjectKey);
 
@@ -48,7 +50,7 @@ export default function ProjectSwitcher({
                 <SquareKanban className="size-4" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{current?.name ?? 'No projects yet'}</span>
+                <span className="truncate font-medium">{current?.name ?? t('noProjects')}</span>
                 <span className="truncate text-xs text-muted-foreground">
                   {current?.key ?? '—'}
                 </span>
@@ -63,7 +65,7 @@ export default function ProjectSwitcher({
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Projects
+              {t('projects')}
             </DropdownMenuLabel>
             {projects.map((b, i) => (
               <DropdownMenuItem
@@ -86,14 +88,14 @@ export default function ProjectSwitcher({
               <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                 <Plus className="size-4" />
               </div>
-              <span className="font-medium text-muted-foreground">New project</span>
+              <span className="font-medium text-muted-foreground">{t('newProject')}</span>
             </DropdownMenuItem>
             <DropdownMenuItem asChild className="gap-2 p-2">
               <Link href={manageProjectsPath()}>
                 <div className="flex size-6 items-center justify-center rounded-md border bg-background">
                   <Settings2 className="size-4" />
                 </div>
-                <span className="font-medium text-muted-foreground">Manage projects</span>
+                <span className="font-medium text-muted-foreground">{t('manageProjects')}</span>
               </Link>
             </DropdownMenuItem>
           </DropdownMenuContent>

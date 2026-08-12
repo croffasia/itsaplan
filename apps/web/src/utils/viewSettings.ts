@@ -44,22 +44,23 @@ export const customFieldId = (key: CustomFieldKey): number => Number(key.slice(3
 
 // Every display property, in the canonical order they render (left to right on a
 // card, and as Table columns after the title). Used to render the property
-// toggles and to keep column order stable regardless of toggle order.
-export const DISPLAY_PROPERTIES: { value: DisplayProperty; label: string }[] = [
-  { value: 'id', label: 'ID' },
-  { value: 'status', label: 'State' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'type', label: 'Type' },
-  { value: 'assignee', label: 'Assignee' },
-  { value: 'delegate', label: 'Delegate' },
-  { value: 'initiative', label: 'Initiative' },
-  { value: 'cycle', label: 'Cycle' },
-  { value: 'labels', label: 'Labels' },
-  { value: 'startDate', label: 'Start date' },
-  { value: 'dueDate', label: 'Due date' },
-  { value: 'created', label: 'Created' },
-  { value: 'updated', label: 'Updated' },
-  { value: 'statusAge', label: 'Time in status' },
+// toggles and to keep column order stable regardless of toggle order. The name of
+// a property is a message under `display.properties`.
+export const DISPLAY_PROPERTIES: DisplayProperty[] = [
+  'id',
+  'status',
+  'priority',
+  'type',
+  'assignee',
+  'delegate',
+  'initiative',
+  'cycle',
+  'labels',
+  'startDate',
+  'dueDate',
+  'created',
+  'updated',
+  'statusAge',
 ];
 
 // The grouping fields and display properties that name an optional section's
@@ -82,10 +83,8 @@ export function isFieldEnabled(
 }
 
 // The display properties a project offers, without the ones whose section is off.
-export function offeredDisplayProperties(
-  features: ProjectFeatures,
-): { value: DisplayProperty; label: string }[] {
-  return DISPLAY_PROPERTIES.filter((p) => isFieldEnabled(p.value, features));
+export function offeredDisplayProperties(features: ProjectFeatures): DisplayProperty[] {
+  return DISPLAY_PROPERTIES.filter((p) => isFieldEnabled(p, features));
 }
 
 // Timeline zoom: how much horizontal space one day gets, which sets whether day
@@ -196,7 +195,7 @@ const GROUP_FIELDS: GroupField[] = [
   'initiative',
   'cycle',
 ];
-const DISPLAY_VALUES = DISPLAY_PROPERTIES.map((p) => p.value);
+const DISPLAY_VALUES: string[] = DISPLAY_PROPERTIES;
 const TIMELINE_SCALES: TimelineScale[] = ['week', 'month', 'quarter'];
 
 function normalizeSort(sort: unknown): Sort | null {
@@ -271,8 +270,7 @@ export function normalizeViewSettings(
     properties: Array.isArray(s.properties)
       ? (s.properties as unknown[]).filter(
           (p): p is PropertyKey =>
-            typeof p === 'string' &&
-            ((DISPLAY_VALUES as string[]).includes(p) || isCustomFieldKey(p)),
+            typeof p === 'string' && (DISPLAY_VALUES.includes(p) || isCustomFieldKey(p)),
         )
       : d.properties,
     timelineScale: TIMELINE_SCALES.includes(s.timelineScale as TimelineScale)

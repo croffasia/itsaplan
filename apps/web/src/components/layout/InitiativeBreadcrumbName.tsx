@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativeQuery, useUpdateInitiative } from '@/services/initiatives.service';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ export default function InitiativeBreadcrumbName({
   initiativeId: number;
   projectKey: string;
 }) {
+  const t = useTranslations('nav');
   const { can } = usePermissions();
   const { data } = useInitiativeQuery(initiativeId);
   const update = useUpdateInitiative(projectKey);
@@ -59,7 +61,7 @@ export default function InitiativeBreadcrumbName({
     <span
       className={`truncate font-medium ${canEdit ? 'cursor-text' : ''}`}
       onDoubleClick={canEdit ? () => setEditing(true) : undefined}
-      title={canEdit ? 'Double-click to rename' : undefined}
+      title={canEdit ? t('doubleClickToRename') : undefined}
     >
       {title}
     </span>

@@ -4,15 +4,8 @@ import type { BoardIssue, IssueLink, IssueLinkInputKind, IssueLinkKind } from '@
 // A relation reads differently from each of its two ends, and both the panel and
 // the activity feed name it from the end being looked at. That reading is the
 // IssueLinkInputKind — the same vocabulary the API takes when a relation is
-// created, so the picker's options are these too.
-
-export const LINK_RELATION_LABELS: Record<IssueLinkInputKind, string> = {
-  blocked_by: 'Blocked by',
-  blocks: 'Blocks',
-  duplicates: 'Duplicates',
-  duplicated_by: 'Duplicated by',
-  relates: 'Related',
-};
+// created, so the picker's options are these too. The name of a relation is a
+// message under `issueLinks.relations` (see useLinkRelationLabel).
 
 // Icon per relation. The two duplicate readings share one icon; the label next
 // to it separates them.
@@ -37,18 +30,13 @@ export const LINK_RELATIONS: IssueLinkInputKind[] = [
 // issue cannot duplicate anything, so the two duplicate readings are left out.
 export const CREATE_LINK_RELATIONS: IssueLinkInputKind[] = ['blocked_by', 'blocks', 'relates'];
 
-// The same relations as a sentence fragment, for the activity feed and the
-// picker's prompt. The feed stores the relation as the entry's subject.
-export const LINK_RELATION_PHRASES: Record<IssueLinkInputKind, string> = {
-  blocked_by: 'blocked by',
-  blocks: 'blocking',
-  duplicates: 'a duplicate of',
-  duplicated_by: 'duplicated by',
-  relates: 'related to',
-};
-
-export function linkPhrase(subject: string | null): string {
-  return (subject && LINK_RELATION_PHRASES[subject as IssueLinkInputKind]) || 'linked to';
+// Whether an activity entry's subject names a relation. The feed stores the
+// relation there, and reads it as a sentence fragment ("marked this issue as
+// blocked by IAP-3") rather than the noun the panel heads a group with: the
+// phrases are messages under `issueLinks.phrases`, the nouns under
+// `issueLinks.relations` (see useLinkRelationLabel).
+export function isLinkRelation(subject: string | null): subject is IssueLinkInputKind {
+  return subject != null && LINK_RELATIONS.includes(subject as IssueLinkInputKind);
 }
 
 // How the relation reads from the issue the link was loaded for. The source side

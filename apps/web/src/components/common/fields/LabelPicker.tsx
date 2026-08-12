@@ -7,6 +7,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import LabelPickerSection from './LabelPickerSection';
+import { useTranslations } from 'next-intl';
 
 // The label selector shared by the issue fields and the filter bar. Type-ahead (a
 // letter jumps to the matching row) comes from the underlying menu.
@@ -23,6 +24,7 @@ export default function LabelPicker({
   onToggle: (id: number) => void;
   trigger: ReactNode;
 }) {
+  const t = useTranslations('common');
   const selectedSet = useMemo(() => new Set(selected), [selected]);
   const sections = useMemo(() => groupLabels(labels, groups), [labels, groups]);
 
@@ -31,7 +33,7 @@ export default function LabelPicker({
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-56">
         {sections.length === 0 && (
-          <p className="px-2 py-1.5 text-sm text-muted-foreground">No labels.</p>
+          <p className="px-2 py-1.5 text-sm text-muted-foreground">{t('noLabels')}</p>
         )}
         {sections.map((section) => (
           <LabelPickerSection

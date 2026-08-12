@@ -1,0 +1,46 @@
+{
+  "viewPermissions": "查看权限",
+  "none": "未授予任何权限",
+  "grantedCount": "已授予 {count, plural, other {# 项权限}}",
+  "resources": {
+    "work_items": "工作项",
+    "initiatives": "计划",
+    "cycles": "周期",
+    "dashboards": "仪表盘",
+    "views": "工作项视图",
+    "members_invite": "邀请",
+    "members_manage": "成员",
+    "states": "状态",
+    "issue_types": "工作项类型",
+    "labels": "标签",
+    "ai_agents": "AI 代理",
+    "integrations": "集成",
+    "agent_skills": "代理技能",
+    "agent_tools": "代理工具",
+    "custom_fields": "自定义字段",
+    "workflow_config": "工作流配置",
+    "actions": "操作",
+    "webhooks": "Webhook",
+    "note_boards": "便签板",
+    "danger_zone": "危险操作"
+  },
+  "actions": {
+    "create": "新建",
+    "edit": "编辑",
+    "read": "查看",
+    "delete": "删除"
+  },
+  "groups": {
+    "workItems": "工作项",
+    "dashboards": "仪表盘",
+    "notes": "便签",
+    "ai": "AI",
+    "configuration": "配置",
+    "members": "成员",
+    "project": "项目",
+    "other": "其他"
+  },
+  "resourceColumn": "资源",
+  "allowed": "允许",
+  "notAllowed": "不允许"
+}

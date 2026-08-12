@@ -1,0 +1,202 @@
+{
+  "noAccess": "你无权访问仪表盘。",
+  "defaultName": "概览",
+  "newDashboard": "新建仪表盘",
+  "renameDashboard": "重命名仪表盘",
+  "namePlaceholder": "仪表盘名称",
+  "options": "仪表盘选项",
+  "rename": "重命名",
+  "editLayout": "编辑布局",
+  "discard": "放弃更改",
+  "saveDashboard": "保存仪表盘",
+  "saveChanges": "保存更改",
+  "noWidgets": "暂无组件。添加组件来配置此仪表盘。",
+  "addWidget": "添加组件",
+  "addWidgetTitle": "添加组件",
+  "addWidgetDescription": "选择要添加到此仪表盘的组件。",
+  "searchWidgets": "搜索组件",
+  "clearSearch": "清除搜索",
+  "noWidgetMatches": "没有与“{query}”匹配的组件。",
+  "dragToMove": "拖动以移动",
+  "widgetName": "组件名称",
+  "widgetSettings": "组件设置",
+  "widgetOptions": "组件选项",
+  "removeWidget": "移除组件",
+  "lastDays": "最近 {days} 天",
+  "showRows": "显示 {count} 条",
+  "widgetGroups": {
+    "issues": "工作项",
+    "agents": "AI 代理和 Webhook"
+  },
+  "widgets": {
+    "stat": {
+      "label": "数量",
+      "description": "符合筛选条件的工作项数量"
+    },
+    "recent_issues": {
+      "label": "最近工作项",
+      "description": "按创建或更新时间显示最新工作项"
+    },
+    "activity_feed": {
+      "label": "活动动态",
+      "description": "项目范围的变更记录，可按执行者和操作筛选"
+    },
+    "pulse": {
+      "label": "活跃度",
+      "description": "按天显示活动的 GitHub 风格热力图"
+    },
+    "throughput": {
+      "label": "吞吐量",
+      "description": "每周创建和关闭的工作项数量"
+    },
+    "breakdown": {
+      "label": "分类统计",
+      "description": "按状态、优先级、类型或负责人统计工作项"
+    },
+    "agent_runs": {
+      "label": "代理运行",
+      "description": "最近的 AI 代理运行及其结果"
+    },
+    "agent_health": {
+      "label": "代理运行状况",
+      "description": "指定时间范围内代理运行的成功率和失败情况"
+    },
+    "webhook_health": {
+      "label": "Webhook 投递状况",
+      "description": "Webhook 投递结果和已禁用端点"
+    },
+    "agent_workload": {
+      "label": "代理工作量",
+      "description": "各代理接收的工作项及运行结果"
+    }
+  },
+  "breakdown": {
+    "empty": "暂无工作项。",
+    "by": {
+      "status": "状态",
+      "priority": "优先级",
+      "type": "类型",
+      "assignee": "负责人",
+      "delegate": "执行代理"
+    },
+    "caption": {
+      "status": "按状态",
+      "priority": "按优先级",
+      "type": "按类型",
+      "assignee": "按负责人",
+      "delegate": "按执行代理"
+    }
+  },
+  "recentIssues": {
+    "empty": "没有符合此筛选条件的工作项。",
+    "captionCreated": "最新创建优先",
+    "captionUpdated": "最近更新",
+    "filterCount": "{count, plural, other {# 个筛选条件}}",
+    "sort": {
+      "created": "最新创建",
+      "updated": "最近更新"
+    }
+  },
+  "activityFeed": {
+    "empty": "没有符合此筛选条件的活动记录。",
+    "someone": "某位用户",
+    "filterCount": "{count, plural, other {# 个筛选条件}}",
+    "actions": {
+      "all": "全部活动",
+      "status": "状态变更",
+      "assignee": "负责人变更",
+      "priority": "优先级",
+      "created": "创建"
+    },
+    "verbs": {
+      "comment": "评论了",
+      "created": "创建了",
+      "title": "重命名了",
+      "description": "更新了以下工作项的描述：",
+      "status": "更改了以下工作项的状态：",
+      "assignee": "更改了以下工作项的负责人：",
+      "priority": "更改了以下工作项的优先级：",
+      "type": "更改了以下工作项的类型：",
+      "start_date": "更改了以下工作项的开始日期：",
+      "due_date": "更改了以下工作项的截止日期：",
+      "label_add": "为以下工作项添加了标签：",
+      "label_remove": "移除了以下工作项的标签：",
+      "field": "更新了以下工作项的字段：",
+      "other": "更新了"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "按小时",
+      "day": "按天",
+      "week": "按周"
+    },
+    "unit": {
+      "hour": "小时",
+      "day": "天",
+      "week": "周"
+    },
+    "events": "{count, plural, other {# 个事件}}",
+    "eventNoun": "{count, plural, one {个事件} other {个事件}}",
+    "active": "{count} 个活跃项",
+    "less": "较少",
+    "more": "较多"
+  },
+  "throughput": {
+    "empty": "此时间段内暂无活动。",
+    "lastWeeks": "最近 {weeks} 周",
+    "created": "已创建",
+    "closed": "已关闭"
+  },
+  "agentRuns": {
+    "empty": "暂无代理运行记录。",
+    "filters": {
+      "all": "全部运行",
+      "failed": "失败",
+      "pending": "已排队",
+      "success": "成功"
+    },
+    "status": {
+      "pending": "已排队",
+      "success": "成功",
+      "failed": "失败"
+    },
+    "trigger": {
+      "mention": "因以下位置的提及而运行：",
+      "delegation": "因以下工作项的委派而运行：",
+      "manual": "手动运行",
+      "schedule": "按定时任务运行"
+    }
+  },
+  "agentHealth": {
+    "empty": "暂无代理运行记录。",
+    "successRate": "成功率",
+    "runs": "{count, plural, other {# 次运行}}",
+    "failed": "{count} 次失败",
+    "queued": "{count} 次已排队"
+  },
+  "webhookHealth": {
+    "deliveries": "次投递",
+    "failed": "{count} 次失败",
+    "pending": "{count} 次待处理",
+    "allDelivered": "全部投递成功",
+    "disabled": "{count, plural, other {# 个已禁用端点}}"
+  },
+  "agentWorkload": {
+    "empty": "此项目暂无代理。",
+    "agent": "代理",
+    "delegated": "已委派",
+    "runs": "运行次数",
+    "failed": "{count} 次失败",
+    "kind": {
+      "external": "外部",
+      "internal": "内置"
+    }
+  },
+  "defaultWidgets": {
+    "open": "未关闭",
+    "inProgress": "进行中",
+    "backlog": "待办池",
+    "unassigned": "未指派"
+  }
+}

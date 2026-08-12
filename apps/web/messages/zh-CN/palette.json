@@ -1,0 +1,12 @@
+{
+  "placeholder": "输入命令或搜索…",
+  "noResults": "未找到结果。",
+  "issues": "工作项",
+  "searching": "正在搜索…",
+  "selectAllIssues": "选择所有工作项",
+  "newIssue": "新建工作项",
+  "newProject": "新建项目",
+  "board": "看板",
+  "commands": "命令",
+  "switchProject": "切换项目"
+}

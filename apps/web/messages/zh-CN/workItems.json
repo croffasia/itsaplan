@@ -1,0 +1,105 @@
+{
+  "newIssue": "新建工作项",
+  "collapse": "折叠",
+  "expand": "展开",
+  "hide": "隐藏",
+  "show": "显示",
+  "hiddenColumns": "隐藏列",
+  "hiddenGroups": "隐藏分组",
+  "selectAll": "全选",
+  "deselectAll": "取消全选",
+  "resizeColumn": "调整列宽",
+  "viewNamePlaceholder": "所有工作项",
+  "sortedOrder": "工作项当前按 {field} 排序。切换为手动排序后才能移动。",
+  "statusSince": "自 {date} 起处于当前状态",
+  "createdOn": "创建于 {date}",
+  "updatedOn": "更新于 {date}",
+  "subtasksProgress": "子任务 {done}/{total}",
+  "subtasksDone": "已完成 {done}/{total} 个子任务",
+  "columns": {
+    "title": "标题",
+    "status": "状态",
+    "statusAge": "处于当前状态",
+    "priority": "优先级",
+    "type": "类型",
+    "initiative": "计划",
+    "cycle": "周期",
+    "labels": "标签",
+    "startDate": "开始",
+    "dueDate": "截止",
+    "created": "创建时间",
+    "updated": "更新时间"
+  },
+  "calendar": {
+    "previousMonth": "上个月",
+    "nextMonth": "下个月",
+    "today": "今天",
+    "moreIssues": "另有 {count} 个",
+    "issueCount": "{count, plural, other {# 个工作项}}",
+    "weekdays": {
+      "sun": "周日",
+      "mon": "周一",
+      "tue": "周二",
+      "wed": "周三",
+      "thu": "周四",
+      "fri": "周五",
+      "sat": "周六"
+    },
+    "noDate": {
+      "dueDate": "无截止日期",
+      "startDate": "无开始日期"
+    },
+    "allDated": {
+      "dueDate": "所有工作项都已设置截止日期。",
+      "startDate": "所有工作项都已设置开始日期。"
+    }
+  },
+  "timeline": {
+    "empty": "暂无可放入时间线的工作项。",
+    "expandGroup": "展开分组",
+    "collapseGroup": "折叠分组",
+    "inferredStart": "根据创建日期推算开始时间",
+    "inferredStartDraggable": "根据创建日期推算开始时间——拖动以设置"
+  },
+  "bulk": {
+    "selected": "已选择 {count} 项",
+    "status": "状态",
+    "priority": "优先级",
+    "assignee": "负责人",
+    "delegate": "执行代理",
+    "initiative": "计划",
+    "cycle": "周期",
+    "labels": "标签",
+    "noAssignee": "无负责人",
+    "noDelegate": "无执行代理",
+    "noInitiative": "无计划",
+    "noCycle": "无周期",
+    "archive": "归档",
+    "clearSelection": "清除选择"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, other {归档工作项}}",
+      "confirm": "{count, plural, other {归档 # 个工作项}}",
+      "description": "{count, plural, other {归档选中的 # 个工作项？它们将离开看板，之后可以恢复。}}"
+    },
+    "delete": {
+      "title": "{count, plural, other {删除工作项}}",
+      "confirm": "{count, plural, other {删除 # 个工作项}}",
+      "description": "{count, plural, other {删除选中的 # 个工作项？}}这还会删除评论、活动记录和附件。此操作无法撤销。"
+    }
+  },
+  "share": {
+    "issueTitle": "工作项",
+    "issueUnavailable": "此工作项不可用。",
+    "boardUnavailable": "此共享看板不可用，链接可能已撤销。"
+  },
+  "groups": {
+    "noAssignee": "无负责人",
+    "noDelegate": "无执行代理",
+    "noPriority": "无优先级",
+    "noType": "无类型",
+    "noInitiative": "无计划",
+    "noCycle": "无周期"
+  }
+}

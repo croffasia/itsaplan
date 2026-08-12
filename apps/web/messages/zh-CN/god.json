@@ -1,0 +1,211 @@
+{
+  "pager": {
+    "perPage": "每页",
+    "rowsPerPage": "每页行数",
+    "range": "第 {first}-{last} 项，共 {total} 项",
+    "previous": "上一页",
+    "next": "下一页"
+  },
+  "access": {
+    "owner": "所有者拥有完整访问权限，不受角色权限矩阵限制。",
+    "role": "根据“{role}”角色确定。",
+    "default": "未分配角色，使用默认成员权限。",
+    "joined": "加入于 {date}"
+  },
+  "providers": {
+    "credential": "密码",
+    "google": "Google",
+    "passkey": "通行密钥"
+  },
+  "users": {
+    "empty": "没有符合筛选条件的账户。",
+    "searchPlaceholder": "按姓名或邮箱搜索",
+    "kind": "账户类型",
+    "kinds": {
+      "human": "人员",
+      "agent": "AI 代理",
+      "all": "所有账户"
+    },
+    "columns": {
+      "account": "账户",
+      "role": "角色",
+      "signIn": "登录方式",
+      "projects": "项目",
+      "lastSeen": "最近登录",
+      "email": "邮箱"
+    },
+    "registered": "注册于 {date}",
+    "roleGod": "实例管理员",
+    "roleUser": "用户",
+    "agent": "代理",
+    "noProviders": "无",
+    "neverSeen": "从未登录",
+    "verified": "已验证",
+    "notVerified": "未验证",
+    "open": "打开账户",
+    "showAccess": "查看项目权限"
+  },
+  "userPanel": {
+    "instanceOwner": "实例管理员",
+    "user": "用户",
+    "aiAgent": "AI 代理",
+    "emailVerified": "邮箱已验证",
+    "unconfirmedTitle": "邮箱未验证",
+    "unconfirmedHint": "确认验证邮件未送达后可手动标记。",
+    "verify": "标记为已验证",
+    "verifying": "正在验证…",
+    "verifyDone": "邮箱已验证",
+    "signInMethods": "登录方式",
+    "noProviders": "未关联",
+    "projects": "项目",
+    "noProjects": "无",
+    "registered": "注册时间",
+    "lastSeen": "最近登录",
+    "neverSignedIn": "从未登录",
+    "projectAccess": "项目访问权限",
+    "noAccessTitle": "无项目访问权限",
+    "noAccessHint": "在收到项目邀请前，此账户无法访问任何项目。",
+    "deleteHint": "该账户创建的工作项和评论会保留，但作者将取消关联。",
+    "deleteTitle": "删除账户",
+    "deleteConfirm": "删除账户",
+    "deleteConfirmWithProjects": "{count, plural, other {删除账户和项目}}",
+    "deleteMessage": "<strong>{name}</strong> 将无法访问此实例。该用户创建的工作项和评论会保留，但作者将被取消关联。此操作无法撤销。",
+    "soleOwnerTitle": "{count, plural, other {# 个项目的唯一所有者}}",
+    "soleOwnerHint": "{count, plural, other {账户删除后，将无人能够管理这些项目。}}",
+    "deleteWithProjects": "{count, plural, other {同时删除这些项目}}",
+    "deleteWithProjectsOn": "同时删除项目中的所有内容。",
+    "deleteWithProjectsOff": "或者先取消，再添加第二名所有者。",
+    "deleted": "账户已删除",
+    "deletedWithProjects": "账户及其项目已删除"
+  },
+  "projects": {
+    "empty": "没有符合搜索条件的项目。",
+    "searchPlaceholder": "按标识或名称搜索",
+    "columns": {
+      "project": "项目",
+      "members": "成员",
+      "issues": "工作项",
+      "agents": "代理",
+      "lastActivity": "最近活动",
+      "mcp": "MCP"
+    },
+    "created": "创建于 {date}",
+    "archived": "{count} 个已归档",
+    "neverActive": "从未活动",
+    "mcpEnabled": "已启用",
+    "mcpOff": "已关闭",
+    "open": "打开项目",
+    "showDetails": "查看项目详情"
+  },
+  "projectPanel": {
+    "mcpEnabled": "MCP 已启用",
+    "mcpOff": "MCP 已关闭",
+    "created": "创建于 {date}",
+    "lastActivity": "最近活动：{value}",
+    "noActivity": "暂无活动",
+    "statTitle": "{label}：{value}",
+    "stats": {
+      "issues": "工作项",
+      "archivedIssues": "归档工作项",
+      "initiatives": "计划",
+      "members": "成员",
+      "dashboards": "仪表盘",
+      "views": "视图",
+      "agents": "AI 代理",
+      "skills": "技能",
+      "tools": "工具",
+      "integrations": "集成"
+    },
+    "members": "成员",
+    "noMembersTitle": "暂无成员",
+    "noMembersHint": "需要邀请成员后才能访问此项目。"
+  },
+  "authentication": {
+    "saved": "身份验证设置已保存",
+    "registration": "注册",
+    "registrationHint": "设置哪些人可以创建此实例的账户。",
+    "modes": {
+      "open": {
+        "label": "开放注册",
+        "description": "任何访问注册页面的人都可以创建账户。"
+      },
+      "invite": {
+        "label": "仅限邀请",
+        "description": "只有收到项目邀请的邮箱可以创建账户。"
+      },
+      "closed": {
+        "label": "关闭注册",
+        "description": "不允许创建新账户，现有账户仍可登录。"
+      }
+    },
+    "signIn": "登录选项",
+    "signInHint": "这些选项需要发送邮件，配置邮件服务商后才可启用。",
+    "needsProvider": "请先在“邮件服务商”中完成配置。",
+    "requireVerification": "要求验证邮箱",
+    "requireVerificationHint": "新账户必须验证邮箱后才能登录。",
+    "magicLink": "邮箱登录链接",
+    "magicLinkHint": "通过邮件发送免密码登录链接。"
+  },
+  "hotkeys": {
+    "saved": "键盘快捷键已保存"
+  },
+  "storage": {
+    "saved": "存储设置已保存",
+    "fileSize": "文件大小",
+    "fileSizeHint": "设置允许上传的最大文件大小。超过限制的文件不会保存。",
+    "attachmentMb": "附件大小（MB）",
+    "attachmentHint": "适用于工作项附件、粘贴到描述中的文件以及代理添加的附件。",
+    "avatarMb": "头像大小（MB）",
+    "avatarHint": "适用于用户上传的账户头像。",
+    "mimeTypes": "允许的附件类型",
+    "mimeTypesHint": "每行填写一个 MIME 类型，留空表示允许任何文件。",
+    "mimeTypesNote": "每行填写完整类型（application/pdf）或通配符（image/*）。已存储文件不会受列表变更影响。",
+    "quota": "项目配额",
+    "quotaHint": "单个项目可使用的附件存储总量。0 表示不限制。",
+    "quotaMb": "每个项目的存储空间（MB）",
+    "quotaNote": "项目达到配额后会拒绝新上传，直到有人删除附件。"
+  },
+  "telegram": {
+    "saved": "Telegram 设置已保存",
+    "bot": "机器人",
+    "botConfigured": "用户可以在个人资料中打开此机器人的对话，以关联 Telegram 账户。",
+    "botMissing": "在 Telegram 中通过 @BotFather 创建机器人，然后在此粘贴机器人令牌。",
+    "botToken": "机器人令牌",
+    "botTokenHint": "保存时会通过 Telegram 验证令牌，错误令牌会立即被拒绝。",
+    "resolvedHint": "根据令牌解析。用户关联账户时会看到此机器人。"
+  },
+  "email": {
+    "saved": "邮件服务商已保存",
+    "provider": "邮件服务商",
+    "providerHint": "选择一个服务商，凭据会加密存储。",
+    "from": "发件地址",
+    "fromHint": "Resend 必填；SMTP 默认使用用户名。",
+    "host": "主机",
+    "port": "端口",
+    "encryption": "加密方式",
+    "encryptionOptions": {
+      "none": "无",
+      "ssl": "SSL",
+      "tls": "TLS"
+    },
+    "username": "用户名",
+    "password": "密码",
+    "passwordPlaceholder": "SMTP 密码",
+    "timeout": "超时（秒）",
+    "optional": "可选",
+    "apiKey": "API 密钥",
+    "projectNotifications": "项目通知",
+    "projectNotificationsHint": "允许项目使用此服务商发送通知。每个项目可以自行选择是否使用。"
+  },
+  "authProvider": {
+    "saved": "身份验证提供商已保存",
+    "google": "Google",
+    "googleConfigured": "邮箱没有对应账户时会创建账户；已有已验证账户时会直接登录。",
+    "googleMissing": "请先填写客户端 ID 和客户端密钥。",
+    "clientId": "客户端 ID",
+    "clientSecret": "客户端密钥",
+    "redirectUri": "重定向 URI",
+    "redirectUriHint": "请在 Google Cloud 控制台的 OAuth 客户端中添加此地址。地址不完全匹配时，Google 会拒绝登录。",
+    "copyRedirectUri": "复制重定向 URI"
+  }
+}

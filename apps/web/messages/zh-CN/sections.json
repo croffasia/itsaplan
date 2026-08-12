@@ -1,0 +1,109 @@
+{
+  "account": {
+    "profile": "个人资料",
+    "preferences": "偏好设置",
+    "accounts": "关联账户",
+    "security": "安全",
+    "api-keys": "API 密钥"
+  },
+  "godGroups": {
+    "management": "管理",
+    "instance": "实例"
+  },
+  "god": {
+    "users": {
+      "label": "用户",
+      "description": "此实例中的所有账户，包括全局角色、邮箱验证状态和各用户可访问的项目。"
+    },
+    "projects": {
+      "label": "项目",
+      "description": "此实例中的所有项目，包括项目内容、最近活动时间和访问成员。"
+    },
+    "authentication": {
+      "label": "身份验证",
+      "description": "设置谁可以注册、如何验证账户以及可用的外部登录提供商。"
+    },
+    "hotkeys": {
+      "label": "键盘快捷键",
+      "description": "设置实例中所有用户的默认快捷键。每位用户可在偏好设置中重新绑定。"
+    },
+    "storage": {
+      "label": "存储",
+      "description": "设置单个文件大小、允许的附件类型和每个项目的存储配额。"
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "设置用户关联 Telegram 账户所用的机器人，以及项目未单独配置时发送通知的机器人。"
+    },
+    "email": {
+      "label": "邮件服务商",
+      "description": "设置实例用于发送密码重置、邮箱验证和登录链接的邮件服务商。"
+    },
+    "auth-provider": {
+      "label": "身份验证提供商",
+      "description": "设置用户可以用于登录的外部账户。"
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "常规",
+      "description": "设置项目名称、描述和启用的功能区。"
+    },
+    "notifications": {
+      "label": "通知提供商",
+      "description": "设置此项目发送通知所用的邮件（SMTP 或 Resend）和 Telegram 机器人凭据。"
+    },
+    "states": {
+      "label": "状态",
+      "description": "设置工作项在工作流中经过的状态，每个状态显示为一个状态列。"
+    },
+    "issue-types": {
+      "label": "工作项类型",
+      "description": "设置此项目可以包含的工作项类型及其专属字段。"
+    },
+    "labels": {
+      "label": "标签",
+      "description": "设置用于组织和筛选项目工作项的标签。"
+    },
+    "custom-fields": {
+      "label": "自定义字段",
+      "description": "设置工作项的额外字段，可应用于所有类型或指定工作项类型。"
+    },
+    "configuration": {
+      "label": "配置",
+      "description": "设置子任务与父工作项的联动方式，以及何时归档长期无活动的工作项。"
+    },
+    "actions": {
+      "label": "操作",
+      "description": "设置工作项上的快捷操作，一次点击即可更改字段。"
+    },
+    "schedules": {
+      "label": "定时任务",
+      "description": "按固定时间重复运行代理任务。"
+    },
+    "webhooks": {
+      "label": "Webhook",
+      "description": "将项目事件发送到外部 URL，并使用每个 Webhook 独立的密钥签名。"
+    },
+    "github": {
+      "label": "GitHub",
+      "description": "当关联的拉取请求在 GitHub 上合并时自动关闭工作项。"
+    },
+    "ai-agents": {
+      "label": "代理",
+      "description": "可以接受工作项委派的 AI 代理。"
+    },
+    "integrations": {
+      "label": "集成",
+      "description": "代理访问 AI 提供商和工具时使用的凭据。"
+    },
+    "agent-skills": {
+      "label": "技能",
+      "description": "内置代理可按需加载的可复用指令。"
+    },
+    "agent-tools": {
+      "label": "工具",
+      "description": "代理可以调用的工具，每个工具连接到一个集成凭据。"
+    }
+  }
+}

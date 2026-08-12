@@ -1,0 +1,31 @@
+{
+  "label": "管理项目",
+  "title": "管理项目",
+  "description": "查看你加入的所有项目及相应权限。可以复制现有项目的配置来新建项目。所有者可以删除项目，成员可以退出项目。删除项目会永久移除其中的所有内容。",
+  "empty": "你尚未加入任何项目。",
+  "columns": {
+    "project": "项目",
+    "role": "角色",
+    "permissions": "权限",
+    "actions": "操作"
+  },
+  "yourPermissions": "你的权限",
+  "copyAction": "复制项目",
+  "deleteAction": "删除项目",
+  "leaveAction": "退出项目",
+  "roles": {
+    "owner": "所有者",
+    "member": "成员"
+  },
+  "deleteDialog": {
+    "title": "删除 {name}？",
+    "confirm": "永久删除",
+    "description": "这将永久删除 <strong>{name}</strong> 及其中的所有工作项、评论、附件和设置。此操作无法撤销。",
+    "typeToConfirm": "输入 <code>{key}</code> 以确认。"
+  },
+  "leaveDialog": {
+    "title": "退出 {name}？",
+    "confirm": "退出项目",
+    "description": "你将失去对 <strong>{name}</strong> 及其工作项的访问权限。如需重新加入，需要项目所有者重新邀请。"
+  }
+}

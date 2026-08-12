@@ -1,0 +1,29 @@
+{
+  "title": "MCP 服务器",
+  "description": "通过模型上下文协议将 AI 代理连接到此项目。代理获得其所用 API 密钥对应的访问权限。",
+  "access": "MCP 访问",
+  "enabled": "已启用",
+  "disabled": "已禁用",
+  "ownerOnly": "只有项目所有者可以启用或停用 MCP 访问。",
+  "toggleAria": "切换 MCP 访问",
+  "connectClient": "连接客户端",
+  "keyHint": "在 <link>API 密钥</link>页面创建个人密钥，然后替换代码片段中的 <code>{apiKey}</code>。",
+  "endpoint": "端点",
+  "clientTabsAria": "客户端",
+  "addToFile": "添加到 <code>{file}</code>",
+  "copyAria": "复制",
+  "copied": "已复制到剪贴板",
+  "notes": {
+    "claudeCode": "在终端中运行此命令。",
+    "vscode": "需要 GitHub Copilot。",
+    "claudeDesktop": "Claude Desktop 通过 mcp-remote 桥接器连接远程服务器，需要 Node.js。",
+    "other": "任何支持基于 Streamable HTTP 的 MCP 客户端都可以使用。将客户端指向此端点，并发送 Authorization: Bearer {apiKey} 请求头。"
+  },
+  "clients": {
+    "other": "其他"
+  },
+  "toast": {
+    "enabled": "MCP 访问已启用",
+    "disabled": "MCP 访问已禁用"
+  }
+}

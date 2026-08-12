@@ -1,0 +1,32 @@
+{
+  "label": "API 密钥",
+  "title": "API 密钥",
+  "description": "个人 API 密钥以你的账户（{email}）身份验证 API 请求。密钥值只在创建时显示一次。",
+  "sectionTitle": "你的 API 密钥",
+  "create": "创建 API 密钥",
+  "empty": "暂无 API 密钥。创建密钥以验证 API 请求。",
+  "fallbackName": "API 密钥",
+  "createdAt": "创建于 {date}",
+  "deleteAction": "删除 API 密钥",
+  "createDialog": {
+    "title": "创建 API 密钥",
+    "nameLabel": "名称",
+    "namePlaceholder": "例如：CI 流水线",
+    "nameHint": "用于以后识别此密钥的名称。",
+    "submit": "创建密钥",
+    "submitPending": "正在创建…",
+    "error": "无法创建 API 密钥。"
+  },
+  "createdDialog": {
+    "title": "API 密钥已创建",
+    "description": "请立即复制密钥。为确保安全，密钥只显示一次，之后无法再次获取。",
+    "copy": "复制密钥"
+  },
+  "deleteDialog": {
+    "title": "删除 API 密钥？",
+    "confirm": "删除密钥",
+    "description": "使用此密钥的所有请求会立即失效。此操作无法撤销。",
+    "error": "无法删除 API 密钥。"
+  },
+  "loadFailed": "无法加载 API 密钥。"
+}

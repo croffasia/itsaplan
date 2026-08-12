@@ -1,0 +1,37 @@
+{
+  "title": "收件箱",
+  "empty": "暂无通知",
+  "selectNotification": "选择一条通知",
+  "backToList": "收件箱",
+  "filter": "筛选",
+  "display": "显示",
+  "notificationType": "通知类型",
+  "showRead": "显示已读通知",
+  "showSnoozed": "显示已稍后提醒的通知",
+  "markAllRead": "全部标为已读",
+  "deleteAllRead": "删除所有已读通知",
+  "deleteAllReadCompleted": "删除已完成工作项的所有已读通知",
+  "types": {
+    "assigned": "已指派",
+    "mentioned": "已提及",
+    "commented": "有新评论",
+    "state_changed": "状态已变更"
+  },
+  "actions": {
+    "markRead": "标为已读",
+    "markUnread": "标为未读",
+    "snooze": "稍后提醒",
+    "unsnooze": "取消稍后提醒",
+    "tomorrow": "明天",
+    "inAWeek": "一周后",
+    "pickDate": "选择日期…"
+  },
+  "event": {
+    "someone": "某位用户",
+    "assigned": "{who} 将工作项指派给你",
+    "mentioned": "{who} 提及了你",
+    "commented": "{who} 发表了评论",
+    "stateChanged": "{who} 将状态从 {from} 更改为 {to}",
+    "stateChangedPlain": "{who} 更改了状态"
+  }
+}

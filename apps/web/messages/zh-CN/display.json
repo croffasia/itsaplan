@@ -1,0 +1,92 @@
+{
+  "title": "显示",
+  "layouts": {
+    "kanban": "看板",
+    "table": "表格",
+    "timeline": "时间线",
+    "calendar": "日历"
+  },
+  "sortFields": {
+    "manual": "手动",
+    "title": "标题",
+    "identifier": "工作项编号",
+    "status": "状态",
+    "priority": "优先级",
+    "assignee": "负责人",
+    "type": "类型",
+    "startDate": "开始日期",
+    "dueDate": "截止日期",
+    "created": "创建时间",
+    "updated": "更新时间"
+  },
+  "groupFields": {
+    "none": "不分组",
+    "status": "状态",
+    "assignee": "负责人",
+    "delegate": "执行代理",
+    "priority": "优先级",
+    "type": "类型",
+    "initiative": "计划",
+    "cycle": "周期"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "状态",
+    "priority": "优先级",
+    "type": "类型",
+    "assignee": "负责人",
+    "delegate": "执行代理",
+    "initiative": "计划",
+    "cycle": "周期",
+    "labels": "标签",
+    "startDate": "开始日期",
+    "dueDate": "截止日期",
+    "created": "创建时间",
+    "updated": "更新时间",
+    "statusAge": "处于当前状态的时间"
+  },
+  "stateTypes": {
+    "backlog": "待办池",
+    "unstarted": "未开始",
+    "started": "进行中",
+    "completed": "已完成",
+    "canceled": "已取消"
+  },
+  "timelineScales": {
+    "week": "周",
+    "month": "月",
+    "quarter": "季度"
+  },
+  "weekStart": {
+    "0": "周日",
+    "1": "周一"
+  },
+  "dateFields": {
+    "dueDate": "截止日期",
+    "startDate": "开始日期"
+  },
+  "rows": {
+    "columns": "状态列",
+    "grouping": "分组",
+    "swimlanes": "泳道",
+    "subGrouping": "次级分组",
+    "ordering": "排序方式",
+    "ascending": "升序",
+    "descending": "降序",
+    "showEmptyColumns": "显示空状态列",
+    "showEmptyGroups": "显示空分组",
+    "showLinks": "显示关联",
+    "separateSubtaskCards": "将子任务显示为单独卡片",
+    "separateSubtaskRows": "将子任务显示为单独行",
+    "showNestedSubtasks": "显示嵌套子任务",
+    "nestedSubtasks": "嵌套子任务",
+    "displayProperties": "显示属性",
+    "placeBy": "定位依据",
+    "startWeekOn": "每周起始日",
+    "startCollapsed": "默认折叠分组",
+    "scale": "时间刻度",
+    "addCustomField": "添加自定义字段",
+    "viewIcon": "视图图标"
+  },
+  "layoutCommand": "{layout}布局"
+}

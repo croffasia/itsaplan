@@ -1,0 +1,14 @@
+{
+  "all": "全部",
+  "newView": "新建视图",
+  "switchView": "切换视图",
+  "searchViews": "搜索视图…",
+  "noViews": "未找到视图。",
+  "options": "视图选项",
+  "share": "共享",
+  "shared": "已共享",
+  "editView": "编辑视图",
+  "shareBoard": "共享看板",
+  "newViewHint": "根据当前筛选条件和显示设置创建视图",
+  "filter": "筛选"
+}

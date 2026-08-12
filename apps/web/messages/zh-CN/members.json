@@ -1,0 +1,103 @@
+{
+  "title": "成员",
+  "description": "有权访问此项目的人员。通过邮箱邀请成员；项目所有者可以撤销访问权限。",
+  "columns": {
+    "member": "成员",
+    "role": "角色",
+    "actions": "操作"
+  },
+  "you": "（你）",
+  "aiAgent": "AI 代理",
+  "joined": "· 加入于 {date}",
+  "leaveProject": "退出项目",
+  "revokeAccess": "撤销访问权限",
+  "lastOwner": "项目必须至少保留一名所有者",
+  "leaveTitle": "退出此项目",
+  "leaveDescription": "你将失去对此项目及其工作项的访问权限。项目所有者之后可以重新邀请你。",
+  "revokeTitle": "撤销 {name} 的访问权限",
+  "revokeDescription": "{name} 将失去对此项目的访问权限，之后可以重新邀请。",
+  "selectRole": "选择角色",
+  "editDescription": "编辑描述",
+  "descriptionQuestionSelf": "你在此项目中负责什么？",
+  "descriptionQuestionOther": "此成员在项目中负责什么？",
+  "descriptionPlaceholder": "例如：后端工程师，负责 API 和集成",
+  "invites": {
+    "emailPlaceholder": "name@example.com",
+    "rolePlaceholder": "角色",
+    "invite": "邀请",
+    "inviting": "正在邀请…",
+    "pendingCount": "{count, plural, other {# 个待处理邀请}}",
+    "copyLink": "复制链接",
+    "copied": "已复制",
+    "revokeAction": "撤销邀请",
+    "removeAction": "移除邀请",
+    "invitedBy": "由 {name} 邀请 · ",
+    "createdAt": "创建于 {date}",
+    "respondedAt": "{status, select, accepted {已接受} rejected {已拒绝} other {已更新}} {date}",
+    "status": {
+      "pending": "待处理",
+      "accepted": "已接受",
+      "rejected": "已拒绝"
+    },
+    "revokeTitle": "撤销发送至 {email} 的邀请",
+    "revokeConfirm": "撤销邀请",
+    "revokeDescription": "邀请链接将失效，之后仍可再次邀请此邮箱。"
+  },
+  "roles": {
+    "title": "角色",
+    "description": "自定义角色及其授予的权限。在成员列表中为成员分配角色。",
+    "ownerOnly": "只有项目所有者可以管理角色。",
+    "empty": "暂无自定义角色。新建角色以授予指定范围的访问权限。",
+    "columns": {
+      "role": "角色",
+      "permissions": "权限",
+      "actions": "操作"
+    },
+    "default": "默认",
+    "editAction": "编辑角色",
+    "deleteAction": "删除角色",
+    "defaultUndeletable": "无法删除默认角色",
+    "deleteTitle": "删除角色“{name}”",
+    "deleteDescription": "使用此角色的成员将改为默认角色。此操作无法撤销。",
+    "newRole": "新建角色",
+    "editorTitleEdit": "编辑角色",
+    "editorTitleNew": "新建角色",
+    "editorSubtitle": "角色权限",
+    "namePlaceholder": "例如：贡献者",
+    "resourceColumn": "资源",
+    "toggleActionAll": "切换所有资源的“{action}”权限",
+    "toggleGroupAll": "切换“{group}”的所有权限",
+    "toggleActionGroup": "切换“{group}”的“{action}”权限",
+    "cellAria": "{resource}：{action}",
+    "saveRole": "保存角色",
+    "createRole": "新建角色",
+    "importExport": "角色导入和导出",
+    "copyRoles": "复制角色",
+    "pasteRoles": "粘贴角色",
+    "nothingToCopy": "没有可复制的自定义角色。",
+    "copiedRoles": "已复制 {count, plural, other {# 个角色}}。",
+    "copyFailed": "无法复制到剪贴板。",
+    "readFailed": "无法读取剪贴板。",
+    "parseFailed": "无法从剪贴板读取角色。",
+    "import": {
+      "title": "应用剪贴板中的角色",
+      "summary": "将应用 {count, plural, other {# 个角色}}。覆盖角色会替换其权限矩阵，成员仍保留该角色。",
+      "preview": "预览权限",
+      "apply": "{count, plural, =0 {应用角色} one {应用 # 个角色} other {应用 # 个角色}}",
+      "applied": "已应用角色：新建 {created} 个，更新 {updated} 个{skipped, plural, =0 {} other {，跳过 # 个}}。",
+      "actions": {
+        "create": "新建",
+        "update": "覆盖",
+        "skip": "跳过（默认）"
+      }
+    },
+    "transferErrors": {
+      "invalidJson": "剪贴板中不是有效的 JSON。",
+      "notAnExport": "剪贴板中不是角色导出数据。",
+      "empty": "角色导出数据为空。"
+    }
+  },
+  "promoted": "成员已晋升为所有者",
+  "roleUpdated": "成员角色已更新",
+  "descriptionUpdated": "成员描述已更新"
+}

@@ -1,0 +1,144 @@
+{
+  "title": "计划",
+  "newInitiative": "新建计划",
+  "notFound": "未找到计划。",
+  "options": "计划选项",
+  "showDescription": "显示描述",
+  "noDescription": "暂无描述。",
+  "noOwner": "无负责人",
+  "targetDate": "目标日期",
+  "progress": "进度",
+  "activity": "活动记录",
+  "noActivity": "暂无活动记录。",
+  "noIssuesLinked": "暂无关联工作项。",
+  "inProgress": "进行中",
+  "emptyTitle": "暂无计划",
+  "emptyDescription": "计划将相关工作项归入同一目标。",
+  "emptyTabDescription": "计划会随状态变更显示在不同标签页中。",
+  "emptyTab": {
+    "active": "暂无进行中的计划",
+    "planned": "暂无已规划的计划",
+    "proposed": "暂无提议中的计划",
+    "completed": "暂无已完成的计划"
+  },
+  "tabs": {
+    "active": "进行中",
+    "planned": "已规划",
+    "proposed": "提议中",
+    "completed": "已完成",
+    "all": "所有计划"
+  },
+  "detailTabs": {
+    "overview": "概览",
+    "issues": "工作项"
+  },
+  "columns": {
+    "name": "名称",
+    "priority": "优先级",
+    "owner": "负责人",
+    "target": "目标日期",
+    "progress": "进度",
+    "health": "进展状态"
+  },
+  "status": {
+    "proposed": "提议中",
+    "planned": "已规划",
+    "active": "进行中",
+    "completed": "已完成",
+    "canceled": "已取消"
+  },
+  "stateGroups": {
+    "backlog": "待办池",
+    "unstarted": "待办",
+    "started": "进行中",
+    "completed": "已完成",
+    "canceled": "已取消"
+  },
+  "health": {
+    "on_track": "进展正常",
+    "at_risk": "存在风险",
+    "off_track": "进度偏离",
+    "unknown": "暂无评估"
+  },
+  "healthInfo": {
+    "trigger": "如何计算进展状态？",
+    "title": "进展状态",
+    "description": "比较已完成工作比例和已用时间比例，并自动更新。",
+    "legend": {
+      "on_track": "工作进度与时间计划基本一致。",
+      "at_risk": "工作进度落后于时间计划。",
+      "off_track": "工作进度明显落后，或目标日期已过。",
+      "unknown": "数据不足：没有工作项或未设置目标日期。"
+    },
+    "howCalculated": "计算方式",
+    "workDone": "已完成工作",
+    "timeElapsed": "已用时间",
+    "trail": "工作进度落后于时间的比例",
+    "trailOnTrack": "落后不超过 10%",
+    "trailAtRisk": "落后 10%–25%",
+    "trailOffTrack": "落后超过 25%"
+  },
+  "timeline": {
+    "title": "时间线",
+    "started": "开始日期",
+    "target": "目标日期",
+    "remaining": "剩余时间",
+    "overdue": "已逾期 {days} 天",
+    "dueToday": "今天到期",
+    "left": "剩余 {days} 天",
+    "timeElapsed": "已用时间",
+    "workDone": "已完成工作",
+    "noTargetDate": "设置目标日期以跟踪进度。"
+  },
+  "form": {
+    "title": "标题",
+    "titlePlaceholder": "第三季度发布",
+    "description": "描述",
+    "descriptionPlaceholder": "此计划的目标是什么？",
+    "create": "新建计划",
+    "creating": "正在创建…",
+    "editTitle": "编辑计划",
+    "save": "保存更改"
+  },
+  "pagination": {
+    "range": "第 {from}–{to} 项，共 {total} 项",
+    "previous": "上一页",
+    "next": "下一页"
+  },
+  "select": {
+    "label": "计划",
+    "search": "关联计划…",
+    "empty": "暂无计划。",
+    "none": "无计划"
+  },
+  "feed": {
+    "system": "系统",
+    "createdInitiative": "创建了计划",
+    "createdIssue": "创建了工作项",
+    "renamed": "重命名为“{title}”",
+    "descriptionUpdated": "更新了描述",
+    "descriptionCleared": "清除了描述",
+    "statusSet": "将状态设为 {status}",
+    "statusMoved": "从 {from} 移至 {to}",
+    "prioritySet": "将优先级设为 {priority}",
+    "priorityRemoved": "移除了优先级",
+    "ownerSet": "将负责人设为 {name}",
+    "ownerRemoved": "移除了负责人 {name}",
+    "assigneeSet": "指派给 {name}",
+    "assigneeRemoved": "移除了负责人 {name}",
+    "delegateSet": "委派给 {name}",
+    "delegateRemoved": "移除了执行代理 {name}",
+    "targetDateSet": "将目标日期设为 {date}",
+    "targetDateRemoved": "移除了目标日期",
+    "startDateSet": "将开始日期设为 {date}",
+    "startDateRemoved": "移除了开始日期",
+    "dueDateSet": "将截止日期设为 {date}",
+    "dueDateRemoved": "移除了截止日期",
+    "labelAdded": "添加了标签 {label}",
+    "labelRemoved": "移除了标签 {label}",
+    "typeSet": "将类型设为 {type}",
+    "typeRemoved": "移除了类型",
+    "linked": "关联至 {name}",
+    "unlinked": "取消了与此计划的关联"
+  }
+}

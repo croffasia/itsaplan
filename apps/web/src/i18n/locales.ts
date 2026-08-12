@@ -1,6 +1,6 @@
 // The languages the interface ships with. `en` is the source language: every key
 // exists in `messages/en.json`, and a missing translation falls back to it.
-export const LOCALES = ['en', 'uk'] as const;
+export const LOCALES = ['en', 'uk', 'zh-CN'] as const;
 
 export type Locale = (typeof LOCALES)[number];
 
@@ -15,11 +15,13 @@ export const LOCALE_COOKIE = 'NEXT_LOCALE';
 export const LOCALE_LABELS: Record<Locale, string> = {
   en: 'English',
   uk: 'Українська',
+  'zh-CN': '简体中文',
 };
 
 export const LOCALE_FLAGS: Record<Locale, string> = {
   en: '🇬🇧',
   uk: '🇺🇦',
+  'zh-CN': '🇨🇳',
 };
 
 export function isLocale(value: string | undefined | null): value is Locale {

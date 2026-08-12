@@ -1,0 +1,8 @@
+{
+  "noProjectAccess": "你无权访问此项目。",
+  "projectUnavailable": "此项目不可用。",
+  "noProjects": "暂无项目，请先新建一个项目。",
+  "noProjectsTitle": "暂无项目",
+  "noProjectsHint": "新建第一个项目，然后开始在看板中规划工作项。",
+  "createProject": "新建项目"
+}

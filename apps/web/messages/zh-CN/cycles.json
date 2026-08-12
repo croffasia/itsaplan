@@ -1,0 +1,58 @@
+{
+  "title": "周期",
+  "newCycle": "新建周期",
+  "status": {
+    "upcoming": "即将开始",
+    "active": "进行中",
+    "completed": "已结束"
+  },
+  "views": {
+    "table": "表格",
+    "timeline": "时间线"
+  },
+  "columns": {
+    "name": "名称",
+    "dates": "日期",
+    "length": "时长",
+    "issues": "工作项",
+    "progress": "进度"
+  },
+  "emptyTitle": "暂无周期",
+  "emptyDescription": "周期是团队安排工作项的固定时间段。",
+  "nothingPlannedTitle": "暂无周期计划",
+  "nothingPlannedDescription": "时间线显示当前和即将开始的周期，已结束的周期显示在表格中。",
+  "options": "周期选项",
+  "transferIssues": "转移未完成的工作项",
+  "form": {
+    "editTitle": "编辑周期",
+    "newTitle": "新建周期",
+    "name": "名称",
+    "goal": "目标",
+    "goalPlaceholder": "此周期应交付什么？",
+    "length": "时长",
+    "starts": "开始日期",
+    "ends": "结束日期",
+    "create": "新建周期",
+    "saveFailed": "无法保存周期"
+  },
+  "weeks": "{count, plural, other {# 周}}",
+  "transfer": {
+    "title": "转移未完成的工作项",
+    "description": "未处于已完成或已取消状态的工作项会移至所选周期，其余工作项保留在此周期。",
+    "moveTo": "移至",
+    "noCycle": "不属于任何周期",
+    "submit": "移动工作项",
+    "moving": "正在移动…",
+    "moved": "{count, plural, other {已移动 # 个工作项}}",
+    "failed": "无法移动工作项"
+  },
+  "details": "周期详情",
+  "goal": "目标",
+  "noGoal": "未设置目标。",
+  "progress": "进度",
+  "openCycle": "打开周期",
+  "dragFailed": "无法移动周期",
+  "notFound": "未找到周期。",
+  "defaultName": "迭代 {n}",
+  "issuesDone": "已完成工作项"
+}

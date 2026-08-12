@@ -1,0 +1,16 @@
+{
+  "updateAvailable": "有可用更新",
+  "releaseHistory": "版本历史",
+  "runningOutdated": "当前版本为 {current}，最新版本为 {latest}。",
+  "runningUnknown": "当前版本为 {current}，无法获取最新版本。",
+  "runningLatest": "当前版本 {current} 已是最新版本。",
+  "noReleases": "此构建不包含版本说明。",
+  "badgeRunning": "当前版本",
+  "badgeNew": "新版本",
+  "earlier": "更早的版本",
+  "check": "检查更新",
+  "checking": "正在检查",
+  "lastChecked": "上次检查：{date}",
+  "allReleases": "所有版本",
+  "noNotes": "此版本没有版本说明。"
+}

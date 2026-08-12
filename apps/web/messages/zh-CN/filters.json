@@ -1,0 +1,39 @@
+{
+  "add": "添加筛选条件",
+  "remove": "移除筛选条件",
+  "valuePlaceholder": "值",
+  "noOptions": "无可用选项",
+  "selected": "已选择 {count} 项",
+  "operators": {
+    "is": "是",
+    "is_not": "不是",
+    "before": "早于",
+    "after": "晚于",
+    "is_set": "已设置",
+    "is_not_set": "未设置",
+    "contains": "包含",
+    "not_contains": "不包含"
+  },
+  "boolean": {
+    "true": "是",
+    "false": "否"
+  },
+  "fields": {
+    "status": "状态",
+    "statusType": "状态类型",
+    "assignee": "负责人",
+    "delegate": "执行代理",
+    "priority": "优先级",
+    "type": "类型",
+    "labels": "标签",
+    "dueDate": "截止日期",
+    "startDate": "开始日期",
+    "created": "创建时间",
+    "updated": "更新时间"
+  },
+  "unset": {
+    "assignee": "无负责人",
+    "delegate": "无执行代理",
+    "type": "无类型"
+  }
+}

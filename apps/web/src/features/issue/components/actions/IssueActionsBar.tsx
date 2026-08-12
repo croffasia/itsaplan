@@ -21,6 +21,7 @@ import { shareIssuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ShareDialog from '@/components/common/share/ShareDialog';
+import { useTranslations } from 'next-intl';
 
 // The issue detail Actions: the manual actions whose condition matches this
 // issue, plus Copy Prompt and a delete button. Owns the delete/apply
@@ -39,6 +40,7 @@ export default function IssueActionsBar({
   variant?: 'row' | 'header';
   onDeleted?: () => void;
 }) {
+  const t = useTranslations('issue.actionsBar');
   const { can } = usePermissions();
   const { data: session } = useSession();
   const qc = useQueryClient();
@@ -81,7 +83,7 @@ export default function IssueActionsBar({
   // The issue's short identifier link (/IAP-62) redirects to the canonical page URL.
   async function copyLink() {
     await navigator.clipboard.writeText(`${window.location.origin}/${issue.identifier}`);
-    toast.success('Short link copied');
+    toast.success(t('shortLinkCopied'));
   }
 
   // In the panel header the action buttons sit next to the size-7 expand/close
@@ -101,7 +103,7 @@ export default function IssueActionsBar({
             <Share2 className="size-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>Copy short link</TooltipContent>
+        <TooltipContent>{t('copyShortLink')}</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -118,7 +120,7 @@ export default function IssueActionsBar({
             )}
           </Button>
         </TooltipTrigger>
-        <TooltipContent>{copied ? 'Copied!' : 'Copy Prompt'}</TooltipContent>
+        <TooltipContent>{copied ? t('copied') : t('copyPrompt')}</TooltipContent>
       </Tooltip>
       {canEdit && (
         <Tooltip>
@@ -134,7 +136,9 @@ export default function IssueActionsBar({
               <Globe className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{issue.shareToken ? 'Shared publicly' : 'Share publicly'}</TooltipContent>
+          <TooltipContent>
+            {issue.shareToken ? t('sharedPublicly') : t('sharePublicly')}
+          </TooltipContent>
         </Tooltip>
       )}
       {issueActions.map((a) => {
@@ -171,7 +175,7 @@ export default function IssueActionsBar({
               )}
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{issue.archivedAt ? 'Restore issue' : 'Archive issue'}</TooltipContent>
+          <TooltipContent>{issue.archivedAt ? t('restore') : t('archive')}</TooltipContent>
         </Tooltip>
       )}
       {canDelete && (
@@ -186,7 +190,7 @@ export default function IssueActionsBar({
               <Trash2 className="size-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Delete issue</TooltipContent>
+          <TooltipContent>{t('delete')}</TooltipContent>
         </Tooltip>
       )}
     </div>
@@ -219,7 +223,7 @@ export default function IssueActionsBar({
       <ShareDialog
         open={sharing}
         onOpenChange={setSharing}
-        title="Share issue"
+        title={t('shareIssue')}
         token={issue.shareToken}
         extended={issue.shareExtended}
         enable={share}

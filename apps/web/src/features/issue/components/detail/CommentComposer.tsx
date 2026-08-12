@@ -5,6 +5,7 @@ import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateComment } from '../../services/comments.service';
+import { useTranslations } from 'next-intl';
 
 // The new-comment box: a plain markdown textarea with an @-mention menu. Typing "@"
 // opens a menu of the project's members and agents; picking one inserts a mention
@@ -30,6 +31,7 @@ export default function CommentComposer({
   authorName: string;
   authorImage?: string | null;
 }) {
+  const t = useTranslations('issue.comments');
   const createComment = useCreateComment();
   const [body, setBody] = useState('');
   const [menu, setMenu] = useState<MentionQuery | null>(null);
@@ -126,7 +128,7 @@ export default function CommentComposer({
           name={authorName}
           image={authorImage}
           className="mt-0.5 size-7 text-[11px]"
-          title={`Comment as ${authorName}`}
+          title={t('commentAs', { name: authorName })}
         />
         <div className="relative min-w-0 flex-1">
           <div className="overflow-hidden rounded-lg border bg-muted/20 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/30">
@@ -137,7 +139,7 @@ export default function CommentComposer({
                 onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)
               }
               onBlur={() => setMenu(null)}
-              placeholder="Write a comment… use @ to mention"
+              placeholder={t('placeholder')}
               className="min-h-[64px] resize-none rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none focus-visible:ring-0"
               onKeyDown={onKeyDown}
             />
@@ -146,10 +148,10 @@ export default function CommentComposer({
                 <kbd className="rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium">
                   {cmdKey} ↵
                 </kbd>
-                <span className="ml-1.5">to send</span>
+                <span className="ml-1.5">{t('toSend')}</span>
               </span>
               <Button size="sm" disabled={!body.trim() || posting} onClick={() => void post()}>
-                {posting ? 'Posting…' : 'Comment'}
+                {posting ? t('posting') : t('comment')}
               </Button>
             </div>
           </div>

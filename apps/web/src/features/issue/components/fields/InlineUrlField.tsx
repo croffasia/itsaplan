@@ -3,6 +3,7 @@ import { Check, ExternalLink } from 'lucide-react';
 import { Pill } from '@/components/common/fields/Pill';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from 'next-intl';
 
 // A bare domain typed without a scheme is treated as https; the API accepts only
 // absolute http(s) URLs.
@@ -33,6 +34,8 @@ export default function InlineUrlField({
   saveKey: string;
   onSave: (v: string | null) => void;
 }) {
+  const t = useTranslations('issue.fields');
+  const tCommon = useTranslations('common');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [invalid, setInvalid] = useState(false);
@@ -63,7 +66,7 @@ export default function InlineUrlField({
     if (display == null) {
       return (
         <Pill onClick={start}>
-          <span>Empty</span>
+          <span>{t('empty')}</span>
         </Pill>
       );
     }
@@ -76,7 +79,7 @@ export default function InlineUrlField({
           href={display}
           target="_blank"
           rel="noopener noreferrer"
-          title="Open in new tab"
+          title={t('openInNewTab')}
           className="flex size-6 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
         >
           <ExternalLink className="size-3.5" />
@@ -109,7 +112,7 @@ export default function InlineUrlField({
         variant="ghost"
         size="icon"
         className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
-        title="Save"
+        title={tCommon('save')}
         onMouseDown={(e) => e.preventDefault()}
         onClick={commit}
       >

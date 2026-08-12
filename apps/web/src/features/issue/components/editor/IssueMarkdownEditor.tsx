@@ -12,6 +12,7 @@ import { Video } from '../../utils/tiptap-video';
 import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
 import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from './EditorSelectionMenu';
+import { useTranslations } from 'next-intl';
 
 // Shared by every editor instance. A block with no language is detected by
 // highlightAuto, so there is no language picker.
@@ -26,7 +27,7 @@ export default function IssueMarkdownEditor({
   onChange,
   onBlur,
   onReady,
-  placeholder = 'Add description…',
+  placeholder,
   className,
   editable = true,
   uploadFile,
@@ -50,6 +51,7 @@ export default function IssueMarkdownEditor({
   // issue to read them from yet (the create modal), which drops the picker.
   imageAttachments?: Embeddable[];
 }) {
+  const t = useTranslations('issue.editor');
   const editorRef = useRef<Editor | null>(null);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
@@ -81,6 +83,7 @@ export default function IssueMarkdownEditor({
       Video,
       SlashCommand.configure({
         onPickImage: imageAttachments ? () => setImagePickerOpen(true) : undefined,
+        labels: { codeBlock: t('codeBlock'), image: t('image') },
       }),
       // html:true so the custom <video> tag survives the markdown round-trip.
       // tiptap only instantiates nodes declared in its schema (there is no

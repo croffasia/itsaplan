@@ -5,6 +5,7 @@ import Avatar from '@/components/common/Avatar';
 import { Pill } from '@/components/common/fields/Pill';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSetIssueWatching } from '../../services/watchers.service';
+import { useTranslations } from 'next-intl';
 
 // Who follows the issue, and the button the signed-in member subscribes and
 // unsubscribes themselves with. Members subscribe only themselves, so the stack is
@@ -17,6 +18,7 @@ export default function IssueWatchers({
   issueId: number;
   watchers: IssueWatcher[];
 }) {
+  const t = useTranslations('issue.watchers');
   const { data: session } = useSession();
   const currentUserId = session?.user.id ?? null;
   const watching = watchers.some((w) => w.userId === currentUserId);
@@ -33,7 +35,7 @@ export default function IssueWatchers({
         onClick={() => setWatching.mutate({ issueId, watching: !watching })}
       >
         {watching ? <EyeOff /> : <Eye />}
-        {watching ? 'Unwatch' : 'Watch'}
+        {watching ? t('unwatch') : t('watch')}
       </Pill>
       {/* Negative spacing so the avatars overlap; the ring in the card color keeps
           them separated. */}

@@ -12,17 +12,22 @@ import {
   Strikethrough,
   type LucideIcon,
 } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import EditorToolbarButton from './EditorToolbarButton';
 
-function setLink(editor: Editor) {
-  const url = window.prompt('Link URL', editor.getAttributes('link').href ?? '');
+function setLink(editor: Editor, prompt: string) {
+  const url = window.prompt(prompt, editor.getAttributes('link').href ?? '');
   if (url === null) return;
   if (url === '') editor.chain().focus().unsetLink().run();
   else editor.chain().focus().setLink({ href: url }).run();
 }
 
 // `name` is the mark or node the button toggles, which is also what lights it up.
-const ITEMS: { name: string; icon: LucideIcon; run: (editor: Editor) => void }[] = [
+const ITEMS: {
+  name: string;
+  icon: LucideIcon;
+  run: (editor: Editor, linkPrompt: string) => void;
+}[] = [
   { name: 'bold', icon: Bold, run: (editor) => editor.chain().focus().toggleBold().run() },
   { name: 'italic', icon: Italic, run: (editor) => editor.chain().focus().toggleItalic().run() },
   {
@@ -55,6 +60,7 @@ const ITEMS: { name: string; icon: LucideIcon; run: (editor: Editor) => void }[]
 ];
 
 export default function EditorSelectionMenu({ editor }: { editor: Editor }) {
+  const t = useTranslations('issue.editor');
   return (
     <BubbleMenu
       editor={editor}
@@ -65,7 +71,7 @@ export default function EditorSelectionMenu({ editor }: { editor: Editor }) {
         <EditorToolbarButton
           key={item.name}
           active={editor.isActive(item.name)}
-          onClick={() => item.run(editor)}
+          onClick={() => item.run(editor, t('linkUrl'))}
         >
           <item.icon />
         </EditorToolbarButton>

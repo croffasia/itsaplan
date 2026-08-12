@@ -16,6 +16,7 @@ import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { useSetIssueParent } from '../../services/subtasks.service';
 import IssueSectionHeading from './IssueSectionHeading';
 import IssueRefRow from './IssueRefRow';
+import { useTranslations } from 'next-intl';
 
 // The issue's place in the subtask hierarchy: the parent it hangs under, or the
 // subtasks it has with how many of them are done. The two never show together —
@@ -36,6 +37,8 @@ export default function IssueSubtasksPanel({
   // own to link to.
   onOpenIssue?: (id: number) => void;
 }) {
+  const tCommon = useTranslations('common');
+  const t = useTranslations('issue.subtasks');
   const { can } = usePermissions();
   const canEdit = !readOnly && can('work_items', 'edit');
   const canCreate = !readOnly && can('work_items', 'create');
@@ -64,7 +67,7 @@ export default function IssueSubtasksPanel({
         <IssueRefRow
           project={project}
           issue={parent}
-          removeLabel={`Detach from ${parent.identifier}`}
+          removeLabel={t('detachFromParent', { parent: parent.identifier })}
           readOnly={readOnly}
           onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
           onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
@@ -73,7 +76,7 @@ export default function IssueSubtasksPanel({
     if (issue.subtasks.length === 0)
       return (
         <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          {canEdit ? 'Use Add to break this issue down into subtasks.' : 'No subtasks yet.'}
+          {canEdit ? t('emptyHint') : t('empty')}
         </p>
       );
     return issue.subtasks.map((subtask) => (
@@ -81,7 +84,7 @@ export default function IssueSubtasksPanel({
         key={subtask.id}
         project={project}
         issue={subtask}
-        removeLabel={`Detach ${subtask.identifier}`}
+        removeLabel={t('detach', { subtask: subtask.identifier })}
         readOnly={readOnly}
         onOpen={onOpenIssue && (() => onOpenIssue(subtask.id))}
         onRemove={canEdit ? () => detach(subtask.id, issue.id) : undefined}
@@ -97,7 +100,7 @@ export default function IssueSubtasksPanel({
           without it the row would shrink to the height of the heading text. */}
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
         <IssueSectionHeading
-          label={parent ? 'Parent' : 'Subtasks'}
+          label={parent ? t('parent') : t('title')}
           open={open}
           onToggle={toggle}
           tally={done}
@@ -107,15 +110,17 @@ export default function IssueSubtasksPanel({
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-7 gap-1.5">
                 <Plus className="size-4" />
-                Add
+                {tCommon('add')}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               {canCreate && (
-                <DropdownMenuItem onSelect={() => setCreating(true)}>New subtask</DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setCreating(true)}>
+                  {t('newSubtask')}
+                </DropdownMenuItem>
               )}
               <DropdownMenuItem onSelect={() => setAttaching(true)}>
-                Existing issue
+                {t('existingIssue')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -127,8 +132,8 @@ export default function IssueSubtasksPanel({
       {attaching && (
         <IssuePickerDialog
           projectKey={project.project.key}
-          title="Add an existing issue as a subtask"
-          prompt="Search issues to add as a subtask…"
+          title={t('addExisting')}
+          prompt={t('searchPrompt')}
           // The hierarchy is one level deep, so an issue that already hangs under
           // a parent has to be detached there first.
           exclude={(hit) => hit.id === issue.id || hit.parentId !== null}
@@ -156,7 +161,7 @@ export default function IssueSubtasksPanel({
             delegateUserId: null,
             priority: issue.priority,
           }}
-          crumb={`Subtask of ${issue.identifier}`}
+          crumb={t('subtaskOf', { issue: issue.identifier })}
           onClose={() => setCreating(false)}
           onCreated={() => setCreating(false)}
         />

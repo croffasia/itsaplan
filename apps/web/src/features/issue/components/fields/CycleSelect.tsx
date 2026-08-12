@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Pill } from '@/components/common/fields/Pill';
+import { useTranslations } from 'next-intl';
 
 // A Pill trigger opening the cycles an issue can be planned into: the ones that have
 // not finished. A completed cycle is not offered — it records what it delivered — but
@@ -27,6 +28,7 @@ export default function CycleSelect({
   value: CycleRef | null;
   onChange: (cycle: CycleRef | null) => void;
 }) {
+  const t = useTranslations('issue.cycleSelect');
   const [open, setOpen] = useState(false);
   const { data } = useCycleOptionsQuery(projectKey);
   const planned = data ?? [];
@@ -45,18 +47,18 @@ export default function CycleSelect({
       <PopoverTrigger asChild>
         <Pill active={value != null}>
           {value != null ? <RefreshCw /> : <CircleDashed />}
-          {value?.name ?? 'Cycle'}
+          {value?.name ?? t('label')}
         </Pill>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">
         <Command>
-          <CommandInput placeholder="Plan into cycle…" />
+          <CommandInput placeholder={t('search')} />
           <CommandList>
-            <CommandEmpty>No cycles.</CommandEmpty>
+            <CommandEmpty>{t('empty')}</CommandEmpty>
             <CommandGroup>
-              <CommandItem value="No cycle" onSelect={() => select(null)}>
+              <CommandItem value={t('none')} onSelect={() => select(null)}>
                 <CircleDashed />
-                <span className="flex-1">No cycle</span>
+                <span className="flex-1">{t('none')}</span>
                 {value == null && <Check className="ml-auto" />}
               </CommandItem>
               {cycles.map((cycle) => (

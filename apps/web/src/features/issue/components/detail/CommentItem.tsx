@@ -3,6 +3,7 @@ import { type FeedItem } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
 import { mentionsToChips } from '../../utils/mentions';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import { useTranslations } from 'next-intl';
 
 // One comment in an activity list: avatar, author, age, and the rendered markdown
 // body. A feed entry stores the author's name, not their picture, so the uploaded
@@ -10,7 +11,8 @@ import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 // live feed, the shared read-only feed, and the timeline's per-status popover.
 
 export default function CommentItem({ item, image }: { item: FeedItem; image: string | null }) {
-  const author = item.actorName ?? 'Unknown';
+  const t = useTranslations('issue.comments');
+  const author = item.actorName ?? t('unknownAuthor');
   return (
     <li className="flex gap-3">
       <Avatar name={author} image={image} className="mt-0.5 size-7 text-[11px]" />

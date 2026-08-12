@@ -8,6 +8,7 @@ import IssueAttachmentThumb from '../IssueAttachmentThumb';
 import IssueImageAnnotator from '../IssueImageAnnotator';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useTranslations } from 'next-intl';
 
 // One pending file in the footer strip: the thumbnail opens a larger preview to
 // insert the file from, the corner button drops it. That button overhangs the
@@ -24,6 +25,7 @@ export default function NewIssueAttachmentChip({
   onAnnotate: (id: number, file: File) => void;
   onRemove: (id: number) => void;
 }) {
+  const t = useTranslations('issue.attachments');
   const [open, setOpen] = useState(false);
   const [annotating, setAnnotating] = useState(false);
 
@@ -33,7 +35,7 @@ export default function NewIssueAttachmentChip({
         <PopoverTrigger asChild>
           <button
             type="button"
-            aria-label={`Preview ${item.filename}`}
+            aria-label={t('preview', { name: item.filename })}
             className="relative flex size-full items-center justify-center overflow-hidden rounded-md border bg-muted hover:border-ring"
           >
             <IssueAttachmentThumb attachment={item} />
@@ -56,7 +58,7 @@ export default function NewIssueAttachmentChip({
                 setOpen(false);
               }}
             >
-              Insert
+              {t('insertShort')}
             </Button>
           )}
           {isImage(item) && (
@@ -69,7 +71,7 @@ export default function NewIssueAttachmentChip({
                 setAnnotating(true);
               }}
             >
-              Annotate
+              {t('annotate')}
             </Button>
           )}
         </PopoverContent>
@@ -91,8 +93,8 @@ export default function NewIssueAttachmentChip({
       <button
         type="button"
         onClick={() => onRemove(item.id)}
-        aria-label={`Remove ${item.filename}`}
-        title="Remove"
+        aria-label={t('remove', { name: item.filename })}
+        title={t('removeShort')}
         className="absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full border bg-popover text-muted-foreground opacity-0 shadow-sm transition-opacity group-hover:opacity-100 hover:text-destructive focus-visible:opacity-100"
       >
         <X className="size-3" />

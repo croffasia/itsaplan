@@ -50,6 +50,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Pill } from '@/components/common/fields/Pill';
 import InitiativeSelect from '../fields/InitiativeSelect';
 import CycleSelect from '../fields/CycleSelect';
+import { useTranslations } from 'next-intl';
 
 export default function NewIssueModal({
   project,
@@ -66,6 +67,8 @@ export default function NewIssueModal({
   onClose: () => void;
   onCreated: (created: Issue) => void;
 }) {
+  const t = useTranslations('issue.create');
+  const tFields = useTranslations('issue.fields');
   const [title, setTitle] = useState(defaults.title ?? '');
   const [description, setDescription] = useState(defaults.description ?? '');
   const [columnId, setColumnId] = useState(defaults.columnId);
@@ -258,7 +261,7 @@ export default function NewIssueModal({
 
   return (
     <Modal
-      title="New issue"
+      title={t('title')}
       crumb={crumb}
       projectKey={project.project.key}
       onClose={onClose}
@@ -278,7 +281,7 @@ export default function NewIssueModal({
         {draggedFiles !== null && <NewIssueDropOverlay count={draggedFiles} />}
         <input
           className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground"
-          placeholder="Issue title"
+          placeholder={t('titlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           autoFocus
@@ -315,7 +318,7 @@ export default function NewIssueModal({
               assignees={project.assignees}
               value={assigneeUserId}
               onChange={setAssigneeUserId}
-              placeholder="Assignee"
+              placeholder={tFields('assignee')}
             />
           )}
 
@@ -324,7 +327,7 @@ export default function NewIssueModal({
               assignees={project.assignees}
               value={delegateUserId}
               onChange={setDelegateUserId}
-              placeholder="Delegate"
+              placeholder={tFields('delegate')}
             />
           )}
 
@@ -357,13 +360,13 @@ export default function NewIssueModal({
 
           <DatePill
             value={startDate || null}
-            placeholder="Start date"
+            placeholder={tFields('startDate')}
             onChange={(v) => setStartDate(v ?? '')}
           />
 
           <DatePill
             value={dueDate || null}
-            placeholder="Due date"
+            placeholder={tFields('dueDate')}
             onChange={(v) => setDueDate(v ?? '')}
           />
 
@@ -388,9 +391,9 @@ export default function NewIssueModal({
               </PopoverTrigger>
               <PopoverContent className="w-56 p-0" align="start">
                 <Command>
-                  <CommandInput placeholder="Add field…" />
+                  <CommandInput placeholder={t('addFieldPlaceholder')} />
                   <CommandList>
-                    <CommandEmpty>No fields.</CommandEmpty>
+                    <CommandEmpty>{t('noFields')}</CommandEmpty>
                     <CommandGroup>
                       {availableDefs.map((def) => (
                         <CommandItem
@@ -425,7 +428,7 @@ export default function NewIssueModal({
             onRemove={removeAttachment}
           />
           <Button className="ml-auto" disabled={saving || !title.trim()} onClick={submit}>
-            Create issue
+            {t('submit')}
           </Button>
         </div>
       </div>

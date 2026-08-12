@@ -14,6 +14,8 @@ export type SlashItem = {
 export type SlashCommandOptions = {
   // Omitted where there is nothing to pick from, which drops the Image item.
   onPickImage?: () => void;
+  // The names of the items, in the reader's language.
+  labels: { codeBlock: string; image: string };
 };
 
 // Typing "/" opens a list of blocks to insert — how they are reached with nothing
@@ -22,7 +24,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
   name: 'slashCommand',
 
   addProseMirrorPlugins() {
-    const { onPickImage } = this.options;
+    const { onPickImage, labels } = this.options;
 
     return [
       Suggestion<SlashItem, SlashItem>({
@@ -34,7 +36,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
         items: ({ query }) => {
           const items: SlashItem[] = [
             {
-              title: 'Code block',
+              title: labels.codeBlock,
               icon: SquareCode,
               run: ({ editor, range }) =>
                 editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
@@ -42,7 +44,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
           ];
           if (onPickImage) {
             items.push({
-              title: 'Image',
+              title: labels.image,
               icon: ImageIcon,
               run: ({ editor, range }) => {
                 editor.chain().focus().deleteRange(range).run();

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/select';
 import InlineUrlField from './InlineUrlField';
 import InlineTextField from './InlineTextField';
+import { useTranslations } from 'next-intl';
 
 // Radix Select forbids an empty-string item value, so "(none)" options use this
 // sentinel and map back to '' / null on change.
@@ -32,6 +33,7 @@ export default function IssueCustomFieldControl({
   onChange: (value: IssueFieldValueInput) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.customFields');
   // Read-only: show the current value statically, no editor.
   if (readOnly) {
     if (def.fieldType === 'select' || def.fieldType === 'multi_select') {
@@ -54,7 +56,7 @@ export default function IssueCustomFieldControl({
       );
     }
     if (def.fieldType === 'boolean') {
-      return <span className="text-sm">{current?.value ? 'Yes' : 'No'}</span>;
+      return <span className="text-sm">{current?.value ? t('yes') : t('no')}</span>;
     }
     const v = current?.value;
     return (

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { CHECKLIST_TITLE_MAX } from '../../utils/checklists';
 import IssueChecklistEditableText from './IssueChecklistEditableText';
 import IssueChecklistGrip from './IssueChecklistGrip';
+import { useTranslations } from 'next-intl';
 
 type Sortable = ReturnType<typeof useSortable>;
 
@@ -25,6 +26,7 @@ export default function IssueChecklistHeader({
   onRename: (title: string) => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations('issue.checklists');
   const done = checklist.items.filter((item) => item.done).length;
 
   return (
@@ -55,7 +57,7 @@ export default function IssueChecklistHeader({
           variant="ghost"
           size="icon"
           className="size-6 shrink-0 opacity-0 group-hover/list:opacity-100 hover:text-destructive"
-          aria-label={`Delete checklist ${checklist.title}`}
+          aria-label={t('deleteChecklist', { title: checklist.title })}
           onClick={onDelete}
         >
           <Trash2 className="size-3.5" />

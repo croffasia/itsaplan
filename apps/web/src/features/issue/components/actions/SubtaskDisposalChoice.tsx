@@ -3,6 +3,7 @@ import { type SubtaskDisposition, type SubtaskMode } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import IssuePickerDialog from '@/components/common/overlay/IssuePickerDialog';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 // What happens to the subtasks of the issues being removed. Shown inside the
 // delete and archive confirmations whenever the selection has any: nothing is
@@ -25,6 +26,7 @@ export default function SubtaskDisposalChoice({
   value: SubtaskDisposition | null;
   onChange: (disposition: SubtaskDisposition) => void;
 }) {
+  const t = useTranslations('issue.subtaskDisposal');
   const [picking, setPicking] = useState(false);
   const [newParent, setNewParent] = useState<string | null>(null);
 
@@ -32,16 +34,16 @@ export default function SubtaskDisposalChoice({
   const options: { mode: SubtaskMode; label: string }[] = [
     {
       mode: 'cascade',
-      label: action === 'delete' ? `Delete ${them} too` : `Archive ${them} too`,
+      label: action === 'delete' ? t('deleteToo', { count }) : t('archiveToo', { count }),
     },
-    { mode: 'detach', label: `Keep ${them} without a parent` },
-    { mode: 'reassign', label: `Move ${them} to another issue` },
+    { mode: 'detach', label: t('detach', { count }) },
+    { mode: 'reassign', label: t('reassign', { count }) },
   ];
 
   return (
     <div className="space-y-2 rounded-md border p-3">
       <p className="text-sm text-foreground">
-        {removedIssueIds.length === 1 ? 'This issue has' : 'These issues have'} {count} subtask
+        {t('intro', { issues: removedIssueIds.length, count })}
         {count === 1 ? '' : 's'}. Choose what happens to {them}.
       </p>
       <div className="flex flex-col gap-1">
@@ -67,7 +69,7 @@ export default function SubtaskDisposalChoice({
         <p className="flex items-center gap-2 text-sm text-muted-foreground">
           New parent: <span className="font-mono text-foreground">{newParent}</span>
           <Button variant="ghost" size="sm" className="h-6" onClick={() => setPicking(true)}>
-            Change
+            {t('change')}
           </Button>
         </p>
       )}
@@ -75,8 +77,8 @@ export default function SubtaskDisposalChoice({
       {picking && (
         <IssuePickerDialog
           projectKey={projectKey}
-          title="Move the subtasks to another issue"
-          prompt="Search the new parent issue…"
+          title={t('reassignTitle')}
+          prompt={t('searchParent')}
           // A subtask cannot be the parent of another, and neither can an issue
           // that is being removed here.
           exclude={(hit) => hit.parentId !== null || removedIssueIds.includes(hit.id)}

@@ -1,8 +1,10 @@
-import { formatDistanceToNow, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { useFormatter, useTranslations } from 'next-intl';
 import { CircleDot } from 'lucide-react';
 import { type FeedItem } from '@/lib/api';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ACTION_ICON, describeActivity } from '../../utils/activityText';
+import { ACTION_ICON } from '../../utils/activityIcons';
+import { useActivityText } from '../../hooks/useActivityText';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 
 // One change-log entry in an activity list: icon, actor, the sentence describing
@@ -11,9 +13,12 @@ import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 // live feed, the shared read-only feed, and the timeline's per-status popover.
 
 export default function ActivityLine({ item }: { item: FeedItem }) {
+  const t = useTranslations('issue');
+  const format = useFormatter();
+  const describeActivity = useActivityText();
   const Icon = (item.action && ACTION_ICON[item.action]) || CircleDot;
   const { line, popover } = describeActivity(item);
-  const actor = item.actorName ?? 'System';
+  const actor = item.actorName ?? t('system');
   return (
     <li className="flex items-center gap-2.5 text-xs">
       <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
@@ -28,7 +33,7 @@ export default function ActivityLine({ item }: { item: FeedItem }) {
                 type="button"
                 className="ml-1.5 text-foreground/70 underline underline-offset-2 hover:text-foreground"
               >
-                view
+                {t('viewValue')}
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-80 w-96 overflow-y-auto">
@@ -36,9 +41,7 @@ export default function ActivityLine({ item }: { item: FeedItem }) {
             </PopoverContent>
           </Popover>
         )}
-        <span className="ml-1.5 text-xs">
-          · {formatDistanceToNow(parseISO(item.createdAt), { addSuffix: true })}
-        </span>
+        <span className="ml-1.5 text-xs">· {format.relativeTime(parseISO(item.createdAt))}</span>
       </span>
     </li>
   );

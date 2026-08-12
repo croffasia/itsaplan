@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { CHECKLIST_ITEM_MAX } from '../../utils/checklists';
 import IssueChecklistEditableText from './IssueChecklistEditableText';
 import IssueChecklistGrip from './IssueChecklistGrip';
+import { useTranslations } from 'next-intl';
 
 // One checkbox line. The row is the sortable node and the grip is its handle, so
 // the checkbox and the text stay clickable while dragging is possible.
@@ -24,6 +25,7 @@ export default function IssueChecklistItemRow({
   onRename: (content: string) => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations('issue.checklists');
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: item.id,
     disabled: !canEdit,
@@ -65,7 +67,7 @@ export default function IssueChecklistItemRow({
           variant="ghost"
           size="icon"
           className="size-6 shrink-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
-          aria-label={`Remove ${item.content}`}
+          aria-label={t('removeItem', { item: item.content })}
           onClick={onRemove}
         >
           <X className="size-3.5" />

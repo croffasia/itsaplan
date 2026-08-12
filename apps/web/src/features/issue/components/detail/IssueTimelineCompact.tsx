@@ -1,6 +1,7 @@
 import { durationLabel, type LifecycleMetrics, type TimelineLane } from '../../utils/timeline';
 import IssueTimelineMetric from './IssueTimelineMetric';
 import IssueTimelineShare from './IssueTimelineShare';
+import { useTranslations } from 'next-intl';
 
 // The whole life of the issue as one bar: a share per status, sized by the total time
 // spent in it (repeat visits merged), with the same figures and the lifecycle metrics
@@ -18,6 +19,7 @@ export default function IssueTimelineCompact({
   metrics: LifecycleMetrics;
   imageByUserId: Map<string, string | null>;
 }) {
+  const t = useTranslations('issue.stats');
   const unfinished = lanes.filter((lane) => lane.stateType !== 'completed');
   // An issue that only ever sat in completed statuses leaves nothing else to scale,
   // so there they all take a share.
@@ -64,14 +66,14 @@ export default function IssueTimelineCompact({
         <div className="ml-auto flex items-center gap-4">
           {lead && (
             <IssueTimelineMetric
-              label="Lead time"
+              label={t('leadTime')}
               value={lead}
               description="From creation to the first time the issue reached a completed status — the wait as seen from outside, queue included."
             />
           )}
           {cycle && (
             <IssueTimelineMetric
-              label="Cycle time"
+              label={t('cycleTime')}
               value={cycle}
               description="From the first started status to that same completion — the work itself, without the time spent waiting in the queue."
             />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import {
   type Attachment,
   type ProjectDetail,
@@ -25,6 +26,7 @@ export function useIssueDetail(
   issueId: number,
   onIssueLoaded?: (issue: IssueDetailRow) => void,
 ) {
+  const t = useTranslations('issue.attachments');
   const issueQuery = useIssueQuery(issueId);
   const issue = issueQuery.data ?? null;
   const fieldDefs = fieldDefsForType(project.customFields, issue?.typeId ?? null);
@@ -104,11 +106,11 @@ export function useIssueDetail(
     }
     if (embeds.length > 0) {
       appendToDescription(embeds.join('\n\n'));
-      toast.success(embeds.length === 1 ? '1 file attached' : `${embeds.length} files attached`);
+      toast.success(t('attachedCount', { count: embeds.length }));
     }
     const failed = files.length - embeds.length;
     if (failed > 0) {
-      toast.error(failed === 1 ? 'Could not upload the file' : `Could not upload ${failed} files`);
+      toast.error(t('uploadFailedCount', { count: failed }));
     }
   }
 

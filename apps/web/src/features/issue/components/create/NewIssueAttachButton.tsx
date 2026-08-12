@@ -4,6 +4,7 @@ import { useStorageSettingsQuery } from '@/services/storage.service';
 import { attachmentAccept, attachmentLimitHint } from '@/utils/uploadLimits';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTranslations } from 'next-intl';
 
 // Attaches files to an issue being created; the picked files are listed by
 // NewIssueAttachmentStrip and uploaded once the issue exists.
@@ -12,6 +13,7 @@ export default function NewIssueAttachButton({
 }: {
   onPick: (files: FileList | null) => void;
 }) {
+  const t = useTranslations('issue.attachments');
   const limits = useStorageSettingsQuery().data;
   const fileInput = useRef<HTMLInputElement>(null);
 
@@ -23,7 +25,7 @@ export default function NewIssueAttachButton({
             variant="ghost"
             size="icon"
             className="text-muted-foreground hover:text-foreground"
-            aria-label="Attach files"
+            aria-label={t('attachFiles')}
             onClick={() => fileInput.current?.click()}
           >
             <Paperclip />

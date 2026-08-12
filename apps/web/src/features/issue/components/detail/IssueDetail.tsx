@@ -5,6 +5,7 @@ import IssueDetailContent from './IssueDetailContent';
 import IssueActionsBar from '../actions/IssueActionsBar';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 // The issue detail as a right-hand side panel over the project. Expand opens the
 // same issue as a full page; the shared body lives in IssueDetailContent.
@@ -21,6 +22,8 @@ export default function IssueDetail({
   // (/project/KEY/issue/42); null while the issue is still loading.
   onExpand: (sequenceNumber: number | null) => void;
 }) {
+  const t = useTranslations('issue');
+  const tCommon = useTranslations('common');
   const [issue, setIssue] = useState<IssueDetailRow | null>(null);
 
   useExitOnEscape(onClose);
@@ -55,11 +58,17 @@ export default function IssueDetail({
               size="icon"
               className="size-7 text-muted-foreground hover:text-foreground"
               onClick={() => onExpand(issue?.sequenceNumber ?? null)}
-              title="Open as page"
+              title={t('openAsPage')}
             >
               <Maximize2 />
             </Button>
-            <Button variant="ghost" size="icon" className="size-7" onClick={onClose} title="Close">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-7"
+              onClick={onClose}
+              title={tCommon('close')}
+            >
               <X />
             </Button>
           </div>

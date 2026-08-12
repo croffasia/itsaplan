@@ -1,5 +1,6 @@
 import { useContext, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
+import { useFormatter, useTranslations } from 'next-intl';
 import {
   Archive,
   ArchiveRestore,
@@ -25,6 +26,7 @@ import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { STATUS_META } from '@/utils/initiativeMeta';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { usePermissions } from '@/hooks/usePermissions';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { ShellCtx } from '@/context/shellContext';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
@@ -34,7 +36,8 @@ import { toDateStr } from '@/utils/dates';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { StateIcon } from '../shared/IssueIcons';
-import { dueDatePresets, formatPreset } from '../../utils/dueDatePresets';
+import { dueDatePresets } from '../../utils/dueDatePresets';
+import { useDueDatePresetLabel } from '../../hooks/useDueDatePresetLabel';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -69,6 +72,9 @@ export default function IssueContextMenu({
   onDeleted?: () => void;
   children: ReactNode;
 }) {
+  const t = useTranslations('issue.menu');
+  const format = useFormatter();
+  const tCommon = useTranslations('common');
   const { can } = usePermissions();
   // Read the Shell directly (not useShell) so this can render outside it: on the
   // public read-only board there is no Shell, and the card is shown without a menu.
@@ -80,6 +86,8 @@ export default function IssueContextMenu({
   const { archive, dialog: archiveDialog } = useArchiveAction(project, onDeleted);
   const restoreIssue = useRestoreIssue(project.project.key);
   const actionsQuery = useActionsQuery(project.project.key);
+  const priorityLabel = usePriorityLabel();
+  const presetLabel = useDueDatePresetLabel();
   const [open, setOpen] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
@@ -108,7 +116,7 @@ export default function IssueContextMenu({
 
   async function copyPrompt() {
     await navigator.clipboard.writeText(buildIssuePrompt(issue, project, session?.user));
-    toast.success('Prompt copied to clipboard');
+    toast.success(t('promptCopied'));
   }
 
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
@@ -127,11 +135,11 @@ export default function IssueContextMenu({
               open mode. Reading an issue needs no permission. */}
           <ContextMenuItem onSelect={() => onOpenIssue(issue.id, 'panel')}>
             <PanelRight />
-            Preview
+            {t('preview')}
           </ContextMenuItem>
           <ContextMenuItem onSelect={() => onOpenIssue(issue.id, 'page')}>
             <SquareArrowOutUpRight />
-            Go to issue
+            {t('goToIssue')}
           </ContextMenuItem>
 
           <ContextMenuSeparator />
@@ -149,7 +157,7 @@ export default function IssueContextMenu({
                   ) : (
                     <CircleDashed />
                   )}
-                  Status
+                  {t('status')}
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent className="w-56">
                   {project.columns.map((c) => (
@@ -165,7 +173,7 @@ export default function IssueContextMenu({
               <ContextMenuSub>
                 <ContextMenuSubTrigger>
                   {currentPriority.icon}
-                  Priority
+                  {t('priority')}
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent className="w-52">
                   {PRIORITY_FIELDS.map((p) => (
@@ -174,7 +182,7 @@ export default function IssueContextMenu({
                       onSelect={() => patch({ priority: p.value || null })}
                     >
                       {p.icon}
-                      <span className="flex-1">{p.label}</span>
+                      <span className="flex-1">{priorityLabel(p.value)}</span>
                       <SelectedCheck selected={p.value === (issue.priority ?? '')} />
                     </ContextMenuItem>
                   ))}
@@ -185,12 +193,12 @@ export default function IssueContextMenu({
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
                     <User />
-                    Assignee
+                    {t('assignee')}
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent className="w-56">
                     <ContextMenuItem onSelect={() => patch({ assigneeUserId: null })}>
                       <CircleDashed />
-                      <span className="flex-1">No assignee</span>
+                      <span className="flex-1">{t('noAssignee')}</span>
                       <SelectedCheck selected={issue.assigneeUserId == null} />
                     </ContextMenuItem>
                     {members.map((a) => (
@@ -211,12 +219,12 @@ export default function IssueContextMenu({
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
                     <Bot />
-                    Delegate
+                    {t('delegate')}
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent className="w-56">
                     <ContextMenuItem onSelect={() => patch({ delegateUserId: null })}>
                       <CircleDashed />
-                      <span className="flex-1">No delegate</span>
+                      <span className="flex-1">{t('noDelegate')}</span>
                       <SelectedCheck selected={issue.delegateUserId == null} />
                     </ContextMenuItem>
                     {agents.map((a) => (
@@ -237,12 +245,12 @@ export default function IssueContextMenu({
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
                     {issue.initiative ? <Target /> : <CircleDashed />}
-                    Initiative
+                    {t('initiative')}
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent className="w-56">
                     <ContextMenuItem onSelect={() => patch({ initiativeId: null })}>
                       <CircleDashed />
-                      <span className="flex-1">No initiative</span>
+                      <span className="flex-1">{t('noInitiative')}</span>
                       <SelectedCheck selected={issue.initiative == null} />
                     </ContextMenuItem>
                     {initiatives.map((it) => (
@@ -260,12 +268,12 @@ export default function IssueContextMenu({
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
                     {issue.cycle ? <RefreshCw /> : <CircleDashed />}
-                    Cycle
+                    {t('cycle')}
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent className="w-56">
                     <ContextMenuItem onSelect={() => patch({ cycleId: null })}>
                       <CircleDashed />
-                      <span className="flex-1">No cycle</span>
+                      <span className="flex-1">{t('noCycle')}</span>
                       <SelectedCheck selected={issue.cycle == null} />
                     </ContextMenuItem>
                     {project.plannedCycles.map((cycle) => (
@@ -282,7 +290,7 @@ export default function IssueContextMenu({
               <ContextMenuSub>
                 <ContextMenuSubTrigger>
                   <CalendarClock />
-                  Due date
+                  {t('dueDate')}
                 </ContextMenuSubTrigger>
                 <ContextMenuSubContent className="w-72">
                   {dueDatePresets().map((p) => (
@@ -291,9 +299,13 @@ export default function IssueContextMenu({
                       onSelect={() => patch({ dueDate: toDateStr(p.date) })}
                     >
                       <CalendarClock />
-                      <span className="whitespace-nowrap">{p.label}</span>
+                      <span className="whitespace-nowrap">{presetLabel(p.key)}</span>
                       <ContextMenuShortcut className="whitespace-nowrap">
-                        {formatPreset(p.date)}
+                        {format.dateTime(p.date, {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
                       </ContextMenuShortcut>
                     </ContextMenuItem>
                   ))}
@@ -302,7 +314,7 @@ export default function IssueContextMenu({
                       <ContextMenuSeparator />
                       <ContextMenuItem onSelect={() => patch({ dueDate: null })}>
                         <X />
-                        Clear due date
+                        {t('clearDueDate')}
                       </ContextMenuItem>
                     </>
                   )}
@@ -313,7 +325,7 @@ export default function IssueContextMenu({
                 <ContextMenuSub>
                   <ContextMenuSubTrigger>
                     <Tag />
-                    Labels
+                    {t('labels')}
                   </ContextMenuSubTrigger>
                   <ContextMenuSubContent className="w-56">
                     {project.labels.map((l) => (
@@ -357,7 +369,7 @@ export default function IssueContextMenu({
               to everyone — it only reads the issue, so no permission gate. */}
           <ContextMenuItem onSelect={copyPrompt}>
             <ClipboardCopy />
-            Copy Prompt
+            {t('copyPrompt')}
           </ContextMenuItem>
 
           {canEdit && <ContextMenuSeparator />}
@@ -367,12 +379,12 @@ export default function IssueContextMenu({
             (issue.archivedAt ? (
               <ContextMenuItem onSelect={() => restoreIssue.mutate(issue.id)}>
                 <ArchiveRestore />
-                Restore
+                {t('restore')}
               </ContextMenuItem>
             ) : (
               <ContextMenuItem onSelect={() => archive(issue)}>
                 <Archive />
-                Archive
+                {t('archive')}
               </ContextMenuItem>
             ))}
 
@@ -381,7 +393,7 @@ export default function IssueContextMenu({
           {canDelete && (
             <ContextMenuItem variant="destructive" onSelect={() => setConfirmingDelete(true)}>
               <Trash2 />
-              Delete
+              {tCommon('delete')}
             </ContextMenuItem>
           )}
         </ContextMenuContent>

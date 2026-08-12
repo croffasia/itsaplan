@@ -12,8 +12,10 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import ArchivedBadge from '@/components/common/ArchivedBadge';
-import { LINK_RELATION_LABELS, LINK_RELATION_PHRASES } from '@/utils/issueLinks';
+import { byKey } from '@/utils/messageKey';
+import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
 import { useLinkIssues } from '../../services/links.service';
+import { useTranslations } from 'next-intl';
 
 // Searches for the issue on the other end of a new relation, server-side across
 // the project (archived included). The relation itself is already chosen — the
@@ -33,6 +35,9 @@ export default function IssueLinkDialog({
   linkedIssueIds: Set<number>;
   onClose: () => void;
 }) {
+  const t = useTranslations('issue.linkDialog');
+  const phrase = byKey(useTranslations('issueLinks.phrases'));
+  const relationLabel = useLinkRelationLabel();
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const linkIssues = useLinkIssues();
@@ -47,7 +52,7 @@ export default function IssueLinkDialog({
   const debounced = useDebouncedValue(query, 250);
   const search = useIssueSearchQuery(project.project.key, debounced, { enabled: true });
   const hits = (search.data ?? []).filter((h) => h.id !== issueId && !linkedIssueIds.has(h.id));
-  const prompt = `Search issues this one is ${LINK_RELATION_PHRASES[relation]}…`;
+  const prompt = t('searchPrompt', { relation: phrase(relation) });
 
   async function pick(targetIssueId: number) {
     setError(null);
@@ -60,7 +65,7 @@ export default function IssueLinkDialog({
       });
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not link the issues');
+      setError(err instanceof Error ? err.message : t('failed'));
     }
   }
 
@@ -71,7 +76,7 @@ export default function IssueLinkDialog({
       open
       onOpenChange={onClose}
       shouldFilter={false}
-      title={`Link an issue: ${LINK_RELATION_LABELS[relation]}`}
+      title={t('title', { relation: relationLabel(relation) })}
       description={prompt}
     >
       <CommandInput placeholder={prompt} value={query} onValueChange={setQuery} />
@@ -79,9 +84,7 @@ export default function IssueLinkDialog({
       {error && <p className="px-3 py-2 text-xs text-destructive">{error}</p>}
 
       <CommandList>
-        <CommandEmpty>
-          {query.trim() ? 'No issues match.' : 'Type to search this project’s issues.'}
-        </CommandEmpty>
+        <CommandEmpty>{query.trim() ? t('noMatches') : t('typeToSearch')}</CommandEmpty>
         <CommandGroup>
           {hits.map((hit) => (
             <CommandItem key={hit.id} value={String(hit.id)} onSelect={() => void pick(hit.id)}>

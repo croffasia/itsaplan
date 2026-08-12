@@ -1,5 +1,6 @@
 import { type useSortable } from '@dnd-kit/sortable';
 import { GripVertical } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 // Taken from useSortable's own return type: dnd-kit does not export the listener
 // map type from its package root, and reaching into its dist/ internals for it
@@ -21,6 +22,7 @@ export default function IssueChecklistGrip({
   listeners: Sortable['listeners'];
   className: string;
 }) {
+  const t = useTranslations('issue.checklists');
   if (!canEdit) return <span className="-ml-1 size-4" />;
 
   return (
@@ -29,7 +31,7 @@ export default function IssueChecklistGrip({
       {...attributes}
       {...listeners}
       className={`-ml-1 cursor-grab touch-none text-muted-foreground/50 ${className}`}
-      title="Drag to reorder"
+      title={t('dragToReorder')}
     >
       <GripVertical className="size-4" />
     </button>

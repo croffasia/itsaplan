@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 import { formatShortDate } from '@/utils/dates';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { cn } from '@/lib/utils';
 import Avatar from '@/components/common/Avatar';
 import { PriorityIcon } from './IssueIcons';
@@ -20,6 +22,8 @@ export function PriorityBadge({
   priority: string;
   className?: string;
 }) {
+  const t = useTranslations('common.priority');
+  const priorityLabel = usePriorityLabel();
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -27,7 +31,7 @@ export function PriorityBadge({
           <PriorityIcon priority={priority} className={className} />
         </span>
       </TooltipTrigger>
-      <TooltipContent className="capitalize">{priority} priority</TooltipContent>
+      <TooltipContent>{t('tooltip', { priority: priorityLabel(priority) })}</TooltipContent>
     </Tooltip>
   );
 }

@@ -7,12 +7,14 @@ import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { useIssueBySeqQuery } from '@/services/issues.service';
 import IssueDetailContent from './components/detail/IssueDetailContent';
 import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
+import { useTranslations } from 'next-intl';
 
 // The full-page issue view (/project/:projectKey/issue/:sequenceNumber), rendered
 // inside the Shell layout. The URL carries the project-scoped number, resolved to
 // the issue here; the project comes from the Shell. Escape returns to the work
 // items view.
 export default function IssueViewPage() {
+  const t = useTranslations('issue');
   const router = useRouter();
   const params = useParams();
   const { project } = useShell();
@@ -41,7 +43,7 @@ export default function IssueViewPage() {
         ) : issueQuery.isLoading ? (
           <IssueDetailSkeleton />
         ) : (
-          <div className="py-6 text-sm text-muted-foreground">Issue not found.</div>
+          <div className="py-6 text-sm text-muted-foreground">{t('notFound')}</div>
         )}
       </div>
     </div>

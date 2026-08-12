@@ -2,6 +2,7 @@ import { type CustomField, type IssueFieldValue, type IssueFieldValueInput } fro
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import { type Embeddable } from '../../utils/attachmentEmbed';
 import IssueCustomFieldControl from './IssueCustomFieldControl';
+import { useTranslations } from 'next-intl';
 
 // One custom field rendered in the issue body (under the description) rather than
 // as a Properties row: a heading with the field name, then the value editor. A
@@ -24,6 +25,7 @@ export default function IssueCustomFieldBody({
   onSetField: (fieldId: number, value: IssueFieldValueInput) => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.fields');
   return (
     <div className="mt-6">
       <h3 className="mb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
@@ -33,7 +35,7 @@ export default function IssueCustomFieldBody({
         <IssueMarkdownEditor
           defaultValue={(current?.value as string) ?? ''}
           key={saveKey}
-          placeholder="Empty"
+          placeholder={t('empty')}
           editable={!readOnly}
           uploadFile={uploadFile}
           imageAttachments={imageAttachments}

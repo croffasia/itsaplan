@@ -1,5 +1,4 @@
 import type { Issue, ProjectDetail } from '@/lib/api';
-import { priorityLabel } from '@/utils/fieldOptions';
 import { issuePath } from '@/utils/paths';
 
 // A git-branch-safe handle from the current user: the email local part (or name)
@@ -56,7 +55,7 @@ export function buildIssuePrompt(
   ];
   tags.push('<description>', issue.description.trim(), '</description>');
   if (status) tags.push(`<status>${status}</status>`);
-  if (issue.priority) tags.push(`<priority>${priorityLabel(issue.priority)}</priority>`);
+  if (issue.priority) tags.push(`<priority>${issue.priority}</priority>`);
   if (type) tags.push(`<type>${type}</type>`);
   if (assignee) tags.push(`<assignee>${assignee}</assignee>`);
   if (delegate) tags.push(`<delegate>${delegate}</delegate>`);

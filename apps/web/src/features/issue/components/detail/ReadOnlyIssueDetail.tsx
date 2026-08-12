@@ -8,6 +8,7 @@ import IssueProperties from './IssueProperties';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import ReadOnlyActivityFeed from './ReadOnlyActivityFeed';
+import { useTranslations } from 'next-intl';
 
 const noop = () => {};
 
@@ -30,6 +31,7 @@ export default function ReadOnlyIssueDetail({
   // so its rows only name the issue.
   onOpenIssue?: (id: number) => void;
 }) {
+  const t = useTranslations('issue');
   const { project: scaffold, issue, feed } = bundle;
   const properties = usePersistedOpen('issue-properties-open');
   const project = toPublicProjectDetail(scaffold);
@@ -45,7 +47,7 @@ export default function ReadOnlyIssueDetail({
         <div className="flex items-center gap-2">
           {issue.archivedAt && (
             <span className="shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
-              Archived
+              {t('archived')}
             </span>
           )}
           <span className="text-xs text-muted-foreground tabular-nums">{issue.identifier}</span>

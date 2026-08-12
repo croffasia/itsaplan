@@ -5,11 +5,12 @@ import { ANNOTATION_COLORS, type AnnotationTool } from '../utils/annotations';
 import EditorToolbarButton from './editor/EditorToolbarButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
-const TOOLS: { id: AnnotationTool; label: string; icon: LucideIcon }[] = [
-  { id: 'marker', label: 'Marker', icon: Highlighter },
-  { id: 'rect', label: 'Rectangle', icon: Square },
-  { id: 'ellipse', label: 'Ellipse', icon: Circle },
+const TOOLS: { id: AnnotationTool; icon: LucideIcon }[] = [
+  { id: 'marker', icon: Highlighter },
+  { id: 'rect', icon: Square },
+  { id: 'ellipse', icon: Circle },
 ];
 
 export default function IssueImageAnnotatorToolbar({
@@ -29,13 +30,15 @@ export default function IssueImageAnnotatorToolbar({
   onUndo: () => void;
   onSave: () => void;
 }) {
+  const tCommon = useTranslations('common');
+  const t = useTranslations('issue.annotator');
   return (
     <div className="mt-4 flex items-center gap-1 border-t pt-3">
       {TOOLS.map((item) => (
         <EditorToolbarButton
           key={item.id}
           active={tool === item.id}
-          title={item.label}
+          title={t(`tools.${item.id}`)}
           onClick={() => onToolChange(item.id)}
         >
           <item.icon />
@@ -48,7 +51,7 @@ export default function IssueImageAnnotatorToolbar({
         <button
           key={value}
           type="button"
-          aria-label={`Color ${value}`}
+          aria-label={t('color', { color: value })}
           aria-pressed={color === value}
           onClick={() => onColorChange(value)}
           className={cn(
@@ -62,12 +65,12 @@ export default function IssueImageAnnotatorToolbar({
 
       <span className="mx-2 h-6 w-px bg-border" />
 
-      <EditorToolbarButton disabled={!canUndo} title="Undo" onClick={onUndo}>
+      <EditorToolbarButton disabled={!canUndo} title={t('undo')} onClick={onUndo}>
         <Undo2 />
       </EditorToolbarButton>
 
       <Button className="ml-auto" onClick={onSave}>
-        Save
+        {tCommon('save')}
       </Button>
     </div>
   );

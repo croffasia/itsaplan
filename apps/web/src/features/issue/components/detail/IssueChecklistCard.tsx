@@ -19,6 +19,7 @@ import {
 import IssueChecklistAddInput from './IssueChecklistAddInput';
 import IssueChecklistHeader from './IssueChecklistHeader';
 import IssueChecklistItemRow from './IssueChecklistItemRow';
+import { useTranslations } from 'next-intl';
 
 // One checklist: its title row and its items. The items are sortable within this
 // checklist only — the SortableContext holds just its own item ids, so a row
@@ -32,6 +33,7 @@ export default function IssueChecklistCard({
   checklist: Checklist;
   canEdit: boolean;
 }) {
+  const t = useTranslations('issue.checklists');
   const [adding, setAdding] = useState(false);
   const sensors = useDndSensors();
   const renameChecklist = useRenameChecklist();
@@ -103,7 +105,7 @@ export default function IssueChecklistCard({
         (adding ? (
           <div className="mt-1 px-2">
             <IssueChecklistAddInput
-              placeholder="Add an item…"
+              placeholder={t('addItem')}
               maxLength={CHECKLIST_ITEM_MAX}
               onSubmit={(content) =>
                 createItem.mutate({ issueId, checklistId: checklist.id, content })
@@ -118,7 +120,7 @@ export default function IssueChecklistCard({
             className="mt-1 h-7 w-full justify-start gap-1.5 text-muted-foreground"
             onClick={() => setAdding(true)}
           >
-            <Plus className="size-4" /> Add an item
+            <Plus className="size-4" /> {t('addItemButton')}
           </Button>
         ))}
     </div>

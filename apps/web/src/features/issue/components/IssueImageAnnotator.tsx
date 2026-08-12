@@ -6,6 +6,7 @@ import IssueImageAnnotatorCanvas from './IssueImageAnnotatorCanvas';
 import IssueImageAnnotatorToolbar from './IssueImageAnnotatorToolbar';
 import Modal from '@/components/common/overlay/Modal';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // Marks an image up in a fullscreen dialog and hands the result back as a PNG;
 // what happens to that file is the caller's call.
@@ -25,9 +26,10 @@ export default function IssueImageAnnotator({
   onSave: (file: File) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations('issue.annotator');
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [tool, setTool] = useState<AnnotationTool>('rect');
   const [color, setColor] = useState(ANNOTATION_COLORS[0]);
@@ -46,7 +48,7 @@ export default function IssueImageAnnotator({
         await loaded.decode();
         if (!cancelled) setImage(loaded);
       } catch {
-        if (!cancelled) setError('Could not load the image');
+        if (!cancelled) setFailed(true);
       }
     })();
     return () => {
@@ -76,7 +78,7 @@ export default function IssueImageAnnotator({
 
   return (
     <Modal
-      title="Annotate image"
+      title={t('title')}
       onClose={onClose}
       wide="xl"
       fullscreen={fullscreen}
@@ -90,8 +92,8 @@ export default function IssueImageAnnotator({
             fullscreen && 'flex-1',
           )}
         >
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          {!error && !image && <p className="text-sm text-muted-foreground">Loading the image…</p>}
+          {failed && <p className="text-sm text-destructive">{t('loadFailed')}</p>}
+          {!failed && !image && <p className="text-sm text-muted-foreground">{t('loading')}</p>}
           {image && (
             <IssueImageAnnotatorCanvas
               canvasRef={canvasRef}

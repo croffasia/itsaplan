@@ -5,6 +5,7 @@ import { attachmentHtml, isImage, isVideo } from '../../utils/attachmentEmbed';
 import { formatSize } from '../../utils/fileSize';
 import IssueAttachmentThumb from '../IssueAttachmentThumb';
 import { Button } from '@/components/ui/button';
+import { useTranslations } from 'next-intl';
 
 function onDragStart(e: DragEvent<HTMLElement>, a: Attachment) {
   e.dataTransfer.setData('text/html', attachmentHtml(a));
@@ -33,13 +34,15 @@ export default function IssueAttachmentCard({
   onDelete: () => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.attachments');
+  const tCommon = useTranslations('common');
   const viewable = isImage(attachment) || isVideo(attachment);
   const dragProps = readOnly
     ? {}
     : {
         draggable: true,
         onDragStart: (e: DragEvent<HTMLElement>) => onDragStart(e, attachment),
-        title: 'Drag into the description',
+        title: t('dragIntoDescription'),
       };
 
   return (
@@ -59,8 +62,8 @@ export default function IssueAttachmentCard({
           <button
             type="button"
             onClick={onOpen}
-            title="Open preview"
-            aria-label={`Open ${attachment.filename}`}
+            title={t('openPreview')}
+            aria-label={t('open', { name: attachment.filename })}
             className="absolute inset-0 cursor-zoom-in"
           />
         )}
@@ -76,8 +79,8 @@ export default function IssueAttachmentCard({
                   variant="ghost"
                   size="icon"
                   className="size-7"
-                  title="Insert into the description"
-                  aria-label={`Insert ${attachment.filename} into the description`}
+                  title={t('insertIntoDescription')}
+                  aria-label={t('insert', { name: attachment.filename })}
                   onClick={onInsert}
                 >
                   <Plus />
@@ -87,8 +90,8 @@ export default function IssueAttachmentCard({
                     variant="ghost"
                     size="icon"
                     className="size-7"
-                    title="Annotate"
-                    aria-label={`Annotate ${attachment.filename}`}
+                    title={t('annotate')}
+                    aria-label={t('annotateFile', { name: attachment.filename })}
                     onClick={onAnnotate}
                   >
                     <PenLine />
@@ -96,11 +99,11 @@ export default function IssueAttachmentCard({
                 )}
               </>
             )}
-            <Button variant="ghost" size="icon" className="size-7" asChild title="Download">
+            <Button variant="ghost" size="icon" className="size-7" asChild title={t('download')}>
               <a
                 href={`${attachment.url}?download=1`}
                 download={attachment.filename}
-                aria-label={`Download ${attachment.filename}`}
+                aria-label={t('downloadFile', { name: attachment.filename })}
                 draggable={false}
               >
                 <Download />
@@ -111,8 +114,8 @@ export default function IssueAttachmentCard({
                 variant="ghost"
                 size="icon"
                 className="size-7 text-muted-foreground hover:text-destructive"
-                title="Delete"
-                aria-label={`Delete ${attachment.filename}`}
+                title={tCommon('delete')}
+                aria-label={t('deleteFile', { name: attachment.filename })}
                 onClick={onDelete}
               >
                 <Trash2 />

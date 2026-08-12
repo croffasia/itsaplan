@@ -2,10 +2,13 @@ import { useState } from 'react';
 import type { ActionDef, ProjectDetail, Issue, SubtaskDisposition } from '@/lib/api';
 import { matchesFilterSet } from '@/utils/filters';
 import { describeEffect } from '@/utils/actions';
+import { useEffectText } from '@/hooks/useEffectText';
 import { dispositionReady } from '@/utils/subtasks';
 import { useDeleteIssue, useIssueQuery, useUpdateIssue } from '@/services/issues.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import SubtaskDisposalChoice from './SubtaskDisposalChoice';
+import type { ReactNode } from 'react';
+import { useTranslations } from 'next-intl';
 
 // The project's manual actions whose condition matches this issue, in saved
 // order. Shared by the issue detail Actions block and the context menu.
@@ -20,11 +23,16 @@ export function matchedActions(
 // The confirm-dialog body for running an action: the changes it will apply, one
 // per line.
 function EffectSummary({ action, project }: { action: ActionDef; project: ProjectDetail }) {
-  const lines = describeEffect(action.effect, project);
+  const t = useTranslations('issue.actions');
+  const effectText = useEffectText();
+  const lines = describeEffect(action.effect, project, effectText);
   return (
     <div className="text-sm text-muted-foreground">
       <p>
-        Apply <span className="font-medium text-foreground">{action.name}</span> to this issue?
+        {t.rich('applyDescription', {
+          action: action.name,
+          v: (chunks: ReactNode) => <span className="font-medium text-foreground">{chunks}</span>,
+        })}
       </p>
       {lines.length > 0 && (
         <ul className="mt-2 space-y-0.5">
@@ -53,6 +61,7 @@ export function DeleteIssueDialog({
   onClose: () => void;
   onDeleted?: () => void;
 }) {
+  const t = useTranslations('issue.actions');
   const deleteIssue = useDeleteIssue(project.project.key);
   // The board carries only active issues, so an archived issue's subtasks are not
   // countable from it. The detail read carries them, archived ones included; it is
@@ -64,8 +73,8 @@ export function DeleteIssueDialog({
 
   return (
     <ConfirmDialog
-      title="Delete issue"
-      confirmLabel="Delete issue"
+      title={t('deleteTitle')}
+      confirmLabel={t('deleteTitle')}
       confirmDisabled={!detail.data || (subtasks > 0 && !dispositionReady(disposition))}
       onConfirm={async () => {
         await deleteIssue.mutateAsync({ id: issue.id, subtasks: disposition ?? undefined });
@@ -75,8 +84,7 @@ export function DeleteIssueDialog({
       onClose={onClose}
     >
       <p className="text-sm text-muted-foreground">
-        Delete {issue.identifier}? This removes the issue, its comments, activity and attachments.
-        This cannot be undone.
+        {t('deleteDescription', { issue: issue.identifier })} {t('cannotBeUndone')}
       </p>
       {subtasks > 0 && (
         <SubtaskDisposalChoice
@@ -105,11 +113,12 @@ export function ApplyActionDialog({
   action: ActionDef;
   onClose: () => void;
 }) {
+  const t = useTranslations('issue.actions');
   const updateIssue = useUpdateIssue(project.project.key);
   return (
     <ConfirmDialog
       title={action.name}
-      confirmLabel="Apply"
+      confirmLabel={t('apply')}
       onConfirm={async () => {
         await updateIssue.mutateAsync({ id: issue.id, patch: action.effect });
         onClose();

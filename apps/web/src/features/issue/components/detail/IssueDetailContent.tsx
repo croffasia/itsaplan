@@ -16,6 +16,7 @@ import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
 import IssueActionsBar from '../actions/IssueActionsBar';
+import { useTranslations } from 'next-intl';
 
 // The body of a issue — title, description, markdown custom fields, the
 // Properties grid, attachments, and the activity feed. Shared by the side panel
@@ -43,6 +44,8 @@ export default function IssueDetailContent({
   // inside a narrower container like the inbox pane.
   layout?: 'panel' | 'page' | 'split';
 }) {
+  const t = useTranslations('issue');
+  const tEditor = useTranslations('issue.editor');
   const {
     issue,
     fieldDefs,
@@ -71,7 +74,7 @@ export default function IssueDetailContent({
       <div className="flex items-start gap-2">
         {issue.archivedAt && (
           <span className="mt-1 shrink-0 rounded border border-border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground uppercase">
-            Archived
+            {t('archived')}
           </span>
         )}
         {canEdit ? (
@@ -81,7 +84,7 @@ export default function IssueDetailContent({
           <textarea
             className="field-sizing-content min-w-0 flex-1 resize-none bg-transparent text-lg leading-snug font-semibold outline-none placeholder:text-muted-foreground"
             rows={1}
-            placeholder="Issue title"
+            placeholder={t('titlePlaceholder')}
             defaultValue={issue.title}
             key={`title-${issue.updatedAt}`}
             onKeyDown={(e) => {
@@ -106,6 +109,7 @@ export default function IssueDetailContent({
       {(canEdit || issue.description.trim() !== '') && (
         <IssueMarkdownEditor
           className="mt-2"
+          placeholder={tEditor('descriptionPlaceholder')}
           defaultValue={issue.description}
           key={`desc-${issue.updatedAt}-${replacements}`}
           editable={canEdit}

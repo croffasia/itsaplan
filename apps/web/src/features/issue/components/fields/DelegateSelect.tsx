@@ -1,4 +1,5 @@
 import { CircleDashed } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { Assignee } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from '@/components/common/fields/Pill';
@@ -10,7 +11,7 @@ export default function DelegateSelect({
   assignees,
   value,
   onChange,
-  placeholder = 'No delegate',
+  placeholder,
   readOnly,
 }: {
   assignees: Assignee[];
@@ -19,6 +20,8 @@ export default function DelegateSelect({
   placeholder?: string;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.fieldSelects');
+  const none = t('noDelegate');
   const agents = assignees.filter((a) => a.kind === 'agent');
   const delegate = agents.find((a) => a.userId === value);
   return (
@@ -31,17 +34,17 @@ export default function DelegateSelect({
           ) : (
             <CircleDashed />
           )}
-          {delegate?.name ?? placeholder}
+          {delegate?.name ?? placeholder ?? none}
         </Pill>
       }
-      inputPlaceholder="Delegate to…"
-      emptyText="No agents."
+      inputPlaceholder={t('delegateTo')}
+      emptyText={t('noAgents')}
       items={[
         {
           key: 'none',
-          search: 'No delegate',
+          search: none,
           icon: <CircleDashed />,
-          label: 'No delegate',
+          label: none,
           selected: value == null,
           onSelect: () => onChange(null),
         },

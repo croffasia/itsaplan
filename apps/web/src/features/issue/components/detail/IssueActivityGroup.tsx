@@ -2,6 +2,7 @@ import { type FeedGroup } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { durationLabel } from '../../utils/timeline';
 import ActivityItemList from './ActivityItemList';
+import { useTranslations } from 'next-intl';
 
 // One stretch of the grouped activity log: a header carrying the status, how long the
 // issue stayed in it and when, over the entries written while it was there.
@@ -15,6 +16,7 @@ export default function IssueActivityGroup({
   color: string;
   imageByUserId: Map<string, string | null>;
 }) {
+  const t = useTranslations('issue.stats');
   const range = group.to
     ? `${formatDateTime(group.from)} → ${formatDateTime(group.to)}`
     : `since ${formatDateTime(group.from)}`;
@@ -27,7 +29,7 @@ export default function IssueActivityGroup({
       />
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 border-b pb-2">
         <div className="flex items-baseline gap-2">
-          <span className="text-sm font-medium">{group.status ?? 'Unknown status'}</span>
+          <span className="text-sm font-medium">{group.status ?? t('unknownStatus')}</span>
           {group.repeat && <span className="text-xs text-muted-foreground">· again</span>}
           <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground tabular-nums">
             {durationLabel(group.durationMs)}

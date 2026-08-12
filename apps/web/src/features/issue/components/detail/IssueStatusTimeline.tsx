@@ -7,6 +7,7 @@ import { buildLifecycleMetrics, buildTimelineLayout } from '../../utils/timeline
 import IssueTimelineCompact from './IssueTimelineCompact';
 import IssueTimelineLanes from './IssueTimelineLanes';
 import IssueSectionHeading from './IssueSectionHeading';
+import { useTranslations } from 'next-intl';
 
 // How the issue moved through the statuses, above the activity log. The compact bar
 // shows one share per status with the lifecycle metrics; the header button swaps in
@@ -31,6 +32,7 @@ export default function IssueStatusTimeline({
   columns: Column[];
   imageByUserId: Map<string, string | null>;
 }) {
+  const t = useTranslations('issue.stats');
   // Null until the person changes the shape on this issue, and then it wins over the
   // preference for as long as the issue stays open.
   const [openHere, setOpenHere] = useState<boolean | null>(null);
@@ -38,7 +40,7 @@ export default function IssueStatusTimeline({
   const timelineQuery = useTimelineQuery(issueId);
   const { data: prefs } = useAccountPreferencesQuery();
   const segments = timelineQuery.data ?? [];
-  const layout = buildTimelineLayout(segments, columns);
+  const layout = buildTimelineLayout(segments, columns, t('unknownStatus'));
 
   if (layout.lanes.length === 0 || !prefs) return null;
 
@@ -52,7 +54,7 @@ export default function IssueStatusTimeline({
       {/* Fixed height: the view button only renders while the section is open, and
           without it the row would shrink to the height of the heading text. */}
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-4' : ''}`}>
-        <IssueSectionHeading label="Stats" open={open} onToggle={() => setOpenHere(!open)} />
+        <IssueSectionHeading label={t('title')} open={open} onToggle={() => setOpenHere(!open)} />
         {open && (
           <Button
             variant="ghost"
@@ -60,7 +62,7 @@ export default function IssueStatusTimeline({
             className="h-7 px-2 text-xs text-muted-foreground"
             onClick={() => setTimelineHere(!showTimeline)}
           >
-            {showTimeline ? 'Compact' : 'Timeline'}
+            {showTimeline ? t('compact') : t('timeline')}
           </Button>
         )}
       </div>

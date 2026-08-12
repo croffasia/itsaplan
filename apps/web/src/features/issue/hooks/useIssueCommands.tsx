@@ -24,7 +24,9 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useSession } from '@/lib/auth-client';
 import { useShell } from '@/context/shellContext';
 import { colorDot } from '@/components/common/fields/colorDot';
+import { useFormatter, useTranslations } from 'next-intl';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import type { Command, CommandSection } from '@/utils/commands';
 import {
   ApplyActionDialog,
@@ -33,7 +35,8 @@ import {
 } from '../components/actions/IssueActions';
 import { useArchiveAction } from './useArchiveAction';
 import { StateIcon } from '../components/shared/IssueIcons';
-import { dueDatePresets, formatPreset } from '../utils/dueDatePresets';
+import { dueDatePresets } from '../utils/dueDatePresets';
+import { useDueDatePresetLabel } from './useDueDatePresetLabel';
 import { buildIssuePrompt } from '../utils/issuePrompt';
 
 // The palette commands for the issue the user is looking at — the issue page or
@@ -47,6 +50,11 @@ export function useIssueCommands(
   onDeleted?: () => void,
 ): { section: CommandSection | null; dialogs: ReactNode } {
   const { can } = usePermissions();
+  const t = useTranslations('issue.commands');
+  const tPriority = useTranslations('common.priority');
+  const format = useFormatter();
+  const priorityLabel = usePriorityLabel();
+  const presetLabel = useDueDatePresetLabel();
   const { onOpenIssue } = useShell();
   const { data: session } = useSession();
   const projectKey = project?.project.key ?? null;
@@ -94,25 +102,25 @@ export function useIssueCommands(
 
   const copyPrompt = async () => {
     await navigator.clipboard.writeText(buildIssuePrompt(issue, project, session?.user));
-    toast.success('Prompt copied to clipboard');
+    toast.success(t('promptCopied'));
   };
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(`${window.location.origin}/${issue.identifier}`);
-    toast.success('Short link copied');
+    toast.success(t('shortLinkCopied'));
   };
 
   const items: Command[] = [
     {
       id: 'issue.preview',
-      label: 'Preview issue',
+      label: t('preview'),
       icon: <PanelRight />,
       keywords: 'open panel side',
       run: () => onOpenIssue(issue.id, 'panel'),
     },
     {
       id: 'issue.open',
-      label: 'Go to issue',
+      label: t('goToIssue'),
       icon: <SquareArrowOutUpRight />,
       keywords: 'open page full',
       run: () => onOpenIssue(issue.id, 'page'),
@@ -122,7 +130,7 @@ export function useIssueCommands(
   if (canEdit) {
     items.push({
       id: 'issue.status',
-      label: 'Change status',
+      label: t('status'),
       icon: currentColumn ? (
         <StateIcon
           stateType={currentColumn.stateType}
@@ -134,8 +142,8 @@ export function useIssueCommands(
       ),
       keywords: 'state column move',
       submenu: {
-        heading: 'Change status',
-        placeholder: 'Set status to…',
+        heading: t('status'),
+        placeholder: t('statusPlaceholder'),
         items: project.columns.map((c) => ({
           id: `issue.status.${c.id}`,
           label: c.name,
@@ -148,16 +156,16 @@ export function useIssueCommands(
 
     items.push({
       id: 'issue.priority',
-      label: 'Set priority',
+      label: t('priority'),
       icon: (PRIORITY_FIELDS.find((p) => p.value === (issue.priority ?? '')) ?? PRIORITY_FIELDS[0])
         .icon,
       keywords: 'urgent high medium low',
       submenu: {
-        heading: 'Set priority',
-        placeholder: 'Set priority to…',
+        heading: t('priority'),
+        placeholder: tPriority('setTo'),
         items: PRIORITY_FIELDS.map((p) => ({
           id: `issue.priority.${p.value || 'none'}`,
-          label: p.label,
+          label: priorityLabel(p.value),
           icon: p.icon,
           checked: p.value === (issue.priority ?? ''),
           run: () => patch({ priority: p.value || null }),
@@ -168,16 +176,16 @@ export function useIssueCommands(
     if (members.length > 0) {
       items.push({
         id: 'issue.assignee',
-        label: 'Assign to',
+        label: t('assignee'),
         icon: <User />,
         keywords: 'owner member',
         submenu: {
-          heading: 'Assign to',
-          placeholder: 'Assign to…',
+          heading: t('assignee'),
+          placeholder: t('assigneePlaceholder'),
           items: [
             {
               id: 'issue.assignee.none',
-              label: 'No assignee',
+              label: t('noAssignee'),
               icon: <CircleDashed />,
               checked: issue.assigneeUserId == null,
               run: () => patch({ assigneeUserId: null }),
@@ -197,16 +205,16 @@ export function useIssueCommands(
     if (agents.length > 0) {
       items.push({
         id: 'issue.delegate',
-        label: 'Delegate to agent',
+        label: t('delegate'),
         icon: <Bot />,
         keywords: 'ai bot',
         submenu: {
-          heading: 'Delegate to agent',
-          placeholder: 'Delegate to…',
+          heading: t('delegate'),
+          placeholder: t('delegatePlaceholder'),
           items: [
             {
               id: 'issue.delegate.none',
-              label: 'No delegate',
+              label: t('noDelegate'),
               icon: <CircleDashed />,
               checked: issue.delegateUserId == null,
               run: () => patch({ delegateUserId: null }),
@@ -225,25 +233,25 @@ export function useIssueCommands(
 
     items.push({
       id: 'issue.due-date',
-      label: 'Set due date',
+      label: t('dueDate'),
       icon: <CalendarClock />,
       keywords: 'deadline schedule',
       submenu: {
-        heading: 'Set due date',
-        placeholder: 'Set due date to…',
+        heading: t('dueDate'),
+        placeholder: t('dueDatePlaceholder'),
         items: [
           ...dueDatePresets().map((p) => ({
             id: `issue.due-date.${p.key}`,
-            label: p.label,
+            label: presetLabel(p.key),
             icon: <CalendarClock />,
-            shortcut: formatPreset(p.date),
+            shortcut: format.dateTime(p.date, { weekday: 'short', month: 'short', day: 'numeric' }),
             run: () => patch({ dueDate: toDateStr(p.date) }),
           })),
           ...(issue.dueDate
             ? [
                 {
                   id: 'issue.due-date.clear',
-                  label: 'Clear due date',
+                  label: t('clearDueDate'),
                   icon: <X />,
                   run: () => patch({ dueDate: null }),
                 },
@@ -256,12 +264,12 @@ export function useIssueCommands(
     if (project.labels.length > 0) {
       items.push({
         id: 'issue.labels',
-        label: 'Toggle labels',
+        label: t('labels'),
         icon: <Tag />,
         keywords: 'tag',
         submenu: {
-          heading: 'Toggle labels',
-          placeholder: 'Toggle a label…',
+          heading: t('labels'),
+          placeholder: t('labelsPlaceholder'),
           items: project.labels.map((l) => ({
             id: `issue.labels.${l.id}`,
             label: l.name,
@@ -295,14 +303,14 @@ export function useIssueCommands(
   items.push(
     {
       id: 'issue.copy-link',
-      label: 'Copy short link',
+      label: t('copyShortLink'),
       icon: <Share2 />,
       keywords: 'url share',
       run: () => void copyLink(),
     },
     {
       id: 'issue.copy-prompt',
-      label: 'Copy prompt',
+      label: t('copyPrompt'),
       icon: <ClipboardCopy />,
       keywords: 'ai markdown clipboard',
       run: () => void copyPrompt(),
@@ -314,13 +322,13 @@ export function useIssueCommands(
       issue.archivedAt
         ? {
             id: 'issue.restore',
-            label: 'Restore issue',
+            label: t('restore'),
             icon: <ArchiveRestore />,
             run: () => restoreIssue.mutate(issue.id),
           }
         : {
             id: 'issue.archive',
-            label: 'Archive issue',
+            label: t('archive'),
             icon: <Archive />,
             run: () => archive(issue),
           },
@@ -330,7 +338,7 @@ export function useIssueCommands(
   if (canDelete) {
     items.push({
       id: 'issue.delete',
-      label: 'Delete issue',
+      label: t('delete'),
       icon: <Trash2 />,
       destructive: true,
       run: () => setConfirmingDelete(true),

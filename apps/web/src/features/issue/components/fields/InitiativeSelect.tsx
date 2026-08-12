@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Check, CircleDashed, Target } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { STATUS_META } from '@/utils/initiativeMeta';
@@ -26,6 +27,7 @@ export default function InitiativeSelect({
   value: number | null;
   onChange: (id: number | null) => void;
 }) {
+  const t = useTranslations('initiatives.select');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -54,19 +56,19 @@ export default function InitiativeSelect({
       <PopoverTrigger asChild>
         <Pill active={value != null}>
           {value != null ? <Target /> : <CircleDashed />}
-          {current?.title ?? 'Initiative'}
+          {current?.title ?? t('label')}
         </Pill>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">
         <Command shouldFilter={false}>
-          <CommandInput placeholder="Link to initiative…" value={query} onValueChange={setQuery} />
+          <CommandInput placeholder={t('search')} value={query} onValueChange={setQuery} />
           <CommandList>
-            <CommandEmpty>No initiatives.</CommandEmpty>
+            <CommandEmpty>{t('empty')}</CommandEmpty>
             <CommandGroup>
               {!query && (
-                <CommandItem value="No initiative" onSelect={() => select(null)}>
+                <CommandItem value={t('none')} onSelect={() => select(null)}>
                   <CircleDashed />
-                  <span className="flex-1">No initiative</span>
+                  <span className="flex-1">{t('none')}</span>
                   {value == null && <Check className="ml-auto" />}
                 </CommandItem>
               )}

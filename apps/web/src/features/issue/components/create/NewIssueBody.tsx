@@ -7,6 +7,7 @@ import { hasFieldValue } from '../../utils/fieldValues';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import NewIssueBodyFields from './NewIssueBodyFields';
 import NewIssueBodySwitcher from './NewIssueBodySwitcher';
+import { useTranslations } from 'next-intl';
 
 // The written part of a new issue: the description, plus the custom fields the
 // project shows in the body. A switcher keeps one markdown field on screen at a
@@ -40,6 +41,9 @@ export default function NewIssueBody({
   onFieldEditorReady: (id: number, editor: Editor | null) => void;
   uploadFile: (file: File) => Promise<Embeddable>;
 }) {
+  const t = useTranslations('issue.create');
+  const tEditor = useTranslations('issue.editor');
+  const tFields = useTranslations('issue.fields');
   const markdownDefs = bodyDefs.filter((d) => d.fieldType === 'markdown');
   const pillDefs = bodyDefs.filter((d) => d.fieldType !== 'markdown');
 
@@ -50,6 +54,7 @@ export default function NewIssueBody({
   const descriptionEditor = (
     <IssueMarkdownEditor
       className={cn(bodyDefs.length === 0 && 'mt-3', editorClass)}
+      placeholder={tEditor('descriptionPlaceholder')}
       defaultValue={description}
       onChange={onDescriptionChange}
       onReady={onDescriptionReady}
@@ -60,7 +65,7 @@ export default function NewIssueBody({
   if (bodyDefs.length === 0) return descriptionEditor;
 
   const sections = [
-    { value: DESCRIPTION_SECTION, label: 'Description', filled: description.trim() !== '' },
+    { value: DESCRIPTION_SECTION, label: t('description'), filled: description.trim() !== '' },
     ...markdownDefs.map((def) => ({
       value: fieldSection(def.id),
       label: def.name,
@@ -70,7 +75,7 @@ export default function NewIssueBody({
       ? [
           {
             value: OTHER_SECTION,
-            label: 'Other',
+            label: t('other'),
             filled: pillDefs.some((def) => hasFieldValue(fieldValues[def.id])),
           },
         ]
@@ -99,7 +104,7 @@ export default function NewIssueBody({
           <IssueMarkdownEditor
             className={editorClass}
             defaultValue={(fieldValues[def.id]?.value as string) ?? ''}
-            placeholder="Empty"
+            placeholder={tFields('empty')}
             onChange={(md) => onFieldValue(def.id, { value: md })}
             onReady={(editor) => onFieldEditorReady(def.id, editor)}
             uploadFile={uploadFile}

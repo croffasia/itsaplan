@@ -103,6 +103,8 @@ export function statusColor(columns: Column[], status: string | null): string {
 export function buildTimelineLayout(
   segments: TimelineSegment[],
   columns: Column[],
+  // Names a segment whose status the project no longer has.
+  unknownStatus: string,
 ): TimelineLayout {
   if (segments.length === 0) return { lanes: [], ticks: [], hasFixedTail: false };
 
@@ -127,7 +129,7 @@ export function buildTimelineLayout(
     if (!lane) {
       const found = columnOf(segment.status);
       lane = {
-        label: segment.status ?? 'Unknown status',
+        label: segment.status ?? unknownStatus,
         color: found?.column.color || FALLBACK_COLOR,
         stateType: found?.column.stateType,
         order: found?.index ?? columns.length,

@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { type IssueLinkInputKind, type IssueRelations, type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
-import {
-  LINK_RELATIONS,
-  LINK_RELATION_LABELS,
-  inverseRelation,
-  linkRelation,
-  storedKind,
-} from '@/utils/issueLinks';
+import { LINK_RELATIONS, inverseRelation, linkRelation, storedKind } from '@/utils/issueLinks';
+import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { useLinkIssues, useUnlinkIssues } from '../../services/links.service';
 import NewIssueModal from '../create/NewIssueModal';
@@ -15,6 +10,7 @@ import IssueLinkDialog from './IssueLinkDialog';
 import IssueLinksAddMenu from './IssueLinksAddMenu';
 import IssueRefRow from './IssueRefRow';
 import IssueSectionHeading from './IssueSectionHeading';
+import { useTranslations } from 'next-intl';
 
 // The issue's relations to other issues, grouped by how each reads from this
 // issue (Blocked by, Blocks, Duplicates, Duplicated by, Related). The links come
@@ -37,6 +33,8 @@ export default function IssueLinksPanel({
   // its own to link to.
   onOpenIssue?: (id: number) => void;
 }) {
+  const t = useTranslations('issue.links');
+  const relationLabel = useLinkRelationLabel();
   const { can } = usePermissions();
   const canEdit = !readOnly && can('work_items', 'edit');
   const canCreate = !readOnly && can('work_items', 'create');
@@ -62,7 +60,7 @@ export default function IssueLinksPanel({
       {/* Fixed height: the Add button only renders while the section is open, and
           without it the row would shrink to the height of the heading text. */}
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading label="Links" open={open} onToggle={toggle} />
+        <IssueSectionHeading label={t('title')} open={open} onToggle={toggle} />
         {open && canEdit && (
           <IssueLinksAddMenu
             canCreate={canCreate}
@@ -75,21 +73,21 @@ export default function IssueLinksPanel({
       {open &&
         (links.length === 0 ? (
           <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            Use Add to link an issue that blocks, duplicates or relates to this one.
+            {t('emptyHint')}
           </p>
         ) : (
           <div className="flex flex-col gap-3">
             {groups.map((group) => (
               <div key={group.relation}>
                 <h4 className="mb-1 px-2 text-xs font-medium text-muted-foreground">
-                  {LINK_RELATION_LABELS[group.relation]}
+                  {relationLabel(group.relation)}
                 </h4>
                 {group.links.map((link) => (
                   <IssueRefRow
                     key={link.id}
                     project={project}
                     issue={link.issue}
-                    removeLabel={`Remove the link to ${link.issue.identifier}`}
+                    removeLabel={t('remove', { issue: link.issue.identifier })}
                     readOnly={readOnly}
                     onOpen={onOpenIssue && (() => onOpenIssue(link.issue.id))}
                     onRemove={
@@ -137,7 +135,7 @@ export default function IssueLinksPanel({
           }}
           // The crumb names the relation from the new issue's end, the way the
           // subtask one does; the menu picked it from this issue's end.
-          crumb={`${LINK_RELATION_LABELS[inverseRelation(creating)]} ${issue.identifier}`}
+          crumb={`${relationLabel(inverseRelation(creating))} ${issue.identifier}`}
           onClose={() => setCreating(null)}
           onCreated={(created) => {
             linkIssues.mutate({

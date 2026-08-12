@@ -6,6 +6,7 @@ import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import CommentComposer from './CommentComposer';
 import IssueFeedList from './IssueFeedList';
 import IssueGroupedFeed from './IssueGroupedFeed';
+import { useTranslations } from 'next-intl';
 
 // The issue's activity log: a comment composer over the entries, in one of two shapes
 // picked by the tabs between them. Both run newest first and page 25 at a time; the
@@ -22,6 +23,8 @@ export default function IssueActivityFeed({
   columns: Column[];
   imageByUserId: Map<string, string | null>;
 }) {
+  const tIssue = useTranslations('issue');
+  const t = useTranslations('issue.comments');
   const { data: session } = useSession();
   const { data: preferences } = useAccountPreferencesQuery();
   // Null until the person picks a shape on this issue, and then it wins over the
@@ -32,13 +35,13 @@ export default function IssueActivityFeed({
   const view = viewHere ?? preferences?.issueActivityView;
 
   const user = session?.user ?? null;
-  const authorName = user?.name || user?.email || 'You';
+  const authorName = user?.name || user?.email || t('you');
   const authorImage = (user as { image?: string | null } | null)?.image ?? null;
 
   return (
     <div className="mt-6 border-t pt-5">
       <h3 className="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        Activity
+        {tIssue('activityHeading')}
       </h3>
 
       <CommentComposer
@@ -56,10 +59,10 @@ export default function IssueActivityFeed({
         >
           <TabsList className="ml-auto h-7 p-[2px]">
             <TabsTrigger value="flat" className="px-2 text-xs">
-              Flat
+              {tIssue('feedFlat')}
             </TabsTrigger>
             <TabsTrigger value="grouped" className="px-2 text-xs">
-              Grouped
+              {tIssue('feedGrouped')}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="flat">

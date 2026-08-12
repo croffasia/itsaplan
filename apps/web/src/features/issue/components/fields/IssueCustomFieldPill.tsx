@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { Pill } from '@/components/common/fields/Pill';
+import { useTranslations } from 'next-intl';
 
 // A pill + popover editor for a single non-markdown custom field, used in the
 // new-issue modal where the value is collected before the issue exists.
@@ -27,6 +28,7 @@ export default function IssueCustomFieldPill({
   onChange: (v: IssueFieldValueInput) => void;
   defaultOpen?: boolean;
 }) {
+  const t = useTranslations('issue.customFields');
   const [open, setOpen] = useState(defaultOpen);
 
   if (def.fieldType === 'boolean') {
@@ -58,7 +60,7 @@ export default function IssueCustomFieldPill({
         <PopoverContent className="w-56 p-0" align="start">
           <Command>
             <CommandList>
-              <CommandEmpty>No options.</CommandEmpty>
+              <CommandEmpty>{t('noOptions')}</CommandEmpty>
               <CommandGroup>
                 {def.fieldType === 'select' && (
                   <CommandItem

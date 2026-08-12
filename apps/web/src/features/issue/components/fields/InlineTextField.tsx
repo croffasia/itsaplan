@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 import { Pill } from '@/components/common/fields/Pill';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useTranslations } from 'next-intl';
 
 // Text/number/date custom field: shows the value as a ghost pill and switches to
 // an input on click, so an unset field reads as a compact "Empty" rather than a
@@ -18,6 +19,8 @@ export default function InlineTextField({
   saveKey: string;
   onSave: (v: string | number | null) => void;
 }) {
+  const t = useTranslations('issue.fields');
+  const tCommon = useTranslations('common');
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
   const [invalid, setInvalid] = useState(false);
@@ -54,7 +57,7 @@ export default function InlineTextField({
   if (!editing) {
     return (
       <Pill active={display != null} onClick={start}>
-        <span className="max-w-[240px] truncate">{display ?? 'Empty'}</span>
+        <span className="max-w-[240px] truncate">{display ?? t('empty')}</span>
       </Pill>
     );
   }
@@ -85,7 +88,7 @@ export default function InlineTextField({
         variant="ghost"
         size="icon"
         className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
-        title="Save"
+        title={tCommon('save')}
         onMouseDown={(e) => e.preventDefault()}
         onClick={commit}
       >

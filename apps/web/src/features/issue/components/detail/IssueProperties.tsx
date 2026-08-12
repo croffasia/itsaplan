@@ -25,6 +25,7 @@ import IssueWatchers from './IssueWatchers';
 import IssueSectionHeading from './IssueSectionHeading';
 import { type Embeddable } from '../../utils/attachmentEmbed';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // One property row in the two-column list: name on the left, control on the right.
 function PropertyRow({ label, children }: { label: string; children: ReactNode }) {
@@ -78,11 +79,12 @@ export default function IssueProperties({
   open: boolean;
   onToggle: () => void;
 }) {
+  const t = useTranslations('issue.fields');
   const hasMembers = project.assignees.some((a) => a.kind === 'member');
   const hasAgents = project.assignees.some((a) => a.kind === 'agent');
   const rows = (
     <>
-      <PropertyRow label="State">
+      <PropertyRow label={t('state')}>
         <StatusSelect
           columns={project.columns}
           value={issue.columnId}
@@ -91,7 +93,7 @@ export default function IssueProperties({
         />
       </PropertyRow>
 
-      <PropertyRow label="Priority">
+      <PropertyRow label={t('priority')}>
         <PrioritySelect
           value={issue.priority ?? ''}
           onChange={(v) => onPatch({ priority: v || null })}
@@ -100,7 +102,7 @@ export default function IssueProperties({
       </PropertyRow>
 
       {hasMembers && (
-        <PropertyRow label="Assignee">
+        <PropertyRow label={t('assignee')}>
           <AssigneeSelect
             assignees={project.assignees}
             value={issue.assigneeUserId}
@@ -111,7 +113,7 @@ export default function IssueProperties({
       )}
 
       {hasAgents && (
-        <PropertyRow label="Delegate">
+        <PropertyRow label={t('delegate')}>
           <DelegateSelect
             assignees={project.assignees}
             value={issue.delegateUserId}
@@ -122,13 +124,13 @@ export default function IssueProperties({
       )}
 
       {watchers && (
-        <PropertyRow label="Watching">
+        <PropertyRow label={t('watching')}>
           <IssueWatchers issueId={issue.id} watchers={watchers} />
         </PropertyRow>
       )}
 
       {project.issueTypes.length > 0 && (
-        <PropertyRow label="Type">
+        <PropertyRow label={t('type')}>
           <TypeSelect
             issueTypes={project.issueTypes}
             value={issue.typeId}
@@ -139,7 +141,7 @@ export default function IssueProperties({
       )}
 
       {project.labels.length > 0 && (
-        <PropertyRow label="Labels">
+        <PropertyRow label={t('labels')}>
           <LabelsSelect
             labels={project.labels}
             groups={project.labelGroups}
@@ -151,14 +153,14 @@ export default function IssueProperties({
       )}
 
       {project.project.initiativesEnabled && (!readOnly || issue.initiative) && (
-        <PropertyRow label="Initiative">
+        <PropertyRow label={t('initiative')}>
           {readOnly ? (
             // Read-only shows the linked initiative from the issue itself, avoiding
             // the authenticated initiatives query the editable select runs.
             <ReadOnlyPill>
               <Pill active={!!issue.initiative}>
                 <Target />
-                {issue.initiative?.title ?? 'Initiative'}
+                {issue.initiative?.title ?? t('initiative')}
               </Pill>
             </ReadOnlyPill>
           ) : (
@@ -172,14 +174,14 @@ export default function IssueProperties({
       )}
 
       {project.project.cyclesEnabled && (!readOnly || issue.cycle) && (
-        <PropertyRow label="Cycle">
+        <PropertyRow label={t('cycle')}>
           {readOnly ? (
             // Read-only shows the cycle from the issue itself, avoiding the
             // authenticated cycles query the editable select runs.
             <ReadOnlyPill>
               <Pill active={!!issue.cycle}>
                 <RefreshCw />
-                {issue.cycle?.name ?? 'Cycle'}
+                {issue.cycle?.name ?? t('cycle')}
               </Pill>
             </ReadOnlyPill>
           ) : (
@@ -192,19 +194,19 @@ export default function IssueProperties({
         </PropertyRow>
       )}
 
-      <PropertyRow label="Start date">
+      <PropertyRow label={t('startDate')}>
         <DatePill
           value={issue.startDate}
-          placeholder="Start date"
+          placeholder={t('startDate')}
           onChange={(v) => onPatch({ startDate: v })}
           readOnly={readOnly}
         />
       </PropertyRow>
 
-      <PropertyRow label="Due date">
+      <PropertyRow label={t('dueDate')}>
         <DatePill
           value={issue.dueDate}
-          placeholder="Due date"
+          placeholder={t('dueDate')}
           onChange={(v) => onPatch({ dueDate: v })}
           readOnly={readOnly}
         />
@@ -252,13 +254,13 @@ export default function IssueProperties({
     // against the one below it.
     <div className={cn('mt-6 border-t pt-5', !open && '-mb-2', className)}>
       <IssueSectionHeading
-        label="Properties"
+        label={t('properties')}
         open={open}
         onToggle={onToggle}
         className={cn('h-7', open && 'mb-3')}
       />
       {open && (
-        <div className="grid grid-cols-[72px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
+        <div className="grid grid-cols-[104px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
       )}
     </div>
   );

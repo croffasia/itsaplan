@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import IssueDetailSkeleton from '@/features/issue/components/detail/IssueDetailSkeleton';
@@ -27,6 +28,7 @@ export default function PublicIssueOverlay({
   onOpenIssue: (id: number) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations('workItems.share');
   const query = useQuery({
     queryKey: ['share', 'view', token, 'issue', issueId],
     queryFn: () => api.getSharedViewIssue(token, issueId as number),
@@ -38,7 +40,7 @@ export default function PublicIssueOverlay({
     <Dialog open={issueId != null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="fixed inset-0 top-0 left-0 h-screen w-screen max-w-none translate-x-0 translate-y-0 gap-0 overflow-y-auto rounded-none border-0 p-0 sm:max-w-none">
         <DialogHeader className="sr-only">
-          <DialogTitle>Issue</DialogTitle>
+          <DialogTitle>{t('issueTitle')}</DialogTitle>
         </DialogHeader>
         {query.isLoading && (
           <div className="px-8 py-2">
@@ -46,7 +48,7 @@ export default function PublicIssueOverlay({
           </div>
         )}
         {(query.isError || (!query.isLoading && !query.data)) && (
-          <p className="p-8 text-sm text-muted-foreground">This issue is not available.</p>
+          <p className="p-8 text-sm text-muted-foreground">{t('issueUnavailable')}</p>
         )}
         {query.data && (
           <ReadOnlyIssueDetail bundle={query.data} extended={extended} onOpenIssue={onOpenIssue} />

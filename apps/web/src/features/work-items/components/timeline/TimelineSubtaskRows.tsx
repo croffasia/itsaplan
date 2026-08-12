@@ -1,4 +1,5 @@
 import { CornerDownRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { issueColor, type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { useSubtasks } from '../../context/useSubtasks';
@@ -34,6 +35,7 @@ export function TimelineSubtaskRows({
   spanToRect: (start: Date, end: Date) => { left: number; width: number };
   onOpen: (id: number) => void;
 }) {
+  const t = useTranslations('workItems.timeline');
   const subtasks = useSubtasks(issueId);
 
   return (
@@ -86,7 +88,7 @@ export function TimelineSubtaskRows({
                   backgroundColor: issueColor(subtask, maps),
                   borderLeft: span.inferredStart ? '2px dashed rgba(255,255,255,0.75)' : undefined,
                 }}
-                title={span.inferredStart ? 'Start inferred from the created date' : subtask.title}
+                title={span.inferredStart ? t('inferredStart') : subtask.title}
               >
                 <span className="truncate text-[10px] leading-none">{subtask.title}</span>
               </div>

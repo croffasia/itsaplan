@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { type SubtaskDisposition } from '@/lib/api';
 import { dispositionReady } from '@/utils/subtasks';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
@@ -24,14 +25,13 @@ export function BulkRemovalDialog({
   onConfirm: (subtasks?: SubtaskDisposition) => Promise<unknown>;
   onClose: () => void;
 }) {
+  const t = useTranslations('workItems.removal');
   const [disposition, setDisposition] = useState<SubtaskDisposition | null>(null);
-  const deleting = action === 'delete';
-  const noun = `issue${ids.length === 1 ? '' : 's'}`;
 
   return (
     <ConfirmDialog
-      title={`${deleting ? 'Delete' : 'Archive'} ${noun}`}
-      confirmLabel={`${deleting ? 'Delete' : 'Archive'} ${ids.length} ${noun}`}
+      title={t(`${action}.title`, { count: ids.length })}
+      confirmLabel={t(`${action}.confirm`, { count: ids.length })}
       confirmDisabled={subtaskCount > 0 && !dispositionReady(disposition)}
       onConfirm={async () => {
         await onConfirm(disposition ?? undefined);
@@ -40,9 +40,7 @@ export function BulkRemovalDialog({
       onClose={onClose}
     >
       <p className="text-sm text-muted-foreground">
-        {deleting
-          ? `Delete ${ids.length} selected ${noun}? This also removes comments, activity and attachments. This cannot be undone.`
-          : `Archive ${ids.length} selected ${noun}? ${ids.length === 1 ? 'It leaves' : 'They leave'} the board and can be restored later.`}
+        {t(`${action}.description`, { count: ids.length })}
       </p>
       {subtaskCount > 0 && (
         <SubtaskDisposalChoice

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { type Issue } from '@/lib/api';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
@@ -15,6 +16,7 @@ export function CalendarDayOverflow({
   dot: (issue: Issue) => string;
   onOpen: (id: number) => void;
 }) {
+  const t = useTranslations('workItems.calendar');
   const [open, setOpen] = useState(false);
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -23,12 +25,12 @@ export function CalendarDayOverflow({
           type="button"
           className="px-1.5 text-left text-[10px] text-muted-foreground hover:text-foreground"
         >
-          +{hidden} more
+          {t('moreIssues', { count: hidden })}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-60 p-1">
         <div className="px-2 py-1 text-xs font-medium text-muted-foreground">
-          {issues.length} issues
+          {t('issueCount', { count: issues.length })}
         </div>
         <div className="flex max-h-72 flex-col overflow-y-auto">
           {issues.map((issue) => (

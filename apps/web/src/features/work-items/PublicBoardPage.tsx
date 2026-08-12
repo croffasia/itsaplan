@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslations } from 'next-intl';
 import { api } from '@/lib/api';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -12,6 +13,7 @@ import PublicIssueOverlay from './components/public/PublicIssueOverlay';
 // the board bundle by token and renders it with no session; clicking an issue opens
 // its read-only detail under the same token.
 export default function PublicBoardPage({ token }: { token: string }) {
+  const t = useTranslations('workItems.share');
   const [openIssueId, setOpenIssueId] = useState<number | null>(null);
   const query = useQuery({
     queryKey: ['share', 'view', token],
@@ -34,9 +36,7 @@ export default function PublicBoardPage({ token }: { token: string }) {
   if (query.isError || !query.data) {
     return (
       <PublicShareFrame>
-        <p className="px-6 py-10 text-sm text-muted-foreground">
-          This shared board is not available. The link may have been revoked.
-        </p>
+        <p className="px-6 py-10 text-sm text-muted-foreground">{t('boardUnavailable')}</p>
       </PublicShareFrame>
     );
   }

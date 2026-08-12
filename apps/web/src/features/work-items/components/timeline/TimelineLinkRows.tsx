@@ -1,7 +1,7 @@
 import { type IssueLinkRef } from '@/lib/api';
 import { issueColor, type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
-import { LINK_RELATION_LABELS } from '@/utils/issueLinks';
+import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
 import { useIssueLinks } from '../../context/useIssueLinks';
 import { effSpan, LINK_ROW_H } from '../../utils/timeline';
 
@@ -34,6 +34,7 @@ export function TimelineLinkRows({
   spanToRect: (start: Date, end: Date) => { left: number; width: number };
   onOpen: (id: number) => void;
 }) {
+  const relationLabel = useLinkRelationLabel();
   const links = useIssueLinks(refs);
 
   return (
@@ -63,7 +64,7 @@ export function TimelineLinkRows({
             >
               {/* Fixed width so the identifiers stay in one column when a row
                   leaves its relation unnamed. */}
-              <span className="w-20 shrink-0">{named && LINK_RELATION_LABELS[link.relation]}</span>
+              <span className="w-20 shrink-0">{named && relationLabel(link.relation)}</span>
               <span className="shrink-0 tabular-nums">{link.issue.identifier}</span>
               <span className="min-w-0 flex-1 truncate">{link.issue.title}</span>
             </div>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useTranslations } from 'next-intl';
 
 // The grip on the right edge of a table column's header cell: dragging it sets
 // that column's width. The starting width is measured from the cell itself, so a
@@ -10,6 +11,7 @@ export function TableColumnResizer({
   onResize: (width: number) => void;
   onResizeEnd: () => void;
 }) {
+  const t = useTranslations('workItems');
   // The drag listens on the window, since the pointer leaves the 6px grip as soon
   // as it moves. Switching layout or project unmounts the header mid-drag, and the
   // pointerup that would drop the listeners never reaches this component.
@@ -42,7 +44,7 @@ export function TableColumnResizer({
   return (
     <div
       onPointerDown={beginResize}
-      aria-label="Resize the column"
+      aria-label={t('resizeColumn')}
       // Placed in the gap after the cell, so it does not cover the label, and
       // stretched over the header's padding to stay easy to grab. touch-none keeps
       // a touch drag on the grip from scrolling the table instead.

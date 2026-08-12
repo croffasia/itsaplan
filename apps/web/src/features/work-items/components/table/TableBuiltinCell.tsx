@@ -2,7 +2,7 @@ import { CalendarClock } from 'lucide-react';
 import { type Issue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
-import { priorityLabel } from '@/utils/fieldOptions';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import {
   AssigneeAvatar,
   DateBadge,
@@ -24,6 +24,7 @@ export function TableBuiltinCell({
   issue: Issue;
   maps: Maps;
 }) {
+  const priorityLabel = usePriorityLabel();
   switch (column) {
     case 'status': {
       const col = maps.columnById.get(issue.columnId);

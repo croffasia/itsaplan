@@ -2,7 +2,7 @@ import { startOfDay } from 'date-fns';
 import { type BoardIssue, type Issue, type ProjectDetail } from '@/lib/api';
 import { parseDate } from '@/utils/dates';
 import { buildDayTrack, type DayTrack } from '@/utils/timelineTrack';
-import { buildGroups, groupIssues, type IssueGroup } from '@/utils/project';
+import { buildGroups, groupIssues, type GroupLabels, type IssueGroup } from '@/utils/project';
 import type { GroupField, TimelineScale } from '@/utils/viewSettings';
 
 // px per day at each zoom level. Wider days keep the per-day numbers legible;
@@ -60,6 +60,7 @@ export interface TimelineModel extends DayTrack {
 export function buildTimeline({
   project,
   group,
+  groupLabels,
   showEmptyGroups,
   collapsedGroups,
   viewportW,
@@ -68,13 +69,14 @@ export function buildTimeline({
 }: {
   project: ProjectDetail;
   group: GroupField;
+  groupLabels: GroupLabels;
   showEmptyGroups: boolean;
   collapsedGroups: Set<string>;
   viewportW: number;
   labelW: number;
   dayW: number;
 }): TimelineModel {
-  const groups = buildGroups(project, group);
+  const groups = buildGroups(project, group, groupLabels);
   const issuesByGroup = groupIssues(groups, project.issues, group);
   // Rows, and the date range that covers every bar.
   const rows: TimelineRow[] = [];

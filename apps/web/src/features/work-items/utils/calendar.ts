@@ -2,8 +2,6 @@ import { addDays, startOfMonth, startOfWeek } from 'date-fns';
 import { type Issue } from '@/lib/api';
 import type { ViewSettings } from '@/utils/viewSettings';
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
 // The calendar layout for the visible month: issues bucketed by their chosen date
 // (due or start), the rest collected as unscheduled, the weekday headers rotated
 // to the chosen first day, and the six-week day grid (a constant height regardless
@@ -20,6 +18,8 @@ export function buildCalendarModel(
   dateField: ViewSettings['calendarDateField'],
   weekStart: ViewSettings['weekStart'],
   cursor: Date,
+  // The seven weekday names, Sunday first, in the reader's language.
+  weekdayNames: string[],
 ): CalendarModel {
   const byDay = new Map<string, Issue[]>();
   const unscheduled: Issue[] = [];
@@ -34,7 +34,7 @@ export function buildCalendarModel(
     }
   }
 
-  const weekdays = [...WEEKDAYS.slice(weekStart), ...WEEKDAYS.slice(0, weekStart)];
+  const weekdays = [...weekdayNames.slice(weekStart), ...weekdayNames.slice(0, weekStart)];
   const gridStart = startOfWeek(startOfMonth(cursor), { weekStartsOn: weekStart });
   const days = Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
 

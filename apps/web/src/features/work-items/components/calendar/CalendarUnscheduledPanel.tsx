@@ -1,4 +1,5 @@
 import { useDroppable } from '@dnd-kit/core';
+import { useTranslations } from 'next-intl';
 import { type ProjectDetail, type Issue } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { type DateField } from '@/utils/viewSettings';
@@ -21,8 +22,8 @@ export function CalendarUnscheduledPanel({
   dot: (issue: Issue) => string;
   onOpen: (id: number) => void;
 }) {
+  const t = useTranslations('workItems.calendar');
   const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_ID });
-  const fieldName = dateField === 'dueDate' ? 'due' : 'start';
   return (
     <div
       ref={setNodeRef}
@@ -32,7 +33,7 @@ export function CalendarUnscheduledPanel({
       )}
     >
       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        {`No ${fieldName} date`}
+        {t(`noDate.${dateField}`)}
         <span className="text-muted-foreground">{issues.length}</span>
       </div>
       <div className="flex flex-col gap-1 overflow-y-auto">
@@ -46,7 +47,7 @@ export function CalendarUnscheduledPanel({
           />
         ))}
         {issues.length === 0 && (
-          <span className="text-xs text-muted-foreground/50">{`Everything has a ${fieldName} date.`}</span>
+          <span className="text-xs text-muted-foreground/50">{t(`allDated.${dateField}`)}</span>
         )}
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from '@dnd-kit/core';
+import { useTranslations } from 'next-intl';
 import { type Issue } from '@/lib/api';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
 import { toDateStr } from '@/utils/dates';
@@ -17,12 +18,16 @@ import { CalendarMonthNav } from './CalendarMonthNav';
 import { CalendarDayCell } from './CalendarDayCell';
 import { CalendarUnscheduledPanel, UNSCHEDULED_ID } from './CalendarUnscheduledPanel';
 
+// Sunday first, which is the order buildCalendarModel rotates from.
+const WEEKDAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'] as const;
+
 export default function CalendarView({
   project,
   settings,
   onOpenIssue,
   readOnly,
 }: WorkItemsViewProps) {
+  const t = useTranslations('workItems.calendar');
   const updateIssue = useUpdateIssue(project.project.key);
   const [cursor, setCursor] = useState<Date>(() => startOfMonth(new Date()));
   const [activeId, setActiveId] = useState<number | null>(null);
@@ -38,6 +43,7 @@ export default function CalendarView({
     dateField,
     settings.weekStart,
     cursor,
+    WEEKDAY_KEYS.map((key) => t(`weekdays.${key}`)),
   );
 
   function reschedule(issueId: number, value: string | null) {

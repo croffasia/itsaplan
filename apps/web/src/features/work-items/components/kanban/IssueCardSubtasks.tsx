@@ -1,4 +1,5 @@
 import { ListTree } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type Maps } from '@/utils/project';
 import { subtaskProgress } from '@/utils/subtasks';
 import { cn } from '@/lib/utils';
@@ -20,6 +21,7 @@ export function IssueCardSubtasks({
   maps: Maps;
   onOpen?: (id: number) => void;
 }) {
+  const t = useTranslations('workItems');
   const subtasks = useSubtasks(issueId);
   if (subtasks.length === 0) return null;
   const progress = subtaskProgress(subtasks, maps.columnById);
@@ -28,7 +30,7 @@ export function IssueCardSubtasks({
     <div className="mt-2.5 flex flex-col gap-1 border-t border-border/50 pt-2">
       <span className="flex items-center gap-1.5 text-[10px] tracking-wide text-muted-foreground/70">
         <ListTree className="size-3 shrink-0 text-muted-foreground" />
-        {`Subtasks ${progress.done}/${progress.total}`}
+        {t('subtasksProgress', { done: progress.done, total: progress.total })}
       </span>
       {subtasks.map((subtask) => {
         const column = maps.columnById.get(subtask.columnId);

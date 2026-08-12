@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { Archive, Bot, CircleDashed, RefreshCw, Tag, Target, Trash2, User, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type ProjectDetail } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
+import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { subtaskCount } from '@/utils/subtasks';
@@ -24,6 +26,9 @@ import { BulkRemovalDialog } from './BulkRemovalDialog';
 // change stays visible and further edits can be chained) and self-empties after
 // archive/delete as those issues leave the board.
 export function BulkActionBar({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('workItems.bulk');
+  const tCommon = useTranslations('common');
+  const priorityLabel = usePriorityLabel();
   const selection = useSelection();
   const { can } = usePermissions();
   const bulk = useBulkActions(project);
@@ -55,7 +60,9 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
             disabled && 'opacity-70',
           )}
         >
-          <span className="pr-1 text-sm font-medium whitespace-nowrap">{ids.length} selected</span>
+          <span className="pr-1 text-sm font-medium whitespace-nowrap">
+            {t('selected', { count: ids.length })}
+          </span>
 
           {canEdit && (
             <>
@@ -63,7 +70,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
 
               <BarMenu
                 icon={<CircleDashed className="size-4" />}
-                label="Status"
+                label={t('status')}
                 disabled={disabled}
               >
                 {project.columns.map((c) => (
@@ -77,23 +84,27 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                 ))}
               </BarMenu>
 
-              <BarMenu icon={PRIORITY_FIELDS[0].icon} label="Priority" disabled={disabled}>
+              <BarMenu icon={PRIORITY_FIELDS[0].icon} label={t('priority')} disabled={disabled}>
                 {PRIORITY_FIELDS.map((p) => (
                   <DropdownMenuItem
                     key={p.value || 'none'}
                     onSelect={() => void bulk.patch(ids, { priority: p.value || null })}
                   >
                     {p.icon}
-                    <span className="flex-1">{p.label}</span>
+                    <span className="flex-1">{priorityLabel(p.value)}</span>
                   </DropdownMenuItem>
                 ))}
               </BarMenu>
 
               {members.length > 0 && (
-                <BarMenu icon={<User className="size-4" />} label="Assignee" disabled={disabled}>
+                <BarMenu
+                  icon={<User className="size-4" />}
+                  label={t('assignee')}
+                  disabled={disabled}
+                >
                   <DropdownMenuItem onSelect={() => void bulk.patch(ids, { assigneeUserId: null })}>
                     <CircleDashed />
-                    <span className="flex-1">No assignee</span>
+                    <span className="flex-1">{t('noAssignee')}</span>
                   </DropdownMenuItem>
                   {members.map((a) => (
                     <DropdownMenuItem
@@ -108,10 +119,14 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
               )}
 
               {agents.length > 0 && (
-                <BarMenu icon={<Bot className="size-4" />} label="Delegate" disabled={disabled}>
+                <BarMenu
+                  icon={<Bot className="size-4" />}
+                  label={t('delegate')}
+                  disabled={disabled}
+                >
                   <DropdownMenuItem onSelect={() => void bulk.patch(ids, { delegateUserId: null })}>
                     <CircleDashed />
-                    <span className="flex-1">No delegate</span>
+                    <span className="flex-1">{t('noDelegate')}</span>
                   </DropdownMenuItem>
                   {agents.map((a) => (
                     <DropdownMenuItem
@@ -128,12 +143,12 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
               {initiatives.length > 0 && (
                 <BarMenu
                   icon={<Target className="size-4" />}
-                  label="Initiative"
+                  label={t('initiative')}
                   disabled={disabled}
                 >
                   <DropdownMenuItem onSelect={() => void bulk.patch(ids, { initiativeId: null })}>
                     <CircleDashed />
-                    <span className="flex-1">No initiative</span>
+                    <span className="flex-1">{t('noInitiative')}</span>
                   </DropdownMenuItem>
                   {initiatives.map((initiative) => (
                     <DropdownMenuItem
@@ -148,10 +163,14 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
               )}
 
               {project.plannedCycles.length > 0 && (
-                <BarMenu icon={<RefreshCw className="size-4" />} label="Cycle" disabled={disabled}>
+                <BarMenu
+                  icon={<RefreshCw className="size-4" />}
+                  label={t('cycle')}
+                  disabled={disabled}
+                >
                   <DropdownMenuItem onSelect={() => void bulk.patch(ids, { cycleId: null })}>
                     <CircleDashed />
-                    <span className="flex-1">No cycle</span>
+                    <span className="flex-1">{t('noCycle')}</span>
                   </DropdownMenuItem>
                   {project.plannedCycles.map((cycle) => (
                     <DropdownMenuItem
@@ -166,7 +185,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
               )}
 
               {project.labels.length > 0 && (
-                <BarMenu icon={<Tag className="size-4" />} label="Labels" disabled={disabled}>
+                <BarMenu icon={<Tag className="size-4" />} label={t('labels')} disabled={disabled}>
                   {project.labels.map((l) => (
                     <DropdownMenuItem
                       key={l.id}
@@ -195,7 +214,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
                 }}
               >
                 <Archive className="size-4" />
-                Archive
+                {t('archive')}
               </Button>
             </>
           )}
@@ -209,7 +228,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
               onClick={() => setConfirming('delete')}
             >
               <Trash2 className="size-4" />
-              Delete
+              {tCommon('delete')}
             </Button>
           )}
 
@@ -220,7 +239,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
             size="icon"
             className="size-8 text-muted-foreground"
             onClick={selection.clear}
-            title="Clear selection"
+            title={t('clearSelection')}
           >
             <X />
           </Button>

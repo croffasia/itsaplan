@@ -1,4 +1,5 @@
 import { ListChecks, ListX } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useSelection } from '../../context/useSelection';
@@ -8,6 +9,7 @@ import { useSelection } from '../../context/useSelection';
 // active, so the header stays clean otherwise — needs a `group/column` ancestor for
 // the hover reveal.
 export function SelectAllToggle({ ids, className }: { ids: number[]; className?: string }) {
+  const t = useTranslations('workItems');
   const selection = useSelection();
   if (ids.length === 0) return null;
   const allSelected = ids.every((id) => selection.isSelected(id));
@@ -22,7 +24,7 @@ export function SelectAllToggle({ ids, className }: { ids: number[]; className?:
         className,
       )}
       onClick={() => (allSelected ? selection.remove(ids) : selection.add(ids))}
-      title={allSelected ? 'Deselect all' : 'Select all'}
+      title={allSelected ? t('deselectAll') : t('selectAll')}
     >
       {allSelected ? <ListX /> : <ListChecks />}
     </Button>

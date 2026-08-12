@@ -14,7 +14,9 @@ import { useDndSensors } from '@/lib/dnd';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useUpdateIssue } from '@/services/issues.service';
 import { useTableColumnWidths } from '../../hooks/useTableColumnWidths';
-import { preferPrefix, sortedOrderMessage, type DropData } from '../../utils/dnd';
+import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
+import { useGroupLabels } from '@/hooks/useGroupLabels';
+import { preferPrefix, type DropData } from '../../utils/dnd';
 import {
   buildTableItems,
   collapsedKey,
@@ -44,6 +46,8 @@ export default function TableView({
   readOnly,
   widthScope,
 }: TableViewProps) {
+  const sortedOrderMessage = useSortedOrderMessage();
+  const groupLabels = useGroupLabels();
   const updateIssue = useUpdateIssue(project.project.key);
   const [activeId, setActiveId] = useState<number | null>(null);
   const sensors = useDndSensors(readOnly);
@@ -57,8 +61,8 @@ export default function TableView({
   const grouped = settings.group !== 'none';
   const subgrouped = grouped && settings.subgroup !== 'none';
   const sorted = sortIssues(project.issues, settings.sort, project);
-  const groups = buildGroups(project, settings.group);
-  const subGroups = subgrouped ? buildGroups(project, settings.subgroup) : [];
+  const groups = buildGroups(project, settings.group, groupLabels);
+  const subGroups = subgrouped ? buildGroups(project, settings.subgroup, groupLabels) : [];
   const maps = buildMaps(project);
 
   const { columns, gridTemplate, minWidth, alignTop } = resolveColumns(

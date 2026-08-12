@@ -1,7 +1,8 @@
 import { type IssueLinkRef } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
-import { LINK_RELATION_ICONS, LINK_RELATION_LABELS } from '@/utils/issueLinks';
+import { LINK_RELATION_ICONS } from '@/utils/issueLinks';
+import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useIssueLinks } from '../../context/useIssueLinks';
 
@@ -19,6 +20,7 @@ export function IssueCardLinks({
   maps: Maps;
   onOpen?: (id: number) => void;
 }) {
+  const relationLabel = useLinkRelationLabel();
   const links = useIssueLinks(refs);
   if (links.length === 0) return null;
 
@@ -69,7 +71,7 @@ export function IssueCardLinks({
                               : 'text-muted-foreground',
                           )}
                         />
-                        {LINK_RELATION_LABELS[link.relation]}
+                        {relationLabel(link.relation)}
                       </>
                     )}
                   </span>

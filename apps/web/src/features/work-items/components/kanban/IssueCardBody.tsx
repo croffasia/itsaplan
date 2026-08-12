@@ -1,4 +1,5 @@
 import { CalendarArrowUp, CalendarClock, RefreshCw, Target, Timer } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
@@ -29,6 +30,7 @@ export function IssueCardBody({
   properties: PropertyKey[];
   onOpen?: (id: number) => void;
 }) {
+  const t = useTranslations('workItems');
   const has = (p: DisplayProperty) => properties.includes(p);
   const type = issue.typeId != null ? maps.typeById.get(issue.typeId) : undefined;
   const assignee =
@@ -89,7 +91,7 @@ export function IssueCardBody({
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
-                In current status since {formatShortDate(issue.statusSince)}
+                {t('statusSince', { date: formatShortDate(issue.statusSince) })}
               </TooltipContent>
             </Tooltip>
           )}
@@ -97,14 +99,14 @@ export function IssueCardBody({
             <DateBadge
               icon={<CalendarArrowUp className="size-2.5" />}
               date={issue.startDate}
-              title="Start date"
+              title={t('columns.startDate')}
             />
           )}
           {has('dueDate') && issue.dueDate && (
             <DateBadge
               icon={<CalendarClock className="size-2.5" />}
               date={issue.dueDate}
-              title="Due date"
+              title={t('columns.dueDate')}
               overdue={isDueOverdue(issue.dueDate, column?.stateType)}
             />
           )}
@@ -150,9 +152,9 @@ export function IssueCardBody({
       {footerShown && (
         <div className="mt-2 flex items-center justify-between gap-2">
           <span className="text-[11px] text-muted-foreground/70">
-            {has('created') && `Created ${formatShortDate(issue.createdAt)}`}
+            {has('created') && t('createdOn', { date: formatShortDate(issue.createdAt) })}
             {has('created') && has('updated') && ' · '}
-            {has('updated') && `Updated ${formatShortDate(issue.updatedAt)}`}
+            {has('updated') && t('updatedOn', { date: formatShortDate(issue.updatedAt) })}
           </span>
           {/* Negative spacing so a delegate and an assignee shown together
               overlap; the ring in the card color keeps them separated. */}

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
@@ -36,9 +38,12 @@ interface TimelineCollapseState {
 // It renders the saved-view tabs, the inline edit bar and the selected layout;
 // the project data and the view editor come from the Shell through React context.
 export default function WorkItemsPage() {
+  const t = useTranslations('workItems');
+  const tCommon = useTranslations('common');
   const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
     useShell();
   const { can } = usePermissions();
+  const groupLabels = useGroupLabels();
   const features = useProjectFeatures();
   const [timelineCollapseState, setTimelineCollapseState] = useState<TimelineCollapseState>({
     scope: '',
@@ -67,7 +72,7 @@ export default function WorkItemsPage() {
   const changeSettings = (next: ViewSettings) =>
     editor.changeSettings(restoreHiddenSections(next, editor.settings, features));
 
-  const timelineGroups = buildGroups(filteredProject, settings.group);
+  const timelineGroups = buildGroups(filteredProject, settings.group, groupLabels);
   const timelineIssuesByGroup = groupIssues(timelineGroups, filteredProject.issues, settings.group);
   const visibleTimelineGroupKeys = timelineGroups
     .filter(
@@ -170,7 +175,7 @@ export default function WorkItemsPage() {
               <ViewIconPicker icon={editor.draftIcon} onChange={editor.setDraftIcon} />
               <Input
                 value={editor.draftName}
-                placeholder="All issues"
+                placeholder={t('viewNamePlaceholder')}
                 autoFocus
                 onChange={(e) => editor.setDraftName(e.target.value)}
                 onKeyDown={(e) =>
@@ -181,7 +186,7 @@ export default function WorkItemsPage() {
                 className="h-8 flex-1 border-0 bg-transparent px-1 text-sm font-medium shadow-none focus-visible:ring-0"
               />
               <Button variant="ghost" size="sm" onClick={editor.cancelEdits}>
-                Cancel
+                {tCommon('cancel')}
               </Button>
               {canSaveView && (
                 <Button
@@ -189,7 +194,7 @@ export default function WorkItemsPage() {
                   disabled={!editor.activeView && !editor.draftName.trim()}
                   onClick={() => void editor.saveEdits()}
                 >
-                  Save
+                  {tCommon('save')}
                 </Button>
               )}
             </div>

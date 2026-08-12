@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { DEFAULT_COLOR, type IssueGroup } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { GroupDot } from '../shared/GroupDot';
@@ -25,6 +26,7 @@ export function TimelineGroupRow({
   isDrop: boolean;
   onToggle: () => void;
 }) {
+  const t = useTranslations('workItems.timeline');
   return (
     <div
       data-group-key={group.key}
@@ -33,7 +35,7 @@ export function TimelineGroupRow({
     >
       <button
         type="button"
-        title={collapsed ? 'Expand group' : 'Collapse group'}
+        title={collapsed ? t('expandGroup') : t('collapseGroup')}
         onClick={onToggle}
         className={cn(
           'sticky left-0 z-10 flex shrink-0 items-center gap-2 overflow-hidden border-r px-3 text-left text-sm font-medium',

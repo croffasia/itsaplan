@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { type BoardIssue, type ProjectDetail, type Issue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { isBlocked } from '@/utils/issueLinks';
@@ -52,6 +53,7 @@ export function TimelineIssueRow({
   onBeginDrag: (e: React.PointerEvent, issue: Issue, mode: TimelineDragMode) => void;
   onOpen: (id: number) => void;
 }) {
+  const t = useTranslations('workItems.timeline');
   const blocked = isBlocked(issue);
 
   return (
@@ -102,9 +104,7 @@ export function TimelineIssueRow({
             opacity: span.inferredStart ? 0.8 : 1,
             borderLeft: span.inferredStart ? '2px dashed rgba(255,255,255,0.75)' : undefined,
           }}
-          title={
-            span.inferredStart ? 'Start inferred from the created date — drag to set it' : undefined
-          }
+          title={span.inferredStart ? t('inferredStartDraggable') : undefined}
         >
           {!readOnly && (
             <span

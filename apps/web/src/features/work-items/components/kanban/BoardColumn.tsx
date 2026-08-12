@@ -2,6 +2,7 @@ import { useCallback, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { ChevronsRightLeft, EyeOff, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps, type IssueGroup } from '@/utils/project';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,7 @@ export function BoardColumn({
   // In a read-only share the add affordance and select-all toggle are hidden.
   readOnly?: boolean;
 }) {
+  const t = useTranslations('workItems');
   const { can } = usePermissions();
   const canCreateIssue = can('work_items', 'create') && !readOnly;
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -106,7 +108,7 @@ export function BoardColumn({
             size="icon"
             className="size-6 text-muted-foreground"
             onClick={onCollapse}
-            title="Collapse"
+            title={t('collapse')}
           >
             <ChevronsRightLeft />
           </Button>
@@ -115,7 +117,7 @@ export function BoardColumn({
             size="icon"
             className="size-6 text-muted-foreground"
             onClick={onHide}
-            title="Hide"
+            title={t('hide')}
           >
             <EyeOff />
           </Button>
@@ -125,7 +127,7 @@ export function BoardColumn({
               size="icon"
               className="size-6 text-muted-foreground"
               onClick={onAddIssue}
-              title="New issue"
+              title={t('newIssue')}
             >
               <Plus />
             </Button>
@@ -190,7 +192,7 @@ export function BoardColumn({
               className="invisible absolute left-0 w-full text-muted-foreground opacity-0 group-focus-within/column:visible group-focus-within/column:opacity-100 group-hover/column:visible group-hover/column:opacity-100"
               style={{ top: cardsHeight + ADD_BUTTON_GAP }}
               onClick={onAddIssue}
-              title="New issue"
+              title={t('newIssue')}
             >
               <Plus />
             </Button>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { type Issue, type IssuePatch, type ProjectDetail } from '@/lib/api';
 import { addDays, toDateStr } from '@/utils/dates';
 import { buildGroups, groupKeyOf } from '@/utils/project';
+import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useUpdateIssue } from '@/services/issues.service';
 import type { GroupField } from '@/utils/viewSettings';
 import { effSpan } from '../utils/timeline';
@@ -36,9 +37,10 @@ export function useTimelineDrag({
   dayW: number;
   onOpenIssue: (id: number) => void;
 }) {
+  const groupLabels = useGroupLabels();
   const updateIssue = useUpdateIssue(project.project.key);
   const groupByKey = new Map(
-    buildGroups(project, group).map((issueGroup) => [issueGroup.key, issueGroup]),
+    buildGroups(project, group, groupLabels).map((issueGroup) => [issueGroup.key, issueGroup]),
   );
   const [preview, setPreview] = useState<{ issueId: number; start: Date; end: Date } | null>(null);
   const [dropGroupKey, setDropGroupKey] = useState<string | null>(null);

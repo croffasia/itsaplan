@@ -1,6 +1,7 @@
 import { DndContext } from '@dnd-kit/core';
 import { toast } from 'sonner';
 import { ChevronDown, Eye } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import {
   buildGroups,
   buildMaps,
@@ -11,9 +12,10 @@ import {
   type IssueGroup,
 } from '@/utils/project';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
+import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
+import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useSelection } from '../../context/useSelection';
 import { boardCollision, issuesToMove } from '../../utils/kanban';
-import { sortedOrderMessage } from '../../utils/dnd';
 import { Button } from '@/components/ui/button';
 import { GroupDot } from '../shared/GroupDot';
 import { CardOverlay } from './CardOverlay';
@@ -30,6 +32,9 @@ export default function FlatBoard({
   onAddIssue,
   readOnly,
 }: WorkItemsViewProps) {
+  const t = useTranslations('workItems');
+  const groupLabels = useGroupLabels();
+  const sortedOrderMessage = useSortedOrderMessage();
   const dnd = useBoardDnd(project.project.key, readOnly);
   const selection = useSelection();
 
@@ -57,7 +62,7 @@ export default function FlatBoard({
         : settings.collapsedGroups.filter((k) => k !== key),
     });
 
-  const groups = buildGroups(project, settings.group);
+  const groups = buildGroups(project, settings.group, groupLabels);
   const sorted = sortIssues(project.issues, settings.sort, project);
   const issuesByGroup = groupIssues(groups, sorted, settings.group);
   const maps = buildMaps(project);
@@ -69,7 +74,6 @@ export default function FlatBoard({
     : groups.filter((g) => (issuesByGroup.get(g.key)?.length ?? 0) > 0);
   const visibleGroups = baseGroups.filter((g) => !hiddenSet.has(g.key));
   const hiddenGroups = baseGroups.filter((g) => hiddenSet.has(g.key));
-  const groupNoun = settings.group === 'status' ? 'columns' : 'groups';
 
   // Reordering inside a column only holds when the view is ordered manually: with
   // any other sort field the card would snap back to where the sort puts it. Cards
@@ -142,7 +146,7 @@ export default function FlatBoard({
           <div className="ml-auto w-64 shrink-0 self-start rounded-md border p-2">
             <div className="flex w-full items-center gap-1.5 px-1 py-1 text-sm font-medium text-muted-foreground">
               <ChevronDown className="size-4" />
-              Hidden {groupNoun}
+              {settings.group === 'status' ? t('hiddenColumns') : t('hiddenGroups')}
             </div>
             <div className="mt-1 flex flex-col gap-1">
               {hiddenGroups.map((group) => (
@@ -162,7 +166,7 @@ export default function FlatBoard({
                     size="icon"
                     className="size-6 text-muted-foreground"
                     onClick={() => setHidden(group.key, false)}
-                    title="Show"
+                    title={t('show')}
                   >
                     <Eye />
                   </Button>

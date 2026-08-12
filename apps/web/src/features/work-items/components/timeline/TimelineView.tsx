@@ -1,6 +1,8 @@
 import { Fragment, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useElementWidth } from '@/hooks/useElementWidth';
 import { useTimelineLabelWidth } from '@/hooks/useTimelineLabelWidth';
 import { LABEL_NARROW_W } from '@/utils/timelineTrack';
@@ -30,7 +32,9 @@ export default function TimelineView({
   viewId,
   readOnly,
 }: TimelineViewProps) {
+  const t = useTranslations('workItems.timeline');
   const { can } = usePermissions(project);
+  const groupLabels = useGroupLabels();
   const barsReadOnly = readOnly || !can('work_items', 'edit');
   const [localCollapsedGroups, setLocalCollapsedGroups] = useState<Set<string>>(new Set());
   const activeCollapsedGroups = collapsedGroups ?? localCollapsedGroups;
@@ -68,6 +72,7 @@ export default function TimelineView({
     buildTimeline({
       project,
       group: settings.group,
+      groupLabels,
       showEmptyGroups: settings.showEmptyGroups,
       collapsedGroups: activeCollapsedGroups,
       viewportW,
@@ -88,9 +93,7 @@ export default function TimelineView({
         {!narrow && <TimelineLabelResizer labelW={labelW} onResize={setTitleWidth} />}
 
         {rows.length === 0 && (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            No issues to place on the timeline yet.
-          </div>
+          <div className="p-8 text-center text-sm text-muted-foreground">{t('empty')}</div>
         )}
 
         {rows.map((row) => {

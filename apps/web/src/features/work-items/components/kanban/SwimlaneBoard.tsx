@@ -16,6 +16,8 @@ import {
 } from '@/utils/project';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
+import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
+import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useSelection } from '../../context/useSelection';
 import { GroupDot } from '../shared/GroupDot';
 import { SelectAllToggle } from './SelectAllToggle';
@@ -27,7 +29,6 @@ import {
   collapsedSwimlanesKey,
   issuesToMove,
 } from '../../utils/kanban';
-import { sortedOrderMessage } from '../../utils/dnd';
 
 // One flattened swimlane block: its header, then a row of columns.
 interface SwimlaneRow {
@@ -49,13 +50,15 @@ export default function SwimlaneBoard({
   onOpenIssue,
   readOnly,
 }: WorkItemsViewProps) {
+  const sortedOrderMessage = useSortedOrderMessage();
+  const groupLabels = useGroupLabels();
   const dnd = useBoardDnd(project.project.key, readOnly);
   const selection = useSelection();
   const collapsed = usePersistedSet(collapsedSwimlanesKey(project.project.id, settings.subgroup));
 
   const maps = buildMaps(project);
-  const columnGroups = buildGroups(project, settings.group);
-  const swimlaneGroups = buildGroups(project, settings.subgroup);
+  const columnGroups = buildGroups(project, settings.group, groupLabels);
+  const swimlaneGroups = buildGroups(project, settings.subgroup, groupLabels);
   const sorted = sortIssues(project.issues, settings.sort, project);
   const nested = nestIssues(
     swimlaneGroups,

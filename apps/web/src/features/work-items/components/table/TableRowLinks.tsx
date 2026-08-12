@@ -1,7 +1,7 @@
 import { type IssueLinkRef } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
-import { LINK_RELATION_LABELS } from '@/utils/issueLinks';
+import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { useIssueLinks } from '../../context/useIssueLinks';
 
@@ -17,6 +17,7 @@ export function TableRowLinks({
   maps: Maps;
   onOpenIssue: (id: number) => void;
 }) {
+  const relationLabel = useLinkRelationLabel();
   const links = useIssueLinks(refs);
   if (links.length === 0) return null;
 
@@ -44,7 +45,7 @@ export function TableRowLinks({
                 onOpenIssue(link.issue.id);
               }}
             >
-              <span className="w-24 shrink-0">{named && LINK_RELATION_LABELS[link.relation]}</span>
+              <span className="w-24 shrink-0">{named && relationLabel(link.relation)}</span>
               {column && (
                 <StateIcon
                   stateType={column.stateType}

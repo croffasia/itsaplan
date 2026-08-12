@@ -1,5 +1,4 @@
 import { pointerWithin, type CollisionDetection } from '@dnd-kit/core';
-import { SORT_FIELDS, type SortField } from '@/utils/viewTypes';
 
 // Data a table drop target carries: the move to apply when an issue is dropped on
 // it, given the dragged issue id. Section targets append; row targets insert at
@@ -7,13 +6,6 @@ import { SORT_FIELDS, type SortField } from '@/utils/viewTypes';
 // list because a board drag can move a whole selection.
 export interface DropData {
   onDrop: (issueId: number) => void;
-}
-
-// Why an issue cannot be reordered inside its group: the view is sorted by a
-// field, so the order is not the user's to set until ordering is back on Manual.
-export function sortedOrderMessage(field: SortField): string {
-  const label = SORT_FIELDS.find((f) => f.value === field)?.label ?? field;
-  return `Issues are ordered by ${label}. Switch ordering to Manual to move them.`;
 }
 
 // Item drop targets sit inside their container target, so the pointer is always

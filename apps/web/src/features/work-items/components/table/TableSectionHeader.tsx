@@ -1,4 +1,5 @@
 import { ChevronDown, ChevronRight, Plus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { type IssueGroup } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,7 @@ export function TableSectionHeader({
   // In a read-only share the add affordance is hidden.
   readOnly?: boolean;
 }) {
+  const t = useTranslations('workItems');
   const { can } = usePermissions();
   const canCreateIssue = can('work_items', 'create') && !readOnly;
   return (
@@ -58,7 +60,7 @@ export function TableSectionHeader({
           size="icon"
           className="size-6 text-muted-foreground"
           onClick={onAddIssue}
-          title="New issue"
+          title={t('newIssue')}
         >
           <Plus />
         </Button>

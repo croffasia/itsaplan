@@ -1,0 +1,12 @@
+{
+  "placeholder": "Введіть команду або пошуковий запит…",
+  "noResults": "Нічого не знайдено.",
+  "issues": "Задачі",
+  "searching": "Пошук…",
+  "selectAllIssues": "Вибрати всі задачі",
+  "newIssue": "Нова задача",
+  "newProject": "Новий проєкт",
+  "board": "Дошка",
+  "commands": "Команди",
+  "switchProject": "Змінити проєкт"
+}

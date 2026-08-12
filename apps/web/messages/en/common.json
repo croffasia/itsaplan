@@ -1,0 +1,129 @@
+{
+  "cancel": "Cancel",
+  "done": "Done",
+  "loading": "Loading…",
+  "signOut": "Sign out",
+  "member": "Member",
+  "owner": "Owner",
+  "delete": "Delete",
+  "more": "More",
+  "back": "Back",
+  "save": "Save",
+  "saving": "Saving…",
+  "close": "Close",
+  "name": "Name",
+  "edit": "Edit",
+  "language": "Language",
+  "toggleTheme": "Toggle theme",
+  "priority": {
+    "label": "Priority",
+    "tooltip": "{priority} priority",
+    "setTo": "Set priority to…",
+    "none": "No priority",
+    "urgent": "Urgent",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
+  },
+  "add": "Add",
+  "showMore": "Show more",
+  "archived": "Archived",
+  "clear": "Clear",
+  "noLabels": "No labels.",
+  "enabled": "Enabled",
+  "fullscreen": "Fullscreen",
+  "exitFullscreen": "Exit fullscreen",
+  "resizeTitleColumn": "Resize the title column",
+  "openGeneralSettings": "Open General settings",
+  "noSectionAccess": "You do not have access to this section.",
+  "brandSubtitle": "Plan issues on a board. Sign in to open your projects.",
+  "hotkeys": {
+    "pressKeys": "Press keys",
+    "fixed": "Fixed",
+    "resetShortcut": "Reset this shortcut",
+    "groups": {
+      "general": "General",
+      "workItems": "Work items"
+    },
+    "commands": {
+      "palette": {
+        "toggle": "Open the command palette"
+      },
+      "project": {
+        "switch": "Switch to project 1–9",
+        "new": "New project",
+        "settings": "Open project settings"
+      },
+      "sidebar": {
+        "toggle": "Show or hide the sidebar"
+      },
+      "issue": {
+        "new": "New issue"
+      },
+      "view": {
+        "kanban": "Board layout",
+        "table": "Table layout",
+        "timeline": "Timeline layout",
+        "calendar": "Calendar layout"
+      },
+      "board": {
+        "select-all": "Select all issues on the board"
+      }
+    },
+    "conflict": "Already used by {command}"
+  },
+  "agentChat": {
+    "emptyHint": "Send a message to test how this agent replies and which tools it uses.",
+    "messagePlaceholder": "Message {agent}…",
+    "reset": "Reset conversation",
+    "send": "Send",
+    "loadingEarlier": "Loading earlier messages…",
+    "messages": "Conversation messages",
+    "usingTool": "Using {tool}…",
+    "thinking": "Thinking…",
+    "title": "Chat with {agent}",
+    "unreachable": "Could not reach the agent. Try again."
+  },
+  "share": {
+    "createFailed": "Could not create the link. Try again.",
+    "changeFailed": "Could not change what the link shows. Try again.",
+    "stopFailed": "Could not stop sharing. Try again.",
+    "copyFailed": "Could not copy the link. Select it and copy by hand.",
+    "hint": "Anyone with the link can read it. No account needed.",
+    "shareLink": "Share link",
+    "fullDetails": "Full issue details",
+    "fullDetailsHint": "Assignees, labels, custom fields and activity.",
+    "stopSharing": "Stop sharing",
+    "createLink": "Create link",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "actions": "Actions",
+  "clearSearch": "Clear search",
+  "hide": "Hide",
+  "show": "Show",
+  "copy": "Copy",
+  "copied": "Copied",
+  "change": "Change",
+  "featureOffHint": "An owner can turn this section back on in General settings.",
+  "description": "Description",
+  "pickColor": "Pick color",
+  "new": "New",
+  "features": {
+    "initiatives": "Initiatives",
+    "cycles": "Cycles",
+    "dashboards": "Dashboards",
+    "notes": "Notes",
+    "subtasks": "Subtasks",
+    "checklists": "Checklists",
+    "issueStats": "Issue stats"
+  },
+  "featureOffTitle": "{feature} are turned off",
+  "toggleSidebar": "Toggle sidebar",
+  "system": "System",
+  "genericError": "Something went wrong",
+  "commandPalette": "Command palette",
+  "commandPaletteHint": "Search for a command to run…",
+  "scrollToEnd": "Scroll to end",
+  "scrollToStart": "Scroll to start"
+}

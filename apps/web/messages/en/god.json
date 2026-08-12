@@ -1,0 +1,211 @@
+{
+  "pager": {
+    "perPage": "Per page",
+    "rowsPerPage": "Rows per page",
+    "range": "{first}-{last} of {total}",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "access": {
+    "owner": "An owner has full access: the role matrix is not consulted.",
+    "role": "Resolved from the \"{role}\" role.",
+    "default": "No role assigned: the default member permissions apply.",
+    "joined": "joined {date}"
+  },
+  "providers": {
+    "credential": "Password",
+    "google": "Google",
+    "passkey": "Passkey"
+  },
+  "users": {
+    "empty": "No accounts match these filters.",
+    "searchPlaceholder": "Search by name or email",
+    "kind": "Account kind",
+    "kinds": {
+      "human": "Humans",
+      "agent": "AI bots",
+      "all": "All accounts"
+    },
+    "columns": {
+      "account": "Account",
+      "role": "Role",
+      "signIn": "Sign-in",
+      "projects": "Projects",
+      "lastSeen": "Last seen",
+      "email": "Email"
+    },
+    "registered": "joined {date}",
+    "roleGod": "God",
+    "roleUser": "User",
+    "agent": "Agent",
+    "noProviders": "none",
+    "neverSeen": "never",
+    "verified": "Verified",
+    "notVerified": "Not verified",
+    "open": "Open account",
+    "showAccess": "Show project access"
+  },
+  "userPanel": {
+    "instanceOwner": "Instance owner",
+    "user": "User",
+    "aiAgent": "AI agent",
+    "emailVerified": "Email verified",
+    "unconfirmedTitle": "Email address not confirmed",
+    "unconfirmedHint": "Confirm it here when the link never reached them.",
+    "verify": "Mark verified",
+    "verifying": "Confirming…",
+    "verifyDone": "Email address confirmed",
+    "signInMethods": "Sign-in methods",
+    "noProviders": "None linked",
+    "projects": "Projects",
+    "noProjects": "None",
+    "registered": "Registered",
+    "lastSeen": "Last seen",
+    "neverSignedIn": "Never signed in",
+    "projectAccess": "Project access",
+    "noAccessTitle": "No project access",
+    "noAccessHint": "This account reaches nothing until someone invites it to a project.",
+    "deleteHint": "Issues and comments stay, with the author unassigned.",
+    "deleteTitle": "Delete account",
+    "deleteConfirm": "Delete account",
+    "deleteConfirmWithProjects": "{count, plural, one {Delete account and project} other {Delete account and projects}}",
+    "deleteMessage": "<strong>{name}</strong> loses access to this instance. Issues and comments they wrote stay, with the author unassigned. This cannot be undone.",
+    "soleOwnerTitle": "{count, plural, one {Only owner of a project} other {Only owner of # projects}}",
+    "soleOwnerHint": "{count, plural, one {Once the account is gone, nobody can manage it.} other {Once the account is gone, nobody can manage them.}}",
+    "deleteWithProjects": "{count, plural, one {Delete the project with the account} other {Delete the projects with the account}}",
+    "deleteWithProjectsOn": "Everything inside goes too.",
+    "deleteWithProjectsOff": "Or cancel and add a second owner first.",
+    "deleted": "Account deleted",
+    "deletedWithProjects": "Account and its projects deleted"
+  },
+  "projects": {
+    "empty": "No projects match this search.",
+    "searchPlaceholder": "Search by key or name",
+    "columns": {
+      "project": "Project",
+      "members": "Members",
+      "issues": "Issues",
+      "agents": "Agents",
+      "lastActivity": "Last activity",
+      "mcp": "MCP"
+    },
+    "created": "created {date}",
+    "archived": "{count} archived",
+    "neverActive": "never",
+    "mcpEnabled": "Enabled",
+    "mcpOff": "Off",
+    "open": "Open project",
+    "showDetails": "Show project details"
+  },
+  "projectPanel": {
+    "mcpEnabled": "MCP enabled",
+    "mcpOff": "MCP off",
+    "created": "created {date}",
+    "lastActivity": "Last activity: {value}",
+    "noActivity": "none yet",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "issues": "Issues",
+      "archivedIssues": "Archived issues",
+      "initiatives": "Initiatives",
+      "members": "Members",
+      "dashboards": "Dashboards",
+      "views": "Views",
+      "agents": "AI agents",
+      "skills": "Skills",
+      "tools": "Tools",
+      "integrations": "Integrations"
+    },
+    "members": "Members",
+    "noMembersTitle": "No members",
+    "noMembersHint": "Nobody can reach this project until someone is invited to it."
+  },
+  "authentication": {
+    "saved": "Authentication settings saved",
+    "registration": "Registration",
+    "registrationHint": "Who may create an account on this instance.",
+    "modes": {
+      "open": {
+        "label": "Open",
+        "description": "Anyone who reaches the sign-up page can create an account."
+      },
+      "invite": {
+        "label": "Invite only",
+        "description": "An account can only be created through an invite link."
+      },
+      "closed": {
+        "label": "Closed",
+        "description": "No new accounts. Existing ones keep signing in."
+      }
+    },
+    "signIn": "Sign-in options",
+    "signInHint": "Options that need outbound mail. They stay off until a provider is configured.",
+    "needsProvider": "Set up the Email provider under Integrations first.",
+    "requireVerification": "Require email confirmation",
+    "requireVerificationHint": "A new account must confirm its address before it can sign in.",
+    "magicLink": "Sign-in links",
+    "magicLinkHint": "Offer signing in with a link sent by email, alongside the password."
+  },
+  "hotkeys": {
+    "saved": "Keyboard shortcuts saved"
+  },
+  "storage": {
+    "saved": "Storage settings saved",
+    "fileSize": "File size",
+    "fileSizeHint": "The largest single file an upload may carry. A bigger file is refused before it is stored.",
+    "attachmentMb": "Attachment size (MB)",
+    "attachmentHint": "Applies to issue attachments, files pasted into a description, and attachments added by agents.",
+    "avatarMb": "Avatar size (MB)",
+    "avatarHint": "The profile picture people upload for their account.",
+    "mimeTypes": "Accepted attachment types",
+    "mimeTypesHint": "One content type per line. Leave empty to accept any file.",
+    "mimeTypesNote": "A line is a full type (application/pdf) or a wildcard (image/*). Files already stored are kept whatever the list says.",
+    "quota": "Project quota",
+    "quotaHint": "Total attachment storage one project may use. 0 means no limit.",
+    "quotaMb": "Storage per project (MB)",
+    "quotaNote": "Once a project reaches the quota, new uploads are refused until someone deletes attachments."
+  },
+  "telegram": {
+    "saved": "Telegram settings saved",
+    "bot": "Bot",
+    "botConfigured": "People connect their Telegram account by opening a chat with this bot from their profile.",
+    "botMissing": "Create a bot with @BotFather in Telegram and paste its token here.",
+    "botToken": "Bot token",
+    "botTokenHint": "The token is verified with Telegram when you save, so a wrong one is refused here rather than failing silently later.",
+    "resolvedHint": "Resolved from the token. This is the bot people will see when connecting."
+  },
+  "email": {
+    "saved": "Email provider saved",
+    "provider": "Email provider",
+    "providerHint": "Choose one provider. Credentials are stored encrypted.",
+    "from": "From address",
+    "fromHint": "Required for Resend. With SMTP it defaults to the username.",
+    "host": "Host",
+    "port": "Port",
+    "encryption": "Encryption",
+    "encryptionOptions": {
+      "none": "None",
+      "ssl": "SSL",
+      "tls": "TLS"
+    },
+    "username": "Username",
+    "password": "Password",
+    "passwordPlaceholder": "SMTP password",
+    "timeout": "Timeout (s)",
+    "optional": "Optional",
+    "apiKey": "API key",
+    "projectNotifications": "Project notifications",
+    "projectNotificationsHint": "Let projects deliver their notifications through this provider instead of configuring one of their own. Each project still chooses whether to use it."
+  },
+  "authProvider": {
+    "saved": "Auth provider saved",
+    "google": "Google",
+    "googleConfigured": "An address without an account gets one; an address that already has a confirmed account signs into it.",
+    "googleMissing": "Add the client ID and secret first.",
+    "clientId": "Client ID",
+    "clientSecret": "Client secret",
+    "redirectUri": "Redirect URI",
+    "redirectUriHint": "Register this on the OAuth client in the Google Cloud console. Google refuses the sign-in if it does not match exactly.",
+    "copyRedirectUri": "Copy redirect URI"
+  }
+}

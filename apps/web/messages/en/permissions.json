@@ -1,0 +1,46 @@
+{
+  "viewPermissions": "View permissions",
+  "none": "No permissions granted",
+  "grantedCount": "{count, plural, one {# permission} other {# permissions}} granted",
+  "resources": {
+    "work_items": "Work items",
+    "initiatives": "Initiatives",
+    "cycles": "Cycles",
+    "dashboards": "Dashboards",
+    "views": "Work item views",
+    "members_invite": "Invites",
+    "members_manage": "Members",
+    "states": "States",
+    "issue_types": "Issue types",
+    "labels": "Labels",
+    "ai_agents": "AI agents",
+    "integrations": "Integrations",
+    "agent_skills": "Agent skills",
+    "agent_tools": "Agent tools",
+    "custom_fields": "Custom fields",
+    "workflow_config": "Workflow configuration",
+    "actions": "Actions",
+    "webhooks": "Webhooks",
+    "note_boards": "Note boards",
+    "danger_zone": "Danger zone"
+  },
+  "actions": {
+    "create": "Create",
+    "edit": "Edit",
+    "read": "Read",
+    "delete": "Delete"
+  },
+  "groups": {
+    "workItems": "Work items",
+    "dashboards": "Dashboards",
+    "notes": "Notes",
+    "ai": "AI",
+    "configuration": "Configuration",
+    "members": "Members",
+    "project": "Project",
+    "other": "Other"
+  },
+  "resourceColumn": "Resource",
+  "allowed": "allowed",
+  "notAllowed": "not allowed"
+}

@@ -1,0 +1,12 @@
+{
+  "placeholder": "Type a command or search…",
+  "noResults": "No results found.",
+  "issues": "Issues",
+  "searching": "Searching…",
+  "selectAllIssues": "Select all issues",
+  "newIssue": "New issue",
+  "newProject": "New project",
+  "board": "Board",
+  "commands": "Commands",
+  "switchProject": "Switch project"
+}

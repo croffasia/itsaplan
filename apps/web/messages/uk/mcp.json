@@ -1,0 +1,29 @@
+{
+  "title": "MCP-сервер",
+  "description": "Підключайте AI-агентів до цього проєкту через Model Context Protocol. Агент отримує доступ того API-ключа, який використовує.",
+  "access": "Доступ MCP",
+  "enabled": "Увімкнено",
+  "disabled": "Вимкнено",
+  "ownerOnly": "Вмикати й вимикати доступ MCP може лише власник проєкту.",
+  "toggleAria": "Перемкнути доступ MCP",
+  "connectClient": "Підключити клієнта",
+  "keyHint": "Створіть персональний ключ на сторінці <link>API-ключі</link>, потім замініть <code>{apiKey}</code> у сніпеті.",
+  "endpoint": "Endpoint",
+  "clientTabsAria": "Клієнт",
+  "addToFile": "Додайте до <code>{file}</code>",
+  "copyAria": "Копіювати",
+  "copied": "Скопійовано в буфер обміну",
+  "notes": {
+    "claudeCode": "Виконайте це в терміналі.",
+    "vscode": "Потрібен GitHub Copilot.",
+    "claudeDesktop": "Claude Desktop зʼєднується з віддаленими серверами через міст mcp-remote. Потрібен Node.js.",
+    "other": "Підходить будь-який клієнт з підтримкою MCP через Streamable HTTP. Вкажіть йому endpoint і надсилайте заголовок Authorization: Bearer {apiKey}."
+  },
+  "clients": {
+    "other": "Інший"
+  },
+  "toast": {
+    "enabled": "MCP-доступ увімкнено",
+    "disabled": "MCP-доступ вимкнено"
+  }
+}

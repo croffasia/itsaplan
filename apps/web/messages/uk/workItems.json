@@ -1,0 +1,105 @@
+{
+  "newIssue": "Нова задача",
+  "collapse": "Згорнути",
+  "expand": "Розгорнути",
+  "hide": "Сховати",
+  "show": "Показати",
+  "hiddenColumns": "Сховані колонки",
+  "hiddenGroups": "Сховані групи",
+  "selectAll": "Вибрати всі",
+  "deselectAll": "Зняти вибір",
+  "resizeColumn": "Змінити ширину колонки",
+  "viewNamePlaceholder": "Усі задачі",
+  "sortedOrder": "Задачі відсортовані за полем «{field}». Перемкніть сортування на «Вручну», щоб їх переміщати.",
+  "statusSince": "У поточному статусі з {date}",
+  "createdOn": "Створено {date}",
+  "updatedOn": "Оновлено {date}",
+  "subtasksProgress": "Підзадачі {done}/{total}",
+  "subtasksDone": "Виконано {done} з {total} підзадач",
+  "columns": {
+    "title": "Назва",
+    "status": "Статус",
+    "statusAge": "У статусі",
+    "priority": "Пріоритет",
+    "type": "Тип",
+    "initiative": "Ініціатива",
+    "cycle": "Цикл",
+    "labels": "Мітки",
+    "startDate": "Початок",
+    "dueDate": "Дедлайн",
+    "created": "Створено",
+    "updated": "Оновлено"
+  },
+  "calendar": {
+    "previousMonth": "Попередній місяць",
+    "nextMonth": "Наступний місяць",
+    "today": "Сьогодні",
+    "moreIssues": "+{count} ще",
+    "issueCount": "{count, plural, one {# задача} few {# задачі} many {# задач} other {# задачі}}",
+    "weekdays": {
+      "sun": "Нд",
+      "mon": "Пн",
+      "tue": "Вт",
+      "wed": "Ср",
+      "thu": "Чт",
+      "fri": "Пт",
+      "sat": "Сб"
+    },
+    "noDate": {
+      "dueDate": "Без дедлайну",
+      "startDate": "Без дати початку"
+    },
+    "allDated": {
+      "dueDate": "Усе має дедлайн.",
+      "startDate": "Усе має дату початку."
+    }
+  },
+  "timeline": {
+    "empty": "Ще немає задач для таймлайну.",
+    "expandGroup": "Розгорнути групу",
+    "collapseGroup": "Згорнути групу",
+    "inferredStart": "Початок виведено з дати створення",
+    "inferredStartDraggable": "Початок виведено з дати створення — перетягніть, щоб задати"
+  },
+  "bulk": {
+    "selected": "Вибрано: {count}",
+    "status": "Статус",
+    "priority": "Пріоритет",
+    "assignee": "Виконавець",
+    "delegate": "Делегат",
+    "initiative": "Ініціатива",
+    "cycle": "Цикл",
+    "labels": "Мітки",
+    "noAssignee": "Без виконавця",
+    "noDelegate": "Без делегата",
+    "noInitiative": "Без ініціативи",
+    "noCycle": "Без циклу",
+    "archive": "Архівувати",
+    "clearSelection": "Зняти вибір"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Архівувати задачу} other {Архівувати задачі}}",
+      "confirm": "{count, plural, one {Архівувати # задачу} few {Архівувати # задачі} many {Архівувати # задач} other {Архівувати # задачі}}",
+      "description": "{count, plural, one {Архівувати # вибрану задачу? Вона зникне з дошки, її можна буде відновити пізніше.} other {Архівувати # вибраних задач? Вони зникнуть з дошки, їх можна буде відновити пізніше.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Видалити задачу} other {Видалити задачі}}",
+      "confirm": "{count, plural, one {Видалити # задачу} few {Видалити # задачі} many {Видалити # задач} other {Видалити # задачі}}",
+      "description": "{count, plural, one {Видалити # вибрану задачу?} few {Видалити # вибрані задачі?} many {Видалити # вибраних задач?} other {Видалити # вибраної задачі?}} Разом з нею буде видалено коментарі, активність і вкладення. Цю дію не можна скасувати."
+    }
+  },
+  "share": {
+    "issueTitle": "Задача",
+    "issueUnavailable": "Ця задача недоступна.",
+    "boardUnavailable": "Ця спільна дошка недоступна. Можливо, посилання відкликали."
+  },
+  "groups": {
+    "noAssignee": "Без виконавця",
+    "noDelegate": "Без делегата",
+    "noPriority": "Без пріоритету",
+    "noType": "Без типу",
+    "noInitiative": "Без ініціативи",
+    "noCycle": "Без циклу"
+  }
+}

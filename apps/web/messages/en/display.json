@@ -1,0 +1,92 @@
+{
+  "title": "Display",
+  "layouts": {
+    "kanban": "Kanban",
+    "table": "Table",
+    "timeline": "Timeline",
+    "calendar": "Calendar"
+  },
+  "sortFields": {
+    "manual": "Manual",
+    "title": "Title",
+    "identifier": "Issue number",
+    "status": "State",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "type": "Type",
+    "startDate": "Start date",
+    "dueDate": "Due date",
+    "created": "Created",
+    "updated": "Updated"
+  },
+  "groupFields": {
+    "none": "No grouping",
+    "status": "State",
+    "assignee": "Assignee",
+    "delegate": "Delegate",
+    "priority": "Priority",
+    "type": "Type",
+    "initiative": "Initiative",
+    "cycle": "Cycle"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "State",
+    "priority": "Priority",
+    "type": "Type",
+    "assignee": "Assignee",
+    "delegate": "Delegate",
+    "initiative": "Initiative",
+    "cycle": "Cycle",
+    "labels": "Labels",
+    "startDate": "Start date",
+    "dueDate": "Due date",
+    "created": "Created",
+    "updated": "Updated",
+    "statusAge": "Time in status"
+  },
+  "stateTypes": {
+    "backlog": "Backlog",
+    "unstarted": "Unstarted",
+    "started": "Started",
+    "completed": "Completed",
+    "canceled": "Canceled"
+  },
+  "timelineScales": {
+    "week": "Week",
+    "month": "Month",
+    "quarter": "Quarter"
+  },
+  "weekStart": {
+    "0": "Sunday",
+    "1": "Monday"
+  },
+  "dateFields": {
+    "dueDate": "Due date",
+    "startDate": "Start date"
+  },
+  "rows": {
+    "columns": "Columns",
+    "grouping": "Grouping",
+    "swimlanes": "Swimlanes",
+    "subGrouping": "Sub-grouping",
+    "ordering": "Ordering",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "showEmptyColumns": "Show empty columns",
+    "showEmptyGroups": "Show empty groups",
+    "showLinks": "Show links",
+    "separateSubtaskCards": "Show subtasks as separate cards",
+    "separateSubtaskRows": "Show subtasks as separate rows",
+    "showNestedSubtasks": "Show nested subtasks",
+    "nestedSubtasks": "Nested subtasks",
+    "displayProperties": "Display properties",
+    "placeBy": "Place by",
+    "startWeekOn": "Start week on",
+    "startCollapsed": "Start with groups collapsed",
+    "scale": "Scale",
+    "addCustomField": "Add custom field",
+    "viewIcon": "View icon"
+  },
+  "layoutCommand": "{layout} layout"
+}

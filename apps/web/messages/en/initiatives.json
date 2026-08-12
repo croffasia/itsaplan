@@ -1,0 +1,144 @@
+{
+  "title": "Initiatives",
+  "newInitiative": "New initiative",
+  "notFound": "Initiative not found.",
+  "options": "Initiative options",
+  "showDescription": "Show description",
+  "noDescription": "No description.",
+  "noOwner": "No owner",
+  "targetDate": "Target date",
+  "progress": "Progress",
+  "activity": "Activity",
+  "noActivity": "No activity yet.",
+  "noIssuesLinked": "No issues linked yet.",
+  "inProgress": "In progress",
+  "emptyTitle": "No initiatives yet",
+  "emptyDescription": "An initiative groups related issues under one goal.",
+  "emptyTabDescription": "Initiatives move between tabs as their status changes.",
+  "emptyTab": {
+    "active": "No active initiatives",
+    "planned": "No planned initiatives",
+    "proposed": "No proposed initiatives",
+    "completed": "No completed initiatives"
+  },
+  "tabs": {
+    "active": "Active",
+    "planned": "Planned",
+    "proposed": "Proposed",
+    "completed": "Completed",
+    "all": "All initiatives"
+  },
+  "detailTabs": {
+    "overview": "Overview",
+    "issues": "Issues"
+  },
+  "columns": {
+    "name": "Name",
+    "priority": "Priority",
+    "owner": "Owner",
+    "target": "Target",
+    "progress": "Progress",
+    "health": "Health"
+  },
+  "status": {
+    "proposed": "Proposed",
+    "planned": "Planned",
+    "active": "Active",
+    "completed": "Completed",
+    "canceled": "Canceled"
+  },
+  "stateGroups": {
+    "backlog": "Backlog",
+    "unstarted": "Todo",
+    "started": "In Progress",
+    "completed": "Done",
+    "canceled": "Canceled"
+  },
+  "health": {
+    "on_track": "On track",
+    "at_risk": "At risk",
+    "off_track": "Off track",
+    "unknown": "No update"
+  },
+  "healthInfo": {
+    "trigger": "How is health calculated?",
+    "title": "Health",
+    "description": "Compares work done against time elapsed. Updates automatically.",
+    "legend": {
+      "on_track": "Work is keeping pace with the schedule.",
+      "at_risk": "Work is slipping behind the schedule.",
+      "off_track": "Work is well behind, or the target date has passed.",
+      "unknown": "Not enough data yet: no issues or no target date."
+    },
+    "howCalculated": "How it's calculated",
+    "workDone": "Work done",
+    "timeElapsed": "Time elapsed",
+    "trail": "How far work trails time",
+    "trailOnTrack": "up to 10% behind",
+    "trailAtRisk": "10-25% behind",
+    "trailOffTrack": "over 25% behind"
+  },
+  "timeline": {
+    "title": "Timeline",
+    "started": "Started",
+    "target": "Target",
+    "remaining": "Remaining",
+    "overdue": "{days}d overdue",
+    "dueToday": "Due today",
+    "left": "{days}d left",
+    "timeElapsed": "Time elapsed",
+    "workDone": "Work done",
+    "noTargetDate": "Set a target date to track pace."
+  },
+  "form": {
+    "title": "Title",
+    "titlePlaceholder": "Q3 Launch",
+    "description": "Description",
+    "descriptionPlaceholder": "What is this initiative about?",
+    "create": "Create initiative",
+    "creating": "Creating…",
+    "editTitle": "Edit initiative",
+    "save": "Save changes"
+  },
+  "pagination": {
+    "range": "{from}–{to} of {total}",
+    "previous": "Previous page",
+    "next": "Next page"
+  },
+  "select": {
+    "label": "Initiative",
+    "search": "Link to initiative…",
+    "empty": "No initiatives.",
+    "none": "No initiative"
+  },
+  "feed": {
+    "system": "System",
+    "createdInitiative": "created the initiative",
+    "createdIssue": "created the issue",
+    "renamed": "renamed to “{title}”",
+    "descriptionUpdated": "updated the description",
+    "descriptionCleared": "cleared the description",
+    "statusSet": "set status to {status}",
+    "statusMoved": "moved from {from} to {to}",
+    "prioritySet": "set priority to {priority}",
+    "priorityRemoved": "removed priority",
+    "ownerSet": "set owner to {name}",
+    "ownerRemoved": "removed owner {name}",
+    "assigneeSet": "assigned to {name}",
+    "assigneeRemoved": "removed assignee {name}",
+    "delegateSet": "delegated to {name}",
+    "delegateRemoved": "removed delegate {name}",
+    "targetDateSet": "set target date to {date}",
+    "targetDateRemoved": "removed target date",
+    "startDateSet": "set start date to {date}",
+    "startDateRemoved": "removed start date",
+    "dueDateSet": "set due date to {date}",
+    "dueDateRemoved": "removed due date",
+    "labelAdded": "added label {label}",
+    "labelRemoved": "removed label {label}",
+    "typeSet": "set type to {type}",
+    "typeRemoved": "removed type",
+    "linked": "linked to {name}",
+    "unlinked": "unlinked from the initiative"
+  }
+}

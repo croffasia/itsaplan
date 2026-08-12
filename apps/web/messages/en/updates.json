@@ -1,0 +1,16 @@
+{
+  "updateAvailable": "Update available",
+  "releaseHistory": "Release history",
+  "runningOutdated": "You're running {current}. Latest is {latest}.",
+  "runningUnknown": "You're running {current}. Latest release unknown.",
+  "runningLatest": "You're running {current}, the latest release.",
+  "noReleases": "No release notes shipped with this build.",
+  "badgeRunning": "Running",
+  "badgeNew": "New",
+  "earlier": "Earlier releases",
+  "check": "Check for updates",
+  "checking": "Checking",
+  "lastChecked": "Last checked {date}",
+  "allReleases": "All releases",
+  "noNotes": "This release has no notes."
+}

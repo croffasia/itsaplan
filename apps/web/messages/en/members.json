@@ -1,0 +1,103 @@
+{
+  "title": "Members",
+  "description": "People with access to this project. Invite people by email; owners can revoke access.",
+  "columns": {
+    "member": "Member",
+    "role": "Role",
+    "actions": "Actions"
+  },
+  "you": "(you)",
+  "aiAgent": "AI Agent",
+  "joined": "· joined {date}",
+  "leaveProject": "Leave project",
+  "revokeAccess": "Revoke access",
+  "lastOwner": "A project must keep at least one owner",
+  "leaveTitle": "Leave this project",
+  "leaveDescription": "You will lose access to this project and its issues. An owner can invite you back later.",
+  "revokeTitle": "Revoke access for {name}",
+  "revokeDescription": "{name} will lose access to this project. They can be invited back later.",
+  "selectRole": "Select role",
+  "editDescription": "Edit description",
+  "descriptionQuestionSelf": "What do you do in this project?",
+  "descriptionQuestionOther": "What does this person do in this project?",
+  "descriptionPlaceholder": "e.g. Backend engineer, owns the API and integrations",
+  "invites": {
+    "emailPlaceholder": "name@example.com",
+    "rolePlaceholder": "Role",
+    "invite": "Invite",
+    "inviting": "Inviting…",
+    "pendingCount": "{count, plural, one {# pending invite} other {# pending invites}}",
+    "copyLink": "Copy link",
+    "copied": "Copied",
+    "revokeAction": "Revoke invite",
+    "removeAction": "Remove invite",
+    "invitedBy": "Invited by {name} · ",
+    "createdAt": "created {date}",
+    "respondedAt": "{status, select, accepted {accepted} rejected {rejected} other {updated}} {date}",
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "rejected": "Rejected"
+    },
+    "revokeTitle": "Revoke invite for {email}",
+    "revokeConfirm": "Revoke invite",
+    "revokeDescription": "The invite link will stop working. You can invite this email again later."
+  },
+  "roles": {
+    "title": "Roles",
+    "description": "Custom roles and the permissions each grants. Assign a role to a member from the Members list.",
+    "ownerOnly": "Only project owners can manage roles.",
+    "empty": "No roles yet. Create one to grant scoped access.",
+    "columns": {
+      "role": "Role",
+      "permissions": "Permissions",
+      "actions": "Actions"
+    },
+    "default": "Default",
+    "editAction": "Edit role",
+    "deleteAction": "Delete role",
+    "defaultUndeletable": "The default role cannot be deleted",
+    "deleteTitle": "Delete role \"{name}\"",
+    "deleteDescription": "Members with this role will be moved to the default role. This cannot be undone.",
+    "newRole": "New role",
+    "editorTitleEdit": "Edit role",
+    "editorTitleNew": "New role",
+    "editorSubtitle": "role permissions",
+    "namePlaceholder": "e.g. Contributor",
+    "resourceColumn": "Resource",
+    "toggleActionAll": "Toggle {action} for all resources",
+    "toggleGroupAll": "Toggle all {group} permissions",
+    "toggleActionGroup": "Toggle {action} for {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "Save role",
+    "createRole": "Create role",
+    "importExport": "Role import and export",
+    "copyRoles": "Copy roles",
+    "pasteRoles": "Paste roles",
+    "nothingToCopy": "No custom roles to copy.",
+    "copiedRoles": "Copied {count, plural, one {# role} other {# roles}}.",
+    "copyFailed": "Could not copy to the clipboard.",
+    "readFailed": "Could not read the clipboard.",
+    "parseFailed": "Could not read roles from the clipboard.",
+    "import": {
+      "title": "Apply roles from clipboard",
+      "summary": "{count, plural, one {# role} other {# roles}} will be applied. Overwriting a role replaces its permission matrix; members keep the role.",
+      "preview": "Preview permissions",
+      "apply": "Apply {count, plural, =0 {roles} one {# role} other {# roles}}",
+      "applied": "Applied roles: {created} created, {updated} updated{skipped, plural, =0 {} other {, # skipped}}.",
+      "actions": {
+        "create": "New",
+        "update": "Overwrite",
+        "skip": "Skip (default)"
+      }
+    },
+    "transferErrors": {
+      "invalidJson": "Clipboard does not contain valid JSON.",
+      "notAnExport": "Clipboard does not contain a roles export.",
+      "empty": "The roles export is empty."
+    }
+  },
+  "promoted": "Member promoted to owner",
+  "roleUpdated": "Member role updated",
+  "descriptionUpdated": "Member description updated"
+}

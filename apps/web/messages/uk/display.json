@@ -1,0 +1,92 @@
+{
+  "title": "Відображення",
+  "layouts": {
+    "kanban": "Канбан",
+    "table": "Таблиця",
+    "timeline": "Таймлайн",
+    "calendar": "Календар"
+  },
+  "sortFields": {
+    "manual": "Вручну",
+    "title": "Назва",
+    "identifier": "Номер задачі",
+    "status": "Статус",
+    "priority": "Пріоритет",
+    "assignee": "Виконавець",
+    "type": "Тип",
+    "startDate": "Дата початку",
+    "dueDate": "Дедлайн",
+    "created": "Створено",
+    "updated": "Оновлено"
+  },
+  "groupFields": {
+    "none": "Без групування",
+    "status": "Статус",
+    "assignee": "Виконавець",
+    "delegate": "Делегат",
+    "priority": "Пріоритет",
+    "type": "Тип",
+    "initiative": "Ініціатива",
+    "cycle": "Цикл"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "Статус",
+    "priority": "Пріоритет",
+    "type": "Тип",
+    "assignee": "Виконавець",
+    "delegate": "Делегат",
+    "initiative": "Ініціатива",
+    "cycle": "Цикл",
+    "labels": "Мітки",
+    "startDate": "Дата початку",
+    "dueDate": "Дедлайн",
+    "created": "Створено",
+    "updated": "Оновлено",
+    "statusAge": "Час у статусі"
+  },
+  "stateTypes": {
+    "backlog": "Беклог",
+    "unstarted": "Не розпочато",
+    "started": "У роботі",
+    "completed": "Завершено",
+    "canceled": "Скасовано"
+  },
+  "timelineScales": {
+    "week": "Тиждень",
+    "month": "Місяць",
+    "quarter": "Квартал"
+  },
+  "weekStart": {
+    "0": "Неділя",
+    "1": "Понеділок"
+  },
+  "dateFields": {
+    "dueDate": "Дедлайн",
+    "startDate": "Дата початку"
+  },
+  "rows": {
+    "columns": "Колонки",
+    "grouping": "Групування",
+    "swimlanes": "Доріжки",
+    "subGrouping": "Підгрупування",
+    "ordering": "Сортування",
+    "ascending": "За зростанням",
+    "descending": "За спаданням",
+    "showEmptyColumns": "Показувати порожні колонки",
+    "showEmptyGroups": "Показувати порожні групи",
+    "showLinks": "Показувати зв'язки",
+    "separateSubtaskCards": "Показувати підзадачі окремо",
+    "separateSubtaskRows": "Показувати підзадачі окремо",
+    "showNestedSubtasks": "Показувати вкладені підзадачі",
+    "nestedSubtasks": "Вкладені підзадачі",
+    "displayProperties": "Властивості",
+    "placeBy": "Розміщувати за",
+    "startWeekOn": "Початок тижня",
+    "startCollapsed": "Починати зі згорнутими групами",
+    "scale": "Масштаб",
+    "addCustomField": "Додати власне поле",
+    "viewIcon": "Іконка подання"
+  },
+  "layoutCommand": "Розкладка «{layout}»"
+}

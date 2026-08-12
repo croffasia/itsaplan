@@ -1,0 +1,109 @@
+{
+  "account": {
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "accounts": "Accounts",
+    "security": "Security",
+    "api-keys": "API keys"
+  },
+  "godGroups": {
+    "management": "Management",
+    "instance": "Instance"
+  },
+  "god": {
+    "users": {
+      "label": "Users",
+      "description": "Every account on this instance: the global role, whether the address is confirmed, and the projects each user can reach."
+    },
+    "projects": {
+      "label": "Projects",
+      "description": "Every project on this instance: what each one holds, when it was last active, and who can reach it."
+    },
+    "authentication": {
+      "label": "Authentication",
+      "description": "Who may register on this instance, how accounts are confirmed, and the providers people sign in with."
+    },
+    "hotkeys": {
+      "label": "Keyboard shortcuts",
+      "description": "The key each command is bound to for everyone on this instance. Each person can rebind a shortcut for their own account in their preferences."
+    },
+    "storage": {
+      "label": "Storage",
+      "description": "How much people may upload: the size of a single file, the attachment types accepted, and the storage each project gets."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "The bot people connect their Telegram account to, and the one that delivers Telegram notifications for projects that set no bot of their own."
+    },
+    "email": {
+      "label": "Email provider",
+      "description": "The mail provider the instance sends through: password resets, address confirmation, and sign-in links."
+    },
+    "auth-provider": {
+      "label": "Auth provider",
+      "description": "The external accounts people may sign in with."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "General",
+      "description": "The project's name, description, and the sections it shows."
+    },
+    "notifications": {
+      "label": "Notification providers",
+      "description": "The email (SMTP or Resend) and Telegram bot credentials this project delivers notifications through."
+    },
+    "states": {
+      "label": "States",
+      "description": "The workflow states issues move through, each shown as a column."
+    },
+    "issue-types": {
+      "label": "Issue types",
+      "description": "The kinds of issues this project can hold, each with its own fields."
+    },
+    "labels": {
+      "label": "Labels",
+      "description": "Tags for organizing and filtering issues across the project."
+    },
+    "custom-fields": {
+      "label": "Custom fields",
+      "description": "Extra fields shown on issues, global or scoped to an issue type."
+    },
+    "configuration": {
+      "label": "Configuration",
+      "description": "How subtasks close with their parent, and when stale issues are archived."
+    },
+    "actions": {
+      "label": "Actions",
+      "description": "Buttons on an issue that set fields in one click."
+    },
+    "schedules": {
+      "label": "Schedules",
+      "description": "Run agent tasks on a recurring schedule."
+    },
+    "webhooks": {
+      "label": "Webhooks",
+      "description": "Send project events to external URLs, signed with a per-webhook secret."
+    },
+    "github": {
+      "label": "GitHub",
+      "description": "Close issues automatically when their pull requests merge on GitHub."
+    },
+    "ai-agents": {
+      "label": "Agents",
+      "description": "Bot users you can delegate issues to."
+    },
+    "integrations": {
+      "label": "Integrations",
+      "description": "Credentials your agents use to reach AI providers and tools."
+    },
+    "agent-skills": {
+      "label": "Skills",
+      "description": "Reusable instructions internal agents load on demand."
+    },
+    "agent-tools": {
+      "label": "Tools",
+      "description": "Tools agents can call, each connected to an integration credential."
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "add": "Додати фільтр",
+  "remove": "Прибрати фільтр",
+  "valuePlaceholder": "значення",
+  "noOptions": "Немає варіантів",
+  "selected": "Вибрано: {count}",
+  "operators": {
+    "is": "дорівнює",
+    "is_not": "не дорівнює",
+    "before": "до",
+    "after": "після",
+    "is_set": "задано",
+    "is_not_set": "не задано",
+    "contains": "містить",
+    "not_contains": "не містить"
+  },
+  "boolean": {
+    "true": "Так",
+    "false": "Ні"
+  },
+  "fields": {
+    "status": "Статус",
+    "statusType": "Тип статусу",
+    "assignee": "Виконавець",
+    "delegate": "Делегат",
+    "priority": "Пріоритет",
+    "type": "Тип",
+    "labels": "Мітки",
+    "dueDate": "Дедлайн",
+    "startDate": "Дата початку",
+    "created": "Створено",
+    "updated": "Оновлено"
+  },
+  "unset": {
+    "assignee": "Без виконавця",
+    "delegate": "Без делегата",
+    "type": "Без типу"
+  }
+}

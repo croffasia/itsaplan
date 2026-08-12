@@ -1,0 +1,105 @@
+{
+  "newIssue": "New issue",
+  "collapse": "Collapse",
+  "expand": "Expand",
+  "hide": "Hide",
+  "show": "Show",
+  "hiddenColumns": "Hidden columns",
+  "hiddenGroups": "Hidden groups",
+  "selectAll": "Select all",
+  "deselectAll": "Deselect all",
+  "resizeColumn": "Resize the column",
+  "viewNamePlaceholder": "All issues",
+  "sortedOrder": "Issues are ordered by {field}. Switch ordering to Manual to move them.",
+  "statusSince": "In current status since {date}",
+  "createdOn": "Created {date}",
+  "updatedOn": "Updated {date}",
+  "subtasksProgress": "Subtasks {done}/{total}",
+  "subtasksDone": "{done} of {total} subtasks done",
+  "columns": {
+    "title": "Title",
+    "status": "State",
+    "statusAge": "In status",
+    "priority": "Priority",
+    "type": "Type",
+    "initiative": "Initiative",
+    "cycle": "Cycle",
+    "labels": "Labels",
+    "startDate": "Start",
+    "dueDate": "Due",
+    "created": "Created",
+    "updated": "Updated"
+  },
+  "calendar": {
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "today": "Today",
+    "moreIssues": "+{count} more",
+    "issueCount": "{count, plural, one {# issue} other {# issues}}",
+    "weekdays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    },
+    "noDate": {
+      "dueDate": "No due date",
+      "startDate": "No start date"
+    },
+    "allDated": {
+      "dueDate": "Everything has a due date.",
+      "startDate": "Everything has a start date."
+    }
+  },
+  "timeline": {
+    "empty": "No issues to place on the timeline yet.",
+    "expandGroup": "Expand group",
+    "collapseGroup": "Collapse group",
+    "inferredStart": "Start inferred from the created date",
+    "inferredStartDraggable": "Start inferred from the created date — drag to set it"
+  },
+  "bulk": {
+    "selected": "{count} selected",
+    "status": "Status",
+    "priority": "Priority",
+    "assignee": "Assignee",
+    "delegate": "Delegate",
+    "initiative": "Initiative",
+    "cycle": "Cycle",
+    "labels": "Labels",
+    "noAssignee": "No assignee",
+    "noDelegate": "No delegate",
+    "noInitiative": "No initiative",
+    "noCycle": "No cycle",
+    "archive": "Archive",
+    "clearSelection": "Clear selection"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Archive issue} other {Archive issues}}",
+      "confirm": "{count, plural, one {Archive # issue} other {Archive # issues}}",
+      "description": "{count, plural, one {Archive # selected issue? It leaves the board and can be restored later.} other {Archive # selected issues? They leave the board and can be restored later.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Delete issue} other {Delete issues}}",
+      "confirm": "{count, plural, one {Delete # issue} other {Delete # issues}}",
+      "description": "{count, plural, one {Delete # selected issue?} other {Delete # selected issues?}} This also removes comments, activity and attachments. This cannot be undone."
+    }
+  },
+  "share": {
+    "issueTitle": "Issue",
+    "issueUnavailable": "This issue is not available.",
+    "boardUnavailable": "This shared board is not available. The link may have been revoked."
+  },
+  "groups": {
+    "noAssignee": "No assignee",
+    "noDelegate": "No delegate",
+    "noPriority": "No priority",
+    "noType": "No type",
+    "noInitiative": "No initiative",
+    "noCycle": "No cycle"
+  }
+}

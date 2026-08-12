@@ -1,0 +1,58 @@
+{
+  "title": "Cycles",
+  "newCycle": "New cycle",
+  "status": {
+    "upcoming": "Upcoming",
+    "active": "Active",
+    "completed": "Completed"
+  },
+  "views": {
+    "table": "Table",
+    "timeline": "Timeline"
+  },
+  "columns": {
+    "name": "Name",
+    "dates": "Dates",
+    "length": "Length",
+    "issues": "Issues",
+    "progress": "Progress"
+  },
+  "emptyTitle": "No cycles yet",
+  "emptyDescription": "A cycle is a time-boxed period the team plans its issues into.",
+  "nothingPlannedTitle": "Nothing planned",
+  "nothingPlannedDescription": "The timeline shows active and upcoming cycles. Finished ones are in the table.",
+  "options": "Cycle options",
+  "transferIssues": "Transfer unfinished issues",
+  "form": {
+    "editTitle": "Edit cycle",
+    "newTitle": "New cycle",
+    "name": "Name",
+    "goal": "Goal",
+    "goalPlaceholder": "What should this cycle deliver?",
+    "length": "Length",
+    "starts": "Starts",
+    "ends": "Ends",
+    "create": "Create cycle",
+    "saveFailed": "Could not save the cycle"
+  },
+  "weeks": "{count, plural, one {# week} other {# weeks}}",
+  "transfer": {
+    "title": "Transfer unfinished issues",
+    "description": "Issues that are not completed or canceled move to the cycle you pick. The rest stay here.",
+    "moveTo": "Move to",
+    "noCycle": "No cycle",
+    "submit": "Move issues",
+    "moving": "Moving…",
+    "moved": "{count, plural, one {# issue moved} other {# issues moved}}",
+    "failed": "Could not move the issues"
+  },
+  "details": "Cycle details",
+  "goal": "Goal",
+  "noGoal": "No goal set.",
+  "progress": "Progress",
+  "openCycle": "Open cycle",
+  "dragFailed": "Could not move the cycle",
+  "notFound": "Cycle not found.",
+  "defaultName": "Sprint {n}",
+  "issuesDone": "Issues done"
+}

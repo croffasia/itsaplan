@@ -1,0 +1,31 @@
+{
+  "label": "Manage projects",
+  "title": "Manage projects",
+  "description": "Every project you belong to, with your permissions in each. Copy one to start a new project from its setup. Owners can delete a project; members can leave one. Deleting permanently removes the project and everything in it.",
+  "empty": "You are not a member of any project yet.",
+  "columns": {
+    "project": "Project",
+    "role": "Role",
+    "permissions": "Permissions",
+    "actions": "Actions"
+  },
+  "yourPermissions": "Your permissions",
+  "copyAction": "Copy project",
+  "deleteAction": "Delete project",
+  "leaveAction": "Leave project",
+  "roles": {
+    "owner": "Owner",
+    "member": "Member"
+  },
+  "deleteDialog": {
+    "title": "Delete {name}?",
+    "confirm": "Delete permanently",
+    "description": "This permanently deletes <strong>{name}</strong> and everything in it: issues, comments, attachments, and settings. This cannot be undone.",
+    "typeToConfirm": "Type <code>{key}</code> to confirm."
+  },
+  "leaveDialog": {
+    "title": "Leave {name}?",
+    "confirm": "Leave project",
+    "description": "You will lose access to <strong>{name}</strong> and its work items. To join again you need a new invite from an owner."
+  }
+}

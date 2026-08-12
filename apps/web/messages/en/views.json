@@ -1,0 +1,14 @@
+{
+  "all": "All",
+  "newView": "New view",
+  "switchView": "Switch view",
+  "searchViews": "Search views…",
+  "noViews": "No views found.",
+  "options": "View options",
+  "share": "Share",
+  "shared": "Shared",
+  "editView": "Edit view",
+  "shareBoard": "Share board",
+  "newViewHint": "Create a view from the current filters and display",
+  "filter": "Filter"
+}

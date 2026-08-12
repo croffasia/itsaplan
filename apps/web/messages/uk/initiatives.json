@@ -1,0 +1,144 @@
+{
+  "title": "Ініціативи",
+  "newInitiative": "Нова ініціатива",
+  "notFound": "Ініціативу не знайдено.",
+  "options": "Дії з ініціативою",
+  "showDescription": "Показати опис",
+  "noDescription": "Опису немає.",
+  "noOwner": "Без власника",
+  "targetDate": "Цільова дата",
+  "progress": "Прогрес",
+  "activity": "Активність",
+  "noActivity": "Активності ще немає.",
+  "noIssuesLinked": "Задач ще не прив'язано.",
+  "inProgress": "У роботі",
+  "emptyTitle": "Ініціатив ще немає",
+  "emptyDescription": "Ініціатива об'єднує пов'язані задачі під однією ціллю.",
+  "emptyTabDescription": "Ініціативи переходять між вкладками разом зі зміною статусу.",
+  "emptyTab": {
+    "active": "Активних ініціатив немає",
+    "planned": "Запланованих ініціатив немає",
+    "proposed": "Запропонованих ініціатив немає",
+    "completed": "Завершених ініціатив немає"
+  },
+  "tabs": {
+    "active": "Активні",
+    "planned": "Заплановані",
+    "proposed": "Запропоновані",
+    "completed": "Завершені",
+    "all": "Усі ініціативи"
+  },
+  "detailTabs": {
+    "overview": "Огляд",
+    "issues": "Задачі"
+  },
+  "columns": {
+    "name": "Назва",
+    "priority": "Пріоритет",
+    "owner": "Власник",
+    "target": "Ціль",
+    "progress": "Прогрес",
+    "health": "Стан"
+  },
+  "status": {
+    "proposed": "Запропонована",
+    "planned": "Запланована",
+    "active": "Активна",
+    "completed": "Завершена",
+    "canceled": "Скасована"
+  },
+  "stateGroups": {
+    "backlog": "Беклог",
+    "unstarted": "До виконання",
+    "started": "У роботі",
+    "completed": "Готово",
+    "canceled": "Скасовано"
+  },
+  "health": {
+    "on_track": "За планом",
+    "at_risk": "Є ризик",
+    "off_track": "Відставання",
+    "unknown": "Немає даних"
+  },
+  "healthInfo": {
+    "trigger": "Як розраховується стан?",
+    "title": "Стан",
+    "description": "Порівнює виконану роботу з витраченим часом. Оновлюється автоматично.",
+    "legend": {
+      "on_track": "Робота встигає за графіком.",
+      "at_risk": "Робота починає відставати від графіка.",
+      "off_track": "Робота суттєво відстає або цільова дата минула.",
+      "unknown": "Даних ще замало: немає задач або цільової дати."
+    },
+    "howCalculated": "Як це розраховується",
+    "workDone": "Виконана робота",
+    "timeElapsed": "Витрачений час",
+    "trail": "Наскільки робота відстає від часу",
+    "trailOnTrack": "до 10% відставання",
+    "trailAtRisk": "10-25% відставання",
+    "trailOffTrack": "понад 25% відставання"
+  },
+  "timeline": {
+    "title": "Терміни",
+    "started": "Початок",
+    "target": "Ціль",
+    "remaining": "Залишилось",
+    "overdue": "прострочено на {days} дн.",
+    "dueToday": "Термін сьогодні",
+    "left": "{days} дн. залишилось",
+    "timeElapsed": "Витрачений час",
+    "workDone": "Виконана робота",
+    "noTargetDate": "Вкажіть цільову дату, щоб бачити темп."
+  },
+  "form": {
+    "title": "Назва",
+    "titlePlaceholder": "Запуск у 3 кварталі",
+    "description": "Опис",
+    "descriptionPlaceholder": "Про що ця ініціатива?",
+    "create": "Створити ініціативу",
+    "creating": "Створення…",
+    "editTitle": "Редагувати ініціативу",
+    "save": "Зберегти зміни"
+  },
+  "pagination": {
+    "range": "{from}–{to} з {total}",
+    "previous": "Попередня сторінка",
+    "next": "Наступна сторінка"
+  },
+  "select": {
+    "label": "Ініціатива",
+    "search": "Прив'язати до ініціативи…",
+    "empty": "Ініціатив немає.",
+    "none": "Без ініціативи"
+  },
+  "feed": {
+    "system": "Система",
+    "createdInitiative": "створив(-ла) ініціативу",
+    "createdIssue": "створив(-ла) задачу",
+    "renamed": "перейменував(-ла) на «{title}»",
+    "descriptionUpdated": "оновив(-ла) опис",
+    "descriptionCleared": "очистив(-ла) опис",
+    "statusSet": "встановив(-ла) статус {status}",
+    "statusMoved": "перемістив(-ла) з {from} до {to}",
+    "prioritySet": "встановив(-ла) пріоритет {priority}",
+    "priorityRemoved": "прибрав(-ла) пріоритет",
+    "ownerSet": "призначив(-ла) власником {name}",
+    "ownerRemoved": "прибрав(-ла) власника {name}",
+    "assigneeSet": "призначив(-ла) виконавцем {name}",
+    "assigneeRemoved": "прибрав(-ла) виконавця {name}",
+    "delegateSet": "делегував(-ла) {name}",
+    "delegateRemoved": "прибрав(-ла) делегата {name}",
+    "targetDateSet": "встановив(-ла) цільову дату {date}",
+    "targetDateRemoved": "прибрав(-ла) цільову дату",
+    "startDateSet": "встановив(-ла) дату початку {date}",
+    "startDateRemoved": "прибрав(-ла) дату початку",
+    "dueDateSet": "встановив(-ла) дедлайн {date}",
+    "dueDateRemoved": "прибрав(-ла) дедлайн",
+    "labelAdded": "додав(-ла) мітку {label}",
+    "labelRemoved": "прибрав(-ла) мітку {label}",
+    "typeSet": "встановив(-ла) тип {type}",
+    "typeRemoved": "прибрав(-ла) тип",
+    "linked": "прив'язав(-ла) до {name}",
+    "unlinked": "відв'язав(-ла) від ініціативи"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "label": "API keys",
+  "title": "API keys",
+  "description": "Personal API keys authenticate requests to the API as your account ({email}). A key's value is shown only once, when you create it.",
+  "sectionTitle": "Your API keys",
+  "create": "Create API key",
+  "empty": "No API keys yet. Create one to authenticate requests to the API.",
+  "fallbackName": "API key",
+  "createdAt": "Created {date}",
+  "deleteAction": "Delete API key",
+  "createDialog": {
+    "title": "Create API key",
+    "nameLabel": "Name",
+    "namePlaceholder": "e.g. CI pipeline",
+    "nameHint": "A label to recognize this key later.",
+    "submit": "Create key",
+    "submitPending": "Creating…",
+    "error": "Could not create API key."
+  },
+  "createdDialog": {
+    "title": "API key created",
+    "description": "Copy your key now. For security, it is shown only once and cannot be retrieved later.",
+    "copy": "Copy key"
+  },
+  "deleteDialog": {
+    "title": "Delete API key?",
+    "confirm": "Delete key",
+    "description": "Any request using this key will stop working immediately. This cannot be undone.",
+    "error": "Could not delete API key."
+  },
+  "loadFailed": "Could not load API keys."
+}

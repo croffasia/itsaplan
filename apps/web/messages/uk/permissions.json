@@ -1,0 +1,46 @@
+{
+  "viewPermissions": "Переглянути права",
+  "none": "Прав не надано",
+  "grantedCount": "Надано {count, plural, one {# право} few {# права} many {# прав} other {# права}}",
+  "resources": {
+    "work_items": "Задачі",
+    "initiatives": "Ініціативи",
+    "cycles": "Цикли",
+    "dashboards": "Дашборди",
+    "views": "Подання задач",
+    "members_invite": "Запрошення",
+    "members_manage": "Учасники",
+    "states": "Статуси",
+    "issue_types": "Типи задач",
+    "labels": "Мітки",
+    "ai_agents": "AI-агенти",
+    "integrations": "Інтеграції",
+    "agent_skills": "Навички агентів",
+    "agent_tools": "Інструменти агентів",
+    "custom_fields": "Власні поля",
+    "workflow_config": "Налаштування робочого процесу",
+    "actions": "Дії",
+    "webhooks": "Вебхуки",
+    "note_boards": "Дошки нотаток",
+    "danger_zone": "Небезпечна зона"
+  },
+  "actions": {
+    "create": "Створення",
+    "edit": "Редагування",
+    "read": "Читання",
+    "delete": "Видалення"
+  },
+  "groups": {
+    "workItems": "Задачі",
+    "dashboards": "Дашборди",
+    "notes": "Нотатки",
+    "ai": "AI",
+    "configuration": "Налаштування",
+    "members": "Учасники",
+    "project": "Проєкт",
+    "other": "Інше"
+  },
+  "resourceColumn": "Ресурс",
+  "allowed": "дозволено",
+  "notAllowed": "не дозволено"
+}

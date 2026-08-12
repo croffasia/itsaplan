@@ -1,0 +1,37 @@
+{
+  "title": "Вхідні",
+  "empty": "Сповіщень немає",
+  "selectNotification": "Виберіть сповіщення",
+  "backToList": "Вхідні",
+  "filter": "Фільтр",
+  "display": "Відображення",
+  "notificationType": "Тип сповіщення",
+  "showRead": "Показувати прочитані",
+  "showSnoozed": "Показувати відкладені",
+  "markAllRead": "Позначити всі прочитаними",
+  "deleteAllRead": "Видалити всі прочитані",
+  "deleteAllReadCompleted": "Видалити прочитані для завершених задач",
+  "types": {
+    "assigned": "Призначено",
+    "mentioned": "Згадано",
+    "commented": "Прокоментовано",
+    "state_changed": "Статус змінено"
+  },
+  "actions": {
+    "markRead": "Позначити прочитаним",
+    "markUnread": "Позначити непрочитаним",
+    "snooze": "Відкласти",
+    "unsnooze": "Повернути",
+    "tomorrow": "Завтра",
+    "inAWeek": "Через тиждень",
+    "pickDate": "Вибрати дату…"
+  },
+  "event": {
+    "someone": "Хтось",
+    "assigned": "{who} призначив(ла) задачу вам",
+    "mentioned": "{who} згадав(ла) вас",
+    "commented": "{who} залишив(ла) коментар",
+    "stateChanged": "{who} змінив(ла) статус з {from} на {to}",
+    "stateChangedPlain": "{who} змінив(ла) статус"
+  }
+}

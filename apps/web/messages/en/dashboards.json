@@ -1,0 +1,202 @@
+{
+  "noAccess": "You do not have access to dashboards.",
+  "defaultName": "Overview",
+  "newDashboard": "New dashboard",
+  "renameDashboard": "Rename dashboard",
+  "namePlaceholder": "Dashboard name",
+  "options": "Dashboard options",
+  "rename": "Rename",
+  "editLayout": "Edit layout",
+  "discard": "Discard",
+  "saveDashboard": "Save dashboard",
+  "saveChanges": "Save changes",
+  "noWidgets": "No widgets yet. Add one to build this dashboard.",
+  "addWidget": "Add widget",
+  "addWidgetTitle": "Add a widget",
+  "addWidgetDescription": "Pick a widget to add to this dashboard.",
+  "searchWidgets": "Search widgets",
+  "clearSearch": "Clear search",
+  "noWidgetMatches": "No widget matches “{query}”.",
+  "dragToMove": "Drag to move",
+  "widgetName": "Widget name",
+  "widgetSettings": "Widget settings",
+  "widgetOptions": "Widget options",
+  "removeWidget": "Remove widget",
+  "lastDays": "Last {days} days",
+  "showRows": "Show {count}",
+  "widgetGroups": {
+    "issues": "Issues",
+    "agents": "AI agents & webhooks"
+  },
+  "widgets": {
+    "stat": {
+      "label": "Number",
+      "description": "Count of issues matching a filter"
+    },
+    "recent_issues": {
+      "label": "Recent issues",
+      "description": "Latest issues by created or updated time"
+    },
+    "activity_feed": {
+      "label": "Activity feed",
+      "description": "Project-wide change log, filterable by actor and action"
+    },
+    "pulse": {
+      "label": "Pulse",
+      "description": "GitHub-style heatmap of daily activity"
+    },
+    "throughput": {
+      "label": "Throughput",
+      "description": "Created vs closed issues per week"
+    },
+    "breakdown": {
+      "label": "Breakdown",
+      "description": "Issue counts by status, priority, type, or assignee"
+    },
+    "agent_runs": {
+      "label": "Agent runs",
+      "description": "Recent AI agent runs with their outcome"
+    },
+    "agent_health": {
+      "label": "Agent health",
+      "description": "Agent run success rate and failures over a window"
+    },
+    "webhook_health": {
+      "label": "Webhook health",
+      "description": "Webhook delivery outcomes and disabled endpoints"
+    },
+    "agent_workload": {
+      "label": "Agent workload",
+      "description": "Delegated issues and run outcomes per agent"
+    }
+  },
+  "breakdown": {
+    "empty": "No issues yet.",
+    "by": {
+      "status": "State",
+      "priority": "Priority",
+      "type": "Type",
+      "assignee": "Assignee",
+      "delegate": "Delegate"
+    },
+    "caption": {
+      "status": "By state",
+      "priority": "By priority",
+      "type": "By type",
+      "assignee": "By assignee",
+      "delegate": "By delegate"
+    }
+  },
+  "recentIssues": {
+    "empty": "No issues match this filter.",
+    "captionCreated": "Newest first",
+    "captionUpdated": "Recently updated",
+    "filterCount": "{count, plural, one {# filter} other {# filters}}",
+    "sort": {
+      "created": "Newest",
+      "updated": "Updated"
+    }
+  },
+  "activityFeed": {
+    "empty": "No activity matches this filter.",
+    "someone": "Someone",
+    "filterCount": "{count, plural, one {# filter} other {# filters}}",
+    "actions": {
+      "all": "All activity",
+      "status": "Status changes",
+      "assignee": "Assignments",
+      "priority": "Priority",
+      "created": "Created"
+    },
+    "verbs": {
+      "comment": "commented on",
+      "created": "created",
+      "title": "renamed",
+      "description": "updated the description of",
+      "status": "changed the status of",
+      "assignee": "changed the assignee of",
+      "priority": "changed the priority of",
+      "type": "changed the type of",
+      "start_date": "changed the start date of",
+      "due_date": "changed the due date of",
+      "label_add": "added a label to",
+      "label_remove": "removed a label from",
+      "field": "updated a field on",
+      "other": "updated"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "By hour",
+      "day": "By day",
+      "week": "By week"
+    },
+    "unit": {
+      "hour": "Hours",
+      "day": "Days",
+      "week": "Weeks"
+    },
+    "events": "{count, plural, one {# event} other {# events}}",
+    "eventNoun": "{count, plural, one {event} other {events}}",
+    "active": "{count} active",
+    "less": "Less",
+    "more": "More"
+  },
+  "throughput": {
+    "empty": "No activity in this period.",
+    "lastWeeks": "Last {weeks} weeks",
+    "created": "Created",
+    "closed": "Closed"
+  },
+  "agentRuns": {
+    "empty": "No agent runs yet.",
+    "filters": {
+      "all": "All runs",
+      "failed": "Failed",
+      "pending": "Queued",
+      "success": "Succeeded"
+    },
+    "status": {
+      "pending": "queued",
+      "success": "success",
+      "failed": "failed"
+    },
+    "trigger": {
+      "mention": "ran on mention in",
+      "delegation": "ran on delegation of",
+      "manual": "ran manually",
+      "schedule": "ran on schedule"
+    }
+  },
+  "agentHealth": {
+    "empty": "No agent runs.",
+    "successRate": "success rate",
+    "runs": "{count, plural, one {# run} other {# runs}}",
+    "failed": "{count} failed",
+    "queued": "{count} queued"
+  },
+  "webhookHealth": {
+    "deliveries": "deliveries",
+    "failed": "{count} failed",
+    "pending": "{count} pending",
+    "allDelivered": "all delivered",
+    "disabled": "{count, plural, one {# disabled endpoint} other {# disabled endpoints}}"
+  },
+  "agentWorkload": {
+    "empty": "No agents in this project.",
+    "agent": "Agent",
+    "delegated": "Delegated",
+    "runs": "Runs",
+    "failed": "{count} failed",
+    "kind": {
+      "external": "External",
+      "internal": "Internal"
+    }
+  },
+  "defaultWidgets": {
+    "open": "Open",
+    "inProgress": "In progress",
+    "backlog": "Backlog",
+    "unassigned": "Unassigned"
+  }
+}

@@ -1,0 +1,202 @@
+{
+  "noAccess": "У вас немає доступу до дашбордів.",
+  "defaultName": "Огляд",
+  "newDashboard": "Новий дашборд",
+  "renameDashboard": "Перейменувати дашборд",
+  "namePlaceholder": "Назва дашборда",
+  "options": "Дії з дашбордом",
+  "rename": "Перейменувати",
+  "editLayout": "Редагувати розкладку",
+  "discard": "Скасувати зміни",
+  "saveDashboard": "Зберегти дашборд",
+  "saveChanges": "Зберегти зміни",
+  "noWidgets": "Віджетів ще немає. Додайте перший, щоб зібрати дашборд.",
+  "addWidget": "Додати віджет",
+  "addWidgetTitle": "Додати віджет",
+  "addWidgetDescription": "Виберіть віджет для цього дашборда.",
+  "searchWidgets": "Пошук віджетів",
+  "clearSearch": "Очистити пошук",
+  "noWidgetMatches": "Немає віджетів за запитом «{query}».",
+  "dragToMove": "Перетягніть, щоб перемістити",
+  "widgetName": "Назва віджета",
+  "widgetSettings": "Налаштування віджета",
+  "widgetOptions": "Дії з віджетом",
+  "removeWidget": "Видалити віджет",
+  "lastDays": "Останні {days} дн.",
+  "showRows": "Показати {count}",
+  "widgetGroups": {
+    "issues": "Задачі",
+    "agents": "AI-агенти та вебхуки"
+  },
+  "widgets": {
+    "stat": {
+      "label": "Число",
+      "description": "Кількість задач, що відповідають фільтру"
+    },
+    "recent_issues": {
+      "label": "Останні задачі",
+      "description": "Найновіші задачі за часом створення або оновлення"
+    },
+    "activity_feed": {
+      "label": "Стрічка активності",
+      "description": "Журнал змін по проєкту з фільтром за автором і дією"
+    },
+    "pulse": {
+      "label": "Пульс",
+      "description": "Теплова карта щоденної активності"
+    },
+    "throughput": {
+      "label": "Пропускна здатність",
+      "description": "Створені та закриті задачі за тиждень"
+    },
+    "breakdown": {
+      "label": "Розподіл",
+      "description": "Кількість задач за статусом, пріоритетом, типом чи виконавцем"
+    },
+    "agent_runs": {
+      "label": "Запуски агентів",
+      "description": "Останні запуски AI-агентів та їхній результат"
+    },
+    "agent_health": {
+      "label": "Стан агентів",
+      "description": "Частка успішних запусків і збої за період"
+    },
+    "webhook_health": {
+      "label": "Стан вебхуків",
+      "description": "Результати доставок і вимкнені ендпоінти"
+    },
+    "agent_workload": {
+      "label": "Завантаження агентів",
+      "description": "Делеговані задачі та результати запусків по агентах"
+    }
+  },
+  "breakdown": {
+    "empty": "Задач ще немає.",
+    "by": {
+      "status": "Статус",
+      "priority": "Пріоритет",
+      "type": "Тип",
+      "assignee": "Виконавець",
+      "delegate": "Делегат"
+    },
+    "caption": {
+      "status": "За статусом",
+      "priority": "За пріоритетом",
+      "type": "За типом",
+      "assignee": "За виконавцем",
+      "delegate": "За делегатом"
+    }
+  },
+  "recentIssues": {
+    "empty": "Немає задач за цим фільтром.",
+    "captionCreated": "Спочатку найновіші",
+    "captionUpdated": "Нещодавно оновлені",
+    "filterCount": "{count, plural, one {# фільтр} few {# фільтри} many {# фільтрів} other {# фільтра}}",
+    "sort": {
+      "created": "Найновіші",
+      "updated": "Оновлені"
+    }
+  },
+  "activityFeed": {
+    "empty": "Немає активності за цим фільтром.",
+    "someone": "Хтось",
+    "filterCount": "{count, plural, one {# фільтр} few {# фільтри} many {# фільтрів} other {# фільтра}}",
+    "actions": {
+      "all": "Уся активність",
+      "status": "Зміни статусу",
+      "assignee": "Призначення",
+      "priority": "Пріоритет",
+      "created": "Створення"
+    },
+    "verbs": {
+      "comment": "прокоментував(-ла)",
+      "created": "створив(-ла)",
+      "title": "перейменував(-ла)",
+      "description": "оновив(-ла) опис",
+      "status": "змінив(-ла) статус",
+      "assignee": "змінив(-ла) виконавця",
+      "priority": "змінив(-ла) пріоритет",
+      "type": "змінив(-ла) тип",
+      "start_date": "змінив(-ла) дату початку",
+      "due_date": "змінив(-ла) дедлайн",
+      "label_add": "додав(-ла) мітку",
+      "label_remove": "прибрав(-ла) мітку",
+      "field": "оновив(-ла) поле",
+      "other": "оновив(-ла)"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "За годинами",
+      "day": "За днями",
+      "week": "За тижнями"
+    },
+    "unit": {
+      "hour": "Години",
+      "day": "Дні",
+      "week": "Тижні"
+    },
+    "events": "{count, plural, one {# подія} few {# події} many {# подій} other {# події}}",
+    "eventNoun": "{count, plural, one {подія} few {події} many {подій} other {події}}",
+    "active": "{count} активних",
+    "less": "Менше",
+    "more": "Більше"
+  },
+  "throughput": {
+    "empty": "Немає активності за цей період.",
+    "lastWeeks": "Останні {weeks} тиж.",
+    "created": "Створено",
+    "closed": "Закрито"
+  },
+  "agentRuns": {
+    "empty": "Запусків агентів ще немає.",
+    "filters": {
+      "all": "Усі запуски",
+      "failed": "Невдалі",
+      "pending": "У черзі",
+      "success": "Успішні"
+    },
+    "status": {
+      "pending": "у черзі",
+      "success": "успіх",
+      "failed": "збій"
+    },
+    "trigger": {
+      "mention": "запущений згадкою в",
+      "delegation": "запущений делегуванням",
+      "manual": "запущений вручну",
+      "schedule": "запущений за розкладом"
+    }
+  },
+  "agentHealth": {
+    "empty": "Запусків агентів немає.",
+    "successRate": "успішних запусків",
+    "runs": "{count, plural, one {# запуск} few {# запуски} many {# запусків} other {# запуску}}",
+    "failed": "{count} зі збоєм",
+    "queued": "{count} у черзі"
+  },
+  "webhookHealth": {
+    "deliveries": "доставок",
+    "failed": "{count} зі збоєм",
+    "pending": "{count} в очікуванні",
+    "allDelivered": "усі доставлені",
+    "disabled": "{count, plural, one {# вимкнений ендпоінт} few {# вимкнені ендпоінти} many {# вимкнених ендпоінтів} other {# вимкненого ендпоінта}}"
+  },
+  "agentWorkload": {
+    "empty": "У цьому проєкті немає агентів.",
+    "agent": "Агент",
+    "delegated": "Делеговано",
+    "runs": "Запуски",
+    "failed": "{count} зі збоєм",
+    "kind": {
+      "external": "Зовнішній",
+      "internal": "Внутрішній"
+    }
+  },
+  "defaultWidgets": {
+    "open": "Відкриті",
+    "inProgress": "В роботі",
+    "backlog": "Беклог",
+    "unassigned": "Без виконавця"
+  }
+}

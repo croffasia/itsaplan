@@ -1,0 +1,103 @@
+{
+  "title": "Учасники",
+  "description": "Люди з доступом до цього проєкту. Запрошуйте поштою; власники можуть відкликати доступ.",
+  "columns": {
+    "member": "Учасник",
+    "role": "Роль",
+    "actions": "Дії"
+  },
+  "you": "(ви)",
+  "aiAgent": "AI-агент",
+  "joined": "· приєднався {date}",
+  "leaveProject": "Вийти з проєкту",
+  "revokeAccess": "Відкликати доступ",
+  "lastOwner": "У проєкті має залишатися щонайменше один власник",
+  "leaveTitle": "Вийти з цього проєкту",
+  "leaveDescription": "Ви втратите доступ до цього проєкту та його задач. Власник зможе запросити вас знову.",
+  "revokeTitle": "Відкликати доступ для {name}",
+  "revokeDescription": "{name} втратить доступ до цього проєкту. Його можна буде запросити знову.",
+  "selectRole": "Виберіть роль",
+  "editDescription": "Редагувати опис",
+  "descriptionQuestionSelf": "Чим ви займаєтесь у цьому проєкті?",
+  "descriptionQuestionOther": "Чим ця людина займається в цьому проєкті?",
+  "descriptionPlaceholder": "напр. Backend-інженер, відповідає за API та інтеграції",
+  "invites": {
+    "emailPlaceholder": "name@example.com",
+    "rolePlaceholder": "Роль",
+    "invite": "Запросити",
+    "inviting": "Надсилання…",
+    "pendingCount": "{count, plural, one {# запрошення в очікуванні} few {# запрошення в очікуванні} many {# запрошень в очікуванні} other {# запрошення в очікуванні}}",
+    "copyLink": "Скопіювати посилання",
+    "copied": "Скопійовано",
+    "revokeAction": "Відкликати запрошення",
+    "removeAction": "Прибрати запрошення",
+    "invitedBy": "Запросив {name} · ",
+    "createdAt": "створено {date}",
+    "respondedAt": "{status, select, accepted {прийнято} rejected {відхилено} other {оновлено}} {date}",
+    "status": {
+      "pending": "В очікуванні",
+      "accepted": "Прийнято",
+      "rejected": "Відхилено"
+    },
+    "revokeTitle": "Відкликати запрошення для {email}",
+    "revokeConfirm": "Відкликати запрошення",
+    "revokeDescription": "Посилання-запрошення перестане працювати. Ви зможете запросити цю адресу знову."
+  },
+  "roles": {
+    "title": "Ролі",
+    "description": "Власні ролі та права, які кожна з них надає. Призначити роль учаснику можна зі списку учасників.",
+    "ownerOnly": "Керувати ролями можуть лише власники проєкту.",
+    "empty": "Ролей ще немає. Створіть роль, щоб надати обмежений доступ.",
+    "columns": {
+      "role": "Роль",
+      "permissions": "Права",
+      "actions": "Дії"
+    },
+    "default": "За замовчуванням",
+    "editAction": "Редагувати роль",
+    "deleteAction": "Видалити роль",
+    "defaultUndeletable": "Роль за замовчуванням видалити не можна",
+    "deleteTitle": "Видалити роль «{name}»",
+    "deleteDescription": "Учасників із цією роллю буде переведено на роль за замовчуванням. Дію не можна скасувати.",
+    "newRole": "Нова роль",
+    "editorTitleEdit": "Редагувати роль",
+    "editorTitleNew": "Нова роль",
+    "editorSubtitle": "права ролі",
+    "namePlaceholder": "напр. Contributor",
+    "resourceColumn": "Ресурс",
+    "toggleActionAll": "Перемкнути «{action}» для всіх ресурсів",
+    "toggleGroupAll": "Перемкнути всі права групи {group}",
+    "toggleActionGroup": "Перемкнути «{action}» для {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "Зберегти роль",
+    "createRole": "Створити роль",
+    "importExport": "Імпорт і експорт ролей",
+    "copyRoles": "Скопіювати ролі",
+    "pasteRoles": "Вставити ролі",
+    "nothingToCopy": "Немає власних ролей для копіювання.",
+    "copiedRoles": "Скопійовано {count, plural, one {# роль} few {# ролі} many {# ролей} other {# ролі}}.",
+    "copyFailed": "Не вдалося скопіювати в буфер обміну.",
+    "readFailed": "Не вдалося прочитати буфер обміну.",
+    "parseFailed": "Не вдалося прочитати ролі з буфера обміну.",
+    "import": {
+      "title": "Застосувати ролі з буфера обміну",
+      "summary": "Буде застосовано {count, plural, one {# роль} few {# ролі} many {# ролей} other {# ролі}}. Перезапис ролі замінює її матрицю прав; учасники зберігають роль.",
+      "preview": "Попередній перегляд прав",
+      "apply": "Застосувати {count, plural, =0 {ролі} one {# роль} few {# ролі} many {# ролей} other {# ролі}}",
+      "applied": "Ролі застосовано: створено {created}, оновлено {updated}{skipped, plural, =0 {} other {, пропущено #}}.",
+      "actions": {
+        "create": "Нова",
+        "update": "Перезаписати",
+        "skip": "Пропустити (за замовчуванням)"
+      }
+    },
+    "transferErrors": {
+      "invalidJson": "У буфері обміну немає коректного JSON.",
+      "notAnExport": "У буфері обміну немає експорту ролей.",
+      "empty": "Експорт ролей порожній."
+    }
+  },
+  "promoted": "Учасника призначено власником",
+  "roleUpdated": "Роль учасника оновлено",
+  "descriptionUpdated": "Опис учасника оновлено"
+}

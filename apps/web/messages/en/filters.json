@@ -1,0 +1,39 @@
+{
+  "add": "Add filter",
+  "remove": "Remove filter",
+  "valuePlaceholder": "value",
+  "noOptions": "No options",
+  "selected": "{count} selected",
+  "operators": {
+    "is": "is",
+    "is_not": "is not",
+    "before": "before",
+    "after": "after",
+    "is_set": "is set",
+    "is_not_set": "is not set",
+    "contains": "contains",
+    "not_contains": "does not contain"
+  },
+  "boolean": {
+    "true": "True",
+    "false": "False"
+  },
+  "fields": {
+    "status": "State",
+    "statusType": "State type",
+    "assignee": "Assignee",
+    "delegate": "Delegate",
+    "priority": "Priority",
+    "type": "Type",
+    "labels": "Labels",
+    "dueDate": "Due date",
+    "startDate": "Start date",
+    "created": "Created",
+    "updated": "Updated"
+  },
+  "unset": {
+    "assignee": "No assignee",
+    "delegate": "No delegate",
+    "type": "No type"
+  }
+}

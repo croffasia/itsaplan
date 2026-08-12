@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.9.0](https://github.com/croffasia/itsaplan/compare/v0.8.0...v0.9.0) (2026-08-12)
+
+
+### Features
+
+* close issues from merged GitHub pull requests ([#120](https://github.com/croffasia/itsaplan/issues/120)) ([48f4d0e](https://github.com/croffasia/itsaplan/commit/48f4d0eeee5c311ab2f26fa19ee46f74255aac6b))
+* single revision engine behind live refresh ([#119](https://github.com/croffasia/itsaplan/issues/119)) ([51eb888](https://github.com/croffasia/itsaplan/commit/51eb888c3d7d97608506a3584bb22e3378667d31))
+* **web:** localize UI with en/uk support ([#123](https://github.com/croffasia/itsaplan/issues/123)) ([bf3beaf](https://github.com/croffasia/itsaplan/commit/bf3beaffd659326affcdaf8e89ef5b77db147c3f))
+* **web:** move the whole selection when a selected card is dragged ([#112](https://github.com/croffasia/itsaplan/issues/112)) ([46b388b](https://github.com/croffasia/itsaplan/commit/46b388b2327bca2462b24c0e444e0a490fc9c425))
+* **web:** resizable table columns persisted per view scope ([#116](https://github.com/croffasia/itsaplan/issues/116)) ([0f11119](https://github.com/croffasia/itsaplan/commit/0f111199af288e98c65d4c8acc806afc8b69a9d4))
+
+
+### Improvements
+
+* **web:** add loading skeletons across the app ([#118](https://github.com/croffasia/itsaplan/issues/118)) ([ec90f0d](https://github.com/croffasia/itsaplan/commit/ec90f0dd06482e256e4c40d67037054508a17a29))
+* **web:** split subtask display into separate cards and nested rows ([#109](https://github.com/croffasia/itsaplan/issues/109)) ([43c69fb](https://github.com/croffasia/itsaplan/commit/43c69fbc98d6ad188f9583f75f861b4acd932b29))
+* **web:** switch to upstream Inter and enable disambiguating glyphs ([#107](https://github.com/croffasia/itsaplan/issues/107)) ([1648687](https://github.com/croffasia/itsaplan/commit/16486873640bc202cf7c5717aebae09c07560c53))
+
+
+### Bug Fixes
+
+* decouple issue pickers and agent forms from resource permissions ([#121](https://github.com/croffasia/itsaplan/issues/121)) ([bddbea5](https://github.com/croffasia/itsaplan/commit/bddbea5d1cf6dee8de49a060940bb77700fbc3e8))
+
 ## [0.8.0](https://github.com/croffasia/itsaplan/compare/v0.7.0...v0.8.0) (2026-08-07)
 
 

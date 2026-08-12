@@ -1,0 +1,92 @@
+{
+  "title": "Отображение",
+  "layouts": {
+    "kanban": "Канбан",
+    "table": "Таблица",
+    "timeline": "Таймлайн",
+    "calendar": "Календарь"
+  },
+  "sortFields": {
+    "manual": "Вручную",
+    "title": "Название",
+    "identifier": "Номер задачи",
+    "status": "Статус",
+    "priority": "Приоритет",
+    "assignee": "Исполнитель",
+    "type": "Тип",
+    "startDate": "Дата начала",
+    "dueDate": "Дедлайн",
+    "created": "Создано",
+    "updated": "Обновлено"
+  },
+  "groupFields": {
+    "none": "Без группировки",
+    "status": "Статус",
+    "assignee": "Исполнитель",
+    "delegate": "Делегат",
+    "priority": "Приоритет",
+    "type": "Тип",
+    "initiative": "Инициатива",
+    "cycle": "Цикл"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "Статус",
+    "priority": "Приоритет",
+    "type": "Тип",
+    "assignee": "Исполнитель",
+    "delegate": "Делегат",
+    "initiative": "Инициатива",
+    "cycle": "Цикл",
+    "labels": "Метки",
+    "startDate": "Дата начала",
+    "dueDate": "Дедлайн",
+    "created": "Создано",
+    "updated": "Обновлено",
+    "statusAge": "Время в статусе"
+  },
+  "stateTypes": {
+    "backlog": "Бэклог",
+    "unstarted": "Не начато",
+    "started": "В работе",
+    "completed": "Завершено",
+    "canceled": "Отменено"
+  },
+  "timelineScales": {
+    "week": "Неделя",
+    "month": "Месяц",
+    "quarter": "Квартал"
+  },
+  "weekStart": {
+    "0": "Воскресенье",
+    "1": "Понедельник"
+  },
+  "dateFields": {
+    "dueDate": "Дедлайн",
+    "startDate": "Дата начала"
+  },
+  "rows": {
+    "columns": "Колонки",
+    "grouping": "Группировка",
+    "swimlanes": "Дорожки",
+    "subGrouping": "Подгруппировка",
+    "ordering": "Сортировка",
+    "ascending": "По возрастанию",
+    "descending": "По убыванию",
+    "showEmptyColumns": "Показывать пустые колонки",
+    "showEmptyGroups": "Показывать пустые группы",
+    "showLinks": "Показывать связи",
+    "separateSubtaskCards": "Показывать подзадачи отдельно",
+    "separateSubtaskRows": "Показывать подзадачи отдельно",
+    "showNestedSubtasks": "Показывать вложенные подзадачи",
+    "nestedSubtasks": "Вложенные подзадачи",
+    "displayProperties": "Свойства",
+    "placeBy": "Размещать по",
+    "startWeekOn": "Начало недели",
+    "startCollapsed": "Начинать со свёрнутыми группами",
+    "scale": "Масштаб",
+    "addCustomField": "Добавить пользовательское поле",
+    "viewIcon": "Иконка представления"
+  },
+  "layoutCommand": "Раскладка «{layout}»"
+}

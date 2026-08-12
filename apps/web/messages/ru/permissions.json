@@ -1,0 +1,46 @@
+{
+  "viewPermissions": "Посмотреть права",
+  "none": "Права не предоставлены",
+  "grantedCount": "Предоставлено {count, plural, one {# право} few {# права} many {# прав} other {# права}}",
+  "resources": {
+    "work_items": "Задачи",
+    "initiatives": "Инициативы",
+    "cycles": "Циклы",
+    "dashboards": "Дашборды",
+    "views": "Представления задач",
+    "members_invite": "Приглашения",
+    "members_manage": "Участники",
+    "states": "Статусы",
+    "issue_types": "Типы задач",
+    "labels": "Метки",
+    "ai_agents": "AI-агенты",
+    "integrations": "Интеграции",
+    "agent_skills": "Навыки агентов",
+    "agent_tools": "Инструменты агентов",
+    "custom_fields": "Пользовательские поля",
+    "workflow_config": "Настройки рабочего процесса",
+    "actions": "Действия",
+    "webhooks": "Вебхуки",
+    "note_boards": "Доски заметок",
+    "danger_zone": "Опасная зона"
+  },
+  "actions": {
+    "create": "Создание",
+    "edit": "Редактирование",
+    "read": "Чтение",
+    "delete": "Удаление"
+  },
+  "groups": {
+    "workItems": "Задачи",
+    "dashboards": "Дашборды",
+    "notes": "Заметки",
+    "ai": "AI",
+    "configuration": "Настройки",
+    "members": "Участники",
+    "project": "Проект",
+    "other": "Другое"
+  },
+  "resourceColumn": "Ресурс",
+  "allowed": "разрешено",
+  "notAllowed": "не разрешено"
+}

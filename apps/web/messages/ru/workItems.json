@@ -1,0 +1,105 @@
+{
+  "newIssue": "Новая задача",
+  "collapse": "Свернуть",
+  "expand": "Развернуть",
+  "hide": "Скрыть",
+  "show": "Показать",
+  "hiddenColumns": "Скрытые колонки",
+  "hiddenGroups": "Скрытые группы",
+  "selectAll": "Выбрать все",
+  "deselectAll": "Снять выбор",
+  "resizeColumn": "Изменить ширину колонки",
+  "viewNamePlaceholder": "Все задачи",
+  "sortedOrder": "Задачи отсортированы по полю «{field}». Переключите сортировку на «Вручную», чтобы их перемещать.",
+  "statusSince": "В текущем статусе с {date}",
+  "createdOn": "Создано {date}",
+  "updatedOn": "Обновлено {date}",
+  "subtasksProgress": "Подзадачи {done}/{total}",
+  "subtasksDone": "Выполнено {done} из {total} подзадач",
+  "columns": {
+    "title": "Название",
+    "status": "Статус",
+    "statusAge": "В статусе",
+    "priority": "Приоритет",
+    "type": "Тип",
+    "initiative": "Инициатива",
+    "cycle": "Цикл",
+    "labels": "Метки",
+    "startDate": "Начало",
+    "dueDate": "Дедлайн",
+    "created": "Создано",
+    "updated": "Обновлено"
+  },
+  "calendar": {
+    "previousMonth": "Предыдущий месяц",
+    "nextMonth": "Следующий месяц",
+    "today": "Сегодня",
+    "moreIssues": "+{count} ещё",
+    "issueCount": "{count, plural, one {# задача} few {# задачи} many {# задач} other {# задачи}}",
+    "weekdays": {
+      "sun": "Вс",
+      "mon": "Пн",
+      "tue": "Вт",
+      "wed": "Ср",
+      "thu": "Чт",
+      "fri": "Пт",
+      "sat": "Сб"
+    },
+    "noDate": {
+      "dueDate": "Без дедлайна",
+      "startDate": "Без даты начала"
+    },
+    "allDated": {
+      "dueDate": "У всего есть дедлайн.",
+      "startDate": "У всего есть дата начала."
+    }
+  },
+  "timeline": {
+    "empty": "Пока нет задач для таймлайна.",
+    "expandGroup": "Развернуть группу",
+    "collapseGroup": "Свернуть группу",
+    "inferredStart": "Начало выведено из даты создания",
+    "inferredStartDraggable": "Начало выведено из даты создания — перетащите, чтобы задать"
+  },
+  "bulk": {
+    "selected": "Выбрано: {count}",
+    "status": "Статус",
+    "priority": "Приоритет",
+    "assignee": "Исполнитель",
+    "delegate": "Делегат",
+    "initiative": "Инициатива",
+    "cycle": "Цикл",
+    "labels": "Метки",
+    "noAssignee": "Без исполнителя",
+    "noDelegate": "Без делегата",
+    "noInitiative": "Без инициативы",
+    "noCycle": "Без цикла",
+    "archive": "Архивировать",
+    "clearSelection": "Снять выбор"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Архивировать задачу} other {Архивировать задачи}}",
+      "confirm": "{count, plural, one {Архивировать # задачу} few {Архивировать # задачи} many {Архивировать # задач} other {Архивировать # задачи}}",
+      "description": "{count, plural, one {Архивировать # выбранную задачу? Она исчезнет с доски, её можно будет восстановить позже.} other {Архивировать # выбранных задач? Они исчезнут с доски, их можно будет восстановить позже.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Удалить задачу} other {Удалить задачи}}",
+      "confirm": "{count, plural, one {Удалить # задачу} few {Удалить # задачи} many {Удалить # задач} other {Удалить # задачи}}",
+      "description": "{count, plural, one {Удалить # выбранную задачу?} few {Удалить # выбранные задачи?} many {Удалить # выбранных задач?} other {Удалить # выбранной задачи?}} Вместе с ней будут удалены комментарии, активность и вложения. Это действие нельзя отменить."
+    }
+  },
+  "share": {
+    "issueTitle": "Задача",
+    "issueUnavailable": "Эта задача недоступна.",
+    "boardUnavailable": "Эта общая доска недоступна. Возможно, ссылку отозвали."
+  },
+  "groups": {
+    "noAssignee": "Без исполнителя",
+    "noDelegate": "Без делегата",
+    "noPriority": "Без приоритета",
+    "noType": "Без типа",
+    "noInitiative": "Без инициативы",
+    "noCycle": "Без цикла"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "relations": {
+    "blocked_by": "Заблокирована",
+    "blocks": "Блокирует",
+    "duplicates": "Дублирует",
+    "duplicated_by": "Продублирована",
+    "relates": "Связана"
+  },
+  "phrases": {
+    "blocked_by": "заблокирована",
+    "blocks": "блокирует",
+    "duplicates": "дублирует",
+    "duplicated_by": "продублирована",
+    "relates": "связана с"
+  }
+}

@@ -6,7 +6,7 @@ import { eq, sql } from 'drizzle-orm';
 // defaults below apply, so a read never fails. Timestamps stay UTC everywhere in the
 // API — `timezone` only tells the web app which zone to render them in.
 
-export const LOCALES = ['en', 'uk', 'zh-CN'] as const;
+export const LOCALES = ['en', 'uk', 'ru', 'zh-CN'] as const;
 export const THEMES = ['light', 'dark', 'system'] as const;
 export const ISSUE_OPEN_MODES = ['panel', 'page'] as const;
 export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat'] as const;

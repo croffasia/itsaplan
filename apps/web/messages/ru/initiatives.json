@@ -1,0 +1,144 @@
+{
+  "title": "Инициативы",
+  "newInitiative": "Новая инициатива",
+  "notFound": "Инициатива не найдена.",
+  "options": "Действия с инициативой",
+  "showDescription": "Показать описание",
+  "noDescription": "Описания нет.",
+  "noOwner": "Без владельца",
+  "targetDate": "Целевая дата",
+  "progress": "Прогресс",
+  "activity": "Активность",
+  "noActivity": "Активности пока нет.",
+  "noIssuesLinked": "Задачи пока не привязаны.",
+  "inProgress": "В работе",
+  "emptyTitle": "Инициатив пока нет",
+  "emptyDescription": "Инициатива объединяет связанные задачи под одной целью.",
+  "emptyTabDescription": "Инициативы переходят между вкладками вместе со сменой статуса.",
+  "emptyTab": {
+    "active": "Активных инициатив нет",
+    "planned": "Запланированных инициатив нет",
+    "proposed": "Предложенных инициатив нет",
+    "completed": "Завершённых инициатив нет"
+  },
+  "tabs": {
+    "active": "Активные",
+    "planned": "Запланированные",
+    "proposed": "Предложенные",
+    "completed": "Завершённые",
+    "all": "Все инициативы"
+  },
+  "detailTabs": {
+    "overview": "Обзор",
+    "issues": "Задачи"
+  },
+  "columns": {
+    "name": "Название",
+    "priority": "Приоритет",
+    "owner": "Владелец",
+    "target": "Цель",
+    "progress": "Прогресс",
+    "health": "Состояние"
+  },
+  "status": {
+    "proposed": "Предложена",
+    "planned": "Запланирована",
+    "active": "Активная",
+    "completed": "Завершена",
+    "canceled": "Отменена"
+  },
+  "stateGroups": {
+    "backlog": "Бэклог",
+    "unstarted": "К выполнению",
+    "started": "В работе",
+    "completed": "Готово",
+    "canceled": "Отменено"
+  },
+  "health": {
+    "on_track": "По плану",
+    "at_risk": "Есть риск",
+    "off_track": "Отставание",
+    "unknown": "Нет данных"
+  },
+  "healthInfo": {
+    "trigger": "Как рассчитывается состояние?",
+    "title": "Состояние",
+    "description": "Сравнивает выполненную работу с прошедшим временем. Обновляется автоматически.",
+    "legend": {
+      "on_track": "Работа успевает за графиком.",
+      "at_risk": "Работа начинает отставать от графика.",
+      "off_track": "Работа существенно отстаёт или целевая дата прошла.",
+      "unknown": "Данных пока мало: нет задач или целевой даты."
+    },
+    "howCalculated": "Как это рассчитывается",
+    "workDone": "Выполненная работа",
+    "timeElapsed": "Прошедшее время",
+    "trail": "Насколько работа отстаёт от времени",
+    "trailOnTrack": "до 10% отставания",
+    "trailAtRisk": "10-25% отставания",
+    "trailOffTrack": "более 25% отставания"
+  },
+  "timeline": {
+    "title": "Сроки",
+    "started": "Начало",
+    "target": "Цель",
+    "remaining": "Осталось",
+    "overdue": "просрочено на {days} дн.",
+    "dueToday": "Срок сегодня",
+    "left": "{days} дн. осталось",
+    "timeElapsed": "Прошедшее время",
+    "workDone": "Выполненная работа",
+    "noTargetDate": "Укажите целевую дату, чтобы видеть темп."
+  },
+  "form": {
+    "title": "Название",
+    "titlePlaceholder": "Запуск в 3 квартале",
+    "description": "Описание",
+    "descriptionPlaceholder": "О чём эта инициатива?",
+    "create": "Создать инициативу",
+    "creating": "Создание…",
+    "editTitle": "Редактировать инициативу",
+    "save": "Сохранить изменения"
+  },
+  "pagination": {
+    "range": "{from}–{to} из {total}",
+    "previous": "Предыдущая страница",
+    "next": "Следующая страница"
+  },
+  "select": {
+    "label": "Инициатива",
+    "search": "Привязать к инициативе…",
+    "empty": "Инициатив нет.",
+    "none": "Без инициативы"
+  },
+  "feed": {
+    "system": "Система",
+    "createdInitiative": "создал(а) инициативу",
+    "createdIssue": "создал(а) задачу",
+    "renamed": "переименовал(а) в «{title}»",
+    "descriptionUpdated": "обновил(а) описание",
+    "descriptionCleared": "очистил(а) описание",
+    "statusSet": "установил(а) статус {status}",
+    "statusMoved": "переместил(а) из {from} в {to}",
+    "prioritySet": "установил(а) приоритет {priority}",
+    "priorityRemoved": "убрал(а) приоритет",
+    "ownerSet": "назначил(а) владельцем {name}",
+    "ownerRemoved": "убрал(а) владельца {name}",
+    "assigneeSet": "назначил(а) исполнителем {name}",
+    "assigneeRemoved": "убрал(а) исполнителя {name}",
+    "delegateSet": "делегировал(а) {name}",
+    "delegateRemoved": "убрал(а) делегата {name}",
+    "targetDateSet": "установил(а) целевую дату {date}",
+    "targetDateRemoved": "убрал(а) целевую дату",
+    "startDateSet": "установил(а) дату начала {date}",
+    "startDateRemoved": "убрал(а) дату начала",
+    "dueDateSet": "установил(а) дедлайн {date}",
+    "dueDateRemoved": "убрал(а) дедлайн",
+    "labelAdded": "добавил(а) метку {label}",
+    "labelRemoved": "убрал(а) метку {label}",
+    "typeSet": "установил(а) тип {type}",
+    "typeRemoved": "убрал(а) тип",
+    "linked": "привязал(а) к {name}",
+    "unlinked": "отвязал(а) от инициативы"
+  }
+}

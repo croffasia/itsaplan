@@ -1,0 +1,37 @@
+{
+  "title": "Входящие",
+  "empty": "Уведомлений нет",
+  "selectNotification": "Выберите уведомление",
+  "backToList": "Входящие",
+  "filter": "Фильтр",
+  "display": "Отображение",
+  "notificationType": "Тип уведомления",
+  "showRead": "Показывать прочитанные",
+  "showSnoozed": "Показывать отложенные",
+  "markAllRead": "Отметить все прочитанными",
+  "deleteAllRead": "Удалить все прочитанные",
+  "deleteAllReadCompleted": "Удалить прочитанные для завершённых задач",
+  "types": {
+    "assigned": "Назначено",
+    "mentioned": "Упоминание",
+    "commented": "Прокомментировано",
+    "state_changed": "Статус изменён"
+  },
+  "actions": {
+    "markRead": "Отметить прочитанным",
+    "markUnread": "Отметить непрочитанным",
+    "snooze": "Отложить",
+    "unsnooze": "Вернуть",
+    "tomorrow": "Завтра",
+    "inAWeek": "Через неделю",
+    "pickDate": "Выбрать дату…"
+  },
+  "event": {
+    "someone": "Кто-то",
+    "assigned": "{who} назначил(а) задачу вам",
+    "mentioned": "{who} упомянул(а) вас",
+    "commented": "{who} оставил(а) комментарий",
+    "stateChanged": "{who} изменил(а) статус с {from} на {to}",
+    "stateChangedPlain": "{who} изменил(а) статус"
+  }
+}

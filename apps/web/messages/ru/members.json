@@ -1,0 +1,103 @@
+{
+  "title": "Участники",
+  "description": "Люди с доступом к этому проекту. Приглашайте по почте; владельцы могут отозвать доступ.",
+  "columns": {
+    "member": "Участник",
+    "role": "Роль",
+    "actions": "Действия"
+  },
+  "you": "(вы)",
+  "aiAgent": "AI-агент",
+  "joined": "· присоединился {date}",
+  "leaveProject": "Выйти из проекта",
+  "revokeAccess": "Отозвать доступ",
+  "lastOwner": "В проекте должен остаться хотя бы один владелец",
+  "leaveTitle": "Выйти из этого проекта",
+  "leaveDescription": "Вы потеряете доступ к этому проекту и его задачам. Владелец сможет пригласить вас снова.",
+  "revokeTitle": "Отозвать доступ для {name}",
+  "revokeDescription": "{name} потеряет доступ к этому проекту. Его можно будет пригласить снова.",
+  "selectRole": "Выберите роль",
+  "editDescription": "Редактировать описание",
+  "descriptionQuestionSelf": "Чем вы занимаетесь в этом проекте?",
+  "descriptionQuestionOther": "Чем этот человек занимается в этом проекте?",
+  "descriptionPlaceholder": "напр. Backend-инженер, отвечает за API и интеграции",
+  "invites": {
+    "emailPlaceholder": "name@example.com",
+    "rolePlaceholder": "Роль",
+    "invite": "Пригласить",
+    "inviting": "Отправка…",
+    "pendingCount": "{count, plural, one {# приглашение в ожидании} few {# приглашения в ожидании} many {# приглашений в ожидании} other {# приглашения в ожидании}}",
+    "copyLink": "Скопировать ссылку",
+    "copied": "Скопировано",
+    "revokeAction": "Отозвать приглашение",
+    "removeAction": "Убрать приглашение",
+    "invitedBy": "Пригласил {name} · ",
+    "createdAt": "создано {date}",
+    "respondedAt": "{status, select, accepted {принято} rejected {отклонено} other {обновлено}} {date}",
+    "status": {
+      "pending": "В ожидании",
+      "accepted": "Принято",
+      "rejected": "Отклонено"
+    },
+    "revokeTitle": "Отозвать приглашение для {email}",
+    "revokeConfirm": "Отозвать приглашение",
+    "revokeDescription": "Ссылка-приглашение перестанет работать. Вы сможете пригласить этот адрес снова."
+  },
+  "roles": {
+    "title": "Роли",
+    "description": "Свои роли и права, которые каждая из них даёт. Назначить роль участнику можно из списка участников.",
+    "ownerOnly": "Управлять ролями могут только владельцы проекта.",
+    "empty": "Ролей пока нет. Создайте роль, чтобы дать ограниченный доступ.",
+    "columns": {
+      "role": "Роль",
+      "permissions": "Права",
+      "actions": "Действия"
+    },
+    "default": "По умолчанию",
+    "editAction": "Редактировать роль",
+    "deleteAction": "Удалить роль",
+    "defaultUndeletable": "Роль по умолчанию удалить нельзя",
+    "deleteTitle": "Удалить роль «{name}»",
+    "deleteDescription": "Участники с этой ролью будут переведены на роль по умолчанию. Действие нельзя отменить.",
+    "newRole": "Новая роль",
+    "editorTitleEdit": "Редактировать роль",
+    "editorTitleNew": "Новая роль",
+    "editorSubtitle": "права роли",
+    "namePlaceholder": "напр. Contributor",
+    "resourceColumn": "Ресурс",
+    "toggleActionAll": "Переключить «{action}» для всех ресурсов",
+    "toggleGroupAll": "Переключить все права группы {group}",
+    "toggleActionGroup": "Переключить «{action}» для {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "Сохранить роль",
+    "createRole": "Создать роль",
+    "importExport": "Импорт и экспорт ролей",
+    "copyRoles": "Скопировать роли",
+    "pasteRoles": "Вставить роли",
+    "nothingToCopy": "Нет своих ролей для копирования.",
+    "copiedRoles": "Скопировано {count, plural, one {# роль} few {# роли} many {# ролей} other {# роли}}.",
+    "copyFailed": "Не удалось скопировать в буфер обмена.",
+    "readFailed": "Не удалось прочитать буфер обмена.",
+    "parseFailed": "Не удалось прочитать роли из буфера обмена.",
+    "import": {
+      "title": "Применить роли из буфера обмена",
+      "summary": "Будет применено {count, plural, one {# роль} few {# роли} many {# ролей} other {# роли}}. Перезапись роли заменяет её матрицу прав; участники сохраняют роль.",
+      "preview": "Предпросмотр прав",
+      "apply": "Применить {count, plural, =0 {роли} one {# роль} few {# роли} many {# ролей} other {# роли}}",
+      "applied": "Роли применены: создано {created}, обновлено {updated}{skipped, plural, =0 {} other {, пропущено #}}.",
+      "actions": {
+        "create": "Новая",
+        "update": "Перезаписать",
+        "skip": "Пропустить (по умолчанию)"
+      }
+    },
+    "transferErrors": {
+      "invalidJson": "В буфере обмена нет корректного JSON.",
+      "notAnExport": "В буфере обмена нет экспорта ролей.",
+      "empty": "Экспорт ролей пуст."
+    }
+  },
+  "promoted": "Участник назначен владельцем",
+  "roleUpdated": "Роль участника обновлена",
+  "descriptionUpdated": "Описание участника обновлено"
+}

@@ -1,0 +1,39 @@
+{
+  "add": "Добавить фильтр",
+  "remove": "Убрать фильтр",
+  "valuePlaceholder": "значение",
+  "noOptions": "Нет вариантов",
+  "selected": "Выбрано: {count}",
+  "operators": {
+    "is": "равно",
+    "is_not": "не равно",
+    "before": "до",
+    "after": "после",
+    "is_set": "задано",
+    "is_not_set": "не задано",
+    "contains": "содержит",
+    "not_contains": "не содержит"
+  },
+  "boolean": {
+    "true": "Да",
+    "false": "Нет"
+  },
+  "fields": {
+    "status": "Статус",
+    "statusType": "Тип статуса",
+    "assignee": "Исполнитель",
+    "delegate": "Делегат",
+    "priority": "Приоритет",
+    "type": "Тип",
+    "labels": "Метки",
+    "dueDate": "Дедлайн",
+    "startDate": "Дата начала",
+    "created": "Создано",
+    "updated": "Обновлено"
+  },
+  "unset": {
+    "assignee": "Без исполнителя",
+    "delegate": "Без делегата",
+    "type": "Без типа"
+  }
+}

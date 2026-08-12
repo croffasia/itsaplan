@@ -1,0 +1,202 @@
+{
+  "noAccess": "У вас нет доступа к дашбордам.",
+  "defaultName": "Обзор",
+  "newDashboard": "Новый дашборд",
+  "renameDashboard": "Переименовать дашборд",
+  "namePlaceholder": "Название дашборда",
+  "options": "Действия с дашбордом",
+  "rename": "Переименовать",
+  "editLayout": "Редактировать раскладку",
+  "discard": "Отменить изменения",
+  "saveDashboard": "Сохранить дашборд",
+  "saveChanges": "Сохранить изменения",
+  "noWidgets": "Виджетов пока нет. Добавьте первый, чтобы собрать дашборд.",
+  "addWidget": "Добавить виджет",
+  "addWidgetTitle": "Добавить виджет",
+  "addWidgetDescription": "Выберите виджет для этого дашборда.",
+  "searchWidgets": "Поиск виджетов",
+  "clearSearch": "Очистить поиск",
+  "noWidgetMatches": "Нет виджетов по запросу «{query}».",
+  "dragToMove": "Перетащите, чтобы переместить",
+  "widgetName": "Название виджета",
+  "widgetSettings": "Настройки виджета",
+  "widgetOptions": "Действия с виджетом",
+  "removeWidget": "Удалить виджет",
+  "lastDays": "Последние {days} дн.",
+  "showRows": "Показать {count}",
+  "widgetGroups": {
+    "issues": "Задачи",
+    "agents": "AI-агенты и вебхуки"
+  },
+  "widgets": {
+    "stat": {
+      "label": "Число",
+      "description": "Количество задач, попадающих под фильтр"
+    },
+    "recent_issues": {
+      "label": "Последние задачи",
+      "description": "Самые новые задачи по времени создания или обновления"
+    },
+    "activity_feed": {
+      "label": "Лента активности",
+      "description": "Журнал изменений по проекту с фильтром по автору и действию"
+    },
+    "pulse": {
+      "label": "Пульс",
+      "description": "Тепловая карта ежедневной активности"
+    },
+    "throughput": {
+      "label": "Пропускная способность",
+      "description": "Созданные и закрытые задачи за неделю"
+    },
+    "breakdown": {
+      "label": "Распределение",
+      "description": "Количество задач по статусу, приоритету, типу или исполнителю"
+    },
+    "agent_runs": {
+      "label": "Запуски агентов",
+      "description": "Последние запуски AI-агентов и их результат"
+    },
+    "agent_health": {
+      "label": "Состояние агентов",
+      "description": "Доля успешных запусков и сбои за период"
+    },
+    "webhook_health": {
+      "label": "Состояние вебхуков",
+      "description": "Результаты доставок и выключенные эндпоинты"
+    },
+    "agent_workload": {
+      "label": "Загрузка агентов",
+      "description": "Делегированные задачи и результаты запусков по агентам"
+    }
+  },
+  "breakdown": {
+    "empty": "Задач пока нет.",
+    "by": {
+      "status": "Статус",
+      "priority": "Приоритет",
+      "type": "Тип",
+      "assignee": "Исполнитель",
+      "delegate": "Делегат"
+    },
+    "caption": {
+      "status": "По статусу",
+      "priority": "По приоритету",
+      "type": "По типу",
+      "assignee": "По исполнителю",
+      "delegate": "По делегату"
+    }
+  },
+  "recentIssues": {
+    "empty": "Нет задач по этому фильтру.",
+    "captionCreated": "Сначала самые новые",
+    "captionUpdated": "Недавно обновлённые",
+    "filterCount": "{count, plural, one {# фильтр} few {# фильтра} many {# фильтров} other {# фильтра}}",
+    "sort": {
+      "created": "Самые новые",
+      "updated": "Обновлённые"
+    }
+  },
+  "activityFeed": {
+    "empty": "Нет активности по этому фильтру.",
+    "someone": "Кто-то",
+    "filterCount": "{count, plural, one {# фильтр} few {# фильтра} many {# фильтров} other {# фильтра}}",
+    "actions": {
+      "all": "Вся активность",
+      "status": "Изменения статуса",
+      "assignee": "Назначения",
+      "priority": "Приоритет",
+      "created": "Создание"
+    },
+    "verbs": {
+      "comment": "прокомментировал(а)",
+      "created": "создал(а)",
+      "title": "переименовал(а)",
+      "description": "обновил(а) описание",
+      "status": "изменил(а) статус",
+      "assignee": "изменил(а) исполнителя",
+      "priority": "изменил(а) приоритет",
+      "type": "изменил(а) тип",
+      "start_date": "изменил(а) дату начала",
+      "due_date": "изменил(а) дедлайн",
+      "label_add": "добавил(а) метку",
+      "label_remove": "убрал(а) метку",
+      "field": "обновил(а) поле",
+      "other": "обновил(а)"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "По часам",
+      "day": "По дням",
+      "week": "По неделям"
+    },
+    "unit": {
+      "hour": "Часы",
+      "day": "Дни",
+      "week": "Недели"
+    },
+    "events": "{count, plural, one {# событие} few {# события} many {# событий} other {# события}}",
+    "eventNoun": "{count, plural, one {событие} few {события} many {событий} other {события}}",
+    "active": "{count} активных",
+    "less": "Меньше",
+    "more": "Больше"
+  },
+  "throughput": {
+    "empty": "Нет активности за этот период.",
+    "lastWeeks": "Последние {weeks} нед.",
+    "created": "Создано",
+    "closed": "Закрыто"
+  },
+  "agentRuns": {
+    "empty": "Запусков агентов пока нет.",
+    "filters": {
+      "all": "Все запуски",
+      "failed": "Неудачные",
+      "pending": "В очереди",
+      "success": "Успешные"
+    },
+    "status": {
+      "pending": "в очереди",
+      "success": "успех",
+      "failed": "сбой"
+    },
+    "trigger": {
+      "mention": "запущен упоминанием в",
+      "delegation": "запущен делегированием",
+      "manual": "запущен вручную",
+      "schedule": "запущен по расписанию"
+    }
+  },
+  "agentHealth": {
+    "empty": "Запусков агентов нет.",
+    "successRate": "успешных запусков",
+    "runs": "{count, plural, one {# запуск} few {# запуска} many {# запусков} other {# запуска}}",
+    "failed": "{count} со сбоем",
+    "queued": "{count} в очереди"
+  },
+  "webhookHealth": {
+    "deliveries": "доставок",
+    "failed": "{count} со сбоем",
+    "pending": "{count} в ожидании",
+    "allDelivered": "все доставлены",
+    "disabled": "{count, plural, one {# выключенный эндпоинт} few {# выключенных эндпоинта} many {# выключенных эндпоинтов} other {# выключенного эндпоинта}}"
+  },
+  "agentWorkload": {
+    "empty": "В этом проекте нет агентов.",
+    "agent": "Агент",
+    "delegated": "Делегировано",
+    "runs": "Запуски",
+    "failed": "{count} со сбоем",
+    "kind": {
+      "external": "Внешний",
+      "internal": "Внутренний"
+    }
+  },
+  "defaultWidgets": {
+    "open": "Открытые",
+    "inProgress": "В работе",
+    "backlog": "Бэклог",
+    "unassigned": "Без исполнителя"
+  }
+}

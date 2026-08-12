@@ -1,0 +1,16 @@
+{
+  "updateAvailable": "Доступно обновление",
+  "releaseHistory": "История релизов",
+  "runningOutdated": "У вас {current}. Последняя — {latest}.",
+  "runningUnknown": "У вас {current}. Последний релиз неизвестен.",
+  "runningLatest": "У вас {current} — последний релиз.",
+  "noReleases": "Эта сборка не содержит заметок к релизам.",
+  "badgeRunning": "Текущая",
+  "badgeNew": "Новое",
+  "earlier": "Предыдущие релизы",
+  "check": "Проверить обновления",
+  "checking": "Проверка",
+  "lastChecked": "Проверено {date}",
+  "allReleases": "Все релизы",
+  "noNotes": "Этот релиз без заметок."
+}

@@ -20,6 +20,8 @@ const nextConfig: NextConfig = {
   // the query string to the empty one it carries, and a replaced attachment is
   // requested with a cache-busting `?v=`.
   images: {
+    // The optimizer refuses local IPs, and in dev the api is on localhost.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === 'development',
     remotePatterns: [
       {
         protocol: apiUrl.protocol === 'https:' ? 'https' : 'http',

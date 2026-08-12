@@ -109,7 +109,7 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
     errorMsg: errorMessage(error),
     // A 403 on the scaffold means the session is valid but the user is not a member
     // of this project. Shown as an access message instead of the generic error banner
-    // (and never as a login bounce — the middleware owns the no-session case).
+    // (and never as a login bounce — the proxy owns the no-session case).
     forbidden: projectQuery.error instanceof ApiError && projectQuery.error.status === 403,
   };
 }

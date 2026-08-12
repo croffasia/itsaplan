@@ -4,7 +4,6 @@ import {
   BookText,
   Clock3,
   Columns3,
-  Github,
   Info,
   KeyRound,
   ListPlus,
@@ -17,6 +16,7 @@ import {
   Zap,
 } from 'lucide-react';
 import type { PermissionResource } from '@/lib/api';
+import GithubIcon from '@/components/common/GithubIcon';
 
 // The sidebar group a section is listed under: the project-level general
 // settings, workflow configuration, automation/integrations, or the AI section
@@ -103,7 +103,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   },
   {
     slug: 'github',
-    icon: Github,
+    icon: GithubIcon,
     resource: 'integrations',
     group: 'automation',
   },

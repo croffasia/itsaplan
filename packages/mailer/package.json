@@ -11,13 +11,13 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "nodemailer": "^9.0.3"
+    "nodemailer": "^9.0.5"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
     "@types/bun": "latest",
     "@types/nodemailer": "^8.0.1",
     "eslint": "^9.39.0",
-    "typescript": "^5.7.3"
+    "typescript": "^6.0.3"
   }
 }

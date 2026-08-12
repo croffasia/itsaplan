@@ -1,5 +1,6 @@
-import { BookText, Github, Pencil, Trash2 } from 'lucide-react';
+import { BookText, Pencil, Trash2 } from 'lucide-react';
 import type { AgentSkill } from '@/lib/api';
+import GithubIcon from '@/components/common/GithubIcon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';
@@ -28,7 +29,7 @@ export function SkillRow({
         <div className="flex min-w-0 items-start gap-2.5">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
             {skill.source === 'github' ? (
-              <Github className="size-4" />
+              <GithubIcon className="size-4" />
             ) : (
               <BookText className="size-4" />
             )}

@@ -22,7 +22,7 @@ import {
 // Signed-in user control in the header: shows the account avatar and a menu with
 // the email, the role, links to preferences, connected accounts, account security
 // (passkeys) and API keys, and sign out.
-// Signing out clears the session and the middleware sends the browser back to
+// Signing out clears the session and the proxy sends the browser back to
 // the login page.
 export default function UserMenu() {
   const t = useTranslations('nav');

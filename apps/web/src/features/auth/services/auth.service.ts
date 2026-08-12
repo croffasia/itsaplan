@@ -14,7 +14,7 @@ const appUrl = (path: string) =>
   typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
 
 // Each call throws with the API message on failure; on success the session cookie
-// is set and the middleware lets the user into the planner. A failure without a
+// is set and the proxy lets the user into the planner. A failure without a
 // message throws an empty one, and the caller (useAuthAction) words it.
 
 // Sign-in was refused because the address is not confirmed yet. The only 403 the

@@ -9,6 +9,7 @@ import type {
   CustomField,
   Label,
   StateType,
+  InitiativeRef,
   Issue,
   IssuePatch,
   IssueType,
@@ -16,6 +17,7 @@ import type {
 } from '@/lib/api';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { PRIORITY_ORDER, PRIORITY_RANK } from '@/utils/fieldOptions';
+import { GROUP_STATUS_ORDER } from '@/utils/initiativeMeta';
 import type { GroupField, ViewSettings } from '@/utils/viewSettings';
 import type { Sort } from '@/utils/viewTypes';
 
@@ -174,8 +176,8 @@ export function groupByColumn(columnIds: number[], issues: Issue[]): Map<number,
 
 // One Project column / Table section when grouping by the chosen field. `key` is a
 // stable id (field-prefixed so different groupings never collide). `assign` is
-// the patch that reassigns a issue dropped into this group; it is null for the
-// single 'none' group, which is not a drop target.
+// the patch that reassigns a issue dropped into this group; null marks a group
+// that takes no drop (the single 'none' group, a finished cycle).
 export interface IssueGroup {
   key: string;
   name: string;
@@ -198,8 +200,8 @@ export interface GroupLabels {
 }
 
 // The groups for a project under the chosen grouping field, in display order.
-// Includes a trailing "No …" group for the nullable fields so an unset issue
-// still has a home (and a drop target that clears the field).
+// Every nullable field gets a "No …" group so an unset issue still has a home
+// (and a drop target that clears the field).
 export function buildGroups(
   project: ProjectDetail,
   group: GroupField,
@@ -258,40 +260,50 @@ export function buildGroups(
     case 'initiative': {
       // Lanes come from the initiatives the loaded issues are linked to (each issue
       // carries its initiative). Initiatives with no issue on the board get no lane;
-      // the full list is fetched on demand only where a picker needs it.
-      const seen = new Map<number, string>();
+      // the full list is fetched on demand only where a picker needs it. "No
+      // initiative" leads, then the lanes by status, by title within one status.
+      const seen = new Map<number, InitiativeRef>();
       for (const issue of project.issues)
-        if (issue.initiative) seen.set(issue.initiative.id, issue.initiative.title);
-      const options = [...seen.entries()]
-        .sort((a, b) => a[1].localeCompare(b[1]))
-        .map(([id, title]) => ({ key: `i${id}`, name: title, assign: { initiativeId: id } }));
+        if (issue.initiative) seen.set(issue.initiative.id, issue.initiative);
+      const options = [...seen.values()]
+        .sort(
+          (a, b) =>
+            GROUP_STATUS_ORDER.indexOf(a.status) - GROUP_STATUS_ORDER.indexOf(b.status) ||
+            a.title.localeCompare(b.title),
+        )
+        .map((i) => ({ key: `i${i.id}`, name: i.title, assign: { initiativeId: i.id } }));
       return [
-        ...options,
         { key: 'i-none', name: labels.noInitiative, assign: { initiativeId: null } },
+        ...options,
       ];
     }
     case 'cycle': {
-      // A column per cycle the board plans into — the unfinished ones the project
-      // carries, oldest first (the API orders them by start date) — and one per
-      // cycle only the issues name, so the work of a finished cycle stays reachable.
-      // Those come first: they ended before the unfinished ones start. They take no
-      // drop: a finished cycle records what it delivered. A public share carries no
-      // cycle list, so all of its columns come from the issues.
+      // "No cycle" leads, then the cycles the board plans into: the upcoming ones
+      // from the nearest to the last, then the running one (the API orders the list
+      // by start date, so filtering by status keeps that order). Last come the
+      // cycles only the issues name — the finished ones — so the work they carry
+      // stays reachable; they take no drop, a finished cycle records what it
+      // delivered. A public share carries no cycle list, so all of its columns come
+      // from the issues.
       const namedByIssues = new Map<number, string>();
       for (const issue of project.issues)
         if (issue.cycle) namedByIssues.set(issue.cycle.id, issue.cycle.name);
       for (const c of project.plannedCycles) namedByIssues.delete(c.id);
+      const upcomingFirst = [
+        ...project.plannedCycles.filter((c) => c.status === 'upcoming'),
+        ...project.plannedCycles.filter((c) => c.status !== 'upcoming'),
+      ];
       return [
-        ...[...namedByIssues.entries()]
-          .sort((a, b) => a[1].localeCompare(b[1]))
-          .map(([id, name]) => ({ key: `y${id}`, name, assign: null })),
-        ...project.plannedCycles.map((c) => ({
+        { key: 'y-none', name: labels.noCycle, assign: { cycleId: null } },
+        ...upcomingFirst.map((c) => ({
           key: `y${c.id}`,
           name: c.name,
           color: CYCLE_STATUS_META[c.status].color,
           assign: { cycleId: c.id },
         })),
-        { key: 'y-none', name: labels.noCycle, assign: { cycleId: null } },
+        ...[...namedByIssues.entries()]
+          .sort((a, b) => a[1].localeCompare(b[1]))
+          .map(([id, name]) => ({ key: `y${id}`, name, assign: null })),
       ];
     }
     case 'none':

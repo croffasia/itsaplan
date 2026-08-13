@@ -80,19 +80,29 @@ describe('issues', () => {
       expect(list.map((i) => i.id)).toContain(created.data!.id);
     });
 
-    it('returns the linked initiative expanded to id and title', async () => {
+    it('returns the linked initiative expanded to id, title and status', async () => {
       const { asOwner, columnId } = await setupProject();
       const initiative = (
-        await asOwner.projects({ projectKey: 'MKT' }).initiatives.post({ title: 'Q3 Launch' })
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .initiatives.post({ title: 'Q3 Launch', status: 'active' })
       ).data!;
 
       const created = await createIssue(asOwner, columnId, { initiativeId: initiative.id });
       expect(created.status).toBe(201);
-      expect(created.data?.initiative).toEqual({ id: initiative.id, title: 'Q3 Launch' });
+      expect(created.data?.initiative).toEqual({
+        id: initiative.id,
+        title: 'Q3 Launch',
+        status: 'active',
+      });
 
       // The board payload carries the same expanded shape.
       const onBoard = (await issuesOf(asOwner)).find((i) => i.id === created.data!.id);
-      expect(onBoard?.initiative).toEqual({ id: initiative.id, title: 'Q3 Launch' });
+      expect(onBoard?.initiative).toEqual({
+        id: initiative.id,
+        title: 'Q3 Launch',
+        status: 'active',
+      });
     });
 
     it('stores the optional fields when provided', async () => {

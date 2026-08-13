@@ -1459,10 +1459,12 @@ export interface ProjectViewer {
 }
 
 // How an issue carries the initiative and the cycle it belongs to: the id plus
-// what to render. The picker lists are InitiativeOption / CycleOption.
+// what to render, and the initiative status the board orders its lanes by. The
+// picker lists are InitiativeOption / CycleOption.
 export interface InitiativeRef {
   id: number;
   title: string;
+  status: InitiativeStatus;
 }
 
 export interface CycleRef {

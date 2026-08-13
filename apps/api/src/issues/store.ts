@@ -76,9 +76,10 @@ export interface IssueRow {
   sequenceNumber: number;
   identifier: string;
   typeId: number | null;
-  // The initiative this issue is linked to, expanded to id + title for rendering,
-  // or null. Filled by attachGroupings; mapIssue alone leaves it null.
-  initiative: { id: number; title: string } | null;
+  // The initiative this issue is linked to, expanded to id + title for rendering
+  // and status for ordering the lanes of a board grouped by initiative, or null.
+  // Filled by attachGroupings; mapIssue alone leaves it null.
+  initiative: { id: number; title: string; status: string } | null;
   // The cycle this issue is planned into, expanded to id + name for rendering, or
   // null. Filled by attachGroupings; mapIssue alone leaves it null.
   cycle: { id: number; name: string } | null;
@@ -451,7 +452,7 @@ export async function restoreIssue(
 }
 
 // Expands what an issue is planned under — its initiative and its cycle — to
-// { id, title } / { id, name } in place. Both hang off the same issue rows, so one
+// { id, title, status } / { id, name } in place. Both hang off the same issue rows, so one
 // query carries them; an issue linked to neither keeps the nulls mapIssue set.
 // Rendering those names on a board card needs no separate scaffold lookup this way.
 async function attachGroupings(issues: IssueRow[]): Promise<void> {
@@ -461,6 +462,7 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
       issueId: issue.id,
       initiativeId: initiative.id,
       initiativeTitle: initiative.title,
+      initiativeStatus: initiative.status,
       cycleId: cycle.id,
       cycleName: cycle.name,
     })
@@ -480,7 +482,9 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
   for (const i of issues) {
     const r = byIssue.get(i.id);
     i.initiative =
-      r && r.initiativeId != null ? { id: r.initiativeId, title: r.initiativeTitle! } : null;
+      r && r.initiativeId != null
+        ? { id: r.initiativeId, title: r.initiativeTitle!, status: r.initiativeStatus! }
+        : null;
     i.cycle = r && r.cycleId != null ? { id: r.cycleId, name: r.cycleName! } : null;
   }
 }

@@ -22,6 +22,17 @@ export const STATUS_ORDER: InitiativeStatus[] = [
   'canceled',
 ];
 
+// The lane order of a board grouped by initiative. It leads with the work being
+// picked up next rather than following the lifecycle STATUS_ORDER, which puts
+// 'proposed' first.
+export const GROUP_STATUS_ORDER: InitiativeStatus[] = [
+  'planned',
+  'proposed',
+  'active',
+  'completed',
+  'canceled',
+];
+
 // Health (computed server-side). null means there is nothing to judge yet, and
 // carries the muted color of an unknown value.
 export const HEALTH_META: Record<InitiativeHealth, { color: string }> = {

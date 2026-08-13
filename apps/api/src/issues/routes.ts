@@ -107,9 +107,10 @@ const IssueResponse = t.Object({
   sequenceNumber: t.Number(),
   identifier: t.String(),
   typeId: t.Nullable(t.Number()),
-  // The linked initiative expanded to id + title (for rendering), or null. Set
-  // through create/update by initiativeId.
-  initiative: t.Nullable(t.Object({ id: t.Number(), title: t.String() })),
+  // The linked initiative expanded to id + title for rendering and status for
+  // ordering the lanes of a board grouped by initiative, or null. Set through
+  // create/update by initiativeId.
+  initiative: t.Nullable(t.Object({ id: t.Number(), title: t.String(), status: t.String() })),
   // The cycle this issue is planned into, expanded to id + name, or null. Set
   // through create/update by cycleId.
   cycle: t.Nullable(t.Object({ id: t.Number(), name: t.String() })),

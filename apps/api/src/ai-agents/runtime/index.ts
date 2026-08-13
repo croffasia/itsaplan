@@ -3,7 +3,7 @@ import { getAgentById, getInternalAgentApiKey, type AiAgentRow } from '../store'
 import { getProjectById, type ProjectRow } from '../../projects/store';
 import { getCredentialSecret } from '../../integrations/store';
 import { listAgentSkills } from '#modules/agents/skills/service';
-import { listAgentToolsForRun } from '../../agent-tools/store';
+import { listAgentToolsForRun } from '#modules/agents/tools/service';
 import { buildCustomTools } from './tools/custom-tools';
 import { buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
@@ -15,7 +15,7 @@ import { HttpError } from '../../shared/lib';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
 // from its stored configuration (provider/model/instructions) and run against a
-// prompt. It is given the work-item system tools for its project (see tools/agent-tools),
+// prompt. It is given the work-item system tools for its project (see tools/route-tools),
 // so it can read and manage that project's issues, comments, labels, custom field
 // values, and attachments — acting as its own bot user, plus a read_skill tool for
 // any skills enabled on it.

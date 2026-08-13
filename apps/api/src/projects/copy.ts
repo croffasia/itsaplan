@@ -31,7 +31,7 @@ import {
   setAgentSkills,
   listAgentSkills,
 } from '#modules/agents/skills/service';
-import { listAgentToolLinks, setAgentTools } from '../agent-tools/store';
+import { listAgentToolLinks, setAgentTools } from '#modules/agents/tools/service';
 import { listAgentSchedules, createAgentSchedule } from '#modules/agents/schedules/service';
 import { nextCronRun } from '#modules/agents/schedules/cron';
 import { getObject } from '../shared/s3';

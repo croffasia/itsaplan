@@ -1,48 +1,28 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors, errors } from '../shared/responses';
-import { mcpTool } from '../mcp/generate';
-import { agentInProject } from '#modules/agents/skills/service';
-import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../ai-agents/runtime/tools/catalog';
+import { noContent } from '#shared/http';
+import { guards } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
+import { mcpTool } from '#mcp/generate';
+import { agentInProject } from '../skills/service';
+import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../../ai-agents/runtime/tools/catalog';
+import {
+  AgentToolListResponse,
+  AgentToolResponse,
+  ToolMetaListResponse,
+  agentParams,
+  createAgentToolBody,
+  setAgentToolsBody,
+  toolParams,
+} from './model';
 import {
   listAgentTools,
   createAgentTool,
   deleteAgentTool,
   listAgentToolLinks,
   setAgentTools,
-} from './store';
-
-const toolParams = t.Object({ projectKey: t.String(), agentToolId: t.Numeric() });
-const agentParams = t.Object({
-  projectKey: t.String(),
-  agentId: t.Numeric({ description: 'Agent id from list_ai_agents.' }),
-});
-
-// A built-in agent action in the catalog (ToolMeta from ai-agents/runtime/tools).
-// `always` marks the read-only actions granted unconditionally, that cannot be
-// toggled off.
-const ToolMetaResponse = t.Object({
-  key: t.String(),
-  label: t.String(),
-  description: t.String(),
-  always: t.Boolean(),
-});
-
-// A configured tool DTO: the tool bound to a credential, enriched with the credential's
-// integration and label for display. The tool catalog itself is served by the
-// integrations catalog (kind 'tool').
-const AgentToolResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  toolKey: t.String(),
-  credentialId: t.Number(),
-  integrationKey: t.String(),
-  credentialLabel: t.Nullable(t.String()),
-  createdAt: t.String(),
-});
+} from './service';
 
 // Two tool systems live under this tag. Built-in agent actions (create_issue,
 // search_issues, ...) are the catalog an internal agent is granted through its
@@ -57,11 +37,9 @@ export const agentToolRoutes = new Elysia({
   .use(authContext)
   .use(guards)
 
-  // The built-in actions an internal agent can be granted, followed by the always-on
-  // read-only ones. Feeds the `tools` field on create_ai_agent / update_ai_agent.
   .get('/projects/:projectKey/ai-agents/tools', () => [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS], {
     permission: ['ai_agents', 'read'],
-    response: { 200: t.Array(ToolMetaResponse), ...accessErrors },
+    response: { 200: ToolMetaListResponse, ...accessErrors },
     detail: {
       summary: 'List built-in agent actions',
       description:
@@ -73,7 +51,7 @@ export const agentToolRoutes = new Elysia({
 
   .get('/projects/:projectKey/agent-tools', ({ project }) => listAgentTools(project.id), {
     permission: ['agent_tools', 'read'],
-    response: { 200: t.Array(AgentToolResponse), ...accessErrors },
+    response: { 200: AgentToolListResponse, ...accessErrors },
     detail: {
       summary: 'List configured tools',
       description:
@@ -91,7 +69,7 @@ export const agentToolRoutes = new Elysia({
       return createAgentTool(project.id, body);
     },
     {
-      body: t.Object({ toolKey: t.String({ minLength: 1 }), credentialId: t.Number() }),
+      body: createAgentToolBody,
       permission: ['agent_tools', 'create'],
       response: { 201: AgentToolResponse, ...commonErrors, ...errors(409) },
       detail: {
@@ -127,7 +105,7 @@ export const agentToolRoutes = new Elysia({
     {
       params: agentParams,
       permission: ['agent_tools', 'read'],
-      response: { 200: t.Array(AgentToolResponse), ...accessErrors },
+      response: { 200: AgentToolListResponse, ...accessErrors },
       detail: {
         summary: "List an agent's enabled tools",
         description: 'List the configured tools enabled on an agent.',
@@ -146,14 +124,10 @@ export const agentToolRoutes = new Elysia({
       return listAgentToolLinks(params.agentId);
     },
     {
-      body: t.Object({
-        agentToolIds: t.Array(t.Number(), {
-          description: 'Configured tool ids from list_configured_tools.',
-        }),
-      }),
+      body: setAgentToolsBody,
       params: agentParams,
       permission: ['agent_tools', 'edit'],
-      response: { 200: t.Array(AgentToolResponse), ...commonErrors },
+      response: { 200: AgentToolListResponse, ...commonErrors },
       detail: {
         summary: "Set an agent's enabled tools",
         description:

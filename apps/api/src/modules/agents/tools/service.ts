@@ -1,9 +1,9 @@
 import { db, agentTool, agentToolLink, integrationCredential } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { getTool, type ToolConfig } from '@repo/agent-tools';
-import { iso, HttpError, rethrowDuplicate } from '../shared/lib';
+import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { decryptSecret } from '@repo/crypto';
-import { getCredentialById } from '../integrations/store';
+import { getCredentialById } from '../../../integrations/store';
 
 // Data access for configured tools. A configured tool binds a catalog tool (tool_key)
 // to one integration_credential. The secret lives on the credential, so a row here
@@ -62,15 +62,14 @@ export async function createAgentTool(
   projectId: number,
   input: NewAgentToolInput,
 ): Promise<AgentToolRow> {
-  const found = getTool(input.toolKey);
-  if (!found) throw new HttpError(400, `Unknown tool: ${input.toolKey}`);
+  const tool = getTool(input.toolKey);
+  if (!tool) throw new HttpError(400, `Unknown tool: ${input.toolKey}`);
   const credential = await getCredentialById(input.credentialId, projectId);
   if (!credential) throw new HttpError(400, 'Credential not found');
-  // The bound credential must belong to the tool's integration.
-  if (credential.integrationKey !== found.integration.key) {
+  if (credential.integrationKey !== tool.integration.key) {
     throw new HttpError(
       400,
-      `This tool needs a ${found.integration.label} credential, not ${credential.integrationKey}.`,
+      `This tool needs a ${tool.integration.label} credential, not ${credential.integrationKey}.`,
     );
   }
   try {
@@ -132,8 +131,7 @@ export async function listAgentToolsForRun(
   }));
 }
 
-// Replaces the set of configured tools enabled on an agent. Only tools in the agent's
-// project are accepted; unknown or cross-project ids are ignored.
+// Unknown ids and ids from another project are ignored, not rejected.
 export async function setAgentTools(
   agentId: number,
   projectId: number,

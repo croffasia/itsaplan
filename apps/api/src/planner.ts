@@ -11,7 +11,7 @@ import { labelRoutes } from './labels/routes';
 import { aiAgentRoutes } from './ai-agents/routes';
 import { integrationRoutes } from './integrations/routes';
 import { agentSkillRoutes } from './modules/agents/skills';
-import { agentToolRoutes } from './agent-tools/routes';
+import { agentToolRoutes } from './modules/agents/tools';
 import { customFieldRoutes } from './custom-fields/routes';
 import { issueRoutes } from './issues/routes';
 import { initiativeRoutes } from './initiatives/routes';

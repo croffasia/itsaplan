@@ -8,7 +8,7 @@ import { inviteRoutes } from './invites/routes';
 import { columnRoutes } from './columns/routes';
 import { issueTypeRoutes } from './issue-types/routes';
 import { labelRoutes } from './labels/routes';
-import { aiAgentRoutes } from './ai-agents/routes';
+import { aiAgentRoutes } from './modules/agents/core';
 import { integrationRoutes } from './integrations/routes';
 import { agentSkillRoutes } from './modules/agents/skills';
 import { agentToolRoutes } from './modules/agents/tools';

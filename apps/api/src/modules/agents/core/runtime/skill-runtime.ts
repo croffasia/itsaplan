@@ -1,10 +1,6 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import {
-  getSkillMarkdown,
-  getSkillRefContent,
-  type SkillRow,
-} from '#modules/agents/skills/service';
+import { getSkillMarkdown, getSkillRefContent, type SkillRow } from '../../skills/service';
 
 // Wires a project's skills into an internal agent run using progressive disclosure:
 // the system prompt lists only each enabled skill's name and description, and a

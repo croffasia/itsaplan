@@ -1,9 +1,9 @@
 import { createTool } from '@mastra/core/tools';
 import type { z } from 'zod';
-import type { ProjectRow } from '../../../projects/store';
-import { routeTools, type McpInputSchema, type McpRouteTool } from '../../../mcp/generate';
-import { dispatchTool } from '../../../mcp/dispatch';
-import { getMcpApp } from '../../../mcp/app-ref';
+import type { ProjectRow } from '../../../../../projects/store';
+import { routeTools, type McpInputSchema, type McpRouteTool } from '#mcp/generate';
+import { dispatchTool } from '#mcp/dispatch';
+import { getMcpApp } from '#mcp/app-ref';
 import { ALWAYS_ON_KEYS, normalizeToolKeys, toolMeta } from './catalog';
 
 // The tools an internal agent uses to work in its project, built from the routes

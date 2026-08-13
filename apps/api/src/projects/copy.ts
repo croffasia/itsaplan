@@ -23,7 +23,7 @@ import { iso } from '../shared/lib';
 import { defaultMemberPermissions } from '../shared/permissions';
 import { DEFAULT_COLUMNS, type ProjectRow } from './store';
 import { GITHUB_SETTING_KEY } from '../github/store';
-import { listAgents, createAgent, type NewAgentInput } from '../ai-agents/store';
+import { listAgents, createAgent, type NewAgentInput } from '#modules/agents/core/service';
 import {
   listSkills,
   getSkillMarkdown,

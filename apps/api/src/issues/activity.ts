@@ -12,9 +12,9 @@ import {
 import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '../shared/lib';
 import { emitWebhookEvent } from '../webhooks/emit';
-import { parseMentions } from '../ai-agents/mentions';
-import { isAgentUser, listInternalAgentsByUserIds } from '../ai-agents/store';
-import { enqueueAgentRun } from '../ai-agents/run-queue';
+import { parseMentions } from '#modules/agents/core/mentions';
+import { isAgentUser, listInternalAgentsByUserIds } from '#modules/agents/core/service';
+import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { notifyComment, notifyIssueChange } from '../notifications/store';
 
 // Issue timeline: comments and change-log activity in one table (issue_activity).

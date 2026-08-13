@@ -1,13 +1,10 @@
 import { t } from 'elysia';
 
+export { agentParams } from '../model';
+
 export const toolParams = t.Object({ projectKey: t.String(), agentToolId: t.Numeric() });
 
-export const agentParams = t.Object({
-  projectKey: t.String(),
-  agentId: t.Numeric({ description: 'Agent id from list_ai_agents.' }),
-});
-
-// A built-in agent action in the catalog (ToolMeta from ai-agents/runtime/tools).
+// A built-in agent action in the catalog (ToolMeta from ../core/runtime/tools).
 // `always` marks the read-only actions granted unconditionally, that cannot be
 // toggled off.
 const ToolMetaResponse = t.Object({

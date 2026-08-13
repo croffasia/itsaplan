@@ -1,15 +1,15 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
 import { db, aiAgent, apikey, projectMember } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-import { getProjectByKey } from '../../../projects/store';
-import { getAgentById, getInternalAgentApiKey } from '../../store';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
+import { getProjectByKey } from '../../../../../projects/store';
+import { getAgentById, getInternalAgentApiKey } from '../../service';
 import { buildRouteTools } from '../../runtime/tools/route-tools';
 import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';
-import { routeTools } from '../../../mcp/generate';
-import { getMcpApp } from '../../../mcp/app-ref';
+import { routeTools } from '#mcp/generate';
+import { getMcpApp } from '#mcp/app-ref';
 
 // The tools an internal agent runs with, built from the routes tagged mcpTool() and
 // dispatched in process with the agent's own API key. What is asserted here is the

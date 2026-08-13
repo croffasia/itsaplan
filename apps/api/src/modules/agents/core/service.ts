@@ -10,9 +10,9 @@ import {
 } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
-import { iso, HttpError, rethrowDuplicate } from '../shared/lib';
-import { getCredentialById } from '../integrations/store';
-import { integrationKind } from '../integrations/catalog';
+import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
+import { getCredentialById } from '../../../integrations/store';
+import { integrationKind } from '../../../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
@@ -506,4 +506,14 @@ export async function deleteAgent(id: number, projectId: number): Promise<boolea
   await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
   await db.delete(user).where(eq(user.id, agent.userId));
   return true;
+}
+
+// True if the agent belongs to the project (guards addressing an agent by id).
+export async function agentInProject(agentId: number, projectId: number): Promise<boolean> {
+  const rows = await db
+    .select({ id: aiAgent.id })
+    .from(aiAgent)
+    .where(and(eq(aiAgent.id, agentId), eq(aiAgent.projectId, projectId)))
+    .limit(1);
+  return rows.length > 0;
 }

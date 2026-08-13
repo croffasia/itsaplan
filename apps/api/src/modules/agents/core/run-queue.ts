@@ -1,6 +1,6 @@
 import { db, agentRun, issue, project } from '@repo/db';
 import { and, desc, eq, lt, sql } from 'drizzle-orm';
-import { iso } from '../shared/lib';
+import { iso } from '#shared/lib';
 import { intEnv } from './helpers/env';
 import { renderMentionsPlain } from './mentions';
 

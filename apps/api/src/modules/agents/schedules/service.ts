@@ -1,7 +1,7 @@
 import { db, agentRun, agentSchedule, aiAgent, user } from '@repo/db';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
-import { deleteThreadsWhere } from '../../../ai-agents/runtime/memory';
+import { deleteThreadsWhere } from '../core/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
 
@@ -150,7 +150,7 @@ export async function updateAgentSchedule(
 }
 
 // Deletes a schedule and the conversation thread its runs shared, which lives outside
-// the database cascades (see ai-agents/runtime/memory).
+// the database cascades (see ../core/runtime/memory).
 export async function deleteAgentSchedule(projectId: number, scheduleId: number): Promise<boolean> {
   const current = await getAgentSchedule(projectId, scheduleId);
   if (!current) return false;

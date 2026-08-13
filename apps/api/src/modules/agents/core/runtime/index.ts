@@ -1,9 +1,9 @@
 import { Agent } from '@mastra/core/agent';
-import { getAgentById, getInternalAgentApiKey, type AiAgentRow } from '../store';
-import { getProjectById, type ProjectRow } from '../../projects/store';
-import { getCredentialSecret } from '../../integrations/store';
-import { listAgentSkills } from '#modules/agents/skills/service';
-import { listAgentToolsForRun } from '#modules/agents/tools/service';
+import { getAgentById, getInternalAgentApiKey, type AiAgentRow } from '../service';
+import { getProjectById, type ProjectRow } from '../../../../projects/store';
+import { getCredentialSecret } from '../../../../integrations/store';
+import { listAgentSkills } from '../../skills/service';
+import { listAgentToolsForRun } from '../../tools/service';
 import { buildCustomTools } from './tools/custom-tools';
 import { buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
@@ -11,7 +11,7 @@ import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
-import { HttpError } from '../../shared/lib';
+import { HttpError } from '#shared/lib';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
 // from its stored configuration (provider/model/instructions) and run against a

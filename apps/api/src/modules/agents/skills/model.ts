@@ -1,13 +1,10 @@
 import { t } from 'elysia';
 
+export { agentParams } from '../model';
+
 export const skillParams = t.Object({
   projectKey: t.String(),
   skillId: t.Numeric({ description: 'Skill id from list_agent_skills.' }),
-});
-
-export const agentParams = t.Object({
-  projectKey: t.String(),
-  agentId: t.Numeric({ description: 'Agent id from list_ai_agents.' }),
 });
 
 const refPath = t.String({

@@ -9,7 +9,7 @@ import {
   projectColumn,
 } from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
-import { parseMentions } from '../ai-agents/mentions';
+import { parseMentions } from '#modules/agents/core/mentions';
 import { autoWatchIssue, watcherUserIds } from '../issues/watchers';
 import { iso } from '../shared/lib';
 import { enqueueOutbound } from './outbound';

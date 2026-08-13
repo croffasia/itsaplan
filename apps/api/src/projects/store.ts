@@ -16,7 +16,7 @@ import {
   type Permissions,
 } from '../shared/permissions';
 import { getProjectSetting, setProjectSetting } from '../settings/store';
-import { deleteThreadsWhere } from '../ai-agents/runtime/memory';
+import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 
 // Data access for projects: the top-level container that groups its own columns,
 // issue types, labels, assignees, custom fields, issues, saved views, and

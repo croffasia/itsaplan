@@ -4,7 +4,7 @@ import { renderMentionsPlain, parseMentionedUsers } from '../mentions';
 // Frames a triggered internal run into the text an agent receives: the framed user
 // prompt (framePrompt) and the system-instruction blocks about the run mode
 // (runModePreamble) and the people involved (peopleContext). The interactive test
-// chat does not use this path — it frames its own prompt in routes.ts.
+// chat does not use this path — it frames its own prompt in the controller.
 
 // The fields of a claimed run this module reads. The HTTP body in internal-routes.ts
 // is structurally compatible.

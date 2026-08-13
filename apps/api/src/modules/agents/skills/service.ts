@@ -1,4 +1,4 @@
-import { db, agentSkill, agentSkillLink, aiAgent } from '@repo/db';
+import { db, agentSkill, agentSkillLink } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
 import { iso, rethrowDuplicate, HttpError } from '#shared/lib';
 import { putObject, getObjectText, deleteObjects } from '#shared/s3';
@@ -346,14 +346,4 @@ export async function setAgentSkills(
       await tx.insert(agentSkillLink).values(valid.map((skillId) => ({ agentId, skillId })));
     }
   });
-}
-
-// True if the agent belongs to the project (guards addressing an agent by id).
-export async function agentInProject(agentId: number, projectId: number): Promise<boolean> {
-  const rows = await db
-    .select({ id: aiAgent.id })
-    .from(aiAgent)
-    .where(and(eq(aiAgent.id, agentId), eq(aiAgent.projectId, projectId)))
-    .limit(1);
-  return rows.length > 0;
 }

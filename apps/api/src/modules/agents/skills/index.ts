@@ -36,8 +36,8 @@ import {
   deleteReference,
   listAgentSkills,
   setAgentSkills,
-  agentInProject,
 } from './service';
+import { agentInProject } from '../core/service';
 
 // Reference-file bytes are capped like the skill markdown.
 const MAX_REF_BYTES = MAX_SKILL_BYTES;

@@ -5,8 +5,8 @@ import { authContext } from '#shared/auth-context';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
-import { agentInProject } from '../skills/service';
-import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../../ai-agents/runtime/tools/catalog';
+import { agentInProject } from '../core/service';
+import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../core/runtime/tools/catalog';
 import {
   AgentToolListResponse,
   AgentToolResponse,

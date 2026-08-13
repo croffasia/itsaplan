@@ -9,8 +9,10 @@ Rules and invariants for this package below; read the code for the walkthrough.
   `index.ts` (controller), `model.ts` (schemas), `service.ts` (Drizzle). Cross-cutting
   code in `shared/`. See `src/modules/` for the current set.
 - Features nest one level deeper only where they already call each other:
-  `modules/agents/{schedules,skills}`. A feature whose links to its neighbours run one
-  way stays flat.
+  `modules/agents/{core,schedules,skills,tools}`, where `core` holds the agent itself
+  and its runtime. A feature whose links to its neighbours run one way stays flat. A
+  schema several of the nested features share sits in the parent's `model.ts` and is
+  re-exported from each child's (`agentParams`).
 - `src/app.ts` assembles and exports the app (`export const app`, no `.listen()`);
   `src/index.ts` only binds the port. `export type App = typeof app` types the Eden
   Treaty client (web + tests).

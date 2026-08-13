@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-import { createComment } from '../../../issues/activity';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
+import { createComment } from '../../../../../issues/activity';
 import { claimDueRuns } from '../../run-queue';
 
 // Mentioning an internal agent in a comment queues an agent_run so the agent can

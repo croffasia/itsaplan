@@ -5,7 +5,7 @@ import { getProjectById, type ProjectRow } from '../projects/store';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '../issue-types/store';
 import { listLabels, listLabelGroups } from '../labels/store';
-import { listCustomFields } from '../custom-fields/store';
+import { listCustomFields } from '#modules/custom-fields/service';
 import { listAssigneeCandidates } from '../members/store';
 import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '../issues/store';
 import { listFeed, type FeedItemRow } from '../issues/activity';

@@ -1,5 +1,7 @@
 import { db, customField, customFieldOption } from '@repo/db';
-import { and, asc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { HttpError } from '#shared/lib';
+import { getIssueTypeById } from '../../issue-types/store';
 
 // Data access for custom fields and their options. Every field belongs to a
 // project. A field with issue_type_id NULL is project-wide (applies to every
@@ -68,19 +70,20 @@ export async function listCustomFields(
   projectId: number,
   opts: { issueTypeId?: number; allTypes?: boolean } = {},
 ): Promise<CustomFieldRow[]> {
-  const scope = opts.allTypes
-    ? undefined
-    : opts.issueTypeId != null
-      ? or(isNull(customField.issueTypeId), eq(customField.issueTypeId, opts.issueTypeId))
-      : isNull(customField.issueTypeId);
+  const conds: SQL[] = [eq(customField.projectId, projectId)];
+  if (!opts.allTypes) {
+    if (opts.issueTypeId != null) {
+      conds.push(
+        or(isNull(customField.issueTypeId), eq(customField.issueTypeId, opts.issueTypeId))!,
+      );
+    } else {
+      conds.push(isNull(customField.issueTypeId));
+    }
+  }
   const fields = await db
     .select()
     .from(customField)
-    .where(
-      scope
-        ? and(eq(customField.projectId, projectId), scope)
-        : eq(customField.projectId, projectId),
-    )
+    .where(and(...conds))
     .orderBy(asc(customField.position));
   const options = await optionsByField(fields.map((f) => f.id));
   return fields.map((f) => mapField(f, options.get(f.id) ?? []));
@@ -110,6 +113,12 @@ export async function createCustomField(input: {
   options?: string[];
 }): Promise<CustomFieldRow> {
   const issueTypeId = input.issueTypeId ?? null;
+  if (issueTypeId != null) {
+    const type = await getIssueTypeById(issueTypeId);
+    if (!type || type.projectId !== input.projectId) {
+      throw new HttpError(400, 'issueTypeId does not belong to this project');
+    }
+  }
   const [{ pos }] = await db
     .select({ pos: sql<number>`COALESCE(MAX(${customField.position}), -1) + 1` })
     .from(customField)

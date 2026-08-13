@@ -33,7 +33,7 @@ import {
 import type { IssueQuery } from '#modules/agents/core/issue-query';
 import { iso, num, HttpError } from '../shared/lib';
 import type { ProjectRow } from '../projects/store';
-import { getCustomFieldById, type CustomFieldType } from '../custom-fields/store';
+import { getCustomFieldById, type CustomFieldType } from '#modules/custom-fields/service';
 import {
   recordActivity,
   recordActivityEntries,

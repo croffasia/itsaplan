@@ -12,7 +12,7 @@ import { aiAgentRoutes } from './modules/agents/core';
 import { integrationRoutes } from './integrations/routes';
 import { agentSkillRoutes } from './modules/agents/skills';
 import { agentToolRoutes } from './modules/agents/tools';
-import { customFieldRoutes } from './custom-fields/routes';
+import { customFieldRoutes } from './modules/custom-fields';
 import { issueRoutes } from './issues/routes';
 import { initiativeRoutes } from './initiatives/routes';
 import { cycleRoutes } from './cycles/routes';

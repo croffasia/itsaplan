@@ -27,7 +27,7 @@ import { listColumns } from '#modules/columns/service';
 import { ColumnResponse } from '#modules/columns/model';
 import { listIssueTypes } from '../issue-types/store';
 import { listLabels, listLabelGroups } from '../labels/store';
-import { listCustomFields } from '../custom-fields/store';
+import { listCustomFields } from '#modules/custom-fields/service';
 
 const projectBody = t.Object({
   key: t.String({ minLength: 1 }),

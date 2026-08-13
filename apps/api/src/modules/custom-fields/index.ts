@@ -1,43 +1,23 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards } from '../shared/guards';
-import { HttpError } from '../shared/lib';
-import { commonErrors } from '../shared/responses';
-import { mcpTool } from '../mcp/generate';
-import { listCustomFields, createCustomField, updateCustomField, deleteCustomField } from './store';
-import { getIssueTypeById } from '../issue-types/store';
-
-const fieldType = t.Union([
-  t.Literal('text'),
-  t.Literal('markdown'),
-  t.Literal('url'),
-  t.Literal('number'),
-  t.Literal('boolean'),
-  t.Literal('date'),
-  t.Literal('select'),
-  t.Literal('multi_select'),
-]);
-
-const fieldParams = t.Object({ projectKey: t.String(), fieldId: t.Numeric() });
-
-// A field option DTO (CustomFieldOptionRow from the store).
-const CustomFieldOptionResponse = t.Object({
-  id: t.Number(),
-  value: t.String(),
-  color: t.String(),
-  position: t.Number(),
-});
-
-// A custom field DTO (CustomFieldRow from the store).
-const CustomFieldResponse = t.Object({
-  id: t.Number(),
-  issueTypeId: t.Nullable(t.Number()),
-  name: t.String(),
-  fieldType,
-  showInBody: t.Boolean(),
-  position: t.Number(),
-  options: t.Array(CustomFieldOptionResponse),
-});
+import { noContent } from '#shared/http';
+import { guards } from '#shared/guards';
+import { HttpError } from '#shared/lib';
+import { commonErrors } from '#shared/responses';
+import { mcpTool } from '#mcp/generate';
+import {
+  CustomFieldListResponse,
+  CustomFieldResponse,
+  createCustomFieldBody,
+  fieldParams,
+  listFieldsQuery,
+  updateCustomFieldBody,
+} from './model';
+import {
+  listCustomFields,
+  createCustomField,
+  updateCustomField,
+  deleteCustomField,
+} from './service';
 
 export const customFieldRoutes = new Elysia({
   name: 'custom-fields',
@@ -52,10 +32,9 @@ export const customFieldRoutes = new Elysia({
       return listCustomFields(project.id, { issueTypeId: query.issueTypeId });
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      query: t.Object({ issueTypeId: t.Optional(t.Numeric()) }),
+      query: listFieldsQuery,
       permission: ['custom_fields', 'read'],
-      response: { 200: t.Array(CustomFieldResponse), ...commonErrors },
+      response: { 200: CustomFieldListResponse, ...commonErrors },
       detail: {
         summary: "List a project's custom fields",
         description: "List a project's custom fields.",
@@ -67,25 +46,11 @@ export const customFieldRoutes = new Elysia({
   .post(
     '/projects/:projectKey/custom-fields',
     async ({ project, body, set }) => {
-      // A type-scoped field must target an issue type of this project.
-      if (body.issueTypeId != null) {
-        const type = await getIssueTypeById(body.issueTypeId);
-        if (!type || type.projectId !== project.id) {
-          throw new HttpError(400, 'issueTypeId does not belong to this project');
-        }
-      }
       set.status = 201;
       return createCustomField({ projectId: project.id, ...body });
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({
-        issueTypeId: t.Optional(t.Nullable(t.Integer())),
-        name: t.String({ minLength: 1 }),
-        fieldType,
-        showInBody: t.Optional(t.Boolean()),
-        options: t.Optional(t.Array(t.String({ minLength: 1 }))),
-      }),
+      body: createCustomFieldBody,
       permission: ['custom_fields', 'create'],
       response: { 201: CustomFieldResponse, ...commonErrors },
       detail: {
@@ -104,10 +69,7 @@ export const customFieldRoutes = new Elysia({
       return field;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        showInBody: t.Optional(t.Boolean()),
-      }),
+      body: updateCustomFieldBody,
       params: fieldParams,
       permission: ['custom_fields', 'edit'],
       response: { 200: CustomFieldResponse, ...commonErrors },

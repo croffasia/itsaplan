@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Custom fields belong to a project. A field with issueTypeId null is
 // project-wide; a field with issueTypeId set applies only to issues of that
 // type. Routes live under /projects/:projectKey/custom-fields, so the permission
-// guard runs on :projectKey and the store scopes every field to that project.
+// guard runs on :projectKey and the service scopes every field to that project.
 // Fields are read back through GET /projects/:projectKey/custom-fields, which
 // takes an optional issueTypeId query to include that type's own fields.
 
@@ -263,7 +263,7 @@ describe('custom-fields', () => {
   });
 
   // A field is addressed as /projects/:projectKey/custom-fields/:fieldId. The
-  // permission guard runs on :projectKey, so the store scopes the field to that
+  // permission guard runs on :projectKey, so the service scopes the field to that
   // project — a member of one project must not edit or delete another project's
   // field by passing its id.
   describe('cross-project isolation', () => {

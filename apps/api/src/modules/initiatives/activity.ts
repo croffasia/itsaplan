@@ -1,6 +1,6 @@
 import { db, issue, issueActivity, project, user } from '@repo/db';
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
-import { iso } from '../shared/lib';
+import { iso } from '#shared/lib';
 
 // An initiative's activity feed merges two kinds of rows from issue_activity:
 // events of the initiative itself (initiative_id set) and the activity of the

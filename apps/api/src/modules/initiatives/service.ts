@@ -1,8 +1,8 @@
 import { db, initiative, initiativeLabel, issue, label, projectColumn, user } from '@repo/db';
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
-import { labelNames } from '../issues/activity';
-import { getMembership } from '../members/store';
-import { HttpError, iso, num } from '../shared/lib';
+import { labelNames } from '../../issues/activity';
+import { getMembership } from '../../members/store';
+import { HttpError, iso, num } from '#shared/lib';
 import { computeHealth, type Health } from './health';
 import { recordActivity, logInitiativeUpdate, type InitiativeSnapshot } from './activity';
 

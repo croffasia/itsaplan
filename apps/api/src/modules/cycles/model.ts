@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { pageQueryFields, pageResponse } from '#shared/pagination';
 
 const IsoDate = t.String({
   pattern: '^\\d{4}-\\d{2}-\\d{2}$',
@@ -15,12 +16,7 @@ export const listCyclesQuery = t.Object({
   ),
 });
 
-export const completedCyclesQuery = t.Object({
-  page: t.Optional(t.Numeric({ minimum: 1, description: '1-based page. Default 1.' })),
-  pageSize: t.Optional(
-    t.Numeric({ minimum: 1, maximum: 100, description: 'Items per page (1-100). Default 25.' }),
-  ),
-});
+export const completedCyclesQuery = t.Object(pageQueryFields);
 
 // CycleRow from the service. status follows from the dates against today (upcoming /
 // active / completed) and progress is derived issue counts; neither is stored.
@@ -39,12 +35,7 @@ export const CycleResponse = t.Object({
 
 export const CycleListResponse = t.Array(CycleResponse);
 
-export const CyclePageResponse = t.Object({
-  items: CycleListResponse,
-  total: t.Number(),
-  page: t.Number(),
-  pageSize: t.Number(),
-});
+export const CyclePageResponse = pageResponse(CycleResponse);
 
 export const CycleOptionListResponse = t.Array(
   t.Object({ id: t.Number(), name: t.String(), status: t.String() }),

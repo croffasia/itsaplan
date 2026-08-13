@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-import { addProjectMember } from '../../../__tests__/helpers/members';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
+import { addProjectMember } from '#tests/helpers/members';
 
 // Initiatives are a project-scoped grouping of issues. Issues link to one through
 // issue.initiativeId. status is a fixed lifecycle enum; progress and health are

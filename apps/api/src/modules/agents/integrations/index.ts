@@ -1,60 +1,25 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors } from '../shared/responses';
-import { mcpTool } from '../mcp/generate';
+import { noContent } from '#shared/http';
+import { guards } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors } from '#shared/responses';
+import { mcpTool } from '#mcp/generate';
 import { INTEGRATION_CATALOG, integrationKind } from './catalog';
-import { listModelsForProvider } from './models';
-import { listCredentials, createCredential, updateCredential, deleteCredential } from './store';
-
-const credentialParams = t.Object({ projectKey: t.String(), credentialId: t.Numeric() });
-
-// A stored credential DTO — never carries the secret, only the redacted view.
-const CredentialResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  integrationKey: t.String(),
-  label: t.Nullable(t.String()),
-  redacted: t.Record(t.String(), t.Any()),
-  createdAt: t.String(),
-});
-
-const ConfigFieldResponse = t.Object({
-  key: t.String(),
-  label: t.String(),
-  type: t.String(),
-  required: t.Boolean(),
-  placeholder: t.Optional(t.String()),
-  help: t.Optional(t.String()),
-});
-
-const IntegrationResponse = t.Object({
-  key: t.String(),
-  label: t.String(),
-  kind: t.String(),
-  credentialSchema: t.Array(ConfigFieldResponse),
-  tools: t.Array(
-    t.Object({
-      key: t.String(),
-      label: t.String(),
-      description: t.String(),
-      scopes: t.Optional(t.Array(t.String())),
-    }),
-  ),
-});
-
-const ProviderModelResponse = t.Object({ id: t.String(), name: t.String() });
-
-// A connected integration as a picker option: what it is and what it is called.
-// Carries no credential fields, redacted or otherwise.
-const IntegrationOptionResponse = t.Object({
-  id: t.Number(),
-  integrationKey: t.String(),
-  kind: t.Union([t.Literal('llm'), t.Literal('tool')]),
-  label: t.Nullable(t.String()),
-});
+import { listModelsForProvider } from './provider-models';
+import {
+  CredentialListResponse,
+  CredentialResponse,
+  IntegrationCatalogResponse,
+  IntegrationOptionListResponse,
+  ProviderModelListResponse,
+  createCredentialBody,
+  credentialParams,
+  integrationOptionsQuery,
+  providerParams,
+  updateCredentialBody,
+} from './model';
+import { listCredentials, createCredential, updateCredential, deleteCredential } from './service';
 
 // The credential store is gated under the integrations resource; the catalog, the
 // provider models and the picker options carry no project secrets and are open to
@@ -72,7 +37,7 @@ export const integrationRoutes = new Elysia({
   // project member: the catalog is a constant in this codebase, not project data.
   .get('/projects/:projectKey/integrations/catalog', () => INTEGRATION_CATALOG, {
     projectMember: true,
-    response: { 200: t.Array(IntegrationResponse), ...accessErrors },
+    response: { 200: IntegrationCatalogResponse, ...accessErrors },
     detail: {
       summary: 'List available integrations',
       description:
@@ -89,14 +54,9 @@ export const integrationRoutes = new Elysia({
     '/projects/:projectKey/integrations/models/:provider',
     ({ params }) => listModelsForProvider(params.provider),
     {
-      params: t.Object({
-        projectKey: t.String(),
-        provider: t.String({
-          description: "LLM provider key from list_integrations, e.g. 'anthropic'.",
-        }),
-      }),
+      params: providerParams,
       projectMember: true,
-      response: { 200: t.Array(ProviderModelResponse), ...accessErrors },
+      response: { 200: ProviderModelListResponse, ...accessErrors },
       detail: {
         summary: "List a provider's models",
         description:
@@ -122,16 +82,9 @@ export const integrationRoutes = new Elysia({
       });
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      query: t.Object({
-        kind: t.Optional(
-          t.Union([t.Literal('llm'), t.Literal('tool')], {
-            description: 'Only the integrations of this kind.',
-          }),
-        ),
-      }),
+      query: integrationOptionsQuery,
       projectMember: true,
-      response: { 200: t.Array(IntegrationOptionResponse), ...commonErrors },
+      response: { 200: IntegrationOptionListResponse, ...commonErrors },
       detail: {
         summary: 'List integration options',
         description:
@@ -142,7 +95,7 @@ export const integrationRoutes = new Elysia({
 
   .get('/projects/:projectKey/integrations', ({ project }) => listCredentials(project.id), {
     permission: ['integrations', 'read'],
-    response: { 200: t.Array(CredentialResponse), ...accessErrors },
+    response: { 200: CredentialListResponse, ...accessErrors },
     detail: {
       summary: 'List credentials',
       description:
@@ -160,11 +113,7 @@ export const integrationRoutes = new Elysia({
       return createCredential(project.id, body);
     },
     {
-      body: t.Object({
-        integrationKey: t.String({ minLength: 1 }),
-        label: t.Optional(t.Nullable(t.String())),
-        credential: t.Record(t.String(), t.Any()),
-      }),
+      body: createCredentialBody,
       permission: ['integrations', 'create'],
       response: { 201: CredentialResponse, ...commonErrors },
       detail: {
@@ -184,10 +133,7 @@ export const integrationRoutes = new Elysia({
       return row;
     },
     {
-      body: t.Object({
-        label: t.Optional(t.Nullable(t.String())),
-        credential: t.Optional(t.Record(t.String(), t.Any())),
-      }),
+      body: updateCredentialBody,
       params: credentialParams,
       permission: ['integrations', 'edit'],
       response: { 200: CredentialResponse, ...commonErrors },

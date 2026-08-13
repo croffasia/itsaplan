@@ -1,7 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { getAgentById, getInternalAgentApiKey, type AiAgentRow } from '../service';
 import { getProjectById, type ProjectRow } from '../../../../projects/store';
-import { getCredentialSecret } from '../../../../integrations/store';
+import { getCredentialSecret } from '../../integrations/service';
 import { listAgentSkills } from '../../skills/service';
 import { listAgentToolsForRun } from '../../tools/service';
 import { buildCustomTools } from './tools/custom-tools';

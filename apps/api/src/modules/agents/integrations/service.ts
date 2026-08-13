@@ -7,7 +7,7 @@ import {
   type ToolConfig,
   type ConfigField,
 } from '@repo/agent-tools';
-import { iso, HttpError } from '../shared/lib';
+import { iso, HttpError } from '#shared/lib';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { credentialSchemaFor } from './catalog';
 

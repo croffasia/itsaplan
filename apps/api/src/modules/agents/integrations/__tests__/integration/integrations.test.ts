@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-import { addProjectMember } from '../../../__tests__/helpers/members';
-import { untaggedRoutes } from '../../../__tests__/helpers/mcp';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
+import { addProjectMember } from '#tests/helpers/members';
+import { untaggedRoutes } from '#tests/helpers/mcp';
 
 // Integration credentials for a project: one store for LLM provider keys (kind 'llm')
 // and tool credentials (kind 'tool'). The secret is stored encrypted and never

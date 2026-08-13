@@ -11,8 +11,8 @@ import {
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
-import { getCredentialById } from '../../../integrations/store';
-import { integrationKind } from '../../../integrations/catalog';
+import { getCredentialById } from '../integrations/service';
+import { integrationKind } from '../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';

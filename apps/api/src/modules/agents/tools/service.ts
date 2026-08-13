@@ -3,7 +3,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import { getTool, type ToolConfig } from '@repo/agent-tools';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { decryptSecret } from '@repo/crypto';
-import { getCredentialById } from '../../../integrations/store';
+import { getCredentialById } from '../integrations/service';
 
 // Data access for configured tools. A configured tool binds a catalog tool (tool_key)
 // to one integration_credential. The secret lives on the credential, so a row here

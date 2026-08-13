@@ -9,7 +9,7 @@ import { columnRoutes } from './modules/columns';
 import { issueTypeRoutes } from './issue-types/routes';
 import { labelRoutes } from './labels/routes';
 import { aiAgentRoutes } from './modules/agents/core';
-import { integrationRoutes } from './integrations/routes';
+import { integrationRoutes } from './modules/agents/integrations';
 import { agentSkillRoutes } from './modules/agents/skills';
 import { agentToolRoutes } from './modules/agents/tools';
 import { customFieldRoutes } from './modules/custom-fields';

@@ -5,25 +5,31 @@ Rules and invariants for this package below; read the code for the walkthrough.
 
 ## Structure
 
-- Feature-based: one folder per domain = `routes.ts` (controller) + `store.ts`
-  (Drizzle service). Cross-cutting code in `shared/`. See `src/` for the current set.
-- `app.ts` assembles and exports the app (`export const app`, no `.listen()`);
-  `index.ts` only binds the port. `export type App = typeof app` types the Eden Treaty
-  client (web + tests).
-- `routes.ts`: `new Elysia({ name: "<feature>", detail: { tags: ["<Tag>"] } })` —
-  routes chained directly on it, input validated with `t`, each route sets
-  `detail.summary`.
-- `store.ts`: plain async functions, no Elysia/HTTP types, returns DTOs never rows.
+- Feature-based: one folder per domain under `src/modules/`, three files —
+  `index.ts` (controller), `model.ts` (schemas), `service.ts` (Drizzle). Cross-cutting
+  code in `shared/`. See `src/modules/` for the current set.
+- `src/app.ts` assembles and exports the app (`export const app`, no `.listen()`);
+  `src/index.ts` only binds the port. `export type App = typeof app` types the Eden
+  Treaty client (web + tests).
+- `index.ts`: `new Elysia({ name: "<feature>", detail: { tags: ["<Tag>"] } })` —
+  routes chained directly on it, each route sets `detail.summary`. Handlers only;
+  the schemas they reference come from `model.ts`.
+- `model.ts`: the `t` schemas of the feature's requests and responses. An update body
+  is `t.Partial(<create body>)` where it accepts the same fields.
+- `service.ts`: plain async functions, no Elysia/HTTP types, returns DTOs never rows.
+- The features still sitting in `src/<feature>/` as `routes.ts` + `store.ts` predate
+  this layout. Move one to `src/modules/` when you next change it; do not add a new
+  feature in the old shape.
 
 ## Adding a route
 
 - Chain on the same instance — never reassign to an intermediate `const` (breaks
   Elysia type inference and `type App`).
-- Validate all input with `t`. Numeric path ids use `t.Numeric()`; never
-  `Number(params.x)` in the handler.
+- Validate all input with `t`, from a schema declared in the feature's `model.ts`.
+  Numeric path ids use `t.Numeric()`; never `Number(params.x)` in the handler.
 - Enforce access with a guard in the route options, never an imperative call in the
   handler (see Auth and access).
-- Throw `HttpError` for failures; return the store DTO on success; `noContent()` for a
+- Throw `HttpError` for failures; return the service DTO on success; `noContent()` for a
   delete with no body; `set.status = 201` on create.
 - New feature: `.use()` it in `planner.ts` and register its tag in the swagger
   `documentation.tags` list in `app.ts`.
@@ -35,6 +41,12 @@ Rules and invariants for this package below; read the code for the walkthrough.
 - Unique violation: wrap the insert in `rethrowDuplicate(err, "<what>")` → 409.
 - `onError` also maps `t`-schema rejection → 400, `NOT_FOUND` → 404, anything else →
   500 logged with `[planner]`.
+- A route declares the statuses it can fail with by spreading a map from
+  `shared/responses.ts` into its `response`: `accessErrors` (401/403/404) for a
+  guarded read, `commonErrors` (+400) where it also validates input, `errors(...)` for
+  anything else (`{ ...commonErrors, ...errors(409) }`). Listing the codes per route is
+  what puts them in the OpenAPI docs — a `guard({ schema: "standalone", response })`
+  on the feature passes typecheck but drops them from the spec.
 
 ## Data invariants
 

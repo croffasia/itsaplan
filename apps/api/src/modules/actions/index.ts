@@ -1,10 +1,18 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards, entityGuard } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { HttpError } from '../shared/lib';
-import { mcpTool } from '../mcp/generate';
-import { accessErrors, commonErrors } from '../shared/responses';
+import { noContent } from '../../shared/http';
+import { guards, entityGuard } from '../../shared/guards';
+import { authContext } from '../../shared/auth-context';
+import { HttpError } from '../../shared/lib';
+import { mcpTool } from '../../mcp/generate';
+import { accessErrors, commonErrors } from '../../shared/responses';
+import {
+  ActionResponse,
+  ActionListResponse,
+  actionParams,
+  createActionBody,
+  updateActionBody,
+  reorderActionsBody,
+} from './model';
 import {
   listActions,
   createAction,
@@ -12,22 +20,7 @@ import {
   updateAction,
   deleteAction,
   reorderActions,
-} from './store';
-
-const actionParams = t.Object({ actionId: t.Numeric() });
-
-// An action DTO (ActionRow from the store). condition and effect are jsonb blobs
-// owned by the UI, stored and returned without inspecting their shape.
-const ActionResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  icon: t.String(),
-  condition: t.Any(),
-  effect: t.Any(),
-  position: t.Number(),
-  createdAt: t.String(),
-});
+} from './service';
 
 export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Actions'] } })
   .use(authContext)
@@ -48,7 +41,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     },
     {
       permission: ['actions', 'read'],
-      response: { 200: t.Array(ActionResponse), ...accessErrors },
+      response: { 200: ActionListResponse, ...accessErrors },
       detail: {
         summary: 'List actions',
         description: "List a project's actions.",
@@ -67,7 +60,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     },
     {
       projectMember: true,
-      response: { 200: t.Array(ActionResponse), ...accessErrors },
+      response: { 200: ActionListResponse, ...accessErrors },
       detail: {
         summary: 'List quick actions',
         description: "List a project's actions for the issue quick actions.",
@@ -82,12 +75,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
       return createAction({ projectId: project.id, ...body });
     },
     {
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        icon: t.Optional(t.String()),
-        condition: t.Optional(t.Any()),
-        effect: t.Optional(t.Any()),
-      }),
+      body: createActionBody,
       permission: ['actions', 'create'],
       response: { 201: ActionResponse, ...commonErrors },
       detail: {
@@ -105,9 +93,9 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
       return reorderActions(project.id, body.orderedIds);
     },
     {
-      body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
+      body: reorderActionsBody,
       permission: ['actions', 'edit'],
-      response: { 200: t.Array(ActionResponse), ...commonErrors },
+      response: { 200: ActionListResponse, ...commonErrors },
       detail: {
         summary: 'Reorder actions',
         description: "Set the display order of a project's actions.",
@@ -124,12 +112,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
       return action;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        icon: t.Optional(t.String()),
-        condition: t.Optional(t.Any()),
-        effect: t.Optional(t.Any()),
-      }),
+      body: updateActionBody,
       params: actionParams,
       savedAction: 'edit',
       response: { 200: ActionResponse, ...commonErrors },

@@ -20,7 +20,7 @@ import { attachmentRoutes } from './attachments/routes';
 import { avatarRoutes } from './avatars/routes';
 import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
-import { actionRoutes } from './actions/routes';
+import { actionRoutes } from './modules/actions';
 import { webhookRoutes } from './webhooks/routes';
 import { githubSettingsRoutes } from './github/routes';
 import { dashboardRoutes } from './dashboards/routes';

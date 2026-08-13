@@ -23,7 +23,8 @@ import {
   ISSUE_TYPE_PRESET_KEYS,
 } from './store';
 import { copyProject, COPY_INCLUDE_KEYS } from './copy';
-import { listColumns } from '../columns/store';
+import { listColumns } from '#modules/columns/service';
+import { ColumnResponse } from '#modules/columns/model';
 import { listIssueTypes } from '../issue-types/store';
 import { listLabels, listLabelGroups } from '../labels/store';
 import { listCustomFields } from '../custom-fields/store';
@@ -95,16 +96,6 @@ const ProjectListItemResponse = t.Composite([
     permissions: t.Optional(PermissionMatrix),
   }),
 ]);
-
-// A column (ColumnRow from columns/store).
-const ColumnResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  stateType: t.String(),
-  color: t.String(),
-  position: t.Number(),
-});
 
 // An issue type (IssueTypeRow from issue-types/store).
 const IssueTypeResponse = t.Object({

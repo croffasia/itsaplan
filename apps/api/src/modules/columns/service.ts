@@ -1,10 +1,7 @@
 import { db, projectColumn, issue, issueLabel, issueFieldValue, issueFieldOption } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
-import { HttpError } from '../shared/lib';
-import { recordActivityForIssues } from '../issues/activity';
-
-// Data access for columns (kanban states). A column belongs to one project and
-// has a state type that fixes its place in the work items view's left-to-right order.
+import { HttpError } from '#shared/lib';
+import { recordActivityForIssues } from '../../issues/activity';
 
 export interface ColumnRow {
   id: number;
@@ -26,10 +23,8 @@ function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
   };
 }
 
-// Columns are ordered by state type (backlog → unstarted → started → completed
-// → canceled), then by position within a type. This is the work items view's left-to-right
-// order, so a newly added column appears next to the others of its state type
-// rather than at the end.
+// The work items view's left-to-right order: sorting by state type before position
+// keeps a newly added column next to the others of its type rather than at the end.
 const STATE_TYPE_ORDER = sql`CASE ${projectColumn.stateType}
     WHEN 'backlog' THEN 0
     WHEN 'unstarted' THEN 1
@@ -71,7 +66,7 @@ export async function createColumn(input: {
   return mapColumn(row);
 }
 
-export async function getColumnById(id: number): Promise<ColumnRow | null> {
+async function getColumnById(id: number): Promise<ColumnRow | null> {
   const rows = await db.select().from(projectColumn).where(eq(projectColumn.id, id));
   return rows[0] ? mapColumn(rows[0]) : null;
 }
@@ -96,10 +91,9 @@ export async function updateColumn(
   return row ? mapColumn(row) : null;
 }
 
-// Renumbers the project's columns to match orderedIds (the desired left-to-right
-// order). Any column not listed is appended in its current order. Runs a two-pass
-// update — first shift every position out of range, then assign 0..n-1 — so the
-// UNIQUE(project_id, position) constraint never sees a transient duplicate.
+// Any column missing from orderedIds is appended in its current order. The two-pass
+// update — shift every position out of range, then assign 0..n-1 — keeps the
+// UNIQUE(project_id, position) constraint from seeing a transient duplicate.
 export async function reorderColumns(projectId: number, orderedIds: number[]): Promise<void> {
   const existing = await listColumns(projectId);
   const known = new Set(existing.map((c) => c.id));
@@ -120,13 +114,11 @@ export async function reorderColumns(projectId: number, orderedIds: number[]): P
   });
 }
 
-// Deletes a column. `move` reassigns the column's issues to targetColumnId before
-// dropping the column; `delete` removes the issues and their dependent rows
-// (labels, custom field values/options) first. Backlog columns cannot be deleted,
-// which keeps at least one column on every project. Runs in one transaction so the
-// column and its issues are never left half-deleted.
 export type DeleteColumnOptions = { mode: 'move'; targetColumnId: number } | { mode: 'delete' };
 
+// Backlog columns cannot be deleted, which keeps at least one column on every
+// project. The column and its issues go in one transaction so neither is left
+// half-deleted.
 export async function deleteColumn(
   columnId: number,
   projectId: number,
@@ -134,8 +126,6 @@ export async function deleteColumn(
   actorUserId?: string | null,
 ): Promise<void> {
   const column = await getColumnById(columnId);
-  // Scoped to projectId: a column id outside the caller's project is a 404, not a
-  // cross-project delete.
   if (!column || column.projectId !== projectId)
     throw new HttpError(404, `Column ${columnId} not found`);
   if (column.stateType === 'backlog') throw new HttpError(400, 'Backlog columns cannot be deleted');
@@ -169,9 +159,8 @@ export async function deleteColumn(
     return moved;
   });
 
-  // A reassignment is a status change like any other, so it belongs in the change
-  // log: the issue's status timeline reads its stretches from these entries, and
-  // without one the issue keeps counting time under the column it no longer sits in.
+  // The status timeline reads its stretches from the change log: without an entry
+  // the issue keeps counting time under the column it no longer sits in.
   if (target)
     await recordActivityForIssues(
       movedIssueIds,

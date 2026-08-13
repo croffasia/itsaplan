@@ -5,7 +5,7 @@ import { projectRoutes } from './projects/routes';
 import { memberRoutes } from './members/routes';
 import { roleRoutes } from './roles/routes';
 import { inviteRoutes } from './invites/routes';
-import { columnRoutes } from './columns/routes';
+import { columnRoutes } from './modules/columns';
 import { issueTypeRoutes } from './issue-types/routes';
 import { labelRoutes } from './labels/routes';
 import { aiAgentRoutes } from './modules/agents/core';

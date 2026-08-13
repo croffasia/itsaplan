@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Columns (kanban states). There is no GET /columns route — a column is read back
 // through the project view (GET /projects/:projectKey), whose `columns` field is
@@ -303,7 +303,7 @@ describe('columns', () => {
   });
 
   // A column is addressed as /projects/:projectKey/columns/:columnId. The
-  // permission guard runs on :projectKey, so the store must also scope the column
+  // permission guard runs on :projectKey, so the service must also scope the column
   // to that project — otherwise a member of one project could edit or delete a
   // column of another project by passing its id.
   describe('cross-project isolation', () => {

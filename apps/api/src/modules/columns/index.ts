@@ -1,32 +1,21 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { authContext } from '../shared/auth-context';
-import { guards } from '../shared/guards';
-import { requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { commonErrors } from '../shared/responses';
-import { listColumns, createColumn, updateColumn, reorderColumns, deleteColumn } from './store';
-
-const stateType = t.Union([
-  t.Literal('backlog'),
-  t.Literal('unstarted'),
-  t.Literal('started'),
-  t.Literal('completed'),
-  t.Literal('canceled'),
-]);
-
-const columnParams = t.Object({ projectKey: t.String(), columnId: t.Numeric() });
-
-// A column DTO (ColumnRow from the store).
-const ColumnResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  stateType: t.String(),
-  color: t.String(),
-  position: t.Number(),
-});
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { authContext } from '#shared/auth-context';
+import { guards } from '#shared/guards';
+import { requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { commonErrors } from '#shared/responses';
+import {
+  ColumnListResponse,
+  ColumnResponse,
+  columnParams,
+  createColumnBody,
+  deleteColumnBody,
+  reorderColumnsBody,
+  updateColumnBody,
+} from './model';
+import { listColumns, createColumn, updateColumn, reorderColumns, deleteColumn } from './service';
 
 export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Columns'] } })
   .use(authContext)
@@ -38,11 +27,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       return createColumn({ projectId: project.id, ...body });
     },
     {
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        stateType,
-        color: t.Optional(t.String()),
-      }),
+      body: createColumnBody,
       permission: ['states', 'create'],
       response: { 201: ColumnResponse, ...commonErrors },
       detail: {
@@ -55,8 +40,6 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
     },
   )
 
-  // Reorders the project's columns. Body carries the full desired left-to-right
-  // order of column ids; the store renumbers positions to match.
   .put(
     '/projects/:projectKey/columns/reorder',
     async ({ project, body }) => {
@@ -64,9 +47,9 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       return listColumns(project.id);
     },
     {
-      body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
+      body: reorderColumnsBody,
       permission: ['states', 'edit'],
-      response: { 200: t.Array(ColumnResponse), ...commonErrors },
+      response: { 200: ColumnListResponse, ...commonErrors },
       detail: {
         summary: 'Reorder columns',
         description:
@@ -85,11 +68,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       return column;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        stateType: t.Optional(stateType),
-        color: t.Optional(t.String()),
-      }),
+      body: updateColumnBody,
       params: columnParams,
       permission: ['states', 'edit'],
       response: { 200: ColumnResponse, ...commonErrors },
@@ -101,9 +80,6 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
     },
   )
 
-  // Deletes a column. Body picks what happens to its issues: mode 'move' reassigns
-  // them to targetColumnId, mode 'delete' removes them. Backlog columns are
-  // rejected by the store layer.
   .delete(
     '/projects/:projectKey/columns/:columnId',
     async ({ params, project, body, user }) => {
@@ -111,10 +87,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       return noContent();
     },
     {
-      body: t.Union([
-        t.Object({ mode: t.Literal('move'), targetColumnId: t.Integer() }),
-        t.Object({ mode: t.Literal('delete') }),
-      ]),
+      body: deleteColumnBody,
       params: columnParams,
       permission: ['states', 'delete'],
       response: { 204: t.Void(), ...commonErrors },

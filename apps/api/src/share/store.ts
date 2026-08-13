@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { db, issue, projectView } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { getProjectById, type ProjectRow } from '../projects/store';
-import { listColumns } from '../columns/store';
+import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '../issue-types/store';
 import { listLabels, listLabelGroups } from '../labels/store';
 import { listCustomFields } from '../custom-fields/store';

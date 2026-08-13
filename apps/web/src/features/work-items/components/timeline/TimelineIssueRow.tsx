@@ -24,6 +24,7 @@ export function TimelineIssueRow({
   active,
   isDrop,
   groupKey,
+  indented,
   labelW,
   trackWidth,
   dayLines,
@@ -42,6 +43,8 @@ export function TimelineIssueRow({
   active: boolean;
   isDrop: boolean;
   groupKey: string;
+  // Rows under a sub-section are indented to sit below their sub-header.
+  indented: boolean;
   labelW: number;
   trackWidth: number;
   dayLines: { backgroundImage: string };
@@ -65,7 +68,8 @@ export function TimelineIssueRow({
       <IssueContextMenu project={project} issue={issue}>
         <div
           className={cn(
-            'sticky left-0 z-10 flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden border-r px-3',
+            'sticky left-0 z-10 flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden border-r pr-3',
+            indented ? 'pl-7' : 'pl-3',
             isDrop ? 'bg-accent/40' : 'bg-background',
           )}
           style={{ width: labelW }}

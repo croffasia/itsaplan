@@ -12,6 +12,7 @@ import { effSpan, LINK_ROW_H } from '../../utils/timeline';
 export function TimelineLinkRows({
   links: refs,
   groupKey,
+  indented,
   maps,
   labelW,
   trackWidth,
@@ -25,6 +26,8 @@ export function TimelineLinkRows({
   // The parent row's group, so a bar dragged over a sub-row still reads the group
   // it is being dropped into.
   groupKey: string;
+  // Follows the parent row's indent, so the sub-rows stay nested under it.
+  indented: boolean;
   maps: Maps;
   labelW: number;
   trackWidth: number;
@@ -58,7 +61,10 @@ export function TimelineLinkRows({
             style={{ height: LINK_ROW_H, borderTopStyle: 'solid' }}
           >
             <div
-              className="sticky left-0 z-10 flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden border-r bg-background pr-3 pl-9 text-xs text-muted-foreground"
+              className={cn(
+                'sticky left-0 z-10 flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden border-r bg-background pr-3 text-xs text-muted-foreground',
+                indented ? 'pl-13' : 'pl-9',
+              )}
               style={{ width: labelW }}
               onClick={() => onOpen(link.issue.id)}
             >

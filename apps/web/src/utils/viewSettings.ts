@@ -100,10 +100,10 @@ export type WeekStart = 0 | 1;
 export interface ViewSettings {
   sort: Sort;
   group: GroupField;
-  // Second grouping level: Project swimlanes (rows) / Table sub-sections. 'none'
-  // disables it. Kept distinct from `group`; the Display panel never offers the
-  // primary field here, and normalizeViewSettings forces it back to 'none' if it
-  // ever equals `group`.
+  // Second grouping level: Project swimlanes (rows) / Table and Timeline
+  // sub-sections. 'none' disables it. Kept distinct from `group`; the Display
+  // panel never offers the primary field here, and normalizeViewSettings forces
+  // it back to 'none' if it ever equals `group`.
   subgroup: GroupField;
   showEmptyGroups: boolean;
   // The issues' relations: rows under a Kanban card, sub-rows under a Table or

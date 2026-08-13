@@ -11,6 +11,7 @@ import { TimelineLabelResizer } from '@/components/common/timeline/TimelineLabel
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
 import { buildTimeline, labelWidthKey, SCALE_DAY_W } from '../../utils/timeline';
 import { TimelineGroupRow } from './TimelineGroupRow';
+import { TimelineSubgroupRow } from './TimelineSubgroupRow';
 import { TimelineIssueRow } from './TimelineIssueRow';
 import { TimelineLinkRows } from './TimelineLinkRows';
 import { TimelineSubtaskRows } from './TimelineSubtaskRows';
@@ -57,6 +58,7 @@ export default function TimelineView({
   const { preview, dropGroupKey, beginDrag } = useTimelineDrag({
     project,
     group: settings.group,
+    subgroup: settings.subgroup,
     dayW: DAY_W,
     onOpenIssue,
   });
@@ -68,10 +70,12 @@ export default function TimelineView({
   // on wider ones it is the width the grip was dragged to.
   const narrow = viewportW < 640;
   const labelW = narrow ? LABEL_NARROW_W : titleWidth;
+  const subgrouped = settings.group !== 'none' && settings.subgroup !== 'none';
   const { rows, days, months, trackWidth, todayLeft, todayInRange, dayLines, spanToRect } =
     buildTimeline({
       project,
       group: settings.group,
+      subgroup: settings.subgroup,
       groupLabels,
       showEmptyGroups: settings.showEmptyGroups,
       collapsedGroups: activeCollapsedGroups,
@@ -117,6 +121,27 @@ export default function TimelineView({
             );
           }
 
+          if (row.kind === 'subgroup') {
+            return (
+              <TimelineSubgroupRow
+                key={`s-${row.groupKey}`}
+                sub={row.sub}
+                groupKey={row.groupKey}
+                count={row.count}
+                collapsed={row.collapsed}
+                aggregateRect={
+                  row.aggregateSpan
+                    ? spanToRect(row.aggregateSpan.start, row.aggregateSpan.end)
+                    : null
+                }
+                labelW={labelW}
+                trackWidth={trackWidth}
+                isDrop={dropGroupKey === row.groupKey}
+                onToggle={() => toggleGroup(row.groupKey)}
+              />
+            );
+          }
+
           const { issue, span } = row;
           const active = preview?.issueId === issue.id;
           const rect = spanToRect(
@@ -135,6 +160,7 @@ export default function TimelineView({
                 active={active}
                 isDrop={dropGroupKey === row.groupKey}
                 groupKey={row.groupKey}
+                indented={subgrouped}
                 labelW={labelW}
                 trackWidth={trackWidth}
                 dayLines={dayLines}
@@ -147,6 +173,7 @@ export default function TimelineView({
               <TimelineSubtaskRows
                 issueId={issue.id}
                 groupKey={row.groupKey}
+                indented={subgrouped}
                 maps={maps}
                 labelW={labelW}
                 trackWidth={trackWidth}
@@ -159,6 +186,7 @@ export default function TimelineView({
               <TimelineLinkRows
                 links={issue.links}
                 groupKey={row.groupKey}
+                indented={subgrouped}
                 maps={maps}
                 labelW={labelW}
                 trackWidth={trackWidth}

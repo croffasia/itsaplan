@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { type Issue, type IssuePatch, type ProjectDetail } from '@/lib/api';
 import { addDays, toDateStr } from '@/utils/dates';
-import { buildGroups, groupKeyOf } from '@/utils/project';
+import { buildGroups, groupKeyOf, mergeAssign, subgroupKey } from '@/utils/project';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useUpdateIssue } from '@/services/issues.service';
 import type { GroupField } from '@/utils/viewSettings';
@@ -22,26 +22,45 @@ interface DragSession {
 }
 
 // Pointer-drag state and handlers for the timeline bars. A drag moves the bar
-// (rewriting start/due dates and, on a vertical move, the selected group) or resizes one
-// end; a gesture with no change opens the issue. `preview` is the in-progress
-// span for the dragged issue; `dropGroupKey` is the group under the cursor
-// during a move (null when it matches the origin), used to highlight the target.
+// (rewriting start/due dates and, on a vertical move, the section's grouping
+// fields) or resizes one end; a gesture with no change opens the issue.
+// `preview` is the in-progress span for the dragged issue; `dropGroupKey` is the
+// section under the cursor during a move (null when it matches the origin), used
+// to highlight the target.
 export function useTimelineDrag({
   project,
   group,
+  subgroup,
   dayW,
   onOpenIssue,
 }: {
   project: ProjectDetail;
   group: GroupField;
+  subgroup: GroupField;
   dayW: number;
   onOpenIssue: (id: number) => void;
 }) {
   const groupLabels = useGroupLabels();
   const updateIssue = useUpdateIssue(project.project.key);
-  const groupByKey = new Map(
-    buildGroups(project, group, groupLabels).map((issueGroup) => [issueGroup.key, issueGroup]),
-  );
+  const subgrouped = group !== 'none' && subgroup !== 'none';
+  const subGroups = subgrouped ? buildGroups(project, subgroup, groupLabels) : [];
+  // The patch each drop target applies: the group's own, and — when sub-grouped —
+  // the two grouping fields combined for every sub-section.
+  const assignByKey = new Map<string, IssuePatch | null>();
+  for (const issueGroup of buildGroups(project, group, groupLabels)) {
+    assignByKey.set(issueGroup.key, issueGroup.assign);
+    for (const sub of subGroups) {
+      assignByKey.set(
+        subgroupKey(issueGroup.key, sub.key),
+        mergeAssign(issueGroup.assign, sub.assign),
+      );
+    }
+  }
+  // The section an issue currently sits in — the same key its row renders under.
+  const sectionKeyOf = (issue: Issue) =>
+    subgrouped
+      ? subgroupKey(groupKeyOf(issue, group), groupKeyOf(issue, subgroup))
+      : groupKeyOf(issue, group);
   const [preview, setPreview] = useState<{ issueId: number; start: Date; end: Date } | null>(null);
   const [dropGroupKey, setDropGroupKey] = useState<string | null>(null);
 
@@ -49,7 +68,7 @@ export function useTimelineDrag({
     e.preventDefault();
     e.stopPropagation();
     const span = effSpan(issue);
-    const issueGroupKey = groupKeyOf(issue, group);
+    const issueGroupKey = sectionKeyOf(issue);
     const session: DragSession = {
       startX: e.clientX,
       origStart: span.start,
@@ -105,7 +124,7 @@ export function useTimelineDrag({
           patch.dueDate = toDateStr(session.curEnd);
         }
         if (session.targetGroupKey !== session.origGroupKey) {
-          const assign = groupByKey.get(session.targetGroupKey)?.assign;
+          const assign = assignByKey.get(session.targetGroupKey);
           if (assign) Object.assign(patch, assign);
         }
       } else if (session.deltaDays !== 0) {

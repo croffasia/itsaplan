@@ -2,7 +2,14 @@ import { startOfDay } from 'date-fns';
 import { type BoardIssue, type Issue, type ProjectDetail } from '@/lib/api';
 import { parseDate } from '@/utils/dates';
 import { buildDayTrack, type DayTrack } from '@/utils/timelineTrack';
-import { buildGroups, groupIssues, type GroupLabels, type IssueGroup } from '@/utils/project';
+import {
+  buildGroups,
+  groupIssues,
+  nestIssues,
+  subgroupKey,
+  type GroupLabels,
+  type IssueGroup,
+} from '@/utils/project';
 import type { GroupField, TimelineScale } from '@/utils/viewSettings';
 
 // px per day at each zoom level. Wider days keep the per-day numbers legible;
@@ -11,6 +18,7 @@ export const SCALE_DAY_W: Record<TimelineScale, number> = { week: 32, month: 12,
 export const ROW_H = 36; // px, an issue row
 export const LINK_ROW_H = 26; // px, a linked-issue sub-row under an issue row
 export const GROUP_H = 32; // px, a state group header row
+export const SUBGROUP_H = 28; // px, a sub-group header row under a group
 
 // The dragged label-column width is a client-only preference, kept per project
 // and per saved view (the tab the timeline is open on), so each of them keeps the
@@ -40,7 +48,10 @@ export function effSpan(issue: Issue): Span {
 }
 
 // A flat render list so the left labels and the right tracks share the exact
-// same row order and heights: one entry per state group header, then its issues.
+// same row order and heights: one entry per group header, its sub-group headers
+// when sub-grouped, then the issues. `groupKey` on an issue row is the section
+// it sits in — the sub-section key when sub-grouped — which is what a vertical
+// drag drops onto.
 export type TimelineRow =
   | {
       kind: 'group';
@@ -49,7 +60,27 @@ export type TimelineRow =
       collapsed: boolean;
       aggregateSpan: Span | null;
     }
+  | {
+      kind: 'subgroup';
+      sub: IssueGroup;
+      groupKey: string;
+      count: number;
+      collapsed: boolean;
+      aggregateSpan: Span | null;
+    }
   | { kind: 'issue'; issue: BoardIssue; span: Span; groupKey: string };
+
+// The span covering a section's bars, shown on its header row when collapsed.
+function sectionSpan(issueRows: { span: Span }[]): Span | null {
+  let start: Date | null = null;
+  let end: Date | null = null;
+  for (const { span } of issueRows) {
+    if (!start || span.start < start) start = span.start;
+    if (!end || span.end > end) end = span.end;
+  }
+  if (!start || !end) return null;
+  return { start, end, inferredStart: false };
+}
 
 // The whole timeline layout derived from the project and the current viewport:
 // the flattened rows plus the day track they are placed on.
@@ -60,6 +91,7 @@ export interface TimelineModel extends DayTrack {
 export function buildTimeline({
   project,
   group,
+  subgroup,
   groupLabels,
   showEmptyGroups,
   collapsedGroups,
@@ -69,6 +101,7 @@ export function buildTimeline({
 }: {
   project: ProjectDetail;
   group: GroupField;
+  subgroup: GroupField;
   groupLabels: GroupLabels;
   showEmptyGroups: boolean;
   collapsedGroups: Set<string>;
@@ -77,31 +110,75 @@ export function buildTimeline({
   dayW: number;
 }): TimelineModel {
   const groups = buildGroups(project, group, groupLabels);
-  const issuesByGroup = groupIssues(groups, project.issues, group);
-  // Rows, and the date range that covers every bar.
+  const subgrouped = group !== 'none' && subgroup !== 'none';
+  const subGroups = subgrouped ? buildGroups(project, subgroup, groupLabels) : [];
   const rows: TimelineRow[] = [];
+
+  const spanned = (issues: BoardIssue[]) =>
+    issues.map((issue) => ({ issue, span: effSpan(issue) }));
+
+  if (!subgrouped) {
+    const issuesByGroup = groupIssues(groups, project.issues, group);
+    for (const issueGroup of groups) {
+      const issueRows = spanned(issuesByGroup.get(issueGroup.key) ?? []);
+      if (!showEmptyGroups && issueRows.length === 0) continue;
+      const collapsed = collapsedGroups.has(issueGroup.key);
+      rows.push({
+        kind: 'group',
+        group: issueGroup,
+        count: issueRows.length,
+        collapsed,
+        aggregateSpan: sectionSpan(issueRows),
+      });
+      if (collapsed) continue;
+      for (const { issue, span } of issueRows) {
+        rows.push({ kind: 'issue', issue, span, groupKey: issueGroup.key });
+      }
+    }
+  } else {
+    const nested = nestIssues(groups, subGroups, project.issues, group, subgroup);
+    for (const issueGroup of groups) {
+      const inner = nested.get(issueGroup.key)!;
+      const bySub = subGroups.map((sub) => ({ sub, issueRows: spanned(inner.get(sub.key) ?? []) }));
+      const count = bySub.reduce((sum, s) => sum + s.issueRows.length, 0);
+      if (!showEmptyGroups && count === 0) continue;
+      const collapsed = collapsedGroups.has(issueGroup.key);
+      rows.push({
+        kind: 'group',
+        group: issueGroup,
+        count,
+        collapsed,
+        aggregateSpan: sectionSpan(bySub.flatMap((s) => s.issueRows)),
+      });
+      if (collapsed) continue;
+      for (const { sub, issueRows } of bySub) {
+        if (!showEmptyGroups && issueRows.length === 0) continue;
+        const key = subgroupKey(issueGroup.key, sub.key);
+        const subCollapsed = collapsedGroups.has(key);
+        rows.push({
+          kind: 'subgroup',
+          sub,
+          groupKey: key,
+          count: issueRows.length,
+          collapsed: subCollapsed,
+          aggregateSpan: sectionSpan(issueRows),
+        });
+        if (subCollapsed) continue;
+        for (const { issue, span } of issueRows) {
+          rows.push({ kind: 'issue', issue, span, groupKey: key });
+        }
+      }
+    }
+  }
+
+  // The date range the track covers: the group aggregates, so it spans every
+  // issue whether or not its section is expanded.
   let min: Date | null = null;
   let max: Date | null = null;
-  for (const issueGroup of groups) {
-    const issues = issuesByGroup.get(issueGroup.key) ?? [];
-    if (!showEmptyGroups && issues.length === 0) continue;
-    const issueRows = issues.map((issue) => ({ issue, span: effSpan(issue) }));
-    let groupStart: Date | null = null;
-    let groupEnd: Date | null = null;
-    for (const { span } of issueRows) {
-      if (!groupStart || span.start < groupStart) groupStart = span.start;
-      if (!groupEnd || span.end > groupEnd) groupEnd = span.end;
-      if (!min || span.start < min) min = span.start;
-      if (!max || span.end > max) max = span.end;
-    }
-    const aggregateSpan =
-      groupStart && groupEnd ? { start: groupStart, end: groupEnd, inferredStart: false } : null;
-    const collapsed = collapsedGroups.has(issueGroup.key);
-    rows.push({ kind: 'group', group: issueGroup, count: issues.length, collapsed, aggregateSpan });
-    if (collapsed) continue;
-    for (const { issue, span } of issueRows) {
-      rows.push({ kind: 'issue', issue, span, groupKey: issueGroup.key });
-    }
+  for (const row of rows) {
+    if (row.kind !== 'group' || !row.aggregateSpan) continue;
+    if (!min || row.aggregateSpan.start < min) min = row.aggregateSpan.start;
+    if (!max || row.aggregateSpan.end > max) max = row.aggregateSpan.end;
   }
 
   return { rows, ...buildDayTrack({ min, max, viewportW, labelW, dayW }) };

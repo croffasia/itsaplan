@@ -1,5 +1,11 @@
 import { type BoardIssue, type CustomField, type Issue, type IssuePatch } from '@/lib/api';
-import { groupIssues, mergeAssign, nestIssues, type IssueGroup } from '@/utils/project';
+import {
+  groupIssues,
+  mergeAssign,
+  nestIssues,
+  subgroupKey,
+  type IssueGroup,
+} from '@/utils/project';
 import {
   customFieldId,
   isCustomFieldKey,
@@ -51,12 +57,6 @@ export function columnWidthsKey(projectKey: string, scope: string): string {
 // own collapse set.
 export function collapsedKey(projectId: number, group: string, subgroup: string): string {
   return `kanban-table-collapsed:${projectId}:${group}:${subgroup}`;
-}
-
-// Collapse key for a sub-section: primary group key + sub-group key, so the same
-// sub-group value under two different primary groups collapses independently.
-function subKey(groupKey: string, sgKey: string): string {
-  return `${groupKey}::${sgKey}`;
 }
 
 // The list is flattened to one array of section headers and issue rows, then
@@ -165,7 +165,7 @@ export function buildTableItems({
       for (const sg of subGroups) {
         const issues = inner.get(sg.key) ?? [];
         if (!settings.showEmptyGroups && issues.length === 0) continue;
-        const key = subKey(group.key, sg.key);
+        const key = subgroupKey(group.key, sg.key);
         const assign = mergeAssign(group.assign, sg.assign);
         items.push({
           kind: 'subheader',

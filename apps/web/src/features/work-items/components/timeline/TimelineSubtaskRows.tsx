@@ -13,6 +13,7 @@ import { effSpan, LINK_ROW_H } from '../../utils/timeline';
 export function TimelineSubtaskRows({
   issueId,
   groupKey,
+  indented,
   maps,
   labelW,
   trackWidth,
@@ -26,6 +27,8 @@ export function TimelineSubtaskRows({
   // The parent row's group, so a bar dragged over a sub-row still reads the group
   // it is being dropped into.
   groupKey: string;
+  // Follows the parent row's indent, so the sub-rows stay nested under it.
+  indented: boolean;
   maps: Maps;
   labelW: number;
   trackWidth: number;
@@ -58,7 +61,10 @@ export function TimelineSubtaskRows({
             style={{ height: LINK_ROW_H }}
           >
             <div
-              className="sticky left-0 z-10 flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden border-r bg-background pr-3 pl-6 text-xs text-muted-foreground"
+              className={cn(
+                'sticky left-0 z-10 flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden border-r bg-background pr-3 text-xs text-muted-foreground',
+                indented ? 'pl-10' : 'pl-6',
+              )}
               style={{ width: labelW }}
               onClick={() => onOpen(subtask.id)}
             >

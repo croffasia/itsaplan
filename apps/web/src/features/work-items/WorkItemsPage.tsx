@@ -84,6 +84,7 @@ export default function WorkItemsPage() {
     projectKey,
     editor.activeViewId ?? 'all',
     settings.group,
+    settings.subgroup,
     settings.showEmptyGroups,
     settings.timelineCollapseAll,
   ].join(':');

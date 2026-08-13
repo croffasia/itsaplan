@@ -61,7 +61,7 @@ export default function DisplayGroupingRows({
   const subgroupOptions = toOptions(fields.filter((f) => f !== settings.group));
   const sortOptions = SORT_FIELDS.map((value) => ({ value, label: sortLabel(value) }));
   const showsGrouping = view === 'kanban' || view === 'table' || view === 'timeline';
-  const showsSubgrouping = (view === 'kanban' || view === 'table') && settings.group !== 'none';
+  const showsSubgrouping = showsGrouping && settings.group !== 'none';
 
   return (
     <>

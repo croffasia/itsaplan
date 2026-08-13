@@ -371,6 +371,13 @@ export function nestIssues<T extends Issue>(
   return out;
 }
 
+// The key of a sub-section in a two-level grouping: primary group key + sub-group
+// key, so the same sub-group value under two different groups keeps its own
+// collapse state and its own drop target.
+export function subgroupKey(groupKey: string, subKey: string): string {
+  return `${groupKey}::${subKey}`;
+}
+
 // The patch that reassigns a issue dropped into a two-level cell: the primary
 // group's assign combined with the sub-group's assign. Either may be null (the
 // 'none' group / a Table with no sub-grouping), in which case only the other

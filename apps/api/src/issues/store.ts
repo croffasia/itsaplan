@@ -51,7 +51,7 @@ import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '#modules/agents/core/service';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getInitiativeProjectId } from '../initiatives/store';
-import { getCycleRef } from '../cycles/store';
+import { getCycleRef } from '#modules/cycles/service';
 import { getMembership } from '../members/store';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { applySubtaskAutomation } from './automation';

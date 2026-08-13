@@ -15,7 +15,7 @@ import { agentToolRoutes } from './modules/agents/tools';
 import { customFieldRoutes } from './modules/custom-fields';
 import { issueRoutes } from './issues/routes';
 import { initiativeRoutes } from './initiatives/routes';
-import { cycleRoutes } from './cycles/routes';
+import { cycleRoutes } from './modules/cycles';
 import { attachmentRoutes } from './modules/attachments';
 import { avatarRoutes } from './modules/avatars';
 import { viewRoutes } from './views/routes';

@@ -1,6 +1,6 @@
 import { db, cycle, issue, projectColumn } from '@repo/db';
 import { and, asc, desc, eq, ne, sql, type SQL } from 'drizzle-orm';
-import { HttpError, iso } from '../shared/lib';
+import { HttpError, iso } from '#shared/lib';
 
 // Data access for cycles: a time-boxed period of work inside a project (a sprint).
 // Issues link to a cycle through issue.cycle_id. The status is derived from the

@@ -1,12 +1,25 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { guards, entityGuard } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors } from '../shared/responses';
-import { transferCycleIssues } from '../issues/store';
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { guards, entityGuard } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors } from '#shared/responses';
+import { transferCycleIssues } from '../../issues/store';
+import {
+  CycleListResponse,
+  CycleOptionListResponse,
+  CyclePageResponse,
+  CycleResponse,
+  TransferCycleResponse,
+  completedCyclesQuery,
+  createCycleBody,
+  cycleParams,
+  listCyclesQuery,
+  transferCycleBody,
+  updateCycleBody,
+} from './model';
 import {
   listCycles,
   listPlannedCycles,
@@ -16,29 +29,7 @@ import {
   createCycle,
   updateCycle,
   deleteCycle,
-} from './store';
-
-const cycleParams = t.Object({ cycleId: t.Numeric() });
-
-const IsoDate = t.String({
-  pattern: '^\\d{4}-\\d{2}-\\d{2}$',
-  description: "Date 'YYYY-MM-DD'.",
-});
-
-// CycleRow from the store. status follows from the dates against today (upcoming /
-// active / completed) and progress is derived issue counts; neither is stored.
-const CycleResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  goal: t.String(),
-  startDate: t.String(),
-  endDate: t.String(),
-  status: t.String(),
-  createdAt: t.String(),
-  updatedAt: t.String(),
-  progress: t.Object({ completed: t.Number(), canceled: t.Number(), total: t.Number() }),
-});
+} from './service';
 
 export const cycleRoutes = new Elysia({
   name: 'cycles',
@@ -57,16 +48,9 @@ export const cycleRoutes = new Elysia({
     async ({ project, query }) =>
       query.status === 'planned' ? listPlannedCycles(project.id) : listCycles(project.id),
     {
-      params: t.Object({ projectKey: t.String() }),
-      query: t.Object({
-        status: t.Optional(
-          t.Literal('planned', {
-            description: 'Only the cycles that have not finished: active and upcoming.',
-          }),
-        ),
-      }),
+      query: listCyclesQuery,
       permission: ['cycles', 'read'],
-      response: { 200: t.Array(CycleResponse), ...commonErrors },
+      response: { 200: CycleListResponse, ...commonErrors },
       detail: {
         summary: 'List cycles',
         description: "A project's cycles, oldest first.",
@@ -85,12 +69,8 @@ export const cycleRoutes = new Elysia({
       return cycles.map((c) => ({ id: c.id, name: c.name, status: c.status }));
     },
     {
-      params: t.Object({ projectKey: t.String() }),
       permission: ['work_items', 'read'],
-      response: {
-        200: t.Array(t.Object({ id: t.Number(), name: t.String(), status: t.String() })),
-        ...accessErrors,
-      },
+      response: { 200: CycleOptionListResponse, ...accessErrors },
       detail: {
         summary: 'List cycle options',
         description: 'The cycles an issue can be planned into: id, name and status.',
@@ -110,27 +90,9 @@ export const cycleRoutes = new Elysia({
       return { items, total, page, pageSize };
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      query: t.Object({
-        page: t.Optional(t.Numeric({ minimum: 1, description: '1-based page. Default 1.' })),
-        pageSize: t.Optional(
-          t.Numeric({
-            minimum: 1,
-            maximum: 100,
-            description: 'Items per page (1-100). Default 25.',
-          }),
-        ),
-      }),
+      query: completedCyclesQuery,
       permission: ['cycles', 'read'],
-      response: {
-        200: t.Object({
-          items: t.Array(CycleResponse),
-          total: t.Number(),
-          page: t.Number(),
-          pageSize: t.Number(),
-        }),
-        ...commonErrors,
-      },
+      response: { 200: CyclePageResponse, ...commonErrors },
       detail: {
         summary: 'List completed cycles',
         description: "A page of a project's finished cycles, newest first.",
@@ -145,13 +107,7 @@ export const cycleRoutes = new Elysia({
       return createCycle(project.id, body);
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({
-        name: t.String({ minLength: 1, description: 'Cycle name.' }),
-        goal: t.Optional(t.String({ description: 'What the team commits to in this cycle.' })),
-        startDate: IsoDate,
-        endDate: IsoDate,
-      }),
+      body: createCycleBody,
       permission: ['cycles', 'create'],
       response: { 201: CycleResponse, ...commonErrors },
       detail: {
@@ -191,12 +147,7 @@ export const cycleRoutes = new Elysia({
     },
     {
       params: cycleParams,
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1, description: 'New name.' })),
-        goal: t.Optional(t.String({ description: 'New goal.' })),
-        startDate: t.Optional(IsoDate),
-        endDate: t.Optional(IsoDate),
-      }),
+      body: updateCycleBody,
       cycle: 'edit',
       response: { 200: CycleResponse, ...commonErrors },
       detail: {
@@ -240,16 +191,9 @@ export const cycleRoutes = new Elysia({
     },
     {
       params: cycleParams,
-      body: t.Object({
-        targetCycleId: t.Nullable(
-          t.Integer({
-            description:
-              'Cycle to move the unfinished issues to, or null to leave them without a cycle.',
-          }),
-        ),
-      }),
+      body: transferCycleBody,
       cycle: 'edit',
-      response: { 200: t.Object({ moved: t.Number() }), ...commonErrors },
+      response: { 200: TransferCycleResponse, ...commonErrors },
       detail: {
         summary: 'Transfer unfinished issues',
         description:

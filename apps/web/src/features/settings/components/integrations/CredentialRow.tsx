@@ -26,12 +26,12 @@ export function CredentialRow({
   const fields = Object.entries(credential.redacted);
   return (
     <TableRow className="group/item">
-      <TableCell className="px-3 py-3 align-top whitespace-normal">
-        <div className="flex min-w-0 items-start gap-2.5">
+      <TableCell className="px-3 py-3 whitespace-normal">
+        <div className="flex min-w-0 items-center gap-2.5">
           <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
             <KeyRound className="size-4" />
           </div>
-          <div className="flex min-w-0 flex-col gap-0.5 pt-0.5">
+          <div className="flex min-w-0 flex-col gap-0.5">
             <span className="truncate text-sm font-medium text-foreground">{integrationLabel}</span>
             {credential.label && (
               <span className="truncate text-xs text-muted-foreground">{credential.label}</span>
@@ -39,7 +39,7 @@ export function CredentialRow({
           </div>
         </div>
       </TableCell>
-      <TableCell className="px-3 py-3 pt-4 align-top whitespace-normal">
+      <TableCell className="px-3 py-3 whitespace-normal">
         {fields.length > 0 ? (
           <div className="flex flex-wrap gap-1">
             {fields.map(([k, v]) => (
@@ -52,7 +52,7 @@ export function CredentialRow({
           <span className="text-xs text-muted-foreground">{t('noFields')}</span>
         )}
       </TableCell>
-      <TableCell className="px-3 py-2 pt-3 align-top">
+      <TableCell className="px-3 py-2">
         <div className="flex items-center justify-end gap-1">
           {canEdit && (
             <Button

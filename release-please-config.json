@@ -18,8 +18,8 @@
         { "type": "build", "section": "Build" },
         { "type": "ci", "section": "CI" },
         { "type": "revert", "section": "Reverts" },
-        { "type": "test", "section": "Tests", "hidden": true },
-        { "type": "chore", "section": "Chores", "hidden": true }
+        { "type": "test", "section": "Tests" },
+        { "type": "chore", "section": "Chores" }
       ]
     }
   }

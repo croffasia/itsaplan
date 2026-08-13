@@ -196,8 +196,9 @@ strategy runs. After `1.0.0`, `!` bumps the major on its own.
 bumps the patch for any type it does not recognise, and the entry reaches the
 changelog because `changelog-sections` in `release-please-config.json` maps it to
 an "Improvements" section — a type missing from that list is dropped from the
-notes. The list of types a PR title may use lives in `pr-title.yml`; the two
-have to stay in sync.
+notes. Every type in that list gets its own section in the changelog, including
+`chore` and `test`. The list of types a PR title may use lives in
+`pr-title.yml`; the two have to stay in sync.
 
 The scope is the name of one app or package (`api`, `web`, `worker`, `bot`, `db`,
 `auth`, …). A change spanning several of them carries no scope.

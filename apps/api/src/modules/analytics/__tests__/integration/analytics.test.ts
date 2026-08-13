@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser, type TestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-import { pulseRows } from '../../store';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
+import { pulseRows } from '../../service';
 
 // Read-only project analytics. Every figure is derived from the issue /
 // project_column / issue_activity tables, so the tests build state through the

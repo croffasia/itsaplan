@@ -1,19 +1,11 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { Elysia, t } from 'elysia';
-import { guards } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { checkPermission } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { getProjectById } from '../projects/store';
+import { Elysia } from 'elysia';
+import { HttpError } from '#shared/lib';
+import { errors } from '#shared/responses';
+import { getProjectById } from '../../projects/store';
 import { handlePullRequestEvent, type PullRequestPayload } from './handler';
-import {
-  claimGithubDelivery,
-  findProjectByGithubWebhookId,
-  getOrCreateGithubSettings,
-  recordGithubEvent,
-  regenerateGithubSecret,
-  updateGithubSettings,
-} from './store';
+import { WebhookAckResponse, webhookBody, webhookParams } from './model';
+import { claimGithubDelivery, findProjectByGithubWebhookId, recordGithubEvent } from './service';
 
 // GitHub's HMAC over the raw request body, sent as "sha256=<hex>".
 function signatureValid(secret: string, rawBody: string, header: string | undefined): boolean {
@@ -66,11 +58,9 @@ export const githubWebhookRoutes = new Elysia({
   },
   {
     parse: 'text',
-    body: t.String(),
-    params: t.Object({ webhookId: t.String() }),
-    response: {
-      200: t.Object({ ok: t.Boolean(), handled: t.String() }),
-    },
+    body: webhookBody,
+    params: webhookParams,
+    response: { 200: WebhookAckResponse, ...errors(400, 401, 404) },
     detail: {
       summary: 'Receive a GitHub webhook',
       description:
@@ -79,60 +69,3 @@ export const githubWebhookRoutes = new Elysia({
     },
   },
 );
-
-// The GitHub settings DTO (GithubSettings from the store). Unlike outgoing
-// webhook secrets, this secret authorizes issue moves through the receiver, so
-// it is shown only to members with integrations edit access; read-only callers
-// get null.
-const GithubSettingsResponse = t.Object({
-  enabled: t.Boolean(),
-  webhookId: t.String(),
-  secret: t.Nullable(t.String()),
-  onMergeColumnId: t.Nullable(t.Number()),
-  onOpenColumnId: t.Nullable(t.Number()),
-  lastEventAt: t.Nullable(t.String()),
-  lastEventRepo: t.Nullable(t.String()),
-});
-
-export const githubSettingsRoutes = new Elysia({
-  name: 'github-settings',
-  detail: { tags: ['GitHub'] },
-})
-  .use(authContext)
-  .use(guards)
-  .get(
-    '/projects/:projectKey/settings/github',
-    async ({ project, user }) => {
-      const settings = await getOrCreateGithubSettings(project.id);
-      const canEdit = await checkPermission(project.id, user, 'integrations', 'edit');
-      return { ...settings, secret: canEdit ? settings.secret : null };
-    },
-    {
-      permission: ['integrations', 'read'],
-      response: { 200: GithubSettingsResponse },
-      detail: { summary: "Get a project's GitHub integration settings" },
-    },
-  )
-  .patch(
-    '/projects/:projectKey/settings/github',
-    ({ project, body }) => updateGithubSettings(project.id, body),
-    {
-      permission: ['integrations', 'edit'],
-      body: t.Object({
-        enabled: t.Optional(t.Boolean()),
-        onMergeColumnId: t.Optional(t.Nullable(t.Number())),
-        onOpenColumnId: t.Optional(t.Nullable(t.Number())),
-      }),
-      response: { 200: GithubSettingsResponse },
-      detail: { summary: "Update a project's GitHub integration settings" },
-    },
-  )
-  .post(
-    '/projects/:projectKey/settings/github/secret',
-    ({ project }) => regenerateGithubSecret(project.id),
-    {
-      permission: ['integrations', 'edit'],
-      response: { 200: GithubSettingsResponse },
-      detail: { summary: "Regenerate a project's GitHub webhook secret" },
-    },
-  );

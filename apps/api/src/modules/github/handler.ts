@@ -1,7 +1,7 @@
-import { getIssueBySequence, updateIssue } from '../issues/store';
-import { recordActivity, type ActivityActor } from '../issues/activity';
+import { getIssueBySequence, updateIssue } from '../../issues/store';
+import { recordActivity, type ActivityActor } from '../../issues/activity';
 import { parseMagicWords, type IssueRef } from './magic-words';
-import { columnStateTypes, firstCompletedColumnId, type GithubSettings } from './store';
+import { columnStateTypes, firstCompletedColumnId, type GithubSettings } from './service';
 
 // Applies a GitHub pull_request delivery to the project's issues:
 // - a PR merged into the repository's default branch moves the issues named by a

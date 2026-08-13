@@ -22,7 +22,7 @@ import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
 import { actionRoutes } from './modules/actions';
 import { webhookRoutes } from './webhooks/routes';
-import { githubSettingsRoutes } from './github/routes';
+import { githubSettingsRoutes } from './modules/github';
 import { dashboardRoutes } from './modules/dashboards';
 import { noteBoardRoutes } from './note-boards/routes';
 import { analyticsRoutes } from './modules/analytics';

@@ -22,7 +22,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { iso } from '../shared/lib';
 import { defaultMemberPermissions } from '../shared/permissions';
 import { DEFAULT_COLUMNS, type ProjectRow } from './store';
-import { GITHUB_SETTING_KEY } from '../github/store';
+import { GITHUB_SETTING_KEY } from '#modules/github/service';
 import { listAgents, createAgent, type NewAgentInput } from '#modules/agents/core/service';
 import {
   listSkills,

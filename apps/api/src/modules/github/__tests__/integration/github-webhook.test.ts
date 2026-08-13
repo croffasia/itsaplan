@@ -1,9 +1,9 @@
 import { createHmac } from 'node:crypto';
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { app } from '../../../app';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { app } from '../../../../app';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // The inbound GitHub webhook: a signed pull_request delivery moves the issues its
 // magic words name, through the same path a user's move takes (activity entries,

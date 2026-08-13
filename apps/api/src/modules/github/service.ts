@@ -2,8 +2,13 @@ import { randomBytes } from 'node:crypto';
 import { db, projectColumn, projectSetting } from '@repo/db';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { decryptSecret, encryptSecret, type EncryptedSecret } from '@repo/crypto';
-import { HttpError } from '../shared/lib';
-import { getProjectSetting } from '../settings/store';
+import { HttpError } from '#shared/lib';
+import { getProjectSetting } from '../../settings/store';
+
+// Exported for the project copier, which must not clone this setting: the copy
+// would carry the source's secret and webhook id (a credential disclosure to the
+// copy's owner, and ambiguous inbound routing).
+export const GITHUB_SETTING_KEY = 'github';
 
 // The GitHub integration config for a project, stored in project_setting under
 // GITHUB_SETTING_KEY. `webhookId` routes an incoming delivery to the project (it is the
@@ -13,12 +18,6 @@ import { getProjectSetting } from '../settings/store';
 // completed column); `onOpenColumnId` is where an issue moves when a linked PR is
 // opened (null = no action). lastEventAt/lastEventRepo show the settings page
 // that deliveries arrive.
-
-// Exported for the project copier, which must not clone this setting: the copy
-// would carry the source's secret and webhook id (a credential disclosure to the
-// copy's owner, and ambiguous inbound routing).
-export const GITHUB_SETTING_KEY = 'github';
-
 interface StoredGithubSettings {
   enabled: boolean;
   webhookId: string;

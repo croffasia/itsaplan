@@ -1,6 +1,6 @@
 import { db, projectDashboard } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
-import { iso, num } from '../shared/lib';
+import { iso, num } from '#shared/lib';
 
 // Saved dashboards: the analytics tabs of a project. layout is a jsonb blob owned
 // by the UI (an ordered list of widget entries); this layer stores and returns it

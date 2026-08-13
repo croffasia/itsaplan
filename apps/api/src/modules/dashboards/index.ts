@@ -1,10 +1,18 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards, entityGuard } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { HttpError } from '../shared/lib';
-import { mcpTool } from '../mcp/generate';
-import { accessErrors, commonErrors } from '../shared/responses';
+import { noContent } from '#shared/http';
+import { guards, entityGuard } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { HttpError } from '#shared/lib';
+import { mcpTool } from '#mcp/generate';
+import { accessErrors, commonErrors } from '#shared/responses';
+import {
+  DashboardListResponse,
+  DashboardResponse,
+  createDashboardBody,
+  dashboardParams,
+  reorderDashboardsBody,
+  updateDashboardBody,
+} from './model';
 import {
   listDashboards,
   createDashboard,
@@ -12,26 +20,9 @@ import {
   updateDashboard,
   deleteDashboard,
   reorderDashboards,
-} from './store';
+} from './service';
 
-const dashboardParams = t.Object({ dashboardId: t.Numeric() });
-
-// A dashboard DTO (DashboardRow from the store). layout is a jsonb blob owned by
-// the UI and returned verbatim, so it is typed as t.Any().
-const DashboardResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  icon: t.Nullable(t.String()),
-  layout: t.Any(),
-  position: t.Number(),
-  createdAt: t.String(),
-});
-
-export const dashboardRoutes = new Elysia({
-  name: 'dashboards',
-  detail: { tags: ['Dashboards'] },
-})
+export const dashboardRoutes = new Elysia({ name: 'dashboards', detail: { tags: ['Dashboards'] } })
   .use(authContext)
   .use(guards)
   // Guard for routes that address a dashboard by its own id (no :projectKey in
@@ -50,7 +41,7 @@ export const dashboardRoutes = new Elysia({
     },
     {
       permission: ['dashboards', 'read'],
-      response: { 200: t.Array(DashboardResponse), ...accessErrors },
+      response: { 200: DashboardListResponse, ...accessErrors },
       detail: { summary: "List a project's dashboards", ...mcpTool('list_dashboards') },
     },
   )
@@ -62,27 +53,22 @@ export const dashboardRoutes = new Elysia({
       return createDashboard({ projectId: project.id, ...body });
     },
     {
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        icon: t.Optional(t.Nullable(t.String())),
-        layout: t.Optional(t.Any()),
-      }),
+      body: createDashboardBody,
       permission: ['dashboards', 'create'],
       response: { 201: DashboardResponse, ...commonErrors },
       detail: { summary: 'Create a dashboard', ...mcpTool('create_dashboard') },
     },
   )
 
-  // Sets the tab order to orderedIds.
   .put(
     '/projects/:projectKey/dashboards/reorder',
     async ({ project, body }) => {
       return reorderDashboards(project.id, body.orderedIds);
     },
     {
-      body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
+      body: reorderDashboardsBody,
       permission: ['dashboards', 'edit'],
-      response: { 200: t.Array(DashboardResponse), ...commonErrors },
+      response: { 200: DashboardListResponse, ...commonErrors },
       detail: { summary: 'Reorder dashboards', ...mcpTool('reorder_dashboards') },
     },
   )
@@ -95,11 +81,7 @@ export const dashboardRoutes = new Elysia({
       return dashboard;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        icon: t.Optional(t.Nullable(t.String())),
-        layout: t.Optional(t.Any()),
-      }),
+      body: updateDashboardBody,
       params: dashboardParams,
       dashboard: 'edit',
       response: { 200: DashboardResponse, ...commonErrors },

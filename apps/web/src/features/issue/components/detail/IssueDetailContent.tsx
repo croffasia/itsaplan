@@ -108,7 +108,7 @@ export default function IssueDetailContent({
           inviting an edit that cannot happen. */}
       {(canEdit || issue.description.trim() !== '') && (
         <IssueMarkdownEditor
-          className="mt-2"
+          className="mt-4"
           placeholder={tEditor('descriptionPlaceholder')}
           defaultValue={issue.description}
           key={`desc-${issue.updatedAt}-${replacements}`}

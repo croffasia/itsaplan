@@ -3,6 +3,8 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import {
   Bold,
   Code,
+  Heading1,
+  Heading2,
   Italic,
   Link as LinkIcon,
   List,
@@ -22,12 +24,25 @@ function setLink(editor: Editor, prompt: string) {
   else editor.chain().focus().setLink({ href: url }).run();
 }
 
-// `name` is the mark or node the button toggles, which is also what lights it up.
+// `name` plus `attrs` is the mark or node the button toggles, which is also what lights it up.
 const ITEMS: {
   name: string;
+  attrs?: { level: 1 | 2 };
   icon: LucideIcon;
   run: (editor: Editor, linkPrompt: string) => void;
 }[] = [
+  {
+    name: 'heading',
+    attrs: { level: 1 },
+    icon: Heading1,
+    run: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+  },
+  {
+    name: 'heading',
+    attrs: { level: 2 },
+    icon: Heading2,
+    run: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+  },
   { name: 'bold', icon: Bold, run: (editor) => editor.chain().focus().toggleBold().run() },
   { name: 'italic', icon: Italic, run: (editor) => editor.chain().focus().toggleItalic().run() },
   {
@@ -69,8 +84,8 @@ export default function EditorSelectionMenu({ editor }: { editor: Editor }) {
     >
       {ITEMS.map((item) => (
         <EditorToolbarButton
-          key={item.name}
-          active={editor.isActive(item.name)}
+          key={`${item.name}${item.attrs?.level ?? ''}`}
+          active={editor.isActive(item.name, item.attrs)}
           onClick={() => item.run(editor, t('linkUrl'))}
         >
           <item.icon />

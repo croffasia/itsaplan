@@ -55,7 +55,7 @@ export default function ReadOnlyIssueDetail({
         <h1 className="mt-1 text-lg font-semibold">{issue.title}</h1>
 
         {issue.description.trim() && (
-          <IssueMarkdownEditor className="mt-2" defaultValue={issue.description} editable={false} />
+          <IssueMarkdownEditor className="mt-4" defaultValue={issue.description} editable={false} />
         )}
 
         {fieldDefs

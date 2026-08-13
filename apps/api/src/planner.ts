@@ -16,7 +16,7 @@ import { customFieldRoutes } from './custom-fields/routes';
 import { issueRoutes } from './issues/routes';
 import { initiativeRoutes } from './initiatives/routes';
 import { cycleRoutes } from './cycles/routes';
-import { attachmentRoutes } from './attachments/routes';
+import { attachmentRoutes } from './modules/attachments';
 import { avatarRoutes } from './avatars/routes';
 import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';

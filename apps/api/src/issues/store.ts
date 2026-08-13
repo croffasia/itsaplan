@@ -45,7 +45,7 @@ import {
   type IssueSnapshot,
 } from './activity';
 import { autoWatchIssue } from './watchers';
-import { mapAttachment, type AttachmentRow } from '../attachments/store';
+import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
 import { notifyIssueChange } from '../notifications/store';
 import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '#modules/agents/core/service';

@@ -3,7 +3,7 @@ import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { HttpError } from '../shared/lib';
 import { archiveIssue, deleteIssue, restoreIssue, updateIssue } from './store';
-import type { AttachmentRow } from '../attachments/store';
+import type { AttachmentRow } from '#modules/attachments/service';
 
 // An issue's subtasks: issues carrying its id in parent_id. The hierarchy is one
 // level deep (see assertParent in store.ts), so a subtask has no subtasks of its

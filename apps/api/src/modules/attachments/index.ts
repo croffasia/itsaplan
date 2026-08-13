@@ -1,15 +1,23 @@
 import { Elysia, t } from 'elysia';
 import { randomUUID, createHash } from 'node:crypto';
-import { noContent } from '../shared/http';
-import { authContext } from '../shared/auth-context';
-import { entityGuard } from '../shared/guards';
-import { HttpError } from '../shared/lib';
-import { putObject, getObject, deleteObject } from '../shared/s3';
-import { assertPublicHttpUrl } from '../shared/net';
-import { getIssueProjectId } from '../issues/store';
-import { mcpTool } from '../mcp/generate';
-import { accessErrors, commonErrors, errors } from '../shared/responses';
-import { getStorageSettings, mimeAllowed, MB, type StorageSettings } from '../settings/storage';
+import { noContent } from '#shared/http';
+import { authContext } from '#shared/auth-context';
+import { entityGuard } from '#shared/guards';
+import { HttpError } from '#shared/lib';
+import { putObject, getObject, deleteObject } from '#shared/s3';
+import { assertPublicHttpUrl } from '#shared/net';
+import { mcpTool } from '#mcp/generate';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
+import { getIssueProjectId } from '../../issues/store';
+import { getStorageSettings, mimeAllowed, MB, type StorageSettings } from '../../settings/storage';
+import {
+  AttachmentResponse,
+  AttachmentListResponse,
+  importAttachmentBody,
+  issueParams,
+  rawAttachmentQuery,
+  uploadAttachmentBody,
+} from './model';
 import {
   createAttachment,
   listAttachments,
@@ -19,19 +27,9 @@ import {
   removeAttachmentEmbeds,
   getProjectAttachmentBytes,
   type AttachmentRow,
-} from './store';
+} from './service';
 
-// Wire shape produced by attachmentDto (see there for what it omits).
-const AttachmentSchema = t.Object({
-  id: t.String(),
-  filename: t.String(),
-  contentType: t.String(),
-  sizeBytes: t.Number(),
-  createdAt: t.String(),
-  url: t.String(),
-});
-
-// The upload limits are instance settings (see ../settings/storage.ts), read per
+// The upload limits are instance settings (see ../../settings/storage.ts), read per
 // request so a change in god mode takes effect without a restart.
 async function assertUploadAllowed(
   limits: StorageSettings,
@@ -97,8 +95,6 @@ function attachmentDto(a: AttachmentRow) {
   };
 }
 
-const issueParams = t.Object({ issueId: t.Numeric() });
-
 export const attachmentRoutes = new Elysia({
   name: 'attachments',
   detail: { tags: ['Attachments'] },
@@ -126,7 +122,7 @@ export const attachmentRoutes = new Elysia({
     {
       params: issueParams,
       issueAttachment: 'read',
-      response: { 200: t.Array(AttachmentSchema), ...commonErrors },
+      response: { 200: AttachmentListResponse, ...commonErrors },
       detail: {
         summary: 'List attachments',
         description: "List an issue's attachments by its numeric id.",
@@ -163,10 +159,10 @@ export const attachmentRoutes = new Elysia({
       return attachmentDto(row);
     },
     {
-      body: t.Object({ file: t.File() }),
+      body: uploadAttachmentBody,
       params: issueParams,
       issueAttachment: 'create',
-      response: { 201: AttachmentSchema, ...commonErrors, ...errors(413, 502) },
+      response: { 201: AttachmentResponse, ...commonErrors, ...errors(413, 502) },
       detail: { summary: 'Upload an attachment' },
     },
   )
@@ -233,14 +229,9 @@ export const attachmentRoutes = new Elysia({
     },
     {
       params: issueParams,
-      body: t.Object({
-        filename: t.String({ minLength: 1 }),
-        url: t.Optional(t.String()),
-        contentBase64: t.Optional(t.String()),
-        contentType: t.Optional(t.String()),
-      }),
+      body: importAttachmentBody,
       issueAttachment: 'create',
-      response: { 201: AttachmentSchema, ...commonErrors, ...errors(413, 502) },
+      response: { 201: AttachmentResponse, ...commonErrors, ...errors(413, 502) },
       detail: {
         summary: 'Add an attachment from a URL or base64',
         description: 'Attach a file to an issue without a multipart upload.',
@@ -295,9 +286,9 @@ export const attachmentRoutes = new Elysia({
       return attachmentDto(row);
     },
     {
-      body: t.Object({ file: t.File() }),
+      body: uploadAttachmentBody,
       attachment: 'edit',
-      response: { 200: AttachmentSchema, ...commonErrors, ...errors(413, 502) },
+      response: { 200: AttachmentResponse, ...commonErrors, ...errors(413, 502) },
       detail: { summary: "Replace an attachment's file" },
     },
   )
@@ -378,7 +369,7 @@ export const attachmentRoutes = new Elysia({
       return new Response(obj.body, { headers });
     },
     {
-      query: t.Object({ download: t.Optional(t.String()) }),
+      query: rawAttachmentQuery,
       // Public route: no 401/403. Returns a raw Response (bytes), so no typed 200
       // body — Elysia cannot validate a raw Response. Only the 404 it can throw.
       response: { ...errors(404) },

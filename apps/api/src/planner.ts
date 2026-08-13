@@ -17,7 +17,7 @@ import { issueRoutes } from './issues/routes';
 import { initiativeRoutes } from './initiatives/routes';
 import { cycleRoutes } from './cycles/routes';
 import { attachmentRoutes } from './modules/attachments';
-import { avatarRoutes } from './avatars/routes';
+import { avatarRoutes } from './modules/avatars';
 import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
 import { actionRoutes } from './modules/actions';

@@ -5,7 +5,7 @@ import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
 import { mcpTool } from '../mcp/generate';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import {
   listNoteBoards,
   createNoteBoard,
@@ -109,12 +109,7 @@ export const noteBoardRoutes = new Elysia({
         limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50 })),
         offset: t.Optional(t.Numeric({ minimum: 0 })),
       }),
-      response: {
-        200: t.Array(NoteBoardSummaryResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(NoteBoardSummaryResponse), ...accessErrors },
       detail: {
         summary: "List a project's note boards",
         description:
@@ -129,12 +124,7 @@ export const noteBoardRoutes = new Elysia({
     async ({ project }) => listNoteBoardAccessCandidates(project.id),
     {
       permission: ['note_boards', 'edit'],
-      response: {
-        200: t.Array(NoteBoardAccessCandidateResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(NoteBoardAccessCandidateResponse), ...accessErrors },
       detail: {
         summary: 'List who a board can be shared with',
         description:
@@ -151,12 +141,7 @@ export const noteBoardRoutes = new Elysia({
     {
       permission: ['note_boards', 'read'],
       params: boardParams,
-      response: {
-        200: NoteBoardResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: NoteBoardResponse, ...accessErrors },
       detail: {
         summary: 'Get a note board with its canvas',
         description:
@@ -186,13 +171,7 @@ export const noteBoardRoutes = new Elysia({
         visibility: t.Optional(t.Union([t.Literal('public'), t.Literal('private')])),
         canvas: t.Optional(t.Any()),
       }),
-      response: {
-        201: NoteBoardResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: NoteBoardResponse, ...commonErrors },
       detail: {
         summary: 'Create a note board',
         description:
@@ -246,13 +225,7 @@ export const noteBoardRoutes = new Elysia({
         visibility: t.Optional(Visibility),
         memberIds: t.Optional(t.Array(t.String())),
       }),
-      response: {
-        200: NoteBoardResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: NoteBoardResponse, ...commonErrors },
       detail: {
         summary: 'Update a note board',
         description:
@@ -272,12 +245,7 @@ export const noteBoardRoutes = new Elysia({
     {
       permission: ['note_boards', 'delete'],
       params: boardParams,
-      response: {
-        204: t.Void(),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete a note board',
         description: 'Permanently delete a note board and every note on it.',

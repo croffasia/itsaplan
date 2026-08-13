@@ -4,7 +4,7 @@ import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
 import { mcpTool } from '../mcp/generate';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import {
   WEBHOOK_EVENT_TYPES,
   listWebhooks,
@@ -124,12 +124,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
     },
     {
       permission: ['webhooks', 'read'],
-      response: {
-        200: t.Array(WebhookResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(WebhookResponse), ...accessErrors },
       detail: { summary: "List a project's webhooks", ...mcpTool('list_webhooks') },
     },
   )
@@ -152,13 +147,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
         isActive: t.Optional(t.Boolean()),
       }),
       permission: ['webhooks', 'create'],
-      response: {
-        201: WebhookResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: WebhookResponse, ...commonErrors },
       detail: { summary: 'Create a webhook', ...mcpTool('create_webhook') },
     },
   )
@@ -182,13 +171,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
       }),
       params: webhookParams,
       webhook: 'edit',
-      response: {
-        200: WebhookResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: WebhookResponse, ...commonErrors },
       detail: { summary: 'Update a webhook', ...mcpTool('update_webhook') },
     },
   )
@@ -202,13 +185,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
     {
       params: webhookParams,
       webhook: 'delete',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: { summary: 'Delete a webhook', ...mcpTool('delete_webhook') },
     },
   )
@@ -225,13 +202,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
         limit: t.Optional(t.Numeric()),
       }),
       webhook: 'read',
-      response: {
-        200: WebhookDeliveryPageResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: WebhookDeliveryPageResponse, ...commonErrors },
       detail: {
         summary: 'List webhook deliveries',
         description: "List a webhook's delivery attempts.",

@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { guards } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import { getProjectEmailConfig } from '@repo/auth';
 import {
   ENCRYPTION_MODES,
@@ -76,12 +76,7 @@ export const notificationSettingsRoutes = new Elysia({
     async ({ project }) => withSystemAvailability(await getNotificationSettings(project.id)),
     {
       permission: ['danger_zone', 'read'],
-      response: {
-        200: NotificationSettingsResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: NotificationSettingsResponse, ...accessErrors },
       detail: {
         summary: 'Get notification provider settings',
         description: "Get a project's notification provider settings (secrets redacted).",
@@ -96,13 +91,7 @@ export const notificationSettingsRoutes = new Elysia({
     {
       body: NotificationSettingsBody,
       permission: ['danger_zone', 'edit'],
-      response: {
-        200: NotificationSettingsResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: NotificationSettingsResponse, ...commonErrors },
       detail: {
         summary: 'Update notification provider settings',
         description: "Update a project's notification provider settings.",

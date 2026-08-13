@@ -3,7 +3,7 @@ import { authContext } from '../shared/auth-context';
 import { guards } from '../shared/guards';
 import { noContent } from '../shared/http';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
 import { nextCronRun } from './cron';
 import {
@@ -88,12 +88,7 @@ export const agentScheduleRoutes = new Elysia({
   .use(guards)
   .get('/projects/:projectKey/agent-schedules', ({ project }) => listAgentSchedules(project.id), {
     permission: ['ai_agents', 'read'],
-    response: {
-      200: t.Array(AgentScheduleResponse),
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(AgentScheduleResponse), ...accessErrors },
     detail: {
       summary: 'List agent schedules',
       description: "List the project's agent schedules with their cron, next run, and last run.",
@@ -120,13 +115,7 @@ export const agentScheduleRoutes = new Elysia({
     {
       body: scheduleBody,
       permission: ['ai_agents', 'create'],
-      response: {
-        201: AgentScheduleResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: AgentScheduleResponse, ...commonErrors },
       detail: {
         summary: 'Create an agent schedule',
         description: 'Create a schedule that sends a task to an internal agent on a cron.',
@@ -160,13 +149,7 @@ export const agentScheduleRoutes = new Elysia({
       params,
       body: t.Partial(scheduleBody),
       permission: ['ai_agents', 'edit'],
-      response: {
-        200: AgentScheduleResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: AgentScheduleResponse, ...commonErrors },
       detail: {
         summary: 'Update an agent schedule',
         description: "Update a schedule's agent, task, cron, or status.",
@@ -185,13 +168,7 @@ export const agentScheduleRoutes = new Elysia({
     {
       params,
       permission: ['ai_agents', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an agent schedule',
         description: 'Delete a schedule with its run history. Irreversible.',
@@ -210,13 +187,7 @@ export const agentScheduleRoutes = new Elysia({
     {
       params,
       permission: ['ai_agents', 'edit'],
-      response: {
-        202: QueuedRunResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 202: QueuedRunResponse, ...commonErrors },
       detail: {
         summary: 'Run an agent schedule now',
         description:
@@ -236,13 +207,7 @@ export const agentScheduleRoutes = new Elysia({
     {
       params,
       permission: ['ai_agents', 'read'],
-      response: {
-        200: t.Array(ScheduleRunResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ScheduleRunResponse), ...commonErrors },
       detail: {
         summary: 'List agent schedule runs',
         description:

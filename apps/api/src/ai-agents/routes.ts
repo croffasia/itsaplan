@@ -4,7 +4,7 @@ import { guards } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
 import {
   listAgents,
@@ -211,12 +211,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   .use(guards)
   .get('/projects/:projectKey/ai-agents', ({ project }) => listAgents(project.id), {
     permission: ['ai_agents', 'read'],
-    response: {
-      200: t.Array(AiAgentResponse),
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(AiAgentResponse), ...accessErrors },
     detail: {
       summary: 'List AI agents',
       description: "List a project's AI agents with their config.",
@@ -234,13 +229,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     {
       params: agentParams,
       permission: ['ai_agents', 'read'],
-      response: {
-        200: AiAgentResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: AiAgentResponse, ...commonErrors },
       detail: {
         summary: 'Get an AI agent',
         description: 'Get an AI agent by id with its config.',
@@ -268,14 +257,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         ...configFields,
       }),
       permission: ['ai_agents', 'create'],
-      response: {
-        201: CreateAgentResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 201: CreateAgentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an AI agent',
         description:
@@ -301,14 +283,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       }),
       params: agentParams,
       permission: ['ai_agents', 'edit'],
-      response: {
-        200: AiAgentResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: AiAgentResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an AI agent',
         description: "Update an AI agent's name, username, or model config.",
@@ -333,13 +308,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     {
       params: agentParams,
       permission: ['ai_agents', 'edit'],
-      response: {
-        200: RegenerateKeyResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: RegenerateKeyResponse, ...commonErrors },
       detail: {
         summary: 'Regenerate the API key',
         description: "Rotate an external agent's API key and return the new secret once.",
@@ -365,13 +334,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         limit: t.Optional(t.Numeric()),
       }),
       permission: ['ai_agents', 'read'],
-      response: {
-        200: AgentRunPageResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: AgentRunPageResponse, ...commonErrors },
       detail: {
         summary: 'List agent runs',
         description: "List an agent's triggered runs.",
@@ -389,13 +352,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     {
       params: agentParams,
       permission: ['ai_agents', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an AI agent',
         description: 'Delete an AI agent and its bot user. Irreversible.',
@@ -418,13 +375,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       body: runBody,
       params: agentParams,
       permission: ['ai_agents', 'read'],
-      response: {
-        200: RunAgentResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: RunAgentResponse, ...commonErrors },
       detail: {
         summary: 'Run an AI agent',
         description:
@@ -476,10 +427,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         // The success body is an SSE stream (text/event-stream), returned as a raw
         // Response, so it is not a JSON shape the validator can describe.
         200: t.Any(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
+        ...commonErrors,
       },
       detail: {
         summary: 'Run an AI agent (stream)',
@@ -501,13 +449,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     {
       params: agentParams,
       permission: ['ai_agents', 'read'],
-      response: {
-        200: t.Array(ChatThreadResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ChatThreadResponse), ...commonErrors },
       detail: { summary: 'List chat threads' },
     },
   )
@@ -528,13 +470,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       params: threadParams,
       query: t.Object({ page: t.Optional(t.Numeric({ minimum: 0 })) }),
       permission: ['ai_agents', 'read'],
-      response: {
-        200: ChatMessagesResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ChatMessagesResponse, ...commonErrors },
       detail: { summary: 'Get thread messages' },
     },
   )
@@ -555,13 +491,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     {
       params: threadParams,
       permission: ['ai_agents', 'read'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: { summary: 'Delete a chat thread' },
     },
   );

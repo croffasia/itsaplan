@@ -3,7 +3,7 @@ import { noContent } from '../shared/http';
 import { guards } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
 import { agentInProject } from '../agent-skills/store';
 import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../ai-agents/runtime/tools/catalog';
@@ -61,12 +61,7 @@ export const agentToolRoutes = new Elysia({
   // read-only ones. Feeds the `tools` field on create_ai_agent / update_ai_agent.
   .get('/projects/:projectKey/ai-agents/tools', () => [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS], {
     permission: ['ai_agents', 'read'],
-    response: {
-      200: t.Array(ToolMetaResponse),
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(ToolMetaResponse), ...accessErrors },
     detail: {
       summary: 'List built-in agent actions',
       description:
@@ -78,12 +73,7 @@ export const agentToolRoutes = new Elysia({
 
   .get('/projects/:projectKey/agent-tools', ({ project }) => listAgentTools(project.id), {
     permission: ['agent_tools', 'read'],
-    response: {
-      200: t.Array(AgentToolResponse),
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(AgentToolResponse), ...accessErrors },
     detail: {
       summary: 'List configured tools',
       description:
@@ -103,14 +93,7 @@ export const agentToolRoutes = new Elysia({
     {
       body: t.Object({ toolKey: t.String({ minLength: 1 }), credentialId: t.Number() }),
       permission: ['agent_tools', 'create'],
-      response: {
-        201: AgentToolResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 201: AgentToolResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Configure a tool',
         description: 'Bind a tool to an integration credential.',
@@ -128,12 +111,7 @@ export const agentToolRoutes = new Elysia({
     {
       params: toolParams,
       permission: ['agent_tools', 'delete'],
-      response: {
-        204: t.Void(),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...accessErrors },
       detail: { summary: 'Delete a configured tool', description: 'Delete a configured tool.' },
     },
   )
@@ -149,12 +127,7 @@ export const agentToolRoutes = new Elysia({
     {
       params: agentParams,
       permission: ['agent_tools', 'read'],
-      response: {
-        200: t.Array(AgentToolResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(AgentToolResponse), ...accessErrors },
       detail: {
         summary: "List an agent's enabled tools",
         description: 'List the configured tools enabled on an agent.',
@@ -180,13 +153,7 @@ export const agentToolRoutes = new Elysia({
       }),
       params: agentParams,
       permission: ['agent_tools', 'edit'],
-      response: {
-        200: t.Array(AgentToolResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(AgentToolResponse), ...commonErrors },
       detail: {
         summary: "Set an agent's enabled tools",
         description:

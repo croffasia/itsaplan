@@ -5,7 +5,7 @@ import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import { transferCycleIssues } from '../issues/store';
 import {
   listCycles,
@@ -66,13 +66,7 @@ export const cycleRoutes = new Elysia({
         ),
       }),
       permission: ['cycles', 'read'],
-      response: {
-        200: t.Array(CycleResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(CycleResponse), ...commonErrors },
       detail: {
         summary: 'List cycles',
         description: "A project's cycles, oldest first.",
@@ -95,9 +89,7 @@ export const cycleRoutes = new Elysia({
       permission: ['work_items', 'read'],
       response: {
         200: t.Array(t.Object({ id: t.Number(), name: t.String(), status: t.String() })),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
+        ...accessErrors,
       },
       detail: {
         summary: 'List cycle options',
@@ -137,10 +129,7 @@ export const cycleRoutes = new Elysia({
           page: t.Number(),
           pageSize: t.Number(),
         }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
+        ...commonErrors,
       },
       detail: {
         summary: 'List completed cycles',
@@ -164,13 +153,7 @@ export const cycleRoutes = new Elysia({
         endDate: IsoDate,
       }),
       permission: ['cycles', 'create'],
-      response: {
-        201: CycleResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: CycleResponse, ...commonErrors },
       detail: {
         summary: 'Create a cycle',
         description:
@@ -190,13 +173,7 @@ export const cycleRoutes = new Elysia({
     {
       params: cycleParams,
       cycle: 'read',
-      response: {
-        200: CycleResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: CycleResponse, ...commonErrors },
       detail: {
         summary: 'Get a cycle',
         description: 'Get a cycle by its numeric id.',
@@ -221,13 +198,7 @@ export const cycleRoutes = new Elysia({
         endDate: t.Optional(IsoDate),
       }),
       cycle: 'edit',
-      response: {
-        200: CycleResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: CycleResponse, ...commonErrors },
       detail: {
         summary: 'Update a cycle',
         description:
@@ -246,13 +217,7 @@ export const cycleRoutes = new Elysia({
     {
       params: cycleParams,
       cycle: 'delete',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a cycle',
         description: 'Delete a cycle by its numeric id. Its issues stay, without a cycle.',
@@ -284,13 +249,7 @@ export const cycleRoutes = new Elysia({
         ),
       }),
       cycle: 'edit',
-      response: {
-        200: t.Object({ moved: t.Number() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Object({ moved: t.Number() }), ...commonErrors },
       detail: {
         summary: 'Transfer unfinished issues',
         description:

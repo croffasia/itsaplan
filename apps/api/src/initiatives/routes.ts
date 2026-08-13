@@ -5,7 +5,7 @@ import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { commonErrors } from '../shared/responses';
 import {
   listInitiatives,
   listInitiativeOptions,
@@ -152,10 +152,7 @@ export const initiativeRoutes = new Elysia({
           page: t.Number(),
           pageSize: t.Number(),
         }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
+        ...commonErrors,
       },
       detail: {
         summary: 'List initiatives',
@@ -183,10 +180,7 @@ export const initiativeRoutes = new Elysia({
       permission: ['work_items', 'read'],
       response: {
         200: t.Array(t.Object({ id: t.Number(), title: t.String(), status: t.String() })),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
+        ...commonErrors,
       },
       detail: {
         summary: 'List initiative options',
@@ -210,10 +204,7 @@ export const initiativeRoutes = new Elysia({
           completed: t.Number(),
           canceled: t.Number(),
         }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
+        ...commonErrors,
       },
       detail: {
         summary: 'Initiative status counts',
@@ -251,13 +242,7 @@ export const initiativeRoutes = new Elysia({
         ),
       }),
       permission: ['initiatives', 'create'],
-      response: {
-        201: InitiativeResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: InitiativeResponse, ...commonErrors },
       detail: {
         summary: 'Create an initiative',
         description: 'Create an initiative in a project.',
@@ -276,13 +261,7 @@ export const initiativeRoutes = new Elysia({
     {
       params: initiativeParams,
       initiative: 'read',
-      response: {
-        200: InitiativeResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: InitiativeResponse, ...commonErrors },
       detail: {
         summary: 'Get an initiative',
         description: 'Get an initiative by its numeric id.',
@@ -322,13 +301,7 @@ export const initiativeRoutes = new Elysia({
         ),
       }),
       initiative: 'edit',
-      response: {
-        200: InitiativeResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: InitiativeResponse, ...commonErrors },
       detail: {
         summary: 'Update an initiative',
         description: 'Update an initiative by its numeric id.',
@@ -346,13 +319,7 @@ export const initiativeRoutes = new Elysia({
     {
       params: initiativeParams,
       initiative: 'delete',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an initiative',
         description: 'Delete an initiative by its numeric id. Irreversible.',
@@ -384,13 +351,7 @@ export const initiativeRoutes = new Elysia({
         ),
       }),
       initiative: 'read',
-      response: {
-        200: FeedPageResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: FeedPageResponse, ...commonErrors },
       detail: {
         summary: 'Get an initiative feed',
         description: "Get an initiative's activity feed by its numeric id.",

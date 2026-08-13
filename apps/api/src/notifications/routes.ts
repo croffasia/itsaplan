@@ -3,7 +3,7 @@ import { noContent } from '../shared/http';
 import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { errors } from '../shared/responses';
 import {
   listNotifications,
   unreadCount,
@@ -100,7 +100,7 @@ export const notificationRoutes = new Elysia({
           t.String({ description: "'true' shows snoozed. Default false." }),
         ),
       }),
-      response: { 200: NotificationPageResponse, 401: ErrorResponse },
+      response: { 200: NotificationPageResponse, ...errors(401) },
       detail: { summary: 'List inbox notifications' },
     },
   )
@@ -117,7 +117,7 @@ export const notificationRoutes = new Elysia({
       query: t.Object({
         projectId: t.Optional(t.String({ description: 'Scope the count to one project.' })),
       }),
-      response: { 200: t.Object({ unread: t.Number() }), 401: ErrorResponse },
+      response: { 200: t.Object({ unread: t.Number() }), ...errors(401) },
       detail: { summary: 'Get unread notification count' },
     },
   )
@@ -131,7 +131,7 @@ export const notificationRoutes = new Elysia({
     },
     {
       body: t.Optional(t.Object({ projectId: t.Optional(t.Number()) })),
-      response: { 200: t.Object({ count: t.Number() }), 401: ErrorResponse },
+      response: { 200: t.Object({ count: t.Number() }), ...errors(401) },
       detail: { summary: 'Mark all notifications read' },
     },
   )
@@ -154,7 +154,7 @@ export const notificationRoutes = new Elysia({
         ),
         projectId: t.Optional(t.String({ description: 'Scope the delete to one project.' })),
       }),
-      response: { 200: t.Object({ count: t.Number() }), 401: ErrorResponse },
+      response: { 200: t.Object({ count: t.Number() }), ...errors(401) },
       detail: { summary: 'Delete inbox notifications' },
     },
   )
@@ -171,7 +171,7 @@ export const notificationRoutes = new Elysia({
     {
       params: idParams,
       body: t.Optional(t.Object({ read: t.Optional(t.Boolean()) })),
-      response: { 204: t.Void(), 401: ErrorResponse, 404: ErrorResponse },
+      response: { 204: t.Void(), ...errors(401, 404) },
       detail: { summary: 'Mark a notification read or unread' },
     },
   )
@@ -189,7 +189,7 @@ export const notificationRoutes = new Elysia({
     {
       params: idParams,
       body: t.Object({ until: t.Nullable(t.String()) }),
-      response: { 204: t.Void(), 400: ErrorResponse, 401: ErrorResponse, 404: ErrorResponse },
+      response: { 204: t.Void(), ...errors(400, 401, 404) },
       detail: {
         summary: 'Snooze a notification',
         description: 'Snooze a notification until a time, or clear its snooze.',
@@ -207,7 +207,7 @@ export const notificationRoutes = new Elysia({
     },
     {
       params: idParams,
-      response: { 204: t.Void(), 401: ErrorResponse, 404: ErrorResponse },
+      response: { 204: t.Void(), ...errors(401, 404) },
       detail: { summary: 'Delete a notification' },
     },
   );

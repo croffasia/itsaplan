@@ -5,7 +5,7 @@ import { authContext } from '../shared/auth-context';
 import { guards } from '../shared/guards';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { commonErrors } from '../shared/responses';
 import { listColumns, createColumn, updateColumn, reorderColumns, deleteColumn } from './store';
 
 const stateType = t.Union([
@@ -44,13 +44,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
         color: t.Optional(t.String()),
       }),
       permission: ['states', 'create'],
-      response: {
-        201: ColumnResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: ColumnResponse, ...commonErrors },
       detail: {
         summary: 'Create a column',
         description:
@@ -72,13 +66,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
     {
       body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
       permission: ['states', 'edit'],
-      response: {
-        200: t.Array(ColumnResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ColumnResponse), ...commonErrors },
       detail: {
         summary: 'Reorder columns',
         description:
@@ -104,13 +92,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       }),
       params: columnParams,
       permission: ['states', 'edit'],
-      response: {
-        200: ColumnResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ColumnResponse, ...commonErrors },
       detail: {
         summary: 'Update a column',
         description: "Update a column's name, stateType, or color.",
@@ -135,13 +117,7 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       ]),
       params: columnParams,
       permission: ['states', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a column',
         description:

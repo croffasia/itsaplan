@@ -5,7 +5,7 @@ import { authContext } from '../shared/auth-context';
 import { guards } from '../shared/guards';
 import { requireUser, type AuthUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { getRole } from '../roles/store';
 import {
   createInvite,
@@ -113,14 +113,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         roleId: t.Optional(t.Nullable(t.Integer())),
       }),
       permission: ['members_invite', 'create'],
-      response: {
-        201: InviteRowResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 201: InviteRowResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an invite',
         description:
@@ -139,12 +132,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     {
       params: t.Object({ projectKey: t.String() }),
       permission: ['members_invite', 'read'],
-      response: {
-        200: t.Array(InviteRowResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(InviteRowResponse), ...accessErrors },
       detail: { summary: "List a project's invites", ...mcpTool('list_invites') },
     },
   )
@@ -160,13 +148,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     {
       params: t.Object({ projectKey: t.String(), inviteId: t.Numeric() }),
       permission: ['members_invite', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an invite',
         description: 'Revoke a project invite.',
@@ -189,12 +171,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     },
     {
       params: tokenParams,
-      response: {
-        200: InviteViewResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: InviteViewResponse, ...errors(400, 401, 404) },
       detail: {
         summary: 'Get an invite',
         description: 'Get an invite by its token, with its project and role.',
@@ -213,14 +190,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     },
     {
       params: tokenParams,
-      response: {
-        200: AcceptInviteResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: AcceptInviteResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Accept an invite',
         description: 'Accept an invite (email must match your session).',
@@ -238,14 +208,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     },
     {
       params: tokenParams,
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Reject an invite',
         description: 'Reject an invite (email must match your session).',

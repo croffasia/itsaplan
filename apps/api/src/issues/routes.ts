@@ -7,7 +7,7 @@ import { assertPermission, assertMcpEnabled, requireUser } from '../shared/acces
 import { isMcpRequest } from '../shared/mcp-request';
 import { getProjectById } from '../projects/store';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { deleteObject } from '../shared/s3';
 import {
   createIssue,
@@ -452,13 +452,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         ),
       }),
       permission: ['work_items', 'create'],
-      response: {
-        201: IssueResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: IssueResponse, ...commonErrors },
       detail: {
         summary: 'Create an issue',
         description: 'Create an issue in a project.',
@@ -501,13 +495,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         }),
       }),
       permission: ['work_items', 'edit'],
-      response: {
-        200: t.Object({ updated: t.Number() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Object({ updated: t.Number() }), ...commonErrors },
       detail: { summary: 'Bulk update issues' },
     },
   )
@@ -526,13 +514,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         add: t.Array(t.Integer(), { minItems: 1, description: 'Label ids to add.' }),
       }),
       permission: ['work_items', 'edit'],
-      response: {
-        200: t.Object({ updated: t.Number() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Object({ updated: t.Number() }), ...commonErrors },
       detail: { summary: 'Bulk add labels to issues' },
     },
   )
@@ -554,14 +536,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         newParentId: t.Optional(NewParentIdSchema),
       }),
       permission: ['work_items', 'edit'],
-      response: {
-        200: t.Object({ archived: t.Number() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: t.Object({ archived: t.Number() }), ...commonErrors, ...errors(409) },
       detail: { summary: 'Bulk archive issues' },
     },
   )
@@ -589,14 +564,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         newParentId: t.Optional(NewParentIdSchema),
       }),
       permission: ['work_items', 'delete'],
-      response: {
-        200: t.Object({ deleted: t.Number() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: t.Object({ deleted: t.Number() }), ...commonErrors, ...errors(409) },
       detail: { summary: 'Bulk delete issues' },
     },
   )
@@ -624,13 +592,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
       }),
       permission: ['work_items', 'read'],
-      response: {
-        200: t.Array(IssueSearchHitResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(IssueSearchHitResponse), ...commonErrors },
       detail: {
         summary: 'Search issues by text',
         description: "Search a project's issues by text.",
@@ -699,13 +661,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
       }),
       permission: ['work_items', 'read'],
-      response: {
-        200: t.Array(IssueSearchHitResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(IssueSearchHitResponse), ...commonErrors },
       detail: {
         summary: 'List issues by filters',
         description: "List a project's issues by field filters.",
@@ -730,12 +686,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: t.Object({ projectKey: t.String() }),
       permission: ['work_items', 'read'],
-      response: {
-        200: t.Object({ issues: t.Array(BoardIssueResponse) }),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Object({ issues: t.Array(BoardIssueResponse) }), ...accessErrors },
       detail: { summary: 'Get board issues' },
     },
   )
@@ -748,12 +699,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: t.Object({ projectKey: t.String() }),
       permission: ['work_items', 'read'],
-      response: {
-        200: t.Array(IssueResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(IssueResponse), ...accessErrors },
       detail: { summary: 'List archived issues' },
     },
   )
@@ -777,13 +723,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: t.Object({ projectKey: t.String(), sequenceNumber: t.Numeric() }),
       permission: ['work_items', 'read'],
-      response: {
-        200: IssueWithFieldsResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: IssueWithFieldsResponse, ...commonErrors },
       detail: {
         summary: 'Get an issue by number',
         description:
@@ -818,13 +758,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
     {
       params: issueParams,
-      response: {
-        200: IssueWithFieldsResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: IssueWithFieldsResponse, ...commonErrors },
       detail: {
         summary: 'Get an issue',
         description: 'Get an issue by its numeric id.',
@@ -905,13 +839,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       }),
       params: issueParams,
       workItem: 'edit',
-      response: {
-        200: IssueResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: IssueResponse, ...commonErrors },
       detail: {
         summary: 'Update an issue',
         description: 'Update an issue by its numeric id.',
@@ -946,14 +874,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         newParentId: t.Optional(t.Numeric(NewParentIdSchema)),
       }),
       workItem: 'delete',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Delete an issue',
         description:
@@ -990,14 +911,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         }),
       ),
       workItem: 'edit',
-      response: {
-        200: IssueResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Archive an issue',
         description:
@@ -1021,13 +935,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueParams,
       workItem: 'edit',
-      response: {
-        200: IssueResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: IssueResponse, ...commonErrors },
       detail: {
         summary: 'Restore an archived issue',
         description:
@@ -1059,13 +967,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       }),
       params: t.Object({ issueId: t.Numeric(), fieldId: t.Numeric() }),
       workItem: 'edit',
-      response: {
-        200: t.Object({ ok: t.Boolean() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Object({ ok: t.Boolean() }), ...commonErrors },
       detail: {
         summary: 'Set a custom field value',
         description: 'Set a custom field value on an issue by its numeric id.',
@@ -1093,14 +995,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       }),
       params: issueParams,
       workItem: 'edit',
-      response: {
-        201: IssueLinkResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 201: IssueLinkResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Link two issues',
         description:
@@ -1122,13 +1017,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: t.Object({ issueId: t.Numeric(), linkId: t.Numeric() }),
       workItem: 'edit',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Unlink two issues',
         description: "Remove one of an issue's relations by the link id.",
@@ -1143,13 +1032,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .get('/issues/:issueId/checklists', async ({ params }) => listChecklists(params.issueId), {
     params: issueParams,
     workItem: 'read',
-    response: {
-      200: t.Array(ChecklistResponse),
-      400: ErrorResponse,
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(ChecklistResponse), ...commonErrors },
     detail: {
       summary: "List an issue's checklists",
       description: 'Every checklist of an issue with its items, both in display order.',
@@ -1166,13 +1049,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       body: t.Object({ title: ChecklistTitleSchema }),
       params: issueParams,
       workItem: 'edit',
-      response: {
-        201: ChecklistResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: ChecklistResponse, ...commonErrors },
       detail: {
         summary: 'Add a checklist',
         description: 'Add a checklist to an issue. It starts empty; add its items separately.',
@@ -1189,13 +1066,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       body: OrderedIdsSchema,
       params: issueParams,
       workItem: 'edit',
-      response: {
-        200: t.Array(ChecklistResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ChecklistResponse), ...commonErrors },
       detail: {
         summary: "Reorder an issue's checklists",
         description: "Set the display order of an issue's checklists.",
@@ -1211,13 +1082,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       body: t.Object({ title: ChecklistTitleSchema }),
       params: checklistParams,
       checklist: 'edit',
-      response: {
-        200: ChecklistResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ChecklistResponse, ...commonErrors },
       detail: { summary: 'Rename a checklist', description: "Change a checklist's title." },
     },
   )
@@ -1233,13 +1098,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: checklistParams,
       checklist: 'edit',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a checklist',
         description: 'Delete a checklist and every item on it.',
@@ -1257,13 +1116,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       body: t.Object({ content: ChecklistItemContentSchema }),
       params: checklistParams,
       checklist: 'edit',
-      response: {
-        201: ChecklistItemResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: ChecklistItemResponse, ...commonErrors },
       detail: {
         summary: 'Add a checklist item',
         description: 'Append an item to a checklist.',
@@ -1278,13 +1131,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       body: OrderedIdsSchema,
       params: checklistParams,
       checklist: 'edit',
-      response: {
-        200: t.Array(ChecklistItemResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ChecklistItemResponse), ...commonErrors },
       detail: {
         summary: 'Reorder checklist items',
         description: 'Set the display order of the items within one checklist.',
@@ -1304,13 +1151,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       }),
       params: checklistItemParams,
       checklistItem: 'edit',
-      response: {
-        200: ChecklistItemResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ChecklistItemResponse, ...commonErrors },
       detail: {
         summary: 'Update a checklist item',
         description: "Change a checklist item's text, its checked state, or both.",
@@ -1328,13 +1169,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: checklistItemParams,
       checklistItem: 'edit',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a checklist item',
         description: 'Remove one item from a checklist.',
@@ -1355,13 +1190,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueParams,
       workItem: 'read',
-      response: {
-        200: t.Array(IssueWatcherResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(IssueWatcherResponse), ...commonErrors },
       detail: {
         summary: 'Watch an issue',
         description: 'Subscribe the current user to an issue and return its watchers.',
@@ -1380,13 +1209,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueParams,
       workItem: 'read',
-      response: {
-        200: t.Array(IssueWatcherResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(IssueWatcherResponse), ...commonErrors },
       detail: {
         summary: 'Unwatch an issue',
         description: 'Unsubscribe the current user from an issue and return its watchers.',
@@ -1406,13 +1229,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       params: issueParams,
       query: feedPageQuery,
       workItem: 'read',
-      response: {
-        200: FeedPageResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: FeedPageResponse, ...commonErrors },
       detail: {
         summary: 'Get an issue feed',
         description: "Get an issue's activity feed by its numeric id.",
@@ -1431,13 +1248,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       params: issueParams,
       query: feedPageQuery,
       workItem: 'read',
-      response: {
-        200: GroupedFeedPageResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: GroupedFeedPageResponse, ...commonErrors },
       detail: {
         summary: 'Get an issue feed grouped by status',
         description:
@@ -1452,13 +1263,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .get('/issues/:issueId/timeline', async ({ params }) => listStatusTimeline(params.issueId), {
     params: issueParams,
     workItem: 'read',
-    response: {
-      200: t.Array(TimelineSegmentResponse),
-      400: ErrorResponse,
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(TimelineSegmentResponse), ...commonErrors },
     detail: {
       summary: 'Get an issue status timeline',
       description: "Get the stretches an issue spent in each status, with each one's duration.",
@@ -1479,13 +1284,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         ),
       }),
       workItem: 'read',
-      response: {
-        200: t.Array(FeedItemResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(FeedItemResponse), ...commonErrors },
       detail: {
         summary: 'Get the activity of one timeline stretch',
         description: "Get an issue's activity entries written between two moments, oldest first.",
@@ -1509,13 +1308,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       body: t.Object({ body: t.String({ minLength: 1, description: 'Comment text.' }) }),
       params: issueParams,
       workItem: 'create',
-      response: {
-        201: FeedItemResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: FeedItemResponse, ...commonErrors },
       detail: {
         summary: 'Add a comment',
         description: 'Add a comment to an issue by its numeric id.',

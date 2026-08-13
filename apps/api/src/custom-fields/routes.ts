@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import { noContent } from '../shared/http';
 import { guards } from '../shared/guards';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { commonErrors } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
 import { listCustomFields, createCustomField, updateCustomField, deleteCustomField } from './store';
 import { getIssueTypeById } from '../issue-types/store';
@@ -55,13 +55,7 @@ export const customFieldRoutes = new Elysia({
       params: t.Object({ projectKey: t.String() }),
       query: t.Object({ issueTypeId: t.Optional(t.Numeric()) }),
       permission: ['custom_fields', 'read'],
-      response: {
-        200: t.Array(CustomFieldResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(CustomFieldResponse), ...commonErrors },
       detail: {
         summary: "List a project's custom fields",
         description: "List a project's custom fields.",
@@ -93,13 +87,7 @@ export const customFieldRoutes = new Elysia({
         options: t.Optional(t.Array(t.String({ minLength: 1 }))),
       }),
       permission: ['custom_fields', 'create'],
-      response: {
-        201: CustomFieldResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: CustomFieldResponse, ...commonErrors },
       detail: {
         summary: 'Create a custom field',
         description: 'Create a custom field for a project.',
@@ -122,13 +110,7 @@ export const customFieldRoutes = new Elysia({
       }),
       params: fieldParams,
       permission: ['custom_fields', 'edit'],
-      response: {
-        200: CustomFieldResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: CustomFieldResponse, ...commonErrors },
       detail: {
         summary: 'Update a custom field',
         description: 'Update a custom field.',
@@ -147,13 +129,7 @@ export const customFieldRoutes = new Elysia({
     {
       params: fieldParams,
       permission: ['custom_fields', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a custom field',
         description: 'Delete a custom field.',

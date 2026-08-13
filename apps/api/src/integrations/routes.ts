@@ -3,7 +3,7 @@ import { noContent } from '../shared/http';
 import { guards } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
 import { INTEGRATION_CATALOG, integrationKind } from './catalog';
 import { listModelsForProvider } from './models';
@@ -72,12 +72,7 @@ export const integrationRoutes = new Elysia({
   // project member: the catalog is a constant in this codebase, not project data.
   .get('/projects/:projectKey/integrations/catalog', () => INTEGRATION_CATALOG, {
     projectMember: true,
-    response: {
-      200: t.Array(IntegrationResponse),
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(IntegrationResponse), ...accessErrors },
     detail: {
       summary: 'List available integrations',
       description:
@@ -101,12 +96,7 @@ export const integrationRoutes = new Elysia({
         }),
       }),
       projectMember: true,
-      response: {
-        200: t.Array(ProviderModelResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ProviderModelResponse), ...accessErrors },
       detail: {
         summary: "List a provider's models",
         description:
@@ -141,13 +131,7 @@ export const integrationRoutes = new Elysia({
         ),
       }),
       projectMember: true,
-      response: {
-        200: t.Array(IntegrationOptionResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(IntegrationOptionResponse), ...commonErrors },
       detail: {
         summary: 'List integration options',
         description:
@@ -158,12 +142,7 @@ export const integrationRoutes = new Elysia({
 
   .get('/projects/:projectKey/integrations', ({ project }) => listCredentials(project.id), {
     permission: ['integrations', 'read'],
-    response: {
-      200: t.Array(CredentialResponse),
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(CredentialResponse), ...accessErrors },
     detail: {
       summary: 'List credentials',
       description:
@@ -187,13 +166,7 @@ export const integrationRoutes = new Elysia({
         credential: t.Record(t.String(), t.Any()),
       }),
       permission: ['integrations', 'create'],
-      response: {
-        201: CredentialResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: CredentialResponse, ...commonErrors },
       detail: {
         summary: 'Add a credential',
         description: 'Store a credential for an integration.',
@@ -217,13 +190,7 @@ export const integrationRoutes = new Elysia({
       }),
       params: credentialParams,
       permission: ['integrations', 'edit'],
-      response: {
-        200: CredentialResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: CredentialResponse, ...commonErrors },
       detail: {
         summary: 'Update a credential',
         description: "Update a credential's label or secret. The integration is fixed.",
@@ -241,12 +208,7 @@ export const integrationRoutes = new Elysia({
     {
       params: credentialParams,
       permission: ['integrations', 'delete'],
-      response: {
-        204: t.Void(),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete a credential',
         description: 'Delete an integration credential.',

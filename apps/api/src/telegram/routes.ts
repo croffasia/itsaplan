@@ -2,7 +2,7 @@ import { Elysia, t } from 'elysia';
 import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { errors } from '../shared/responses';
 import { noContent } from '../shared/http';
 import {
   getInstanceBotConfig,
@@ -55,7 +55,7 @@ export const telegramRoutes = new Elysia({ name: 'telegram', detail: { tags: ['T
       };
     },
     {
-      response: { 200: TelegramAccountResponse, 401: ErrorResponse },
+      response: { 200: TelegramAccountResponse, ...errors(401) },
       detail: {
         summary: 'Get the linked Telegram account',
         description:
@@ -76,7 +76,7 @@ export const telegramRoutes = new Elysia({ name: 'telegram', detail: { tags: ['T
       return { url: `https://t.me/${config.botUsername}?start=${code}`, expiresAt };
     },
     {
-      response: { 200: TelegramLinkStartResponse, 400: ErrorResponse, 401: ErrorResponse },
+      response: { 200: TelegramLinkStartResponse, ...errors(400, 401) },
       detail: {
         summary: 'Start linking a Telegram account',
         description:
@@ -93,7 +93,7 @@ export const telegramRoutes = new Elysia({ name: 'telegram', detail: { tags: ['T
       return noContent();
     },
     {
-      response: { 204: t.Void(), 401: ErrorResponse },
+      response: { 204: t.Void(), ...errors(401) },
       detail: { summary: 'Unlink the Telegram account' },
     },
   );

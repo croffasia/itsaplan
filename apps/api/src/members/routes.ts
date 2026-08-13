@@ -5,7 +5,7 @@ import { authContext } from '../shared/auth-context';
 import { guards } from '../shared/guards';
 import { assertPermission, requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import {
   listMembers,
   getMembership,
@@ -45,12 +45,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
     {
       params: t.Object({ projectKey: t.String() }),
       permission: ['members_manage', 'read'],
-      response: {
-        200: t.Array(MemberResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(MemberResponse), ...accessErrors },
       detail: { summary: 'List project members', ...mcpTool('list_members') },
     },
   )
@@ -90,13 +85,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       params: memberParams,
       body: t.Object({ role: memberRole, roleId: t.Optional(t.Nullable(t.Integer())) }),
       projectOwner: true,
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: "Update a member's role",
         description:
@@ -128,13 +117,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       params: memberParams,
       body: t.Object({ description: t.String({ maxLength: 500 }) }),
       projectMember: true,
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: "Set a member's description",
         description:
@@ -167,13 +150,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
     {
       params: memberParams,
       projectMember: true,
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Remove a member',
         description: 'Remove a member from the project, or leave it yourself.',

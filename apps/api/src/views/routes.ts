@@ -4,7 +4,7 @@ import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
 import {
   listViews,
@@ -56,12 +56,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     },
     {
       permission: ['views', 'read'],
-      response: {
-        200: t.Array(ViewResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ViewResponse), ...accessErrors },
       detail: {
         summary: 'List saved views',
         description: "List a project's saved views.",
@@ -84,13 +79,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
         display: t.Optional(t.Any()),
       }),
       permission: ['views', 'create'],
-      response: {
-        201: ViewResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: ViewResponse, ...commonErrors },
       detail: {
         summary: 'Create a saved view',
         description: 'Create a saved view in a project.',
@@ -108,13 +97,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     {
       body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
       permission: ['views', 'edit'],
-      response: {
-        200: t.Array(ViewResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ViewResponse), ...commonErrors },
       detail: {
         summary: 'Reorder saved views',
         description: "Set the display order of a project's saved views.",
@@ -139,13 +122,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       }),
       params: viewParams,
       savedView: 'edit',
-      response: {
-        200: ViewResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ViewResponse, ...commonErrors },
       detail: {
         summary: 'Update a saved view',
         description: 'Update an existing saved view.',
@@ -164,13 +141,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     {
       params: viewParams,
       savedView: 'read',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Favorite a saved view',
         description: "Add a saved view to the caller's favorites.",
@@ -187,13 +158,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     {
       params: viewParams,
       savedView: 'read',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Unfavorite a saved view',
         description: "Remove a saved view from the caller's favorites.",
@@ -210,13 +175,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     {
       params: viewParams,
       savedView: 'delete',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a saved view',
         description: 'Delete a saved view. Irreversible.',

@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { authContext } from '../shared/auth-context';
-import { ErrorResponse } from '../shared/responses';
+import { errors } from '../shared/responses';
 import { getStorageSettings, StorageSettingsSchema } from './storage';
 import { getHotkeySettings, HotkeyCombosSchema } from './hotkeys';
 import { getAppVersion } from './updates';
@@ -16,7 +16,7 @@ export const settingsRoutes = new Elysia({
 })
   .use(authContext)
   .get('/settings/storage', () => getStorageSettings(), {
-    response: { 200: StorageSettingsSchema, 401: ErrorResponse },
+    response: { 200: StorageSettingsSchema, ...errors(401) },
     detail: {
       summary: 'Get storage limits',
       description: 'Get the instance upload limits the UI shows before a file is picked.',
@@ -24,7 +24,7 @@ export const settingsRoutes = new Elysia({
   })
 
   .get('/settings/hotkeys', () => getHotkeySettings(), {
-    response: { 200: HotkeyCombosSchema, 401: ErrorResponse },
+    response: { 200: HotkeyCombosSchema, ...errors(401) },
     detail: {
       summary: 'Get instance keyboard shortcuts',
       description:
@@ -37,7 +37,7 @@ export const settingsRoutes = new Elysia({
   // required: the version tells an anonymous visitor which release to look up
   // vulnerabilities for.
   .get('/settings/version', () => ({ version: getAppVersion() }), {
-    response: { 200: t.Object({ version: t.String() }), 401: ErrorResponse },
+    response: { 200: t.Object({ version: t.String() }), ...errors(401) },
     detail: {
       summary: 'Get the running version',
       description: 'Get the version of the app this instance runs.',

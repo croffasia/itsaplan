@@ -3,7 +3,7 @@ import { mcpTool } from '../mcp/generate';
 import { noContent } from '../shared/http';
 import { guards } from '../shared/guards';
 import { HttpError, rethrowDuplicate } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { commonErrors, errors } from '../shared/responses';
 import {
   createLabel,
   updateLabel,
@@ -53,14 +53,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
         groupId: t.Optional(t.Nullable(t.Integer())),
       }),
       permission: ['labels', 'create'],
-      response: {
-        201: LabelResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 201: LabelResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create a label',
         description: 'Create a label. Optional groupId assigns it to a label group.',
@@ -89,14 +82,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       }),
       params: labelParams,
       permission: ['labels', 'edit'],
-      response: {
-        200: LabelResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: LabelResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update a label',
         description:
@@ -115,13 +101,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
     {
       params: labelParams,
       permission: ['labels', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a label',
         description: 'Delete a label.',
@@ -144,14 +124,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
     {
       body: t.Object({ name: t.String({ minLength: 1 }), color: t.Optional(t.String()) }),
       permission: ['labels', 'create'],
-      response: {
-        201: LabelGroupResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 201: LabelGroupResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create a label group',
         description: 'Create a label group, a named container for labels.',
@@ -179,14 +152,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       }),
       params: groupParams,
       permission: ['labels', 'edit'],
-      response: {
-        200: LabelGroupResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: LabelGroupResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update a label group',
         description: "Update a label group's name or color.",
@@ -204,13 +170,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
     {
       params: groupParams,
       permission: ['labels', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a label group',
         description: 'Delete a label group.',

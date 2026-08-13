@@ -4,7 +4,7 @@ import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
 import { mcpTool } from '../mcp/generate';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import {
   listActions,
   createAction,
@@ -48,12 +48,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     },
     {
       permission: ['actions', 'read'],
-      response: {
-        200: t.Array(ActionResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ActionResponse), ...accessErrors },
       detail: {
         summary: 'List actions',
         description: "List a project's actions.",
@@ -72,12 +67,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     },
     {
       projectMember: true,
-      response: {
-        200: t.Array(ActionResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ActionResponse), ...accessErrors },
       detail: {
         summary: 'List quick actions',
         description: "List a project's actions for the issue quick actions.",
@@ -99,13 +89,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
         effect: t.Optional(t.Any()),
       }),
       permission: ['actions', 'create'],
-      response: {
-        201: ActionResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: ActionResponse, ...commonErrors },
       detail: {
         summary: 'Create an action',
         description: 'Create an action in a project.',
@@ -123,13 +107,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     {
       body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
       permission: ['actions', 'edit'],
-      response: {
-        200: t.Array(ActionResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ActionResponse), ...commonErrors },
       detail: {
         summary: 'Reorder actions',
         description: "Set the display order of a project's actions.",
@@ -154,13 +132,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
       }),
       params: actionParams,
       savedAction: 'edit',
-      response: {
-        200: ActionResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ActionResponse, ...commonErrors },
       detail: {
         summary: 'Update an action',
         description: 'Update an existing action.',
@@ -178,13 +150,7 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     {
       params: actionParams,
       savedAction: 'delete',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an action',
         description: 'Delete an action. Irreversible.',

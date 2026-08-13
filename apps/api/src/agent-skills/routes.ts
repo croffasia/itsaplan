@@ -3,7 +3,7 @@ import { noContent } from '../shared/http';
 import { guards } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { mcpTool } from '../mcp/generate';
 import { MAX_SKILL_BYTES, importGithubSkill, discoverGithubSkills } from './skill-format';
 import {
@@ -66,12 +66,7 @@ export const agentSkillRoutes = new Elysia({
 
   .get('/projects/:projectKey/agent-skills', ({ project }) => listSkills(project.id), {
     permission: ['agent_skills', 'read'],
-    response: {
-      200: t.Array(SkillResponse),
-      401: ErrorResponse,
-      403: ErrorResponse,
-      404: ErrorResponse,
-    },
+    response: { 200: t.Array(SkillResponse), ...accessErrors },
     detail: {
       summary: 'List agent skills',
       description: "List the project's skill library, each skill with its reference files.",
@@ -89,12 +84,7 @@ export const agentSkillRoutes = new Elysia({
     {
       params: skillParams,
       permission: ['agent_skills', 'read'],
-      response: {
-        200: SkillResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: SkillResponse, ...accessErrors },
       detail: {
         summary: 'Get an agent skill',
         description:
@@ -114,12 +104,7 @@ export const agentSkillRoutes = new Elysia({
     {
       params: skillParams,
       permission: ['agent_skills', 'read'],
-      response: {
-        200: t.Object({ markdown: t.String() }),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Object({ markdown: t.String() }), ...accessErrors },
       detail: {
         summary: 'Get skill markdown',
         description: "Get a skill's SKILL.md content.",
@@ -139,12 +124,7 @@ export const agentSkillRoutes = new Elysia({
       params: skillParams,
       query: t.Object({ path: refPath }),
       permission: ['agent_skills', 'read'],
-      response: {
-        200: t.Object({ content: t.String() }),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Object({ content: t.String() }), ...accessErrors },
       detail: {
         summary: 'Get reference file content',
         description: "Get the text of one of a skill's reference files by path.",
@@ -171,11 +151,8 @@ export const agentSkillRoutes = new Elysia({
             url: t.String(),
           }),
         ),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        502: ErrorResponse,
+        ...commonErrors,
+        ...errors(502),
       },
       detail: {
         summary: 'Discover GitHub skills',
@@ -248,16 +225,7 @@ export const agentSkillRoutes = new Elysia({
         ),
       }),
       permission: ['agent_skills', 'create'],
-      response: {
-        201: SkillResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-        413: ErrorResponse,
-        502: ErrorResponse,
-      },
+      response: { 201: SkillResponse, ...commonErrors, ...errors(409, 413, 502) },
       detail: {
         summary: 'Create an agent skill',
         description:
@@ -287,15 +255,7 @@ export const agentSkillRoutes = new Elysia({
       }),
       params: skillParams,
       permission: ['agent_skills', 'edit'],
-      response: {
-        200: SkillResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-        413: ErrorResponse,
-      },
+      response: { 200: SkillResponse, ...commonErrors, ...errors(409, 413) },
       detail: {
         summary: 'Update an agent skill',
         description: "Update a skill's name, description, or SKILL.md content.",
@@ -314,12 +274,7 @@ export const agentSkillRoutes = new Elysia({
     {
       params: skillParams,
       permission: ['agent_skills', 'delete'],
-      response: {
-        204: t.Void(),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete an agent skill',
         description: 'Delete a skill, its reference files, and its links to agents.',
@@ -352,14 +307,7 @@ export const agentSkillRoutes = new Elysia({
       body: t.Object({ file: t.File() }),
       params: skillParams,
       permission: ['agent_skills', 'edit'],
-      response: {
-        200: SkillResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        413: ErrorResponse,
-      },
+      response: { 200: SkillResponse, ...commonErrors, ...errors(413) },
       detail: {
         summary: 'Add a reference file',
         description: 'Add a reference file to a skill.',
@@ -387,14 +335,7 @@ export const agentSkillRoutes = new Elysia({
       body: t.Object({ path: refPath, content: t.String({ description: 'The new file text.' }) }),
       params: skillParams,
       permission: ['agent_skills', 'edit'],
-      response: {
-        200: SkillResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        413: ErrorResponse,
-      },
+      response: { 200: SkillResponse, ...commonErrors, ...errors(413) },
       detail: {
         summary: 'Update reference file content',
         description: "Replace the text of a skill's existing reference file, addressed by path.",
@@ -414,12 +355,7 @@ export const agentSkillRoutes = new Elysia({
       params: skillParams,
       query: t.Object({ path: refPath }),
       permission: ['agent_skills', 'edit'],
-      response: {
-        200: SkillResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: SkillResponse, ...accessErrors },
       detail: {
         summary: 'Delete a reference file',
         description: "Delete a skill's reference file by path.",
@@ -439,12 +375,7 @@ export const agentSkillRoutes = new Elysia({
     {
       params: agentParams,
       permission: ['agent_skills', 'read'],
-      response: {
-        200: t.Array(SkillResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(SkillResponse), ...accessErrors },
       detail: {
         summary: "List an agent's enabled skills",
         description: 'List the skills enabled on an agent.',
@@ -471,13 +402,7 @@ export const agentSkillRoutes = new Elysia({
       }),
       params: agentParams,
       permission: ['agent_skills', 'edit'],
-      response: {
-        200: t.Array(SkillResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(SkillResponse), ...commonErrors },
       detail: {
         summary: "Set an agent's enabled skills",
         description:

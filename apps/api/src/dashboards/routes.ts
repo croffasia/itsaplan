@@ -4,7 +4,7 @@ import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
 import { mcpTool } from '../mcp/generate';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import {
   listDashboards,
   createDashboard,
@@ -50,12 +50,7 @@ export const dashboardRoutes = new Elysia({
     },
     {
       permission: ['dashboards', 'read'],
-      response: {
-        200: t.Array(DashboardResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(DashboardResponse), ...accessErrors },
       detail: { summary: "List a project's dashboards", ...mcpTool('list_dashboards') },
     },
   )
@@ -73,13 +68,7 @@ export const dashboardRoutes = new Elysia({
         layout: t.Optional(t.Any()),
       }),
       permission: ['dashboards', 'create'],
-      response: {
-        201: DashboardResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: DashboardResponse, ...commonErrors },
       detail: { summary: 'Create a dashboard', ...mcpTool('create_dashboard') },
     },
   )
@@ -93,13 +82,7 @@ export const dashboardRoutes = new Elysia({
     {
       body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
       permission: ['dashboards', 'edit'],
-      response: {
-        200: t.Array(DashboardResponse),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(DashboardResponse), ...commonErrors },
       detail: { summary: 'Reorder dashboards', ...mcpTool('reorder_dashboards') },
     },
   )
@@ -119,13 +102,7 @@ export const dashboardRoutes = new Elysia({
       }),
       params: dashboardParams,
       dashboard: 'edit',
-      response: {
-        200: DashboardResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: DashboardResponse, ...commonErrors },
       detail: { summary: 'Update a dashboard', ...mcpTool('update_dashboard') },
     },
   )
@@ -139,13 +116,7 @@ export const dashboardRoutes = new Elysia({
     {
       params: dashboardParams,
       dashboard: 'delete',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: { summary: 'Delete a dashboard', ...mcpTool('delete_dashboard') },
     },
   );

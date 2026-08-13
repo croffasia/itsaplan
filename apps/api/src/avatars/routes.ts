@@ -7,7 +7,7 @@ import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { HttpError } from '../shared/lib';
 import { putObject, getObject, deleteObject } from '../shared/s3';
-import { ErrorResponse } from '../shared/responses';
+import { errors } from '../shared/responses';
 import { getStorageSettings, MB } from '../settings/storage';
 
 // Avatar images for the signed-in user. The bytes live in the S3-compatible
@@ -94,13 +94,7 @@ export const avatarRoutes = new Elysia({ name: 'avatars', detail: { tags: ['Avat
     },
     {
       body: t.Object({ file: t.File() }),
-      response: {
-        200: t.Object({ image: t.String() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        413: ErrorResponse,
-        502: ErrorResponse,
-      },
+      response: { 200: t.Object({ image: t.String() }), ...errors(400, 401, 413, 502) },
       detail: { summary: "Upload the current user's avatar" },
     },
   )
@@ -115,10 +109,7 @@ export const avatarRoutes = new Elysia({ name: 'avatars', detail: { tags: ['Avat
       return noContent();
     },
     {
-      response: {
-        204: t.Void(),
-        401: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...errors(401) },
       detail: { summary: "Remove the current user's avatar" },
     },
   )
@@ -147,7 +138,7 @@ export const avatarRoutes = new Elysia({ name: 'avatars', detail: { tags: ['Avat
     {
       params: t.Object({ id: t.String() }),
       // Public route: no 401/403. Returns raw bytes, so no typed 200 body.
-      response: { 404: ErrorResponse },
+      response: { ...errors(404) },
       detail: { summary: "Preview a user's avatar (public, no auth)" },
     },
   );

@@ -4,7 +4,7 @@ import { noContent } from '../shared/http';
 import { guards } from '../shared/guards';
 import { HttpError, rethrowDuplicate } from '../shared/lib';
 import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from '../shared/permissions';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { listRoles, getRole, createRole, updateRole, deleteRole } from './store';
 
 const roleParams = t.Object({ projectKey: t.String(), roleId: t.Numeric() });
@@ -46,10 +46,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     '/permission-catalog',
     () => ({ resources: [...PERMISSION_RESOURCES], actions: [...PERMISSION_ACTIONS] }),
     {
-      response: {
-        200: PermissionCatalogResponse,
-        401: ErrorResponse,
-      },
+      response: { 200: PermissionCatalogResponse, ...errors(401) },
       detail: {
         summary: 'List the permission catalog',
         description: "List the resources and actions a role's permission matrix is built from.",
@@ -66,12 +63,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     {
       params: t.Object({ projectKey: t.String() }),
       projectMember: true,
-      response: {
-        200: t.Array(RoleResponse),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(RoleResponse), ...accessErrors },
       detail: { summary: "List a project's roles", ...mcpTool('list_roles') },
     },
   )
@@ -90,14 +82,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       params: t.Object({ projectKey: t.String() }),
       body: t.Object({ name: t.String({ minLength: 1 }), permissions }),
       projectOwner: true,
-      response: {
-        201: RoleResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 201: RoleResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Create a role', ...mcpTool('create_role') },
     },
   )
@@ -121,14 +106,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
         permissions: t.Optional(permissions),
       }),
       projectOwner: true,
-      response: {
-        200: RoleResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        409: ErrorResponse,
-      },
+      response: { 200: RoleResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update a role',
         description: 'Update a role.',
@@ -151,13 +129,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     {
       params: roleParams,
       projectOwner: true,
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a role',
         description: 'Delete a custom role. The default role cannot be deleted.',

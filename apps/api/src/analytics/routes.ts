@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { guards } from '../shared/guards';
 import { mcpTool } from '../mcp/generate';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors } from '../shared/responses';
 import {
   getStats,
   getBreakdown,
@@ -138,12 +138,7 @@ export const analyticsRoutes = new Elysia({
     },
     {
       permission: ['dashboards', 'read'],
-      response: {
-        200: StatsDto,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: StatsDto, ...accessErrors },
       detail: {
         summary: 'Get project stats',
         description: 'Issue counts by state (open, in progress, overdue, and more).',
@@ -168,13 +163,7 @@ export const analyticsRoutes = new Elysia({
         ]),
       }),
       permission: ['dashboards', 'read'],
-      response: {
-        200: t.Array(BreakdownItem),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(BreakdownItem), ...commonErrors },
       detail: {
         summary: 'Get project breakdown',
         description: 'Issue counts grouped by a chosen dimension.',
@@ -199,13 +188,7 @@ export const analyticsRoutes = new Elysia({
         columns: t.Optional(t.Numeric()),
       }),
       permission: ['dashboards', 'read'],
-      response: {
-        200: t.Array(PulseBucket),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(PulseBucket), ...commonErrors },
       detail: {
         summary: 'Get project pulse',
         description: 'Activity counts over time for a heatmap.',
@@ -223,13 +206,7 @@ export const analyticsRoutes = new Elysia({
     {
       query: t.Object({ weeks: t.Optional(t.Numeric()) }),
       permission: ['dashboards', 'read'],
-      response: {
-        200: t.Array(ThroughputWeek),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(ThroughputWeek), ...commonErrors },
       detail: {
         summary: 'Get project throughput',
         description: 'Created versus closed issues over time.',
@@ -276,13 +253,7 @@ export const analyticsRoutes = new Elysia({
         issueIds: t.Optional(t.String()),
       }),
       permission: ['dashboards', 'read'],
-      response: {
-        200: ActivityPage,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ActivityPage, ...commonErrors },
       detail: {
         summary: 'Get project activity',
         description: 'Project-wide feed of issue activity.',
@@ -305,13 +276,7 @@ export const analyticsRoutes = new Elysia({
         limit: t.Optional(t.Numeric()),
       }),
       permission: ['dashboards', 'read'],
-      response: {
-        200: t.Array(AgentRunFeedItem),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(AgentRunFeedItem), ...commonErrors },
       detail: {
         summary: 'List agent runs',
         description: 'Project-wide feed of agent runs.',
@@ -329,13 +294,7 @@ export const analyticsRoutes = new Elysia({
     {
       query: t.Object({ days: t.Optional(t.Numeric()) }),
       permission: ['dashboards', 'read'],
-      response: {
-        200: AgentRunStatsDto,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: AgentRunStatsDto, ...commonErrors },
       detail: {
         summary: 'Get agent run stats',
         description: 'Agent run outcome counts (success, failed, pending).',
@@ -353,13 +312,7 @@ export const analyticsRoutes = new Elysia({
     {
       query: t.Object({ days: t.Optional(t.Numeric()) }),
       permission: ['dashboards', 'read'],
-      response: {
-        200: WebhookStatsDto,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: WebhookStatsDto, ...commonErrors },
       detail: {
         summary: 'Get webhook stats',
         description: 'Webhook delivery outcomes and active/disabled webhook counts.',
@@ -375,12 +328,7 @@ export const analyticsRoutes = new Elysia({
     },
     {
       permission: ['dashboards', 'read'],
-      response: {
-        200: t.Array(AgentWorkloadItem),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(AgentWorkloadItem), ...accessErrors },
       detail: {
         summary: 'Get agent workload',
         description: 'Per-agent open delegated issues and run outcomes.',

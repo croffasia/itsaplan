@@ -13,7 +13,7 @@ import {
 import { authContext } from '../shared/auth-context';
 import { requireGod } from '../shared/access';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { noContent } from '../shared/http';
 import { deleteProject } from '../projects/store';
 import {
@@ -221,7 +221,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       hasEmailProvider: await hasConfiguredEmailProvider(),
     }),
     {
-      response: { 200: AuthSettingsResponse, 401: ErrorResponse, 403: ErrorResponse },
+      response: { 200: AuthSettingsResponse, ...errors(401, 403) },
       detail: {
         summary: 'Get authentication settings',
         description: 'Get the instance registration mode and email-dependent auth options.',
@@ -243,12 +243,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
     {
       body: AuthSettingsBody,
-      response: {
-        200: AuthSettingsResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-      },
+      response: { 200: AuthSettingsResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'Update authentication settings',
         description: 'Update the instance registration mode and email-dependent auth options.',
@@ -257,7 +252,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   )
 
   .get('/god/email-settings', () => getEmailSettings(), {
-    response: { 200: EmailSettingsResponse, 401: ErrorResponse, 403: ErrorResponse },
+    response: { 200: EmailSettingsResponse, ...errors(401, 403) },
     detail: {
       summary: 'Get instance email settings',
       description: 'Get the mail provider used for authentication email (secrets redacted).',
@@ -266,12 +261,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
 
   .put('/god/email-settings', ({ body }) => setEmailSettings(body), {
     body: EmailSettingsBody,
-    response: {
-      200: EmailSettingsResponse,
-      400: ErrorResponse,
-      401: ErrorResponse,
-      403: ErrorResponse,
-    },
+    response: { 200: EmailSettingsResponse, ...errors(400, 401, 403) },
     detail: {
       summary: 'Update instance email settings',
       description: 'Update the mail provider used for authentication email.',
@@ -282,7 +272,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     '/god/google-settings',
     async () => ({ ...(await getGoogleSettings()), redirectUri: GOOGLE_REDIRECT_URI }),
     {
-      response: { 200: GoogleSettingsResponse, 401: ErrorResponse, 403: ErrorResponse },
+      response: { 200: GoogleSettingsResponse, ...errors(401, 403) },
       detail: {
         summary: 'Get Google sign-in settings',
         description: 'Get the Google OAuth credentials (the client secret redacted).',
@@ -306,12 +296,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
     {
       body: GoogleSettingsBody,
-      response: {
-        200: GoogleSettingsResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-      },
+      response: { 200: GoogleSettingsResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'Update Google sign-in settings',
         description: 'Update the Google OAuth credentials and whether Google sign-in is offered.',
@@ -320,7 +305,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   )
 
   .get('/god/storage-settings', () => getStorageSettings(), {
-    response: { 200: StorageSettingsSchema, 401: ErrorResponse, 403: ErrorResponse },
+    response: { 200: StorageSettingsSchema, ...errors(401, 403) },
     detail: {
       summary: 'Get storage limits',
       description: 'Get the instance upload limits: file sizes, accepted types, and project quota.',
@@ -329,12 +314,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
 
   .put('/god/storage-settings', ({ body }) => setStorageSettings(body), {
     body: StorageSettingsBody,
-    response: {
-      200: StorageSettingsSchema,
-      400: ErrorResponse,
-      401: ErrorResponse,
-      403: ErrorResponse,
-    },
+    response: { 200: StorageSettingsSchema, ...errors(400, 401, 403) },
     detail: {
       summary: 'Update storage limits',
       description:
@@ -343,7 +323,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   })
 
   .get('/god/hotkey-settings', () => getHotkeySettings(), {
-    response: { 200: HotkeyCombosSchema, 401: ErrorResponse, 403: ErrorResponse },
+    response: { 200: HotkeyCombosSchema, ...errors(401, 403) },
     detail: {
       summary: 'Get instance keyboard shortcuts',
       description:
@@ -353,12 +333,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
 
   .put('/god/hotkey-settings', ({ body }) => setHotkeySettings(body), {
     body: HotkeyCombosSchema,
-    response: {
-      200: HotkeyCombosSchema,
-      400: ErrorResponse,
-      401: ErrorResponse,
-      403: ErrorResponse,
-    },
+    response: { 200: HotkeyCombosSchema, ...errors(400, 401, 403) },
     detail: {
       summary: 'Update instance keyboard shortcuts',
       description:
@@ -371,7 +346,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   // sidebar hides the indicator from everyone else. The version alone is readable by
   // any signed-in user (/settings/version).
   .get('/god/updates', () => getUpdateStatus(), {
-    response: { 200: UpdateStatusSchema, 401: ErrorResponse, 403: ErrorResponse },
+    response: { 200: UpdateStatusSchema, ...errors(401, 403) },
     detail: {
       summary: 'Get the update status',
       description:
@@ -380,7 +355,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   })
 
   .post('/god/updates/check', () => getUpdateStatus(), {
-    response: { 200: UpdateStatusSchema, 401: ErrorResponse, 403: ErrorResponse },
+    response: { 200: UpdateStatusSchema, ...errors(401, 403) },
     detail: {
       summary: 'Check for updates now',
       description:
@@ -389,7 +364,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   })
 
   .get('/god/telegram-settings', () => getInstanceBotSettings(), {
-    response: { 200: TelegramSettingsResponse, 401: ErrorResponse, 403: ErrorResponse },
+    response: { 200: TelegramSettingsResponse, ...errors(401, 403) },
     detail: {
       summary: 'Get Telegram bot settings',
       description: 'Get the instance Telegram bot (the token redacted).',
@@ -416,12 +391,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
     {
       body: TelegramSettingsBody,
-      response: {
-        200: TelegramSettingsResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-      },
+      response: { 200: TelegramSettingsResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'Update Telegram bot settings',
         description:
@@ -450,9 +420,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       }),
       response: {
         200: t.Object({ items: t.Array(InstanceUserResponse), total: t.Number() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
+        ...errors(400, 401, 403),
       },
       detail: {
         summary: 'List instance users',
@@ -471,12 +439,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
     {
       params: t.Object({ userId: t.String() }),
-      response: {
-        200: InstanceUserDetailResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: InstanceUserDetailResponse, ...accessErrors },
       detail: {
         summary: 'Get an instance user',
         description:
@@ -494,12 +457,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
     {
       params: t.Object({ userId: t.String() }),
-      response: {
-        200: InstanceUserDetailResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: InstanceUserDetailResponse, ...accessErrors },
       detail: {
         summary: 'Confirm a user email address',
         description:
@@ -544,13 +502,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         // issue, comment and attachment in them goes too.
         withProjects: t.Optional(t.Boolean()),
       }),
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a user',
         description:
@@ -575,9 +527,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       }),
       response: {
         200: t.Object({ items: t.Array(InstanceProjectResponse), total: t.Number() }),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
+        ...errors(400, 401, 403),
       },
       detail: {
         summary: 'List instance projects',
@@ -596,13 +546,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
     {
       params: t.Object({ projectId: t.Numeric() }),
-      response: {
-        200: InstanceProjectDetailResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: InstanceProjectDetailResponse, ...commonErrors },
       detail: {
         summary: 'Get an instance project',
         description:

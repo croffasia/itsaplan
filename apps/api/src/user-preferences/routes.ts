@@ -3,7 +3,7 @@ import { authContext } from '../shared/auth-context';
 import { requireUser } from '../shared/access';
 import { getMembership } from '../members/store';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { errors } from '../shared/responses';
 import { HotkeyCombosSchema } from '../settings/hotkeys';
 import { getPreferences, isValidTimezone, updatePreferences } from './store';
 
@@ -67,7 +67,7 @@ export const userPreferenceRoutes = new Elysia({
   .use(authContext)
 
   .get('/account/preferences', ({ user }) => getPreferences(requireUser(user).id), {
-    response: { 200: PreferenceResponse, 401: ErrorResponse },
+    response: { 200: PreferenceResponse, ...errors(401) },
     detail: {
       summary: 'Get account preferences',
       description:
@@ -91,12 +91,7 @@ export const userPreferenceRoutes = new Elysia({
     },
     {
       body: PreferencePatch,
-      response: {
-        200: PreferenceResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-      },
+      response: { 200: PreferenceResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'Update account preferences',
         description:

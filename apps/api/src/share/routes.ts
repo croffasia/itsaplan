@@ -3,7 +3,7 @@ import { noContent } from '../shared/http';
 import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { commonErrors, errors } from '../shared/responses';
 import { getIssueProjectId } from '../issues/store';
 import { getView } from '../views/store';
 import {
@@ -72,13 +72,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       params: t.Object({ issueId: t.Numeric() }),
       body: ShareExtendedBody,
       workItem: 'edit',
-      response: {
-        200: ShareTokenResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ShareTokenResponse, ...commonErrors },
       detail: { summary: 'Enable issue sharing' },
     },
   )
@@ -93,13 +87,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     {
       params: t.Object({ issueId: t.Numeric() }),
       workItem: 'edit',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: { summary: 'Revoke issue sharing' },
     },
   )
@@ -115,13 +103,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
       params: t.Object({ viewId: t.Numeric() }),
       body: ShareExtendedBody,
       savedView: 'edit',
-      response: {
-        200: ShareTokenResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: ShareTokenResponse, ...commonErrors },
       detail: { summary: 'Enable view sharing' },
     },
   )
@@ -136,13 +118,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     {
       params: t.Object({ viewId: t.Numeric() }),
       savedView: 'edit',
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: { summary: 'Revoke view sharing' },
     },
   )
@@ -158,7 +134,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     },
     {
       params: tokenParams,
-      response: { 200: BundleResponse, 400: ErrorResponse, 404: ErrorResponse },
+      response: { 200: BundleResponse, ...errors(400, 404) },
       detail: { summary: 'Get a shared issue' },
     },
   )
@@ -172,7 +148,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     },
     {
       params: tokenParams,
-      response: { 200: BundleResponse, 400: ErrorResponse, 404: ErrorResponse },
+      response: { 200: BundleResponse, ...errors(400, 404) },
       detail: { summary: 'Get a shared view' },
     },
   )
@@ -186,7 +162,7 @@ export const shareRoutes = new Elysia({ name: 'share', detail: { tags: ['Share']
     },
     {
       params: t.Object({ token: t.String({ format: 'uuid' }), issueId: t.Numeric() }),
-      response: { 200: BundleResponse, 400: ErrorResponse, 404: ErrorResponse },
+      response: { 200: BundleResponse, ...errors(400, 404) },
       detail: { summary: 'Get an issue from a shared view' },
     },
   );

@@ -8,7 +8,7 @@ import { putObject, getObject, deleteObject } from '../shared/s3';
 import { assertPublicHttpUrl } from '../shared/net';
 import { getIssueProjectId } from '../issues/store';
 import { mcpTool } from '../mcp/generate';
-import { ErrorResponse } from '../shared/responses';
+import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { getStorageSettings, mimeAllowed, MB, type StorageSettings } from '../settings/storage';
 import {
   createAttachment,
@@ -126,13 +126,7 @@ export const attachmentRoutes = new Elysia({
     {
       params: issueParams,
       issueAttachment: 'read',
-      response: {
-        200: t.Array(AttachmentSchema),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: t.Array(AttachmentSchema), ...commonErrors },
       detail: {
         summary: 'List attachments',
         description: "List an issue's attachments by its numeric id.",
@@ -172,15 +166,7 @@ export const attachmentRoutes = new Elysia({
       body: t.Object({ file: t.File() }),
       params: issueParams,
       issueAttachment: 'create',
-      response: {
-        201: AttachmentSchema,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        413: ErrorResponse,
-        502: ErrorResponse,
-      },
+      response: { 201: AttachmentSchema, ...commonErrors, ...errors(413, 502) },
       detail: { summary: 'Upload an attachment' },
     },
   )
@@ -254,15 +240,7 @@ export const attachmentRoutes = new Elysia({
         contentType: t.Optional(t.String()),
       }),
       issueAttachment: 'create',
-      response: {
-        201: AttachmentSchema,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        413: ErrorResponse,
-        502: ErrorResponse,
-      },
+      response: { 201: AttachmentSchema, ...commonErrors, ...errors(413, 502) },
       detail: {
         summary: 'Add an attachment from a URL or base64',
         description: 'Attach a file to an issue without a multipart upload.',
@@ -319,15 +297,7 @@ export const attachmentRoutes = new Elysia({
     {
       body: t.Object({ file: t.File() }),
       attachment: 'edit',
-      response: {
-        200: AttachmentSchema,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        413: ErrorResponse,
-        502: ErrorResponse,
-      },
+      response: { 200: AttachmentSchema, ...commonErrors, ...errors(413, 502) },
       detail: { summary: "Replace an attachment's file" },
     },
   )
@@ -352,12 +322,7 @@ export const attachmentRoutes = new Elysia({
     },
     {
       attachment: 'delete',
-      response: {
-        204: t.Void(),
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete an attachment',
         description: 'Delete an attachment. Irreversible.',
@@ -416,9 +381,7 @@ export const attachmentRoutes = new Elysia({
       query: t.Object({ download: t.Optional(t.String()) }),
       // Public route: no 401/403. Returns a raw Response (bytes), so no typed 200
       // body — Elysia cannot validate a raw Response. Only the 404 it can throw.
-      response: {
-        404: ErrorResponse,
-      },
+      response: { ...errors(404) },
       detail: { summary: 'Download or preview an attachment (public, no auth)' },
     },
   );

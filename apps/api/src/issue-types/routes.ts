@@ -3,7 +3,7 @@ import { mcpTool } from '../mcp/generate';
 import { noContent } from '../shared/http';
 import { guards } from '../shared/guards';
 import { HttpError } from '../shared/lib';
-import { ErrorResponse } from '../shared/responses';
+import { commonErrors } from '../shared/responses';
 import { createIssueType, updateIssueType, deleteIssueType } from './store';
 
 const typeParams = t.Object({ projectKey: t.String(), typeId: t.Numeric() });
@@ -38,13 +38,7 @@ export const issueTypeRoutes = new Elysia({
         isDefault: t.Optional(t.Boolean()),
       }),
       permission: ['issue_types', 'create'],
-      response: {
-        201: IssueTypeResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 201: IssueTypeResponse, ...commonErrors },
       detail: {
         summary: 'Create an issue type',
         description:
@@ -69,13 +63,7 @@ export const issueTypeRoutes = new Elysia({
       }),
       params: typeParams,
       permission: ['issue_types', 'edit'],
-      response: {
-        200: IssueTypeResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 200: IssueTypeResponse, ...commonErrors },
       detail: {
         summary: 'Update an issue type',
         description: "Update an issue type's name, color, or default flag.",
@@ -93,13 +81,7 @@ export const issueTypeRoutes = new Elysia({
     {
       params: typeParams,
       permission: ['issue_types', 'delete'],
-      response: {
-        204: t.Void(),
-        400: ErrorResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-      },
+      response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete an issue type',
         description: 'Delete an issue type.',

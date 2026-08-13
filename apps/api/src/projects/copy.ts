@@ -30,10 +30,10 @@ import {
   createSkillFromFiles,
   setAgentSkills,
   listAgentSkills,
-} from '../agent-skills/store';
+} from '#modules/agents/skills/service';
 import { listAgentToolLinks, setAgentTools } from '../agent-tools/store';
-import { listAgentSchedules, createAgentSchedule } from '#modules/agent-schedules/service';
-import { nextCronRun } from '#modules/agent-schedules/cron';
+import { listAgentSchedules, createAgentSchedule } from '#modules/agents/schedules/service';
+import { nextCronRun } from '#modules/agents/schedules/cron';
 import { getObject } from '../shared/s3';
 
 // Which parts of a source project the copy carries over. Each key mirrors a section

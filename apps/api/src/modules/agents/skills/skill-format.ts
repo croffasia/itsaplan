@@ -1,4 +1,4 @@
-import { HttpError } from '../shared/lib';
+import { HttpError } from '#shared/lib';
 
 // Parsing and validation for skills in the Anthropic Agent Skill format: a SKILL.md
 // with YAML frontmatter (name/description) plus optional reference files, no

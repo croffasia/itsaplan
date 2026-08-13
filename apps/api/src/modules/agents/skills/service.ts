@@ -1,7 +1,7 @@
 import { db, agentSkill, agentSkillLink, aiAgent } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
-import { iso, rethrowDuplicate, HttpError } from '../shared/lib';
-import { putObject, getObjectText, deleteObjects } from '../shared/s3';
+import { iso, rethrowDuplicate, HttpError } from '#shared/lib';
+import { putObject, getObjectText, deleteObjects } from '#shared/s3';
 import { parseFrontmatter, isDisallowedRef } from './skill-format';
 
 // Data access for the project skill library. A skill's SKILL.md and reference files

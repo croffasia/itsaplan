@@ -8,6 +8,9 @@ Rules and invariants for this package below; read the code for the walkthrough.
 - Feature-based: one folder per domain under `src/modules/`, three files —
   `index.ts` (controller), `model.ts` (schemas), `service.ts` (Drizzle). Cross-cutting
   code in `shared/`. See `src/modules/` for the current set.
+- Features nest one level deeper only where they already call each other:
+  `modules/agents/{schedules,skills}`. A feature whose links to its neighbours run one
+  way stays flat.
 - `src/app.ts` assembles and exports the app (`export const app`, no `.listen()`);
   `src/index.ts` only binds the port. `export type App = typeof app` types the Eden
   Treaty client (web + tests).

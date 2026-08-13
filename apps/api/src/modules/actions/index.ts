@@ -1,10 +1,10 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../../shared/http';
-import { guards, entityGuard } from '../../shared/guards';
-import { authContext } from '../../shared/auth-context';
-import { HttpError } from '../../shared/lib';
-import { mcpTool } from '../../mcp/generate';
-import { accessErrors, commonErrors } from '../../shared/responses';
+import { noContent } from '#shared/http';
+import { guards, entityGuard } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { HttpError } from '#shared/lib';
+import { mcpTool } from '#mcp/generate';
+import { accessErrors, commonErrors } from '#shared/responses';
 import {
   ActionResponse,
   ActionListResponse,

@@ -1,6 +1,6 @@
 import { db, projectAction } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
-import { iso, num } from '../../shared/lib';
+import { iso, num } from '#shared/lib';
 
 // Manual actions: saved macros on a project. condition is a filter set deciding
 // which issues the action applies to (empty = always); effect is a partial issue

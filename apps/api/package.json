@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#shared/*": "./src/shared/*.ts",
+    "#mcp/*": "./src/mcp/*.ts",
+    "#modules/*": "./src/modules/*.ts",
+    "#tests/*": "./src/__tests__/*.ts"
+  },
   "scripts": {
     "dev": "bun --env-file=../../.env run --watch src/index.ts",
     "start": "bun run src/index.ts",

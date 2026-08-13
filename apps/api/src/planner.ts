@@ -28,7 +28,7 @@ import { noteBoardRoutes } from './note-boards/routes';
 import { analyticsRoutes } from './analytics/routes';
 import { settingsRoutes } from './settings/routes';
 import { godRoutes } from './god/routes';
-import { agentScheduleRoutes } from './agent-schedules/routes';
+import { agentScheduleRoutes } from './modules/agent-schedules';
 import { notificationRoutes } from './notifications/routes';
 import { notificationSettingsRoutes } from './notification-settings/routes';
 import { notificationPreferenceRoutes } from './notification-preferences/routes';

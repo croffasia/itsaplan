@@ -20,6 +20,13 @@ Rules and invariants for this package below; read the code for the walkthrough.
 - The features still sitting in `src/<feature>/` as `routes.ts` + `store.ts` predate
   this layout. Move one to `src/modules/` when you next change it; do not add a new
   feature in the old shape.
+- Imports inside a module are relative (`./model`); everything it reaches outside
+  itself goes through the subpath aliases in `apps/api/package.json` — `#shared/*`,
+  `#mcp/*`, `#modules/*`, `#tests/*`. They map to a `.ts` file (`"#shared/*":
+"./src/shared/*.ts"`), which is what makes both `tsc` and Bun resolve them, and they
+  resolve against the api's own `package.json`, so they hold in the Docker image where
+  the process starts from the repo root. A tsconfig `paths` alias would not: there is
+  no tsconfig.json at that root.
 
 ## Adding a route
 

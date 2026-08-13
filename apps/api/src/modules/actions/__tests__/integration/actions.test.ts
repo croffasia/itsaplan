@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi } from '../../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../../__tests__/helpers/auth';
-import { resetDb } from '../../../../__tests__/helpers/db';
+import { authedApi } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 async function setupOwnerProject() {
   const owner = await signUpTestUser();

@@ -1,7 +1,7 @@
 import { db, agentRun, agentSchedule, aiAgent, user } from '@repo/db';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { iso } from '../shared/lib';
-import { deleteThreadsWhere } from '../ai-agents/runtime/memory';
+import { iso } from '#shared/lib';
+import { deleteThreadsWhere } from '../../ai-agents/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
 

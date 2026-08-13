@@ -1,5 +1,5 @@
 import { Cron } from 'croner';
-import { HttpError } from '../shared/lib';
+import { HttpError } from '#shared/lib';
 
 export function nextCronRun(expression: string, from = new Date()): Date {
   try {

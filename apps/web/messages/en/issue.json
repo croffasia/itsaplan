@@ -198,7 +198,10 @@
   "customFields": {
     "noOptions": "No options.",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "time": "Time",
+    "startTime": "Start time",
+    "endTime": "End time"
   },
   "editor": {
     "linkUrl": "Link URL",

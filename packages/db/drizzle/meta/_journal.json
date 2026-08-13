@@ -526,6 +526,13 @@
       "when": 1786572699500,
       "tag": "0074_gigantic_lenny_balinger",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1786628860087,
+      "tag": "0075_left_rafael_vega",
+      "breakpoints": true
     }
   ]
 }

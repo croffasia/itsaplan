@@ -561,6 +561,145 @@ describe('issues', () => {
       expect((await fieldValue(asOwner, issue.id, field.id))?.value).toBe(true);
     });
 
+    // Treaty revives an ISO datetime into a Date, so the moment is compared, not
+    // the shape it arrives in.
+    function asIso(value: unknown): string {
+      return new Date(value as string).toISOString();
+    }
+
+    it('stores and reads back a datetime field value', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Kickoff', fieldType: 'datetime' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: '2026-09-16T07:30:00.000Z' });
+      expect(put.status).toBe(200);
+
+      const stored = await fieldValue(asOwner, issue.id, field.id);
+      expect(asIso(stored?.value)).toBe('2026-09-16T07:30:00.000Z');
+      expect(stored?.valueEnd).toBeNull();
+    });
+
+    it('stores and reads back both ends of a datetime range', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Slot', fieldType: 'datetime_range' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: '2026-09-16T07:30:00.000Z', valueEnd: '2026-09-16T09:30:00.000Z' });
+      expect(put.status).toBe(200);
+
+      const stored = await fieldValue(asOwner, issue.id, field.id);
+      expect(asIso(stored?.value)).toBe('2026-09-16T07:30:00.000Z');
+      expect(asIso(stored?.valueEnd)).toBe('2026-09-16T09:30:00.000Z');
+    });
+
+    it('rejects an unparseable datetime', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Kickoff', fieldType: 'datetime' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: 'not-a-datetime' });
+      expect(put.status).toBe(400);
+    });
+
+    it('rejects a datetime without a time of day', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Kickoff', fieldType: 'datetime' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: '2026-09-16' });
+      expect(put.status).toBe(400);
+    });
+
+    it('rejects a range whose end is not after its start', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Slot', fieldType: 'datetime_range' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const fields = asOwner.issues({ issueId: issue.id }).fields({ fieldId: field.id });
+
+      const equal = await fields.put({
+        value: '2026-09-16T07:30:00.000Z',
+        valueEnd: '2026-09-16T07:30:00.000Z',
+      });
+      expect(equal.status).toBe(400);
+
+      const before = await fields.put({
+        value: '2026-09-16T07:30:00.000Z',
+        valueEnd: '2026-09-16T06:30:00.000Z',
+      });
+      expect(before.status).toBe(400);
+    });
+
+    it('rejects a range end without a start', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Slot', fieldType: 'datetime_range' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: null, valueEnd: '2026-09-16T09:30:00.000Z' });
+      expect(put.status).toBe(400);
+    });
+
+    it('clears both ends of a datetime range when set to null', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Slot', fieldType: 'datetime_range' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const fields = asOwner.issues({ issueId: issue.id }).fields({ fieldId: field.id });
+      await fields.put({
+        value: '2026-09-16T07:30:00.000Z',
+        valueEnd: '2026-09-16T09:30:00.000Z',
+      });
+
+      const cleared = await fields.put({ value: null });
+      expect(cleared.status).toBe(200);
+
+      const stored = await fieldValue(asOwner, issue.id, field.id);
+      expect(stored?.value).toBeNull();
+      expect(stored?.valueEnd).toBeNull();
+    });
+
     it('clears a field value when set to null', async () => {
       const { asOwner, columnId } = await setupProject();
       const field = (

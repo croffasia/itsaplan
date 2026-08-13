@@ -1,11 +1,12 @@
 import { addDays, startOfMonth, startOfWeek } from 'date-fns';
-import { type Issue } from '@/lib/api';
-import type { ViewSettings } from '@/utils/viewSettings';
+import { type CustomField, type Issue } from '@/lib/api';
+import { issueDay } from '@/utils/calendarFields';
+import type { BuiltinDateField, ViewSettings } from '@/utils/viewSettings';
 
 // The calendar layout for the visible month: issues bucketed by their chosen date
-// (due or start), the rest collected as unscheduled, the weekday headers rotated
-// to the chosen first day, and the six-week day grid (a constant height regardless
-// of month length).
+// (a built-in column or a date custom field), the rest collected as unscheduled,
+// the weekday headers rotated to the chosen first day, and the six-week day grid
+// (a constant height regardless of month length).
 export interface CalendarModel {
   byDay: Map<string, Issue[]>;
   unscheduled: Issue[];
@@ -15,7 +16,9 @@ export interface CalendarModel {
 
 export function buildCalendarModel(
   issues: Issue[],
-  dateField: ViewSettings['calendarDateField'],
+  builtin: BuiltinDateField,
+  // The custom field the issues are placed by, or null for the built-in column.
+  custom: CustomField | null,
   weekStart: ViewSettings['weekStart'],
   cursor: Date,
   // The seven weekday names, Sunday first, in the reader's language.
@@ -24,11 +27,11 @@ export function buildCalendarModel(
   const byDay = new Map<string, Issue[]>();
   const unscheduled: Issue[] = [];
   for (const issue of issues) {
-    const value = issue[dateField];
-    if (value) {
-      const list = byDay.get(value) ?? [];
+    const day = issueDay(issue, builtin, custom);
+    if (day) {
+      const list = byDay.get(day) ?? [];
       list.push(issue);
-      byDay.set(value, list);
+      byDay.set(day, list);
     } else {
       unscheduled.push(issue);
     }

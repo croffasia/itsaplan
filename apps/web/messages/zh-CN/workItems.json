@@ -47,11 +47,13 @@
     },
     "noDate": {
       "dueDate": "无截止日期",
-      "startDate": "无开始日期"
+      "startDate": "无开始日期",
+      "custom": "无日期"
     },
     "allDated": {
       "dueDate": "所有工作项都已设置截止日期。",
-      "startDate": "所有工作项都已设置开始日期。"
+      "startDate": "所有工作项都已设置开始日期。",
+      "custom": "所有工作项都已设置日期。"
     }
   },
   "timeline": {

@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   api,
   type BulkIssuePatch,
+  type IssueFieldValueEntry,
   type IssueFieldValueInput,
   type IssuePatch,
   type NewIssueInput,
@@ -179,9 +180,26 @@ export function useRestoreIssue(projectKey: string | null) {
   });
 }
 
-// Setting a custom field value. Invalidates the issue (the value lives on it),
-// its activity feed, and — since the project's issues carry field values for
-// filtering — the project detail.
+// The issue's field values with one field's entry replaced by what is being sent.
+function patchFieldValues(
+  entries: IssueFieldValueEntry[],
+  fieldId: number,
+  input: IssueFieldValueInput,
+): IssueFieldValueEntry[] {
+  const entry: IssueFieldValueEntry = {
+    fieldId,
+    value: input.value ?? null,
+    valueEnd: input.valueEnd ?? null,
+    optionIds: input.optionIds ?? [],
+  };
+  const rest = entries.filter((e) => e.fieldId !== fieldId);
+  return [...rest, entry];
+}
+
+// Setting a custom field value. The project detail is patched optimistically (a
+// Calendar placed by a date custom field moves the card on drop, before the
+// request resolves), then invalidated on settle together with the issue and its
+// activity feed.
 export function useSetFieldValue(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
@@ -194,6 +212,26 @@ export function useSetFieldValue(projectKey: string | null) {
       fieldId: number;
       value: IssueFieldValueInput;
     }) => api.setFieldValue(issueId, fieldId, value),
+    onMutate: async ({ issueId, fieldId, value }) => {
+      if (!projectKey) return {};
+      const key = qk.boardIssues(projectKey);
+      await qc.cancelQueries({ queryKey: key });
+      const prev = qc.getQueryData<BoardIssues>(key);
+      if (prev) {
+        qc.setQueryData<BoardIssues>(key, {
+          ...prev,
+          issues: prev.issues.map((i) =>
+            i.id === issueId
+              ? { ...i, fieldValues: patchFieldValues(i.fieldValues, fieldId, value) }
+              : i,
+          ),
+        });
+      }
+      return { prev, key };
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev && ctx.key) qc.setQueryData(ctx.key, ctx.prev);
+    },
     onSettled: (_data, _err, { issueId }) => {
       void qc.invalidateQueries({ queryKey: qk.issue(issueId) });
       void qc.invalidateQueries({ queryKey: qk.feed(issueId) });

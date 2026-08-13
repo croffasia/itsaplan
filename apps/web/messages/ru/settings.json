@@ -447,6 +447,8 @@
       "number": "число",
       "boolean": "флажок",
       "date": "дата",
+      "datetime": "дата и время",
+      "datetime_range": "дата и диапазон времени",
       "select": "выбор",
       "multi_select": "мультивыбор"
     },

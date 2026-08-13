@@ -92,7 +92,10 @@ export function offeredDisplayProperties(features: ProjectFeatures): DisplayProp
 export type TimelineScale = 'week' | 'month' | 'quarter';
 
 // Which date drives Calendar placement (and the Timeline is start->due always).
-export type DateField = 'dueDate' | 'startDate';
+// A `cf:<id>` key places the issues by a date, datetime or datetime range custom
+// field; a stale key (a since-deleted field) falls back to the due date.
+export type BuiltinDateField = 'dueDate' | 'startDate';
+export type DateField = BuiltinDateField | CustomFieldKey;
 
 // date-fns weekStartsOn: 0 Sunday, 1 Monday.
 export type WeekStart = 0 | 1;
@@ -279,7 +282,9 @@ export function normalizeViewSettings(
     timelineCollapseAll:
       typeof s.timelineCollapseAll === 'boolean' ? s.timelineCollapseAll : d.timelineCollapseAll,
     calendarDateField:
-      s.calendarDateField === 'startDate' || s.calendarDateField === 'dueDate'
+      s.calendarDateField === 'startDate' ||
+      s.calendarDateField === 'dueDate' ||
+      (typeof s.calendarDateField === 'string' && isCustomFieldKey(s.calendarDateField))
         ? s.calendarDateField
         : d.calendarDateField,
     weekStart: s.weekStart === 0 || s.weekStart === 1 ? s.weekStart : d.weekStart,

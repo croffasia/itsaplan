@@ -47,11 +47,13 @@
     },
     "noDate": {
       "dueDate": "No due date",
-      "startDate": "No start date"
+      "startDate": "No start date",
+      "custom": "No date"
     },
     "allDated": {
       "dueDate": "Everything has a due date.",
-      "startDate": "Everything has a start date."
+      "startDate": "Everything has a start date.",
+      "custom": "Everything has a date."
     }
   },
   "timeline": {

@@ -487,7 +487,16 @@ export async function* streamAiAgentRun(
 }
 
 export type CustomFieldType =
-  'text' | 'markdown' | 'url' | 'number' | 'boolean' | 'date' | 'select' | 'multi_select';
+  | 'text'
+  | 'markdown'
+  | 'url'
+  | 'number'
+  | 'boolean'
+  | 'date'
+  | 'datetime'
+  | 'datetime_range'
+  | 'select'
+  | 'multi_select';
 
 export interface CustomFieldOption {
   id: number;
@@ -509,11 +518,13 @@ export interface CustomField {
 }
 
 // One custom field value on a project issue: the scalar value (null for
-// select/multi_select and unset fields) and the selected option ids. Only
-// fields with a value set appear; unset fields are omitted (see listIssues).
+// select/multi_select and unset fields), the end of a datetime_range, and the
+// selected option ids. Only fields with a value set appear; unset fields are
+// omitted (see listIssues).
 export interface IssueFieldValueEntry {
   fieldId: number;
   value: string | number | boolean | null;
+  valueEnd: string | null;
   optionIds: number[];
 }
 
@@ -1440,14 +1451,16 @@ export interface IssueFieldValue {
   name: string;
   fieldType: CustomFieldType;
   value: string | number | boolean | null;
+  valueEnd: string | null;
   optionIds: number[];
 }
 
 // A custom field value on the way in (setFieldValue). `value` carries the
-// scalar types, `optionIds` the select/multi_select ones; a field uses one or
-// the other.
+// scalar types, `valueEnd` the end of a datetime_range, `optionIds` the
+// select/multi_select ones; a field uses one or the other.
 export interface IssueFieldValueInput {
   value?: string | number | boolean | null;
+  valueEnd?: string | null;
   optionIds?: number[];
 }
 

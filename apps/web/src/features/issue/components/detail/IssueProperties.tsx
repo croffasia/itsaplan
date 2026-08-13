@@ -260,7 +260,7 @@ export default function IssueProperties({
         className={cn('h-7', open && 'mb-3')}
       />
       {open && (
-        <div className="grid grid-cols-[104px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
+        <div className="grid grid-cols-[180px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
       )}
     </div>
   );

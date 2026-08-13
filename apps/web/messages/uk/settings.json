@@ -447,6 +447,8 @@
       "number": "число",
       "boolean": "прапорець",
       "date": "дата",
+      "datetime": "дата й час",
+      "datetime_range": "дата й діапазон часу",
       "select": "вибір",
       "multi_select": "мультивибір"
     },

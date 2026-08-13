@@ -10,7 +10,16 @@ import { getIssueTypeById } from '../../issue-types/store';
 // set on issues (ON DELETE CASCADE on the field_id foreign keys).
 
 export type CustomFieldType =
-  'text' | 'markdown' | 'url' | 'number' | 'boolean' | 'date' | 'select' | 'multi_select';
+  | 'text'
+  | 'markdown'
+  | 'url'
+  | 'number'
+  | 'boolean'
+  | 'date'
+  | 'datetime'
+  | 'datetime_range'
+  | 'select'
+  | 'multi_select';
 
 export interface CustomFieldOptionRow {
   id: number;

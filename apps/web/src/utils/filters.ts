@@ -4,6 +4,7 @@
 // issues are handed to the view. The server never inspects this shape.
 
 import type { ProjectDetail, StateType, Issue } from '@/lib/api';
+import { dayKey } from '@/utils/dates';
 
 // The built-in fields a condition can target. Custom fields are targeted with
 // the string `cf:<fieldId>` (see customFieldKey / parseCustomFieldKey).
@@ -65,10 +66,12 @@ function isEffectiveCondition(cond: FilterCondition): boolean {
 }
 
 // Normalizes any date the store returns to a "YYYY-MM-DD" day for comparison:
-// due/start dates are already that; created/updated are ISO datetimes, so the
-// date part is sliced off. String comparison on this format orders correctly.
+// due/start dates are already that; a moment (created/updated, a datetime custom
+// field) is taken by the day it falls on in the user's zone, which is the day the
+// views render it as. String comparison on this format orders correctly.
 function toDay(value: string | null): string | null {
-  return value ? value.slice(0, 10) : null;
+  if (!value) return null;
+  return value.length <= 10 ? value : dayKey(value);
 }
 
 // The issue's value(s) for a built-in set-membership field, as an array so

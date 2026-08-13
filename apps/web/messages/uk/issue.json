@@ -198,7 +198,10 @@
   "customFields": {
     "noOptions": "Варіантів немає.",
     "yes": "Так",
-    "no": "Ні"
+    "no": "Ні",
+    "time": "Час",
+    "startTime": "Початок",
+    "endTime": "Завершення"
   },
   "editor": {
     "linkUrl": "URL посилання",

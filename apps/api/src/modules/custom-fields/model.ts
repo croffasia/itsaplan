@@ -7,6 +7,8 @@ const fieldType = t.Union([
   t.Literal('number'),
   t.Literal('boolean'),
   t.Literal('date'),
+  t.Literal('datetime'),
+  t.Literal('datetime_range'),
   t.Literal('select'),
   t.Literal('multi_select'),
 ]);

@@ -1,6 +1,9 @@
 import { type CustomField, type IssueFieldValue, type IssueFieldValueInput } from '@/lib/api';
+import { formatDate, formatDateTimeRange } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import DatePill from '@/components/common/fields/DatePill';
+import DateTimePill from '@/components/common/fields/DateTimePill';
 import {
   Select,
   SelectContent,
@@ -34,6 +37,7 @@ export default function IssueCustomFieldControl({
   readOnly?: boolean;
 }) {
   const t = useTranslations('issue.customFields');
+  const tFields = useTranslations('issue.fields');
   // Read-only: show the current value statically, no editor.
   if (readOnly) {
     if (def.fieldType === 'select' || def.fieldType === 'multi_select') {
@@ -59,11 +63,14 @@ export default function IssueCustomFieldControl({
       return <span className="text-sm">{current?.value ? t('yes') : t('no')}</span>;
     }
     const v = current?.value;
-    return (
-      <span className="text-sm">
-        {v == null || v === '' ? <span className="text-muted-foreground">—</span> : String(v)}
-      </span>
-    );
+    if (v == null || v === '') return <span className="text-sm text-muted-foreground">—</span>;
+    if (def.fieldType === 'date') return <span className="text-sm">{formatDate(String(v))}</span>;
+    if (def.fieldType === 'datetime' || def.fieldType === 'datetime_range') {
+      return (
+        <span className="text-sm">{formatDateTimeRange(String(v), current?.valueEnd ?? null)}</span>
+      );
+    }
+    return <span className="text-sm">{String(v)}</span>;
   }
 
   if (def.fieldType === 'url') {
@@ -76,7 +83,29 @@ export default function IssueCustomFieldControl({
     );
   }
 
-  if (def.fieldType === 'text' || def.fieldType === 'number' || def.fieldType === 'date') {
+  if (def.fieldType === 'date') {
+    return (
+      <DatePill
+        value={(current?.value as string | null) ?? null}
+        placeholder={tFields('empty')}
+        onChange={(v) => onChange({ value: v })}
+      />
+    );
+  }
+
+  if (def.fieldType === 'datetime' || def.fieldType === 'datetime_range') {
+    return (
+      <DateTimePill
+        value={(current?.value as string | null) ?? null}
+        valueEnd={current?.valueEnd ?? null}
+        range={def.fieldType === 'datetime_range'}
+        placeholder={tFields('empty')}
+        onChange={(value, valueEnd) => onChange({ value, valueEnd })}
+      />
+    );
+  }
+
+  if (def.fieldType === 'text' || def.fieldType === 'number') {
     return (
       <InlineTextField
         value={(current?.value as string | number | null) ?? null}

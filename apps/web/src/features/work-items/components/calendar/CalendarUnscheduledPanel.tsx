@@ -2,7 +2,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { useTranslations } from 'next-intl';
 import { type ProjectDetail, type Issue } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { type DateField } from '@/utils/viewSettings';
+import { isCustomFieldKey, type DateField } from '@/utils/viewSettings';
 import { CalendarUnscheduledCard } from './CalendarUnscheduledCard';
 
 // Droppable id for the unscheduled panel; day cells use `day:<YYYY-MM-DD>`.
@@ -24,6 +24,8 @@ export function CalendarUnscheduledPanel({
 }) {
   const t = useTranslations('workItems.calendar');
   const { setNodeRef, isOver } = useDroppable({ id: UNSCHEDULED_ID });
+  // A custom field placement has no wording of its own; it reads as a plain date.
+  const key = isCustomFieldKey(dateField) ? 'custom' : dateField;
   return (
     <div
       ref={setNodeRef}
@@ -33,7 +35,7 @@ export function CalendarUnscheduledPanel({
       )}
     >
       <div className="mb-2 flex items-center gap-2 text-sm font-medium text-muted-foreground">
-        {t(`noDate.${dateField}`)}
+        {t(`noDate.${key}`)}
         <span className="text-muted-foreground">{issues.length}</span>
       </div>
       <div className="flex flex-col gap-1 overflow-y-auto">
@@ -47,7 +49,7 @@ export function CalendarUnscheduledPanel({
           />
         ))}
         {issues.length === 0 && (
-          <span className="text-xs text-muted-foreground/50">{t(`allDated.${dateField}`)}</span>
+          <span className="text-xs text-muted-foreground/50">{t(`allDated.${key}`)}</span>
         )}
       </div>
     </div>

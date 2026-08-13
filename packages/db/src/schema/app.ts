@@ -734,7 +734,7 @@ export const customField = pgTable(
   (t) => [
     check(
       'custom_field_field_type_check',
-      sql`${t.fieldType} IN ('text', 'markdown', 'url', 'number', 'boolean', 'date', 'select', 'multi_select')`,
+      sql`${t.fieldType} IN ('text', 'markdown', 'url', 'number', 'boolean', 'date', 'datetime', 'datetime_range', 'select', 'multi_select')`,
     ),
   ],
 );
@@ -992,6 +992,10 @@ export const issueFieldValue = pgTable(
     valueNumber: numeric('value_number'),
     valueBool: boolean('value_bool'),
     valueDate: date('value_date'),
+    // datetime and datetime_range fields. A datetime_range keeps its end here;
+    // for a datetime the end stays NULL.
+    valueDatetime: timestamp('value_datetime', { withTimezone: true }),
+    valueDatetimeEnd: timestamp('value_datetime_end', { withTimezone: true }),
   },
   (t) => [unique().on(t.issueId, t.fieldId)],
 );

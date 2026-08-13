@@ -1,6 +1,6 @@
 import { Check, ExternalLink } from 'lucide-react';
 import { type CustomField, type Issue } from '@/lib/api';
-import { formatShortDate } from '@/utils/dates';
+import { formatDateTimeRange, formatShortDate } from '@/utils/dates';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { MarkdownCell } from './MarkdownCell';
 
@@ -46,6 +46,13 @@ export function TableCustomCell({ field, issue }: { field: CustomField; issue: I
   if (raw == null || raw === '') return <div>{DASH}</div>;
   if (field.fieldType === 'date')
     return <div className="text-xs text-muted-foreground">{formatShortDate(String(raw))}</div>;
+  if (field.fieldType === 'datetime' || field.fieldType === 'datetime_range') {
+    return (
+      <div className="truncate text-xs text-muted-foreground">
+        {formatDateTimeRange(String(raw), entry?.valueEnd ?? null)}
+      </div>
+    );
+  }
   // Url fields render as a link that opens in a new tab; stopPropagation so the
   // click follows the link instead of opening the issue row behind it.
   if (field.fieldType === 'url') {

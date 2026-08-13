@@ -23,6 +23,8 @@ const FIELD_TYPES: CustomFieldType[] = [
   'number',
   'boolean',
   'date',
+  'datetime',
+  'datetime_range',
   'select',
   'multi_select',
 ];

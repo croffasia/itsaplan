@@ -47,11 +47,13 @@
     },
     "noDate": {
       "dueDate": "Без дедлайну",
-      "startDate": "Без дати початку"
+      "startDate": "Без дати початку",
+      "custom": "Без дати"
     },
     "allDated": {
       "dueDate": "Усе має дедлайн.",
-      "startDate": "Усе має дату початку."
+      "startDate": "Усе має дату початку.",
+      "custom": "Усе має дату."
     }
   },
   "timeline": {

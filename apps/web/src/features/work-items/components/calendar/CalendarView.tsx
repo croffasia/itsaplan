@@ -12,7 +12,12 @@ import { type Issue } from '@/lib/api';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
 import { toDateStr } from '@/utils/dates';
 import { useDndSensors } from '@/lib/dnd';
-import { useUpdateIssue } from '@/services/issues.service';
+import { useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
+import {
+  calendarBuiltinField,
+  calendarCustomField,
+  rescheduleFieldValue,
+} from '@/utils/calendarFields';
 import { buildCalendarModel } from '../../utils/calendar';
 import { CalendarMonthNav } from './CalendarMonthNav';
 import { CalendarDayCell } from './CalendarDayCell';
@@ -29,25 +34,41 @@ export default function CalendarView({
 }: WorkItemsViewProps) {
   const t = useTranslations('workItems.calendar');
   const updateIssue = useUpdateIssue(project.project.key);
+  const setFieldValue = useSetFieldValue(project.project.key);
   const [cursor, setCursor] = useState<Date>(() => startOfMonth(new Date()));
   const [activeId, setActiveId] = useState<number | null>(null);
   const sensors = useDndSensors(readOnly);
 
-  const dateField = settings.calendarDateField;
+  const builtinField = calendarBuiltinField(settings.calendarDateField);
+  const customFieldDef = calendarCustomField(settings.calendarDateField, project.customFields);
   const today = new Date();
   const maps = buildMaps(project);
   const dot = (issue: Issue) => issueColor(issue, maps);
 
   const { byDay, unscheduled, weekdays, days } = buildCalendarModel(
     project.issues,
-    dateField,
+    builtinField,
+    customFieldDef,
     settings.weekStart,
     cursor,
     WEEKDAY_KEYS.map((key) => t(`weekdays.${key}`)),
   );
 
-  function reschedule(issueId: number, value: string | null) {
-    updateIssue.mutate({ id: issueId, patch: { [dateField]: value } });
+  // A drop moves the field the calendar is placed by: the built-in column, or the
+  // custom field's value (which keeps its time of day and, for a range, its
+  // length).
+  function reschedule(issueId: number, day: string | null) {
+    if (!customFieldDef) {
+      updateIssue.mutate({ id: issueId, patch: { [builtinField]: day } });
+      return;
+    }
+    const issue = project.issues.find((i) => i.id === issueId);
+    if (!issue) return;
+    setFieldValue.mutate({
+      issueId,
+      fieldId: customFieldDef.id,
+      value: rescheduleFieldValue(issue, customFieldDef, day),
+    });
   }
 
   function handleDragEnd(e: DragEndEvent) {
@@ -105,7 +126,7 @@ export default function CalendarView({
 
         <CalendarUnscheduledPanel
           project={project}
-          dateField={dateField}
+          dateField={settings.calendarDateField}
           issues={unscheduled}
           dot={dot}
           onOpen={onOpenIssue}

@@ -12,6 +12,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { colorDot } from '@/components/common/fields/colorDot';
+import DatePill from '@/components/common/fields/DatePill';
+import DateTimePill from '@/components/common/fields/DateTimePill';
 import { Pill } from '@/components/common/fields/Pill';
 import { useTranslations } from 'next-intl';
 
@@ -107,7 +109,29 @@ export default function IssueCustomFieldPill({
     );
   }
 
-  // text / number / date
+  if (def.fieldType === 'date') {
+    return (
+      <DatePill
+        value={(value?.value as string | null) ?? null}
+        placeholder={def.name}
+        onChange={(v) => onChange({ value: v })}
+      />
+    );
+  }
+
+  if (def.fieldType === 'datetime' || def.fieldType === 'datetime_range') {
+    return (
+      <DateTimePill
+        value={(value?.value as string | null) ?? null}
+        valueEnd={value?.valueEnd ?? null}
+        range={def.fieldType === 'datetime_range'}
+        placeholder={def.name}
+        onChange={(v, valueEnd) => onChange({ value: v, valueEnd })}
+      />
+    );
+  }
+
+  // text / number / url
   const raw = value?.value;
   const hasValue = raw != null && raw !== '';
   return (

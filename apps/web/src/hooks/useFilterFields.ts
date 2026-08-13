@@ -27,6 +27,8 @@ function customFieldKind(field: CustomField): FieldKind {
     case 'boolean':
       return 'boolean';
     case 'date':
+    case 'datetime':
+    case 'datetime_range':
       return 'date';
     default:
       return 'text'; // text, markdown

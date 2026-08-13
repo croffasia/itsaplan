@@ -198,7 +198,10 @@
   "customFields": {
     "noOptions": "Вариантов нет.",
     "yes": "Да",
-    "no": "Нет"
+    "no": "Нет",
+    "time": "Время",
+    "startTime": "Начало",
+    "endTime": "Окончание"
   },
   "editor": {
     "linkUrl": "URL ссылки",

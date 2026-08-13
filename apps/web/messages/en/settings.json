@@ -447,6 +447,8 @@
       "number": "number",
       "boolean": "checkbox",
       "date": "date",
+      "datetime": "date & time",
+      "datetime_range": "date & time range",
       "select": "select",
       "multi_select": "multi-select"
     },

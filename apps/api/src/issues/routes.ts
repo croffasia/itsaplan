@@ -93,10 +93,11 @@ async function purgeObjects(attachments: { s3Key: string }[]): Promise<void> {
 // --- Response DTO schemas (mirror the store interfaces the handlers return) -------
 
 // IssueFieldValueEntry from the store: a compact custom field value carried on an
-// issue (scalar value plus selected option ids).
+// issue (scalar value, the end of a datetime_range, and selected option ids).
 const IssueFieldValueEntry = t.Object({
   fieldId: t.Number(),
   value: t.Nullable(t.Union([t.String(), t.Number(), t.Boolean()])),
+  valueEnd: t.Nullable(t.String()),
   optionIds: t.Array(t.Number()),
 });
 
@@ -142,6 +143,7 @@ const IssueFieldValueRow = t.Object({
   name: t.String(),
   fieldType: t.String(),
   value: t.Nullable(t.Union([t.String(), t.Number(), t.Boolean()])),
+  valueEnd: t.Nullable(t.String()),
   optionIds: t.Array(t.Number()),
 });
 
@@ -947,7 +949,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
 
   // Sets one custom field's value on one issue. For select/multi_select fields,
   // body.optionIds replaces the full selection; for every other field type,
-  // body.value must match the field's type (text/number/boolean/date).
+  // body.value must match the field's type (text/number/boolean/date/datetime).
+  // A datetime_range takes its end in body.valueEnd.
   .put(
     '/issues/:issueId/fields/:fieldId',
     async ({ params, body, user, projectId }) => {
@@ -963,6 +966,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       body: t.Object({
         value: t.Optional(t.Nullable(t.Union([t.String(), t.Number(), t.Boolean()]))),
+        valueEnd: t.Optional(t.Nullable(t.String())),
         optionIds: t.Optional(t.Array(t.Integer())),
       }),
       params: t.Object({ issueId: t.Numeric(), fieldId: t.Numeric() }),

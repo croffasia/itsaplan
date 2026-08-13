@@ -198,7 +198,10 @@
   "customFields": {
     "noOptions": "暂无选项。",
     "yes": "是",
-    "no": "否"
+    "no": "否",
+    "time": "时间",
+    "startTime": "开始时间",
+    "endTime": "结束时间"
   },
   "editor": {
     "linkUrl": "链接 URL",

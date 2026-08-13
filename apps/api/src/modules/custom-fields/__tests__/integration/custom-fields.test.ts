@@ -129,6 +129,18 @@ describe('custom-fields', () => {
       expect(res.status).toBe(400);
     });
 
+    it('creates the datetime field types', async () => {
+      const { asOwner } = await setupProject();
+
+      const moment = await fields(asOwner).post({ name: 'Kickoff', fieldType: 'datetime' });
+      expect(moment.status).toBe(201);
+      expect(moment.data).toMatchObject({ fieldType: 'datetime' });
+
+      const slot = await fields(asOwner).post({ name: 'Slot', fieldType: 'datetime_range' });
+      expect(slot.status).toBe(201);
+      expect(slot.data).toMatchObject({ fieldType: 'datetime_range' });
+    });
+
     it('rejects an unknown field type', async () => {
       const { asOwner } = await setupProject();
       const res = await fields(asOwner).post({

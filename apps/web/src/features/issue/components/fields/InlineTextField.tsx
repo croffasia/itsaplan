@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTranslations } from 'next-intl';
 
-// Text/number/date custom field: shows the value as a ghost pill and switches to
+// Text/number custom field: shows the value as a ghost pill and switches to
 // an input on click, so an unset field reads as a compact "Empty" rather than a
 // full-width empty box.
 export default function InlineTextField({
@@ -15,7 +15,7 @@ export default function InlineTextField({
   onSave,
 }: {
   value: string | number | null;
-  fieldType: 'text' | 'number' | 'date';
+  fieldType: 'text' | 'number';
   saveKey: string;
   onSave: (v: string | number | null) => void;
 }) {

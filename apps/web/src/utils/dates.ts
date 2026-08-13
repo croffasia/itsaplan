@@ -99,6 +99,57 @@ export function formatDateTime(value: string): string {
   });
 }
 
+// The display zone's offset at a given moment, in ms (zone time minus UTC).
+function zoneOffsetMs(date: Date): number {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    ...zoneOption(),
+  }).formatToParts(date);
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value);
+  const asUtc = Date.UTC(
+    part('year'),
+    part('month') - 1,
+    part('day'),
+    part('hour'),
+    part('minute'),
+    part('second'),
+  );
+  return asUtc - date.getTime();
+}
+
+// The "YYYY-MM-DD" day and "HH:mm" time a moment falls on in the user's zone —
+// the parts a date-time picker edits. Null for an unparseable value.
+export function toZonedParts(value: string): { day: string; time: string } | null {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const shifted = new Date(date.getTime() + zoneOffsetMs(date)).toISOString();
+  return { day: shifted.slice(0, 10), time: shifted.slice(11, 16) };
+}
+
+// The moment a day + time in the user's zone stands for, as an ISO string. The
+// offset is resolved against the result as well, so a time on a DST switch lands
+// on the offset in force at the moment itself.
+export function fromZonedParts(day: string, time: string): string {
+  const asUtc = new Date(`${day}T${time}:00Z`);
+  const first = new Date(asUtc.getTime() - zoneOffsetMs(asUtc));
+  return new Date(asUtc.getTime() - zoneOffsetMs(first)).toISOString();
+}
+
+// "Jul 2, 14:05 – 16:30" for a range, rendered in the user's zone; the day is
+// repeated on the end when it falls on another one. Without an end it is a
+// single moment.
+export function formatDateTimeRange(start: string, end: string | null): string {
+  if (!end) return formatDateTime(start);
+  if (dayKey(start) !== dayKey(end)) return `${formatDateTime(start)} – ${formatDateTime(end)}`;
+  return `${formatDateTime(start)} – ${toZonedParts(end)?.time ?? end}`;
+}
+
 // "July 2, 2026" for a moment in time, rendered in the user's zone.
 export function formatLongDate(value: string): string {
   const date = new Date(value);

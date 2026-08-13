@@ -61,10 +61,12 @@ import { applySubtaskAutomation } from './automation';
 // plus the issue's project-scoped sequence number.
 
 // Compact custom field value for the work items payload: the scalar value (null for
-// select/multi_select and unset fields) and the selected option ids.
+// select/multi_select and unset fields), the end of a datetime_range, and the
+// selected option ids.
 export interface IssueFieldValueEntry {
   fieldId: number;
   value: string | number | boolean | null;
+  valueEnd: string | null;
   optionIds: number[];
 }
 
@@ -529,6 +531,8 @@ async function attachFieldValues(issues: IssueRow[]): Promise<void> {
         valueNumber: issueFieldValue.valueNumber,
         valueBool: issueFieldValue.valueBool,
         valueDate: issueFieldValue.valueDate,
+        valueDatetime: issueFieldValue.valueDatetime,
+        valueDatetimeEnd: issueFieldValue.valueDatetimeEnd,
       })
       .from(issueFieldValue)
       .where(inArray(issueFieldValue.issueId, issueIds)),
@@ -549,11 +553,16 @@ async function attachFieldValues(issues: IssueRow[]): Promise<void> {
     let fields = byIssue.get(issueId);
     if (!fields) byIssue.set(issueId, (fields = new Map()));
     let entry = fields.get(fieldId);
-    if (!entry) fields.set(fieldId, (entry = { fieldId, value: null, optionIds: [] }));
+    if (!entry)
+      fields.set(fieldId, (entry = { fieldId, value: null, valueEnd: null, optionIds: [] }));
     return entry;
   };
 
-  for (const row of scalarRows) entryFor(row.issueId, row.fieldId).value = pickScalarValue(row);
+  for (const row of scalarRows) {
+    const entry = entryFor(row.issueId, row.fieldId);
+    entry.value = pickScalarValue(row);
+    entry.valueEnd = row.valueDatetimeEnd ? iso(row.valueDatetimeEnd) : null;
+  }
   for (const row of optionRows) entryFor(row.issueId, row.fieldId).optionIds.push(row.optionId);
 
   for (const i of issues) {
@@ -1204,6 +1213,8 @@ export interface IssueFieldValueRow {
   name: string;
   fieldType: CustomFieldType;
   value: string | number | boolean | null;
+  // The end of a datetime_range as an ISO datetime; null for every other type.
+  valueEnd: string | null;
   optionIds: number[];
 }
 
@@ -1212,11 +1223,13 @@ function pickScalarValue(row: {
   valueNumber: string | null;
   valueBool: boolean | null;
   valueDate: string | null;
+  valueDatetime: Date | null;
 }): string | number | boolean | null {
   if (row.valueText != null) return row.valueText;
   if (row.valueNumber != null) return Number(row.valueNumber);
   if (row.valueBool != null) return row.valueBool;
   if (row.valueDate != null) return row.valueDate;
+  if (row.valueDatetime != null) return iso(row.valueDatetime);
   return null;
 }
 
@@ -1233,6 +1246,8 @@ export async function getIssueFieldValues(issueId: number): Promise<IssueFieldVa
       valueNumber: issueFieldValue.valueNumber,
       valueBool: issueFieldValue.valueBool,
       valueDate: issueFieldValue.valueDate,
+      valueDatetime: issueFieldValue.valueDatetime,
+      valueDatetimeEnd: issueFieldValue.valueDatetimeEnd,
     })
     .from(issue)
     .innerJoin(
@@ -1265,6 +1280,7 @@ export async function getIssueFieldValues(issueId: number): Promise<IssueFieldVa
     name: row.name,
     fieldType: row.fieldType as CustomFieldType,
     value: pickScalarValue(row),
+    valueEnd: row.valueDatetimeEnd ? iso(row.valueDatetimeEnd) : null,
     optionIds: optionsByField.get(row.fieldId) ?? [],
   }));
 }
@@ -1281,15 +1297,33 @@ function isHttpUrl(value: string): boolean {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
+// A datetime value on the way in: an ISO datetime string, or null when unset.
+// Anything else (a number, a date-only string, unparseable text) is rejected: a
+// value without a time of day would land on midnight UTC, which is another day
+// for most readers.
+function parseDatetime(value: unknown): Date | null {
+  if (value == null || value === '') return null;
+  if (typeof value !== 'string') throw new HttpError(400, 'Invalid datetime');
+  if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) throw new HttpError(400, 'Invalid datetime');
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) throw new HttpError(400, 'Invalid datetime');
+  return date;
+}
+
 // Sets one field's value on one issue. projectId is the issue's project: the field
 // is resolved inside it, so a field id belonging to another project does not match.
 // For select/multi_select fields, pass optionIds (replaces the full selection); for
-// every other field type, pass value matching the field's type.
+// every other field type, pass value matching the field's type. A datetime_range
+// takes its end in valueEnd.
 export async function setIssueFieldValue(
   projectId: number,
   issueId: number,
   fieldId: number,
-  input: { value?: string | number | boolean | null; optionIds?: number[] },
+  input: {
+    value?: string | number | boolean | null;
+    valueEnd?: string | null;
+    optionIds?: number[];
+  },
   actorUserId?: string | null,
 ): Promise<void> {
   const field = await getCustomFieldById(projectId, fieldId);
@@ -1342,6 +1376,19 @@ export async function setIssueFieldValue(
       case 'date':
         column = { valueDate: (input.value as string) ?? null };
         break;
+      case 'datetime':
+        column = { valueDatetime: parseDatetime(input.value), valueDatetimeEnd: null };
+        break;
+      case 'datetime_range': {
+        const start = parseDatetime(input.value);
+        const end = parseDatetime(input.valueEnd);
+        if (end && !start) throw new HttpError(400, 'Range end needs a start');
+        if (start && end && end <= start) {
+          throw new HttpError(400, 'Range end must be after its start');
+        }
+        column = { valueDatetime: start, valueDatetimeEnd: end };
+        break;
+      }
       default:
         column = { valueText: (input.value as string) ?? null };
     }
@@ -1357,6 +1404,8 @@ export async function setIssueFieldValue(
       toText = null;
     } else if (field.fieldType === 'boolean') {
       toText = value ? 'true' : 'false';
+    } else if (field.fieldType === 'datetime_range' && input.valueEnd) {
+      toText = `${String(value)} — ${input.valueEnd}`;
     } else {
       toText = String(value);
     }

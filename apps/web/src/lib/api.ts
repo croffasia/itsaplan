@@ -1483,6 +1483,7 @@ export interface InitiativeRef {
 export interface CycleRef {
   id: number;
   name: string;
+  status: CycleStatus;
 }
 
 // The board scaffold, returned by getProject: everything the work-items UI needs

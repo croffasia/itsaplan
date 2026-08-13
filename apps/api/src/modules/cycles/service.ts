@@ -29,7 +29,7 @@ export interface CycleRow {
 
 // Compared in UTC against the date columns, so a cycle turns active and completed on
 // its own boundary days regardless of the reader's zone.
-function cycleStatus(startDate: string, endDate: string): CycleStatus {
+export function cycleStatus(startDate: string, endDate: string): CycleStatus {
   const today = new Date().toISOString().slice(0, 10);
   if (today < startDate) return 'upcoming';
   if (today > endDate) return 'completed';

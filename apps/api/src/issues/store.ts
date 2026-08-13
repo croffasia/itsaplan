@@ -51,7 +51,7 @@ import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '#modules/agents/core/service';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getInitiativeProjectId } from '#modules/initiatives/service';
-import { getCycleRef } from '#modules/cycles/service';
+import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '../members/store';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { applySubtaskAutomation } from './automation';
@@ -82,9 +82,10 @@ export interface IssueRow {
   // and status for ordering the lanes of a board grouped by initiative, or null.
   // Filled by attachGroupings; mapIssue alone leaves it null.
   initiative: { id: number; title: string; status: string } | null;
-  // The cycle this issue is planned into, expanded to id + name for rendering, or
-  // null. Filled by attachGroupings; mapIssue alone leaves it null.
-  cycle: { id: number; name: string } | null;
+  // The cycle this issue is planned into, expanded to id + name for rendering and
+  // status for filtering by the running or the upcoming ones, or null. Filled by
+  // attachGroupings; mapIssue alone leaves it null.
+  cycle: { id: number; name: string; status: CycleStatus } | null;
   assigneeUserId: string | null;
   delegateUserId: string | null;
   columnId: number;
@@ -454,7 +455,7 @@ export async function restoreIssue(
 }
 
 // Expands what an issue is planned under — its initiative and its cycle — to
-// { id, title, status } / { id, name } in place. Both hang off the same issue rows, so one
+// { id, title, status } / { id, name, status } in place. Both hang off the same issue rows, so one
 // query carries them; an issue linked to neither keeps the nulls mapIssue set.
 // Rendering those names on a board card needs no separate scaffold lookup this way.
 async function attachGroupings(issues: IssueRow[]): Promise<void> {
@@ -467,6 +468,8 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
       initiativeStatus: initiative.status,
       cycleId: cycle.id,
       cycleName: cycle.name,
+      cycleStart: cycle.startDate,
+      cycleEnd: cycle.endDate,
     })
     .from(issue)
     .leftJoin(initiative, eq(initiative.id, issue.initiativeId))
@@ -487,7 +490,14 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
       r && r.initiativeId != null
         ? { id: r.initiativeId, title: r.initiativeTitle!, status: r.initiativeStatus! }
         : null;
-    i.cycle = r && r.cycleId != null ? { id: r.cycleId, name: r.cycleName! } : null;
+    i.cycle =
+      r && r.cycleId != null
+        ? {
+            id: r.cycleId,
+            name: r.cycleName!,
+            status: cycleStatus(r.cycleStart!, r.cycleEnd!),
+          }
+        : null;
   }
 }
 

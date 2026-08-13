@@ -1,17 +1,31 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { CustomField, ProjectDetail } from '@/lib/api';
+import type { CustomField, InitiativeOption, InitiativeRef, ProjectDetail } from '@/lib/api';
+import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
+import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { formatDate } from '@/utils/dates';
-import { PRIORITY_FILTER_VALUES, STATE_TYPES } from '@/utils/fieldOptions';
-import type { FilterCondition, FilterSet, FilterValue } from '@/utils/filters';
+import {
+  CYCLE_FILTER_STATUSES,
+  INITIATIVE_FILTER_STATUSES,
+  PRIORITY_FILTER_VALUES,
+  STATE_TYPES,
+} from '@/utils/fieldOptions';
+import { compareByGroupOrder } from '@/utils/initiativeMeta';
+import { projectFeatures } from '@/utils/projectFeatures';
+import {
+  statusValue,
+  type FilterCondition,
+  type FilterSet,
+  type FilterValue,
+} from '@/utils/filters';
 import {
   OPERATORS_BY_KIND,
   type FieldKind,
   type FieldOption,
   type FieldSpec,
 } from '@/utils/filterFields';
-import { customFieldKey } from '@/utils/viewSettings';
+import { customFieldKey, isFieldEnabled, type GroupField } from '@/utils/viewSettings';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { byKey } from '@/utils/messageKey';
 
@@ -35,6 +49,47 @@ function customFieldKind(field: CustomField): FieldKind {
   }
 }
 
+// The initiatives to offer: the ones an issue can be linked to, so a view can be
+// set up for an initiative that carries no issue yet, then the closed ones only the
+// issues name, ordered by status and title, so the work under them stays filterable.
+function initiativeOptions(project: ProjectDetail, linkable: InitiativeOption[]): FieldOption[] {
+  const namedByIssues = new Map<number, InitiativeRef>();
+  for (const issue of project.issues)
+    if (issue.initiative) namedByIssues.set(issue.initiative.id, issue.initiative);
+  for (const i of linkable) namedByIssues.delete(i.id);
+  return [
+    ...linkable.map((i) => ({ value: i.id, label: i.title })),
+    ...[...namedByIssues.values()]
+      .sort(compareByGroupOrder)
+      .map((i) => ({ value: i.id, label: i.title })),
+  ];
+}
+
+// The cycles to offer: the ones the project plans into, then the finished ones
+// only the issues name, so work planned into them stays reachable.
+function cycleOptions(project: ProjectDetail): FieldOption[] {
+  const namedByIssues = new Map<number, string>();
+  for (const issue of project.issues)
+    if (issue.cycle) namedByIssues.set(issue.cycle.id, issue.cycle.name);
+  for (const c of project.plannedCycles) namedByIssues.delete(c.id);
+  return [
+    ...project.plannedCycles.map((c) => ({
+      value: c.id,
+      label: c.name,
+      color: CYCLE_STATUS_META[c.status].color,
+    })),
+    ...[...namedByIssues.entries()]
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, name]) => ({ value: id, label: name })),
+  ];
+}
+
+// Marks the first option, so a rule separates the ones naming a single cycle or
+// initiative from the values that stand for a whole status.
+function withDivider(options: FieldOption[]): FieldOption[] {
+  return options.map((o, i) => (i === 0 ? { ...o, dividerBefore: true } : o));
+}
+
 // A fresh condition for a newly picked field, with the kind's first operator and
 // no values, so it is inert (see isEffectiveCondition) until the user fills it in.
 export function newCondition(spec: FieldSpec): FilterCondition {
@@ -48,11 +103,15 @@ export function newCondition(spec: FieldSpec): FilterCondition {
 
 // The filter vocabulary in the reader's language: the field catalog of a project,
 // the operator names, the boolean choices, and the short renderings a pill and a
-// saved action show.
-export function useFilterFields() {
+// saved action show. `projectKey` is what the initiative options are read under —
+// pass it wherever the catalog or a description is built.
+export function useFilterFields(projectKey?: string) {
   const t = useTranslations('filters');
+  const initiatives = useInitiativeOptionsQuery(projectKey ?? null).data ?? [];
   const operator = byKey(useTranslations('filters.operators'));
   const stateType = byKey(useTranslations('display.stateTypes'));
+  const cycleStatus = byKey(useTranslations('filters.cycleStatus'));
+  const initiativeStatus = byKey(useTranslations('filters.initiativeStatus'));
   const priorityLabel = usePriorityLabel();
 
   const booleanOptions: FieldOption[] = [
@@ -119,6 +178,33 @@ export function useFilterFields() {
         ],
       },
       {
+        field: 'initiative',
+        label: t('fields.initiative'),
+        kind: 'set',
+        options: [
+          ...INITIATIVE_FILTER_STATUSES.map((s) => ({
+            value: statusValue(s),
+            label: initiativeStatus(s),
+          })),
+          { value: null, label: t('unset.initiative') },
+          ...withDivider(initiativeOptions(project, initiatives)),
+        ],
+      },
+      {
+        field: 'cycle',
+        label: t('fields.cycle'),
+        kind: 'set',
+        options: [
+          ...CYCLE_FILTER_STATUSES.map((s) => ({
+            value: statusValue(s),
+            label: cycleStatus(s),
+            color: CYCLE_STATUS_META[s].color,
+          })),
+          { value: null, label: t('unset.cycle') },
+          ...withDivider(cycleOptions(project)),
+        ],
+      },
+      {
         field: 'labels',
         label: t('fields.labels'),
         kind: 'set',
@@ -141,7 +227,10 @@ export function useFilterFields() {
             : undefined,
       });
     }
-    return specs;
+    // The fields of an optional section are offered only while it is on, as the
+    // grouping fields and display properties are.
+    const features = projectFeatures(project.project);
+    return specs.filter((s) => isFieldEnabled(s.field as GroupField, features));
   };
 
   // Short display of a condition's chosen values for the pill.

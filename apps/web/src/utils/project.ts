@@ -17,7 +17,15 @@ import type {
 } from '@/lib/api';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { PRIORITY_ORDER, PRIORITY_RANK } from '@/utils/fieldOptions';
-import { GROUP_STATUS_ORDER } from '@/utils/initiativeMeta';
+import {
+  hasValue,
+  isEffectiveCondition,
+  statusValue,
+  type FilterCondition,
+  type FilterSet,
+  type FilterValue,
+} from '@/utils/filters';
+import { compareByGroupOrder } from '@/utils/initiativeMeta';
 import type { GroupField, ViewSettings } from '@/utils/viewSettings';
 import type { Sort } from '@/utils/viewTypes';
 
@@ -43,6 +51,9 @@ export const DEFAULT_COLOR = '#6b7280';
 // are the active project+view's display settings (see lib/viewSettings).
 export interface WorkItemsViewProps {
   project: ProjectDetail;
+  // The conditions the project's issues were filtered by. The layouts re-read them
+  // to leave out the groups those conditions exclude (see buildGroups).
+  filters: FilterSet;
   // Custom field definitions applicable to this project (global + the project's
   // type-scoped fields). The Table view renders enabled ones as columns.
   customFields: CustomField[];
@@ -184,6 +195,10 @@ export interface IssueGroup {
   color?: string;
   stateType?: StateType; // status groups, for the state icon
   assign: IssuePatch | null;
+  // What a filter condition on the grouping field matches this group by: the
+  // field's value, plus the status an initiative or a cycle is in. Read by
+  // buildGroups to drop the groups an active filter makes unreachable.
+  values: FilterValue[];
 }
 
 // The names a grouping needs beyond the project's own entities: the "No …" group
@@ -201,12 +216,19 @@ export interface GroupLabels {
 
 // The groups for a project under the chosen grouping field, in display order.
 // Every nullable field gets a "No …" group so an unset issue still has a home
-// (and a drop target that clears the field).
+// (and a drop target that clears the field). `filters` drops the groups its own
+// conditions exclude: a filter on the grouping field makes those unreachable — no
+// issue can show there and a drop into one would hide the card it moved.
 export function buildGroups(
   project: ProjectDetail,
   group: GroupField,
   labels: GroupLabels,
+  filters: FilterSet,
 ): IssueGroup[] {
+  return allowedGroups(allGroups(project, group, labels), group, filters);
+}
+
+function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabels): IssueGroup[] {
   switch (group) {
     case 'status':
       return project.columns.map((c) => ({
@@ -215,6 +237,7 @@ export function buildGroups(
         color: c.color,
         stateType: c.stateType,
         assign: { columnId: c.id },
+        values: [c.id],
       }));
     case 'assignee':
       return [
@@ -224,8 +247,14 @@ export function buildGroups(
             key: `a${a.userId}`,
             name: a.name,
             assign: { assigneeUserId: a.userId },
+            values: [a.userId],
           })),
-        { key: 'a-none', name: labels.noAssignee, assign: { assigneeUserId: null } },
+        {
+          key: 'a-none',
+          name: labels.noAssignee,
+          assign: { assigneeUserId: null },
+          values: [null],
+        },
       ];
     case 'delegate':
       return [
@@ -235,8 +264,14 @@ export function buildGroups(
             key: `d${a.userId}`,
             name: a.name,
             assign: { delegateUserId: a.userId },
+            values: [a.userId],
           })),
-        { key: 'd-none', name: labels.noDelegate, assign: { delegateUserId: null } },
+        {
+          key: 'd-none',
+          name: labels.noDelegate,
+          assign: { delegateUserId: null },
+          values: [null],
+        },
       ];
     case 'priority':
       return [
@@ -244,8 +279,9 @@ export function buildGroups(
           key: `p${value}`,
           name: labels.priority(value),
           assign: { priority: value },
+          values: [value],
         })),
-        { key: 'p-none', name: labels.noPriority, assign: { priority: null } },
+        { key: 'p-none', name: labels.noPriority, assign: { priority: null }, values: [null] },
       ];
     case 'type':
       return [
@@ -254,8 +290,9 @@ export function buildGroups(
           name: t.name,
           color: t.color,
           assign: { typeId: t.id },
+          values: [t.id],
         })),
-        { key: 't-none', name: labels.noType, assign: { typeId: null } },
+        { key: 't-none', name: labels.noType, assign: { typeId: null }, values: [null] },
       ];
     case 'initiative': {
       // Lanes come from the initiatives the loaded issues are linked to (each issue
@@ -265,15 +302,19 @@ export function buildGroups(
       const seen = new Map<number, InitiativeRef>();
       for (const issue of project.issues)
         if (issue.initiative) seen.set(issue.initiative.id, issue.initiative);
-      const options = [...seen.values()]
-        .sort(
-          (a, b) =>
-            GROUP_STATUS_ORDER.indexOf(a.status) - GROUP_STATUS_ORDER.indexOf(b.status) ||
-            a.title.localeCompare(b.title),
-        )
-        .map((i) => ({ key: `i${i.id}`, name: i.title, assign: { initiativeId: i.id } }));
+      const options = [...seen.values()].sort(compareByGroupOrder).map((i) => ({
+        key: `i${i.id}`,
+        name: i.title,
+        assign: { initiativeId: i.id },
+        values: [i.id, statusValue(i.status)],
+      }));
       return [
-        { key: 'i-none', name: labels.noInitiative, assign: { initiativeId: null } },
+        {
+          key: 'i-none',
+          name: labels.noInitiative,
+          assign: { initiativeId: null },
+          values: [null],
+        },
         ...options,
       ];
     }
@@ -294,20 +335,51 @@ export function buildGroups(
         ...project.plannedCycles.filter((c) => c.status !== 'upcoming'),
       ];
       return [
-        { key: 'y-none', name: labels.noCycle, assign: { cycleId: null } },
+        { key: 'y-none', name: labels.noCycle, assign: { cycleId: null }, values: [null] },
         ...upcomingFirst.map((c) => ({
           key: `y${c.id}`,
           name: c.name,
           color: CYCLE_STATUS_META[c.status].color,
           assign: { cycleId: c.id },
+          values: [c.id, statusValue(c.status)],
         })),
         ...[...namedByIssues.entries()]
           .sort((a, b) => a[1].localeCompare(b[1]))
-          .map(([id, name]) => ({ key: `y${id}`, name, assign: null })),
+          .map(([id, name]) => ({
+            key: `y${id}`,
+            name,
+            assign: null,
+            values: [id, statusValue('completed')],
+          })),
       ];
     }
     case 'none':
-      return [{ key: 'all', name: '', assign: null }];
+      return [{ key: 'all', name: '', assign: null, values: [] }];
+  }
+}
+
+// The groups an active filter still lets an issue reach. Only the conditions on
+// the grouping field itself narrow it: the rest decide which issues show, not
+// which groups exist. Operators that read a date or a text never apply to a
+// grouping field, so they leave the groups alone.
+function allowedGroups(groups: IssueGroup[], group: GroupField, filters: FilterSet): IssueGroup[] {
+  const conditions = filters.conditions.filter((c) => c.field === group && isEffectiveCondition(c));
+  if (conditions.length === 0) return groups;
+  return groups.filter((g) => conditions.every((c) => groupMatches(g, c)));
+}
+
+function groupMatches(group: IssueGroup, cond: FilterCondition): boolean {
+  switch (cond.op) {
+    case 'is':
+      return group.values.some((v) => cond.values.includes(v));
+    case 'is_not':
+      return !group.values.some((v) => cond.values.includes(v));
+    case 'is_set':
+      return hasValue(group.values);
+    case 'is_not_set':
+      return !hasValue(group.values);
+    default:
+      return true;
   }
 }
 

@@ -46,6 +46,7 @@ interface SwimlaneRow {
 // with the sticky column header row.
 export default function SwimlaneBoard({
   project,
+  filters,
   settings,
   onOpenIssue,
   readOnly,
@@ -57,8 +58,8 @@ export default function SwimlaneBoard({
   const collapsed = usePersistedSet(collapsedSwimlanesKey(project.project.id, settings.subgroup));
 
   const maps = buildMaps(project);
-  const columnGroups = buildGroups(project, settings.group, groupLabels);
-  const swimlaneGroups = buildGroups(project, settings.subgroup, groupLabels);
+  const columnGroups = buildGroups(project, settings.group, groupLabels, filters);
+  const swimlaneGroups = buildGroups(project, settings.subgroup, groupLabels, filters);
   const sorted = sortIssues(project.issues, settings.sort, project);
   const nested = nestIssues(
     swimlaneGroups,

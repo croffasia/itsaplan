@@ -35,6 +35,7 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
 
   const viewProps = {
     project: viewProject,
+    filters: board.filters,
     customFields,
     settings: board.settings,
     onSettingsChange: board.changeSettings,

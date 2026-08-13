@@ -39,6 +39,7 @@ interface TableViewProps extends WorkItemsViewProps {
 
 export default function TableView({
   project,
+  filters,
   customFields,
   settings,
   onOpenIssue,
@@ -61,8 +62,8 @@ export default function TableView({
   const grouped = settings.group !== 'none';
   const subgrouped = grouped && settings.subgroup !== 'none';
   const sorted = sortIssues(project.issues, settings.sort, project);
-  const groups = buildGroups(project, settings.group, groupLabels);
-  const subGroups = subgrouped ? buildGroups(project, settings.subgroup, groupLabels) : [];
+  const groups = buildGroups(project, settings.group, groupLabels, filters);
+  const subGroups = subgrouped ? buildGroups(project, settings.subgroup, groupLabels, filters) : [];
   const maps = buildMaps(project);
 
   const { columns, gridTemplate, minWidth, alignTop } = resolveColumns(

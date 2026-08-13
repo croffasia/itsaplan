@@ -33,6 +33,18 @@ export const GROUP_STATUS_ORDER: InitiativeStatus[] = [
   'canceled',
 ];
 
+// Orders the initiatives a board lists as lanes and a filter offers as values: by
+// GROUP_STATUS_ORDER, by title within one status.
+export function compareByGroupOrder(
+  a: { status: InitiativeStatus; title: string },
+  b: { status: InitiativeStatus; title: string },
+): number {
+  return (
+    GROUP_STATUS_ORDER.indexOf(a.status) - GROUP_STATUS_ORDER.indexOf(b.status) ||
+    a.title.localeCompare(b.title)
+  );
+}
+
 // Health (computed server-side). null means there is nothing to judge yet, and
 // carries the muted color of an unknown value.
 export const HEALTH_META: Record<InitiativeHealth, { color: string }> = {

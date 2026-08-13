@@ -26,6 +26,7 @@ import { CollapsedColumn } from './CollapsedColumn';
 // with a trailing "Hidden" panel for manually-hidden columns.
 export default function FlatBoard({
   project,
+  filters,
   settings,
   onSettingsChange,
   onOpenIssue,
@@ -62,7 +63,7 @@ export default function FlatBoard({
         : settings.collapsedGroups.filter((k) => k !== key),
     });
 
-  const groups = buildGroups(project, settings.group, groupLabels);
+  const groups = buildGroups(project, settings.group, groupLabels, filters);
   const sorted = sortIssues(project.issues, settings.sort, project);
   const issuesByGroup = groupIssues(groups, sorted, settings.group);
   const maps = buildMaps(project);

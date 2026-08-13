@@ -1,6 +1,7 @@
 import { startOfDay } from 'date-fns';
 import { type BoardIssue, type Issue, type ProjectDetail } from '@/lib/api';
 import { parseDate } from '@/utils/dates';
+import type { FilterSet } from '@/utils/filters';
 import { buildDayTrack, type DayTrack } from '@/utils/timelineTrack';
 import {
   buildGroups,
@@ -90,6 +91,7 @@ export interface TimelineModel extends DayTrack {
 
 export function buildTimeline({
   project,
+  filters,
   group,
   subgroup,
   groupLabels,
@@ -100,6 +102,7 @@ export function buildTimeline({
   dayW,
 }: {
   project: ProjectDetail;
+  filters: FilterSet;
   group: GroupField;
   subgroup: GroupField;
   groupLabels: GroupLabels;
@@ -109,9 +112,9 @@ export function buildTimeline({
   labelW: number;
   dayW: number;
 }): TimelineModel {
-  const groups = buildGroups(project, group, groupLabels);
+  const groups = buildGroups(project, group, groupLabels, filters);
   const subgrouped = group !== 'none' && subgroup !== 'none';
-  const subGroups = subgrouped ? buildGroups(project, subgroup, groupLabels) : [];
+  const subGroups = subgrouped ? buildGroups(project, subgroup, groupLabels, filters) : [];
   const rows: TimelineRow[] = [];
 
   const spanned = (issues: BoardIssue[]) =>

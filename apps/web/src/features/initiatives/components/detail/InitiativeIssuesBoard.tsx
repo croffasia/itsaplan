@@ -32,6 +32,7 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
 
   const viewProps = {
     project: viewProject,
+    filters: board.filters,
     customFields,
     settings: board.settings,
     onSettingsChange: board.changeSettings,

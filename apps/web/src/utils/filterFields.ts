@@ -7,11 +7,15 @@ export interface FieldOption {
   value: FilterValue;
   label: string;
   color?: string;
+  // Draws a rule above this option, which splits a list into groups — the values
+  // that stand for a whole status of the cycle or the initiative, then the ones
+  // that name a single one.
+  dividerBefore?: boolean;
 }
 
 // One filterable field: how it is labeled, what kind of value it holds, and (for
 // set fields) the choices. `field` is the persisted key (a builtin name or
-// `cf:<id>`). Built by useFieldSpecs, which names the builtins in the reader's
+// `cf:<id>`). Built by useFilterFields, which names the builtins in the reader's
 // language.
 export interface FieldSpec {
   field: string;
@@ -31,7 +35,7 @@ export const OPERATORS_BY_KIND: Record<FieldKind, FilterOperator[]> = {
 };
 
 // The builtin filterable fields, in menu order. Their options come from the
-// project (see useFieldSpecs); the custom fields follow them.
+// project (see useFilterFields); the custom fields follow them.
 export const BUILTIN_FILTER_FIELDS = [
   'status',
   'statusType',
@@ -39,6 +43,8 @@ export const BUILTIN_FILTER_FIELDS = [
   'delegate',
   'priority',
   'type',
+  'initiative',
+  'cycle',
   'labels',
   'dueDate',
   'startDate',

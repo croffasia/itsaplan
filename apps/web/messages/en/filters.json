@@ -18,6 +18,15 @@
     "true": "True",
     "false": "False"
   },
+  "cycleStatus": {
+    "active": "Active cycle",
+    "upcoming": "Upcoming cycles"
+  },
+  "initiativeStatus": {
+    "active": "Active initiatives",
+    "planned": "Planned initiatives",
+    "proposed": "Proposed initiatives"
+  },
   "fields": {
     "status": "State",
     "statusType": "State type",
@@ -25,6 +34,8 @@
     "delegate": "Delegate",
     "priority": "Priority",
     "type": "Type",
+    "initiative": "Initiative",
+    "cycle": "Cycle",
     "labels": "Labels",
     "dueDate": "Due date",
     "startDate": "Start date",
@@ -34,6 +45,8 @@
   "unset": {
     "assignee": "No assignee",
     "delegate": "No delegate",
-    "type": "No type"
+    "type": "No type",
+    "initiative": "No initiative",
+    "cycle": "No cycle"
   }
 }

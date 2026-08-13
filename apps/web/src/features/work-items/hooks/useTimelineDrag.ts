@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { type Issue, type IssuePatch, type ProjectDetail } from '@/lib/api';
+import type { FilterSet } from '@/utils/filters';
 import { addDays, toDateStr } from '@/utils/dates';
 import { buildGroups, groupKeyOf, mergeAssign, subgroupKey } from '@/utils/project';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
@@ -29,12 +30,14 @@ interface DragSession {
 // to highlight the target.
 export function useTimelineDrag({
   project,
+  filters,
   group,
   subgroup,
   dayW,
   onOpenIssue,
 }: {
   project: ProjectDetail;
+  filters: FilterSet;
   group: GroupField;
   subgroup: GroupField;
   dayW: number;
@@ -43,11 +46,11 @@ export function useTimelineDrag({
   const groupLabels = useGroupLabels();
   const updateIssue = useUpdateIssue(project.project.key);
   const subgrouped = group !== 'none' && subgroup !== 'none';
-  const subGroups = subgrouped ? buildGroups(project, subgroup, groupLabels) : [];
+  const subGroups = subgrouped ? buildGroups(project, subgroup, groupLabels, filters) : [];
   // The patch each drop target applies: the group's own, and — when sub-grouped —
   // the two grouping fields combined for every sub-section.
   const assignByKey = new Map<string, IssuePatch | null>();
-  for (const issueGroup of buildGroups(project, group, groupLabels)) {
+  for (const issueGroup of buildGroups(project, group, groupLabels, filters)) {
     assignByKey.set(issueGroup.key, issueGroup.assign);
     for (const sub of subGroups) {
       assignByKey.set(

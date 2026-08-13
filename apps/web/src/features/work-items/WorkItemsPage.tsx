@@ -72,7 +72,12 @@ export default function WorkItemsPage() {
   const changeSettings = (next: ViewSettings) =>
     editor.changeSettings(restoreHiddenSections(next, editor.settings, features));
 
-  const timelineGroups = buildGroups(filteredProject, settings.group, groupLabels);
+  const timelineGroups = buildGroups(
+    filteredProject,
+    settings.group,
+    groupLabels,
+    editor.effectiveFilters,
+  );
   const timelineIssuesByGroup = groupIssues(timelineGroups, filteredProject.issues, settings.group);
   const visibleTimelineGroupKeys = timelineGroups
     .filter(
@@ -109,6 +114,7 @@ export default function WorkItemsPage() {
 
   const viewProps = {
     project: filteredProject,
+    filters: editor.effectiveFilters,
     customFields,
     settings,
     onSettingsChange: changeSettings,

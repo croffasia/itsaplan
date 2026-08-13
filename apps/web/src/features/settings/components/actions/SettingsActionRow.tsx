@@ -27,7 +27,7 @@ export function SettingsActionRow({
 }) {
   const t = useTranslations('settings.actions');
   const can = useSettingsCan();
-  const { describeConditions } = useFilterFields();
+  const { describeConditions } = useFilterFields(project.project.key);
   const effectText = useEffectText();
   const conditions = describeConditions(action.condition, project, customFields);
   const effects = describeEffect(action.effect, project, effectText);

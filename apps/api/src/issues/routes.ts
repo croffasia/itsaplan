@@ -112,9 +112,10 @@ const IssueResponse = t.Object({
   // ordering the lanes of a board grouped by initiative, or null. Set through
   // create/update by initiativeId.
   initiative: t.Nullable(t.Object({ id: t.Number(), title: t.String(), status: t.String() })),
-  // The cycle this issue is planned into, expanded to id + name, or null. Set
-  // through create/update by cycleId.
-  cycle: t.Nullable(t.Object({ id: t.Number(), name: t.String() })),
+  // The cycle this issue is planned into, expanded to id + name for rendering and
+  // status for filtering by the running or the upcoming ones, or null. Set through
+  // create/update by cycleId.
+  cycle: t.Nullable(t.Object({ id: t.Number(), name: t.String(), status: t.String() })),
   assigneeUserId: t.Nullable(t.String()),
   delegateUserId: t.Nullable(t.String()),
   columnId: t.Number(),

@@ -15,6 +15,8 @@ export type BuiltinFilterField =
   | 'delegate' // delegate agent id, or null for "no delegate"
   | 'priority' // priority string, or null for "no priority"
   | 'type' // issue type id, or null for "no type"
+  | 'initiative' // initiative id or `status:<status>`, or null for "no initiative"
+  | 'cycle' // cycle id or `status:<status>`, or null for "no cycle"
   | 'labels' // label ids (a issue has any/none of the chosen ones)
   | 'dueDate'
   | 'startDate'
@@ -47,6 +49,14 @@ export interface FilterSet {
 
 export const EMPTY_FILTER_SET: FilterSet = { conditions: [] };
 
+// The value that stands for a whole status of the initiative or the cycle an issue
+// is planned under, instead of one of them by id: "the running cycle", "the active
+// initiatives". A saved view built on it follows the cycles as they roll over. An
+// issue matches both its own id and the status it is in.
+export function statusValue(status: string): string {
+  return `status:${status}`;
+}
+
 export function parseCustomFieldKey(field: string): number | null {
   return field.startsWith('cf:') ? Number(field.slice(3)) : null;
 }
@@ -60,7 +70,7 @@ export function isActiveFilterSet(filters: FilterSet | null | undefined): boolea
 
 // Whether a condition actually constrains the result. Presence operators
 // (is_set/is_not_set) need no value; every other operator needs at least one.
-function isEffectiveCondition(cond: FilterCondition): boolean {
+export function isEffectiveCondition(cond: FilterCondition): boolean {
   if (cond.op === 'is_set' || cond.op === 'is_not_set') return true;
   return cond.values.length > 0;
 }
@@ -96,6 +106,12 @@ function builtinSetValues(
       return [issue.priority];
     case 'type':
       return [issue.typeId];
+    case 'initiative':
+      return issue.initiative
+        ? [issue.initiative.id, statusValue(issue.initiative.status)]
+        : [null];
+    case 'cycle':
+      return issue.cycle ? [issue.cycle.id, statusValue(issue.cycle.status)] : [null];
     case 'labels':
       return issue.labelIds.length ? issue.labelIds : [null];
     default:
@@ -136,7 +152,9 @@ function customFieldScalar(issue: Issue, fieldId: number): FilterValue {
   return entry ? entry.value : null;
 }
 
-function hasValue(values: FilterValue[]): boolean {
+// Whether a set of values counts as present for is_set/is_not_set: a null or an
+// empty string is what an unset field reads as.
+export function hasValue(values: FilterValue[]): boolean {
   return values.some((v) => v !== null && v !== '');
 }
 

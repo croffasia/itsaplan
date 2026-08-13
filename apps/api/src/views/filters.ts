@@ -14,6 +14,8 @@ type FilterField =
   | 'delegate'
   | 'priority'
   | 'type'
+  | 'initiative'
+  | 'cycle'
   | 'labels'
   | 'dueDate'
   | 'startDate'
@@ -36,6 +38,13 @@ interface FilterSet {
 }
 
 const DATE_FIELDS: FilterField[] = ['dueDate', 'startDate', 'created', 'updated'];
+
+// A condition on the initiative or the cycle names either one of them by id or a
+// whole status this way ("the running cycle"), so an issue matches both its own id
+// and the status it is planned under.
+function statusValue(status: string): string {
+  return `status:${status}`;
+}
 
 function parseCustomFieldKey(field: string): number | null {
   return field.startsWith('cf:') ? Number(field.slice(3)) : null;
@@ -82,6 +91,12 @@ function builtinSetValues(
       return [issue.priority];
     case 'type':
       return [issue.typeId];
+    case 'initiative':
+      return issue.initiative
+        ? [issue.initiative.id, statusValue(issue.initiative.status)]
+        : [null];
+    case 'cycle':
+      return issue.cycle ? [issue.cycle.id, statusValue(issue.cycle.status)] : [null];
     case 'labels':
       return issue.labelIds.length ? issue.labelIds : [null];
     default:

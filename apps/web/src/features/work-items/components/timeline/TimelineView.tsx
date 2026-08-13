@@ -26,6 +26,7 @@ interface TimelineViewProps extends WorkItemsViewProps {
 
 export default function TimelineView({
   project,
+  filters,
   settings,
   onOpenIssue,
   collapsedGroups,
@@ -57,6 +58,7 @@ export default function TimelineView({
   const scrollRef = useRef<HTMLDivElement>(null);
   const { preview, dropGroupKey, beginDrag } = useTimelineDrag({
     project,
+    filters,
     group: settings.group,
     subgroup: settings.subgroup,
     dayW: DAY_W,
@@ -74,6 +76,7 @@ export default function TimelineView({
   const { rows, days, months, trackWidth, todayLeft, todayInRange, dayLines, spanToRect } =
     buildTimeline({
       project,
+      filters,
       group: settings.group,
       subgroup: settings.subgroup,
       groupLabels,

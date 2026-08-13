@@ -1,5 +1,6 @@
 import { type SharedViewBundle } from '@/lib/api';
 import { defaultViewSettings } from '@/utils/viewSettings';
+import { EMPTY_FILTER_SET } from '@/utils/filters';
 import { type WorkItemsViewProps } from '@/utils/project';
 import { toPublicProjectDetail } from '@/utils/publicProject';
 import { withoutShownSubtasks } from '@/utils/subtasks';
@@ -43,6 +44,8 @@ export default function ReadOnlyBoard({
 
   const viewProps: WorkItemsViewProps = {
     project: boardProject,
+    // The view's filters stay on the server, which sends only the issues they match.
+    filters: EMPTY_FILTER_SET,
     customFields: project.customFields,
     settings,
     onSettingsChange: noop,

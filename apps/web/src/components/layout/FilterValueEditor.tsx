@@ -91,30 +91,32 @@ export default function FilterValueEditor({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>{trigger}</PopoverTrigger>
-      <PopoverContent align="start" className="max-h-72 w-56 overflow-auto p-1">
+      <PopoverContent align="start" className="max-h-72 w-72 overflow-auto p-1">
         {options.map((o) => {
           const checked = cond.values.some((v) => v === o.value);
           return (
-            <button
-              key={String(o.value)}
-              type="button"
-              onClick={() => toggle(o.value)}
-              className={cn(
-                'flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent',
-                checked && 'font-medium',
-              )}
-            >
-              <span
+            <div key={String(o.value)}>
+              {o.dividerBefore && <div className="my-1 h-px bg-border" />}
+              <button
+                type="button"
+                onClick={() => toggle(o.value)}
                 className={cn(
-                  'size-3 rounded-full border',
-                  checked ? 'border-primary bg-primary' : 'border-muted-foreground',
+                  'flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent',
+                  checked && 'font-medium',
                 )}
-              />
-              {o.color && (
-                <span className="size-2.5 rounded-full" style={{ backgroundColor: o.color }} />
-              )}
-              <span className="truncate">{o.label}</span>
-            </button>
+              >
+                <span
+                  className={cn(
+                    'size-3 rounded-full border',
+                    checked ? 'border-primary bg-primary' : 'border-muted-foreground',
+                  )}
+                />
+                {o.color && (
+                  <span className="size-2.5 rounded-full" style={{ backgroundColor: o.color }} />
+                )}
+                <span className="truncate">{o.label}</span>
+              </button>
+            </div>
           );
         })}
         {options.length === 0 && (

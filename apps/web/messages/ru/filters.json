@@ -18,6 +18,15 @@
     "true": "Да",
     "false": "Нет"
   },
+  "cycleStatus": {
+    "active": "Активный цикл",
+    "upcoming": "Будущие циклы"
+  },
+  "initiativeStatus": {
+    "active": "Активные инициативы",
+    "planned": "Планируемые инициативы",
+    "proposed": "Предложенные инициативы"
+  },
   "fields": {
     "status": "Статус",
     "statusType": "Тип статуса",
@@ -25,6 +34,8 @@
     "delegate": "Делегат",
     "priority": "Приоритет",
     "type": "Тип",
+    "initiative": "Инициатива",
+    "cycle": "Цикл",
     "labels": "Метки",
     "dueDate": "Дедлайн",
     "startDate": "Дата начала",
@@ -34,6 +45,8 @@
   "unset": {
     "assignee": "Без исполнителя",
     "delegate": "Без делегата",
-    "type": "Без типа"
+    "type": "Без типа",
+    "initiative": "Без инициативы",
+    "cycle": "Без цикла"
   }
 }

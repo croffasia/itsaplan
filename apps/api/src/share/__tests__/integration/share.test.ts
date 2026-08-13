@@ -219,6 +219,45 @@ describe('share', () => {
       expect(opened.status).toBe(404);
     });
 
+    it('excludes issues a cycle or initiative filter hides, by id and by status', async () => {
+      const { asOwner, issueId, columnId } = await setup();
+      const project = asOwner.projects({ projectKey: 'MKT' });
+      // Dates around today, so the cycle is the running one.
+      const cycle = await project.cycles.post({
+        name: 'Sprint 1',
+        startDate: '2000-01-01',
+        endDate: '2099-01-14',
+      });
+      const initiative = await project.initiatives.post({ title: 'Q3' });
+      await asOwner
+        .issues({ issueId })
+        .patch({ cycleId: cycle.data!.id, initiativeId: initiative.data!.id });
+      const outside = await project.issues.post({ columnId, title: 'Unplanned' });
+
+      for (const condition of [
+        { id: 'c1', field: 'cycle', op: 'is' as const, values: [cycle.data!.id] },
+        { id: 'c1', field: 'initiative', op: 'is' as const, values: [initiative.data!.id] },
+        { id: 'c1', field: 'cycle', op: 'is' as const, values: ['status:active'] },
+        {
+          id: 'c1',
+          field: 'initiative',
+          op: 'is' as const,
+          values: [`status:${initiative.data!.status}`],
+        },
+      ]) {
+        const view = await project.views.post({
+          name: 'Filtered',
+          filters: { conditions: [condition] },
+        });
+        const token = (await asOwner.views({ viewId: view.data!.id }).share.post()).data!.token;
+
+        const shared = await api.share.view({ token }).get();
+        const ids = shared.data.issues.map((i: { id: number }) => i.id);
+        expect(ids).toContain(issueId);
+        expect(ids).not.toContain(outside.data!.id);
+      }
+    });
+
     it('leaves relations to issues the view filter hides out of the board and the opened issue', async () => {
       const { asOwner, issueId, columnId } = await setup();
       const board = await asOwner.projects({ projectKey: 'MKT' }).get();

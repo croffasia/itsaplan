@@ -23,7 +23,7 @@ export default function FilterBar({
   customFields: CustomField[];
 }) {
   const t = useTranslations('filters');
-  const { fieldSpecs } = useFilterFields();
+  const { fieldSpecs } = useFilterFields(project.project.key);
   const [addOpen, setAddOpen] = useState(false);
   const specs = fieldSpecs(project, customFields);
   const specByField = new Map(specs.map((s) => [s.field, s]));

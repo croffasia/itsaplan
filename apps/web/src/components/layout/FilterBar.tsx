@@ -26,7 +26,10 @@ export default function FilterBar({
   const { fieldSpecs } = useFilterFields(project.project.key);
   const [addOpen, setAddOpen] = useState(false);
   const specs = fieldSpecs(project, customFields);
-  const specByField = new Map(specs.map((s) => [s.field, s]));
+  // The pills read a catalog that also carries the fields only the current
+  // conditions still name, so a condition on a switched-off section stays visible
+  // and removable while the add menu no longer offers it.
+  const specByField = new Map(fieldSpecs(project, customFields, filters).map((s) => [s.field, s]));
 
   const update = (id: string, patch: Partial<FilterCondition>) =>
     onChange({ conditions: filters.conditions.map((c) => (c.id === id ? { ...c, ...patch } : c)) });

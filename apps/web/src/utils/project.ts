@@ -407,8 +407,9 @@ export function groupKeyOf(issue: Issue, group: GroupField): string {
 }
 
 // Issues bucketed by group key, preserving order. The map always has an (empty)
-// entry for every group in `groups`; a issue whose key is not among them (only
-// possible if the project data is inconsistent) is dropped.
+// entry for every group in `groups`; a issue whose key is not among them is
+// dropped — `groups` comes from buildGroups under the same filters the issues
+// passed, so that means a group the filter excludes.
 export function groupIssues<T extends Issue>(
   groups: IssueGroup[],
   issues: T[],

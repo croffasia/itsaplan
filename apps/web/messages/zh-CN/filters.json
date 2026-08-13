@@ -20,12 +20,12 @@
   },
   "cycleStatus": {
     "active": "进行中的周期",
-    "upcoming": "未来的周期"
+    "upcoming": "即将开始的周期"
   },
   "initiativeStatus": {
     "active": "进行中的计划",
-    "planned": "已计划的计划",
-    "proposed": "已提议的计划"
+    "planned": "已规划的计划",
+    "proposed": "提议中的计划"
   },
   "fields": {
     "status": "状态",

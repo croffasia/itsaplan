@@ -122,8 +122,14 @@ export function useFilterFields(projectKey?: string) {
   const operatorLabel = (op: FilterCondition['op']) => operator(op);
 
   // The full catalog of filterable fields for a project: builtins plus every
-  // custom field.
-  const fieldSpecs = (project: ProjectDetail, customFields: CustomField[]): FieldSpec[] => {
+  // custom field. `kept` is a filter set whose fields stay in the catalog even
+  // when their section is off, so a condition saved earlier still renders as a
+  // removable pill instead of filtering invisibly.
+  const fieldSpecs = (
+    project: ProjectDetail,
+    customFields: CustomField[],
+    kept?: FilterSet | null,
+  ): FieldSpec[] => {
     const specs: FieldSpec[] = [
       {
         field: 'status',
@@ -230,7 +236,10 @@ export function useFilterFields(projectKey?: string) {
     // The fields of an optional section are offered only while it is on, as the
     // grouping fields and display properties are.
     const features = projectFeatures(project.project);
-    return specs.filter((s) => isFieldEnabled(s.field as GroupField, features));
+    const used = new Set((kept?.conditions ?? []).map((c) => c.field));
+    return specs.filter(
+      (s) => isFieldEnabled(s.field as GroupField, features) || used.has(s.field),
+    );
   };
 
   // Short display of a condition's chosen values for the pill.
@@ -259,7 +268,7 @@ export function useFilterFields(projectKey?: string) {
     customFields: CustomField[],
   ): string[] => {
     if (!filters) return [];
-    const byField = new Map(fieldSpecs(project, customFields).map((s) => [s.field, s]));
+    const byField = new Map(fieldSpecs(project, customFields, filters).map((s) => [s.field, s]));
     const out: string[] = [];
     for (const cond of filters.conditions) {
       const spec = byField.get(cond.field);

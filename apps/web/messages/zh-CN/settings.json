@@ -373,7 +373,19 @@
     "importTitle": "从剪贴板应用状态",
     "importSummary": "将应用 {count, plural, other {# 个状态}}。匹配的状态保留分组，只更新颜色。",
     "importApply": "{count, plural, other {应用 # 个状态}}",
-    "imported": "已应用状态：新建 {created} 个，更新 {updated} 个。"
+    "imported": "已应用状态：新建 {created} 个，更新 {updated} 个。",
+    "wip": {
+      "label": "在制品上限",
+      "none": "不限制",
+      "help": "该状态应容纳多少个工作项。看板会显示数量与上限的对比。",
+      "modeLabel": "达到上限时",
+      "softLabel": "提醒",
+      "softHelp": "看板会将该状态标记为已满，但仍可将工作项移入。",
+      "hardLabel": "阻止",
+      "hardHelp": "该状态已满时，任何入口都无法将工作项移入。",
+      "badgeSoft": "上限 {limit}",
+      "badgeHard": "上限 {limit}，强制"
+    }
   },
   "issueTypes": {
     "add": "添加类型",

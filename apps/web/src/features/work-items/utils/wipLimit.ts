@@ -36,6 +36,26 @@ export function wipStateFor(
   };
 }
 
+export type WipFullColor = 'destructive' | 'warning';
+
+// The colour a full column is marked in, by what its limit does: a hard limit has
+// refused work, a soft one only warns.
+export function wipFullColor(state: WipState): WipFullColor {
+  return state.mode === 'hard' ? 'destructive' : 'warning';
+}
+
+// Tailwind matches class names as literal strings, so the two variants are spelled
+// out rather than built from the colour name.
+export const WIP_FULL_TEXT: Record<WipFullColor, string> = {
+  destructive: 'text-destructive',
+  warning: 'text-warning',
+};
+
+export const WIP_FULL_TINT: Record<WipFullColor, string> = {
+  destructive: 'bg-destructive/5',
+  warning: 'bg-warning/5',
+};
+
 // Whether `incoming` more issues may enter the column. Only a hard limit refuses;
 // a soft one is advisory, and a column with no limit is always open.
 export function wipAllows(state: WipState | null, incoming: number): boolean {

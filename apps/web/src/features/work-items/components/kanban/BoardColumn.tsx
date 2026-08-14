@@ -17,7 +17,7 @@ import { SelectAllToggle } from './SelectAllToggle';
 import { useIsOverContainer } from '../../hooks/useIsOverContainer';
 import { useIncomingCount } from '../../hooks/useIncomingCount';
 import { COLUMN_WIDTH } from '../../utils/kanban';
-import { wipAllows, type WipState } from '../../utils/wipLimit';
+import { wipAllows, wipFullColor, WIP_FULL_TINT, type WipState } from '../../utils/wipLimit';
 import { WipCount } from './WipCount';
 
 // The add button sits under the last card, outside the measured cards, so it
@@ -111,7 +111,7 @@ export function BoardColumn({
     <div
       className={cn(
         'group/column flex h-full shrink-0 flex-col rounded-md bg-kanban-column px-3 py-2',
-        wip?.full && 'bg-destructive/5',
+        wip?.full && WIP_FULL_TINT[wipFullColor(wip)],
       )}
       style={{ width: COLUMN_WIDTH }}
     >

@@ -5,7 +5,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { GroupDot } from '../shared/GroupDot';
-import { type WipState } from '../../utils/wipLimit';
+import { type WipState, WIP_FULL_TEXT, wipFullColor } from '../../utils/wipLimit';
 
 // A column collapsed to a narrow vertical strip. It stays in place (in column
 // order) with its name reading vertically and its count visible; collapsing only
@@ -56,7 +56,9 @@ export function CollapsedColumn({
       <GroupDot group={group} />
       <div className="flex flex-1 items-start gap-2 text-sm font-medium [writing-mode:vertical-rl]">
         <span className="text-foreground">{group.name}</span>
-        <span className={cn(wip?.full ? 'text-destructive' : 'text-muted-foreground')}>
+        <span
+          className={cn(wip?.full ? WIP_FULL_TEXT[wipFullColor(wip)] : 'text-muted-foreground')}
+        >
           {count}
         </span>
       </div>

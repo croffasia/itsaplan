@@ -29,6 +29,18 @@ async function createAgent(
   return res.data!.agent.id;
 }
 
+// A second project owner, so the permission matrix is out of the way and only the
+// agent's runner scope decides what they may do.
+async function addSecondOwner(asOwner: Api): Promise<Api> {
+  const user = await signUpTestUser({ name: 'Second' });
+  const invite = await asOwner
+    .projects({ projectKey: 'MKT' })
+    .invites.post({ email: user.email, role: 'owner' });
+  const api = authedApi(user.cookie);
+  await api.invites({ token: invite.data!.token }).accept.post();
+  return api;
+}
+
 async function createSchedule(api: Api, agentId: number, cron = '0 9 * * *') {
   return schedules(api).post({
     agentId,
@@ -85,10 +97,31 @@ describe('agent schedules', () => {
     expect(res.status).toBe(400);
   });
 
-  it('rejects an external agent and an agent of another project', async () => {
+  it('schedules an external agent, whose runner claims the run', async () => {
     const { asOwner } = await setup();
     const externalId = await createAgent(asOwner, { username: 'hook', kind: 'external' });
-    expect((await createSchedule(asOwner, externalId)).status).toBe(400);
+    expect((await createSchedule(asOwner, externalId)).status).toBe(201);
+  });
+
+  it("keeps an 'owner'-scoped agent's tasks to its owner", async () => {
+    const { asOwner } = await setup();
+    const agentId = await createAgent(asOwner, { username: 'hook', kind: 'external' });
+    await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['ai-agents']({ agentId })
+      .patch({ runnerScope: 'owner' });
+    const asSecond = await addSecondOwner(asOwner);
+
+    expect((await createSchedule(asSecond, agentId)).status).toBe(403);
+
+    const own = await createSchedule(asOwner, agentId);
+    expect(own.status).toBe(201);
+    expect((await schedules(asSecond)({ scheduleId: own.data!.id }).run.post()).status).toBe(403);
+    expect((await schedules(asOwner)({ scheduleId: own.data!.id }).run.post()).status).toBe(202);
+  });
+
+  it('rejects an agent of another project', async () => {
+    const { asOwner } = await setup();
 
     await asOwner.projects.post({ key: 'ENG', name: 'Engineering' });
     const foreignId = await createAgent(asOwner, { username: 'eng', projectKey: 'ENG' });

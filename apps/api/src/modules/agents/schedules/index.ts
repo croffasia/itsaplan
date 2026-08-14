@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
+import { requireUser } from '#shared/access';
 import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors } from '#shared/responses';
@@ -48,18 +49,19 @@ export const agentScheduleRoutes = new Elysia({
   })
   .post(
     '/projects/:projectKey/agent-schedules',
-    async ({ project, body, set }) => {
+    async ({ project, body, set, user }) => {
       const cron = body.cron.trim();
       const row = await createAgentSchedule({
         projectId: project.id,
         agentId: body.agentId,
+        actorUserId: requireUser(user).id,
         name: requiredText(body.name, 'Name'),
         prompt: requiredText(body.prompt, 'Task'),
         cron,
         status: body.status ?? 'active',
         nextRunAt: nextCronRun(cron),
       });
-      if (!row) throw new HttpError(400, 'Select an internal agent from this project');
+      if (!row) throw new HttpError(400, 'Select an agent from this project');
       set.status = 201;
       return row;
     },
@@ -69,14 +71,14 @@ export const agentScheduleRoutes = new Elysia({
       response: { 201: AgentScheduleResponse, ...commonErrors },
       detail: {
         summary: 'Create an agent schedule',
-        description: 'Create a schedule that sends a task to an internal agent on a cron.',
+        description: 'Create a schedule that sends a task to an agent on a cron.',
         ...mcpTool('create_agent_schedule'),
       },
     },
   )
   .patch(
     '/projects/:projectKey/agent-schedules/:scheduleId',
-    async ({ project, params, body }) => {
+    async ({ project, params, body, user }) => {
       const cron = body.cron?.trim();
       const current = await getAgentSchedule(project.id, params.scheduleId);
       if (!current) throw new HttpError(404, 'Schedule not found');
@@ -85,14 +87,19 @@ export const agentScheduleRoutes = new Elysia({
       let nextRunAt: Date | undefined;
       if (cron !== undefined) nextRunAt = nextCronRun(cron);
       else if (resuming) nextRunAt = nextCronRun(current.cron);
-      const row = await updateAgentSchedule(project.id, params.scheduleId, {
-        ...(body.agentId !== undefined ? { agentId: body.agentId } : {}),
-        ...(body.name !== undefined ? { name: requiredText(body.name, 'Name') } : {}),
-        ...(body.prompt !== undefined ? { prompt: requiredText(body.prompt, 'Task') } : {}),
-        ...(cron !== undefined ? { cron } : {}),
-        ...(nextRunAt !== undefined ? { nextRunAt } : {}),
-        ...(body.status !== undefined ? { status: body.status } : {}),
-      });
+      const row = await updateAgentSchedule(
+        project.id,
+        params.scheduleId,
+        {
+          ...(body.agentId !== undefined ? { agentId: body.agentId } : {}),
+          ...(body.name !== undefined ? { name: requiredText(body.name, 'Name') } : {}),
+          ...(body.prompt !== undefined ? { prompt: requiredText(body.prompt, 'Task') } : {}),
+          ...(cron !== undefined ? { cron } : {}),
+          ...(nextRunAt !== undefined ? { nextRunAt } : {}),
+          ...(body.status !== undefined ? { status: body.status } : {}),
+        },
+        requireUser(user).id,
+      );
       if (!row) throw new HttpError(404, 'Schedule not found');
       return row;
     },
@@ -129,8 +136,12 @@ export const agentScheduleRoutes = new Elysia({
   )
   .post(
     '/projects/:projectKey/agent-schedules/:scheduleId/run',
-    async ({ project, params, set }) => {
-      const runId = await enqueueManualScheduleRun(project.id, params.scheduleId);
+    async ({ project, params, set, user }) => {
+      const runId = await enqueueManualScheduleRun(
+        project.id,
+        params.scheduleId,
+        requireUser(user).id,
+      );
       if (runId == null) throw new HttpError(404, 'Schedule not found');
       set.status = 202;
       return { runId };

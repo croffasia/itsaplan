@@ -272,6 +272,36 @@ describe('ai agents', () => {
     expect(internal.data?.agent).toMatchObject({ kind: 'internal', roleId });
   });
 
+  it("puts an external agent on the project's default role when none is given", async () => {
+    const { asOwner } = await setup();
+    const roles = await asOwner.projects({ projectKey: 'MKT' }).roles.get();
+    const defaultRole = roles.data!.find((r) => r.isDefault)!;
+
+    const created = await agents(asOwner).post({ name: 'Ext', username: 'ext', kind: 'external' });
+    expect(created.data?.agent).toMatchObject({ roleId: defaultRole.id });
+
+    // Clearing the role falls back to the same default rather than leaving the agent
+    // on the built-in permissions.
+    const cleared = await agents(asOwner)({ agentId: created.data!.agent.id }).patch({
+      roleId: null,
+    });
+    expect(cleared.data).toMatchObject({ roleId: defaultRole.id });
+  });
+
+  it('rejects a role from another project for an external agent', async () => {
+    const { asOwner } = await setup();
+    await asOwner.projects.post({ key: 'ENG', name: 'Engineering' });
+    const foreign = await asOwner.projects({ projectKey: 'ENG' }).roles.get();
+
+    const res = await agents(asOwner).post({
+      name: 'Ext',
+      username: 'ext',
+      kind: 'external',
+      roleId: foreign.data![0].id,
+    });
+    expect(res.status).toBe(400);
+  });
+
   it('lists agents without the secret', async () => {
     const { asOwner } = await setup();
     await agents(asOwner).post({ name: 'Bot', username: 'bot', kind: 'external' });
@@ -305,6 +335,44 @@ describe('ai agents', () => {
     const project = await asOwner.projects({ projectKey: 'MKT' }).get();
     const agent = project.data?.assignees.find((a) => a.kind === 'agent');
     expect(agent).toMatchObject({ name: 'Assign Me', kind: 'agent', agentKind: 'external' });
+    expect(agent?.restrictedToUserId).toBeNull();
+  });
+
+  it("names the owner of an 'owner'-scoped agent as an assignee candidate", async () => {
+    const { owner, asOwner } = await setup();
+    const created = await agents(asOwner).post({
+      name: 'Mine Only',
+      username: 'mine',
+      kind: 'external',
+      runnerScope: 'owner',
+    });
+    const project = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const agent = project.data?.assignees.find((a) => a.userId === created.data!.agent.userId);
+    expect(agent?.restrictedToUserId).toBe(owner.userId);
+
+    // Widening the scope drops the restriction: any member's runs reach the runner.
+    await agents(asOwner)({ agentId: created.data!.agent.id }).patch({ runnerScope: 'project' });
+    const widened = await asOwner.projects({ projectKey: 'MKT' }).get();
+    expect(
+      widened.data?.assignees.find((a) => a.userId === created.data!.agent.userId)
+        ?.restrictedToUserId,
+    ).toBeNull();
+  });
+
+  it("hands an 'owner'-scoped agent to the member who chose the scope", async () => {
+    const { asOwner } = await setup();
+    const created = await agents(asOwner).post({ name: 'Ext', username: 'ext', kind: 'external' });
+    const second = await signUpTestUser({ name: 'Second' });
+    const invite = await asOwner
+      .projects({ projectKey: 'MKT' })
+      .invites.post({ email: second.email, role: 'owner' });
+    const asSecond = authedApi(second.cookie);
+    await asSecond.invites({ token: invite.data!.token }).accept.post();
+
+    const res = await agents(asSecond)({ agentId: created.data!.agent.id }).patch({
+      runnerScope: 'owner',
+    });
+    expect(res.data).toMatchObject({ runnerScope: 'owner', ownerUserId: second.userId });
   });
 
   it('regenerates the key with a new secret', async () => {

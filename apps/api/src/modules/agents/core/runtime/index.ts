@@ -1,6 +1,6 @@
 import { Agent } from '@mastra/core/agent';
 import { getAgentById, getInternalAgentApiKey, type AiAgentRow } from '../service';
-import { getProjectById, type ProjectRow } from '../../../../projects/store';
+import { getProjectById } from '../../../../projects/store';
 import { getCredentialSecret } from '../../integrations/service';
 import { listAgentSkills } from '../../skills/service';
 import { listAgentToolsForRun } from '../../tools/service';
@@ -11,6 +11,7 @@ import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
+import { projectPreamble } from '../prompt/framing';
 import { HttpError } from '#shared/lib';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
@@ -68,20 +69,6 @@ export type AgentRunEvent =
   | { type: 'tool-end'; toolCallId: string; toolName: string }
   | { type: 'done'; threadId: string | null }
   | { type: 'error'; message: string };
-
-// A leading system-instruction block naming the project the agent works in. Grounds
-// every run (the test chat and the issue-triggered runs) so the agent knows which
-// project its work-item tools act on and how issue keys are formed.
-function projectPreamble(project: ProjectRow): string {
-  return [
-    '## Current project',
-    `You are working in the project "${project.name}" (key ${project.key}). All your`,
-    `work-item tools act on this project only, and its issues are addressed by keys`,
-    `like ${project.key}-123.`,
-    '',
-    '',
-  ].join('\n');
-}
 
 async function buildAgent(row: AiAgentRow, contextPreamble: string): Promise<Agent> {
   const project = await getProjectById(row.projectId);

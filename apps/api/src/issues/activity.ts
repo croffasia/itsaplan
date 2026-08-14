@@ -13,7 +13,7 @@ import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '../shared/lib';
 import { emitWebhookEvent } from '../webhooks/emit';
 import { parseMentions } from '#modules/agents/core/mentions';
-import { isAgentUser, listInternalAgentsByUserIds } from '#modules/agents/core/service';
+import { isAgentUser, listMentionTriggerAgents } from '#modules/agents/core/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { notifyComment, notifyIssueChange } from '../notifications/store';
 
@@ -299,15 +299,16 @@ export async function createComment(input: {
   return comment;
 }
 
-// If the comment mentions internal agents, queue a run for each so they can reply.
-// Only quick queries run here; the LLM call happens later in the poller, so creating
-// a comment is never blocked on it. Comments authored by an agent's bot user never
-// trigger runs, which stops agents from setting each other (or themselves) off.
+// If the comment mentions agents, queue a run for each so they can reply. Only quick
+// queries run here; the work happens later — in the poller for an internal agent, on
+// the operator's runner for an external one — so creating a comment is never blocked
+// on it. Comments authored by an agent's bot user never trigger runs, which stops
+// agents from setting each other (or themselves) off.
 async function enqueueMentionRuns(projectId: number, comment: FeedItemRow): Promise<void> {
   const mentionedUserIds = parseMentions(comment.body ?? '');
   if (mentionedUserIds.length === 0) return;
   if (comment.actorUserId && (await isAgentUser(comment.actorUserId))) return;
-  const agents = await listInternalAgentsByUserIds(projectId, mentionedUserIds);
+  const agents = await listMentionTriggerAgents(projectId, mentionedUserIds, comment.actorUserId);
   for (const agent of agents) {
     await enqueueAgentRun({
       agentId: agent.id,

@@ -93,9 +93,9 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   // runs in-process and has no key, so apiKey comes back null.
   .post(
     '/projects/:projectKey/ai-agents',
-    async ({ project, body, set }) => {
+    async ({ project, body, set, user }) => {
       set.status = 201;
-      return createAgent(project.id, body);
+      return createAgent(project.id, { ...body, ownerUserId: requireUser(user).id });
     },
     {
       body: createAgentBody,
@@ -113,8 +113,8 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
 
   .patch(
     '/projects/:projectKey/ai-agents/:agentId',
-    async ({ params, project, body }) => {
-      const agent = await updateAgent(params.agentId, project.id, body);
+    async ({ params, project, body, user }) => {
+      const agent = await updateAgent(params.agentId, project.id, body, requireUser(user).id);
       if (!agent) throw new HttpError(404, 'Agent not found');
       return agent;
     },

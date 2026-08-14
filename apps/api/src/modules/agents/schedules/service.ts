@@ -1,6 +1,7 @@
 import { db, agentRun, agentSchedule, aiAgent, user } from '@repo/db';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { iso } from '#shared/lib';
+import { HttpError, iso } from '#shared/lib';
+import { canTriggerAgent } from '../core/service';
 import { deleteThreadsWhere } from '../core/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
@@ -80,9 +81,19 @@ export async function getAgentSchedule(
   return rows[0] ? mapSchedule(rows[0]) : null;
 }
 
+// A schedule is a trigger like a mention, so it obeys the same rule: an agent scoped
+// to its owner takes tasks from that member only, otherwise anyone in the project
+// could send a task to someone else's runner.
+async function assertTriggerable(agentId: number, actorUserId: string): Promise<void> {
+  if (!(await canTriggerAgent(agentId, actorUserId))) {
+    throw new HttpError(403, 'This agent only takes tasks from its owner');
+  }
+}
+
 export async function createAgentSchedule(input: {
   projectId: number;
   agentId: number;
+  actorUserId: string;
   name: string;
   prompt: string;
   cron: string;
@@ -92,14 +103,9 @@ export async function createAgentSchedule(input: {
   const agent = await db
     .select({ id: aiAgent.id })
     .from(aiAgent)
-    .where(
-      and(
-        eq(aiAgent.id, input.agentId),
-        eq(aiAgent.projectId, input.projectId),
-        eq(aiAgent.kind, 'internal'),
-      ),
-    );
+    .where(and(eq(aiAgent.id, input.agentId), eq(aiAgent.projectId, input.projectId)));
   if (!agent[0]) return null;
+  await assertTriggerable(input.agentId, input.actorUserId);
   const [row] = await db
     .insert(agentSchedule)
     .values({
@@ -126,6 +132,7 @@ export async function updateAgentSchedule(
     status?: AgentScheduleStatus;
     nextRunAt?: Date;
   },
+  actorUserId: string,
 ): Promise<AgentScheduleRow | null> {
   const current = await getAgentSchedule(projectId, scheduleId);
   if (!current) return null;
@@ -133,14 +140,9 @@ export async function updateAgentSchedule(
     const agent = await db
       .select({ id: aiAgent.id })
       .from(aiAgent)
-      .where(
-        and(
-          eq(aiAgent.id, patch.agentId),
-          eq(aiAgent.projectId, projectId),
-          eq(aiAgent.kind, 'internal'),
-        ),
-      );
+      .where(and(eq(aiAgent.id, patch.agentId), eq(aiAgent.projectId, projectId)));
     if (!agent[0]) return null;
+    await assertTriggerable(patch.agentId, actorUserId);
   }
   await db
     .update(agentSchedule)
@@ -162,9 +164,11 @@ export async function deleteAgentSchedule(projectId: number, scheduleId: number)
 export async function enqueueManualScheduleRun(
   projectId: number,
   scheduleId: number,
+  actorUserId: string,
 ): Promise<number | null> {
   const schedule = await getAgentSchedule(projectId, scheduleId);
   if (!schedule) return null;
+  await assertTriggerable(schedule.agentId, actorUserId);
   const [run] = await db
     .insert(agentRun)
     .values({

@@ -4,16 +4,19 @@ import { eq } from 'drizzle-orm';
 import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { addProjectMember } from '#tests/helpers/members';
 import { createComment } from '../../../../../issues/activity';
 import { claimDueRuns } from '../../run-queue';
 
-// Mentioning an internal agent in a comment queues an agent_run so the agent can
-// reply. The queue is drained by an in-process poller (not exercised here — it makes
-// a live LLM call); this test covers the deterministic half: a mention enqueues a
-// run, a plain comment does not, and a comment authored by an agent's bot user never
-// enqueues one (the loop guard). agent_run has no API surface, so it is read through
-// the db; the loop guard is exercised at the store (an agent posts via the in-process
-// add_comment tool, not the HTTP route, since it is not a project member).
+// Mentioning an agent in a comment queues an agent_run so the agent can reply. The
+// queue is drained by the in-process poller for an internal agent (not exercised
+// here — it makes a live LLM call) and over HTTP by a runner for an external one.
+// This test covers the deterministic half: a mention enqueues a run, a plain comment
+// does not, an owner-scoped external agent ignores other members, and a comment
+// authored by an agent's bot user never enqueues one (the loop guard). agent_run is
+// read through the db; the loop guard is exercised at the store (an agent posts via
+// the in-process add_comment tool, not the HTTP route, since it is not a project
+// member).
 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
@@ -87,7 +90,28 @@ describe('agent mention runs', () => {
     expect((await runsForIssue(issue.id)).length).toBe(0);
   });
 
-  it('does not queue a run for an external agent mentioned in a comment', async () => {
+  it('queues a run for an external agent mentioned by its owner', async () => {
+    const { asOwner, columnId } = await setup();
+    const ext = (
+      await agents(asOwner).post({
+        name: 'Ext Bot',
+        username: 'ext',
+        kind: 'external',
+        triggerOnMention: true,
+      })
+    ).data!.agent;
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asOwner
+      .issues({ issueId: issue.id })
+      .comments.post({ body: mention('Ext Bot', ext.userId) });
+
+    const queued = await runsForIssue(issue.id);
+    expect(queued.length).toBe(1);
+    expect(queued[0]).toMatchObject({ agentId: ext.id, status: 'pending' });
+  });
+
+  it('leaves an external agent alone until its mention trigger is turned on', async () => {
     const { asOwner, columnId } = await setup();
     const ext = (await agents(asOwner).post({ name: 'Ext Bot', username: 'ext', kind: 'external' }))
       .data!.agent;
@@ -97,6 +121,32 @@ describe('agent mention runs', () => {
       .issues({ issueId: issue.id })
       .comments.post({ body: mention('Ext Bot', ext.userId) });
     expect((await runsForIssue(issue.id)).length).toBe(0);
+  });
+
+  it('does not queue an owner-scoped external agent for another member', async () => {
+    const { asOwner, columnId } = await setup();
+    const ext = (
+      await agents(asOwner).post({
+        name: 'Ext Bot',
+        username: 'ext',
+        kind: 'external',
+        triggerOnMention: true,
+        runnerScope: 'owner',
+      })
+    ).data!.agent;
+    const asMember = await addProjectMember(asOwner, 'MKT');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asMember
+      .issues({ issueId: issue.id })
+      .comments.post({ body: mention('Ext Bot', ext.userId) });
+    expect((await runsForIssue(issue.id)).length).toBe(0);
+
+    await agents(asOwner)({ agentId: ext.id }).patch({ runnerScope: 'project' });
+    await asMember
+      .issues({ issueId: issue.id })
+      .comments.post({ body: mention('Ext Bot', ext.userId) });
+    expect((await runsForIssue(issue.id)).length).toBe(1);
   });
 
   it("does not queue a run when an agent's bot user authors the mention (loop guard)", async () => {

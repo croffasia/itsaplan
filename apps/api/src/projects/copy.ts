@@ -673,7 +673,12 @@ export async function copyProject(
         memoryLastMessages: a.memoryLastMessages,
         triggerOnMention: a.triggerOnMention,
         triggerOnAssign: a.triggerOnAssign,
+        delegationDelaySec: a.delegationDelaySec,
         roleId: a.roleId != null ? (roleMap.get(a.roleId) ?? null) : null,
+        // An 'owner'-scoped agent keeps its scope, bound to whoever made the copy —
+        // the source owner need not be a member of the new project.
+        runnerScope: a.runnerScope,
+        ownerUserId: ownerId,
       };
       const { agent } = await createAgent(newProject.id, agentInput);
       agentMap.set(a.id, agent.id);
@@ -702,6 +707,7 @@ export async function copyProject(
       await createAgentSchedule({
         projectId: newProject.id,
         agentId: newAgentId,
+        actorUserId: ownerId,
         name: s.name,
         prompt: s.prompt,
         cron: s.cron,

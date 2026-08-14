@@ -994,20 +994,21 @@ export async function updateIssue(
   return after;
 }
 
-// If an issue's new delegate is an internal agent that reacts to delegation, queue a
-// run so it can act on the issue. Skipped when the agent delegated to itself (an
-// agent setting itself off). The LLM call happens later in the poller, so the write
-// is never blocked on it.
+// If an issue's new delegate is an agent that reacts to delegation, queue a run so it
+// can act on the issue. Skipped when the agent delegated to itself (an agent setting
+// itself off). The run is executed later — by the poller or by the agent's runner —
+// so the write is never blocked on it.
 async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promise<void> {
   const delegate = after.delegateUserId;
   if (!delegate || delegate === actorId(actor)) return;
-  const agent = await getAssignTriggerAgent(delegate);
+  const agent = await getAssignTriggerAgent(delegate, actorId(actor));
   if (!agent) return;
   await enqueueAgentRun({
     agentId: agent.id,
     issueId: after.id,
     sourceActivityId: null,
     prompt: `Work item ${after.identifier}: "${after.title}" has been delegated to you. Review it and take the appropriate next step.`,
+    delaySeconds: agent.delegationDelaySec,
   });
 }
 

@@ -4,6 +4,7 @@ import {
   user,
   apikey,
   projectMember,
+  projectRole,
   agentSkillLink,
   agentToolLink,
   integrationCredential,
@@ -34,6 +35,12 @@ import { deleteThreadsWhere } from './runtime/memory';
 
 export type AgentKind = 'external' | 'internal';
 
+// Which runs an external agent's runner is served. 'project', the default: any
+// member's runs, so an agent added to a project works for the whole team. 'owner':
+// only runs triggered by the member who created it, for a runner whose machine and
+// credentials should serve nobody else.
+export type RunnerScope = 'owner' | 'project';
+
 export interface AiAgentRow {
   id: number;
   projectId: number;
@@ -51,12 +58,21 @@ export interface AiAgentRow {
   // Conversation memory: recall the last memoryLastMessages messages of a thread.
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
-  // Internal-agent run triggers.
+  // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // How long a delegation run waits before it can be claimed.
+  delegationDelaySec: number;
   // The project_role the bot user acts under. NULL falls back to the project's
   // default member permissions.
   roleId: number | null;
+  // The member who created the agent, and whose runs an 'owner'-scoped runner is
+  // limited to. 'project' scope lets the runner take any member's runs.
+  ownerUserId: string | null;
+  runnerScope: RunnerScope;
+  // When a runner last polled for this agent, which is what presence is derived
+  // from. Null until a runner connects.
+  lastSeenAt: string | null;
   createdAt: string;
   // The agent's current API key, for display only — the secret is never returned
   // after creation. start is the key's leading characters kept for identification.
@@ -89,7 +105,11 @@ function mapAgent(row: {
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  delegationDelaySec: number;
   roleId: number | null;
+  ownerUserId: string | null;
+  runnerScope: string;
+  lastSeenAt: Date | null;
   createdAt: Date;
   apiKeyStart: string | null;
   modelProvider: string | null;
@@ -114,7 +134,11 @@ function mapAgent(row: {
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
     triggerOnAssign: row.triggerOnAssign,
+    delegationDelaySec: row.delegationDelaySec,
     roleId: row.roleId,
+    ownerUserId: row.ownerUserId,
+    runnerScope: row.runnerScope as RunnerScope,
+    lastSeenAt: row.lastSeenAt ? iso(row.lastSeenAt) : null,
     createdAt: iso(row.createdAt),
     apiKeyStart: row.apiKeyStart,
     modelProvider: row.modelProvider,
@@ -141,7 +165,11 @@ const agentColumns = {
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
   triggerOnAssign: aiAgent.triggerOnAssign,
+  delegationDelaySec: aiAgent.delegationDelaySec,
   roleId: aiAgent.roleId,
+  ownerUserId: aiAgent.ownerUserId,
+  runnerScope: aiAgent.runnerScope,
+  lastSeenAt: aiAgent.lastSeenAt,
   createdAt: aiAgent.createdAt,
   apiKeyStart: apikey.start,
   modelProvider: integrationCredential.integrationKey,
@@ -179,42 +207,79 @@ export async function getAgentById(id: number, projectId: number): Promise<AiAge
   return rows[0] ? mapAgent(rows[0]) : null;
 }
 
-// Internal agents in the project whose bot user is among the given ids and that
-// react to mentions. Turns the user ids parsed from a comment's mentions into the
-// agents that should run.
-export async function listInternalAgentsByUserIds(
+// An agent may run for whoever triggered it: always an internal agent, which runs on
+// our side, and an external one only when its runner is project-scoped or the trigger
+// came from the agent's owner, whose machine that runner is. An 'owner'-scoped agent
+// without an owner names nobody to restrict it to — the account was deleted — so it
+// takes any member's runs rather than silently stopping.
+function isTriggerableBy(
+  agent: { kind: string; runnerScope: string; ownerUserId: string | null },
+  actorUserId: string | null,
+): boolean {
+  if (agent.kind === 'internal' || agent.runnerScope !== 'owner' || !agent.ownerUserId) return true;
+  return agent.ownerUserId === actorUserId;
+}
+
+const triggerScopeColumns = {
+  kind: aiAgent.kind,
+  runnerScope: aiAgent.runnerScope,
+  ownerUserId: aiAgent.ownerUserId,
+};
+
+// Whether the member may send the agent a task, for the paths that queue a run
+// outside the mention and delegation triggers (a schedule). An agent that no longer
+// exists reads as triggerable — the caller's own lookup reports it missing.
+export async function canTriggerAgent(agentId: number, actorUserId: string): Promise<boolean> {
+  const rows = await db
+    .select(triggerScopeColumns)
+    .from(aiAgent)
+    .where(eq(aiAgent.id, agentId))
+    .limit(1);
+  return !rows[0] || isTriggerableBy(rows[0], actorUserId);
+}
+
+// Agents in the project whose bot user is among the given ids and that react to
+// mentions. Turns the user ids parsed from a comment's mentions into the agents that
+// should run for the comment's author.
+export async function listMentionTriggerAgents(
   projectId: number,
   userIds: string[],
+  actorUserId: string | null,
 ): Promise<{ id: number; userId: string }[]> {
   if (userIds.length === 0) return [];
-  return db
-    .select({ id: aiAgent.id, userId: aiAgent.userId })
+  const rows = await db
+    .select({ id: aiAgent.id, userId: aiAgent.userId, ...triggerScopeColumns })
     .from(aiAgent)
     .where(
       and(
         eq(aiAgent.projectId, projectId),
-        eq(aiAgent.kind, 'internal'),
         eq(aiAgent.triggerOnMention, true),
         inArray(aiAgent.userId, userIds),
       ),
     );
+  return rows
+    .filter((row) => isTriggerableBy(row, actorUserId))
+    .map((row) => ({ id: row.id, userId: row.userId }));
 }
 
-// The internal agent whose bot user is userId and that reacts to being delegated to,
-// or null. Turns a new delegate into the agent that should run on delegation.
-export async function getAssignTriggerAgent(userId: string): Promise<{ id: number } | null> {
+// The agent whose bot user is userId and that reacts to being delegated to, or null.
+// Turns a new delegate into the agent that should run on delegation.
+export async function getAssignTriggerAgent(
+  userId: string,
+  actorUserId: string | null,
+): Promise<{ id: number; delegationDelaySec: number } | null> {
   const rows = await db
-    .select({ id: aiAgent.id })
+    .select({
+      id: aiAgent.id,
+      delegationDelaySec: aiAgent.delegationDelaySec,
+      ...triggerScopeColumns,
+    })
     .from(aiAgent)
-    .where(
-      and(
-        eq(aiAgent.userId, userId),
-        eq(aiAgent.kind, 'internal'),
-        eq(aiAgent.triggerOnAssign, true),
-      ),
-    )
+    .where(and(eq(aiAgent.userId, userId), eq(aiAgent.triggerOnAssign, true)))
     .limit(1);
-  return rows[0] ?? null;
+  const row = rows[0];
+  if (!row || !isTriggerableBy(row, actorUserId)) return null;
+  return { id: row.id, delegationDelaySec: row.delegationDelaySec };
 }
 
 // True if the user id is the bot user of an agent in this project. Validates that a
@@ -256,6 +321,32 @@ async function assertModelCredential(
   }
 }
 
+// The role an external agent acts under. It is always an explicit role of the
+// project — the operator drives it over HTTP, so what it may do has to be visible on
+// the Roles page rather than resolved from a built-in default. A role from another
+// project is rejected; no role given means the project's default one ("Member").
+async function resolveExternalRoleId(
+  projectId: number,
+  roleId: number | null | undefined,
+): Promise<number> {
+  if (roleId != null) {
+    const rows = await db
+      .select({ id: projectRole.id })
+      .from(projectRole)
+      .where(and(eq(projectRole.id, roleId), eq(projectRole.projectId, projectId)))
+      .limit(1);
+    if (!rows[0]) throw new HttpError(400, 'Role not found in this project');
+    return rows[0].id;
+  }
+  const rows = await db
+    .select({ id: projectRole.id })
+    .from(projectRole)
+    .where(and(eq(projectRole.projectId, projectId), eq(projectRole.isDefault, true)))
+    .limit(1);
+  if (!rows[0]) throw new HttpError(400, 'This project has no default role');
+  return rows[0].id;
+}
+
 export interface NewAgentInput {
   name: string;
   username: string;
@@ -268,11 +359,19 @@ export interface NewAgentInput {
   maxSteps?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
-  // Internal-agent triggers (defaults: mention on, assign off).
+  // Run triggers. Assign is off by default, and so is mention for an external agent:
+  // nothing answers its runs until its operator starts a runner, so an agent added
+  // for its API key alone must not collect runs no one drains.
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
-  // External-agent authorization role.
+  delegationDelaySec?: number;
+  // Authorization role. Required in effect for an external agent: left out, it
+  // resolves to the project's default role.
   roleId?: number | null;
+  // External-agent runner scope (default: any member's runs).
+  runnerScope?: RunnerScope;
+  // The member creating the agent, who owns its runner.
+  ownerUserId?: string | null;
 }
 
 // Issues a fresh API key owned by the agent's bot user and returns its plaintext
@@ -300,9 +399,12 @@ export async function createAgent(
   if (isInternal) await assertModelCredential(projectId, input.modelCredentialId);
 
   // Every agent acts under a project role and so needs a project_member row for the
-  // permission checks to apply to its requests. roleId names the role; NULL falls
-  // back to the project's default member permissions.
-  const roleId = input.roleId ?? null;
+  // permission checks to apply to its requests. An external agent always carries an
+  // explicit role of the project; an internal one may leave it NULL and fall back to
+  // the built-in default member permissions.
+  const roleId = isInternal
+    ? (input.roleId ?? null)
+    : await resolveExternalRoleId(projectId, input.roleId);
 
   const agentId = await db.transaction(async (tx) => {
     await tx
@@ -318,15 +420,18 @@ export async function createAgent(
           kind: input.kind,
           modelCredentialId: isInternal ? (input.modelCredentialId ?? null) : null,
           model: isInternal ? (input.model ?? null) : null,
-          instructions: isInternal ? (input.instructions ?? null) : null,
+          instructions: input.instructions ?? null,
           tools: isInternal ? normalizeToolKeys(input.tools) : [],
           temperature: isInternal ? (input.temperature ?? null) : null,
           maxSteps: isInternal ? (input.maxSteps ?? null) : null,
           memoryEnabled: isInternal ? (input.memoryEnabled ?? false) : false,
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
-          triggerOnMention: isInternal ? (input.triggerOnMention ?? true) : false,
-          triggerOnAssign: isInternal ? (input.triggerOnAssign ?? false) : false,
+          triggerOnMention: input.triggerOnMention ?? isInternal,
+          triggerOnAssign: input.triggerOnAssign ?? false,
+          delegationDelaySec: input.delegationDelaySec,
           roleId,
+          ownerUserId: input.ownerUserId ?? null,
+          runnerScope: input.runnerScope ?? 'project',
         })
         .returning({ id: aiAgent.id });
       await tx.insert(projectMember).values({ projectId, userId, role: 'member', roleId });
@@ -428,13 +533,17 @@ export interface AgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  delegationDelaySec?: number;
   roleId?: number | null;
+  runnerScope?: RunnerScope;
 }
 
 export async function updateAgent(
   id: number,
   projectId: number,
   patch: AgentPatch,
+  // The member making the change: choosing the 'owner' scope means their own runs.
+  actorUserId: string,
 ): Promise<AiAgentRow | null> {
   const agent = await getAgentById(id, projectId);
   if (!agent) return null;
@@ -446,11 +555,16 @@ export async function updateAgent(
   }
 
   // Changing an agent's role updates both the config row and the bot user's
-  // membership, so the permission checks act under the new role.
-  if (patch.roleId !== undefined) {
+  // membership, so the permission checks act under the new role. An external agent
+  // cannot end up without one: clearing it falls back to the project's default role.
+  const roleId =
+    patch.roleId !== undefined && agent.kind === 'external'
+      ? await resolveExternalRoleId(projectId, patch.roleId)
+      : patch.roleId;
+  if (roleId !== undefined) {
     await db
       .update(projectMember)
-      .set({ roleId: patch.roleId })
+      .set({ roleId })
       .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, agent.userId)));
   }
 
@@ -466,7 +580,14 @@ export async function updateAgent(
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;
   if (patch.triggerOnMention !== undefined) set.triggerOnMention = patch.triggerOnMention;
   if (patch.triggerOnAssign !== undefined) set.triggerOnAssign = patch.triggerOnAssign;
-  if (patch.roleId !== undefined) set.roleId = patch.roleId;
+  if (patch.delegationDelaySec !== undefined) set.delegationDelaySec = patch.delegationDelaySec;
+  if (roleId !== undefined) set.roleId = roleId;
+  // The scope and its owner are one setting: 'owner' means the runs of the member who
+  // chose it, so switching to it hands the agent to them.
+  if (patch.runnerScope !== undefined) {
+    set.runnerScope = patch.runnerScope;
+    if (patch.runnerScope === 'owner') set.ownerUserId = actorUserId;
+  }
   if (Object.keys(set).length > 0) {
     try {
       await db

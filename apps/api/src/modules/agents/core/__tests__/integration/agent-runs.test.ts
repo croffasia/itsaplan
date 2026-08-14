@@ -88,6 +88,39 @@ describe('agent run history', () => {
     expect(res.data!.items[0]).toMatchObject({ trigger: 'delegation', issueId: issue.id });
   });
 
+  it('holds a delegation run back by the agent delay, and a mention run not at all', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await agents(asOwner)({ agentId: agent.id }).patch({ triggerOnAssign: true });
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asOwner.issues({ issueId: issue.id }).patch({ delegateUserId: agent.userId });
+    await mentionAgent(asOwner, issue.id, 'Design Bot', agent.userId);
+
+    const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
+    const byTrigger = new Map(res.data!.items.map((r) => [r.trigger, r]));
+    const dueInMs = (at: string) => new Date(at).getTime() - Date.now();
+    // The default delay is two minutes; the assertion leaves room for the round trip.
+    expect(dueInMs(byTrigger.get('delegation')!.nextAttemptAt)).toBeGreaterThan(110_000);
+    expect(dueInMs(byTrigger.get('mention')!.nextAttemptAt)).toBeLessThanOrEqual(0);
+  });
+
+  it('starts a delegation run at once when the delay is zero', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await agents(asOwner)({ agentId: agent.id }).patch({
+      triggerOnAssign: true,
+      delegationDelaySec: 0,
+    });
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asOwner.issues({ issueId: issue.id }).patch({ delegateUserId: agent.userId });
+
+    const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
+    const run = res.data!.items[0];
+    expect(new Date(run.nextAttemptAt).getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
   it('paginates newest first with a keyset cursor', async () => {
     const { asOwner, columnId } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');

@@ -1,5 +1,7 @@
 import { t } from 'elysia';
 
+import { agentRunTrigger } from '../model';
+
 export { agentParams } from '../model';
 
 export const threadParams = t.Object({
@@ -64,6 +66,13 @@ const configFields = {
   ),
   triggerOnMention: t.Optional(t.Boolean({ description: 'Run when @-mentioned in a comment.' })),
   triggerOnAssign: t.Optional(t.Boolean({ description: 'Run when assigned to an issue.' })),
+  delegationDelaySec: t.Optional(
+    t.Integer({
+      minimum: 0,
+      maximum: 86400,
+      description: 'Seconds a delegation run waits before the agent may pick it up.',
+    }),
+  ),
   roleId: t.Optional(
     t.Nullable(
       t.Integer({
@@ -72,6 +81,13 @@ const configFields = {
           'default role.',
       }),
     ),
+  ),
+  runnerScope: t.Optional(
+    t.Union([t.Literal('owner'), t.Literal('project')], {
+      description:
+        "Which runs an external agent's runner receives: 'owner' only the creator's, " +
+        "'project' any member's.",
+    }),
   ),
 };
 
@@ -93,7 +109,11 @@ export const AiAgentResponse = t.Object({
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),
   triggerOnAssign: t.Boolean(),
+  delegationDelaySec: t.Number(),
   roleId: t.Nullable(t.Number()),
+  ownerUserId: t.Nullable(t.String()),
+  runnerScope: t.Union([t.Literal('owner'), t.Literal('project')]),
+  lastSeenAt: t.Nullable(t.String()),
   createdAt: t.String(),
   apiKeyStart: t.Nullable(t.String()),
   modelProvider: t.Nullable(t.String()),
@@ -122,18 +142,14 @@ export const RunAgentResponse = t.Object({
 export const AgentRunResponse = t.Object({
   id: t.Number(),
   status: t.String(),
-  trigger: t.Union([
-    t.Literal('mention'),
-    t.Literal('delegation'),
-    t.Literal('schedule'),
-    t.Literal('manual'),
-  ]),
+  trigger: agentRunTrigger,
   issueId: t.Nullable(t.Number()),
   issueIdentifier: t.Nullable(t.String()),
   issueTitle: t.Nullable(t.String()),
   prompt: t.String(),
   attempts: t.Number(),
   lastError: t.Nullable(t.String()),
+  output: t.Nullable(t.String()),
   nextAttemptAt: t.String(),
   createdAt: t.String(),
 });

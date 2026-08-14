@@ -420,6 +420,25 @@ describe('projects', () => {
       expect(withRoles.data?.map((r) => r.name).sort()).toEqual(['Editor', 'Member']);
     });
 
+    it("keeps an external agent's runner scope, bound to the caller", async () => {
+      const { api, user } = await signUpClient();
+      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await api.projects({ projectKey: 'SRC' })['ai-agents'].post({
+        name: 'Ext',
+        username: 'ext',
+        kind: 'external',
+        runnerScope: 'owner',
+      });
+
+      await api.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'DST',
+        name: 'Destination',
+        include: { agents: true },
+      });
+      const copied = await api.projects({ projectKey: 'DST' })['ai-agents'].get();
+      expect(copied.data?.[0]).toMatchObject({ runnerScope: 'owner', ownerUserId: user.userId });
+    });
+
     it('returns 400 with an error body on a duplicate key', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });

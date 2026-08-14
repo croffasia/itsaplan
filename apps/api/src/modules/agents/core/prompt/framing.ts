@@ -1,7 +1,8 @@
 import { peoplePreamble, type Person } from './run-context';
 import { renderMentionsPlain, parseMentionedUsers } from '../mentions';
+import type { AgentRunTrigger } from '../../model';
 
-// Frames a triggered internal run into the text an agent receives: the framed user
+// Frames a triggered run into the text an agent receives: the framed user
 // prompt (framePrompt) and the system-instruction blocks about the run mode
 // (runModePreamble) and the people involved (peopleContext). The interactive test
 // chat does not use this path — it frames its own prompt in the controller.
@@ -10,7 +11,7 @@ import { renderMentionsPlain, parseMentionedUsers } from '../mentions';
 // is structurally compatible.
 export interface RunForPrompt {
   id: number;
-  trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
+  trigger: AgentRunTrigger;
   prompt: string;
   issueId: number | null;
   issueIdentifier: string | null;
@@ -94,6 +95,20 @@ function frameMention(run: RunForPrompt, titled: string): string {
     'The comment that mentioned you:',
     '',
     renderMentionsPlain(run.prompt),
+  ].join('\n');
+}
+
+// A leading system-instruction block naming the project the agent works in. Grounds
+// every run — the test chat, the issue-triggered runs, and the ones a runner executes
+// — so the agent knows which project its tools act on and how issue keys are formed.
+export function projectPreamble(project: { key: string; name: string }): string {
+  return [
+    '## Current project',
+    `You are working in the project "${project.name}" (key ${project.key}). All your`,
+    `work-item tools act on this project only, and its issues are addressed by keys`,
+    `like ${project.key}-123.`,
+    '',
+    '',
   ].join('\n');
 }
 

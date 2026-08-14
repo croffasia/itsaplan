@@ -2894,10 +2894,14 @@ export const api = {
 
   // The session user's own interface preferences, held per account. A read returns
   // the defaults when nothing was saved; a write patches only the fields it carries.
-  getAccountPreferences: () => request<AccountPreferences>('/account/preferences'),
-  updateAccountPreferences: (input: AccountPreferencesPatch) =>
+  getAccountPreferences: (locale: Locale) =>
+    request<AccountPreferences>('/account/preferences', {
+      headers: { 'Accept-Language': locale },
+    }),
+  updateAccountPreferences: (input: AccountPreferencesPatch, locale: Locale) =>
     request<AccountPreferences>('/account/preferences', {
       method: 'PATCH',
+      headers: { 'Accept-Language': locale },
       body: JSON.stringify(input),
     }),
 

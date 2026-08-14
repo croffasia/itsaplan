@@ -5,10 +5,10 @@ import { app } from '../../app';
 // Use for unauthenticated routes; planner routes return 401 through this.
 export const api = treaty(app);
 
-// Treaty client that sends a session cookie on every request. Pass the `cookie`
-// from signUpTestUser to act as that user.
-export function authedApi(cookie: string) {
-  return treaty(app, { headers: { cookie } });
+// Treaty client that sends a session cookie on every request. Pass additional
+// headers when the route behavior depends on request metadata.
+export function authedApi(cookie: string, headers?: Record<string, string>) {
+  return treaty(app, { headers: { ...headers, cookie } });
 }
 
 export type Api = typeof api;

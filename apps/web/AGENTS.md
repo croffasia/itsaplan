@@ -60,7 +60,7 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   an untranslated one renders its English text.
 - A new namespace needs its file in every language plus an entry in `defaultMessages`.
 - A new language: `messages/<code>/`, `src/i18n/locales.ts`, `src/hooks/useDateFnsLocale.ts`,
-  and `LOCALES`/`Locale` in `apps/api/src/user-preferences/`. No migration — the `locale`
+  and `LOCALES`/`Locale` in `apps/api/src/modules/user-preferences/`. No migration — the `locale`
   column has no CHECK.
 - Don't subset messages per route with `pick()`: a missing namespace then fails at runtime
   instead of at typecheck.

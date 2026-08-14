@@ -1,19 +1,18 @@
 import { db, userPreference } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
+import { DEFAULT_LOCALE, type Locale } from './locale';
 
 // A user's own interface preferences, held per account so the same choices apply on
 // every device. One row per user; absent means nothing was changed yet and the
-// defaults below apply, so a read never fails. Timestamps stay UTC everywhere in the
-// API — `timezone` only tells the web app which zone to render them in.
+// request's browser-localized defaults apply, so a read never fails. Timestamps stay
+// UTC everywhere in the API — `timezone` only tells the web app which zone to render them in.
 
-export const LOCALES = ['en', 'uk', 'ru', 'zh-CN'] as const;
 export const THEMES = ['light', 'dark', 'system'] as const;
 export const ISSUE_OPEN_MODES = ['panel', 'page'] as const;
 export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat'] as const;
 export const ISSUE_STATS_VIEWS = ['compact', 'timeline'] as const;
 export const ISSUE_ACTIVITY_VIEWS = ['flat', 'grouped'] as const;
 
-export type Locale = (typeof LOCALES)[number];
 export type Theme = (typeof THEMES)[number];
 export type IssueOpenMode = (typeof ISSUE_OPEN_MODES)[number];
 export type StartPage = (typeof START_PAGES)[number];
@@ -49,10 +48,10 @@ export interface UserPreferenceDto {
 
 export type UserPreferencePatch = Partial<UserPreferenceDto>;
 
-export function defaults(): UserPreferenceDto {
+export function defaults(locale: Locale = DEFAULT_LOCALE): UserPreferenceDto {
   return {
     timezone: 'UTC',
-    locale: 'en',
+    locale,
     theme: 'system',
     issueOpenMode: 'panel',
     startPage: 'work-items',
@@ -108,7 +107,10 @@ function toDto(row: {
 }
 
 // A user's preferences, or the defaults when they have no row yet.
-export async function getPreferences(userId: string): Promise<UserPreferenceDto> {
+export async function getPreferences(
+  userId: string,
+  defaultLocale: Locale = DEFAULT_LOCALE,
+): Promise<UserPreferenceDto> {
   const rows = await db
     .select({
       timezone: userPreference.timezone,
@@ -126,7 +128,7 @@ export async function getPreferences(userId: string): Promise<UserPreferenceDto>
     })
     .from(userPreference)
     .where(eq(userPreference.userId, userId));
-  return rows[0] ? toDto(rows[0]) : defaults();
+  return rows[0] ? toDto(rows[0]) : defaults(defaultLocale);
 }
 
 // Applies a partial update and returns the full result. Fields left out keep their
@@ -134,8 +136,9 @@ export async function getPreferences(userId: string): Promise<UserPreferenceDto>
 export async function updatePreferences(
   userId: string,
   patch: UserPreferencePatch,
+  defaultLocale: Locale = DEFAULT_LOCALE,
 ): Promise<UserPreferenceDto> {
-  const next = { ...(await getPreferences(userId)), ...patch };
+  const next = { ...(await getPreferences(userId, defaultLocale)), ...patch };
   await db
     .insert(userPreference)
     .values({ userId, ...next })

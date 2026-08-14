@@ -24,6 +24,9 @@ own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
 - **At-least-once delivery.** Duplicates are possible (a 2xx whose ACK is lost);
   the `event_id` is stable across retries so receivers deduplicate. Never mint a
   new id per attempt.
+- **Agent runs: internal agents only.** An external agent's runs are claimed over
+  HTTP by the operator's runner (`POST /agent-runs/claim`), so the worker's claim
+  filters on `ai_agent.kind = 'internal'` and leaves the rest queued.
 - **Claim leases, not a status flag.** Claiming pushes `next_attempt_at` forward
   by `WEBHOOK_LEASE_SECONDS`; a crashed delivery is reclaimed after the lease. Keep
   the lease comfortably larger than `WEBHOOK_TIMEOUT_MS`.

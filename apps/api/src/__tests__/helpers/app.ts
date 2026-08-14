@@ -11,4 +11,10 @@ export function authedApi(cookie: string) {
   return treaty(app, { headers: { cookie } });
 }
 
+// Treaty client that authenticates with an API key instead of a session cookie —
+// how an external agent and its runner call the API.
+export function apiKeyApi(apiKey: string) {
+  return treaty(app, { headers: { 'x-api-key': apiKey } });
+}
+
 export type Api = typeof api;

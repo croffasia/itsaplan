@@ -29,6 +29,9 @@ export async function processAgentRuns(): Promise<void> {
   await Promise.all(runs.map(processRun));
 }
 
+// Only internal agents run here. An external agent's runs are claimed over HTTP by
+// the operator's runner, so the worker must leave them in the queue however long
+// they sit there.
 async function claimDueRuns(): Promise<ClaimedRun[]> {
   const batchSize = intEnv('AGENT_RUN_BATCH_SIZE', 5);
   const leaseSeconds = intEnv('AGENT_RUN_LEASE_SECONDS', 300);
@@ -38,9 +41,10 @@ async function claimDueRuns(): Promise<ClaimedRun[]> {
         started_at = coalesce(r.started_at, now()),
         next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
     WHERE r.id IN (
-      SELECT id FROM agent_run
-      WHERE status = 'pending' AND next_attempt_at <= now()
-      ORDER BY next_attempt_at, id
+      SELECT id FROM agent_run q
+      WHERE q.status = 'pending' AND q.next_attempt_at <= now()
+        AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
+      ORDER BY q.next_attempt_at, q.id
       FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}
     )

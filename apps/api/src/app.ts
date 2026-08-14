@@ -64,6 +64,10 @@ export const app = new Elysia()
           },
           { name: 'Agent Skills', description: 'Skill library given to internal agents' },
           {
+            name: 'Agent Runner',
+            description: "Run queue an external agent's runner drains with the agent's API key",
+          },
+          {
             name: 'Agent Tools',
             description: 'Tools configured on a credential and given to agents',
           },

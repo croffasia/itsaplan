@@ -1,6 +1,7 @@
 import { db, agentRun, issue, project } from '@repo/db';
 import { and, desc, eq, lt, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
+import type { AgentRunTrigger } from '../model';
 import { intEnv } from './helpers/env';
 import { renderMentionsPlain } from './mentions';
 
@@ -24,13 +25,18 @@ export async function enqueueAgentRun(input: {
   sourceActivityId: number | null;
   prompt: string;
   trigger?: 'mention' | 'delegation';
+  // Seconds the run stays unclaimable after it is queued, so the issue can still be
+  // edited before the agent reads it.
+  delaySeconds?: number;
 }): Promise<void> {
+  const delay = Math.max(0, Math.trunc(input.delaySeconds ?? 0));
   await db.insert(agentRun).values({
     agentId: input.agentId,
     issueId: input.issueId,
     sourceActivityId: input.sourceActivityId,
     prompt: input.prompt,
     trigger: input.trigger ?? (input.sourceActivityId == null ? 'delegation' : 'mention'),
+    nextAttemptAt: delay > 0 ? sql`now() + make_interval(secs => ${delay})` : undefined,
   });
 }
 
@@ -60,11 +66,13 @@ export interface ClaimedRun {
   requesterName: string | null;
 }
 
-// Atomically claims up to batchSize due runs. FOR UPDATE SKIP LOCKED lets more than
-// one API replica run without ever claiming the same row. Claiming bumps attempts
-// and pushes next_attempt_at forward by the lease while keeping status 'pending', so
-// a run whose poller crashes mid-flight becomes claimable again after the lease — no
-// separate recovery pass. The agent's project_id and user_id are read inline.
+// Atomically claims up to batchSize due runs of internal agents. FOR UPDATE SKIP
+// LOCKED lets more than one API replica run without ever claiming the same row.
+// Claiming bumps attempts and pushes next_attempt_at forward by the lease while
+// keeping status 'pending', so a run whose poller crashes mid-flight becomes
+// claimable again after the lease — no separate recovery pass. The agent's
+// project_id and user_id are read inline. An external agent's runs are left alone:
+// they are claimed over HTTP by the operator's runner (modules/agents/runner).
 export async function claimDueRuns(): Promise<ClaimedRun[]> {
   const batchSize = agentRunConfig.batchSize();
   const leaseSeconds = agentRunConfig.leaseSeconds();
@@ -73,9 +81,10 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
     SET attempts = r.attempts + 1,
         next_attempt_at = now() + make_interval(secs => ${leaseSeconds})
     WHERE r.id IN (
-      SELECT id FROM agent_run
-      WHERE status = 'pending' AND next_attempt_at <= now()
-      ORDER BY next_attempt_at
+      SELECT id FROM agent_run q
+      WHERE q.status = 'pending' AND q.next_attempt_at <= now()
+        AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
+      ORDER BY q.next_attempt_at
       FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}
     )
@@ -124,20 +133,22 @@ export async function markRunFailed(id: number, error: string): Promise<void> {
     .where(eq(agentRun.id, id));
 }
 
-// One row of an agent's run history, for the runs sidebar. `trigger` is derived: a run
-// with a source comment is a mention, otherwise a delegation. The issue is joined for
+// One row of an agent's run history, for the runs sidebar. The issue is joined for
 // its human key and title. `prompt` is the enqueued task with mention tokens rendered
 // to @Name for display.
 export interface AgentRunRow {
   id: number;
   status: string;
-  trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
+  trigger: AgentRunTrigger;
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;
   prompt: string;
   attempts: number;
   lastError: string | null;
+  // What the run produced: the runtime's reply, or whatever the runner's command
+  // printed. Null until the run finishes.
+  output: string | null;
   nextAttemptAt: string;
   createdAt: string;
 }
@@ -161,11 +172,11 @@ export async function listAgentRuns(
       id: agentRun.id,
       status: agentRun.status,
       trigger: agentRun.trigger,
-      sourceActivityId: agentRun.sourceActivityId,
       issueId: agentRun.issueId,
       prompt: agentRun.prompt,
       attempts: agentRun.attempts,
       lastError: agentRun.lastError,
+      output: agentRun.output,
       nextAttemptAt: agentRun.nextAttemptAt,
       createdAt: agentRun.createdAt,
       issueSeq: issue.sequenceNumber,
@@ -186,13 +197,14 @@ export async function listAgentRuns(
     items: page.map((r) => ({
       id: r.id,
       status: r.status,
-      trigger: r.trigger as AgentRunRow['trigger'],
+      trigger: r.trigger as AgentRunTrigger,
       issueId: r.issueId,
       issueIdentifier: r.projectKey && r.issueSeq != null ? `${r.projectKey}-${r.issueSeq}` : null,
       issueTitle: r.issueTitle ?? null,
       prompt: renderMentionsPlain(r.prompt),
       attempts: r.attempts,
       lastError: r.lastError,
+      output: r.output,
       nextAttemptAt: iso(r.nextAttemptAt),
       createdAt: iso(r.createdAt),
     })),

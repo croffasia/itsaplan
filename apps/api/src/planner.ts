@@ -29,6 +29,7 @@ import { analyticsRoutes } from './modules/analytics';
 import { settingsRoutes } from './settings/routes';
 import { godRoutes } from './god/routes';
 import { agentScheduleRoutes } from './modules/agents/schedules';
+import { agentRunnerRoutes } from './modules/agents/runner';
 import { notificationRoutes } from './notifications/routes';
 import { notificationSettingsRoutes } from './notification-settings/routes';
 import { notificationPreferenceRoutes } from './notification-preferences/routes';
@@ -96,6 +97,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(webhookRoutes)
   .use(githubSettingsRoutes)
   .use(agentScheduleRoutes)
+  .use(agentRunnerRoutes)
   .use(dashboardRoutes)
   .use(noteBoardRoutes)
   .use(analyticsRoutes)

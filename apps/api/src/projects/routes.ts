@@ -134,6 +134,7 @@ const AssigneeCandidateResponse = t.Object({
   image: t.Nullable(t.String()),
   kind: t.Union([t.Literal('member'), t.Literal('agent')]),
   agentKind: t.Nullable(t.Union([t.Literal('external'), t.Literal('internal')])),
+  restrictedToUserId: t.Nullable(t.String()),
 });
 
 // A custom field option (CustomFieldOptionRow from custom-fields/store).

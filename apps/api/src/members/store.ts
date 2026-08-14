@@ -109,6 +109,9 @@ export interface AssigneeCandidate {
   // (the agent tool) can pick who to tag. Null for an agent.
   role: MemberRole | null;
   description: string | null;
+  // The user an 'owner'-scoped external agent works for: only their runs reach its
+  // runner, so delegating it to anyone else does nothing. Null for everyone else.
+  restrictedToUserId: string | null;
 }
 
 export async function listAssigneeCandidates(projectId: number): Promise<AssigneeCandidate[]> {
@@ -136,6 +139,8 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         email: user.email,
         image: user.image,
         agentKind: aiAgent.kind,
+        ownerUserId: aiAgent.ownerUserId,
+        runnerScope: aiAgent.runnerScope,
       })
       .from(aiAgent)
       .innerJoin(user, eq(user.id, aiAgent.userId))
@@ -150,6 +155,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     agentKind: null,
     role: r.role as MemberRole,
     description: r.description,
+    restrictedToUserId: null,
   }));
   const agents: AssigneeCandidate[] = agentRows.map((r) => ({
     userId: r.userId,
@@ -160,6 +166,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     agentKind: r.agentKind as 'external' | 'internal',
     role: null,
     description: null,
+    restrictedToUserId: r.runnerScope === 'owner' ? r.ownerUserId : null,
   }));
   return [...members, ...agents].sort((a, b) => a.name.localeCompare(b.name));
 }

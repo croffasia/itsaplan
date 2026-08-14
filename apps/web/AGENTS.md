@@ -60,10 +60,15 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   an untranslated one renders its English text.
 - A new namespace needs its file in every language plus an entry in `defaultMessages`.
 - A new language: `messages/<code>/`, `src/i18n/locales.ts`, `src/hooks/useDateFnsLocale.ts`,
-  and `LOCALES`/`Locale` in `apps/api/src/user-preferences/`. No migration — the `locale`
+  and `LOCALES`/`Locale` in `apps/api/src/modules/user-preferences/`. No migration — the `locale`
   column has no CHECK.
 - Don't subset messages per route with `pick()`: a missing namespace then fails at runtime
   instead of at typecheck.
+- `bun run lint` checks the message files themselves (`eslint-plugin-i18n-json`, wired in
+  `eslint.config.mjs`): every language carries every namespace of `messages/en` with the same
+  key set, and each message parses as ICU. A key added to English alone fails CI. Angle
+  brackets in a message are rich-text tags to next-intl — write `owner/repo`, not
+  `<owner>/<repo>`, or the message does not parse.
 
 `docs/dev/i18n.md` has the whole picture, including how a switch reaches the server render.
 

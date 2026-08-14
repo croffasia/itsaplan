@@ -10,6 +10,7 @@ import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
 import { qk } from '@/services/queryKeys';
 import { buildGroups, groupIssues } from '@/utils/project';
+import { countIssuesByColumn } from './utils/wipLimit';
 import {
   restoreHiddenSections,
   withoutHiddenSections,
@@ -72,6 +73,10 @@ export default function WorkItemsPage() {
   const changeSettings = (next: ViewSettings) =>
     editor.changeSettings(restoreHiddenSections(next, editor.settings, features));
 
+  // From the unfiltered project, so a column's WIP limit is measured against every
+  // issue in it rather than the ones the active filters leave on screen.
+  const columnCounts = countIssuesByColumn(project.issues);
+
   const timelineGroups = buildGroups(
     filteredProject,
     settings.group,
@@ -115,6 +120,7 @@ export default function WorkItemsPage() {
   const viewProps = {
     project: filteredProject,
     filters: editor.effectiveFilters,
+    columnCounts,
     customFields,
     settings,
     onSettingsChange: changeSettings,

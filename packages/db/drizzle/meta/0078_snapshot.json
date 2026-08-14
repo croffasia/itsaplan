@@ -1,6 +1,6 @@
 {
-  "id": "a24a08f6-468b-456e-9bfa-105e632ca686",
-  "prevId": "00000000-0000-4000-8000-000000000077",
+  "id": "00000000-0000-4000-8000-000000000078",
+  "prevId": "f85faa80-cff4-4bba-be71-6a92d0145408",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1579,7 +1579,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'project'"
+          "default": "'owner'"
         },
         "last_seen_at": {
           "name": "last_seen_at",
@@ -4619,6 +4619,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "wip_limit": {
+          "name": "wip_limit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wip_mode": {
+          "name": "wip_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'soft'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -4659,6 +4672,14 @@
         "project_column_state_type_check": {
           "name": "project_column_state_type_check",
           "value": "\"project_column\".\"state_type\" IN ('backlog', 'unstarted', 'started', 'completed', 'canceled')"
+        },
+        "project_column_wip_mode_check": {
+          "name": "project_column_wip_mode_check",
+          "value": "\"project_column\".\"wip_mode\" IN ('soft', 'hard')"
+        },
+        "project_column_wip_limit_check": {
+          "name": "project_column_wip_limit_check",
+          "value": "\"project_column\".\"wip_limit\" IS NULL OR \"project_column\".\"wip_limit\" > 0"
         }
       },
       "isRLSEnabled": false

@@ -276,6 +276,12 @@ export const projectColumn = pgTable(
     stateType: text('state_type').notNull().default('unstarted'),
     color: text('color').notNull().default('#6b7280'),
     position: integer('position').notNull(),
+    // The work-in-progress limit: how many issues the column should hold. NULL is
+    // no limit, which is what every column starts as. wipMode decides what happens
+    // at the limit — 'soft' only warns, 'hard' refuses further issues — and is only
+    // read when wipLimit is set.
+    wipLimit: integer('wip_limit'),
+    wipMode: text('wip_mode').notNull().default('soft'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -283,6 +289,8 @@ export const projectColumn = pgTable(
       'project_column_state_type_check',
       sql`${t.stateType} IN ('backlog', 'unstarted', 'started', 'completed', 'canceled')`,
     ),
+    check('project_column_wip_mode_check', sql`${t.wipMode} IN ('soft', 'hard')`),
+    check('project_column_wip_limit_check', sql`${t.wipLimit} IS NULL OR ${t.wipLimit} > 0`),
     unique().on(t.projectId, t.position),
   ],
 );

@@ -16,6 +16,13 @@
   "updatedOn": "Updated {date}",
   "subtasksProgress": "Subtasks {done}/{total}",
   "subtasksDone": "{done} of {total} subtasks done",
+  "wip": {
+    "reached": "{column} is at its limit of {limit} issues.",
+    "tooltip": "Work-in-progress limit: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} of {total} / {max}",
+    "filteredTooltip": "{shown} shown by the current filters. The limit of {max} counts all {total} issues in the column."
+  },
   "columns": {
     "title": "Title",
     "status": "State",

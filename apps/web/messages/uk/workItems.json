@@ -16,6 +16,13 @@
   "updatedOn": "Оновлено {date}",
   "subtasksProgress": "Підзадачі {done}/{total}",
   "subtasksDone": "Виконано {done} з {total} підзадач",
+  "wip": {
+    "reached": "Статус «{column}» досяг межі в {limit} задач.",
+    "tooltip": "Ліміт задач у роботі: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} з {total} / {max}",
+    "filteredTooltip": "Поточні фільтри показують {shown}. Ліміт {max} рахує всі {total} задач у колонці."
+  },
   "columns": {
     "title": "Назва",
     "status": "Статус",

@@ -67,7 +67,9 @@ export async function handlePullRequestEvent(
       const stateType = (await columnStateTypes([issue.columnId])).get(issue.columnId);
       if (stateType && CLOSED_STATE_TYPES.includes(stateType)) continue;
       await recordActivity(issue.id, [prEntry('merged')], GITHUB_ACTOR);
-      await updateIssue(issue.id, { columnId: targetId }, GITHUB_ACTOR);
+      await updateIssue(issue.id, { columnId: targetId }, GITHUB_ACTOR, {
+        skipIfColumnFull: true,
+      });
     }
     return 'merged';
   }
@@ -86,6 +88,7 @@ export async function handlePullRequestEvent(
       if (stateType === 'backlog' || stateType === 'unstarted')
         await updateIssue(issue.id, { columnId: targetId }, GITHUB_ACTOR, {
           onlyIfColumnId: issue.columnId,
+          skipIfColumnFull: true,
         });
     }
     return 'opened';

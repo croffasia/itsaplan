@@ -1,6 +1,6 @@
 {
-  "id": "f85faa80-cff4-4bba-be71-6a92d0145408",
-  "prevId": "9b540250-e0d2-45a8-94a5-f23260f000ac",
+  "id": "00000000-0000-4000-8000-000000000081",
+  "prevId": "58c31622-56ef-4bcd-8e4f-275ed06b5da9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1531,6 +1531,13 @@
           "notNull": true,
           "default": false
         },
+        "delegation_delay_sec": {
+          "name": "delegation_delay_sec",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 120
+        },
         "role_id": {
           "name": "role_id",
           "type": "integer",
@@ -1579,7 +1586,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'owner'"
+          "default": "'project'"
         },
         "last_seen_at": {
           "name": "last_seen_at",
@@ -1706,6 +1713,10 @@
         "ai_agent_runner_scope_check": {
           "name": "ai_agent_runner_scope_check",
           "value": "\"ai_agent\".\"runner_scope\" IN ('owner', 'project')"
+        },
+        "ai_agent_delegation_delay_check": {
+          "name": "ai_agent_delegation_delay_check",
+          "value": "\"ai_agent\".\"delegation_delay_sec\" >= 0 AND \"ai_agent\".\"delegation_delay_sec\" <= 86400"
         }
       },
       "isRLSEnabled": false

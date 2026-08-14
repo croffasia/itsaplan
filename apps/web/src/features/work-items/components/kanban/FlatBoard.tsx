@@ -11,8 +11,11 @@ import {
   type WorkItemsViewProps,
   type IssueGroup,
 } from '@/utils/project';
+import { isActiveFilterSet } from '@/utils/filters';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
 import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
+import { useWipLimitMessage } from '../../hooks/useWipLimitMessage';
+import { countEntering, wipAllows, wipStateFor } from '../../utils/wipLimit';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useSelection } from '../../context/useSelection';
 import { boardCollision, issuesToMove } from '../../utils/kanban';
@@ -21,12 +24,14 @@ import { GroupDot } from '../shared/GroupDot';
 import { CardOverlay } from './CardOverlay';
 import { BoardColumn } from './BoardColumn';
 import { CollapsedColumn } from './CollapsedColumn';
+import { WipCount } from './WipCount';
 
 // Flat board: one vertically-virtualized column per group, laid out horizontally,
 // with a trailing "Hidden" panel for manually-hidden columns.
 export default function FlatBoard({
   project,
   filters,
+  columnCounts,
   settings,
   onSettingsChange,
   onOpenIssue,
@@ -36,8 +41,10 @@ export default function FlatBoard({
   const t = useTranslations('workItems');
   const groupLabels = useGroupLabels();
   const sortedOrderMessage = useSortedOrderMessage();
+  const wipLimitMessage = useWipLimitMessage();
   const dnd = useBoardDnd(project.project.key, readOnly);
   const selection = useSelection();
+  const filtered = isActiveFilterSet(filters);
 
   // Hidden columns live in the view's display (settings.hiddenGroups); toggling
   // one writes through onSettingsChange (a display edit on a saved view, saved on
@@ -83,6 +90,8 @@ export default function FlatBoard({
   // since that changes the grouping field rather than the order.
   const manualOrder = settings.sort.field === 'manual';
 
+  const wipOf = (group: IssueGroup) => wipStateFor(group, project.columns, columnCounts);
+
   function moveIssue(issueIds: number[], group: IssueGroup, index: number) {
     const assign = group.assign;
     if (!assign) return;
@@ -90,6 +99,13 @@ export default function FlatBoard({
     const ids = issuesToMove(issueIds, sorted, target, manualOrder);
     if (ids.length === 0) {
       toast.info(sortedOrderMessage(settings.sort.field));
+      return;
+    }
+    // Refused here rather than left to the server: the move is optimistic, so a
+    // card would otherwise land in the column and snap back out of it.
+    const wip = wipOf(group);
+    if (wip && !wipAllows(wip, countEntering(ids, sorted, group))) {
+      toast.info(wipLimitMessage(group.name, wip.limit));
       return;
     }
     const positions = positionsAt(target, index, ids.length);
@@ -120,6 +136,7 @@ export default function FlatBoard({
               key={group.key}
               group={group}
               count={issuesByGroup.get(group.key)?.length ?? 0}
+              wip={wipOf(group)}
               onExpand={() => setCollapsed(group.key, false)}
               onAddIssue={() => addIssueTo(group)}
               readOnly={readOnly}
@@ -133,6 +150,9 @@ export default function FlatBoard({
               maps={maps}
               properties={settings.properties}
               manualOrder={manualOrder}
+              wip={wipOf(group)}
+              filtered={filtered}
+              boardIssues={sorted}
               onMoveIssue={moveIssue}
               onOpenIssue={onOpenIssue}
               onAddIssue={() => addIssueTo(group)}
@@ -158,9 +178,11 @@ export default function FlatBoard({
                   <div className="flex items-center gap-2 text-foreground">
                     <GroupDot group={group} />
                     {group.name}
-                    <span className="text-muted-foreground">
-                      {issuesByGroup.get(group.key)?.length ?? 0}
-                    </span>
+                    <WipCount
+                      filteredCount={issuesByGroup.get(group.key)?.length ?? 0}
+                      wip={wipOf(group)}
+                      filtered={filtered}
+                    />
                   </div>
                   <Button
                     variant="ghost"

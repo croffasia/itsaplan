@@ -4,10 +4,15 @@
 
 // An error carrying an HTTP status. Thrown from stores and routes; the planner
 // plugin's onError maps it to a { error } JSON response with that status.
+//
+// `code` names the failure for a caller that has to branch on it rather than show
+// the message — an agent moving issues without a human watching. Most failures
+// leave it unset: the status and the message are enough to render.
 export class HttpError extends Error {
   constructor(
     public status: number,
     message: string,
+    public code?: string,
   ) {
     super(message);
   }

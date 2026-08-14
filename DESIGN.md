@@ -31,6 +31,11 @@ switch).
   in dark.
 - `destructive` — error / overdue / delete only. It serves two roles at once: `text-destructive`
   on the page, and a fill under the white label of a destructive button or badge.
+- `warning` — a state that needs attention but has refused nothing, where `destructive` would
+  overstate it: a soft WIP limit is at its maximum while a hard one has blocked the move. Text
+  and low-opacity tint only; there is no warning button, so it is tuned for the page background
+  alone. An amber rather than a bright yellow — yellow at a legible chroma has to drop this far
+  in lightness to hold contrast against the light page.
 - `ring` — focus ring (keyboard a11y).
 - `chart-1…5` — a neutral grayscale ramp for charts. For categorical series that need
   to be told apart (priority, assignee), widgets use their own small hue palette; for

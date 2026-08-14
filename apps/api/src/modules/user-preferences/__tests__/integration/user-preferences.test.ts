@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { api, authedApi } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { api, authedApi } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Account preferences are self-scoped: a user only ever reads and writes their own
 // row, so there is no project or permission wiring to cover. A read before any write
@@ -30,6 +30,29 @@ describe('user preferences', () => {
       lastProjectId: null,
       hotkeys: {},
     });
+  });
+
+  it('uses the preferred supported browser language when nothing was saved', async () => {
+    const u = await signUpTestUser();
+
+    const res = await authedApi(u.cookie, {
+      'accept-language': 'ru;q=0.4,zh-CN;q=0.9,en;q=0.8',
+    }).account.preferences.get();
+
+    expect(res.status).toBe(200);
+    expect(res.data?.locale).toBe('zh-CN');
+  });
+
+  it('saves the preferred browser language with the first preference update', async () => {
+    const u = await signUpTestUser();
+    const client = authedApi(u.cookie, {
+      'accept-language': 'uk-UA,uk;q=0.9,en;q=0.8',
+    });
+
+    await client.account.preferences.patch({ theme: 'dark' });
+
+    const stored = await authedApi(u.cookie, { 'accept-language': 'en' }).account.preferences.get();
+    expect(stored.data).toMatchObject({ locale: 'uk', theme: 'dark' });
   });
 
   it('saves a full update and reads it back', async () => {

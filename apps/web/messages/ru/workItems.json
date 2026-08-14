@@ -16,6 +16,13 @@
   "updatedOn": "Обновлено {date}",
   "subtasksProgress": "Подзадачи {done}/{total}",
   "subtasksDone": "Выполнено {done} из {total} подзадач",
+  "wip": {
+    "reached": "Статус «{column}» достиг предела в {limit} задач.",
+    "tooltip": "Лимит задач в работе: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} из {total} / {max}",
+    "filteredTooltip": "Текущие фильтры показывают {shown}. Лимит {max} считает все {total} задач в колонке."
+  },
   "columns": {
     "title": "Название",
     "status": "Статус",

@@ -54,6 +54,10 @@ export interface WorkItemsViewProps {
   // The conditions the project's issues were filtered by. The layouts re-read them
   // to leave out the groups those conditions exclude (see buildGroups).
   filters: FilterSet;
+  // Issues per column id before those filters are applied. A column's WIP limit is
+  // measured against this rather than the cards on screen, so the limit means the
+  // same thing to every viewer whatever they have filtered.
+  columnCounts: Map<number, number>;
   // Custom field definitions applicable to this project (global + the project's
   // type-scoped fields). The Table view renders enabled ones as columns.
   customFields: CustomField[];

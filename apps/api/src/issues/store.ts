@@ -25,6 +25,7 @@ import {
   isNotNull,
   isNull,
   lte,
+  ne,
   notInArray,
   or,
   sql,
@@ -55,6 +56,7 @@ import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/serv
 import { getMembership } from '../members/store';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { applySubtaskAutomation } from './automation';
+import { assertWipLimit, wipLimitBreach } from '#modules/columns/service';
 
 // Data access for issues and their per-issue data: labels, custom field values,
 // and selected options. The human identifier (e.g. "MKT-42") is the project key
@@ -805,6 +807,7 @@ export async function createIssue(
   await assertInitiative(project.id, input.initiativeId);
   await assertCycle(project.id, input.cycleId);
   await assertColumn(project.id, input.columnId);
+  await assertWipLimit(input.columnId);
   await assertIssueType(project.id, input.typeId);
   await assertParent(project.id, null, input.parentId);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
@@ -933,11 +936,16 @@ export interface IssuePatch {
 // issue still sits in that column, so an automation acting on a state it read
 // earlier cannot overwrite a concurrent move. A failed guard writes nothing and
 // returns the current row.
+//
+// opts.skipIfColumnFull does the same for a hard WIP limit: the move is dropped
+// instead of throwing. Automations set it, because they run after the write that
+// triggered them — a throw there would report a move that already succeeded as
+// failed, and abort the rest of the batch the automation is working through.
 export async function updateIssue(
   id: number,
   patch: IssuePatch,
   actor?: ActivityActor,
-  opts?: { onlyIfColumnId?: number },
+  opts?: { onlyIfColumnId?: number; skipIfColumnFull?: boolean },
 ): Promise<IssueRow | null> {
   const before = await loadSnapshot(id);
   if (!before) return null;
@@ -946,6 +954,13 @@ export async function updateIssue(
   await assertInitiative(before.projectId, patch.initiativeId);
   await assertCycle(before.projectId, patch.cycleId, before.cycleId);
   await assertColumn(before.projectId, patch.columnId);
+  // Only a move into a different column consumes capacity, so re-saving an issue
+  // that already sits in a full column is never refused.
+  if (patch.columnId !== undefined && patch.columnId !== before.columnId) {
+    const breach = await wipLimitBreach(patch.columnId);
+    if (breach && !opts?.skipIfColumnFull) throw breach;
+    if (breach) return getIssue(id);
+  }
   await assertIssueType(before.projectId, patch.typeId);
   await assertParent(before.projectId, id, patch.parentId);
 
@@ -1150,8 +1165,26 @@ export async function bulkUpdateIssues(
   actorUserId?: string | null,
 ): Promise<number> {
   const valid = await issuesInProject(projectId, ids);
+  // The whole batch is checked against the limit before any of it is written:
+  // per-issue checks inside the loop would move issues until the column filled up
+  // and then fail, leaving the move half-applied.
+  if (patch.columnId !== undefined) {
+    const incoming = await countEnteringColumn(valid, patch.columnId);
+    if (incoming > 0) await assertWipLimit(patch.columnId, incoming);
+  }
   for (const id of valid) await updateIssue(id, patch, actorUserId);
   return valid.length;
+}
+
+// How many of the listed issues are not already in the target column — the ones a
+// move would actually add to it.
+async function countEnteringColumn(ids: number[], columnId: number): Promise<number> {
+  if (ids.length === 0) return 0;
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(issue)
+    .where(and(inArray(issue.id, ids), ne(issue.columnId, columnId)));
+  return count;
 }
 
 // Adds the given labels to every listed issue, keeping each issue's existing

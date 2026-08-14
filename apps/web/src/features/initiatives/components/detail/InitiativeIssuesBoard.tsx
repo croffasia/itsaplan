@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
+import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
 import KanbanBoard from '@/features/work-items/components/kanban/KanbanBoard';
@@ -33,6 +34,9 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
   const viewProps = {
     project: viewProject,
     filters: board.filters,
+    // Counted across the whole project, not just this initiative: the limit belongs
+    // to the column, and its other issues occupy it just the same.
+    columnCounts: countIssuesByColumn(project.issues),
     customFields,
     settings: board.settings,
     onSettingsChange: board.changeSettings,

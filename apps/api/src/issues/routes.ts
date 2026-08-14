@@ -455,10 +455,12 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         ),
       }),
       permission: ['work_items', 'create'],
-      response: { 201: IssueResponse, ...commonErrors },
+      response: { 201: IssueResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an issue',
-        description: 'Create an issue in a project.',
+        description:
+          'Create an issue in a project. Fails with 409 (code wip_limit_exceeded) ' +
+          'when the target column is at a hard WIP limit.',
         ...mcpTool('create_issue'),
       },
     },
@@ -498,7 +500,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         }),
       }),
       permission: ['work_items', 'edit'],
-      response: { 200: t.Object({ updated: t.Number() }), ...commonErrors },
+      response: { 200: t.Object({ updated: t.Number() }), ...commonErrors, ...errors(409) },
       detail: { summary: 'Bulk update issues' },
     },
   )
@@ -842,10 +844,12 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       }),
       params: issueParams,
       workItem: 'edit',
-      response: { 200: IssueResponse, ...commonErrors },
+      response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an issue',
-        description: 'Update an issue by its numeric id.',
+        description:
+          'Update an issue by its numeric id. Moving it into a column that is at a ' +
+          'hard WIP limit fails with 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
       },
     },

@@ -1,5 +1,5 @@
 {
-  "id": "f85faa80-cff4-4bba-be71-6a92d0145408",
+  "id": "9b540250-e0d2-45a8-94a5-f23260f000ac",
   "prevId": "9a1fe2c2-7cc9-4bd1-8410-e7ad66b7d0cf",
   "version": "7",
   "dialect": "postgresql",
@@ -1568,25 +1568,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "owner_user_id": {
-          "name": "owner_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "runner_scope": {
-          "name": "runner_scope",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'owner'"
-        },
-        "last_seen_at": {
-          "name": "last_seen_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -1664,19 +1645,6 @@
           ],
           "onDelete": "set null",
           "onUpdate": "no action"
-        },
-        "ai_agent_owner_user_id_user_id_fk": {
-          "name": "ai_agent_owner_user_id_user_id_fk",
-          "tableFrom": "ai_agent",
-          "tableTo": "user",
-          "columnsFrom": [
-            "owner_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1702,10 +1670,6 @@
         "ai_agent_kind_check": {
           "name": "ai_agent_kind_check",
           "value": "\"ai_agent\".\"kind\" IN ('external', 'internal')"
-        },
-        "ai_agent_runner_scope_check": {
-          "name": "ai_agent_runner_scope_check",
-          "value": "\"ai_agent\".\"runner_scope\" IN ('owner', 'project')"
         }
       },
       "isRLSEnabled": false
@@ -4619,6 +4583,19 @@
           "primaryKey": false,
           "notNull": true
         },
+        "wip_limit": {
+          "name": "wip_limit",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "wip_mode": {
+          "name": "wip_mode",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'soft'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp with time zone",
@@ -4659,6 +4636,14 @@
         "project_column_state_type_check": {
           "name": "project_column_state_type_check",
           "value": "\"project_column\".\"state_type\" IN ('backlog', 'unstarted', 'started', 'completed', 'canceled')"
+        },
+        "project_column_wip_mode_check": {
+          "name": "project_column_wip_mode_check",
+          "value": "\"project_column\".\"wip_mode\" IN ('soft', 'hard')"
+        },
+        "project_column_wip_limit_check": {
+          "name": "project_column_wip_limit_check",
+          "value": "\"project_column\".\"wip_limit\" IS NULL OR \"project_column\".\"wip_limit\" > 0"
         }
       },
       "isRLSEnabled": false

@@ -2,8 +2,10 @@ import { ChevronsLeftRight, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type IssueGroup } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { GroupDot } from '../shared/GroupDot';
+import { type WipState, WIP_FULL_TEXT, wipFullColor } from '../../utils/wipLimit';
 
 // A column collapsed to a narrow vertical strip. It stays in place (in column
 // order) with its name reading vertically and its count visible; collapsing only
@@ -11,12 +13,16 @@ import { GroupDot } from '../shared/GroupDot';
 export function CollapsedColumn({
   group,
   count,
+  wip,
   onExpand,
   onAddIssue,
   readOnly,
 }: {
   group: IssueGroup;
   count: number;
+  // The column's WIP limit, or null when it has none. The strip is too narrow for
+  // the full `count / max`, so a full column only colours its count.
+  wip: WipState | null;
   onExpand: () => void;
   onAddIssue: () => void;
   // In a read-only share the add affordance is hidden.
@@ -50,7 +56,11 @@ export function CollapsedColumn({
       <GroupDot group={group} />
       <div className="flex flex-1 items-start gap-2 text-sm font-medium [writing-mode:vertical-rl]">
         <span className="text-foreground">{group.name}</span>
-        <span className="text-muted-foreground">{count}</span>
+        <span
+          className={cn(wip?.full ? WIP_FULL_TEXT[wipFullColor(wip)] : 'text-muted-foreground')}
+        >
+          {count}
+        </span>
       </div>
     </div>
   );

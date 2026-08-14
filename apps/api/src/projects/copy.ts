@@ -362,6 +362,8 @@ export async function copyProject(
             stateType: col.stateType,
             color: col.color,
             position: col.position,
+            wipLimit: col.wipLimit,
+            wipMode: col.wipMode,
           })
           .returning({ id: projectColumn.id });
         maps.column.set(col.id, created.id);

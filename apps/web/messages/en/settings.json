@@ -405,7 +405,19 @@
     "importTitle": "Apply states from clipboard",
     "importSummary": "{count, plural, one {# state} other {# states}} will be applied. A matching state keeps its group; only its color is updated.",
     "importApply": "{count, plural, one {Apply # state} other {Apply # states}}",
-    "imported": "Applied states: {created} created, {updated} updated."
+    "imported": "Applied states: {created} created, {updated} updated.",
+    "wip": {
+      "label": "Work-in-progress limit",
+      "none": "No limit",
+      "help": "How many issues this state should hold. The board shows the count against it.",
+      "modeLabel": "At the limit",
+      "softLabel": "Warn",
+      "softHelp": "The board marks the state as full. Issues can still be moved into it.",
+      "hardLabel": "Block",
+      "hardHelp": "Issues cannot be moved into the state while it is full, from anywhere.",
+      "badgeSoft": "max {limit}",
+      "badgeHard": "max {limit}, enforced"
+    }
   },
   "issueTypes": {
     "add": "Add type",
@@ -608,7 +620,7 @@
     "secretRegenerated": "New secret created. Update it in your GitHub webhook too.",
     "manualHint": "In your GitHub repository, open <b>Settings → Webhooks → Add webhook</b>. Paste the payload URL and secret, set the content type to <code>application/json</code>, and choose only the <b>Pull requests</b> event.",
     "cliHint": "Requires the <link>GitHub CLI</link>. Copy this command, replace <code>{placeholder}</code> with your repository, and run it in a terminal.",
-    "commandCopied": "Command copied. Replace <owner>/<repo>, then run it.",
+    "commandCopied": "Command copied. Replace owner/repo, then run it.",
     "copied": "{label} copied",
     "lastDelivery": "Last delivery",
     "lastDeliveryAt": "Received {ago}",

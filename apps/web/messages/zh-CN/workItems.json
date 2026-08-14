@@ -16,6 +16,13 @@
   "updatedOn": "更新于 {date}",
   "subtasksProgress": "子任务 {done}/{total}",
   "subtasksDone": "已完成 {done}/{total} 个子任务",
+  "wip": {
+    "reached": "「{column}」已达到 {limit} 个工作项的上限。",
+    "tooltip": "在制品上限：{max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown}/{total} / {max}",
+    "filteredTooltip": "当前筛选显示 {shown} 个。上限 {max} 计入该列的全部 {total} 个工作项。"
+  },
   "columns": {
     "title": "标题",
     "status": "状态",

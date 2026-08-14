@@ -33,7 +33,7 @@ import { agentRunnerRoutes } from './modules/agents/runner';
 import { notificationRoutes } from './notifications/routes';
 import { notificationSettingsRoutes } from './notification-settings/routes';
 import { notificationPreferenceRoutes } from './notification-preferences/routes';
-import { userPreferenceRoutes } from './user-preferences/routes';
+import { userPreferenceRoutes } from './modules/user-preferences';
 import { telegramRoutes } from './telegram/routes';
 import { syncRoutes } from './sync/routes';
 
@@ -53,7 +53,7 @@ export const planner = new Elysia({ name: 'planner' })
   .onError({ as: 'global' }, ({ code, error, set }) => {
     if (error instanceof HttpError) {
       set.status = error.status;
-      return { error: error.message };
+      return error.code ? { error: error.message, code: error.code } : { error: error.message };
     }
     if (code === 'VALIDATION') {
       set.status = 400;

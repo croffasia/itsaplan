@@ -8,11 +8,17 @@ import { api } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 import { useInvalidateProject } from '@/services/projects.service';
 
+// Refetched on an interval because an external agent's runner presence comes from
+// this list: without it the online/offline state stays at whatever it was when the
+// settings page opened.
+const RUNNER_PRESENCE_REFRESH_MS = 30_000;
+
 export function useAiAgentsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.aiAgents(projectKey ?? ''),
     queryFn: () => api.listAiAgents(projectKey!),
     enabled: projectKey != null,
+    refetchInterval: RUNNER_PRESENCE_REFRESH_MS,
   });
 }
 

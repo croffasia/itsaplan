@@ -43,7 +43,10 @@ export default function AgentExpandedLayout({
   }
 
   return (
-    <div ref={containerRef} className="min-h-0 flex-1 overflow-y-auto px-6 pt-2 pb-10">
+    <div
+      ref={containerRef}
+      className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10 sm:px-6 sm:pt-2"
+    >
       {banner && <div className={`mx-auto mb-6 w-full ${AGENT_EXPANDED_WIDTH}`}>{banner}</div>}
       <div className={`mx-auto flex w-full gap-10 ${AGENT_EXPANDED_WIDTH}`}>
         <SectionNav

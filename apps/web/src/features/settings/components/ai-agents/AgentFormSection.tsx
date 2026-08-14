@@ -55,7 +55,9 @@ export function AgentFormSection({
           />
         </CollapsibleTrigger>
         <CollapsibleContent>
-          <div className="space-y-4 pt-4">{children}</div>
+          {/* Indented to the header's title column (past the icon), so the fields read
+              as belonging to the section above them. */}
+          <div className="space-y-4 pt-4 pl-6">{children}</div>
         </CollapsibleContent>
       </Collapsible>
     </div>

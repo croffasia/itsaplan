@@ -1,49 +1,31 @@
 import { type ReactNode, useState } from 'react';
-import {
-  Cpu,
-  IdCard,
-  ListChecks,
-  Shield,
-  SlidersHorizontal,
-  Sparkles,
-  Wrench,
-  Zap,
-} from 'lucide-react';
-import type { AgentTool, IntegrationMeta, IntegrationOption, ProviderModel, Role } from '@/lib/api';
+import { Cpu, IdCard, ListChecks, SlidersHorizontal, Sparkles, Wrench, Zap } from 'lucide-react';
+import type {
+  AgentTool,
+  AiAgent,
+  IntegrationMeta,
+  IntegrationOption,
+  ProviderModel,
+  Role,
+} from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Switch } from '@/components/ui/switch';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { type SectionNavItem } from '@/components/common/page/SectionNav';
 import { type AgentFormValue, grantedToolCount } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
 import AgentExpandedLayout from './AgentExpandedLayout';
+import AgentAccessSection from './AgentAccessSection';
 import AgentModelSection from './AgentModelSection';
 import AgentActionsSection from './AgentActionsSection';
+import AgentTriggersSection from './AgentTriggersSection';
+import { AgentInstructionsField } from './AgentInstructionsField';
+import AgentRunnerSection from './AgentRunnerSection';
 import { useTranslations } from 'next-intl';
 
-// Sentinel select value for "no explicit role" (falls back to the project default).
-const DEFAULT_ROLE_VALUE = '__default__';
-
-// Which sections open when the form first renders. Core sections start open; the
-// optional/heavy ones (Skills, Tools, Advanced) start collapsed to keep the initial
-// view short.
-const DEFAULT_OPEN: Record<string, boolean> = {
-  basics: true,
-  access: true,
-  model: true,
-  triggers: true,
-  actions: true,
-  skills: false,
-  tools: false,
-  advanced: false,
-};
+// Which sections open when the form first renders: only Access, so the form opens as
+// a short list of sections instead of a wall of fields. Basics is not in it because
+// it never collapses.
+const DEFAULT_OPEN: Record<string, boolean> = { access: true };
 
 // The agent form: the sections an agent of this kind has, in a stacked column or, for
 // a full-width internal agent, beside a section nav. `kindLocked` fixes the kind on
@@ -61,6 +43,7 @@ export default function SettingsAiAgentFields({
   models,
   modelsLoading,
   roles,
+  agent,
   skillsContent,
   toolsContent,
   banner,
@@ -77,6 +60,9 @@ export default function SettingsAiAgentFields({
   models: ProviderModel[];
   modelsLoading: boolean;
   roles: Role[];
+  // The saved agent, for the state only the server knows (its runner's presence).
+  // Null while creating.
+  agent: AiAgent | null;
   // The Skills section body, built by the parent (it owns the skill library and
   // links). Null when Skills does not apply; the section is hidden then.
   skillsContent?: ReactNode | null;
@@ -95,8 +81,10 @@ export default function SettingsAiAgentFields({
     onOpenChange: (o: boolean) => setOpenSections((s) => ({ ...s, [id]: o })),
   });
 
+  // No section header: the name, handle, and instructions are the agent itself, so
+  // they open the form as plain fields rather than as one more thing to expand.
   const basicsSection = (
-    <AgentFormSection key="basics" {...sectionProps('basics')} icon={IdCard} title={t('basics')}>
+    <div key="basics" id="basics" className="scroll-mt-4 space-y-4">
       {!kindLocked && (
         <div className="space-y-1.5">
           <span className="text-sm font-medium">{t('kind')}</span>
@@ -145,40 +133,28 @@ export default function SettingsAiAgentFields({
         />
         <p className="text-xs text-muted-foreground">{t('usernameHint')}</p>
       </div>
-    </AgentFormSection>
+
+      {value.kind === 'external' && (
+        <AgentInstructionsField
+          value={value.instructions}
+          onChange={(instructions) => onChange({ instructions })}
+        />
+      )}
+    </div>
   );
 
   const accessSection = (
-    <AgentFormSection
+    <AgentAccessSection
       key="access"
       {...sectionProps('access')}
-      icon={Shield}
-      title={t('access')}
-      hint={t('accessHint')}
-    >
-      <div className="space-y-1.5">
-        <span className="text-sm font-medium">{t('role')}</span>
-        <Select
-          value={value.roleId != null ? String(value.roleId) : DEFAULT_ROLE_VALUE}
-          onValueChange={(v) => onChange({ roleId: v === DEFAULT_ROLE_VALUE ? null : Number(v) })}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder={t('chooseRole')} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={DEFAULT_ROLE_VALUE}>{t('defaultRole')}</SelectItem>
-            {roles.map((r) => (
-              <SelectItem key={r.id} value={String(r.id)}>
-                {r.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">
-          {value.kind === 'external' ? t('roleHintExternal') : t('roleHintInternal')}
-        </p>
-      </div>
-    </AgentFormSection>
+      value={value}
+      onChange={onChange}
+      roles={roles}
+    />
+  );
+
+  const runnerSection = (
+    <AgentRunnerSection key="runner" {...sectionProps('runner')} agent={agent} />
   );
 
   const modelSection = (
@@ -209,34 +185,12 @@ export default function SettingsAiAgentFields({
   );
 
   const triggersSection = (
-    <AgentFormSection
+    <AgentTriggersSection
       key="triggers"
       {...sectionProps('triggers')}
-      icon={Zap}
-      title={t('triggers')}
-      hint={t('triggersHint')}
-    >
-      <label className="flex cursor-pointer items-center justify-between gap-2">
-        <span>
-          <span className="text-sm">{t('onMention')}</span>
-          <span className="block text-xs text-muted-foreground">{t('onMentionHint')}</span>
-        </span>
-        <Switch
-          checked={value.triggerOnMention}
-          onCheckedChange={(v) => onChange({ triggerOnMention: v })}
-        />
-      </label>
-      <label className="flex cursor-pointer items-center justify-between gap-2">
-        <span>
-          <span className="text-sm">{t('onDelegation')}</span>
-          <span className="block text-xs text-muted-foreground">{t('onDelegationHint')}</span>
-        </span>
-        <Switch
-          checked={value.triggerOnAssign}
-          onCheckedChange={(v) => onChange({ triggerOnAssign: v })}
-        />
-      </label>
-    </AgentFormSection>
+      value={value}
+      onChange={onChange}
+    />
   );
 
   const skillsSection =
@@ -378,7 +332,11 @@ export default function SettingsAiAgentFields({
     <div className="space-y-8">
       {basicsSection}
       {value.kind === 'external' ? (
-        accessSection
+        <>
+          {accessSection}
+          {triggersSection}
+          {runnerSection}
+        </>
       ) : (
         <>
           {modelSection}

@@ -133,6 +133,7 @@ function RunItem({ run: r }: { run: AgentRun }) {
           {r.status === 'failed' && r.lastError && (
             <DetailBlock label={t('error')} value={r.lastError} />
           )}
+          {r.output && <DetailBlock label={t('result')} value={r.output} />}
           {r.status === 'pending' && (
             <DetailBlock
               label={t('queue')}

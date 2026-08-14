@@ -22,11 +22,12 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { AgentMetaRow, AgentTriggers } from './AgentMetaRow';
+import { AgentRunnerStatus } from './AgentRunnerStatus';
 import { useTranslations } from 'next-intl';
 
 // One agent as a table row: the Agent cell holds the name, @username, kind badge,
 // and created date; the Configuration cell shows an internal agent's meta line
-// (model, capability/tool/skill counts, enabled triggers) or an external agent's
+// (model, capability/tool/skill counts) or an external agent's runner presence and
 // non-secret key prefix. Row actions (history/chat/regenerate/edit/delete) sit in
 // the last cell. The plaintext key is never here, only apiKeyStart identifies the
 // key. `providerLabel` maps a provider key to its catalog label.
@@ -49,8 +50,10 @@ export function SettingsAiAgentRow({
 }) {
   const t = useTranslations('settings.agents');
   const can = useSettingsCan();
-  const canHistory = agent.kind === 'internal' && can('read');
-  const canChat = canHistory;
+  const canHistory = can('read');
+  // Only an internal agent runs in the built-in runtime, which is what the test chat
+  // drives.
+  const canChat = agent.kind === 'internal' && canHistory;
   const canRegenerate = agent.kind === 'external' && can('edit');
   const hasMenu = canChat || canRegenerate || can('delete');
 
@@ -79,19 +82,18 @@ export function SettingsAiAgentRow({
         </div>
       </TableCell>
       <TableCell className="px-3 py-3 pt-4 align-top whitespace-normal">
-        {agent.kind === 'internal' ? (
-          <AgentTriggers agent={agent} />
-        ) : (
-          <span className="text-xs text-muted-foreground">—</span>
-        )}
+        <AgentTriggers agent={agent} />
       </TableCell>
       <TableCell className="px-3 py-3 pt-4 align-top whitespace-normal">
         {agent.kind === 'internal' ? (
           <AgentMetaRow agent={agent} providerLabel={providerLabel} />
         ) : (
-          <span className="text-xs text-muted-foreground">
-            {agent.apiKeyStart ? t('apiKeyValue', { start: agent.apiKeyStart }) : t('apiKey')}
-          </span>
+          <div className="flex flex-col gap-1">
+            <AgentRunnerStatus agent={agent} />
+            <span className="text-xs text-muted-foreground">
+              {agent.apiKeyStart ? t('apiKeyValue', { start: agent.apiKeyStart }) : t('apiKey')}
+            </span>
+          </div>
         )}
       </TableCell>
       <TableCell className="px-3 py-2 pt-3 align-top">

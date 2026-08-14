@@ -17,7 +17,11 @@ export interface AgentFormValue {
   memoryLastMessages: string;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // Minutes a delegation run waits before the agent may pick it up, as a string so
+  // the input can be cleared while typing.
+  delegationDelayMin: string;
   roleId: number | null;
+  runnerScope: 'owner' | 'project';
 }
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
@@ -58,8 +62,18 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     memoryLastMessages: agent?.memoryLastMessages != null ? String(agent.memoryLastMessages) : '',
     triggerOnMention: agent?.triggerOnMention ?? true,
     triggerOnAssign: agent?.triggerOnAssign ?? false,
+    delegationDelayMin: String(Math.round((agent?.delegationDelaySec ?? 120) / 60)),
     roleId: agent?.roleId ?? null,
+    runnerScope: agent?.runnerScope ?? 'project',
   };
+}
+
+// The delegation delay the server stores. A blank or unparseable input means no
+// delay; the value is clamped to the server's 0..24h range.
+function delegationDelaySec(minutes: string): number {
+  const n = Math.round(Number(minutes.trim()));
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(n, 1440) * 60;
 }
 
 // Parses an optional number input: blank becomes null (clears the field), a valid
@@ -72,24 +86,29 @@ function parseNum(s: string): number | null {
 }
 
 // The kind-specific config, shared by the create input and edit patch. Both kinds
-// carry the authorization role they act under; an internal agent adds the
-// model/tools/trigger config on top.
+// carry the authorization role they act under, their run triggers, and their
+// instructions; an external agent adds the scope of the runs its runner receives, an
+// internal one the model/tools config.
 function configFields(v: AgentFormValue) {
+  const common = {
+    roleId: v.roleId,
+    instructions: v.instructions.trim() || null,
+    triggerOnMention: v.triggerOnMention,
+    triggerOnAssign: v.triggerOnAssign,
+    delegationDelaySec: delegationDelaySec(v.delegationDelayMin),
+  };
   if (v.kind === 'external') {
-    return { roleId: v.roleId };
+    return { ...common, runnerScope: v.runnerScope };
   }
   return {
-    roleId: v.roleId,
+    ...common,
     modelCredentialId: v.modelCredentialId,
     model: v.model.trim() || null,
-    instructions: v.instructions.trim() || null,
     tools: v.tools,
     temperature: parseNum(v.temperature),
     maxSteps: parseNum(v.maxSteps),
     memoryEnabled: v.memoryEnabled,
     memoryLastMessages: v.memoryEnabled ? parseNum(v.memoryLastMessages) : null,
-    triggerOnMention: v.triggerOnMention,
-    triggerOnAssign: v.triggerOnAssign,
   };
 }
 

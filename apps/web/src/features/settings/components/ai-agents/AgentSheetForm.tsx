@@ -267,6 +267,7 @@ export function AgentSheetForm({
       models={providerModelsQuery.data ?? []}
       modelsLoading={providerModelsQuery.isLoading}
       roles={rolesQuery.data ?? []}
+      agent={agent}
       skillsContent={skillsContent}
       toolsContent={toolsContent}
       banner={banner}
@@ -284,14 +285,14 @@ export function AgentSheetForm({
       {ownsScroll ? (
         fields
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-1 pb-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-6">
           <div className={`mx-auto w-full space-y-6 ${contentWidth}`}>
             {banner}
             {fields}
           </div>
         </div>
       )}
-      <div className="border-t border-border/60 px-6 py-3">
+      <div className="border-t border-border/60 px-4 py-3 sm:px-6">
         <div className={`mx-auto flex w-full ${contentWidth} ${expanded ? 'justify-end' : ''}`}>
           <Button
             type="submit"

@@ -147,6 +147,9 @@ export interface Assignee {
   image: string | null;
   kind: 'member' | 'agent';
   agentKind: 'external' | 'internal' | null;
+  // The user an 'owner'-scoped agent works for: delegating it to anyone else queues a
+  // run its runner never receives. Null for members and project-scoped agents.
+  restrictedToUserId: string | null;
 }
 
 // An AI agent on a project: a bot user plus its configuration. `kind` is
@@ -171,11 +174,19 @@ export interface AiAgent {
   maxSteps: number | null;
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
-  // Internal-agent run triggers.
+  // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // How long a delegation run waits before the agent may pick it up.
+  delegationDelaySec: number;
   // External-agent authorization role (a project_role id, or null for the default).
   roleId: number | null;
+  // The member who created the agent, and whose runs an 'owner'-scoped runner is
+  // limited to; 'project' scope serves any member's runs.
+  ownerUserId: string | null;
+  runnerScope: 'owner' | 'project';
+  // When the agent's runner last polled, or null while none ever has.
+  lastSeenAt: string | null;
   createdAt: string;
   apiKeyStart: string | null;
   // The integration key of the model credential (the provider, e.g. "openai"), or
@@ -200,6 +211,7 @@ export interface AgentRun {
   prompt: string;
   attempts: number;
   lastError: string | null;
+  output: string | null;
   nextAttemptAt: string;
   createdAt: string;
 }
@@ -271,7 +283,9 @@ export interface NewAiAgentInput {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  delegationDelaySec?: number;
   roleId?: number | null;
+  runnerScope?: 'owner' | 'project';
 }
 
 export interface AiAgentPatch {
@@ -287,7 +301,9 @@ export interface AiAgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  delegationDelaySec?: number;
   roleId?: number | null;
+  runnerScope?: 'owner' | 'project';
 }
 
 // A field of an integration's credential form (from the catalog). `type` "secret"

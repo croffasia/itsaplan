@@ -31,6 +31,7 @@ import { ShellCtx } from '@/context/shellContext';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
 import { buildIssuePrompt } from '../../utils/issuePrompt';
+import { delegatableAgents } from '../../utils/delegates';
 import { useSession } from '@/lib/auth-client';
 import { toDateStr } from '@/utils/dates';
 import { colorDot } from '@/components/common/fields/colorDot';
@@ -123,7 +124,7 @@ export default function IssueContextMenu({
   const currentPriority =
     PRIORITY_FIELDS.find((p) => p.value === (issue.priority ?? '')) ?? PRIORITY_FIELDS[0];
   const members = project.assignees.filter((a) => a.kind === 'member');
-  const agents = project.assignees.filter((a) => a.kind === 'agent');
+  const agents = delegatableAgents(project.assignees, session?.user.id ?? null);
   const initiatives = initiativesQuery.data ?? [];
 
   return (

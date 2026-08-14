@@ -292,6 +292,8 @@
     "you": "Ви",
     "members": "Учасники",
     "delegateTo": "Делегувати…",
+    "delegateOwnedBy": "Працює лише для {name}",
+    "delegateOwnedByOther": "Працює лише для свого власника",
     "noDelegate": "Без делегата",
     "noAgents": "Агентів немає.",
     "noState": "Статусів немає.",

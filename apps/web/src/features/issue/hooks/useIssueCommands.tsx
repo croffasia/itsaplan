@@ -38,6 +38,7 @@ import { StateIcon } from '../components/shared/IssueIcons';
 import { dueDatePresets } from '../utils/dueDatePresets';
 import { useDueDatePresetLabel } from './useDueDatePresetLabel';
 import { buildIssuePrompt } from '../utils/issuePrompt';
+import { delegatableAgents } from '../utils/delegates';
 
 // The palette commands for the issue the user is looking at — the issue page or
 // the open detail panel. They are the context menu's actions in command form and
@@ -96,7 +97,7 @@ export function useIssueCommands(
   const canDelete = can('work_items', 'delete');
   const patch = (fields: IssuePatch) => updateIssue.mutate({ id: issue.id, patch: fields });
   const members = project.assignees.filter((a) => a.kind === 'member');
-  const agents = project.assignees.filter((a) => a.kind === 'agent');
+  const agents = delegatableAgents(project.assignees, session?.user.id ?? null);
   const actions = matchedActions(actionsQuery.data ?? [], project, issue);
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
 

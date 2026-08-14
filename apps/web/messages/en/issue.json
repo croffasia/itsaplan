@@ -292,6 +292,8 @@
     "you": "You",
     "members": "Members",
     "delegateTo": "Delegate to…",
+    "delegateOwnedBy": "Only runs for {name}",
+    "delegateOwnedByOther": "Runs only for its owner",
     "noDelegate": "No delegate",
     "noAgents": "No agents.",
     "noState": "No state.",

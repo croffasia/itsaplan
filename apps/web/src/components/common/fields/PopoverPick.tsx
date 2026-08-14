@@ -9,6 +9,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import ReadOnlyPill from './ReadOnlyPill';
 
@@ -24,6 +25,8 @@ export interface PickItem {
   trailing?: ReactNode;
   // Listed but not selectable.
   disabled?: boolean;
+  // Why the row reads the way it does, on hover.
+  tooltip?: ReactNode;
   onSelect: () => void;
 }
 
@@ -72,22 +75,35 @@ export default function PopoverPick({
 
   if (readOnly) return <ReadOnlyPill>{trigger}</ReadOnlyPill>;
 
-  const renderItem = (it: PickItem) => (
-    <CommandItem
-      key={it.key}
-      value={it.search}
-      disabled={it.disabled}
-      onSelect={() => {
-        it.onSelect();
-        if (closeOnSelect) setOpen(false);
-      }}
-    >
-      {it.icon}
-      <span className="flex-1 truncate">{it.label}</span>
-      {it.trailing}
-      {it.selected && <Check />}
-    </CommandItem>
-  );
+  const renderItem = (it: PickItem) => {
+    const row = (
+      <CommandItem
+        key={it.key}
+        value={it.search}
+        disabled={it.disabled}
+        onSelect={() => {
+          it.onSelect();
+          if (closeOnSelect) setOpen(false);
+        }}
+      >
+        {it.icon}
+        <span className="flex-1 truncate">{it.label}</span>
+        {it.trailing}
+        {it.selected && <Check />}
+      </CommandItem>
+    );
+    if (!it.tooltip) return row;
+    // A disabled row takes no pointer events, so the wrapper is what the tooltip
+    // listens on.
+    return (
+      <Tooltip key={it.key}>
+        <TooltipTrigger asChild>
+          <div>{row}</div>
+        </TooltipTrigger>
+        <TooltipContent>{it.tooltip}</TooltipContent>
+      </Tooltip>
+    );
+  };
 
   return (
     <Popover modal={modal} open={open} onOpenChange={setOpen}>

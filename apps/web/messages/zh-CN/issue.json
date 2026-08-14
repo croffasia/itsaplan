@@ -292,6 +292,8 @@
     "you": "你",
     "members": "成员",
     "delegateTo": "委派给…",
+    "delegateOwnedBy": "仅为 {name} 运行",
+    "delegateOwnedByOther": "仅为其所有者运行",
     "noDelegate": "无执行代理",
     "noAgents": "暂无代理。",
     "noState": "暂无状态。",

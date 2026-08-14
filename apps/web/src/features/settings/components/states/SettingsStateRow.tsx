@@ -57,6 +57,13 @@ export function SettingsStateRow({
       <ItemContent>
         <ItemTitle>{column.name}</ItemTitle>
       </ItemContent>
+      {column.wipLimit != null && (
+        <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
+          {column.wipMode === 'hard'
+            ? t('wip.badgeHard', { limit: column.wipLimit })
+            : t('wip.badgeSoft', { limit: column.wipLimit })}
+        </span>
+      )}
       <ItemActions className="opacity-0 group-hover/item:opacity-100">
         {canEdit && (
           <Button

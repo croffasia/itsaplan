@@ -46,6 +46,9 @@ export default function ReadOnlyBoard({
     project: boardProject,
     // The view's filters stay on the server, which sends only the issues they match.
     filters: EMPTY_FILTER_SET,
+    // No real column totals to measure a limit against for the same reason, and a
+    // share has nothing to drop anyway: empty leaves the counters plain.
+    columnCounts: new Map(),
     customFields: project.customFields,
     settings,
     onSettingsChange: noop,

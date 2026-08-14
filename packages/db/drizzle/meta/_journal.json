@@ -533,6 +533,13 @@
       "when": 1786628860087,
       "tag": "0075_left_rafael_vega",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1786713287358,
+      "tag": "0076_demonic_shaman",
+      "breakpoints": true
     }
   ]
 }

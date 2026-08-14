@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import type { Cycle } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
+import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
 import { useLocalBoardSettings } from '@/hooks/useLocalBoardSettings';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
@@ -36,6 +37,9 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
   const viewProps = {
     project: viewProject,
     filters: board.filters,
+    // Counted across the whole project, not just this cycle: the limit belongs to
+    // the column, and its other issues occupy it just the same.
+    columnCounts: countIssuesByColumn(project.issues),
     customFields,
     settings: board.settings,
     onSettingsChange: board.changeSettings,

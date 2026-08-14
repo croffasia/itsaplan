@@ -3,7 +3,7 @@ import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type Column, type ProjectDetail, type StateType } from '@/lib/api';
+import { type Column, type ProjectDetail, type StateType, type WipMode } from '@/lib/api';
 import { useDndSensors } from '@/lib/dnd';
 import { STATE_TYPES } from '@/utils/fieldOptions';
 import { DEFAULT_COLOR } from '@/utils/project';
@@ -12,6 +12,7 @@ import { ItemGroup } from '@/components/ui/item';
 import SettingsColorField from '../crud/SettingsColorField';
 import { SettingsEmpty } from '../crud/SettingsEmpty';
 import { SettingsInlineEditForm } from '../crud/SettingsInlineEditForm';
+import SettingsWipLimitField from '../crud/SettingsWipLimitField';
 import { useSettingsCan } from '../../context/settingsPermission';
 import {
   useCreateColumn,
@@ -30,6 +31,10 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
   const [editColor, setEditColor] = useState(DEFAULT_COLOR);
+  const [editWip, setEditWip] = useState<{ limit: number | null; mode: WipMode }>({
+    limit: null,
+    mode: 'soft',
+  });
   const [deleting, setDeleting] = useState<Column | null>(null);
   const t = useTranslations('settings.states');
   const tCommon = useTranslations('common');
@@ -90,13 +95,19 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
     setEditingId(c.id);
     setEditName(c.name);
     setEditColor(c.color);
+    setEditWip({ limit: c.wipLimit, mode: c.wipMode });
   }
 
   async function saveEdit(c: Column) {
     if (!editName.trim()) return;
     await updateColumn.mutateAsync({
       id: c.id,
-      patch: { name: editName.trim(), color: editColor },
+      patch: {
+        name: editName.trim(),
+        color: editColor,
+        wipLimit: editWip.limit,
+        wipMode: editWip.mode,
+      },
     });
     setEditingId(null);
   }
@@ -148,6 +159,13 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
                           onSubmit={() => void saveEdit(c)}
                           onCancel={() => setEditingId(null)}
                           leading={<SettingsColorField value={editColor} onChange={setEditColor} />}
+                          trailing={
+                            <SettingsWipLimitField
+                              limit={editWip.limit}
+                              mode={editWip.mode}
+                              onChange={(limit, mode) => setEditWip({ limit, mode })}
+                            />
+                          }
                         />
                       ) : (
                         <SettingsStateRow

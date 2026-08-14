@@ -1,5 +1,5 @@
 import { db, projectColumn, issue, issueLabel, issueFieldValue, issueFieldOption } from '@repo/db';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { recordActivityForIssues } from '../../issues/activity';
 
@@ -10,6 +10,8 @@ export interface ColumnRow {
   stateType: string;
   color: string;
   position: number;
+  wipLimit: number | null;
+  wipMode: string;
 }
 
 function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
@@ -20,7 +22,57 @@ function mapColumn(row: typeof projectColumn.$inferSelect): ColumnRow {
     stateType: row.stateType,
     color: row.color,
     position: row.position,
+    wipLimit: row.wipLimit,
+    wipMode: row.wipMode,
   };
+}
+
+export const WIP_LIMIT_EXCEEDED = 'wip_limit_exceeded';
+
+// The error for `incoming` issues entering a column that is at its work-in-progress
+// limit, or null when they fit. Only an enforced limit ('hard') refuses; a soft one
+// just drives the board's warning treatment. `incoming` is how many issues the write
+// carries — a board drag can move a whole selection at once.
+//
+// Returned rather than thrown because the callers differ: a write a user asked for
+// fails with it, while an automation moving issues on its own (subtask rules, a
+// merged pull request) leaves the issue where it is instead of failing the action
+// that set it off.
+//
+// The count and the write are separate statements, so two simultaneous moves can
+// both pass and leave the column one over. That is left as is: a column over its
+// limit is a state the board already has to render (a limit lowered under the
+// current count does the same), and locking the column on every drag would cost
+// more than the overshoot.
+export async function wipLimitBreach(columnId: number, incoming = 1): Promise<HttpError | null> {
+  const [column] = await db
+    .select({
+      name: projectColumn.name,
+      limit: projectColumn.wipLimit,
+      mode: projectColumn.wipMode,
+    })
+    .from(projectColumn)
+    .where(eq(projectColumn.id, columnId));
+  if (!column || column.limit == null || column.mode !== 'hard') return null;
+
+  // Archived issues are off the board, so they do not occupy the column.
+  const [{ count }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(issue)
+    .where(and(eq(issue.columnId, columnId), isNull(issue.archivedAt)));
+  if (count + incoming <= column.limit) return null;
+
+  return new HttpError(
+    409,
+    `Column "${column.name}" is at its WIP limit of ${column.limit}`,
+    WIP_LIMIT_EXCEEDED,
+  );
+}
+
+// The same check for a write that must fail rather than skip.
+export async function assertWipLimit(columnId: number, incoming = 1): Promise<void> {
+  const breach = await wipLimitBreach(columnId, incoming);
+  if (breach) throw breach;
 }
 
 // The work items view's left-to-right order: sorting by state type before position
@@ -48,6 +100,8 @@ export async function createColumn(input: {
   name: string;
   stateType: string;
   color?: string;
+  wipLimit?: number | null;
+  wipMode?: string;
 }): Promise<ColumnRow> {
   const [{ pos }] = await db
     .select({ pos: sql<number>`COALESCE(MAX(${projectColumn.position}), -1) + 1` })
@@ -61,6 +115,8 @@ export async function createColumn(input: {
       stateType: input.stateType,
       color: input.color ?? '#6b7280',
       position: Number(pos),
+      wipLimit: input.wipLimit ?? null,
+      wipMode: input.wipMode ?? 'soft',
     })
     .returning();
   return mapColumn(row);
@@ -76,13 +132,22 @@ async function getColumnById(id: number): Promise<ColumnRow | null> {
 export async function updateColumn(
   id: number,
   projectId: number,
-  patch: { name?: string; color?: string; stateType?: string },
+  patch: {
+    name?: string;
+    color?: string;
+    stateType?: string;
+    // null clears the limit; absent leaves it as it is.
+    wipLimit?: number | null;
+    wipMode?: string;
+  },
 ): Promise<ColumnRow | null> {
   const scope = and(eq(projectColumn.id, id), eq(projectColumn.projectId, projectId));
   const set: Partial<typeof projectColumn.$inferInsert> = {};
   if (patch.name !== undefined) set.name = patch.name;
   if (patch.color !== undefined) set.color = patch.color;
   if (patch.stateType !== undefined) set.stateType = patch.stateType;
+  if (patch.wipLimit !== undefined) set.wipLimit = patch.wipLimit;
+  if (patch.wipMode !== undefined) set.wipMode = patch.wipMode;
   if (Object.keys(set).length === 0) {
     const rows = await db.select().from(projectColumn).where(scope);
     return rows[0] ? mapColumn(rows[0]) : null;

@@ -17,6 +17,8 @@ export const ColumnResponse = t.Object({
   stateType: t.String(),
   color: t.String(),
   position: t.Number(),
+  wipLimit: t.Union([t.Number(), t.Null()]),
+  wipMode: t.String(),
 });
 
 export const ColumnListResponse = t.Array(ColumnResponse);
@@ -25,6 +27,23 @@ export const createColumnBody = t.Object({
   name: t.String({ minLength: 1 }),
   stateType,
   color: t.Optional(t.String()),
+  wipLimit: t.Optional(
+    t.Nullable(
+      t.Integer({
+        minimum: 1,
+        description:
+          'How many issues this column should hold. null for no limit. ' +
+          'Enforced only when wipMode is "hard".',
+      }),
+    ),
+  ),
+  wipMode: t.Optional(
+    t.Union([t.Literal('soft'), t.Literal('hard')], {
+      description:
+        'What happens at wipLimit: "soft" only warns on the board, ' +
+        '"hard" refuses an issue entering a full column with a 409.',
+    }),
+  ),
 });
 
 export const updateColumnBody = t.Partial(createColumnBody);

@@ -14,12 +14,16 @@ import {
   type WorkItemsViewProps,
   type IssueGroup,
 } from '@/utils/project';
+import { isActiveFilterSet } from '@/utils/filters';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
 import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
+import { useWipLimitMessage } from '../../hooks/useWipLimitMessage';
+import { countEntering, wipAllows, wipStateFor } from '../../utils/wipLimit';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useSelection } from '../../context/useSelection';
 import { GroupDot } from '../shared/GroupDot';
+import { WipCount } from './WipCount';
 import { SelectAllToggle } from './SelectAllToggle';
 import { CardOverlay } from './CardOverlay';
 import { SwimlaneCell } from './SwimlaneCell';
@@ -47,12 +51,15 @@ interface SwimlaneRow {
 export default function SwimlaneBoard({
   project,
   filters,
+  columnCounts,
   settings,
   onOpenIssue,
   readOnly,
 }: WorkItemsViewProps) {
   const sortedOrderMessage = useSortedOrderMessage();
+  const wipLimitMessage = useWipLimitMessage();
   const groupLabels = useGroupLabels();
+  const filtered = isActiveFilterSet(filters);
   const dnd = useBoardDnd(project.project.key, readOnly);
   const selection = useSelection();
   const collapsed = usePersistedSet(collapsedSwimlanesKey(project.project.id, settings.subgroup));
@@ -122,6 +129,8 @@ export default function SwimlaneBoard({
   // since that changes the grouping fields rather than the order.
   const manualOrder = settings.sort.field === 'manual';
 
+  const wipOf = (column: IssueGroup) => wipStateFor(column, project.columns, columnCounts);
+
   function moveIssue(
     swimlane: IssueGroup,
     column: IssueGroup,
@@ -134,6 +143,13 @@ export default function SwimlaneBoard({
     const ids = issuesToMove(issueIds, sorted, cellIssues, manualOrder);
     if (ids.length === 0) {
       toast.info(sortedOrderMessage(settings.sort.field));
+      return;
+    }
+    // Measured against the whole column, across every swimlane: moving a card
+    // between two swimlanes of the same column adds nothing to it.
+    const wip = wipOf(column);
+    if (wip && !wipAllows(wip, countEntering(ids, sorted, column))) {
+      toast.info(wipLimitMessage(column.name, wip.limit));
       return;
     }
     const positions = positionsAt(cellIssues, index, ids.length);
@@ -173,7 +189,13 @@ export default function SwimlaneBoard({
               >
                 <GroupDot group={column} />
                 <span className="truncate">{column.name}</span>
-                <span className="text-muted-foreground">{columnTotals.get(column.key) ?? 0}</span>
+                {/* The limit is the whole column's, so it sits here rather than on
+                    the swimlane cells, whose counts stay plain. */}
+                <WipCount
+                  filteredCount={columnTotals.get(column.key) ?? 0}
+                  wip={wipOf(column)}
+                  filtered={filtered}
+                />
                 {!readOnly && (
                   <SelectAllToggle ids={idsByColumn.get(column.key) ?? []} className="ml-auto" />
                 )}

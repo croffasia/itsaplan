@@ -52,7 +52,7 @@ export const planner = new Elysia({ name: 'planner' })
   .onError({ as: 'global' }, ({ code, error, set }) => {
     if (error instanceof HttpError) {
       set.status = error.status;
-      return { error: error.message };
+      return error.code ? { error: error.message, code: error.code } : { error: error.message };
     }
     if (code === 'VALIDATION') {
       set.status = 400;

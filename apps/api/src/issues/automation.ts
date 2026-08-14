@@ -49,7 +49,9 @@ async function completeParent(
   const closed = await closedColumnIds([...siblingColumnIds, parentColumnId]);
   if (closed.has(parentColumnId)) return;
   if (siblingColumnIds.some((id) => !closed.has(id))) return;
-  await updateIssue(parentId, { columnId: subtask.columnId }, actorUserId);
+  await updateIssue(parentId, { columnId: subtask.columnId }, actorUserId, {
+    skipIfColumnFull: true,
+  });
 }
 
 // Moves the issue's still-open subtasks into the column it was just closed in.
@@ -58,7 +60,9 @@ async function closeSubtasks(parent: IssueRow, actorUserId?: ActivityActor): Pro
   const closed = await closedColumnIds(subtasks.map((s) => s.columnId));
   for (const subtask of subtasks)
     if (!closed.has(subtask.columnId))
-      await updateIssue(subtask.id, { columnId: parent.columnId }, actorUserId);
+      await updateIssue(subtask.id, { columnId: parent.columnId }, actorUserId, {
+        skipIfColumnFull: true,
+      });
 }
 
 async function isClosedColumn(columnId: number): Promise<boolean> {

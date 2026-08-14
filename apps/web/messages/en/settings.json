@@ -373,7 +373,19 @@
     "importTitle": "Apply states from clipboard",
     "importSummary": "{count, plural, one {# state} other {# states}} will be applied. A matching state keeps its group; only its color is updated.",
     "importApply": "{count, plural, one {Apply # state} other {Apply # states}}",
-    "imported": "Applied states: {created} created, {updated} updated."
+    "imported": "Applied states: {created} created, {updated} updated.",
+    "wip": {
+      "label": "Work-in-progress limit",
+      "none": "No limit",
+      "help": "How many issues this state should hold. The board shows the count against it.",
+      "modeLabel": "At the limit",
+      "softLabel": "Warn",
+      "softHelp": "The board marks the state as full. Issues can still be moved into it.",
+      "hardLabel": "Block",
+      "hardHelp": "Issues cannot be moved into the state while it is full, from anywhere.",
+      "badgeSoft": "max {limit}",
+      "badgeHard": "max {limit}, enforced"
+    }
   },
   "issueTypes": {
     "add": "Add type",

@@ -23,10 +23,13 @@ export function resolveApiUrl(url: string): string {
 // 403 (no access to the project / not owner), 404 (not found) and 400 (a
 // validation or business-rule failure). `message` is the API's `{ error }` text
 // when present, so existing consumers that read `error.message` keep working.
+// `code` names the failure where the API sends one, for a caller that has to
+// branch on it rather than show the message.
 export class ApiError extends Error {
   constructor(
     readonly status: number,
     message: string,
+    readonly code?: string,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -48,7 +51,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   if (!res.ok) {
     const body = await res.json().catch(() => null);
-    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`, body?.code);
   }
   if (res.status === 204) return undefined as T;
   return res.json();
@@ -111,7 +114,13 @@ export interface Column {
   stateType: StateType;
   color: string;
   position: number;
+  // How many issues the column should hold, or null for no limit. wipMode decides
+  // whether passing it only warns on the board or is refused outright.
+  wipLimit: number | null;
+  wipMode: WipMode;
 }
+
+export type WipMode = 'soft' | 'hard';
 
 export interface IssueType {
   id: number;
@@ -2090,7 +2099,13 @@ export const api = {
 
   createColumn: (
     projectKey: string,
-    input: { name: string; stateType: StateType; color?: string },
+    input: {
+      name: string;
+      stateType: StateType;
+      color?: string;
+      wipLimit?: number | null;
+      wipMode?: WipMode;
+    },
   ) =>
     request<Column>(`/projects/${projectKey}/columns`, {
       method: 'POST',
@@ -2099,7 +2114,14 @@ export const api = {
   updateColumn: (
     projectKey: string,
     columnId: number,
-    patch: { name?: string; stateType?: StateType; color?: string },
+    patch: {
+      name?: string;
+      stateType?: StateType;
+      color?: string;
+      // null clears the limit; absent leaves it as it is.
+      wipLimit?: number | null;
+      wipMode?: WipMode;
+    },
   ) =>
     request<Column>(`/projects/${projectKey}/columns/${columnId}`, {
       method: 'PATCH',

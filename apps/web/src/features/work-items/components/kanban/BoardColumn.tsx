@@ -15,7 +15,10 @@ import { CardDropSlot } from './CardDropSlot';
 import { DropLine } from '../shared/DropLine';
 import { SelectAllToggle } from './SelectAllToggle';
 import { useIsOverContainer } from '../../hooks/useIsOverContainer';
+import { useIncomingCount } from '../../hooks/useIncomingCount';
 import { COLUMN_WIDTH } from '../../utils/kanban';
+import { wipAllows, type WipState } from '../../utils/wipLimit';
+import { WipCount } from './WipCount';
 
 // The add button sits under the last card, outside the measured cards, so it
 // carries its own copy of the gap CardDropSlot puts above a card (pt-2).
@@ -39,6 +42,9 @@ export function BoardColumn({
   onAddIssue,
   onHide,
   onCollapse,
+  wip,
+  filtered,
+  boardIssues,
   readOnly,
 }: {
   project: ProjectDetail;
@@ -56,6 +62,13 @@ export function BoardColumn({
   onAddIssue: () => void;
   onHide: () => void;
   onCollapse: () => void;
+  // The column's WIP limit, or null when it has none or this board is not grouped
+  // by status. `filtered` says whether the cards shown are a subset of the column.
+  wip: WipState | null;
+  filtered: boolean;
+  // Every issue the board holds, to tell which of a drag's cards are already in
+  // this column when only some of them are on screen.
+  boardIssues: BoardIssue[];
   // In a read-only share the add affordance and select-all toggle are hidden.
   readOnly?: boolean;
 }) {
@@ -63,11 +76,17 @@ export function BoardColumn({
   const { can } = usePermissions();
   const canCreateIssue = can('work_items', 'create') && !readOnly;
   const scrollRef = useRef<HTMLDivElement>(null);
+  // A hard limit that is already full takes no card from elsewhere, so the column
+  // stops being a drop target while such a drag is in flight. Cards already in it
+  // still reorder within it — that adds nothing to the column.
+  const incoming = useIncomingCount(group, boardIssues);
+  const closed = incoming > 0 && !wipAllows(wip, incoming);
   // The scroll area is the append drop target; merge its ref with the virtualizer
   // scroll element ref.
   const columnId = `col:${group.key}`;
   const { setNodeRef: dropRef, isOver } = useDroppable({
     id: columnId,
+    disabled: closed,
     data: { onDrop: (ids: number[]) => onMoveIssue(ids, group, issues.length) },
   });
   const mergedRef = useCallback(
@@ -90,7 +109,10 @@ export function BoardColumn({
 
   return (
     <div
-      className="group/column flex h-full shrink-0 flex-col rounded-md bg-kanban-column px-3 py-2"
+      className={cn(
+        'group/column flex h-full shrink-0 flex-col rounded-md bg-kanban-column px-3 py-2',
+        wip?.full && 'bg-destructive/5',
+      )}
       style={{ width: COLUMN_WIDTH }}
     >
       {/* Stop header clicks (select-all, collapse, hide, add) from reaching the
@@ -99,7 +121,7 @@ export function BoardColumn({
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
           <GroupDot group={group} />
           {group.name}
-          <span className="text-muted-foreground">{issues.length}</span>
+          <WipCount filteredCount={issues.length} wip={wip} filtered={filtered} />
         </div>
         <div className="flex items-center gap-1">
           {!readOnly && <SelectAllToggle ids={issues.map((i) => i.id)} />}
@@ -166,7 +188,7 @@ export function BoardColumn({
                     drop in that gap inserts. */}
                 <CardDropSlot
                   issueId={issue.id}
-                  disabled={!manualOrder}
+                  disabled={!manualOrder || closed}
                   onDrop={(ids) => onMoveIssue(ids, group, vi.index)}
                 >
                   <BoardCard

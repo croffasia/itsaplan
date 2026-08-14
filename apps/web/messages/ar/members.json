@@ -1,0 +1,103 @@
+{
+  "title": "الأعضاء",
+  "description": "دول الناس اللي عندهم وصول للمشروع ده. تقدر تدعو حد بالبريد، والمالك بس هو اللي يقدر يلغي وصول أي حد.",
+  "columns": {
+    "member": "العضو",
+    "role": "الدور",
+    "actions": "الإجراءات"
+  },
+  "you": "(أنت)",
+  "aiAgent": "وكيل ذكاء اصطناعي",
+  "joined": "· انضم {date}",
+  "leaveProject": "مغادرة المشروع",
+  "revokeAccess": "إلغاء الوصول",
+  "lastOwner": "لازم يفضل للمشروع مالك واحد على الأقل",
+  "leaveTitle": "مغادرة هذا المشروع",
+  "leaveDescription": "هتفقد الوصول للمشروع ده ولمهامه. أي مالك يقدر يدعوك تاني بعدين.",
+  "revokeTitle": "إلغاء وصول {name}",
+  "revokeDescription": "{name} هيفقد الوصول للمشروع ده. تقدر تدعوه تاني بعدين.",
+  "selectRole": "اختيار الدور",
+  "editDescription": "تعديل الوصف",
+  "descriptionQuestionSelf": "إنت بتعمل إيه في المشروع ده؟",
+  "descriptionQuestionOther": "الشخص ده بيعمل إيه في المشروع ده؟",
+  "descriptionPlaceholder": "مثلًا: مهندس خلفية، مسؤول عن واجهة البرمجة والتكاملات",
+  "invites": {
+    "emailPlaceholder": "name@example.com",
+    "rolePlaceholder": "الدور",
+    "invite": "دعوة",
+    "inviting": "جارٍ الدعوة…",
+    "pendingCount": "{count, plural, zero {لا دعوات معلّقة} one {دعوة معلّقة واحدة} two {دعوتان معلّقتان} few {# دعوات معلّقة} many {# دعوة معلّقة} other {# دعوة معلّقة}}",
+    "copyLink": "نسخ الرابط",
+    "copied": "تم النسخ",
+    "revokeAction": "إلغاء الدعوة",
+    "removeAction": "إزالة الدعوة",
+    "invitedBy": "بدعوة من {name} · ",
+    "createdAt": "أُنشئت {date}",
+    "respondedAt": "{status, select, accepted {قُبلت} rejected {رُفضت} other {حُدّثت}} {date}",
+    "status": {
+      "pending": "معلّقة",
+      "accepted": "مقبولة",
+      "rejected": "مرفوضة"
+    },
+    "revokeTitle": "إلغاء الدعوة إلى {email}",
+    "revokeConfirm": "إلغاء الدعوة",
+    "revokeDescription": "رابط الدعوة هيبطّل يشتغل. تقدر تبعت دعوة تانية لنفس البريد بعدين."
+  },
+  "roles": {
+    "title": "الأدوار",
+    "description": "الأدوار المخصّصة والصلاحيات اللي بيديها كل دور. عشان تدّي دور لعضو، اعمل كده من قائمة الأعضاء.",
+    "ownerOnly": "مالكين المشروع بس هما اللي يقدروا يديروا الأدوار.",
+    "empty": "مفيش أدوار لسه. اعمل دور عشان تدّي وصول محدود لناس معيّنة.",
+    "columns": {
+      "role": "الدور",
+      "permissions": "الصلاحيات",
+      "actions": "الإجراءات"
+    },
+    "default": "افتراضي",
+    "editAction": "تعديل الدور",
+    "deleteAction": "حذف الدور",
+    "defaultUndeletable": "لا يمكن حذف الدور الافتراضي",
+    "deleteTitle": "حذف الدور \"{name}\"",
+    "deleteDescription": "الأعضاء اللي على الدور ده هيتنقلوا للدور الافتراضي. ده مش هينفع ترجع فيه.",
+    "newRole": "دور جديد",
+    "editorTitleEdit": "تعديل الدور",
+    "editorTitleNew": "دور جديد",
+    "editorSubtitle": "صلاحيات الدور",
+    "namePlaceholder": "مثال: مساهم",
+    "resourceColumn": "المورد",
+    "toggleActionAll": "تبديل {action} لكل الموارد",
+    "toggleGroupAll": "تبديل كل صلاحيات {group}",
+    "toggleActionGroup": "تبديل {action} لـ {group}",
+    "cellAria": "{resource}: {action}",
+    "saveRole": "حفظ الدور",
+    "createRole": "إنشاء دور",
+    "importExport": "استيراد الأدوار وتصديرها",
+    "copyRoles": "نسخ الأدوار",
+    "pasteRoles": "لصق الأدوار",
+    "nothingToCopy": "لا توجد أدوار مخصّصة لنسخها.",
+    "copiedRoles": "{count, plural, zero {لم يُنسخ أي دور} one {نُسخ دور واحد} two {نُسخ دوران} few {نُسخت # أدوار} many {نُسخ # دورًا} other {نُسخ # دور}}.",
+    "copyFailed": "تعذّر النسخ إلى الحافظة.",
+    "readFailed": "تعذّرت قراءة الحافظة.",
+    "parseFailed": "تعذّرت قراءة الأدوار من الحافظة.",
+    "import": {
+      "title": "تطبيق الأدوار من الحافظة",
+      "summary": "{count, plural, zero {مش هيتطبّق أي دور} one {هيتطبّق دور واحد} two {هيتطبّق دورين} few {هتتطبّق # أدوار} many {هيتطبّق # دورًا} other {هيتطبّق # دور}}. لو استبدلت دور موجود، مصفوفة صلاحياته كلها هتتبدّل بالجديدة، والأعضاء هيفضلوا على نفس الدور.",
+      "preview": "معاينة الصلاحيات",
+      "apply": "{count, plural, =0 {تطبيق الأدوار} zero {تطبيق الأدوار} one {تطبيق دور واحد} two {تطبيق دورين} few {تطبيق # أدوار} many {تطبيق # دورًا} other {تطبيق # دور}}",
+      "applied": "الأدوار اتطبّقت: {created} اتعملوا جداد، {updated} اتحدّثوا{skipped, plural, =0 {} other {، و# اتتخطّوا}}.",
+      "actions": {
+        "create": "جديد",
+        "update": "استبدال",
+        "skip": "تخطٍّ (افتراضي)"
+      }
+    },
+    "transferErrors": {
+      "invalidJson": "الحافظة لا تحتوي على JSON صالح.",
+      "notAnExport": "الحافظة لا تحتوي على تصدير أدوار.",
+      "empty": "تصدير الأدوار فارغ."
+    }
+  },
+  "promoted": "تمت ترقية العضو إلى مالك",
+  "roleUpdated": "تم تحديث دور العضو",
+  "descriptionUpdated": "تم تحديث وصف العضو"
+}

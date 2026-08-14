@@ -1,0 +1,144 @@
+{
+  "title": "المبادرات",
+  "newInitiative": "مبادرة جديدة",
+  "notFound": "لم يتم العثور على المبادرة.",
+  "options": "خيارات المبادرة",
+  "showDescription": "إظهار الوصف",
+  "noDescription": "لا يوجد وصف.",
+  "noOwner": "لا يوجد مالك",
+  "targetDate": "التاريخ المستهدف",
+  "progress": "التقدّم",
+  "activity": "النشاط",
+  "noActivity": "لا يوجد نشاط بعد.",
+  "noIssuesLinked": "لا توجد مهام مرتبطة بعد.",
+  "inProgress": "قيد التنفيذ",
+  "emptyTitle": "لا توجد مبادرات بعد",
+  "emptyDescription": "المبادرة بتجمّع المهام المرتبطة ببعضها تحت هدف واحد.",
+  "emptyTabDescription": "المبادرات بتتنقل بين علامات التبويب لوحدها لما حالتها تتغير.",
+  "emptyTab": {
+    "active": "لا توجد مبادرات نشطة",
+    "planned": "لا توجد مبادرات مخطّطة",
+    "proposed": "لا توجد مبادرات مقترحة",
+    "completed": "لا توجد مبادرات مكتملة"
+  },
+  "tabs": {
+    "active": "نشطة",
+    "planned": "مخطّطة",
+    "proposed": "مقترحة",
+    "completed": "مكتملة",
+    "all": "كل المبادرات"
+  },
+  "detailTabs": {
+    "overview": "نظرة عامة",
+    "issues": "المهام"
+  },
+  "columns": {
+    "name": "الاسم",
+    "priority": "الأولوية",
+    "owner": "المالك",
+    "target": "المستهدف",
+    "progress": "التقدّم",
+    "health": "الحالة الصحية"
+  },
+  "status": {
+    "proposed": "مقترحة",
+    "planned": "مخطّطة",
+    "active": "نشطة",
+    "completed": "مكتملة",
+    "canceled": "ملغاة"
+  },
+  "stateGroups": {
+    "backlog": "قائمة الانتظار",
+    "unstarted": "للتنفيذ",
+    "started": "قيد التنفيذ",
+    "completed": "منجزة",
+    "canceled": "ملغاة"
+  },
+  "health": {
+    "on_track": "على المسار",
+    "at_risk": "في خطر",
+    "off_track": "خارج المسار",
+    "unknown": "لا يوجد تحديث"
+  },
+  "healthInfo": {
+    "trigger": "كيف تُحتسب الحالة الصحية؟",
+    "title": "الحالة الصحية",
+    "description": "بتقارن العمل اللي خلص بالوقت اللي عدّى. بتتحدّث لوحدها.",
+    "legend": {
+      "on_track": "العمل ماشي مع الجدول الزمني.",
+      "at_risk": "العمل بيتأخر شوية عن الجدول الزمني.",
+      "off_track": "العمل متأخر كتير، أو التاريخ المستهدف عدّى خلاص.",
+      "unknown": "لسه مفيش بيانات كفاية: مفيش مهام أو مفيش تاريخ مستهدف."
+    },
+    "howCalculated": "كيف تُحتسب",
+    "workDone": "العمل المنجز",
+    "timeElapsed": "الوقت المنقضي",
+    "trail": "مقدار تأخّر العمل عن الوقت",
+    "trailOnTrack": "حتى ١٠٪ تأخّر",
+    "trailAtRisk": "١٠–٢٥٪ تأخّر",
+    "trailOffTrack": "أكثر من ٢٥٪ تأخّر"
+  },
+  "timeline": {
+    "title": "الجدول الزمني",
+    "started": "بدأت",
+    "target": "المستهدف",
+    "remaining": "المتبقي",
+    "overdue": "متأخرة {days} يوم",
+    "dueToday": "مستحقة اليوم",
+    "left": "متبقٍ {days} يوم",
+    "timeElapsed": "الوقت المنقضي",
+    "workDone": "العمل المنجز",
+    "noTargetDate": "عيّن تاريخًا مستهدفًا لتتبّع الوتيرة."
+  },
+  "form": {
+    "title": "العنوان",
+    "titlePlaceholder": "إطلاق الربع الثالث",
+    "description": "الوصف",
+    "descriptionPlaceholder": "المبادرة دي عن إيه؟",
+    "create": "إنشاء مبادرة",
+    "creating": "جارٍ الإنشاء…",
+    "editTitle": "تعديل المبادرة",
+    "save": "حفظ التغييرات"
+  },
+  "pagination": {
+    "range": "{from}–{to} من {total}",
+    "previous": "الصفحة السابقة",
+    "next": "الصفحة التالية"
+  },
+  "select": {
+    "label": "المبادرة",
+    "search": "الربط بمبادرة…",
+    "empty": "لا توجد مبادرات.",
+    "none": "بلا مبادرة"
+  },
+  "feed": {
+    "system": "النظام",
+    "createdInitiative": "أنشأ المبادرة",
+    "createdIssue": "أنشأ المهمة",
+    "renamed": "أعاد التسمية إلى “{title}”",
+    "descriptionUpdated": "حدّث الوصف",
+    "descriptionCleared": "مسح الوصف",
+    "statusSet": "عيّن الحالة إلى {status}",
+    "statusMoved": "نقل من {from} إلى {to}",
+    "prioritySet": "عيّن الأولوية إلى {priority}",
+    "priorityRemoved": "أزال الأولوية",
+    "ownerSet": "عيّن المالك إلى {name}",
+    "ownerRemoved": "أزال المالك {name}",
+    "assigneeSet": "أسند إلى {name}",
+    "assigneeRemoved": "أزال المسؤول {name}",
+    "delegateSet": "فوّض إلى {name}",
+    "delegateRemoved": "أزال المفوَّض {name}",
+    "targetDateSet": "عيّن التاريخ المستهدف إلى {date}",
+    "targetDateRemoved": "أزال التاريخ المستهدف",
+    "startDateSet": "عيّن تاريخ البدء إلى {date}",
+    "startDateRemoved": "أزال تاريخ البدء",
+    "dueDateSet": "عيّن تاريخ الاستحقاق إلى {date}",
+    "dueDateRemoved": "أزال تاريخ الاستحقاق",
+    "labelAdded": "أضاف الوسم {label}",
+    "labelRemoved": "أزال الوسم {label}",
+    "typeSet": "عيّن النوع إلى {type}",
+    "typeRemoved": "أزال النوع",
+    "linked": "ربط بـ {name}",
+    "unlinked": "ألغى الربط بالمبادرة"
+  }
+}

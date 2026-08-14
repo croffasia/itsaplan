@@ -1,0 +1,202 @@
+{
+  "noAccess": "ليس لديك صلاحية الوصول إلى لوحات المعلومات.",
+  "defaultName": "نظرة عامة",
+  "newDashboard": "لوحة معلومات جديدة",
+  "renameDashboard": "إعادة تسمية لوحة المعلومات",
+  "namePlaceholder": "اسم لوحة المعلومات",
+  "options": "خيارات لوحة المعلومات",
+  "rename": "إعادة تسمية",
+  "editLayout": "تعديل التخطيط",
+  "discard": "تجاهل",
+  "saveDashboard": "حفظ لوحة المعلومات",
+  "saveChanges": "حفظ التغييرات",
+  "noWidgets": "مفيش أدوات لسه. ضيف أداة عشان تبني لوحة المعلومات دي.",
+  "addWidget": "إضافة أداة",
+  "addWidgetTitle": "إضافة أداة",
+  "addWidgetDescription": "اختار الأداة اللي عايز تضيفها للوحة المعلومات دي.",
+  "searchWidgets": "بحث في الأدوات",
+  "clearSearch": "مسح البحث",
+  "noWidgetMatches": "لا توجد أداة تطابق “{query}”.",
+  "dragToMove": "اسحب للنقل",
+  "widgetName": "اسم الأداة",
+  "widgetSettings": "إعدادات الأداة",
+  "widgetOptions": "خيارات الأداة",
+  "removeWidget": "إزالة الأداة",
+  "lastDays": "آخر {days} يوم",
+  "showRows": "عرض {count}",
+  "widgetGroups": {
+    "issues": "المهام",
+    "agents": "وكلاء الذكاء الاصطناعي وخطافات الويب"
+  },
+  "widgets": {
+    "stat": {
+      "label": "عدد",
+      "description": "بيعدّ المهام اللي بتطابق تصفية إنت بتحددها"
+    },
+    "recent_issues": {
+      "label": "المهام الأخيرة",
+      "description": "أحدث المهام، مرتّبة بوقت الإنشاء أو آخر تحديث"
+    },
+    "activity_feed": {
+      "label": "سجل النشاط",
+      "description": "سجل التغييرات في المشروع كله، وتقدر تصفّيه بمين عمل التغيير وبنوع الإجراء"
+    },
+    "pulse": {
+      "label": "النبض",
+      "description": "خريطة حرارية بتوريك النشاط اليومي، بشكل زي اللي في GitHub"
+    },
+    "throughput": {
+      "label": "الإنتاجية",
+      "description": "مقارنة بين المهام اللي اتفتحت واللي اتقفلت كل أسبوع"
+    },
+    "breakdown": {
+      "label": "التوزيع",
+      "description": "بيوزّع عدد المهام حسب الحالة أو الأولوية أو النوع أو المسؤول"
+    },
+    "agent_runs": {
+      "label": "تشغيلات الوكلاء",
+      "description": "أحدث تشغيلات وكلاء الذكاء الاصطناعي ونتيجة كل تشغيل"
+    },
+    "agent_health": {
+      "label": "حالة الوكلاء",
+      "description": "معدل نجاح تشغيلات الوكلاء وعدد اللي فشل منها خلال فترة إنت بتحددها"
+    },
+    "webhook_health": {
+      "label": "حالة خطافات الويب",
+      "description": "نتايج تسليم خطافات الويب والنقاط اللي اتعطّلت"
+    },
+    "agent_workload": {
+      "label": "عبء عمل الوكلاء",
+      "description": "المهام المفوّضة لكل وكيل ونتايج تشغيلاته"
+    }
+  },
+  "breakdown": {
+    "empty": "لا توجد مهام بعد.",
+    "by": {
+      "status": "الحالة",
+      "priority": "الأولوية",
+      "type": "النوع",
+      "assignee": "المسؤول",
+      "delegate": "المفوَّض"
+    },
+    "caption": {
+      "status": "حسب الحالة",
+      "priority": "حسب الأولوية",
+      "type": "حسب النوع",
+      "assignee": "حسب المسؤول",
+      "delegate": "حسب المفوَّض"
+    }
+  },
+  "recentIssues": {
+    "empty": "لا توجد مهام تطابق هذه التصفية.",
+    "captionCreated": "الأحدث أولًا",
+    "captionUpdated": "المحدَّثة مؤخرًا",
+    "filterCount": "{count, plural, zero {لا تصفيات} one {تصفية واحدة} two {تصفيتان} few {# تصفيات} many {# تصفية} other {# تصفية}}",
+    "sort": {
+      "created": "الأحدث",
+      "updated": "المحدَّثة"
+    }
+  },
+  "activityFeed": {
+    "empty": "لا يوجد نشاط يطابق هذه التصفية.",
+    "someone": "شخص ما",
+    "filterCount": "{count, plural, zero {لا تصفيات} one {تصفية واحدة} two {تصفيتان} few {# تصفيات} many {# تصفية} other {# تصفية}}",
+    "actions": {
+      "all": "كل النشاط",
+      "status": "تغييرات الحالة",
+      "assignee": "الإسنادات",
+      "priority": "الأولوية",
+      "created": "الإنشاء"
+    },
+    "verbs": {
+      "comment": "علّق على",
+      "created": "أنشأ",
+      "title": "أعاد تسمية",
+      "description": "حدّث وصف",
+      "status": "غيّر حالة",
+      "assignee": "غيّر المسؤول عن",
+      "priority": "غيّر أولوية",
+      "type": "غيّر نوع",
+      "start_date": "غيّر تاريخ بدء",
+      "due_date": "غيّر تاريخ استحقاق",
+      "label_add": "أضاف وسمًا إلى",
+      "label_remove": "أزال وسمًا من",
+      "field": "حدّث حقلًا في",
+      "other": "حدّث"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "حسب الساعة",
+      "day": "حسب اليوم",
+      "week": "حسب الأسبوع"
+    },
+    "unit": {
+      "hour": "ساعات",
+      "day": "أيام",
+      "week": "أسابيع"
+    },
+    "events": "{count, plural, zero {لا أحداث} one {حدث واحد} two {حدثان} few {# أحداث} many {# حدثًا} other {# حدث}}",
+    "eventNoun": "{count, plural, zero {حدث} one {حدث} two {حدثان} few {أحداث} many {حدثًا} other {حدث}}",
+    "active": "{count} نشط",
+    "less": "أقل",
+    "more": "أكثر"
+  },
+  "throughput": {
+    "empty": "لا يوجد نشاط في هذه الفترة.",
+    "lastWeeks": "آخر {weeks} أسبوع",
+    "created": "مُنشأة",
+    "closed": "مُغلقة"
+  },
+  "agentRuns": {
+    "empty": "لا توجد تشغيلات وكلاء بعد.",
+    "filters": {
+      "all": "كل التشغيلات",
+      "failed": "فاشلة",
+      "pending": "في الانتظار",
+      "success": "ناجحة"
+    },
+    "status": {
+      "pending": "في الانتظار",
+      "success": "نجاح",
+      "failed": "فشل"
+    },
+    "trigger": {
+      "mention": "شُغّل عند ذكره في",
+      "delegation": "شُغّل عند تفويض",
+      "manual": "شُغّل يدويًا",
+      "schedule": "شُغّل حسب الجدولة"
+    }
+  },
+  "agentHealth": {
+    "empty": "لا توجد تشغيلات وكلاء.",
+    "successRate": "معدل النجاح",
+    "runs": "{count, plural, zero {لا تشغيلات} one {تشغيل واحد} two {تشغيلان} few {# تشغيلات} many {# تشغيلًا} other {# تشغيل}}",
+    "failed": "{count} فاشلة",
+    "queued": "{count} في الانتظار"
+  },
+  "webhookHealth": {
+    "deliveries": "عمليات تسليم",
+    "failed": "{count} فاشلة",
+    "pending": "{count} معلّقة",
+    "allDelivered": "تم تسليم الكل",
+    "disabled": "{count, plural, zero {لا نقاط معطّلة} one {نقطة معطّلة واحدة} two {نقطتان معطّلتان} few {# نقاط معطّلة} many {# نقطة معطّلة} other {# نقطة معطّلة}}"
+  },
+  "agentWorkload": {
+    "empty": "لا يوجد وكلاء في هذا المشروع.",
+    "agent": "الوكيل",
+    "delegated": "مفوَّضة",
+    "runs": "التشغيلات",
+    "failed": "{count} فاشلة",
+    "kind": {
+      "external": "خارجي",
+      "internal": "داخلي"
+    }
+  },
+  "defaultWidgets": {
+    "open": "مفتوحة",
+    "inProgress": "قيد التنفيذ",
+    "backlog": "قائمة الانتظار",
+    "unassigned": "غير مُسندة"
+  }
+}

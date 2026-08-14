@@ -1,0 +1,114 @@
+{
+  "newIssue": "مهمة جديدة",
+  "collapse": "طيّ",
+  "expand": "توسيع",
+  "hide": "إخفاء",
+  "show": "إظهار",
+  "hiddenColumns": "الأعمدة المخفية",
+  "hiddenGroups": "المجموعات المخفية",
+  "selectAll": "تحديد الكل",
+  "deselectAll": "إلغاء تحديد الكل",
+  "resizeColumn": "تغيير عرض العمود",
+  "viewNamePlaceholder": "كل المهام",
+  "sortedOrder": "المهام مرتّبة حسب {field}. حوّل الترتيب لـ يدوي عشان تقدر تنقلها.",
+  "statusSince": "في الحالة الحالية منذ {date}",
+  "createdOn": "أُنشئت {date}",
+  "updatedOn": "حُدّثت {date}",
+  "subtasksProgress": "المهام الفرعية {done}/{total}",
+  "subtasksDone": "{done} من {total} مهام فرعية مكتملة",
+  "columns": {
+    "title": "العنوان",
+    "status": "الحالة",
+    "statusAge": "في الحالة",
+    "priority": "الأولوية",
+    "type": "النوع",
+    "initiative": "المبادرة",
+    "cycle": "الدورة",
+    "labels": "الوسوم",
+    "startDate": "البدء",
+    "dueDate": "الاستحقاق",
+    "created": "الإنشاء",
+    "updated": "التحديث"
+  },
+  "calendar": {
+    "previousMonth": "الشهر السابق",
+    "nextMonth": "الشهر التالي",
+    "today": "اليوم",
+    "moreIssues": "+{count} أخرى",
+    "issueCount": "{count, plural, zero {لا مهام} one {مهمة واحدة} two {مهمتان} few {# مهام} many {# مهمة} other {# مهمة}}",
+    "weekdays": {
+      "sun": "أحد",
+      "mon": "إثن",
+      "tue": "ثلا",
+      "wed": "أرب",
+      "thu": "خمي",
+      "fri": "جمع",
+      "sat": "سبت"
+    },
+    "noDate": {
+      "dueDate": "لا يوجد تاريخ استحقاق",
+      "startDate": "لا يوجد تاريخ بدء",
+      "custom": "لا يوجد تاريخ"
+    },
+    "allDated": {
+      "dueDate": "كل العناصر لها تاريخ استحقاق.",
+      "startDate": "كل العناصر لها تاريخ بدء.",
+      "custom": "كل العناصر لها تاريخ."
+    }
+  },
+  "timeline": {
+    "empty": "لا توجد مهام لعرضها على الخط الزمني بعد.",
+    "expandGroup": "توسيع المجموعة",
+    "collapseGroup": "طيّ المجموعة",
+    "inferredStart": "البدء مُستنتج من تاريخ الإنشاء",
+    "inferredStartDraggable": "البدء متحسب من تاريخ الإنشاء — اسحب عشان تحدّده بنفسك"
+  },
+  "bulk": {
+    "selected": "{count} محدّدة",
+    "status": "الحالة",
+    "priority": "الأولوية",
+    "assignee": "المسؤول",
+    "delegate": "المفوَّض",
+    "initiative": "المبادرة",
+    "cycle": "الدورة",
+    "labels": "الوسوم",
+    "noAssignee": "بلا مسؤول",
+    "noDelegate": "بلا مفوَّض",
+    "noInitiative": "بلا مبادرة",
+    "noCycle": "بلا دورة",
+    "archive": "أرشفة",
+    "clearSelection": "مسح التحديد"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, zero {أرشفة المهام} one {أرشفة المهمة} two {أرشفة المهمتين} few {أرشفة المهام} many {أرشفة المهام} other {أرشفة المهام}}",
+      "confirm": "{count, plural, zero {أرشفة المهام} one {أرشفة مهمة واحدة} two {أرشفة مهمتين} few {أرشفة # مهام} many {أرشفة # مهمة} other {أرشفة # مهمة}}",
+      "description": "{count, plural, zero {تأرشف المهام المحدّدة؟ هتخرج من اللوحة وتقدر ترجّعها بعدين.} one {تأرشف المهمة المحدّدة؟ هتخرج من اللوحة وتقدر ترجّعها بعدين.} two {تأرشف المهمتين المحدّدتين؟ هيخرجوا من اللوحة وتقدر ترجّعهم بعدين.} few {تأرشف # مهام محدّدة؟ هيخرجوا من اللوحة وتقدر ترجّعهم بعدين.} many {تأرشف # مهمة محدّدة؟ هيخرجوا من اللوحة وتقدر ترجّعهم بعدين.} other {تأرشف # مهمة محدّدة؟ هيخرجوا من اللوحة وتقدر ترجّعهم بعدين.}}"
+    },
+    "delete": {
+      "title": "{count, plural, zero {حذف المهام} one {حذف المهمة} two {حذف المهمتين} few {حذف المهام} many {حذف المهام} other {حذف المهام}}",
+      "confirm": "{count, plural, zero {حذف المهام} one {حذف مهمة واحدة} two {حذف مهمتين} few {حذف # مهام} many {حذف # مهمة} other {حذف # مهمة}}",
+      "description": "{count, plural, zero {تحذف المهام المحدّدة؟} one {تحذف المهمة المحدّدة؟} two {تحذف المهمتين المحدّدتين؟} few {تحذف # مهام محدّدة؟} many {تحذف # مهمة محدّدة؟} other {تحذف # مهمة محدّدة؟}} ده كمان هيشيل التعليقات والنشاط والمرفقات. ومش هينفع ترجع فيه."
+    }
+  },
+  "share": {
+    "issueTitle": "المهمة",
+    "issueUnavailable": "هذه المهمة غير متاحة.",
+    "boardUnavailable": "اللوحة المشاركة دي مش متاحة. يمكن الرابط اتلغى."
+  },
+  "groups": {
+    "noAssignee": "بلا مسؤول",
+    "noDelegate": "بلا مفوَّض",
+    "noPriority": "بلا أولوية",
+    "noType": "بلا نوع",
+    "noInitiative": "بلا مبادرة",
+    "noCycle": "بلا دورة"
+  },
+  "wip": {
+    "reached": "{column} وصل لحدّه الأقصى وهو {limit} مهمة.",
+    "tooltip": "حدّ العمل الجاري: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} من {total} / {max}",
+    "filteredTooltip": "{shown} ظاهرة بالفلاتر الحالية. الحدّ {max} بيتحسب على كل المهام اللي في العمود وعددها {total}، مش الظاهر بس."
+  }
+}

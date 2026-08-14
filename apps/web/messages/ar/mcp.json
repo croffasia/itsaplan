@@ -1,0 +1,29 @@
+{
+  "title": "خادم MCP",
+  "description": "اربط وكلاء الذكاء الاصطناعي بالمشروع ده عبر Model Context Protocol. الوكيل بياخد نفس صلاحيات مفتاح واجهة البرمجة (API key) اللي بيستخدمه.",
+  "access": "الوصول عبر MCP",
+  "enabled": "مُفعَّل",
+  "disabled": "مُعطَّل",
+  "ownerOnly": "مالك المشروع بس هو اللي يقدر يشغّل الوصول عبر MCP أو يوقفه.",
+  "toggleAria": "تبديل الوصول عبر MCP",
+  "connectClient": "ربط عميل",
+  "keyHint": "اعمل مفتاح شخصي من صفحة <link>مفاتيح واجهة البرمجة (API keys)</link>، وبعدين بدّل <code>{apiKey}</code> في المقتطف.",
+  "endpoint": "نقطة النهاية",
+  "clientTabsAria": "العميل",
+  "addToFile": "أضِف إلى <code>{file}</code>",
+  "copyAria": "نسخ",
+  "copied": "نُسخ إلى الحافظة",
+  "notes": {
+    "claudeCode": "نفّذ هذا في الطرفية.",
+    "vscode": "يتطلّب GitHub Copilot.",
+    "claudeDesktop": "Claude Desktop بيوصل للخوادم البعيدة عن طريق جسر mcp-remote. محتاج Node.js.",
+    "other": "أي عميل بيدعم MCP عبر Streamable HTTP هيشتغل. وجّهه على نقطة النهاية وابعت ترويسة Authorization: Bearer {apiKey}."
+  },
+  "clients": {
+    "other": "أخرى"
+  },
+  "toast": {
+    "enabled": "فُعِّل الوصول عبر MCP",
+    "disabled": "عُطِّل الوصول عبر MCP"
+  }
+}

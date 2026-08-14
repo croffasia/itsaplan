@@ -11,6 +11,10 @@ describe('localeFromAcceptLanguage', () => {
     assert.equal(localeFromAcceptLanguage('uk-UA,uk;q=0.9,en;q=0.8'), 'uk');
   });
 
+  it('matches a regional Arabic browser locale to the supported base language', () => {
+    assert.equal(localeFromAcceptLanguage('ar-SA,ar;q=0.9,en;q=0.8'), 'ar');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
     assert.equal(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8'), 'en');
   });

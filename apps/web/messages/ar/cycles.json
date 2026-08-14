@@ -1,0 +1,58 @@
+{
+  "title": "الدورات",
+  "newCycle": "دورة جديدة",
+  "status": {
+    "upcoming": "قادمة",
+    "active": "نشطة",
+    "completed": "مكتملة"
+  },
+  "views": {
+    "table": "جدول",
+    "timeline": "خط زمني"
+  },
+  "columns": {
+    "name": "الاسم",
+    "dates": "التواريخ",
+    "length": "المدة",
+    "issues": "المهام",
+    "progress": "التقدّم"
+  },
+  "emptyTitle": "لا توجد دورات بعد",
+  "emptyDescription": "الدورة فترة زمنية محدّدة الفريق بيخطّط مهامه جواها.",
+  "nothingPlannedTitle": "لا شيء مخطَّط",
+  "nothingPlannedDescription": "الخط الزمني بيعرض الدورات الشغالة والجاية. اللي خلصت تلاقيها في الجدول.",
+  "options": "خيارات الدورة",
+  "transferIssues": "نقل المهام غير المنتهية",
+  "form": {
+    "editTitle": "تعديل الدورة",
+    "newTitle": "دورة جديدة",
+    "name": "الاسم",
+    "goal": "الهدف",
+    "goalPlaceholder": "ما الذي ينبغي أن تحقّقه هذه الدورة؟",
+    "length": "المدة",
+    "starts": "تبدأ",
+    "ends": "تنتهي",
+    "create": "إنشاء دورة",
+    "saveFailed": "تعذّر حفظ الدورة"
+  },
+  "weeks": "{count, plural, zero {مفيش أسابيع} one {أسبوع واحد} two {أسبوعين} few {# أسابيع} many {# أسبوع} other {# أسبوع}}",
+  "transfer": {
+    "title": "نقل المهام غير المنتهية",
+    "description": "المهام اللي لسه مخلصتش أو مش ملغية هتتنقل للدورة اللي تختارها. والباقي هيفضل مكانه.",
+    "moveTo": "النقل إلى",
+    "noCycle": "بلا دورة",
+    "submit": "نقل المهام",
+    "moving": "جارٍ النقل…",
+    "moved": "{count, plural, zero {مفيش مهام اتنقلت} one {مهمة واحدة اتنقلت} two {مهمتين اتنقلوا} few {# مهام اتنقلت} many {# مهمة اتنقلت} other {# مهمة اتنقلت}}",
+    "failed": "تعذّر نقل المهام"
+  },
+  "details": "تفاصيل الدورة",
+  "goal": "الهدف",
+  "noGoal": "لم يُحدَّد هدف.",
+  "progress": "التقدّم",
+  "openCycle": "فتح الدورة",
+  "dragFailed": "تعذّر نقل الدورة",
+  "notFound": "الدورة غير موجودة.",
+  "defaultName": "سبرنت {n}",
+  "issuesDone": "المهام المنجزة"
+}

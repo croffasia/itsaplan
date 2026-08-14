@@ -5,6 +5,8 @@
   "openAsPage": "Відкрити як сторінку",
   "titlePlaceholder": "Назва задачі",
   "noActivity": "Активності ще немає.",
+  "noActivityInStretch": "Немає активності за цей період.",
+  "activityLoadFailed": "Не вдалося завантажити активність.",
   "fields": {
     "state": "Статус",
     "priority": "Пріоритет",

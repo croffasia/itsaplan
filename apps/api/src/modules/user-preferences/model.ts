@@ -1,7 +1,13 @@
 import { t } from 'elysia';
 import { HotkeyCombosSchema } from '../../settings/hotkeys';
 
-const Locale = t.Union([t.Literal('en'), t.Literal('uk'), t.Literal('ru'), t.Literal('zh-CN')]);
+const Locale = t.Union([
+  t.Literal('en'),
+  t.Literal('uk'),
+  t.Literal('ru'),
+  t.Literal('zh-CN'),
+  t.Literal('ar'),
+]);
 const Theme = t.Union([t.Literal('light'), t.Literal('dark'), t.Literal('system')]);
 const IssueOpenMode = t.Union([t.Literal('panel'), t.Literal('page')]);
 const StartPage = t.Union([

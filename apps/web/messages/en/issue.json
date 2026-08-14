@@ -5,6 +5,8 @@
   "openAsPage": "Open as page",
   "titlePlaceholder": "Issue title",
   "noActivity": "No activity yet.",
+  "noActivityInStretch": "No activity in this stretch.",
+  "activityLoadFailed": "Could not load the activity.",
   "fields": {
     "state": "State",
     "priority": "Priority",

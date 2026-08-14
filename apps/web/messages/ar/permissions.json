@@ -1,0 +1,46 @@
+{
+  "viewPermissions": "عرض الصلاحيات",
+  "none": "لم تُمنح أي صلاحيات",
+  "grantedCount": "{count, plural, zero {مفيش صلاحيات ممنوحة} one {صلاحية واحدة ممنوحة} two {صلاحيتين ممنوحين} few {# صلاحيات ممنوحة} many {# صلاحية ممنوحة} other {# صلاحية ممنوحة}}",
+  "resources": {
+    "work_items": "عناصر العمل (work items)",
+    "initiatives": "المبادرات (initiatives)",
+    "cycles": "الدورات (cycles)",
+    "dashboards": "لوحات المعلومات",
+    "views": "عروض عناصر العمل",
+    "members_invite": "الدعوات",
+    "members_manage": "الأعضاء",
+    "states": "الحالات",
+    "issue_types": "أنواع المهام",
+    "labels": "الوسوم",
+    "ai_agents": "وكلاء الذكاء الاصطناعي (AI agents)",
+    "integrations": "التكاملات (integrations)",
+    "agent_skills": "مهارات الوكلاء (agent skills)",
+    "agent_tools": "أدوات الوكلاء (agent tools)",
+    "custom_fields": "الحقول المخصّصة",
+    "workflow_config": "تهيئة سير العمل",
+    "actions": "الإجراءات",
+    "webhooks": "خطافات الويب (webhooks)",
+    "note_boards": "لوحات الملاحظات",
+    "danger_zone": "منطقة الخطر"
+  },
+  "actions": {
+    "create": "إنشاء",
+    "edit": "تعديل",
+    "read": "قراءة",
+    "delete": "حذف"
+  },
+  "groups": {
+    "workItems": "عناصر العمل",
+    "dashboards": "لوحات المعلومات",
+    "notes": "الملاحظات",
+    "ai": "الذكاء الاصطناعي",
+    "configuration": "التهيئة",
+    "members": "الأعضاء",
+    "project": "المشروع",
+    "other": "أخرى"
+  },
+  "resourceColumn": "المورد",
+  "allowed": "مسموح",
+  "notAllowed": "غير مسموح"
+}

@@ -1,0 +1,37 @@
+{
+  "title": "صندوق الوارد",
+  "empty": "لا توجد إشعارات",
+  "selectNotification": "اختر إشعارًا",
+  "backToList": "صندوق الوارد",
+  "filter": "تصفية",
+  "display": "العرض",
+  "notificationType": "نوع الإشعار",
+  "showRead": "إظهار المقروءة",
+  "showSnoozed": "إظهار المؤجّلة",
+  "markAllRead": "تعليم الكل كمقروء",
+  "deleteAllRead": "حذف كل المقروءة",
+  "deleteAllReadCompleted": "حذف كل المقروءة للمهام المكتملة",
+  "types": {
+    "assigned": "مُسنَدة",
+    "mentioned": "إشارة إليك",
+    "commented": "تعليق",
+    "state_changed": "تغيّرت الحالة"
+  },
+  "actions": {
+    "markRead": "تعليم كمقروء",
+    "markUnread": "تعليم كغير مقروء",
+    "snooze": "تأجيل",
+    "unsnooze": "إلغاء التأجيل",
+    "tomorrow": "غدًا",
+    "inAWeek": "بعد أسبوع",
+    "pickDate": "اختر تاريخًا…"
+  },
+  "event": {
+    "someone": "أحدهم",
+    "assigned": "أسنَد {who} المهمة إليك",
+    "mentioned": "أشار إليك {who}",
+    "commented": "علّق {who}",
+    "stateChanged": "{who} غيّر الحالة من {from} لـ {to}",
+    "stateChangedPlain": "غيّر {who} الحالة"
+  }
+}

@@ -10,6 +10,10 @@ describe('localeFromAcceptLanguage', () => {
     expect(localeFromAcceptLanguage('uk-UA,uk;q=0.9,en;q=0.8')).toBe('uk');
   });
 
+  it('matches a regional Arabic browser locale to the supported base language', () => {
+    expect(localeFromAcceptLanguage('ar-SA,ar;q=0.9,en;q=0.8')).toBe('ar');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
     expect(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8')).toBe('en');
   });

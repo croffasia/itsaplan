@@ -1,0 +1,92 @@
+{
+  "title": "العرض",
+  "layouts": {
+    "kanban": "كانبان",
+    "table": "جدول",
+    "timeline": "خط زمني",
+    "calendar": "تقويم"
+  },
+  "sortFields": {
+    "manual": "يدوي",
+    "title": "العنوان",
+    "identifier": "رقم المهمة",
+    "status": "الحالة",
+    "priority": "الأولوية",
+    "assignee": "المسؤول",
+    "type": "النوع",
+    "startDate": "تاريخ البدء",
+    "dueDate": "تاريخ الاستحقاق",
+    "created": "الإنشاء",
+    "updated": "التحديث"
+  },
+  "groupFields": {
+    "none": "بلا تجميع",
+    "status": "الحالة",
+    "assignee": "المسؤول",
+    "delegate": "المفوَّض",
+    "priority": "الأولوية",
+    "type": "النوع",
+    "initiative": "المبادرة",
+    "cycle": "الدورة"
+  },
+  "properties": {
+    "id": "المعرّف",
+    "status": "الحالة",
+    "priority": "الأولوية",
+    "type": "النوع",
+    "assignee": "المسؤول",
+    "delegate": "المفوَّض",
+    "initiative": "المبادرة",
+    "cycle": "الدورة",
+    "labels": "الوسوم",
+    "startDate": "تاريخ البدء",
+    "dueDate": "تاريخ الاستحقاق",
+    "created": "الإنشاء",
+    "updated": "التحديث",
+    "statusAge": "المدة في الحالة"
+  },
+  "stateTypes": {
+    "backlog": "قائمة الانتظار",
+    "unstarted": "لم تبدأ",
+    "started": "قيد التنفيذ",
+    "completed": "مكتملة",
+    "canceled": "ملغاة"
+  },
+  "timelineScales": {
+    "week": "أسبوع",
+    "month": "شهر",
+    "quarter": "ربع سنة"
+  },
+  "weekStart": {
+    "0": "الأحد",
+    "1": "الإثنين"
+  },
+  "dateFields": {
+    "dueDate": "تاريخ الاستحقاق",
+    "startDate": "تاريخ البدء"
+  },
+  "rows": {
+    "columns": "الأعمدة",
+    "grouping": "التجميع",
+    "swimlanes": "المسارات",
+    "subGrouping": "التجميع الفرعي",
+    "ordering": "الترتيب",
+    "ascending": "تصاعدي",
+    "descending": "تنازلي",
+    "showEmptyColumns": "إظهار الأعمدة الفارغة",
+    "showEmptyGroups": "إظهار المجموعات الفارغة",
+    "showLinks": "إظهار الروابط",
+    "separateSubtaskCards": "إظهار المهام الفرعية كبطاقات منفصلة",
+    "separateSubtaskRows": "إظهار المهام الفرعية كصفوف منفصلة",
+    "showNestedSubtasks": "إظهار المهام الفرعية المتداخلة",
+    "nestedSubtasks": "المهام الفرعية المتداخلة",
+    "displayProperties": "خصائص العرض",
+    "placeBy": "الترتيب حسب",
+    "startWeekOn": "بداية الأسبوع",
+    "startCollapsed": "البدء بمجموعات مطوية",
+    "scale": "المقياس",
+    "addCustomField": "إضافة حقل مخصّص",
+    "viewIcon": "أيقونة العرض"
+  },
+  "layoutCommand": "تخطيط {layout}"
+}

@@ -1,0 +1,8 @@
+{
+  "noProjectAccess": "مالكش صلاحية تدخل المشروع ده.",
+  "projectUnavailable": "هذا المشروع غير متاح.",
+  "noProjects": "مفيش مشاريع لسه، اعمل واحد وابدأ.",
+  "noProjectsTitle": "لا توجد مشاريع بعد",
+  "noProjectsHint": "اعمل أول مشروع ليك وابدأ تخطّط مهامك على لوحة.",
+  "createProject": "إنشاء مشروع"
+}

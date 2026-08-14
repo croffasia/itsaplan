@@ -1,0 +1,129 @@
+{
+  "cancel": "إلغاء",
+  "done": "تم",
+  "loading": "جارٍ التحميل…",
+  "signOut": "تسجيل الخروج",
+  "member": "عضو",
+  "owner": "مالك",
+  "delete": "حذف",
+  "more": "المزيد",
+  "back": "رجوع",
+  "save": "حفظ",
+  "saving": "جارٍ الحفظ…",
+  "close": "إغلاق",
+  "name": "الاسم",
+  "edit": "تعديل",
+  "language": "اللغة",
+  "toggleTheme": "تبديل المظهر",
+  "priority": {
+    "label": "الأولوية",
+    "tooltip": "أولوية {priority}",
+    "setTo": "تعيين الأولوية إلى…",
+    "none": "بلا أولوية",
+    "urgent": "عاجلة",
+    "high": "عالية",
+    "medium": "متوسطة",
+    "low": "منخفضة"
+  },
+  "add": "إضافة",
+  "showMore": "عرض المزيد",
+  "archived": "مؤرشف",
+  "clear": "مسح",
+  "noLabels": "لا توجد وسوم.",
+  "enabled": "مُفعّل",
+  "fullscreen": "ملء الشاشة",
+  "exitFullscreen": "إنهاء ملء الشاشة",
+  "resizeTitleColumn": "تغيير عرض عمود العنوان",
+  "openGeneralSettings": "فتح الإعدادات العامة",
+  "noSectionAccess": "مالكش صلاحية تدخل القسم ده.",
+  "brandSubtitle": "خطّط مهامك على لوحة. سجّل الدخول عشان تفتح مشاريعك.",
+  "hotkeys": {
+    "pressKeys": "اضغط المفاتيح",
+    "fixed": "ثابت",
+    "resetShortcut": "إعادة تعيين هذا الاختصار",
+    "groups": {
+      "general": "عام",
+      "workItems": "عناصر العمل"
+    },
+    "commands": {
+      "palette": {
+        "toggle": "فتح لوحة الأوامر"
+      },
+      "project": {
+        "switch": "التبديل إلى المشروع ١–٩",
+        "new": "مشروع جديد",
+        "settings": "فتح إعدادات المشروع"
+      },
+      "sidebar": {
+        "toggle": "إظهار الشريط الجانبي أو إخفاؤه"
+      },
+      "issue": {
+        "new": "مهمة جديدة"
+      },
+      "view": {
+        "kanban": "تخطيط اللوحة",
+        "table": "تخطيط الجدول",
+        "timeline": "تخطيط الجدول الزمني",
+        "calendar": "تخطيط التقويم"
+      },
+      "board": {
+        "select-all": "تحديد كل المهام على اللوحة"
+      }
+    },
+    "conflict": "مستخدم بالفعل من قِبل {command}"
+  },
+  "agentChat": {
+    "emptyHint": "ابعت رسالة عشان تجرّب الوكيل ده بيرد إزاي وبيستخدم أنهي أدوات.",
+    "messagePlaceholder": "راسل {agent}…",
+    "reset": "إعادة تعيين المحادثة",
+    "send": "إرسال",
+    "loadingEarlier": "جارٍ تحميل الرسائل السابقة…",
+    "messages": "رسائل المحادثة",
+    "usingTool": "يستخدم {tool}…",
+    "thinking": "جارٍ التفكير…",
+    "title": "محادثة مع {agent}",
+    "unreachable": "تعذّر الوصول إلى الوكيل. حاول مرة أخرى."
+  },
+  "share": {
+    "createFailed": "تعذّر إنشاء الرابط. حاول مرة أخرى.",
+    "changeFailed": "مقدرناش نغيّر اللي الرابط بيعرضه. جرّب تاني.",
+    "stopFailed": "تعذّر إيقاف المشاركة. حاول مرة أخرى.",
+    "copyFailed": "مقدرناش ننسخ الرابط. حدّده وانسخه بإيدك.",
+    "hint": "أي حد معاه الرابط يقدر يقراه، من غير ما يعمل حساب.",
+    "shareLink": "رابط المشاركة",
+    "fullDetails": "تفاصيل المهمة كاملة",
+    "fullDetailsHint": "المسؤولين والوسوم والحقول المخصصة والنشاط.",
+    "stopSharing": "إيقاف المشاركة",
+    "createLink": "إنشاء رابط",
+    "copy": "نسخ",
+    "copied": "تم النسخ"
+  },
+  "actions": "الإجراءات",
+  "clearSearch": "مسح البحث",
+  "hide": "إخفاء",
+  "show": "إظهار",
+  "copy": "نسخ",
+  "copied": "تم النسخ",
+  "change": "تغيير",
+  "featureOffHint": "المالك يقدر يرجّع تشغيل القسم ده من الإعدادات العامة.",
+  "description": "الوصف",
+  "pickColor": "اختيار لون",
+  "new": "جديد",
+  "features": {
+    "initiatives": "المبادرات",
+    "cycles": "الدورات",
+    "dashboards": "لوحات المعلومات",
+    "notes": "الملاحظات",
+    "subtasks": "المهام الفرعية",
+    "checklists": "قوائم التحقّق (قائمة الحاجات اللي لازم تتراجع)",
+    "issueStats": "إحصاءات المهام"
+  },
+  "featureOffTitle": "{feature} مُعطّلة",
+  "toggleSidebar": "تبديل الشريط الجانبي",
+  "system": "النظام",
+  "genericError": "حدث خطأ ما",
+  "commandPalette": "لوحة الأوامر",
+  "commandPaletteHint": "دوّر على أمر تشغّله…",
+  "scrollToEnd": "التمرير إلى النهاية",
+  "scrollToStart": "التمرير إلى البداية"
+}

@@ -5,6 +5,8 @@
   "openAsPage": "在完整页面中打开",
   "titlePlaceholder": "工作项标题",
   "noActivity": "暂无活动记录。",
+  "noActivityInStretch": "此时间段内没有活动。",
+  "activityLoadFailed": "无法加载活动。",
   "fields": {
     "state": "状态",
     "priority": "优先级",

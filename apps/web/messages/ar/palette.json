@@ -1,0 +1,12 @@
+{
+  "placeholder": "اكتب أمرًا أو ابحث…",
+  "noResults": "لا توجد نتائج.",
+  "issues": "المهام",
+  "searching": "جارٍ البحث…",
+  "selectAllIssues": "تحديد كل المهام",
+  "newIssue": "مهمة جديدة",
+  "newProject": "مشروع جديد",
+  "board": "اللوحة",
+  "commands": "الأوامر",
+  "switchProject": "تبديل المشروع"
+}

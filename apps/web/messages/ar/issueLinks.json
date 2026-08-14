@@ -1,0 +1,16 @@
+{
+  "relations": {
+    "blocked_by": "معطَّلة بواسطة",
+    "blocks": "تُعطِّل",
+    "duplicates": "مكرّرة عن",
+    "duplicated_by": "مكرّرة بواسطة",
+    "relates": "ذات صلة"
+  },
+  "phrases": {
+    "blocked_by": "معطَّلة بواسطة",
+    "blocks": "تُعطِّل",
+    "duplicates": "نسخة مكرّرة عن",
+    "duplicated_by": "مكرّرة بواسطة",
+    "relates": "ذات صلة بـ"
+  }
+}

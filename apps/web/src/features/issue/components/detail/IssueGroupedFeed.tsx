@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { type Column, type FeedGroup, type GroupedFeedPage } from '@/lib/api';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -19,13 +20,14 @@ export default function IssueGroupedFeed({
   columns: Column[];
   imageByUserId: Map<string, string | null>;
 }) {
+  const t = useTranslations('issue');
   const feedQuery = useGroupedFeedQuery(issueId);
   const groups = joinGroups(feedQuery.data?.pages ?? []);
 
   if (feedQuery.isLoading) return <ListSkeleton rows={3} rowClassName="h-12" />;
 
   if (groups.length === 0) {
-    return <p className="text-sm text-muted-foreground">No activity yet.</p>;
+    return <p className="text-sm text-muted-foreground">{t('noActivity')}</p>;
   }
 
   return (

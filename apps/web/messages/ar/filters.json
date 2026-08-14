@@ -1,0 +1,52 @@
+{
+  "add": "إضافة عامل تصفية",
+  "remove": "إزالة عامل التصفية",
+  "valuePlaceholder": "قيمة",
+  "noOptions": "لا توجد خيارات",
+  "selected": "{count} محدَّد",
+  "operators": {
+    "is": "يساوي",
+    "is_not": "لا يساوي",
+    "before": "قبل",
+    "after": "بعد",
+    "is_set": "مُحدَّد",
+    "is_not_set": "غير مُحدَّد",
+    "contains": "يحتوي على",
+    "not_contains": "لا يحتوي على"
+  },
+  "boolean": {
+    "true": "صحيح",
+    "false": "خطأ"
+  },
+  "cycleStatus": {
+    "active": "الدورة النشطة",
+    "upcoming": "الدورات القادمة"
+  },
+  "initiativeStatus": {
+    "active": "المبادرات النشطة",
+    "planned": "المبادرات المخطَّطة",
+    "proposed": "المبادرات المقترحة"
+  },
+  "fields": {
+    "status": "الحالة",
+    "statusType": "نوع الحالة",
+    "assignee": "المسؤول",
+    "delegate": "المفوَّض",
+    "priority": "الأولوية",
+    "type": "النوع",
+    "initiative": "المبادرة",
+    "cycle": "الدورة",
+    "labels": "الوسوم",
+    "dueDate": "تاريخ الاستحقاق",
+    "startDate": "تاريخ البدء",
+    "created": "تاريخ الإنشاء",
+    "updated": "تاريخ التحديث"
+  },
+  "unset": {
+    "assignee": "بلا مسؤول",
+    "delegate": "بلا مفوَّض",
+    "type": "بلا نوع",
+    "initiative": "بلا مبادرة",
+    "cycle": "بلا دورة"
+  }
+}

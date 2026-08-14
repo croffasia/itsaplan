@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl';
 import { type FeedItem } from '@/lib/api';
 import { useFeedQuery } from '../../services/comments.service';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
@@ -15,6 +16,7 @@ export default function IssueFeedList({
   issueId: number;
   imageByUserId: Map<string, string | null>;
 }) {
+  const t = useTranslations('issue');
   const feedQuery = useFeedQuery(issueId);
 
   // The pages come back newest first. Dedupe by id so a boundary item that shifts
@@ -30,7 +32,7 @@ export default function IssueFeedList({
   if (feedQuery.isLoading) return <ListSkeleton rows={3} rowClassName="h-12" />;
 
   if (items.length === 0) {
-    return <p className="text-sm text-muted-foreground">No activity yet.</p>;
+    return <p className="text-sm text-muted-foreground">{t('noActivity')}</p>;
   }
 
   return (

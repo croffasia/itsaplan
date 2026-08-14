@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/croffasia/itsaplan/compare/v0.10.0...v0.10.1) (2026-08-14)
+
+
+### Bug Fixes
+
+* support deploying outside the compose stack ([#151](https://github.com/croffasia/itsaplan/issues/151)) ([6245e8d](https://github.com/croffasia/itsaplan/commit/6245e8d48820d44afaef0b75deb24f48ec6f7454))
+
 ## [0.10.0](https://github.com/croffasia/itsaplan/compare/v0.9.0...v0.10.0) (2026-08-14)
 
 

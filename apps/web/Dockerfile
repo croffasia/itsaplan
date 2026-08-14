@@ -17,6 +17,7 @@ COPY packages/auth/package.json ./packages/auth/
 COPY packages/agent-tools/package.json ./packages/agent-tools/
 COPY packages/crypto/package.json ./packages/crypto/
 COPY packages/mailer/package.json ./packages/mailer/
+COPY packages/runner/package.json ./packages/runner/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
 RUN bun install --frozen-lockfile
 

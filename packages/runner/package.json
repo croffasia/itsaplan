@@ -1,0 +1,56 @@
+{
+  "name": "@itsaplan/runner",
+  "version": "0.1.0",
+  "description": "Runs an Itsaplan external agent's queued tasks on your own machine",
+  "keywords": [
+    "itsaplan",
+    "ai-agents",
+    "agentic",
+    "agent",
+    "runner",
+    "cli",
+    "self-hosted",
+    "open-source",
+    "project-management",
+    "issue-tracker",
+    "jira-alternative",
+    "linear-alternative",
+    "claude-code",
+    "codex",
+    "gemini-cli",
+    "opencode"
+  ],
+  "homepage": "https://github.com/croffasia/itsaplan/tree/main/packages/runner#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/croffasia/itsaplan.git",
+    "directory": "packages/runner"
+  },
+  "bugs": "https://github.com/croffasia/itsaplan/issues",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "itsaplan-runner": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "bun build src/cli.ts --target=node --outfile dist/cli.js",
+    "prepublishOnly": "bun run build",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@types/node": "^26.2.0",
+    "eslint": "^9.39.0",
+    "typescript": "^6.0.3"
+  }
+}

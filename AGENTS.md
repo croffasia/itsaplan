@@ -75,6 +75,7 @@ packages/auth   @repo/auth   — better-auth server instance + instance auth set
 packages/crypto @repo/crypto — AES-256-GCM encryption for secrets at rest
 packages/mailer @repo/mailer — SMTP/Resend transport for outbound email
 packages/agent-tools @repo/agent-tools — tool definitions for the AI agent runtime
+packages/runner @itsaplan/runner — CLI that runs an external agent's queued tasks on the operator's own machine
 packages/eslint-config @repo/eslint-config — shared ESLint config
 ```
 
@@ -235,7 +236,11 @@ tidy moves the code. This is separate from the CI gate (`format:check` + `lint` 
 
 ## Gotchas
 
-- Don't add a build step for shared packages — they're consumed as source.
+- Don't add a build step for shared packages — they're consumed as source. The one
+  exception is `packages/runner`: it is the only member published to npm, so it bundles
+  to `dist/` (`bun build --target=node`) and its source stays free of Bun APIs — the
+  published CLI runs on plain Node. Release it by hand (`npm publish` after bumping
+  `version`); release-please manages the application's version, not this package's.
 - When adding a new workspace member under `packages/*` or `apps/*`, add a matching
   `COPY <path>/package.json ./<path>/` line to every Dockerfile that installs deps
   (`apps/api`, `apps/web`, `apps/worker`, `apps/bot`). The install stage

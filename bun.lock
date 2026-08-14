@@ -236,6 +236,19 @@
         "typescript": "^6.0.3",
       },
     },
+    "packages/runner": {
+      "name": "@itsaplan/runner",
+      "version": "0.1.0",
+      "bin": {
+        "itsaplan-runner": "./dist/cli.js",
+      },
+      "devDependencies": {
+        "@repo/eslint-config": "workspace:*",
+        "@types/node": "^26.2.0",
+        "eslint": "^9.39.0",
+        "typescript": "^6.0.3",
+      },
+    },
   },
   "overrides": {
     "@scalar/themes": "0.16.2",
@@ -579,6 +592,8 @@
     "@internationalized/number": ["@internationalized/number@3.6.7", "", { "dependencies": { "@swc/helpers": "^0.5.0" } }, "sha512-3ji1fcrT+FPAK86UqEhB/psHixYo6niWPJtt7+qRaYFynt/BaJG8GhAPimtWUpEiVSTq8ZM8L5psMxGquiB/Vg=="],
 
     "@isaacs/ttlcache": ["@isaacs/ttlcache@2.1.5", "", {}, "sha512-VwGZqqjAWPICTmxUZnbpEfO60LhPWzquik+bmyXGY7pYRn6diEvCI5i6Ca+J6o2y4vS73HrpuMTo2dOvUevH8w=="],
+
+    "@itsaplan/runner": ["@itsaplan/runner@workspace:packages/runner"],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 

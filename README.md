@@ -55,8 +55,12 @@ stable release.
 **AI agents**
 
 - Agents as project members with their own permissions and assigned issues
-- Configure each agent's model, system prompt, tools, and reusable skills — built on the
-  [Mastra](https://github.com/mastra-ai/mastra) agent framework
+- Internal agents run on the instance: configure the model, system prompt, tools, and reusable
+  skills — built on the [Mastra](https://github.com/mastra-ai/mastra) agent framework
+- External agents run wherever you want: drive the run queue through the API with your own
+  implementation, or install [`@itsaplan/runner`](packages/runner) and let it hand every task to
+  Claude Code, Codex, Gemini CLI, GitHub Copilot CLI, opencode, or any command that reads stdin —
+  on your own machine, under your own account
 - Mention an agent in a comment to trigger a run
 - Scheduled agent runs
 - Built-in chat with per-agent conversation history
@@ -142,5 +146,5 @@ not a public issue, so we can fix it first. Details in [SECURITY.md](SECURITY.md
 
 Copyright © 2026 VIBE DEV SPACE LLC.
 
-[AGPL-3.0](LICENSE). Running a modified version as a network service means publishing
-your changes under the same license.
+[AGPL-3.0](LICENSE), except `packages/runner`, which is
+[Apache-2.0](packages/runner/LICENSE).

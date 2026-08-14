@@ -10,8 +10,10 @@ import {
 // (see ../attachments/store.ts).
 //
 // Config comes from env. forcePathStyle is required for MinIO (and most
-// self-hosted S3 gateways) because they do not serve virtual-host-style buckets.
-// region is sent but ignored by MinIO; a value is still required by the SDK.
+// self-hosted S3 gateways) because they do not serve virtual-host-style buckets;
+// hosted stores that only serve virtual-host-style buckets set
+// S3_FORCE_PATH_STYLE=false. region is sent but ignored by MinIO; a value is
+// still required by the SDK.
 
 let cached: { client: S3Client; bucket: string } | null = null;
 
@@ -31,7 +33,7 @@ function getClient(): { client: S3Client; bucket: string } {
       endpoint,
       region: process.env.S3_REGION || 'us-east-1',
       credentials: { accessKeyId, secretAccessKey },
-      forcePathStyle: true,
+      forcePathStyle: process.env.S3_FORCE_PATH_STYLE !== 'false',
     }),
     bucket,
   };

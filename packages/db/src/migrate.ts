@@ -14,6 +14,24 @@ const db = drizzle(migrationClient);
 
 const migrationsFolder = new URL('../drizzle', import.meta.url).pathname;
 
+// Compose orders the api behind a healthy postgres, but a platform without that
+// guarantee (Railway, plain `docker run`) starts both at once and the first
+// connections are refused. Wait for the server separately so a failing migration
+// still reports on the first attempt.
+const ATTEMPTS = 15;
+const RETRY_DELAY_MS = 2000;
+
+for (let attempt = 1; ; attempt++) {
+  try {
+    await migrationClient`select 1`;
+    break;
+  } catch (error) {
+    if (attempt === ATTEMPTS) throw error;
+    console.log(`⏳ Waiting for the database (${attempt}/${ATTEMPTS})...`);
+    await Bun.sleep(RETRY_DELAY_MS);
+  }
+}
+
 console.log('⏳ Running migrations...');
 await migrate(db, { migrationsFolder });
 await migrationClient.end();

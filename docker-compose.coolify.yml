@@ -101,6 +101,7 @@ services:
       S3_ACCESS_KEY_ID: ${SERVICE_USER_MINIO}
       S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
       S3_REGION: ${S3_REGION:-us-east-1}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
     # start_period covers the migrations the container applies before it listens.
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']

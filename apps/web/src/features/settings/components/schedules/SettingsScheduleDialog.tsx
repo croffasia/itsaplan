@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Terminal } from 'lucide-react';
 import type { AgentSchedule, AgentScheduleInput, AiAgent } from '@/lib/api';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { parseScheduleInput } from '../../utils/cronSchedule';
+import { AgentRunnerStatus } from '../ai-agents/AgentRunnerStatus';
 import { SettingsScheduleInput } from './SettingsScheduleInput';
 import { useTranslations } from 'next-intl';
 
@@ -33,10 +35,12 @@ export function SettingsScheduleDialog({
 }) {
   const t = useTranslations('settings.schedules');
   const tCommon = useTranslations('common');
+  const tAgents = useTranslations('settings.agents');
   const [agentId, setAgentId] = useState(String(initial?.agentId ?? agents[0]?.id ?? ''));
   const [name, setName] = useState(initial?.name ?? '');
   const [prompt, setPrompt] = useState(initial?.prompt ?? '');
   const [scheduleInput, setScheduleInput] = useState(initial?.cron ?? 'Every day at 9:00 AM');
+  const selectedAgent = agents.find((a) => String(a.id) === agentId) ?? null;
   const parsedSchedule = parseScheduleInput(scheduleInput);
   const isValid =
     Number(agentId) > 0 &&
@@ -97,12 +101,25 @@ export function SettingsScheduleDialog({
                 {agents.map((agent) => (
                   <SelectItem key={agent.id} value={String(agent.id)}>
                     {agent.name}
+                    <span className="text-xs text-muted-foreground">
+                      {tAgents(`kindLabel.${agent.kind}`)}
+                    </span>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </Field>
         </div>
+
+        {selectedAgent?.kind === 'external' && (
+          <div className="flex items-start gap-2.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5">
+            <Terminal className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1 space-y-1">
+              <p className="text-xs text-muted-foreground">{t('externalAgentHint')}</p>
+              <AgentRunnerStatus agent={selectedAgent} />
+            </div>
+          </div>
+        )}
 
         <Field htmlFor="schedule-task" label={t('task')}>
           <Textarea

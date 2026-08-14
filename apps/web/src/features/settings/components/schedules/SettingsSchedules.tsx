@@ -12,7 +12,7 @@ import {
   useRunAgentSchedule,
   useUpdateAgentSchedule,
 } from '@/services/agentSchedules.service';
-import { useInternalAgents } from '../../hooks/useInternalAgents';
+import { useAiAgentsQuery } from '@/services/aiAgents.service';
 import { useSettingsCan } from '../../context/settingsPermission';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsScheduleDialog } from './SettingsScheduleDialog';
@@ -33,9 +33,9 @@ export default function SettingsSchedules({
   const projectKey = project.project.key;
   const can = useSettingsCan();
   const schedulesQuery = useAgentSchedules(projectKey);
-  const agentsQuery = useInternalAgents(projectKey);
+  const agentsQuery = useAiAgentsQuery(projectKey);
   const schedules = schedulesQuery.data ?? [];
-  const agents = agentsQuery.agents;
+  const agents = agentsQuery.data ?? [];
   const createSchedule = useCreateAgentSchedule(projectKey);
   const updateSchedule = useUpdateAgentSchedule(projectKey);
   const deleteSchedule = useDeleteAgentSchedule(projectKey);

@@ -1,0 +1,1 @@
+ALTER TABLE "ai_agent" ALTER COLUMN "runner_scope" SET DEFAULT 'project';

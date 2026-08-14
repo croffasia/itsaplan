@@ -375,6 +375,10 @@ export const aiAgent = pgTable(
     // trigger_on_assign is set.
     triggerOnMention: boolean('trigger_on_mention').notNull().default(true),
     triggerOnAssign: boolean('trigger_on_assign').notNull().default(false),
+    // How long a delegation run waits before it becomes claimable, which leaves time
+    // to keep editing the issue after delegating it. Applies to delegation only: a
+    // mention is a question already asked, and its author waits for the reply.
+    delegationDelaySec: integer('delegation_delay_sec').notNull().default(120),
     // Authorization: the project_role the bot user acts under. Every agent request
     // carries its API key and is enforced by this role through the normal permission
     // checks — an external agent's HTTP calls and an internal agent's in-process tool
@@ -392,12 +396,25 @@ export const aiAgent = pgTable(
     // store). memory_last_messages is NULL when memory is off.
     memoryEnabled: boolean('memory_enabled').notNull().default(false),
     memoryLastMessages: integer('memory_last_messages'),
+    // The member who created the agent. An external agent's runner authenticates
+    // with the agent's key, so `owner` scope means the runner only receives runs
+    // this member triggered; `project` scope, the default, means any member's.
+    ownerUserId: text('owner_user_id').references(() => user.id, { onDelete: 'set null' }),
+    runnerScope: text('runner_scope').notNull().default('project'),
+    // Last time a runner claimed work or sent a heartbeat for this agent, which is
+    // what the UI shows as its presence. NULL for an agent no runner ever polled.
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     unique().on(t.projectId, t.username),
     unique().on(t.userId),
     check('ai_agent_kind_check', sql`${t.kind} IN ('external', 'internal')`),
+    check('ai_agent_runner_scope_check', sql`${t.runnerScope} IN ('owner', 'project')`),
+    check(
+      'ai_agent_delegation_delay_check',
+      sql`${t.delegationDelaySec} >= 0 AND ${t.delegationDelaySec} <= 86400`,
+    ),
     index('ai_agent_project_idx').on(t.projectId),
   ],
 );

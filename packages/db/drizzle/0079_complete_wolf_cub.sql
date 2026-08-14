@@ -1,0 +1,2 @@
+ALTER TABLE "ai_agent" ADD COLUMN "delegation_delay_sec" integer DEFAULT 120 NOT NULL;--> statement-breakpoint
+ALTER TABLE "ai_agent" ADD CONSTRAINT "ai_agent_delegation_delay_check" CHECK ("ai_agent"."delegation_delay_sec" >= 0 AND "ai_agent"."delegation_delay_sec" <= 86400);

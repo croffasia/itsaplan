@@ -533,6 +533,41 @@
       "when": 1786628860087,
       "tag": "0075_left_rafael_vega",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1786664454733,
+      "tag": "0076_nostalgic_captain_america",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1786664455733,
+      "tag": "0077_external_agent_roles",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1786695836751,
+      "tag": "0078_fair_eternals",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1786708280946,
+      "tag": "0079_complete_wolf_cub",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1786708281946,
+      "tag": "0080_owner_scope_backfill",
+      "breakpoints": true
     }
   ]
 }

@@ -576,7 +576,7 @@
     "secretRegenerated": "Создан новый секрет. Обновите его и в вебхуке на GitHub.",
     "manualHint": "В репозитории на GitHub откройте <b>Settings → Webhooks → Add webhook</b>. Вставьте URL и секрет, укажите тип содержимого <code>application/json</code> и выберите только событие <b>Pull requests</b>.",
     "cliHint": "Нужен <link>GitHub CLI</link>. Скопируйте эту команду, замените <code>{placeholder}</code> на свой репозиторий и выполните её в терминале.",
-    "commandCopied": "Команда скопирована. Замените <owner>/<repo> и выполните её.",
+    "commandCopied": "Команда скопирована. Замените owner/repo и выполните её.",
     "copied": "{label} скопировано",
     "lastDelivery": "Последняя доставка",
     "lastDeliveryAt": "Получено {ago}",

@@ -576,7 +576,7 @@
     "secretRegenerated": "New secret created. Update it in your GitHub webhook too.",
     "manualHint": "In your GitHub repository, open <b>Settings → Webhooks → Add webhook</b>. Paste the payload URL and secret, set the content type to <code>application/json</code>, and choose only the <b>Pull requests</b> event.",
     "cliHint": "Requires the <link>GitHub CLI</link>. Copy this command, replace <code>{placeholder}</code> with your repository, and run it in a terminal.",
-    "commandCopied": "Command copied. Replace <owner>/<repo>, then run it.",
+    "commandCopied": "Command copied. Replace owner/repo, then run it.",
     "copied": "{label} copied",
     "lastDelivery": "Last delivery",
     "lastDeliveryAt": "Received {ago}",

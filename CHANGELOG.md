@@ -1,5 +1,55 @@
 # Changelog
 
+## [0.10.0](https://github.com/croffasia/itsaplan/compare/v0.9.0...v0.10.0) (2026-08-14)
+
+
+### Features
+
+* add datetime custom fields and calendar placement by date fields ([#139](https://github.com/croffasia/itsaplan/issues/139)) ([0f0eb72](https://github.com/croffasia/itsaplan/commit/0f0eb7206c91d10b06d7405223d941e664ea4e50))
+* add per-user favorites for saved views ([#132](https://github.com/croffasia/itsaplan/issues/132)) ([ec1827f](https://github.com/croffasia/itsaplan/commit/ec1827f0c51ceaa529d08631b5af101a9ccd3fb2))
+* add WIP limits to board columns ([#146](https://github.com/croffasia/itsaplan/issues/146)) ([3f5cb37](https://github.com/croffasia/itsaplan/commit/3f5cb37b80521195c49db933fcf64b5c0ddc5a1c))
+* filter issues by cycle and initiative ([#140](https://github.com/croffasia/itsaplan/issues/140)) ([a4d574d](https://github.com/croffasia/itsaplan/commit/a4d574d34e1c3504281facda5e23504e08f5b5a4))
+* run external agents on your own machine ([#147](https://github.com/croffasia/itsaplan/issues/147)) ([b86eda5](https://github.com/croffasia/itsaplan/commit/b86eda51888267298a2f64364bb98200cd4d2366))
+* **web:** add a second grouping level to the timeline ([#137](https://github.com/croffasia/itsaplan/issues/137)) ([353af73](https://github.com/croffasia/itsaplan/commit/353af732259ef87abeedeb8b8b2edf3e85fe4996))
+* **web:** add H1 and H2 buttons to the description editor menu ([#143](https://github.com/croffasia/itsaplan/issues/143)) ([58d304c](https://github.com/croffasia/itsaplan/commit/58d304c52d979e18543b4d9a700627535a4fec72))
+* **web:** add Russian (ru) UI translations ([#131](https://github.com/croffasia/itsaplan/issues/131)) ([e31175b](https://github.com/croffasia/itsaplan/commit/e31175bee905f50cd54da41dd81cf332eb6c1612))
+* **web:** add Simplified Chinese (zh-CN) UI translations ([#130](https://github.com/croffasia/itsaplan/issues/130)) ([d3e54d1](https://github.com/croffasia/itsaplan/commit/d3e54d143b8c954e77ad717dc56b2dcb8e6b2521))
+* **web:** drag timeline rows between groups and reorder them ([#141](https://github.com/croffasia/itsaplan/issues/141)) ([3d31551](https://github.com/croffasia/itsaplan/commit/3d315512a5b2614d8f0b80f14b53bebdcfd5bbb7))
+
+
+### Improvements
+
+* order cycle and initiative groups by status ([#136](https://github.com/croffasia/itsaplan/issues/136)) ([6c6bd08](https://github.com/croffasia/itsaplan/commit/6c6bd087f79b950d11165b8c949a60e75453e035))
+
+
+### Bug Fixes
+
+* select the default language from the user's locale ([#144](https://github.com/croffasia/itsaplan/issues/144)) ([a337192](https://github.com/croffasia/itsaplan/commit/a337192e43152b99dd4c58ee3d60d40d9330266b))
+* **web:** center integration name vertically in the credentials list ([#142](https://github.com/croffasia/itsaplan/issues/142)) ([afe908b](https://github.com/croffasia/itsaplan/commit/afe908b3b94b43f78f068466f9cdcb3ac973786d))
+* **web:** localize dates to the interface language ([#133](https://github.com/croffasia/itsaplan/issues/133)) ([74ad1d0](https://github.com/croffasia/itsaplan/commit/74ad1d007fb003c20cedf227fe955119e4674d00))
+
+
+### Refactoring
+
+* **api:** drop the server-side cache of the update check ([#128](https://github.com/croffasia/itsaplan/issues/128)) ([009ffc8](https://github.com/croffasia/itsaplan/commit/009ffc84f93023a4ca12e8a1e8c1eb6120a73cd0))
+* **api:** restructure the api into feature modules (part 1) ([#138](https://github.com/croffasia/itsaplan/issues/138)) ([4aff469](https://github.com/croffasia/itsaplan/commit/4aff469e1ac0dca0d274f4f74b3548a2a882a059))
+
+
+### Build
+
+* **web:** lint translation files for missing keys across locales ([#148](https://github.com/croffasia/itsaplan/issues/148)) ([817645d](https://github.com/croffasia/itsaplan/commit/817645d2ee2e7f893d8c867150665414868830c4))
+
+
+### CI
+
+* show chore and test commits in the changelog ([#135](https://github.com/croffasia/itsaplan/issues/135)) ([a33936a](https://github.com/croffasia/itsaplan/commit/a33936a4384a9abd1b2affe56c0698946743cd6b))
+
+
+### Chores
+
+* update dependencies across the workspace ([#134](https://github.com/croffasia/itsaplan/issues/134)) ([eafba30](https://github.com/croffasia/itsaplan/commit/eafba308481f74c688cddec72b9dc297e82a87d7))
+* **web:** let prettier ignore the generated next-env.d.ts ([#149](https://github.com/croffasia/itsaplan/issues/149)) ([22acf61](https://github.com/croffasia/itsaplan/commit/22acf61a49231003e1db3f94dfe405969d10fd7c))
+
 ## [0.9.0](https://github.com/croffasia/itsaplan/compare/v0.8.0...v0.9.0) (2026-08-12)
 
 

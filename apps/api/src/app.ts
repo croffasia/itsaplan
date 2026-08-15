@@ -110,6 +110,15 @@ export const app = new Elysia()
             description:
               'Instance administration: registration policy, email provider, Google sign-in',
           },
+          {
+            name: 'System',
+            description: 'Liveness, the current session user, and the instance sign-in policy',
+          },
+          {
+            name: 'Internal',
+            description:
+              'Endpoints the worker and the bot call with the shared WORKER_INTERNAL_TOKEN',
+          },
         ],
         // Planner routes are session-gated. Besides the session cookie (sent by the
         // browser, not modelled here), a request may carry an `x-api-key` header:
@@ -128,29 +137,59 @@ export const app = new Elysia()
   // better-auth: forward every /api/auth/* request to its handler.
   .all('/api/auth/*', ({ request }) => auth.handler(request))
   // Example protected handler: read the session from better-auth.
-  .get('/me', async ({ request }) => {
-    const session = await auth.api.getSession({ headers: request.headers });
-    if (!session) return { authenticated: false };
-    return { authenticated: true, user: session.user };
-  })
+  .get(
+    '/me',
+    async ({ request }) => {
+      const session = await auth.api.getSession({ headers: request.headers });
+      if (!session) return { authenticated: false };
+      return { authenticated: true, user: session.user };
+    },
+    {
+      detail: {
+        tags: ['System'],
+        summary: 'Get the current session user',
+        description:
+          'Resolve the request credentials to a session and return the user it belongs to. ' +
+          'Without a session it answers `{ authenticated: false }` instead of failing.',
+      },
+    },
+  )
   // What the sign-in and sign-up screens need before there is a session: whether
   // registration is open, invite-only, or closed, and which sign-in methods are
   // offered. Public on purpose — the screens are reached logged out. It carries no
   // credentials, only the instance's own policy.
-  .get('/auth-config', async () => {
-    const settings = await getAuthSettings();
-    const emailEnabled = await hasConfiguredEmailProvider();
-    return {
-      registration: settings.registration,
-      // Both are only usable when the instance can actually send mail.
-      magicLink: settings.magicLink && emailEnabled,
-      requireEmailVerification: settings.requireEmailVerification && emailEnabled,
-      emailEnabled,
-      google: await hasConfiguredGoogle(),
-    };
-  })
+  .get(
+    '/auth-config',
+    async () => {
+      const settings = await getAuthSettings();
+      const emailEnabled = await hasConfiguredEmailProvider();
+      return {
+        registration: settings.registration,
+        // Both are only usable when the instance can actually send mail.
+        magicLink: settings.magicLink && emailEnabled,
+        requireEmailVerification: settings.requireEmailVerification && emailEnabled,
+        emailEnabled,
+        google: await hasConfiguredGoogle(),
+      };
+    },
+    {
+      detail: {
+        tags: ['System'],
+        summary: "Get the instance's sign-in configuration",
+        description:
+          'Report the registration policy and the sign-in methods the instance offers, so the ' +
+          'sign-in and sign-up screens can render before there is a session. Public.',
+      },
+    },
+  )
   // Root doubles as the liveness/health endpoint.
-  .get('/', () => ({ name: "It's a Plan api", status: 'ok' }))
+  .get('/', () => ({ name: "It's a Plan api", status: 'ok' }), {
+    detail: {
+      tags: ['System'],
+      summary: 'Check that the api is up',
+      description: 'Liveness probe: returns the api name and `status: "ok"`.',
+    },
+  })
   .use(internalAgentRunRoutes)
   .use(internalNotificationRoutes)
   .use(internalTelegramRoutes)

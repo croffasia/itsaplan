@@ -25,6 +25,7 @@ const sendBody = t.Object({
 
 export const internalNotificationRoutes = new Elysia({
   name: 'internal-notification-deliveries',
+  detail: { tags: ['Internal'] },
 }).post(
   '/internal/notification-deliveries/send',
   async ({ body, headers, set }) => {
@@ -41,5 +42,14 @@ export const internalNotificationRoutes = new Elysia({
       config,
     });
   },
-  { body: sendBody },
+  {
+    body: sendBody,
+    detail: {
+      summary: 'Send one notification delivery',
+      description:
+        "Send a claimed delivery over its channel with the project's stored credentials and " +
+        'return the result the worker records. Called by the worker with the x-worker-token ' +
+        'header.',
+    },
+  },
 );

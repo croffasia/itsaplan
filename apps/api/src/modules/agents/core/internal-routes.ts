@@ -26,7 +26,10 @@ function workerTokenValid(headers: Record<string, string | undefined>): boolean 
   return !!expected && headers['x-worker-token'] === expected;
 }
 
-export const internalAgentRunRoutes = new Elysia({ name: 'internal-agent-runs' })
+export const internalAgentRunRoutes = new Elysia({
+  name: 'internal-agent-runs',
+  detail: { tags: ['Internal'] },
+})
   .post(
     '/internal/agent-runs/execute',
     async ({ body, headers, set }) => {
@@ -43,7 +46,16 @@ export const internalAgentRunRoutes = new Elysia({ name: 'internal-agent-runs' }
       });
       return { output: result.text };
     },
-    { body: runBody },
+    {
+      body: runBody,
+      detail: {
+        summary: 'Execute a queued agent run',
+        description:
+          'Run one claimed agent run in the api, where the model credentials and the agent ' +
+          'runtime live, and return the text the agent produced. Called by the worker with ' +
+          'the x-worker-token header.',
+      },
+    },
   )
 
   // Deletes the agent memory of archived issues. The worker's auto-archive sweep
@@ -60,5 +72,13 @@ export const internalAgentRunRoutes = new Elysia({ name: 'internal-agent-runs' }
       for (const issueId of body.issueIds) deleted += await deleteThreadsWhere({ issueId });
       return { deleted };
     },
-    { body: t.Object({ issueIds: t.Array(t.Number()) }) },
+    {
+      body: t.Object({ issueIds: t.Array(t.Number()) }),
+      detail: {
+        summary: 'Delete the agent threads of issues',
+        description:
+          'Drop the agent memory threads of the given issues and return how many were ' +
+          'deleted. Called by the worker with the x-worker-token header.',
+      },
+    },
   );

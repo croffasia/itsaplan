@@ -22,18 +22,32 @@ function authorized(headers: Record<string, string | undefined>): boolean {
   return Boolean(expected) && headers['x-worker-token'] === expected;
 }
 
-export const internalTelegramRoutes = new Elysia({ name: 'internal-telegram' })
-  .get('/internal/telegram/config', async ({ headers, set }) => {
-    if (!authorized(headers)) {
-      set.status = 401;
-      return { enabled: false, botToken: '', botUsername: '' };
-    }
-    const config = await getInstanceBotConfig();
-    // A disabled or tokenless bot is reported as not enabled, so the service simply
-    // stops polling instead of having to interpret the config itself.
-    if (!isInstanceBotUsable(config)) return { enabled: false, botToken: '', botUsername: '' };
-    return { enabled: true, botToken: config.botToken, botUsername: config.botUsername };
-  })
+export const internalTelegramRoutes = new Elysia({
+  name: 'internal-telegram',
+  detail: { tags: ['Internal'] },
+})
+  .get(
+    '/internal/telegram/config',
+    async ({ headers, set }) => {
+      if (!authorized(headers)) {
+        set.status = 401;
+        return { enabled: false, botToken: '', botUsername: '' };
+      }
+      const config = await getInstanceBotConfig();
+      // A disabled or tokenless bot is reported as not enabled, so the service simply
+      // stops polling instead of having to interpret the config itself.
+      if (!isInstanceBotUsable(config)) return { enabled: false, botToken: '', botUsername: '' };
+      return { enabled: true, botToken: config.botToken, botUsername: config.botUsername };
+    },
+    {
+      detail: {
+        summary: "Get the instance's Telegram bot config",
+        description:
+          'Return the bot token and username the bot service polls with, or `enabled: false` ' +
+          'when no usable bot is configured. Called by the bot with the x-worker-token header.',
+      },
+    },
+  )
 
   .post(
     '/internal/telegram/link',
@@ -44,5 +58,13 @@ export const internalTelegramRoutes = new Elysia({ name: 'internal-telegram' })
       }
       return confirmTelegramLink(body);
     },
-    { body: linkBody },
+    {
+      body: linkBody,
+      detail: {
+        summary: 'Confirm a Telegram link code',
+        description:
+          "Redeem the code a user sent the bot with /start and attach the chat to that user's " +
+          'account. Called by the bot with the x-worker-token header.',
+      },
+    },
   );

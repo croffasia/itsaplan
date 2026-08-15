@@ -26,7 +26,7 @@ export default function IssueBreadcrumb({
       </Link>
       {parent && projectKey && (
         <>
-          <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+          <ChevronRight className="size-3.5 shrink-0 text-muted-foreground rtl:rotate-180" />
           <Link
             href={issuePath(projectKey, parent.sequenceNumber)}
             className="truncate text-muted-foreground hover:text-foreground"
@@ -35,7 +35,7 @@ export default function IssueBreadcrumb({
           </Link>
         </>
       )}
-      <ChevronRight className="size-3.5 shrink-0 text-muted-foreground" />
+      <ChevronRight className="size-3.5 shrink-0 text-muted-foreground rtl:rotate-180" />
       <span className="truncate font-medium">{identifier ?? '…'}</span>
     </span>
   );

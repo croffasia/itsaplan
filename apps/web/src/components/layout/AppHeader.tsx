@@ -36,18 +36,21 @@ export default function AppHeader({
   return (
     <header className="flex h-12 shrink-0 items-center gap-2 border-b px-2 sm:px-4">
       <SidebarTrigger />
-      <Separator orientation="vertical" className="mr-1 h-4" />
+      <Separator orientation="vertical" className="me-1 h-4" />
       <div className="min-w-0 truncate text-sm font-medium">{title}</div>
 
       <button
         type="button"
         onClick={onOpenCommand}
         title={t('searchHint', { key: paletteKey ?? '' })}
-        className="ml-auto flex size-8 shrink-0 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:bg-accent sm:w-auto sm:max-w-xs sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:gap-2 sm:px-3"
+        className="ms-auto flex size-8 shrink-0 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:bg-accent sm:w-auto sm:max-w-xs sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:gap-2 sm:px-3"
       >
         <Search className="size-4 shrink-0" />
         <span className="hidden truncate sm:inline">{t('search')}</span>
-        <kbd className="ml-auto hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] sm:inline">
+        <kbd
+          dir="ltr"
+          className="ms-auto hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] sm:inline"
+        >
           {paletteKey}
         </kbd>
       </button>

@@ -7,7 +7,7 @@ import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 
-// The issue detail as a right-hand side panel over the project. Expand opens the
+// The issue detail as a side panel over the project, at the end edge. Expand opens the
 // same issue as a full page; the shared body lives in IssueDetailContent.
 export default function IssueDetail({
   project,
@@ -35,7 +35,7 @@ export default function IssueDetail({
     >
       {/* No padding at the top: the sticky header carries it, so it can sit flush
           against the panel edge with nothing showing above it. */}
-      <div className="ml-auto flex h-full w-full flex-col overflow-y-auto border-l bg-card px-5 pt-0 pb-5 sm:w-[720px] sm:max-w-[92vw] sm:px-8">
+      <div className="ms-auto flex h-full w-full flex-col overflow-y-auto border-s bg-card px-5 pt-0 pb-5 sm:w-[720px] sm:max-w-[92vw] sm:px-8">
         {/* The header stays at the top while the body scrolls under it. Negative
             margins cancel the panel padding so its translucent, blurred backdrop
             spans the full panel width. */}

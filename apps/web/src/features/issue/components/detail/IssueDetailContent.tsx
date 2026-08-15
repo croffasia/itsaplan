@@ -213,15 +213,15 @@ export default function IssueDetailContent({
   );
 
   if (layout === 'page') {
-    // From xl the issue content is left-aligned and the actions with Properties
-    // are fixed to the right edge (out of flow), so they never shift the content;
-    // the right margin reserves their width so the two do not overlap. Below xl
-    // there is no room for two columns, so the same two blocks are shown inside
-    // the content column instead — the actions above the title, Properties under
-    // the description.
+    // From xl the issue content sits at the start edge and the actions with
+    // Properties are fixed to the end edge (out of flow), so they never shift the
+    // content; the end margin reserves their width so the two do not overlap.
+    // Below xl there is no room for two columns, so the same two blocks are shown
+    // inside the content column instead — the actions above the title, Properties
+    // under the description.
     return (
       <>
-        <div className="max-w-3xl xl:mr-[340px]">
+        <div className="max-w-3xl xl:me-[340px]">
           {/* Stuck to the top of the scrolling page, with the same translucent,
               blurred backdrop the side panel's header uses. The negative top
               margin cancels the page's padding so the row starts where the title
@@ -234,7 +234,7 @@ export default function IssueDetailContent({
           {sections}
           {activity}
         </div>
-        <aside className="hidden xl:fixed xl:top-16 xl:right-6 xl:block xl:max-h-[calc(100vh-5.5rem)] xl:w-[340px] xl:overflow-y-auto">
+        <aside className="hidden xl:fixed xl:end-6 xl:top-16 xl:block xl:max-h-[calc(100vh-5.5rem)] xl:w-[340px] xl:overflow-y-auto">
           {actions}
           {sidebarProperties}
         </aside>

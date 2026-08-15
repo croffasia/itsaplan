@@ -7,6 +7,8 @@ import type {
   ProjectDetail,
   Column,
   CustomField,
+  CycleOption,
+  InitiativeOption,
   Label,
   StateType,
   InitiativeRef,
@@ -20,6 +22,7 @@ import { PRIORITY_ORDER, PRIORITY_RANK } from '@/utils/fieldOptions';
 import {
   hasValue,
   isEffectiveCondition,
+  parseStatusValue,
   statusValue,
   type FilterCondition,
   type FilterSet,
@@ -62,10 +65,20 @@ function pinnedFilterValues(filters: FilterSet): Map<string, FilterValue | undef
   return pinned;
 }
 
+// The one entity of a status, for a condition that pins a whole status ("the
+// active cycle") instead of naming one. Several of them name nothing.
+function onlyWithStatus(entities: { id: number; status: string }[], status: string) {
+  const inStatus = entities.filter((e) => e.status === status);
+  return inStatus.length === 1 ? inStatus[0].id : undefined;
+}
+
 // The defaults a new issue takes from the active filters, so an issue created on
 // a filtered board stays visible on it. They fill in only what the call site left
 // out — what the user pointed at wins over the filters.
-export function defaultsFromFilters(filters: FilterSet): NewIssueDefaults {
+export function defaultsFromFilters(
+  filters: FilterSet,
+  planned: { cycles: CycleOption[]; initiatives: InitiativeOption[] },
+): NewIssueDefaults {
   const pinned = pinnedFilterValues(filters);
   const pinnedId = (field: string) => {
     const value = pinned.get(field);
@@ -76,14 +89,20 @@ export function defaultsFromFilters(filters: FilterSet): NewIssueDefaults {
     return typeof value === 'string' || value === null ? value : undefined;
   };
 
+  const pinnedEntity = (field: string, entities: { id: number; status: string }[]) => {
+    const value = pinned.get(field);
+    if (typeof value === 'number' || value === null) return value;
+    const status = parseStatusValue(value ?? null);
+    return status === null ? undefined : onlyWithStatus(entities, status);
+  };
+
   const labelId = pinnedId('labels');
   const defaults: NewIssueDefaults = {
     // A column is never pinned to null: every issue has one.
     columnId: pinnedId('status') ?? undefined,
     typeId: pinnedId('type'),
-    // `status:<status>` pins a whole status, which names no initiative or cycle.
-    initiativeId: pinnedId('initiative'),
-    cycleId: pinnedId('cycle'),
+    initiativeId: pinnedEntity('initiative', planned.initiatives),
+    cycleId: pinnedEntity('cycle', planned.cycles),
     assigneeUserId: pinnedText('assignee'),
     delegateUserId: pinnedText('delegate'),
     priority: pinnedText('priority'),

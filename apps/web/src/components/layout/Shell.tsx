@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { useIssueBySeqQuery } from '@/services/issues.service';
 import { useAccountPreferences } from '@/services/preferences.service';
 import type { IssueOpenMode } from '@/lib/api';
@@ -52,6 +53,7 @@ export default function Shell({
     forbidden,
   } = useShellProject(projectKey, route.activeViewId);
 
+  const initiativeOptions = useInitiativeOptionsQuery(projectKey).data ?? [];
   const { issueOpenMode, showChatByDefault } = useAccountPreferences();
   const overlays = useOverlays(showChatByDefault);
   const issueQuery = useIssueBySeqQuery(projectKey, routeIssueSeq);
@@ -64,7 +66,12 @@ export default function Shell({
 
   // Only the work items routes: a cycle or an initiative board carries its own
   // filters and merges them itself.
-  const filterDefaults = route.onBoard ? defaultsFromFilters(editor.effectiveFilters) : {};
+  const filterDefaults = route.onBoard
+    ? defaultsFromFilters(editor.effectiveFilters, {
+        cycles: project?.plannedCycles ?? [],
+        initiatives: initiativeOptions,
+      })
+    : {};
   const addIssue = (defaults: NewIssueDefaults) =>
     overlays.setNewIssueDefaults({ ...filterDefaults, ...defaults });
 

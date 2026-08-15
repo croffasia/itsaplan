@@ -57,6 +57,10 @@ export function statusValue(status: string): string {
   return `status:${status}`;
 }
 
+export function parseStatusValue(value: FilterValue): string | null {
+  return typeof value === 'string' && value.startsWith('status:') ? value.slice(7) : null;
+}
+
 export function parseCustomFieldKey(field: string): number | null {
   return field.startsWith('cf:') ? Number(field.slice(3)) : null;
 }

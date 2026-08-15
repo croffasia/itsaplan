@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
 import { defaultsFromFilters } from '@/utils/project';
+import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
@@ -23,6 +24,7 @@ const INITIATIVE_BOARD_STORE_KEY = 'planner_initiative_board_settings';
 export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: number }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
   const board = useLocalBoardSettings(INITIATIVE_BOARD_STORE_KEY, initiativeId);
+  const initiativeOptions = useInitiativeOptionsQuery(project?.project.key ?? null).data ?? [];
 
   const viewProject = useMemo(() => {
     if (!project) return null;
@@ -43,7 +45,14 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
     onSettingsChange: board.changeSettings,
     onOpenIssue,
     onAddIssue: (defaults: Parameters<typeof onAddIssue>[0]) =>
-      onAddIssue({ ...defaultsFromFilters(board.filters), initiativeId, ...defaults }),
+      onAddIssue({
+        ...defaultsFromFilters(board.filters, {
+          cycles: project.plannedCycles,
+          initiatives: initiativeOptions,
+        }),
+        initiativeId,
+        ...defaults,
+      }),
   };
 
   let view;

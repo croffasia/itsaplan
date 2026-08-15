@@ -1,5 +1,6 @@
 import type { Edge } from '@xyflow/react';
 import type { NoteCanvas, NoteNode } from '@/lib/api';
+import { uuid } from '@/utils/uuid';
 import type { StickerNodeType } from '../components/StickerNode';
 import { DEFAULT_STICKER_COLOR } from './stickerColors';
 
@@ -46,7 +47,7 @@ export function toCanvas(nodes: StickerNodeType[], edges: Edge[]): NoteCanvas {
 
 export function newSticker(position: { x: number; y: number }): StickerNodeType {
   return {
-    id: crypto.randomUUID(),
+    id: uuid(),
     type: 'sticker',
     position,
     width: DEFAULT_WIDTH,

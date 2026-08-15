@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ApiError, streamAiAgentRun } from '@/lib/api';
 import type { AiChatMessage } from '@/lib/api';
+import { uuid } from '@/utils/uuid';
 import { useTranslations } from 'next-intl';
 
 export type ChatMessage = AiChatMessage;
@@ -34,11 +35,11 @@ export function useAgentChat(projectKey: string, agentId: number) {
       const text = prompt.trim();
       if (!text || status === 'streaming') return;
 
-      const assistantId = crypto.randomUUID();
+      const assistantId = uuid();
       const createdAt = new Date().toISOString();
       setMessages((m) => [
         ...m,
-        { id: crypto.randomUUID(), role: 'user', text, createdAt },
+        { id: uuid(), role: 'user', text, createdAt },
         { id: assistantId, role: 'assistant', text: '', createdAt },
       ]);
       setStatus('streaming');

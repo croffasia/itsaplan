@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
+import { uuid } from '@/utils/uuid';
 
 // One open conversation in the chat panel. `threadId` is null until the agent answers
 // the first message, and stays null for an agent that keeps no memory. `running` and
@@ -20,7 +21,7 @@ export type ChatSessionState = Pick<ChatSession, 'running' | 'hasMessages'>;
 const storageKey = (projectKey: string) => `aiChat:panel:tabs:${projectKey}`;
 
 const newSession = (agentId: number, threadId: string | null = null): ChatSession => ({
-  id: crypto.randomUUID(),
+  id: uuid(),
   agentId,
   threadId,
   running: false,

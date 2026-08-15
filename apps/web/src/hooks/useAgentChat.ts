@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ApiError, streamAiAgentChat, streamAiAgentRun } from '@/lib/api';
 import type { AiChatMessage, AiChatPart, AiChatToolPart } from '@/lib/api';
+import { uuid } from '@/utils/uuid';
 import { useTranslations } from 'next-intl';
 
 // `error` is what a stream that failed left behind. It is not part of a stored
@@ -91,11 +92,11 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
       // the one on screen, and the answer is where the user looks for what happened.
       let failure: string | null = null;
 
-      const assistantId = crypto.randomUUID();
+      const assistantId = uuid();
       const createdAt = new Date().toISOString();
       setMessages((m) => [
         ...m,
-        { id: crypto.randomUUID(), role: 'user', parts: [{ type: 'text', text }], createdAt },
+        { id: uuid(), role: 'user', parts: [{ type: 'text', text }], createdAt },
         { id: assistantId, role: 'assistant', parts: [], createdAt },
       ]);
       setStatus(external ? 'queued' : 'streaming');
@@ -207,7 +208,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
       if (!text) return;
       setQueuePaused(false);
       if (runningRef.current || pending.length > 0) {
-        setPending((queue) => [...queue, { id: crypto.randomUUID(), text }]);
+        setPending((queue) => [...queue, { id: uuid(), text }]);
         return;
       }
       void runTurn(text);

@@ -5,6 +5,7 @@
 // the dashboards feature consumes them.
 
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
+import { uuid } from '@/utils/uuid';
 
 export type WidgetType =
   | 'stat'
@@ -98,7 +99,7 @@ export const WIDGET_DEFAULTS: Record<
 // Placed at the origin; the editor drops it at the bottom of the current layout.
 export function createWidget(type: WidgetType): WidgetInstance {
   const d = WIDGET_DEFAULTS[type];
-  return { id: crypto.randomUUID(), type, x: 0, y: 0, w: d.w, h: d.h, config: { ...d.config } };
+  return { id: uuid(), type, x: 0, y: 0, w: d.w, h: d.h, config: { ...d.config } };
 }
 
 // Legacy layouts stored a `size` of 'full' | 'half' | 'quarter' instead of `w`.

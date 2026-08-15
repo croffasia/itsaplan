@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { uuid } from '@/utils/uuid';
 
 // One row of the editor. `key` is local and stable across edits, so typing in a row
 // does not move the focus when the rows above it change; `id` is the option's own id,
@@ -42,7 +43,7 @@ export default function FieldOptionsEditor({
   function commitPending() {
     const values = parseOptionValues(pending);
     if (values.length === 0) return;
-    onChange([...options, ...values.map((value) => ({ key: crypto.randomUUID(), value }))]);
+    onChange([...options, ...values.map((value) => ({ key: uuid(), value }))]);
     onPendingChange('');
   }
 

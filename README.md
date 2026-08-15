@@ -76,6 +76,16 @@ stable release.
 
 ## Getting started
 
+### Deploy on Railway — recommended
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/4EKNEN?utm_medium=integration&utm_source=button&utm_campaign=itsaplan)
+
+The whole stack in one click, no server to run. You supply two hostnames and Railway
+generates every secret. A domain of your own is required — see
+[the guide](docs/railway.md) for why, and for the steps after the deploy.
+
+### Run it on your own server
+
 Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
 
 ```bash
@@ -88,16 +98,9 @@ docker compose up -d --build
 One command brings up the whole stack: Postgres, MinIO, api, worker, bot, and web. The
 first account registered becomes the instance admin.
 
-Or deploy it hosted, without a server of your own:
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/4EKNEN?utm_medium=integration&utm_source=button&utm_campaign=itsaplan)
-
-You supply two hostnames, Railway generates every secret. A domain of your own is required
-— see [the guide](docs/railway.md) for why.
-
+- [Deploy on Railway](docs/railway.md) — one-click hosted deploy from the template
 - [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates
 - [Deploy on Coolify](docs/coolify.md) — the same stack on a Coolify instance
-- [Deploy on Railway](docs/railway.md) — one-click hosted deploy from the template
 - [Local development](docs/development.md) — running the apps on the host, and the tests
 
 ## Built with

@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
+import { defaultsFromFilters } from '@/utils/project';
 import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
@@ -42,7 +43,7 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
     onSettingsChange: board.changeSettings,
     onOpenIssue,
     onAddIssue: (defaults: Parameters<typeof onAddIssue>[0]) =>
-      onAddIssue({ initiativeId, ...defaults }),
+      onAddIssue({ ...defaultsFromFilters(board.filters), initiativeId, ...defaults }),
   };
 
   let view;

@@ -113,7 +113,7 @@ export default function FlatBoard({
   }
 
   function addIssueTo(group: IssueGroup) {
-    onAddIssue({ columnId: project.columns[0]?.id ?? 0, ...group.assign });
+    onAddIssue({ ...group.assign });
   }
 
   return (

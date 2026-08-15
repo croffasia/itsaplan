@@ -27,7 +27,7 @@ export type StickerNodeType = Node<NoteSticker, 'sticker'>;
 // card is read-only.
 export default function StickerNode({ id, data, selected }: NodeProps<StickerNodeType>) {
   const { setNodes, setEdges } = useReactFlow();
-  const { project, onAddIssue } = useShell();
+  const { onAddIssue } = useShell();
   const { can } = usePermissions();
   const canCreateIssue = can('work_items', 'create');
   const canEdit = can('note_boards', 'edit');
@@ -41,10 +41,7 @@ export default function StickerNode({ id, data, selected }: NodeProps<StickerNod
   };
 
   // The note itself stays on the board after the issue is created.
-  const convert = () => {
-    if (!project) return;
-    onAddIssue({ columnId: project.columns[0]?.id ?? 0, ...stickerToIssue(data) });
-  };
+  const convert = () => onAddIssue(stickerToIssue(data));
 
   const remove = () => {
     setNodes((nodes) => nodes.filter((n) => n.id !== id));

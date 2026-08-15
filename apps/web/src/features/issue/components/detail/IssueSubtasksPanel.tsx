@@ -154,7 +154,6 @@ export default function IssueSubtasksPanel({
           project={project}
           defaults={{
             parentId: issue.id,
-            columnId: project.columns[0]?.id ?? 0,
             typeId: issue.typeId,
             initiativeId: issue.initiative?.id ?? null,
             assigneeUserId: issue.assigneeUserId,

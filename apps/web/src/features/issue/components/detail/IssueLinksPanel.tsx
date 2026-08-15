@@ -126,7 +126,6 @@ export default function IssueLinksPanel({
         <NewIssueModal
           project={project}
           defaults={{
-            columnId: project.columns[0]?.id ?? 0,
             typeId: issue.typeId,
             initiativeId: issue.initiative?.id ?? null,
             assigneeUserId: issue.assigneeUserId,

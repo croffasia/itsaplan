@@ -71,7 +71,7 @@ export default function NewIssueModal({
   const tFields = useTranslations('issue.fields');
   const [title, setTitle] = useState(defaults.title ?? '');
   const [description, setDescription] = useState(defaults.description ?? '');
-  const [columnId, setColumnId] = useState(defaults.columnId);
+  const [columnId, setColumnId] = useState(defaults.columnId ?? project.columns[0]?.id ?? 0);
   const [typeId, setTypeId] = useState<number | null>(
     defaults.typeId === undefined
       ? (project.issueTypes.find((t) => t.isDefault)?.id ?? null)
@@ -100,7 +100,7 @@ export default function NewIssueModal({
   const [priority, setPriority] = useState(defaults.priority ?? '');
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [labelIds, setLabelIds] = useState<number[]>([]);
+  const [labelIds, setLabelIds] = useState<number[]>(defaults.labelIds ?? []);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);

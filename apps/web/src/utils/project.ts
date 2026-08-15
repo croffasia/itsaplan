@@ -31,17 +31,67 @@ import type { Sort } from '@/utils/viewTypes';
 
 export type { Sort, SortField } from '@/utils/viewTypes';
 
-export type NewIssueDefaults = Pick<
-  NewIssueInput,
-  | 'columnId'
-  | 'typeId'
-  | 'initiativeId'
-  | 'cycleId'
-  | 'assigneeUserId'
-  | 'delegateUserId'
-  | 'priority'
-> &
-  Partial<Pick<NewIssueInput, 'title' | 'description' | 'parentId'>>;
+// What a call site fills the create dialog with. A field it leaves out is the
+// dialog's own choice: the first column, the default type, the current user.
+export type NewIssueDefaults = Partial<
+  Pick<
+    NewIssueInput,
+    | 'columnId'
+    | 'typeId'
+    | 'initiativeId'
+    | 'cycleId'
+    | 'assigneeUserId'
+    | 'delegateUserId'
+    | 'priority'
+    | 'title'
+    | 'description'
+    | 'parentId'
+    | 'labelIds'
+  >
+>;
+
+// The value a condition pins its field to. A field named by several conditions,
+// or by one that allows several values, is not pinned to any.
+function pinnedFilterValues(filters: FilterSet): Map<string, FilterValue | undefined> {
+  const pinned = new Map<string, FilterValue | undefined>();
+  for (const cond of filters.conditions) {
+    if (cond.op !== 'is') continue;
+    const pins = cond.values.length === 1 && !pinned.has(cond.field);
+    pinned.set(cond.field, pins ? cond.values[0] : undefined);
+  }
+  return pinned;
+}
+
+// The defaults a new issue takes from the active filters, so an issue created on
+// a filtered board stays visible on it. They fill in only what the call site left
+// out — what the user pointed at wins over the filters.
+export function defaultsFromFilters(filters: FilterSet): NewIssueDefaults {
+  const pinned = pinnedFilterValues(filters);
+  const pinnedId = (field: string) => {
+    const value = pinned.get(field);
+    return typeof value === 'number' || value === null ? value : undefined;
+  };
+  const pinnedText = (field: string) => {
+    const value = pinned.get(field);
+    return typeof value === 'string' || value === null ? value : undefined;
+  };
+
+  const labelId = pinnedId('labels');
+  const defaults: NewIssueDefaults = {
+    // A column is never pinned to null: every issue has one.
+    columnId: pinnedId('status') ?? undefined,
+    typeId: pinnedId('type'),
+    // `status:<status>` pins a whole status, which names no initiative or cycle.
+    initiativeId: pinnedId('initiative'),
+    cycleId: pinnedId('cycle'),
+    assigneeUserId: pinnedText('assignee'),
+    delegateUserId: pinnedText('delegate'),
+    priority: pinnedText('priority'),
+    labelIds: labelId != null ? [labelId] : undefined,
+  };
+  // The dialog reads an explicit undefined as "no assignee" / "no type".
+  return Object.fromEntries(Object.entries(defaults).filter(([, v]) => v !== undefined));
+}
 
 // Fallback dot/bar color for a group or issue whose status/type has no color.
 export const DEFAULT_COLOR = '#6b7280';

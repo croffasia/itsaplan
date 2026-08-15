@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import type { Cycle } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
+import { defaultsFromFilters } from '@/utils/project';
 import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
 import { useLocalBoardSettings } from '@/hooks/useLocalBoardSettings';
 import FilterBar from '@/components/layout/FilterBar';
@@ -45,7 +46,10 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
     onSettingsChange: board.changeSettings,
     onOpenIssue,
     onAddIssue: (defaults: Parameters<typeof onAddIssue>[0]) =>
-      onAddIssue(cycle.status === 'completed' ? defaults : { cycleId, ...defaults }),
+      onAddIssue({
+        ...defaultsFromFilters(board.filters),
+        ...(cycle.status === 'completed' ? defaults : { cycleId, ...defaults }),
+      }),
   };
 
   let view;

@@ -31,4 +31,5 @@ docker compose up -d --build
 
 Changing `API_URL` needs a rebuild too, for the same build-time inlining reason.
 
-For a Coolify instance, see [coolify.md](coolify.md).
+For a Coolify instance, see [coolify.md](coolify.md). For a hosted deploy without a
+server of your own, see [railway.md](railway.md).

@@ -58,4 +58,5 @@ are generated on the first deploy and stay stable across later ones — nothing 
 hand. Optional variables from `.env.example` — legal document URLs, telemetry opt-out,
 worker tuning — go in **Configuration → Environment Variables**.
 
-To run the same stack outside Coolify, see [self-hosting.md](self-hosting.md).
+To run the same stack outside Coolify, see [self-hosting.md](self-hosting.md) or
+[railway.md](railway.md).

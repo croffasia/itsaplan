@@ -3,7 +3,7 @@
 Railway builds the stack from source and generates the secrets itself. You supply two
 hostnames; everything else is wired by the template.
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/4EKNEN?utm_medium=integration&utm_source=button&utm_campaign=itsaplan)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/its-a-plan?utm_medium=integration&utm_source=button&utm_campaign=itsaplan)
 
 The template provisions six resources: Postgres with a volume, a storage bucket for
 attachments, and the api, web, worker and bot services, each built from its own Dockerfile

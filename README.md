@@ -78,7 +78,7 @@ stable release.
 
 ### Deploy on Railway — recommended
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/new/template/4EKNEN?utm_medium=integration&utm_source=button&utm_campaign=itsaplan)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/its-a-plan?utm_medium=integration&utm_source=button&utm_campaign=itsaplan)
 
 The whole stack in one click, no server to run. You supply two hostnames and Railway
 generates every secret. A domain of your own is required — see

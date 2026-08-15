@@ -5,6 +5,12 @@ export const scheduleParams = t.Object({
   scheduleId: t.Numeric({ description: 'Schedule id from list_agent_schedules.' }),
 });
 
+export const scheduleRunParams = t.Object({
+  projectKey: t.String(),
+  scheduleId: t.Numeric({ description: 'Schedule id from list_agent_schedules.' }),
+  runId: t.Numeric({ description: 'Run id from list_agent_schedule_runs.' }),
+});
+
 export const scheduleStatus = t.UnionEnum(['active', 'paused'], {
   description: "'active' runs on the cron, 'paused' does not run until it is set back to 'active'.",
 });
@@ -40,6 +46,11 @@ export const AgentScheduleResponse = t.Object({
   nextRunAt: t.String(),
   lastRunAt: t.Nullable(t.String()),
   lastRunStatus: t.Nullable(t.String()),
+  pendingRuns: t.Number({ description: 'Runs of this schedule that have not started yet.' }),
+  canTrigger: t.Boolean({
+    description:
+      "Whether you may run or stop this schedule; an 'owner'-scoped agent serves its owner only.",
+  }),
   createdAt: t.String(),
   updatedAt: t.String(),
 });
@@ -65,3 +76,7 @@ export const ScheduleRunResponse = t.Object({
 export const ScheduleRunListResponse = t.Array(ScheduleRunResponse);
 
 export const QueuedRunResponse = t.Object({ runId: t.Number() });
+
+export const CanceledRunsResponse = t.Object({
+  canceled: t.Number({ description: 'How many pending runs were ended.' }),
+});

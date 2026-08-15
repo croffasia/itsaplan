@@ -35,14 +35,22 @@
     "runHistory": "سجل التشغيل",
     "moreActions": "إجراءات أخرى",
     "runNow": "تشغيل الآن",
+    "cancelPending": "إنهاء التشغيلات المعلّقة ({count})",
+    "cancelRun": "إنهاء هذا التشغيل",
+    "stopAllPending": "إيقاف كل المعلّق",
     "edit": "تعديل الجدولة",
     "delete": "حذف الجدولة",
     "runStatus": {
       "success": "نجح",
       "failed": "فشل",
-      "pending": "قيد الانتظار"
+      "pending": "قيد الانتظار",
+      "canceled": "أُلغي",
+      "running": "قيد التشغيل"
     },
     "noRuns": "لا توجد تشغيلات بعد.",
+    "pendingGroup": "قيد الانتظار",
+    "runningGroup": "قيد التشغيل",
+    "completedGroup": "مكتملة",
     "error": "خطأ",
     "result": "النتيجة",
     "noOutput": "لا يوجد ناتج",

@@ -159,7 +159,8 @@
     "status": {
       "pending": "у черзі",
       "success": "успіх",
-      "failed": "збій"
+      "failed": "збій",
+      "canceled": "скасовано"
     },
     "trigger": {
       "mention": "запущений згадкою в",

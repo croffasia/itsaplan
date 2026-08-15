@@ -575,6 +575,13 @@
       "when": 1786713292358,
       "tag": "0081_owner_scope_backfill",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1786805381958,
+      "tag": "0082_yellow_proudstar",
+      "breakpoints": true
     }
   ]
 }

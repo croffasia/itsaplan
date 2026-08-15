@@ -1,7 +1,7 @@
 import { db, agentRun, agentSchedule, aiAgent, user } from '@repo/db';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
-import { canTriggerAgent } from '../core/service';
+import { canTriggerAgent, isTriggerableBy } from '../core/service';
 import { deleteThreadsWhere } from '../core/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
@@ -18,6 +18,11 @@ export interface AgentScheduleRow {
   nextRunAt: string;
   lastRunAt: string | null;
   lastRunStatus: string | null;
+  // Runs that have not been picked up yet — the ones cancelPendingScheduleRuns ends.
+  pendingRuns: number;
+  // Whether the member reading the schedule may send its agent a task: an 'owner'-scoped
+  // runner serves its owner only.
+  canTrigger: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,8 +43,16 @@ const columns = {
     where r.schedule_id = ${agentSchedule.id}
     order by r.id desc limit 1
   )`,
+  pendingRuns: sql<number>`(
+    select count(*)::int from ${agentRun} r
+    where r.schedule_id = ${agentSchedule.id}
+      and r.status = 'pending' and r.started_at is null
+  )`,
   createdAt: agentSchedule.createdAt,
   updatedAt: agentSchedule.updatedAt,
+  kind: aiAgent.kind,
+  runnerScope: aiAgent.runnerScope,
+  ownerUserId: aiAgent.ownerUserId,
 };
 
 function baseQuery() {
@@ -52,33 +65,39 @@ function baseQuery() {
 
 type SelectedSchedule = Awaited<ReturnType<typeof baseQuery>>[number];
 
-function mapSchedule(row: SelectedSchedule): AgentScheduleRow {
+function mapSchedule(row: SelectedSchedule, actorUserId: string): AgentScheduleRow {
+  const { kind, runnerScope, ownerUserId, ...schedule } = row;
   return {
-    ...row,
+    ...schedule,
     timezone: 'UTC',
-    status: row.status as AgentScheduleStatus,
-    nextRunAt: iso(row.nextRunAt),
-    lastRunAt: row.lastRunAt ? iso(row.lastRunAt) : null,
-    createdAt: iso(row.createdAt),
-    updatedAt: iso(row.updatedAt),
+    status: schedule.status as AgentScheduleStatus,
+    nextRunAt: iso(schedule.nextRunAt),
+    lastRunAt: schedule.lastRunAt ? iso(schedule.lastRunAt) : null,
+    canTrigger: isTriggerableBy({ kind, runnerScope, ownerUserId }, actorUserId),
+    createdAt: iso(schedule.createdAt),
+    updatedAt: iso(schedule.updatedAt),
   };
 }
 
-export async function listAgentSchedules(projectId: number): Promise<AgentScheduleRow[]> {
+export async function listAgentSchedules(
+  projectId: number,
+  actorUserId: string,
+): Promise<AgentScheduleRow[]> {
   const rows = await baseQuery()
     .where(eq(aiAgent.projectId, projectId))
     .orderBy(desc(agentSchedule.id));
-  return rows.map(mapSchedule);
+  return rows.map((row) => mapSchedule(row, actorUserId));
 }
 
 export async function getAgentSchedule(
   projectId: number,
   scheduleId: number,
+  actorUserId: string,
 ): Promise<AgentScheduleRow | null> {
   const rows = await baseQuery().where(
     and(eq(aiAgent.projectId, projectId), eq(agentSchedule.id, scheduleId)),
   );
-  return rows[0] ? mapSchedule(rows[0]) : null;
+  return rows[0] ? mapSchedule(rows[0], actorUserId) : null;
 }
 
 // A schedule is a trigger like a mention, so it obeys the same rule: an agent scoped
@@ -118,7 +137,7 @@ export async function createAgentSchedule(input: {
       nextRunAt: input.nextRunAt,
     })
     .returning({ id: agentSchedule.id });
-  return getAgentSchedule(input.projectId, row.id);
+  return getAgentSchedule(input.projectId, row.id, input.actorUserId);
 }
 
 export async function updateAgentSchedule(
@@ -134,7 +153,7 @@ export async function updateAgentSchedule(
   },
   actorUserId: string,
 ): Promise<AgentScheduleRow | null> {
-  const current = await getAgentSchedule(projectId, scheduleId);
+  const current = await getAgentSchedule(projectId, scheduleId, actorUserId);
   if (!current) return null;
   if (patch.agentId !== undefined) {
     const agent = await db
@@ -148,13 +167,17 @@ export async function updateAgentSchedule(
     .update(agentSchedule)
     .set({ ...patch, updatedAt: new Date() })
     .where(eq(agentSchedule.id, scheduleId));
-  return getAgentSchedule(projectId, scheduleId);
+  return getAgentSchedule(projectId, scheduleId, actorUserId);
 }
 
 // Deletes a schedule and the conversation thread its runs shared, which lives outside
 // the database cascades (see ../core/runtime/memory).
-export async function deleteAgentSchedule(projectId: number, scheduleId: number): Promise<boolean> {
-  const current = await getAgentSchedule(projectId, scheduleId);
+export async function deleteAgentSchedule(
+  projectId: number,
+  scheduleId: number,
+  actorUserId: string,
+): Promise<boolean> {
+  const current = await getAgentSchedule(projectId, scheduleId, actorUserId);
   if (!current) return false;
   await db.delete(agentSchedule).where(eq(agentSchedule.id, scheduleId));
   await deleteThreadsWhere({ scheduleId });
@@ -166,7 +189,7 @@ export async function enqueueManualScheduleRun(
   scheduleId: number,
   actorUserId: string,
 ): Promise<number | null> {
-  const schedule = await getAgentSchedule(projectId, scheduleId);
+  const schedule = await getAgentSchedule(projectId, scheduleId, actorUserId);
   if (!schedule) return null;
   await assertTriggerable(schedule.agentId, actorUserId);
   const [run] = await db
@@ -179,6 +202,34 @@ export async function enqueueManualScheduleRun(
     })
     .returning({ id: agentRun.id });
   return run.id;
+}
+
+// Ends runs that no worker or runner has picked up yet: a claim stamps started_at, and
+// a run already being executed has to finish on its own. 'canceled' is terminal — every
+// claim, retry, and result path filters on 'pending'. Null when the schedule is not in
+// the project, otherwise how many runs were ended.
+export async function cancelPendingScheduleRuns(
+  projectId: number,
+  scheduleId: number,
+  actorUserId: string,
+  runId?: number,
+): Promise<number | null> {
+  const schedule = await getAgentSchedule(projectId, scheduleId, actorUserId);
+  if (!schedule) return null;
+  await assertTriggerable(schedule.agentId, actorUserId);
+  const rows = await db
+    .update(agentRun)
+    .set({ status: 'canceled', finishedAt: new Date() })
+    .where(
+      and(
+        eq(agentRun.scheduleId, scheduleId),
+        eq(agentRun.status, 'pending'),
+        isNull(agentRun.startedAt),
+        runId != null ? eq(agentRun.id, runId) : undefined,
+      ),
+    )
+    .returning({ id: agentRun.id });
+  return rows.length;
 }
 
 export interface ScheduleRunRow {
@@ -198,8 +249,9 @@ export interface ScheduleRunRow {
 export async function listScheduleRuns(
   projectId: number,
   scheduleId: number,
+  actorUserId: string,
 ): Promise<ScheduleRunRow[] | null> {
-  const schedule = await getAgentSchedule(projectId, scheduleId);
+  const schedule = await getAgentSchedule(projectId, scheduleId, actorUserId);
   if (!schedule) return null;
   const rows = await db
     .select()

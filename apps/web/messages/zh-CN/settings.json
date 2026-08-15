@@ -35,14 +35,22 @@
     "runHistory": "运行记录",
     "moreActions": "更多操作",
     "runNow": "立即运行",
+    "cancelPending": "结束待处理的运行（{count}）",
+    "cancelRun": "结束此次运行",
+    "stopAllPending": "停止全部待处理",
     "edit": "编辑定时任务",
     "delete": "删除定时任务",
     "runStatus": {
       "success": "成功",
       "failed": "失败",
-      "pending": "待处理"
+      "pending": "待处理",
+      "canceled": "已取消",
+      "running": "运行中"
     },
     "noRuns": "暂无运行记录。",
+    "pendingGroup": "待处理",
+    "runningGroup": "运行中",
+    "completedGroup": "已完成",
     "error": "错误",
     "result": "结果",
     "noOutput": "无输出",

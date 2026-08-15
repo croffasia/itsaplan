@@ -35,14 +35,22 @@
     "runHistory": "Історія запусків",
     "moreActions": "Інші дії",
     "runNow": "Запустити зараз",
+    "cancelPending": "Завершити запуски в очікуванні ({count})",
+    "cancelRun": "Завершити запуск",
+    "stopAllPending": "Зупинити всі в очікуванні",
     "edit": "Редагувати розклад",
     "delete": "Видалити розклад",
     "runStatus": {
       "success": "Успішно",
       "failed": "Збій",
-      "pending": "В очікуванні"
+      "pending": "В очікуванні",
+      "canceled": "Скасовано",
+      "running": "Виконується"
     },
     "noRuns": "Запусків ще немає.",
+    "pendingGroup": "В очікуванні",
+    "runningGroup": "Виконуються",
+    "completedGroup": "Завершені",
     "error": "Помилка",
     "result": "Результат",
     "noOutput": "Без виводу",

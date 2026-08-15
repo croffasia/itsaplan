@@ -159,7 +159,8 @@
     "status": {
       "pending": "queued",
       "success": "success",
-      "failed": "failed"
+      "failed": "failed",
+      "canceled": "canceled"
     },
     "trigger": {
       "mention": "ran on mention in",

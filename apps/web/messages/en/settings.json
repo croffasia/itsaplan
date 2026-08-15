@@ -35,14 +35,22 @@
     "runHistory": "Run history",
     "moreActions": "More actions",
     "runNow": "Run now",
+    "cancelPending": "End pending runs ({count})",
+    "cancelRun": "End this run",
+    "stopAllPending": "Stop all pending",
     "edit": "Edit schedule",
     "delete": "Delete schedule",
     "runStatus": {
       "success": "Succeeded",
       "failed": "Failed",
-      "pending": "Pending"
+      "pending": "Pending",
+      "canceled": "Canceled",
+      "running": "Running"
     },
     "noRuns": "No runs yet.",
+    "pendingGroup": "Pending",
+    "runningGroup": "Running",
+    "completedGroup": "Completed",
     "error": "Error",
     "result": "Result",
     "noOutput": "No output",

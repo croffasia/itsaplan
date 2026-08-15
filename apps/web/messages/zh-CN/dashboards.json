@@ -159,7 +159,8 @@
     "status": {
       "pending": "已排队",
       "success": "成功",
-      "failed": "失败"
+      "failed": "失败",
+      "canceled": "已取消"
     },
     "trigger": {
       "mention": "因以下位置的提及而运行：",

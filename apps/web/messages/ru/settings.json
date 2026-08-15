@@ -35,14 +35,22 @@
     "runHistory": "История запусков",
     "moreActions": "Другие действия",
     "runNow": "Запустить сейчас",
+    "cancelPending": "Завершить ожидающие запуски ({count})",
+    "cancelRun": "Завершить запуск",
+    "stopAllPending": "Остановить все ожидающие",
     "edit": "Редактировать расписание",
     "delete": "Удалить расписание",
     "runStatus": {
       "success": "Успешно",
       "failed": "Сбой",
-      "pending": "В ожидании"
+      "pending": "В ожидании",
+      "canceled": "Отменён",
+      "running": "Выполняется"
     },
     "noRuns": "Запусков пока нет.",
+    "pendingGroup": "В ожидании",
+    "runningGroup": "Выполняются",
+    "completedGroup": "Завершённые",
     "error": "Ошибка",
     "result": "Результат",
     "noOutput": "Без вывода",

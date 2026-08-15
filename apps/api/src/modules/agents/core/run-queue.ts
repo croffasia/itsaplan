@@ -110,8 +110,13 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
   return rows as unknown as ClaimedRun[];
 }
 
+// A run canceled while it was in flight keeps that outcome: each of these writes only
+// where the row is still 'pending'.
 export async function markRunSuccess(id: number): Promise<void> {
-  await db.update(agentRun).set({ status: 'success', lastError: null }).where(eq(agentRun.id, id));
+  await db
+    .update(agentRun)
+    .set({ status: 'success', lastError: null })
+    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
 export async function scheduleRunRetry(id: number, delayMs: number, error: string): Promise<void> {
@@ -123,14 +128,14 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
       lastError: error.slice(0, 500),
     })
-    .where(eq(agentRun.id, id));
+    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
 export async function markRunFailed(id: number, error: string): Promise<void> {
   await db
     .update(agentRun)
     .set({ status: 'failed', lastError: error.slice(0, 500) })
-    .where(eq(agentRun.id, id));
+    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
 // One row of an agent's run history, for the runs sidebar. The issue is joined for

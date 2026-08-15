@@ -10,13 +10,16 @@ import { nextCronRun } from './cron';
 import {
   AgentScheduleResponse,
   AgentScheduleListResponse,
+  CanceledRunsResponse,
   QueuedRunResponse,
   ScheduleRunListResponse,
   createScheduleBody,
   scheduleParams,
+  scheduleRunParams,
   updateScheduleBody,
 } from './model';
 import {
+  cancelPendingScheduleRuns,
   createAgentSchedule,
   deleteAgentSchedule,
   enqueueManualScheduleRun,
@@ -38,15 +41,19 @@ export const agentScheduleRoutes = new Elysia({
 })
   .use(authContext)
   .use(guards)
-  .get('/projects/:projectKey/agent-schedules', ({ project }) => listAgentSchedules(project.id), {
-    permission: ['ai_agents', 'read'],
-    response: { 200: AgentScheduleListResponse, ...accessErrors },
-    detail: {
-      summary: 'List agent schedules',
-      description: "List the project's agent schedules with their cron, next run, and last run.",
-      ...mcpTool('list_agent_schedules'),
+  .get(
+    '/projects/:projectKey/agent-schedules',
+    ({ project, user }) => listAgentSchedules(project.id, requireUser(user).id),
+    {
+      permission: ['ai_agents', 'read'],
+      response: { 200: AgentScheduleListResponse, ...accessErrors },
+      detail: {
+        summary: 'List agent schedules',
+        description: "List the project's agent schedules with their cron, next run, and last run.",
+        ...mcpTool('list_agent_schedules'),
+      },
     },
-  })
+  )
   .post(
     '/projects/:projectKey/agent-schedules',
     async ({ project, body, set, user }) => {
@@ -80,7 +87,7 @@ export const agentScheduleRoutes = new Elysia({
     '/projects/:projectKey/agent-schedules/:scheduleId',
     async ({ project, params, body, user }) => {
       const cron = body.cron?.trim();
-      const current = await getAgentSchedule(project.id, params.scheduleId);
+      const current = await getAgentSchedule(project.id, params.scheduleId, requireUser(user).id);
       if (!current) throw new HttpError(404, 'Schedule not found');
       // Recompute the next run when the cron changes, or when resuming a paused schedule.
       const resuming = body.status === 'active' && current.status === 'paused';
@@ -117,8 +124,8 @@ export const agentScheduleRoutes = new Elysia({
   )
   .delete(
     '/projects/:projectKey/agent-schedules/:scheduleId',
-    async ({ project, params }) => {
-      if (!(await deleteAgentSchedule(project.id, params.scheduleId))) {
+    async ({ project, params, user }) => {
+      if (!(await deleteAgentSchedule(project.id, params.scheduleId, requireUser(user).id))) {
         throw new HttpError(404, 'Schedule not found');
       }
       return noContent();
@@ -159,10 +166,58 @@ export const agentScheduleRoutes = new Elysia({
       },
     },
   )
+  .post(
+    '/projects/:projectKey/agent-schedules/:scheduleId/runs/cancel',
+    async ({ project, params, user }) => {
+      const canceled = await cancelPendingScheduleRuns(
+        project.id,
+        params.scheduleId,
+        requireUser(user).id,
+      );
+      if (canceled == null) throw new HttpError(404, 'Schedule not found');
+      return { canceled };
+    },
+    {
+      params: scheduleParams,
+      permission: ['ai_agents', 'edit'],
+      response: { 200: CanceledRunsResponse, ...commonErrors },
+      detail: {
+        summary: 'End the pending runs of an agent schedule',
+        description:
+          'End every run of the schedule that has not started yet, so it is never run. ' +
+          'A run already being executed, and one that finished, are left as they are.',
+        ...mcpTool('cancel_agent_schedule_runs'),
+      },
+    },
+  )
+  .post(
+    '/projects/:projectKey/agent-schedules/:scheduleId/runs/:runId/cancel',
+    async ({ project, params, user }) => {
+      const canceled = await cancelPendingScheduleRuns(
+        project.id,
+        params.scheduleId,
+        requireUser(user).id,
+        params.runId,
+      );
+      if (canceled == null) throw new HttpError(404, 'Schedule not found');
+      if (canceled === 0) throw new HttpError(404, 'Pending run not found');
+      return { canceled };
+    },
+    {
+      params: scheduleRunParams,
+      permission: ['ai_agents', 'edit'],
+      response: { 200: CanceledRunsResponse, ...commonErrors },
+      detail: {
+        summary: 'End one pending run of an agent schedule',
+        description: 'End a run that has not started yet, so it is never run.',
+        ...mcpTool('cancel_agent_schedule_run'),
+      },
+    },
+  )
   .get(
     '/projects/:projectKey/agent-schedules/:scheduleId/runs',
-    async ({ project, params }) => {
-      const rows = await listScheduleRuns(project.id, params.scheduleId);
+    async ({ project, params, user }) => {
+      const rows = await listScheduleRuns(project.id, params.scheduleId, requireUser(user).id);
       if (!rows) throw new HttpError(404, 'Schedule not found');
       return rows;
     },

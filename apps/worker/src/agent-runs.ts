@@ -1,5 +1,5 @@
 import { db, agentRun } from '@repo/db';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { equalJitterBackoffMs } from './backoff';
 import { intEnv } from './env';
 import { postInternal } from './internal-api';
@@ -63,13 +63,15 @@ async function claimDueRuns(): Promise<ClaimedRun[]> {
   return rows as unknown as ClaimedRun[];
 }
 
+// Every write is conditional on the run still being 'pending': a run canceled while it
+// was in flight keeps that outcome instead of being finished or retried.
 async function processRun(run: ClaimedRun): Promise<void> {
   try {
     const output = await executeRun(run);
     await db
       .update(agentRun)
       .set({ status: 'success', output, lastError: null, finishedAt: new Date() })
-      .where(eq(agentRun.id, run.id));
+      .where(and(eq(agentRun.id, run.id), eq(agentRun.status, 'pending')));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (run.attempts < intEnv('AGENT_RUN_MAX_ATTEMPTS', 3)) {
@@ -82,13 +84,13 @@ async function processRun(run: ClaimedRun): Promise<void> {
           nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
           lastError: message.slice(0, 500),
         })
-        .where(eq(agentRun.id, run.id));
+        .where(and(eq(agentRun.id, run.id), eq(agentRun.status, 'pending')));
       return;
     }
     await db
       .update(agentRun)
       .set({ status: 'failed', lastError: message.slice(0, 500), finishedAt: new Date() })
-      .where(eq(agentRun.id, run.id));
+      .where(and(eq(agentRun.id, run.id), eq(agentRun.status, 'pending')));
   }
 }
 

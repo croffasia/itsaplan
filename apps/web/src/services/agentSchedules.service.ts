@@ -52,6 +52,18 @@ export function useDeleteAgentSchedule(projectKey: string) {
   });
 }
 
+export function useCancelAgentScheduleRuns(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ scheduleId, runId }: { scheduleId: number; runId?: number }) =>
+      api.cancelAgentScheduleRuns(projectKey, scheduleId, runId),
+    onSuccess: (_data, { scheduleId }) => {
+      void qc.invalidateQueries({ queryKey: qk.agentSchedules(projectKey) });
+      void qc.invalidateQueries({ queryKey: qk.agentScheduleRuns(projectKey, scheduleId) });
+    },
+  });
+}
+
 export function useRunAgentSchedule(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({

@@ -208,11 +208,15 @@ export interface AiAgent {
   toolCount: number;
 }
 
+// A run waits as 'pending' until a worker or a runner takes it; 'canceled' is a
+// pending run ended by hand.
+export type AgentRunStatus = 'pending' | 'success' | 'failed' | 'canceled';
+
 // One row of an agent's autonomous run history. Issue-triggered runs reference an
 // issue; scheduled and manual runs do not.
 export interface AgentRun {
   id: number;
-  status: 'pending' | 'success' | 'failed';
+  status: AgentRunStatus;
   trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
   issueId: number | null;
   issueIdentifier: string | null;
@@ -241,7 +245,11 @@ export interface AgentSchedule {
   status: 'active' | 'paused';
   nextRunAt: string;
   lastRunAt: string | null;
-  lastRunStatus: 'pending' | 'success' | 'failed' | null;
+  lastRunStatus: AgentRunStatus | null;
+  pendingRuns: number;
+  // False when the agent's runner is scoped to another member, who alone may run or
+  // stop it.
+  canTrigger: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -256,7 +264,7 @@ export interface AgentScheduleInput {
 
 export interface AgentScheduleRun {
   id: number;
-  status: 'pending' | 'success' | 'failed';
+  status: AgentRunStatus;
   trigger: 'schedule' | 'manual';
   prompt: string;
   attempts: number;
@@ -1196,7 +1204,7 @@ export interface ThroughputWeek {
 // One agent run in the project-wide feed (agent runs widget).
 export interface AgentRunFeedItem {
   id: number;
-  status: 'pending' | 'success' | 'failed';
+  status: AgentRunStatus;
   trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
   agentId: number;
   agentName: string;
@@ -2654,6 +2662,12 @@ export const api = {
     }),
   listAgentScheduleRuns: (projectKey: string, scheduleId: number) =>
     request<AgentScheduleRun[]>(`/projects/${projectKey}/agent-schedules/${scheduleId}/runs`),
+  // Ends the schedule's waiting runs — all of them, or the one given.
+  cancelAgentScheduleRuns: (projectKey: string, scheduleId: number, runId?: number) =>
+    request<{ canceled: number }>(
+      `/projects/${projectKey}/agent-schedules/${scheduleId}/runs${runId != null ? `/${runId}` : ''}/cancel`,
+      { method: 'POST' },
+    ),
   // The caller's own chat threads with an agent, newest first.
   listAiAgentThreads: (projectKey: string, agentId: number) =>
     request<AiChatThread[]>(`/projects/${projectKey}/ai-agents/${agentId}/threads`),

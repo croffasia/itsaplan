@@ -703,7 +703,7 @@ export async function copyProject(
   // Schedules: re-created for the copied agents. next_run_at is recomputed from the
   // cron so the copy starts on its own cadence rather than inheriting a past due time.
   if (inc.schedules) {
-    for (const s of await listAgentSchedules(sourceProjectId)) {
+    for (const s of await listAgentSchedules(sourceProjectId, ownerId)) {
       const newAgentId = agentMap.get(s.agentId);
       if (newAgentId == null) continue;
       await createAgentSchedule({

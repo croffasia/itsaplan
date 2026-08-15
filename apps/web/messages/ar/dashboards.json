@@ -159,7 +159,8 @@
     "status": {
       "pending": "في الانتظار",
       "success": "نجاح",
-      "failed": "فشل"
+      "failed": "فشل",
+      "canceled": "أُلغي"
     },
     "trigger": {
       "mention": "شُغّل عند ذكره في",

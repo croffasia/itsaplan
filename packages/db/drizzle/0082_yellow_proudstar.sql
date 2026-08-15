@@ -1,0 +1,2 @@
+ALTER TABLE "agent_run" DROP CONSTRAINT "agent_run_status_check";--> statement-breakpoint
+ALTER TABLE "agent_run" ADD CONSTRAINT "agent_run_status_check" CHECK ("agent_run"."status" IN ('pending', 'success', 'failed', 'canceled'));

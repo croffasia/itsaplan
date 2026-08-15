@@ -212,7 +212,7 @@ export async function getAgentById(id: number, projectId: number): Promise<AiAge
 // came from the agent's owner, whose machine that runner is. An 'owner'-scoped agent
 // without an owner names nobody to restrict it to — the account was deleted — so it
 // takes any member's runs rather than silently stopping.
-function isTriggerableBy(
+export function isTriggerableBy(
   agent: { kind: string; runnerScope: string; ownerUserId: string | null },
   actorUserId: string | null,
 ): boolean {

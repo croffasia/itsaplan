@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { untaggedRoutes } from '#tests/helpers/mcp';
@@ -39,6 +39,17 @@ async function addSecondOwner(asOwner: Api): Promise<Api> {
   const api = authedApi(user.cookie);
   await api.invites({ token: invite.data!.token }).accept.post();
   return api;
+}
+
+// An external agent plus a client authenticated as its runner, which is how a run gets
+// claimed (and stamped as started) without a worker.
+async function createRunnerAgent(api: Api): Promise<{ agentId: number; asRunner: Api }> {
+  const res = await api.projects({ projectKey: 'MKT' })['ai-agents'].post({
+    name: 'Runner Bot',
+    username: 'runner',
+    kind: 'external',
+  });
+  return { agentId: res.data!.agent.id, asRunner: apiKeyApi(res.data!.apiKey!) };
 }
 
 async function createSchedule(api: Api, agentId: number, cron = '0 9 * * *') {
@@ -118,6 +129,11 @@ describe('agent schedules', () => {
     expect(own.status).toBe(201);
     expect((await schedules(asSecond)({ scheduleId: own.data!.id }).run.post()).status).toBe(403);
     expect((await schedules(asOwner)({ scheduleId: own.data!.id }).run.post()).status).toBe(202);
+    expect(
+      (await schedules(asSecond)({ scheduleId: own.data!.id }).runs.cancel.post()).status,
+    ).toBe(403);
+    expect((await schedules(asSecond).get()).data?.[0]).toMatchObject({ canTrigger: false });
+    expect((await schedules(asOwner).get()).data?.[0]).toMatchObject({ canTrigger: true });
   });
 
   it('rejects an agent of another project', async () => {
@@ -185,6 +201,70 @@ describe('agent schedules', () => {
     });
   });
 
+  it('ends every pending run of a schedule', async () => {
+    const { asOwner } = await setup();
+    const agentId = await createAgent(asOwner, { username: 'hook', kind: 'external' });
+    const scheduleId = (await createSchedule(asOwner, agentId)).data!.id;
+    await schedules(asOwner)({ scheduleId }).run.post();
+    await schedules(asOwner)({ scheduleId }).run.post();
+    expect((await schedules(asOwner).get()).data?.[0]).toMatchObject({ pendingRuns: 2 });
+
+    const canceled = await schedules(asOwner)({ scheduleId }).runs.cancel.post();
+    expect(canceled.status).toBe(200);
+    expect(canceled.data).toMatchObject({ canceled: 2 });
+
+    const runs = await schedules(asOwner)({ scheduleId }).runs.get();
+    expect(runs.data?.map((run) => run.status)).toEqual(['canceled', 'canceled']);
+    expect(runs.data?.[0].finishedAt).not.toBeNull();
+    expect((await schedules(asOwner).get()).data?.[0]).toMatchObject({
+      pendingRuns: 0,
+      lastRunStatus: 'canceled',
+    });
+
+    // Nothing is left to end, and a finished run is not touched again.
+    expect((await schedules(asOwner)({ scheduleId }).runs.cancel.post()).data).toMatchObject({
+      canceled: 0,
+    });
+  });
+
+  it('ends one pending run and 404s on it afterwards', async () => {
+    const { asOwner } = await setup();
+    const agentId = await createAgent(asOwner, { username: 'hook', kind: 'external' });
+    const scheduleId = (await createSchedule(asOwner, agentId)).data!.id;
+    const kept = (await schedules(asOwner)({ scheduleId }).run.post()).data!.runId;
+    const runId = (await schedules(asOwner)({ scheduleId }).run.post()).data!.runId;
+
+    const canceled = await schedules(asOwner)({ scheduleId }).runs({ runId }).cancel.post();
+    expect(canceled.status).toBe(200);
+    expect(canceled.data).toMatchObject({ canceled: 1 });
+    expect((await schedules(asOwner)({ scheduleId }).runs({ runId }).cancel.post()).status).toBe(
+      404,
+    );
+
+    const runs = await schedules(asOwner)({ scheduleId }).runs.get();
+    expect(runs.data?.find((run) => run.id === runId)).toMatchObject({ status: 'canceled' });
+    expect(runs.data?.find((run) => run.id === kept)).toMatchObject({ status: 'pending' });
+  });
+
+  it('leaves a run its runner already claimed', async () => {
+    const { asOwner } = await setup();
+    const { agentId, asRunner } = await createRunnerAgent(asOwner);
+    const scheduleId = (await createSchedule(asOwner, agentId)).data!.id;
+    await schedules(asOwner)({ scheduleId }).run.post();
+    const runId = (await asRunner['agent-runs'].claim.post()).data!.run!.id;
+
+    expect((await schedules(asOwner).get()).data?.[0]).toMatchObject({ pendingRuns: 0 });
+    expect((await schedules(asOwner)({ scheduleId }).runs.cancel.post()).data).toMatchObject({
+      canceled: 0,
+    });
+    expect((await schedules(asOwner)({ scheduleId }).runs({ runId }).cancel.post()).status).toBe(
+      404,
+    );
+    expect((await schedules(asOwner)({ scheduleId }).runs.get()).data?.[0]).toMatchObject({
+      status: 'pending',
+    });
+  });
+
   it('deletes a schedule with its runs and 404s on it afterwards', async () => {
     const { asOwner } = await setup();
     const agentId = await createAgent(asOwner);
@@ -206,6 +286,10 @@ describe('agent schedules', () => {
     expect(patched.status).toBe(404);
     expect((await schedules(asOwner)({ scheduleId: 999999 }).run.post()).status).toBe(404);
     expect((await schedules(asOwner)({ scheduleId: 999999 }).runs.get()).status).toBe(404);
+    expect((await schedules(asOwner)({ scheduleId: 999999 }).runs.cancel.post()).status).toBe(404);
+    expect(
+      (await schedules(asOwner)({ scheduleId: 999999 }).runs({ runId: 1 }).cancel.post()).status,
+    ).toBe(404);
   });
 
   it('denies a non-member', async () => {
@@ -217,6 +301,7 @@ describe('agent schedules', () => {
 
     expect((await schedules(asOutsider).get()).status).toBe(403);
     expect((await schedules(asOutsider)({ scheduleId }).run.post()).status).toBe(403);
+    expect((await schedules(asOutsider)({ scheduleId }).runs.cancel.post()).status).toBe(403);
     expect((await schedules(asOutsider)({ scheduleId }).delete()).status).toBe(403);
   });
 

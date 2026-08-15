@@ -475,7 +475,7 @@ export const agentRun = pgTable(
     }),
     // The mention comment body at enqueue time, framed into the agent's prompt.
     prompt: text('prompt').notNull(),
-    // pending -> success | failed. Like webhook_delivery, a claim keeps the row
+    // pending -> success | failed | canceled. Like webhook_delivery, a claim keeps the row
     // 'pending' and pushes next_attempt_at forward by a lease, so a run whose poller
     // crashes mid-flight becomes claimable again after the lease expires.
     status: text('status').notNull().default('pending'),
@@ -488,7 +488,10 @@ export const agentRun = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check('agent_run_status_check', sql`${t.status} IN ('pending', 'success', 'failed')`),
+    check(
+      'agent_run_status_check',
+      sql`${t.status} IN ('pending', 'success', 'failed', 'canceled')`,
+    ),
     check(
       'agent_run_trigger_check',
       sql`${t.trigger} IN ('mention', 'delegation', 'schedule', 'manual')`,

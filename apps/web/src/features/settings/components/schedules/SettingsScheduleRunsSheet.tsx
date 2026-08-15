@@ -1,10 +1,10 @@
-import { useId, useState } from 'react';
-import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { AgentSchedule, AgentScheduleRun } from '@/lib/api';
-import { formatDateTime } from '@/utils/dates';
-import { useAgentScheduleRuns } from '@/services/agentSchedules.service';
+import type { AgentSchedule } from '@/lib/api';
+import {
+  useAgentScheduleRuns,
+  useCancelAgentScheduleRuns,
+} from '@/services/agentSchedules.service';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Sheet,
   SheetContent,
@@ -12,6 +12,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+import { useSettingsCan } from '../../context/settingsPermission';
+import { SettingsScheduleRunRow } from './SettingsScheduleRunRow';
 import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleRunsSheet({
@@ -24,7 +26,34 @@ export function SettingsScheduleRunsSheet({
   onClose: () => void;
 }) {
   const t = useTranslations('settings.schedules');
+  const can = useSettingsCan();
   const query = useAgentScheduleRuns(projectKey, schedule?.id ?? null);
+  const cancelRuns = useCancelAgentScheduleRuns(projectKey);
+  const canCancel = can('edit') && schedule?.canTrigger === true;
+  const runs = query.data ?? [];
+
+  function cancel(runId?: number) {
+    if (schedule) cancelRuns.mutate({ scheduleId: schedule.id, runId });
+  }
+
+  // A claim stamps startedAt, so a started run can no longer be canceled.
+  const groups = [
+    {
+      key: 'pending',
+      title: t('pendingGroup'),
+      runs: runs.filter((r) => r.status === 'pending' && !r.startedAt),
+    },
+    {
+      key: 'running',
+      title: t('runningGroup'),
+      runs: runs.filter((r) => r.status === 'pending' && r.startedAt),
+    },
+    {
+      key: 'completed',
+      title: t('completedGroup'),
+      runs: runs.filter((r) => r.status !== 'pending'),
+    },
+  ].filter((group) => group.runs.length > 0);
   return (
     <Sheet open={schedule != null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
@@ -35,63 +64,48 @@ export function SettingsScheduleRunsSheet({
         <div className="min-h-0 flex-1 overflow-y-auto">
           {query.isLoading ? (
             <ListSkeleton rows={4} className="p-4" rowClassName="h-12" />
-          ) : query.data?.length ? (
-            <div className="divide-y divide-border/50">
-              {query.data.map((run) => (
-                <RunRow key={run.id} run={run} />
-              ))}
-            </div>
+          ) : groups.length ? (
+            groups.map((group) => (
+              <div key={group.key}>
+                <div className="flex items-center gap-2 bg-muted/50 px-4 py-1.5">
+                  <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                    {group.title}
+                  </p>
+                  {group.key === 'pending' && canCancel && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ms-auto h-6 text-xs"
+                      disabled={cancelRuns.isPending}
+                      onClick={() => cancel()}
+                    >
+                      <span>
+                        {t('stopAllPending')}
+                        <sup className="ms-0.5 text-[9px] tabular-nums">{group.runs.length}</sup>
+                      </span>
+                    </Button>
+                  )}
+                </div>
+                <div className="divide-y divide-border/50">
+                  {group.runs.map((run) => (
+                    <SettingsScheduleRunRow
+                      key={run.id}
+                      run={run}
+                      canceling={cancelRuns.isPending && cancelRuns.variables?.runId === run.id}
+                      onCancel={
+                        group.key === 'pending' && canCancel ? () => cancel(run.id) : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
           ) : (
             <p className="p-4 text-sm text-muted-foreground">{t('noRuns')}</p>
           )}
         </div>
       </SheetContent>
     </Sheet>
-  );
-}
-
-function RunRow({ run }: { run: AgentScheduleRun }) {
-  const t = useTranslations('settings.schedules');
-  const [open, setOpen] = useState(false);
-  const contentId = useId();
-  const variant =
-    run.status === 'failed' ? 'destructive' : run.status === 'success' ? 'secondary' : 'outline';
-  return (
-    <div>
-      <button
-        type="button"
-        className="flex w-full items-center gap-2 px-4 py-3 text-left text-xs hover:bg-accent/50"
-        onClick={() => setOpen((value) => !value)}
-        aria-expanded={open}
-        aria-controls={contentId}
-      >
-        {open ? <ChevronDown className="size-3.5" /> : <ChevronRight className="size-3.5" />}
-        <Badge variant={variant}>{run.status}</Badge>
-        <span className="capitalize">{run.trigger}</span>
-        <span className="ml-auto text-muted-foreground">{formatDateTime(run.createdAt)}</span>
-      </button>
-      {open && (
-        <div id={contentId} className="space-y-3 px-4 pb-4 text-xs">
-          <Block label={t('task')} value={run.prompt} />
-          <Block
-            label={run.lastError ? t('error') : t('result')}
-            value={run.lastError ?? run.output ?? t('noOutput')}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function Block({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
-        {label}
-      </p>
-      <pre className="overflow-x-auto rounded-md bg-muted p-3 font-sans whitespace-pre-wrap">
-        {value}
-      </pre>
-    </div>
   );
 }

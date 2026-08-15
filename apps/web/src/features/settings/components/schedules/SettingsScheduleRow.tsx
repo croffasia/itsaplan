@@ -1,4 +1,5 @@
 import {
+  Ban,
   Bot,
   History,
   MessageSquareText,
@@ -34,6 +35,7 @@ export function SettingsScheduleRow({
   running,
   onToggle,
   onRun,
+  onCancelPending,
   onHistory,
   onEdit,
   onDelete,
@@ -42,6 +44,7 @@ export function SettingsScheduleRow({
   running: boolean;
   onToggle: () => void;
   onRun: () => void;
+  onCancelPending: () => void;
   onHistory: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -161,6 +164,12 @@ export function SettingsScheduleRow({
                     {t('runNow')}
                   </DropdownMenuItem>
                 )}
+                {can('edit') && schedule.canTrigger && schedule.pendingRuns > 0 && (
+                  <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onCancelPending}>
+                    <Ban />
+                    {t('cancelPending', { count: schedule.pendingRuns })}
+                  </DropdownMenuItem>
+                )}
                 {can('edit') && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onEdit}>
                     <Pencil />
@@ -202,5 +211,6 @@ function statusDotClass(status: AgentSchedule['status']): string {
 function runDotClass(status: NonNullable<AgentSchedule['lastRunStatus']>): string {
   if (status === 'success') return 'bg-emerald-500';
   if (status === 'failed') return 'bg-red-500';
+  if (status === 'canceled') return 'bg-muted-foreground/40';
   return 'bg-amber-500';
 }

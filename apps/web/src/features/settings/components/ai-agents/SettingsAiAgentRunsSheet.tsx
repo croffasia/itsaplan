@@ -164,6 +164,7 @@ const STATUS_VARIANT: Record<AgentRun['status'], 'secondary' | 'destructive' | '
   success: 'secondary',
   failed: 'destructive',
   pending: 'outline',
+  canceled: 'outline',
 };
 
 function StatusBadge({ status }: { status: AgentRun['status'] }) {

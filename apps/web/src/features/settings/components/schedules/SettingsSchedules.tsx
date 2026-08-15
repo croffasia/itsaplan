@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/common/page/EmptyState';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import {
   useAgentSchedules,
+  useCancelAgentScheduleRuns,
   useCreateAgentSchedule,
   useDeleteAgentSchedule,
   useRunAgentSchedule,
@@ -40,6 +41,7 @@ export default function SettingsSchedules({
   const updateSchedule = useUpdateAgentSchedule(projectKey);
   const deleteSchedule = useDeleteAgentSchedule(projectKey);
   const runSchedule = useRunAgentSchedule(projectKey);
+  const cancelPendingRuns = useCancelAgentScheduleRuns(projectKey);
   const [editing, setEditing] = useState<number | 'new' | null>(null);
   const [deleting, setDeleting] = useState<AgentSchedule | null>(null);
   const [history, setHistory] = useState<AgentSchedule | null>(null);
@@ -111,6 +113,7 @@ export default function SettingsSchedules({
               })
             }
             onRun={(scheduleId) => runSchedule.mutate(scheduleId)}
+            onCancelPending={(scheduleId) => cancelPendingRuns.mutate({ scheduleId })}
             onHistory={setHistory}
             onEdit={setEditing}
             onDelete={setDeleting}

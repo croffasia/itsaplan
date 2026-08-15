@@ -8,6 +8,7 @@ interface SettingsSchedulesTableProps {
   runningId: number | null;
   onToggle: (schedule: AgentSchedule) => void;
   onRun: (scheduleId: number) => void;
+  onCancelPending: (scheduleId: number) => void;
   onHistory: (schedule: AgentSchedule) => void;
   onEdit: (scheduleId: number) => void;
   onDelete: (schedule: AgentSchedule) => void;
@@ -18,6 +19,7 @@ export function SettingsSchedulesTable({
   runningId,
   onToggle,
   onRun,
+  onCancelPending,
   onHistory,
   onEdit,
   onDelete,
@@ -58,6 +60,7 @@ export function SettingsSchedulesTable({
             running={runningId === schedule.id}
             onToggle={() => onToggle(schedule)}
             onRun={() => onRun(schedule.id)}
+            onCancelPending={() => onCancelPending(schedule.id)}
             onHistory={() => onHistory(schedule)}
             onEdit={() => onEdit(schedule.id)}
             onDelete={() => onDelete(schedule)}

@@ -13,6 +13,7 @@ import {
 } from '@/utils/fieldOptions';
 import { compareByGroupOrder } from '@/utils/initiativeMeta';
 import { projectFeatures } from '@/utils/projectFeatures';
+import { uuid } from '@/utils/uuid';
 import {
   statusValue,
   type FilterCondition,
@@ -94,7 +95,7 @@ function withDivider(options: FieldOption[]): FieldOption[] {
 // no values, so it is inert (see isEffectiveCondition) until the user fills it in.
 export function newCondition(spec: FieldSpec): FilterCondition {
   return {
-    id: crypto.randomUUID(),
+    id: uuid(),
     field: spec.field,
     op: OPERATORS_BY_KIND[spec.kind][0],
     values: [],

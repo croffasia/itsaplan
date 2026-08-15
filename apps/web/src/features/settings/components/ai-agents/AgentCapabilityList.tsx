@@ -44,18 +44,18 @@ export function AgentCapabilityList({
     <div className="space-y-2">
       {showSearch && (
         <div className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={searchPlaceholder}
-            className="h-8 pr-9 pl-9 text-sm"
+            className="h-8 ps-9 pe-9 text-sm"
           />
           {query && (
             <button
               type="button"
               onClick={() => setQuery('')}
-              className="absolute top-1/2 right-3 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="absolute end-3 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
               aria-label={tCommon('clearSearch')}
             >
               <X className="size-4" />
@@ -64,7 +64,7 @@ export function AgentCapabilityList({
         </div>
       )}
 
-      <div className="max-h-72 space-y-1.5 overflow-y-auto pr-1">
+      <div className="max-h-72 space-y-1.5 overflow-y-auto pe-1">
         {matches.length === 0 ? (
           <p className="py-4 text-center text-xs text-muted-foreground">
             {t('noMatch', { query: query.trim() })}

@@ -9,6 +9,7 @@ import { useSession } from '@/lib/auth-client';
 import { apiDocsPath, godPath, mcpServerPath } from '@/utils/paths';
 import { GOD_SECTIONS } from '@/utils/godSections';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
+import { useSidebarSide } from '@/hooks/useSidebarSide';
 import {
   Sidebar,
   SidebarContent,
@@ -61,9 +62,10 @@ export default function AppSidebar({
   const settingsMode = settingsNav.groups.some((g) => g.items.some((i) => i.active));
   const onApiDocs = pathname.endsWith('/api');
   const onMcp = pathname.endsWith('/mcp');
+  const side = useSidebarSide();
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" side={side}>
       <SidebarHeader>
         <ProjectSwitcher
           projects={projects}

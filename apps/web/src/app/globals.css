@@ -292,10 +292,19 @@
 .md-content li + li {
   margin-top: 0.25em;
 }
+/* Each written block reads in the script it was typed in, so a paragraph of Arabic
+   and one of English can sit in the same description. The direction is set per
+   block rather than on the editor: `auto` on the root reads only the first
+   paragraph, and an empty editor gives it nothing to read, which would resolve to
+   left-to-right and take the placeholder with it. An empty block is left out for
+   that reason — it follows the page instead. */
+.md-content > :is(p, h1, h2, h3, li, blockquote):not(.is-editor-empty) {
+  unicode-bidi: plaintext;
+}
 .md-content p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
   color: var(--muted-foreground);
-  float: left;
+  float: inline-start;
   height: 0;
   pointer-events: none;
 }
@@ -338,11 +347,15 @@
   padding: 0.1em 0.35em;
   font-size: 0.9em;
 }
+/* Source code reads left to right whatever the interface language is, so a code
+   block keeps its direction inside a mirrored page. */
 .md-content pre {
   background: var(--muted);
   border-radius: var(--radius-md);
   padding: 0.6em 0.8em;
   overflow-x: auto;
+  direction: ltr;
+  text-align: start;
 }
 .md-content pre code {
   background: none;
@@ -447,13 +460,13 @@
   background-color: var(--hljs-deletion-bg);
 }
 .md-content blockquote {
-  border-left: 2px solid var(--border);
-  padding-left: 0.75em;
+  border-inline-start: 2px solid var(--border);
+  padding-inline-start: 0.75em;
   color: var(--muted-foreground);
 }
 .md-content ul,
 .md-content ol {
-  padding-left: 1.25em;
+  padding-inline-start: 1.25em;
 }
 .md-content ul {
   list-style: disc;
@@ -465,7 +478,7 @@
    lay each item out as [checkbox] [text]. */
 .md-content ul[data-type='taskList'] {
   list-style: none;
-  padding-left: 0;
+  padding-inline-start: 0;
 }
 .md-content ul[data-type='taskList'] li {
   display: flex;
@@ -477,6 +490,57 @@
 }
 .md-content ul[data-type='taskList'] input[type='checkbox'] {
   cursor: pointer;
+}
+/* Right-to-left corrections for the shadcn primitives, applied from the outside for
+   the same reason as the shadows above: the generated components are kept as shadcn
+   writes them, so an edit inside one is lost the next time it is re-added.
+
+   These rules also have to sit outside @layer. Tailwind v4 orders its layers
+   `theme, base, components, utilities`, so a rule in `@layer components` loses to
+   the utility classes on the element however specific it is. */
+[dir='rtl'] [data-slot='dialog-close'],
+[dir='rtl'] [data-slot='sheet-close'] {
+  right: auto;
+  inset-inline-end: calc(var(--spacing) * 4);
+}
+/* `translate-x` has no logical form, so the checked position is mirrored
+   explicitly: the thumb travels towards the end of the track either way. */
+[dir='rtl'] [data-slot='switch-thumb'][data-state='checked'] {
+  --tw-translate-x: calc(-1 * (100% - 2px));
+  translate: var(--tw-translate-x) var(--tw-translate-y);
+}
+/* The inset variant butts the main panel against the sidebar, so it drops the margin
+   on the sidebar's side and puts it back once the sidebar collapses. Upstream does
+   that with `ml-0` / `collapsed:ml-2`; mirrored, the side to drop is the right one.
+   Stated physically because the upstream declaration is physical too, and a logical
+   property here would resolve to the same side and fight it. */
+@media (width >= 48rem) {
+  [dir='rtl'] [data-slot='sidebar-inset']:is(:where(.peer)[data-variant='inset'] ~ *) {
+    margin-left: calc(var(--spacing) * 2);
+    margin-right: 0;
+  }
+  [dir='rtl']
+    [data-slot='sidebar-inset']:is(:where(.peer)[data-variant='inset'] ~ *):is(
+      :where(.peer)[data-state='collapsed'] ~ *
+    ) {
+    margin-right: calc(var(--spacing) * 2);
+  }
+}
+/* The trigger icon shows a panel against the edge the sidebar sits on. */
+[dir='rtl'] [data-slot='sidebar-trigger'] svg {
+  rotate: 180deg;
+}
+
+/* xyflow sets `direction: ltr` on its own root, which it needs for the coordinate
+   math behind panning and zooming, and every note inherited it. A note's content is
+   prose, so it takes the page direction back; the canvas keeps its own, since a note
+   is placed by stored coordinates and moved with a transform.
+
+   Selected through the attribute rather than `inherit`: xyflow's stylesheet is
+   imported from the canvas component, so it lands after this file and wins on
+   source order against a single class. */
+[dir='rtl'] .sticker-note {
+  direction: rtl;
 }
 /* Sticky notes always sit on a light pastel background, so their placeholder and
    checkboxes are keyed to dark regardless of the app theme. */

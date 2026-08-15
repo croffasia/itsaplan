@@ -192,19 +192,19 @@ export function SkillCreateDialog({
 
           {candidates.length > 5 && (
             <div className="relative">
-              <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={t('searchPlaceholder')}
-                className="pr-9 pl-9"
+                className="ps-9 pe-9"
                 autoFocus
               />
               {query && (
                 <button
                   type="button"
                   onClick={() => setQuery('')}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 rounded-sm text-muted-foreground transition-colors hover:text-foreground"
                   aria-label={tCommon('clearSearch')}
                 >
                   <X className="size-4" />
@@ -307,7 +307,7 @@ export function SkillCreateDialog({
             <TriangleAlert className="mt-px size-4 shrink-0" />
             <div className="space-y-1.5 text-xs leading-relaxed">
               <p className="font-medium">{t('trustWarning')}</p>
-              <ul className="list-disc space-y-0.5 pl-4 text-amber-700/90 dark:text-amber-300/90">
+              <ul className="list-disc space-y-0.5 ps-4 text-amber-700/90 dark:text-amber-300/90">
                 <li>{t('trustWarning1')}</li>
                 <li>{t('trustWarning2')}</li>
               </ul>

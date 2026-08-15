@@ -101,7 +101,7 @@ export default function FilterValueEditor({
                 type="button"
                 onClick={() => toggle(o.value)}
                 className={cn(
-                  'flex w-full items-center gap-2 rounded px-2 py-1 text-left text-sm hover:bg-accent',
+                  'flex w-full items-center gap-2 rounded px-2 py-1 text-start text-sm hover:bg-accent',
                   checked && 'font-medium',
                 )}
               >

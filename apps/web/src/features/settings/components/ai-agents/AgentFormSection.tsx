@@ -35,7 +35,7 @@ export function AgentFormSection({
     // forward it) so the section nav's querySelector and scrollIntoView can find it.
     <div id={id} className="scroll-mt-4">
       <Collapsible open={open} onOpenChange={onOpenChange}>
-        <CollapsibleTrigger className="group/section flex w-full items-center gap-2.5 border-b border-border/60 pb-2.5 text-left">
+        <CollapsibleTrigger className="group/section flex w-full items-center gap-2.5 border-b border-border/60 pb-2.5 text-start">
           {Icon && (
             <Icon className="size-4 shrink-0 text-muted-foreground transition-colors group-hover/section:text-foreground" />
           )}
@@ -50,14 +50,14 @@ export function AgentFormSection({
           )}
           <ChevronRight
             className={`size-4 shrink-0 text-muted-foreground/60 transition group-hover/section:text-muted-foreground ${
-              open ? 'rotate-90' : ''
+              open ? 'rotate-90' : 'rtl:rotate-180'
             }`}
           />
         </CollapsibleTrigger>
         <CollapsibleContent>
           {/* Indented to the header's title column (past the icon), so the fields read
               as belonging to the section above them. */}
-          <div className="space-y-4 pt-4 pl-6">{children}</div>
+          <div className="space-y-4 ps-6 pt-4">{children}</div>
         </CollapsibleContent>
       </Collapsible>
     </div>

@@ -41,17 +41,17 @@ export function ToolPicker({
   return (
     <div className="space-y-4">
       <div className="relative">
-        <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('search')}
-          className="pl-9"
+          className="ps-9"
         />
       </div>
 
-      <div className="max-h-[55vh] space-y-5 overflow-y-auto pr-1">
+      <div className="max-h-[55vh] space-y-5 overflow-y-auto pe-1">
         {matches.length === 0 && (
           <p className="py-6 text-center text-sm text-muted-foreground">
             {t('noMatches', { query: query.trim() })}
@@ -77,7 +77,7 @@ export function ToolPicker({
                     key={o.toolKey}
                     type="button"
                     onClick={() => onSelect(o.toolKey)}
-                    className="block w-full rounded-lg border border-transparent px-3 py-2 text-left transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    className="block w-full rounded-lg border border-transparent px-3 py-2 text-start transition-colors hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   >
                     <span className="block text-sm font-medium text-foreground">{o.label}</span>
                     <span className="block text-xs text-muted-foreground">{o.description}</span>

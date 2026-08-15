@@ -94,7 +94,10 @@ export default function TimelineView({
       onDragCancel={reorder.onDragCancel}
       onDragEnd={reorder.onDragEnd}
     >
-      <div ref={scrollRef} className="h-full overflow-auto">
+      {/* Time runs left to right in every language, and the bars are positioned in
+          pixels from the left edge, so the track keeps its direction even when the
+          rest of the interface is mirrored. */}
+      <div ref={scrollRef} dir="ltr" className="h-full overflow-auto">
         <div className="relative" style={{ width: labelW + trackWidth }}>
           <TimelineHeader
             labelW={labelW}

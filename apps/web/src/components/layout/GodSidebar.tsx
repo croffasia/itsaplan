@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { godPath } from '@/utils/paths';
 import { GOD_GROUPS, godIntegrationsIn, godSectionsIn } from '@/utils/godSections';
 import { useGodSectionText } from '@/hooks/useSectionLabels';
+import { useSidebarSide } from '@/hooks/useSidebarSide';
 import {
   Sidebar,
   SidebarContent,
@@ -32,9 +33,10 @@ export default function GodSidebar() {
   const t = useTranslations('nav');
   const god = useGodSectionText();
   const pathname = usePathname();
+  const side = useSidebarSide();
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" side={side}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>

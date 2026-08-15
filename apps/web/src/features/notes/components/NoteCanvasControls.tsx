@@ -64,7 +64,7 @@ export default function NoteCanvasControls({
   }
 
   return (
-    <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+    <div className="absolute end-3 top-3 z-10 flex items-center gap-2">
       {canEdit && (
         <Button variant="secondary" size="sm" onClick={onAddNote}>
           <Plus className="size-4" /> {t('addNote')}

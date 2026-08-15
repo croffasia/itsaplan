@@ -47,7 +47,7 @@ export default function WidgetFrame({
           <button
             type="button"
             title={t('dragToMove')}
-            className="widget-drag-handle -ml-1 cursor-grab touch-none text-muted-foreground/60 hover:text-foreground"
+            className="widget-drag-handle -ms-1 cursor-grab touch-none text-muted-foreground/60 hover:text-foreground"
           >
             <GripVertical className="size-4" />
           </button>

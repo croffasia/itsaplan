@@ -74,7 +74,9 @@ export function IssueCardBody({
             <TooltipContent>{column.name}</TooltipContent>
           </Tooltip>
         )}
-        <span className="line-clamp-2 text-sm leading-snug text-foreground">{issue.title}</span>
+        <span dir="auto" className="line-clamp-2 text-sm leading-snug text-foreground">
+          {issue.title}
+        </span>
       </div>
 
       {metaShown && (

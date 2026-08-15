@@ -20,7 +20,11 @@ export function AgentRunnerCodeBlock({ code }: { code: string }) {
 
   return (
     <div className="flex items-start gap-2">
-      <pre className="min-w-0 flex-1 overflow-x-auto rounded-md border bg-muted/40 px-2.5 py-2 font-mono text-xs">
+      {/* A shell command reads left to right whatever the interface language is. */}
+      <pre
+        dir="ltr"
+        className="min-w-0 flex-1 overflow-x-auto rounded-md border bg-muted/40 px-2.5 py-2 text-start font-mono text-xs"
+      >
         {code}
       </pre>
       <Button

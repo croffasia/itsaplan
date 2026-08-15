@@ -148,7 +148,7 @@ export function SkillEditDialog({
         </header>
 
         <div className="grid min-h-0 grid-cols-[minmax(0,17rem)_1fr]">
-          <aside className="flex min-h-0 flex-col gap-5 overflow-y-auto border-r border-border/60 p-4">
+          <aside className="flex min-h-0 flex-col gap-5 overflow-y-auto border-e border-border/60 p-4">
             <div className="space-y-1.5">
               <Label>{tCommon('name')}</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} disabled={!canEdit} />

@@ -52,7 +52,7 @@ export default function AgentTriggersSection({
         />
       </label>
       {value.triggerOnAssign && (
-        <div className="flex items-center justify-between gap-2 border-l pl-3">
+        <div className="flex items-center justify-between gap-2 border-s ps-3">
           <span>
             <label htmlFor="agent-delegation-delay" className="text-sm">
               {t('delegationDelay')}

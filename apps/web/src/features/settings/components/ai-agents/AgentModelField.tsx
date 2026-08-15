@@ -57,7 +57,7 @@ export default function AgentModelField({
           <span className={value ? 'truncate' : 'truncate text-muted-foreground'}>
             {value || t('chooseModel')}
           </span>
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+          <ChevronsUpDown className="ms-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
@@ -89,10 +89,10 @@ export default function AgentModelField({
                     <span className="flex-1 truncate">
                       <span className="font-mono text-xs">{m.id}</span>
                       {m.name !== m.id && (
-                        <span className="ml-2 text-muted-foreground">{m.name}</span>
+                        <span className="ms-2 text-muted-foreground">{m.name}</span>
                       )}
                     </span>
-                    {value === m.id && <Check className="ml-auto size-4" />}
+                    {value === m.id && <Check className="ms-auto size-4" />}
                   </CommandItem>
                 ))}
               </CommandGroup>

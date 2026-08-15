@@ -35,7 +35,7 @@ export default function NoteCanvasTitle({
   }, [saveStatus]);
 
   return (
-    <div className="absolute top-3 left-3 z-10 flex items-center gap-2">
+    <div className="absolute start-3 top-3 z-10 flex items-center gap-2">
       {creator && (
         <Tooltip>
           <TooltipTrigger asChild>

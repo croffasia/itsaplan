@@ -61,9 +61,15 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
 - A new namespace needs its file in every language plus an entry in `defaultMessages`.
 - A new language: `messages/<code>/`, `src/i18n/locales.ts`, `src/hooks/useDateFnsLocale.ts`,
   and `LOCALES`/`Locale` in `apps/api/src/modules/user-preferences/`. No migration — the `locale`
-  column has no CHECK.
+  column has no CHECK. One written right to left also goes in `RTL_LOCALES`.
 - Don't subset messages per route with `pick()`: a missing namespace then fails at runtime
   instead of at typecheck.
+- The layout mirrors for a right-to-left language, so position new components with the logical
+  utilities — `ms`/`me`, `ps`/`pe`, `start`/`end`, `border-s`/`border-e`, `text-start`/`text-end`
+  — not `ml-`, `left-` or `text-left`, which compile to physical CSS and ignore `dir`. A
+  `left`/`translate-x` centring pair and an edge the caller names (`Sheet side="right"`) stay
+  physical; content that is not prose (timelines, charts, code) sits in a `dir="ltr"` container,
+  and user-written text gets `dir="auto"`. `docs/dev/i18n.md` has the whole picture.
 - `bun run lint` checks the message files themselves (`eslint-plugin-i18n-json`, wired in
   `eslint.config.mjs`): every language carries every namespace of `messages/en` with the same
   key set, and each message parses as ICU. A key added to English alone fails CI. Angle
@@ -82,6 +88,13 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
 - Call the backend over HTTP at the API origin. `lib/api.ts` reads `NEXT_PUBLIC_API_URL`
   from `apps/web/.env` (same value as the root `API_URL`), inlined at build time.
 - Add shadcn components with `bunx shadcn@latest add <name>` (config in `components.json`).
+- **Don't edit `src/components/ui/`** — those files are generated and re-adding a component
+  overwrites them. Style them from the outside instead: every primitive carries a `data-slot`
+  attribute, so a rule in `globals.css` targeting `[data-slot='…']` survives the update (the
+  overlay shadows and the right-to-left corrections both work this way). Such a rule has to sit
+  outside `@layer`: Tailwind orders its layers `theme, base, components, utilities`, so anything
+  in `@layer components` loses to the utility classes on the element. When the change is a prop
+  the component already exposes (`Sidebar side`), pass it from the caller rather than writing CSS.
 - Tailwind v4: no `tailwind.config`; tokens live in `src/app/globals.css` (`@theme`, CSS vars).
 - `NEXT_PUBLIC_*` are build-time — set them in `apps/web/.env` before `next build`, or as
   web Dockerfile build args.

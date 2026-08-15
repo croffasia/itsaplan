@@ -3,6 +3,7 @@ import { ThemeProvider } from 'next-themes';
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Providers } from '@/components/providers';
+import { localeDirection, type Locale } from '@/i18n/locales';
 import './globals.css';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,7 +19,7 @@ export default async function RootLayout({
   const locale = await getLocale();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} dir={localeDirection(locale as Locale)} suppressHydrationWarning>
       <body className="antialiased">
         <ThemeProvider
           attribute="class"

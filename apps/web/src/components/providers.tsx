@@ -2,9 +2,11 @@
 
 import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useRef, useState, type ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { Direction } from 'radix-ui';
 import { toast } from 'sonner';
 import { ApiError } from '@/lib/api';
+import { localeDirection, type Locale } from '@/i18n/locales';
 import { HotkeysProvider } from '@/context/useHotkeys';
 import { SyncProvider } from '@/context/syncContext';
 import { Toaster } from '@/components/ui/sonner';
@@ -21,6 +23,10 @@ function errorMessage(error: unknown, fallback: string): string {
 
 export function Providers({ children }: { children: ReactNode }) {
   const t = useTranslations('common');
+  // Radix reads the direction from this context, not from the CSS: without it a
+  // menu keeps left-to-right arrow-key navigation and alignment even once the
+  // layout is mirrored.
+  const dir = localeDirection(useLocale() as Locale);
   // The cache is built once, so the toast reads the fallback through a ref the
   // render refreshes; switching locale then reaches errors too.
   const fallback = useRef(t('genericError'));
@@ -54,12 +60,14 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionScope />
-      <PreferencesSync />
-      <SyncProvider>
-        <HotkeysProvider>{children}</HotkeysProvider>
-      </SyncProvider>
-      <Toaster position="bottom-right" richColors />
+      <Direction.Provider dir={dir}>
+        <SessionScope />
+        <PreferencesSync />
+        <SyncProvider>
+          <HotkeysProvider>{children}</HotkeysProvider>
+        </SyncProvider>
+        <Toaster position={dir === 'rtl' ? 'bottom-left' : 'bottom-right'} dir={dir} richColors />
+      </Direction.Provider>
     </QueryClientProvider>
   );
 }

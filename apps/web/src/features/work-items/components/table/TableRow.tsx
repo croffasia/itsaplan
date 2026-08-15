@@ -99,7 +99,9 @@ export function TableRow({
               {issue.identifier}
             </span>
           )}
-          <span className="truncate text-foreground">{issue.title}</span>
+          <span dir="auto" className="truncate text-foreground">
+            {issue.title}
+          </span>
           <SubtaskProgress issueId={issue.id} maps={maps} />
         </div>
 

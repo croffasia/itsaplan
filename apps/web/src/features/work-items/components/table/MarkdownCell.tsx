@@ -48,6 +48,11 @@ export function MarkdownCell({ value }: { value: string }) {
   }, [html]);
 
   return (
-    <div ref={ref} className="md-content text-xs" dangerouslySetInnerHTML={{ __html: html }} />
+    <div
+      ref={ref}
+      dir="auto"
+      className="md-content text-xs"
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }

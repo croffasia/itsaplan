@@ -79,7 +79,7 @@ export default function SettingsAiAgents({ project }: { project: ProjectDetail }
                 <TableHead className="text-xs font-medium text-muted-foreground">
                   {t('columns.configuration')}
                 </TableHead>
-                <TableHead className="text-right text-xs font-medium text-muted-foreground">
+                <TableHead className="text-end text-xs font-medium text-muted-foreground">
                   {tCommon('actions')}
                 </TableHead>
               </TableRow>

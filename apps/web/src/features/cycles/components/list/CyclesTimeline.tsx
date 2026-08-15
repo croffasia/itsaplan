@@ -58,8 +58,10 @@ export default function CyclesTimeline({
     el.scrollLeft = Math.max(0, todayLeft - labelW);
   }, [rows.length, todayLeft, labelW]);
 
+  // Left to right in every language, like the work items timeline: the bars are
+  // placed in pixels from the left edge, and `scrollLeft` above counts from it.
   return (
-    <div ref={scrollRef} className="flex-1 overflow-auto">
+    <div ref={scrollRef} dir="ltr" className="flex-1 overflow-auto">
       <div className="relative" style={{ width: labelW + trackWidth }}>
         <TimelineHeader
           labelW={labelW}

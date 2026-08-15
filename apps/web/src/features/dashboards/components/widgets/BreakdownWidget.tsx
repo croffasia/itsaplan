@@ -51,7 +51,10 @@ export default function BreakdownWidget({
     }
     return (
       <div className="flex flex-col items-center gap-3 sm:flex-row">
-        <ChartContainer config={{}} className="aspect-square h-[160px]">
+        {/* Recharts draws to absolute SVG coordinates and does not read the document
+            direction, so a mirrored chart would put its slices and legend out of step
+            with each other. The labels and the tooltip are still translated. */}
+        <ChartContainer dir="ltr" config={{}} className="aspect-square h-[160px]">
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
             <Pie data={chartData} dataKey="value" nameKey="name" innerRadius={45} strokeWidth={2}>

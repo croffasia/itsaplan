@@ -94,7 +94,7 @@ export default function SettingsAiAgentFields({
                 key={k}
                 type="button"
                 onClick={() => onChange({ kind: k })}
-                className={`rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                className={`rounded-md px-3 py-2 text-start text-sm transition-colors ${
                   value.kind === k
                     ? 'bg-secondary ring-1 ring-foreground/15'
                     : 'bg-muted/50 hover:bg-accent/60'
@@ -272,7 +272,7 @@ export default function SettingsAiAgentFields({
           </span>
         </label>
         {value.memoryEnabled && (
-          <div className="space-y-1.5 pl-6">
+          <div className="space-y-1.5 ps-6">
             <label htmlFor="agent-memory-n" className="text-sm font-medium">
               {t('memoryCount')}
             </label>

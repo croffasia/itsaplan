@@ -118,7 +118,7 @@ function SheetBody({
 
       <div className="flex min-h-0 flex-1">
         <div
-          className={`flex min-h-0 flex-1 flex-col ${split ? 'basis-0 border-r border-border/60' : ''}`}
+          className={`flex min-h-0 flex-1 flex-col ${split ? 'basis-0 border-e border-border/60' : ''}`}
         >
           <AgentSheetForm
             projectKey={projectKey}

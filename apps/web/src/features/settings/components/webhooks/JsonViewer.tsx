@@ -27,13 +27,18 @@ export function JsonViewer({ value }: { value: unknown }) {
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-1.5 right-1.5 z-10 size-6 text-muted-foreground opacity-0 group-hover/json:opacity-100 hover:text-foreground"
+        className="absolute end-1.5 top-1.5 z-10 size-6 text-muted-foreground opacity-0 group-hover/json:opacity-100 hover:text-foreground"
         title={t('copy')}
         onClick={copy}
       >
         {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
       </Button>
-      <div className="max-h-72 overflow-auto rounded-md bg-muted/50 p-2 pr-8 font-mono text-[11px] leading-relaxed">
+      {/* JSON reads left to right whatever the interface language is: the payload
+          keeps its direction, and its tree disclosure chevrons keep pointing right. */}
+      <div
+        dir="ltr"
+        className="max-h-72 overflow-auto rounded-md bg-muted/50 p-2 pe-8 text-start font-mono text-[11px] leading-relaxed"
+      >
         {isJson ? (
           <JsonNode value={data} depth={0} isLast />
         ) : (

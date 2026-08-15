@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import GridLayout, { useContainerWidth, verticalCompactor, type Layout } from 'react-grid-layout';
+import { Direction } from 'radix-ui';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -31,6 +32,7 @@ export default function WidgetGrid({
   editor: DashboardEditor;
   editing: boolean;
 }) {
+  const direction = Direction.useDirection();
   const t = useTranslations('dashboards');
   const { layout } = editor;
   // useContainerWidth starts at a sane default width and refines it after mount,
@@ -61,7 +63,10 @@ export default function WidgetGrid({
   }
 
   return (
-    <div ref={containerRef}>
+    // react-grid-layout places every widget at an absolute `left` and has no
+    // right-to-left mode, so the grid itself keeps its direction. Each widget then
+    // takes the page's back, since only the placing has to stay left to right.
+    <div ref={containerRef} dir="ltr">
       {width > 0 && (
         <GridLayout
           width={width}
@@ -80,7 +85,7 @@ export default function WidgetGrid({
           className={cn(editing && 'rounded-lg outline-1 outline-border/50 outline-dashed')}
         >
           {layout.map((widget) => (
-            <div key={widget.id} className="min-w-0 overflow-hidden">
+            <div key={widget.id} dir={direction} className="min-w-0 overflow-hidden">
               <WidgetFrame
                 widget={widget}
                 editing={editing}

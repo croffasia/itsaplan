@@ -104,7 +104,7 @@ function RunItem({ run: r }: { run: AgentRun }) {
     <div>
       <button
         type="button"
-        className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-xs hover:bg-accent/50"
+        className="flex w-full items-center gap-2 px-4 py-2.5 text-start text-xs hover:bg-accent/50"
         onClick={() => setOpen((v) => !v)}
       >
         {open ? (
@@ -120,7 +120,7 @@ function RunItem({ run: r }: { run: AgentRun }) {
         )}
         <Tooltip>
           <TooltipTrigger asChild>
-            <span className="ml-auto shrink-0 text-muted-foreground">
+            <span className="ms-auto shrink-0 text-muted-foreground">
               {formatDistanceToNow(parseISO(r.createdAt), { addSuffix: true, locale })}
             </span>
           </TooltipTrigger>

@@ -41,8 +41,11 @@ export default function ThroughputWidget({
     if (chartData.length === 0) {
       return <p className="py-10 text-center text-sm text-muted-foreground">{t('empty')}</p>;
     }
+    // Recharts draws to absolute SVG coordinates and does not read the document
+    // direction, so a mirrored chart would put its axes and series out of step with
+    // each other. The labels and the tooltip are still translated.
     return (
-      <ChartContainer config={chartConfig} className="h-[180px] w-full">
+      <ChartContainer dir="ltr" config={chartConfig} className="h-[180px] w-full">
         <BarChart data={chartData}>
           <CartesianGrid vertical={false} />
           <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} fontSize={11} />

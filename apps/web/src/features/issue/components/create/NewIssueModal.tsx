@@ -280,6 +280,10 @@ export default function NewIssueModal({
             positioned ancestor, so the overlay covers the whole modal. */}
         {draggedFiles !== null && <NewIssueDropOverlay count={draggedFiles} />}
         <input
+          // `auto` once there is something to read, so a title keeps the script it
+          // was typed in. While the field is empty there is nothing to read from,
+          // and it would fall back to left-to-right and strand the placeholder.
+          dir={title ? 'auto' : undefined}
           className="w-full bg-transparent text-lg font-semibold outline-none placeholder:text-muted-foreground"
           placeholder={t('titlePlaceholder')}
           value={title}

@@ -134,6 +134,10 @@ export default function CommentComposer({
           <div className="overflow-hidden rounded-lg border bg-muted/20 shadow-xs transition-[border-color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/30">
             <Textarea
               ref={taRef}
+              // `auto` once there is something to read, so a comment keeps the
+              // script it was typed in. An empty box has nothing to read from, and
+              // would fall back to left-to-right and strand the placeholder.
+              dir={body ? 'auto' : undefined}
               value={body}
               onChange={(e) =>
                 onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)

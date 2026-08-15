@@ -66,17 +66,23 @@ export default function IssueStatusTimeline({
           </Button>
         )}
       </div>
-      {open &&
-        (showTimeline ? (
-          <IssueTimelineLanes issueId={issueId} layout={layout} imageByUserId={imageByUserId} />
-        ) : (
-          <IssueTimelineCompact
-            issueId={issueId}
-            lanes={layout.lanes}
-            metrics={buildLifecycleMetrics(segments, columns)}
-            imageByUserId={imageByUserId}
-          />
-        ))}
+      {/* The bars and the axis ticks are placed as a percentage from the left edge,
+          and time runs left to right in every language, so the chart keeps its
+          direction inside a mirrored page. */}
+      {open && (
+        <div dir="ltr">
+          {showTimeline ? (
+            <IssueTimelineLanes issueId={issueId} layout={layout} imageByUserId={imageByUserId} />
+          ) : (
+            <IssueTimelineCompact
+              issueId={issueId}
+              lanes={layout.lanes}
+              metrics={buildLifecycleMetrics(segments, columns)}
+              imageByUserId={imageByUserId}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }

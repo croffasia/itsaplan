@@ -108,7 +108,7 @@ export default function Modal({
         </div>
         {/* After the body: Radix focuses the first tabbable node on open, which
             should be a field of the body, not a control. */}
-        <div className="absolute top-3 right-3 flex items-center gap-1">
+        <div className="absolute end-3 top-3 flex items-center gap-1">
           {onToggleFullscreen && (
             <Button
               variant="ghost"

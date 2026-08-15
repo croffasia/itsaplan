@@ -33,7 +33,7 @@ export default function FilterConditionPill({
   const t = useTranslations('filters');
   const { operatorLabel } = useFilterFields();
   return (
-    <div className="flex items-center gap-1 rounded-md border bg-muted/60 py-0.5 pr-0.5 pl-2 text-xs">
+    <div className="flex items-center gap-1 rounded-md border bg-muted/60 py-0.5 ps-2 pe-0.5 text-xs">
       <span className="font-medium text-foreground">{spec.label}</span>
       <Select value={cond.op} onValueChange={(v) => onOperatorChange(v as FilterOperator)}>
         <SelectTrigger

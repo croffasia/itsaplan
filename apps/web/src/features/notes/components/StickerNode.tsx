@@ -62,6 +62,10 @@ export default function StickerNode({ id, data, selected }: NodeProps<StickerNod
 
       <div className="mb-1 flex items-center gap-2">
         <input
+          // `auto` once there is something to read, so a title keeps the script it
+          // was typed in. An empty one has nothing to read from and would fall back
+          // to left-to-right, taking the placeholder with it.
+          dir={data.title ? 'auto' : undefined}
           value={data.title}
           onChange={(e) => update({ title: e.target.value })}
           readOnly={!canEdit}

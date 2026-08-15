@@ -72,7 +72,7 @@ export default function FilterBar({
               key={spec.field}
               type="button"
               onClick={() => add(spec)}
-              className="w-full truncate rounded px-2 py-1 text-left text-sm hover:bg-accent"
+              className="w-full truncate rounded px-2 py-1 text-start text-sm hover:bg-accent"
             >
               {spec.label}
             </button>

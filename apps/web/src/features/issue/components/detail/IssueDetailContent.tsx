@@ -82,6 +82,9 @@ export default function IssueDetailContent({
           // Its value stays single-line: Enter commits instead of inserting a
           // newline, and pasted line breaks are collapsed on blur.
           <textarea
+            // Laid out by the script the title is written in, not the interface
+            // language, so an Arabic title reads correctly in an English session.
+            dir="auto"
             className="field-sizing-content min-w-0 flex-1 resize-none bg-transparent text-lg leading-snug font-semibold outline-none placeholder:text-muted-foreground"
             rows={1}
             placeholder={t('titlePlaceholder')}
@@ -100,7 +103,9 @@ export default function IssueDetailContent({
             }}
           />
         ) : (
-          <h1 className="min-w-0 flex-1 text-lg leading-snug font-semibold">{issue.title}</h1>
+          <h1 dir="auto" className="min-w-0 flex-1 text-lg leading-snug font-semibold">
+            {issue.title}
+          </h1>
         )}
       </div>
 

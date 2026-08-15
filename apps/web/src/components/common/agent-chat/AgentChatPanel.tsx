@@ -104,6 +104,9 @@ export function AgentChatPanel({
             <InputGroup className="rounded-xl">
               <InputGroupTextarea
                 ref={textareaRef}
+                // `auto` once there is something to read, so a message keeps the
+                // script it was typed in. An empty box has nothing to read from.
+                dir={input ? 'auto' : undefined}
                 className="max-h-40 min-h-10 py-2.5"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

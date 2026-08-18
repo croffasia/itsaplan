@@ -2,7 +2,7 @@ import { db, issueWatcher, projectMember, user, userPreference } from '@repo/db'
 import { and, asc, eq, inArray, isNull, or } from 'drizzle-orm';
 
 // Who follows an issue. A watcher receives every notification the issue produces
-// (see notifications/store.ts); the assignment and mention notifications are
+// (see modules/notifications/service.ts); the assignment and mention notifications are
 // addressed to one person and reach them whether they watch the issue or not.
 //
 // A member subscribes either by hand or through the auto-subscribe rules below.

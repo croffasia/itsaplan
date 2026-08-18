@@ -1,9 +1,21 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { authContext } from '../shared/auth-context';
-import { requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { errors } from '../shared/responses';
+import { noContent } from '#shared/http';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { errors } from '#shared/responses';
+import {
+  AffectedCountResponse,
+  NotificationPageResponse,
+  UnreadCountResponse,
+  deleteNotificationsQuery,
+  listNotificationsQuery,
+  markAllReadBody,
+  notificationParams,
+  setNotificationReadBody,
+  snoozeNotificationBody,
+  unreadCountQuery,
+} from './model';
 import {
   listNotifications,
   unreadCount,
@@ -12,43 +24,11 @@ import {
   snoozeNotification,
   deleteNotification,
   deleteNotifications,
+  NOTIFICATION_TYPES,
   type NotificationType,
   type NotificationFilters,
   type DeleteScope,
-} from './store';
-
-const NOTIFICATION_TYPES: NotificationType[] = [
-  'assigned',
-  'mentioned',
-  'commented',
-  'state_changed',
-];
-
-const NotificationResponse = t.Object({
-  id: t.Number(),
-  type: t.String(),
-  actorUserId: t.Nullable(t.String()),
-  actorName: t.Nullable(t.String()),
-  readAt: t.Nullable(t.String()),
-  snoozedUntil: t.Nullable(t.String()),
-  createdAt: t.String(),
-  issueId: t.Number(),
-  issueSeq: t.Number(),
-  issueTitle: t.String(),
-  issueStateType: t.String(),
-  projectId: t.Number(),
-  projectKey: t.String(),
-  projectName: t.String(),
-  fromState: t.Nullable(t.String()),
-  toState: t.Nullable(t.String()),
-});
-
-const NotificationPageResponse = t.Object({
-  items: t.Array(NotificationResponse),
-  nextCursor: t.Nullable(t.Object({ ts: t.String(), id: t.Number() })),
-});
-
-const idParams = t.Object({ id: t.Numeric() });
+} from './service';
 
 // Inbox: the session user's own notifications across every project they are a
 // member of. Every route is scoped to that user (no project permission needed to
@@ -77,7 +57,9 @@ export const notificationRoutes = new Elysia({
       if (query.types) {
         const types = query.types
           .split(',')
-          .filter((x): x is NotificationType => (NOTIFICATION_TYPES as string[]).includes(x));
+          .filter((x): x is NotificationType =>
+            (NOTIFICATION_TYPES as readonly string[]).includes(x),
+          );
         if (types.length) filters.types = types;
       }
       if (query.from) filters.fromUserId = query.from;
@@ -87,19 +69,7 @@ export const notificationRoutes = new Elysia({
       return listNotifications(userId, { before, limit, filters });
     },
     {
-      query: t.Object({
-        limit: t.Optional(t.String({ description: 'Max items per page (1-100). Default 30.' })),
-        cursor: t.Optional(t.String({ description: 'nextCursor from the previous page.' })),
-        types: t.Optional(
-          t.String({ description: 'Comma-separated notification types to include.' }),
-        ),
-        from: t.Optional(t.String({ description: 'Filter by actor user id.' })),
-        projectId: t.Optional(t.String({ description: 'Filter by project id.' })),
-        includeRead: t.Optional(t.String({ description: "'false' hides read. Default true." })),
-        includeSnoozed: t.Optional(
-          t.String({ description: "'true' shows snoozed. Default false." }),
-        ),
-      }),
+      query: listNotificationsQuery,
       response: { 200: NotificationPageResponse, ...errors(401) },
       detail: { summary: 'List inbox notifications' },
     },
@@ -114,10 +84,8 @@ export const notificationRoutes = new Elysia({
       return { unread: await unreadCount(userId, projectId) };
     },
     {
-      query: t.Object({
-        projectId: t.Optional(t.String({ description: 'Scope the count to one project.' })),
-      }),
-      response: { 200: t.Object({ unread: t.Number() }), ...errors(401) },
+      query: unreadCountQuery,
+      response: { 200: UnreadCountResponse, ...errors(401) },
       detail: { summary: 'Get unread notification count' },
     },
   )
@@ -130,8 +98,8 @@ export const notificationRoutes = new Elysia({
       return { count };
     },
     {
-      body: t.Optional(t.Object({ projectId: t.Optional(t.Number()) })),
-      response: { 200: t.Object({ count: t.Number() }), ...errors(401) },
+      body: markAllReadBody,
+      response: { 200: AffectedCountResponse, ...errors(401) },
       detail: { summary: 'Mark all notifications read' },
     },
   )
@@ -146,15 +114,8 @@ export const notificationRoutes = new Elysia({
       return { count };
     },
     {
-      query: t.Object({
-        scope: t.Optional(
-          t.Union([t.Literal('all'), t.Literal('read'), t.Literal('read-completed')], {
-            description: 'Which notifications to delete. Default read.',
-          }),
-        ),
-        projectId: t.Optional(t.String({ description: 'Scope the delete to one project.' })),
-      }),
-      response: { 200: t.Object({ count: t.Number() }), ...errors(401) },
+      query: deleteNotificationsQuery,
+      response: { 200: AffectedCountResponse, ...errors(401) },
       detail: { summary: 'Delete inbox notifications' },
     },
   )
@@ -169,8 +130,8 @@ export const notificationRoutes = new Elysia({
       return noContent();
     },
     {
-      params: idParams,
-      body: t.Optional(t.Object({ read: t.Optional(t.Boolean()) })),
+      params: notificationParams,
+      body: setNotificationReadBody,
       response: { 204: t.Void(), ...errors(401, 404) },
       detail: { summary: 'Mark a notification read or unread' },
     },
@@ -187,8 +148,8 @@ export const notificationRoutes = new Elysia({
       return noContent();
     },
     {
-      params: idParams,
-      body: t.Object({ until: t.Nullable(t.String()) }),
+      params: notificationParams,
+      body: snoozeNotificationBody,
       response: { 204: t.Void(), ...errors(400, 401, 404) },
       detail: {
         summary: 'Snooze a notification',
@@ -206,7 +167,7 @@ export const notificationRoutes = new Elysia({
       return noContent();
     },
     {
-      params: idParams,
+      params: notificationParams,
       response: { 204: t.Void(), ...errors(401, 404) },
       detail: { summary: 'Delete a notification' },
     },

@@ -31,7 +31,7 @@ import { godRoutes } from './god/routes';
 import { agentScheduleRoutes } from './modules/agents/schedules';
 import { agentRunnerRoutes } from './modules/agents/runner';
 import { agentChatRoutes } from './modules/agents/chat';
-import { notificationRoutes } from './notifications/routes';
+import { notificationRoutes } from './modules/notifications';
 import { notificationSettingsRoutes } from './modules/notification-settings';
 import { notificationPreferenceRoutes } from './modules/notification-preferences';
 import { userPreferenceRoutes } from './modules/user-preferences';

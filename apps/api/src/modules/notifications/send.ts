@@ -2,7 +2,7 @@ import { sendEmail, emailBody, type EmailConfig, type SendResult } from '@repo/m
 import { getProjectEmailConfig } from '@repo/auth';
 import { emailSource, type NotificationConfig } from '#modules/notification-settings/service';
 import type { DeliveryPayload } from './outbound';
-import { getInstanceBotConfig, isInstanceBotUsable } from '../telegram/store';
+import { getInstanceBotConfig, isInstanceBotUsable } from '../../telegram/store';
 
 // Sends one composed notification over the requested channel using the project's
 // decrypted config. Email transport lives in @repo/mailer (shared with the

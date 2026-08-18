@@ -1,5 +1,6 @@
-import { Elysia, t } from 'elysia';
+import { Elysia } from 'elysia';
 import { getDeliveryConfig } from '#modules/notification-settings/service';
+import { sendDeliveryBody } from './model';
 import { sendDelivery } from './send';
 
 // Internal endpoint the worker calls to deliver one claimed notification_delivery
@@ -8,21 +9,6 @@ import { sendDelivery } from './send';
 // in the worker, mirroring /internal/agent-runs/execute. Authenticated with the
 // shared WORKER_INTERNAL_TOKEN. Returns the SendResult so the worker records the
 // outcome and decides whether to retry.
-const sendBody = t.Object({
-  projectId: t.Number(),
-  channel: t.UnionEnum(['email', 'telegram']),
-  recipient: t.Nullable(t.String()),
-  payload: t.Object({
-    subject: t.Optional(t.String()),
-    text: t.String(),
-    // The Telegram body. Elysia strips fields the schema does not declare, so
-    // leaving it out here would silently drop the formatted message and send the
-    // plain-text fallback instead.
-    html: t.Optional(t.String()),
-    url: t.Optional(t.String()),
-  }),
-});
-
 export const internalNotificationRoutes = new Elysia({
   name: 'internal-notification-deliveries',
   detail: { tags: ['Internal'] },
@@ -43,7 +29,7 @@ export const internalNotificationRoutes = new Elysia({
     });
   },
   {
-    body: sendBody,
+    body: sendDeliveryBody,
     detail: {
       summary: 'Send one notification delivery',
       description:

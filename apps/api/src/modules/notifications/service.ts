@@ -10,8 +10,8 @@ import {
 } from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
 import { parseMentions } from '#modules/agents/core/mentions';
-import { autoWatchIssue, watcherUserIds } from '../issues/watchers';
-import { iso } from '../shared/lib';
+import { autoWatchIssue, watcherUserIds } from '../../issues/watchers';
+import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
 
 // Inbox notifications. A notification is one (recipient, event) row: a user is told
@@ -22,7 +22,8 @@ import { enqueueOutbound } from './outbound';
 // notified about their own action, and only project members receive notifications,
 // so agent bot users (assigned via delegate, not members) are excluded.
 
-export type NotificationType = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
+export const NOTIFICATION_TYPES = ['assigned', 'mentioned', 'commented', 'state_changed'] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 export interface NewNotificationRow {
   userId: string;

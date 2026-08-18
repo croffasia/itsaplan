@@ -47,7 +47,7 @@ import {
 } from './activity';
 import { autoWatchIssue } from './watchers';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
-import { notifyIssueChange } from '../notifications/store';
+import { notifyIssueChange } from '#modules/notifications/service';
 import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '#modules/agents/core/service';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';

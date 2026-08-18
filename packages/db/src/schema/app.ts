@@ -701,10 +701,10 @@ export const userTelegramAccount = pgTable(
 // Outbox for outbound notification delivery. One row per (recipient, channel,
 // message) to send for an issue event: an email or a Telegram message to one member.
 // Rows are enqueued when inbox notifications are created (see
-// apps/api/src/notifications/outbound.ts) and drained by the worker following the
-// same claim/retry pattern as webhook_delivery. The message text is composed at
-// enqueue time and stored in `payload`; the channel credentials are read from
-// project_notification_setting at send time. channel is 'email' | 'telegram'
+// apps/api/src/modules/notifications/outbound.ts) and drained by the worker
+// following the same claim/retry pattern as webhook_delivery. The message text is
+// composed at enqueue time and stored in `payload`; the channel credentials are read
+// from project_notification_setting at send time. channel is 'email' | 'telegram'
 // ('email' picks SMTP or Resend from the project config). recipient is the member's
 // email address for email rows, or their Telegram chat id for telegram rows.
 export const notificationDelivery = pgTable(

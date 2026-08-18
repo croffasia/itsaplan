@@ -15,7 +15,7 @@ import { emitWebhookEvent } from '../webhooks/emit';
 import { parseMentions } from '#modules/agents/core/mentions';
 import { isAgentUser, listMentionTriggerAgents } from '#modules/agents/core/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
-import { notifyComment, notifyIssueChange } from '../notifications/store';
+import { notifyComment, notifyIssueChange } from '#modules/notifications/service';
 
 // Issue timeline: comments and change-log activity in one table (issue_activity).
 // kind selects which payload columns a row uses. The author is the session user

@@ -1,9 +1,19 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { guards } from '../shared/guards';
-import { HttpError, rethrowDuplicate } from '../shared/lib';
-import { commonErrors, errors } from '../shared/responses';
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { guards } from '#shared/guards';
+import { HttpError, rethrowDuplicate } from '#shared/lib';
+import { commonErrors, errors } from '#shared/responses';
+import {
+  LabelGroupResponse,
+  LabelResponse,
+  createLabelBody,
+  createLabelGroupBody,
+  labelGroupParams,
+  labelParams,
+  updateLabelBody,
+  updateLabelGroupBody,
+} from './model';
 import {
   createLabel,
   updateLabel,
@@ -11,31 +21,10 @@ import {
   createLabelGroup,
   updateLabelGroup,
   deleteLabelGroup,
-} from './store';
-
-const labelParams = t.Object({ projectKey: t.String(), labelId: t.Numeric() });
-const groupParams = t.Object({ projectKey: t.String(), groupId: t.Numeric() });
-
-// A label DTO (LabelRow from the store).
-const LabelResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  groupId: t.Nullable(t.Number()),
-  name: t.String(),
-  color: t.String(),
-});
-
-// A label group DTO (LabelGroupRow from the store).
-const LabelGroupResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  color: t.String(),
-});
+} from './service';
 
 export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels'] } })
   .use(guards)
-  // --- Labels ------------------------------------------------------------------
   .post(
     '/projects/:projectKey/labels',
     async ({ project, body, set }) => {
@@ -47,11 +36,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       }
     },
     {
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        color: t.Optional(t.String()),
-        groupId: t.Optional(t.Nullable(t.Integer())),
-      }),
+      body: createLabelBody,
       permission: ['labels', 'create'],
       response: { 201: LabelResponse, ...commonErrors, ...errors(409) },
       detail: {
@@ -75,11 +60,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       return label;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        color: t.Optional(t.String()),
-        groupId: t.Optional(t.Nullable(t.Integer())),
-      }),
+      body: updateLabelBody,
       params: labelParams,
       permission: ['labels', 'edit'],
       response: { 200: LabelResponse, ...commonErrors, ...errors(409) },
@@ -110,7 +91,6 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
     },
   )
 
-  // --- Label groups ------------------------------------------------------------
   .post(
     '/projects/:projectKey/label-groups',
     async ({ project, body, set }) => {
@@ -122,7 +102,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       }
     },
     {
-      body: t.Object({ name: t.String({ minLength: 1 }), color: t.Optional(t.String()) }),
+      body: createLabelGroupBody,
       permission: ['labels', 'create'],
       response: { 201: LabelGroupResponse, ...commonErrors, ...errors(409) },
       detail: {
@@ -146,11 +126,8 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       return group;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        color: t.Optional(t.String()),
-      }),
-      params: groupParams,
+      body: updateLabelGroupBody,
+      params: labelGroupParams,
       permission: ['labels', 'edit'],
       response: { 200: LabelGroupResponse, ...commonErrors, ...errors(409) },
       detail: {
@@ -168,7 +145,7 @@ export const labelRoutes = new Elysia({ name: 'labels', detail: { tags: ['Labels
       return noContent();
     },
     {
-      params: groupParams,
+      params: labelGroupParams,
       permission: ['labels', 'delete'],
       response: { 204: t.Void(), ...commonErrors },
       detail: {

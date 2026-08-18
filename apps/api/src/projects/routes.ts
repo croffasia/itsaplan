@@ -27,7 +27,8 @@ import { listColumns } from '#modules/columns/service';
 import { ColumnResponse } from '#modules/columns/model';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { IssueTypeResponse } from '#modules/issue-types/model';
-import { listLabels, listLabelGroups } from '../labels/store';
+import { listLabels, listLabelGroups } from '#modules/labels/service';
+import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
 import { listCustomFields } from '#modules/custom-fields/service';
 
 const projectBody = t.Object({
@@ -97,23 +98,6 @@ const ProjectListItemResponse = t.Composite([
     permissions: t.Optional(PermissionMatrix),
   }),
 ]);
-
-// A label (LabelRow from labels/store).
-const LabelResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  groupId: t.Nullable(t.Number()),
-  name: t.String(),
-  color: t.String(),
-});
-
-// A label group (LabelGroupRow from labels/store).
-const LabelGroupResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  color: t.String(),
-});
 
 // An assignable candidate (AssigneeCandidate from members/store): a project
 // member or an AI agent's bot user.

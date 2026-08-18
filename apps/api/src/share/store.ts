@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { getProjectById, type ProjectRow } from '../projects/store';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
-import { listLabels, listLabelGroups } from '../labels/store';
+import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listAssigneeCandidates } from '../members/store';
 import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '../issues/store';

@@ -63,7 +63,9 @@ stable release.
   on your own machine, under your own account
 - Mention an agent in a comment to trigger a run
 - Scheduled agent runs
-- Built-in chat with per-agent conversation history
+- Built-in chat with per-agent conversation history, with an external agent too: the runner
+  answers from your machine, streaming the reply and the tools it uses, and resumes the same
+  coding agent session on every message of the conversation
 
 **Platform**
 
@@ -102,6 +104,7 @@ first account registered becomes the instance admin.
 - [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates
 - [Deploy on Coolify](docs/coolify.md) — the same stack on a Coolify instance
 - [Local development](docs/development.md) — running the apps on the host, and the tests
+- [Coding agent setup](docs/runner.md) — the config for each CLI that `@itsaplan/runner` runs
 
 ## Built with
 

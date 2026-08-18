@@ -1,11 +1,10 @@
 import { Elysia, t } from 'elysia';
-import { authContext } from '#shared/auth-context';
-import { requireUser } from '#shared/access';
 import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
 import { commonErrors, errors } from '#shared/responses';
+import { runnerAuth } from '../runner-auth';
 import { ClaimResponse, resultBody, runParams } from './model';
-import { claimRunnerRun, finishRun, getRunnerAgent, heartbeatRun } from './service';
+import { claimRunnerRun, finishRun, heartbeatRun } from './service';
 
 // The queue an external agent's runner drains, authenticated with the agent's own
 // API key.
@@ -13,21 +12,7 @@ export const agentRunnerRoutes = new Elysia({
   name: 'agent-runner',
   detail: { tags: ['Agent Runner'] },
 })
-  .use(authContext)
-  // Resolves the agent from the caller's key, so a runner can only ever reach its own
-  // runs. Set `runnerAgent: true` in the route options and read `agent` in the handler.
-  .macro({
-    runnerAgent(_enabled: boolean) {
-      return {
-        async resolve({ user }) {
-          const agent = await getRunnerAgent(requireUser(user).id);
-          if (!agent) throw new HttpError(403, 'Only an agent key can claim runs');
-          if (agent.kind !== 'external') throw new HttpError(403, 'Internal agents run in-process');
-          return { agent };
-        },
-      };
-    },
-  })
+  .use(runnerAuth)
 
   .post('/agent-runs/claim', async ({ agent }) => ({ run: await claimRunnerRun(agent) }), {
     runnerAgent: true,

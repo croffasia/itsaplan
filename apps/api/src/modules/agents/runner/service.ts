@@ -82,7 +82,8 @@ type ClaimedRow = Omit<RunnerRun, 'systemPrompt'> & {
 };
 
 // Records that a runner polled, which is what the UI shows as the agent's presence.
-async function touchRunner(agentId: number): Promise<void> {
+// The chat feed calls it too: both queues are drained by the same runner.
+export async function touchRunner(agentId: number): Promise<void> {
   await db.update(aiAgent).set({ lastSeenAt: new Date() }).where(eq(aiAgent.id, agentId));
 }
 

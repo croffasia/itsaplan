@@ -130,7 +130,9 @@ function parseArgv(argv: string[]): { configPath?: string; agent?: string; args:
       break;
     }
     if (arg === '--agent') {
-      parsed.agent = argv[++i];
+      const value = argv[++i];
+      if (value === undefined) throw new Error('--agent needs a value');
+      parsed.agent = value;
       continue;
     }
     if (arg.startsWith('--agent=')) {

@@ -185,6 +185,68 @@ describe('answer stream', () => {
     expect(text(sink.events)).toBe('Looking at it.');
   });
 
+  it('reports what an opencode tool call ended with', async () => {
+    const sink = collect();
+    const stream = new AnswerStream('opencode-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      [
+        JSON.stringify({
+          sessionID: 'ses_1',
+          part: {
+            type: 'tool',
+            callID: 'c1',
+            tool: 'bash',
+            state: { status: 'running', input: { command: 'ls' } },
+          },
+        }),
+        JSON.stringify({
+          sessionID: 'ses_1',
+          part: {
+            type: 'tool',
+            callID: 'c1',
+            tool: 'bash',
+            state: { status: 'completed', input: { command: 'ls' }, output: 'README.md' },
+          },
+        }),
+        '',
+      ].join('\n'),
+    );
+    await stream.finish('');
+
+    expect(types(sink.events)).toEqual([
+      'RUN_STARTED',
+      'TOOL_CALL_START',
+      'TOOL_CALL_ARGS',
+      'TOOL_CALL_END',
+      'TOOL_CALL_RESULT',
+      'RUN_FINISHED',
+    ]);
+    const result = sink.events.find((e) => e.type === 'TOOL_CALL_RESULT');
+    expect((result as { content: string }).content).toBe('README.md');
+  });
+
+  it('reports what a failed opencode tool call said, once', async () => {
+    const sink = collect();
+    const stream = new AnswerStream('opencode-json', 'chat:1:u:x', '7', sink.send);
+
+    const failed = JSON.stringify({
+      sessionID: 'ses_1',
+      part: {
+        type: 'tool',
+        callID: 'c1',
+        tool: 'bash',
+        state: { status: 'error', input: {}, error: 'exit 1' },
+      },
+    });
+    stream.write([failed, failed, ''].join('\n'));
+    await stream.finish('');
+
+    const results = sink.events.filter((e) => e.type === 'TOOL_CALL_RESULT');
+    expect(results).toHaveLength(1);
+    expect((results[0] as { content: string }).content).toBe('exit 1');
+  });
+
   it('ignores a line that parses to something other than an object', async () => {
     for (const format of ['claude-stream-json', 'codex-jsonl', 'opencode-json'] as const) {
       const sink = collect();

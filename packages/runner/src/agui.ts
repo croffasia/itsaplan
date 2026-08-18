@@ -39,9 +39,11 @@ export class AnswerStream {
   // so it is known in time for the first batch of events.
   private sessionId: string | null = null;
   // opencode re-sends a growing part rather than the delta, so the last text seen says
-  // how much of the next one is new. Tool parts are re-sent the same way, hence the set.
+  // how much of the next one is new. Tool parts are re-sent the same way, hence the sets:
+  // one for the call already reported, one for the result it ended with.
   private openTextPart = '';
   private readonly openToolCalls = new Set<string>();
+  private readonly closedToolCalls = new Set<string>();
   // Whether the command reported partial text of its own. Its final message repeats
   // that text, and emitting both would say everything twice.
   private sawPartialText = false;
@@ -210,11 +212,18 @@ export class AnswerStream {
       this.appendText(grown);
       return;
     }
-    if (part.type === 'tool' && part.callID) {
-      if (this.openToolCalls.has(part.callID)) return;
+    if (part.type !== 'tool' || !part.callID) return;
+    if (!this.openToolCalls.has(part.callID)) {
       this.openToolCalls.add(part.callID);
       this.pushToolCall(part.callID, part.tool ?? 'tool', JSON.stringify(part.state?.input ?? {}));
     }
+    if (this.closedToolCalls.has(part.callID)) return;
+    const state = part.state;
+    const result =
+      state?.status === 'completed' ? state.output : state?.status === 'error' ? state.error : null;
+    if (typeof result !== 'string') return;
+    this.closedToolCalls.add(part.callID);
+    this.pushToolResult(part.callID, result);
   }
 
   private readClaudeLine(message: StreamJsonLine): void {
@@ -332,7 +341,8 @@ interface OpencodeLine {
     text?: string;
     callID?: string;
     tool?: string;
-    state?: { input?: unknown };
+    // A call ends 'completed' with its output, or 'error' with what went wrong.
+    state?: { status?: string; input?: unknown; output?: string; error?: string };
   };
 }
 

@@ -1,7 +1,7 @@
 import { Extension, type Editor, type Range } from '@tiptap/core';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion from '@tiptap/suggestion';
-import { Image as ImageIcon, SquareCode, type LucideIcon } from 'lucide-react';
+import { Image as ImageIcon, SquareCode, Table, type LucideIcon } from 'lucide-react';
 import EditorSlashMenu, { type SlashMenuRef } from '@/components/common/editor/EditorSlashMenu';
 
 export type SlashItem = {
@@ -18,6 +18,8 @@ export type SlashCommandOptions = {
   container?: string;
   // The name of the item, in the reader's language.
   codeBlockLabel: string;
+  // Omitted where the editor has no table extension, which drops the Table item.
+  tableLabel?: string;
   // Omitted where there is nothing to pick from, which drops the Image item.
   image?: { label: string; onPick: () => void };
 };
@@ -28,7 +30,7 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
   name: 'slashCommand',
 
   addProseMirrorPlugins() {
-    const { codeBlockLabel, image, container } = this.options;
+    const { codeBlockLabel, tableLabel, image, container } = this.options;
 
     return [
       Suggestion<SlashItem, SlashItem>({
@@ -44,6 +46,19 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
                 editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
             },
           ];
+          if (tableLabel) {
+            items.push({
+              title: tableLabel,
+              icon: Table,
+              run: ({ editor, range }) =>
+                editor
+                  .chain()
+                  .focus()
+                  .deleteRange(range)
+                  .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+                  .run(),
+            });
+          }
           if (image) {
             items.push({
               title: image.label,

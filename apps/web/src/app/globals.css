@@ -491,6 +491,38 @@
 .md-content ul[data-type='taskList'] input[type='checkbox'] {
   cursor: pointer;
 }
+.md-content table {
+  border-collapse: collapse;
+}
+/* A table keeps its column widths and scrolls on its own instead of squeezing the
+   columns into the width it is given. Rendered markdown puts the table straight into
+   the content; the editor wraps it in a div of its own. */
+.md-content > table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+.md-content .tableWrapper {
+  overflow-x: auto;
+}
+/* A cell being typed into is empty for a moment; a column collapsed to nothing has
+   no place to click. */
+.md-content .tableWrapper :is(th, td) {
+  min-width: 4em;
+}
+.md-content .selectedCell {
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+}
+.md-content :is(th, td) {
+  border: 1px solid var(--border);
+  padding: 0.35em 0.6em;
+  text-align: start;
+}
+.md-content th {
+  background: var(--muted);
+  font-weight: 600;
+}
 /* Right-to-left corrections for the shadcn primitives, applied from the outside for
    the same reason as the shadows above: the generated components are kept as shadcn
    writes them, so an edit inside one is lost the next time it is re-added.

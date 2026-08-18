@@ -135,6 +135,12 @@
   "scrollToStart": "التمرير إلى البداية",
   "editor": {
     "linkUrl": "عنوان الرابط",
-    "codeBlock": "كتلة برمجية"
+    "codeBlock": "كتلة برمجية",
+    "table": "جدول",
+    "tableAddRow": "إضافة صف",
+    "tableDeleteRow": "حذف صف",
+    "tableAddColumn": "إضافة عمود",
+    "tableDeleteColumn": "حذف عمود",
+    "tableDelete": "حذف الجدول"
   }
 }

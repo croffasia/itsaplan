@@ -135,6 +135,12 @@
   "scrollToStart": "滚动到顶部",
   "editor": {
     "linkUrl": "链接 URL",
-    "codeBlock": "代码块"
+    "codeBlock": "代码块",
+    "table": "表格",
+    "tableAddRow": "添加行",
+    "tableDeleteRow": "删除行",
+    "tableAddColumn": "添加列",
+    "tableDeleteColumn": "删除列",
+    "tableDelete": "删除表格"
   }
 }

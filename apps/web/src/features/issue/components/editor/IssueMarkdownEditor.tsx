@@ -2,16 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { TableKit } from '@tiptap/extension-table';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight';
 import { Markdown } from 'tiptap-markdown';
 import { ResizableImage } from '../../utils/tiptap-image';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
+import { MarkdownTable } from '../../utils/tiptap-table';
 import { Video } from '../../utils/tiptap-video';
 import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
 import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
+import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
 import { useTranslations } from 'next-intl';
 
 // Shared by every editor instance. A block with no language is detected by
@@ -82,8 +85,14 @@ export default function IssueMarkdownEditor({
       ResizableImage,
       // Renders video attachments as an inline <video> player.
       Video,
+      // TableKit carries the row and cell nodes around MarkdownTable's table node.
+      // Column widths are not resizable: markdown carries no width, so a resized
+      // column would be lost the next time the description is read back.
+      TableKit.configure({ table: false }),
+      MarkdownTable.configure({ resizable: false }),
       SlashCommand.configure({
         codeBlockLabel: tCommon('codeBlock'),
+        tableLabel: tCommon('table'),
         image: imageAttachments
           ? { label: t('image'), onPick: () => setImagePickerOpen(true) }
           : undefined,
@@ -141,6 +150,7 @@ export default function IssueMarkdownEditor({
   return (
     <div className={className}>
       {editable && <EditorSelectionMenu editor={editor} />}
+      {editable && <EditorTableMenu editor={editor} />}
       {/* Grows with the text rather than being pinned to the container's height,
           so a container that scrolls measures the overflow and shows a bar. */}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />

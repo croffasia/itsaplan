@@ -135,6 +135,12 @@
   "scrollToStart": "Scroll to start",
   "editor": {
     "linkUrl": "Link URL",
-    "codeBlock": "Code block"
+    "codeBlock": "Code block",
+    "table": "Table",
+    "tableAddRow": "Add row",
+    "tableDeleteRow": "Delete row",
+    "tableAddColumn": "Add column",
+    "tableDeleteColumn": "Delete column",
+    "tableDelete": "Delete table"
   }
 }

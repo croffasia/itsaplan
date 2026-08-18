@@ -135,6 +135,12 @@
   "scrollToStart": "Прокрутить вверх",
   "editor": {
     "linkUrl": "URL ссылки",
-    "codeBlock": "Блок кода"
+    "codeBlock": "Блок кода",
+    "table": "Таблица",
+    "tableAddRow": "Добавить строку",
+    "tableDeleteRow": "Удалить строку",
+    "tableAddColumn": "Добавить столбец",
+    "tableDeleteColumn": "Удалить столбец",
+    "tableDelete": "Удалить таблицу"
   }
 }

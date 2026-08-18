@@ -251,9 +251,10 @@ tidy moves the code. This is separate from the CI gate (`format:check` + `lint` 
   `bun run auth:generate` then `bun run db:generate` + `db:migrate`.
 - Frontend and backend on different domains in prod: adjust cookie `sameSite`/`secure`
   and `APP_URL` (see `packages/auth/AGENTS.md`).
-- Tests run on `bun test` with Eden Treaty. Only `apps/api` has a suite so far; its
-  setup and the rules for writing tests are in `apps/api/AGENTS.md`. They are
-  integration tests against a real test Postgres (`.env.test`), not mocks.
+- Tests run on `bun test`. `apps/api` uses Eden Treaty; its setup and the rules for
+  writing tests are in `apps/api/AGENTS.md`. They are integration tests against a real
+  test Postgres (`.env.test`), not mocks. `packages/runner` has plain unit tests that
+  need nothing running.
 - `bun --filter` needs the `=` form: `bun --filter='@repo/db' run <script>`. The space form
   `bun --filter <name> run <script>` matches no packages in Bun 1.3.9.
 

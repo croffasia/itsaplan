@@ -13,9 +13,10 @@ import { AgentRunnerHelpStep } from './AgentRunnerHelpStep';
 //
 // One tab per coding agent, each holding the files to copy as they stand: the MCP
 // server this instance exposes, the runner config, and the line that starts it. The
-// only difference between the tabs is the command being started. YOUR_KEY rather
-// than <key>: next-intl parses angle brackets in a message as rich-text tags, and
-// step 1 quotes the placeholder.
+// runner knows how to invoke each of these CLIs, so the config only names one; a tab
+// differs from the next in where that CLI reads its MCP server from. Where the key
+// itself has to be written out, the placeholder is `the-agent-key` rather than
+// `$ITSAPLAN_API_KEY`, which on the same screen means the variable the runner sets.
 
 // The MCP server for a client that takes a JSON config file. The key comes from the
 // environment the runner sets, so it is not duplicated in a second file.
@@ -35,14 +36,14 @@ const CODEX_TOML = `[mcp_servers.itsaplan]
 url = "${API_URL}/mcp"
 bearer_token_env_var = "ITSAPLAN_API_KEY"`;
 
-// Copilot CLI reads a project's servers from .mcp.json; its headers take no variable
-// interpolation, so the key is written in as it stands.
+// Copilot CLI reads the same .mcp.json as Claude Code, but its headers take no
+// variable interpolation, so the key is written in as it stands.
 const COPILOT_MCP = `{
   "mcpServers": {
     "itsaplan": {
       "type": "http",
       "url": "${API_URL}/mcp",
-      "headers": { "Authorization": "Bearer YOUR_KEY" },
+      "headers": { "Authorization": "Bearer the-agent-key" },
       "tools": ["*"]
     }
   }
@@ -81,52 +82,43 @@ const AGENTS = [
   {
     id: 'claude',
     label: 'Claude Code',
-    // --mcp-config adds this instance's server to whatever the machine already has;
-    // the operator's own servers, skills and memory stay in the run. A headless run
-    // has nobody to answer a permission prompt, so it goes to auto mode, where a
-    // classifier reviews each action instead — including the MCP tool calls, which
-    // therefore need no allow list of their own.
-    command:
-      'claude -p --mcp-config ./mcp.json ' +
-      '--append-system-prompt "$ITSAPLAN_SYSTEM_PROMPT" ' +
-      '--permission-mode auto --output-format text',
-    files: [{ name: 'mcp.json', code: MCP_JSON }],
+    // Claude Code picks up .mcp.json from the directory it runs in, which is `cwd`,
+    // so the runner config needs nothing for it. The instance's server lands on top
+    // of what the machine already has, so the operator's own servers, skills and
+    // memory stay in the run.
+    agent: 'claude',
+    files: [{ name: '.mcp.json', code: MCP_JSON }],
   },
   {
     id: 'codex',
     label: 'Codex',
-    // Codex has no system-prompt flag, so the run's system prompt is prepended to
-    // the task; "-" is codex's own marker for "read the prompt from stdin".
-    command:
-      'printf \'%s\\n\\n%s\' "$ITSAPLAN_SYSTEM_PROMPT" "$(cat)" | ' +
-      'codex exec --sandbox workspace-write --skip-git-repo-check -',
+    // Codex reads its servers from ~/.codex/config.toml only — no project file — so
+    // this one is written once per machine. --skip-git-repo-check is what lets the
+    // working directory be something other than a git repository.
+    agent: 'codex',
+    args: ['--skip-git-repo-check'],
     files: [{ name: '~/.codex/config.toml', code: CODEX_TOML }],
   },
   {
     id: 'gemini',
     label: 'Gemini CLI',
-    // Same as Codex: no system-prompt flag, so it goes in front of the task. Gemini
-    // reads a piped prompt on stdin.
-    command:
-      'printf \'%s\\n\\n%s\' "$ITSAPLAN_SYSTEM_PROMPT" "$(cat)" | gemini --approval-mode yolo',
+    agent: 'gemini',
     files: [{ name: '.gemini/settings.json', code: GEMINI_SETTINGS }],
   },
   {
     id: 'copilot',
     label: 'Copilot CLI',
-    // No system-prompt flag and no stdin prompt: both go in as one -p argument.
-    command:
-      'copilot -p "$(printf \'%s\\n\\n%s\' "$ITSAPLAN_SYSTEM_PROMPT" "$(cat)")" ' +
-      '--allow-all-tools --no-ask-user',
+    agent: 'copilot',
     files: [{ name: '.mcp.json', code: COPILOT_MCP }],
   },
   {
     id: 'opencode',
     label: 'Opencode',
-    // opencode run takes the prompt as an argument only, never on stdin.
-    command: 'opencode run "$(printf \'%s\\n\\n%s\' "$ITSAPLAN_SYSTEM_PROMPT" "$(cat)")"',
+    agent: 'opencode',
     files: [{ name: 'opencode.json', code: OPENCODE_JSON }],
   },
+  // A command of its own turns the preset off: the runner then knows nothing about
+  // what it runs, keeps no session for it, and hands it the task on stdin.
   {
     id: 'custom',
     label: '',
@@ -135,16 +127,25 @@ const AGENTS = [
   },
 ] as const;
 
-function configFile(command: string): string {
-  return `{
-  "url": "${API_URL}",
-  "apiKey": "YOUR_KEY",
-  "command": ${JSON.stringify(command)},
-  "cwd": "/path/to/working-dir",
-  "concurrency": 1,
-  "pollIntervalMs": 3000,
-  "timeoutMs": 1800000
-}`;
+// Only what the runner cannot work out on its own. `cwd` is where the agent's files
+// and the MCP config above are read from; concurrency, poll interval and timeout keep
+// their defaults.
+function configFile(preset: {
+  agent?: string;
+  args?: readonly string[];
+  command?: string;
+}): string {
+  return JSON.stringify(
+    {
+      url: API_URL,
+      apiKey: 'the-agent-key',
+      ...(preset.agent ? { agent: preset.agent } : { command: preset.command }),
+      cwd: '/path/to/working-dir',
+      ...(preset.args ? { args: preset.args } : {}),
+    },
+    null,
+    2,
+  );
 }
 
 export const RUN_COMMAND = 'npx -y @itsaplan/runner';
@@ -160,10 +161,10 @@ export function AgentRunnerHelpSheet() {
           {t('runnerHelpOpen')}
         </Button>
       </SheetTrigger>
-      {/* Fixed height with the scroll inside: the tabs hold snippets of different
+      {/* Full height with the scroll inside: the tabs hold snippets of different
           lengths, and a sheet that resized to each of them would jump under the
           pointer. */}
-      <SheetContent side="bottom" className="flex h-[90vh] flex-col">
+      <SheetContent side="bottom" className="flex h-dvh flex-col">
         <SheetHeader>
           <SheetTitle>{t('runnerHelpTitle')}</SheetTitle>
         </SheetHeader>
@@ -172,11 +173,15 @@ export function AgentRunnerHelpSheet() {
             <p className="text-xs text-muted-foreground">{t('runnerHelpKeyHint')}</p>
           </AgentRunnerHelpStep>
 
-          <AgentRunnerHelpStep n={2} title={t('runnerHelpTool')}>
+          <AgentRunnerHelpStep n={2} title={t('runnerHelpMcp')}>
+            <p className="text-xs text-muted-foreground">{t('runnerHelpMcpHint')}</p>
+          </AgentRunnerHelpStep>
+
+          <AgentRunnerHelpStep n={3} title={t('runnerHelpTool')}>
             <p className="text-xs text-muted-foreground">{t('runnerHelpToolHint')}</p>
           </AgentRunnerHelpStep>
 
-          <AgentRunnerHelpStep n={3} title={t('runnerHelpRun')}>
+          <AgentRunnerHelpStep n={4} title={t('runnerHelpRun')}>
             <Tabs defaultValue="claude">
               <TabsList variant="line">
                 {AGENTS.map((a) => (
@@ -195,7 +200,7 @@ export function AgentRunnerHelpSheet() {
                   ))}
                   <div className="space-y-1.5">
                     <p className="font-mono text-xs text-muted-foreground">itsaplan-runner.json</p>
-                    <AgentRunnerCodeBlock code={configFile(a.command)} />
+                    <AgentRunnerCodeBlock code={configFile(a)} />
                   </div>
                   <AgentRunnerCodeBlock code={RUN_COMMAND} />
                 </TabsContent>
@@ -203,7 +208,7 @@ export function AgentRunnerHelpSheet() {
             </Tabs>
           </AgentRunnerHelpStep>
 
-          <AgentRunnerHelpStep n={4} title={t('runnerHelpCheck')}>
+          <AgentRunnerHelpStep n={5} title={t('runnerHelpCheck')}>
             <p className="text-xs text-muted-foreground">{t('runnerHelpCheckHint')}</p>
           </AgentRunnerHelpStep>
         </div>

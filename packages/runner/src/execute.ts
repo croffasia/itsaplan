@@ -1,11 +1,22 @@
 import { spawn } from 'node:child_process';
-import type { Run } from './client';
-import type { RunnerConfig } from './config';
+import { presetOf, type RunnerConfig } from './config';
+import { presetArgv, presetPrompt, type Preset } from './presets';
 
-// Runs one task: the configured command in a shell, with the task on stdin and the
-// run's context in the environment, including the server's system prompt for commands
-// that take one. Everything the agent needs beyond the task — the issue, its comments,
-// its fields — it reads itself through the API or MCP with the key handed to it here.
+// Runs one task: the command the preset builds, or the operator's own in a shell, with the
+// task on stdin and its context in the environment. Everything the agent needs beyond the
+// task — the issue, its comments, its fields — it reads itself through the API or MCP with
+// the key handed to it here.
+
+// A queued run and a chat message differ only in these.
+export interface Task {
+  prompt: string;
+  // A preset with no flag for it puts this in front of the prompt; the operator's own
+  // command reads it from the environment.
+  systemPrompt: string;
+  env: Record<string, string>;
+  // The coding agent session to resume, for a preset that keeps them.
+  sessionId?: string | null;
+}
 
 export interface Outcome {
   status: 'success' | 'failed';
@@ -13,28 +24,24 @@ export interface Outcome {
   error?: string;
 }
 
-// What is reported back: the tail of each stream, so a long transcript still shows its
-// ending — the part that says what the agent did — without sending megabytes back.
+// Only the tail of each stream is reported, so a long transcript still shows its ending —
+// the part that says what the agent did — without sending megabytes back.
 const OUTPUT_LIMIT = 8000;
 const ERROR_LIMIT = 400;
 
-// Applied as the output arrives, so a command that prints for half an hour does not
-// buffer all of it to have everything but the last few kilobytes thrown away.
+// Applied as the output arrives, so a command that prints for half an hour does not buffer
+// all of it to have everything but the last few kilobytes thrown away.
 function tail(text: string, limit: number): string {
   return text.length <= limit ? text : `…${text.slice(-limit)}`;
 }
 
-function childEnv(config: RunnerConfig, run: Run): Record<string, string> {
+function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
   return {
     ...(process.env as Record<string, string>),
     ...config.env,
     ITSAPLAN_URL: config.url,
     ITSAPLAN_API_KEY: config.apiKey,
-    ITSAPLAN_RUN_ID: String(run.id),
-    ITSAPLAN_TRIGGER: run.trigger,
-    ITSAPLAN_SYSTEM_PROMPT: run.systemPrompt,
-    ITSAPLAN_ISSUE: run.issueIdentifier ?? '',
-    ITSAPLAN_ISSUE_ID: run.issueId == null ? '' : String(run.issueId),
+    ...task.env,
   };
 }
 
@@ -49,10 +56,40 @@ function killGroup(pid: number): void {
   }
 }
 
-export async function execute(config: RunnerConfig, run: Run): Promise<Outcome> {
-  const child = spawn('sh', ['-c', config.command], {
+// A preset is spawned directly, with no shell in between: the session id and the
+// operator's arguments reach the command as they are, with nothing to quote. The
+// operator's own command goes through a shell, which is what it was written for.
+function spawnArgs(
+  config: RunnerConfig,
+  preset: Preset | undefined,
+  task: Task,
+): [string, string[]] {
+  if (!preset) return ['sh', ['-c', config.command ?? '']];
+  return [
+    preset.bin,
+    presetArgv(preset, task.sessionId ?? null, task.systemPrompt, config.args, task.prompt),
+  ];
+}
+
+// A CLI that took the task as an argument would read it twice if it also arrived here.
+function stdinText(preset: Preset | undefined, task: Task): string {
+  if (!preset) return task.prompt;
+  if (preset.promptVia === 'arg') return '';
+  return presetPrompt(preset, task.systemPrompt, task.prompt);
+}
+
+// `onData` sees stdout as it arrives, for a caller that reports the output while the
+// command is still running.
+export async function execute(
+  config: RunnerConfig,
+  task: Task,
+  onData?: (chunk: string) => void,
+): Promise<Outcome> {
+  const preset = presetOf(config);
+  const [bin, args] = spawnArgs(config, preset, task);
+  const child = spawn(bin, args, {
     cwd: config.cwd,
-    env: childEnv(config, run),
+    env: childEnv(config, task),
     detached: true,
   });
 
@@ -68,14 +105,15 @@ export async function execute(config: RunnerConfig, run: Run): Promise<Outcome> 
   child.stderr.setEncoding('utf8');
   child.stdout.on('data', (chunk: string) => {
     stdout = tail(stdout + chunk, OUTPUT_LIMIT);
+    onData?.(chunk);
   });
   child.stderr.on('data', (chunk: string) => {
     stderr = tail(stderr + chunk, ERROR_LIMIT);
   });
-  // A command that ignores stdin closes the pipe before the prompt is written, which
-  // is an EPIPE the runner has no reason to fail on.
+  // A command that ignores stdin closes the pipe before the prompt is written, which is an
+  // EPIPE the runner has no reason to fail on.
   child.stdin.on('error', () => {});
-  child.stdin.end(run.prompt);
+  child.stdin.end(stdinText(preset, task));
 
   const exited = new Promise<{ code: number | null; signal: string | null }>((resolve, reject) => {
     child.on('error', reject);

@@ -163,6 +163,8 @@
     "runnerHelpTitle": "如何启动运行器",
     "runnerHelpKey": "复制智能体的 API 密钥",
     "runnerHelpKeyHint": "只显示一次——创建或重新生成密钥时。",
+    "runnerHelpMcp": "为项目开启 MCP",
+    "runnerHelpMcpHint": "设置、MCP 服务器。默认关闭，智能体通过它读取事项并写回结果。",
     "runnerHelpTool": "安装智能体 CLI 并登录",
     "runnerHelpToolHint": "在将要运行运行器的机器上。运行器无法替你登录。",
     "runnerHelpRun": "把这些文件保存到智能体要工作的目录",

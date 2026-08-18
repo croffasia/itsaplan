@@ -1,7 +1,7 @@
 {
   "name": "@itsaplan/runner",
-  "version": "0.1.0",
-  "description": "Runs an Itsaplan external agent's queued tasks on your own machine",
+  "version": "0.2.0",
+  "description": "Runs an Itsaplan external agent's queued tasks and answers its chat on your own machine",
   "keywords": [
     "itsaplan",
     "ai-agents",
@@ -45,10 +45,12 @@
     "build": "bun build src/cli.ts --target=node --outfile dist/cli.js",
     "prepublishOnly": "bun run build",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "test": "bun test",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
+    "@types/bun": "latest",
     "@types/node": "^26.2.0",
     "eslint": "^9.39.0",
     "typescript": "^6.0.3"

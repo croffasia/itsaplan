@@ -163,6 +163,8 @@
     "runnerHelpTitle": "How to start a runner",
     "runnerHelpKey": "Copy the agent's API key",
     "runnerHelpKeyHint": "Shown once, at creation or key regeneration.",
+    "runnerHelpMcp": "Turn MCP on for the project",
+    "runnerHelpMcpHint": "Settings, MCP Server. Off by default, and it is how the agent reads issues and posts results.",
     "runnerHelpTool": "Install the coding agent and sign in",
     "runnerHelpToolHint": "On the machine that will run the runner. The runner cannot sign in for you.",
     "runnerHelpRun": "Save the files where the agent should work",

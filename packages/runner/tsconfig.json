@@ -1,7 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // Node types only: this is the one workspace member published to npm, and its
+    // source has to run on plain Node. The tests are checked with Bun's types by
+    // tsconfig.test.json instead.
     "types": ["node"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/__tests__"]
 }

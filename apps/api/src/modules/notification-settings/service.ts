@@ -185,8 +185,8 @@ async function readConfig(projectId: number): Promise<NotificationConfig | null>
   return { ...defaultConfig(), ...(JSON.parse(decryptSecret(row)) as NotificationConfig) };
 }
 
-// The redacted settings for a project. Defaults (all channels off, no secrets)
-// when nothing has been saved.
+// The redacted settings for a project. Defaults (no secrets, no provider of its own,
+// delivery through the instance provider) when nothing has been saved.
 export async function getNotificationSettings(projectId: number): Promise<NotificationSettingsDto> {
   const config = (await readConfig(projectId)) ?? defaultConfig();
   return toDto(config);
@@ -199,6 +199,7 @@ export async function setNotificationSettings(
 ): Promise<NotificationSettingsDto> {
   const current = (await readConfig(projectId)) ?? defaultConfig();
   const next = applyPatch(current, patch);
+  const redacted = toDto(next);
   const enc = encryptSecret(JSON.stringify(next));
   await db
     .insert(projectNotificationSetting)
@@ -207,7 +208,7 @@ export async function setNotificationSettings(
       ciphertext: enc.ciphertext,
       iv: enc.iv,
       authTag: enc.authTag,
-      redacted: toDto(next),
+      redacted,
     })
     .onConflictDoUpdate({
       target: projectNotificationSetting.projectId,
@@ -215,11 +216,11 @@ export async function setNotificationSettings(
         ciphertext: enc.ciphertext,
         iv: enc.iv,
         authTag: enc.authTag,
-        redacted: toDto(next),
+        redacted,
         updatedAt: sql`now()`,
       },
     });
-  return toDto(next);
+  return redacted;
 }
 
 // The redacted settings read straight from the plaintext `redacted` column, without

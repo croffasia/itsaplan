@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { getDeliveryConfig } from '../notification-settings/store';
+import { getDeliveryConfig } from '#modules/notification-settings/service';
 import { sendDelivery } from './send';
 
 // Internal endpoint the worker calls to deliver one claimed notification_delivery

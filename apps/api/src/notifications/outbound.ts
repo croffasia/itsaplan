@@ -1,7 +1,7 @@
 import { db, notificationDelivery, issue, issueActivity, project, user } from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
 import { getProjectEmailConfig } from '@repo/auth';
-import { emailSource, readRedactedSettings } from '../notification-settings/store';
+import { emailSource, readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '../telegram/store';
 import { escapeHtml } from '../shared/lib';

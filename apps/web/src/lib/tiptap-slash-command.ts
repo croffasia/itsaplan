@@ -2,7 +2,7 @@ import { Extension, type Editor, type Range } from '@tiptap/core';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion from '@tiptap/suggestion';
 import { Image as ImageIcon, SquareCode, type LucideIcon } from 'lucide-react';
-import EditorSlashMenu, { type SlashMenuRef } from '../components/editor/EditorSlashMenu';
+import EditorSlashMenu, { type SlashMenuRef } from '@/components/common/editor/EditorSlashMenu';
 
 export type SlashItem = {
   title: string;
@@ -12,10 +12,14 @@ export type SlashItem = {
 };
 
 export type SlashCommandOptions = {
+  // Where the list mounts. Radix makes everything outside the open overlay inert,
+  // so it has to be that overlay's element. Defaults to an open dialog, falling
+  // back to document.body when the selector matches nothing.
+  container?: string;
+  // The name of the item, in the reader's language.
+  codeBlockLabel: string;
   // Omitted where there is nothing to pick from, which drops the Image item.
-  onPickImage?: () => void;
-  // The names of the items, in the reader's language.
-  labels: { codeBlock: string; image: string };
+  image?: { label: string; onPick: () => void };
 };
 
 // Typing "/" opens a list of blocks to insert — how they are reached with nothing
@@ -24,31 +28,29 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
   name: 'slashCommand',
 
   addProseMirrorPlugins() {
-    const { onPickImage, labels } = this.options;
+    const { codeBlockLabel, image, container } = this.options;
 
     return [
       Suggestion<SlashItem, SlashItem>({
         editor: this.editor,
         char: '/',
-        // In a dialog the list must mount inside it — Radix makes the rest of the
-        // page inert. Falls back to document.body when no dialog is open.
-        container: '[data-slot="dialog-content"]',
+        container: container ?? '[data-slot="dialog-content"]',
         items: ({ query }) => {
           const items: SlashItem[] = [
             {
-              title: labels.codeBlock,
+              title: codeBlockLabel,
               icon: SquareCode,
               run: ({ editor, range }) =>
                 editor.chain().focus().deleteRange(range).toggleCodeBlock().run(),
             },
           ];
-          if (onPickImage) {
+          if (image) {
             items.push({
-              title: labels.image,
+              title: image.label,
               icon: ImageIcon,
               run: ({ editor, range }) => {
                 editor.chain().focus().deleteRange(range).run();
-                onPickImage();
+                image.onPick();
               },
             });
           }

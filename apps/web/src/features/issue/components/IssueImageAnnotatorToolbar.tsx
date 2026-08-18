@@ -2,7 +2,7 @@
 
 import { Circle, Highlighter, Square, Undo2, type LucideIcon } from 'lucide-react';
 import { ANNOTATION_COLORS, type AnnotationTool } from '../utils/annotations';
-import EditorToolbarButton from './editor/EditorToolbarButton';
+import EditorToolbarButton from '@/components/common/editor/EditorToolbarButton';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';

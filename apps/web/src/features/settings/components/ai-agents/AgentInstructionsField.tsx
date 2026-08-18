@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Maximize2 } from 'lucide-react';
-import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -10,11 +9,12 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useTranslations } from 'next-intl';
+import AgentInstructionsEditor from './AgentInstructionsEditor';
 
-// The agent's system-prompt field. An inline textarea plus a maximize control next
-// to the label that opens the same value in a large dialog for comfortable editing.
-// Both editors are bound to the same value/onChange, so edits stay in sync. Used in
-// both the compact side panel and the full-width layout.
+// The agent's system-prompt field, written as markdown. An inline editor plus a
+// maximize control next to the label that opens the same value in a large dialog
+// for comfortable editing. Used in both the compact side panel and the full-width
+// layout.
 export function AgentInstructionsField({
   value,
   onChange,
@@ -27,9 +27,7 @@ export function AgentInstructionsField({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <label htmlFor="agent-instructions" className="text-sm font-medium">
-          {t('instructionsLabel')}
-        </label>
+        <span className="text-sm font-medium">{t('instructionsLabel')}</span>
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -40,13 +38,18 @@ export function AgentInstructionsField({
           <Maximize2 className="size-3.5" />
         </button>
       </div>
-      <Textarea
-        id="agent-instructions"
-        placeholder={t('instructionsPlaceholder')}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="min-h-24"
-      />
+      {/* Only one of the two editors exists at a time: the editor reads its content
+          on mount, so the inline one has to remount to pick up the dialog's edits. */}
+      {!open && (
+        <AgentInstructionsEditor
+          defaultValue={value}
+          onChange={onChange}
+          placeholder={t('instructionsPlaceholder')}
+          ariaLabel={t('instructionsLabel')}
+          slashContainer='[data-slot="sheet-content"]'
+          className="flex min-h-24 w-full flex-col rounded-md border border-input px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50"
+        />
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent
@@ -61,12 +64,14 @@ export function AgentInstructionsField({
               </Button>
             </DialogClose>
           </DialogHeader>
-          <Textarea
+          <AgentInstructionsEditor
             autoFocus
+            defaultValue={value}
+            onChange={onChange}
             placeholder={t('instructionsPlaceholder')}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            className="min-h-0 flex-1 resize-none border-0 bg-transparent px-0 text-base leading-relaxed shadow-none focus-visible:ring-0"
+            ariaLabel={t('instructionsLabel')}
+            slashContainer='[data-slot="dialog-content"]'
+            className="flex min-h-0 flex-1 flex-col overflow-y-auto text-base leading-relaxed"
           />
         </DialogContent>
       </Dialog>

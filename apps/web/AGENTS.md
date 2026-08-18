@@ -41,8 +41,8 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   packages (`api.ts`, `auth-client.ts`, `markdown.ts`, `dnd.ts`) plus shadcn's `utils.ts` (`cn`,
   fixed by `components.json`); `src/utils` holds own helpers and constants with no external
   package behind them. `src/context` holds shared React contexts and their `use*` readers.
-- `components/common` groups by purpose: `agent-chat/`, `fields/`, `inputs/`, `page/`, `overlay/`,
-  `permissions/`, `hotkeys/`, `skeleton/`. A component that fits none of them stays at the
+- `components/common` groups by purpose: `agent-chat/`, `editor/`, `fields/`, `inputs/`, `page/`,
+  `overlay/`, `permissions/`, `hotkeys/`, `skeleton/`. A component that fits none of them stays at the
   `common/` root.
   Imports of a sibling in the same folder are relative; everything else uses `@/`.
 - Component files use the feature name as a PascalCase prefix, file name = exported name. Service

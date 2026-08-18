@@ -74,12 +74,20 @@ const ITEMS: {
   },
 ];
 
-export default function EditorSelectionMenu({ editor }: { editor: Editor }) {
-  const t = useTranslations('issue.editor');
+export default function EditorSelectionMenu({
+  editor,
+  placement = 'top',
+}: {
+  editor: Editor;
+  // Above the selection by default. A field with a label right over it passes
+  // "bottom" so the menu does not cover the label.
+  placement?: 'top' | 'bottom';
+}) {
+  const t = useTranslations('common.editor');
   return (
     <BubbleMenu
       editor={editor}
-      options={{ placement: 'top' }}
+      options={{ placement }}
       className="flex items-center gap-0.5 rounded-md border bg-popover p-1 shadow-md"
     >
       {ITEMS.map((item) => (

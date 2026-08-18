@@ -206,12 +206,10 @@
     "endTime": "End time"
   },
   "editor": {
-    "linkUrl": "Link URL",
     "insertImage": "Insert image",
     "insertNamed": "Insert {name}",
     "descriptionPlaceholder": "Add description…",
     "noImages": "No images attached yet. Upload one from the Attachments panel, or drop it straight onto the editor.",
-    "codeBlock": "Code block",
     "image": "Image"
   },
   "cycleSelect": {

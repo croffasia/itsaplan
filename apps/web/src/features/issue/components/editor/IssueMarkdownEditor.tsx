@@ -7,11 +7,11 @@ import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight';
 import { Markdown } from 'tiptap-markdown';
 import { ResizableImage } from '../../utils/tiptap-image';
-import { SlashCommand } from '../../utils/tiptap-slash-command';
+import { SlashCommand } from '@/lib/tiptap-slash-command';
 import { Video } from '../../utils/tiptap-video';
 import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
 import EditorImagePicker from './EditorImagePicker';
-import EditorSelectionMenu from './EditorSelectionMenu';
+import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
 import { useTranslations } from 'next-intl';
 
 // Shared by every editor instance. A block with no language is detected by
@@ -52,6 +52,7 @@ export default function IssueMarkdownEditor({
   imageAttachments?: Embeddable[];
 }) {
   const t = useTranslations('issue.editor');
+  const tCommon = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
@@ -82,8 +83,10 @@ export default function IssueMarkdownEditor({
       // Renders video attachments as an inline <video> player.
       Video,
       SlashCommand.configure({
-        onPickImage: imageAttachments ? () => setImagePickerOpen(true) : undefined,
-        labels: { codeBlock: t('codeBlock'), image: t('image') },
+        codeBlockLabel: tCommon('codeBlock'),
+        image: imageAttachments
+          ? { label: t('image'), onPick: () => setImagePickerOpen(true) }
+          : undefined,
       }),
       // html:true so the custom <video> tag survives the markdown round-trip.
       // tiptap only instantiates nodes declared in its schema (there is no

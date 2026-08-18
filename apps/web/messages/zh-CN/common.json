@@ -132,5 +132,9 @@
   "commandPalette": "命令面板",
   "commandPaletteHint": "搜索要运行的命令…",
   "scrollToEnd": "滚动到底部",
-  "scrollToStart": "滚动到顶部"
+  "scrollToStart": "滚动到顶部",
+  "editor": {
+    "linkUrl": "链接 URL",
+    "codeBlock": "代码块"
+  }
 }

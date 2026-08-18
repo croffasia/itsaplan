@@ -206,12 +206,10 @@
     "endTime": "وقت الانتهاء"
   },
   "editor": {
-    "linkUrl": "عنوان الرابط",
     "insertImage": "إدراج صورة",
     "insertNamed": "إدراج {name}",
     "descriptionPlaceholder": "إضافة وصف…",
     "noImages": "مفيش صور مرفقة لسه. ارفع صورة من لوحة المرفقات، أو ارميها على المحرر على طول.",
-    "codeBlock": "كتلة برمجية",
     "image": "صورة"
   },
   "cycleSelect": {

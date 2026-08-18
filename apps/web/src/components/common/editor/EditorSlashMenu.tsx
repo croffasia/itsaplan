@@ -1,6 +1,6 @@
 import { useEffect, useImperativeHandle, useState, type Ref } from 'react';
 import { cn } from '@/lib/utils';
-import { type SlashItem } from '../../utils/tiptap-slash-command';
+import { type SlashItem } from '@/lib/tiptap-slash-command';
 
 export type SlashMenuRef = { onKeyDown: (props: { event: KeyboardEvent }) => boolean };
 

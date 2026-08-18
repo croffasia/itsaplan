@@ -132,5 +132,9 @@
   "commandPalette": "لوحة الأوامر",
   "commandPaletteHint": "دوّر على أمر تشغّله…",
   "scrollToEnd": "التمرير إلى النهاية",
-  "scrollToStart": "التمرير إلى البداية"
+  "scrollToStart": "التمرير إلى البداية",
+  "editor": {
+    "linkUrl": "عنوان الرابط",
+    "codeBlock": "كتلة برمجية"
+  }
 }

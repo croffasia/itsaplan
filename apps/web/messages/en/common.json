@@ -132,5 +132,9 @@
   "commandPalette": "Command palette",
   "commandPaletteHint": "Search for a command to run…",
   "scrollToEnd": "Scroll to end",
-  "scrollToStart": "Scroll to start"
+  "scrollToStart": "Scroll to start",
+  "editor": {
+    "linkUrl": "Link URL",
+    "codeBlock": "Code block"
+  }
 }

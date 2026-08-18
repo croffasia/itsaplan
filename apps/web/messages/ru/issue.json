@@ -206,12 +206,10 @@
     "endTime": "Окончание"
   },
   "editor": {
-    "linkUrl": "URL ссылки",
     "insertImage": "Вставить изображение",
     "insertNamed": "Вставить {name}",
     "descriptionPlaceholder": "Добавьте описание…",
     "noImages": "Изображений пока нет. Загрузите из панели вложений или перетащите прямо в редактор.",
-    "codeBlock": "Блок кода",
     "image": "Изображение"
   },
   "cycleSelect": {

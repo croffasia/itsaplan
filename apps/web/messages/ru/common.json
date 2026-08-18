@@ -132,5 +132,9 @@
   "commandPalette": "Палитра команд",
   "commandPaletteHint": "Найдите команду для выполнения…",
   "scrollToEnd": "Прокрутить вниз",
-  "scrollToStart": "Прокрутить вверх"
+  "scrollToStart": "Прокрутить вверх",
+  "editor": {
+    "linkUrl": "URL ссылки",
+    "codeBlock": "Блок кода"
+  }
 }

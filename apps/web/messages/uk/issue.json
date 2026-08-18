@@ -206,12 +206,10 @@
     "endTime": "Завершення"
   },
   "editor": {
-    "linkUrl": "URL посилання",
     "insertImage": "Вставити зображення",
     "insertNamed": "Вставити {name}",
     "descriptionPlaceholder": "Додайте опис…",
     "noImages": "Зображень ще немає. Завантажте з панелі вкладень або перетягніть просто в редактор.",
-    "codeBlock": "Блок коду",
     "image": "Зображення"
   },
   "cycleSelect": {

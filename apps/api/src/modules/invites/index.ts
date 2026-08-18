@@ -1,12 +1,21 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { authContext } from '../shared/auth-context';
-import { guards } from '../shared/guards';
-import { requireUser, type AuthUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors, errors } from '../shared/responses';
-import { getRole } from '../roles/store';
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { authContext } from '#shared/auth-context';
+import { guards } from '#shared/guards';
+import { requireUser, type AuthUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
+import { getRole } from '../../roles/store';
+import {
+  AcceptInviteResponse,
+  InviteRowListResponse,
+  InviteRowResponse,
+  InviteViewResponse,
+  createInviteBody,
+  inviteParams,
+  tokenParams,
+} from './model';
 import {
   createInvite,
   listInvites,
@@ -15,56 +24,10 @@ import {
   getInviteRowByToken,
   acceptInvite,
   rejectInvite,
-} from './store';
+} from './service';
 
-const inviteRole = t.Union([t.Literal('owner'), t.Literal('member')]);
-
-// The token is a UUID column. Validating its format here turns a malformed token
-// into a 400 instead of letting it reach Postgres and surface as a 500.
-const tokenParams = t.Object({ token: t.String({ format: 'uuid' }) });
-
-// An invite's lifecycle status.
-const inviteStatus = t.Union([t.Literal('pending'), t.Literal('accepted'), t.Literal('rejected')]);
-
-// The owner-facing invite row (InviteRow from the store).
-const InviteRowResponse = t.Object({
-  id: t.Number(),
-  token: t.String(),
-  email: t.String(),
-  role: inviteRole,
-  roleId: t.Nullable(t.Number()),
-  roleName: t.Nullable(t.String()),
-  status: inviteStatus,
-  createdAt: t.String(),
-  respondedAt: t.Nullable(t.String()),
-  invitedByName: t.Nullable(t.String()),
-  invitedByEmail: t.Nullable(t.String()),
-});
-
-// The invitee-facing invite view (InviteView from the store).
-const InviteViewResponse = t.Object({
-  token: t.String(),
-  projectKey: t.String(),
-  projectName: t.String(),
-  email: t.String(),
-  role: inviteRole,
-  roleId: t.Nullable(t.Number()),
-  roleName: t.Nullable(t.String()),
-  status: inviteStatus,
-  createdAt: t.String(),
-  hasAccount: t.Boolean(),
-});
-
-// The result of accepting an invite: the joined project's context.
-const AcceptInviteResponse = t.Object({
-  projectKey: t.String(),
-  projectName: t.String(),
-  role: inviteRole,
-});
-
-// Loads the invite named by the token and asserts the caller may act on it: it
-// must exist, still be pending, and be addressed to the session email
-// (case-insensitive). Shared by accept and reject.
+// Shared by accept and reject: an invite is actionable only by the account whose
+// email it names, and only while it is still pending.
 async function loadActionableInvite(token: string, user: AuthUser | undefined | null) {
   const current = requireUser(user);
   const invite = await getInviteRowByToken(token);
@@ -80,10 +43,6 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
   .use(authContext)
   .use(guards)
 
-  // --- Owner-side: manage a project's invites ---
-
-  // Create an invite link for an email + role. Owner only. A second pending
-  // invite for the same email in the same project is a 409.
   .post(
     '/projects/:projectKey/invites',
     async ({ project, body, user, set }) => {
@@ -106,12 +65,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       return invite;
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({
-        email: t.String({ format: 'email' }),
-        role: inviteRole,
-        roleId: t.Optional(t.Nullable(t.Integer())),
-      }),
+      body: createInviteBody,
       permission: ['members_invite', 'create'],
       response: { 201: InviteRowResponse, ...commonErrors, ...errors(409) },
       detail: {
@@ -130,14 +84,12 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       return listInvites(project.id);
     },
     {
-      params: t.Object({ projectKey: t.String() }),
       permission: ['members_invite', 'read'],
-      response: { 200: t.Array(InviteRowResponse), ...accessErrors },
+      response: { 200: InviteRowListResponse, ...accessErrors },
       detail: { summary: "List a project's invites", ...mcpTool('list_invites') },
     },
   )
 
-  // Revoke a pending invite (or remove a resolved one). Owner only.
   .delete(
     '/projects/:projectKey/invites/:inviteId',
     async ({ project, params }) => {
@@ -146,7 +98,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       return noContent();
     },
     {
-      params: t.Object({ projectKey: t.String(), inviteId: t.Numeric() }),
+      params: inviteParams,
       permission: ['members_invite', 'delete'],
       response: { 204: t.Void(), ...commonErrors },
       detail: {
@@ -157,11 +109,8 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     },
   )
 
-  // --- Invitee-side: open, accept, or reject a link ---
-
-  // Look up an invite by its token to render the accept/reject screen. Any
-  // authenticated user may read it (the token is unguessable); only the matching
-  // email may accept.
+  // Unguarded by project membership: the invitee is not a member yet. The token
+  // is unguessable, so any authenticated caller holding one may read the invite.
   .get(
     '/invites/:token',
     async ({ params }) => {
@@ -184,9 +133,7 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     '/invites/:token/accept',
     async ({ params, user }) => {
       const { invite, current } = await loadActionableInvite(params.token, user);
-      await acceptInvite(invite, current.id);
-      const view = await getInviteByToken(params.token);
-      return { projectKey: view!.projectKey, projectName: view!.projectName, role: view!.role };
+      return acceptInvite(invite, current.id);
     },
     {
       params: tokenParams,

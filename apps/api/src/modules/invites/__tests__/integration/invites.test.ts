@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi } from '../../../__tests__/helpers/app';
-import { signUpTestUser, type TestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { authedApi } from '#tests/helpers/app';
+import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Integration coverage for the invites feature: the owner-side routes that
 // create/list/revoke invites and the invitee-side routes that read, accept, or

@@ -1,7 +1,7 @@
 import { db, projectInvite, projectMember, projectRole, project, user } from '@repo/db';
 import { and, desc, eq, sql } from 'drizzle-orm';
-import { HttpError, iso, pgErrorCode } from '../shared/lib';
-import type { MemberRole } from '../members/store';
+import { HttpError, iso, pgErrorCode } from '#shared/lib';
+import type { MemberRole } from '../../members/store';
 
 // Data access for project invites. An invite is a token-addressed grant of a
 // role to an email in a project. Creating one requires the project owner;
@@ -44,6 +44,13 @@ export interface InviteView {
   // open in sign-in mode instead of registration. Scoped to the one email bound
   // to this (unguessable) token, so it is not a general existence oracle.
   hasAccount: boolean;
+}
+
+// The project context an invitee lands in once the invite is accepted.
+export interface AcceptedInvite {
+  projectKey: string;
+  projectName: string;
+  role: MemberRole;
 }
 
 const normalizeEmail = (email: string) => email.trim().toLowerCase();
@@ -224,8 +231,8 @@ export async function getInviteRowByToken(token: string) {
 export async function acceptInvite(
   invite: { id: number; projectId: number; role: string; roleId: number | null },
   userId: string,
-): Promise<void> {
-  await db.transaction(async (tx) => {
+): Promise<AcceptedInvite> {
+  return db.transaction(async (tx) => {
     // A member joins on the invite's chosen role, falling back to the project's
     // default role when none was set; an owner bypasses roles.
     let roleId: number | null = null;
@@ -251,6 +258,11 @@ export async function acceptInvite(
       .update(projectInvite)
       .set({ status: 'accepted', acceptedByUserId: userId, respondedAt: new Date() })
       .where(eq(projectInvite.id, invite.id));
+    const [joined] = await tx
+      .select({ projectKey: project.key, projectName: project.name })
+      .from(project)
+      .where(eq(project.id, invite.projectId));
+    return { ...joined, role: invite.role as MemberRole };
   });
 }
 

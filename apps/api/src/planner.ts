@@ -4,7 +4,7 @@ import { authContext } from './shared/auth-context';
 import { projectRoutes } from './projects/routes';
 import { memberRoutes } from './members/routes';
 import { roleRoutes } from './roles/routes';
-import { inviteRoutes } from './invites/routes';
+import { inviteRoutes } from './modules/invites';
 import { columnRoutes } from './modules/columns';
 import { issueTypeRoutes } from './issue-types/routes';
 import { labelRoutes } from './labels/routes';

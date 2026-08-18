@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.11.0](https://github.com/croffasia/itsaplan/compare/v0.10.1...v0.11.0) (2026-08-18)
+
+
+### Features
+
+* add Arabic language support with RTL layout ([#150](https://github.com/croffasia/itsaplan/issues/150)) ([6a4bec3](https://github.com/croffasia/itsaplan/commit/6a4bec32eda4bde574a1bb965c64411e834bab46))
+* chat with an external agent ([#163](https://github.com/croffasia/itsaplan/issues/163)) ([327f939](https://github.com/croffasia/itsaplan/commit/327f939edc7c10be275d4d8d43572ecf9048ea9a))
+* end pending runs of an agent schedule ([#157](https://github.com/croffasia/itsaplan/issues/157)) ([cc0469c](https://github.com/croffasia/itsaplan/commit/cc0469c8969fc79d494e5a90ccb5009dcc565be7))
+* **web:** prefill new issue from the active view filters ([#156](https://github.com/croffasia/itsaplan/issues/156)) ([f4bb080](https://github.com/croffasia/itsaplan/commit/f4bb08037b49f19ba06791d9628a12b663d358b6))
+
+
+### Bug Fixes
+
+* **web:** mirror the issue detail sidebar and header for right-to-left ([#155](https://github.com/croffasia/itsaplan/issues/155)) ([ddaad03](https://github.com/croffasia/itsaplan/commit/ddaad0311b2409c8663a6fab7184ef24159c9518))
+
+
+### Documentation
+
+* add the Railway deploy guide and button ([#153](https://github.com/croffasia/itsaplan/issues/153)) ([208935f](https://github.com/croffasia/itsaplan/commit/208935f929b7d7a96e4834bc6aadf80e787390c3))
+* **api:** describe the system and internal endpoints in the OpenAPI docs ([#158](https://github.com/croffasia/itsaplan/issues/158)) ([685ae6a](https://github.com/croffasia/itsaplan/commit/685ae6a7f8d6c58ec839d70f4b4b6e076b0ac487))
+
 ## [0.10.1](https://github.com/croffasia/itsaplan/compare/v0.10.0...v0.10.1) (2026-08-14)
 
 

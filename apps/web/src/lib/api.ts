@@ -452,25 +452,44 @@ export interface NewConfiguredToolInput {
 // conversation thread id; `error` reports a failure that happened mid-run.
 export type AgentRunEvent =
   | { type: 'text'; value: string }
-  | { type: 'tool-start'; toolCallId: string; toolName: string }
-  | { type: 'tool-end'; toolCallId: string; toolName: string }
+  | { type: 'tool-start'; toolCallId: string; toolName: string; args?: string }
+  // An external agent's runner sends a call's arguments after the call itself, in
+  // pieces; an internal agent has them all at its start.
+  | { type: 'tool-args'; toolCallId: string; delta: string }
+  | { type: 'tool-end'; toolCallId: string; result?: string }
   | { type: 'done'; threadId: string | null }
   | { type: 'error'; message: string };
 
 // One of the caller's saved chat conversations with an agent. `title` is the first
-// prompt (truncated); null when it was never set.
+// prompt (truncated); null when it was never set. `cliSessionId` is the coding agent
+// session an external agent's runner keeps for the thread on its own machine — null
+// before the runner has reported one, and always null for an internal agent.
 export interface AiChatThread {
   id: string;
   title: string | null;
+  cliSessionId: string | null;
   createdAt: string;
   updatedAt: string;
 }
+
+// One piece of a message, in the order the agent produced it: what it wrote, and the
+// tools it called between one stretch of text and the next. A call carries what it was
+// given and what it answered where the agent reported them.
+export interface AiChatToolPart {
+  type: 'tool';
+  toolCallId: string;
+  toolName: string;
+  args?: string;
+  result?: string;
+}
+
+export type AiChatPart = { type: 'text'; text: string } | AiChatToolPart;
 
 // One restored message of a chat thread's transcript.
 export interface AiChatMessage {
   id: string;
   role: 'user' | 'assistant';
-  text: string;
+  parts: AiChatPart[];
   createdAt: string;
 }
 
@@ -497,6 +516,15 @@ export async function* streamAiAgentRun(
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+  for await (const frame of readSseFrames(res)) {
+    yield JSON.parse(frame.data) as AgentRunEvent;
+  }
+}
+
+// The frames of one SSE connection: separated by a blank line, each carrying a single
+// JSON-encoded event on its `data:` line and, on a resumable stream, the `id:` a
+// reconnect resumes from. Throws ApiError when the request failed before the stream.
+async function* readSseFrames(res: Response): AsyncGenerator<{ id: number | null; data: string }> {
   if (!res.ok || !res.body) {
     const err = await res.json().catch(() => null);
     throw new ApiError(res.status, err?.error ?? `${res.status} ${res.statusText}`);
@@ -505,17 +533,104 @@ export async function* streamAiAgentRun(
   let buffer = '';
   for (;;) {
     const { done, value } = await reader.read();
-    if (done) break;
+    if (done) return;
     buffer += value;
-    // SSE frames are separated by a blank line; each frame here is a single
-    // `data:` line carrying one JSON-encoded event.
     let sep: number;
     while ((sep = buffer.indexOf('\n\n')) !== -1) {
-      const frame = buffer.slice(0, sep);
+      const lines = buffer.slice(0, sep).split('\n');
       buffer = buffer.slice(sep + 2);
-      const line = frame.split('\n').find((l) => l.startsWith('data:'));
-      if (line) yield JSON.parse(line.slice(5).trim()) as AgentRunEvent;
+      const dataLine = lines.find((l) => l.startsWith('data:'));
+      if (!dataLine) continue;
+      const idLine = lines.find((l) => l.startsWith('id:'));
+      yield {
+        id: idLine ? Number(idLine.slice(3).trim()) : null,
+        data: dataLine.slice(5).trim(),
+      };
     }
+  }
+}
+
+// What an external agent's runner reports while it answers, as AG-UI events
+// (https://docs.ag-ui.com). Only the ones the chat renders are named; the rest of the
+// protocol passes through and is ignored here.
+interface AgUiEvent {
+  type: string;
+  delta?: string;
+  content?: string;
+  message?: string;
+  toolCallId?: string;
+  toolCallName?: string;
+}
+
+// How many times a dropped stream is picked up again. The answer keeps being produced
+// on the operator's machine either way; this only decides how long the browser follows it.
+const CHAT_STREAM_RETRIES = 3;
+
+// Sends a message to an external agent and streams the answer its runner produces,
+// yielding the same events as an internal agent's run so the chat consumes one shape.
+// The answer starts only once a runner takes the message: until then the stream is open
+// with nothing on it.
+export async function* streamAiAgentChat(
+  projectKey: string,
+  agentId: number,
+  input: { prompt: string; threadId?: string | null },
+): AsyncGenerator<AgentRunEvent> {
+  const body = input.threadId
+    ? { prompt: input.prompt, threadId: input.threadId }
+    : { prompt: input.prompt };
+  const sent = await request<{ threadId: string; messageId: number }>(
+    `/projects/${projectKey}/ai-agents/${agentId}/chat`,
+    { method: 'POST', body: JSON.stringify(body) },
+  );
+  const base = `${API_URL}/projects/${projectKey}/ai-agents/${agentId}/chat/${sent.messageId}/stream`;
+  let after = 0;
+  // The answer always ends on a terminal event, so a stream that closed without one was
+  // cut: pick it up again from the last event already shown.
+  for (let attempt = 0; attempt <= CHAT_STREAM_RETRIES; attempt++) {
+    let ended = false;
+    try {
+      const res = await fetch(`${base}?after=${after}`, { credentials: 'include' });
+      for await (const frame of readSseFrames(res)) {
+        after = frame.id ?? after;
+        const event = JSON.parse(frame.data) as AgUiEvent;
+        if (event.type === 'RUN_FINISHED') {
+          ended = true;
+          break;
+        }
+        if (event.type === 'RUN_ERROR') {
+          ended = true;
+          yield { type: 'error', message: event.message ?? 'The agent stopped answering' };
+          break;
+        }
+        const mapped = toRunEvent(event);
+        if (mapped) yield mapped;
+      }
+    } catch (err) {
+      if (attempt === CHAT_STREAM_RETRIES) throw err;
+    }
+    if (ended) break;
+  }
+  yield { type: 'done', threadId: sent.threadId };
+}
+
+function toRunEvent(event: AgUiEvent): AgentRunEvent | null {
+  switch (event.type) {
+    case 'TEXT_MESSAGE_CONTENT':
+      return { type: 'text', value: event.delta ?? '' };
+    case 'TOOL_CALL_START':
+      return {
+        type: 'tool-start',
+        toolCallId: event.toolCallId ?? '',
+        toolName: event.toolCallName ?? '',
+      };
+    case 'TOOL_CALL_ARGS':
+      return { type: 'tool-args', toolCallId: event.toolCallId ?? '', delta: event.delta ?? '' };
+    // TOOL_CALL_END closes the call's arguments, which the runner reports in the same
+    // batch as the call itself. The tool is done when its result arrives.
+    case 'TOOL_CALL_RESULT':
+      return { type: 'tool-end', toolCallId: event.toolCallId ?? '', result: event.content };
+    default:
+      return null;
   }
 }
 

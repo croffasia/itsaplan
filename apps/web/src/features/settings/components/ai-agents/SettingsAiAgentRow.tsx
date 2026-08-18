@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
+import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,7 +23,6 @@ import { TableCell, TableRow } from '@/components/ui/table';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSettingsCan } from '../../context/settingsPermission';
 import { AgentMetaRow, AgentTriggers } from './AgentMetaRow';
-import { AgentRunnerStatus } from './AgentRunnerStatus';
 import { useTranslations } from 'next-intl';
 
 // One agent as a table row: the Agent cell holds the name, @username, kind badge,
@@ -51,11 +51,8 @@ export function SettingsAiAgentRow({
   const t = useTranslations('settings.agents');
   const can = useSettingsCan();
   const canHistory = can('read');
-  // Only an internal agent runs in the built-in runtime, which is what the test chat
-  // drives.
-  const canChat = agent.kind === 'internal' && canHistory;
   const canRegenerate = agent.kind === 'external' && can('edit');
-  const hasMenu = canChat || canRegenerate || can('delete');
+  const hasMenu = canHistory || canRegenerate || can('delete');
 
   return (
     <TableRow className="group/item">
@@ -125,7 +122,7 @@ export function SettingsAiAgentRow({
                 <TooltipContent>{t('moreActions')}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end">
-                {canChat && (
+                {canHistory && (
                   <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onChat}>
                     <MessageSquare />
                     {t('testChat')}
@@ -137,7 +134,7 @@ export function SettingsAiAgentRow({
                     {t('regenerateConfirm')}
                   </DropdownMenuItem>
                 )}
-                {can('delete') && (canChat || canRegenerate) && <DropdownMenuSeparator />}
+                {can('delete') && (canHistory || canRegenerate) && <DropdownMenuSeparator />}
                 {can('delete') && (
                   <DropdownMenuItem
                     className="min-h-11 sm:min-h-8"

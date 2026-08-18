@@ -1,7 +1,7 @@
 {
   "noAccess": "You do not have access to AI agents in this project.",
   "emptyTitle": "No agents to chat with",
-  "emptyDescription": "Only internal agents can chat here, in test mode.",
+  "emptyDescription": "Chat with an agent of this project: an internal one, or an external one through its runner.",
   "createAgent": "Create an agent",
   "agents": "Agents",
   "agentsAvailable": "{count, plural, one {# agent} other {# agents}} available",
@@ -9,8 +9,8 @@
   "newChat": "New chat",
   "memoryOff": "Memory off",
   "noAgents": "No agents",
-  "addInternalAgent": "Add an internal agent",
-  "noInternalAgents": "No internal agents to chat with yet.",
+  "addAgent": "Add an agent",
+  "noAgentsYet": "No agents to chat with yet.",
   "history": "History",
   "backToChat": "Back to chat",
   "minimize": "Minimize",
@@ -21,5 +21,8 @@
   "deleteThread": "Delete conversation",
   "deleteThreadConfirm": "“{title}” and its messages are deleted permanently.",
   "noThreads": "No conversations yet. Send a message to start one.",
-  "noModel": "No model set"
+  "noModel": "No model set",
+  "copySession": "Copy session id",
+  "sessionLabel": "Local session id",
+  "sessionHint": "The session the agent's runner keeps on its own machine. Resume it there to read the full transcript with its tool calls."
 }

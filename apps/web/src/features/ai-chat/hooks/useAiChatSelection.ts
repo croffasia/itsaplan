@@ -7,9 +7,8 @@ import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { qk } from '@/services/queryKeys';
 
 // The agents available for chat and which conversation is shown, shared by the AI Chat
-// page and the floating chat. Only internal agents appear, since they are the ones the
-// built-in runtime can run; external agents are driven through the API and have no test
-// chat.
+// page and the floating chat. Both kinds appear: an internal agent answers in the API
+// process, an external one through the runner its operator runs.
 //
 // `selectedThreadId` is a past thread, or null for a fresh chat. `newChatNonce` bumps on
 // "New chat" so the host can key the conversation by it and remount into a fresh session
@@ -17,7 +16,7 @@ import { qk } from '@/services/queryKeys';
 export function useAiChatSelection(projectKey: string | null) {
   const qc = useQueryClient();
   const agentsQuery = useAiAgentsQuery(projectKey);
-  const agents = (agentsQuery.data ?? []).filter((agent) => agent.kind === 'internal');
+  const agents = agentsQuery.data ?? [];
   const catalog = useIntegrationCatalogQuery(projectKey).data ?? [];
   const providerLabel = (key: string) => catalog.find((entry) => entry.key === key)?.label ?? key;
 

@@ -1,7 +1,7 @@
 {
   "noAccess": "你无权访问此项目的 AI 代理。",
   "emptyTitle": "暂无可对话的代理",
-  "emptyDescription": "这里只能以测试模式与内置代理对话。",
+  "emptyDescription": "与本项目的代理对话：内置代理，或通过运行器连接的外部代理。",
   "createAgent": "新建代理",
   "agents": "代理",
   "agentsAvailable": "{count, plural, other {# 个代理可用}}",
@@ -9,8 +9,8 @@
   "newChat": "新建对话",
   "memoryOff": "记忆已关闭",
   "noAgents": "暂无代理",
-  "addInternalAgent": "添加内置代理",
-  "noInternalAgents": "暂无可对话的内置代理。",
+  "addAgent": "添加代理",
+  "noAgentsYet": "暂无可对话的代理。",
   "history": "历史记录",
   "backToChat": "返回对话",
   "minimize": "最小化",
@@ -21,5 +21,8 @@
   "deleteThread": "删除对话",
   "deleteThreadConfirm": "将永久删除“{title}”及其中的消息。",
   "noThreads": "暂无对话。发送消息以开始对话。",
-  "noModel": "未设置模型"
+  "noModel": "未设置模型",
+  "copySession": "复制会话 ID",
+  "sessionLabel": "本地会话 ID",
+  "sessionHint": "智能体运行器在自己机器上保留的会话。在那里恢复它，可查看包含工具调用的完整记录。"
 }

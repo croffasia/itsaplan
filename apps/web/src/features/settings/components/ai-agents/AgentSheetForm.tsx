@@ -247,11 +247,14 @@ export function AgentSheetForm({
     revealedKey !== null ? <AgentKeyBanner apiKey={revealedKey} onDismiss={onDismissKey} /> : null;
 
   // The full-width internal editor owns its scroll container (it holds the section
-  // nav's scroll spy). Every other case stacks in a single readable column here.
+  // nav's scroll spy). Every other case stacks in a single column here. Once the
+  // agent exists the chat takes the other half of the sheet and the form fills its
+  // column; while creating there is no chat and it stands alone at full width, which
+  // needs a readable cap.
   const ownsScroll = expanded && value.kind === 'internal';
   let contentWidth = '';
   if (ownsScroll) contentWidth = AGENT_EXPANDED_WIDTH;
-  else if (expanded) contentWidth = 'max-w-2xl';
+  else if (expanded && isCreate) contentWidth = 'max-w-2xl';
 
   const fields = (
     <SettingsAiAgentFields
@@ -285,7 +288,7 @@ export function AgentSheetForm({
       {ownsScroll ? (
         fields
       ) : (
-        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-6">
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-6 sm:px-6">
           <div className={`mx-auto w-full space-y-6 ${contentWidth}`}>
             {banner}
             {fields}

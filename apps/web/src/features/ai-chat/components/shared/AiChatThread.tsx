@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { AiAgent } from '@/lib/api';
 import { useAgentChat } from '@/hooks/useAgentChat';
 import { useAgentThreadMessagesQuery } from '@/services/aiAgents.service';
+import { qk } from '@/services/queryKeys';
 import { AgentChatPanel } from '@/components/common/agent-chat/AgentChatPanel';
 import { AiChatThreadSkeleton } from './AiChatThreadSkeleton';
 
@@ -34,8 +36,17 @@ export function AiChatThread({
     send,
     loadThread,
     prependHistory,
-  } = useAgentChat(projectKey, agent.id);
+  } = useAgentChat(projectKey, agent.id, agent.kind === 'external');
   const messagesQuery = useAgentThreadMessagesQuery(projectKey, agent.id, threadId);
+  const qc = useQueryClient();
+
+  // An answer that just ended may have bound the thread to a session on the runner, and
+  // the thread list is what carries that. Refetching once per answer is what makes the
+  // session appear without a reload.
+  useEffect(() => {
+    if (status !== 'ready') return;
+    void qc.invalidateQueries({ queryKey: qk.agentThreads(projectKey, agent.id) });
+  }, [status, qc, projectKey, agent.id]);
 
   // How many transcript pages of the active thread are already in the conversation.
   // Page 0 counts as merged from the start: for a restored thread it is what

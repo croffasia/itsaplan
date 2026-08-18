@@ -5,6 +5,8 @@ import { ArrowUp, Bot, RotateCw } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
 import type { ChatMessage, ChatStatus } from '@/hooks/useAgentChat';
 import { AgentChatTranscript } from './AgentChatTranscript';
+import { AgentRunnerStatus } from './AgentRunnerStatus';
+import { isRunnerOnline } from './runnerOnline';
 import {
   Empty,
   EmptyDescription,
@@ -23,9 +25,7 @@ import { useTranslations } from 'next-intl';
 
 // The running transcript and the composer for one agent conversation. The
 // conversation state lives above this panel (in the agent chat host), so it is
-// presentational: it renders what it is given and reports sends. The agent's
-// replies stream in and render as markdown; the user's own turns render as plain
-// text.
+// presentational: it renders what it is given and reports sends.
 export function AgentChatPanel({
   agent,
   messages,
@@ -49,20 +49,24 @@ export function AgentChatPanel({
 }) {
   const t = useTranslations('common.agentChat');
   const [input, setInput] = useState('');
-  const isStreaming = status === 'streaming';
+  // An external agent answers on its runner, so with none polling the message would sit
+  // in the queue with nothing to take it. The composer says so instead of accepting it.
+  const runnerOffline = agent.kind === 'external' && !isRunnerOnline(agent);
+  const isBusy = status !== 'ready';
+  const canWrite = !isBusy && !runnerOffline;
 
-  // The textarea is disabled while a reply streams, which drops focus. Restore it
-  // once streaming ends so the user can keep typing without clicking back in.
+  // The textarea is disabled while a reply is on its way, which drops focus. Restore
+  // it once the reply ends so the user can keep typing without clicking back in.
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const wasStreaming = useRef(false);
+  const wasBusy = useRef(false);
   useEffect(() => {
-    if (wasStreaming.current && !isStreaming) textareaRef.current?.focus();
-    wasStreaming.current = isStreaming;
-  }, [isStreaming]);
+    if (wasBusy.current && !isBusy) textareaRef.current?.focus();
+    wasBusy.current = isBusy;
+  }, [isBusy]);
 
   function submit() {
     const text = input.trim();
-    if (!text || isStreaming) return;
+    if (!text || !canWrite) return;
     setInput('');
     onSend(text);
   }
@@ -84,7 +88,7 @@ export function AgentChatPanel({
           ) : (
             <AgentChatTranscript
               messages={messages}
-              isStreaming={isStreaming}
+              status={status}
               activeTool={activeTool}
               hasEarlierMessages={hasEarlierMessages}
               isLoadingEarlier={isLoadingEarlier}
@@ -94,6 +98,12 @@ export function AgentChatPanel({
         </div>
 
         <div className="p-4 pt-2">
+          {runnerOffline && (
+            <div className="mx-auto mb-2 flex w-full max-w-3xl flex-wrap items-center gap-x-2 gap-y-0.5">
+              <AgentRunnerStatus agent={agent} />
+              <span className="text-xs text-muted-foreground">{t('runnerOfflineHint')}</span>
+            </div>
+          )}
           <form
             className="mx-auto w-full max-w-3xl"
             onSubmit={(e) => {
@@ -116,8 +126,12 @@ export function AgentChatPanel({
                     submit();
                   }
                 }}
-                placeholder={t('messagePlaceholder', { agent: agent.name })}
-                disabled={isStreaming}
+                placeholder={
+                  runnerOffline
+                    ? t('runnerOffline')
+                    : t('messagePlaceholder', { agent: agent.name })
+                }
+                disabled={!canWrite}
                 rows={1}
               />
               <InputGroupAddon align="block-end">
@@ -128,7 +142,7 @@ export function AgentChatPanel({
                     size="icon-sm"
                     className="rounded-lg text-muted-foreground hover:text-foreground"
                     title={t('reset')}
-                    disabled={isStreaming || messages.length === 0}
+                    disabled={isBusy || messages.length === 0}
                     onClick={onReset}
                   >
                     <RotateCw />
@@ -140,7 +154,7 @@ export function AgentChatPanel({
                   variant="default"
                   size="icon-sm"
                   className="ml-auto rounded-lg"
-                  disabled={!input.trim() || isStreaming}
+                  disabled={!input.trim() || !canWrite}
                 >
                   <ArrowUp />
                   <span className="sr-only">{t('send')}</span>

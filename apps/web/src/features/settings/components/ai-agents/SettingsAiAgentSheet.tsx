@@ -68,19 +68,19 @@ function SheetBody({
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
 
   const agent = initialAgent ?? createdAgent;
-  const canTest = agent?.kind === 'internal';
   // Held here so the transcript and thread survive re-renders. No agent yet during
   // create → id 0; the chat is only reachable once the agent exists.
-  const chat = useAgentChat(projectKey, agent?.id ?? 0);
+  const chat = useAgentChat(projectKey, agent?.id ?? 0, agent?.kind === 'external');
 
   function onCreated(created: AiAgent, apiKey: string | null) {
     setCreatedAgent(created);
     setRevealedKey(apiKey);
   }
 
-  // The sheet is always full width: a testable agent shows the form and the chat side
-  // by side; otherwise the form takes the full width on its own.
-  const split = canTest && !!agent;
+  // The sheet is always full width: an existing agent shows the form and the chat side
+  // by side; while creating one there is nothing to chat with, so the form takes the
+  // full width on its own.
+  const split = !!agent;
 
   return (
     <div className="flex h-full min-h-0 flex-col">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Terminal } from 'lucide-react';
 import type { AgentSchedule, AgentScheduleInput, AiAgent } from '@/lib/api';
+import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,6 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { parseScheduleInput } from '../../utils/cronSchedule';
-import { AgentRunnerStatus } from '../ai-agents/AgentRunnerStatus';
 import { SettingsScheduleInput } from './SettingsScheduleInput';
 import { useTranslations } from 'next-intl';
 

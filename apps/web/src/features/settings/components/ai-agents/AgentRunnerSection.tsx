@@ -1,10 +1,10 @@
 import { Code2, Package, Terminal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
+import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import { AgentFormSection } from './AgentFormSection';
 import { AgentRunnerCodeBlock } from './AgentRunnerCodeBlock';
 import { AgentRunnerHelpSheet, RUN_COMMAND } from './AgentRunnerHelpSheet';
-import { AgentRunnerStatus } from './AgentRunnerStatus';
 
 // The Runner section of an external agent: whether its runner is connected right
 // now, and how to start one. Who may give the agent work is an access question and

@@ -4,7 +4,10 @@ import { Bot } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { Badge } from '@/components/ui/badge';
+import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import { AiChatThread } from '../shared/AiChatThread';
+import { AiChatSessionBadge } from '../shared/AiChatSessionBadge';
+import { useThreadSessionId } from '../../hooks/useThreadSessionId';
 import { agentModelLabel } from '../../utils/agentModelLabel';
 
 // One agent's conversation on the AI Chat page: a header identifying the agent, and the
@@ -23,6 +26,7 @@ export function AiChatConversation({
   onThreadCreated: (threadId: string) => void;
 }) {
   const t = useTranslations('aiChat');
+  const sessionId = useThreadSessionId(projectKey, agent.id, threadId);
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -33,16 +37,27 @@ export function AiChatConversation({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{agent.name}</span>
-            {!agent.memoryEnabled && (
+            {/* Memory is a setting of the built-in runtime. An external agent's memory is
+                its runner's session, whose id the header shows instead. */}
+            {agent.kind === 'internal' && !agent.memoryEnabled && (
               <Badge variant="secondary" className="shrink-0">
                 {t('memoryOff')}
               </Badge>
             )}
           </div>
-          <div className="truncate text-xs text-muted-foreground">
-            @{agent.username} · {agentModelLabel(agent, providerLabel, t('noModel'))}
+          <div className="flex items-center gap-1.5 truncate text-xs text-muted-foreground">
+            <span className="truncate">@{agent.username}</span>
+            <span aria-hidden>·</span>
+            {agent.kind === 'external' ? (
+              <AgentRunnerStatus agent={agent} compact />
+            ) : (
+              <span className="truncate">
+                {agentModelLabel(agent, providerLabel, t('noModel'))}
+              </span>
+            )}
           </div>
         </div>
+        {sessionId && <AiChatSessionBadge sessionId={sessionId} />}
       </div>
 
       <div className="min-h-0 flex-1">

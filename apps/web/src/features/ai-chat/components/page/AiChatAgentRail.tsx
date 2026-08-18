@@ -4,9 +4,11 @@ import { Bot, Sparkles } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import { agentModelLabel } from '../../utils/agentModelLabel';
 
-// The left rail of the AI Chat page: the internal agents to chat with.
+// The left rail of the AI Chat page: the agents to chat with. An internal agent shows
+// the model it runs on, an external one whether its runner is connected.
 export function AiChatAgentRail({
   agents,
   selectedId,
@@ -56,10 +58,16 @@ export function AiChatAgentRail({
                 <div className="truncate text-sm font-medium">{agent.name}</div>
                 <div className="truncate text-xs text-muted-foreground">@{agent.username}</div>
                 <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground/80">
-                  <Sparkles className="size-3 shrink-0" />
-                  <span className="truncate">
-                    {agentModelLabel(agent, providerLabel, t('noModel'))}
-                  </span>
+                  {agent.kind === 'external' ? (
+                    <AgentRunnerStatus agent={agent} compact />
+                  ) : (
+                    <>
+                      <Sparkles className="size-3 shrink-0" />
+                      <span className="truncate">
+                        {agentModelLabel(agent, providerLabel, t('noModel'))}
+                      </span>
+                    </>
+                  )}
                 </div>
               </div>
             </button>

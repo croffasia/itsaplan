@@ -66,14 +66,16 @@ export function FloatingChat({
     <div className="fixed right-4 bottom-4 z-40 flex flex-col items-end gap-3">
       <div
         className={cn(
-          'relative flex h-[32rem] max-h-[calc(100vh-7rem)] w-[calc(100vw-2rem)] max-w-96 flex-col overflow-hidden rounded-xl border bg-background shadow-xl',
+          'relative flex h-[32rem] max-h-[calc(100vh-7rem)] w-[calc(100vw-2rem)] max-w-96 flex-col overflow-hidden rounded-xl border bg-background shadow-[var(--modal-shadow)]',
           !open && 'hidden',
         )}
       >
         <FloatingChatHeader
           agents={agents}
           providerLabel={providerLabel}
+          projectKey={project.project.key}
           selected={selected}
+          threadId={selectedThreadId}
           onSelectAgent={handleSelectAgent}
           onShowHistory={() => setView('history')}
           onNewChat={handleNewChat}
@@ -93,7 +95,7 @@ export function FloatingChat({
             />
           ) : (
             <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
-              {t('noInternalAgents')}
+              {t('noAgentsYet')}
             </div>
           )}
 
@@ -116,7 +118,7 @@ export function FloatingChat({
 
       <Button
         size="icon"
-        className="size-12 shrink-0 rounded-full shadow-lg"
+        className="size-12 shrink-0 rounded-full shadow-[var(--overlay-shadow)]"
         title={open ? t('hideChat') : t('openChat')}
         aria-expanded={open}
         onClick={() => onOpenChange(!open)}

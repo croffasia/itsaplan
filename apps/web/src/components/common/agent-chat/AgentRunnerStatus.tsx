@@ -3,15 +3,15 @@ import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatDurationShort } from '@/utils/dates';
-
-// A runner is considered online while it keeps polling; the reference runner polls
-// every few seconds, so a gap this long means it is gone rather than between polls.
-const ONLINE_WINDOW_MS = 90_000;
+import { isRunnerOnline } from './runnerOnline';
 
 // Whether an external agent's runner is connected right now. The agent has no runner
 // until someone starts one, so "never connected" is a normal state and reads
 // differently from "went offline". `compact` drops to the bare state for places that
 // already say what it is about, such as a section header.
+//
+// The strings sit in the settings namespace, where the runner is set up; the chat shows
+// the same three states rather than wording its own.
 export function AgentRunnerStatus({
   agent,
   compact = false,
@@ -22,7 +22,7 @@ export function AgentRunnerStatus({
 }) {
   const t = useTranslations('settings.agents');
   const lastSeen = agent?.lastSeenAt ?? null;
-  const online = lastSeen != null && Date.now() - new Date(lastSeen).getTime() < ONLINE_WINDOW_MS;
+  const online = isRunnerOnline(agent);
 
   let label: string;
   if (online) label = compact ? t('runnerStateOnline') : t('runnerOnline');

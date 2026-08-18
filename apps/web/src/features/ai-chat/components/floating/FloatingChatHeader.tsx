@@ -12,15 +12,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
+import { AiChatSessionBadge } from '../shared/AiChatSessionBadge';
+import { useThreadSessionId } from '../../hooks/useThreadSessionId';
 import { agentModelLabel } from '../../utils/agentModelLabel';
 
-// The top bar of the floating chat: the agent picker plus the history, new-chat and
-// minimize actions. `selected` is null when the project has no internal agents, which
-// disables everything but minimize.
+// The top bar of the floating chat: the agent picker plus the session, history, new-chat
+// and minimize actions. `selected` is null when the project has no agents, which disables
+// everything but minimize.
 export function FloatingChatHeader({
   agents,
   providerLabel,
+  projectKey,
   selected,
+  threadId,
   onSelectAgent,
   onShowHistory,
   onNewChat,
@@ -28,13 +33,16 @@ export function FloatingChatHeader({
 }: {
   agents: AiAgent[];
   providerLabel: (key: string) => string;
+  projectKey: string;
   selected: AiAgent | null;
+  threadId: string | null;
   onSelectAgent: (id: number) => void;
   onShowHistory: () => void;
   onNewChat: () => void;
   onMinimize: () => void;
 }) {
   const t = useTranslations('aiChat');
+  const sessionId = useThreadSessionId(projectKey, selected?.id ?? null, threadId);
 
   return (
     <div className="flex items-center gap-1 border-b px-2.5 py-2">
@@ -52,7 +60,7 @@ export function FloatingChatHeader({
                 {selected?.name ?? t('noAgents')}
               </div>
               <div className="truncate text-xs leading-tight text-muted-foreground">
-                {selected ? `@${selected.username}` : t('addInternalAgent')}
+                {selected ? `@${selected.username}` : t('addAgent')}
               </div>
             </div>
             {selected && <ChevronDown className="size-4 shrink-0 text-muted-foreground" />}
@@ -71,7 +79,11 @@ export function FloatingChatHeader({
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm">{agent.name}</div>
                 <div className="truncate text-xs text-muted-foreground">
-                  {agentModelLabel(agent, providerLabel, t('noModel'))}
+                  {agent.kind === 'external' ? (
+                    <AgentRunnerStatus agent={agent} compact />
+                  ) : (
+                    agentModelLabel(agent, providerLabel, t('noModel'))
+                  )}
                 </div>
               </div>
               {agent.id === selected?.id && <Check className="size-4 shrink-0" />}
@@ -80,6 +92,7 @@ export function FloatingChatHeader({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {sessionId && <AiChatSessionBadge compact sessionId={sessionId} />}
       <Button
         variant="ghost"
         size="icon"

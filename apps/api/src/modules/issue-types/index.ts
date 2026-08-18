@@ -1,23 +1,16 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { guards } from '../shared/guards';
-import { HttpError } from '../shared/lib';
-import { commonErrors } from '../shared/responses';
-import { createIssueType, updateIssueType, deleteIssueType } from './store';
-
-const typeParams = t.Object({ projectKey: t.String(), typeId: t.Numeric() });
-
-// An issue type DTO (IssueTypeRow from the store).
-const IssueTypeResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  icon: t.String(),
-  color: t.String(),
-  isDefault: t.Boolean(),
-  position: t.Number(),
-});
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { guards } from '#shared/guards';
+import { HttpError } from '#shared/lib';
+import { commonErrors } from '#shared/responses';
+import {
+  IssueTypeResponse,
+  createIssueTypeBody,
+  issueTypeParams,
+  updateIssueTypeBody,
+} from './model';
+import { createIssueType, updateIssueType, deleteIssueType } from './service';
 
 export const issueTypeRoutes = new Elysia({
   name: 'issue-types',
@@ -31,12 +24,7 @@ export const issueTypeRoutes = new Elysia({
       return createIssueType({ projectId: project.id, ...body });
     },
     {
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        icon: t.Optional(t.String()),
-        color: t.Optional(t.String()),
-        isDefault: t.Optional(t.Boolean()),
-      }),
+      body: createIssueTypeBody,
       permission: ['issue_types', 'create'],
       response: { 201: IssueTypeResponse, ...commonErrors },
       detail: {
@@ -56,12 +44,8 @@ export const issueTypeRoutes = new Elysia({
       return type;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        color: t.Optional(t.String()),
-        isDefault: t.Optional(t.Boolean()),
-      }),
-      params: typeParams,
+      body: updateIssueTypeBody,
+      params: issueTypeParams,
       permission: ['issue_types', 'edit'],
       response: { 200: IssueTypeResponse, ...commonErrors },
       detail: {
@@ -79,7 +63,7 @@ export const issueTypeRoutes = new Elysia({
       return noContent();
     },
     {
-      params: typeParams,
+      params: issueTypeParams,
       permission: ['issue_types', 'delete'],
       response: { 204: t.Void(), ...commonErrors },
       detail: {

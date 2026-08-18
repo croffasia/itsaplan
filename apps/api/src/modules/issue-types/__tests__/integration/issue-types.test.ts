@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Issue types belong to one project. There is no GET /issue-types route — a type
 // is read back through the project view (GET /projects/:projectKey), whose
 // `issueTypes` field is listIssueTypes() ordered by position. A new project seeds
-// no types, so the list starts empty. Names are unique within a project (a UNIQUE
-// (project_id, name) constraint → 409 on a duplicate).
+// one default "Task" type at position 0, so the list starts with it. Names are unique
+// within a project (a UNIQUE (project_id, name) constraint → 409 on a duplicate).
 
 async function setupProject() {
   const owner = await signUpTestUser();
@@ -202,7 +202,7 @@ describe('issue-types', () => {
       expect(types.map((t) => t.id)).not.toContain(type.id);
     });
 
-    // The store deletes by (id, projectId) with no existence check, so a missing
+    // The service deletes by (id, projectId) with no existence check, so a missing
     // id is a no-op that still returns 204.
     it('returns 204 for a missing type', async () => {
       const { asOwner } = await setupProject();
@@ -215,8 +215,8 @@ describe('issue-types', () => {
   });
 
   // A type is addressed as /projects/:projectKey/issue-types/:typeId. The
-  // permission guard runs on :projectKey, so the store must scope the type to that
-  // project — otherwise a request under one project could edit or delete another
+  // permission guard runs on :projectKey, so the service must scope the type to
+  // that project — otherwise a request under one project could edit or delete another
   // project's type by passing its id. delete has no existence check (always 204),
   // so the isolation is asserted by the foreign type surviving, not by the status.
   describe('cross-project isolation', () => {

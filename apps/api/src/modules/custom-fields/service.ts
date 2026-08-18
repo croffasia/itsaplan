@@ -1,7 +1,7 @@
 import { db, customField, customFieldOption } from '@repo/db';
 import { and, asc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { getIssueTypeById } from '../../issue-types/store';
+import { getIssueTypeById } from '#modules/issue-types/service';
 
 // Data access for custom fields and their options. Every field belongs to a
 // project. A field with issue_type_id NULL is project-wide (applies to every

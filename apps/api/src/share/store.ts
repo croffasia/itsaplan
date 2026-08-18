@@ -3,7 +3,7 @@ import { db, issue, projectView } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { getProjectById, type ProjectRow } from '../projects/store';
 import { listColumns } from '#modules/columns/service';
-import { listIssueTypes } from '../issue-types/store';
+import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '../labels/store';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listAssigneeCandidates } from '../members/store';

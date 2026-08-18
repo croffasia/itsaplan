@@ -1,21 +1,10 @@
-import { Elysia, t } from 'elysia';
-import { guards } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { requireUser } from '../shared/access';
-import { accessErrors, commonErrors } from '../shared/responses';
-import { getPreferences, setPreferences } from './store';
-
-const EventToggles = t.Object({
-  assigned: t.Boolean(),
-  mentioned: t.Boolean(),
-  commented: t.Boolean(),
-  state_changed: t.Boolean(),
-});
-
-const PreferenceBody = t.Object({
-  emailEvents: EventToggles,
-  telegramEvents: EventToggles,
-});
+import { Elysia } from 'elysia';
+import { guards } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
+import { accessErrors, commonErrors } from '#shared/responses';
+import { NotificationPreferenceBody } from './model';
+import { getPreferences, setPreferences } from './service';
 
 // A member's own notification preferences for a project: which issue events they want
 // by email and/or Telegram. Every route is self-scoped to the session user, so bare
@@ -35,7 +24,7 @@ export const notificationPreferenceRoutes = new Elysia({
     ({ project, user }) => getPreferences(requireUser(user).id, project.id),
     {
       projectMember: true,
-      response: { 200: PreferenceBody, ...accessErrors },
+      response: { 200: NotificationPreferenceBody, ...accessErrors },
       detail: {
         summary: 'Get notification preferences',
         description: "Get the current user's notification preferences for a project.",
@@ -47,9 +36,9 @@ export const notificationPreferenceRoutes = new Elysia({
     '/projects/:projectKey/notification-preferences',
     ({ project, user, body }) => setPreferences(requireUser(user).id, project.id, body),
     {
-      body: PreferenceBody,
+      body: NotificationPreferenceBody,
       projectMember: true,
-      response: { 200: PreferenceBody, ...commonErrors },
+      response: { 200: NotificationPreferenceBody, ...commonErrors },
       detail: {
         summary: 'Update notification preferences',
         description: "Update the current user's notification preferences for a project.",

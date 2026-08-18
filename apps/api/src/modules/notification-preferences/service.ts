@@ -4,14 +4,9 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 // A member's own notification preferences for one project: for each issue event
 // type, whether they want it by email and/or Telegram. One row per (user, project);
 // absent means the member has not opted in and receives nothing (opt-in default).
-// The project's provider credentials live separately in notification-settings, and
-// which Telegram chat the member is reached at comes from the account they linked
-// (telegram/store.ts), which is instance-wide. Here is only the per-user choice of
-// events and channels.
 
 // The issue events a member can subscribe to, matching the inbox notification types.
-export const EVENT_KEYS = ['assigned', 'mentioned', 'commented', 'state_changed'] as const;
-export type EventKey = (typeof EVENT_KEYS)[number];
+export type EventKey = 'assigned' | 'mentioned' | 'commented' | 'state_changed';
 export type EventToggles = Record<EventKey, boolean>;
 
 export interface NotificationPreferenceDto {

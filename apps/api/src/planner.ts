@@ -33,7 +33,7 @@ import { agentRunnerRoutes } from './modules/agents/runner';
 import { agentChatRoutes } from './modules/agents/chat';
 import { notificationRoutes } from './notifications/routes';
 import { notificationSettingsRoutes } from './notification-settings/routes';
-import { notificationPreferenceRoutes } from './notification-preferences/routes';
+import { notificationPreferenceRoutes } from './modules/notification-preferences';
 import { userPreferenceRoutes } from './modules/user-preferences';
 import { telegramRoutes } from './telegram/routes';
 import { syncRoutes } from './sync/routes';

@@ -24,7 +24,7 @@ import { actionRoutes } from './modules/actions';
 import { webhookRoutes } from './webhooks/routes';
 import { githubSettingsRoutes } from './modules/github';
 import { dashboardRoutes } from './modules/dashboards';
-import { noteBoardRoutes } from './note-boards/routes';
+import { noteBoardRoutes } from './modules/note-boards';
 import { analyticsRoutes } from './modules/analytics';
 import { settingsRoutes } from './settings/routes';
 import { godRoutes } from './god/routes';

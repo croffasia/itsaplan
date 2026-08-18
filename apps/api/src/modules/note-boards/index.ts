@@ -1,11 +1,20 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { mcpTool } from '../mcp/generate';
-import { accessErrors, commonErrors } from '../shared/responses';
+import { noContent } from '#shared/http';
+import { guards } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { mcpTool } from '#mcp/generate';
+import { accessErrors, commonErrors } from '#shared/responses';
+import {
+  NoteBoardAccessCandidateListResponse,
+  NoteBoardResponse,
+  NoteBoardSummaryListResponse,
+  createNoteBoardBody,
+  listNoteBoardsQuery,
+  noteBoardParams,
+  updateNoteBoardBody,
+} from './model';
 import {
   listNoteBoards,
   createNoteBoard,
@@ -14,37 +23,7 @@ import {
   deleteNoteBoard,
   listNoteBoardAccessCandidates,
   type NoteBoardRow,
-} from './store';
-
-const boardParams = t.Object({ projectKey: t.String(), boardId: t.Numeric() });
-
-const Visibility = t.Union([t.Literal('public'), t.Literal('private'), t.Literal('restricted')]);
-
-// A note board DTO (NoteBoardRow from the store). canvas is a jsonb blob owned by
-// the UI (React Flow nodes/edges) and returned verbatim, so it is typed t.Any().
-const NoteBoardResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  ownerUserId: t.Nullable(t.String()),
-  createdByUserId: t.Nullable(t.String()),
-  visibility: Visibility,
-  memberIds: t.Array(t.String()),
-  name: t.String(),
-  canvas: t.Any(),
-  createdAt: t.String(),
-  updatedAt: t.String(),
-});
-
-// The list/switcher DTO: the board without its canvas or member list.
-const NoteBoardSummaryResponse = t.Omit(NoteBoardResponse, ['canvas', 'memberIds']);
-
-const NoteBoardAccessCandidateResponse = t.Object({
-  userId: t.String(),
-  name: t.String(),
-  image: t.Nullable(t.String()),
-  kind: t.Union([t.Literal('member'), t.Literal('agent')]),
-  canAccess: t.Boolean(),
-});
+} from './service';
 
 // Load a board that belongs to this project and that the user may access: a
 // public board is open to any member; a private one to its owner and the members
@@ -103,13 +82,8 @@ export const noteBoardRoutes = new Elysia({
     },
     {
       permission: ['note_boards', 'read'],
-      // Paged for the board switcher.
-      query: t.Object({
-        q: t.Optional(t.String()),
-        limit: t.Optional(t.Numeric({ minimum: 1, maximum: 50 })),
-        offset: t.Optional(t.Numeric({ minimum: 0 })),
-      }),
-      response: { 200: t.Array(NoteBoardSummaryResponse), ...accessErrors },
+      query: listNoteBoardsQuery,
+      response: { 200: NoteBoardSummaryListResponse, ...accessErrors },
       detail: {
         summary: "List a project's note boards",
         description:
@@ -124,7 +98,7 @@ export const noteBoardRoutes = new Elysia({
     async ({ project }) => listNoteBoardAccessCandidates(project.id),
     {
       permission: ['note_boards', 'edit'],
-      response: { 200: t.Array(NoteBoardAccessCandidateResponse), ...accessErrors },
+      response: { 200: NoteBoardAccessCandidateListResponse, ...accessErrors },
       detail: {
         summary: 'List who a board can be shared with',
         description:
@@ -140,7 +114,7 @@ export const noteBoardRoutes = new Elysia({
     },
     {
       permission: ['note_boards', 'read'],
-      params: boardParams,
+      params: noteBoardParams,
       response: { 200: NoteBoardResponse, ...accessErrors },
       detail: {
         summary: 'Get a note board with its canvas',
@@ -166,11 +140,7 @@ export const noteBoardRoutes = new Elysia({
     },
     {
       permission: ['note_boards', 'create'],
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        visibility: t.Optional(t.Union([t.Literal('public'), t.Literal('private')])),
-        canvas: t.Optional(t.Any()),
-      }),
+      body: createNoteBoardBody,
       response: { 201: NoteBoardResponse, ...commonErrors },
       detail: {
         summary: 'Create a note board',
@@ -218,13 +188,8 @@ export const noteBoardRoutes = new Elysia({
     },
     {
       permission: ['note_boards', 'edit'],
-      params: boardParams,
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        canvas: t.Optional(t.Any()),
-        visibility: t.Optional(Visibility),
-        memberIds: t.Optional(t.Array(t.String())),
-      }),
+      params: noteBoardParams,
+      body: updateNoteBoardBody,
       response: { 200: NoteBoardResponse, ...commonErrors },
       detail: {
         summary: 'Update a note board',
@@ -244,7 +209,7 @@ export const noteBoardRoutes = new Elysia({
     },
     {
       permission: ['note_boards', 'delete'],
-      params: boardParams,
+      params: noteBoardParams,
       response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete a note board',

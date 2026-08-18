@@ -1,7 +1,7 @@
 import { db, noteBoard, noteBoardMember } from '@repo/db';
 import { and, desc, eq, exists, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
-import { iso } from '../shared/lib';
-import { hasPermission } from '../shared/permissions';
+import { iso } from '#shared/lib';
+import { hasPermission } from '#shared/permissions';
 import { listAssigneeCandidates, listMemberContexts } from '#modules/members/service';
 
 // Note boards: a freeform canvas of sticky notes. canvas is a jsonb blob owned by
@@ -12,7 +12,7 @@ import { listAssigneeCandidates, listMemberContexts } from '#modules/members/ser
 
 // The three states the UI offers, derived from the two columns above: a board with
 // an owner and no granted members is private, one with granted members restricted.
-export type NoteBoardVisibility = 'public' | 'private' | 'restricted';
+type NoteBoardVisibility = 'public' | 'private' | 'restricted';
 
 export interface NoteBoardRow {
   id: number;

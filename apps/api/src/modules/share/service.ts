@@ -1,22 +1,22 @@
 import { randomUUID } from 'node:crypto';
 import { db, issue, projectView } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { getProjectById, type ProjectRow } from '../projects/store';
+import { getProjectById, type ProjectRow } from '../../projects/store';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listAssigneeCandidates } from '#modules/members/service';
-import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '../issues/store';
-import { listFeed, type FeedItemRow } from '../issues/activity';
+import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '../../issues/store';
+import { listFeed, type FeedItemRow } from '../../issues/activity';
 import {
   attachBoardLinks,
   listIssueLinks,
   type BoardIssueLink,
   type IssueLinkRow,
-} from '../issues/links';
-import { getParentRef, listSubtasks, type IssueRef } from '../issues/subtasks';
-import { applyFilters } from '../views/filters';
+} from '../../issues/links';
+import { getParentRef, listSubtasks, type IssueRef } from '../../issues/subtasks';
+import { applyFilters } from '../../views/filters';
 
 // Public read-only sharing: an issue or a saved view carries an unguessable
 // share_token that, when set, makes it readable without a session through the
@@ -114,7 +114,7 @@ function redactIssue<T extends IssueRow>(row: T): T {
 }
 
 // The read-only feed shows the newest activity; a public share never paginates,
-// so it is capped at the store's max page (100). An issue with more than that
+// so it is capped at listFeed's max page (100). An issue with more than that
 // shows its latest 100 entries.
 async function issueFeed(issueId: number): Promise<FeedItemRow[]> {
   const page = await listFeed(issueId, { limit: 100 });

@@ -1,7 +1,7 @@
 import { db, projectInvite, projectMember, projectRole, project, user } from '@repo/db';
 import { and, desc, eq, sql } from 'drizzle-orm';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
-import type { MemberRole } from '../../members/store';
+import type { MemberRole } from '#modules/members/service';
 
 // Data access for project invites. An invite is a token-addressed grant of a
 // role to an email in a project. Creating one requires the project owner;

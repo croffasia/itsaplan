@@ -1,11 +1,18 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { authContext } from '../shared/auth-context';
-import { guards } from '../shared/guards';
-import { assertPermission, requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors } from '../shared/responses';
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { authContext } from '#shared/auth-context';
+import { guards } from '#shared/guards';
+import { assertPermission, requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors } from '#shared/responses';
+import { getRole } from '../../roles/store';
+import {
+  MemberListResponse,
+  memberParams,
+  setMemberDescriptionBody,
+  setMemberRoleBody,
+} from './model';
 import {
   listMembers,
   getMembership,
@@ -13,46 +20,23 @@ import {
   setMembership,
   setMemberDescription,
   countOwners,
-} from './store';
-import { getRole } from '../roles/store';
-
-const memberParams = t.Object({ projectKey: t.String(), userId: t.String() });
-const memberRole = t.Union([t.Literal('owner'), t.Literal('member')]);
-
-// A member DTO (MemberRow from the store).
-const MemberResponse = t.Object({
-  userId: t.String(),
-  name: t.String(),
-  email: t.String(),
-  image: t.Nullable(t.String()),
-  role: memberRole,
-  roleId: t.Nullable(t.Number()),
-  roleName: t.Nullable(t.String()),
-  description: t.String(),
-  isAgent: t.Boolean(),
-  createdAt: t.String(),
-});
+} from './service';
 
 export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Members'] } })
   .use(authContext)
   .use(guards)
-  // Members with members_manage read may see who else is on the project.
   .get(
     '/projects/:projectKey/members',
     async ({ project }) => {
       return listMembers(project.id);
     },
     {
-      params: t.Object({ projectKey: t.String() }),
       permission: ['members_manage', 'read'],
-      response: { 200: t.Array(MemberResponse), ...accessErrors },
+      response: { 200: MemberListResponse, ...accessErrors },
       detail: { summary: 'List project members', ...mcpTool('list_members') },
     },
   )
 
-  // Set a member's role. Owner only. role "owner" promotes them to owner (owners
-  // bypass roles); role "member" assigns a custom role by roleId (null falls back
-  // to the default role). Demoting the last owner is refused.
   .patch(
     '/projects/:projectKey/members/:userId',
     async ({ project, params, body, user }) => {
@@ -83,7 +67,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
     },
     {
       params: memberParams,
-      body: t.Object({ role: memberRole, roleId: t.Optional(t.Nullable(t.Integer())) }),
+      body: setMemberRoleBody,
       projectOwner: true,
       response: { 204: t.Void(), ...commonErrors },
       detail: {
@@ -96,9 +80,8 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
     },
   )
 
-  // Set a member's project description (what they do). A member may edit their own;
-  // an owner may edit anyone's. The description is shown on the members page and
-  // given to agents so they can pick who to tag on an unassigned issue.
+  // The description is shown on the members page and given to agents so they can
+  // pick who to tag on an unassigned issue.
   .patch(
     '/projects/:projectKey/members/:userId/description',
     async ({ project, params, body, user }) => {
@@ -115,7 +98,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
     },
     {
       params: memberParams,
-      body: t.Object({ description: t.String({ maxLength: 500 }) }),
+      body: setMemberDescriptionBody,
       projectMember: true,
       response: { 204: t.Void(), ...commonErrors },
       detail: {
@@ -127,10 +110,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
     },
   )
 
-  // Revoke a member's access, or leave the project yourself. Removing someone
-  // else requires members_manage delete (owners bypass); a member may always
-  // remove themselves. The last owner cannot be removed. New members join through
-  // invites, so there is no direct add here.
+  // New members join through invites, so there is no direct add here.
   .delete(
     '/projects/:projectKey/members/:userId',
     async ({ project, params, user }) => {

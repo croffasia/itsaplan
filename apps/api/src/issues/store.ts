@@ -53,7 +53,7 @@ import { getAssignTriggerAgent, isProjectAgent } from '#modules/agents/core/serv
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
-import { getMembership } from '../members/store';
+import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { applySubtaskAutomation } from './automation';
 import { assertWipLimit, wipLimitBreach } from '#modules/columns/service';

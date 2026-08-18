@@ -3,7 +3,7 @@ import { requireUser } from '#shared/access';
 import { authContext } from '#shared/auth-context';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
-import { getMembership } from '../../members/store';
+import { getMembership } from '#modules/members/service';
 import { PreferencePatch, PreferenceResponse } from './model';
 import { getPreferences, isValidTimezone, updatePreferences } from './service';
 import { localeFromAcceptLanguage } from './locale';

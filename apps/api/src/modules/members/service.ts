@@ -1,12 +1,12 @@
 import { db, projectMember, projectRole, user, aiAgent } from '@repo/db';
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import { iso } from '../shared/lib';
+import { iso } from '#shared/lib';
 import {
   defaultMemberPermissions,
   fullPermissions,
   normalizePermissions,
   type Permissions,
-} from '../shared/permissions';
+} from '#shared/permissions';
 
 // Data access for project membership: which users can reach a project and their
 // role in it ("owner" or "member"). Access checks resolve the owning project of

@@ -1,6 +1,6 @@
 import { HttpError } from './lib';
 import { getProjectByKey, type ProjectRow } from '../projects/store';
-import { getMembership, getMemberContext } from '../members/store';
+import { getMembership, getMemberContext } from '#modules/members/service';
 import { hasPermission, type PermissionAction, type PermissionResource } from './permissions';
 
 // The authenticated user carried on the request context. Populated by the

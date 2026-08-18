@@ -1,6 +1,6 @@
 import { db, projectMember, projectRole, revision } from '@repo/db';
 import { and, eq, inArray } from 'drizzle-orm';
-import { toMemberContext, type MemberRole } from '../members/store';
+import { toMemberContext, type MemberRole } from '#modules/members/service';
 import { hasPermission, type PermissionResource } from '../shared/permissions';
 
 // The revision engine's read side. The counters themselves are written by the

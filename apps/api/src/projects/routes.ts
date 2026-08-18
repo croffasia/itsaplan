@@ -7,7 +7,7 @@ import { guards } from '../shared/guards';
 import { requireUser } from '../shared/access';
 import { isMcpRequest } from '../shared/mcp-request';
 import { accessErrors, commonErrors, errors } from '../shared/responses';
-import { getMemberContext, listAssigneeCandidates } from '../members/store';
+import { getMemberContext, listAssigneeCandidates } from '#modules/members/service';
 import {
   listProjects,
   createProject,
@@ -99,7 +99,7 @@ const ProjectListItemResponse = t.Composite([
   }),
 ]);
 
-// An assignable candidate (AssigneeCandidate from members/store): a project
+// An assignable candidate (AssigneeCandidate from members/service): a project
 // member or an AI agent's bot user.
 const AssigneeCandidateResponse = t.Object({
   userId: t.String(),
@@ -161,7 +161,7 @@ const ProjectSettingsResponse = t.Object({
   features: FeaturesResponse,
 });
 
-// The caller's own role in a project (from MemberContext in members/store). The
+// The caller's own role in a project (from MemberContext in members/service). The
 // resolved permission matrix is a sibling `permissions` key on the board payload.
 const ViewerResponse = t.Object({
   role: t.Union([t.Literal('owner'), t.Literal('member')]),

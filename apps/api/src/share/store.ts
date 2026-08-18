@@ -6,7 +6,7 @@ import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
-import { listAssigneeCandidates } from '../members/store';
+import { listAssigneeCandidates } from '#modules/members/service';
 import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '../issues/store';
 import { listFeed, type FeedItemRow } from '../issues/activity';
 import {

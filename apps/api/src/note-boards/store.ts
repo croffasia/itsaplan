@@ -2,7 +2,7 @@ import { db, noteBoard, noteBoardMember } from '@repo/db';
 import { and, desc, eq, exists, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
 import { iso } from '../shared/lib';
 import { hasPermission } from '../shared/permissions';
-import { listAssigneeCandidates, listMemberContexts } from '../members/store';
+import { listAssigneeCandidates, listMemberContexts } from '#modules/members/service';
 
 // Note boards: a freeform canvas of sticky notes. canvas is a jsonb blob owned by
 // the UI (React Flow nodes + edges + viewport); this layer stores and returns it

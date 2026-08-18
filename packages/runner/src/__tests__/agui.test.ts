@@ -185,6 +185,18 @@ describe('answer stream', () => {
     expect(text(sink.events)).toBe('Looking at it.');
   });
 
+  it('ignores a line that parses to something other than an object', async () => {
+    for (const format of ['claude-stream-json', 'codex-jsonl', 'opencode-json'] as const) {
+      const sink = collect();
+      const stream = new AnswerStream(format, 'chat:1:u:x', '7', sink.send);
+
+      stream.write('null\n42\n');
+      await stream.finish('');
+
+      expect(types(sink.events)).toEqual(['RUN_STARTED', 'RUN_FINISHED']);
+    }
+  });
+
   it('reports the session each format names, from its first line', async () => {
     const claude = collect();
     const claudeStream = new AnswerStream('claude-stream-json', 'chat:1:u:x', '7', claude.send);

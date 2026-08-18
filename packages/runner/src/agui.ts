@@ -161,6 +161,9 @@ export class AnswerStream {
       this.appendText(`${trimmed}\n`);
       return;
     }
+    // A line that parses to null, a number or a string carries none of the fields below,
+    // and reading them off it would end the run with a type error.
+    if (!parsed || typeof parsed !== 'object') return;
     switch (this.format) {
       case 'claude-stream-json':
         this.readClaudeLine(parsed as StreamJsonLine);

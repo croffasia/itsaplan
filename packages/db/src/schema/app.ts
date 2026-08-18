@@ -4,6 +4,7 @@
 import { sql } from 'drizzle-orm';
 import {
   bigint,
+  bigserial,
   boolean,
   check,
   type AnyPgColumn,
@@ -500,6 +501,91 @@ export const agentRun = pgTable(
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),
     index('agent_run_schedule_idx').on(t.scheduleId),
   ],
+);
+
+// A conversation between one member and one external agent. The internal agents'
+// threads are held by Mastra's own store; an external agent is driven by a runner on
+// its operator's machine, which has no memory of its own, so the conversation lives
+// here. The id carries the same shape as a Mastra chat thread id (see
+// runtime/thread-ids), which is what lets the chat UI address both kinds the same way.
+export const agentChatThread = pgTable(
+  'agent_chat_thread',
+  {
+    id: text('id').primaryKey(),
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    title: text('title'),
+    // The session the runner's coding agent keeps for this thread on its own machine.
+    // Set once the runner reports the session it started; null means the next message
+    // starts a fresh one and is sent with the conversation framed into its prompt.
+    cliSessionId: text('cli_session_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('agent_chat_thread_agent_user_idx').on(t.agentId, t.userId, t.updatedAt.desc())],
+);
+
+// One turn of a chat thread, and for an agent turn also the queue row the runner
+// drains. A member's message is written 'success' with its text; the agent's answer is
+// inserted empty and 'pending', goes 'streaming' when a runner claims it, and is filled
+// in from the events that runner reports. A claim pushes next_attempt_at forward by a
+// lease, so an answer whose runner dies is claimable again once the lease expires —
+// which is why the due index covers both live states. agent_id repeats the thread's
+// agent so a runner finds its due turns with one index.
+export const agentChatMessage = pgTable(
+  'agent_chat_message',
+  {
+    id: serial('id').primaryKey(),
+    threadId: text('thread_id')
+      .notNull()
+      .references(() => agentChatThread.id, { onDelete: 'cascade' }),
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    role: text('role').notNull(),
+    // The turn's text: what the member wrote, or what the agent has said so far. It is
+    // appended to as text events arrive, so the transcript reads correctly mid-answer.
+    content: text('content').notNull().default(''),
+    status: text('status').notNull().default('pending'),
+    attempts: integer('attempts').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
+    lastError: text('last_error'),
+    startedAt: timestamp('started_at', { withTimezone: true }),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('agent_chat_message_role_check', sql`${t.role} IN ('user', 'assistant')`),
+    check(
+      'agent_chat_message_status_check',
+      sql`${t.status} IN ('pending', 'streaming', 'success', 'failed')`,
+    ),
+    index('agent_chat_message_thread_idx').on(t.threadId, t.id),
+    index('agent_chat_message_due_idx')
+      .on(t.agentId, t.nextAttemptAt)
+      .where(sql`${t.status} IN ('pending', 'streaming')`),
+  ],
+);
+
+// What the runner reported while producing one agent turn, as AG-UI events (text
+// deltas, tool calls, the run's lifecycle). Append-only: the id is the cursor a reader
+// resumes from, which is what lets the browser reconnect mid-answer without replaying
+// what it already has.
+export const agentChatEvent = pgTable(
+  'agent_chat_event',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    messageId: integer('message_id')
+      .notNull()
+      .references(() => agentChatMessage.id, { onDelete: 'cascade' }),
+    payload: jsonb('payload').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('agent_chat_event_message_idx').on(t.messageId, t.id)],
 );
 
 // Stored credentials for a project's integrations. One store for every secret: the

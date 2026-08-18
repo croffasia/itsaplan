@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '#shared/http';
+import { noContent, sseFrame, sseResponse } from '#shared/http';
 import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
@@ -13,6 +13,7 @@ import {
   deleteAgent,
   regenerateKey,
   getAgentById,
+  type AgentKind,
 } from './service';
 import {
   AgentRunPageResponse,
@@ -31,12 +32,17 @@ import {
   threadParams,
   updateAgentBody,
 } from './model';
-import { runAgent, streamAgent, type RunOpts } from './runtime';
+import { runAgent, streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
 import { peoplePreamble } from './prompt/run-context';
 import type { SessionUser } from '#shared/auth-context';
 import { listAgentRuns } from './run-queue';
 import { listChatThreads, getChatThreadMessages, deleteChatThread } from './runtime/memory';
 import { isOwnChatThread } from './runtime/thread-ids';
+import {
+  listThreads as listExternalThreads,
+  getThreadMessages as getExternalThreadMessages,
+  deleteThread as deleteExternalThread,
+} from '../chat/service';
 
 // Run options for an interactive chat run (the test chat): the caller owns the memory
 // thread and is named to the agent as the requester. A supplied thread id must be one
@@ -54,6 +60,23 @@ function chatRunOpts(user: SessionUser | null, agentId: number, threadId?: strin
       requester: { name: user?.name ?? caller.email ?? 'User', userId: caller.id },
     }),
   };
+}
+
+async function* runFrames(events: AsyncIterable<AgentRunEvent>): AsyncGenerator<string> {
+  for await (const event of events) yield sseFrame(event);
+}
+
+// Where a thread of this agent is kept: an external agent's conversations are held by
+// the chat feed its runner drains, an internal agent's by the runtime memory. The routes
+// below serve both through the same shapes.
+function threadStore(kind: AgentKind) {
+  return kind === 'external'
+    ? {
+        list: listExternalThreads,
+        messages: getExternalThreadMessages,
+        remove: deleteExternalThread,
+      }
+    : { list: listChatThreads, messages: getChatThreadMessages, remove: deleteChatThread };
 }
 
 export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['AI Agents'] } })
@@ -228,33 +251,17 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   // agent is doing as it happens. Errors mid-stream arrive as an `error` event.
   .post(
     '/projects/:projectKey/ai-agents/:agentId/run/stream',
-    ({ params, project, body, user }) => {
-      const events = streamAgent(
-        params.agentId,
-        project.id,
-        body.prompt,
-        chatRunOpts(user, params.agentId, body.threadId),
-      );
-      const encoder = new TextEncoder();
-      const stream = new ReadableStream<Uint8Array>({
-        async start(controller) {
-          for await (const event of events) {
-            // The consumer cancelled (e.g. closed the chat): stop consuming the
-            // agent stream instead of enqueuing onto a closed controller.
-            if (controller.desiredSize === null) return;
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
-          }
-          controller.close();
-        },
-      });
-      return new Response(stream, {
-        headers: {
-          'Content-Type': 'text/event-stream',
-          'Cache-Control': 'no-cache',
-          Connection: 'keep-alive',
-        },
-      });
-    },
+    ({ params, project, body, user }) =>
+      sseResponse(
+        runFrames(
+          streamAgent(
+            params.agentId,
+            project.id,
+            body.prompt,
+            chatRunOpts(user, params.agentId, body.threadId),
+          ),
+        ),
+      ),
     {
       body: runBody,
       params: agentParams,
@@ -280,7 +287,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       const caller = requireUser(user);
       const agent = await getAgentById(params.agentId, project.id);
       if (!agent) throw new HttpError(404, 'Agent not found');
-      return listChatThreads(caller.id, params.agentId);
+      return threadStore(agent.kind).list(caller.id, params.agentId);
     },
     {
       params: agentParams,
@@ -298,7 +305,11 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       const caller = requireUser(user);
       const agent = await getAgentById(params.agentId, project.id);
       if (!agent) throw new HttpError(404, 'Agent not found');
-      const messages = await getChatThreadMessages(params.threadId, caller.id, query.page ?? 0);
+      const messages = await threadStore(agent.kind).messages(
+        params.threadId,
+        caller.id,
+        query.page,
+      );
       if (messages === null) throw new HttpError(404, 'Thread not found');
       return messages;
     },
@@ -319,9 +330,8 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       const caller = requireUser(user);
       const agent = await getAgentById(params.agentId, project.id);
       if (!agent) throw new HttpError(404, 'Agent not found');
-      if (!(await deleteChatThread(params.threadId, caller.id))) {
-        throw new HttpError(404, 'Thread not found');
-      }
+      const deleted = await threadStore(agent.kind).remove(params.threadId, caller.id);
+      if (!deleted) throw new HttpError(404, 'Thread not found');
       return noContent();
     },
     {

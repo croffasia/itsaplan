@@ -544,6 +544,9 @@ describe('ai agents', () => {
       'GET /projects/:projectKey/ai-agents/:agentId/threads',
       'GET /projects/:projectKey/ai-agents/:agentId/threads/:threadId/messages',
       'DELETE /projects/:projectKey/ai-agents/:agentId/threads/:threadId',
+      'POST /projects/:projectKey/ai-agents/:agentId/chat',
+      'GET /projects/:projectKey/ai-agents/:agentId/chat/:messageId/events',
+      'GET /projects/:projectKey/ai-agents/:agentId/chat/:messageId/stream',
     ]);
   });
 });

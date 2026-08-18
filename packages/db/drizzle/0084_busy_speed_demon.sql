@@ -1,0 +1,1 @@
+ALTER TABLE "agent_chat_thread" ADD COLUMN "cli_session_id" text;

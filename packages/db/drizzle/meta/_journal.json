@@ -582,6 +582,20 @@
       "when": 1786805381958,
       "tag": "0082_yellow_proudstar",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1786911699600,
+      "tag": "0083_ambitious_wendell_rand",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1786919228260,
+      "tag": "0084_busy_speed_demon",
+      "breakpoints": true
     }
   ]
 }

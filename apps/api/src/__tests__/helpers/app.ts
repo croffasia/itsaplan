@@ -1,6 +1,10 @@
 import { treaty } from '@elysiajs/eden';
 import { app } from '../../app';
 
+// The app itself, for a route Treaty cannot drive (an event stream, where there is no
+// JSON body to hand back).
+export { app };
+
 // Anonymous Eden Treaty client bound to the in-memory app (no network, no port).
 // Use for unauthenticated routes; planner routes return 401 through this.
 export const api = treaty(app);

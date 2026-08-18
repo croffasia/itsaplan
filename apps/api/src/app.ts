@@ -68,6 +68,10 @@ export const app = new Elysia()
             description: "Run queue an external agent's runner drains with the agent's API key",
           },
           {
+            name: 'Agent Chat',
+            description: "Chat with an external agent: the member's messages and its runner's feed",
+          },
+          {
             name: 'Agent Tools',
             description: 'Tools configured on a credential and given to agents',
           },

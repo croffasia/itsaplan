@@ -80,9 +80,16 @@
     "loadingEarlier": "Loading earlier messages…",
     "messages": "Conversation messages",
     "usingTool": "Using {tool}…",
+    "usedTool": "Used {tool}",
+    "usedTools": "{count, plural, one {Used # tool} other {Used # tools}}",
+    "toolInput": "Input",
+    "toolOutput": "Output",
     "thinking": "Thinking…",
+    "waitingForRunner": "Waiting for the runner…",
     "title": "Chat with {agent}",
-    "unreachable": "Could not reach the agent. Try again."
+    "unreachable": "Could not reach the agent. Try again.",
+    "runnerOffline": "Runner offline",
+    "runnerOfflineHint": "Start the runner on your machine to chat with this agent."
   },
   "share": {
     "createFailed": "Could not create the link. Try again.",

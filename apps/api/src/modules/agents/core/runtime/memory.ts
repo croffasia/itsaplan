@@ -1,6 +1,8 @@
 import { Memory } from '@mastra/memory';
 import { PostgresStore } from '@mastra/pg';
 import { toIso } from '../helpers/dates';
+import { appendTextPart, toolArgsText, toolText } from '../../chat-parts';
+import type { ChatMessageDTO, ChatMessagePage, ChatPart, ChatThreadSummary } from '../../model';
 
 // Conversation memory for internal agents. Threads and their messages are
 // persisted in a Postgres-backed store (Mastra manages its own tables), reusing
@@ -100,14 +102,6 @@ export async function deleteThreadsWhere(
   return threads.length;
 }
 
-// One chat thread in the history list.
-export type ChatThreadSummary = {
-  id: string;
-  title: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
 // Lists a user's chat threads with one agent, newest first. Scoped by resourceId
 // (the caller) and the agent binding in metadata, so a caller only ever sees their
 // own conversations with that agent.
@@ -123,25 +117,11 @@ export async function listChatThreads(
   return res.threads.map((t) => ({
     id: t.id,
     title: t.title && t.title.length > 0 ? t.title : null,
+    cliSessionId: null,
     createdAt: toIso(t.createdAt),
     updatedAt: toIso(t.updatedAt),
   }));
 }
-
-// One message in a restored conversation. Only user and assistant turns are
-// returned; tool and system messages are omitted (the UI shows text, not the raw
-// tool traffic).
-export type ChatMessageDTO = {
-  id: string;
-  role: 'user' | 'assistant';
-  text: string;
-  createdAt: string;
-};
-
-export type ChatMessagePage = {
-  items: ChatMessageDTO[];
-  nextPage: number | null;
-};
 
 // Loads the transcript of one chat thread for the given owner. Returns null when
 // the thread does not exist or is not owned by resourceId (so the caller maps it to
@@ -165,32 +145,43 @@ export async function getChatThreadMessages(
   const out: ChatMessageDTO[] = [];
   for (const m of messages) {
     if (m.role !== 'user' && m.role !== 'assistant') continue;
-    const text = messageText(m.content);
-    if (text) out.push({ id: m.id, role: m.role, text, createdAt: toIso(m.createdAt) });
+    const parts = messageParts(m.content);
+    if (parts.length > 0) {
+      out.push({ id: m.id, role: m.role, parts, createdAt: toIso(m.createdAt) });
+    }
   }
   return { items: out, nextPage: hasMore ? page + 1 : null };
 }
 
-// Extracts the plain text of a Mastra v2 message: the concatenation of its text
-// parts, falling back to the flat content string.
-function messageText(content: unknown): string {
-  if (content && typeof content === 'object') {
-    const parts = (content as { parts?: unknown }).parts;
-    if (Array.isArray(parts)) {
-      const text = parts
-        .filter(
-          (p): p is { type: string; text: string } =>
-            !!p &&
-            typeof p === 'object' &&
-            (p as { type?: unknown }).type === 'text' &&
-            typeof (p as { text?: unknown }).text === 'string',
-        )
-        .map((p) => p.text)
-        .join('');
-      if (text) return text;
+// As much of a stored Mastra v2 message part as the chat reads.
+type StoredPart = {
+  type?: unknown;
+  text?: unknown;
+  toolInvocation?: { toolCallId?: unknown; toolName?: unknown; args?: unknown; result?: unknown };
+};
+
+// Reads a Mastra v2 message into the parts the chat shows: its text and the tool calls
+// it made, in the order they are stored. Falls back to the flat content string of a
+// message kept without parts.
+function messageParts(content: unknown): ChatPart[] {
+  if (!content || typeof content !== 'object') return [];
+  const { parts, content: flat } = content as { parts?: unknown; content?: unknown };
+  const out: ChatPart[] = [];
+  for (const part of Array.isArray(parts) ? parts : []) {
+    if (!part || typeof part !== 'object') continue;
+    const { type, text, toolInvocation } = part as StoredPart;
+    if (type === 'text' && typeof text === 'string') {
+      appendTextPart(out, text);
+    } else if (type === 'tool-invocation' && typeof toolInvocation?.toolName === 'string') {
+      out.push({
+        type: 'tool',
+        toolCallId: String(toolInvocation.toolCallId ?? ''),
+        toolName: toolInvocation.toolName,
+        args: toolArgsText(toolInvocation.args),
+        result: toolText(toolInvocation.result),
+      });
     }
-    const flat = (content as { content?: unknown }).content;
-    if (typeof flat === 'string') return flat;
   }
-  return '';
+  if (out.length > 0) return out;
+  return typeof flat === 'string' && flat ? [{ type: 'text', text: flat }] : [];
 }

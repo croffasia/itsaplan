@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import type { MastraMessagePart } from '@mastra/core/agent/message-list';
 import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -40,7 +41,7 @@ async function seedThread(
   resourceId: string,
   agent: { id: number; projectId: number },
   title: string,
-  turns: Array<{ role: 'user' | 'assistant'; text: string }> = [],
+  turns: Array<{ role: 'user' | 'assistant'; text: string; parts?: MastraMessagePart[] }> = [],
 ) {
   await ensureThread(
     threadId,
@@ -61,11 +62,15 @@ async function seedThread(
       createdAt: new Date(t++),
       content: {
         format: 2 as const,
-        parts: [{ type: 'text' as const, text: turn.text }],
+        parts: turn.parts ?? [{ type: 'text' as const, text: turn.text }],
         content: turn.text,
       },
     })),
   });
+}
+
+function textOf(message: { parts: Array<{ type: string; text?: string }> }): string {
+  return message.parts.map((part) => (part.type === 'text' ? part.text : '')).join('');
 }
 
 // Moves a seeded thread a minute into the past. Threads seeded one after another are
@@ -167,14 +172,56 @@ describe('agent chat history', () => {
       .threads({ threadId: 't1' })
       .messages.get();
     expect(res.status).toBe(200);
-    expect(res.data!.items.map((m) => ({ role: m.role, text: m.text }))).toEqual([
-      { role: 'user', text: 'list 5 posts' },
-      { role: 'assistant', text: 'here they are' },
+    expect(res.data!.items.map((m) => ({ role: m.role, parts: m.parts }))).toEqual([
+      { role: 'user', parts: [{ type: 'text', text: 'list 5 posts' }] },
+      { role: 'assistant', parts: [{ type: 'text', text: 'here they are' }] },
     ]);
     expect(res.data!.items.every((message) => !Number.isNaN(Date.parse(message.createdAt)))).toBe(
       true,
     );
     expect(res.data!.nextPage).toBeNull();
+  });
+
+  it('keeps a tool call between the stretches of text around it', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('t-tools', owner.userId, agent, 'tools', [
+      { role: 'user', text: 'what is left?' },
+      {
+        role: 'assistant',
+        text: 'Looking.Two things.',
+        parts: [
+          { type: 'text', text: 'Looking.' },
+          {
+            type: 'tool-invocation',
+            toolInvocation: {
+              toolCallId: 'call-1',
+              toolName: 'list_issues',
+              args: { status: 'open', __mastraMetadata: { runId: 'r1' } },
+              state: 'result',
+              result: 'two',
+            },
+          },
+          { type: 'text', text: 'Two things.' },
+        ],
+      },
+    ]);
+
+    const res = await agents(asOwner)({ agentId: agent.id })
+      .threads({ threadId: 't-tools' })
+      .messages.get();
+    expect(res.status).toBe(200);
+    expect(res.data!.items[1]!.parts).toEqual([
+      { type: 'text', text: 'Looking.' },
+      {
+        type: 'tool',
+        toolCallId: 'call-1',
+        toolName: 'list_issues',
+        args: '{"status":"open"}',
+        result: 'two',
+      },
+      { type: 'text', text: 'Two things.' },
+    ]);
   });
 
   it('returns an empty transcript for an owned thread with no messages', async () => {
@@ -203,15 +250,15 @@ describe('agent chat history', () => {
       .messages.get();
     expect(latest.status).toBe(200);
     expect(latest.data!.items).toHaveLength(25);
-    expect(latest.data!.items[0]!.text).toBe('message 2');
-    expect(latest.data!.items[24]!.text).toBe('message 26');
+    expect(textOf(latest.data!.items[0]!)).toBe('message 2');
+    expect(textOf(latest.data!.items[24]!)).toBe('message 26');
     expect(latest.data!.nextPage).toBe(1);
 
     const earlier = await agents(asOwner)({ agentId: agent.id })
       .threads({ threadId: 'long' })
       .messages.get({ query: { page: 1 } });
     expect(earlier.status).toBe(200);
-    expect(earlier.data!.items.map((message) => message.text)).toEqual(['message 0', 'message 1']);
+    expect(earlier.data!.items.map(textOf)).toEqual(['message 0', 'message 1']);
     expect(earlier.data!.nextPage).toBeNull();
   });
 

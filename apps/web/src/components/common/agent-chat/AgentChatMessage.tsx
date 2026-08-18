@@ -1,12 +1,32 @@
 'use client';
 
 import type { ChatMessage } from '@/hooks/useAgentChat';
+import type { AiChatPart, AiChatToolPart } from '@/lib/api';
 import { formatLongDate, formatTime } from '@/utils/dates';
 import Markdown from '@/components/common/Markdown';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import { Message, MessageContent, MessageFooter } from '@/components/ui/message';
 import { MessageScrollerItem } from '@/components/ui/message-scroller';
+import AgentChatToolCalls from './AgentChatToolCalls';
+
+type Block = { text: string } | { tools: AiChatToolPart[] };
+
+// Tool calls that follow one another are shown as one block, in the place between the
+// two stretches of text where they were made.
+function blocksOf(parts: AiChatPart[]): Block[] {
+  const blocks: Block[] = [];
+  for (const part of parts) {
+    if (part.type === 'text') {
+      blocks.push({ text: part.text });
+      continue;
+    }
+    const last = blocks[blocks.length - 1];
+    if (last && 'tools' in last) last.tools.push(part);
+    else blocks.push({ tools: [part] });
+  }
+  return blocks;
+}
 
 export default function AgentChatMessage({
   message,
@@ -30,14 +50,20 @@ export default function AgentChatMessage({
       )}
       <Message align={isUser ? 'end' : 'start'}>
         <MessageContent>
-          <Bubble variant={isUser ? 'muted' : 'ghost'}>
-            <BubbleContent>
-              {isUser ? (
-                <span className="whitespace-pre-wrap">{message.text}</span>
+          <Bubble variant={isUser ? 'muted' : 'ghost'} className="gap-2">
+            {blocksOf(message.parts).map((block, index) =>
+              'tools' in block ? (
+                <AgentChatToolCalls key={index} tools={block.tools} />
               ) : (
-                <Markdown>{message.text}</Markdown>
-              )}
-            </BubbleContent>
+                <BubbleContent key={index}>
+                  {isUser ? (
+                    <span className="whitespace-pre-wrap">{block.text}</span>
+                  ) : (
+                    <Markdown>{block.text}</Markdown>
+                  )}
+                </BubbleContent>
+              ),
+            )}
           </Bubble>
           <MessageFooter>{formatTime(message.createdAt)}</MessageFooter>
         </MessageContent>

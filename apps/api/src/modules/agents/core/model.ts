@@ -164,9 +164,30 @@ export const AgentRunPageResponse = t.Object({
 export const ChatThreadResponse = t.Object({
   id: t.String(),
   title: t.Nullable(t.String()),
+  cliSessionId: t.Nullable(
+    t.String({
+      description:
+        "The coding agent session an external agent's runner keeps for this thread on its " +
+        'own machine. Always null for an internal agent, which runs in this process.',
+    }),
+  ),
   createdAt: t.String(),
   updatedAt: t.String(),
 });
+
+// One piece of a message (ChatPart): a stretch of text, or a tool the agent called
+// between two of them, with what it was given and what it answered where the agent
+// reported them.
+const ChatPartResponse = t.Union([
+  t.Object({ type: t.Literal('text'), text: t.String() }),
+  t.Object({
+    type: t.Literal('tool'),
+    toolCallId: t.String(),
+    toolName: t.String(),
+    args: t.Optional(t.String()),
+    result: t.Optional(t.String()),
+  }),
+]);
 
 // One page of a chat thread's transcript (ChatMessagePage).
 export const ChatMessagesResponse = t.Object({
@@ -174,7 +195,7 @@ export const ChatMessagesResponse = t.Object({
     t.Object({
       id: t.String(),
       role: t.Union([t.Literal('user'), t.Literal('assistant')]),
-      text: t.String(),
+      parts: t.Array(ChatPartResponse),
       createdAt: t.String(),
     }),
   ),

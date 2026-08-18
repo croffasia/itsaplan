@@ -80,9 +80,16 @@
     "loadingEarlier": "جارٍ تحميل الرسائل السابقة…",
     "messages": "رسائل المحادثة",
     "usingTool": "يستخدم {tool}…",
+    "usedTool": "تم استخدام {tool}",
+    "usedTools": "{count, plural, zero {لم تُستخدم أدوات} one {تم استخدام أداة واحدة} two {تم استخدام أداتين} few {تم استخدام # أدوات} many {تم استخدام # أداة} other {تم استخدام # أداة}}",
+    "toolInput": "المدخلات",
+    "toolOutput": "المخرجات",
     "thinking": "جارٍ التفكير…",
+    "waitingForRunner": "مستني الرانر…",
     "title": "محادثة مع {agent}",
-    "unreachable": "تعذّر الوصول إلى الوكيل. حاول مرة أخرى."
+    "unreachable": "تعذّر الوصول إلى الوكيل. حاول مرة أخرى.",
+    "runnerOffline": "المنفّذ (runner) مش متصل",
+    "runnerOfflineHint": "شغّل المنفّذ على جهازك عشان تقدر تكلّم الوكيل ده."
   },
   "share": {
     "createFailed": "تعذّر إنشاء الرابط. حاول مرة أخرى.",

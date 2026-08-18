@@ -100,6 +100,7 @@
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "date-fns": "^4.4.0",
+        "highlight.js": "~11.11.0",
         "inter-ui": "^4.1.1",
         "isomorphic-dompurify": "^3.22.0",
         "lowlight": "^3.3.0",
@@ -239,12 +240,13 @@
     },
     "packages/runner": {
       "name": "@itsaplan/runner",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "bin": {
         "itsaplan-runner": "./dist/cli.js",
       },
       "devDependencies": {
         "@repo/eslint-config": "workspace:*",
+        "@types/bun": "latest",
         "@types/node": "^26.2.0",
         "eslint": "^9.39.0",
         "typescript": "^6.0.3",

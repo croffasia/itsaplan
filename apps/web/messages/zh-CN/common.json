@@ -80,9 +80,16 @@
     "loadingEarlier": "正在加载更早的消息…",
     "messages": "对话消息",
     "usingTool": "正在使用 {tool}…",
+    "usedTool": "已使用 {tool}",
+    "usedTools": "{count, plural, other {已使用 # 个工具}}",
+    "toolInput": "输入",
+    "toolOutput": "输出",
     "thinking": "正在思考…",
+    "waitingForRunner": "正在等待运行器…",
     "title": "与 {agent} 对话",
-    "unreachable": "无法连接代理，请重试。"
+    "unreachable": "无法连接代理，请重试。",
+    "runnerOffline": "运行器未连接",
+    "runnerOfflineHint": "在你的机器上启动运行器，才能与该智能体聊天。"
   },
   "share": {
     "createFailed": "无法创建链接，请重试。",

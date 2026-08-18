@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import type { UIEvent, WheelEvent } from 'react';
-import type { ChatMessage } from '@/hooks/useAgentChat';
+import type { ChatMessage, ChatStatus } from '@/hooks/useAgentChat';
 import { dayKey } from '@/utils/dates';
 import AgentChatMessage from './AgentChatMessage';
 import InitialScrollToEnd from './InitialScrollToEnd';
@@ -20,20 +20,26 @@ const loadThreshold = 48;
 
 export function AgentChatTranscript({
   messages,
-  isStreaming,
+  status,
   activeTool,
   hasEarlierMessages = false,
   isLoadingEarlier = false,
   onLoadEarlier,
 }: {
   messages: ChatMessage[];
-  isStreaming: boolean;
+  status: ChatStatus;
   activeTool: string | null;
   hasEarlierMessages?: boolean;
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
 }) {
   const t = useTranslations('common.agentChat');
+
+  let statusLabel: string;
+  if (status === 'queued') statusLabel = t('waitingForRunner');
+  else if (activeTool) statusLabel = t('usingTool', { tool: activeTool });
+  else statusLabel = t('thinking');
+
   const loadLocked = useRef(false);
   const hasLeftStart = useRef(false);
 
@@ -77,7 +83,7 @@ export function AgentChatTranscript({
         onWheel={handleWheel}
       >
         <MessageScrollerContent
-          aria-busy={isStreaming || isLoadingEarlier}
+          aria-busy={status !== 'ready' || isLoadingEarlier}
           className="mx-auto w-full max-w-3xl gap-6 p-4"
         >
           {messages.map((message, index) => {
@@ -91,12 +97,10 @@ export function AgentChatTranscript({
             );
           })}
 
-          {isStreaming && (
+          {status !== 'ready' && (
             <MessageScrollerItem messageId="stream-status">
               <Marker role="status">
-                <MarkerContent className="shimmer">
-                  {activeTool ? t('usingTool', { tool: activeTool }) : t('thinking')}
-                </MarkerContent>
+                <MarkerContent className="shimmer">{statusLabel}</MarkerContent>
               </Marker>
             </MessageScrollerItem>
           )}

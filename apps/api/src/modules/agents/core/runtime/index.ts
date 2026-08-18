@@ -9,6 +9,7 @@ import { buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
+import { toolArgsText, toolText } from '../../chat-parts';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { projectPreamble } from '../prompt/framing';
@@ -65,8 +66,8 @@ async function resolveModel(row: AiAgentRow): Promise<ModelConfig> {
 // and carries the conversation thread id; `error` reports a failure mid-stream.
 export type AgentRunEvent =
   | { type: 'text'; value: string }
-  | { type: 'tool-start'; toolCallId: string; toolName: string }
-  | { type: 'tool-end'; toolCallId: string; toolName: string }
+  | { type: 'tool-start'; toolCallId: string; toolName: string; args?: string }
+  | { type: 'tool-end'; toolCallId: string; toolName: string; result?: string }
   | { type: 'done'; threadId: string | null }
   | { type: 'error'; message: string };
 
@@ -147,6 +148,7 @@ export async function* streamAgent(
             type: 'tool-start',
             toolCallId: chunk.payload.toolCallId,
             toolName: chunk.payload.toolName,
+            args: toolArgsText(chunk.payload.args),
           };
           break;
         case 'tool-result':
@@ -154,6 +156,7 @@ export async function* streamAgent(
             type: 'tool-end',
             toolCallId: chunk.payload.toolCallId,
             toolName: chunk.payload.toolName,
+            result: toolText(chunk.payload.result),
           };
           break;
         case 'error':

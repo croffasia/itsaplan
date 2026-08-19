@@ -3,7 +3,7 @@
 Adapted from the [Apache Software Foundation Individual Contributor License Agreement
 v2.0](https://www.apache.org/licenses/icla.pdf).
 
-Thank you for your interest in It's a Plan, a project of VIBE DEV SPACE LLC (the
+Thank you for your interest in It's a Plan, a project of Andrii Poluosmak (the
 "Project Owner"). To clarify the intellectual property licence granted with
 Contributions from any person, the Project Owner must have a Contributor License
 Agreement ("Agreement") on file, signed by each Contributor, indicating agreement to the
@@ -112,6 +112,13 @@ available under [AGPL-3.0](LICENSE) or another licence approved by the
 [Open Source Initiative](https://opensource.org/licenses). The Project Owner may
 additionally license the Work, including Your Contributions, under separate commercial
 terms, and may operate the Work as a paid hosted service.
+
+## 10. Assignment
+
+The Project Owner may assign this Agreement, together with the licences granted in
+sections 2 and 3, to a successor in interest to the Work, whether an individual or a
+legal entity. This Agreement binds and benefits the Project Owner's successors and
+assigns, and the commitment in section 9 passes to the assignee.
 
 ## How to sign
 

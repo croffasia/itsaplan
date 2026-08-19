@@ -158,7 +158,7 @@ not a public issue, so we can fix it first. Details in [SECURITY.md](SECURITY.md
 
 ## License
 
-Copyright © 2026 VIBE DEV SPACE LLC.
+Copyright © 2026 Andrii Poluosmak.
 
 [AGPL-3.0](LICENSE), except `packages/runner`, which is
 [Apache-2.0](packages/runner/LICENSE).

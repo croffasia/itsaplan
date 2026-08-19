@@ -228,6 +228,6 @@ Do everything else in WSL: Node, the coding agent, the config file, and the runn
 
 ## License
 
-Copyright © 2026 VIBE DEV SPACE LLC.
+Copyright © 2026 Andrii Poluosmak.
 
 [Apache-2.0](LICENSE).

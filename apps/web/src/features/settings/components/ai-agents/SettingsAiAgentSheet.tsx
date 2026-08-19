@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Bot, X } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
+import { useAiAgentsQuery } from '@/services/aiAgents.service';
 import {
   Sheet,
   SheetClose,
@@ -64,18 +65,15 @@ function SheetBody({
   // The agent just created in this sheet, if any. Once set, the form switches from
   // create to edit for it without remounting.
   const [createdAgent, setCreatedAgent] = useState<AiAgent | null>(null);
-  // A new external agent's plaintext key, revealed once inline after create.
-  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  // The create response is a snapshot; re-read the row from the list so a key
+  // regenerated in this sheet updates the prefix it shows.
+  const agents = useAiAgentsQuery(projectKey).data ?? [];
+  const created = createdAgent && (agents.find((a) => a.id === createdAgent.id) ?? createdAgent);
 
-  const agent = initialAgent ?? createdAgent;
+  const agent = initialAgent ?? created;
   // Held here so the transcript and thread survive re-renders. No agent yet during
   // create → id 0; the chat is only reachable once the agent exists.
   const chat = useAgentChat(projectKey, agent?.id ?? 0, agent?.kind === 'external');
-
-  function onCreated(created: AiAgent, apiKey: string | null) {
-    setCreatedAgent(created);
-    setRevealedKey(apiKey);
-  }
 
   // The sheet is always full width: an existing agent shows the form and the chat side
   // by side; while creating one there is nothing to chat with, so the form takes the
@@ -124,9 +122,7 @@ function SheetBody({
             projectKey={projectKey}
             agent={agent}
             expanded
-            onCreated={onCreated}
-            revealedKey={revealedKey}
-            onDismissKey={() => setRevealedKey(null)}
+            onCreated={setCreatedAgent}
           />
         </div>
 

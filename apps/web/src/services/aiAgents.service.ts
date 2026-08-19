@@ -116,8 +116,12 @@ export function useUpdateAiAgent(projectKey: string | null) {
 }
 
 export function useRegenerateAiAgentKey(projectKey: string | null) {
+  const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => api.regenerateAiAgentKey(projectKey!, id),
+    onSuccess: () => {
+      if (projectKey) void qc.invalidateQueries({ queryKey: qk.aiAgents(projectKey) });
+    },
   });
 }
 

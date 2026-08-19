@@ -26,7 +26,6 @@ import { Button } from '@/components/ui/button';
 import { AgentCapabilityList } from './AgentCapabilityList';
 import SettingsAiAgentFields from './SettingsAiAgentFields';
 import { AGENT_EXPANDED_WIDTH } from './AgentExpandedLayout';
-import AgentKeyBanner from './AgentKeyBanner';
 import {
   initialAgentValue,
   isAgentFormValid,
@@ -42,27 +41,26 @@ import { useTranslations } from 'next-intl';
 // creates one; once created (onCreated lifts it to the sheet) the same form switches
 // to editing that agent without remounting, so the entered values stay. The kind can
 // be chosen on create but not changed after. A new external agent's key is revealed
-// once, inline at the top, via revealedKey. An internal agent's enabled skills are
-// managed once the agent exists (they are linked through a separate endpoint).
+// once in the API key section. An internal agent's enabled skills are managed once
+// the agent exists (they are linked through a separate endpoint).
 export function AgentSheetForm({
   projectKey,
   agent,
   expanded = false,
   onCreated,
-  revealedKey,
-  onDismissKey,
 }: {
   projectKey: string;
   agent: AiAgent | null;
   expanded?: boolean;
-  onCreated: (agent: AiAgent, apiKey: string | null) => void;
-  revealedKey: string | null;
-  onDismissKey: () => void;
+  onCreated: (agent: AiAgent) => void;
 }) {
   const t = useTranslations('settings.agents');
   const tCommon = useTranslations('common');
   const [value, setValue] = useState<AgentFormValue>(() => initialAgentValue(agent ?? undefined));
   const isCreate = agent == null;
+  // The plaintext key issued in this sheet, by the create or by a regenerate. It is
+  // shown once in the API key section and cannot be read back from the server.
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
   // While creating, the username is derived from the name until the user edits it.
   // Clearing the username field resumes auto-generation.
   const [usernameEdited, setUsernameEdited] = useState(false);
@@ -177,7 +175,8 @@ export function AgentSheetForm({
       if (res.agent.kind === 'internal' && canManageTools && toolIds && toolIds.length > 0) {
         await setAgentTools.mutateAsync({ agentId: res.agent.id, agentToolIds: toolIds });
       }
-      onCreated(res.agent, res.apiKey);
+      setRevealedKey(res.apiKey);
+      onCreated(res.agent);
     } else {
       await updateAgent.mutateAsync({ id: agent.id, patch: toUpdatePatch(value) });
       if (agent.kind === 'internal' && canManageSkills && skillIds !== null) {
@@ -243,9 +242,6 @@ export function AgentSheetForm({
     )
   ) : null;
 
-  const banner =
-    revealedKey !== null ? <AgentKeyBanner apiKey={revealedKey} onDismiss={onDismissKey} /> : null;
-
   // The full-width internal editor owns its scroll container (it holds the section
   // nav's scroll spy). Every other case stacks in a single column here. Once the
   // agent exists the chat takes the other half of the sheet and the form fills its
@@ -273,7 +269,8 @@ export function AgentSheetForm({
       agent={agent}
       skillsContent={skillsContent}
       toolsContent={toolsContent}
-      banner={banner}
+      revealedKey={revealedKey}
+      onRevealedKey={setRevealedKey}
     />
   );
 
@@ -289,10 +286,7 @@ export function AgentSheetForm({
         fields
       ) : (
         <div className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-6 sm:px-6">
-          <div className={`mx-auto w-full space-y-6 ${contentWidth}`}>
-            {banner}
-            {fields}
-          </div>
+          <div className={`mx-auto w-full space-y-6 ${contentWidth}`}>{fields}</div>
         </div>
       )}
       <div className="border-t border-border/60 px-4 py-3 sm:px-6">

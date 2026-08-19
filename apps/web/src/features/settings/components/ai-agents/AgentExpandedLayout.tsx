@@ -13,12 +13,10 @@ export const AGENT_EXPANDED_WIDTH = 'max-w-[860px]';
 // scroll root so the nav can spy on which section is in view and jump to one on click.
 export default function AgentExpandedLayout({
   navSections,
-  banner,
   onExpand,
   children,
 }: {
   navSections: SectionNavItem[];
-  banner?: ReactNode;
   // Ensure a section is open before scrolling to it (jumping to a collapsed section
   // would land on just its header).
   onExpand: (id: string) => void;
@@ -47,7 +45,6 @@ export default function AgentExpandedLayout({
       ref={containerRef}
       className="min-h-0 flex-1 overflow-y-auto px-4 pt-5 pb-10 sm:px-6 sm:pt-2"
     >
-      {banner && <div className={`mx-auto mb-6 w-full ${AGENT_EXPANDED_WIDTH}`}>{banner}</div>}
       <div className={`mx-auto flex w-full gap-10 ${AGENT_EXPANDED_WIDTH}`}>
         <SectionNav
           sections={navSections}

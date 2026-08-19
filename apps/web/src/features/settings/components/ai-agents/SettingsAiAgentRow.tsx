@@ -1,12 +1,4 @@
-import {
-  Bot,
-  History,
-  KeyRound,
-  MessageSquare,
-  MoreHorizontal,
-  Pencil,
-  Trash2,
-} from 'lucide-react';
+import { Bot, History, MessageSquare, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
 import { formatShortDate } from '@/utils/dates';
 import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
@@ -28,15 +20,14 @@ import { useTranslations } from 'next-intl';
 // One agent as a table row: the Agent cell holds the name, @username, kind badge,
 // and created date; the Configuration cell shows an internal agent's meta line
 // (model, capability/tool/skill counts) or an external agent's runner presence and
-// non-secret key prefix. Row actions (history/chat/regenerate/edit/delete) sit in
-// the last cell. The plaintext key is never here, only apiKeyStart identifies the
-// key. `providerLabel` maps a provider key to its catalog label.
+// non-secret key prefix. Row actions (history/chat/edit/delete) sit in the last
+// cell; the key itself is managed in the agent's sheet. `providerLabel` maps a
+// provider key to its catalog label.
 export function SettingsAiAgentRow({
   agent,
   providerLabel,
   onChat,
   onRuns,
-  onRegenerate,
   onEdit,
   onDelete,
 }: {
@@ -44,15 +35,13 @@ export function SettingsAiAgentRow({
   providerLabel: (key: string) => string;
   onChat: () => void;
   onRuns: () => void;
-  onRegenerate: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
   const t = useTranslations('settings.agents');
   const can = useSettingsCan();
   const canHistory = can('read');
-  const canRegenerate = agent.kind === 'external' && can('edit');
-  const hasMenu = canHistory || canRegenerate || can('delete');
+  const hasMenu = canHistory || can('delete');
 
   return (
     <TableRow className="group/item">
@@ -128,13 +117,7 @@ export function SettingsAiAgentRow({
                     {t('testChat')}
                   </DropdownMenuItem>
                 )}
-                {canRegenerate && (
-                  <DropdownMenuItem className="min-h-11 sm:min-h-8" onSelect={onRegenerate}>
-                    <KeyRound />
-                    {t('regenerateConfirm')}
-                  </DropdownMenuItem>
-                )}
-                {can('delete') && (canHistory || canRegenerate) && <DropdownMenuSeparator />}
+                {can('delete') && canHistory && <DropdownMenuSeparator />}
                 {can('delete') && (
                   <DropdownMenuItem
                     className="min-h-11 sm:min-h-8"

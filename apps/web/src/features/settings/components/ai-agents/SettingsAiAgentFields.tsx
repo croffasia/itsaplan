@@ -15,6 +15,7 @@ import { type AgentFormValue, grantedToolCount } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
 import AgentExpandedLayout from './AgentExpandedLayout';
 import AgentAccessSection from './AgentAccessSection';
+import AgentTokenSection from './AgentTokenSection';
 import AgentModelSection from './AgentModelSection';
 import AgentActionsSection from './AgentActionsSection';
 import AgentTriggersSection from './AgentTriggersSection';
@@ -22,10 +23,11 @@ import { AgentInstructionsField } from './AgentInstructionsField';
 import AgentRunnerSection from './AgentRunnerSection';
 import { useTranslations } from 'next-intl';
 
-// Which sections open when the form first renders: only Access, so the form opens as
-// a short list of sections instead of a wall of fields. Basics is not in it because
-// it never collapses.
-const DEFAULT_OPEN: Record<string, boolean> = { access: true };
+// Which sections open when the form first renders, so it opens as a short list of
+// sections instead of a wall of fields. Basics is not in it because it never
+// collapses; the API key section is, because an external agent is unusable until its
+// key is in the operator's hands.
+const DEFAULT_OPEN: Record<string, boolean> = { access: true, token: true };
 
 // The agent form: the sections an agent of this kind has, in a stacked column or, for
 // a full-width internal agent, beside a section nav. `kindLocked` fixes the kind on
@@ -46,7 +48,8 @@ export default function SettingsAiAgentFields({
   agent,
   skillsContent,
   toolsContent,
-  banner,
+  revealedKey,
+  onRevealedKey,
 }: {
   value: AgentFormValue;
   onChange: (patch: Partial<AgentFormValue>) => void;
@@ -68,9 +71,10 @@ export default function SettingsAiAgentFields({
   skillsContent?: ReactNode | null;
   // The Tools section body (configured custom tools), built the same way.
   toolsContent?: ReactNode | null;
-  // Optional strip rendered above the form (the revealed-key banner on create),
-  // used by the full-width internal layout which owns its own scroll container.
-  banner?: ReactNode;
+  // The plaintext key issued in this sheet (external agents only), shown once in the
+  // API key section, and the way to drop it or replace it after a regenerate.
+  revealedKey: string | null;
+  onRevealedKey: (apiKey: string | null) => void;
 }) {
   const t = useTranslations('settings.agents');
   const tCommon = useTranslations('common');
@@ -150,6 +154,17 @@ export default function SettingsAiAgentFields({
       value={value}
       onChange={onChange}
       roles={roles}
+    />
+  );
+
+  const tokenSection = (
+    <AgentTokenSection
+      key="token"
+      {...sectionProps('token')}
+      projectKey={projectKey}
+      agent={agent}
+      revealedKey={revealedKey}
+      onRevealedKey={onRevealedKey}
     />
   );
 
@@ -313,7 +328,6 @@ export default function SettingsAiAgentFields({
     return (
       <AgentExpandedLayout
         navSections={navSections}
-        banner={banner}
         onExpand={(id) => setOpenSections((s) => ({ ...s, [id]: true }))}
       >
         {basicsSection}
@@ -333,6 +347,7 @@ export default function SettingsAiAgentFields({
       {basicsSection}
       {value.kind === 'external' ? (
         <>
+          {tokenSection}
           {accessSection}
           {triggersSection}
           {runnerSection}

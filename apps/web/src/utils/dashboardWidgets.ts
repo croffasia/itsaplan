@@ -4,7 +4,7 @@
 // live in the shared layer because api.ts types Dashboard.layout with them and
 // the dashboards feature consumes them.
 
-import type { FilterSet } from '@/utils/filters';
+import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
 
 export type WidgetType =
   | 'stat'
@@ -99,6 +99,16 @@ export function createWidget(type: WidgetType): WidgetInstance {
 // Legacy layouts stored a `size` of 'full' | 'half' | 'quarter' instead of `w`.
 const LEGACY_SIZE_W: Record<string, number> = { full: 12, half: 6, quarter: 3 };
 
+// A stored config is part of the same opaque blob, so its filter set can hold
+// anything. A `conditions` that is not a list is read as no filter, which is what
+// every filter reader (isActiveFilterSet, applyFilters) expects.
+function normalizeConfig(config: WidgetConfig | undefined): WidgetConfig | undefined {
+  if (!config || typeof config !== 'object') return undefined;
+  if (config.filters === undefined) return config;
+  const conditions = config.filters?.conditions;
+  return Array.isArray(conditions) ? config : { ...config, filters: EMPTY_FILTER_SET };
+}
+
 // Normalizes a persisted widget's size/type. Handles older layouts that carry a
 // `size` string or a missing width/height. Position is filled by normalizeLayout.
 export function normalizeWidget(w: WidgetInstance): WidgetInstance {
@@ -110,7 +120,7 @@ export function normalizeWidget(w: WidgetInstance): WidgetInstance {
     id: w.id,
     type: w.type,
     title: w.title,
-    config: w.config,
+    config: normalizeConfig(w.config),
     x: Number.isFinite(w.x) ? w.x : 0,
     y: Number.isFinite(w.y) ? w.y : 0,
     w: Math.min(GRID_COLS, Math.max(MIN_W, Math.round(width))),
@@ -118,12 +128,21 @@ export function normalizeWidget(w: WidgetInstance): WidgetInstance {
   };
 }
 
+// A widget the grid can key on. The server stores the layout verbatim, so an API
+// client can leave anything in it; entries without an id are dropped.
+function isWidget(w: unknown): w is WidgetInstance {
+  return typeof w === 'object' && w !== null && typeof (w as WidgetInstance).id === 'string';
+}
+
 // Normalizes every widget and, for older layouts without positions, packs them
 // left-to-right (wrapping at GRID_COLS) in list order so react-grid-layout has
 // valid coordinates. New layouts already carry x/y and pass through unchanged.
-export function normalizeLayout(layout: DashboardLayout): DashboardLayout {
-  const needsPack = layout.some((it) => !Number.isFinite(it.x) || !Number.isFinite(it.y));
-  const items = layout.map(normalizeWidget);
+// The argument is `unknown` because it comes from the opaque jsonb blob: a layout
+// that is not a list of widgets is read as an empty dashboard.
+export function normalizeLayout(layout: unknown): DashboardLayout {
+  const stored = Array.isArray(layout) ? layout.filter(isWidget) : [];
+  const needsPack = stored.some((it) => !Number.isFinite(it.x) || !Number.isFinite(it.y));
+  const items = stored.map(normalizeWidget);
   if (!needsPack) return items;
   let x = 0;
   let y = 0;

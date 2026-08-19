@@ -16,10 +16,13 @@ export const DashboardResponse = t.Object({
 
 export const DashboardListResponse = t.Array(DashboardResponse);
 
+// The widget entries stay opaque, but the layout itself has to be a list: the UI
+// reads it as one, and an API client that stores an object there makes the
+// dashboards page unrenderable.
 export const createDashboardBody = t.Object({
   name: t.String({ minLength: 1 }),
   icon: t.Optional(t.Nullable(t.String())),
-  layout: t.Optional(t.Any()),
+  layout: t.Optional(t.Array(t.Unknown())),
 });
 
 export const updateDashboardBody = t.Partial(createDashboardBody);

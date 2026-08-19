@@ -205,6 +205,24 @@ describe('dashboards', () => {
       expect(res.status).toBe(400);
     });
 
+    it('rejects a layout that is not a list', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        // @ts-expect-error the layout has to be a list of widget entries
+        .dashboards.post({ name: 'Broken', layout: { widgets: [] } });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a patch that sets a layout that is not a list', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const id = (await asOwner.projects({ projectKey: 'MKT' }).dashboards.post({ name: 'Named' }))
+        .data!.id;
+      // @ts-expect-error the layout has to be a list of widget entries
+      const res = await asOwner.dashboards({ dashboardId: id }).patch({ layout: 'nope' });
+      expect(res.status).toBe(400);
+    });
+
     it('rejects a non-numeric dashboard id', async () => {
       const { asOwner } = await setupOwnerProject();
       const res = await asOwner.dashboards({ dashboardId: 'abc' }).patch({ name: 'Nope' });

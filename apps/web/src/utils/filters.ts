@@ -74,9 +74,11 @@ export function isActiveFilterSet(filters: FilterSet | null | undefined): boolea
 
 // Whether a condition actually constrains the result. Presence operators
 // (is_set/is_not_set) need no value; every other operator needs at least one.
+// `values` is checked for being a list because the whole set comes from a jsonb
+// blob the server stores without inspecting it.
 export function isEffectiveCondition(cond: FilterCondition): boolean {
   if (cond.op === 'is_set' || cond.op === 'is_not_set') return true;
-  return cond.values.length > 0;
+  return Array.isArray(cond.values) && cond.values.length > 0;
 }
 
 // Normalizes any date the store returns to a "YYYY-MM-DD" day for comparison:

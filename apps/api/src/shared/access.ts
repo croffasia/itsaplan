@@ -1,5 +1,5 @@
 import { HttpError } from './lib';
-import { getProjectByKey, type ProjectRow } from '../projects/store';
+import { getProjectByKey, type ProjectRow } from '#modules/projects/service';
 import { getMembership, getMemberContext } from '#modules/members/service';
 import { hasPermission, type PermissionAction, type PermissionResource } from './permissions';
 

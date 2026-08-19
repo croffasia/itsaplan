@@ -19,9 +19,9 @@ import {
   projectSetting,
 } from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
-import { iso } from '../shared/lib';
-import { defaultMemberPermissions } from '../shared/permissions';
-import { DEFAULT_COLUMNS, type ProjectRow } from './store';
+import { iso } from '#shared/lib';
+import { defaultMemberPermissions } from '#shared/permissions';
+import { DEFAULT_COLUMNS, type ProjectRow } from './service';
 import { GITHUB_SETTING_KEY } from '#modules/github/service';
 import { listAgents, createAgent, type NewAgentInput } from '#modules/agents/core/service';
 import {
@@ -34,7 +34,7 @@ import {
 import { listAgentToolLinks, setAgentTools } from '#modules/agents/tools/service';
 import { listAgentSchedules, createAgentSchedule } from '#modules/agents/schedules/service';
 import { nextCronRun } from '#modules/agents/schedules/cron';
-import { getObject } from '../shared/s3';
+import { getObject } from '#shared/s3';
 
 // Which parts of a source project the copy carries over. Each key mirrors a section
 // of the project settings menu. A key set false skips that entity. Some sections
@@ -252,7 +252,7 @@ async function readObjectBytes(key: string): Promise<{ bytes: Buffer; contentTyp
 // and tools/agents reference are remapped to the copied entities. Entities with side
 // effects outside the database are copied after that transaction commits: skills copy
 // their object-store files, agents create their own bot user and API key, and both go
-// through the same store functions the UI uses.
+// through the same service functions the UI uses.
 export async function copyProject(
   sourceProjectId: number,
   input: { key: string; name: string; description?: string },
@@ -633,7 +633,7 @@ export async function copyProject(
   });
 
   // Skills: copy each skill's object-store files into the new project's own prefix,
-  // then create the row through the same store the UI uses.
+  // then create the row through the same service the UI uses.
   if (inc.skills) {
     for (const s of await listSkills(sourceProjectId)) {
       const markdown = await getSkillMarkdown(s.id, sourceProjectId);

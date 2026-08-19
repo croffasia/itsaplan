@@ -6,7 +6,7 @@ import { getHotkeySettings, HotkeyCombosSchema } from './hotkeys';
 import { getAppVersion } from './updates';
 
 // Routes for global instance settings (app_setting): a key-value store not scoped
-// to a project. The MCP toggle is per-project (see projects/routes.ts), not here.
+// to a project. The MCP toggle is per-project (see modules/projects), not here.
 //
 // Storage limits are readable by any signed-in user, because the upload UI shows
 // them before a file is picked. Changing them is god mode (/god/storage-settings).

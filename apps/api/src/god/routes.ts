@@ -15,7 +15,7 @@ import { requireGod } from '../shared/access';
 import { HttpError } from '../shared/lib';
 import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { noContent } from '../shared/http';
-import { deleteProject } from '../projects/store';
+import { deleteProject } from '#modules/projects/service';
 import {
   USER_KINDS,
   deleteInstanceUser,

@@ -6,7 +6,7 @@ import { and, eq, sql } from 'drizzle-orm';
 
 // Per-project settings (project_setting): the same key-value store scoped to a
 // project. Typed accessors per key live in the feature that owns the key (e.g.
-// auto-archive in projects/store.ts).
+// auto-archive in modules/projects/service.ts).
 
 export async function getProjectSetting<T>(projectId: number, key: string): Promise<T | null> {
   const rows = await db

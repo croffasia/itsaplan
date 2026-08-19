@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia';
 import { HttpError, pgErrorCode } from './shared/lib';
 import { authContext } from './shared/auth-context';
-import { projectRoutes } from './projects/routes';
+import { projectRoutes } from './modules/projects';
 import { memberRoutes } from './modules/members';
 import { roleRoutes } from './roles/routes';
 import { inviteRoutes } from './modules/invites';

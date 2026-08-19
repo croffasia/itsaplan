@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
-import { getProjectByKey } from '../../../../../projects/store';
+import { getProjectByKey } from '#modules/projects/service';
 import { getAgentById, getInternalAgentApiKey } from '../../service';
 import { buildRouteTools } from '../../runtime/tools/route-tools';
 import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';

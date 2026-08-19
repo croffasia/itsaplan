@@ -1,13 +1,13 @@
 import { db, issue, projectColumn } from '@repo/db';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { getSubtaskAutomationSettings } from '../projects/store';
+import { getSubtaskAutomationSettings } from '#modules/projects/service';
 import { listSubtasks } from './subtasks';
 import { updateIssue, type IssueRow } from './store';
 import type { ActivityActor } from './activity';
 
 // The subtask automations a column change triggers, both off unless the project
-// turns them on (projects/store.ts). A closed issue is one sitting in a column
-// whose stateType is 'completed' or 'canceled'.
+// turns them on (modules/projects/service.ts). A closed issue is one sitting in a
+// column whose stateType is 'completed' or 'canceled'.
 //
 // The hierarchy is one level deep, so an issue is either a subtask or a parent and
 // only one of the two rules applies to it. Each rule writes through updateIssue, so

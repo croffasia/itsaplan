@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-import { addProjectMember } from '../../../__tests__/helpers/members';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
+import { addProjectMember } from '#tests/helpers/members';
 
 // Full integration flow: a real session against the real (test) database.
 // Requires the test DB to be up and migrated:

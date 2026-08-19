@@ -1,13 +1,32 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { HttpError } from '../shared/lib';
-import { authContext } from '../shared/auth-context';
-import { guards } from '../shared/guards';
-import { requireUser } from '../shared/access';
-import { isMcpRequest } from '../shared/mcp-request';
-import { accessErrors, commonErrors, errors } from '../shared/responses';
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { HttpError } from '#shared/lib';
+import { authContext } from '#shared/auth-context';
+import { guards } from '#shared/guards';
+import { requireUser } from '#shared/access';
+import { isMcpRequest } from '#shared/mcp-request';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getMemberContext, listAssigneeCandidates } from '#modules/members/service';
+import { listColumns } from '#modules/columns/service';
+import { listIssueTypes } from '#modules/issue-types/service';
+import { listLabels, listLabelGroups } from '#modules/labels/service';
+import { listCustomFields } from '#modules/custom-fields/service';
+import {
+  AutoArchiveResponse,
+  ProjectBoardResponse,
+  ProjectListResponse,
+  ProjectResponse,
+  ProjectSettingsResponse,
+  SubtaskAutomationResponse,
+  copyProjectBody,
+  createProjectBody,
+  listProjectsQuery,
+  updateAutoArchiveBody,
+  updateProjectBody,
+  updateProjectSettingsBody,
+  updateSubtaskAutomationBody,
+} from './model';
 import {
   listProjects,
   createProject,
@@ -20,169 +39,8 @@ import {
   setAutoArchiveSettings,
   getSubtaskAutomationSettings,
   setSubtaskAutomationSettings,
-  ISSUE_TYPE_PRESET_KEYS,
-} from './store';
-import { copyProject, COPY_INCLUDE_KEYS } from './copy';
-import { listColumns } from '#modules/columns/service';
-import { ColumnResponse } from '#modules/columns/model';
-import { listIssueTypes } from '#modules/issue-types/service';
-import { IssueTypeResponse } from '#modules/issue-types/model';
-import { listLabels, listLabelGroups } from '#modules/labels/service';
-import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
-import { listCustomFields } from '#modules/custom-fields/service';
-
-const projectBody = t.Object({
-  key: t.String({ minLength: 1 }),
-  name: t.String({ minLength: 1 }),
-  description: t.Optional(t.String()),
-});
-
-// Create adds the issue-type preset: which set of types the new project starts with.
-// Omitted → "general" (a single Task). Copy takes its types from the source project,
-// so the preset applies to create only.
-const createProjectBody = t.Composite([
-  projectBody,
-  t.Object({
-    preset: t.Optional(
-      t.Union(
-        ISSUE_TYPE_PRESET_KEYS.map((k) => t.Literal(k)),
-        { description: `Issue-type preset: ${ISSUE_TYPE_PRESET_KEYS.join(', ')}.` },
-      ),
-    ),
-  }),
-]);
-
-// Copy adds an optional selection of which parts of the source project to carry over.
-// Omitted → the source project's structure (states, types, labels, custom fields,
-// views, dashboards, actions), matching the copy's original behavior. Each flag maps
-// to a section of the project settings menu; the store force-enables dependencies.
-const copyProjectBody = t.Composite([
-  projectBody,
-  t.Object({
-    include: t.Optional(
-      t.Object(Object.fromEntries(COPY_INCLUDE_KEYS.map((k) => [k, t.Optional(t.Boolean())]))),
-    ),
-  }),
-]);
-
-// A project DTO (ProjectRow from the store).
-const ProjectResponse = t.Object({
-  id: t.Number(),
-  key: t.String(),
-  name: t.String(),
-  description: t.String(),
-  mcpEnabled: t.Boolean(),
-  // The optional sections, toggled in Settings -> General. All on by default; a
-  // disabled section is hidden in the web app and its rows are kept.
-  initiativesEnabled: t.Boolean(),
-  dashboardsEnabled: t.Boolean(),
-  notesEnabled: t.Boolean(),
-  cyclesEnabled: t.Boolean(),
-  subtasksEnabled: t.Boolean(),
-  checklistsEnabled: t.Boolean(),
-  issueStatsEnabled: t.Boolean(),
-  createdAt: t.String(),
-});
-
-// The permission matrix as resolved for a member: for each resource, the
-// create/edit/read/delete flags.
-const PermissionMatrix = t.Record(t.String(), t.Record(t.String(), t.Boolean()));
-
-// A project in the caller's list (ProjectListItem): ProjectRow plus the caller's
-// own role in it, and the caller's permission matrix when requested with
-// ?permissions=true.
-const ProjectListItemResponse = t.Composite([
-  ProjectResponse,
-  t.Object({
-    role: t.Union([t.Literal('owner'), t.Literal('member')]),
-    permissions: t.Optional(PermissionMatrix),
-  }),
-]);
-
-// An assignable candidate (AssigneeCandidate from members/service): a project
-// member or an AI agent's bot user.
-const AssigneeCandidateResponse = t.Object({
-  userId: t.String(),
-  name: t.String(),
-  email: t.String(),
-  image: t.Nullable(t.String()),
-  kind: t.Union([t.Literal('member'), t.Literal('agent')]),
-  agentKind: t.Nullable(t.Union([t.Literal('external'), t.Literal('internal')])),
-  restrictedToUserId: t.Nullable(t.String()),
-});
-
-// A custom field option (CustomFieldOptionRow from custom-fields/store).
-const CustomFieldOptionResponse = t.Object({
-  id: t.Number(),
-  value: t.String(),
-  color: t.String(),
-  position: t.Number(),
-});
-
-// A custom field (CustomFieldRow from custom-fields/store). The board carries every
-// field of the project; the client filters by issueTypeId.
-const CustomFieldResponse = t.Object({
-  id: t.Number(),
-  issueTypeId: t.Nullable(t.Number()),
-  name: t.String(),
-  fieldType: t.String(),
-  showInBody: t.Boolean(),
-  position: t.Number(),
-  options: t.Array(CustomFieldOptionResponse),
-});
-
-// Auto-archive thresholds (AutoArchiveSettings from the store): days of inactivity
-// in a completed/canceled column before the worker archives an issue; null = off.
-const AutoArchiveResponse = t.Object({
-  completedDays: t.Nullable(t.Number()),
-  canceledDays: t.Nullable(t.Number()),
-});
-
-// The subtask automations (SubtaskAutomationSettings from the store).
-const SubtaskAutomationResponse = t.Object({
-  completeParent: t.Boolean(),
-  closeSubtasks: t.Boolean(),
-});
-
-// Which optional sections the project shows (ProjectFeatures from the store).
-const FeaturesResponse = t.Object({
-  initiatives: t.Boolean(),
-  dashboards: t.Boolean(),
-  notes: t.Boolean(),
-  cycles: t.Boolean(),
-  subtasks: t.Boolean(),
-  checklists: t.Boolean(),
-  issueStats: t.Boolean(),
-});
-
-// The project's settings: MCP reachability and the enabled sections.
-const ProjectSettingsResponse = t.Object({
-  mcpEnabled: t.Boolean(),
-  features: FeaturesResponse,
-});
-
-// The caller's own role in a project (from MemberContext in members/service). The
-// resolved permission matrix is a sibling `permissions` key on the board payload.
-const ViewerResponse = t.Object({
-  role: t.Union([t.Literal('owner'), t.Literal('member')]),
-});
-
-// The project board scaffold (GET /projects/:projectKey): the project plus its
-// columns, issue types, labels, label groups, assignable users, custom fields, and
-// the caller's own effective access. The issues themselves come from
-// GET /projects/:projectKey/issues/board.
-const ProjectBoardResponse = t.Object({
-  project: ProjectResponse,
-  columns: t.Array(ColumnResponse),
-  issueTypes: t.Array(IssueTypeResponse),
-  labels: t.Array(LabelResponse),
-  labelGroups: t.Array(LabelGroupResponse),
-  assignees: t.Array(AssigneeCandidateResponse),
-  customFields: t.Array(CustomFieldResponse),
-  viewer: ViewerResponse,
-  // The caller's resolved permission matrix (owners get every flag).
-  permissions: PermissionMatrix,
-});
+} from './service';
+import { copyProject } from './copy';
 
 export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Projects'] } })
   .use(authContext)
@@ -195,14 +53,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         withPermissions: query.permissions === 'true',
       }),
     {
-      query: t.Object({
-        permissions: t.Optional(
-          t.String({
-            description: "'true' to include the caller's permission matrix per project.",
-          }),
-        ),
-      }),
-      response: { 200: t.Array(ProjectListItemResponse), ...errors(401) },
+      query: listProjectsQuery,
+      response: { 200: ProjectListResponse, ...errors(401) },
       detail: {
         summary: 'List projects',
         description:
@@ -233,11 +85,6 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     },
   )
 
-  // Creates a new project copying the selected parts of the source project's
-  // configuration (states, issue types, labels, custom fields, views, dashboards,
-  // actions, roles, settings, notification providers, webhooks, integrations, tools,
-  // skills, agents, schedules) but none of its issues. `include` picks the sections;
-  // omitted, the project structure is copied as before.
   .post(
     '/projects/:projectKey/copy',
     async ({ project, body, user, set }) => {
@@ -329,10 +176,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       return updated;
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        description: t.Optional(t.String()),
-      }),
+      body: updateProjectBody,
       projectOwner: true,
       response: { 200: ProjectResponse, ...commonErrors },
       detail: {
@@ -379,20 +223,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       return { mcpEnabled: current.mcpEnabled, features: projectFeatures(current) };
     },
     {
-      body: t.Object({
-        mcpEnabled: t.Optional(t.Boolean()),
-        features: t.Optional(
-          t.Object({
-            initiatives: t.Optional(t.Boolean()),
-            dashboards: t.Optional(t.Boolean()),
-            notes: t.Optional(t.Boolean()),
-            cycles: t.Optional(t.Boolean()),
-            subtasks: t.Optional(t.Boolean()),
-            checklists: t.Optional(t.Boolean()),
-            issueStats: t.Optional(t.Boolean()),
-          }),
-        ),
-      }),
+      body: updateProjectSettingsBody,
       projectOwner: true,
       response: { 200: ProjectSettingsResponse, ...commonErrors },
       detail: { summary: "Update a project's settings" },
@@ -418,10 +249,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     '/projects/:projectKey/settings/auto-archive',
     ({ project, body }) => setAutoArchiveSettings(project.id, body),
     {
-      body: t.Object({
-        completedDays: t.Nullable(t.Integer({ minimum: 1 })),
-        canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
-      }),
+      body: updateAutoArchiveBody,
       permission: ['workflow_config', 'edit'],
       response: { 200: AutoArchiveResponse, ...commonErrors },
       detail: { summary: "Update a project's auto-archive thresholds" },
@@ -443,10 +271,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     '/projects/:projectKey/settings/subtasks',
     ({ project, body }) => setSubtaskAutomationSettings(project.id, body),
     {
-      body: t.Object({
-        completeParent: t.Boolean(),
-        closeSubtasks: t.Boolean(),
-      }),
+      body: updateSubtaskAutomationBody,
       permission: ['workflow_config', 'edit'],
       response: { 200: SubtaskAutomationResponse, ...commonErrors },
       detail: { summary: "Update a project's subtask automations" },

@@ -8,14 +8,14 @@ import {
   projectSetting,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
-import { iso } from '../shared/lib';
+import { iso } from '#shared/lib';
 import {
   defaultMemberPermissions,
   fullPermissions,
   normalizePermissions,
   type Permissions,
-} from '../shared/permissions';
-import { getProjectSetting, setProjectSetting } from '../settings/store';
+} from '#shared/permissions';
+import { getProjectSetting, setProjectSetting } from '../../settings/store';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 
 // Data access for projects: the top-level container that groups its own columns,

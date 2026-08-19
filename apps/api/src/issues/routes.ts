@@ -5,7 +5,7 @@ import { guards, entityGuard } from '../shared/guards';
 import { authContext } from '../shared/auth-context';
 import { assertPermission, assertMcpEnabled, requireUser } from '../shared/access';
 import { isMcpRequest } from '../shared/mcp-request';
-import { getProjectById } from '../projects/store';
+import { getProjectById } from '#modules/projects/service';
 import { HttpError } from '../shared/lib';
 import { accessErrors, commonErrors, errors } from '../shared/responses';
 import { deleteObject } from '../shared/s3';

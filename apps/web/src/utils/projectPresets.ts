@@ -1,6 +1,7 @@
 // Issue-type presets offered when creating a project. Mirrors ISSUE_TYPE_PRESETS in
-// the API (apps/api/src/projects/store.ts), which is what actually seeds the types;
-// the copy here exists so the dialog can preview the result before the request.
+// the API (apps/api/src/modules/projects/service.ts), which is what actually seeds
+// the types; the copy here exists so the dialog can preview the result before the
+// request.
 export type PresetKey =
   | 'general'
   | 'software'

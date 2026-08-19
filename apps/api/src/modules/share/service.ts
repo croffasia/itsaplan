@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { db, issue, projectView } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { getProjectById, type ProjectRow } from '../../projects/store';
+import { getProjectById, type ProjectRow } from '#modules/projects/service';
 import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';

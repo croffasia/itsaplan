@@ -8,7 +8,7 @@ import {
   assertMcpEnabled,
   type AuthUser,
 } from './access';
-import { getProjectById } from '../projects/store';
+import { getProjectById } from '#modules/projects/service';
 import { isMcpRequest } from './mcp-request';
 import { HttpError } from './lib';
 import type { PermissionResource, PermissionAction } from './permissions';

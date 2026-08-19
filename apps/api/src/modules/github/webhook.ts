@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Elysia } from 'elysia';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
-import { getProjectById } from '../../projects/store';
+import { getProjectById } from '#modules/projects/service';
 import { handlePullRequestEvent, type PullRequestPayload } from './handler';
 import { WebhookAckResponse, webhookBody, webhookParams } from './model';
 import { claimGithubDelivery, findProjectByGithubWebhookId, recordGithubEvent } from './service';

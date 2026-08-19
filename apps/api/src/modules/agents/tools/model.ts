@@ -9,6 +9,7 @@ export const toolParams = t.Object({ projectKey: t.String(), agentToolId: t.Nume
 // toggled off.
 const ToolMetaResponse = t.Object({
   key: t.String(),
+  group: t.String(),
   label: t.String(),
   description: t.String(),
   always: t.Boolean(),

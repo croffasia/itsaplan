@@ -47,7 +47,9 @@ export default function SettingsAiAgentFields({
   roles,
   agent,
   skillsContent,
+  skillsBadge,
   toolsContent,
+  toolsBadge,
   revealedKey,
   onRevealedKey,
 }: {
@@ -69,8 +71,13 @@ export default function SettingsAiAgentFields({
   // The Skills section body, built by the parent (it owns the skill library and
   // links). Null when Skills does not apply; the section is hidden then.
   skillsContent?: ReactNode | null;
+  // "enabled / available" for the Skills header and nav entry. Undefined when the
+  // library is empty and there is nothing to count.
+  skillsBadge?: string;
   // The Tools section body (configured custom tools), built the same way.
   toolsContent?: ReactNode | null;
+  // "enabled / available" for the Tools header and nav entry.
+  toolsBadge?: string;
   // The plaintext key issued in this sheet (external agents only), shown once in the
   // API key section, and the way to drop it or replace it after a regenerate.
   revealedKey: string | null;
@@ -138,12 +145,10 @@ export default function SettingsAiAgentFields({
         <p className="text-xs text-muted-foreground">{t('usernameHint')}</p>
       </div>
 
-      {value.kind === 'external' && (
-        <AgentInstructionsField
-          value={value.instructions}
-          onChange={(instructions) => onChange({ instructions })}
-        />
-      )}
+      <AgentInstructionsField
+        value={value.instructions}
+        onChange={(instructions) => onChange({ instructions })}
+      />
     </div>
   );
 
@@ -216,6 +221,7 @@ export default function SettingsAiAgentFields({
         icon={Sparkles}
         title={t('skills')}
         hint={t('skillsHint')}
+        headerRight={skillsBadge}
       >
         {skillsContent}
       </AgentFormSection>
@@ -229,6 +235,7 @@ export default function SettingsAiAgentFields({
         icon={Wrench}
         title={t('tools')}
         hint={t('toolsHint')}
+        headerRight={toolsBadge}
       >
         {toolsContent}
       </AgentFormSection>
@@ -313,16 +320,20 @@ export default function SettingsAiAgentFields({
     const navSections: SectionNavItem[] = [
       { id: 'basics', label: t('basics'), icon: IdCard },
       { id: 'model', label: t('model'), icon: Cpu },
+      { id: 'advanced', label: t('advanced'), icon: SlidersHorizontal },
       { id: 'triggers', label: t('triggers'), icon: Zap },
       {
         id: 'actions',
         label: t('actions'),
         icon: ListChecks,
-        badge: tools.length > 0 ? `${activeCount}/${tools.length}` : undefined,
+        badge: tools.length > 0 ? `${activeCount} / ${tools.length}` : undefined,
       },
-      ...(skillsSection ? [{ id: 'skills', label: t('skills'), icon: Sparkles }] : []),
-      ...(toolsSection ? [{ id: 'tools', label: t('tools'), icon: Wrench }] : []),
-      { id: 'advanced', label: t('advanced'), icon: SlidersHorizontal },
+      ...(skillsSection
+        ? [{ id: 'skills', label: t('skills'), icon: Sparkles, badge: skillsBadge }]
+        : []),
+      ...(toolsSection
+        ? [{ id: 'tools', label: t('tools'), icon: Wrench, badge: toolsBadge }]
+        : []),
     ];
 
     return (
@@ -332,11 +343,11 @@ export default function SettingsAiAgentFields({
       >
         {basicsSection}
         {modelSection}
+        {advancedSection}
         {triggersSection}
         {actionsSection}
         {skillsSection}
         {toolsSection}
-        {advancedSection}
       </AgentExpandedLayout>
     );
   }
@@ -355,11 +366,11 @@ export default function SettingsAiAgentFields({
       ) : (
         <>
           {modelSection}
-          {actionsSection}
+          {advancedSection}
           {triggersSection}
+          {actionsSection}
           {skillsSection}
           {toolsSection}
-          {advancedSection}
         </>
       )}
     </div>

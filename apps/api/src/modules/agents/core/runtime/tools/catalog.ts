@@ -16,8 +16,12 @@
 // ToolMeta.overrides). An agent's effective rights are the intersection of these keys
 // and its project role.
 
+// The feature an action belongs to, so the config UI can group the catalog.
+export type ToolGroup = 'issues' | 'initiatives' | 'cycles' | 'notes' | 'project';
+
 export interface ToolMeta {
   key: string;
+  group: ToolGroup;
   label: string;
   // Shown in the config UI next to the label.
   description: string;
@@ -38,12 +42,14 @@ const CARD_LAYOUT =
 export const AGENT_ACTIONS: ToolMeta[] = [
   {
     key: 'create_issue',
+    group: 'issues',
     label: 'Create issues',
     description: 'Create new work items in the project.',
     always: false,
   },
   {
     key: 'update_issue',
+    group: 'issues',
     label: 'Update issues',
     description:
       "Change an issue's state, type, initiative, cycle, assignee, delegate, details, priority, dates, or labels.",
@@ -51,90 +57,105 @@ export const AGENT_ACTIONS: ToolMeta[] = [
   },
   {
     key: 'delete_issue',
+    group: 'issues',
     label: 'Delete issues',
     description: 'Permanently delete issues and everything attached to them.',
     always: false,
   },
   {
     key: 'add_comment',
+    group: 'issues',
     label: 'Comment on issues',
     description: 'Post comments on issues as this agent.',
     always: false,
   },
   {
     key: 'set_issue_field_value',
+    group: 'issues',
     label: 'Set custom field values',
     description: 'Set custom field values on an issue.',
     always: false,
   },
   {
     key: 'link_issues',
+    group: 'issues',
     label: 'Link issues',
     description: 'Mark an issue as blocking, blocked by, duplicating, or related to another one.',
     always: false,
   },
   {
     key: 'unlink_issues',
+    group: 'issues',
     label: 'Unlink issues',
     description: 'Remove a relation between two issues.',
     always: false,
   },
   {
     key: 'add_attachment',
+    group: 'issues',
     label: 'Add attachments',
     description: 'Attach a file to an issue from a URL or inline content.',
     always: false,
   },
   {
     key: 'delete_attachment',
+    group: 'issues',
     label: 'Delete attachments',
     description: 'Delete file attachments from issues.',
     always: false,
   },
   {
     key: 'create_initiative',
+    group: 'initiatives',
     label: 'Create initiatives',
     description: 'Create initiatives in the project.',
     always: false,
   },
   {
     key: 'update_initiative',
+    group: 'initiatives',
     label: 'Update initiatives',
     description: 'Change initiative details, status, owner, dates, and labels.',
     always: false,
   },
   {
     key: 'delete_initiative',
+    group: 'initiatives',
     label: 'Delete initiatives',
     description: 'Permanently delete initiatives.',
     always: false,
   },
   {
     key: 'create_cycle',
+    group: 'cycles',
     label: 'Create cycles',
     description: 'Create cycles in the project.',
     always: false,
   },
   {
     key: 'update_cycle',
+    group: 'cycles',
     label: 'Update cycles',
     description: 'Change a cycle’s name, description, and dates.',
     always: false,
   },
   {
     key: 'delete_cycle',
+    group: 'cycles',
     label: 'Delete cycles',
     description: 'Permanently delete cycles. Their issues stay, without a cycle.',
     always: false,
   },
   {
     key: 'transfer_cycle_issues',
+    group: 'cycles',
     label: 'Transfer cycle issues',
     description: "Move a cycle's unfinished issues to another cycle, or off any cycle.",
     always: false,
   },
   {
     key: 'list_note_boards',
+    group: 'notes',
     label: 'List note boards',
     description: 'List and search the note boards the agent can see.',
     always: false,
@@ -145,6 +166,7 @@ export const AGENT_ACTIONS: ToolMeta[] = [
   },
   {
     key: 'get_note_board',
+    group: 'notes',
     label: 'Read a note board',
     description: 'View one board with all of its notes and the connections between them.',
     always: false,
@@ -155,6 +177,7 @@ export const AGENT_ACTIONS: ToolMeta[] = [
   // person in the project.
   {
     key: 'create_note_board',
+    group: 'notes',
     label: 'Create note boards',
     description: 'Create a note board with an optional set of notes.',
     always: false,
@@ -167,6 +190,7 @@ export const AGENT_ACTIONS: ToolMeta[] = [
   },
   {
     key: 'update_note_board',
+    group: 'notes',
     label: 'Update note boards',
     description: 'Rename a board and add, edit, or remove its notes.',
     always: false,
@@ -179,6 +203,7 @@ export const AGENT_ACTIONS: ToolMeta[] = [
   },
   {
     key: 'delete_note_board',
+    group: 'notes',
     label: 'Delete note boards',
     description: 'Permanently delete note boards and all of their notes.',
     always: false,
@@ -191,60 +216,70 @@ export const AGENT_ACTIONS: ToolMeta[] = [
 export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
   {
     key: 'get_current_date',
+    group: 'project',
     label: 'Read the current date',
     description: 'Get the current date and time to resolve relative dates like today or next week.',
     always: true,
   },
   {
     key: 'get_project',
+    group: 'project',
     label: 'Read project setup',
     description: 'View workflow states, issue types, labels, custom fields, and assignees.',
     always: true,
   },
   {
     key: 'search_issues',
+    group: 'issues',
     label: 'Search issues',
     description: 'Find issues by a text query (title, description, number, custom fields).',
     always: true,
   },
   {
     key: 'list_issues',
+    group: 'issues',
     label: 'List issues by filters',
     description: 'List issues filtered by state, type, assignee, priority, label, or due date.',
     always: true,
   },
   {
     key: 'get_issue',
+    group: 'issues',
     label: 'Read an issue',
     description: 'View one issue in full, including its custom field values.',
     always: true,
   },
   {
     key: 'list_attachments',
+    group: 'issues',
     label: 'List attachments',
     description: 'View the file attachment metadata on an issue.',
     always: true,
   },
   {
     key: 'list_initiatives',
+    group: 'initiatives',
     label: 'List initiatives',
     description: 'View initiatives in the project.',
     always: true,
   },
   {
     key: 'get_initiative',
+    group: 'initiatives',
     label: 'Read an initiative',
     description: 'View one initiative with its progress and health.',
     always: true,
   },
   {
     key: 'list_cycles',
+    group: 'cycles',
     label: 'List cycles',
     description: 'View the cycles of the project with their progress.',
     always: true,
   },
   {
     key: 'get_cycle',
+    group: 'cycles',
     label: 'Read a cycle',
     description: 'View one cycle with its dates and progress.',
     always: true,

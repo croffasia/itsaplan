@@ -42,6 +42,13 @@ describe('normalizeToolKeys', () => {
     expect(normalizeToolKeys(all)).toEqual(all);
   });
 
+  it('puts every action in a known feature group (the config UI groups by it)', () => {
+    const groups = new Set(['issues', 'initiatives', 'cycles', 'notes', 'project']);
+    for (const tool of [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS]) {
+      expect(groups.has(tool.group)).toBe(true);
+    }
+  });
+
   it('registers initiative actions and read tools', () => {
     expect(AGENT_ACTIONS.map((tool) => tool.key)).toEqual(
       expect.arrayContaining(['create_initiative', 'update_initiative', 'delete_initiative']),

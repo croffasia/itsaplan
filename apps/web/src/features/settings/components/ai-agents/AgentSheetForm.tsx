@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { Sparkles, Wrench } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
+import { agentSkillsPath, agentToolsPath } from '@/utils/paths';
 import {
   useCreateAiAgent,
   useUpdateAiAgent,
@@ -24,6 +26,7 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { AgentCapabilityList } from './AgentCapabilityList';
+import { AgentEmptyNotice } from './AgentEmptyNotice';
 import SettingsAiAgentFields from './SettingsAiAgentFields';
 import { AGENT_EXPANDED_WIDTH } from './AgentExpandedLayout';
 import {
@@ -195,7 +198,13 @@ export function AgentSheetForm({
   // skill library the agent may load.
   const skillsContent = showSkills ? (
     skillsLibrary.length === 0 ? (
-      <p className="text-xs text-muted-foreground">{t('noSkills')}</p>
+      <AgentEmptyNotice
+        icon={Sparkles}
+        title={t('noSkills')}
+        hint={t('noSkillsHint')}
+        href={agentSkillsPath(projectKey)}
+        linkLabel={t('goToSkills')}
+      />
     ) : (
       <AgentCapabilityList
         searchPlaceholder={t('searchSkills')}
@@ -217,7 +226,13 @@ export function AgentSheetForm({
   // The Tools section body: the configured custom tools the agent may call.
   const toolsContent = showTools ? (
     toolsLibrary.length === 0 ? (
-      <p className="text-xs text-muted-foreground">{t('noTools')}</p>
+      <AgentEmptyNotice
+        icon={Wrench}
+        title={t('noTools')}
+        hint={t('noToolsHint')}
+        href={agentToolsPath(projectKey)}
+        linkLabel={t('goToTools')}
+      />
     ) : (
       <AgentCapabilityList
         searchPlaceholder={t('searchTools')}
@@ -227,20 +242,23 @@ export function AgentSheetForm({
             catalog.flatMap((i) => i.tools).find((t) => t.key === tool.toolKey)?.label ??
             tool.toolKey;
           const integration = integrationLabel(catalog, tool.integrationKey);
-          const on = tool.credentialLabel
-            ? `${integration} · ${tool.credentialLabel}`
-            : integration;
           return {
             id: tool.id,
             checked: selectedTools.includes(tool.id),
             title: toolLabel,
-            subtitle: on,
-            search: `${toolLabel} ${on}`.toLowerCase(),
+            subtitle: tool.credentialLabel ?? undefined,
+            group: integration,
+            search: `${toolLabel} ${integration} ${tool.credentialLabel ?? ''}`.toLowerCase(),
           };
         })}
       />
     )
   ) : null;
+
+  // "enabled / available" over each capability library, shown in the section header
+  // and its nav entry. Nothing to count while the library is empty.
+  const countBadge = (selected: number, total: number) =>
+    total > 0 ? `${selected} / ${total}` : undefined;
 
   // The full-width internal editor owns its scroll container (it holds the section
   // nav's scroll spy). Every other case stacks in a single column here. Once the
@@ -268,7 +286,9 @@ export function AgentSheetForm({
       roles={rolesQuery.data ?? []}
       agent={agent}
       skillsContent={skillsContent}
+      skillsBadge={countBadge(selectedSkills.length, skillsLibrary.length)}
       toolsContent={toolsContent}
+      toolsBadge={countBadge(selectedTools.length, toolsLibrary.length)}
       revealedKey={revealedKey}
       onRevealedKey={setRevealedKey}
     />

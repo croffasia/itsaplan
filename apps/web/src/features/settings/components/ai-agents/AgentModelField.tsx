@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Check, ChevronsUpDown } from 'lucide-react';
+import { Check } from 'lucide-react';
 import type { ProviderModel } from '@/lib/api';
-import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -10,8 +9,9 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Popover, PopoverContent } from '@/components/ui/popover';
 import { useTranslations } from 'next-intl';
+import { AgentComboboxTrigger } from './AgentComboboxTrigger';
 
 // Model picker for an agent: a searchable list of the selected provider's models
 // (from the models.dev registry) that also accepts a model id typed by hand, so a
@@ -45,21 +45,12 @@ export default function AgentModelField({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-expanded={open}
-          disabled={disabled}
-          className="w-full justify-between font-normal"
-        >
-          <span className={value ? 'truncate' : 'truncate text-muted-foreground'}>
-            {value || t('chooseModel')}
-          </span>
-          <ChevronsUpDown className="ms-2 size-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
+      <AgentComboboxTrigger
+        value={value}
+        placeholder={t('chooseModel')}
+        open={open}
+        disabled={disabled}
+      />
       <PopoverContent className="w-(--radix-popover-trigger-width) p-0" align="start">
         <Command>
           <CommandInput placeholder={t('searchModel')} value={search} onValueChange={setSearch} />
@@ -71,7 +62,7 @@ export default function AgentModelField({
               e.currentTarget.scrollTop += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
             }}
           >
-            {!loading && !showCustom && <CommandEmpty>No models found.</CommandEmpty>}
+            {!loading && !showCustom && <CommandEmpty>{t('noModels')}</CommandEmpty>}
             {loading && (
               <div className="px-3 py-2 text-sm text-muted-foreground">{t('loadingModels')}</div>
             )}

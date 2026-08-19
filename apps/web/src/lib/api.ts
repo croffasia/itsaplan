@@ -281,6 +281,7 @@ export interface AgentScheduleRun {
 // read-only tools that are always granted and shown non-editable.
 export interface AgentTool {
   key: string;
+  group: 'issues' | 'initiatives' | 'cycles' | 'notes' | 'project';
   label: string;
   description: string;
   always: boolean;

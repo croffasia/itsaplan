@@ -4,6 +4,8 @@
   "columns": {
     "member": "Member",
     "role": "Role",
+    "timezone": "Timezone",
+    "joined": "Joined",
     "actions": "Actions"
   },
   "you": "(you)",
@@ -12,7 +14,6 @@
     "people": "People",
     "agents": "AI agents"
   },
-  "joined": "· joined {date}",
   "leaveProject": "Leave project",
   "revokeAccess": "Revoke access",
   "lastOwner": "A project must keep at least one owner",

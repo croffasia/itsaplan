@@ -1,6 +1,7 @@
-import { db, projectMember, projectRole, user, aiAgent } from '@repo/db';
+import { db, projectMember, projectRole, user, aiAgent, userPreference } from '@repo/db';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
+import { DEFAULT_TIMEZONE } from '#modules/user-preferences/service';
 import {
   defaultMemberPermissions,
   fullPermissions,
@@ -18,6 +19,12 @@ export interface MemberRow {
   userId: string;
   name: string;
   email: string;
+  // The sign-in name, shown next to the address in the members list. Null for an
+  // agent's bot user, which is written by a direct insert and never gets one.
+  username: string | null;
+  // The zone this member reads timestamps in. Falls back to the same default as
+  // their preferences do while they have not chosen one.
+  timezone: string;
   image: string | null;
   role: MemberRole;
   // The custom role assigned to a member, or null. Owners bypass roles, so their
@@ -177,7 +184,9 @@ export async function listMembers(projectId: number): Promise<MemberRow[]> {
       userId: projectMember.userId,
       name: user.name,
       email: user.email,
+      username: user.username,
       image: user.image,
+      timezone: userPreference.timezone,
       role: projectMember.role,
       roleId: projectMember.roleId,
       roleName: projectRole.name,
@@ -189,13 +198,16 @@ export async function listMembers(projectId: number): Promise<MemberRow[]> {
     .innerJoin(user, eq(user.id, projectMember.userId))
     .leftJoin(projectRole, eq(projectRole.id, projectMember.roleId))
     .leftJoin(aiAgent, eq(aiAgent.userId, projectMember.userId))
+    .leftJoin(userPreference, eq(userPreference.userId, projectMember.userId))
     .where(eq(projectMember.projectId, projectId))
     .orderBy(projectMember.createdAt);
   return rows.map((r) => ({
     userId: r.userId,
     name: r.name,
     email: r.email,
+    username: r.username,
     image: r.image,
+    timezone: r.timezone ?? DEFAULT_TIMEZONE,
     role: r.role as MemberRole,
     roleId: r.roleId,
     roleName: r.roleName,

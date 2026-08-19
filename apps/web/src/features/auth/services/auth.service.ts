@@ -22,8 +22,21 @@ const appUrl = (path: string) =>
 // enough to tell it apart from wrong credentials and offer the link again.
 export class EmailNotConfirmedError extends Error {}
 
-export async function signInWithEmail(input: { email: string; password: string }): Promise<void> {
-  const result = await signIn.email(input);
+// The sign-in screen has one field for two identifiers: an address goes to
+// /sign-in/email, anything else to /sign-in/username. An address is the only thing
+// that can carry an "@", so that is what tells them apart.
+export function isEmailAddress(identifier: string): boolean {
+  return identifier.includes('@');
+}
+
+export async function signInWithPassword(input: {
+  identifier: string;
+  password: string;
+}): Promise<void> {
+  const identifier = input.identifier.trim();
+  const result = isEmailAddress(identifier)
+    ? await signIn.email({ email: identifier, password: input.password })
+    : await signIn.username({ username: identifier, password: input.password });
   if (!result.error) return;
   const message = result.error.message ?? '';
   if (result.error.status === 403) throw new EmailNotConfirmedError(message);

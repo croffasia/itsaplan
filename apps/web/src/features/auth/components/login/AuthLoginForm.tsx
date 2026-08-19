@@ -20,9 +20,10 @@ import AuthMessagePanel from '../AuthMessagePanel';
 import AuthUnconfirmedNotice from './AuthUnconfirmedNotice';
 import {
   EmailNotConfirmedError,
+  isEmailAddress,
   resendVerificationEmail,
   sendMagicLink,
-  signInWithEmail,
+  signInWithPassword,
   signInWithGoogle,
   signInWithPasskey,
 } from '../../services/auth.service';
@@ -38,7 +39,9 @@ type Method = 'password' | 'link';
 export default function AuthLoginForm() {
   const t = useTranslations('auth');
   const [method, setMethod] = useState<Method>('password');
-  const [email, setEmail] = useState('');
+  // With a password this is either an address or a username; a sign-in link can only
+  // go to an address.
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   // The address a sign-in link went to. Set on success, and it replaces the form:
   // there is nothing left to do on this screen until the inbox is opened.
@@ -74,8 +77,8 @@ export default function AuthLoginForm() {
     if (method === 'link') {
       run(
         async () => {
-          await sendMagicLink(email);
-          setLinkSentTo(email);
+          await sendMagicLink(identifier);
+          setLinkSentTo(identifier);
         },
         { redirect: false },
       );
@@ -83,7 +86,7 @@ export default function AuthLoginForm() {
     }
     run(async () => {
       try {
-        await signInWithEmail({ email, password });
+        await signInWithPassword({ identifier, password });
       } catch (err) {
         if (err instanceof EmailNotConfirmedError) setUnconfirmed(true);
         throw err;
@@ -132,15 +135,17 @@ export default function AuthLoginForm() {
         <AuthFormHeader title={t('login.title')} description={subtitle()} />
 
         <Field>
-          <FieldLabel htmlFor="email">{t('fields.email')}</FieldLabel>
+          <FieldLabel htmlFor="identifier">
+            {signingInWithLink ? t('fields.email') : t('fields.identifier')}
+          </FieldLabel>
           <Input
-            id="email"
-            type="email"
+            id="identifier"
+            type={signingInWithLink ? 'email' : 'text'}
             placeholder={t('fields.emailPlaceholder')}
-            autoComplete="email"
+            autoComplete="username"
             required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
             disabled={pending}
           />
         </Field>
@@ -177,11 +182,11 @@ export default function AuthLoginForm() {
           <AuthUnconfirmedNotice
             resent={resent}
             pending={pending}
-            canResend={Boolean(email)}
+            canResend={isEmailAddress(identifier)}
             onResend={() =>
               run(
                 async () => {
-                  await resendVerificationEmail(email);
+                  await resendVerificationEmail(identifier);
                   setResent(true);
                 },
                 { redirect: false },

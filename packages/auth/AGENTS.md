@@ -48,6 +48,27 @@ API, which renders nothing. The web app passes them in `features/auth/services`.
 cannot depend on the setting), so the web sign-up drops that session and shows a
 "confirm your email" screen instead.
 
+## Username
+
+The `username()` plugin adds `username` / `display_username` to the user table and the
+`/sign-in/username` endpoint. Nobody is asked for a name: `databaseHooks.user.create.before`
+derives one from the address — the local part, with everything the plugin's validator
+rejects removed — and appends three random digits when that name is taken or is shorter
+than the 3-character minimum. The owner changes it afterwards through `updateUser`, which
+is where the plugin enforces uniqueness. Accounts that predate the column are filled in by
+`drizzle/0087_username_backfill.sql`, which repeats the same rule in SQL; agent bot users
+are skipped there, and their direct insert never reaches the hook, so their username stays
+NULL.
+
+The plugin's `/is-username-available` is in `disabledPaths` and answers 404. It takes no
+session, and a username comes from the address, so it would tell a stranger which
+addresses are registered.
+
+The sign-in screen has one field for both identifiers and picks the endpoint by whether
+what was typed contains an "@". `/sign-in/username` checks only the static
+`emailAndPassword.requireEmailVerification`, which is `false` here, so the instance
+verification gate in `hooks.before` covers that path as well as `/sign-in/email`.
+
 ## Passkey
 
 `passkey({ rpID, rpName, origin })` adds WebAuthn. `rpID` is the frontend hostname the

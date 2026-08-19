@@ -85,13 +85,23 @@ export function formatDate(value: string): string {
   });
 }
 
-// "Jul 2, 14:05" for a moment in time, rendered in the user's zone.
+// The year a moment falls in, in the display zone. A fixed locale: the value is
+// compared, never shown.
+function zonedYear(date: Date): string {
+  return date.toLocaleDateString('en-US', { year: 'numeric', ...zoneOption() });
+}
+
+// "Jul 2, 14:05" for a moment in time, rendered in the user's zone. A moment from
+// another year carries it — "Jul 2, 2025, 14:05" — so an old row is not read as a
+// recent one.
 export function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
+  const thisYear = zonedYear(date) === zonedYear(new Date());
   return date.toLocaleString(displayLocale, {
     month: 'short',
     day: 'numeric',
+    ...(thisYear ? {} : { year: 'numeric' }),
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,

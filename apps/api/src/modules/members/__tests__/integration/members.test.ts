@@ -50,6 +50,7 @@ describe('members', () => {
       expect(res.data?.[0]).toMatchObject({
         userId: owner.user.userId,
         email: owner.user.email,
+        username: expect.any(String),
         role: 'owner',
         roleId: null,
         roleName: null,

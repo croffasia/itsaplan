@@ -1,11 +1,11 @@
 import { db } from '@repo/db';
-import { eq } from 'drizzle-orm';
+import { eq, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { passkey } from '@better-auth/passkey';
 import { apiKey } from '@better-auth/api-key';
-import { openAPI, magicLink } from 'better-auth/plugins';
+import { openAPI, magicLink, username } from 'better-auth/plugins';
 import * as schema from '@repo/db/schema';
 import {
   getAuthSettings,
@@ -116,17 +116,46 @@ async function assertRegistrationAllowed(email: string): Promise<void> {
   }
 }
 
-// True when an account with this address exists and has not confirmed it. Used to
-// hold back sign-in while the instance requires verification. An unknown address is
-// not "unverified" — it falls through to better-auth's own invalid-credentials
-// answer, so this never reveals whether an account exists.
-async function isUnverified(email: string): Promise<boolean> {
-  if (!email) return false;
+// True when an account matching the sign-in identifier exists and has not confirmed
+// its address. Used to hold back sign-in while the instance requires verification. An
+// unknown identifier is not "unverified" — it falls through to better-auth's own
+// invalid-credentials answer, so this never reveals whether an account exists.
+async function isUnverified(where: SQL): Promise<boolean> {
   const rows = await db
     .select({ emailVerified: schema.user.emailVerified })
     .from(schema.user)
-    .where(eq(schema.user.email, email.trim().toLowerCase()));
+    .where(where);
   return rows[0] ? !rows[0].emailVerified : false;
+}
+
+// Username rules. The bounds are the plugin's own defaults, repeated here because the
+// generator below has to stay inside them.
+const USERNAME_MIN_LENGTH = 3;
+const USERNAME_MAX_LENGTH = 30;
+const SUFFIX_LENGTH = 3;
+
+// Three digits appended to a name that is taken, or too short to stand on its own.
+function randomSuffix(): string {
+  return String(100 + Math.floor(Math.random() * 900));
+}
+
+// Nobody is asked for a username at sign-up: it is derived from the address — the
+// local part, with everything the plugin's validator rejects removed — and the owner
+// changes it later in the profile. A name already in use gets a random suffix, and
+// the check repeats until the name is free.
+async function generateUsername(email: string): Promise<string> {
+  const stem =
+    email
+      .split('@')[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9_.]/g, '')
+      .slice(0, USERNAME_MAX_LENGTH - SUFFIX_LENGTH) || 'user';
+  let candidate = stem.length >= USERNAME_MIN_LENGTH ? stem : stem + randomSuffix();
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    if ((await db.$count(schema.user, eq(schema.user.username, candidate))) === 0) break;
+    candidate = stem + randomSuffix();
+  }
+  return candidate;
 }
 
 export const auth = betterAuth({
@@ -229,7 +258,10 @@ export const auth = betterAuth({
         return;
       }
 
-      if (ctx.path === '/sign-in/email') {
+      // Both password endpoints: the sign-in screen sends the one field it has to
+      // /sign-in/email or /sign-in/username depending on what was typed, and the
+      // instance gate has to apply either way.
+      if (ctx.path === '/sign-in/email' || ctx.path === '/sign-in/username') {
         const settings = await getAuthSettings();
         if (!settings.requireEmailVerification) return;
         // Holding an account back is only fair while a confirmation link can still
@@ -237,8 +269,12 @@ export const auth = betterAuth({
         // out and the gate would lock it forever. This is the same condition the
         // public /auth-config reports, so the sign-in screen and the gate agree.
         if (!(await hasConfiguredEmailProvider())) return;
-        const email = (ctx.body as { email?: string } | undefined)?.email ?? '';
-        if (await isUnverified(email)) {
+        const body = ctx.body as { email?: string; username?: string } | undefined;
+        const identifier =
+          ctx.path === '/sign-in/email'
+            ? eq(schema.user.email, (body?.email ?? '').trim().toLowerCase())
+            : eq(schema.user.username, (body?.username ?? '').trim().toLowerCase());
+        if (await isUnverified(identifier)) {
           throw new APIError('FORBIDDEN', {
             message: 'Confirm your email address before signing in',
           });
@@ -259,7 +295,17 @@ export const auth = betterAuth({
         before: async (user) => {
           await assertRegistrationAllowed(user.email);
           const isFirstUser = (await db.$count(schema.user)) === 0;
-          return { data: { ...user, role: isFirstUser ? 'god' : 'user' } };
+          // A sign-up that carried its own username has passed the plugin's own
+          // check by now; only an account without one gets a derived name.
+          const derived = user.username ?? (await generateUsername(user.email));
+          return {
+            data: {
+              ...user,
+              role: isFirstUser ? 'god' : 'user',
+              username: derived,
+              displayUsername: user.displayUsername ?? derived,
+            },
+          };
         },
       },
     },
@@ -313,6 +359,15 @@ export const auth = betterAuth({
         });
       },
     }),
+    // Usernames: a second identifier next to the address, unique across the
+    // instance. Adds `username` / `display_username` to the user table and the
+    // /sign-in/username endpoint the sign-in screen uses when the visitor typed a
+    // name rather than an address. Nobody is asked for one — the create hook above
+    // derives it from the address, and the profile page changes it afterwards.
+    username({
+      minUsernameLength: USERNAME_MIN_LENGTH,
+      maxUsernameLength: USERNAME_MAX_LENGTH,
+    }),
     // OpenAPI reference for the better-auth handler. Serves a Scalar UI at
     // /api/auth/reference and the raw schema at /api/auth/open-api/generate-schema.
     // The schema is built from every active plugin, so the passkey and apiKey
@@ -323,6 +378,12 @@ export const auth = betterAuth({
 
   // The frontend runs on a different origin (Next :3001) — allow its requests.
   trustedOrigins,
+
+  // The username plugin's /is-username-available answers for anyone, and a username
+  // is derived from the address, so the endpoint would tell a stranger which
+  // addresses are registered. Nothing in the app calls it — the profile form learns
+  // a name is taken from updateUser's error.
+  disabledPaths: ['/is-username-available'],
 
   advanced: {
     // Share the session cookie across subdomains when COOKIE_DOMAIN is the parent

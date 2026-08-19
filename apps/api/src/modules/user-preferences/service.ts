@@ -7,6 +7,9 @@ import { DEFAULT_LOCALE, type Locale } from './locale';
 // request's browser-localized defaults apply, so a read never fails. Timestamps stay
 // UTC everywhere in the API — `timezone` only tells the web app which zone to render them in.
 
+// The zone a user reads timestamps in until they choose one.
+export const DEFAULT_TIMEZONE = 'UTC';
+
 export const THEMES = ['light', 'dark', 'system'] as const;
 export const ISSUE_OPEN_MODES = ['panel', 'page'] as const;
 export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat'] as const;
@@ -50,7 +53,7 @@ export type UserPreferencePatch = Partial<UserPreferenceDto>;
 
 export function defaults(locale: Locale = DEFAULT_LOCALE): UserPreferenceDto {
   return {
-    timezone: 'UTC',
+    timezone: DEFAULT_TIMEZONE,
     locale,
     theme: 'system',
     issueOpenMode: 'panel',

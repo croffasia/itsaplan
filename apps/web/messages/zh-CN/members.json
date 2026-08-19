@@ -4,6 +4,8 @@
   "columns": {
     "member": "成员",
     "role": "角色",
+    "timezone": "时区",
+    "joined": "加入时间",
     "actions": "操作"
   },
   "you": "（你）",
@@ -12,7 +14,6 @@
     "people": "成员",
     "agents": "AI 智能体"
   },
-  "joined": "· 加入于 {date}",
   "leaveProject": "退出项目",
   "revokeAccess": "撤销访问权限",
   "lastOwner": "项目必须至少保留一名所有者",

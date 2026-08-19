@@ -65,9 +65,11 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
     <div className="mb-8 space-y-4">
       <Table className="min-w-[720px] table-fixed">
         <colgroup>
-          <col className="w-[50%]" />
-          <col className="w-[22%]" />
-          <col className="w-[28%]" />
+          <col className="w-[36%]" />
+          <col className="w-[17%]" />
+          <col className="w-[17%]" />
+          <col className="w-[13%]" />
+          <col className="w-[17%]" />
         </colgroup>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -77,17 +79,25 @@ export default function MembersList({ projectKey }: { projectKey: string }) {
             <TableHead className="text-xs font-medium text-muted-foreground">
               {t('columns.role')}
             </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('columns.timezone')}
+            </TableHead>
+            <TableHead className="text-xs font-medium text-muted-foreground">
+              {t('columns.joined')}
+            </TableHead>
             <TableHead className="text-right text-xs font-medium text-muted-foreground">
               {t('columns.actions')}
             </TableHead>
           </TableRow>
         </TableHeader>
-        <TableBody>
+        {/* The row before a group heading drops its border: the heading already
+            separates the two groups, and a line above it reads as a second one. */}
+        <TableBody className="[&_tr:has(+tr[data-group-heading])]:border-b-0">
           {groups.map((group) => (
             <Fragment key={group.key}>
-              <TableRow className="border-0 hover:bg-transparent">
+              <TableRow data-group-heading className="border-0 hover:bg-transparent">
                 <TableCell
-                  colSpan={3}
+                  colSpan={5}
                   className="px-3 pt-5 pb-1 text-xs font-medium text-muted-foreground"
                 >
                   {group.label}

@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useSession } from '@/lib/auth-client';
 import FullPageView from '@/components/common/page/FullPageView';
 import AccountProfileAvatar from './components/profile/AccountProfileAvatar';
-import AccountProfileNameForm from './components/profile/AccountProfileNameForm';
+import AccountProfileDetailsForm from './components/profile/AccountProfileDetailsForm';
 import AccountSection from './components/AccountSection';
 
 export default function AccountProfilePage() {
@@ -20,8 +20,8 @@ export default function AccountProfilePage() {
       <AccountSection title={t('avatarTitle')} description={t('avatarDescription')}>
         <AccountProfileAvatar />
       </AccountSection>
-      <AccountSection title={t('nameTitle')}>
-        <AccountProfileNameForm />
+      <AccountSection title={t('detailsTitle')} description={t('detailsDescription')}>
+        <AccountProfileDetailsForm />
       </AccountSection>
     </FullPageView>
   );

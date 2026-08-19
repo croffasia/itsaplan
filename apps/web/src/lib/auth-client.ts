@@ -1,6 +1,6 @@
 import { createAuthClient } from 'better-auth/react';
 import { inferAdditionalFields } from 'better-auth/client/plugins';
-import { magicLinkClient } from 'better-auth/client/plugins';
+import { magicLinkClient, usernameClient } from 'better-auth/client/plugins';
 import { passkeyClient } from '@better-auth/passkey/client';
 import { apiKeyClient } from '@better-auth/api-key/client';
 import { API_URL } from '@/lib/api';
@@ -25,6 +25,10 @@ export const authClient = createAuthClient({
     // instance setting the sign-in screen reads from /auth-config; the server
     // refuses to send when it is off.
     magicLinkClient(),
+    // Usernames: signIn.username(). The sign-in screen sends its one field here when
+    // what was typed is not an address, and the plugin types `username` on the
+    // session user so the profile page can show it.
+    usernameClient(),
   ],
 });
 

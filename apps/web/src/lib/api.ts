@@ -2081,7 +2081,11 @@ export interface MemberRow {
   userId: string;
   name: string;
   email: string;
+  // The sign-in name. null for an AI agent's bot user, which never gets one.
+  username: string | null;
   image: string | null;
+  // The zone this member reads timestamps in, from their preferences.
+  timezone: string;
   role: MemberRole;
   // The assigned custom role. null when the member uses the project's default
   // role; owners never use roles (both fields null).

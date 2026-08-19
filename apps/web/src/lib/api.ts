@@ -1522,7 +1522,9 @@ export type ActivityAction =
   | 'field'
   | 'archived'
   | 'restored'
-  | 'github_pr';
+  | 'github_pr'
+  | 'agent_started'
+  | 'agent_finished';
 
 // One entry in an issue's timeline. kind selects which payload fields are set:
 // a 'comment' carries body; an 'activity' carries action/subject/fromText/toText.

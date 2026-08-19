@@ -275,6 +275,9 @@
     "fieldCleared": "مسح <v>{field}</v>",
     "archived": "أرشف المهمة",
     "restored": "استعاد المهمة",
+    "agentStarted": "استلم المهمة",
+    "agentFinished": "أنهى العمل على المهمة",
+    "agentFailed": "لم يتمكن من إنهاء المهمة",
     "pullRequestMerged": "دمج طلب السحب <v>{pr}</v>",
     "pullRequestOpened": "فتح طلب السحب <v>{pr}</v>"
   },

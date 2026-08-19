@@ -46,7 +46,7 @@ export const agentRunnerRoutes = new Elysia({
   .post(
     '/agent-runs/:runId/result',
     async ({ agent, params, body }) => {
-      const ok = await finishRun(agent.id, params.runId, body);
+      const ok = await finishRun(agent, params.runId, body);
       if (!ok) throw new HttpError(404, 'Run not found');
       return noContent();
     },

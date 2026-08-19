@@ -275,6 +275,9 @@
     "fieldCleared": "cleared <v>{field}</v>",
     "archived": "archived the issue",
     "restored": "restored the issue",
+    "agentStarted": "picked up the issue",
+    "agentFinished": "finished working on the issue",
+    "agentFailed": "could not finish the issue",
     "pullRequestMerged": "merged pull request <v>{pr}</v>",
     "pullRequestOpened": "opened pull request <v>{pr}</v>"
   },

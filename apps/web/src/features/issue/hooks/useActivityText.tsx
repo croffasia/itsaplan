@@ -137,6 +137,10 @@ export function useActivityText() {
         return { line: line('archived') };
       case 'restored':
         return { line: line('restored') };
+      case 'agent_started':
+        return { line: line('agentStarted') };
+      case 'agent_finished':
+        return { line: line(a.subject === 'failed' ? 'agentFailed' : 'agentFinished') };
       case 'github_pr': {
         // fromText is "owner/repo#42", toText the PR's URL on GitHub.
         const key = a.subject === 'merged' ? 'pullRequestMerged' : 'pullRequestOpened';

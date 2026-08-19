@@ -275,6 +275,9 @@
     "fieldCleared": "清除了 <v>{field}</v>",
     "archived": "归档了工作项",
     "restored": "恢复了工作项",
+    "agentStarted": "接手了该工作项",
+    "agentFinished": "完成了该工作项的处理",
+    "agentFailed": "未能完成该工作项",
     "pullRequestMerged": "合并了拉取请求 <v>{pr}</v>",
     "pullRequestOpened": "打开了拉取请求 <v>{pr}</v>"
   },

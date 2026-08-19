@@ -275,6 +275,9 @@
     "fieldCleared": "очистил(а) <v>{field}</v>",
     "archived": "архивировал(а) задачу",
     "restored": "восстановил(а) задачу",
+    "agentStarted": "взял(а) задачу в работу",
+    "agentFinished": "завершил(а) работу над задачей",
+    "agentFailed": "не смог(ла) завершить работу над задачей",
     "pullRequestMerged": "смержил(а) пул-реквест <v>{pr}</v>",
     "pullRequestOpened": "открыл(а) пул-реквест <v>{pr}</v>"
   },

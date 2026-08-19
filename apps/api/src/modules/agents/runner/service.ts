@@ -1,6 +1,7 @@
 import { db, aiAgent, agentRun, project } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
 import { agentRunConfig } from '../core/run-queue';
+import { recordAgentRunFinished, recordAgentRunStarted } from '../core/run-activity';
 import type { AgentKind } from '../core/service';
 import type { AgentRunTrigger } from '../model';
 import {
@@ -88,26 +89,31 @@ export async function touchRunner(agentId: number): Promise<void> {
 }
 
 // Fails runs that were handed out too many times without a result, so a run whose
-// runner keeps dying ends in a visible state instead of being served forever.
-async function expireExhaustedRuns(agentId: number): Promise<void> {
-  await db
+// runner keeps dying ends in a visible state instead of being served forever. That is
+// the end of the run, so the issue's timeline gets the same entry a reported failure
+// writes.
+async function expireExhaustedRuns(agent: RunnerAgent): Promise<void> {
+  const rows = await db
     .update(agentRun)
     .set({ status: 'failed', lastError: 'Runner did not report a result', finishedAt: new Date() })
     .where(
       and(
-        eq(agentRun.agentId, agentId),
+        eq(agentRun.agentId, agent.id),
         eq(agentRun.status, 'pending'),
         sql`${agentRun.attempts} >= ${agentRunConfig.maxAttempts()}`,
         sql`${agentRun.nextAttemptAt} <= now()`,
       ),
-    );
+    )
+    .returning({ issueId: agentRun.issueId });
+  for (const row of rows)
+    await recordAgentRunFinished({ ...row, agentUserId: agent.userId }, 'failed');
 }
 
 // Claims the agent's next due run, or null when it has none. FOR UPDATE SKIP LOCKED
 // keeps two runners on the same key from taking the same run.
 export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | null> {
   const agentId = agent.id;
-  await expireExhaustedRuns(agentId);
+  await expireExhaustedRuns(agent);
   await touchRunner(agentId);
   const rows = await db.execute(sql`
     UPDATE agent_run r
@@ -140,6 +146,7 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
   const row = (rows as unknown as ClaimedRow[])[0];
   if (!row) return null;
   const forPrompt = { ...row, agentUserId: agent.userId };
+  await recordAgentRunStarted(forPrompt);
   return {
     id: row.id,
     trigger: row.trigger,
@@ -185,11 +192,11 @@ export async function heartbeatRun(agentId: number, runId: number): Promise<bool
 // command and it failed, so re-serving the same run would just repeat it. False when
 // the run is not this agent's, or was already finished.
 export async function finishRun(
-  agentId: number,
+  agent: RunnerAgent,
   runId: number,
   result: { status: 'success' | 'failed'; output?: string | null; error?: string | null },
 ): Promise<boolean> {
-  await touchRunner(agentId);
+  await touchRunner(agent.id);
   const rows = await db
     .update(agentRun)
     .set({
@@ -199,8 +206,11 @@ export async function finishRun(
       finishedAt: new Date(),
     })
     .where(
-      and(eq(agentRun.id, runId), eq(agentRun.agentId, agentId), eq(agentRun.status, 'pending')),
+      and(eq(agentRun.id, runId), eq(agentRun.agentId, agent.id), eq(agentRun.status, 'pending')),
     )
-    .returning({ id: agentRun.id });
-  return rows.length > 0;
+    .returning({ issueId: agentRun.issueId });
+  const row = rows[0];
+  if (!row) return false;
+  await recordAgentRunFinished({ ...row, agentUserId: agent.userId }, result.status);
+  return true;
 }

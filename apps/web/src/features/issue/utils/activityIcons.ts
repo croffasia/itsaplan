@@ -51,4 +51,6 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   archived: Archive,
   restored: ArchiveRestore,
   github_pr: GitPullRequest,
+  agent_started: Bot,
+  agent_finished: Bot,
 };

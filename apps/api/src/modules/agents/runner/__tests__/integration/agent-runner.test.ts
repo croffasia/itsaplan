@@ -65,6 +65,29 @@ describe('agent runner queue', () => {
     expect(res.data!.run!.systemPrompt).toContain('Run mode');
   });
 
+  it('logs on the issue that the agent picked the run up and how it ended', async () => {
+    const { asOwner, asRunner, agent, columnId } = await setup();
+    const issue = await queueRun(asOwner, columnId, agent.userId);
+    const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
+
+    await asRunner['agent-runs']({ runId: run.id }).result.post({
+      status: 'failed',
+      error: 'claude exited with 1',
+    });
+
+    const feed = await asOwner.issues({ issueId: issue.id }).feed.get({ query: {} });
+    expect(feed.data!.items).toContainEqual(
+      expect.objectContaining({ action: 'agent_started', actorUserId: agent.userId }),
+    );
+    expect(feed.data!.items).toContainEqual(
+      expect.objectContaining({
+        action: 'agent_finished',
+        subject: 'failed',
+        actorUserId: agent.userId,
+      }),
+    );
+  });
+
   it("mixes the agent's own instructions into the system prompt", async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
     await asOwner

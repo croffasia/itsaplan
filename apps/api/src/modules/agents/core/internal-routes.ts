@@ -3,6 +3,8 @@ import { runAgent } from './runtime';
 import { deleteThreadsWhere } from './runtime/memory';
 import { runThreadId } from './runtime/thread-ids';
 import { framePrompt, runModePreamble, peopleContext } from './prompt/framing';
+import { recordAgentRunFinished, recordAgentRunStarted } from './run-activity';
+import { agentRunConfig } from './run-queue';
 
 const runBody = t.Object({
   id: t.Number(),
@@ -11,6 +13,7 @@ const runBody = t.Object({
   scheduleId: t.Nullable(t.Number()),
   trigger: t.UnionEnum(['mention', 'delegation', 'schedule', 'manual']),
   prompt: t.String(),
+  attempts: t.Number(),
   projectId: t.Number(),
   agentUserId: t.String(),
   issueIdentifier: t.Nullable(t.String()),
@@ -37,14 +40,25 @@ export const internalAgentRunRoutes = new Elysia({
         set.status = 401;
         return { error: 'Unauthorized' };
       }
-      const result = await runAgent(body.agentId, body.projectId, framePrompt(body), {
-        callerUserId: body.agentUserId,
-        threadId: runThreadId(body),
-        issueId: body.issueId,
-        scheduleId: body.scheduleId,
-        contextPreamble: runModePreamble(body.trigger) + peopleContext(body),
-      });
-      return { output: result.text };
+      // The worker writes the run's own status; the issue's timeline entries are
+      // written here, where the agent's work actually starts and ends. A failure the
+      // worker will retry is not the end of the run, so only the last attempt logs one.
+      await recordAgentRunStarted(body);
+      try {
+        const result = await runAgent(body.agentId, body.projectId, framePrompt(body), {
+          callerUserId: body.agentUserId,
+          threadId: runThreadId(body),
+          issueId: body.issueId,
+          scheduleId: body.scheduleId,
+          contextPreamble: runModePreamble(body.trigger) + peopleContext(body),
+        });
+        await recordAgentRunFinished(body, 'success');
+        return { output: result.text };
+      } catch (error) {
+        if (body.attempts >= agentRunConfig.maxAttempts())
+          await recordAgentRunFinished(body, 'failed');
+        throw error;
+      }
     },
     {
       body: runBody,

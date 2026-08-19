@@ -8,6 +8,10 @@
   },
   "you": "（你）",
   "aiAgent": "AI 代理",
+  "groups": {
+    "people": "成员",
+    "agents": "AI 智能体"
+  },
   "joined": "· 加入于 {date}",
   "leaveProject": "退出项目",
   "revokeAccess": "撤销访问权限",

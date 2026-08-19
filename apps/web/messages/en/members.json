@@ -8,6 +8,10 @@
   },
   "you": "(you)",
   "aiAgent": "AI Agent",
+  "groups": {
+    "people": "People",
+    "agents": "AI agents"
+  },
   "joined": "· joined {date}",
   "leaveProject": "Leave project",
   "revokeAccess": "Revoke access",

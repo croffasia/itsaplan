@@ -8,6 +8,10 @@
   },
   "you": "(ви)",
   "aiAgent": "AI-агент",
+  "groups": {
+    "people": "Люди",
+    "agents": "AI-агенти"
+  },
   "joined": "· приєднався {date}",
   "leaveProject": "Вийти з проєкту",
   "revokeAccess": "Відкликати доступ",

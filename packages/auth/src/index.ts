@@ -1,3 +1,4 @@
+import { randomInt } from 'node:crypto';
 import { db } from '@repo/db';
 import { eq, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
@@ -135,8 +136,10 @@ const USERNAME_MAX_LENGTH = 30;
 const SUFFIX_LENGTH = 3;
 
 // Three digits appended to a name that is taken, or too short to stand on its own.
+// Drawn from the crypto source: the digits are not a secret, but this function sits
+// in the sign-up path, where a predictable generator is worth nobody's argument.
 function randomSuffix(): string {
-  return String(100 + Math.floor(Math.random() * 900));
+  return String(100 + randomInt(900));
 }
 
 // Nobody is asked for a username at sign-up: it is derived from the address — the

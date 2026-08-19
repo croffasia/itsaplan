@@ -187,7 +187,8 @@
     "posting": "جارٍ النشر…",
     "comment": "تعليق",
     "toSend": "للإرسال",
-    "unknownAuthor": "غير معروف"
+    "unknownAuthor": "غير معروف",
+    "goToLastComment": "الانتقال إلى آخر تعليق"
   },
   "stats": {
     "title": "الإحصاءات",

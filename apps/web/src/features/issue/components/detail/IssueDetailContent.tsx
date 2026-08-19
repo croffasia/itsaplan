@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
@@ -10,6 +10,7 @@ import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
+import LastCommentBubble from './LastCommentBubble';
 import IssueDetailSkeleton from './IssueDetailSkeleton';
 import IssueStatusTimeline from './IssueStatusTimeline';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
@@ -66,6 +67,7 @@ export default function IssueDetailContent({
   // never requested again. Counting the replacements remounts the editors, which
   // builds the element anew and lets the raw route revalidate it.
   const [replacements, setReplacements] = useState(0);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   if (!issue) return <IssueDetailSkeleton />;
 
@@ -203,10 +205,22 @@ export default function IssueDetailContent({
           imageByUserId={imageByUserId}
         />
       )}
-      <IssueActivityFeed
+      <div ref={feedRef}>
+        <IssueActivityFeed
+          issueId={issue.id}
+          assignees={project.assignees}
+          columns={project.columns}
+          imageByUserId={imageByUserId}
+        />
+      </div>
+      {/* Last in the column: a bottom-sticky box only lifts into view from a static
+          position below the viewport, so higher up it would never appear. Keyed by the
+          issue, because the panel keeps it mounted while it switches between issues and
+          each issue gets its own turn. */}
+      <LastCommentBubble
+        key={issue.id}
         issueId={issue.id}
-        assignees={project.assignees}
-        columns={project.columns}
+        feedRef={feedRef}
         imageByUserId={imageByUserId}
       />
     </>
@@ -268,13 +282,15 @@ export default function IssueDetailContent({
   }
 
   // The panel renders the actions in its header row (see IssueDetail), so the
-  // panel body omits them.
+  // panel body omits them. The wrapper is what the bubble sticks inside: without
+  // it the bubble's parent would be the panel's scroll container, which bounds a
+  // sticky child to the first screen of the scroll.
   return (
-    <>
+    <div>
       {heading}
       {renderProperties()}
       {sections}
       {activity}
-    </>
+    </div>
   );
 }

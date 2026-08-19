@@ -82,7 +82,9 @@ export const SlashCommand = Extension.create<SlashCommandOptions>({
               component = new ReactRenderer(EditorSlashMenu, {
                 props,
                 editor: props.editor,
-                // The plugin sets no stacking order; the side panel below is z-40.
+                // The plugin sets no stacking order; the menu mounts on the body,
+                // after the panels it opens over, so an equal z-index still paints it
+                // above them.
                 className: 'z-50',
               });
               unmount = props.mount(component.element);

@@ -187,7 +187,8 @@
     "posting": "Надсилання…",
     "comment": "Коментувати",
     "toSend": "щоб надіслати",
-    "unknownAuthor": "Невідомий"
+    "unknownAuthor": "Невідомий",
+    "goToLastComment": "Перейти до останнього коментаря"
   },
   "stats": {
     "title": "Статистика",

@@ -30,7 +30,9 @@ export default function IssueDetail({
 
   return (
     <div
-      className="fixed inset-0 z-40 flex"
+      // Above the floating chat button (z-40), which sits in the corner the panel's
+      // last-comment bubble uses.
+      className="fixed inset-0 z-50 flex"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       {/* No padding at the top: the sticky header carries it, so it can sit flush

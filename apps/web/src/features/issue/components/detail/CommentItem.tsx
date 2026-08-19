@@ -16,7 +16,8 @@ export default function CommentItem({ item, image }: { item: FeedItem; image: st
   const locale = useDateFnsLocale();
   const author = item.actorName ?? t('unknownAuthor');
   return (
-    <li className="flex gap-3">
+    // The id is the scroll target of the last-comment bubble.
+    <li id={`feed-item-${item.id}`} className="flex gap-3">
       <Avatar name={author} image={image} className="mt-0.5 size-7 text-[11px]" />
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">

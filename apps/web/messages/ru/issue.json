@@ -187,7 +187,8 @@
     "posting": "Отправка…",
     "comment": "Комментировать",
     "toSend": "чтобы отправить",
-    "unknownAuthor": "Неизвестный"
+    "unknownAuthor": "Неизвестный",
+    "goToLastComment": "Перейти к последнему комментарию"
   },
   "stats": {
     "title": "Статистика",

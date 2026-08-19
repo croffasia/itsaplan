@@ -187,7 +187,8 @@
     "posting": "Posting…",
     "comment": "Comment",
     "toSend": "to send",
-    "unknownAuthor": "Unknown"
+    "unknownAuthor": "Unknown",
+    "goToLastComment": "Go to the last comment"
   },
   "stats": {
     "title": "Stats",

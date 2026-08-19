@@ -187,7 +187,8 @@
     "posting": "正在发布…",
     "comment": "评论",
     "toSend": "发送",
-    "unknownAuthor": "未知用户"
+    "unknownAuthor": "未知用户",
+    "goToLastComment": "跳转到最新评论"
   },
   "stats": {
     "title": "统计",

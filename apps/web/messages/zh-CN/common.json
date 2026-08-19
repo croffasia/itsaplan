@@ -33,6 +33,7 @@
   "enabled": "已启用",
   "fullscreen": "全屏",
   "exitFullscreen": "退出全屏",
+  "resizePropertiesPanel": "调整属性面板宽度",
   "resizeTitleColumn": "调整标题列宽",
   "openGeneralSettings": "打开常规设置",
   "noSectionAccess": "你无权访问此部分。",

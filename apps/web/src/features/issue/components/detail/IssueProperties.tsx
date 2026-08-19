@@ -31,7 +31,9 @@ import { useTranslations } from 'next-intl';
 function PropertyRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <>
-      <div className="pt-1.5 text-sm text-muted-foreground">{label}</div>
+      <div className="truncate pt-1.5 text-sm text-muted-foreground" title={label}>
+        {label}
+      </div>
       <div className="min-w-0">{children}</div>
     </>
   );
@@ -160,7 +162,7 @@ export default function IssueProperties({
             <ReadOnlyPill>
               <Pill active={!!issue.initiative}>
                 <Target />
-                {issue.initiative?.title ?? t('initiative')}
+                <span className="truncate">{issue.initiative?.title ?? t('initiative')}</span>
               </Pill>
             </ReadOnlyPill>
           ) : (
@@ -181,7 +183,7 @@ export default function IssueProperties({
             <ReadOnlyPill>
               <Pill active={!!issue.cycle}>
                 <RefreshCw />
-                {issue.cycle?.name ?? t('cycle')}
+                <span className="truncate">{issue.cycle?.name ?? t('cycle')}</span>
               </Pill>
             </ReadOnlyPill>
           ) : (
@@ -260,7 +262,12 @@ export default function IssueProperties({
         className={cn('h-7', open && 'mb-3')}
       />
       {open && (
-        <div className="grid grid-cols-[180px_1fr] items-start gap-x-2 gap-y-2.5">{rows}</div>
+        // The name column takes a share of whatever room the section has, capped at
+        // the width long names need, so a narrow sidebar leaves the controls enough
+        // space instead of pushing them out of it.
+        <div className="grid grid-cols-[minmax(0,min(40%,180px))_minmax(0,1fr)] items-start gap-x-2 gap-y-2.5">
+          {rows}
+        </div>
       )}
     </div>
   );

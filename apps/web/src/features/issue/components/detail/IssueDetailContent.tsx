@@ -1,7 +1,10 @@
-import { useRef, useState } from 'react';
+import { type CSSProperties, useRef, useState } from 'react';
+import { Direction } from 'radix-ui';
 import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
 import { usePermissions } from '@/hooks/usePermissions';
+import { usePersistedWidth } from '@/hooks/usePersistedWidth';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
+import ResizeGrip from '@/components/common/ResizeGrip';
 import { useIssueDetail } from '../../hooks/useIssueDetail';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { useFilePaste } from '../../hooks/useFilePaste';
@@ -17,6 +20,12 @@ import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
 import IssueActionsBar from '../actions/IssueActionsBar';
+import {
+  PROPERTIES_MAX_W,
+  PROPERTIES_MIN_W,
+  PROPERTIES_W,
+  propertiesWidthKey,
+} from '../../utils/propertiesWidth';
 import { useTranslations } from 'next-intl';
 
 // The body of a issue — title, description, markdown custom fields, the
@@ -46,7 +55,9 @@ export default function IssueDetailContent({
   layout?: 'panel' | 'page' | 'split';
 }) {
   const t = useTranslations('issue');
+  const tCommon = useTranslations('common');
   const tEditor = useTranslations('issue.editor');
+  const direction = Direction.useDirection();
   const {
     issue,
     fieldDefs,
@@ -63,6 +74,12 @@ export default function IssueDetailContent({
   const features = useProjectFeatures();
   useFilePaste(canEdit && issue ? (files) => void attachFiles(files) : null);
   const properties = usePersistedOpen('issue-properties-open');
+  const { width: propertiesWidth, setWidth: setPropertiesWidth } = usePersistedWidth(
+    propertiesWidthKey(project.project.key),
+    PROPERTIES_W,
+    PROPERTIES_MIN_W,
+    PROPERTIES_MAX_W,
+  );
   // A replaced attachment keeps its URL, so an <img> already in an editor is
   // never requested again. Counting the replacements remounts the editors, which
   // builds the element anew and lets the raw route revalidate it.
@@ -191,6 +208,21 @@ export default function IssueDetailContent({
 
   const actions = <IssueActionsBar project={project} issue={issue} onDeleted={onDeleted} />;
 
+  // The sidebar grows towards the content, so the pointer moving away from the
+  // edge the panel sits on is what widens it.
+  const propertiesGrip = (
+    <ResizeGrip
+      label={tCommon('resizePropertiesPanel')}
+      className="absolute inset-y-0 start-0 -ms-3"
+      onDrag={(deltaX) =>
+        setPropertiesWidth(propertiesWidth + (direction === 'rtl' ? deltaX : -deltaX))
+      }
+    />
+  );
+  // The dragged width reaches the layout as a variable, since the two blocks it
+  // sizes only take it from the breakpoint where the sidebar exists.
+  const propertiesWidthVar = { '--issue-properties-w': `${propertiesWidth}px` } as CSSProperties;
+
   // A feed entry stores the author's name, not their picture, so the uploaded avatar
   // comes from the project's candidate list by actor id. An author who is no longer a
   // member falls back to the initials circle.
@@ -235,7 +267,7 @@ export default function IssueDetailContent({
     // under the description.
     return (
       <>
-        <div className="max-w-3xl xl:me-[340px]">
+        <div className="max-w-3xl xl:me-(--issue-properties-w)" style={propertiesWidthVar}>
           {/* Stuck to the top of the scrolling page, with the same translucent,
               blurred backdrop the side panel's header uses. The negative top
               margin cancels the page's padding so the row starts where the title
@@ -248,9 +280,17 @@ export default function IssueDetailContent({
           {sections}
           {activity}
         </div>
-        <aside className="hidden xl:fixed xl:end-6 xl:top-16 xl:block xl:max-h-[calc(100vh-5.5rem)] xl:w-[340px] xl:overflow-y-auto">
-          {actions}
-          {sidebarProperties}
+        {/* The grip sits outside the scrolling box: a panel that scrolls on one
+            axis clips the other too, which would cut it off. */}
+        <aside
+          className="hidden xl:fixed xl:end-6 xl:top-16 xl:block xl:w-(--issue-properties-w)"
+          style={propertiesWidthVar}
+        >
+          {propertiesGrip}
+          <div className="max-h-[calc(100vh-5.5rem)] overflow-y-auto">
+            {actions}
+            {sidebarProperties}
+          </div>
         </aside>
       </>
     );
@@ -272,7 +312,11 @@ export default function IssueDetailContent({
             {sections}
             {activity}
           </div>
-          <aside className="hidden w-[320px] shrink-0 @3xl:block">
+          <aside
+            className="relative hidden w-(--issue-properties-w) shrink-0 @3xl:block"
+            style={propertiesWidthVar}
+          >
+            {propertiesGrip}
             {actions}
             {sidebarProperties}
           </aside>

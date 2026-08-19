@@ -24,7 +24,7 @@ export default function StatusSelect({
       trigger={
         <Pill active>
           {column ? colorDot(column.color) : <CircleDashed />}
-          {column?.name ?? t('state')}
+          <span className="truncate">{column?.name ?? t('state')}</span>
         </Pill>
       }
       inputPlaceholder={t('changeState')}

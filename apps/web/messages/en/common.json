@@ -33,6 +33,7 @@
   "enabled": "Enabled",
   "fullscreen": "Fullscreen",
   "exitFullscreen": "Exit fullscreen",
+  "resizePropertiesPanel": "Resize the properties panel",
   "resizeTitleColumn": "Resize the title column",
   "openGeneralSettings": "Open General settings",
   "noSectionAccess": "You do not have access to this section.",

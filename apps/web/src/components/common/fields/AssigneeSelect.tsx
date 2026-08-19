@@ -51,7 +51,7 @@ export default function AssigneeSelect({
           ) : (
             <CircleDashed />
           )}
-          {assignee?.name ?? placeholder ?? none}
+          <span className="truncate">{assignee?.name ?? placeholder ?? none}</span>
         </Pill>
       }
       inputPlaceholder={t('assignTo')}

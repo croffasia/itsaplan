@@ -37,7 +37,7 @@ export default function DatePill({
   const pill = trigger ?? (
     <Pill active={!!value}>
       <CalendarIcon />
-      {value ? formatDate(value) : placeholder}
+      <span className="truncate">{value ? formatDate(value) : placeholder}</span>
     </Pill>
   );
   if (readOnly) return <ReadOnlyPill>{pill}</ReadOnlyPill>;

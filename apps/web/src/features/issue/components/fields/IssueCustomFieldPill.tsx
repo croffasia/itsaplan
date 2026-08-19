@@ -43,7 +43,7 @@ export default function IssueCustomFieldPill({
             on && 'border-primary bg-primary',
           )}
         />
-        {def.name}
+        <span className="truncate">{def.name}</span>
       </Pill>
     );
   }
@@ -57,7 +57,9 @@ export default function IssueCustomFieldPill({
     return (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
-          <Pill active={selected.length > 0}>{label}</Pill>
+          <Pill active={selected.length > 0}>
+            <span className="truncate">{label}</span>
+          </Pill>
         </PopoverTrigger>
         <PopoverContent className="w-56 p-0" align="start">
           <Command>

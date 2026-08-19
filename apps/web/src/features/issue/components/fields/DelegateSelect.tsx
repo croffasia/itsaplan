@@ -40,7 +40,7 @@ export default function DelegateSelect({
           ) : (
             <CircleDashed />
           )}
-          {delegate?.name ?? placeholder ?? none}
+          <span className="truncate">{delegate?.name ?? placeholder ?? none}</span>
         </Pill>
       }
       inputPlaceholder={t('delegateTo')}

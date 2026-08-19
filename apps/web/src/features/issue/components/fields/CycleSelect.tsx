@@ -47,7 +47,7 @@ export default function CycleSelect({
       <PopoverTrigger asChild>
         <Pill active={value != null}>
           {value != null ? <RefreshCw /> : <CircleDashed />}
-          {value?.name ?? t('label')}
+          <span className="truncate">{value?.name ?? t('label')}</span>
         </Pill>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">

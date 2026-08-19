@@ -5,8 +5,8 @@ import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project'
 import { usePermissions } from '@/hooks/usePermissions';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useElementWidth } from '@/hooks/useElementWidth';
-import { useTimelineLabelWidth } from '@/hooks/useTimelineLabelWidth';
-import { LABEL_NARROW_W } from '@/utils/timelineTrack';
+import { usePersistedWidth } from '@/hooks/usePersistedWidth';
+import { LABEL_MAX_W, LABEL_MIN_W, LABEL_NARROW_W, LABEL_W } from '@/utils/timelineTrack';
 import { TimelineHeader } from '@/components/common/timeline/TimelineHeader';
 import { TimelineLabelResizer } from '@/components/common/timeline/TimelineLabelResizer';
 import { useTimelineDrag } from '../../hooks/useTimelineDrag';
@@ -55,8 +55,11 @@ export default function TimelineView({
       });
     });
   const DAY_W = SCALE_DAY_W[settings.timelineScale];
-  const { width: titleWidth, setWidth: setTitleWidth } = useTimelineLabelWidth(
+  const { width: titleWidth, setWidth: setTitleWidth } = usePersistedWidth(
     labelWidthKey(project.project.key, viewId ?? null),
+    LABEL_W,
+    LABEL_MIN_W,
+    LABEL_MAX_W,
   );
   const maps = buildMaps(project);
   const scrollRef = useRef<HTMLDivElement>(null);

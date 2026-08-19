@@ -33,6 +33,7 @@
   "enabled": "Включено",
   "fullscreen": "На весь экран",
   "exitFullscreen": "Выйти из полноэкранного режима",
+  "resizePropertiesPanel": "Изменить ширину блока свойств",
   "resizeTitleColumn": "Изменить ширину колонки названий",
   "openGeneralSettings": "Открыть общие настройки",
   "noSectionAccess": "У вас нет доступа к этому разделу.",

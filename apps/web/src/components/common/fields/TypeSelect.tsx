@@ -24,7 +24,7 @@ export default function TypeSelect({
       trigger={
         <Pill active={!!type}>
           {type ? colorDot(type.color) : <CircleDashed />}
-          {type?.name ?? t('type')}
+          <span className="truncate">{type?.name ?? t('type')}</span>
         </Pill>
       }
       inputPlaceholder={t('changeType')}

@@ -33,6 +33,7 @@
   "enabled": "مُفعّل",
   "fullscreen": "ملء الشاشة",
   "exitFullscreen": "إنهاء ملء الشاشة",
+  "resizePropertiesPanel": "تغيير عرض لوحة الخصائص",
   "resizeTitleColumn": "تغيير عرض عمود العنوان",
   "openGeneralSettings": "فتح الإعدادات العامة",
   "noSectionAccess": "مالكش صلاحية تدخل القسم ده.",

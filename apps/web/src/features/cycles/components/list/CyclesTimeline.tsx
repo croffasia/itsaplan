@@ -4,8 +4,8 @@ import type { Cycle } from '@/lib/api';
 import { cyclePath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useElementWidth } from '@/hooks/useElementWidth';
-import { useTimelineLabelWidth } from '@/hooks/useTimelineLabelWidth';
-import { LABEL_NARROW_W } from '@/utils/timelineTrack';
+import { usePersistedWidth } from '@/hooks/usePersistedWidth';
+import { LABEL_MAX_W, LABEL_MIN_W, LABEL_NARROW_W, LABEL_W } from '@/utils/timelineTrack';
 import { TimelineHeader } from '@/components/common/timeline/TimelineHeader';
 import { TimelineLabelResizer } from '@/components/common/timeline/TimelineLabelResizer';
 import { useCycleDrag } from '../../hooks/useCycleDrag';
@@ -35,8 +35,11 @@ export default function CyclesTimeline({
 
   const openCycle = (id: number) => router.push(cyclePath(projectKey, id));
   const canEdit = can('cycles', 'edit');
-  const { width: labelWidth, setWidth: setLabelWidth } = useTimelineLabelWidth(
+  const { width: labelWidth, setWidth: setLabelWidth } = usePersistedWidth(
     cycleLabelWidthKey(projectKey),
+    LABEL_W,
+    LABEL_MIN_W,
+    LABEL_MAX_W,
   );
   // Narrow the sticky label column on small screens so the day track is usable; on
   // wider ones it is the width the grip was dragged to.

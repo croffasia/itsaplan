@@ -35,7 +35,9 @@ export default function LabelsSelect({
       ) : (
         <Tag />
       )}
-      {selected.length > 0 ? t('labelCount', { count: selected.length }) : t('labels')}
+      <span className="truncate">
+        {selected.length > 0 ? t('labelCount', { count: selected.length }) : t('labels')}
+      </span>
     </Pill>
   );
   if (readOnly) return <ReadOnlyPill>{trigger}</ReadOnlyPill>;

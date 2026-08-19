@@ -23,7 +23,7 @@ export default function PrioritySelect({
       trigger={
         <Pill active={!!value}>
           {prio.icon}
-          {value ? priorityLabel(value) : t('label')}
+          <span className="truncate">{value ? priorityLabel(value) : t('label')}</span>
         </Pill>
       }
       inputPlaceholder={t('setTo')}

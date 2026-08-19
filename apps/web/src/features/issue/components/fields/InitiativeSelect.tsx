@@ -56,7 +56,7 @@ export default function InitiativeSelect({
       <PopoverTrigger asChild>
         <Pill active={value != null}>
           {value != null ? <Target /> : <CircleDashed />}
-          {current?.title ?? t('label')}
+          <span className="truncate">{current?.title ?? t('label')}</span>
         </Pill>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-0" align="start">

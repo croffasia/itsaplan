@@ -65,7 +65,9 @@ export default function DateTimePill({
   const pill = (
     <Pill active={!!value}>
       <CalendarClock />
-      {value ? formatDateTimeRange(value, range ? valueEnd : null) : placeholder}
+      <span className="truncate">
+        {value ? formatDateTimeRange(value, range ? valueEnd : null) : placeholder}
+      </span>
     </Pill>
   );
   if (readOnly) return <ReadOnlyPill>{pill}</ReadOnlyPill>;

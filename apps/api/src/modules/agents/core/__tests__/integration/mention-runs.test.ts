@@ -81,6 +81,114 @@ describe('agent mention runs', () => {
     expect(typeof run!.projectId).toBe('number');
   });
 
+  it('gives a claimed run the thread the mention replies to, oldest first', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const client = asOwner.issues({ issueId: issue.id });
+    const first = (await client.comments.post({ body: 'the button is misaligned' })).data!;
+    const second = (await client.comments.post({ body: 'only on mobile', replyToId: first.id }))
+      .data!;
+    await client.comments.post({
+      body: `${mention('Design Bot', agent.userId)} can you look?`,
+      replyToId: second.id,
+    });
+
+    const claimed = await claimDueRuns();
+    const run = claimed.find((r) => r.issueId === issue.id)!;
+    expect(run.threadContext).toContain('Owner: the button is misaligned');
+    expect(run.threadContext).toContain('Owner: only on mobile');
+    expect(run.threadContext!.indexOf('misaligned')).toBeLessThan(
+      run.threadContext!.indexOf('only on mobile'),
+    );
+    // The comment that mentioned the agent is the prompt, not part of the context.
+    expect(run.threadContext).not.toContain('can you look?');
+  });
+
+  it('stops the thread context five comments above the mention', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const client = asOwner.issues({ issueId: issue.id });
+    let parentId = (await client.comments.post({ body: 'note 0' })).data!.id;
+    for (let i = 1; i <= 6; i++) {
+      parentId = (await client.comments.post({ body: `note ${i}`, replyToId: parentId })).data!.id;
+    }
+    await client.comments.post({
+      body: mention('Design Bot', agent.userId),
+      replyToId: parentId,
+    });
+
+    const claimed = await claimDueRuns();
+    const run = claimed.find((r) => r.issueId === issue.id)!;
+    expect(run.threadContext).toContain('note 6');
+    expect(run.threadContext).toContain('note 2');
+    expect(run.threadContext).not.toContain('note 1');
+    expect(run.threadContext).not.toContain('note 0');
+  });
+
+  it('leaves the thread context empty for a top-level mention', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    await asOwner
+      .issues({ issueId: issue.id })
+      .comments.post({ body: mention('Design Bot', agent.userId) });
+
+    const claimed = await claimDueRuns();
+    expect(claimed.find((r) => r.issueId === issue.id)!.threadContext).toBeNull();
+  });
+
+  it("queues a run when someone answers the agent's own comment without tagging it", async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const written = await createComment({
+      issueId: issue.id,
+      actorUserId: agent.userId,
+      body: 'here is what I found',
+    });
+
+    await asOwner
+      .issues({ issueId: issue.id })
+      .comments.post({ body: 'and what about mobile?', replyToId: written.id });
+
+    const queued = await runsForIssue(issue.id);
+    expect(queued.length).toBe(1);
+    expect(queued[0]).toMatchObject({ agentId: agent.id, trigger: 'mention' });
+  });
+
+  it('does not queue a run for a reply to a comment nobody but people wrote', async () => {
+    const { asOwner, columnId } = await setup();
+    await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const client = asOwner.issues({ issueId: issue.id });
+    const first = (await client.comments.post({ body: 'the button is misaligned' })).data!;
+
+    await client.comments.post({ body: 'on mobile only', replyToId: first.id });
+    expect((await runsForIssue(issue.id)).length).toBe(0);
+  });
+
+  it("does not queue a run when an agent answers another agent's comment (loop guard)", async () => {
+    const { asOwner, columnId } = await setup();
+    const author = await createInternalAgent(asOwner, 'Author Bot', 'author');
+    const answering = await createInternalAgent(asOwner, 'Answer Bot', 'answer');
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const written = await createComment({
+      issueId: issue.id,
+      actorUserId: author.userId,
+      body: 'done',
+    });
+
+    await createComment({
+      issueId: issue.id,
+      actorUserId: answering.userId,
+      body: 'thanks',
+      replyToId: written.id,
+    });
+    expect((await runsForIssue(issue.id)).length).toBe(0);
+  });
+
   it('does not queue a run for a comment with no mention', async () => {
     const { asOwner, columnId } = await setup();
     await createInternalAgent(asOwner, 'Design Bot', 'design');

@@ -58,6 +58,12 @@ Read list_issue_activity before commenting on a long-running issue, so you do no
 repeat what is already there. A comment is for the people on the project: keep it
 short and readable, no file paths, no code, no lists of edits.
 
+A comment that answers another one carries that comment's id in replyToId, and the
+replies of the comments on a page come with them, so a thread arrives whole. Answer
+a question someone asked in a comment with add_comment carrying replyToId set to
+that comment's id, so the answer reads in the thread rather than at the end of the
+issue.
+
 ## Restraint
 
 - Reading an issue is not a reason to change it. When you were asked to look

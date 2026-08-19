@@ -2,6 +2,7 @@ import { type FeedGroup } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { durationLabel } from '../../utils/timeline';
 import ActivityItemList from './ActivityItemList';
+import { type ComposerContext } from './CommentComposer';
 import { useTranslations } from 'next-intl';
 
 // One stretch of the grouped activity log: a header carrying the status, how long the
@@ -11,10 +12,12 @@ export default function IssueActivityGroup({
   group,
   color,
   imageByUserId,
+  composer,
 }: {
   group: FeedGroup;
   color: string;
   imageByUserId: Map<string, string | null>;
+  composer: ComposerContext;
 }) {
   const t = useTranslations('issue.stats');
   const range = group.to
@@ -38,7 +41,7 @@ export default function IssueActivityGroup({
         <span className="text-xs text-muted-foreground tabular-nums">{range}</span>
       </div>
       <div className="mt-3">
-        <ActivityItemList items={group.items} imageByUserId={imageByUserId} />
+        <ActivityItemList items={group.items} imageByUserId={imageByUserId} composer={composer} />
       </div>
     </li>
   );

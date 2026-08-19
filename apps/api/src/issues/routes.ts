@@ -307,6 +307,7 @@ const FeedItemResponse = t.Object({
   id: t.Number(),
   issueId: t.Number(),
   kind: t.String(),
+  replyToId: t.Nullable(t.Number()),
   actorUserId: t.Nullable(t.String()),
   actorName: t.Nullable(t.String()),
   body: t.Nullable(t.String()),
@@ -1241,7 +1242,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: FeedPageResponse, ...commonErrors },
       detail: {
         summary: 'Get an issue feed',
-        description: "Get an issue's activity feed by its numeric id.",
+        description:
+          "Get an issue's activity feed by its numeric id: comments and change-log " +
+          'entries, newest first. The page holds the top-level entries; the replies of ' +
+          "its comments come with them, each carrying its parent's id in replyToId.",
         ...mcpTool('list_issue_activity'),
       },
     },
@@ -1311,16 +1315,24 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         issueId: params.issueId,
         actorUserId: requireUser(user).id,
         body: body.body,
+        replyToId: body.replyToId,
       });
     },
     {
-      body: t.Object({ body: t.String({ minLength: 1, description: 'Comment text.' }) }),
+      body: t.Object({
+        body: t.String({ minLength: 1, description: 'Comment text.' }),
+        replyToId: t.Optional(
+          t.Number({ description: 'Reply to this comment of the same issue.' }),
+        ),
+      }),
       params: issueParams,
       workItem: 'create',
       response: { 201: FeedItemResponse, ...commonErrors },
       detail: {
         summary: 'Add a comment',
-        description: 'Add a comment to an issue by its numeric id.',
+        description:
+          'Add a comment to an issue by its numeric id. Pass replyToId to answer an ' +
+          'existing comment of that issue instead of starting a new thread.',
         ...mcpTool('add_comment'),
       },
     },

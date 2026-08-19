@@ -64,6 +64,9 @@ export interface ClaimedRun {
   assigneeName: string | null;
   requesterUserId: string | null;
   requesterName: string | null;
+  // The comments the source comment replies to, oldest first, when it is a reply.
+  // Null for a top-level mention or a delegation.
+  threadContext: string | null;
 }
 
 // Atomically claims up to batchSize due runs of internal agents. FOR UPDATE SKIP
@@ -107,7 +110,42 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId",
       (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName"
   `);
-  return rows as unknown as ClaimedRun[];
+  const runs = rows as unknown as ClaimedRun[];
+  return Promise.all(
+    runs.map(async (run) => ({
+      ...run,
+      threadContext: await loadThreadContext(run.sourceActivityId),
+    })),
+  );
+}
+
+// How far up a thread the agent is given. Further up, the exchange is too far from
+// the question to pay for the tokens it costs.
+const THREAD_CONTEXT_DEPTH = 5;
+
+// The comments the given one replies to, oldest first and at most
+// THREAD_CONTEXT_DEPTH of them, as the text a prompt carries. Null when the comment
+// is not a reply.
+export async function loadThreadContext(sourceActivityId: number | null): Promise<string | null> {
+  if (sourceActivityId == null) return null;
+  const rows = await db.execute(sql`
+    WITH RECURSIVE chain AS (
+      SELECT a.id, a.reply_to_id, a.actor_name, a.body, 0 AS depth
+        FROM issue_activity a
+       WHERE a.id = ${sourceActivityId}
+      UNION ALL
+      SELECT p.id, p.reply_to_id, p.actor_name, p.body, c.depth + 1
+        FROM issue_activity p
+        JOIN chain c ON p.id = c.reply_to_id
+       WHERE c.depth < ${THREAD_CONTEXT_DEPTH}
+    )
+    SELECT actor_name AS "actorName", body FROM chain WHERE depth > 0 ORDER BY depth DESC
+  `);
+  const ancestors = rows as unknown as { actorName: string | null; body: string | null }[];
+  if (ancestors.length === 0) return null;
+  return ancestors
+    .map((a) => `${a.actorName ?? 'Unknown'}: ${renderMentionsPlain(a.body ?? '')}`)
+    .join('\n\n');
 }
 
 // A run canceled while it was in flight keeps that outcome: each of these writes only

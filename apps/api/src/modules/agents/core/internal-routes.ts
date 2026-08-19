@@ -22,6 +22,9 @@ const runBody = t.Object({
   assigneeName: t.Nullable(t.String()),
   requesterUserId: t.Nullable(t.String()),
   requesterName: t.Nullable(t.String()),
+  // Optional so a worker still running the previous build can hand a run over.
+  sourceActivityId: t.Optional(t.Nullable(t.Number())),
+  threadContext: t.Optional(t.Nullable(t.String())),
 });
 
 function workerTokenValid(headers: Record<string, string | undefined>): boolean {

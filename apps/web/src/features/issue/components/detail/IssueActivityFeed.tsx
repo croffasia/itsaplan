@@ -3,7 +3,7 @@ import { type Assignee, type Column, type IssueActivityView } from '@/lib/api';
 import { useSession } from '@/lib/auth-client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
-import CommentComposer from './CommentComposer';
+import CommentComposer, { type ComposerContext } from './CommentComposer';
 import IssueFeedList from './IssueFeedList';
 import IssueGroupedFeed from './IssueGroupedFeed';
 import { useTranslations } from 'next-intl';
@@ -35,8 +35,12 @@ export default function IssueActivityFeed({
   const view = viewHere ?? preferences?.issueActivityView;
 
   const user = session?.user ?? null;
-  const authorName = user?.name || user?.email || t('you');
-  const authorImage = (user as { image?: string | null } | null)?.image ?? null;
+  const composer: ComposerContext = {
+    issueId,
+    assignees,
+    authorName: user?.name || user?.email || t('you'),
+    authorImage: (user as { image?: string | null } | null)?.image ?? null,
+  };
 
   return (
     <div className="mt-6 border-t pt-5">
@@ -44,12 +48,7 @@ export default function IssueActivityFeed({
         {tIssue('activityHeading')}
       </h3>
 
-      <CommentComposer
-        issueId={issueId}
-        assignees={assignees}
-        authorName={authorName}
-        authorImage={authorImage}
-      />
+      <CommentComposer {...composer} />
 
       {view && (
         <Tabs
@@ -66,10 +65,15 @@ export default function IssueActivityFeed({
             </TabsTrigger>
           </TabsList>
           <TabsContent value="flat">
-            <IssueFeedList issueId={issueId} imageByUserId={imageByUserId} />
+            <IssueFeedList issueId={issueId} imageByUserId={imageByUserId} composer={composer} />
           </TabsContent>
           <TabsContent value="grouped">
-            <IssueGroupedFeed issueId={issueId} columns={columns} imageByUserId={imageByUserId} />
+            <IssueGroupedFeed
+              issueId={issueId}
+              columns={columns}
+              imageByUserId={imageByUserId}
+              composer={composer}
+            />
           </TabsContent>
         </Tabs>
       )}

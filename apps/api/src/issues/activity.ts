@@ -9,7 +9,7 @@ import {
   initiative,
   cycle,
 } from '@repo/db';
-import { and, desc, eq, gte, inArray, lt, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '../shared/lib';
 import { emitWebhookEvent } from '../webhooks/emit';
 import { parseMentions } from '#modules/agents/core/mentions';
@@ -30,6 +30,8 @@ export interface FeedItemRow {
   id: number;
   issueId: number;
   kind: FeedKind;
+  // The comment this one replies to, null for a top-level entry.
+  replyToId: number | null;
   actorUserId: string | null;
   actorName: string | null;
   body: string | null;
@@ -58,6 +60,7 @@ function mapFeedItem(row: {
   // issue feed and createComment only ever handle issue rows, so it is present.
   issueId: number | null;
   kind: string;
+  replyToId: number | null;
   actorUserId: string | null;
   actorName: string | null;
   body: string | null;
@@ -71,6 +74,7 @@ function mapFeedItem(row: {
     id: row.id,
     issueId: row.issueId as number,
     kind: row.kind as FeedKind,
+    replyToId: row.replyToId,
     actorUserId: row.actorUserId,
     actorName: row.actorName,
     body: row.body,
@@ -82,9 +86,11 @@ function mapFeedItem(row: {
   };
 }
 
-// One page of an issue's feed, newest first. cursor_ts is created_at as full-
-// precision text so the returned nextCursor round-trips without the millisecond
-// truncation iso() would apply. limit is clamped to 1..100.
+// One page of an issue's feed, newest first. The page is a window over the
+// top-level entries; the replies of the comments in it follow at the end of items,
+// however deep they are nested, so a thread is never split across pages. cursor_ts
+// is created_at as full-precision text so the returned nextCursor round-trips
+// without the millisecond truncation iso() would apply. limit is clamped to 1..100.
 export async function listFeed(
   issueId: number,
   opts: { before?: FeedCursor | null; limit?: number } = {},
@@ -96,6 +102,7 @@ export async function listFeed(
       id: issueActivity.id,
       issueId: issueActivity.issueId,
       kind: issueActivity.kind,
+      replyToId: issueActivity.replyToId,
       actorUserId: issueActivity.actorUserId,
       actorName: issueActivity.actorName,
       body: issueActivity.body,
@@ -110,6 +117,7 @@ export async function listFeed(
     .where(
       and(
         eq(issueActivity.issueId, issueId),
+        isNull(issueActivity.replyToId),
         before
           ? sql`(${issueActivity.createdAt}, ${issueActivity.id}) < (${before.ts}::timestamptz, ${before.id}::integer)`
           : undefined,
@@ -121,10 +129,30 @@ export async function listFeed(
   const hasMore = rows.length > limit;
   const page = hasMore ? rows.slice(0, limit) : rows;
   const last = page[page.length - 1];
+  const items = page.map(mapFeedItem);
+  const replies = await listReplies(items.map((item) => item.id));
   return {
-    items: page.map(mapFeedItem),
+    items: [...items, ...replies],
     nextCursor: hasMore && last ? { ts: last.cursorTs, id: last.id } : null,
   };
+}
+
+// Every reply under the given entries, oldest first, read one level at a time until
+// a level has none. A thread is a handful of comments deep, so the loop is short and
+// each level is one query.
+async function listReplies(parentIds: number[]): Promise<FeedItemRow[]> {
+  const replies: FeedItemRow[] = [];
+  let level = parentIds;
+  while (level.length > 0) {
+    const rows = await db
+      .select()
+      .from(issueActivity)
+      .where(inArray(issueActivity.replyToId, level))
+      .orderBy(issueActivity.createdAt, issueActivity.id);
+    replies.push(...rows.map(mapFeedItem));
+    level = rows.map((row) => row.id);
+  }
+  return replies;
 }
 
 // --- Status timeline --------------------------------------------------------------
@@ -255,19 +283,32 @@ export async function listGroupedFeed(
   });
 
   const groups: FeedGroup[] = [];
+  // A reply joins the group of the thread it hangs under, wherever the issue stood
+  // when it was written, so the thread stays whole.
+  const groupByItemId = new Map<number, FeedGroup>();
   // The entries run newest first and the segments oldest first, so the segment the
   // walk sits on only ever moves back towards the start.
   let index = segments.length - 1;
   for (const item of page.items) {
+    if (item.replyToId != null) {
+      const group = groupByItemId.get(item.replyToId);
+      if (!group) continue;
+      group.items.push(item);
+      groupByItemId.set(item.id, group);
+      continue;
+    }
     const at = Date.parse(item.createdAt);
     while (index > 0 && Date.parse(segments[index].from) > at) index--;
     const segment = segments[index];
     const open = groups[groups.length - 1];
     if (open && open.from === segment.from) {
       open.items.push(item);
+      groupByItemId.set(item.id, open);
       continue;
     }
-    groups.push({ ...segment, items: [item] });
+    const group = { ...segment, items: [item] };
+    groups.push(group);
+    groupByItemId.set(item.id, group);
   }
   return { groups, nextCursor: page.nextCursor };
 }
@@ -276,12 +317,30 @@ export async function createComment(input: {
   issueId: number;
   actorUserId?: string | null;
   body: string;
+  // The comment being replied to. It has to be a comment on the same issue.
+  replyToId?: number | null;
 }): Promise<FeedItemRow> {
   const actorUserId = input.actorUserId ?? null;
   const actorName = await userName(actorUserId);
+  const replyToId = input.replyToId ?? null;
+  if (replyToId != null) {
+    const [parent] = await db
+      .select({ issueId: issueActivity.issueId, kind: issueActivity.kind })
+      .from(issueActivity)
+      .where(eq(issueActivity.id, replyToId));
+    if (!parent || parent.issueId !== input.issueId || parent.kind !== 'comment')
+      throw new HttpError(400, 'replyToId must be a comment on this issue');
+  }
   const [row] = await db
     .insert(issueActivity)
-    .values({ issueId: input.issueId, kind: 'comment', actorUserId, actorName, body: input.body })
+    .values({
+      issueId: input.issueId,
+      kind: 'comment',
+      replyToId,
+      actorUserId,
+      actorName,
+      body: input.body,
+    })
     .returning();
   const comment = mapFeedItem(row);
 
@@ -299,16 +358,29 @@ export async function createComment(input: {
   return comment;
 }
 
-// If the comment mentions agents, queue a run for each so they can reply. Only quick
+// If the comment reaches agents, queue a run for each so they can reply. A mention
+// reaches the agents it names; a reply reaches the author of the comment it answers,
+// so answering an agent in its own thread does not have to tag it again. Only quick
 // queries run here; the work happens later — in the poller for an internal agent, on
 // the operator's runner for an external one — so creating a comment is never blocked
 // on it. Comments authored by an agent's bot user never trigger runs, which stops
 // agents from setting each other (or themselves) off.
 async function enqueueMentionRuns(projectId: number, comment: FeedItemRow): Promise<void> {
-  const mentionedUserIds = parseMentions(comment.body ?? '');
-  if (mentionedUserIds.length === 0) return;
+  const reachedUserIds = new Set(parseMentions(comment.body ?? ''));
+  if (reachedUserIds.size === 0 && comment.replyToId == null) return;
   if (comment.actorUserId && (await isAgentUser(comment.actorUserId))) return;
-  const agents = await listMentionTriggerAgents(projectId, mentionedUserIds, comment.actorUserId);
+  if (comment.replyToId != null) {
+    const [parent] = await db
+      .select({ actorUserId: issueActivity.actorUserId })
+      .from(issueActivity)
+      .where(eq(issueActivity.id, comment.replyToId));
+    if (parent?.actorUserId) reachedUserIds.add(parent.actorUserId);
+  }
+  const agents = await listMentionTriggerAgents(
+    projectId,
+    [...reachedUserIds],
+    comment.actorUserId,
+  );
   for (const agent of agents) {
     await enqueueAgentRun({
       agentId: agent.id,

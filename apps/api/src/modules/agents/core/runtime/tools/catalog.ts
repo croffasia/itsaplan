@@ -250,6 +250,13 @@ export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
     always: true,
   },
   {
+    key: 'list_issue_activity',
+    group: 'issues',
+    label: 'Read an issue discussion',
+    description: "Read an issue's comments and change log, replies included.",
+    always: true,
+  },
+  {
     key: 'list_attachments',
     group: 'issues',
     label: 'List attachments',

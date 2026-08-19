@@ -5,6 +5,7 @@ import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { useGroupedFeedQuery } from '../../services/comments.service';
 import { statusColor } from '../../utils/timeline';
 import IssueActivityGroup from './IssueActivityGroup';
+import { type ComposerContext } from './CommentComposer';
 
 // The activity log split by the status the issue was in when each entry was written,
 // newest first and paged 25 at a time like the flat one. The server does the
@@ -14,11 +15,13 @@ export default function IssueGroupedFeed({
   issueId,
   columns,
   imageByUserId,
+  composer,
 }: {
   issueId: number;
   // The project's columns, for the status colors.
   columns: Column[];
   imageByUserId: Map<string, string | null>;
+  composer: ComposerContext;
 }) {
   const t = useTranslations('issue');
   const feedQuery = useGroupedFeedQuery(issueId);
@@ -39,6 +42,7 @@ export default function IssueGroupedFeed({
             group={group}
             color={statusColor(columns, group.status)}
             imageByUserId={imageByUserId}
+            composer={composer}
           />
         ))}
       </ol>

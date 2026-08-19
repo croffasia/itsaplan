@@ -184,8 +184,12 @@
     "you": "You",
     "commentAs": "Comment as {name}",
     "placeholder": "Write a comment… use @ to mention",
+    "replyPlaceholder": "Write a reply… use @ to mention",
+    "replyTo": "Reply to {name}… use @ to mention",
     "posting": "Posting…",
     "comment": "Comment",
+    "reply": "Reply",
+    "cancel": "Cancel",
     "toSend": "to send",
     "unknownAuthor": "Unknown",
     "goToLastComment": "Go to the last comment"

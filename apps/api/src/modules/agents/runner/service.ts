@@ -1,6 +1,6 @@
 import { db, aiAgent, agentRun, project } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
-import { agentRunConfig } from '../core/run-queue';
+import { agentRunConfig, loadThreadContext } from '../core/run-queue';
 import { recordAgentRunFinished, recordAgentRunStarted } from '../core/run-activity';
 import type { AgentKind } from '../core/service';
 import type { AgentRunTrigger } from '../model';
@@ -80,6 +80,7 @@ type ClaimedRow = Omit<RunnerRun, 'systemPrompt'> & {
   assigneeName: string | null;
   requesterUserId: string | null;
   requesterName: string | null;
+  sourceActivityId: number | null;
 };
 
 // Records that a runner polled, which is what the UI shows as the agent's presence.
@@ -140,12 +141,14 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
       (SELECT assignee_user_id FROM issue i WHERE i.id = r.issue_id) AS "assigneeUserId",
       (SELECT u.name FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
          WHERE i.id = r.issue_id) AS "assigneeName",
+      r.source_activity_id AS "sourceActivityId",
       (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId",
       (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName"
   `);
   const row = (rows as unknown as ClaimedRow[])[0];
   if (!row) return null;
-  const forPrompt = { ...row, agentUserId: agent.userId };
+  const threadContext = await loadThreadContext(row.sourceActivityId);
+  const forPrompt = { ...row, agentUserId: agent.userId, threadContext };
   await recordAgentRunStarted(forPrompt);
   return {
     id: row.id,

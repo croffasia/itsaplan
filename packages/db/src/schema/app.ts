@@ -1201,6 +1201,12 @@ export const issueActivity = pgTable(
       onDelete: 'cascade',
     }),
     kind: text('kind').notNull(),
+    // The comment this one replies to, for the threaded feed. Only comments carry
+    // it, and the parent belongs to the same issue. Deleting a comment deletes its
+    // replies with it.
+    replyToId: integer('reply_to_id').references((): AnyPgColumn => issueActivity.id, {
+      onDelete: 'cascade',
+    }),
     actorUserId: text('actor_user_id').references(() => user.id, {
       onDelete: 'set null',
     }),
@@ -1220,6 +1226,7 @@ export const issueActivity = pgTable(
       sql`(${t.issueId} IS NOT NULL) <> (${t.initiativeId} IS NOT NULL)`,
     ),
     index('issue_activity_issue_idx').on(t.issueId, t.createdAt.desc(), t.id.desc()),
+    index('issue_activity_reply_idx').on(t.replyToId),
     index('issue_activity_initiative_idx').on(t.initiativeId, t.createdAt.desc(), t.id.desc()),
   ],
 );

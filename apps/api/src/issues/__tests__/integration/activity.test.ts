@@ -145,6 +145,104 @@ describe('issue activity', () => {
     });
   });
 
+  // A reply is a comment carrying replyToId. The feed pages over the top-level
+  // entries and serves the replies of the ones on the page with them, so a thread is
+  // never split across pages.
+  describe('replies', () => {
+    it('links a reply to the comment it answers', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const parent = (
+        await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'question' })
+      ).data!;
+
+      const res = await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'answer', replyToId: parent.id });
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ kind: 'comment', replyToId: parent.id });
+    });
+
+    it('serves a reply with its parent, outside the page window', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const parent = (
+        await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'question' })
+      ).data!;
+      await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'answer', replyToId: parent.id });
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'later' });
+
+      // Two top-level entries fill the page; the reply rides along with its parent.
+      const res = await feed(asOwner, issue.id, { limit: '2' });
+      expect(res.data!.items.map((i) => i.body)).toEqual(['later', 'question', 'answer']);
+    });
+
+    it('keeps a reply out of the top-level page window', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const parent = (
+        await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'question' })
+      ).data!;
+      await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'answer', replyToId: parent.id });
+
+      const first = await feed(asOwner, issue.id, { limit: '1' });
+      expect(first.data!.items.map((i) => i.body)).toEqual(['question', 'answer']);
+      const second = await feed(asOwner, issue.id, {
+        limit: '1',
+        cursor: JSON.stringify(first.data!.nextCursor),
+      });
+      expect(second.data!.items.some((i) => i.body === 'answer')).toBe(false);
+    });
+
+    it('groups a reply with its parent, whatever the status it was written in', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const parent = (
+        await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'question' })
+      ).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnIds[1] });
+      await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'answer', replyToId: parent.id });
+
+      const res = await asOwner.issues({ issueId: issue.id }).feed.grouped.get({ query: {} });
+      const bodies = res.data!.groups.map((g) =>
+        g.items.filter((i) => i.kind === 'comment').map((i) => i.body),
+      );
+      expect(bodies).toEqual([[], ['question', 'answer']]);
+    });
+
+    it('rejects a reply to a comment on another issue', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const other = (await createIssue(asOwner, columnId, { title: 'Other' })).data!;
+      const parent = (await asOwner.issues({ issueId: other.id }).comments.post({ body: 'there' }))
+        .data!;
+
+      const res = await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'here', replyToId: parent.id });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a reply to a change-log entry', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const created = (await feed(asOwner, issue.id)).data!.items.find(
+        (i) => i.kind === 'activity',
+      )!;
+
+      const res = await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'reply', replyToId: created.id });
+      expect(res.status).toBe(400);
+    });
+  });
+
   // Change-log entries are written by the issue mutation routes and read back
   // through the feed. Assert the action and its from/to text.
   describe('change log', () => {

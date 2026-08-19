@@ -1534,6 +1534,8 @@ export interface FeedItem {
   id: number;
   issueId: number;
   kind: 'comment' | 'activity';
+  // The comment this one replies to, null for a top-level entry.
+  replyToId: number | null;
   actorUserId: string | null;
   actorName: string | null;
   body: string | null;
@@ -2520,7 +2522,7 @@ export const api = {
     if (to) q.set('to', to);
     return request<FeedItem[]>(`/issues/${issueId}/timeline/items?${q.toString()}`);
   },
-  createComment: (issueId: number, input: { body: string }) =>
+  createComment: (issueId: number, input: { body: string; replyToId?: number }) =>
     request<FeedItem>(`/issues/${issueId}/comments`, {
       method: 'POST',
       body: JSON.stringify(input),

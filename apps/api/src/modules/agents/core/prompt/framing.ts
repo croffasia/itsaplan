@@ -21,6 +21,11 @@ export interface RunForPrompt {
   requesterUserId: string | null;
   requesterName: string | null;
   agentUserId: string;
+  // The comment the mention replies to and the ones above it, oldest first. Absent
+  // for a top-level mention.
+  threadContext?: string | null;
+  // The comment that mentioned the agent, so it can answer in the same thread.
+  sourceActivityId?: number | null;
 }
 
 // System-instruction block describing how this run was started, so the agent knows
@@ -85,17 +90,34 @@ function frameDelegation(run: RunForPrompt, titled: string): string {
 }
 
 function frameMention(run: RunForPrompt, titled: string): string {
-  return [
-    `You were mentioned in a comment on issue ${titled} of your project.`,
+  // Answering with replyToId set keeps the agent's comment in the thread it was
+  // asked in, instead of at the end of the issue.
+  const args = run.sourceActivityId
+    ? `issueId ${run.issueId}, replyToId ${run.sourceActivityId}`
+    : `issueId ${run.issueId}`;
+  // A run also starts when someone answers the agent's own comment without tagging
+  // it, and telling it it was mentioned would not match what it reads.
+  const mentionsAgent = parseMentionedUsers(run.prompt).some((p) => p.userId === run.agentUserId);
+  const lead = mentionsAgent
+    ? `You were mentioned in a comment on issue ${titled} of your project.`
+    : `Someone answered your comment on issue ${titled} of your project.`;
+  const lines = [
+    lead,
     'Work out what the comment is asking for and do it with your tools, then reply by',
-    `adding one comment to the issue with the add_comment tool (issueId ${run.issueId})`,
-    'with the result or answer. Keep it short.',
+    `adding one comment to the issue with the add_comment tool (${args}) with the`,
+    'result or answer. Keep it short.',
     'Do not mention yourself.',
-    '',
-    'The comment that mentioned you:',
-    '',
-    renderMentionsPlain(run.prompt),
-  ].join('\n');
+  ];
+  if (run.threadContext) {
+    lines.push(
+      '',
+      'The comment is a reply. The comments above it in the thread, oldest first:',
+      '',
+      run.threadContext,
+    );
+  }
+  lines.push('', 'The comment that mentioned you:', '', renderMentionsPlain(run.prompt));
+  return lines.join('\n');
 }
 
 // A leading system-instruction block naming the project the agent works in. Grounds

@@ -184,8 +184,12 @@
     "you": "أنت",
     "commentAs": "التعليق باسم {name}",
     "placeholder": "اكتب تعليقًا… استخدم @ للإشارة",
+    "replyPlaceholder": "اكتب ردًا… استخدم @ للإشارة",
+    "replyTo": "رد على {name}… استخدم @ للإشارة",
     "posting": "جارٍ النشر…",
     "comment": "تعليق",
+    "reply": "رد",
+    "cancel": "إلغاء",
     "toSend": "للإرسال",
     "unknownAuthor": "غير معروف",
     "goToLastComment": "الانتقال إلى آخر تعليق"

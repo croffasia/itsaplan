@@ -4,6 +4,7 @@ import { type Assignee } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import { useCreateComment } from '../../services/comments.service';
 import { useTranslations } from 'next-intl';
 
@@ -12,6 +13,15 @@ import { useTranslations } from 'next-intl';
 // token @[Name](user:<id>) into the body. The token is what the backend parses to
 // notify a member or trigger an agent (see the feed's chip rendering for how it
 // displays). Posts as the current session user on the button or Cmd/Ctrl+Enter.
+
+// What every composer needs to post, gathered once by the activity feed: the issue,
+// who can be mentioned, and the author the avatar stands for.
+export interface ComposerContext {
+  issueId: number;
+  assignees: Assignee[];
+  authorName: string;
+  authorImage: string | null;
+}
 
 // The active "@query" being typed: the text after the "@" and the body index of the
 // "@" itself, so a pick can replace the whole "@query" span.
@@ -25,11 +35,16 @@ export default function CommentComposer({
   assignees,
   authorName,
   authorImage,
-}: {
-  issueId: number;
-  assignees: Assignee[];
-  authorName: string;
-  authorImage?: string | null;
+  replyToId,
+  replyToName,
+  onClose,
+}: ComposerContext & {
+  // Set on the reply box a thread opens: the comment it answers and its author.
+  replyToId?: number;
+  replyToName?: string | null;
+  // Closes the reply box — on the cancel button, on Escape, and once the reply is
+  // posted. The box a thread opens is the only one that can be closed.
+  onClose?: () => void;
 }) {
   const t = useTranslations('issue.comments');
   const createComment = useCreateComment();
@@ -40,6 +55,7 @@ export default function CommentComposer({
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   const posting = createComment.isPending;
+  const isReply = replyToId != null;
   const cmdKey = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform) ? '⌘' : 'Ctrl';
 
   // Members and both agent kinds can be mentioned. An internal agent runs in the
@@ -50,6 +66,11 @@ export default function CommentComposer({
     const q = menu.query.toLowerCase();
     return assignees.filter((a) => a.name.toLowerCase().includes(q)).slice(0, 8);
   }, [assignees, menu]);
+
+  // A reply box is opened by a deliberate click on Reply, so it takes the caret.
+  useEffect(() => {
+    if (isReply) taRef.current?.focus();
+  }, [isReply]);
 
   // Restore the caret after a mention is inserted (the body change is async, so the
   // caret has to be set once the new value has rendered).
@@ -89,9 +110,10 @@ export default function CommentComposer({
 
   async function post() {
     if (!body.trim()) return;
-    await createComment.mutateAsync({ issueId, input: { body: body.trim() } });
+    await createComment.mutateAsync({ issueId, input: { body: body.trim(), replyToId } });
     setBody('');
     setMenu(null);
+    onClose?.();
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -117,17 +139,29 @@ export default function CommentComposer({
         return;
       }
     }
+    if (e.key === 'Escape' && onClose) {
+      e.preventDefault();
+      onClose();
+      return;
+    }
     // Cmd/Ctrl+Enter submits, matching the rest of the planner.
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') void post();
   }
 
+  let placeholder = t('placeholder');
+  if (isReply)
+    placeholder = replyToName ? t('replyTo', { name: replyToName }) : t('replyPlaceholder');
+
+  let submitLabel = isReply ? t('reply') : t('comment');
+  if (posting) submitLabel = t('posting');
+
   return (
-    <div className="mb-5">
+    <div className={cn(!isReply && 'mb-5')}>
       <div className="flex gap-3">
         <Avatar
           name={authorName}
           image={authorImage}
-          className="mt-0.5 size-7 text-[11px]"
+          className={cn('mt-0.5 shrink-0 text-[11px]', isReply ? 'size-6' : 'size-7')}
           title={t('commentAs', { name: authorName })}
         />
         <div className="relative min-w-0 flex-1">
@@ -143,8 +177,11 @@ export default function CommentComposer({
                 onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)
               }
               onBlur={() => setMenu(null)}
-              placeholder={t('placeholder')}
-              className="min-h-[64px] resize-none rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none focus-visible:ring-0"
+              placeholder={placeholder}
+              className={cn(
+                'resize-none rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none focus-visible:ring-0',
+                isReply ? 'min-h-[52px]' : 'min-h-[64px]',
+              )}
               onKeyDown={onKeyDown}
             />
             <div className="flex items-center justify-between gap-2 border-t px-2.5 py-2">
@@ -154,9 +191,16 @@ export default function CommentComposer({
                 </kbd>
                 <span className="ml-1.5">{t('toSend')}</span>
               </span>
-              <Button size="sm" disabled={!body.trim() || posting} onClick={() => void post()}>
-                {posting ? t('posting') : t('comment')}
-              </Button>
+              <div className="flex items-center gap-1.5">
+                {onClose && (
+                  <Button size="sm" variant="ghost" onClick={onClose}>
+                    {t('cancel')}
+                  </Button>
+                )}
+                <Button size="sm" disabled={!body.trim() || posting} onClick={() => void post()}>
+                  {submitLabel}
+                </Button>
+              </div>
             </div>
           </div>
 

@@ -68,8 +68,13 @@ export function useTimelineItemsQuery(issueId: number, ranges: TimelineRange[]) 
 export function useCreateComment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ issueId, input }: { issueId: number; input: { body: string } }) =>
-      api.createComment(issueId, input),
+    mutationFn: ({
+      issueId,
+      input,
+    }: {
+      issueId: number;
+      input: { body: string; replyToId?: number };
+    }) => api.createComment(issueId, input),
     onSuccess: (_data, { issueId }) => void qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
   });
 }

@@ -4,6 +4,7 @@ import { useFeedQuery } from '../../services/comments.service';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ActivityItemList from './ActivityItemList';
+import { type ComposerContext } from './CommentComposer';
 
 // The flat activity list, newest first, paged 25 at a time by "Show more". The feed
 // query refetches on its own when an issue edit invalidates it (see useUpdateIssue /
@@ -12,9 +13,11 @@ import ActivityItemList from './ActivityItemList';
 export default function IssueFeedList({
   issueId,
   imageByUserId,
+  composer,
 }: {
   issueId: number;
   imageByUserId: Map<string, string | null>;
+  composer: ComposerContext;
 }) {
   const t = useTranslations('issue');
   const feedQuery = useFeedQuery(issueId);
@@ -37,7 +40,7 @@ export default function IssueFeedList({
 
   return (
     <>
-      <ActivityItemList items={items} imageByUserId={imageByUserId} />
+      <ActivityItemList items={items} imageByUserId={imageByUserId} composer={composer} />
       {feedQuery.hasNextPage && (
         <ShowMoreButton
           loading={feedQuery.isFetchingNextPage}

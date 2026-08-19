@@ -58,6 +58,12 @@ describe('normalizeToolKeys', () => {
     );
   });
 
+  it("keeps the issue discussion readable, so an agent can answer in a comment's thread", () => {
+    const alwaysOn = new Set(ALWAYS_ON_ACTIONS.map((tool) => tool.key));
+    expect(alwaysOn.has('list_issue_activity')).toBe(true);
+    expect(normalizeToolKeys(['list_issue_activity'])).toEqual([]);
+  });
+
   it('registers note board actions as grantable, including the reads', () => {
     const keys = [
       'list_note_boards',

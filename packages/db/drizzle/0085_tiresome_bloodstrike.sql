@@ -1,0 +1,3 @@
+ALTER TABLE "issue_activity" ADD COLUMN "reply_to_id" integer;--> statement-breakpoint
+ALTER TABLE "issue_activity" ADD CONSTRAINT "issue_activity_reply_to_id_issue_activity_id_fk" FOREIGN KEY ("reply_to_id") REFERENCES "public"."issue_activity"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "issue_activity_reply_idx" ON "issue_activity" USING btree ("reply_to_id");

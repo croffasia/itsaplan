@@ -184,8 +184,12 @@
     "you": "你",
     "commentAs": "以 {name} 的身份评论",
     "placeholder": "输入评论…使用 @ 提及成员",
+    "replyPlaceholder": "输入回复…使用 @ 提及成员",
+    "replyTo": "回复 {name}…使用 @ 提及成员",
     "posting": "正在发布…",
     "comment": "评论",
+    "reply": "回复",
+    "cancel": "取消",
     "toSend": "发送",
     "unknownAuthor": "未知用户",
     "goToLastComment": "跳转到最新评论"

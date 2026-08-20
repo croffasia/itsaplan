@@ -1,8 +1,8 @@
 import { marked } from 'marked';
 import DOMPurify from 'isomorphic-dompurify';
 
-// Content that links away from the app (release notes) asks for newTabLinks, so a
-// link does not replace the app with GitHub.
+// Content whose links lead away from the current view (release notes, agent chat)
+// asks for newTabLinks, so following one does not replace what the reader was on.
 export interface HtmlOptions {
   newTabLinks?: boolean;
 }

@@ -11,10 +11,11 @@ import { firecrawl } from './tools/firecrawl';
 import { telegram } from './tools/telegram';
 import { threads } from './tools/threads';
 import { instagram } from './tools/instagram';
+import { notion } from './tools/notion';
 
 // The registry of tool integrations. Add an integration by creating its folder under
 // tools/ and listing it here.
-export const INTEGRATIONS: Integration[] = [jina, firecrawl, telegram, threads, instagram];
+export const INTEGRATIONS: Integration[] = [jina, firecrawl, telegram, threads, instagram, notion];
 
 const BY_KEY = new Map(INTEGRATIONS.map((i) => [i.key, i]));
 

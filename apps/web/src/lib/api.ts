@@ -153,6 +153,8 @@ export interface Assignee {
   userId: string;
   name: string;
   email: string;
+  // The handle they are mentioned by, @username. Null for a member who has none.
+  username: string | null;
   image: string | null;
   kind: 'member' | 'agent';
   agentKind: 'external' | 'internal' | null;
@@ -1775,9 +1777,9 @@ export interface IssueWithWatchers extends IssueRelations {
 
 // Public read-only share bundles, returned by the /share/* routes with no session.
 // The scaffold mirrors ProjectScaffold minus the caller's viewer/permissions and
-// member emails (a public page shows names and avatars only).
+// member emails and handles (a public page shows names and avatars only).
 export type PublicScaffold = Omit<ProjectScaffold, 'viewer' | 'permissions' | 'assignees'> & {
-  assignees: Omit<Assignee, 'email'>[];
+  assignees: Omit<Assignee, 'email' | 'username'>[];
 };
 
 export interface SharedIssueBundle {

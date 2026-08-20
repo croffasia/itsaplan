@@ -328,18 +328,15 @@
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-/* Mention chips: comment bodies rewrite @[Name](user:id) to [@Name](#mention-id)
-   for display (see features/issue/utils/mentions.ts). Style that inert link as a
-   pill rather than an underlined link. */
-.md-content a[href^='#mention-'] {
+/* Mention chips: an @username in the text is rendered as its own node (see
+   lib/tiptap-mention.ts) and styled as a pill. */
+.md-content .mention {
   color: var(--primary);
   background: color-mix(in oklab, var(--primary) 12%, transparent);
-  text-decoration: none;
   border-radius: 0.375em;
   padding: 0.05em 0.35em;
   font-weight: 500;
   white-space: nowrap;
-  cursor: default;
 }
 .md-content code {
   background: var(--muted);

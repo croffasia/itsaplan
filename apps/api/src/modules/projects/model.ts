@@ -93,6 +93,7 @@ const AssigneeCandidateResponse = t.Object({
   userId: t.String(),
   name: t.String(),
   email: t.String(),
+  username: t.Nullable(t.String()),
   image: t.Nullable(t.String()),
   kind: t.Union([t.Literal('member'), t.Literal('agent')]),
   agentKind: t.Nullable(t.Union([t.Literal('external'), t.Literal('internal')])),

@@ -64,6 +64,14 @@ a question someone asked in a comment with add_comment carrying replyToId set to
 that comment's id, so the answer reads in the thread rather than at the end of the
 issue.
 
+## Mentions
+
+A comment or an issue description tags someone by writing @handle inline, which
+notifies them. The handle is the username of a person in get_project.assignees, which
+lists members and AI agents alike; a handle nobody in the project answers to tags
+nobody. An AI agent tagged in a comment starts a run on that issue, so tag one only
+when you want it to act.
+
 ## Restraint
 
 - Reading an issue is not a reason to change it. When you were asked to look

@@ -16,12 +16,13 @@ interface ClaimedRun {
   attempts: number;
   projectId: number;
   agentUserId: string;
+  agentUsername: string;
   issueIdentifier: string | null;
   issueTitle: string | null;
-  assigneeUserId: string | null;
   assigneeName: string | null;
-  requesterUserId: string | null;
+  assigneeUsername: string | null;
   requesterName: string | null;
+  requesterUsername: string | null;
 }
 
 export async function processAgentRuns(): Promise<void> {
@@ -53,12 +54,15 @@ async function claimDueRuns(): Promise<ClaimedRun[]> {
       r.schedule_id AS "scheduleId", r.trigger, r.prompt, r.attempts,
       (SELECT project_id FROM ai_agent a WHERE a.id = r.agent_id) AS "projectId",
       (SELECT user_id FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUserId",
+      (SELECT username FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUsername",
       (SELECT p.key || '-' || i.sequence_number FROM issue i JOIN project p ON p.id = i.project_id WHERE i.id = r.issue_id) AS "issueIdentifier",
       (SELECT title FROM issue i WHERE i.id = r.issue_id) AS "issueTitle",
-      (SELECT assignee_user_id FROM issue i WHERE i.id = r.issue_id) AS "assigneeUserId",
       (SELECT u.name FROM issue i JOIN "user" u ON u.id = i.assignee_user_id WHERE i.id = r.issue_id) AS "assigneeName",
-      (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId",
-      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName"
+      (SELECT COALESCE(u.username, ag.username) FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
+         LEFT JOIN ai_agent ag ON ag.user_id = u.id WHERE i.id = r.issue_id) AS "assigneeUsername",
+      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
+      (SELECT COALESCE(u.username, ag.username) FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
+         LEFT JOIN ai_agent ag ON ag.user_id = u.id WHERE a.id = r.source_activity_id) AS "requesterUsername"
   `);
   return rows as unknown as ClaimedRun[];
 }

@@ -1,0 +1,2 @@
+ALTER TABLE "ai_agent" DROP CONSTRAINT "ai_agent_project_id_username_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "ai_agent_project_username_uq" ON "ai_agent" USING btree ("project_id",lower("username"));

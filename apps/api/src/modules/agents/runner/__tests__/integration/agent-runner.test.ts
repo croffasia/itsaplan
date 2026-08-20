@@ -28,16 +28,12 @@ async function setup() {
   };
 }
 
-const mention = (name: string, userId: string) => `@[${name}](user:${userId})`;
-
 // Queues one run for the agent by mentioning it on a new issue.
-async function queueRun(asOwner: Api, columnId: number, agentUserId: string) {
+async function queueRun(asOwner: Api, columnId: number, username: string) {
   const issue = (
     await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Landing page' })
   ).data!;
-  await asOwner
-    .issues({ issueId: issue.id })
-    .comments.post({ body: `please review ${mention('Ext Bot', agentUserId)}` });
+  await asOwner.issues({ issueId: issue.id }).comments.post({ body: `please review @${username}` });
   return issue;
 }
 
@@ -48,7 +44,7 @@ describe('agent runner queue', () => {
 
   it('claims a queued run with its issue and prompt', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    const issue = await queueRun(asOwner, columnId, agent.userId);
+    const issue = await queueRun(asOwner, columnId, agent.username);
 
     const res = await asRunner['agent-runs'].claim.post();
     expect(res.status).toBe(200);
@@ -67,7 +63,7 @@ describe('agent runner queue', () => {
 
   it('logs on the issue that the agent picked the run up and how it ended', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    const issue = await queueRun(asOwner, columnId, agent.userId);
+    const issue = await queueRun(asOwner, columnId, agent.username);
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
 
     await asRunner['agent-runs']({ runId: run.id }).result.post({
@@ -94,7 +90,7 @@ describe('agent runner queue', () => {
       .projects({ projectKey: 'MKT' })
       ['ai-agents']({ agentId: agent.id })
       .patch({ instructions: 'Always answer in German.' });
-    await queueRun(asOwner, columnId, agent.userId);
+    await queueRun(asOwner, columnId, agent.username);
 
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
     expect(run.systemPrompt).toContain('Always answer in German.');
@@ -110,7 +106,7 @@ describe('agent runner queue', () => {
 
   it('hands a claimed run to no one else until its lease expires', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    await queueRun(asOwner, columnId, agent.userId);
+    await queueRun(asOwner, columnId, agent.username);
 
     expect((await asRunner['agent-runs'].claim.post()).data!.run).not.toBeNull();
     expect((await asRunner['agent-runs'].claim.post()).data!.run).toBeNull();
@@ -118,7 +114,7 @@ describe('agent runner queue', () => {
 
   it('records a success and shows it in the run history', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    await queueRun(asOwner, columnId, agent.userId);
+    await queueRun(asOwner, columnId, agent.username);
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
 
     const res = await asRunner['agent-runs']({ runId: run.id }).result.post({
@@ -140,7 +136,7 @@ describe('agent runner queue', () => {
 
   it('records a failure with its error', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    await queueRun(asOwner, columnId, agent.userId);
+    await queueRun(asOwner, columnId, agent.username);
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
 
     await asRunner['agent-runs']({ runId: run.id }).result.post({
@@ -160,7 +156,7 @@ describe('agent runner queue', () => {
 
   it('rejects a result for a run that is already finished', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    await queueRun(asOwner, columnId, agent.userId);
+    await queueRun(asOwner, columnId, agent.username);
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
     await asRunner['agent-runs']({ runId: run.id }).result.post({ status: 'success' });
 
@@ -170,7 +166,7 @@ describe('agent runner queue', () => {
 
   it("rejects another agent's run", async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    await queueRun(asOwner, columnId, agent.userId);
+    await queueRun(asOwner, columnId, agent.username);
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
     const other = await asOwner
       .projects({ projectKey: 'MKT' })
@@ -188,7 +184,7 @@ describe('agent runner queue', () => {
 
   it('keeps a claimed run leased through a heartbeat', async () => {
     const { asOwner, asRunner, agent, columnId } = await setup();
-    await queueRun(asOwner, columnId, agent.userId);
+    await queueRun(asOwner, columnId, agent.username);
     const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
 
     expect((await asRunner['agent-runs']({ runId: run.id }).heartbeat.post()).status).toBe(204);

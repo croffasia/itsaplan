@@ -1332,7 +1332,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Add a comment',
         description:
           'Add a comment to an issue by its numeric id. Pass replyToId to answer an ' +
-          'existing comment of that issue instead of starting a new thread.',
+          'existing comment of that issue instead of starting a new thread. Writing ' +
+          '@username in the body notifies that member or AI agent; the handles are ' +
+          'the usernames in get_project.assignees.',
         ...mcpTool('add_comment'),
       },
     },

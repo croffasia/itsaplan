@@ -25,8 +25,10 @@ export interface RunnerAgent {
   id: number;
   projectId: number;
   kind: AgentKind;
-  // The agent's bot user, so a run's prompts do not name the agent to itself.
+  // The agent's bot user, so a run's prompts do not name the agent to itself, and
+  // the handle it is addressed by.
   userId: string;
+  username: string;
   // The project the agent belongs to and the operator's own instructions, both of
   // which go into the system prompt handed out with a run.
   projectKey: string;
@@ -44,6 +46,7 @@ export async function getRunnerAgent(userId: string): Promise<RunnerAgent | null
       projectId: aiAgent.projectId,
       kind: aiAgent.kind,
       userId: aiAgent.userId,
+      username: aiAgent.username,
       projectKey: project.key,
       projectName: project.name,
       instructions: aiAgent.instructions,
@@ -76,10 +79,10 @@ export interface RunnerRun {
 // the prompts and are not handed to the runner.
 type ClaimedRow = Omit<RunnerRun, 'systemPrompt'> & {
   issueTitle: string | null;
-  assigneeUserId: string | null;
   assigneeName: string | null;
-  requesterUserId: string | null;
+  assigneeUsername: string | null;
   requesterName: string | null;
+  requesterUsername: string | null;
   sourceActivityId: number | null;
 };
 
@@ -138,17 +141,28 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
          FROM issue i JOIN project p ON p.id = i.project_id
          WHERE i.id = r.issue_id) AS "issueIdentifier",
       (SELECT title FROM issue i WHERE i.id = r.issue_id) AS "issueTitle",
-      (SELECT assignee_user_id FROM issue i WHERE i.id = r.issue_id) AS "assigneeUserId",
       (SELECT u.name FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
          WHERE i.id = r.issue_id) AS "assigneeName",
+      (SELECT COALESCE(u.username, ag.username)
+         FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
+         LEFT JOIN ai_agent ag ON ag.user_id = u.id
+         WHERE i.id = r.issue_id) AS "assigneeUsername",
       r.source_activity_id AS "sourceActivityId",
-      (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId",
-      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName"
+      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
+      (SELECT COALESCE(u.username, ag.username)
+         FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
+         LEFT JOIN ai_agent ag ON ag.user_id = u.id
+         WHERE a.id = r.source_activity_id) AS "requesterUsername"
   `);
   const row = (rows as unknown as ClaimedRow[])[0];
   if (!row) return null;
   const threadContext = await loadThreadContext(row.sourceActivityId);
-  const forPrompt = { ...row, agentUserId: agent.userId, threadContext };
+  const forPrompt = {
+    ...row,
+    agentUserId: agent.userId,
+    agentUsername: agent.username,
+    threadContext,
+  };
   await recordAgentRunStarted(forPrompt);
   return {
     id: row.id,

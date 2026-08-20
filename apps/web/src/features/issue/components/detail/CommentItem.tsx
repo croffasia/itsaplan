@@ -4,7 +4,6 @@ import { type FeedItem } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';
-import { mentionsToChips } from '../../utils/mentions';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import { useTranslations } from 'next-intl';
 
@@ -51,7 +50,7 @@ export default function CommentItem({
       </div>
       <IssueMarkdownEditor
         className="mt-1 ps-7 text-sm text-foreground/85"
-        defaultValue={mentionsToChips(item.body ?? '')}
+        defaultValue={item.body ?? ''}
         editable={false}
       />
     </div>

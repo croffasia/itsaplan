@@ -57,7 +57,7 @@ function chatRunOpts(user: SessionUser | null, agentId: number, threadId?: strin
     callerUserId: caller.id,
     threadId: threadId ?? null,
     contextPreamble: peoplePreamble({
-      requester: { name: user?.name ?? caller.email ?? 'User', userId: caller.id },
+      requester: { name: user?.name ?? caller.email ?? 'User', username: user?.username ?? null },
     }),
   };
 }

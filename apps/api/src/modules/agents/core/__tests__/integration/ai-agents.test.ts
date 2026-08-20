@@ -428,6 +428,46 @@ describe('ai agents', () => {
     expect(res.status).toBe(409);
   });
 
+  // A mention is resolved against the project's members and its agents at once, so a
+  // handle a member already answers to cannot be given to an agent.
+  it('rejects a username a member already uses with 409', async () => {
+    const { owner, asOwner } = await setup();
+    const res = await agents(asOwner).post({
+      name: 'Impostor',
+      username: owner.username,
+      kind: 'external',
+    });
+    expect(res.status).toBe(409);
+  });
+
+  // A handle is resolved lowercased, so two agents differing only by case would both
+  // answer to it.
+  it('rejects a username another agent uses in another case with 409', async () => {
+    const { asOwner } = await setup();
+    await agents(asOwner).post({ name: 'First', username: 'Dup', kind: 'external' });
+    const res = await agents(asOwner).post({ name: 'Second', username: 'dup', kind: 'external' });
+    expect(res.status).toBe(409);
+  });
+
+  it('keeps an agent its own username on an unrelated change', async () => {
+    const { asOwner } = await setup();
+    const created = await agents(asOwner).post({ name: 'Bot', username: 'bot', kind: 'external' });
+    const res = await agents(asOwner)({ agentId: created.data!.agent.id }).patch({
+      username: 'bot',
+      name: 'Bot renamed',
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('rejects renaming an agent onto a member username with 409', async () => {
+    const { owner, asOwner } = await setup();
+    const created = await agents(asOwner).post({ name: 'Bot', username: 'bot', kind: 'external' });
+    const res = await agents(asOwner)({ agentId: created.data!.agent.id }).patch({
+      username: owner.username,
+    });
+    expect(res.status).toBe(409);
+  });
+
   it('rejects an invalid username with 400', async () => {
     const { asOwner } = await setup();
     const res = await agents(asOwner).post({

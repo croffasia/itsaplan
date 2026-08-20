@@ -1,6 +1,6 @@
 import { randomInt } from 'node:crypto';
 import { db } from '@repo/db';
-import { eq, type SQL } from 'drizzle-orm';
+import { eq, sql, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
@@ -142,6 +142,21 @@ function randomSuffix(): string {
   return String(100 + randomInt(900));
 }
 
+// True when an agent of some project already answers to this handle. A mention is
+// resolved against members and agents at once, so the two share one namespace: a
+// member cannot take a name an agent uses, and the check for the other direction
+// sits where an agent is created. Agent handles are stored as typed, so the
+// comparison is case-insensitive.
+async function isAgentHandle(handle: string): Promise<boolean> {
+  const normalized = handle.trim().toLowerCase();
+  if (!normalized) return false;
+  const taken = await db.$count(
+    schema.aiAgent,
+    eq(sql`lower(${schema.aiAgent.username})`, normalized),
+  );
+  return taken > 0;
+}
+
 // Nobody is asked for a username at sign-up: it is derived from the address — the
 // local part, with everything the plugin's validator rejects removed — and the owner
 // changes it later in the profile. A name already in use gets a random suffix, and
@@ -155,7 +170,10 @@ async function generateUsername(email: string): Promise<string> {
       .slice(0, USERNAME_MAX_LENGTH - SUFFIX_LENGTH) || 'user';
   let candidate = stem.length >= USERNAME_MIN_LENGTH ? stem : stem + randomSuffix();
   for (let attempt = 0; attempt < 20; attempt += 1) {
-    if ((await db.$count(schema.user, eq(schema.user.username, candidate))) === 0) break;
+    const taken =
+      (await db.$count(schema.user, eq(schema.user.username, candidate))) > 0 ||
+      (await isAgentHandle(candidate));
+    if (!taken) break;
     candidate = stem + randomSuffix();
   }
   return candidate;
@@ -282,6 +300,18 @@ export const auth = betterAuth({
             message: 'Confirm your email address before signing in',
           });
         }
+        return;
+      }
+
+      // The profile form changes the username here. The plugin only checks it against
+      // the other accounts, so the agents are checked on this side.
+      if (ctx.path === '/update-user') {
+        const handle = (ctx.body as { username?: string } | undefined)?.username;
+        if (handle && (await isAgentHandle(handle))) {
+          throw new APIError('BAD_REQUEST', {
+            message: 'Username is already taken. Please try another.',
+          });
+        }
       }
     }),
   },
@@ -299,8 +329,16 @@ export const auth = betterAuth({
           await assertRegistrationAllowed(user.email);
           const isFirstUser = (await db.$count(schema.user)) === 0;
           // A sign-up that carried its own username has passed the plugin's own
-          // check by now; only an account without one gets a derived name.
-          const derived = user.username ?? (await generateUsername(user.email));
+          // check against the other accounts by now, but not the one against the
+          // agents; only an account without one gets a derived name.
+          const carried = typeof user.username === 'string' ? user.username : null;
+          if (carried && (await isAgentHandle(carried))) {
+            throw new APIError('BAD_REQUEST', {
+              code: 'USERNAME_IS_ALREADY_TAKEN',
+              message: 'Username is already taken. Please try another.',
+            });
+          }
+          const derived = carried ?? (await generateUsername(user.email));
           return {
             data: {
               ...user,

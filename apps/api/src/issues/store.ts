@@ -47,7 +47,7 @@ import {
 } from './activity';
 import { autoWatchIssue } from './watchers';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
-import { notifyIssueChange } from '#modules/notifications/service';
+import { notifyIssueChange, notifyTextMentions } from '#modules/notifications/service';
 import { emitWebhookEvent } from '../webhooks/emit';
 import { getAssignTriggerAgent, isProjectAgent } from '#modules/agents/core/service';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
@@ -870,6 +870,16 @@ export async function createIssue(
       assignedUserId: created.assigneeUserId,
     });
   }
+  // A description written on creation reaches the people it mentions, the same as
+  // one written into an existing issue does.
+  await notifyTextMentions({
+    projectId: project.id,
+    issueId,
+    actorUserId: actorUserId ?? null,
+    sourceActivityId: null,
+    before: '',
+    after: created.description,
+  });
   return created;
 }
 
@@ -1354,6 +1364,15 @@ function parseDatetime(value: unknown): Date | null {
   return date;
 }
 
+// The text a markdown field currently holds on an issue, empty when it is unset.
+async function fieldMarkdown(issueId: number, fieldId: number): Promise<string> {
+  const [row] = await db
+    .select({ valueText: issueFieldValue.valueText })
+    .from(issueFieldValue)
+    .where(and(eq(issueFieldValue.issueId, issueId), eq(issueFieldValue.fieldId, fieldId)));
+  return row?.valueText ?? '';
+}
+
 // Sets one field's value on one issue. projectId is the issue's project: the field
 // is resolved inside it, so a field id belonging to another project does not match.
 // For select/multi_select fields, pass optionIds (replaces the full selection); for
@@ -1381,6 +1400,11 @@ export async function setIssueFieldValue(
   if (field.fieldType === 'number' && input.value != null && input.value !== '') {
     if (!Number.isFinite(Number(input.value))) throw new HttpError(400, 'Invalid number');
   }
+
+  // The markdown a field held before this write, so only the mentions the write
+  // adds reach anyone.
+  const previousMarkdown =
+    field.fieldType === 'markdown' ? await fieldMarkdown(issueId, fieldId) : '';
 
   // to_text is the display-ready new value logged to the activity feed: option
   // value names for select/multi_select, the raw value for everything else.
@@ -1455,5 +1479,22 @@ export async function setIssueFieldValue(
     }
   }
 
-  await recordActivity(issueId, [{ action: 'field', subject: field.name, toText }], actorUserId);
+  const [entry] = await recordActivity(
+    issueId,
+    [{ action: 'field', subject: field.name, toText }],
+    actorUserId,
+  );
+
+  // A markdown field is written in the same editor as the description and reaches
+  // the people it mentions the same way.
+  if (field.fieldType === 'markdown') {
+    await notifyTextMentions({
+      projectId,
+      issueId,
+      actorUserId: actorUserId ?? null,
+      sourceActivityId: entry?.id ?? null,
+      before: previousMarkdown,
+      after: typeof input.value === 'string' ? input.value : '',
+    });
+  }
 }

@@ -3,7 +3,6 @@ import { and, desc, eq, lt, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
 import { intEnv } from './helpers/env';
-import { renderMentionsPlain } from './mentions';
 
 // The agent_run outbox: data access for issue-triggered runs and run history. The
 // background worker claims pending rows, calls the internal runtime route, and
@@ -53,17 +52,20 @@ export interface ClaimedRun {
   // second query.
   projectId: number;
   agentUserId: string;
+  // The agent's own handle, so the prompt can tell whether the text addressed it.
+  agentUsername: string;
   // The issue's human-readable key ("MKT-42") and title, read inline so the poller can
   // frame the run with them. Null if the issue was deleted after enqueue.
   issueIdentifier: string | null;
   issueTitle: string | null;
   // The issue's assignee (the responsible human) and, for a mention run, the author of
   // the comment that mentioned the agent (from the source activity's name snapshot).
-  // Any may be null: no assignee, a deleted user, or a run with no source comment.
-  assigneeUserId: string | null;
+  // Each carries the handle the agent tags them by. Any may be null: no assignee, a
+  // deleted user, or a run with no source comment.
   assigneeName: string | null;
-  requesterUserId: string | null;
+  assigneeUsername: string | null;
   requesterName: string | null;
+  requesterUsername: string | null;
   // The comments the source comment replies to, oldest first, when it is a reply.
   // Null for a top-level mention or a delegation.
   threadContext: string | null;
@@ -100,15 +102,22 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       r.source_activity_id AS "sourceActivityId",
       (SELECT project_id FROM ai_agent a WHERE a.id = r.agent_id) AS "projectId",
       (SELECT user_id FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUserId",
+      (SELECT username FROM ai_agent a WHERE a.id = r.agent_id) AS "agentUsername",
       (SELECT p.key || '-' || i.sequence_number
          FROM issue i JOIN project p ON p.id = i.project_id
          WHERE i.id = r.issue_id) AS "issueIdentifier",
       (SELECT title FROM issue i WHERE i.id = r.issue_id) AS "issueTitle",
-      (SELECT assignee_user_id FROM issue i WHERE i.id = r.issue_id) AS "assigneeUserId",
       (SELECT u.name FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
          WHERE i.id = r.issue_id) AS "assigneeName",
-      (SELECT actor_user_id FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterUserId",
-      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName"
+      (SELECT COALESCE(u.username, ag.username)
+         FROM issue i JOIN "user" u ON u.id = i.assignee_user_id
+         LEFT JOIN ai_agent ag ON ag.user_id = u.id
+         WHERE i.id = r.issue_id) AS "assigneeUsername",
+      (SELECT actor_name FROM issue_activity a WHERE a.id = r.source_activity_id) AS "requesterName",
+      (SELECT COALESCE(u.username, ag.username)
+         FROM issue_activity a JOIN "user" u ON u.id = a.actor_user_id
+         LEFT JOIN ai_agent ag ON ag.user_id = u.id
+         WHERE a.id = r.source_activity_id) AS "requesterUsername"
   `);
   const runs = rows as unknown as ClaimedRun[];
   return Promise.all(
@@ -143,9 +152,7 @@ export async function loadThreadContext(sourceActivityId: number | null): Promis
   `);
   const ancestors = rows as unknown as { actorName: string | null; body: string | null }[];
   if (ancestors.length === 0) return null;
-  return ancestors
-    .map((a) => `${a.actorName ?? 'Unknown'}: ${renderMentionsPlain(a.body ?? '')}`)
-    .join('\n\n');
+  return ancestors.map((a) => `${a.actorName ?? 'Unknown'}: ${a.body ?? ''}`).join('\n\n');
 }
 
 // A run canceled while it was in flight keeps that outcome: each of these writes only
@@ -177,8 +184,7 @@ export async function markRunFailed(id: number, error: string): Promise<void> {
 }
 
 // One row of an agent's run history, for the runs sidebar. The issue is joined for
-// its human key and title. `prompt` is the enqueued task with mention tokens rendered
-// to @Name for display.
+// its human key and title.
 export interface AgentRunRow {
   id: number;
   status: string;
@@ -244,7 +250,7 @@ export async function listAgentRuns(
       issueId: r.issueId,
       issueIdentifier: r.projectKey && r.issueSeq != null ? `${r.projectKey}-${r.issueSeq}` : null,
       issueTitle: r.issueTitle ?? null,
-      prompt: renderMentionsPlain(r.prompt),
+      prompt: r.prompt,
       attempts: r.attempts,
       lastError: r.lastError,
       output: r.output,

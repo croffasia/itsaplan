@@ -416,7 +416,7 @@ export const aiAgent = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique().on(t.projectId, t.username),
+    uniqueIndex('ai_agent_project_username_uq').on(t.projectId, sql`lower(${t.username})`),
     unique().on(t.userId),
     check('ai_agent_kind_check', sql`${t.kind} IN ('external', 'internal')`),
     check('ai_agent_runner_scope_check', sql`${t.runnerScope} IN ('owner', 'project')`),

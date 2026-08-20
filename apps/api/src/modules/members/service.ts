@@ -109,6 +109,8 @@ export interface AssigneeCandidate {
   userId: string;
   name: string;
   email: string;
+  // The handle they are mentioned by, @username. Null for a member who has none.
+  username: string | null;
   image: string | null;
   kind: 'member' | 'agent';
   agentKind: 'external' | 'internal' | null;
@@ -128,6 +130,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         userId: projectMember.userId,
         name: user.name,
         email: user.email,
+        username: user.username,
         image: user.image,
         role: projectMember.role,
         description: projectMember.description,
@@ -144,6 +147,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         userId: aiAgent.userId,
         name: user.name,
         email: user.email,
+        username: aiAgent.username,
         image: user.image,
         agentKind: aiAgent.kind,
         ownerUserId: aiAgent.ownerUserId,
@@ -157,6 +161,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     userId: r.userId,
     name: r.name,
     email: r.email,
+    username: r.username,
     image: r.image,
     kind: 'member',
     agentKind: null,
@@ -168,6 +173,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     userId: r.userId,
     name: r.name,
     email: r.email,
+    username: r.username,
     image: r.image,
     kind: 'agent',
     agentKind: r.agentKind as 'external' | 'internal',

@@ -29,13 +29,9 @@ async function createInternalAgent(asOwner: Api, name: string, username: string)
   return res.data!.agent;
 }
 
-const mention = (name: string, userId: string) => `@[${name}](user:${userId})`;
-
 // Queues a mention run by commenting on the issue with the agent tagged.
-async function mentionAgent(asOwner: Api, issueId: number, agentName: string, agentUserId: string) {
-  await asOwner
-    .issues({ issueId })
-    .comments.post({ body: `please review ${mention(agentName, agentUserId)}` });
+async function mentionAgent(asOwner: Api, issueId: number, username: string) {
+  await asOwner.issues({ issueId }).comments.post({ body: `please review @${username}` });
 }
 
 describe('agent run history', () => {
@@ -56,7 +52,7 @@ describe('agent run history', () => {
     const { asOwner, columnId } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
     const issue = (await createIssue(asOwner, columnId, 'Landing page')).data!;
-    await mentionAgent(asOwner, issue.id, 'Design Bot', agent.userId);
+    await mentionAgent(asOwner, issue.id, agent.username);
 
     const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
     expect(res.status).toBe(200);
@@ -69,9 +65,7 @@ describe('agent run history', () => {
       issueIdentifier: issue.identifier,
       issueTitle: 'Landing page',
     });
-    // The stored mention token is rendered to @Name for display (no id leaks through).
-    expect(run.prompt).toContain('@Design Bot');
-    expect(run.prompt).not.toContain('user:');
+    expect(run.prompt).toContain('@design');
   });
 
   it('lists a delegation run when an issue is delegated to the agent', async () => {
@@ -95,7 +89,7 @@ describe('agent run history', () => {
     const issue = (await createIssue(asOwner, columnId)).data!;
 
     await asOwner.issues({ issueId: issue.id }).patch({ delegateUserId: agent.userId });
-    await mentionAgent(asOwner, issue.id, 'Design Bot', agent.userId);
+    await mentionAgent(asOwner, issue.id, agent.username);
 
     const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
     const byTrigger = new Map(res.data!.items.map((r) => [r.trigger, r]));
@@ -125,9 +119,9 @@ describe('agent run history', () => {
     const { asOwner, columnId } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
     const issue = (await createIssue(asOwner, columnId)).data!;
-    await mentionAgent(asOwner, issue.id, 'Design Bot', agent.userId);
-    await mentionAgent(asOwner, issue.id, 'Design Bot', agent.userId);
-    await mentionAgent(asOwner, issue.id, 'Design Bot', agent.userId);
+    await mentionAgent(asOwner, issue.id, agent.username);
+    await mentionAgent(asOwner, issue.id, agent.username);
+    await mentionAgent(asOwner, issue.id, agent.username);
 
     const first = await agents(asOwner)({ agentId: agent.id }).runs.get({ query: { limit: 2 } });
     expect(first.data!.items.length).toBe(2);
@@ -148,7 +142,7 @@ describe('agent run history', () => {
     const a = await createInternalAgent(asOwner, 'Bot A', 'bota');
     const b = await createInternalAgent(asOwner, 'Bot B', 'botb');
     const issue = (await createIssue(asOwner, columnId)).data!;
-    await mentionAgent(asOwner, issue.id, 'Bot A', a.userId);
+    await mentionAgent(asOwner, issue.id, a.username);
 
     const runsB = await agents(asOwner)({ agentId: b.id }).runs.get();
     expect(runsB.data!.items.length).toBe(0);
@@ -172,7 +166,7 @@ describe('agent run history', () => {
     const { asOwner, columnId } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
     const issue = (await createIssue(asOwner, columnId)).data!;
-    await mentionAgent(asOwner, issue.id, 'Design Bot', agent.userId);
+    await mentionAgent(asOwner, issue.id, agent.username);
 
     const outsider = await signUpTestUser({ name: 'Outsider' });
     const res = await agents(authedApi(outsider.cookie))({ agentId: agent.id }).runs.get();

@@ -9,7 +9,7 @@ import {
   agentToolLink,
   integrationCredential,
 } from '@repo/db';
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, ne, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
 import { iso, HttpError, rethrowDuplicate } from '#shared/lib';
 import { getCredentialById } from '../integrations/service';
@@ -374,6 +374,30 @@ export interface NewAgentInput {
   ownerUserId?: string | null;
 }
 
+// A handle addresses one person or one agent, never several: a mention is resolved
+// against the members and the agents of the project at once, and by the lowercased
+// handle, so a name a member already answers to cannot be issued to an agent and two
+// agents of a project cannot differ by case alone. The agents of a project are held
+// to that by the unique index on (project_id, lower(username)); the check here turns
+// a conflict into a message that names which side took the handle. The reverse check
+// sits in @repo/auth, where a member's username is set.
+async function assertUsernameFree(
+  projectId: number,
+  username: string,
+  exceptAgentId?: number,
+): Promise<void> {
+  const handle = username.toLowerCase();
+  if ((await db.$count(user, eq(user.username, handle))) > 0)
+    throw new HttpError(409, 'A member already uses this username');
+  const conflicts = and(
+    eq(aiAgent.projectId, projectId),
+    eq(sql`lower(${aiAgent.username})`, handle),
+    exceptAgentId == null ? undefined : ne(aiAgent.id, exceptAgentId),
+  );
+  if ((await db.$count(aiAgent, conflicts)) > 0)
+    throw new HttpError(409, 'An agent with this username already exists');
+}
+
 // Issues a fresh API key owned by the agent's bot user and returns its plaintext
 // value (only available at creation). The server-side call sets the owner via
 // userId — better-auth allows this only for a direct (non-request) server call.
@@ -396,6 +420,7 @@ export async function createAgent(
   const userId = crypto.randomUUID();
   const email = `${userId}@agents.local`;
   const isInternal = input.kind === 'internal';
+  await assertUsernameFree(projectId, input.username);
   if (isInternal) await assertModelCredential(projectId, input.modelCredentialId);
 
   // Every agent acts under a project role and so needs a project_member row for the
@@ -569,7 +594,10 @@ export async function updateAgent(
   }
 
   const set: Partial<typeof aiAgent.$inferInsert> = {};
-  if (patch.username !== undefined) set.username = patch.username;
+  if (patch.username !== undefined) {
+    await assertUsernameFree(projectId, patch.username, id);
+    set.username = patch.username;
+  }
   if (patch.modelCredentialId !== undefined) set.modelCredentialId = patch.modelCredentialId;
   if (patch.model !== undefined) set.model = patch.model;
   if (patch.instructions !== undefined) set.instructions = patch.instructions;

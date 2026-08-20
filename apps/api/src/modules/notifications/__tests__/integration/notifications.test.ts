@@ -11,6 +11,7 @@ import { resetDb } from '#tests/helpers/db';
 interface Member {
   api: Api;
   userId: string;
+  username: string;
 }
 
 async function setup(): Promise<{ owner: Member; columnId: number; doneColumnId: number }> {
@@ -20,7 +21,11 @@ async function setup(): Promise<{ owner: Member; columnId: number; doneColumnId:
   const view = await api.projects({ projectKey: 'MKT' }).get();
   const columns = view.data!.columns;
   const done = columns.find((c) => c.stateType === 'completed') ?? columns[columns.length - 1];
-  return { owner: { api, userId: u.userId }, columnId: columns[0].id, doneColumnId: done.id };
+  return {
+    owner: { api, userId: u.userId, username: u.username },
+    columnId: columns[0].id,
+    doneColumnId: done.id,
+  };
 }
 
 async function addMember(owner: Member): Promise<Member> {
@@ -30,7 +35,7 @@ async function addMember(owner: Member): Promise<Member> {
     .invites.post({ email: u.email, role: 'member' });
   const api = authedApi(u.cookie);
   await api.invites({ token: invite.data!.token }).accept.post();
-  return { api, userId: u.userId };
+  return { api, userId: u.userId, username: u.username };
 }
 
 function createIssue(client: Api, columnId: number, patch: Record<string, unknown> = {}) {
@@ -40,6 +45,52 @@ function createIssue(client: Api, columnId: number, patch: Record<string, unknow
 describe('notifications', () => {
   beforeEach(async () => {
     await resetDb();
+  });
+
+  it('notifies a member mentioned in the description', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    const issue = (await createIssue(owner.api, columnId)).data!;
+
+    await owner.api.issues({ issueId: issue.id }).patch({
+      description: `@${member.username} please size this`,
+    });
+
+    const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
+    expect(inbox.data!.items).toHaveLength(1);
+    expect(inbox.data!.items[0]).toMatchObject({ type: 'mentioned', actorUserId: owner.userId });
+  });
+
+  it('notifies a member mentioned in a markdown custom field', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    const field = (
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        ['custom-fields'].post({ name: 'Notes', fieldType: 'markdown' })
+    ).data!;
+    const issue = (await createIssue(owner.api, columnId)).data!;
+
+    await owner.api
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: field.id })
+      .put({ value: `@${member.username} take the copy` });
+
+    const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
+    expect(inbox.data!.items).toHaveLength(1);
+  });
+
+  it('does not notify again for a mention the description already carried', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    const issue = (await createIssue(owner.api, columnId)).data!;
+    const client = owner.api.issues({ issueId: issue.id });
+    await client.patch({ description: `@${member.username} please size this` });
+
+    await client.patch({ description: `@${member.username} please size this today` });
+
+    const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
+    expect(inbox.data!.items).toHaveLength(1);
   });
 
   it('notifies the new assignee, not the actor', async () => {

@@ -76,7 +76,7 @@ function emailPayload(
     assigned: { subject: `${ref}: assigned to you`, text: `${actor} assigned this issue to you.` },
     mentioned: {
       subject: `${ref}: you were mentioned`,
-      text: `${actor} mentioned you in a comment.`,
+      text: `${actor} mentioned you on this issue.`,
     },
     commented: { subject: `${ref}: new comment`, text: `${actor} commented on this issue.` },
     state_changed: {

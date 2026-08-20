@@ -332,7 +332,7 @@
     "telegram": "Telegram",
     "events": {
       "assigned": "الإسناد إلى مهمة",
-      "mentioned": "الإشارة في تعليق",
+      "mentioned": "الإشارة في مهمة",
       "commented": "تعليق جديد على مهمة تتابعها",
       "state_changed": "تغيّر الحالة في مهمة تتابعها"
     },

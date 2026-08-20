@@ -332,7 +332,7 @@
     "telegram": "Telegram",
     "events": {
       "assigned": "Assigned to an issue",
-      "mentioned": "Mentioned in a comment",
+      "mentioned": "Mentioned on an issue",
       "commented": "New comment on an issue you watch",
       "state_changed": "State changed on an issue you watch"
     },

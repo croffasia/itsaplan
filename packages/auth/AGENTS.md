@@ -60,6 +60,13 @@ is where the plugin enforces uniqueness. Accounts that predate the column are fi
 are skipped there, and their direct insert never reaches the hook, so their username stays
 NULL.
 
+A username also addresses an agent in a mention, and a mention is resolved against the
+project's members and its agents at once, so the two share one namespace. Every path that
+sets a member's name checks it against `ai_agent`: `hooks.before` refuses an `/update-user`
+that takes a name an agent already uses, `databaseHooks.user.create.before` refuses a
+sign-up that carried one, and `generateUsername` skips such a name. The check for the other
+direction sits in the api, where an agent is created or renamed.
+
 The plugin's `/is-username-available` is in `disabledPaths` and answers 404. It takes no
 session, and a username comes from the address, so it would tell a stranger which
 addresses are registered.

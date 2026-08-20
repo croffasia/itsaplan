@@ -8,6 +8,7 @@ import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight';
 import { Markdown } from 'tiptap-markdown';
 import { ResizableImage } from '../../utils/tiptap-image';
+import { Mention } from '@/lib/tiptap-mention';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
 import { MarkdownTable } from '../../utils/tiptap-table';
 import { Video } from '../../utils/tiptap-video';
@@ -15,6 +16,7 @@ import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
 import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
 import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
+import { useMentionCandidates } from '@/hooks/useMentionCandidates';
 import { useTranslations } from 'next-intl';
 
 // Shared by every editor instance. A block with no language is detected by
@@ -57,6 +59,11 @@ export default function IssueMarkdownEditor({
   const t = useTranslations('issue.editor');
   const tCommon = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
+  // Held in a ref because the extensions are built once: the "@" menu reads the
+  // roster through it, so a list that arrives later is still offered.
+  const mentionCandidates = useMentionCandidates();
+  const mentionCandidatesRef = useRef(mentionCandidates);
+  mentionCandidatesRef.current = mentionCandidates;
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
   // Upload each file and insert it (image/video inline, other files as a link)
@@ -83,6 +90,9 @@ export default function IssueMarkdownEditor({
       Link.configure({ openOnClick: false, autolink: true }),
       // Renders ![](url) markdown inline.
       ResizableImage,
+      // Renders an @username in the text as a mention chip, and offers the project's
+      // members and agents while one is typed.
+      Mention.configure({ items: () => mentionCandidatesRef.current }),
       // Renders video attachments as an inline <video> player.
       Video,
       // TableKit carries the row and cell nodes around MarkdownTable's table node.

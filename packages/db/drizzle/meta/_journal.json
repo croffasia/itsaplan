@@ -617,6 +617,20 @@
       "when": 1787176571409,
       "tag": "0087_username_backfill",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1787176572409,
+      "tag": "0088_mention_handles",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1787213581571,
+      "tag": "0089_awesome_echo",
+      "breakpoints": true
     }
   ]
 }

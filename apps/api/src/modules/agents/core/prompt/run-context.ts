@@ -6,7 +6,9 @@
 
 export interface Person {
   name: string;
-  userId: string;
+  // The handle the agent addresses them by: @username. Null for a user who has
+  // none, who is then named without one and cannot be tagged.
+  username: string | null;
 }
 
 export interface RunPeople {
@@ -14,15 +16,14 @@ export interface RunPeople {
   requester?: Person | null;
   // The issue's assignee, the human responsible for it. Set on issue-triggered runs.
   assignee?: Person | null;
-  // Other users referenced by @mention in the triggering comment (the agent itself
-  // excluded).
-  mentioned?: Person[];
+  // The handles of the other people the triggering text named (the agent itself
+  // excluded), which may include handles nobody in the project answers to.
+  mentioned?: string[];
 }
 
-// A person written so the model can both read the name and construct a mention token
-// from the id, e.g. `Ada (user:abc123)`.
+// A person written so the model can both read the name and tag them, e.g. `Ada (@ada)`.
 function ref(p: Person): string {
-  return `${p.name} (user:${p.userId})`;
+  return p.username ? `${p.name} (@${p.username})` : p.name;
 }
 
 // Builds the "## People" instruction block, or an empty string when no people are
@@ -33,16 +34,14 @@ export function peoplePreamble(people: RunPeople): string {
   if (people.assignee) {
     lines.push(`- The issue is assigned to ${ref(people.assignee)}, the human responsible for it.`);
   }
-  const mentioned = (people.mentioned ?? []).filter(Boolean);
+  const mentioned = people.mentioned ?? [];
   if (mentioned.length > 0) {
-    lines.push(`- Also mentioned in the text: ${mentioned.map(ref).join(', ')}.`);
+    lines.push(`- Also mentioned in the text: ${mentioned.map((h) => `@${h}`).join(', ')}.`);
   }
   if (lines.length === 0) return '';
 
-  const guidance = [
-    'To mention a person in a comment, write @[Name](user:<userId>) in the comment body.',
-  ];
-  if (people.assignee) {
+  const guidance = ['To mention a person in a comment, write @username in the comment body.'];
+  if (people.assignee?.username) {
     guidance.push(
       'Tag the responsible assignee when you comment so they are notified of what you did.',
     );

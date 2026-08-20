@@ -332,7 +332,7 @@
     "telegram": "Telegram",
     "events": {
       "assigned": "被指派处理某一工作项",
-      "mentioned": "在评论中提及",
+      "mentioned": "在工作项中被提及",
       "commented": "关注的工作项有新评论",
       "state_changed": "关注的工作项状态发生变化"
     },

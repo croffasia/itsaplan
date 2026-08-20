@@ -18,11 +18,12 @@ const runBody = t.Object({
   agentUserId: t.String(),
   issueIdentifier: t.Nullable(t.String()),
   issueTitle: t.Nullable(t.String()),
-  assigneeUserId: t.Nullable(t.String()),
   assigneeName: t.Nullable(t.String()),
-  requesterUserId: t.Nullable(t.String()),
   requesterName: t.Nullable(t.String()),
   // Optional so a worker still running the previous build can hand a run over.
+  agentUsername: t.Optional(t.Nullable(t.String())),
+  assigneeUsername: t.Optional(t.Nullable(t.String())),
+  requesterUsername: t.Optional(t.Nullable(t.String())),
   sourceActivityId: t.Optional(t.Nullable(t.Number())),
   threadContext: t.Optional(t.Nullable(t.String())),
 });

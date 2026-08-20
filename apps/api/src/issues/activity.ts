@@ -12,10 +12,14 @@ import {
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '../shared/lib';
 import { emitWebhookEvent } from '../webhooks/emit';
-import { parseMentions } from '#modules/agents/core/mentions';
+import { parseMentionHandles, resolveMentionHandles } from '#shared/mentions';
 import { isAgentUser, listMentionTriggerAgents } from '#modules/agents/core/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
-import { notifyComment, notifyIssueChange } from '#modules/notifications/service';
+import {
+  notifyComment,
+  notifyIssueChange,
+  notifyTextMentions,
+} from '#modules/notifications/service';
 
 // Issue timeline: comments and change-log activity in one table (issue_activity).
 // kind selects which payload columns a row uses. The author is the session user
@@ -351,8 +355,13 @@ export async function createComment(input: {
   const projectId = projectRows[0]?.projectId;
   if (projectId != null) {
     await emitWebhookEvent(projectId, 'comment.created', comment);
-    await enqueueMentionRuns(projectId, comment);
-    await notifyComment(projectId, comment);
+    // Resolved once: the agent halves start runs, the member half is notified.
+    const mentioned = await resolveMentionHandles(
+      projectId,
+      parseMentionHandles(comment.body ?? ''),
+    );
+    await enqueueMentionRuns(projectId, comment, mentioned.agentUserIds);
+    await notifyComment(projectId, comment, mentioned);
   }
 
   return comment;
@@ -365,10 +374,14 @@ export async function createComment(input: {
 // the operator's runner for an external one — so creating a comment is never blocked
 // on it. Comments authored by an agent's bot user never trigger runs, which stops
 // agents from setting each other (or themselves) off.
-async function enqueueMentionRuns(projectId: number, comment: FeedItemRow): Promise<void> {
-  const reachedUserIds = new Set(parseMentions(comment.body ?? ''));
-  if (reachedUserIds.size === 0 && comment.replyToId == null) return;
+async function enqueueMentionRuns(
+  projectId: number,
+  comment: FeedItemRow,
+  mentionedAgentUserIds: string[],
+): Promise<void> {
+  if (mentionedAgentUserIds.length === 0 && comment.replyToId == null) return;
   if (comment.actorUserId && (await isAgentUser(comment.actorUserId))) return;
+  const reachedUserIds = new Set(mentionedAgentUserIds);
   if (comment.replyToId != null) {
     const [parent] = await db
       .select({ actorUserId: issueActivity.actorUserId })
@@ -605,26 +618,39 @@ export async function logIssueUpdate(
     events.push({ action: 'due_date', fromText: before.dueDate, toText: after.dueDate });
   const inserted = await recordActivity(after.id, events, actor);
 
-  // Inbox notifications for the two events with a dedicated notification type: a new
-  // assignee, and a status change. Both link back to their activity row.
+  // Inbox notifications for the events with a dedicated notification type: a new
+  // assignee, a status change, and the mentions a rewritten description added. Each
+  // links back to its activity row.
   const assigneeChanged = before.assigneeUserId !== after.assigneeUserId;
   const statusChanged = before.columnId !== after.columnId;
+  const descriptionChanged = before.description !== after.description;
+  if (!assigneeChanged && !statusChanged && !descriptionChanged) return;
+  const [row] = await db
+    .select({ projectId: issue.projectId })
+    .from(issue)
+    .where(eq(issue.id, after.id));
+  if (!row) return;
+
+  const idByAction = new Map(inserted.map((r) => [r.action, r.id]));
   if (assigneeChanged || statusChanged) {
-    const idByAction = new Map(inserted.map((r) => [r.action, r.id]));
-    const [row] = await db
-      .select({ projectId: issue.projectId })
-      .from(issue)
-      .where(eq(issue.id, after.id));
-    if (row) {
-      await notifyIssueChange({
-        projectId: row.projectId,
-        issueId: after.id,
-        actorUserId: actorId(actor),
-        assignedUserId: assigneeChanged ? after.assigneeUserId : null,
-        assignedActivityId: idByAction.get('assignee') ?? null,
-        statusChanged,
-        statusActivityId: idByAction.get('status') ?? null,
-      });
-    }
+    await notifyIssueChange({
+      projectId: row.projectId,
+      issueId: after.id,
+      actorUserId: actorId(actor),
+      assignedUserId: assigneeChanged ? after.assigneeUserId : null,
+      assignedActivityId: idByAction.get('assignee') ?? null,
+      statusChanged,
+      statusActivityId: idByAction.get('status') ?? null,
+    });
+  }
+  if (descriptionChanged) {
+    await notifyTextMentions({
+      projectId: row.projectId,
+      issueId: after.id,
+      actorUserId: actorId(actor),
+      sourceActivityId: idByAction.get('description') ?? null,
+      before: before.description,
+      after: after.description,
+    });
   }
 }

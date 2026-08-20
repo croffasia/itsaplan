@@ -9,10 +9,10 @@ import { useCreateComment } from '../../services/comments.service';
 import { useTranslations } from 'next-intl';
 
 // The new-comment box: a plain markdown textarea with an @-mention menu. Typing "@"
-// opens a menu of the project's members and agents; picking one inserts a mention
-// token @[Name](user:<id>) into the body. The token is what the backend parses to
-// notify a member or trigger an agent (see the feed's chip rendering for how it
-// displays). Posts as the current session user on the button or Cmd/Ctrl+Enter.
+// opens a menu of the project's members and agents; picking one writes their handle
+// as @username into the body. That handle is what the backend resolves to notify a
+// member or trigger an agent, and what the feed renders as a chip. Posts as the
+// current session user on the button or Cmd/Ctrl+Enter.
 
 // What every composer needs to post, gathered once by the activity feed: the issue,
 // who can be mentioned, and the author the avatar stands for.
@@ -58,13 +58,18 @@ export default function CommentComposer({
   const isReply = replyToId != null;
   const cmdKey = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform) ? '⌘' : 'Ctrl';
 
-  // Members and both agent kinds can be mentioned. An internal agent runs in the
-  // built-in runtime; an external agent is reached over its operator's webhook, which
-  // receives the comment carrying the mention token.
+  // Members and both agent kinds can be mentioned, and only those that have a handle
+  // to be addressed by. An internal agent runs in the built-in runtime; an external
+  // agent is reached over its operator's webhook, which receives the comment.
   const matches = useMemo(() => {
     if (!menu) return [];
     const q = menu.query.toLowerCase();
-    return assignees.filter((a) => a.name.toLowerCase().includes(q)).slice(0, 8);
+    return assignees
+      .filter(
+        (a) =>
+          a.username && (a.name.toLowerCase().includes(q) || a.username.toLowerCase().includes(q)),
+      )
+      .slice(0, 8);
   }, [assignees, menu]);
 
   // A reply box is opened by a deliberate click on Reply, so it takes the caret.
@@ -99,13 +104,13 @@ export default function CommentComposer({
   }
 
   function selectMention(a: Assignee) {
-    if (!menu) return;
-    const token = `@[${a.name}](user:${a.userId})`;
+    if (!menu || !a.username) return;
+    const handle = `@${a.username}`;
     const caret = taRef.current?.selectionStart ?? body.length;
-    const next = `${body.slice(0, menu.anchor)}${token} ${body.slice(caret)}`;
+    const next = `${body.slice(0, menu.anchor)}${handle} ${body.slice(caret)}`;
     setBody(next);
     setMenu(null);
-    setPendingCaret(menu.anchor + token.length + 1);
+    setPendingCaret(menu.anchor + handle.length + 1);
   }
 
   async function post() {
@@ -225,7 +230,10 @@ export default function CommentComposer({
                     ) : (
                       <User className="size-4 shrink-0" />
                     )}
-                    <span className="flex-1 truncate">{a.name}</span>
+                    <span className="truncate">{a.name}</span>
+                    <span className="flex-1 truncate text-xs text-muted-foreground">
+                      @{a.username}
+                    </span>
                     {a.kind === 'agent' && (
                       <span className="text-[10px] text-muted-foreground uppercase">agent</span>
                     )}

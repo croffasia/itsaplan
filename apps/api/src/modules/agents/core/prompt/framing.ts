@@ -1,5 +1,5 @@
 import { peoplePreamble, type Person } from './run-context';
-import { renderMentionsPlain, parseMentionedUsers } from '../mentions';
+import { parseMentionHandles } from '#shared/mentions';
 import type { AgentRunTrigger } from '../../model';
 
 // Frames a triggered run into the text an agent receives: the framed user
@@ -16,11 +16,15 @@ export interface RunForPrompt {
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;
-  assigneeUserId: string | null;
+  // The issue's assignee and, on a mention run, the author of the comment behind it:
+  // the name they are called by and the handle they are tagged by. The handles are
+  // optional so a worker still running the previous build can hand a run over.
   assigneeName: string | null;
-  requesterUserId: string | null;
+  assigneeUsername?: string | null;
   requesterName: string | null;
+  requesterUsername?: string | null;
   agentUserId: string;
+  agentUsername?: string | null;
   // The comment the mention replies to and the ones above it, oldest first. Absent
   // for a top-level mention.
   threadContext?: string | null;
@@ -66,11 +70,11 @@ function frameDelegation(run: RunForPrompt, titled: string): string {
     'Read the issue for context, then do the work it needs with your tools. Add a',
     'question comment only when you genuinely cannot proceed without a human answer.',
   ];
-  if (run.assigneeUserId) {
+  if (run.assigneeUsername) {
     lines.push(
       '',
       'Whenever you comment on this issue, tag the responsible assignee',
-      `@[${run.assigneeName ?? 'the assignee'}](user:${run.assigneeUserId}) so they are notified.`,
+      `@${run.assigneeUsername} so they are notified.`,
     );
   } else {
     lines.push(
@@ -97,7 +101,9 @@ function frameMention(run: RunForPrompt, titled: string): string {
     : `issueId ${run.issueId}`;
   // A run also starts when someone answers the agent's own comment without tagging
   // it, and telling it it was mentioned would not match what it reads.
-  const mentionsAgent = parseMentionedUsers(run.prompt).some((p) => p.userId === run.agentUserId);
+  const mentionsAgent =
+    !!run.agentUsername &&
+    parseMentionHandles(run.prompt).includes(run.agentUsername.toLowerCase());
   const lead = mentionsAgent
     ? `You were mentioned in a comment on issue ${titled} of your project.`
     : `Someone answered your comment on issue ${titled} of your project.`;
@@ -116,7 +122,7 @@ function frameMention(run: RunForPrompt, titled: string): string {
       run.threadContext,
     );
   }
-  lines.push('', 'The comment that mentioned you:', '', renderMentionsPlain(run.prompt));
+  lines.push('', 'The comment that mentioned you:', '', run.prompt);
   return lines.join('\n');
 }
 
@@ -135,14 +141,13 @@ export function projectPreamble(project: { key: string; name: string }): string 
 }
 
 export function peopleContext(run: RunForPrompt): string {
-  const requester: Person | null =
-    run.requesterUserId && run.requesterName
-      ? { name: run.requesterName, userId: run.requesterUserId }
-      : null;
-  const assignee: Person | null =
-    run.assigneeUserId && run.assigneeName
-      ? { name: run.assigneeName, userId: run.assigneeUserId }
-      : null;
-  const mentioned = parseMentionedUsers(run.prompt).filter((p) => p.userId !== run.agentUserId);
+  const requester: Person | null = run.requesterName
+    ? { name: run.requesterName, username: run.requesterUsername ?? null }
+    : null;
+  const assignee: Person | null = run.assigneeName
+    ? { name: run.assigneeName, username: run.assigneeUsername ?? null }
+    : null;
+  const own = run.agentUsername?.toLowerCase();
+  const mentioned = parseMentionHandles(run.prompt).filter((handle) => handle !== own);
   return peoplePreamble({ requester, assignee, mentioned });
 }

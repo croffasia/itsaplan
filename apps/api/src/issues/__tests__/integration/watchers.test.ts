@@ -13,6 +13,7 @@ import { resetDb } from '../../../__tests__/helpers/db';
 interface Member {
   api: Api;
   userId: string;
+  username: string;
 }
 
 async function setup(): Promise<{ owner: Member; columnId: number }> {
@@ -20,7 +21,10 @@ async function setup(): Promise<{ owner: Member; columnId: number }> {
   const api = authedApi(u.cookie);
   await api.projects.post({ key: 'MKT', name: 'Marketing' });
   const view = await api.projects({ projectKey: 'MKT' }).get();
-  return { owner: { api, userId: u.userId }, columnId: view.data!.columns[0].id };
+  return {
+    owner: { api, userId: u.userId, username: u.username },
+    columnId: view.data!.columns[0].id,
+  };
 }
 
 async function addMember(owner: Member): Promise<Member> {
@@ -30,7 +34,7 @@ async function addMember(owner: Member): Promise<Member> {
     .invites.post({ email: u.email, role: 'member' });
   const api = authedApi(u.cookie);
   await api.invites({ token: invite.data!.token }).accept.post();
-  return { api, userId: u.userId };
+  return { api, userId: u.userId, username: u.username };
 }
 
 function createIssue(client: Api, columnId: number, patch: Record<string, unknown> = {}) {
@@ -86,7 +90,7 @@ describe('issue watchers', () => {
 
       await owner.api
         .issues({ issueId: issue.data!.id })
-        .comments.post({ body: `@[Someone](user:${member.userId}) take a look` });
+        .comments.post({ body: `@${member.username} take a look` });
 
       expect(await watcherIds(owner.api, issue.data!.id)).toContain(member.userId);
     });
@@ -193,9 +197,7 @@ describe('issue watchers', () => {
       const issueId = issue.data!.id;
       await member.api.issues({ issueId }).watch.delete();
 
-      await owner.api
-        .issues({ issueId })
-        .comments.post({ body: `@[Someone](user:${member.userId}) look` });
+      await owner.api.issues({ issueId }).comments.post({ body: `@${member.username} look` });
 
       const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
       expect(inbox.data!.items).toHaveLength(1);

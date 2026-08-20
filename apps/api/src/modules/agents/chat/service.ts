@@ -5,7 +5,7 @@ import { iso } from '#shared/lib';
 import { appendTextPart } from '../chat-parts';
 import { intEnv } from '../core/helpers/env';
 import { projectPreamble } from '../core/prompt/framing';
-import { peoplePreamble } from '../core/prompt/run-context';
+import { peoplePreamble, type Person } from '../core/prompt/run-context';
 import type { ChatMessagePage, ChatPart, ChatThreadSummary } from '../model';
 import { newChatThreadId } from '../core/runtime/thread-ids';
 import { touchRunner, type RunnerAgent } from '../runner/service';
@@ -245,8 +245,8 @@ interface ClaimedRow {
   id: number;
   threadId: string;
   attempts: number;
-  requesterUserId: string;
   requesterName: string | null;
+  requesterUsername: string | null;
   sessionId: string | null;
 }
 
@@ -311,9 +311,10 @@ async function claimMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
       m.id,
       m.thread_id AS "threadId",
       m.attempts,
-      (SELECT user_id FROM agent_chat_thread t WHERE t.id = m.thread_id) AS "requesterUserId",
       (SELECT u.name FROM agent_chat_thread t JOIN "user" u ON u.id = t.user_id
          WHERE t.id = m.thread_id) AS "requesterName",
+      (SELECT u.username FROM agent_chat_thread t JOIN "user" u ON u.id = t.user_id
+         WHERE t.id = m.thread_id) AS "requesterUsername",
       (SELECT cli_session_id FROM agent_chat_thread t WHERE t.id = m.thread_id) AS "sessionId"
   `);
   const row = (rows as unknown as ClaimedRow[])[0];
@@ -333,7 +334,7 @@ async function claimMessage(agent: RunnerAgent): Promise<ClaimedChat | null> {
       ? ''
       : buildSystemPrompt(agent, {
           name: row.requesterName ?? 'the member',
-          userId: row.requesterUserId,
+          username: row.requesterUsername,
         }),
     attempts: row.attempts,
     sessionId: row.sessionId,
@@ -391,10 +392,7 @@ async function readHistory(
 // What the agent is told before the task: the project, that a person is waiting in a
 // chat, who that person is, and last the operator's own instructions, which therefore
 // win over the generic parts.
-function buildSystemPrompt(
-  agent: RunnerAgent,
-  requester: { name: string; userId: string },
-): string {
+function buildSystemPrompt(agent: RunnerAgent, requester: Person): string {
   const instructions = agent.instructions?.trim();
   return (
     projectPreamble({ key: agent.projectKey, name: agent.projectName }) +

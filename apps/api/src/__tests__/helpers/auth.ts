@@ -6,6 +6,9 @@ export interface TestUser {
   cookie: string;
   userId: string;
   email: string;
+  // The handle the sign-up hook derived from the address, which is how a test
+  // mentions this user.
+  username: string;
 }
 
 let counter = 0;
@@ -41,9 +44,11 @@ export async function signUpTestUser(
   // them into a single Cookie header.
   const cookie = setCookies.map((c) => c.split(';')[0]).join('; ');
 
-  const body = (await response.json()) as { user?: { id?: string } };
+  const body = (await response.json()) as { user?: { id?: string; username?: string } };
   const userId = body.user?.id;
   if (!userId) throw new Error(`signUpTestUser: no user id returned for ${email}`);
+  const username = body.user?.username;
+  if (!username) throw new Error(`signUpTestUser: no username returned for ${email}`);
 
-  return { cookie, userId, email };
+  return { cookie, userId, email, username };
 }

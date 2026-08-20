@@ -9,7 +9,7 @@ import {
   projectColumn,
 } from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
-import { parseMentions } from '#modules/agents/core/mentions';
+import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
 import { autoWatchIssue, watcherUserIds } from '../../issues/watchers';
 import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
@@ -72,10 +72,10 @@ async function insertNotifications(rows: NewNotificationRow[]): Promise<void> {
 export async function notifyComment(
   projectId: number,
   comment: { issueId: number; id: number; actorUserId: string | null; body: string | null },
+  mentionedUsers: MentionedUsers,
 ): Promise<void> {
   const actor = comment.actorUserId;
-  const mentionedIds = parseMentions(comment.body ?? '');
-  const mentioned = await keepProjectMembers(projectId, mentionedIds);
+  const mentioned = new Set([...mentionedUsers.memberIds, ...mentionedUsers.agentUserIds]);
   await autoWatchIssue(projectId, comment.issueId, [actor, ...mentioned]);
   const watchers = await watcherUserIds(projectId, comment.issueId);
 
@@ -103,6 +103,41 @@ export async function notifyComment(
     });
   }
   await insertNotifications(rows);
+}
+
+// Fan out the mentions an issue's description or markdown custom field gained. Only
+// the handles the write added are reached, so re-saving a text keeps quiet about the
+// people it already named. Being mentioned subscribes to the issue, the same as it
+// does in a comment. Only the members named are reached: the text describes the work
+// rather than addressing anyone, so an agent named in it is neither notified nor
+// given a run — an agent is addressed in a comment, or given an issue by delegation.
+export async function notifyTextMentions(input: {
+  projectId: number;
+  issueId: number;
+  actorUserId: string | null;
+  // The change-log entry the write recorded, so the inbox item links to it.
+  sourceActivityId: number | null;
+  before: string;
+  after: string;
+}): Promise<void> {
+  const { projectId, issueId, actorUserId: actor } = input;
+  const handles = addedMentionHandles(input.before, input.after);
+  if (handles.length === 0) return;
+  const { memberIds } = await resolveMentionHandles(projectId, handles);
+  if (memberIds.length === 0) return;
+  await autoWatchIssue(projectId, issueId, memberIds);
+  await insertNotifications(
+    memberIds
+      .filter((userId) => userId !== actor)
+      .map((userId) => ({
+        userId,
+        projectId,
+        issueId,
+        sourceActivityId: input.sourceActivityId,
+        type: 'mentioned' as const,
+        actorUserId: actor,
+      })),
+  );
 }
 
 // Fan out issue field changes recorded by an update. A new assignee (if a member and

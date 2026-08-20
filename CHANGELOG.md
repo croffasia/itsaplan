@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.12.0](https://github.com/croffasia/itsaplan/compare/v0.11.0...v0.12.0) (2026-08-20)
+
+
+### Features
+
+* add usernames and let sign-in accept one ([#179](https://github.com/croffasia/itsaplan/issues/179)) ([7784ae1](https://github.com/croffasia/itsaplan/commit/7784ae1fffe7316bd4f0049a2a4fe1db4c67a47f))
+* log on the issue when an agent picks up its run and when it ends ([#169](https://github.com/croffasia/itsaplan/issues/169)) ([046cc49](https://github.com/croffasia/itsaplan/commit/046cc4947caf4bfa13fb3327488b0390fd1abe04))
+* mention people and agents by [@username](https://github.com/username) ([#180](https://github.com/croffasia/itsaplan/issues/180)) ([e0e8be6](https://github.com/croffasia/itsaplan/commit/e0e8be635bb1a4407afd4aefa0eb552a8d3b747b))
+* reply to comments in an issue thread ([#177](https://github.com/croffasia/itsaplan/issues/177)) ([20eccc5](https://github.com/croffasia/itsaplan/commit/20eccc54ab6f25f78e184454f6a8779f29c7499f))
+* **web:** tables in markdown ([#166](https://github.com/croffasia/itsaplan/issues/166)) ([391efdc](https://github.com/croffasia/itsaplan/commit/391efdcfdab40bb2ffb084ee66ec0e007f0d1983))
+* **web:** write agent instructions in the markdown editor ([#164](https://github.com/croffasia/itsaplan/issues/164)) ([dbb5f13](https://github.com/croffasia/itsaplan/commit/dbb5f1398c8c7c0a66af5e341ceb33c42568c64c))
+
+
+### Improvements
+
+* rework the agent create and edit form ([#171](https://github.com/croffasia/itsaplan/issues/171)) ([308b046](https://github.com/croffasia/itsaplan/commit/308b046236f570d374bdeabe7fd09f88eea72139))
+* **web:** group people and AI agents in the members list ([#172](https://github.com/croffasia/itsaplan/issues/172)) ([13344e6](https://github.com/croffasia/itsaplan/commit/13344e6f49e2ce6441c781a939613aee616bdb6a))
+* **web:** keep issue properties inside their width and make the sidebar resizable ([#178](https://github.com/croffasia/itsaplan/issues/178)) ([ac3a65f](https://github.com/croffasia/itsaplan/commit/ac3a65f9422ac96e6b3f086cd824b6e77ceede46))
+* **web:** manage an external agent's API key in its form ([#168](https://github.com/croffasia/itsaplan/issues/168)) ([4610626](https://github.com/croffasia/itsaplan/commit/4610626658e2408026a0918a4731c84b8d826c4a))
+* **web:** show the last comment as a bubble while the feed is off screen ([#174](https://github.com/croffasia/itsaplan/issues/174)) ([2f570fa](https://github.com/croffasia/itsaplan/commit/2f570fa499ac901116aee7e86907ec3cc954651d))
+
+
+### Bug Fixes
+
+* keep the dashboards page working when a stored layout is not a widget list ([#173](https://github.com/croffasia/itsaplan/issues/173)) ([1f25b67](https://github.com/croffasia/itsaplan/commit/1f25b675a1a4c4240a4cf8f2aa0b1664444a11ca))
+
+
+### Refactoring
+
+* **api:** restructure the api into feature modules (part 2) ([#167](https://github.com/croffasia/itsaplan/issues/167)) ([63d2f9c](https://github.com/croffasia/itsaplan/commit/63d2f9caed4fc05633a73080bf721b027b818398))
+
+
+### Documentation
+
+* make the individual the copyright holder and the Project Owner ([#175](https://github.com/croffasia/itsaplan/issues/175)) ([8cce23f](https://github.com/croffasia/itsaplan/commit/8cce23ffcb1a7659a53c557803ff7b9657839d2d))
+
+
+### Chores
+
+* **runner:** release 0.2.1 ([#176](https://github.com/croffasia/itsaplan/issues/176)) ([d3adf83](https://github.com/croffasia/itsaplan/commit/d3adf83cedbafbc2d9ce6d77d6a2fc4d91cc8024))
+
 ## [0.11.0](https://github.com/croffasia/itsaplan/compare/v0.10.1...v0.11.0) (2026-08-18)
 
 

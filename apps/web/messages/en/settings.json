@@ -441,6 +441,11 @@
     "importSummary": "{count, plural, one {# state} other {# states}} will be applied. A matching state keeps its group; only its color is updated.",
     "importApply": "{count, plural, one {Apply # state} other {Apply # states}}",
     "imported": "Applied states: {created} created, {updated} updated.",
+    "autoAssign": {
+      "none": "No auto-assign",
+      "help": "Issues entering this state are assigned to this member, replacing whoever held them.",
+      "rowTitle": "Issues entering this state go to {name}"
+    },
     "wip": {
       "label": "Work-in-progress limit",
       "none": "No limit",

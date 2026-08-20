@@ -118,6 +118,9 @@ export interface Column {
   // whether passing it only warns on the board or is refused outright.
   wipLimit: number | null;
   wipMode: WipMode;
+  // The member every issue entering this column is assigned to, replacing whoever
+  // held it.
+  autoAssignUserId: string | null;
 }
 
 export type WipMode = 'soft' | 'hard';
@@ -2255,6 +2258,7 @@ export const api = {
       color?: string;
       wipLimit?: number | null;
       wipMode?: WipMode;
+      autoAssignUserId?: string | null;
     },
   ) =>
     request<Column>(`/projects/${projectKey}/columns`, {
@@ -2271,6 +2275,8 @@ export const api = {
       // null clears the limit; absent leaves it as it is.
       wipLimit?: number | null;
       wipMode?: WipMode;
+      // null clears the automatic assignment; absent leaves it as it is.
+      autoAssignUserId?: string | null;
     },
   ) =>
     request<Column>(`/projects/${projectKey}/columns/${columnId}`, {

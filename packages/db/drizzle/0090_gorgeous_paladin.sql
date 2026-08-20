@@ -1,0 +1,2 @@
+ALTER TABLE "project_column" ADD COLUMN "auto_assign_user_id" text;--> statement-breakpoint
+ALTER TABLE "project_column" ADD CONSTRAINT "project_column_auto_assign_user_id_user_id_fk" FOREIGN KEY ("auto_assign_user_id") REFERENCES "public"."user"("id") ON DELETE set null ON UPDATE no action;

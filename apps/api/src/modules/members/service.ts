@@ -1,4 +1,12 @@
-import { db, projectMember, projectRole, user, aiAgent, userPreference } from '@repo/db';
+import {
+  db,
+  projectMember,
+  projectRole,
+  projectColumn,
+  user,
+  aiAgent,
+  userPreference,
+} from '@repo/db';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
 import { DEFAULT_TIMEZONE } from '#modules/user-preferences/service';
@@ -273,9 +281,19 @@ export async function setMembership(
 }
 
 export async function removeMember(projectId: number, userId: string): Promise<void> {
-  await db
-    .delete(projectMember)
-    .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(projectMember)
+      .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)));
+    // A column cannot keep assigning issues to someone who is no longer a member:
+    // the same assignment sent as a patch would be refused.
+    await tx
+      .update(projectColumn)
+      .set({ autoAssignUserId: null })
+      .where(
+        and(eq(projectColumn.projectId, projectId), eq(projectColumn.autoAssignUserId, userId)),
+      );
+  });
 }
 
 export async function countOwners(projectId: number): Promise<number> {

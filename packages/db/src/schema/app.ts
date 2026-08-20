@@ -283,6 +283,11 @@ export const projectColumn = pgTable(
     // read when wipLimit is set.
     wipLimit: integer('wip_limit'),
     wipMode: text('wip_mode').notNull().default('soft'),
+    // The member an issue is assigned to when it enters this column, replacing
+    // whoever held it. NULL leaves the assignee alone.
+    autoAssignUserId: text('auto_assign_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

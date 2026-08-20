@@ -631,6 +631,13 @@
       "when": 1787213581571,
       "tag": "0089_awesome_echo",
       "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1787232280651,
+      "tag": "0090_gorgeous_paladin",
+      "breakpoints": true
     }
   ]
 }

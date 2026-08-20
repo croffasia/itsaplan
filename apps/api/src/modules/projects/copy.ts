@@ -353,6 +353,8 @@ export async function copyProject(
         .from(projectColumn)
         .where(eq(projectColumn.projectId, sourceProjectId))
         .orderBy(projectColumn.position);
+      // autoAssignUserId is left unset: the copy starts with only its owner as a
+      // member, so a carried-over member would not be one there.
       for (const col of columnRows) {
         const [created] = await tx
           .insert(projectColumn)

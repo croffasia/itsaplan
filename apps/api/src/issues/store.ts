@@ -56,7 +56,7 @@ import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/serv
 import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import { applySubtaskAutomation } from './automation';
-import { assertWipLimit, wipLimitBreach } from '#modules/columns/service';
+import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
 
 // Data access for issues and their per-issue data: labels, custom field values,
 // and selected options. The human identifier (e.g. "MKT-42") is the project key
@@ -812,6 +812,9 @@ export async function createIssue(
   await assertParent(project.id, null, input.parentId);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
+  // An issue created in a column enters it the same way a moved one does, so the
+  // column's auto-assignee applies. An assignee sent with the create wins over it.
+  const assigneeUserId = input.assigneeUserId ?? (await columnAutoAssignee(input.columnId));
   const issueId = await db.transaction(async (tx) => {
     const [seqRow] = await tx
       .update(projectTable)
@@ -831,7 +834,7 @@ export async function createIssue(
         typeId: input.typeId ?? null,
         initiativeId: input.initiativeId ?? null,
         cycleId: input.cycleId ?? null,
-        assigneeUserId: input.assigneeUserId ?? null,
+        assigneeUserId,
         delegateUserId: input.delegateUserId ?? null,
         columnId: input.columnId,
         parentId: input.parentId ?? null,
@@ -964,15 +967,23 @@ export async function updateIssue(
   await assertInitiative(before.projectId, patch.initiativeId);
   await assertCycle(before.projectId, patch.cycleId, before.cycleId);
   await assertColumn(before.projectId, patch.columnId);
+  const movedToColumnId =
+    patch.columnId !== undefined && patch.columnId !== before.columnId ? patch.columnId : null;
   // Only a move into a different column consumes capacity, so re-saving an issue
   // that already sits in a full column is never refused.
-  if (patch.columnId !== undefined && patch.columnId !== before.columnId) {
-    const breach = await wipLimitBreach(patch.columnId);
+  if (movedToColumnId !== null) {
+    const breach = await wipLimitBreach(movedToColumnId);
     if (breach && !opts?.skipIfColumnFull) throw breach;
     if (breach) return getIssue(id);
   }
   await assertIssueType(before.projectId, patch.typeId);
   await assertParent(before.projectId, id, patch.parentId);
+
+  // An assignee sent with the same move wins over the column's auto-assignee.
+  const autoAssignee =
+    movedToColumnId !== null && patch.assigneeUserId === undefined
+      ? await columnAutoAssignee(movedToColumnId)
+      : null;
 
   const set: Partial<typeof issue.$inferInsert> = {};
   if (patch.columnId !== undefined) set.columnId = patch.columnId;
@@ -982,6 +993,7 @@ export async function updateIssue(
   if (patch.initiativeId !== undefined) set.initiativeId = patch.initiativeId;
   if (patch.cycleId !== undefined) set.cycleId = patch.cycleId;
   if (patch.assigneeUserId !== undefined) set.assigneeUserId = patch.assigneeUserId;
+  else if (autoAssignee) set.assigneeUserId = autoAssignee;
   if (patch.delegateUserId !== undefined) set.delegateUserId = patch.delegateUserId;
   if (patch.title !== undefined) set.title = patch.title;
   if (patch.description !== undefined) set.description = patch.description;

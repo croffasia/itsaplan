@@ -75,7 +75,8 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       detail: {
         summary: 'Update a column',
         description:
-          "Update a column's name, stateType, color, or its WIP limit " + '(wipLimit / wipMode).',
+          "Update a column's name, stateType, color, its WIP limit " +
+          '(wipLimit / wipMode), or its auto-assignee (autoAssignUserId).',
         ...mcpTool('update_column'),
       },
     },

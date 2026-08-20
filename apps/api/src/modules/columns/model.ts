@@ -19,6 +19,7 @@ export const ColumnResponse = t.Object({
   position: t.Number(),
   wipLimit: t.Union([t.Number(), t.Null()]),
   wipMode: t.String(),
+  autoAssignUserId: t.Union([t.String(), t.Null()]),
 });
 
 export const ColumnListResponse = t.Array(ColumnResponse);
@@ -43,6 +44,15 @@ export const createColumnBody = t.Object({
         'What happens at wipLimit: "soft" only warns on the board, ' +
         '"hard" refuses an issue entering a full column with a 409.',
     }),
+  ),
+  autoAssignUserId: t.Optional(
+    t.Nullable(
+      t.String({
+        description:
+          'A project member every issue entering this column is assigned to, ' +
+          'replacing its current assignee. null for no automatic assignment.',
+      }),
+    ),
   ),
 });
 

@@ -7,8 +7,10 @@ import { type Column, type ProjectDetail, type StateType, type WipMode } from '@
 import { useDndSensors } from '@/lib/dnd';
 import { STATE_TYPES } from '@/utils/fieldOptions';
 import { DEFAULT_COLOR } from '@/utils/project';
+import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import { Button } from '@/components/ui/button';
 import { ItemGroup } from '@/components/ui/item';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import SettingsColorField from '../crud/SettingsColorField';
 import { SettingsEmpty } from '../crud/SettingsEmpty';
 import { SettingsInlineEditForm } from '../crud/SettingsInlineEditForm';
@@ -35,6 +37,7 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
     limit: null,
     mode: 'soft',
   });
+  const [editAutoAssign, setEditAutoAssign] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<Column | null>(null);
   const t = useTranslations('settings.states');
   const tCommon = useTranslations('common');
@@ -96,6 +99,7 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
     setEditName(c.name);
     setEditColor(c.color);
     setEditWip({ limit: c.wipLimit, mode: c.wipMode });
+    setEditAutoAssign(c.autoAssignUserId);
   }
 
   async function saveEdit(c: Column) {
@@ -107,6 +111,7 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
         color: editColor,
         wipLimit: editWip.limit,
         wipMode: editWip.mode,
+        autoAssignUserId: editAutoAssign,
       },
     });
     setEditingId(null);
@@ -160,17 +165,35 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
                           onCancel={() => setEditingId(null)}
                           leading={<SettingsColorField value={editColor} onChange={setEditColor} />}
                           trailing={
-                            <SettingsWipLimitField
-                              limit={editWip.limit}
-                              mode={editWip.mode}
-                              onChange={(limit, mode) => setEditWip({ limit, mode })}
-                            />
+                            <>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span>
+                                    <AssigneeSelect
+                                      assignees={project.assignees}
+                                      value={editAutoAssign}
+                                      onChange={setEditAutoAssign}
+                                      placeholder={t('autoAssign.none')}
+                                    />
+                                  </span>
+                                </TooltipTrigger>
+                                <TooltipContent>{t('autoAssign.help')}</TooltipContent>
+                              </Tooltip>
+                              <SettingsWipLimitField
+                                limit={editWip.limit}
+                                mode={editWip.mode}
+                                onChange={(limit, mode) => setEditWip({ limit, mode })}
+                              />
+                            </>
                           }
                         />
                       ) : (
                         <SettingsStateRow
                           key={c.id}
                           column={c}
+                          autoAssignee={project.assignees.find(
+                            (a) => a.userId === c.autoAssignUserId,
+                          )}
                           onEdit={() => startEdit(c)}
                           onDelete={() => setDeleting(c)}
                         />

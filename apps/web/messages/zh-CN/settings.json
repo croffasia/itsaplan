@@ -441,6 +441,11 @@
     "importSummary": "将应用 {count, plural, other {# 个状态}}。匹配的状态保留分组，只更新颜色。",
     "importApply": "{count, plural, other {应用 # 个状态}}",
     "imported": "已应用状态：新建 {created} 个，更新 {updated} 个。",
+    "autoAssign": {
+      "none": "不自动指派",
+      "help": "进入该状态的工作项将指派给该成员，并替换原负责人。",
+      "rowTitle": "进入该状态的工作项将指派给 {name}"
+    },
     "wip": {
       "label": "在制品上限",
       "none": "不限制",

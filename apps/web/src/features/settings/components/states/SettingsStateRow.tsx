@@ -1,12 +1,14 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Pencil, Trash2 } from 'lucide-react';
+import { GripVertical, Pencil, Trash2, UserPlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type Column } from '@/lib/api';
+import { type Assignee, type Column } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { Item, ItemActions, ItemContent, ItemMedia, ItemTitle } from '@/components/ui/item';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSettingsCan } from '../../context/settingsPermission';
 
 // One sortable state row. The whole row is the sortable node; the grip is the
@@ -14,10 +16,12 @@ import { useSettingsCan } from '../../context/settingsPermission';
 // be deleted, so its delete action is hidden.
 export function SettingsStateRow({
   column,
+  autoAssignee,
   onEdit,
   onDelete,
 }: {
   column: Column;
+  autoAssignee?: Assignee;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -57,6 +61,22 @@ export function SettingsStateRow({
       <ItemContent>
         <ItemTitle>{column.name}</ItemTitle>
       </ItemContent>
+      {autoAssignee && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground">
+              <UserPlus className="size-3.5" />
+              <Avatar
+                name={autoAssignee.name}
+                image={autoAssignee.image}
+                className="size-4 text-[8px]"
+              />
+              {autoAssignee.name}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{t('autoAssign.rowTitle', { name: autoAssignee.name })}</TooltipContent>
+        </Tooltip>
+      )}
       {column.wipLimit != null && (
         <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
           {column.wipMode === 'hard'

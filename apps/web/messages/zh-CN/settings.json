@@ -323,7 +323,13 @@
     "chooseCredential": "选择凭据",
     "noCredential": "尚无 {integration} 凭据。请先在集成页面添加。",
     "deleteMessage": "移除 {tool}？使用它的代理将无法再访问此工具。",
-    "scopesUpper": "权限范围"
+    "scopesUpper": "权限范围",
+    "selectGroup": "全选",
+    "clearGroup": "清除",
+    "selectedCount": "{count, plural, other {已选择 # 个工具}}",
+    "oneIntegration": "请选择同一集成的工具，它们使用同一份凭据。",
+    "continue": "继续",
+    "alreadyAdded": "{count, plural, other {其中 # 个工具已在该凭据上配置，将被跳过。}}"
   },
   "notifications": {
     "title": "通知",

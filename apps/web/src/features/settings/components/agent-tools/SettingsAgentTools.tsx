@@ -12,8 +12,9 @@ import { integrationLabel } from '../../utils/integrationLabels';
 import { useTranslations } from 'next-intl';
 
 // Project settings for configured tools: a catalog tool bound to an integration
-// credential. Adding picks a tool and a credential of its integration; deleting
-// confirms first. Enabling a configured tool on an agent is done on the agent editor.
+// credential. Adding picks one or more tools of one integration and a credential of
+// that integration; deleting confirms first. Enabling a configured tool on an agent is
+// done on the agent editor.
 export default function SettingsAgentTools({ project }: { project: ProjectDetail }) {
   const t = useTranslations('settings.tools');
   const tCommon = useTranslations('common');

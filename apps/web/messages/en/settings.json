@@ -323,7 +323,13 @@
     "chooseCredential": "Choose a credential",
     "noCredential": "No {integration} credential yet. Add one on the Integrations page first.",
     "deleteMessage": "Remove {tool}? Agents using it will lose access to this tool.",
-    "scopesUpper": "Scopes"
+    "scopesUpper": "Scopes",
+    "selectGroup": "Select all",
+    "clearGroup": "Clear",
+    "selectedCount": "{count, plural, one {# tool selected} other {# tools selected}}",
+    "oneIntegration": "Pick tools of one integration — they run on one credential.",
+    "continue": "Continue",
+    "alreadyAdded": "{count, plural, one {# tool is already on this credential and is skipped.} other {# tools are already on this credential and are skipped.}}"
   },
   "notifications": {
     "title": "Notifications",

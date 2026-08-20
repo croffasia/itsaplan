@@ -16,9 +16,9 @@ export interface ToolOption {
   integrationLabel: string;
 }
 
-// Add a configured tool in two steps: pick a tool from the searchable, grouped catalog
-// (ToolPicker), then pick a credential of its integration to run it on
-// (ToolCredentialStep).
+// Add configured tools in two steps: pick one or more tools of the same integration from
+// the searchable, grouped catalog (ToolPicker), then pick a credential of that
+// integration to run them on (ToolCredentialStep).
 export function ToolConfigDialog({
   projectKey,
   catalog,
@@ -36,11 +36,11 @@ export function ToolConfigDialog({
       catalog
         .filter((i) => i.kind === 'tool')
         .flatMap((i) =>
-          i.tools.map((t) => ({
-            toolKey: t.key,
-            label: t.label,
-            description: t.description,
-            scopes: t.scopes ?? [],
+          i.tools.map((tool) => ({
+            toolKey: tool.key,
+            label: tool.label,
+            description: tool.description,
+            scopes: tool.scopes ?? [],
             integrationKey: i.key,
             integrationLabel: i.label,
           })),
@@ -48,21 +48,20 @@ export function ToolConfigDialog({
     [catalog],
   );
 
-  const [toolKey, setToolKey] = useState<string | null>(null);
-  const tool = toolOptions.find((t) => t.toolKey === toolKey);
+  const [tools, setTools] = useState<ToolOption[]>([]);
 
   return (
     <Modal title={t('add')} projectKey={projectKey} onClose={onClose} wide>
-      {tool ? (
+      {tools.length > 0 ? (
         <ToolCredentialStep
           projectKey={projectKey}
-          tool={tool}
+          tools={tools}
           credentials={credentials}
-          onBack={() => setToolKey(null)}
+          onBack={() => setTools([])}
           onDone={onClose}
         />
       ) : (
-        <ToolPicker options={toolOptions} onSelect={setToolKey} />
+        <ToolPicker options={toolOptions} onSubmit={setTools} />
       )}
     </Modal>
   );

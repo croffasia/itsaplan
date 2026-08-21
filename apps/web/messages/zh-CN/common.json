@@ -143,5 +143,9 @@
     "tableAddColumn": "添加列",
     "tableDeleteColumn": "删除列",
     "tableDelete": "删除表格"
+  },
+  "chart": {
+    "download": "保存图表",
+    "downloadFailed": "图表保存失败"
   }
 }

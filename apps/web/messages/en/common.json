@@ -143,5 +143,9 @@
     "tableAddColumn": "Add column",
     "tableDeleteColumn": "Delete column",
     "tableDelete": "Delete table"
+  },
+  "chart": {
+    "download": "Save chart",
+    "downloadFailed": "The chart could not be saved"
   }
 }

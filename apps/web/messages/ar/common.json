@@ -143,5 +143,9 @@
     "tableAddColumn": "إضافة عمود",
     "tableDeleteColumn": "حذف عمود",
     "tableDelete": "حذف الجدول"
+  },
+  "chart": {
+    "download": "احفظ الرسم البياني",
+    "downloadFailed": "مقدرناش نحفظ الرسم البياني"
   }
 }

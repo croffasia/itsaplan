@@ -105,6 +105,7 @@ export const app = new Elysia()
             name: 'Analytics',
             description: 'Project metrics: stats, pulse, throughput, breakdowns, activity',
           },
+          { name: 'Charts', description: 'Chart specs an agent builds to show in a chat' },
           {
             name: 'Webhook test',
             description: 'Test receiver for inspecting webhook deliveries (dev aid)',

@@ -210,10 +210,17 @@ export const AGENT_ACTIONS: ToolMeta[] = [
   },
 ];
 
-// Read-only actions, always granted to an internal agent so it can see its project
-// regardless of which actions it is allowed to take. Listed for the UI only; these
-// keys are never stored on the agent (see normalizeToolKeys).
+// Actions that change nothing, always granted to an internal agent so it can read its
+// project and show what it found, regardless of which actions it is allowed to take.
+// Listed for the UI only; these keys are never stored on the agent (see normalizeToolKeys).
 export const ALWAYS_ON_ACTIONS: ToolMeta[] = [
+  {
+    key: 'create_chart',
+    group: 'project',
+    label: 'Draw charts',
+    description: 'Build a chart to show in the chat instead of writing the numbers out.',
+    always: true,
+  },
   {
     key: 'get_current_date',
     group: 'project',

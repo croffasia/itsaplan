@@ -143,5 +143,9 @@
     "tableAddColumn": "Додати стовпець",
     "tableDeleteColumn": "Видалити стовпець",
     "tableDelete": "Видалити таблицю"
+  },
+  "chart": {
+    "download": "Зберегти графік",
+    "downloadFailed": "Не вдалося зберегти графік"
   }
 }

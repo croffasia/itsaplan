@@ -1,6 +1,7 @@
 import { Cell, Pie, PieChart } from 'recharts';
 import { useTranslations } from 'next-intl';
 import type { BreakdownBy, WidgetConfig } from '@/utils/dashboardWidgets';
+import { CHART_PALETTE } from '@/utils/chartSpec';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { useBreakdownQuery } from '../../services/analytics.service';
@@ -8,19 +9,6 @@ import { useBreakdownQuery } from '../../services/analytics.service';
 // The dimensions the counts can be grouped by, in picker order. Their labels are
 // messages under `dashboards.breakdown.by`.
 export const BY_OPTIONS: BreakdownBy[] = ['status', 'priority', 'type', 'assignee', 'delegate'];
-
-// Fallback slice colors for categories without their own color (priority,
-// assignee). Status and type carry their entity color and use it directly.
-const PALETTE = [
-  '#6366f1',
-  '#22c55e',
-  '#eab308',
-  '#ec4899',
-  '#06b6d4',
-  '#f97316',
-  '#8b5cf6',
-  '#64748b',
-];
 
 // Issue counts grouped by a chosen dimension, drawn as a donut. The dimension is a
 // per-widget config choice, edited from the header settings popover (see
@@ -41,7 +29,9 @@ export default function BreakdownWidget({
   const chartData = items.map((i, idx) => ({
     name: i.label,
     value: i.count,
-    fill: i.color ?? PALETTE[idx % PALETTE.length],
+    // Status and type carry their entity color; the other dimensions fall back to
+    // the shared chart palette.
+    fill: i.color ?? CHART_PALETTE[idx % CHART_PALETTE.length],
   }));
 
   function chart() {

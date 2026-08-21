@@ -46,14 +46,26 @@ The worker logs the exact body before each send.
 - The runtime: Bun version, OS and architecture, Postgres major version, whether it
   runs in Docker.
 - How many users, projects and issues there are, plus how many users signed in and how
-  many issues were created in the last 30 days. All of it as size ranges (`6-20`,
-  `101-1000`), never exact numbers.
-- Which features are used at all, as yes/no: initiatives, note boards, dashboards,
-  saved views, custom fields, label groups, project actions, attachments.
+  many issues were created in the last 30 days, and how much space attachments take.
+  All of it as size ranges (`6-20`, `101-1000`), never exact numbers.
+- Which features are used, as yes/no, twice over: ever, and in the last 30 days.
+  Initiatives, note boards, dashboards, saved views, custom fields, label groups,
+  project actions, attachments, cycles, checklists, sub-issues, issue links, watchers,
+  shared issues, shared views, agent chats, agent skills.
+- Which optional sections a project switched off in Settings -> Features, as yes/no.
 - Which integrations are set up and switched on, as yes/no: email, Google sign-in,
-  Telegram bot, webhooks, API keys, MCP, per-project integration credentials.
-- AI agents: how many, how many runs in the last 30 days (as ranges), whether
-  schedules are used.
+  Telegram bot, webhooks, API keys, MCP, repository hosting, per-project integration
+  credentials.
+- Which integrations hold a credential, by their catalogue key (`openai`, `jina`), and
+  which repository hosts have delivered (`github`, `gitlab`, `gitea`, `forgejo`,
+  `bitbucket`). The keys only, never a credential or a repository name.
+- The sign-up policy: whether registration is open, invite-only or closed, whether
+  email has to be confirmed, whether magic links are on.
+- The interface languages users picked, as language codes.
+- AI agents: how many, how many are internal and how many external, how many runs in
+  the last 30 days (as ranges), how many skills, how many chats, whether schedules are
+  used, whether an external agent's runner polled in the last 30 days, and which
+  triggers started a run (mention, delegation, schedule, manual).
 - The share of webhook deliveries and of agent runs that failed in the last 30 days.
 
 ## What is never sent

@@ -1,7 +1,9 @@
 // Shapes the daily telemetry snapshot. Pure, so the rules are unit-tested.
 //
 // Counts go out as buckets, never exact, and nothing here carries a name, key, title,
-// address or email. See TELEMETRY.md.
+// address or email. The string lists (integration keys, git providers, locales) hold
+// identifiers from a fixed catalogue, never anything an operator typed. See
+// TELEMETRY.md.
 
 export interface InstanceCounts {
   users: number;
@@ -9,20 +11,22 @@ export interface InstanceCounts {
   projects: number;
   issues: number;
   issuesCreated30d: number;
+  attachmentMb: number;
   agents: number;
+  internalAgents: number;
+  externalAgents: number;
   agentRuns30d: number;
   agentRunsFailed30d: number;
+  agentSkills: number;
+  agentChats30d: number;
   webhookDeliveries30d: number;
   webhookDeliveriesFailed30d: number;
-  hasInitiatives: boolean;
-  hasNoteBoards: boolean;
-  hasDashboards: boolean;
-  hasCustomViews: boolean;
-  hasCustomFields: boolean;
-  hasLabelGroups: boolean;
-  hasProjectActions: boolean;
-  hasAttachments: boolean;
   hasAgentSchedules: boolean;
+  hasActiveRunners: boolean;
+  runByMention30d: boolean;
+  runByDelegation30d: boolean;
+  runBySchedule30d: boolean;
+  runByManual30d: boolean;
   hasWebhooks: boolean;
   hasApiKeys: boolean;
   hasMcpProject: boolean;
@@ -30,6 +34,14 @@ export interface InstanceCounts {
   hasGoogleOauth: boolean;
   hasTelegramBot: boolean;
   hasProjectIntegrations: boolean;
+  hasGit: boolean;
+}
+
+// Instance-wide authentication policy, as stored in app_setting.
+export interface AuthPolicy {
+  registration: 'open' | 'invite' | 'closed';
+  emailVerification: boolean;
+  magicLink: boolean;
 }
 
 export interface PulseInput {
@@ -44,6 +56,21 @@ export interface PulseInput {
   platform: string;
   postgresMajor: number | null;
   counts: InstanceCounts;
+  // Whether each feature was ever used, and whether it was used in the last 30 days.
+  // Both maps carry the same keys.
+  features: Record<string, boolean>;
+  featuresUsed30d: Record<string, boolean>;
+  // Whether at least one project switched an optional section off.
+  featuresDisabled: Record<string, boolean>;
+  // Catalogue keys of the integrations credentials are stored for, e.g. 'openai',
+  // 'jina'. Never the credentials themselves.
+  integrationKeys: string[];
+  // Repository hosts that have delivered: 'github', 'gitlab', 'gitea', 'forgejo',
+  // 'bitbucket'. Never a repository name.
+  gitProviders: string[];
+  auth: AuthPolicy;
+  // Interface languages the users of this instance picked, e.g. 'en', 'ru'.
+  locales: string[];
 }
 
 // Upper bound of each bucket paired with its label; above the last one, OVERFLOW.
@@ -92,19 +119,11 @@ export function buildPulse(input: PulseInput) {
       projects: bucket(c.projects),
       issues: bucket(c.issues),
       issuesCreated30d: bucket(c.issuesCreated30d),
+      attachmentMb: bucket(c.attachmentMb),
     },
-    // Roles and issue types are absent: every project is seeded with both, so their
-    // presence does not distinguish real use from the seed.
-    features: {
-      initiatives: c.hasInitiatives,
-      noteBoards: c.hasNoteBoards,
-      dashboards: c.hasDashboards,
-      customViews: c.hasCustomViews,
-      customFields: c.hasCustomFields,
-      labelGroups: c.hasLabelGroups,
-      projectActions: c.hasProjectActions,
-      attachments: c.hasAttachments,
-    },
+    features: input.features,
+    featuresUsed30d: input.featuresUsed30d,
+    featuresDisabled: input.featuresDisabled,
     // Which are configured, never any part of the configuration.
     integrations: {
       email: c.hasEmail,
@@ -114,11 +133,32 @@ export function buildPulse(input: PulseInput) {
       apiKeys: c.hasApiKeys,
       mcp: c.hasMcpProject,
       projectIntegrations: c.hasProjectIntegrations,
+      git: c.hasGit,
     },
+    integrationKeys: input.integrationKeys,
+    git: {
+      enabled: c.hasGit,
+      providers: input.gitProviders,
+    },
+    auth: input.auth,
+    locales: input.locales,
     ai: {
       agents: bucket(c.agents),
+      internal: bucket(c.internalAgents),
+      external: bucket(c.externalAgents),
       runs30d: bucket(c.agentRuns30d),
       schedules: c.hasAgentSchedules,
+      // An external agent whose runner polled in the last 30 days.
+      activeRunners: c.hasActiveRunners,
+      skills: bucket(c.agentSkills),
+      chats30d: bucket(c.agentChats30d),
+      // Which ways of starting a run are actually used.
+      triggers: {
+        mention: c.runByMention30d,
+        delegation: c.runByDelegation30d,
+        schedule: c.runBySchedule30d,
+        manual: c.runByManual30d,
+      },
     },
     health: {
       webhookFailureRate30d: failureRate(c.webhookDeliveriesFailed30d, c.webhookDeliveries30d),

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'bun:test';
-import { bucket, buildPulse, failureRate, type InstanceCounts } from '../../telemetry-payload';
+import {
+  bucket,
+  buildPulse,
+  failureRate,
+  type InstanceCounts,
+  type PulseInput,
+} from '../../telemetry-payload';
 
 describe('bucket', () => {
   it('reports zero and one exactly', () => {
@@ -47,30 +53,33 @@ const counts: InstanceCounts = {
   projects: 2,
   issues: 412,
   issuesCreated30d: 30,
+  attachmentMb: 140,
   agents: 1,
+  internalAgents: 1,
+  externalAgents: 0,
   agentRuns30d: 20,
   agentRunsFailed30d: 5,
+  agentSkills: 3,
+  agentChats30d: 8,
   webhookDeliveries30d: 0,
   webhookDeliveriesFailed30d: 0,
-  hasInitiatives: true,
-  hasNoteBoards: false,
-  hasDashboards: true,
-  hasCustomViews: true,
-  hasCustomFields: false,
-  hasLabelGroups: true,
-  hasProjectActions: false,
-  hasAttachments: true,
   hasAgentSchedules: false,
+  hasActiveRunners: false,
+  runByMention30d: true,
+  runByDelegation30d: false,
+  runBySchedule30d: false,
+  runByManual30d: true,
   hasWebhooks: false,
   hasApiKeys: false,
   hasMcpProject: true,
   hasEmail: true,
   hasGoogleOauth: false,
   hasTelegramBot: true,
-  hasProjectIntegrations: false,
+  hasProjectIntegrations: true,
+  hasGit: true,
 };
 
-const input = {
+const input: PulseInput = {
   instanceId: '3f2504e0-4f89-11d3-9a0c-0305e82c3301',
   day: '2026-07-27',
   installedDay: '2026-07-10',
@@ -80,6 +89,13 @@ const input = {
   platform: 'linux/arm64',
   postgresMajor: 17,
   counts,
+  features: { initiatives: true, noteBoards: false, cycles: true },
+  featuresUsed30d: { initiatives: false, noteBoards: false, cycles: true },
+  featuresDisabled: { initiatives: false, notes: true },
+  integrationKeys: ['jina', 'openai'],
+  gitProviders: ['github'],
+  auth: { registration: 'invite', emailVerification: true, magicLink: false },
+  locales: ['en', 'ru'],
 };
 
 describe('buildPulse', () => {
@@ -91,6 +107,7 @@ describe('buildPulse', () => {
       projects: '2-5',
       issues: '101-1000',
       issuesCreated30d: '21-100',
+      attachmentMb: '101-1000',
     });
     expect(JSON.stringify(pulse)).not.toContain('412');
   });
@@ -120,5 +137,33 @@ describe('buildPulse', () => {
     expect(pulse.features.noteBoards).toBe(false);
     expect(pulse.integrations.telegramBot).toBe(true);
     expect(pulse.integrations.webhooks).toBe(false);
+  });
+
+  it('separates what was ever used from what was used in the last 30 days', () => {
+    const pulse = buildPulse(input);
+    expect(pulse.features.initiatives).toBe(true);
+    expect(pulse.featuresUsed30d.initiatives).toBe(false);
+    expect(pulse.featuresDisabled.notes).toBe(true);
+  });
+
+  it('carries catalogue identifiers, never what an operator typed', () => {
+    const pulse = buildPulse(input);
+    expect(pulse.integrationKeys).toEqual(['jina', 'openai']);
+    expect(pulse.git).toEqual({ enabled: true, providers: ['github'] });
+    expect(pulse.locales).toEqual(['en', 'ru']);
+    expect(pulse.auth.registration).toBe('invite');
+  });
+
+  it('reports agent kinds and the triggers that started a run', () => {
+    const pulse = buildPulse(input);
+    expect(pulse.ai.internal).toBe('1');
+    expect(pulse.ai.external).toBe('0');
+    expect(pulse.ai.skills).toBe('2-5');
+    expect(pulse.ai.triggers).toEqual({
+      mention: true,
+      delegation: false,
+      schedule: false,
+      manual: true,
+    });
   });
 });

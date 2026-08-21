@@ -259,6 +259,31 @@ export default function NewIssueModal({
     }
   }
 
+  // Enter creates the issue when the caret is in the title, or when no element has
+  // focus: Radix then keeps focus on the dialog element itself. The handler ignores
+  // focus inside the body editors or a nested dialog.
+  const titleRef = useRef<HTMLInputElement>(null);
+  // No dependency array: the handler reads the title and the saving flag of the
+  // current render, so React registers it again after every render.
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'Enter' || e.shiftKey || e.metaKey || e.ctrlKey || e.altKey || e.isComposing)
+        return;
+      const active = document.activeElement;
+      const isTitleFocused = active === titleRef.current;
+      const isDialogFocused =
+        active instanceof HTMLElement &&
+        active.getAttribute('role') === 'dialog' &&
+        active.contains(titleRef.current);
+      if (!isTitleFocused && !isDialogFocused) return;
+      e.preventDefault();
+      if (saving || !title.trim()) return;
+      void submit();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  });
+
   return (
     <Modal
       title={t('title')}
@@ -280,6 +305,7 @@ export default function NewIssueModal({
             positioned ancestor, so the overlay covers the whole modal. */}
         {draggedFiles !== null && <NewIssueDropOverlay count={draggedFiles} />}
         <input
+          ref={titleRef}
           // `auto` once there is something to read, so a title keeps the script it
           // was typed in. While the field is empty there is nothing to read from,
           // and it would fall back to left-to-right and strand the placeholder.

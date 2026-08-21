@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 // A labelled read-only value with a copy button: the payload URL and secret the
-// user pastes into GitHub's webhook form. `masked` hides the value until copied.
-export default function GithubCopyField({
+// user pastes into the repository's webhook form. `masked` hides the value until
+// the field is focused.
+export default function GitCopyField({
   label,
   value,
   masked = false,
@@ -18,7 +19,7 @@ export default function GithubCopyField({
   masked?: boolean;
   action?: ReactNode;
 }) {
-  const t = useTranslations('settings.github');
+  const t = useTranslations('settings.git');
   const tCommon = useTranslations('common');
   const [revealed, setRevealed] = useState(false);
 

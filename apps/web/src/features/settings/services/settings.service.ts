@@ -143,28 +143,28 @@ export function useUpdateSubtaskAutomation(projectKey: string) {
   });
 }
 
-// GitHub section: the inbound webhook connection and its PR automations.
-export function useGithubSettingsQuery(projectKey: string) {
+// Repository section: the inbound webhook connection and its pull request automations.
+export function useGitSettingsQuery(projectKey: string) {
   return useQuery({
-    queryKey: qk.githubSettings(projectKey),
-    queryFn: () => api.getGithubSettings(projectKey),
+    queryKey: qk.gitSettings(projectKey),
+    queryFn: () => api.getGitSettings(projectKey),
   });
 }
 
-export function useUpdateGithubSettings(projectKey: string) {
+export function useUpdateGitSettings(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: Parameters<typeof api.updateGithubSettings>[1]) =>
-      api.updateGithubSettings(projectKey, patch),
-    onSuccess: (data) => qc.setQueryData(qk.githubSettings(projectKey), data),
+    mutationFn: (patch: Parameters<typeof api.updateGitSettings>[1]) =>
+      api.updateGitSettings(projectKey, patch),
+    onSuccess: (data) => qc.setQueryData(qk.gitSettings(projectKey), data),
   });
 }
 
-export function useRegenerateGithubSecret(projectKey: string) {
+export function useRegenerateGitSecret(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.regenerateGithubSecret(projectKey),
-    onSuccess: (data) => qc.setQueryData(qk.githubSettings(projectKey), data),
+    mutationFn: () => api.regenerateGitSecret(projectKey),
+    onSuccess: (data) => qc.setQueryData(qk.gitSettings(projectKey), data),
   });
 }
 

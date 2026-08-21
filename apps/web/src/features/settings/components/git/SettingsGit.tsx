@@ -5,19 +5,19 @@ import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsRow from '@/components/common/page/SettingsRow';
 import { Switch } from '@/components/ui/switch';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useGithubSettingsQuery, useUpdateGithubSettings } from '../../services/settings.service';
-import GithubConnectionCard from './GithubConnectionCard';
-import GithubAutomationsCard from './GithubAutomationsCard';
+import { useGitSettingsQuery, useUpdateGitSettings } from '../../services/settings.service';
+import GitConnectionCard from './GitConnectionCard';
+import GitAutomationsCard from './GitAutomationsCard';
 
-// The GitHub settings tab: a master switch, and — while it is on — the webhook
-// connection and the pull request automations. Every control writes immediately;
-// there is no form-level save.
-export default function SettingsGithub({ project }: { project: ProjectDetail }) {
-  const t = useTranslations('settings.github');
+// The repository integration tab: a master switch, and — while it is on — the
+// webhook connection and the pull request automations. Every control writes
+// immediately; there is no form-level save.
+export default function SettingsGit({ project }: { project: ProjectDetail }) {
+  const t = useTranslations('settings.git');
   const projectKey = project.project.key;
   const { can } = usePermissions();
-  const settingsQuery = useGithubSettingsQuery(projectKey);
-  const updateSettings = useUpdateGithubSettings(projectKey);
+  const settingsQuery = useGitSettingsQuery(projectKey);
+  const updateSettings = useUpdateGitSettings(projectKey);
 
   if (settingsQuery.isPending || !settingsQuery.data)
     return <ListSkeleton rows={3} rowClassName="h-16" />;
@@ -41,8 +41,8 @@ export default function SettingsGithub({ project }: { project: ProjectDetail }) 
       </SettingsCard>
       {settings.enabled && (
         <>
-          <GithubConnectionCard projectKey={projectKey} settings={settings} editable={editable} />
-          <GithubAutomationsCard
+          <GitConnectionCard projectKey={projectKey} settings={settings} editable={editable} />
+          <GitAutomationsCard
             columns={project.columns}
             settings={settings}
             editable={editable}

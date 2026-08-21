@@ -638,6 +638,27 @@
       "when": 1787232280651,
       "tag": "0090_gorgeous_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1787318680651,
+      "tag": "0091_git_setting_key",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1787322280651,
+      "tag": "0092_git_repositories",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1787325880651,
+      "tag": "0093_git_drop_last_event",
+      "breakpoints": true
     }
   ]
 }

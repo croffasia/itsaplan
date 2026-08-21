@@ -807,21 +807,27 @@ export interface SubtaskAutomationSettings {
   closeSubtasks: boolean;
 }
 
-// Per-project GitHub integration settings. webhookId is the path segment of the
-// payload URL registered on the GitHub repository; secret signs its deliveries
-// and is null for members who may read but not edit integrations. onMergeColumnId
-// is where an issue closed by a merged PR moves (null = the first completed
-// state); onOpenColumnId is where an issue moves when a linked PR is opened
-// (null = no action). lastEventAt/lastEventRepo reflect the most recent delivery
-// received.
-export interface GithubSettings {
+// Per-project repository integration settings, shared by every provider.
+// webhookId is the path segment of the payload URL registered on the repository;
+// secret authenticates its deliveries and is null for members who may read but not
+// edit integrations. onMergeColumnId is where an issue closed by a merged pull
+// request moves (null = the first completed state); onOpenColumnId is where an
+// issue moves when a linked pull request is opened (null = no action).
+export interface GitSettings {
   enabled: boolean;
   webhookId: string;
   secret: string | null;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;
-  lastEventAt: string | null;
-  lastEventRepo: string | null;
+  repositories: GitRepository[];
+}
+
+// One repository that has delivered to the project, with the host it came from
+// and when its last delivery arrived.
+export interface GitRepository {
+  repo: string;
+  provider: string;
+  lastEventAt: string;
 }
 
 // Which optional sections a project shows. All on by default; turning one off
@@ -1571,6 +1577,8 @@ export type ActivityAction =
   | 'field'
   | 'archived'
   | 'restored'
+  | 'git_pr'
+  // Entries recorded before the integration took other providers.
   | 'github_pr'
   | 'agent_started'
   | 'agent_finished';
@@ -3072,19 +3080,19 @@ export const api = {
       body: JSON.stringify(input),
     }),
 
-  // The GitHub integration (integrations: read to view, edit to change).
-  getGithubSettings: (projectKey: string) =>
-    request<GithubSettings>(`/projects/${projectKey}/settings/github`),
-  updateGithubSettings: (
+  // The repository integration (integrations: read to view, edit to change).
+  getGitSettings: (projectKey: string) =>
+    request<GitSettings>(`/projects/${projectKey}/settings/git`),
+  updateGitSettings: (
     projectKey: string,
     patch: { enabled?: boolean; onMergeColumnId?: number | null; onOpenColumnId?: number | null },
   ) =>
-    request<GithubSettings>(`/projects/${projectKey}/settings/github`, {
+    request<GitSettings>(`/projects/${projectKey}/settings/git`, {
       method: 'PATCH',
       body: JSON.stringify(patch),
     }),
-  regenerateGithubSecret: (projectKey: string) =>
-    request<GithubSettings>(`/projects/${projectKey}/settings/github/secret`, {
+  regenerateGitSecret: (projectKey: string) =>
+    request<GitSettings>(`/projects/${projectKey}/settings/git/secret`, {
       method: 'POST',
     }),
 

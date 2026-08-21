@@ -85,9 +85,9 @@
       "label": "خطافات الويب (webhooks)",
       "description": "بعت أحداث المشروع لعناوين URL خارجية، موقّعة بسرّ خاص بكل خطاف ويب."
     },
-    "github": {
-      "label": "GitHub",
-      "description": "قفل المهام تلقائيًا لما طلبات السحب بتاعتها تتدمج على GitHub."
+    "git": {
+      "label": "المستودعات",
+      "description": "قفل المهام لما طلبات السحب بتاعتها تتدمج على GitHub أو GitLab أو Gitea أو Forgejo أو Bitbucket."
     },
     "ai-agents": {
       "label": "الوكلاء (agents)",

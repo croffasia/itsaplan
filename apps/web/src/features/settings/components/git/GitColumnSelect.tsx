@@ -7,7 +7,7 @@ import PopoverPick from '@/components/common/fields/PopoverPick';
 
 // A state select with a null option — the automation target where null means the
 // labelled default ("First completed state") or off ("No action").
-export default function GithubColumnSelect({
+export default function GitColumnSelect({
   columns,
   value,
   noneLabel,
@@ -20,7 +20,7 @@ export default function GithubColumnSelect({
   readOnly?: boolean;
   onChange: (id: number | null) => void;
 }) {
-  const t = useTranslations('settings.github');
+  const t = useTranslations('settings.git');
   const column = value == null ? undefined : columns.find((c) => c.id === value);
   return (
     <PopoverPick

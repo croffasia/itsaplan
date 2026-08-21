@@ -85,9 +85,9 @@
       "label": "Вебхуки",
       "description": "Надсилання подій проєкту на зовнішні URL, підписані окремим секретом кожного вебхука."
     },
-    "github": {
-      "label": "GitHub",
-      "description": "Автоматичне закриття задач, коли їхні пул-реквести змержено в GitHub."
+    "git": {
+      "label": "Репозиторії",
+      "description": "Закриття задач, коли їхній pull request змержено в GitHub, GitLab, Gitea, Forgejo або Bitbucket."
     },
     "ai-agents": {
       "label": "Агенти",

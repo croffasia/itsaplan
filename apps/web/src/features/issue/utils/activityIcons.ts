@@ -50,6 +50,7 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   field: Pencil,
   archived: Archive,
   restored: ArchiveRestore,
+  git_pr: GitPullRequest,
   github_pr: GitPullRequest,
   agent_started: Bot,
   agent_finished: Bot,

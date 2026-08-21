@@ -85,9 +85,9 @@
       "label": "Webhooks",
       "description": "Send project events to external URLs, signed with a per-webhook secret."
     },
-    "github": {
-      "label": "GitHub",
-      "description": "Close issues automatically when their pull requests merge on GitHub."
+    "git": {
+      "label": "Repositories",
+      "description": "Close issues when their pull requests merge on GitHub, GitLab, Gitea, Forgejo, or Bitbucket."
     },
     "ai-agents": {
       "label": "Agents",

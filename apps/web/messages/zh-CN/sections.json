@@ -85,9 +85,9 @@
       "label": "Webhook",
       "description": "将项目事件发送到外部 URL，并使用每个 Webhook 独立的密钥签名。"
     },
-    "github": {
-      "label": "GitHub",
-      "description": "当关联的拉取请求在 GitHub 上合并时自动关闭工作项。"
+    "git": {
+      "label": "仓库",
+      "description": "当关联的拉取请求在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合并时关闭工作项。"
     },
     "ai-agents": {
       "label": "代理",

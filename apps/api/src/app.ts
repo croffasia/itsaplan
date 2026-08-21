@@ -15,7 +15,7 @@ import { setMcpApp } from './mcp/app-ref';
 import { internalAgentRunRoutes } from './modules/agents/core/internal-routes';
 import { internalNotificationRoutes } from './modules/notifications/internal-routes';
 import { internalTelegramRoutes } from './telegram/internal-routes';
-import { githubWebhookRoutes } from './modules/github/webhook';
+import { gitWebhookRoutes } from './modules/git/webhook';
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
@@ -89,8 +89,9 @@ export const app = new Elysia()
           { name: 'Actions', description: 'Project automation actions' },
           { name: 'Webhooks', description: 'Outgoing webhook subscriptions' },
           {
-            name: 'GitHub',
-            description: 'GitHub integration: inbound PR webhook and its per-project settings',
+            name: 'Git',
+            description:
+              'Repository integration: the inbound pull request webhook and its per-project settings',
           },
           { name: 'Agent Schedules', description: 'Recurring tasks for internal agents' },
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
@@ -200,8 +201,8 @@ export const app = new Elysia()
   .use(internalTelegramRoutes)
   // Test receiver for inspecting webhook deliveries (unauthenticated, dev aid).
   .use(webhookTestRoutes)
-  // Inbound GitHub webhook receiver (authenticated by its per-project secret).
-  .use(githubWebhookRoutes)
+  // Inbound repository webhook receiver (authenticated by its per-project secret).
+  .use(gitWebhookRoutes)
   // Planner API: projects, issues, and their dependent entities.
   .use(planner);
 

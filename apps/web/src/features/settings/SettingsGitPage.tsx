@@ -6,12 +6,12 @@ import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import RequirePermission from '@/components/common/permissions/RequirePermission';
 import { SettingsResourceProvider } from './context/settingsPermission';
-import SettingsGithub from './components/github/SettingsGithub';
+import SettingsGit from './components/git/SettingsGit';
 
-const section = settingsSection('github');
+const section = settingsSection('git');
 
-// The GitHub settings page (/project/:projectKey/settings/github).
-export default function SettingsGithubPage() {
+// The repository integration page (/project/:projectKey/settings/git).
+export default function SettingsGitPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
   if (!project) return null;
@@ -24,7 +24,7 @@ export default function SettingsGithubPage() {
     >
       <SettingsResourceProvider resource={section.resource}>
         <RequirePermission resource={section.resource} action="read">
-          <SettingsGithub project={project} />
+          <SettingsGit project={project} />
         </RequirePermission>
       </SettingsResourceProvider>
     </SectionPageView>

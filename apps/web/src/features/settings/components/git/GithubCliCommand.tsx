@@ -13,7 +13,7 @@ export default function GithubCliCommand({
   payloadUrl: string;
   secret: string;
 }) {
-  const t = useTranslations('settings.github');
+  const t = useTranslations('settings.git');
   const tCommon = useTranslations('common');
   const command = (secretText: string) =>
     [

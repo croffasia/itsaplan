@@ -141,8 +141,9 @@ export function useActivityText() {
         return { line: line('agentStarted') };
       case 'agent_finished':
         return { line: line(a.subject === 'failed' ? 'agentFailed' : 'agentFinished') };
+      case 'git_pr':
       case 'github_pr': {
-        // fromText is "owner/repo#42", toText the PR's URL on GitHub.
+        // fromText is "owner/repo#42", toText the pull request's URL.
         const key = a.subject === 'merged' ? 'pullRequestMerged' : 'pullRequestOpened';
         const pr = (chunks: ReactNode) =>
           a.toText ? (

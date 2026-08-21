@@ -1,4 +1,9 @@
-import { type CustomField, type IssueFieldValue, type IssueFieldValueInput } from '@/lib/api';
+import {
+  type Assignee,
+  type CustomField,
+  type IssueFieldValue,
+  type IssueFieldValueInput,
+} from '@/lib/api';
 import { formatDate, formatDateTimeRange } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -11,6 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import Avatar from '@/components/common/Avatar';
+import MemberSelect from './MemberSelect';
 import InlineUrlField from './InlineUrlField';
 import InlineTextField from './InlineTextField';
 import { useTranslations } from 'next-intl';
@@ -26,12 +33,14 @@ const NONE = '__none__';
 export default function IssueCustomFieldControl({
   def,
   current,
+  assignees,
   saveKey,
   onChange,
   readOnly,
 }: {
   def: CustomField;
   current: IssueFieldValue | undefined;
+  assignees: Assignee[];
   saveKey: string;
   onChange: (value: IssueFieldValueInput) => void;
   readOnly?: boolean;
@@ -59,6 +68,16 @@ export default function IssueCustomFieldControl({
         </span>
       );
     }
+    if (def.fieldType === 'member') {
+      const member = assignees.find((a) => a.userId === current?.value);
+      if (!member) return <span className="text-sm text-muted-foreground">—</span>;
+      return (
+        <span className="flex items-center gap-1.5 text-sm">
+          <Avatar name={member.name} image={member.image} className="size-4 text-[8px]" />
+          {member.name}
+        </span>
+      );
+    }
     if (def.fieldType === 'boolean') {
       return <span className="text-sm">{current?.value ? t('yes') : t('no')}</span>;
     }
@@ -71,6 +90,18 @@ export default function IssueCustomFieldControl({
       );
     }
     return <span className="text-sm">{String(v)}</span>;
+  }
+
+  if (def.fieldType === 'member') {
+    return (
+      <MemberSelect
+        assignees={assignees}
+        scope={def.memberScope ?? 'all'}
+        value={(current?.value as string | null) ?? null}
+        placeholder={def.name}
+        onChange={(userId) => onChange({ value: userId })}
+      />
+    );
   }
 
   if (def.fieldType === 'url') {

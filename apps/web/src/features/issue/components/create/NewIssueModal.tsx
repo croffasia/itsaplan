@@ -112,8 +112,14 @@ export default function NewIssueModal({
     () => fieldDefsForType(project.customFields, typeId),
     [project.customFields, typeId],
   );
-  const [activeFieldIds, setActiveFieldIds] = useState<number[]>([]);
-  const [fieldValues, setFieldValues] = useState<Record<number, IssueFieldValueInput>>({});
+  // A member field the dialog was opened with (the board grouped by it) starts
+  // filled in, and shows as a property row so it is visible before saving.
+  const [activeFieldIds, setActiveFieldIds] = useState<number[]>(() =>
+    (defaults.fieldValues ?? []).map((f) => f.fieldId),
+  );
+  const [fieldValues, setFieldValues] = useState<Record<number, IssueFieldValueInput>>(() =>
+    Object.fromEntries((defaults.fieldValues ?? []).map((f) => [f.fieldId, { value: f.userId }])),
+  );
   const [justAddedId, setJustAddedId] = useState<number | null>(null);
 
   const createIssue = useCreateIssue();
@@ -301,8 +307,6 @@ export default function NewIssueModal({
         className={cn('flex min-h-0 flex-col', fullscreen && 'flex-1 overflow-hidden')}
         {...dragHandlers}
       >
-        {/* Not inside a relative box on purpose: the dialog itself is the
-            positioned ancestor, so the overlay covers the whole modal. */}
         {draggedFiles !== null && <NewIssueDropOverlay count={draggedFiles} />}
         <input
           ref={titleRef}
@@ -316,9 +320,6 @@ export default function NewIssueModal({
           onChange={(e) => setTitle(e.target.value)}
           autoFocus
         />
-        {/* The written content is the one part that gives up height, so the pills
-            and the footer stay in view however much of it there is. It scrolls
-            inside its editors, not here, which keeps the switcher in place. */}
         <div className={cn('flex min-h-0 flex-col overflow-hidden', fullscreen && 'flex-1')}>
           <NewIssueBody
             section={bodySection}
@@ -329,6 +330,7 @@ export default function NewIssueModal({
             onDescriptionReady={setDescEditor}
             bodyDefs={bodyDefs}
             fieldValues={fieldValues}
+            assignees={project.assignees}
             onFieldValue={setFieldValue}
             onFieldEditorReady={(id, editor) => {
               if (editor) fieldEditors.current.set(id, editor);
@@ -400,18 +402,17 @@ export default function NewIssueModal({
             onChange={(v) => setDueDate(v ?? '')}
           />
 
-          {/* Custom fields the user added, each with its own value editor. */}
           {activeDefs.map((def) => (
             <IssueCustomFieldPill
               key={def.id}
               def={def}
               value={fieldValues[def.id]}
+              assignees={project.assignees}
               defaultOpen={def.id === justAddedId}
               onChange={(v) => setFieldValue(def.id, v)}
             />
           ))}
 
-          {/* "…" menu to add a custom field to this issue. */}
           {availableDefs.length > 0 && (
             <Popover open={addFieldOpen} onOpenChange={setAddFieldOpen}>
               <PopoverTrigger asChild>

@@ -22,7 +22,7 @@ export function wipStateFor(
   columns: Column[],
   counts: Map<number, number>,
 ): WipState | null {
-  const columnId = group.assign?.columnId;
+  const columnId = group.assign?.patch.columnId;
   if (columnId == null) return null;
   const column = columns.find((c) => c.id === columnId);
   if (!column || column.wipLimit == null) return null;
@@ -75,7 +75,7 @@ export function countEntering(
   issues: { id: number; columnId: number }[],
   group: IssueGroup,
 ): number {
-  const columnId = group.assign?.columnId;
+  const columnId = group.assign?.patch.columnId;
   if (columnId == null) return movedIds.length;
   const byId = new Map(issues.map((issue) => [issue.id, issue.columnId]));
   return movedIds.filter((id) => byId.get(id) !== columnId).length;

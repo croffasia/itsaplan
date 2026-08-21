@@ -65,6 +65,7 @@ export default function ReadOnlyIssueDetail({
               key={def.id}
               def={def}
               current={issue.fields.find((f) => f.fieldId === def.id)}
+              assignees={project.assignees}
               saveKey={`${def.id}-${issue.updatedAt}`}
               onSetField={noop}
               readOnly
@@ -79,8 +80,6 @@ export default function ReadOnlyIssueDetail({
         {extended && <ReadOnlyActivityFeed feed={feed} imageByUserId={imageByUserId} />}
       </div>
 
-      {/* Nothing sits above it in this column, so the section drops the room and
-          the separator it keeps for the block it follows in a single column. */}
       <aside className="w-[340px] shrink-0">
         <IssueProperties
           project={project}

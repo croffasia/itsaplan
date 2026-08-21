@@ -128,8 +128,6 @@ export default function IssueDetailContent({
         )}
       </div>
 
-      {/* Read-only with nothing written is an empty block with a placeholder
-          inviting an edit that cannot happen. */}
       {(canEdit || issue.description.trim() !== '') && (
         <IssueMarkdownEditor
           className="mt-4"
@@ -146,8 +144,6 @@ export default function IssueDetailContent({
         />
       )}
 
-      {/* Custom fields flagged "show in main info" render below the description,
-          each under its own heading, rather than as a Properties row. */}
       {fieldDefs
         .filter((def) => def.showInBody)
         .map((def) => (
@@ -155,6 +151,7 @@ export default function IssueDetailContent({
             key={def.id}
             def={def}
             current={issue.fields.find((f) => f.fieldId === def.id)}
+            assignees={project.assignees}
             saveKey={`${def.id}-${issue.updatedAt}-${replacements}`}
             uploadFile={uploadFile}
             imageAttachments={imageAttachments}
@@ -245,10 +242,6 @@ export default function IssueDetailContent({
           imageByUserId={imageByUserId}
         />
       </div>
-      {/* Last in the column: a bottom-sticky box only lifts into view from a static
-          position below the viewport, so higher up it would never appear. Keyed by the
-          issue, because the panel keeps it mounted while it switches between issues and
-          each issue gets its own turn. */}
       <LastCommentBubble
         key={issue.id}
         issueId={issue.id}
@@ -268,10 +261,6 @@ export default function IssueDetailContent({
     return (
       <>
         <div className="max-w-3xl xl:me-(--issue-properties-w)" style={propertiesWidthVar}>
-          {/* Stuck to the top of the scrolling page, with the same translucent,
-              blurred backdrop the side panel's header uses. The negative top
-              margin cancels the page's padding so the row starts where the title
-              would. */}
           <div className="sticky top-0 z-10 -mt-6 bg-background/85 pt-6 pb-3 backdrop-blur-md xl:hidden">
             {actions}
           </div>
@@ -280,8 +269,6 @@ export default function IssueDetailContent({
           {sections}
           {activity}
         </div>
-        {/* The grip sits outside the scrolling box: a panel that scrolls on one
-            axis clips the other too, which would cut it off. */}
         <aside
           className="hidden xl:fixed xl:end-6 xl:top-16 xl:block xl:w-(--issue-properties-w)"
           style={propertiesWidthVar}

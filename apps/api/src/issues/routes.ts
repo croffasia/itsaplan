@@ -955,8 +955,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
 
   // Sets one custom field's value on one issue. For select/multi_select fields,
   // body.optionIds replaces the full selection; for every other field type,
-  // body.value must match the field's type (text/number/boolean/date/datetime).
-  // A datetime_range takes its end in body.valueEnd.
+  // body.value must match the field's type (text/number/boolean/date/datetime,
+  // and the user id of a project member for a member field). A datetime_range takes
+  // its end in body.valueEnd.
   .put(
     '/issues/:issueId/fields/:fieldId',
     async ({ params, body, user, projectId }) => {
@@ -980,7 +981,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: t.Object({ ok: t.Boolean() }), ...commonErrors },
       detail: {
         summary: 'Set a custom field value',
-        description: 'Set a custom field value on an issue by its numeric id.',
+        description:
+          'Set a custom field value on an issue by its numeric id. A member field takes the ' +
+          "user id of a project member the field's scope allows.",
         ...mcpTool('set_issue_field_value'),
       },
     },

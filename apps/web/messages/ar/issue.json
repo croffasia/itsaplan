@@ -309,7 +309,10 @@
     "state": "الحالة",
     "type": "النوع",
     "labels": "الوسوم",
-    "labelCount": "{count, plural, zero {لا وسوم} one {وسم واحد} two {وسمان} few {# وسوم} many {# وسمًا} other {# وسم}}"
+    "labelCount": "{count, plural, zero {لا وسوم} one {وسم واحد} two {وسمان} few {# وسوم} many {# وسمًا} other {# وسم}}",
+    "noMember": "مش متحدد",
+    "pickMember": "اختار حد…",
+    "noCandidates": "مفيش حد تختاره."
   },
   "watchers": {
     "watch": "متابعة",

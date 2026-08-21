@@ -32,7 +32,12 @@ export default function DisplaySettingsBody({
     <div className="space-y-2">
       <DisplayLayoutTabs view={view} onViewChange={onViewChange} />
 
-      <DisplayGroupingRows view={view} settings={settings} onChange={set} />
+      <DisplayGroupingRows
+        view={view}
+        settings={settings}
+        customFields={customFields}
+        onChange={set}
+      />
 
       {view === 'timeline' && <DisplayTimelineRows settings={settings} onChange={set} />}
 

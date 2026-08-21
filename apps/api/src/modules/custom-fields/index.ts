@@ -75,7 +75,10 @@ export const customFieldRoutes = new Elysia({
       response: { 200: CustomFieldResponse, ...commonErrors },
       detail: {
         summary: 'Update a custom field',
-        description: 'Update a custom field.',
+        description:
+          'Update a custom field. Changing its type clears the values issues hold in it, ' +
+          'narrowing a member scope clears the ones it no longer allows, and an option left ' +
+          'out of `options` is deleted along with the selections of it.',
         ...mcpTool('update_custom_field'),
       },
     },

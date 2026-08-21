@@ -500,7 +500,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'schedule', 'manual')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),
@@ -844,6 +844,9 @@ export const customField = pgTable(
     }),
     name: text('name').notNull(),
     fieldType: text('field_type').notNull(),
+    // Who a 'member' field may hold: every candidate, the people only, or the
+    // agents only. NULL for every other field type.
+    memberScope: text('member_scope'),
     // When true the field renders in the issue body (under the description),
     // like a second description; when false it renders as a Properties row.
     showInBody: boolean('show_in_body').notNull().default(false),
@@ -853,7 +856,11 @@ export const customField = pgTable(
   (t) => [
     check(
       'custom_field_field_type_check',
-      sql`${t.fieldType} IN ('text', 'markdown', 'url', 'number', 'boolean', 'date', 'datetime', 'datetime_range', 'select', 'multi_select')`,
+      sql`${t.fieldType} IN ('text', 'markdown', 'url', 'number', 'boolean', 'date', 'datetime', 'datetime_range', 'select', 'multi_select', 'member')`,
+    ),
+    check(
+      'custom_field_member_scope_check',
+      sql`(${t.fieldType} = 'member') = (${t.memberScope} IS NOT NULL) AND (${t.memberScope} IS NULL OR ${t.memberScope} IN ('all', 'humans', 'agents'))`,
     ),
   ],
 );
@@ -870,6 +877,30 @@ export const customFieldOption = pgTable(
     position: integer('position').notNull().default(0),
   },
   (t) => [unique().on(t.fieldId, t.value)],
+);
+
+// Which member custom fields an agent reacts to. Setting the agent into one of the
+// listed fields enqueues a run for it, the way being made an issue's delegate does
+// with trigger_on_assign. A field the agent is not linked to holds it without
+// starting anything.
+export const agentFieldTrigger = pgTable(
+  'agent_field_trigger',
+  {
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    fieldId: integer('field_id')
+      .notNull()
+      .references(() => customField.id, { onDelete: 'cascade' }),
+    // How long this field's run waits before it becomes claimable. Each field carries
+    // its own, the way delegation carries delegation_delay_sec.
+    delaySec: integer('delay_sec').notNull().default(120),
+  },
+  (t) => [
+    primaryKey({ columns: [t.agentId, t.fieldId] }),
+    check('agent_field_trigger_delay_check', sql`${t.delaySec} >= 0 AND ${t.delaySec} <= 86400`),
+    index('agent_field_trigger_field_idx').on(t.fieldId),
+  ],
 );
 
 // A strategic grouping of issues inside a project (project-scoped, not
@@ -1115,6 +1146,9 @@ export const issueFieldValue = pgTable(
     // for a datetime the end stays NULL.
     valueDatetime: timestamp('value_datetime', { withTimezone: true }),
     valueDatetimeEnd: timestamp('value_datetime_end', { withTimezone: true }),
+    // member fields. Deleting the user clears the field rather than the row, so the
+    // issue keeps the rest of its values.
+    valueUserId: text('value_user_id').references(() => user.id, { onDelete: 'set null' }),
   },
   (t) => [unique().on(t.issueId, t.fieldId)],
 );

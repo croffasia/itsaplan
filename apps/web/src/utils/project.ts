@@ -29,7 +29,19 @@ import {
   type FilterValue,
 } from '@/utils/filters';
 import { compareByGroupOrder } from '@/utils/initiativeMeta';
-import type { GroupField, ViewSettings } from '@/utils/viewSettings';
+import {
+  customFieldId,
+  isCustomFieldKey,
+  type CustomFieldKey,
+  type GroupField,
+  type ViewSettings,
+} from '@/utils/viewSettings';
+import {
+  groupMemberField,
+  memberCandidates,
+  memberFieldValue,
+  memberGroupKey,
+} from '@/utils/memberFields';
 import type { Sort } from '@/utils/viewTypes';
 
 export type { Sort, SortField } from '@/utils/viewTypes';
@@ -51,7 +63,11 @@ export type NewIssueDefaults = Partial<
     | 'parentId'
     | 'labelIds'
   >
->;
+> & {
+  // Member custom fields the dialog opens with, set once the issue exists (they
+  // are not part of the create payload).
+  fieldValues?: { fieldId: number; userId: string }[];
+};
 
 // The value a condition pins its field to. A field named by several conditions,
 // or by one that allows several values, is not pinned to any.
@@ -258,16 +274,27 @@ export function groupByColumn(columnIds: number[], issues: Issue[]): Map<number,
   return byColumn;
 }
 
+// What a drop into a group writes: the patch of the built-in fields it stands for,
+// and the member custom field values, one per grouping level that names such a
+// field. A two-level grouping merges both levels (see mergeAssign).
+export interface GroupAssign {
+  patch: IssuePatch;
+  fields: { fieldId: number; userId: string | null }[];
+}
+
+// The assign of a built-in grouping: a patch alone, no custom field to write.
+const patchOnly = (patch: IssuePatch): GroupAssign => ({ patch, fields: [] });
+
 // One Project column / Table section when grouping by the chosen field. `key` is a
 // stable id (field-prefixed so different groupings never collide). `assign` is
-// the patch that reassigns a issue dropped into this group; null marks a group
-// that takes no drop (the single 'none' group, a finished cycle).
+// what reassigns a issue dropped into this group; null marks a group that takes no
+// drop (the single 'none' group, a finished cycle).
 export interface IssueGroup {
   key: string;
   name: string;
   color?: string;
   stateType?: StateType; // status groups, for the state icon
-  assign: IssuePatch | null;
+  assign: GroupAssign | null;
   // What a filter condition on the grouping field matches this group by: the
   // field's value, plus the status an initiative or a cycle is in. Read by
   // buildGroups to drop the groups an active filter makes unreachable.
@@ -284,6 +311,8 @@ export interface GroupLabels {
   noType: string;
   noInitiative: string;
   noCycle: string;
+  // The "No value" group of a member custom field, which has no name of its own.
+  noMember: string;
   priority: (value: string) => string;
 }
 
@@ -302,6 +331,7 @@ export function buildGroups(
 }
 
 function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabels): IssueGroup[] {
+  if (isCustomFieldKey(group)) return memberGroups(project, group, labels);
   switch (group) {
     case 'status':
       return project.columns.map((c) => ({
@@ -309,7 +339,7 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
         name: c.name,
         color: c.color,
         stateType: c.stateType,
-        assign: { columnId: c.id },
+        assign: patchOnly({ columnId: c.id }),
         values: [c.id],
       }));
     case 'assignee':
@@ -319,13 +349,13 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
           .map((a) => ({
             key: `a${a.userId}`,
             name: a.name,
-            assign: { assigneeUserId: a.userId },
+            assign: patchOnly({ assigneeUserId: a.userId }),
             values: [a.userId],
           })),
         {
           key: 'a-none',
           name: labels.noAssignee,
-          assign: { assigneeUserId: null },
+          assign: patchOnly({ assigneeUserId: null }),
           values: [null],
         },
       ];
@@ -336,13 +366,13 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
           .map((a) => ({
             key: `d${a.userId}`,
             name: a.name,
-            assign: { delegateUserId: a.userId },
+            assign: patchOnly({ delegateUserId: a.userId }),
             values: [a.userId],
           })),
         {
           key: 'd-none',
           name: labels.noDelegate,
-          assign: { delegateUserId: null },
+          assign: patchOnly({ delegateUserId: null }),
           values: [null],
         },
       ];
@@ -351,10 +381,15 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
         ...PRIORITY_ORDER.map((value) => ({
           key: `p${value}`,
           name: labels.priority(value),
-          assign: { priority: value },
+          assign: patchOnly({ priority: value }),
           values: [value],
         })),
-        { key: 'p-none', name: labels.noPriority, assign: { priority: null }, values: [null] },
+        {
+          key: 'p-none',
+          name: labels.noPriority,
+          assign: patchOnly({ priority: null }),
+          values: [null],
+        },
       ];
     case 'type':
       return [
@@ -362,10 +397,10 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
           key: `t${t.id}`,
           name: t.name,
           color: t.color,
-          assign: { typeId: t.id },
+          assign: patchOnly({ typeId: t.id }),
           values: [t.id],
         })),
-        { key: 't-none', name: labels.noType, assign: { typeId: null }, values: [null] },
+        { key: 't-none', name: labels.noType, assign: patchOnly({ typeId: null }), values: [null] },
       ];
     case 'initiative': {
       // Lanes come from the initiatives the loaded issues are linked to (each issue
@@ -378,14 +413,14 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
       const options = [...seen.values()].sort(compareByGroupOrder).map((i) => ({
         key: `i${i.id}`,
         name: i.title,
-        assign: { initiativeId: i.id },
+        assign: patchOnly({ initiativeId: i.id }),
         values: [i.id, statusValue(i.status)],
       }));
       return [
         {
           key: 'i-none',
           name: labels.noInitiative,
-          assign: { initiativeId: null },
+          assign: patchOnly({ initiativeId: null }),
           values: [null],
         },
         ...options,
@@ -408,12 +443,17 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
         ...project.plannedCycles.filter((c) => c.status !== 'upcoming'),
       ];
       return [
-        { key: 'y-none', name: labels.noCycle, assign: { cycleId: null }, values: [null] },
+        {
+          key: 'y-none',
+          name: labels.noCycle,
+          assign: patchOnly({ cycleId: null }),
+          values: [null],
+        },
         ...upcomingFirst.map((c) => ({
           key: `y${c.id}`,
           name: c.name,
           color: CYCLE_STATUS_META[c.status].color,
-          assign: { cycleId: c.id },
+          assign: patchOnly({ cycleId: c.id }),
           values: [c.id, statusValue(c.status)],
         })),
         ...[...namedByIssues.entries()]
@@ -429,6 +469,33 @@ function allGroups(project: ProjectDetail, group: GroupField, labels: GroupLabel
     case 'none':
       return [{ key: 'all', name: '', assign: null, values: [] }];
   }
+}
+
+// The groups of a member custom field: the people and agents its scope offers, then
+// the issues that hold none. A grouping naming a field the project no longer has
+// keeps only that last group, which then holds every issue.
+function memberGroups(
+  project: ProjectDetail,
+  group: CustomFieldKey,
+  labels: GroupLabels,
+): IssueGroup[] {
+  const field = groupMemberField(group, project.customFields);
+  const fieldId = customFieldId(group);
+  const candidates = field ? memberCandidates(project.assignees, field.memberScope ?? 'all') : [];
+  return [
+    ...candidates.map((a) => ({
+      key: memberGroupKey(fieldId, a.userId),
+      name: a.name,
+      assign: { patch: {}, fields: [{ fieldId, userId: a.userId }] },
+      values: [a.userId],
+    })),
+    {
+      key: memberGroupKey(fieldId, null),
+      name: labels.noMember,
+      assign: { patch: {}, fields: [{ fieldId, userId: null }] },
+      values: [null],
+    },
+  ];
 }
 
 // The groups an active filter still lets an issue reach. Only the conditions on
@@ -459,6 +526,10 @@ function groupMatches(group: IssueGroup, cond: FilterCondition): boolean {
 // The group key a issue belongs to under the chosen field — matches a key from
 // buildGroups(project, group).
 export function groupKeyOf(issue: Issue, group: GroupField): string {
+  if (isCustomFieldKey(group)) {
+    const fieldId = customFieldId(group);
+    return memberGroupKey(fieldId, memberFieldValue(issue, fieldId));
+  }
   switch (group) {
     case 'status':
       return `c${issue.columnId}`;
@@ -524,12 +595,24 @@ export function subgroupKey(groupKey: string, subKey: string): string {
   return `${groupKey}::${subKey}`;
 }
 
+// The create-dialog defaults a group stands for: what a drop into it would assign,
+// so an issue added inside the group lands in it. Its "No …" group prefills
+// nothing — an unset field is what a new issue already has.
+export function groupDefaults(assign: GroupAssign | null): NewIssueDefaults {
+  return {
+    ...assign?.patch,
+    fieldValues: (assign?.fields ?? []).flatMap((f) =>
+      f.userId != null ? [{ fieldId: f.fieldId, userId: f.userId }] : [],
+    ),
+  };
+}
+
 // The patch that reassigns a issue dropped into a two-level cell: the primary
 // group's assign combined with the sub-group's assign. Either may be null (the
 // 'none' group / a Table with no sub-grouping), in which case only the other
 // applies; both null means the cell is not a drop target.
-export function mergeAssign(a: IssuePatch | null, b: IssuePatch | null): IssuePatch | null {
+export function mergeAssign(a: GroupAssign | null, b: GroupAssign | null): GroupAssign | null {
   if (!a) return b;
   if (!b) return a;
-  return { ...a, ...b };
+  return { patch: { ...a.patch, ...b.patch }, fields: [...a.fields, ...b.fields] };
 }

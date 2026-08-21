@@ -66,6 +66,19 @@ const configFields = {
   ),
   triggerOnMention: t.Optional(t.Boolean({ description: 'Run when @-mentioned in a comment.' })),
   triggerOnAssign: t.Optional(t.Boolean({ description: 'Run when assigned to an issue.' })),
+  fieldTriggers: t.Optional(
+    t.Array(
+      t.Object({
+        fieldId: t.Integer(),
+        delaySec: t.Integer({ minimum: 0, maximum: 86400 }),
+      }),
+      {
+        description:
+          'Member custom fields (from list_custom_fields) the agent also reacts to: being set ' +
+          'into one of them starts a run after delaySec seconds. Other fields are ignored.',
+      },
+    ),
+  ),
   delegationDelaySec: t.Optional(
     t.Integer({
       minimum: 0,
@@ -109,6 +122,7 @@ export const AiAgentResponse = t.Object({
   memoryLastMessages: t.Nullable(t.Number()),
   triggerOnMention: t.Boolean(),
   triggerOnAssign: t.Boolean(),
+  fieldTriggers: t.Array(t.Object({ fieldId: t.Number(), delaySec: t.Number() })),
   delegationDelaySec: t.Number(),
   roleId: t.Nullable(t.Number()),
   ownerUserId: t.Nullable(t.String()),

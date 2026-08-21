@@ -60,7 +60,7 @@ export default function SwimlaneBoard({
   const wipLimitMessage = useWipLimitMessage();
   const groupLabels = useGroupLabels();
   const filtered = isActiveFilterSet(filters);
-  const dnd = useBoardDnd(project.project.key, readOnly);
+  const dnd = useBoardDnd(project, readOnly);
   const selection = useSelection();
   const collapsed = usePersistedSet(collapsedSwimlanesKey(project.project.id, settings.subgroup));
 
@@ -153,7 +153,7 @@ export default function SwimlaneBoard({
       return;
     }
     const positions = positionsAt(cellIssues, index, ids.length);
-    ids.forEach((id, n) => dnd.move(id, { ...assign, position: positions[n] }));
+    ids.forEach((id, n) => dnd.move(id, assign, positions[n]));
   }
 
   // Inner width so the sticky header and every swimlane share one horizontal

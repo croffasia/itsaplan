@@ -309,7 +309,10 @@
     "state": "State",
     "type": "Type",
     "labels": "Labels",
-    "labelCount": "{count, plural, one {# label} other {# labels}}"
+    "labelCount": "{count, plural, one {# label} other {# labels}}",
+    "noMember": "Not set",
+    "pickMember": "Pick someone…",
+    "noCandidates": "Nobody to pick."
   },
   "watchers": {
     "watch": "Watch",

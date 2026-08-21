@@ -309,7 +309,10 @@
     "state": "Статус",
     "type": "Тип",
     "labels": "Мітки",
-    "labelCount": "{count, plural, one {# мітка} few {# мітки} many {# міток} other {# мітки}}"
+    "labelCount": "{count, plural, one {# мітка} few {# мітки} many {# міток} other {# мітки}}",
+    "noMember": "Не задано",
+    "pickMember": "Вибрати…",
+    "noCandidates": "Нема кого вибрати."
   },
   "watchers": {
     "watch": "Стежити",

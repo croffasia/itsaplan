@@ -34,7 +34,12 @@ import {
 import type { IssueQuery } from '#modules/agents/core/issue-query';
 import { iso, num, HttpError } from '../shared/lib';
 import type { ProjectRow } from '#modules/projects/service';
-import { getCustomFieldById, type CustomFieldType } from '#modules/custom-fields/service';
+import {
+  getCustomFieldById,
+  type CustomFieldRow,
+  type CustomFieldType,
+  type MemberScope,
+} from '#modules/custom-fields/service';
 import {
   recordActivity,
   recordActivityEntries,
@@ -42,6 +47,7 @@ import {
   labelNames,
   actorId,
   type ActivityActor,
+  userName,
   type ActivityInput,
   type IssueSnapshot,
 } from './activity';
@@ -49,7 +55,11 @@ import { autoWatchIssue } from './watchers';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
 import { notifyIssueChange, notifyTextMentions } from '#modules/notifications/service';
 import { emitWebhookEvent } from '../webhooks/emit';
-import { getAssignTriggerAgent, isProjectAgent } from '#modules/agents/core/service';
+import {
+  getAssignTriggerAgent,
+  getFieldTriggerAgent,
+  isProjectAgent,
+} from '#modules/agents/core/service';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
@@ -545,6 +555,7 @@ async function attachFieldValues(issues: IssueRow[]): Promise<void> {
         valueDate: issueFieldValue.valueDate,
         valueDatetime: issueFieldValue.valueDatetime,
         valueDatetimeEnd: issueFieldValue.valueDatetimeEnd,
+        valueUserId: issueFieldValue.valueUserId,
       })
       .from(issueFieldValue)
       .where(inArray(issueFieldValue.issueId, issueIds)),
@@ -1290,7 +1301,9 @@ function pickScalarValue(row: {
   valueBool: boolean | null;
   valueDate: string | null;
   valueDatetime: Date | null;
+  valueUserId: string | null;
 }): string | number | boolean | null {
+  if (row.valueUserId != null) return row.valueUserId;
   if (row.valueText != null) return row.valueText;
   if (row.valueNumber != null) return Number(row.valueNumber);
   if (row.valueBool != null) return row.valueBool;
@@ -1314,6 +1327,7 @@ export async function getIssueFieldValues(issueId: number): Promise<IssueFieldVa
       valueDate: issueFieldValue.valueDate,
       valueDatetime: issueFieldValue.valueDatetime,
       valueDatetimeEnd: issueFieldValue.valueDatetimeEnd,
+      valueUserId: issueFieldValue.valueUserId,
     })
     .from(issue)
     .innerJoin(
@@ -1376,6 +1390,77 @@ function parseDatetime(value: unknown): Date | null {
   return date;
 }
 
+// Enforces that a member field holds someone the project offers for it: a member of
+// the project, and within the field's scope — the people only, the agents only, or
+// both. An agent's bot user also holds a project_member row, so the scope decides.
+async function assertFieldMember(
+  projectId: number,
+  scope: MemberScope | null,
+  userId: string,
+): Promise<void> {
+  const isAgent = await isProjectAgent(projectId, userId);
+  if (scope === 'agents') {
+    if (!isAgent) throw new HttpError(400, 'This field takes an agent of this project');
+    return;
+  }
+  if (!(await getMembership(projectId, userId)) || (scope === 'humans' && isAgent)) {
+    throw new HttpError(400, 'This field takes a member of this project');
+  }
+}
+
+// If the issue's new value for a member field is an agent that reacts to that field,
+// queue a run so it can act on the issue. Skipped when the agent set itself. The run
+// is executed later, so the write is never blocked on it.
+async function enqueueFieldRun(
+  issueId: number,
+  field: CustomFieldRow,
+  userId: string,
+  actorUserId: string | null | undefined,
+): Promise<void> {
+  if (userId === actorUserId) return;
+  const agent = await getFieldTriggerAgent(userId, field.id, actorUserId ?? null);
+  if (!agent) return;
+  const row = await getIssue(issueId);
+  if (!row) return;
+  await enqueueAgentRun({
+    agentId: agent.id,
+    issueId,
+    sourceActivityId: null,
+    trigger: 'field',
+    prompt: `Work item ${row.identifier}: "${row.title}" now has you as its "${field.name}". Review it and take the appropriate next step.`,
+    delaySeconds: agent.delaySec,
+  });
+}
+
+// Tells the person put into a member field about it and subscribes them to the issue,
+// the way an assignee is told. An agent is skipped: its bot user reads no inbox, and
+// its own trigger is what starts it.
+async function notifyFieldMember(
+  projectId: number,
+  issueId: number,
+  userId: string,
+  activityId: number | null,
+  actorUserId: string | null | undefined,
+): Promise<void> {
+  if (await isProjectAgent(projectId, userId)) return;
+  await notifyIssueChange({
+    projectId,
+    issueId,
+    actorUserId: actorUserId ?? null,
+    assignedUserId: userId,
+    assignedActivityId: activityId,
+  });
+}
+
+// The user id a member field currently holds on an issue, null when it is unset.
+async function fieldMemberUserId(issueId: number, fieldId: number): Promise<string | null> {
+  const [row] = await db
+    .select({ valueUserId: issueFieldValue.valueUserId })
+    .from(issueFieldValue)
+    .where(and(eq(issueFieldValue.issueId, issueId), eq(issueFieldValue.fieldId, fieldId)));
+  return row?.valueUserId ?? null;
+}
+
 // The text a markdown field currently holds on an issue, empty when it is unset.
 async function fieldMarkdown(issueId: number, fieldId: number): Promise<string> {
   const [row] = await db
@@ -1412,11 +1497,21 @@ export async function setIssueFieldValue(
   if (field.fieldType === 'number' && input.value != null && input.value !== '') {
     if (!Number.isFinite(Number(input.value))) throw new HttpError(400, 'Invalid number');
   }
+  const memberUserId =
+    field.fieldType === 'member' && typeof input.value === 'string' && input.value !== ''
+      ? input.value
+      : null;
+  if (memberUserId) await assertFieldMember(projectId, field.memberScope, memberUserId);
 
   // The markdown a field held before this write, so only the mentions the write
   // adds reach anyone.
   const previousMarkdown =
     field.fieldType === 'markdown' ? await fieldMarkdown(issueId, fieldId) : '';
+
+  // Who the member field held before this write. A write that sets the same person
+  // again starts no run and tells nobody.
+  const previousMemberUserId =
+    field.fieldType === 'member' ? await fieldMemberUserId(issueId, fieldId) : null;
 
   // to_text is the display-ready new value logged to the activity feed: option
   // value names for select/multi_select, the raw value for everything else.
@@ -1456,6 +1551,9 @@ export async function setIssueFieldValue(
       case 'date':
         column = { valueDate: (input.value as string) ?? null };
         break;
+      case 'member':
+        column = { valueUserId: memberUserId };
+        break;
       case 'datetime':
         column = { valueDatetime: parseDatetime(input.value), valueDatetimeEnd: null };
         break;
@@ -1482,6 +1580,8 @@ export async function setIssueFieldValue(
     const value = input.value;
     if (value == null || value === '') {
       toText = null;
+    } else if (field.fieldType === 'member') {
+      toText = await userName(memberUserId);
     } else if (field.fieldType === 'boolean') {
       toText = value ? 'true' : 'false';
     } else if (field.fieldType === 'datetime_range' && input.valueEnd) {
@@ -1496,6 +1596,11 @@ export async function setIssueFieldValue(
     [{ action: 'field', subject: field.name, toText }],
     actorUserId,
   );
+
+  if (memberUserId && memberUserId !== previousMemberUserId) {
+    await enqueueFieldRun(issueId, field, memberUserId, actorUserId);
+    await notifyFieldMember(projectId, issueId, memberUserId, entry?.id ?? null, actorUserId);
+  }
 
   // A markdown field is written in the same editor as the description and reaches
   // the people it mentions the same way.

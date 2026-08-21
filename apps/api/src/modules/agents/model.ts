@@ -10,6 +10,7 @@ export const agentParams = t.Object({
 export const agentRunTrigger = t.Union([
   t.Literal('mention'),
   t.Literal('delegation'),
+  t.Literal('field'),
   t.Literal('schedule'),
   t.Literal('manual'),
 ]);

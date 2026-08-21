@@ -1,5 +1,5 @@
 import { type Editor } from '@tiptap/react';
-import { type CustomField, type IssueFieldValueInput } from '@/lib/api';
+import { type Assignee, type CustomField, type IssueFieldValueInput } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { type Embeddable } from '../../utils/attachmentEmbed';
 import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSection } from '../../utils/bodySections';
@@ -23,6 +23,7 @@ export default function NewIssueBody({
   onDescriptionReady,
   bodyDefs,
   fieldValues,
+  assignees,
   onFieldValue,
   onFieldEditorReady,
   uploadFile,
@@ -37,6 +38,7 @@ export default function NewIssueBody({
   onDescriptionReady: (editor: Editor | null) => void;
   bodyDefs: CustomField[];
   fieldValues: Record<number, IssueFieldValueInput>;
+  assignees: Assignee[];
   onFieldValue: (id: number, patch: IssueFieldValueInput) => void;
   onFieldEditorReady: (id: number, editor: Editor | null) => void;
   uploadFile: (file: File) => Promise<Embeddable>;
@@ -114,7 +116,12 @@ export default function NewIssueBody({
 
       {pillDefs.length > 0 && (
         <div className={cn(sectionClass(OTHER_SECTION), 'overflow-y-auto')}>
-          <NewIssueBodyFields defs={pillDefs} values={fieldValues} onChange={onFieldValue} />
+          <NewIssueBodyFields
+            defs={pillDefs}
+            values={fieldValues}
+            assignees={assignees}
+            onChange={onFieldValue}
+          />
         </div>
       )}
     </div>

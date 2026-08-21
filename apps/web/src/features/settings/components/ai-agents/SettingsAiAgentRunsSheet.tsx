@@ -19,9 +19,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { useTranslations } from 'next-intl';
 
 // Run history for an agent, in a right-side sidebar. Shows the triggered runs (a
-// mention or a delegation) queued for the agent, newest first, 25 at a time. Each run
-// expands to show the task it was given and, if it failed, the error. Test-chat runs
-// are not recorded, so they never appear here.
+// mention, a delegation, or a member field) queued for the agent, newest first, 25 at
+// a time. Each run expands to show the task it was given and, if it failed, the
+// error. Test-chat runs are not recorded, so they never appear here.
 export function SettingsAiAgentRunsSheet({
   projectKey,
   agent,

@@ -524,7 +524,7 @@ async function cycleName(id: number | null): Promise<string | null> {
   const rows = await db.select({ name: cycle.name }).from(cycle).where(eq(cycle.id, id));
   return rows[0]?.name ?? null;
 }
-async function userName(id: string | null): Promise<string | null> {
+export async function userName(id: string | null): Promise<string | null> {
   if (id == null) return null;
   const rows = await db.select({ name: user.name }).from(user).where(eq(user.id, id));
   return rows[0]?.name ?? null;

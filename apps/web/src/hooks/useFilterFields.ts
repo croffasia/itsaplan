@@ -1,7 +1,13 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { CustomField, InitiativeOption, InitiativeRef, ProjectDetail } from '@/lib/api';
+import type {
+  CustomField,
+  InitiativeOption,
+  InitiativeRef,
+  MemberScope,
+  ProjectDetail,
+} from '@/lib/api';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { formatDate } from '@/utils/dates';
@@ -26,15 +32,18 @@ import {
   type FieldSpec,
 } from '@/utils/filterFields';
 import { customFieldKey, isFieldEnabled, type GroupField } from '@/utils/viewSettings';
+import { memberCandidates } from '@/utils/memberFields';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { byKey } from '@/utils/messageKey';
 
 // Maps a custom field type to a filter field kind. select/multi_select are set
-// fields over their options; the scalar types map to their editors.
+// fields over their options, member is a set over the project's people and agents;
+// the scalar types map to their editors.
 function customFieldKind(field: CustomField): FieldKind {
   switch (field.fieldType) {
     case 'select':
     case 'multi_select':
+    case 'member':
       return 'set';
     case 'number':
       return 'number';
@@ -81,6 +90,18 @@ function cycleOptions(project: ProjectDetail): FieldOption[] {
     ...[...namedByIssues.entries()]
       .sort((a, b) => a[1].localeCompare(b[1]))
       .map(([id, name]) => ({ value: id, label: name })),
+  ];
+}
+
+// The people and agents a member field of this scope holds, plus the unset value.
+function memberFieldOptions(
+  project: ProjectDetail,
+  scope: MemberScope,
+  unsetLabel: string,
+): FieldOption[] {
+  return [
+    ...memberCandidates(project.assignees, scope).map((a) => ({ value: a.userId, label: a.name })),
+    { value: null, label: unsetLabel },
   ];
 }
 
@@ -223,15 +244,13 @@ export function useFilterFields(projectKey?: string) {
     ];
     for (const f of customFields) {
       const kind = customFieldKind(f);
-      specs.push({
-        field: customFieldKey(f.id),
-        label: f.name,
-        kind,
-        options:
-          kind === 'set'
-            ? f.options.map((o) => ({ value: o.id, label: o.value, color: o.color }))
-            : undefined,
-      });
+      let options: FieldOption[] | undefined;
+      if (f.fieldType === 'member') {
+        options = memberFieldOptions(project, f.memberScope ?? 'all', t('unset.member'));
+      } else if (kind === 'set') {
+        options = f.options.map((o) => ({ value: o.id, label: o.value, color: o.color }));
+      }
+      specs.push({ field: customFieldKey(f.id), label: f.name, kind, options });
     }
     // The fields of an optional section are offered only while it is on, as the
     // grouping fields and display properties are.

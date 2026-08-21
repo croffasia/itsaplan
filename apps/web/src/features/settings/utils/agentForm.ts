@@ -17,11 +17,19 @@ export interface AgentFormValue {
   memoryLastMessages: string;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // The member custom fields that start a run when the agent is set into one, each
+  // with its own wait.
+  fieldTriggers: FormFieldTrigger[];
   // Minutes a delegation run waits before the agent may pick it up, as a string so
   // the input can be cleared while typing.
   delegationDelayMin: string;
   roleId: number | null;
   runnerScope: 'owner' | 'project';
+}
+
+export interface FormFieldTrigger {
+  fieldId: number;
+  delayMin: string;
 }
 
 const USERNAME_PATTERN = /^[a-zA-Z0-9._-]+$/;
@@ -62,15 +70,20 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     memoryLastMessages: agent?.memoryLastMessages != null ? String(agent.memoryLastMessages) : '',
     triggerOnMention: agent?.triggerOnMention ?? true,
     triggerOnAssign: agent?.triggerOnAssign ?? false,
+    fieldTriggers: (agent?.fieldTriggers ?? []).map((trigger) => ({
+      fieldId: trigger.fieldId,
+      delayMin: String(Math.round(trigger.delaySec / 60)),
+    })),
     delegationDelayMin: String(Math.round((agent?.delegationDelaySec ?? 120) / 60)),
     roleId: agent?.roleId ?? null,
     runnerScope: agent?.runnerScope ?? 'project',
   };
 }
 
-// The delegation delay the server stores. A blank or unparseable input means no
-// delay; the value is clamped to the server's 0..24h range.
-function delegationDelaySec(minutes: string): number {
+// The delay the server stores, for delegation and for a field trigger alike. A blank
+// or unparseable input means no delay; the value is clamped to the server's 0..24h
+// range.
+export function delaySecFromMinutes(minutes: string): number {
   const n = Math.round(Number(minutes.trim()));
   if (!Number.isFinite(n) || n <= 0) return 0;
   return Math.min(n, 1440) * 60;
@@ -95,7 +108,11 @@ function configFields(v: AgentFormValue) {
     instructions: v.instructions.trim() || null,
     triggerOnMention: v.triggerOnMention,
     triggerOnAssign: v.triggerOnAssign,
-    delegationDelaySec: delegationDelaySec(v.delegationDelayMin),
+    fieldTriggers: v.fieldTriggers.map((trigger) => ({
+      fieldId: trigger.fieldId,
+      delaySec: delaySecFromMinutes(trigger.delayMin),
+    })),
+    delegationDelaySec: delaySecFromMinutes(v.delegationDelayMin),
   };
   if (v.kind === 'external') {
     return { ...common, runnerScope: v.runnerScope };

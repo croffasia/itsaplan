@@ -10,8 +10,11 @@ import type { Sort, WorkItemsView } from '@/utils/viewTypes';
 // Field the Project columns / Table sections group by. 'none' is a single flat
 // list (Table only). Project always groups by something. `subgroup` (below) adds a
 // second level: Project swimlanes / Table sub-sections, and may be 'none'.
-export type GroupField =
+// A `cf:<id>` key groups by a member custom field, which holds one person or agent
+// the way assignee and delegate do.
+export type BuiltinGroupField =
   'none' | 'status' | 'assignee' | 'delegate' | 'priority' | 'type' | 'initiative' | 'cycle';
+export type GroupField = BuiltinGroupField | CustomFieldKey;
 
 // Issue properties that can be shown on a Project card or as a Table column.
 // 'id' is the issue identifier; 'status' the state; the rest map to issue
@@ -67,10 +70,11 @@ export const DISPLAY_PROPERTIES: DisplayProperty[] = [
 // entity, with the section each one needs. Grouping by one while its section is off
 // would render columns for something the project does not show, and its property
 // would print a value from there.
-const SECTION_FIELDS: Partial<Record<GroupField | DisplayProperty, keyof ProjectFeatures>> = {
-  initiative: 'initiatives',
-  cycle: 'cycles',
-};
+const SECTION_FIELDS: Partial<Record<BuiltinGroupField | DisplayProperty, keyof ProjectFeatures>> =
+  {
+    initiative: 'initiatives',
+    cycle: 'cycles',
+  };
 
 // Whether a grouping field or display property applies to a project: the ones behind
 // an optional section only while it is on. A custom field key is never section-bound.
@@ -78,7 +82,7 @@ export function isFieldEnabled(
   field: GroupField | PropertyKey,
   features: ProjectFeatures,
 ): boolean {
-  const section = SECTION_FIELDS[field as GroupField];
+  const section = SECTION_FIELDS[field as BuiltinGroupField];
   return section === undefined || features[section];
 }
 
@@ -129,9 +133,10 @@ export interface ViewSettings {
   calendarDateField: DateField;
   weekStart: WeekStart;
   // Group keys collapsed into the "Hidden columns" panel on the flat project (see
-  // KanbanBoard). Keys are namespaced by grouping field (c<id>/a<id>/p<v>/t<id>),
-  // so a set from one grouping never matches another. Empty for every other
-  // layout. Part of the display, so each saved view keeps its own hidden set.
+  // KanbanBoard). Keys are namespaced by grouping field (c<id>/a<id>/p<v>/t<id>/
+  // f<fieldId>u<userId>), so a set from one grouping never matches another. Empty
+  // for every other layout. Part of the display, so each saved view keeps its own
+  // hidden set.
   hiddenGroups: string[];
   // Group keys collapsed to a narrow vertical strip on the flat project. Unlike
   // hiddenGroups the column stays in place (in column order) with its count
@@ -188,7 +193,7 @@ export function defaultViewSettings(view: WorkItemsView): ViewSettings {
   };
 }
 
-const GROUP_FIELDS: GroupField[] = [
+const GROUP_FIELDS: BuiltinGroupField[] = [
   'none',
   'status',
   'assignee',
@@ -200,6 +205,10 @@ const GROUP_FIELDS: GroupField[] = [
 ];
 const DISPLAY_VALUES: string[] = DISPLAY_PROPERTIES;
 const TIMELINE_SCALES: TimelineScale[] = ['week', 'month', 'quarter'];
+
+const isGroupField = (value: unknown): value is GroupField =>
+  typeof value === 'string' &&
+  (GROUP_FIELDS.includes(value as BuiltinGroupField) || isCustomFieldKey(value));
 
 function normalizeSort(sort: unknown): Sort | null {
   if (sort && typeof sort === 'object') {
@@ -246,18 +255,14 @@ export function normalizeViewSettings(
 ): ViewSettings {
   const d = defaultViewSettings(view);
   if (!s) return d;
-  const storedGroup = GROUP_FIELDS.includes(s.group as GroupField)
-    ? (s.group as GroupField)
-    : d.group;
+  const storedGroup = isGroupField(s.group) ? s.group : d.group;
   // Timeline was previously hard-coded to State while its persisted group was
   // `none`. Normalize that legacy value so existing local and saved views keep
   // their visible grouping after the control becomes configurable.
   const group = view === 'timeline' && storedGroup === 'none' ? d.group : storedGroup;
   // The sub-group is only kept when it names a different field than the primary
   // group; grouping twice by the same field would collapse to one level.
-  const rawSubgroup = GROUP_FIELDS.includes(s.subgroup as GroupField)
-    ? (s.subgroup as GroupField)
-    : 'none';
+  const rawSubgroup = isGroupField(s.subgroup) ? s.subgroup : 'none';
   return {
     sort: normalizeSort(s.sort) ?? d.sort,
     group,

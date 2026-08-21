@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronRight, Plus } from 'lucide-react';
-import { type CustomField, type NewCustomFieldInput, type ProjectDetail } from '@/lib/api';
+import { type CustomField, type ProjectDetail } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
@@ -12,22 +12,22 @@ import {
   useDeleteCustomField,
   useUpdateCustomField,
 } from '../../services/settings.service';
-import { SettingsCustomFieldForm, useFieldTypeLabel } from './SettingsCustomFieldForm';
+import CustomFieldMeta from './CustomFieldMeta';
+import SettingsCustomFieldDialog, { type FieldFormValues } from './SettingsCustomFieldDialog';
 
-// Which group's inline add form is open: 'global' for the project-wide field group,
-// or a issue type id for a type-scoped group. null when no form is open.
+// Which group the add dialog is open for: 'global' for the project-wide field group,
+// or a issue type id for a type-scoped group. null when no dialog is open.
 type AddScope = 'global' | number;
 
 export default function SettingsCustomFields({ project }: { project: ProjectDetail }) {
   const projectKey = project.project.key;
   const [addingScope, setAddingScope] = useState<AddScope | null>(null);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editing, setEditing] = useState<CustomField | null>(null);
   const [deleting, setDeleting] = useState<CustomField | null>(null);
   // Groups the user has collapsed, keyed by scope; every group is expanded by default.
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
   const t = useTranslations('settings.customFields');
-  const fieldTypeLabel = useFieldTypeLabel();
   const can = useSettingsCan();
   const createCustomField = useCreateCustomField(projectKey);
   const updateCustomField = useUpdateCustomField(projectKey);
@@ -56,64 +56,46 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
     });
   }
 
-  // Open the add form for a group, expanding it first so the form is visible.
-  function openAdd(scope: AddScope) {
-    setEditingId(null);
-    setCollapsed((prev) => {
-      const next = new Set(prev);
-      next.delete(String(scope));
-      return next;
-    });
-    setAddingScope(scope);
-  }
-
-  async function add(scope: AddScope, input: Omit<NewCustomFieldInput, 'issueTypeId'>) {
+  async function add(scope: AddScope, values: FieldFormValues) {
     await createCustomField.mutateAsync({
-      ...input,
+      name: values.name,
+      fieldType: values.fieldType,
+      memberScope: values.memberScope,
+      showInBody: values.showInBody,
+      options: values.options.map((o) => o.value),
       issueTypeId: scope === 'global' ? null : scope,
     });
     setAddingScope(null);
   }
 
-  function startEdit(f: CustomField) {
-    setAddingScope(null);
-    setEditingId(f.id);
+  async function saveEdit(id: number, values: FieldFormValues) {
+    await updateCustomField.mutateAsync({
+      id,
+      patch: {
+        name: values.name,
+        showInBody: values.showInBody,
+        fieldType: values.fieldType,
+        memberScope: values.memberScope,
+        options: values.options,
+      },
+    });
+    setEditing(null);
   }
 
-  async function saveEdit(f: CustomField, values: { name: string; showInBody: boolean }) {
-    await updateCustomField.mutateAsync({ id: f.id, patch: values });
-    setEditingId(null);
+  function groupLabel(scope: AddScope): string {
+    return groups.find((g) => g.scope === scope)?.label ?? '';
   }
 
   function renderField(f: CustomField) {
-    if (editingId === f.id) {
-      return (
-        <div key={f.id} className="py-1 pr-3 pl-9">
-          <SettingsCustomFieldForm
-            mode="edit"
-            initial={f}
-            onSubmit={(values) => void saveEdit(f, values)}
-            onCancel={() => setEditingId(null)}
-          />
-        </div>
-      );
-    }
-    const meta = [
-      fieldTypeLabel(f.fieldType),
-      f.showInBody ? t('mainInfoMeta') : null,
-      f.options.length ? f.options.map((o) => o.value).join(', ') : null,
-    ]
-      .filter(Boolean)
-      .join(' · ');
     return (
       <SettingsRow
         key={f.id}
         className="h-11 pl-9"
         title={f.name}
-        meta={meta}
+        meta={<CustomFieldMeta field={f} />}
         editTitle={t('editField')}
         deleteTitle={t('deleteField')}
-        onEdit={() => startEdit(f)}
+        onEdit={() => setEditing(f)}
         onDelete={() => setDeleting(f)}
       />
     );
@@ -125,7 +107,6 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
         {groups.map((g) => {
           const key = String(g.scope);
           const open = !collapsed.has(key);
-          const adding = addingScope === g.scope;
           return (
             <div key={key}>
               <div className="flex h-11 items-center gap-2 rounded-md pr-2 transition-colors hover:bg-accent/50">
@@ -157,7 +138,7 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
                     className="size-7 text-muted-foreground hover:text-foreground"
                     title={t('addField')}
                     aria-label={t('addFieldTo', { group: g.label })}
-                    onClick={() => openAdd(g.scope)}
+                    onClick={() => setAddingScope(g.scope)}
                   >
                     <Plus className="size-4" />
                   </Button>
@@ -167,16 +148,7 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
               {open && (
                 <div className="pb-1">
                   {g.fields.map(renderField)}
-                  {adding && (
-                    <div className="py-1 pr-3 pl-9">
-                      <SettingsCustomFieldForm
-                        mode="add"
-                        onSubmit={(input) => void add(g.scope, input)}
-                        onCancel={() => setAddingScope(null)}
-                      />
-                    </div>
-                  )}
-                  {g.fields.length === 0 && !adding && (
+                  {g.fields.length === 0 && (
                     <p className="py-3 pl-9 text-xs text-muted-foreground">{t('noFields')}</p>
                   )}
                 </div>
@@ -185,6 +157,23 @@ export default function SettingsCustomFields({ project }: { project: ProjectDeta
           );
         })}
       </div>
+
+      {addingScope !== null && (
+        <SettingsCustomFieldDialog
+          group={groupLabel(addingScope)}
+          onSubmit={(values) => void add(addingScope, values)}
+          onClose={() => setAddingScope(null)}
+        />
+      )}
+
+      {editing && (
+        <SettingsCustomFieldDialog
+          group={groupLabel(editing.issueTypeId ?? 'global')}
+          initial={editing}
+          onSubmit={(values) => void saveEdit(editing.id, values)}
+          onClose={() => setEditing(null)}
+        />
+      )}
 
       {deleting && (
         <SettingsConfirmDeleteDialog

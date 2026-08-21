@@ -109,6 +109,7 @@
     "noPriority": "No priority",
     "noType": "No type",
     "noInitiative": "No initiative",
-    "noCycle": "No cycle"
+    "noCycle": "No cycle",
+    "noMember": "No value"
   }
 }

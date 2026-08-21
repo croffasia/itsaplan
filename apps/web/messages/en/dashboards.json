@@ -165,6 +165,7 @@
     "trigger": {
       "mention": "ran on mention in",
       "delegation": "ran on delegation of",
+      "field": "ran on a field of",
       "manual": "ran manually",
       "schedule": "ran on schedule"
     }

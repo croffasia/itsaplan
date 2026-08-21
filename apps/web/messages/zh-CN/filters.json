@@ -47,6 +47,7 @@
     "delegate": "无执行代理",
     "type": "无类型",
     "initiative": "无计划",
-    "cycle": "无周期"
+    "cycle": "无周期",
+    "member": "无值"
   }
 }

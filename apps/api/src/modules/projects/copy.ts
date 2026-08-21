@@ -450,6 +450,7 @@ export async function copyProject(
             issueTypeId: f.issueTypeId != null ? (maps.type.get(f.issueTypeId) ?? null) : null,
             name: f.name,
             fieldType: f.fieldType,
+            memberScope: f.memberScope,
             position: f.position,
           })
           .returning({ id: customField.id });
@@ -677,6 +678,10 @@ export async function copyProject(
         memoryLastMessages: a.memoryLastMessages,
         triggerOnMention: a.triggerOnMention,
         triggerOnAssign: a.triggerOnAssign,
+        fieldTriggers: a.fieldTriggers.flatMap((trigger) => {
+          const fieldId = maps.field.get(trigger.fieldId);
+          return fieldId == null ? [] : [{ fieldId, delaySec: trigger.delaySec }];
+        }),
         delegationDelaySec: a.delegationDelaySec,
         roleId: a.roleId != null ? (roleMap.get(a.roleId) ?? null) : null,
         // An 'owner'-scoped agent keeps its scope, bound to whoever made the copy —

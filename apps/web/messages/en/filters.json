@@ -47,6 +47,7 @@
     "delegate": "No delegate",
     "type": "No type",
     "initiative": "No initiative",
-    "cycle": "No cycle"
+    "cycle": "No cycle",
+    "member": "No value"
   }
 }

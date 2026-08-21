@@ -11,7 +11,7 @@ const runBody = t.Object({
   agentId: t.Number(),
   issueId: t.Nullable(t.Number()),
   scheduleId: t.Nullable(t.Number()),
-  trigger: t.UnionEnum(['mention', 'delegation', 'schedule', 'manual']),
+  trigger: t.UnionEnum(['mention', 'delegation', 'field', 'schedule', 'manual']),
   prompt: t.String(),
   attempts: t.Number(),
   projectId: t.Number(),

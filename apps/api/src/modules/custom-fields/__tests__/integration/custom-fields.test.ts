@@ -34,6 +34,28 @@ function createType(client: Api, name: string, projectKey = 'MKT') {
   return client.projects({ projectKey })['issue-types'].post({ name });
 }
 
+// A project with an issue to hold field values, plus the ids needed to write them.
+async function setupWithIssue() {
+  const owner = await signUpTestUser();
+  const asOwner = authedApi(owner.cookie);
+  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+  const issue = (
+    await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+      columnId: view.data!.columns[0].id,
+      title: 'Task',
+    })
+  ).data!;
+  return { asOwner, ownerUserId: owner.userId, issueId: issue.id };
+}
+
+// The entry an issue carries for a field. Every field of the issue's type is listed,
+// so an unset one comes back with a null value rather than missing.
+async function issueValue(client: Api, issueId: number, fieldId: number) {
+  const res = await client.issues({ issueId }).get();
+  return res.data!.fields.find((f) => f.fieldId === fieldId);
+}
+
 describe('custom-fields', () => {
   beforeEach(async () => {
     await resetDb();
@@ -119,6 +141,44 @@ describe('custom-fields', () => {
         name: 'Steps',
         fieldType: 'text',
         issueTypeId: 999999,
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('defaults a member field to the "all" scope', async () => {
+      const { asOwner } = await setupProject();
+      const created = await fields(asOwner).post({ name: 'Reviewer', fieldType: 'member' });
+      expect(created.status).toBe(201);
+      expect(created.data).toMatchObject({ fieldType: 'member', memberScope: 'all' });
+    });
+
+    it('stores the member scope it was created with', async () => {
+      const { asOwner } = await setupProject();
+      const created = await fields(asOwner).post({
+        name: 'Runner',
+        fieldType: 'member',
+        memberScope: 'agents',
+      });
+      expect(created.data).toMatchObject({ memberScope: 'agents' });
+    });
+
+    it('leaves memberScope null on a field of another type', async () => {
+      const { asOwner } = await setupProject();
+      const created = await fields(asOwner).post({
+        name: 'Severity',
+        fieldType: 'text',
+        memberScope: 'humans',
+      });
+      expect(created.data).toMatchObject({ fieldType: 'text', memberScope: null });
+    });
+
+    it('rejects a member scope outside the three it offers', async () => {
+      const { asOwner } = await setupProject();
+      const res = await fields(asOwner).post({
+        name: 'Reviewer',
+        fieldType: 'member',
+        // @ts-expect-error the scope union rejects this at typecheck; the server rejects it too.
+        memberScope: 'robots',
       });
       expect(res.status).toBe(400);
     });
@@ -225,6 +285,134 @@ describe('custom-fields', () => {
         name: 'Level',
         showInBody: true,
       });
+    });
+
+    it('changes the type and clears the values issues held under the old one', async () => {
+      const { asOwner, issueId } = await setupWithIssue();
+      const field = (await fields(asOwner).post({ name: 'Severity', fieldType: 'text' })).data!;
+      await asOwner.issues({ issueId }).fields({ fieldId: field.id }).put({ value: 'high' });
+
+      const patched = await fields(asOwner)({ fieldId: field.id }).patch({ fieldType: 'number' });
+      expect(patched.data).toMatchObject({ fieldType: 'number' });
+      expect((await issueValue(asOwner, issueId, field.id))?.value).toBeNull();
+    });
+
+    it('drops the options when the type stops holding them', async () => {
+      const { asOwner } = await setupWithIssue();
+      const field = (
+        await fields(asOwner).post({
+          name: 'Priority',
+          fieldType: 'select',
+          options: ['Low', 'High'],
+        })
+      ).data!;
+
+      const patched = await fields(asOwner)({ fieldId: field.id }).patch({ fieldType: 'text' });
+      expect(patched.data).toMatchObject({ fieldType: 'text', options: [] });
+    });
+
+    it('renames an option in place and keeps the issues holding it', async () => {
+      const { asOwner, issueId } = await setupWithIssue();
+      const field = (
+        await fields(asOwner).post({
+          name: 'Priority',
+          fieldType: 'select',
+          options: ['Low', 'High'],
+        })
+      ).data!;
+      const low = field.options[0];
+      await asOwner
+        .issues({ issueId })
+        .fields({ fieldId: field.id })
+        .put({ optionIds: [low.id] });
+
+      const patched = await fields(asOwner)({ fieldId: field.id }).patch({
+        options: [{ id: low.id, value: 'Lowest' }, { value: 'Urgent' }],
+      });
+      expect(patched.data!.options.map((o) => o.value)).toEqual(['Lowest', 'Urgent']);
+      expect((await issueValue(asOwner, issueId, field.id))?.optionIds).toEqual([low.id]);
+    });
+
+    it('deletes an option left out of the list, and the selections of it', async () => {
+      const { asOwner, issueId } = await setupWithIssue();
+      const field = (
+        await fields(asOwner).post({
+          name: 'Priority',
+          fieldType: 'select',
+          options: ['Low', 'High'],
+        })
+      ).data!;
+      const [low, high] = field.options;
+      await asOwner
+        .issues({ issueId })
+        .fields({ fieldId: field.id })
+        .put({ optionIds: [low.id] });
+
+      const patched = await fields(asOwner)({ fieldId: field.id }).patch({
+        options: [{ id: high.id, value: 'High' }],
+      });
+      expect(patched.data!.options.map((o) => o.value)).toEqual(['High']);
+      expect((await issueValue(asOwner, issueId, field.id))?.optionIds ?? []).toEqual([]);
+    });
+
+    it('keeps the options when a select becomes a multi-select', async () => {
+      const { asOwner } = await setupWithIssue();
+      const field = (
+        await fields(asOwner).post({
+          name: 'Priority',
+          fieldType: 'select',
+          options: ['Low', 'High'],
+        })
+      ).data!;
+
+      const patched = await fields(asOwner)({ fieldId: field.id }).patch({
+        fieldType: 'multi_select',
+        options: field.options.map((o) => ({ id: o.id, value: o.value })),
+      });
+      expect(patched.status).toBe(200);
+      expect(patched.data).toMatchObject({ fieldType: 'multi_select' });
+      expect(patched.data!.options.map((o) => o.id)).toEqual(field.options.map((o) => o.id));
+    });
+
+    it('rejects an option list with a repeated value', async () => {
+      const { asOwner } = await setupWithIssue();
+      const field = (
+        await fields(asOwner).post({ name: 'Priority', fieldType: 'select', options: ['Low'] })
+      ).data!;
+
+      const res = await fields(asOwner)({ fieldId: field.id }).patch({
+        options: [{ value: 'Same' }, { value: 'Same' }],
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('narrows a member scope and clears only the members it no longer allows', async () => {
+      const { asOwner, ownerUserId, issueId } = await setupWithIssue();
+      const agent = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['ai-agents'].post({ name: 'Bot', username: 'bot', kind: 'external' })
+      ).data!.agent;
+      const forOwner = (
+        await fields(asOwner).post({ name: 'Reviewer', fieldType: 'member', memberScope: 'all' })
+      ).data!;
+      const forAgent = (
+        await fields(asOwner).post({ name: 'Runner', fieldType: 'member', memberScope: 'all' })
+      ).data!;
+      await asOwner
+        .issues({ issueId })
+        .fields({ fieldId: forOwner.id })
+        .put({ value: ownerUserId });
+      await asOwner
+        .issues({ issueId })
+        .fields({ fieldId: forAgent.id })
+        .put({ value: agent.userId });
+
+      await fields(asOwner)({ fieldId: forOwner.id }).patch({ memberScope: 'humans' });
+      await fields(asOwner)({ fieldId: forAgent.id }).patch({ memberScope: 'humans' });
+
+      expect((await issueValue(asOwner, issueId, forOwner.id))?.value).toBe(ownerUserId);
+      expect((await issueValue(asOwner, issueId, forAgent.id))?.value).toBeNull();
     });
 
     it('returns 404 for a missing field', async () => {

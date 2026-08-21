@@ -109,6 +109,7 @@
     "noPriority": "无优先级",
     "noType": "无类型",
     "noInitiative": "无计划",
-    "noCycle": "无周期"
+    "noCycle": "无周期",
+    "noMember": "无值"
   }
 }

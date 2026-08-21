@@ -309,7 +309,10 @@
     "state": "Статус",
     "type": "Тип",
     "labels": "Метки",
-    "labelCount": "{count, plural, one {# метка} few {# метки} many {# меток} other {# метки}}"
+    "labelCount": "{count, plural, one {# метка} few {# метки} many {# меток} other {# метки}}",
+    "noMember": "Не задано",
+    "pickMember": "Выбрать…",
+    "noCandidates": "Некого выбрать."
   },
   "watchers": {
     "watch": "Следить",

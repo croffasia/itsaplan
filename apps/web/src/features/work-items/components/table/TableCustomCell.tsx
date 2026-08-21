@@ -1,6 +1,8 @@
 import { Check, ExternalLink } from 'lucide-react';
 import { type CustomField, type Issue } from '@/lib/api';
+import { type Maps } from '@/utils/project';
 import { formatDateTimeRange, formatShortDate } from '@/utils/dates';
+import Avatar from '@/components/common/Avatar';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { MarkdownCell } from './MarkdownCell';
 
@@ -14,7 +16,15 @@ function preview(value: unknown): string {
 
 // One custom-field value cell. Reads the issue's entry for the field; an issue
 // whose type doesn't have this field (or has it unset) shows a dash.
-export function TableCustomCell({ field, issue }: { field: CustomField; issue: Issue }) {
+export function TableCustomCell({
+  field,
+  issue,
+  maps,
+}: {
+  field: CustomField;
+  issue: Issue;
+  maps: Maps;
+}) {
   const entry = issue.fieldValues.find((v) => v.fieldId === field.id);
 
   if (field.fieldType === 'select' || field.fieldType === 'multi_select') {
@@ -30,6 +40,18 @@ export function TableCustomCell({ field, issue }: { field: CustomField; issue: I
             <span className="truncate">{o.value}</span>
           </span>
         ))}
+      </div>
+    );
+  }
+
+  if (field.fieldType === 'member') {
+    const member =
+      typeof entry?.value === 'string' ? maps.assigneeById.get(entry.value) : undefined;
+    if (!member) return <div>{DASH}</div>;
+    return (
+      <div className="flex min-w-0 items-center gap-1.5 text-xs">
+        <Avatar name={member.name} image={member.image} className="size-4 text-[8px]" />
+        <span className="truncate">{member.name}</span>
       </div>
     );
   }

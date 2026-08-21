@@ -1,5 +1,5 @@
 import { startOfDay } from 'date-fns';
-import { type BoardIssue, type Issue, type IssuePatch, type ProjectDetail } from '@/lib/api';
+import { type BoardIssue, type Issue, type ProjectDetail } from '@/lib/api';
 import { parseDate } from '@/utils/dates';
 import type { FilterSet } from '@/utils/filters';
 import { buildDayTrack, type DayTrack } from '@/utils/timelineTrack';
@@ -10,6 +10,7 @@ import {
   nestIssues,
   sortIssues,
   subgroupKey,
+  type GroupAssign,
   type GroupLabels,
   type IssueGroup,
 } from '@/utils/project';
@@ -63,7 +64,7 @@ export type TimelineRow =
       count: number;
       collapsed: boolean;
       aggregateSpan: Span | null;
-      assign: IssuePatch | null;
+      assign: GroupAssign | null;
       bucket: BoardIssue[];
     }
   | {
@@ -73,7 +74,7 @@ export type TimelineRow =
       count: number;
       collapsed: boolean;
       aggregateSpan: Span | null;
-      assign: IssuePatch | null;
+      assign: GroupAssign | null;
       bucket: BoardIssue[];
     }
   | {
@@ -81,7 +82,7 @@ export type TimelineRow =
       issue: BoardIssue;
       span: Span;
       index: number;
-      assign: IssuePatch | null;
+      assign: GroupAssign | null;
       bucket: BoardIssue[];
     };
 

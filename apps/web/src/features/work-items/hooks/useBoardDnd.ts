@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
-import type { IssuePatch } from '@/lib/api';
-import { useUpdateIssue } from '@/services/issues.service';
+import type { ProjectDetail } from '@/lib/api';
 import { useDndSensors } from '@/lib/dnd';
 import { draggedIds, type BoardDropData } from '../utils/kanban';
+import { useApplyAssign } from './useApplyAssign';
 
 // Drag-and-drop state and helpers shared by the two board layouts (the flat
 // column board and the swimlane grid). It owns which card is being dragged (for
@@ -12,13 +12,11 @@ import { draggedIds, type BoardDropData } from '../utils/kanban';
 // it with the dragged issue ids — the card alone, or the whole selection when the
 // card is part of it. In a read-only share the board keeps its DndContext but
 // gets inert sensors, so no drag can ever start (see useDndSensors).
-export function useBoardDnd(projectKey: string, readOnly = false) {
-  const updateIssue = useUpdateIssue(projectKey);
+export function useBoardDnd(project: ProjectDetail, readOnly = false) {
+  const move = useApplyAssign(project);
   // The grabbed card and how many issues move with it, for the drag overlay.
   const [active, setActive] = useState<{ id: number; count: number } | null>(null);
   const sensors = useDndSensors(readOnly);
-
-  const move = (issueId: number, patch: IssuePatch) => updateIssue.mutate({ id: issueId, patch });
 
   const onDragStart = (e: DragStartEvent) =>
     setActive({ id: Number(e.active.id), count: draggedIds(e.active).length });

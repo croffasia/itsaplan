@@ -1,7 +1,13 @@
 import { useRef } from 'react';
 import { DndContext } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { buildGroups, buildMaps, sortIssues, type WorkItemsViewProps } from '@/utils/project';
+import {
+  buildGroups,
+  buildMaps,
+  groupDefaults,
+  sortIssues,
+  type WorkItemsViewProps,
+} from '@/utils/project';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useTableColumnWidths } from '../../hooks/useTableColumnWidths';
 import { useIssueReorder } from '../../hooks/useIssueReorder';
@@ -94,7 +100,7 @@ export default function TableView({
             dropId={`sec:${item.dropKey}`}
             onDrop={(id) => reorder.moveIssue(id, item.assign, item.bucket, item.bucket.length)}
             onToggle={() => collapsed.toggle(item.group.key)}
-            onAddIssue={() => onAddIssue({ ...item.group.assign })}
+            onAddIssue={() => onAddIssue(groupDefaults(item.group.assign))}
             readOnly={readOnly}
           />
         );

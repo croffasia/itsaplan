@@ -109,7 +109,7 @@ export function TableRow({
           c.kind === 'builtin' ? (
             <TableBuiltinCell key={columnKey(c)} column={c.col} issue={issue} maps={maps} />
           ) : (
-            <TableCustomCell key={columnKey(c)} field={c.field} issue={issue} />
+            <TableCustomCell key={columnKey(c)} field={c.field} issue={issue} maps={maps} />
           ),
         )}
 

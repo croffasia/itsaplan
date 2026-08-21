@@ -109,6 +109,7 @@
     "noPriority": "Без приоритета",
     "noType": "Без типа",
     "noInitiative": "Без инициативы",
-    "noCycle": "Без цикла"
+    "noCycle": "Без цикла",
+    "noMember": "Не задано"
   }
 }

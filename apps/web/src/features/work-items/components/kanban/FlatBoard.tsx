@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import {
   buildGroups,
   buildMaps,
+  groupDefaults,
   groupIssues,
   positionsAt,
   sortIssues,
@@ -42,7 +43,7 @@ export default function FlatBoard({
   const groupLabels = useGroupLabels();
   const sortedOrderMessage = useSortedOrderMessage();
   const wipLimitMessage = useWipLimitMessage();
-  const dnd = useBoardDnd(project.project.key, readOnly);
+  const dnd = useBoardDnd(project, readOnly);
   const selection = useSelection();
   const filtered = isActiveFilterSet(filters);
 
@@ -109,11 +110,11 @@ export default function FlatBoard({
       return;
     }
     const positions = positionsAt(target, index, ids.length);
-    ids.forEach((id, n) => dnd.move(id, { ...assign, position: positions[n] }));
+    ids.forEach((id, n) => dnd.move(id, assign, positions[n]));
   }
 
   function addIssueTo(group: IssueGroup) {
-    onAddIssue({ ...group.assign });
+    onAddIssue(groupDefaults(group.assign));
   }
 
   return (

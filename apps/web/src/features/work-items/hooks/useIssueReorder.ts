@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { toast } from 'sonner';
-import { type Issue, type IssuePatch, type ProjectDetail } from '@/lib/api';
-import { positionsAt } from '@/utils/project';
+import { type Issue, type ProjectDetail } from '@/lib/api';
+import { positionsAt, type GroupAssign } from '@/utils/project';
 import { useDndSensors } from '@/lib/dnd';
-import { useUpdateIssue } from '@/services/issues.service';
 import type { Sort } from '@/utils/viewTypes';
+import { useApplyAssign } from './useApplyAssign';
 import { useSortedOrderMessage } from './useSortedOrderMessage';
 import { preferPrefix, type DropData } from '../utils/dnd';
 
@@ -31,17 +31,17 @@ export function useIssueReorder({
   readOnly?: boolean;
 }) {
   const sortedOrderMessage = useSortedOrderMessage();
-  const updateIssue = useUpdateIssue(project.project.key);
+  const applyAssign = useApplyAssign(project);
   const sensors = useDndSensors(readOnly);
   const [activeId, setActiveId] = useState<number | null>(null);
 
-  function moveIssue(issueId: number, assign: IssuePatch | null, bucket: Issue[], index: number) {
+  function moveIssue(issueId: number, assign: GroupAssign | null, bucket: Issue[], index: number) {
     if (sort.field !== 'manual' && bucket.some((i) => i.id === issueId)) {
       toast.info(sortedOrderMessage(sort.field));
       return;
     }
     const [position] = positionsAt(bucket, index, 1);
-    updateIssue.mutate({ id: issueId, patch: assign ? { ...assign, position } : { position } });
+    applyAssign(issueId, assign, position);
   }
 
   return {

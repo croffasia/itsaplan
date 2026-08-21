@@ -1,4 +1,9 @@
-import { type CustomField, type IssueFieldValue, type IssueFieldValueInput } from '@/lib/api';
+import {
+  type Assignee,
+  type CustomField,
+  type IssueFieldValue,
+  type IssueFieldValueInput,
+} from '@/lib/api';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import { type Embeddable } from '../../utils/attachmentEmbed';
 import IssueCustomFieldControl from './IssueCustomFieldControl';
@@ -11,6 +16,7 @@ import { useTranslations } from 'next-intl';
 export default function IssueCustomFieldBody({
   def,
   current,
+  assignees,
   saveKey,
   uploadFile,
   imageAttachments,
@@ -19,6 +25,7 @@ export default function IssueCustomFieldBody({
 }: {
   def: CustomField;
   current: IssueFieldValue | undefined;
+  assignees: Assignee[];
   saveKey: string;
   uploadFile?: (file: File) => Promise<Embeddable>;
   imageAttachments?: Embeddable[];
@@ -49,6 +56,7 @@ export default function IssueCustomFieldBody({
         <IssueCustomFieldControl
           def={def}
           current={current}
+          assignees={assignees}
           saveKey={saveKey}
           onChange={(value) => onSetField(def.id, value)}
           readOnly={readOnly}

@@ -1,4 +1,12 @@
-import { db, customField, customFieldOption } from '@repo/db';
+import {
+  db,
+  agentFieldTrigger,
+  aiAgent,
+  customField,
+  customFieldOption,
+  issueFieldOption,
+  issueFieldValue,
+} from '@repo/db';
 import { and, asc, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { getIssueTypeById } from '#modules/issue-types/service';
@@ -19,7 +27,11 @@ export type CustomFieldType =
   | 'datetime'
   | 'datetime_range'
   | 'select'
-  | 'multi_select';
+  | 'multi_select'
+  | 'member';
+
+// Who a member field may hold. Null for every other field type.
+export type MemberScope = 'all' | 'humans' | 'agents';
 
 export interface CustomFieldOptionRow {
   id: number;
@@ -33,6 +45,7 @@ export interface CustomFieldRow {
   issueTypeId: number | null;
   name: string;
   fieldType: CustomFieldType;
+  memberScope: MemberScope | null;
   showInBody: boolean;
   position: number;
   options: CustomFieldOptionRow[];
@@ -47,6 +60,7 @@ function mapField(
     issueTypeId: row.issueTypeId,
     name: row.name,
     fieldType: row.fieldType as CustomFieldType,
+    memberScope: row.memberScope as MemberScope | null,
     showInBody: row.showInBody,
     position: row.position,
     options,
@@ -98,6 +112,22 @@ export async function listCustomFields(
   return fields.map((f) => mapField(f, options.get(f.id) ?? []));
 }
 
+// The ids of the member fields of a project an agent can be set into: the ones whose
+// scope holds agents. These are the fields an agent may carry a run trigger for.
+export async function listAgentMemberFieldIds(projectId: number): Promise<number[]> {
+  const rows = await db
+    .select({ id: customField.id })
+    .from(customField)
+    .where(
+      and(
+        eq(customField.projectId, projectId),
+        eq(customField.fieldType, 'member'),
+        inArray(customField.memberScope, ['all', 'agents']),
+      ),
+    );
+  return rows.map((r) => r.id);
+}
+
 // One field by id, scoped to its project so a field id from another project is
 // not matched. Returns null when no field of that id exists in the project.
 export async function getCustomFieldById(
@@ -118,6 +148,7 @@ export async function createCustomField(input: {
   issueTypeId?: number | null;
   name: string;
   fieldType: CustomFieldType;
+  memberScope?: MemberScope | null;
   showInBody?: boolean;
   options?: string[];
 }): Promise<CustomFieldRow> {
@@ -144,6 +175,7 @@ export async function createCustomField(input: {
       issueTypeId,
       name: input.name,
       fieldType: input.fieldType,
+      memberScope: input.fieldType === 'member' ? (input.memberScope ?? 'all') : null,
       showInBody: input.showInBody ?? false,
       position: Number(pos),
     })
@@ -157,28 +189,130 @@ export async function createCustomField(input: {
   return (await getCustomFieldById(input.projectId, row.id))!;
 }
 
+type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+function holdsOptions(fieldType: CustomFieldType): boolean {
+  return fieldType === 'select' || fieldType === 'multi_select';
+}
+
+// Every value issues hold in the field, both the scalar rows and the selections of
+// its options. A value is written into the column of the type it was set under, so
+// it is unreadable once the field carries another type.
+async function clearFieldValues(tx: Transaction, fieldId: number): Promise<void> {
+  await tx.delete(issueFieldValue).where(eq(issueFieldValue.fieldId, fieldId));
+  await tx.delete(issueFieldOption).where(eq(issueFieldOption.fieldId, fieldId));
+}
+
+// Clears the members a narrowed scope no longer allows, leaving the rest in place.
+// An agent of the project is one whose bot user backs an ai_agent row of it.
+async function clearMembersOutOfScope(
+  tx: Transaction,
+  projectId: number,
+  fieldId: number,
+  scope: MemberScope,
+): Promise<void> {
+  if (scope === 'all') return;
+  const isAgent = sql`EXISTS (SELECT 1 FROM ${aiAgent} WHERE ${aiAgent.userId} = ${issueFieldValue.valueUserId} AND ${aiAgent.projectId} = ${projectId})`;
+  await tx
+    .update(issueFieldValue)
+    .set({ valueUserId: null })
+    .where(
+      and(eq(issueFieldValue.fieldId, fieldId), scope === 'humans' ? isAgent : sql`NOT ${isAgent}`),
+    );
+}
+
+// Writes the option list a select field should end up with. An option that arrives
+// with an id is renamed in place, so the issues holding it keep it; one that is left
+// out is deleted, and its selections go with it.
+async function syncOptions(
+  tx: Transaction,
+  fieldId: number,
+  existing: CustomFieldOptionRow[],
+  next: { id?: number; value: string }[],
+): Promise<void> {
+  const values = next.map((o) => o.value);
+  if (new Set(values).size !== values.length) {
+    throw new HttpError(400, 'Option values must be unique');
+  }
+  const byId = new Map(existing.map((o) => [o.id, o]));
+  const kept = new Set(
+    next.map((o) => o.id).filter((id): id is number => id != null && byId.has(id)),
+  );
+  const removed = existing.filter((o) => !kept.has(o.id)).map((o) => o.id);
+  if (removed.length > 0) {
+    await tx.delete(customFieldOption).where(inArray(customFieldOption.id, removed));
+  }
+  for (const [position, option] of next.entries()) {
+    if (option.id != null && kept.has(option.id)) {
+      await tx
+        .update(customFieldOption)
+        .set({ value: option.value, position })
+        .where(eq(customFieldOption.id, option.id));
+    } else {
+      await tx.insert(customFieldOption).values({ fieldId, value: option.value, position });
+    }
+  }
+}
+
 // Updates a field, scoped to its project. Returns null when no field of that id
-// exists in the project.
+// exists in the project. A field can be reshaped after creation, and the values
+// issues already hold follow the reshape: changing the type clears them, narrowing
+// a member scope clears the ones it no longer allows, and dropping an option clears
+// the selections of it.
 export async function updateCustomField(
   projectId: number,
   id: number,
-  patch: { name?: string; showInBody?: boolean },
+  patch: {
+    name?: string;
+    showInBody?: boolean;
+    fieldType?: CustomFieldType;
+    memberScope?: MemberScope;
+    options?: { id?: number; value: string }[];
+  },
 ): Promise<CustomFieldRow | null> {
-  const scope = and(eq(customField.id, id), eq(customField.projectId, projectId));
-  const set: Partial<typeof customField.$inferInsert> = {};
-  if (patch.name !== undefined) set.name = patch.name;
-  if (patch.showInBody !== undefined) set.showInBody = patch.showInBody;
-  if (Object.keys(set).length > 0) {
-    const updated = await db
-      .update(customField)
-      .set(set)
-      .where(scope)
-      .returning({ id: customField.id });
-    if (updated.length === 0) return null;
-  } else {
-    const rows = await db.select({ id: customField.id }).from(customField).where(scope);
-    if (rows.length === 0) return null;
+  const current = await getCustomFieldById(projectId, id);
+  if (!current) return null;
+
+  const fieldType = patch.fieldType ?? current.fieldType;
+  const typeChanged = fieldType !== current.fieldType;
+  // A field that has just become a member field carries no scope yet, so it starts
+  // at the same default a new one gets.
+  let memberScope: MemberScope | null = null;
+  if (fieldType === 'member') {
+    memberScope = patch.memberScope ?? (typeChanged ? 'all' : current.memberScope);
   }
+
+  await db.transaction(async (tx) => {
+    await tx
+      .update(customField)
+      .set({
+        name: patch.name ?? current.name,
+        showInBody: patch.showInBody ?? current.showInBody,
+        fieldType,
+        memberScope,
+      })
+      .where(and(eq(customField.id, id), eq(customField.projectId, projectId)));
+
+    if (typeChanged) {
+      await clearFieldValues(tx, id);
+      if (!holdsOptions(fieldType)) {
+        await tx.delete(customFieldOption).where(eq(customFieldOption.fieldId, id));
+      }
+    } else if (memberScope != null && memberScope !== current.memberScope) {
+      await clearMembersOutOfScope(tx, projectId, id, memberScope);
+    }
+
+    // A field that no longer takes agents drops its agent triggers: kept, they would
+    // arm again on their own once the field takes agents anew.
+    if (fieldType !== 'member' || memberScope === 'humans') {
+      await tx.delete(agentFieldTrigger).where(eq(agentFieldTrigger.fieldId, id));
+    }
+
+    if (patch.options && holdsOptions(fieldType)) {
+      await syncOptions(tx, id, current.options, patch.options);
+    }
+  });
+
   return getCustomFieldById(projectId, id);
 }
 

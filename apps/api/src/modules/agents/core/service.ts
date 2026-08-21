@@ -7,6 +7,7 @@ import {
   projectRole,
   agentSkillLink,
   agentToolLink,
+  agentFieldTrigger,
   integrationCredential,
 } from '@repo/db';
 import { and, eq, inArray, ne, sql } from 'drizzle-orm';
@@ -17,6 +18,7 @@ import { integrationKind } from '../integrations/catalog';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
+import { listAgentMemberFieldIds } from '#modules/custom-fields/service';
 
 // Data access for AI agents. Each agent is backed by a hidden bot user
 // (ai_agent.user_id -> user.id): that user is what a work item is assigned to,
@@ -41,6 +43,13 @@ export type AgentKind = 'external' | 'internal';
 // credentials should serve nobody else.
 export type RunnerScope = 'owner' | 'project';
 
+// One member custom field an agent reacts to, with the seconds its run waits before
+// the agent may pick it up.
+export interface FieldTrigger {
+  fieldId: number;
+  delaySec: number;
+}
+
 export interface AiAgentRow {
   id: number;
   projectId: number;
@@ -61,6 +70,10 @@ export interface AiAgentRow {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // The member custom fields the agent also reacts to: being set into one of them
+  // starts a run the way being made an issue's delegate does. Each field carries its
+  // own delay, so a field can start at once while another leaves time to edit.
+  fieldTriggers: FieldTrigger[];
   // How long a delegation run waits before it can be claimed.
   delegationDelaySec: number;
   // The project_role the bot user acts under. NULL falls back to the project's
@@ -105,6 +118,7 @@ function mapAgent(row: {
   memoryLastMessages: number | null;
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  fieldTriggers: FieldTrigger[];
   delegationDelaySec: number;
   roleId: number | null;
   ownerUserId: string | null;
@@ -134,6 +148,7 @@ function mapAgent(row: {
     memoryLastMessages: row.memoryLastMessages,
     triggerOnMention: row.triggerOnMention,
     triggerOnAssign: row.triggerOnAssign,
+    fieldTriggers: row.fieldTriggers,
     delegationDelaySec: row.delegationDelaySec,
     roleId: row.roleId,
     ownerUserId: row.ownerUserId,
@@ -165,6 +180,9 @@ const agentColumns = {
   memoryLastMessages: aiAgent.memoryLastMessages,
   triggerOnMention: aiAgent.triggerOnMention,
   triggerOnAssign: aiAgent.triggerOnAssign,
+  fieldTriggers: sql<
+    FieldTrigger[]
+  >`(select coalesce(json_agg(json_build_object('fieldId', ${agentFieldTrigger.fieldId}, 'delaySec', ${agentFieldTrigger.delaySec}) order by ${agentFieldTrigger.fieldId}), '[]'::json) from ${agentFieldTrigger} where ${agentFieldTrigger.agentId} = ${aiAgent.id})`,
   delegationDelaySec: aiAgent.delegationDelaySec,
   roleId: aiAgent.roleId,
   ownerUserId: aiAgent.ownerUserId,
@@ -282,6 +300,49 @@ export async function getAssignTriggerAgent(
   return { id: row.id, delegationDelaySec: row.delegationDelaySec };
 }
 
+// The agent whose bot user is userId and that reacts to being set into that member
+// field, or null. The counterpart of getAssignTriggerAgent for a custom field.
+export async function getFieldTriggerAgent(
+  userId: string,
+  fieldId: number,
+  actorUserId: string | null,
+): Promise<{ id: number; delaySec: number } | null> {
+  const rows = await db
+    .select({
+      id: aiAgent.id,
+      delaySec: agentFieldTrigger.delaySec,
+      ...triggerScopeColumns,
+    })
+    .from(aiAgent)
+    .innerJoin(agentFieldTrigger, eq(agentFieldTrigger.agentId, aiAgent.id))
+    .where(and(eq(aiAgent.userId, userId), eq(agentFieldTrigger.fieldId, fieldId)))
+    .limit(1);
+  const row = rows[0];
+  if (!row || !isTriggerableBy(row, actorUserId)) return null;
+  return { id: row.id, delaySec: row.delaySec };
+}
+
+// Replaces the member fields an agent reacts to. A field that no member field of the
+// project holds agents for is dropped, so a stale id from a client never links.
+async function setFieldTriggers(
+  agentId: number,
+  projectId: number,
+  triggers: FieldTrigger[],
+): Promise<void> {
+  const allowed = new Set(await listAgentMemberFieldIds(projectId));
+  const byField = new Map(
+    triggers.filter((t) => allowed.has(t.fieldId)).map((t) => [t.fieldId, t.delaySec]),
+  );
+  await db.transaction(async (tx) => {
+    await tx.delete(agentFieldTrigger).where(eq(agentFieldTrigger.agentId, agentId));
+    if (byField.size > 0) {
+      await tx
+        .insert(agentFieldTrigger)
+        .values([...byField].map(([fieldId, delaySec]) => ({ agentId, fieldId, delaySec })));
+    }
+  });
+}
+
 // True if the user id is the bot user of an agent in this project. Validates that a
 // delegate is an agent of the same project before it is written to an issue.
 export async function isProjectAgent(projectId: number, userId: string): Promise<boolean> {
@@ -364,6 +425,8 @@ export interface NewAgentInput {
   // for its API key alone must not collect runs no one drains.
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  // The member custom fields that start a run when the agent is set into one.
+  fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
   // Authorization role. Required in effect for an external agent: left out, it
   // resolves to the project's default role.
@@ -467,6 +530,10 @@ export async function createAgent(
     }
   });
 
+  if (input.fieldTriggers?.length) {
+    await setFieldTriggers(agentId, projectId, input.fieldTriggers);
+  }
+
   // Issued outside the transaction: better-auth writes the key through its own
   // connection, so it cannot join this one.
   const apiKey = await issueKey(userId, input.name);
@@ -558,6 +625,7 @@ export interface AgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  fieldTriggers?: FieldTrigger[];
   delegationDelaySec?: number;
   roleId?: number | null;
   runnerScope?: RunnerScope;
@@ -626,6 +694,9 @@ export async function updateAgent(
       rethrowDuplicate(err, 'An agent with this username');
       throw err;
     }
+  }
+  if (patch.fieldTriggers !== undefined) {
+    await setFieldTriggers(id, projectId, patch.fieldTriggers);
   }
 
   return getAgentById(id, projectId);

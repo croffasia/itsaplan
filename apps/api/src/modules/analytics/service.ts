@@ -443,7 +443,7 @@ export async function listActivity(
 export interface AgentRunFeedItem {
   id: number;
   status: string;
-  trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
+  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual';
   agentId: number;
   agentName: string;
   issueId: number | null;

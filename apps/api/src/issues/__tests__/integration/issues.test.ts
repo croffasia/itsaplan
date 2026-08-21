@@ -12,6 +12,7 @@ import { resetDb } from '../../../__tests__/helpers/db';
 
 interface Setup {
   asOwner: Api;
+  ownerUserId: string;
   columnId: number;
   columnIds: number[];
 }
@@ -24,7 +25,7 @@ async function setupProject(): Promise<Setup> {
   await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
   const columnIds = view.data!.columns.map((c) => c.id);
-  return { asOwner, columnId: columnIds[0], columnIds };
+  return { asOwner, ownerUserId: owner.userId, columnId: columnIds[0], columnIds };
 }
 
 function createIssue(client: Api, columnId: number, patch: Record<string, unknown> = {}) {
@@ -501,6 +502,103 @@ describe('issues', () => {
       expect(put.data).toMatchObject({ ok: true });
 
       expect((await fieldValue(asOwner, issue.id, field.id))?.value).toBe('hello');
+    });
+
+    // A member field holds a user id. Which users it offers is its scope: everyone
+    // the project has, the people only, or the agents only.
+    async function memberField(
+      client: Api,
+      name: string,
+      memberScope: 'all' | 'humans' | 'agents',
+    ) {
+      const res = await client
+        .projects({ projectKey: 'MKT' })
+        ['custom-fields'].post({ name, fieldType: 'member', memberScope });
+      return res.data!;
+    }
+
+    async function createAgentUserId(client: Api) {
+      const res = await client
+        .projects({ projectKey: 'MKT' })
+        ['ai-agents'].post({ name: 'Bot', username: 'bot', kind: 'external' });
+      return res.data!.agent.userId;
+    }
+
+    it('sets a member field to a project member', async () => {
+      const { asOwner, ownerUserId, columnId } = await setupProject();
+      const field = await memberField(asOwner, 'Reviewer', 'all');
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: ownerUserId });
+      expect(put.status).toBe(200);
+
+      expect((await fieldValue(asOwner, issue.id, field.id))?.value).toBe(ownerUserId);
+    });
+
+    it('clears a member field with a null value', async () => {
+      const { asOwner, ownerUserId, columnId } = await setupProject();
+      const field = await memberField(asOwner, 'Reviewer', 'all');
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const fields = asOwner.issues({ issueId: issue.id }).fields({ fieldId: field.id });
+
+      await fields.put({ value: ownerUserId });
+      expect((await fields.put({ value: null })).status).toBe(200);
+      expect((await fieldValue(asOwner, issue.id, field.id))?.value).toBeNull();
+    });
+
+    it('rejects a member field value that is not a member of the project', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const outsider = await signUpTestUser();
+      const field = await memberField(asOwner, 'Reviewer', 'all');
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: outsider.userId });
+      expect(put.status).toBe(400);
+    });
+
+    it('rejects an agent in a field scoped to the people', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const agentUserId = await createAgentUserId(asOwner);
+      const field = await memberField(asOwner, 'Reviewer', 'humans');
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: agentUserId });
+      expect(put.status).toBe(400);
+    });
+
+    it('rejects a member in a field scoped to the agents', async () => {
+      const { asOwner, ownerUserId, columnId } = await setupProject();
+      const field = await memberField(asOwner, 'Runner', 'agents');
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: ownerUserId });
+      expect(put.status).toBe(400);
+    });
+
+    it('accepts an agent in a field scoped to the agents', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const agentUserId = await createAgentUserId(asOwner);
+      const field = await memberField(asOwner, 'Runner', 'agents');
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      const put = await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: agentUserId });
+      expect(put.status).toBe(200);
+      expect((await fieldValue(asOwner, issue.id, field.id))?.value).toBe(agentUserId);
     });
 
     it("sets a select field's option ids", async () => {

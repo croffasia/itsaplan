@@ -214,8 +214,6 @@ export default function IssueProperties({
         />
       </PropertyRow>
 
-      {/* Custom fields not flagged "show in main info". A markdown field here
-          spans both columns as a full-width block; the rest are property rows. */}
       {fieldDefs
         .filter((def) => !def.showInBody)
         .map((def) => {
@@ -227,6 +225,7 @@ export default function IssueProperties({
                 <IssueCustomFieldBody
                   def={def}
                   current={current}
+                  assignees={project.assignees}
                   saveKey={saveKey}
                   uploadFile={uploadFile}
                   imageAttachments={imageAttachments}
@@ -241,6 +240,7 @@ export default function IssueProperties({
               <IssueCustomFieldControl
                 def={def}
                 current={current}
+                assignees={project.assignees}
                 saveKey={saveKey}
                 onChange={(value) => onSetField(def.id, value)}
                 readOnly={readOnly}

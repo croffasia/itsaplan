@@ -212,6 +212,12 @@ export interface Assignee {
   restrictedToUserId: string | null;
 }
 
+// One member custom field an agent reacts to, with the seconds its run waits.
+export interface AgentFieldTrigger {
+  fieldId: number;
+  delaySec: number;
+}
+
 // An AI agent on a project: a bot user plus its configuration. `kind` is
 // 'external' (driven by an outside caller through the API) or 'internal' (run by
 // the built-in runtime, so it carries provider/model/instructions/tools). Only an
@@ -237,6 +243,9 @@ export interface AiAgent {
   // Run triggers.
   triggerOnMention: boolean;
   triggerOnAssign: boolean;
+  // The member custom fields that start a run when the agent is set into one, each
+  // with the seconds its run waits before the agent may pick it up.
+  fieldTriggers: AgentFieldTrigger[];
   // How long a delegation run waits before the agent may pick it up.
   delegationDelaySec: number;
   // External-agent authorization role (a project_role id, or null for the default).
@@ -268,7 +277,7 @@ export type AgentRunStatus = 'pending' | 'success' | 'failed' | 'canceled';
 export interface AgentRun {
   id: number;
   status: AgentRunStatus;
-  trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
+  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual';
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;
@@ -352,6 +361,7 @@ export interface NewAiAgentInput {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  fieldTriggers?: AgentFieldTrigger[];
   delegationDelaySec?: number;
   roleId?: number | null;
   runnerScope?: 'owner' | 'project';
@@ -370,6 +380,7 @@ export interface AiAgentPatch {
   memoryLastMessages?: number | null;
   triggerOnMention?: boolean;
   triggerOnAssign?: boolean;
+  fieldTriggers?: AgentFieldTrigger[];
   delegationDelaySec?: number;
   roleId?: number | null;
   runnerScope?: 'owner' | 'project';
@@ -693,7 +704,12 @@ export type CustomFieldType =
   | 'datetime'
   | 'datetime_range'
   | 'select'
-  | 'multi_select';
+  | 'multi_select'
+  | 'member';
+
+// Who a member field may hold: every candidate, the people only, or the agents only.
+// Null for every other field type.
+export type MemberScope = 'all' | 'humans' | 'agents';
 
 export interface CustomFieldOption {
   id: number;
@@ -707,6 +723,7 @@ export interface CustomField {
   issueTypeId: number | null;
   name: string;
   fieldType: CustomFieldType;
+  memberScope: MemberScope | null;
   // When true the field renders in the issue body (under the description);
   // when false it renders as a Properties row.
   showInBody: boolean;
@@ -1375,7 +1392,7 @@ export interface ThroughputWeek {
 export interface AgentRunFeedItem {
   id: number;
   status: AgentRunStatus;
-  trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
+  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual';
   agentId: number;
   agentName: string;
   issueId: number | null;
@@ -2075,10 +2092,24 @@ export interface InitiativeFeedPage {
   nextCursor: FeedCursor | null;
 }
 
+// A field can be reshaped after it exists, and the values issues hold follow: a new
+// fieldType clears them, a narrowed memberScope clears the ones it no longer allows,
+// and an option missing from `options` is deleted along with the selections of it.
+export interface CustomFieldPatch {
+  name?: string;
+  showInBody?: boolean;
+  fieldType?: CustomFieldType;
+  memberScope?: MemberScope;
+  // The full option list of a select field, in display order. An entry with an id
+  // renames that option; one without is new.
+  options?: { id?: number; value: string }[];
+}
+
 export interface NewCustomFieldInput {
   issueTypeId?: number | null;
   name: string;
   fieldType: CustomFieldType;
+  memberScope?: MemberScope;
   showInBody?: boolean;
   options?: string[];
 }
@@ -2408,11 +2439,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
-  updateCustomField: (
-    projectKey: string,
-    fieldId: number,
-    patch: { name?: string; showInBody?: boolean },
-  ) =>
+  updateCustomField: (projectKey: string, fieldId: number, patch: CustomFieldPatch) =>
     request<CustomField>(`/projects/${projectKey}/custom-fields/${fieldId}`, {
       method: 'PATCH',
       body: JSON.stringify(patch),

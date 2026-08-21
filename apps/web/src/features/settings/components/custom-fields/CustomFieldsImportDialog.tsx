@@ -8,7 +8,7 @@ import Modal from '@/components/common/overlay/Modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCreateCustomField, useCreateIssueType } from '../../services/settings.service';
-import { useFieldTypeLabel } from './SettingsCustomFieldForm';
+import { useFieldTypeLabel } from '../../utils/fieldTypes';
 import type { CustomFieldsImportPlan } from '../../utils/customFieldsTransfer';
 
 // Confirms a custom fields paste before applying it. Lists any issue types that will be
@@ -53,6 +53,7 @@ export default function CustomFieldsImportDialog({
           issueTypeId,
           name: field.name,
           fieldType: field.fieldType,
+          memberScope: field.memberScope ?? undefined,
           showInBody: field.showInBody,
           options: field.options,
         });

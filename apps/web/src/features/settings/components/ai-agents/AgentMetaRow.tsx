@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import { AtSign, BookOpen, Sparkles, UserRoundCheck, Wrench, Zap } from 'lucide-react';
+import { AtSign, BookOpen, ListChecks, Sparkles, UserRoundCheck, Wrench, Zap } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
@@ -53,11 +53,12 @@ export function AgentMetaRow({
   );
 }
 
-// The enabled run triggers for an internal agent (mention, delegation), or a muted
-// dash when none are on.
+// The enabled run triggers for an internal agent (mention, delegation, member
+// fields), or a muted dash when none are on.
 export function AgentTriggers({ agent }: { agent: AiAgent }) {
   const t = useTranslations('settings.agents');
-  if (!agent.triggerOnMention && !agent.triggerOnAssign) {
+  const fieldCount = agent.fieldTriggers.length;
+  if (!agent.triggerOnMention && !agent.triggerOnAssign && fieldCount === 0) {
     return <span className="text-xs text-muted-foreground">{t('triggersNone')}</span>;
   }
   return (
@@ -70,6 +71,11 @@ export function AgentTriggers({ agent }: { agent: AiAgent }) {
       {agent.triggerOnAssign && (
         <MetaChip icon={UserRoundCheck} accent>
           {t('triggerDelegation')}
+        </MetaChip>
+      )}
+      {fieldCount > 0 && (
+        <MetaChip icon={ListChecks} accent>
+          {t('triggerFieldCount', { count: fieldCount })}
         </MetaChip>
       )}
     </div>

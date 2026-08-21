@@ -59,6 +59,7 @@ const AgentRunFeedItem = t.Object({
   trigger: t.Union([
     t.Literal('mention'),
     t.Literal('delegation'),
+    t.Literal('field'),
     t.Literal('schedule'),
     t.Literal('manual'),
   ]),

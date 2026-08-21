@@ -7,7 +7,9 @@ import { resetDb } from '#tests/helpers/db';
 // triggered runs (a mention or a delegation), newest first, keyset-paginated. Runs are
 // created by the same paths the runtime uses: mentioning the agent in a comment queues
 // a mention run; delegating an issue to an agent with trigger_on_assign queues a
-// delegation run. The poller (a live LLM call) is not exercised, so runs stay pending.
+// delegation run; setting it into a member custom field it carries a trigger for
+// queues a field run, held back by that trigger's own delay. The poller (a live LLM
+// call) is not exercised, so runs stay pending.
 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
@@ -27,6 +29,21 @@ function createIssue(client: Api, columnId: number, title = 'Task') {
 async function createInternalAgent(asOwner: Api, name: string, username: string) {
   const res = await agents(asOwner).post({ name, username, kind: 'internal' });
   return res.data!.agent;
+}
+
+// A member field that takes agents.
+async function memberField(asOwner: Api, name: string) {
+  const res = await asOwner
+    .projects({ projectKey: 'MKT' })
+    ['custom-fields'].post({ name, fieldType: 'member', memberScope: 'agents' });
+  return res.data!;
+}
+
+// A member field the agent reacts to, with the delay its run waits.
+async function fieldTrigger(asOwner: Api, agentId: number, name: string, delaySec: number) {
+  const field = await memberField(asOwner, name);
+  await agents(asOwner)({ agentId }).patch({ fieldTriggers: [{ fieldId: field.id, delaySec }] });
+  return field;
 }
 
 // Queues a mention run by commenting on the issue with the agent tagged.
@@ -82,6 +99,49 @@ describe('agent run history', () => {
     expect(res.data!.items[0]).toMatchObject({ trigger: 'delegation', issueId: issue.id });
   });
 
+  it('queues a run when the agent is set into a field it reacts to', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const field = (
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        ['custom-fields'].post({ name: 'Reviewer', fieldType: 'member', memberScope: 'agents' })
+    ).data!;
+    await agents(asOwner)({ agentId: agent.id }).patch({
+      fieldTriggers: [{ fieldId: field.id, delaySec: 0 }],
+    });
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asOwner
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: field.id })
+      .put({ value: agent.userId });
+
+    const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
+    expect(res.data!.items.length).toBe(1);
+    expect(res.data!.items[0]).toMatchObject({ trigger: 'field', issueId: issue.id });
+    expect(res.data!.items[0].prompt).toContain('Reviewer');
+  });
+
+  it('queues nothing when the agent carries no trigger for the field', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const field = (
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        ['custom-fields'].post({ name: 'Reviewer', fieldType: 'member', memberScope: 'agents' })
+    ).data!;
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asOwner
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: field.id })
+      .put({ value: agent.userId });
+
+    const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
+    expect(res.data!.items).toEqual([]);
+  });
+
   it('holds a delegation run back by the agent delay, and a mention run not at all', async () => {
     const { asOwner, columnId } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
@@ -113,6 +173,76 @@ describe('agent run history', () => {
     const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
     const run = res.data!.items[0];
     expect(new Date(run.nextAttemptAt).getTime()).toBeLessThanOrEqual(Date.now());
+  });
+
+  it("holds a field run back by that field trigger's own delay", async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const now = await memberField(asOwner, 'Reviewer');
+    const later = await memberField(asOwner, 'Owner');
+    await agents(asOwner)({ agentId: agent.id }).patch({
+      fieldTriggers: [
+        { fieldId: now.id, delaySec: 0 },
+        { fieldId: later.id, delaySec: 600 },
+      ],
+    });
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asOwner
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: now.id })
+      .put({ value: agent.userId });
+    await asOwner
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: later.id })
+      .put({ value: agent.userId });
+
+    const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
+    const byField = res.data!.items.map((r) => ({
+      prompt: r.prompt,
+      dueInMs: new Date(r.nextAttemptAt).getTime() - Date.now(),
+    }));
+    const immediate = byField.find((r) => r.prompt.includes('Reviewer'))!;
+    const delayed = byField.find((r) => r.prompt.includes('Owner'))!;
+    expect(immediate.dueInMs).toBeLessThanOrEqual(0);
+    expect(delayed.dueInMs).toBeGreaterThan(590_000);
+  });
+
+  it('queues nothing when the same member is set again', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const field = await fieldTrigger(asOwner, agent.id, 'Reviewer', 0);
+    const issue = (await createIssue(asOwner, columnId)).data!;
+    const value = asOwner.issues({ issueId: issue.id }).fields({ fieldId: field.id });
+
+    await value.put({ value: agent.userId });
+    await value.put({ value: agent.userId });
+
+    const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
+    expect(res.data!.items.length).toBe(1);
+  });
+
+  it('drops the trigger when the field stops taking agents', async () => {
+    const { asOwner, columnId } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const field = await fieldTrigger(asOwner, agent.id, 'Reviewer', 0);
+    await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['custom-fields']({ fieldId: field.id })
+      .patch({ memberScope: 'humans' });
+    await asOwner
+      .projects({ projectKey: 'MKT' })
+      ['custom-fields']({ fieldId: field.id })
+      .patch({ memberScope: 'agents' });
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    await asOwner
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: field.id })
+      .put({ value: agent.userId });
+
+    const res = await agents(asOwner)({ agentId: agent.id }).runs.get();
+    expect(res.data!.items).toEqual([]);
   });
 
   it('paginates newest first with a keyset cursor', async () => {

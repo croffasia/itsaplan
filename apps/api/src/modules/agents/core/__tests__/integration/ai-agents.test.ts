@@ -409,6 +409,32 @@ describe('ai agents', () => {
     });
   });
 
+  it('links the member fields the agent reacts to, and drops the ids of other fields', async () => {
+    const { asOwner } = await setup();
+    const fields = asOwner.projects({ projectKey: 'MKT' })['custom-fields'];
+    const reviewer = (
+      await fields.post({ name: 'Reviewer', fieldType: 'member', memberScope: 'agents' })
+    ).data!;
+    // A field the agents cannot be set into carries no trigger, so its id is dropped.
+    const owner = (await fields.post({ name: 'Owner', fieldType: 'member', memberScope: 'humans' }))
+      .data!;
+    const created = await agents(asOwner).post({ name: 'Bot', username: 'bot', kind: 'internal' });
+    const agentId = created.data!.agent.id;
+    expect(created.data!.agent.fieldTriggers).toEqual([]);
+
+    const res = await agents(asOwner)({ agentId }).patch({
+      fieldTriggers: [
+        { fieldId: reviewer.id, delaySec: 300 },
+        { fieldId: owner.id, delaySec: 0 },
+      ],
+    });
+    expect(res.status).toBe(200);
+    expect(res.data?.fieldTriggers).toEqual([{ fieldId: reviewer.id, delaySec: 300 }]);
+
+    const cleared = await agents(asOwner)({ agentId }).patch({ fieldTriggers: [] });
+    expect(cleared.data?.fieldTriggers).toEqual([]);
+  });
+
   it('deletes an agent and drops it from assignee candidates', async () => {
     const { asOwner } = await setup();
     const created = await agents(asOwner).post({ name: 'Bot', username: 'bot', kind: 'external' });

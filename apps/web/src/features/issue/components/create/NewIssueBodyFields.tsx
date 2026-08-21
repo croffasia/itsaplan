@@ -1,4 +1,4 @@
-import { type CustomField, type IssueFieldValueInput } from '@/lib/api';
+import { type Assignee, type CustomField, type IssueFieldValueInput } from '@/lib/api';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 
 // The body fields that are not markdown, gathered in the "Other" section: a pill
@@ -6,10 +6,12 @@ import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 export default function NewIssueBodyFields({
   defs,
   values,
+  assignees,
   onChange,
 }: {
   defs: CustomField[];
   values: Record<number, IssueFieldValueInput>;
+  assignees: Assignee[];
   onChange: (id: number, patch: IssueFieldValueInput) => void;
 }) {
   return (
@@ -22,6 +24,7 @@ export default function NewIssueBodyFields({
           <IssueCustomFieldPill
             def={def}
             value={values[def.id]}
+            assignees={assignees}
             onChange={(v) => onChange(def.id, v)}
           />
         </div>

@@ -1,11 +1,12 @@
 // Serialize/parse a project's custom fields for the copy/paste transfer between
 // projects. The payload holds each field with its scope named by the issue type (null
 // for a global field) and, for select fields, its option values. Matching is by name
-// within a scope: an existing field is left as is (its type and options cannot be
-// changed after creation), a missing one is created, and a referenced issue type that
+// within a scope: an existing field is left as is (a paste never rewrites what the
+// project already defines), a missing one is created, and a referenced issue type that
 // does not exist yet is created first.
 
-import type { CustomField, CustomFieldType, IssueType } from '@/lib/api';
+import type { CustomField, CustomFieldType, IssueType, MemberScope } from '@/lib/api';
+import { FIELD_TYPES, MEMBER_SCOPES } from './fieldTypes';
 
 const PAYLOAD_TYPE = 'plan.custom-fields';
 const PAYLOAD_VERSION = 1;
@@ -13,6 +14,7 @@ const PAYLOAD_VERSION = 1;
 export interface FieldTransfer {
   name: string;
   fieldType: CustomFieldType;
+  memberScope: MemberScope | null;
   showInBody: boolean;
   options: string[];
   // The issue type's name this field is scoped to, or null for a global field.
@@ -35,19 +37,6 @@ export interface CustomFieldsImportPlan {
   fields: PlannedField[];
 }
 
-const FIELD_TYPES: CustomFieldType[] = [
-  'text',
-  'markdown',
-  'url',
-  'number',
-  'boolean',
-  'date',
-  'datetime',
-  'datetime_range',
-  'select',
-  'multi_select',
-];
-
 // The clipboard text for the project's custom fields. When includeTypeScoped is false,
 // only global fields are exported.
 export function serializeCustomFields(
@@ -62,6 +51,7 @@ export function serializeCustomFields(
     fields: chosen.map((f) => ({
       name: f.name,
       fieldType: f.fieldType,
+      memberScope: f.memberScope,
       showInBody: f.showInBody,
       options: f.options.map((o) => o.value),
       type: f.issueTypeId != null ? (typeNameById.get(f.issueTypeId) ?? null) : null,
@@ -90,6 +80,9 @@ export function parseCustomFieldsText(text: string): FieldTransfer[] {
     fields.push({
       name,
       fieldType: raw.fieldType as CustomFieldType,
+      memberScope: MEMBER_SCOPES.includes(raw?.memberScope as MemberScope)
+        ? (raw.memberScope as MemberScope)
+        : null,
       showInBody: raw?.showInBody === true,
       options: Array.isArray(raw?.options)
         ? raw.options.filter((o): o is string => typeof o === 'string')

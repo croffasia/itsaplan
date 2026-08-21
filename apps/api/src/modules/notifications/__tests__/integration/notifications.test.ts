@@ -118,6 +118,30 @@ describe('notifications', () => {
     expect(ownerInbox.data!.items).toHaveLength(0);
   });
 
+  it('notifies the member put into a member custom field', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    const field = (
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        ['custom-fields'].post({ name: 'Reviewer', fieldType: 'member', memberScope: 'humans' })
+    ).data!;
+    const issue = (await createIssue(owner.api, columnId, { title: 'Ship it' })).data!;
+
+    await owner.api
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: field.id })
+      .put({ value: member.userId });
+
+    const inbox = await member.api.notifications.get({ query: {} });
+    expect(inbox.data!.items).toHaveLength(1);
+    expect(inbox.data!.items[0]).toMatchObject({
+      type: 'assigned',
+      actorUserId: owner.userId,
+      issueTitle: 'Ship it',
+    });
+  });
+
   it('notifies watchers on a comment', async () => {
     const { owner, columnId } = await setup();
     const member = await addMember(owner);

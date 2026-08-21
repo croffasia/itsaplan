@@ -1,9 +1,10 @@
-import { type BoardIssue, type CustomField, type Issue, type IssuePatch } from '@/lib/api';
+import { type BoardIssue, type CustomField, type Issue } from '@/lib/api';
 import {
   groupIssues,
   mergeAssign,
   nestIssues,
   subgroupKey,
+  type GroupAssign,
   type IssueGroup,
 } from '@/utils/project';
 import {
@@ -71,7 +72,7 @@ export type FlatItem =
       kind: 'header';
       group: IssueGroup;
       count: number;
-      assign: IssuePatch | null;
+      assign: GroupAssign | null;
       bucket: Issue[];
       dropKey: string;
     }
@@ -79,7 +80,7 @@ export type FlatItem =
       kind: 'subheader';
       sub: IssueGroup;
       count: number;
-      assign: IssuePatch | null;
+      assign: GroupAssign | null;
       bucket: Issue[];
       dropKey: string;
     }
@@ -87,7 +88,7 @@ export type FlatItem =
       kind: 'row';
       issue: BoardIssue;
       index: number;
-      assign: IssuePatch | null;
+      assign: GroupAssign | null;
       bucket: Issue[];
       dropKey: string;
     };

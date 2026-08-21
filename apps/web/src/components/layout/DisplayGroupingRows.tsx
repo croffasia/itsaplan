@@ -1,7 +1,15 @@
 import { ArrowDownNarrowWide, ArrowUpNarrowWide } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import type { CustomField } from '@/lib/api';
 import { SORT_FIELDS, type SortField, type WorkItemsView } from '@/utils/viewTypes';
-import { isFieldEnabled, type GroupField, type ViewSettings } from '@/utils/viewSettings';
+import {
+  customFieldKey,
+  isFieldEnabled,
+  type BuiltinGroupField,
+  type GroupField,
+  type ViewSettings,
+} from '@/utils/viewSettings';
+import { isMemberField } from '@/utils/memberFields';
 import { byKey } from '@/utils/messageKey';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { Button } from '@/components/ui/button';
@@ -13,9 +21,9 @@ import DisplaySettingsSelect from '@/components/layout/DisplaySettingsSelect';
 // Timeline and Calendar ignore it.
 const ORDERING_VIEWS: WorkItemsView[] = ['kanban', 'table'];
 
-// Grouping fields, in menu order. Project always groups by something, so it drops
-// 'none'.
-const GROUP_FIELDS: GroupField[] = [
+// Grouping fields, in menu order, before the project's own member custom fields.
+// Project always groups by something, so it drops 'none'.
+const GROUP_FIELDS: BuiltinGroupField[] = [
   'none',
   'status',
   'assignee',
@@ -34,10 +42,12 @@ const GROUP_FIELDS: GroupField[] = [
 export default function DisplayGroupingRows({
   view,
   settings,
+  customFields,
   onChange,
 }: {
   view: WorkItemsView;
   settings: ViewSettings;
+  customFields: CustomField[];
   onChange: (patch: Partial<ViewSettings>) => void;
 }) {
   const t = useTranslations('display.rows');
@@ -48,17 +58,23 @@ export default function DisplayGroupingRows({
   const setGroup = (group: GroupField) =>
     onChange(group === settings.subgroup ? { group, subgroup: 'none' } : { group });
 
-  // Initiative and Cycle are only offered while the project shows their section.
+  // Initiative and Cycle are only offered while the project shows their section. A
+  // member custom field groups by whoever it holds, and is named by itself.
   const features = useProjectFeatures();
   const fields = GROUP_FIELDS.filter((f) => isFieldEnabled(f, features));
-  const toOptions = (values: GroupField[]) =>
-    values.map((value) => ({ value, label: groupLabel(value) }));
+  const memberOptions = customFields
+    .filter(isMemberField)
+    .map((f) => ({ value: customFieldKey(f.id), label: f.name }));
+  const toOptions = (values: BuiltinGroupField[]): { value: GroupField; label: string }[] => [
+    ...values.map((value) => ({ value, label: groupLabel(value) })),
+    ...memberOptions,
+  ];
 
   const groupOptions = toOptions(
     view === 'kanban' || view === 'timeline' ? fields.filter((f) => f !== 'none') : fields,
   );
   // The sub-group never offers the field already used by the primary group.
-  const subgroupOptions = toOptions(fields.filter((f) => f !== settings.group));
+  const subgroupOptions = toOptions(fields).filter((o) => o.value !== settings.group);
   const sortOptions = SORT_FIELDS.map((value) => ({ value, label: sortLabel(value) }));
   const showsGrouping = view === 'kanban' || view === 'table' || view === 'timeline';
   const showsSubgrouping = showsGrouping && settings.group !== 'none';

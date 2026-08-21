@@ -208,6 +208,7 @@ export default function SettingsAiAgentFields({
     <AgentTriggersSection
       key="triggers"
       {...sectionProps('triggers')}
+      projectKey={projectKey}
       value={value}
       onChange={onChange}
     />

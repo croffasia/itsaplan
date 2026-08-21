@@ -309,7 +309,10 @@
     "state": "状态",
     "type": "类型",
     "labels": "标签",
-    "labelCount": "{count, plural, other {# 个标签}}"
+    "labelCount": "{count, plural, other {# 个标签}}",
+    "noMember": "未设置",
+    "pickMember": "选择…",
+    "noCandidates": "没有可选对象。"
   },
   "watchers": {
     "watch": "关注",

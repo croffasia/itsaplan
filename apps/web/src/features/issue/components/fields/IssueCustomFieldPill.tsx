@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
-import { type CustomField, type IssueFieldValueInput } from '@/lib/api';
+import { type Assignee, type CustomField, type IssueFieldValueInput } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import {
   Command,
@@ -15,6 +15,7 @@ import { colorDot } from '@/components/common/fields/colorDot';
 import DatePill from '@/components/common/fields/DatePill';
 import DateTimePill from '@/components/common/fields/DateTimePill';
 import { Pill } from '@/components/common/fields/Pill';
+import MemberSelect from './MemberSelect';
 import { useTranslations } from 'next-intl';
 
 // A pill + popover editor for a single non-markdown custom field, used in the
@@ -22,16 +23,30 @@ import { useTranslations } from 'next-intl';
 export default function IssueCustomFieldPill({
   def,
   value,
+  assignees,
   onChange,
   defaultOpen = false,
 }: {
   def: CustomField;
   value: IssueFieldValueInput | undefined;
+  assignees: Assignee[];
   onChange: (v: IssueFieldValueInput) => void;
   defaultOpen?: boolean;
 }) {
   const t = useTranslations('issue.customFields');
   const [open, setOpen] = useState(defaultOpen);
+
+  if (def.fieldType === 'member') {
+    return (
+      <MemberSelect
+        assignees={assignees}
+        scope={def.memberScope ?? 'all'}
+        value={(value?.value as string | null) ?? null}
+        placeholder={def.name}
+        onChange={(userId) => onChange({ value: userId })}
+      />
+    );
+  }
 
   if (def.fieldType === 'boolean') {
     const on = value?.value === true;

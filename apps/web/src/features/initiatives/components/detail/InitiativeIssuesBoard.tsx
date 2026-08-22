@@ -8,10 +8,7 @@ import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
-import KanbanBoard from '@/features/work-items/components/kanban/KanbanBoard';
-import TableView from '@/features/work-items/components/table/TableView';
-import TimelineView from '@/features/work-items/components/timeline/TimelineView';
-import CalendarView from '@/features/work-items/components/calendar/CalendarView';
+import BoardLayout from '@/features/work-items/components/BoardLayout';
 import { useLocalBoardSettings } from '@/hooks/useLocalBoardSettings';
 
 // Where this board's layout and display settings are kept, per initiative.
@@ -55,21 +52,6 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
       }),
   };
 
-  let view;
-  switch (board.view) {
-    case 'table':
-      view = <TableView {...viewProps} widthScope="initiatives" />;
-      break;
-    case 'timeline':
-      view = <TimelineView {...viewProps} />;
-      break;
-    case 'calendar':
-      view = <CalendarView {...viewProps} />;
-      break;
-    default:
-      view = <KanbanBoard {...viewProps} />;
-  }
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
@@ -88,7 +70,14 @@ export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: 
           issueTypes={project.issueTypes}
         />
       </div>
-      <div className="relative flex-1 overflow-hidden">{view}</div>
+      <div className="relative flex-1 overflow-hidden">
+        <BoardLayout
+          {...viewProps}
+          view={board.view}
+          widthScope="initiatives"
+          allIssues={project.issues}
+        />
+      </div>
     </div>
   );
 }

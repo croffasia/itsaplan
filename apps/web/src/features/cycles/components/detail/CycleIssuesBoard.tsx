@@ -10,10 +10,7 @@ import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
 import { useLocalBoardSettings } from '@/hooks/useLocalBoardSettings';
 import FilterBar from '@/components/layout/FilterBar';
 import DisplayPopover from '@/components/layout/DisplayPopover';
-import KanbanBoard from '@/features/work-items/components/kanban/KanbanBoard';
-import TableView from '@/features/work-items/components/table/TableView';
-import TimelineView from '@/features/work-items/components/timeline/TimelineView';
-import CalendarView from '@/features/work-items/components/calendar/CalendarView';
+import BoardLayout from '@/features/work-items/components/BoardLayout';
 
 // Where this board's layout and display settings are kept, per cycle.
 const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
@@ -57,21 +54,6 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
       }),
   };
 
-  let view;
-  switch (board.view) {
-    case 'table':
-      view = <TableView {...viewProps} widthScope="cycles" />;
-      break;
-    case 'timeline':
-      view = <TimelineView {...viewProps} />;
-      break;
-    case 'calendar':
-      view = <CalendarView {...viewProps} />;
-      break;
-    default:
-      view = <KanbanBoard {...viewProps} />;
-  }
-
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
@@ -90,7 +72,14 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
           issueTypes={project.issueTypes}
         />
       </div>
-      <div className="relative flex-1 overflow-hidden">{view}</div>
+      <div className="relative flex-1 overflow-hidden">
+        <BoardLayout
+          {...viewProps}
+          view={board.view}
+          widthScope="cycles"
+          allIssues={project.issues}
+        />
+      </div>
     </div>
   );
 }

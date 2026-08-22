@@ -1,10 +1,6 @@
 import { db, projectView, projectViewFavorite } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
-import { iso, num } from '../shared/lib';
-
-// Saved views: the tabs above a project's work items view. filters and display are jsonb
-// blobs owned by the UI; this layer stores and returns them without inspecting
-// their shape. position orders the tabs.
+import { iso, num } from '#shared/lib';
 
 export interface ViewRow {
   id: number;
@@ -39,7 +35,6 @@ function mapView(row: typeof projectView.$inferSelect): ViewRow {
   };
 }
 
-// A view as one user sees it: the favorite flag is personal.
 export interface UserViewRow extends ViewRow {
   favorite: boolean;
 }
@@ -78,8 +73,6 @@ export async function removeFavoriteView(viewId: number, userId: string): Promis
     .where(and(eq(projectViewFavorite.viewId, viewId), eq(projectViewFavorite.userId, userId)));
 }
 
-// New views go to the end of the tab row (max position + 1). filters/display are
-// stored verbatim in the jsonb columns.
 export async function createView(input: {
   projectId: number;
   name: string;
@@ -110,8 +103,6 @@ export async function getView(id: number): Promise<ViewRow | null> {
   return rows[0] ? mapView(rows[0]) : null;
 }
 
-// Updates only the provided fields. filters/display are replaced wholesale (not
-// merged), since the UI always sends the full blob.
 export async function updateView(
   id: number,
   patch: { name?: string; icon?: string | null; filters?: unknown; display?: unknown },
@@ -130,8 +121,6 @@ export async function deleteView(id: number): Promise<void> {
   await db.delete(projectView).where(eq(projectView.id, id));
 }
 
-// Sets each view's position to its index in orderedIds, in one transaction, so
-// the tab order the UI sends is stored exactly. Ids not on the project are ignored.
 export async function reorderViews(
   projectId: number,
   orderedIds: number[],

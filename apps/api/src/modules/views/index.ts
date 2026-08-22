@@ -1,11 +1,18 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards, entityGuard } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors } from '../shared/responses';
-import { mcpTool } from '../mcp/generate';
+import { noContent } from '#shared/http';
+import { guards, entityGuard } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors } from '#shared/responses';
+import { mcpTool } from '#mcp/generate';
+import {
+  ViewResponse,
+  createViewBody,
+  reorderViewsBody,
+  updateViewBody,
+  viewParams,
+} from './model';
 import {
   listViews,
   createView,
@@ -16,32 +23,11 @@ import {
   isFavoriteView,
   addFavoriteView,
   removeFavoriteView,
-} from './store';
-
-const viewParams = t.Object({ viewId: t.Numeric() });
-
-// A saved view DTO (ViewRow from the store). filters and display are jsonb blobs
-// owned by the UI, returned as-is (t.Any()).
-const ViewResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  name: t.String(),
-  icon: t.Nullable(t.String()),
-  filters: t.Any(),
-  display: t.Any(),
-  position: t.Number(),
-  shareToken: t.Nullable(t.String()),
-  shareExtended: t.Boolean(),
-  // Personal to the caller, not shared with the other project members.
-  favorite: t.Boolean(),
-  createdAt: t.String(),
-});
+} from './service';
 
 export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] } })
   .use(authContext)
   .use(guards)
-  // Guard for routes that address a view by its own id (no :projectKey in the
-  // path). Set `savedView: "<action>"` in the route options.
   .macro({
     savedView: entityGuard(
       'views',
@@ -72,12 +58,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       return { ...(await createView({ projectId: project.id, ...body })), favorite: false };
     },
     {
-      body: t.Object({
-        name: t.String({ minLength: 1 }),
-        icon: t.Optional(t.Nullable(t.String())),
-        filters: t.Optional(t.Any()),
-        display: t.Optional(t.Any()),
-      }),
+      body: createViewBody,
       permission: ['views', 'create'],
       response: { 201: ViewResponse, ...commonErrors },
       detail: {
@@ -88,14 +69,13 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
     },
   )
 
-  // Sets the tab order to orderedIds.
   .put(
     '/projects/:projectKey/views/reorder',
     async ({ project, body, user }) => {
       return reorderViews(project.id, body.orderedIds, requireUser(user).id);
     },
     {
-      body: t.Object({ orderedIds: t.Array(t.Integer(), { minItems: 1 }) }),
+      body: reorderViewsBody,
       permission: ['views', 'edit'],
       response: { 200: t.Array(ViewResponse), ...commonErrors },
       detail: {
@@ -114,12 +94,7 @@ export const viewRoutes = new Elysia({ name: 'views', detail: { tags: ['Views'] 
       return { ...view, favorite: await isFavoriteView(view.id, requireUser(user).id) };
     },
     {
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        icon: t.Optional(t.Nullable(t.String())),
-        filters: t.Optional(t.Any()),
-        display: t.Optional(t.Any()),
-      }),
+      body: updateViewBody,
       params: viewParams,
       savedView: 'edit',
       response: { 200: ViewResponse, ...commonErrors },

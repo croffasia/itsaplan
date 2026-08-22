@@ -1,13 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-
-// Saved views are the tabs above a project's work items view. List and create are
-// project-scoped (/projects/:projectKey/views), reorder is project-scoped, but
-// patch and delete address a view by its own id (/views/:viewId) and resolve the
-// owning project through the savedView guard. filters/display are jsonb blobs the
-// store keeps verbatim; icon is nullable; position orders the tabs, first is 0.
+import { authedApi } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 async function setupOwnerProject() {
   const owner = await signUpTestUser();

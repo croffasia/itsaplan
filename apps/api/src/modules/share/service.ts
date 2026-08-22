@@ -16,7 +16,7 @@ import {
   type IssueLinkRow,
 } from '../../issues/links';
 import { getParentRef, listSubtasks, type IssueRef } from '../../issues/subtasks';
-import { applyFilters } from '../../views/filters';
+import { applyFilters } from '#modules/views/filters';
 
 // Public read-only sharing: an issue or a saved view carries an unguessable
 // share_token that, when set, makes it readable without a session through the

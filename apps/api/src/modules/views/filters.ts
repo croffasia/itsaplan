@@ -1,4 +1,4 @@
-import type { IssueRow } from '../issues/store';
+import type { IssueRow } from '../../issues/store';
 import type { ColumnRow } from '#modules/columns/service';
 
 // Server-side copy of the view filter engine. The web app (utils/filters.ts) stores
@@ -57,7 +57,6 @@ function isEffectiveCondition(cond: FilterCondition): boolean {
   return cond.values.length > 0;
 }
 
-// Coerces the persisted jsonb into a FilterSet, dropping anything malformed.
 function toFilterSet(raw: unknown): FilterSet {
   if (!raw || typeof raw !== 'object') return { conditions: [] };
   const conditions = (raw as { conditions?: unknown }).conditions;
@@ -170,7 +169,6 @@ function matchCondition(
     return cond.op === 'contains' ? has : !has;
   }
 
-  // is / is_not — set membership.
   const issueValues =
     cfId != null
       ? customFieldValues(issue, cfId)
@@ -179,8 +177,6 @@ function matchCondition(
   return cond.op === 'is' ? overlaps : !overlaps;
 }
 
-// The issues that satisfy every effective condition. An empty or all-empty set
-// returns the input unchanged.
 export function applyFilters(
   issues: IssueRow[],
   rawFilters: unknown,

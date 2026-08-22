@@ -18,7 +18,7 @@ import { initiativeRoutes } from './modules/initiatives';
 import { cycleRoutes } from './modules/cycles';
 import { attachmentRoutes } from './modules/attachments';
 import { avatarRoutes } from './modules/avatars';
-import { viewRoutes } from './views/routes';
+import { viewRoutes } from './modules/views';
 import { shareRoutes } from './modules/share';
 import { actionRoutes } from './modules/actions';
 import { webhookRoutes } from './webhooks/routes';

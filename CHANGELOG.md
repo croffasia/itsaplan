@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.13.0](https://github.com/croffasia/itsaplan/compare/v0.12.0...v0.13.0) (2026-08-22)
+
+
+### Features
+
+* accept pull request webhooks from GitLab, Gitea, Forgejo, and Bitbucket ([#188](https://github.com/croffasia/itsaplan/issues/188)) ([682f301](https://github.com/croffasia/itsaplan/commit/682f30156eef41e1dca51b953b41c75cd7fbfb29))
+* add a member custom field that can trigger an agent ([#191](https://github.com/croffasia/itsaplan/issues/191)) ([ef788e6](https://github.com/croffasia/itsaplan/commit/ef788e63458eccaa04141d6522d46f6f195039c0))
+* add an Antigravity preset and resume Copilot sessions ([#195](https://github.com/croffasia/itsaplan/issues/195)) ([eb6b00c](https://github.com/croffasia/itsaplan/commit/eb6b00c0733e79d14e5a6e4a700d86c4719b1837))
+* **agent-tools:** add Notion integration with page and comment tools ([#181](https://github.com/croffasia/itsaplan/issues/181)) ([566fb7c](https://github.com/croffasia/itsaplan/commit/566fb7c9616f6e8e5ce6283eae9cba078746a5ce))
+* auto-assign issues entering a state to a chosen member ([#183](https://github.com/croffasia/itsaplan/issues/183)) ([6f34ead](https://github.com/croffasia/itsaplan/commit/6f34ead936bbf4265e3a9c9b66d836ff96525c60))
+* let agents draw charts in the chat ([#187](https://github.com/croffasia/itsaplan/issues/187)) ([a9df467](https://github.com/croffasia/itsaplan/commit/a9df467c6d0f998cffa45bba64bc4fb949b43645))
+* **runner:** serve several agents from one runner ([#193](https://github.com/croffasia/itsaplan/issues/193)) ([0b969ee](https://github.com/croffasia/itsaplan/commit/0b969ee5e4a4fe0b7a2aeb4daac4254b6950a0ef))
+
+
+### Improvements
+
+* **web:** select several tools at once when adding tools ([#186](https://github.com/croffasia/itsaplan/issues/186)) ([5f95ca1](https://github.com/croffasia/itsaplan/commit/5f95ca1c9951c9cdb391da134387421fd1771b07))
+* **web:** submit the new issue dialog with Enter ([#189](https://github.com/croffasia/itsaplan/issues/189)) ([806b5bb](https://github.com/croffasia/itsaplan/commit/806b5bb84d36271fbf4787b06f90908e99f795cd))
+* **worker:** widen the daily telemetry snapshot ([#190](https://github.com/croffasia/itsaplan/issues/190)) ([afde4bb](https://github.com/croffasia/itsaplan/commit/afde4bb281d0cfefdccb5db76ee6129c6a1d6700))
+
+
+### Bug Fixes
+
+* **web:** apply link and subtask display settings on initiative and cycle boards ([#196](https://github.com/croffasia/itsaplan/issues/196)) ([e264ed0](https://github.com/croffasia/itsaplan/commit/e264ed093b5cc0d912a370fc3dc8b8b4f6bba1ab))
+* **web:** open links in agent chat in a new tab ([#184](https://github.com/croffasia/itsaplan/issues/184)) ([02fb622](https://github.com/croffasia/itsaplan/commit/02fb62264eb196cb399c19421e47a50a497e9015))
+* **web:** sign out and redirect to login on an expired session ([#185](https://github.com/croffasia/itsaplan/issues/185)) ([5a4c989](https://github.com/croffasia/itsaplan/commit/5a4c9893edecb9d8fdbdc17f45d2f87e6444a811))
+
+
+### Documentation
+
+* refresh the readme feature list ([#192](https://github.com/croffasia/itsaplan/issues/192)) ([73dc94e](https://github.com/croffasia/itsaplan/commit/73dc94e0ad1ad7a7314cfb9442a5926bb8024a5c))
+
 ## [0.12.0](https://github.com/croffasia/itsaplan/compare/v0.11.0...v0.12.0) (2026-08-20)
 
 

@@ -1,9 +1,10 @@
-import { Elysia, t } from 'elysia';
-import { authContext } from '../shared/auth-context';
-import { requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { errors } from '../shared/responses';
-import { NO_REV, readRevs, scopeKind, type ScopeRead } from './store';
+import { Elysia } from 'elysia';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { errors } from '#shared/responses';
+import { NO_REV, readRevs, scopeKind, type ScopeRead } from './service';
+import { RevResponse, revQuery } from './model';
 
 const MAX_SCOPES = 20;
 
@@ -48,13 +49,8 @@ export const syncRoutes = new Elysia({ name: 'sync', detail: { tags: ['Sync'] } 
       };
     },
     {
-      query: t.Object({
-        scopes: t.String({
-          description:
-            "Comma-separated scopes to read, each '<kind>:<id>' — board, issue, initiative, or inbox (by project id).",
-        }),
-      }),
-      response: { 200: t.Object({ revs: t.Record(t.String(), t.String()) }), ...errors(400, 401) },
+      query: revQuery,
+      response: { 200: RevResponse, ...errors(400, 401) },
       detail: {
         summary: 'Get change markers',
         description:

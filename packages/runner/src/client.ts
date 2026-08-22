@@ -6,7 +6,7 @@ import type { RunnerConfig } from './config';
 
 export interface Run {
   id: number;
-  trigger: 'mention' | 'delegation' | 'schedule' | 'manual';
+  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual';
   prompt: string;
   systemPrompt: string;
   issueId: number | null;

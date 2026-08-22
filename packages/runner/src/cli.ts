@@ -8,19 +8,26 @@ import { execute } from './execute';
 // The runner holds no state — the queue is the server's — so stopping it mid-task only
 // means that task's lease expires and another runner picks it up.
 //
-// Two feeds are drained side by side: triggered runs, polled, and chat messages, claimed
-// by a call that waits on the server for one.
+// Two feeds are drained side by side per agent: triggered runs, polled, and chat
+// messages, claimed by a call that waits on the server for one. A config that lists
+// several agents runs that pair for each of them, in the one process.
 
 const HEARTBEAT_MS = 60_000;
 const ERROR_BACKOFF_MS = 5_000;
 
+type Log = (message: string) => void;
+
+function prefixOf(name: string): string {
+  return name ? `[itsaplan-runner ${name}]` : '[itsaplan-runner]';
+}
+
 function log(message: string): void {
-  console.log(`[itsaplan-runner] ${message}`);
+  console.log(`${prefixOf('')} ${message}`);
 }
 
 // A task can take much longer than the server's lease; without this it would be handed
 // out again mid-flight.
-async function withHeartbeat<T>(beat: () => Promise<void>, work: Promise<T>): Promise<T> {
+async function withHeartbeat<T>(log: Log, beat: () => Promise<void>, work: Promise<T>): Promise<T> {
   const timer = setInterval(() => {
     beat().catch((err) => log(`heartbeat failed: ${String(err)}`));
   }, HEARTBEAT_MS);
@@ -45,11 +52,12 @@ function taskOf(run: Run) {
   };
 }
 
-async function handle(config: RunnerConfig, client: Client, run: Run): Promise<void> {
+async function handle(config: RunnerConfig, client: Client, log: Log, run: Run): Promise<void> {
   const label = run.issueIdentifier ?? `run ${run.id}`;
   log(`${label}: started (${run.trigger})`);
   try {
     const outcome = await withHeartbeat(
+      log,
       () => client.heartbeat(run.id),
       execute(config, taskOf(run)),
     );
@@ -67,11 +75,16 @@ async function handle(config: RunnerConfig, client: Client, run: Run): Promise<v
 async function handleChat(
   config: RunnerConfig,
   client: Client,
+  log: Log,
   message: ChatMessage,
 ): Promise<void> {
   log(`chat ${message.id}: answering`);
   try {
-    await withHeartbeat(() => client.chatHeartbeat(message.id), answer(config, client, message));
+    await withHeartbeat(
+      log,
+      () => client.chatHeartbeat(message.id),
+      answer(config, client, message),
+    );
     log(`chat ${message.id}: answered`);
   } catch (err) {
     // Without a reported failure the chat waits for an answer that is no longer coming.
@@ -86,6 +99,7 @@ async function handleChat(
 // false to give the feed up entirely.
 async function drain<T>(
   state: { stopping: boolean },
+  log: Log,
   concurrency: number,
   take: () => Promise<T | null>,
   run: (item: T) => Promise<void>,
@@ -145,12 +159,59 @@ function parseArgv(argv: string[]): { configPath?: string; agent?: string; args:
   return parsed;
 }
 
+// Everything one agent needs: the two feeds, until the runner is stopped or the server
+// refuses its key.
+async function serve(state: { stopping: boolean }, config: RunnerConfig): Promise<void> {
+  const client = new Client(config);
+  const prefix = prefixOf(config.name);
+  const log: Log = (message) => console.log(`${prefix} ${message}`);
+  log(
+    `running ${config.agent ?? 'the configured command'}, polling ${config.url} every ` +
+      `${config.pollIntervalMs}ms, up to ${config.concurrency} at once`,
+  );
+  let chatSupported = true;
+  await Promise.all([
+    drain<Run>(
+      state,
+      log,
+      config.concurrency,
+      () => client.claim(),
+      (run) => handle(config, client, log, run),
+      async () => {
+        await sleep(config.pollIntervalMs);
+        return true;
+      },
+    ),
+    // The claim already waits on the server, so an empty one means the wait ran out and
+    // asking again is the whole delay there is. An instance too old to have the feed
+    // answers 404, and that loop ends rather than asking forever.
+    drain<ChatMessage>(
+      state,
+      log,
+      config.concurrency,
+      async () => {
+        try {
+          return await client.claimChat();
+        } catch (err) {
+          if (err instanceof RequestError && err.status === 404) {
+            log('this instance has no chat feed — only queued runs will be answered');
+            chatSupported = false;
+            return null;
+          }
+          throw err;
+        }
+      },
+      (message) => handleChat(config, client, log, message),
+      () => Promise.resolve(chatSupported),
+    ),
+  ]);
+}
+
 async function main(): Promise<void> {
   const cli = parseArgv(process.argv.slice(2));
   const configPath =
     cli.configPath ?? process.env.ITSAPLAN_RUNNER_CONFIG ?? './itsaplan-runner.json';
-  const config = await loadConfig(configPath, { agent: cli.agent, args: cli.args });
-  const client = new Client(config);
+  const configs = await loadConfig(configPath, { agent: cli.agent, args: cli.args });
   const state = { stopping: false };
 
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {
@@ -167,44 +228,21 @@ async function main(): Promise<void> {
     });
   }
 
-  log(
-    `running ${config.agent ?? 'the configured command'}, polling ${config.url} every ` +
-      `${config.pollIntervalMs}ms, up to ${config.concurrency} at once`,
+  // One agent's key being refused says nothing about the others, so it does not take them
+  // down with it; the runner still exits non-zero once they are all finished.
+  const served = await Promise.all(
+    configs.map((config) =>
+      serve(state, config).then(
+        () => true,
+        (err: unknown) => {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`${prefixOf(config.name)} stopped — ${message}`);
+          return false;
+        },
+      ),
+    ),
   );
-  let chatSupported = true;
-  await Promise.all([
-    drain<Run>(
-      state,
-      config.concurrency,
-      () => client.claim(),
-      (run) => handle(config, client, run),
-      async () => {
-        await sleep(config.pollIntervalMs);
-        return true;
-      },
-    ),
-    // The claim already waits on the server, so an empty one means the wait ran out and
-    // asking again is the whole delay there is. An instance too old to have the feed
-    // answers 404, and that loop ends rather than asking forever.
-    drain<ChatMessage>(
-      state,
-      config.concurrency,
-      async () => {
-        try {
-          return await client.claimChat();
-        } catch (err) {
-          if (err instanceof RequestError && err.status === 404) {
-            log('this instance has no chat feed — only queued runs will be answered');
-            chatSupported = false;
-            return null;
-          }
-          throw err;
-        }
-      },
-      (message) => handleChat(config, client, message),
-      () => Promise.resolve(chatSupported),
-    ),
-  ]);
+  if (served.includes(false)) process.exit(1);
 }
 
 main().catch((err) => {

@@ -3,7 +3,7 @@
 [It's a Plan](https://itsaplan.dev) is a self-hosted, open-source issue tracker. An AI
 agent in it is a project member: it has a role, permissions, and its own issues.
 
-This package runs one such agent on your own machine.
+This package runs such agents on your own machine — one, or several at once.
 
 - Polls your instance for the agent's queued runs. Runs each one with a coding agent CLI.
   Reports the result.
@@ -63,20 +63,21 @@ or mention it in a comment. The task then starts in your terminal.
 `agent` names a CLI that the runner knows. The runner then builds the command itself: the
 flags for an unattended run, and the session resume.
 
-| Agent      | Runs                     | Keeps a chat session |
-| ---------- | ------------------------ | -------------------- |
-| `claude`   | Claude Code              | yes                  |
-| `codex`    | Codex CLI                | yes                  |
-| `opencode` | opencode                 | yes                  |
-| `gemini`   | Gemini CLI               | no                   |
-| `copilot`  | GitHub Copilot CLI       | no                   |
+| Agent      | Runs               | Keeps a chat session |
+| ---------- | ------------------ | -------------------- |
+| `claude`   | Claude Code        | yes                  |
+| `codex`    | Codex CLI          | yes                  |
+| `opencode` | opencode           | yes                  |
+| `gemini`   | Gemini CLI         | no                   |
+| `copilot`  | GitHub Copilot CLI | no                   |
 
 Each preset needs the CLI's own MCP config.
 [Coding agent setup](https://github.com/croffasia/itsaplan/blob/main/docs/runner.md) holds
 that file, and the notes for each CLI.
 
-`--agent` on the command line has priority over the file. The runner appends the
-arguments after `--` to the ones from the preset:
+`--agent` on the command line has priority over the file, except over an `agents` entry
+that names its own. The runner appends the arguments after `--` to the ones from the
+preset:
 
 ```bash
 npx -y @itsaplan/runner --agent claude -- --model opus
@@ -99,6 +100,52 @@ Your arguments come after the preset's own. A repeated flag thus replaces its va
 `command` replaces the preset with your own shell command. The command receives the task
 on stdin. The runner keeps no session for it, because it does not know how to resume one.
 
+## Several agents on one runner
+
+One key is one agent. A runner set up the way you want it can serve several of them at
+once: it polls for each key on its own, and every agent uses the coding agent, the working
+directory and the arguments the file already gives.
+
+```json
+{
+  "url": "http://localhost:3000",
+  "agent": "claude",
+  "cwd": "/Users/me/work/my-repo",
+  "apiKeys": ["the first agent's key", "the second agent's key"]
+}
+```
+
+Nothing else changes: the runner gives each command its own `ITSAPLAN_API_KEY`, so the one
+MCP config in that folder works for all of them.
+
+Use `agents` instead of `apiKeys` where an agent needs something of its own. A field an
+entry sets replaces the shared one, and it inherits every field it leaves out, except its
+`apiKey`, which every entry sets itself. `name` is what the runner's log lines call that
+agent; without it they number the agents `#1`, `#2` in the order of the file.
+
+```json
+{
+  "url": "http://localhost:3000",
+  "agent": "claude",
+  "cwd": "/Users/me/work/my-repo",
+  "agents": [
+    { "apiKey": "the first agent's key", "name": "planner" },
+    {
+      "apiKey": "the second agent's key",
+      "cwd": "/Users/me/work/other-repo",
+      "args": ["--model", "opus"]
+    }
+  ]
+}
+```
+
+`concurrency` counts per agent and per feed, so a runner with three agents at
+`concurrency: 2` can have six queued runs in flight and six chat answers alongside them,
+each one a coding agent CLI of its own. The environment variables and the command-line
+options describe every agent at once; an entry has priority over them.
+
+An agent whose key the instance refuses stops on its own, and the others keep working.
+
 ## Settings
 
 The runner reads `./itsaplan-runner.json`. For a different file, give the path as an
@@ -109,21 +156,23 @@ npx -y @itsaplan/runner /path/to/config.json
 ```
 
 The environment variables have priority over the file. The command-line options have
-priority over both.
+priority over both. An `agents` entry has priority over all three, for the fields it sets.
 
-| Field            | Environment variable        | Default            | What it does                        |
-| ---------------- | --------------------------- | ------------------ | ----------------------------------- |
-| `url`            | `ITSAPLAN_URL`              | required           | Your Itsaplan instance              |
-| `apiKey`         | `ITSAPLAN_API_KEY`          | required           | The external agent's key            |
-| `agent`          | `ITSAPLAN_AGENT`            | —                  | The coding agent to run             |
-| `args`           |                             | `[]`               | Arguments added after the preset's  |
-| `command`        | `ITSAPLAN_COMMAND`          | —                  | Your own command, instead of `agent` |
-| `cwd`            | `ITSAPLAN_CWD`              | where you start it | Working directory for the command   |
-| `env`            |                             | `{}`               | Extra variables for the command     |
-| `concurrency`    | `ITSAPLAN_CONCURRENCY`      | `1`                | Tasks at once. Queued runs and chat answers count apart |
-| `pollIntervalMs` | `ITSAPLAN_POLL_INTERVAL_MS` | `3000`             | Wait after an empty queue. Minimum 1000 |
-| `timeoutMs`      | `ITSAPLAN_TIMEOUT_MS`       | `1800000`          | Time before the runner stops a task      |
-| `outputFormat`   | `ITSAPLAN_OUTPUT_FORMAT`    | the preset's       | How the runner reads a chat answer |
+| Field            | Environment variable        | Default            | What it does                                                       |
+| ---------------- | --------------------------- | ------------------ | ------------------------------------------------------------------ |
+| `url`            | `ITSAPLAN_URL`              | required           | Your Itsaplan instance                                             |
+| `apiKey`         | `ITSAPLAN_API_KEY`          | required           | The external agent's key. Replaced by `apiKeys` or `agents`        |
+| `apiKeys`        |                             | —                  | Several keys, all with these settings. Not with `agents`           |
+| `agents`         |                             | —                  | Several agents, each with its own key and settings. Not with `apiKeys` |
+| `agent`          | `ITSAPLAN_AGENT`            | —                  | The coding agent to run                                            |
+| `args`           |                             | `[]`               | Arguments added after the preset's                                 |
+| `command`        | `ITSAPLAN_COMMAND`          | —                  | Your own command, instead of `agent`                               |
+| `cwd`            | `ITSAPLAN_CWD`              | where you start it | Working directory for the command                                  |
+| `env`            |                             | `{}`               | Extra variables for the command                                    |
+| `concurrency`    | `ITSAPLAN_CONCURRENCY`      | `1`                | Tasks at once, per agent. Queued runs and chat answers count apart |
+| `pollIntervalMs` | `ITSAPLAN_POLL_INTERVAL_MS` | `3000`             | Wait after an empty queue. Minimum 1000                            |
+| `timeoutMs`      | `ITSAPLAN_TIMEOUT_MS`       | `1800000`          | Time before the runner stops a task                                |
+| `outputFormat`   | `ITSAPLAN_OUTPUT_FORMAT`    | the preset's       | How the runner reads a chat answer                                 |
 
 Set `agent` or `command`. With the environment you need no file at all:
 
@@ -148,12 +197,12 @@ sends `$ITSAPLAN_API_KEY` as a bearer token, and acts as its own user with its r
 
 Every run holds these variables:
 
-| Variable                 | What it holds                                                    |
-| ------------------------ | ---------------------------------------------------------------- |
-| `ITSAPLAN_URL`           | the instance that sent the task                                  |
-| `ITSAPLAN_API_KEY`       | the agent's key, for the API and the MCP server                  |
-| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `schedule`, `manual`, or `chat`         |
-| `ITSAPLAN_SYSTEM_PROMPT` | the context of the run, for a command that takes a system prompt |
+| Variable                 | What it holds                                                     |
+| ------------------------ | ----------------------------------------------------------------- |
+| `ITSAPLAN_URL`           | the instance that sent the task                                   |
+| `ITSAPLAN_API_KEY`       | the agent's key, for the API and the MCP server                   |
+| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `field`, `schedule`, `manual`, or `chat` |
+| `ITSAPLAN_SYSTEM_PROMPT` | the context of the run, for a command that takes a system prompt  |
 
 A queued run adds three more:
 
@@ -165,11 +214,11 @@ A queued run adds three more:
 
 A chat message adds three others in their place, and `ITSAPLAN_TRIGGER` is `chat`:
 
-| Variable               | What it holds                                                   |
-| ---------------------- | ---------------------------------------------------------------- |
-| `ITSAPLAN_THREAD_ID`   | the conversation's id                                            |
-| `ITSAPLAN_MESSAGE_ID`  | the id of the message to answer                                  |
-| `ITSAPLAN_SESSION_ID`  | the coding agent's session to resume. Empty for the first message |
+| Variable              | What it holds                                                     |
+| --------------------- | ----------------------------------------------------------------- |
+| `ITSAPLAN_THREAD_ID`  | the conversation's id                                             |
+| `ITSAPLAN_MESSAGE_ID` | the id of the message to answer                                   |
+| `ITSAPLAN_SESSION_ID` | the coding agent's session to resume. Empty for the first message |
 
 The task text of a chat message includes the conversation, unless a session holds it. See
 Sessions below.

@@ -5,8 +5,14 @@ import { PRESETS, PRESET_NAMES, isPresetName, type Preset, type PresetName } fro
 // the runner builds the invocation, which is what lets it resume that CLI's sessions.
 // `command` is a shell command the operator writes themselves, and no session is kept for
 // it. `command` wins where both are set.
+//
+// One runner serves one agent per key, and a config may list several: `apiKeys` runs the
+// same setup under each key, `agents` is the same list where an entry can also change what
+// that agent runs. Loading a config therefore yields one of these per agent.
 
 export interface RunnerConfig {
+  // What the runner's log lines say this agent is. Empty when only one is configured.
+  name: string;
   url: string;
   apiKey: string;
   agent?: PresetName;
@@ -51,6 +57,11 @@ const DEFAULTS = {
 // saves its operator.
 const MIN_POLL_INTERVAL_MS = 1000;
 
+function textOf(value: unknown): string | undefined {
+  const text = typeof value === 'string' ? value.trim() : '';
+  return text || undefined;
+}
+
 function intFrom(value: unknown, fallback: number): number {
   const parsed = typeof value === 'string' ? Number.parseInt(value, 10) : value;
   return typeof parsed === 'number' && Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
@@ -58,7 +69,7 @@ function intFrom(value: unknown, fallback: number): number {
 
 // The preset's own format unless the operator names one.
 function outputFormatFrom(value: unknown, preset: Preset | undefined): OutputFormat {
-  const name = typeof value === 'string' ? value.trim() : '';
+  const name = textOf(value);
   if (!name) return preset?.outputFormat ?? 'text';
   const format = OUTPUT_FORMATS.find((candidate) => candidate === name);
   if (!format) {
@@ -68,7 +79,7 @@ function outputFormatFrom(value: unknown, preset: Preset | undefined): OutputFor
 }
 
 function agentFrom(value: unknown): PresetName | undefined {
-  const name = typeof value === 'string' ? value.trim() : '';
+  const name = textOf(value);
   if (!name) return undefined;
   if (!isPresetName(name)) {
     throw new Error(`agent must be one of ${PRESET_NAMES.join(', ')}`);
@@ -85,7 +96,7 @@ function argsFrom(value: unknown): string[] {
 }
 
 function required(value: unknown, field: string): string {
-  const text = typeof value === 'string' ? value.trim() : '';
+  const text = textOf(value);
   if (!text) throw new Error(`${field} is required — set it in the config file or the environment`);
   return text;
 }
@@ -113,39 +124,124 @@ export interface ConfigOverrides {
   args?: string[];
 }
 
-// ITSAPLAN_* environment variables win over the file, so the key can stay out of it, and
-// the command line wins over both.
-export async function loadConfig(
-  path: string,
-  overrides: ConfigOverrides = {},
-): Promise<RunnerConfig> {
-  const raw = await readConfigFile(path);
-  const env = process.env;
-  const agent = agentFrom(overrides.agent ?? env.ITSAPLAN_AGENT ?? raw.agent);
-  const command =
-    (env.ITSAPLAN_COMMAND ?? (raw.command as string | undefined))?.trim() || undefined;
+type Fields = Record<string, unknown>;
+
+// The list of agents to serve. `apiKeys` is the short form of an `agents` list that
+// changes nothing but the key; without either there is one agent, described by the file
+// itself.
+function agentFieldsFrom(file: Fields): Fields[] {
+  if (file.apiKeys !== undefined && file.agents !== undefined) {
+    throw new Error('set either apiKeys or agents, not both');
+  }
+  if (file.apiKeys !== undefined) {
+    const keys = file.apiKeys;
+    if (!Array.isArray(keys) || keys.some((key) => typeof key !== 'string')) {
+      throw new Error('apiKeys must be an array of strings');
+    }
+    return (keys as string[]).map((apiKey) => ({ apiKey }));
+  }
+  if (file.agents === undefined) return [{}];
+  const agents = file.agents;
+  // Without its own key an entry inherits the shared one, and two entries then poll as the
+  // same agent under different names, each with its own concurrency.
+  if (
+    !Array.isArray(agents) ||
+    agents.some(
+      (entry) =>
+        typeof entry !== 'object' ||
+        entry === null ||
+        Array.isArray(entry) ||
+        !textOf((entry as Fields).apiKey),
+    )
+  ) {
+    throw new Error('agents must be an array of objects, each with its own apiKey');
+  }
+  return agents as Fields[];
+}
+
+// The narrower side replaces the fields it sets, so `agent` and `command` — two ways to
+// say the same thing — never end up one from each side, where `command` would silently win
+// over the agent that was named. A format the wider side asked for described the mode it
+// named, so a narrower side that names another one drops it too and the new mode's preset
+// decides the format again.
+function merge(shared: Fields, own: Fields): Fields {
+  const merged = { ...shared, ...own };
+  const mode = textOf(own.agent) ?? textOf(own.command);
+  const changesMode =
+    mode !== undefined && mode !== (textOf(shared.agent) ?? textOf(shared.command));
+  if (textOf(own.agent)) delete merged.command;
+  else if (textOf(own.command)) delete merged.agent;
+  if (changesMode && !textOf(own.outputFormat)) delete merged.outputFormat;
+  return merged;
+}
+
+function nameOf(entry: Fields, index: number, total: number): string {
+  if (total === 1) return '';
+  return textOf(entry.name) ?? `#${index + 1}`;
+}
+
+function configFrom(fields: Fields, name: string, extraArgs: string[]): RunnerConfig {
+  const agent = agentFrom(fields.agent);
+  const command = textOf(fields.command);
   if (!agent && !command) {
     throw new Error(
       `set either agent (one of ${PRESET_NAMES.join(', ')}) or command in the config file or the environment`,
     );
   }
   return {
-    url: required(env.ITSAPLAN_URL ?? raw.url, 'url').replace(/\/+$/, ''),
-    apiKey: required(env.ITSAPLAN_API_KEY ?? raw.apiKey, 'apiKey'),
+    name,
+    url: required(fields.url, 'url').replace(/\/+$/, ''),
+    apiKey: required(fields.apiKey, 'apiKey'),
     agent,
     command,
-    args: [...argsFrom(raw.args), ...(overrides.args ?? [])],
-    cwd: (env.ITSAPLAN_CWD ?? (raw.cwd as string | undefined))?.replace(/^~/, env.HOME ?? '~'),
-    env: (raw.env as Record<string, string> | undefined) ?? {},
-    concurrency: intFrom(env.ITSAPLAN_CONCURRENCY ?? raw.concurrency, DEFAULTS.concurrency),
+    args: [...argsFrom(fields.args), ...extraArgs],
+    cwd: textOf(fields.cwd)?.replace(/^~/, process.env.HOME ?? '~'),
+    env: (fields.env as Record<string, string> | undefined) ?? {},
+    concurrency: intFrom(fields.concurrency, DEFAULTS.concurrency),
     pollIntervalMs: Math.max(
-      intFrom(env.ITSAPLAN_POLL_INTERVAL_MS ?? raw.pollIntervalMs, DEFAULTS.pollIntervalMs),
+      intFrom(fields.pollIntervalMs, DEFAULTS.pollIntervalMs),
       MIN_POLL_INTERVAL_MS,
     ),
-    timeoutMs: intFrom(env.ITSAPLAN_TIMEOUT_MS ?? raw.timeoutMs, DEFAULTS.timeoutMs),
-    outputFormat: outputFormatFrom(
-      env.ITSAPLAN_OUTPUT_FORMAT ?? raw.outputFormat,
-      presetOf({ agent, command }),
-    ),
+    timeoutMs: intFrom(fields.timeoutMs, DEFAULTS.timeoutMs),
+    outputFormat: outputFormatFrom(fields.outputFormat, presetOf({ agent, command })),
   };
+}
+
+// Whatever the environment and the command line said, which is what the file's shared
+// fields are read through. An agent entry then wins over all three: it is the only place
+// that can describe one agent among several.
+function sharedFields(file: Fields, overrides: ConfigOverrides): Fields {
+  const env = process.env;
+  const outside: Fields = {
+    url: env.ITSAPLAN_URL,
+    apiKey: env.ITSAPLAN_API_KEY,
+    agent: overrides.agent ?? env.ITSAPLAN_AGENT,
+    command: env.ITSAPLAN_COMMAND,
+    cwd: env.ITSAPLAN_CWD,
+    concurrency: env.ITSAPLAN_CONCURRENCY,
+    pollIntervalMs: env.ITSAPLAN_POLL_INTERVAL_MS,
+    timeoutMs: env.ITSAPLAN_TIMEOUT_MS,
+    outputFormat: env.ITSAPLAN_OUTPUT_FORMAT,
+  };
+  // A variable that is not set says nothing about the field, so it must not overwrite it.
+  for (const [field, value] of Object.entries(outside)) {
+    if (!textOf(value)) delete outside[field];
+  }
+  return merge(file, outside);
+}
+
+// One config per agent the file lists, in its order.
+export async function loadConfig(
+  path: string,
+  overrides: ConfigOverrides = {},
+): Promise<RunnerConfig[]> {
+  const file = await readConfigFile(path);
+  const entries = agentFieldsFrom(file);
+  if (entries.length === 0) {
+    throw new Error('no agents configured — apiKeys and agents cannot be empty');
+  }
+  const shared = sharedFields(file, overrides);
+  return entries.map((entry, index) =>
+    configFrom(merge(shared, entry), nameOf(entry, index, entries.length), overrides.args ?? []),
+  );
 }

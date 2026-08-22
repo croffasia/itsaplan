@@ -3,7 +3,7 @@ import { HttpError, pgErrorCode } from './shared/lib';
 import { authContext } from './shared/auth-context';
 import { projectRoutes } from './modules/projects';
 import { memberRoutes } from './modules/members';
-import { roleRoutes } from './roles/routes';
+import { roleRoutes } from './modules/roles';
 import { inviteRoutes } from './modules/invites';
 import { columnRoutes } from './modules/columns';
 import { issueTypeRoutes } from './modules/issue-types';

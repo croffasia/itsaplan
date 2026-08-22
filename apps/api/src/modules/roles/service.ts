@@ -1,7 +1,7 @@
 import { db, projectRole, projectMember } from '@repo/db';
 import { and, asc, eq } from 'drizzle-orm';
-import { iso } from '../shared/lib';
-import { normalizePermissions, type Permissions } from '../shared/permissions';
+import { iso } from '#shared/lib';
+import { normalizePermissions, type Permissions } from '#shared/permissions';
 
 // Data access for project roles: the per-project permission matrices assigned to
 // members. Owners bypass roles. Exactly one role per project is the default

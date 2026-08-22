@@ -3,6 +3,7 @@ import { ColumnResponse } from '#modules/columns/model';
 import { CustomFieldResponse } from '#modules/custom-fields/model';
 import { IssueTypeResponse } from '#modules/issue-types/model';
 import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
+import { PermissionMatrixSchema } from '#shared/permissions';
 import { ISSUE_TYPE_PRESET_KEYS } from './service';
 import { COPY_INCLUDE_KEYS } from './copy';
 
@@ -70,10 +71,6 @@ export const ProjectResponse = t.Object({
   createdAt: t.String(),
 });
 
-// The permission matrix as resolved for a member: for each resource, the
-// create/edit/read/delete flags.
-const PermissionMatrix = t.Record(t.String(), t.Record(t.String(), t.Boolean()));
-
 // A project in the caller's list (ProjectListItem): ProjectRow plus the caller's
 // own role in it, and the caller's permission matrix when requested with
 // ?permissions=true.
@@ -82,7 +79,7 @@ export const ProjectListResponse = t.Array(
     ProjectResponse,
     t.Object({
       role: t.Union([t.Literal('owner'), t.Literal('member')]),
-      permissions: t.Optional(PermissionMatrix),
+      permissions: t.Optional(PermissionMatrixSchema),
     }),
   ]),
 );
@@ -120,7 +117,7 @@ export const ProjectBoardResponse = t.Object({
   customFields: t.Array(CustomFieldResponse),
   viewer: ViewerResponse,
   // The caller's resolved permission matrix (owners get every flag).
-  permissions: PermissionMatrix,
+  permissions: PermissionMatrixSchema,
 });
 
 // Which optional sections the project shows (ProjectFeatures from the service).

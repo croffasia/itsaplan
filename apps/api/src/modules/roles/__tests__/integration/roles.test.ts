@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { api, authedApi } from '../../../__tests__/helpers/app';
-import { signUpTestUser, type TestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from '../../../shared/permissions';
+import { api, authedApi } from '#tests/helpers/app';
+import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
+import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from '#shared/permissions';
 
 // Integration coverage for the roles feature: the static permission catalog,
 // listing a project's roles (any member), and creating, updating, and deleting a

@@ -6,7 +6,7 @@ import { guards } from '#shared/guards';
 import { assertPermission, requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors } from '#shared/responses';
-import { getRole } from '../../roles/store';
+import { getRole } from '#modules/roles/service';
 import {
   MemberListResponse,
   memberParams,

@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 import { REGISTRATION_MODES } from '@repo/auth';
+import { PermissionMatrixSchema } from '#shared/permissions';
 import { USER_KINDS } from './service';
 
 const encryption = t.UnionEnum(['none', 'ssl', 'tls']);
@@ -127,10 +128,6 @@ const InstanceUserResponse = t.Object({
   createdAt: t.String(),
 });
 
-// The permission matrix as returned: for each resource, the create/edit/read/
-// delete flags. Same shape as the roles API returns.
-const PermissionMatrix = t.Record(t.String(), t.Record(t.String(), t.Boolean()));
-
 export const InstanceUserDetailResponse = t.Composite([
   InstanceUserResponse,
   t.Object({
@@ -142,7 +139,7 @@ export const InstanceUserDetailResponse = t.Composite([
         role: t.UnionEnum(['owner', 'member']),
         roleId: t.Nullable(t.Number()),
         roleName: t.Nullable(t.String()),
-        permissions: PermissionMatrix,
+        permissions: PermissionMatrixSchema,
         ownerCount: t.Number(),
         joinedAt: t.String(),
       }),
@@ -188,7 +185,7 @@ export const InstanceProjectDetailResponse = t.Composite([
         role: t.UnionEnum(['owner', 'member']),
         roleId: t.Nullable(t.Number()),
         roleName: t.Nullable(t.String()),
-        permissions: PermissionMatrix,
+        permissions: PermissionMatrixSchema,
         joinedAt: t.String(),
       }),
     ),

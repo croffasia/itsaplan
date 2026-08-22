@@ -6,7 +6,7 @@ import { guards } from '#shared/guards';
 import { requireUser, type AuthUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
-import { getRole } from '../../roles/store';
+import { getRole } from '#modules/roles/service';
 import {
   AcceptInviteResponse,
   InviteRowListResponse,

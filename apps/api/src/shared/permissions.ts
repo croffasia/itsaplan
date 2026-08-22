@@ -1,3 +1,5 @@
+import { t } from 'elysia';
+
 // Permission model for project roles. A role carries a matrix: for each resource
 // the create/edit/read/delete flags. The matrix is stored as jsonb on
 // project_role and enforced here and in shared/access.ts. Owners bypass the
@@ -32,6 +34,11 @@ export type PermissionAction = (typeof PERMISSION_ACTIONS)[number];
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;
 export type Permissions = Record<PermissionResource, ResourcePermissions>;
+
+// The matrix as it crosses the API. Kept as an open record rather than a schema
+// per resource: normalizePermissions is what guarantees the keys, and pinning
+// them here would mean a schema change for every resource added.
+export const PermissionMatrixSchema = t.Record(t.String(), t.Record(t.String(), t.Boolean()));
 
 function fill(value: boolean): ResourcePermissions {
   return { create: value, edit: value, read: value, delete: value };

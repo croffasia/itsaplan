@@ -1,37 +1,19 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { guards } from '../shared/guards';
-import { HttpError, rethrowDuplicate } from '../shared/lib';
-import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from '../shared/permissions';
-import { accessErrors, commonErrors, errors } from '../shared/responses';
-import { listRoles, getRole, createRole, updateRole, deleteRole } from './store';
-
-const roleParams = t.Object({ projectKey: t.String(), roleId: t.Numeric() });
-
-// Permission matrix carried on create/update. Kept loose (a jsonb blob) and
-// sanitized by normalizePermissions in the store: unknown keys are dropped,
-// values coerced to booleans, missing entries defaulted to false.
-const permissions = t.Any();
-
-// The permission matrix as returned: for each resource, the create/edit/read/
-// delete flags. normalizePermissions always fills every resource and action.
-const PermissionMatrix = t.Record(t.String(), t.Record(t.String(), t.Boolean()));
-
-// A role DTO (RoleRow from the store).
-const RoleResponse = t.Object({
-  id: t.Number(),
-  name: t.String(),
-  isDefault: t.Boolean(),
-  permissions: PermissionMatrix,
-  createdAt: t.String(),
-});
-
-// The catalog of resources and actions a role's matrix is built from.
-const PermissionCatalogResponse = t.Object({
-  resources: t.Array(t.String()),
-  actions: t.Array(t.String()),
-});
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { guards } from '#shared/guards';
+import { HttpError, rethrowDuplicate } from '#shared/lib';
+import { PERMISSION_RESOURCES, PERMISSION_ACTIONS } from '#shared/permissions';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
+import { listRoles, getRole, createRole, updateRole, deleteRole } from './service';
+import {
+  PermissionCatalogResponse,
+  RoleResponse,
+  createRoleBody,
+  projectKeyParams,
+  roleParams,
+  updateRoleBody,
+} from './model';
 
 // Roles CRUD. Listing is open to any member; creating, editing, and deleting a
 // role are owner-only. Role management is deliberately not delegated through the
@@ -40,8 +22,7 @@ const PermissionCatalogResponse = t.Object({
 export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] } })
   .use(guards)
 
-  // The catalog of resources and actions a role's permission matrix is built
-  // from. Static; any authenticated user may read it to render a role editor.
+  // Static; any authenticated user may read it to render a role editor.
   .get(
     '/permission-catalog',
     () => ({ resources: [...PERMISSION_RESOURCES], actions: [...PERMISSION_ACTIONS] }),
@@ -55,18 +36,12 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     },
   )
 
-  .get(
-    '/projects/:projectKey/roles',
-    async ({ project }) => {
-      return listRoles(project.id);
-    },
-    {
-      params: t.Object({ projectKey: t.String() }),
-      projectMember: true,
-      response: { 200: t.Array(RoleResponse), ...accessErrors },
-      detail: { summary: "List a project's roles", ...mcpTool('list_roles') },
-    },
-  )
+  .get('/projects/:projectKey/roles', ({ project }) => listRoles(project.id), {
+    params: projectKeyParams,
+    projectMember: true,
+    response: { 200: t.Array(RoleResponse), ...accessErrors },
+    detail: { summary: "List a project's roles", ...mcpTool('list_roles') },
+  })
 
   .post(
     '/projects/:projectKey/roles',
@@ -79,8 +54,8 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
       }
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({ name: t.String({ minLength: 1 }), permissions }),
+      params: projectKeyParams,
+      body: createRoleBody,
       projectOwner: true,
       response: { 201: RoleResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Create a role', ...mcpTool('create_role') },
@@ -101,10 +76,7 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     },
     {
       params: roleParams,
-      body: t.Object({
-        name: t.Optional(t.String({ minLength: 1 })),
-        permissions: t.Optional(permissions),
-      }),
+      body: updateRoleBody,
       projectOwner: true,
       response: { 200: RoleResponse, ...commonErrors, ...errors(409) },
       detail: {

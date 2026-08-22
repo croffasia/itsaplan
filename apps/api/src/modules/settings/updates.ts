@@ -1,5 +1,4 @@
-import { t } from 'elysia';
-import pkg from '../../../../package.json';
+import pkg from '../../../../../package.json';
 
 // Whether a newer release is published, plus the notes to show. The repository's
 // releases atom feed is the source of the history; the CHANGELOG.md of this build
@@ -7,7 +6,8 @@ import pkg from '../../../../package.json';
 // cannot be read.
 //
 // The feed is github.com web content, not the REST API, so no token and no
-// 60/hour limit (agent-skills/skill-format.ts reads github.com atom the same way).
+// 60/hour limit (modules/agents/skills/skill-format.ts reads github.com atom the
+// same way).
 // The result is not stored on the server: every read fetches the feed, and the
 // browser holds it behind a stale time (web services/updates.service.ts).
 // A failed check leaves the local history intact.
@@ -18,7 +18,7 @@ const FETCH_TIMEOUT_MS = 10_000;
 // configure.
 const FEED_URL = 'https://github.com/croffasia/itsaplan/releases.atom';
 
-const CHANGELOG_PATH = `${import.meta.dir}/../../../../CHANGELOG.md`;
+const CHANGELOG_PATH = `${import.meta.dir}/../../../../../CHANGELOG.md`;
 
 export interface Release {
   tag: string;
@@ -41,23 +41,6 @@ export interface UpdateStatus {
   // Newest first.
   releases: Release[];
 }
-
-const ReleaseSchema = t.Object({
-  tag: t.String(),
-  version: t.String(),
-  publishedAt: t.String(),
-  url: t.Nullable(t.String()),
-  notes: t.String(),
-  notesFormat: t.UnionEnum(['html', 'markdown']),
-});
-
-export const UpdateStatusSchema = t.Object({
-  currentVersion: t.String(),
-  latestVersion: t.Nullable(t.String()),
-  updateAvailable: t.Boolean(),
-  checkedAt: t.Nullable(t.String()),
-  releases: t.Array(ReleaseSchema),
-});
 
 export function getAppVersion(): string {
   return pkg.version;

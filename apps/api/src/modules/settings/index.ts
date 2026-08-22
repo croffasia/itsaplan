@@ -1,9 +1,9 @@
-import { Elysia, t } from 'elysia';
-import { authContext } from '../shared/auth-context';
-import { errors } from '../shared/responses';
-import { getStorageSettings, StorageSettingsSchema } from './storage';
-import { getHotkeySettings, HotkeyCombosSchema } from './hotkeys';
+import { Elysia } from 'elysia';
+import { authContext } from '#shared/auth-context';
+import { errors } from '#shared/responses';
+import { getStorageSettings, getHotkeySettings } from './service';
 import { getAppVersion } from './updates';
+import { HotkeyCombosSchema, StorageSettingsSchema, VersionResponse } from './model';
 
 // Routes for global instance settings (app_setting): a key-value store not scoped
 // to a project. The MCP toggle is per-project (see modules/projects), not here.
@@ -37,7 +37,7 @@ export const settingsRoutes = new Elysia({
   // required: the version tells an anonymous visitor which release to look up
   // vulnerabilities for.
   .get('/settings/version', () => ({ version: getAppVersion() }), {
-    response: { 200: t.Object({ version: t.String() }), ...errors(401) },
+    response: { 200: VersionResponse, ...errors(401) },
     detail: {
       summary: 'Get the running version',
       description: 'Get the version of the app this instance runs.',

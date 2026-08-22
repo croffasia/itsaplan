@@ -47,10 +47,15 @@ import { getInstanceBotSettings, setInstanceBotSettings } from '../../telegram/s
 import {
   getStorageSettings,
   setStorageSettings,
+  getHotkeySettings,
+  setHotkeySettings,
+} from '#modules/settings/service';
+import { getUpdateStatus } from '#modules/settings/updates';
+import {
+  HotkeyCombosSchema,
   StorageSettingsSchema,
-} from '../../settings/storage';
-import { getHotkeySettings, setHotkeySettings, HotkeyCombosSchema } from '../../settings/hotkeys';
-import { getUpdateStatus, UpdateStatusSchema } from '../../settings/updates';
+  UpdateStatusSchema,
+} from '#modules/settings/model';
 
 // God mode: instance-wide administration, open only to the "god" user (the first
 // registered account). It covers how people may register, the mail provider that

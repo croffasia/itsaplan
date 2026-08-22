@@ -27,7 +27,7 @@ import { dashboardRoutes } from './modules/dashboards';
 import { noteBoardRoutes } from './modules/note-boards';
 import { analyticsRoutes } from './modules/analytics';
 import { chartRoutes } from './modules/charts';
-import { settingsRoutes } from './settings/routes';
+import { settingsRoutes } from './modules/settings';
 import { godRoutes } from './modules/god';
 import { agentScheduleRoutes } from './modules/agents/schedules';
 import { agentRunnerRoutes } from './modules/agents/runner';

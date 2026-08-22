@@ -9,7 +9,12 @@ import { assertPublicHttpUrl } from '#shared/net';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '../../issues/store';
-import { getStorageSettings, mimeAllowed, MB, type StorageSettings } from '../../settings/storage';
+import {
+  getStorageSettings,
+  mimeAllowed,
+  MB,
+  type StorageSettings,
+} from '#modules/settings/service';
 import {
   AttachmentResponse,
   AttachmentListResponse,
@@ -29,7 +34,7 @@ import {
   type AttachmentRow,
 } from './service';
 
-// The upload limits are instance settings (see ../../settings/storage.ts), read per
+// The upload limits are instance settings (see modules/settings/service.ts), read per
 // request so a change in god mode takes effect without a restart.
 async function assertUploadAllowed(
   limits: StorageSettings,

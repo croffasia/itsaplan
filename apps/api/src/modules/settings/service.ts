@@ -1,5 +1,7 @@
-import { t } from 'elysia';
 import { getSetting, setSetting } from '@repo/db';
+
+// The instance settings kept in app_setting: the upload limits and the keyboard
+// shortcuts.
 
 // Instance-wide upload limits (app_setting key 'storage'). They apply to every
 // upload path in the api and are read by the web app before a file is picked, so
@@ -26,14 +28,6 @@ export interface StorageSettings {
   // Total stored attachment bytes allowed per project, in MB. 0 means unlimited.
   projectQuotaMb: number;
 }
-
-// Served by GET /settings/storage (any signed-in user) and the god routes.
-export const StorageSettingsSchema = t.Object({
-  maxAttachmentMb: t.Number(),
-  maxAvatarMb: t.Number(),
-  attachmentMimeTypes: t.Array(t.String()),
-  projectQuotaMb: t.Number(),
-});
 
 // Images, video, PDF, office documents and plain text formats. Executables,
 // archives and anything else are refused until an admin adds them.
@@ -91,4 +85,24 @@ export function mimeAllowed(contentType: string, allowed: string[]): boolean {
   return allowed.some((pattern) =>
     pattern.endsWith('/*') ? ct.startsWith(pattern.slice(0, -1)) : ct === pattern,
   );
+}
+
+// The instance keyboard shortcuts (app_setting key 'hotkeys'): the combination
+// each command is bound to for everyone on this instance. Only the bindings
+// changed in god mode are stored; the web app fills the rest from its built-in
+// defaults, then applies the user's own overrides on top (user_preference.hotkeys).
+
+const HOTKEYS_SETTING_KEY = 'hotkeys';
+
+export type HotkeyCombos = Record<string, string>;
+
+export async function getHotkeySettings(): Promise<HotkeyCombos> {
+  return (await getSetting<HotkeyCombos>(HOTKEYS_SETTING_KEY)) ?? {};
+}
+
+// Replaces the stored map. The god screen sends the full set of overrides, so an
+// unbound command is one left out rather than one written as empty.
+export async function setHotkeySettings(combos: HotkeyCombos): Promise<HotkeyCombos> {
+  await setSetting(HOTKEYS_SETTING_KEY, combos);
+  return combos;
 }

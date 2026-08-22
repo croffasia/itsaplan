@@ -15,7 +15,7 @@ import {
   normalizePermissions,
   type Permissions,
 } from '#shared/permissions';
-import { getProjectSetting, setProjectSetting } from '../../settings/store';
+import { getProjectSetting, setProjectSetting } from '#shared/project-settings';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 
 // Data access for projects: the top-level container that groups its own columns,

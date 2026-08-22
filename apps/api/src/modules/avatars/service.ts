@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { HttpError } from '#shared/lib';
 import { putObject, getObject, deleteObject } from '#shared/s3';
-import { getStorageSettings, MB } from '../../settings/storage';
+import { getStorageSettings, MB } from '#modules/settings/service';
 
 // Avatar images for the signed-in user. The bytes live in the S3-compatible
 // object store under `avatars/<uuid>`; the user's `image` column (managed by
@@ -43,7 +43,7 @@ async function deletePreviousAvatar(image: string | null | undefined): Promise<v
   });
 }
 
-// The size limit is an instance setting (see ../../settings/storage.ts), read per
+// The size limit is an instance setting (see modules/settings/service.ts), read per
 // call so a change in god mode takes effect without a restart.
 export async function replaceAvatar(
   userId: string,

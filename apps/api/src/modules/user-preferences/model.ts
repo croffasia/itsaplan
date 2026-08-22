@@ -1,5 +1,5 @@
 import { t } from 'elysia';
-import { HotkeyCombosSchema } from '../../settings/hotkeys';
+import { HotkeyCombosSchema } from '#modules/settings/model';
 
 const Locale = t.Union([
   t.Literal('en'),

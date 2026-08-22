@@ -3,7 +3,7 @@ import { db, projectColumn, projectSetting } from '@repo/db';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { decryptSecret, encryptSecret, type EncryptedSecret } from '@repo/crypto';
 import { HttpError } from '#shared/lib';
-import { getProjectSetting } from '../../settings/store';
+import { getProjectSetting } from '#shared/project-settings';
 
 // The shared secret a project hands to its repository host.
 const newSecret = () => `whs_${randomBytes(24).toString('hex')}`;

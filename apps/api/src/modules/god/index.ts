@@ -1,6 +1,5 @@
 import { Elysia, t } from 'elysia';
 import {
-  REGISTRATION_MODES,
   GOOGLE_REDIRECT_URI,
   getAuthSettings,
   setAuthSettings,
@@ -10,25 +9,48 @@ import {
   getGoogleSettings,
   setGoogleSettings,
 } from '@repo/auth';
-import { authContext } from '../shared/auth-context';
-import { requireGod } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors, errors } from '../shared/responses';
-import { noContent } from '../shared/http';
+import { authContext } from '#shared/auth-context';
+import { requireGod } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
+import { noContent } from '#shared/http';
 import { deleteProject } from '#modules/projects/service';
 import {
-  USER_KINDS,
   deleteInstanceUser,
   getInstanceProject,
   getInstanceUser,
   listInstanceProjects,
   listInstanceUsers,
   verifyInstanceUserEmail,
-} from './store';
-import { getInstanceBotSettings, setInstanceBotSettings } from '../telegram/store';
-import { getStorageSettings, setStorageSettings, StorageSettingsSchema } from '../settings/storage';
-import { getHotkeySettings, setHotkeySettings, HotkeyCombosSchema } from '../settings/hotkeys';
-import { getUpdateStatus, UpdateStatusSchema } from '../settings/updates';
+} from './service';
+import {
+  AuthSettingsBody,
+  AuthSettingsResponse,
+  EmailSettingsBody,
+  EmailSettingsResponse,
+  GoogleSettingsBody,
+  GoogleSettingsResponse,
+  InstanceProjectDetailResponse,
+  InstanceProjectListResponse,
+  InstanceUserDetailResponse,
+  InstanceUserListResponse,
+  StorageSettingsBody,
+  TelegramSettingsBody,
+  TelegramSettingsResponse,
+  deleteUserQuery,
+  listProjectsQuery,
+  listUsersQuery,
+  projectParams,
+  userParams,
+} from './model';
+import { getInstanceBotSettings, setInstanceBotSettings } from '../../telegram/store';
+import {
+  getStorageSettings,
+  setStorageSettings,
+  StorageSettingsSchema,
+} from '../../settings/storage';
+import { getHotkeySettings, setHotkeySettings, HotkeyCombosSchema } from '../../settings/hotkeys';
+import { getUpdateStatus, UpdateStatusSchema } from '../../settings/updates';
 
 // God mode: instance-wide administration, open only to the "god" user (the first
 // registered account). It covers how people may register, the mail provider that
@@ -39,172 +61,6 @@ import { getUpdateStatus, UpdateStatusSchema } from '../settings/updates';
 // The settings themselves are owned by @repo/auth, which reads them at sign-up and
 // when sending mail; these routes only expose them over HTTP. Secrets are never
 // returned — each is replaced by a boolean telling whether a value is stored.
-
-const encryption = t.UnionEnum(['none', 'ssl', 'tls']);
-
-const AuthSettingsResponse = t.Object({
-  registration: t.UnionEnum([...REGISTRATION_MODES]),
-  requireEmailVerification: t.Boolean(),
-  magicLink: t.Boolean(),
-  // Whether a mail provider is configured. The settings that depend on outbound
-  // email cannot be turned on without one, and the UI explains why.
-  hasEmailProvider: t.Boolean(),
-});
-
-const AuthSettingsBody = t.Object({
-  registration: t.Optional(t.UnionEnum([...REGISTRATION_MODES])),
-  requireEmailVerification: t.Optional(t.Boolean()),
-  magicLink: t.Optional(t.Boolean()),
-});
-
-const EmailSettingsResponse = t.Object({
-  smtp: t.Object({
-    enabled: t.Boolean(),
-    host: t.String(),
-    port: t.Nullable(t.Number()),
-    encryption,
-    username: t.String(),
-    hasPassword: t.Boolean(),
-    timeout: t.Nullable(t.Number()),
-  }),
-  resend: t.Object({ enabled: t.Boolean(), hasApiKey: t.Boolean() }),
-  from: t.String(),
-  // Whether projects may deliver their notifications through this provider instead
-  // of configuring one of their own.
-  allowProjects: t.Boolean(),
-});
-
-const EmailSettingsBody = t.Object({
-  smtp: t.Optional(
-    t.Object({
-      enabled: t.Boolean(),
-      host: t.String(),
-      port: t.Nullable(t.Integer({ minimum: 1, maximum: 65535 })),
-      encryption,
-      username: t.String(),
-      password: t.Optional(t.String()),
-      timeout: t.Nullable(t.Integer({ minimum: 1 })),
-    }),
-  ),
-  resend: t.Optional(t.Object({ enabled: t.Boolean(), apiKey: t.Optional(t.String()) })),
-  from: t.Optional(t.String()),
-  allowProjects: t.Optional(t.Boolean()),
-});
-
-const GoogleSettingsResponse = t.Object({
-  enabled: t.Boolean(),
-  clientId: t.String(),
-  hasClientSecret: t.Boolean(),
-  // The value to register in the Google Cloud console. Derived from the API origin,
-  // so the UI shows it rather than asking the owner to assemble it.
-  redirectUri: t.String(),
-});
-
-const GoogleSettingsBody = t.Object({
-  enabled: t.Optional(t.Boolean()),
-  clientId: t.Optional(t.String()),
-  clientSecret: t.Optional(t.String()),
-});
-
-const StorageSettingsBody = t.Object({
-  maxAttachmentMb: t.Optional(t.Integer({ minimum: 1, maximum: 10240 })),
-  maxAvatarMb: t.Optional(t.Integer({ minimum: 1, maximum: 1024 })),
-  attachmentMimeTypes: t.Optional(t.Array(t.String({ minLength: 1 }))),
-  projectQuotaMb: t.Optional(t.Integer({ minimum: 0 })),
-});
-
-const TelegramSettingsResponse = t.Object({
-  enabled: t.Boolean(),
-  // Resolved from Telegram when the token is saved. Shown so the administrator can
-  // confirm which bot the token belongs to, and used to build the link deep link.
-  botUsername: t.String(),
-  hasBotToken: t.Boolean(),
-});
-
-const TelegramSettingsBody = t.Object({
-  enabled: t.Optional(t.Boolean()),
-  botToken: t.Optional(t.String()),
-});
-
-// One account in the instance user directory.
-const InstanceUserResponse = t.Object({
-  id: t.String(),
-  name: t.String(),
-  email: t.String(),
-  image: t.Nullable(t.String()),
-  emailVerified: t.Boolean(),
-  role: t.String(),
-  isAgent: t.Boolean(),
-  providers: t.Array(t.String()),
-  projectCount: t.Number(),
-  lastSeenAt: t.Nullable(t.String()),
-  createdAt: t.String(),
-});
-
-// The permission matrix as returned: for each resource, the create/edit/read/
-// delete flags. Same shape as the roles API returns.
-const PermissionMatrix = t.Record(t.String(), t.Record(t.String(), t.Boolean()));
-
-const InstanceUserDetailResponse = t.Composite([
-  InstanceUserResponse,
-  t.Object({
-    projects: t.Array(
-      t.Object({
-        projectId: t.Number(),
-        projectKey: t.String(),
-        projectName: t.String(),
-        role: t.UnionEnum(['owner', 'member']),
-        roleId: t.Nullable(t.Number()),
-        roleName: t.Nullable(t.String()),
-        permissions: PermissionMatrix,
-        ownerCount: t.Number(),
-        joinedAt: t.String(),
-      }),
-    ),
-  }),
-]);
-
-// One project in the instance project directory, with what it holds counted across
-// its dependent tables.
-const InstanceProjectResponse = t.Object({
-  id: t.Number(),
-  key: t.String(),
-  name: t.String(),
-  description: t.String(),
-  mcpEnabled: t.Boolean(),
-  memberCount: t.Number(),
-  issueCount: t.Number(),
-  archivedIssueCount: t.Number(),
-  initiativeCount: t.Number(),
-  dashboardCount: t.Number(),
-  viewCount: t.Number(),
-  agentCount: t.Number(),
-  skillCount: t.Number(),
-  toolCount: t.Number(),
-  integrationCount: t.Number(),
-  lastActivityAt: t.Nullable(t.String()),
-  createdAt: t.String(),
-});
-
-const InstanceProjectDetailResponse = t.Composite([
-  InstanceProjectResponse,
-  t.Object({
-    members: t.Array(
-      t.Object({
-        userId: t.String(),
-        name: t.String(),
-        email: t.String(),
-        image: t.Nullable(t.String()),
-        isAgent: t.Boolean(),
-        role: t.UnionEnum(['owner', 'member']),
-        roleId: t.Nullable(t.Number()),
-        roleName: t.Nullable(t.String()),
-        permissions: PermissionMatrix,
-        joinedAt: t.String(),
-      }),
-    ),
-  }),
-]);
 
 export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   .use(authContext)
@@ -410,18 +266,8 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         offset: query.offset ?? 0,
       }),
     {
-      query: t.Object({
-        search: t.Optional(t.String()),
-        // Agent bot users are accounts too, but they are managed on a project's AI
-        // Agents screen, so the directory lists people unless asked otherwise.
-        kind: t.Optional(t.UnionEnum([...USER_KINDS])),
-        limit: t.Optional(t.Numeric({ minimum: 1, maximum: 200 })),
-        offset: t.Optional(t.Numeric({ minimum: 0 })),
-      }),
-      response: {
-        200: t.Object({ items: t.Array(InstanceUserResponse), total: t.Number() }),
-        ...errors(400, 401, 403),
-      },
+      query: listUsersQuery,
+      response: { 200: InstanceUserListResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'List instance users',
         description:
@@ -438,7 +284,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       return found;
     },
     {
-      params: t.Object({ userId: t.String() }),
+      params: userParams,
       response: { 200: InstanceUserDetailResponse, ...accessErrors },
       detail: {
         summary: 'Get an instance user',
@@ -456,7 +302,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       return updated;
     },
     {
-      params: t.Object({ userId: t.String() }),
+      params: userParams,
       response: { 200: InstanceUserDetailResponse, ...accessErrors },
       detail: {
         summary: 'Confirm a user email address',
@@ -496,12 +342,8 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       return noContent();
     },
     {
-      params: t.Object({ userId: t.String() }),
-      query: t.Object({
-        // Delete the projects this user owns alone along with the account. Every
-        // issue, comment and attachment in them goes too.
-        withProjects: t.Optional(t.Boolean()),
-      }),
+      params: userParams,
+      query: deleteUserQuery,
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Delete a user',
@@ -520,15 +362,8 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         offset: query.offset ?? 0,
       }),
     {
-      query: t.Object({
-        search: t.Optional(t.String()),
-        limit: t.Optional(t.Numeric({ minimum: 1, maximum: 200 })),
-        offset: t.Optional(t.Numeric({ minimum: 0 })),
-      }),
-      response: {
-        200: t.Object({ items: t.Array(InstanceProjectResponse), total: t.Number() }),
-        ...errors(400, 401, 403),
-      },
+      query: listProjectsQuery,
+      response: { 200: InstanceProjectListResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'List instance projects',
         description:
@@ -545,7 +380,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       return found;
     },
     {
-      params: t.Object({ projectId: t.Numeric() }),
+      params: projectParams,
       response: { 200: InstanceProjectDetailResponse, ...commonErrors },
       detail: {
         summary: 'Get an instance project',

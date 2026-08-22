@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { resetDb } from '#tests/helpers/db';
 import { addUser, setup } from '../helpers';
 
 // The update check under god mode. Only the instance owner may read it — they are

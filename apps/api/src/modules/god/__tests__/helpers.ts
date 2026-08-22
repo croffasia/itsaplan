@@ -1,5 +1,5 @@
-import { authedApi, type Api } from '../../__tests__/helpers/app';
-import { signUpTestUser } from '../../__tests__/helpers/auth';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
 
 // Actors and the flows both god directory tests need. The first user in a reset
 // database gets the "god" role, so `setup` registers the instance owner first and

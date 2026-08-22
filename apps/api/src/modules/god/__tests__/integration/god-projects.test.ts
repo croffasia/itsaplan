@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { resetDb } from '#tests/helpers/db';
 import { addUser, createAgentUser, joinProject, setup } from '../helpers';
 
 // The instance project directory under god mode: listing every project on the

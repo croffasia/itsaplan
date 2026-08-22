@@ -31,13 +31,13 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { iso } from '../shared/lib';
+import { iso } from '#shared/lib';
 import {
   defaultMemberPermissions,
   fullPermissions,
   normalizePermissions,
   type Permissions,
-} from '../shared/permissions';
+} from '#shared/permissions';
 
 // Data access for the instance directories (god mode): every account and every
 // project on this instance. It reads across the better-auth tables (user, session,

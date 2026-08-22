@@ -8,7 +8,8 @@ import { execute } from './execute';
 // answer as it appears.
 //
 // A thread with no session yet is answered by a command started without one, and the
-// session it reports is sent with the first batch of events, which binds the thread.
+// session it reports is sent with the first batch of events after it is named, which
+// binds the thread.
 
 // Often enough to read as typing, rarely enough that a chatty command does not become a
 // request per line.

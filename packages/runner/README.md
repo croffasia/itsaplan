@@ -7,8 +7,8 @@ This package runs such agents on your own machine — one, or several at once.
 
 - Polls your instance for the agent's queued runs. Runs each one with a coding agent CLI.
   Reports the result.
-- Has presets for Claude Code, Codex, opencode, Gemini CLI and GitHub Copilot CLI. Each
-  preset sets the unattended flags and the session resume.
+- Has presets for Claude Code, Codex, opencode, Antigravity CLI and GitHub Copilot CLI.
+  Each preset sets the unattended flags and the session resume.
 - Runs your own `command` instead, if you prefer. The command takes the task on stdin.
 - Answers the agent's chat. Sends the text and the tool calls while the CLI prints them.
 
@@ -61,15 +61,15 @@ or mention it in a comment. The task then starts in your terminal.
 ## Which coding agent
 
 `agent` names a CLI that the runner knows. The runner then builds the command itself: the
-flags for an unattended run, and the session resume.
+flags for an unattended run, and the session resume. Every preset keeps a chat session.
 
-| Agent      | Runs               | Keeps a chat session |
-| ---------- | ------------------ | -------------------- |
-| `claude`   | Claude Code        | yes                  |
-| `codex`    | Codex CLI          | yes                  |
-| `opencode` | opencode           | yes                  |
-| `gemini`   | Gemini CLI         | no                   |
-| `copilot`  | GitHub Copilot CLI | no                   |
+| Agent         | Runs               |
+| ------------- | ------------------ |
+| `claude`      | Claude Code        |
+| `codex`       | Codex CLI          |
+| `opencode`    | opencode           |
+| `antigravity` | Antigravity CLI    |
+| `copilot`     | GitHub Copilot CLI |
 
 Each preset needs the CLI's own MCP config.
 [Coding agent setup](https://github.com/croffasia/itsaplan/blob/main/docs/runner.md) holds
@@ -188,7 +188,7 @@ npx -y @itsaplan/runner --agent claude
 The server writes the task text. The text states what occurred, what to do, and to post
 the result as a comment on the issue. Your own `command` receives the text on **stdin**. A
 preset gives it to its CLI in the way that CLI accepts it: on stdin for `claude` and
-`codex`, as an argument for `gemini`, `copilot` and `opencode`.
+`codex`, as an argument for `antigravity`, `copilot` and `opencode`.
 
 The agent reads all other data through the MCP server at `$ITSAPLAN_URL/mcp`. The agent
 sends `$ITSAPLAN_API_KEY` as a bearer token, and acts as its own user with its role.
@@ -234,7 +234,8 @@ The runner streams the answer to the chat while the command runs. It reports the
 calls with the answer. `outputFormat` tells the runner how to read the output:
 
 - `text` — all the output is the answer.
-- `claude-stream-json`, `codex-jsonl`, `opencode-json` — the event stream of that CLI.
+- `claude-stream-json`, `codex-jsonl`, `opencode-json`, `antigravity-stream-json`,
+  `copilot-json` — the event stream of that CLI.
 
 A preset sets `outputFormat` for you. Set it yourself only with your own `command`. If the
 output does not agree with the format, the runner sends the output as plain text.
@@ -246,8 +247,7 @@ Without a session the server sends the last 20 messages of the conversation as p
 
 - The chat header shows the session id. Run `claude --resume <id>` in the runner's working
   directory to open the same session in your terminal.
-- `gemini` and `copilot` keep no session: neither one reports the id of a session that
-  starts non-interactively.
+- Your own `command` keeps no session. Each chat message then includes the conversation.
 - A session stays on the machine that started it. If you delete its files or move the
   runner, the answers fail. Start a new chat then.
 

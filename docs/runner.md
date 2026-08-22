@@ -84,19 +84,18 @@ bearer_token_env_var = "ITSAPLAN_API_KEY"
   and to `codex exec resume`.
 - Add `--skip-git-repo-check` only if the working directory is not a git repository.
 
-## Gemini CLI
+## Antigravity CLI
 
-Gemini CLI reads `.gemini/settings.json` from the working directory. It expands `$VARS`.
-The key thus comes from the environment. `trust` removes the tool confirmation, which a
-headless run cannot answer:
+Antigravity CLI reads its MCP servers from `~/.gemini/config/mcp_config.json`, one file
+per machine. Its headers take no variables, so you write the key in the file. A remote
+server is named by `serverUrl`, not by `url` or `httpUrl`:
 
 ```json
 {
   "mcpServers": {
     "itsaplan": {
-      "httpUrl": "http://localhost:3000/mcp",
-      "headers": { "Authorization": "Bearer $ITSAPLAN_API_KEY" },
-      "trust": true
+      "serverUrl": "http://localhost:3000/mcp",
+      "headers": { "Authorization": "Bearer the-agent-key" }
     }
   }
 }
@@ -108,20 +107,28 @@ headless run cannot answer:
 {
   "url": "http://localhost:3000",
   "apiKey": "the key you copied on creation",
-  "agent": "gemini",
+  "agent": "antigravity",
   "cwd": "/path/to/working-dir"
 }
 ```
 
-- Gemini CLI also has no system-prompt flag. The preset puts the context of the run before
-  the task, and sends both in one `-p` argument.
-- The preset passes `--approval-mode yolo`, which approves each tool call. Repeat the flag
-  in `args` for `auto_edit`, which approves only file changes.
-- Gemini CLI keeps no session. Each chat message thus includes the conversation.
+- The binary is `agy`. Sign in once by running it interactively.
+- Antigravity CLI has no system-prompt flag, and it does not read stdin. The preset thus
+  sends the context of the run and the task in one `-p` argument.
+- The preset passes `--dangerously-skip-permissions`. Antigravity CLI then does not wait
+  for an approval. Without the flag a denied tool call still exits `0`.
+- The preset passes `--output-format stream-json` and `--print-timeout 24h`. The stream
+  gives the chat answer as it is written, includes the tool calls, and names the
+  conversation that the session resume uses. The raised timeout leaves `timeoutMs` to end
+  a long task.
+- One MCP config per machine means one key. `apiKeys` and `agents` still run several
+  agents, but they all reach the instance as the agent whose key is in that file.
 
 ## GitHub Copilot CLI
 
-GitHub Copilot CLI reads `.mcp.json` from the working directory. Its headers accept no
+GitHub Copilot CLI reads `.mcp.json` from the working directory, but only once you have
+trusted that directory interactively. `--additional-mcp-config` loads the same file
+without that step, which is what the runner config below passes. Its headers accept no
 variables. You thus write the key in the file:
 
 ```json
@@ -144,15 +151,20 @@ variables. You thus write the key in the file:
   "url": "http://localhost:3000",
   "apiKey": "the key you copied on creation",
   "agent": "copilot",
-  "cwd": "/path/to/working-dir"
+  "cwd": "/path/to/working-dir",
+  "args": ["--additional-mcp-config", "@.mcp.json"]
 }
 ```
 
 - Copilot CLI has no system-prompt flag, and it does not read stdin. The preset thus sends
   the context of the run and the task in one `-p` argument.
 - The preset passes `--allow-all-tools` and `--no-ask-user`. Copilot CLI then does not
-  wait for an approval.
-- Copilot CLI keeps no session. Each chat message thus includes the conversation.
+  wait for an approval. It still denies a path outside the working directory, and the run
+  continues and exits `0`. Add `--add-dir` or `--allow-all-paths` to `args` for a task that
+  needs one.
+- The preset passes `--output-format json`. This stream gives the chat answer as it is
+  written, and includes the tool calls. Its last line names the session, which
+  `--session-id` resumes.
 
 ## opencode
 

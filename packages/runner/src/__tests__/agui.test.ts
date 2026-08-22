@@ -247,8 +247,177 @@ describe('answer stream', () => {
     expect((results[0] as { content: string }).content).toBe('exit 1');
   });
 
+  it("reads Antigravity's stream as text fragments and tool steps", async () => {
+    const sink = collect();
+    const stream = new AnswerStream('antigravity-stream-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      [
+        JSON.stringify({ event: 'init', conversation_id: 'c3b6', init: { cwd: '/repo' } }),
+        JSON.stringify({
+          event: 'step_update',
+          step_update: {
+            conversation_id: 'c3b6',
+            step_index: 2,
+            state: 'ACTIVE',
+            step_type: 'tool',
+            tool_name: 'run_command',
+            tool_info: { name: 'run_command', parameters: { CommandLine: 'ls' } },
+          },
+        }),
+        JSON.stringify({
+          event: 'step_update',
+          step_update: {
+            conversation_id: 'c3b6',
+            step_index: 2,
+            state: 'DONE',
+            step_type: 'tool',
+            tool_name: 'run_command',
+            tool_info: {
+              name: 'run_command',
+              parameters: { CommandLine: 'ls' },
+              output: 'README.md',
+            },
+          },
+        }),
+        JSON.stringify({
+          event: 'step_update',
+          step_update: {
+            conversation_id: 'c3b6',
+            step_index: 3,
+            state: 'ACTIVE',
+            step_type: 'agent_response',
+            text_delta: 'One file',
+          },
+        }),
+        JSON.stringify({
+          event: 'step_update',
+          step_update: {
+            conversation_id: 'c3b6',
+            step_index: 3,
+            state: 'DONE',
+            step_type: 'agent_response',
+            text_delta: ' is left.',
+          },
+        }),
+        JSON.stringify({
+          event: 'result',
+          result: { conversation_id: 'c3b6', status: 'SUCCESS', response: 'One file is left.' },
+        }),
+        '',
+      ].join('\n'),
+    );
+    await stream.finish('');
+
+    expect(types(sink.events)).toEqual([
+      'RUN_STARTED',
+      'TOOL_CALL_START',
+      'TOOL_CALL_ARGS',
+      'TOOL_CALL_END',
+      'TOOL_CALL_RESULT',
+      'TEXT_MESSAGE_START',
+      'TEXT_MESSAGE_CONTENT',
+      'TEXT_MESSAGE_END',
+      'RUN_FINISHED',
+    ]);
+    // Every fragment is new, and the result repeats them rather than adding to them.
+    expect(text(sink.events)).toBe('One file is left.');
+    expect(stream.startedSession()).toBe('c3b6');
+  });
+
+  it('takes the Antigravity result as the answer when no fragment carried one', async () => {
+    const sink = collect();
+    const stream = new AnswerStream('antigravity-stream-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      `${JSON.stringify({
+        event: 'result',
+        result: { conversation_id: 'c3b6', status: 'SUCCESS', response: 'Done.' },
+      })}\n`,
+    );
+    await stream.finish('');
+
+    expect(text(sink.events)).toBe('Done.');
+    expect(stream.startedSession()).toBe('c3b6');
+  });
+
+  it("reads Copilot's json as text, tool calls and the session it closes with", async () => {
+    const sink = collect();
+    const stream = new AnswerStream('copilot-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      [
+        JSON.stringify({
+          type: 'assistant.message_delta',
+          data: { messageId: 'm1', deltaContent: 'Reading it' },
+        }),
+        JSON.stringify({
+          type: 'assistant.message',
+          data: {
+            messageId: 'm1',
+            content: 'Reading it',
+            toolRequests: [{ toolCallId: 'call_1', name: 'view' }],
+          },
+        }),
+        JSON.stringify({
+          type: 'tool.execution_start',
+          data: { toolCallId: 'call_1', toolName: 'view', arguments: { path: 'alpha.txt' } },
+        }),
+        JSON.stringify({
+          type: 'tool.execution_complete',
+          data: { toolCallId: 'call_1', success: true, result: { content: 'hello from alpha' } },
+        }),
+        JSON.stringify({
+          type: 'assistant.message_delta',
+          data: { messageId: 'm2', deltaContent: '. It says hello.' },
+        }),
+        JSON.stringify({ type: 'result', sessionId: 'c66bf000', exitCode: 0 }),
+        '',
+      ].join('\n'),
+    );
+    await stream.finish('');
+
+    expect(types(sink.events)).toEqual([
+      'RUN_STARTED',
+      'TEXT_MESSAGE_START',
+      'TEXT_MESSAGE_CONTENT',
+      'TOOL_CALL_START',
+      'TOOL_CALL_ARGS',
+      'TOOL_CALL_END',
+      'TOOL_CALL_RESULT',
+      'TEXT_MESSAGE_CONTENT',
+      'TEXT_MESSAGE_END',
+      'RUN_FINISHED',
+    ]);
+    // The assistant message repeats the deltas, so it is not appended a second time.
+    expect(text(sink.events)).toBe('Reading it. It says hello.');
+    expect(stream.startedSession()).toBe('c66bf000');
+  });
+
+  it('reports what a denied Copilot tool call said', async () => {
+    const sink = collect();
+    const stream = new AnswerStream('copilot-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      `${JSON.stringify({
+        type: 'tool.execution_complete',
+        data: { toolCallId: 'call_1', success: false, result: null, error: { message: 'denied' } },
+      })}\n`,
+    );
+    await stream.finish('');
+
+    const result = sink.events.find((e) => e.type === 'TOOL_CALL_RESULT');
+    expect((result as { content: string }).content).toBe('denied');
+  });
+
   it('ignores a line that parses to something other than an object', async () => {
-    for (const format of ['claude-stream-json', 'codex-jsonl', 'opencode-json'] as const) {
+    for (const format of [
+      'claude-stream-json',
+      'codex-jsonl',
+      'opencode-json',
+      'antigravity-stream-json',
+      'copilot-json',
+    ] as const) {
       const sink = collect();
       const stream = new AnswerStream(format, 'chat:1:u:x', '7', sink.send);
 

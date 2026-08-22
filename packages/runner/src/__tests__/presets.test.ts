@@ -33,11 +33,23 @@ describe('preset arguments', () => {
     expect(argv.at(-1)).toBe('do it');
   });
 
-  it('ignores a session for a CLI that cannot resume one', () => {
-    const argv = presetArgv(PRESETS.gemini, 'whatever', '', [], 'do it');
-    expect(argv).not.toContain('whatever');
-    expect(argv.at(-2)).toBe('-p');
-    expect(argv.at(-1)).toBe('do it');
+  it('resumes an Antigravity conversation and keeps the task behind -p', () => {
+    const fresh = presetArgv(PRESETS.antigravity, null, '', [], 'do it');
+    expect(fresh).not.toContain('--conversation');
+    expect(fresh.at(-2)).toBe('-p');
+
+    const resumed = presetArgv(PRESETS.antigravity, 'c3b6', '', [], 'do it');
+    expect(resumed.slice(0, 2)).toEqual(['--conversation', 'c3b6']);
+    expect(resumed.at(-1)).toBe('do it');
+  });
+
+  it('resumes a Copilot session by id, keeping the task behind -p', () => {
+    const fresh = presetArgv(PRESETS.copilot, null, '', [], 'do it');
+    expect(fresh).not.toContain('--session-id');
+    expect(fresh.at(-2)).toBe('-p');
+
+    const resumed = presetArgv(PRESETS.copilot, 'c66bf000', '', [], 'do it');
+    expect(resumed.slice(-4)).toEqual(['--session-id', 'c66bf000', '-p', 'do it']);
   });
 
   it("appends the operator's arguments after the preset's, so a repeated flag wins", () => {

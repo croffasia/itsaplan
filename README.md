@@ -63,7 +63,7 @@ stable release.
   [Mastra](https://github.com/mastra-ai/mastra) agent framework
 - External agents run wherever you want: drive the run queue through the API with your own
   implementation, or install [`@itsaplan/runner`](packages/runner) and let it hand every task to
-  Claude Code, Codex, Gemini CLI, GitHub Copilot CLI, opencode, or any command that reads stdin —
+  Claude Code, Codex, Antigravity CLI, GitHub Copilot CLI, opencode, or any command that reads stdin —
   on your own machine, under your own account
 - A run starts on an @mention in a comment, on an assignment, or on a schedule
 - Tools that reach outside the tracker: Notion, Telegram, Threads, Instagram, Jina, and Firecrawl
@@ -146,7 +146,7 @@ The web app never imports the packages directly, it talks to the API over HTTP.
 **[Vibe Code Kit](https://vibecodekit.dev)** — a Claude Code plugin with 20+ expert skills
 that turn AI slop into senior-level code. It teaches your AI agent professional development
 and design practices, so you ship production-ready code on the first try. Works with Claude
-Code, Codex, Gemini CLI, and Cursor.
+Code, Codex, Antigravity, and Cursor.
 
 It's a Plan is built with it — the code you are reading is the proof.
 

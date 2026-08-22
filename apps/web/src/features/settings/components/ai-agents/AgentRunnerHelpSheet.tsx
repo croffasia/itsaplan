@@ -37,7 +37,9 @@ url = "${API_URL}/mcp"
 bearer_token_env_var = "ITSAPLAN_API_KEY"`;
 
 // Copilot CLI reads the same .mcp.json as Claude Code, but its headers take no
-// variable interpolation, so the key is written in as it stands.
+// variable interpolation, so the key is written in as it stands. It picks the file up on
+// its own only in a directory the operator has trusted interactively, which is why the
+// config below names it.
 const COPILOT_MCP = `{
   "mcpServers": {
     "itsaplan": {
@@ -65,15 +67,14 @@ const OPENCODE_JSON = `{
   }
 }`;
 
-// Gemini CLI reads its MCP servers from .gemini/settings.json, expands $VARS in it,
-// and takes the task on stdin; trust skips the confirmation prompt for this server,
-// which a headless run has no way to answer.
-const GEMINI_SETTINGS = `{
+// Antigravity CLI reads its MCP servers from one file per machine — no project file. A
+// remote server is named by serverUrl, and its headers take no variable interpolation, so
+// the key is written in as it stands.
+const ANTIGRAVITY_MCP = `{
   "mcpServers": {
     "itsaplan": {
-      "httpUrl": "${API_URL}/mcp",
-      "headers": { "Authorization": "Bearer $ITSAPLAN_API_KEY" },
-      "trust": true
+      "serverUrl": "${API_URL}/mcp",
+      "headers": { "Authorization": "Bearer the-agent-key" }
     }
   }
 }`;
@@ -100,15 +101,18 @@ const AGENTS = [
     files: [{ name: '~/.codex/config.toml', code: CODEX_TOML }],
   },
   {
-    id: 'gemini',
-    label: 'Gemini CLI',
-    agent: 'gemini',
-    files: [{ name: '.gemini/settings.json', code: GEMINI_SETTINGS }],
+    id: 'antigravity',
+    label: 'Antigravity CLI',
+    // The binary is `agy`. It has to be signed in once interactively: a headless run
+    // uses the credentials that session cached.
+    agent: 'antigravity',
+    files: [{ name: '~/.gemini/config/mcp_config.json', code: ANTIGRAVITY_MCP }],
   },
   {
     id: 'copilot',
     label: 'Copilot CLI',
     agent: 'copilot',
+    args: ['--additional-mcp-config', '@.mcp.json'],
     files: [{ name: '.mcp.json', code: COPILOT_MCP }],
   },
   {

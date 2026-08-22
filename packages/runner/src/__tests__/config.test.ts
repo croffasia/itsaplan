@@ -109,10 +109,10 @@ describe('several agents', () => {
     process.env.ITSAPLAN_API_KEY = 'key-env';
     const [shared, own] = await load({
       url: base.url,
-      agents: [{ apiKey: 'key-a' }, { apiKey: 'key-b', agent: 'gemini' }],
+      agents: [{ apiKey: 'key-a' }, { apiKey: 'key-b', agent: 'antigravity' }],
     });
     expect(shared).toMatchObject({ apiKey: 'key-a', agent: 'codex' });
-    expect(own).toMatchObject({ apiKey: 'key-b', agent: 'gemini' });
+    expect(own).toMatchObject({ apiKey: 'key-b', agent: 'antigravity' });
   });
 
   it('refuses a config that says both, or that lists no agent at all', async () => {

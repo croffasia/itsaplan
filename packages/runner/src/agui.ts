@@ -35,12 +35,13 @@ export class AnswerStream {
   private text = '';
   private started = false;
   private line = '';
-  // Every event-stream format names its session before the model has produced anything,
-  // so it is known in time for the first batch of events.
+  // Most formats name their session on the line that opens the stream; Copilot names it
+  // on the one that closes it, so it reaches the server with the last batch of events.
   private sessionId: string | null = null;
   // opencode re-sends a growing part rather than the delta, so the last text seen says
-  // how much of the next one is new. Tool parts are re-sent the same way, hence the sets:
-  // one for the call already reported, one for the result it ended with.
+  // how much of the next one is new. A tool is re-sent as it runs, both by opencode and
+  // by Antigravity, hence the sets: one for the call already reported, one for the result
+  // it ended with.
   private openTextPart = '';
   private readonly openToolCalls = new Set<string>();
   private readonly closedToolCalls = new Set<string>();
@@ -176,7 +177,88 @@ export class AnswerStream {
       case 'opencode-json':
         this.readOpencodeLine(parsed as OpencodeLine);
         break;
+      case 'antigravity-stream-json':
+        this.readAntigravityLine(parsed as AntigravityLine);
+        break;
+      case 'copilot-json':
+        this.readCopilotLine(parsed as CopilotLine);
+        break;
     }
+  }
+
+  // The answer arrives as deltas that the assistant message then repeats whole, and a
+  // tool is reported by the pair of events around running it. The session is named on the
+  // closing line.
+  private readCopilotLine(message: CopilotLine): void {
+    const data = message.data;
+    switch (message.type) {
+      case 'result':
+        if (message.sessionId) this.sessionId ??= message.sessionId;
+        return;
+      case 'assistant.message_delta':
+        if (data?.deltaContent) {
+          this.sawPartialText = true;
+          this.appendText(data.deltaContent);
+        }
+        return;
+      case 'assistant.message':
+        if (data?.content && !this.sawPartialText) this.appendText(data.content);
+        return;
+      case 'tool.execution_start':
+        if (data?.toolCallId) {
+          this.pushToolCall(
+            data.toolCallId,
+            data.toolName ?? 'tool',
+            JSON.stringify(data.arguments ?? {}),
+          );
+        }
+        return;
+      case 'tool.execution_complete': {
+        if (!data?.toolCallId) return;
+        const result = data.success ? data.result?.content : data.error?.message;
+        if (typeof result === 'string') this.pushToolResult(data.toolCallId, result);
+        return;
+      }
+    }
+  }
+
+  // The conversation is named on the opening event and on every payload after it. Text
+  // arrives as the fragments of an agent_response step, each one new, and a tool step is
+  // re-sent — once while it runs, once with its output.
+  private readAntigravityLine(message: AntigravityLine): void {
+    const step = message.step_update;
+    const conversationId =
+      message.conversation_id ?? step?.conversation_id ?? message.result?.conversation_id;
+    if (conversationId) this.sessionId ??= conversationId;
+    if (message.event === 'result') {
+      // The result repeats the text of the turn; it is the fallback for a run that
+      // streamed none.
+      if (!this.sawAnyText && typeof message.result?.response === 'string') {
+        this.appendText(message.result.response);
+      }
+      return;
+    }
+    if (!step) return;
+    if (step.step_type === 'agent_response') {
+      if (step.text_delta) this.appendText(step.text_delta);
+      return;
+    }
+    if (step.step_type !== 'tool' || step.step_index === undefined) return;
+    const id = `step-${step.step_index}`;
+    const tool = step.tool_info;
+    if (!this.openToolCalls.has(id)) {
+      this.openToolCalls.add(id);
+      this.pushToolCall(
+        id,
+        step.tool_name ?? tool?.name ?? 'tool',
+        JSON.stringify(tool?.parameters ?? {}),
+      );
+    }
+    if (this.closedToolCalls.has(id)) return;
+    const result = tool?.error?.message ?? tool?.output;
+    if (typeof result !== 'string') return;
+    this.closedToolCalls.add(id);
+    this.pushToolResult(id, result);
   }
 
   // `thread.started` names the session; the answer arrives as a completed item of type
@@ -343,6 +425,43 @@ interface OpencodeLine {
     tool?: string;
     // A call ends 'completed' with its output, or 'error' with what went wrong.
     state?: { status?: string; input?: unknown; output?: string; error?: string };
+  };
+}
+
+// The parts of Antigravity CLI's --output-format stream-json this adapter reads.
+interface AntigravityLine {
+  event?: string;
+  conversation_id?: string;
+  step_update?: {
+    conversation_id?: string;
+    step_index?: number;
+    step_type?: string;
+    tool_name?: string;
+    text_delta?: string;
+    tool_info?: {
+      name?: string;
+      parameters?: unknown;
+      output?: string;
+      error?: { message?: string };
+    };
+  };
+  result?: { conversation_id?: string; response?: string };
+}
+
+// The parts of Copilot CLI's --output-format json this adapter reads. A tool that was
+// denied or failed reports `error` in place of `result`.
+interface CopilotLine {
+  type?: string;
+  sessionId?: string;
+  data?: {
+    content?: string;
+    deltaContent?: string;
+    toolCallId?: string;
+    toolName?: string;
+    arguments?: unknown;
+    success?: boolean;
+    result?: { content?: string } | null;
+    error?: { message?: string };
   };
 }
 

@@ -36,7 +36,14 @@ export interface RunnerConfig {
   outputFormat: OutputFormat;
 }
 
-const OUTPUT_FORMATS = ['text', 'claude-stream-json', 'codex-jsonl', 'opencode-json'] as const;
+const OUTPUT_FORMATS = [
+  'text',
+  'claude-stream-json',
+  'codex-jsonl',
+  'opencode-json',
+  'antigravity-stream-json',
+  'copilot-json',
+] as const;
 
 export type OutputFormat = (typeof OUTPUT_FORMATS)[number];
 

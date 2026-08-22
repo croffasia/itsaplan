@@ -9,13 +9,11 @@ import type { OutputFormat } from './config';
 // Anything else about the invocation — MCP servers, model, working directory — is the
 // operator's, passed through `args` and the `--` tail.
 
-export type PresetName = 'claude' | 'codex' | 'opencode' | 'gemini' | 'copilot';
+export type PresetName = 'claude' | 'codex' | 'opencode' | 'antigravity' | 'copilot';
 
 export interface Preset {
   bin: string;
   outputFormat: OutputFormat;
-  // False means the server keeps framing the conversation into every chat message.
-  sessions: boolean;
   // A CLI that takes the prompt as an argument gets it after everything else, which is why
   // `tail` exists.
   promptVia: 'stdin' | 'arg';
@@ -36,7 +34,6 @@ export const PRESETS: Record<PresetName, Preset> = {
   claude: {
     bin: 'claude',
     outputFormat: 'claude-stream-json',
-    sessions: true,
     promptVia: 'stdin',
     systemPromptFlag: '--append-system-prompt',
     head: (sessionId) => [
@@ -59,7 +56,6 @@ export const PRESETS: Record<PresetName, Preset> = {
   codex: {
     bin: 'codex',
     outputFormat: 'codex-jsonl',
-    sessions: true,
     promptVia: 'stdin',
     head: (sessionId) => [
       ...(sessionId ? ['exec', 'resume', sessionId] : ['exec']),
@@ -73,7 +69,6 @@ export const PRESETS: Record<PresetName, Preset> = {
   opencode: {
     bin: 'opencode',
     outputFormat: 'opencode-json',
-    sessions: true,
     promptVia: 'arg',
     head: (sessionId) => [
       'run',
@@ -84,25 +79,39 @@ export const PRESETS: Record<PresetName, Preset> = {
     tail: [],
   },
 
-  // Nothing here resumes Gemini or Copilot: neither documents a way to read the id of a
-  // session started non-interactively, nor states that its resume flag works alongside a
-  // one-shot prompt. Give either one a session-aware `head` and `sessions: true` once
-  // someone has checked it on a machine that has it.
-  gemini: {
-    bin: 'gemini',
-    outputFormat: 'text',
-    sessions: false,
+  // --conversation resumes the conversation the stream names. --print-timeout is raised
+  // well past its five-minute default, so the runner's own timeout is what ends a long
+  // task.
+  antigravity: {
+    bin: 'agy',
+    outputFormat: 'antigravity-stream-json',
     promptVia: 'arg',
-    head: () => ['--approval-mode', 'yolo'],
+    head: (sessionId) => [
+      ...(sessionId ? ['--conversation', sessionId] : []),
+      '--output-format',
+      'stream-json',
+      '--dangerously-skip-permissions',
+      '--print-timeout',
+      '24h',
+    ],
     tail: ['-p'],
   },
 
+  // --allow-all-tools is required for a run nobody is watching, and --no-ask-user turns
+  // off the tool that would wait for an answer. The json output carries the tool calls,
+  // and its closing `result` line names the session, which --session-id resumes. The
+  // resume flag has to be this one: -r takes its value only as `-r=<id>`.
   copilot: {
     bin: 'copilot',
-    outputFormat: 'text',
-    sessions: false,
+    outputFormat: 'copilot-json',
     promptVia: 'arg',
-    head: () => ['--allow-all-tools', '--no-ask-user'],
+    head: (sessionId) => [
+      '--allow-all-tools',
+      '--no-ask-user',
+      '--output-format',
+      'json',
+      ...(sessionId ? ['--session-id', sessionId] : []),
+    ],
     tail: ['-p'],
   },
 };
@@ -131,7 +140,7 @@ export function presetArgv(
   prompt: string,
 ): string[] {
   return [
-    ...preset.head(preset.sessions ? sessionId : null),
+    ...preset.head(sessionId),
     ...(preset.systemPromptFlag && systemPrompt ? [preset.systemPromptFlag, systemPrompt] : []),
     ...extraArgs,
     ...preset.tail,

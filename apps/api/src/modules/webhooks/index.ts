@@ -1,56 +1,26 @@
 import { Elysia, t } from 'elysia';
-import { noContent } from '../shared/http';
-import { guards, entityGuard } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { HttpError } from '../shared/lib';
-import { mcpTool } from '../mcp/generate';
-import { accessErrors, commonErrors } from '../shared/responses';
+import { noContent } from '#shared/http';
+import { guards, entityGuard } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { HttpError } from '#shared/lib';
+import { mcpTool } from '#mcp/generate';
+import { accessErrors, commonErrors } from '#shared/responses';
 import {
-  WEBHOOK_EVENT_TYPES,
+  WebhookDeliveryPageResponse,
+  WebhookResponse,
+  createWebhookBody,
+  listDeliveriesQuery,
+  updateWebhookBody,
+  webhookParams,
+} from './model';
+import {
   listWebhooks,
   createWebhook,
   getWebhook,
   updateWebhook,
   deleteWebhook,
   listWebhookDeliveries,
-} from './store';
-
-const webhookParams = t.Object({ webhookId: t.Numeric() });
-
-const eventType = t.UnionEnum([...WEBHOOK_EVENT_TYPES]);
-const eventsSchema = t.Array(eventType, { minItems: 1 });
-
-// A webhook subscription DTO (WebhookRow from the store).
-const WebhookResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  url: t.String(),
-  secret: t.String(),
-  events: t.Array(eventType),
-  isActive: t.Boolean(),
-  createdAt: t.String(),
-});
-
-// A webhook delivery attempt DTO (WebhookDeliveryRow from the store).
-const WebhookDeliveryResponse = t.Object({
-  id: t.Number(),
-  eventId: t.String(),
-  eventType: t.String(),
-  status: t.String(),
-  attempts: t.Number(),
-  payload: t.Any(),
-  responseStatus: t.Nullable(t.Number()),
-  responseBody: t.Nullable(t.String()),
-  lastError: t.Nullable(t.String()),
-  nextAttemptAt: t.String(),
-  createdAt: t.String(),
-});
-
-// One page of deliveries (WebhookDeliveryPage from the store).
-const WebhookDeliveryPageResponse = t.Object({
-  items: t.Array(WebhookDeliveryResponse),
-  nextCursor: t.Nullable(t.Number()),
-});
+} from './service';
 
 // A local, loopback, or private-range host — the SSRF-sensitive targets.
 function isLocalHost(host: string): boolean {
@@ -73,14 +43,13 @@ function isIpLiteral(host: string): boolean {
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':');
 }
 
-// Rejects urls that are not https or that point at a local/private address, so a
-// subscription cannot be pointed at internal services (SSRF). The DNS-level check
-// belongs to the delivery side; this is the syntactic guard at registration time.
+// Rejects a url that is not https, or that targets a local or private address. This
+// stops a subscription from reaching internal services (SSRF). The check is syntactic
+// and runs at registration time. The delivery side runs the DNS-level check.
 //
-// Exception for local development (NODE_ENV neither production nor test): a
-// localhost / 0.0.0.0 / IP-literal target is allowed over http, so a local test
-// receiver (e.g. http://localhost:3000/webhook-test/sink) can be registered.
-// Production and the test suite stay strict.
+// Local development is the exception (NODE_ENV is neither production nor test): a
+// localhost, 0.0.0.0, or IP-literal target passes over http, so an operator can
+// register a local test receiver. Production and the test suite stay strict.
 function validateWebhookUrl(raw: string): string {
   let url: URL;
   try {
@@ -108,8 +77,6 @@ function validateWebhookUrl(raw: string): string {
 export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['Webhooks'] } })
   .use(authContext)
   .use(guards)
-  // Guard for routes that address a webhook by its own id (no :projectKey in the
-  // path). Set `webhook: "<action>"` in the route options.
   .macro({
     webhook: entityGuard(
       'webhooks',
@@ -141,11 +108,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
       });
     },
     {
-      body: t.Object({
-        url: t.String({ minLength: 1 }),
-        events: eventsSchema,
-        isActive: t.Optional(t.Boolean()),
-      }),
+      body: createWebhookBody,
       permission: ['webhooks', 'create'],
       response: { 201: WebhookResponse, ...commonErrors },
       detail: { summary: 'Create a webhook', ...mcpTool('create_webhook') },
@@ -164,11 +127,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
       return updated;
     },
     {
-      body: t.Object({
-        url: t.Optional(t.String({ minLength: 1 })),
-        events: t.Optional(eventsSchema),
-        isActive: t.Optional(t.Boolean()),
-      }),
+      body: updateWebhookBody,
       params: webhookParams,
       webhook: 'edit',
       response: { 200: WebhookResponse, ...commonErrors },
@@ -197,10 +156,7 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
     },
     {
       params: webhookParams,
-      query: t.Object({
-        before: t.Optional(t.Numeric()),
-        limit: t.Optional(t.Numeric()),
-      }),
+      query: listDeliveriesQuery,
       webhook: 'read',
       response: { 200: WebhookDeliveryPageResponse, ...commonErrors },
       detail: {

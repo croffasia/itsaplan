@@ -1,21 +1,23 @@
 import { randomBytes } from 'node:crypto';
 import { db, webhook, webhookDelivery } from '@repo/db';
 import { and, desc, eq, lt } from 'drizzle-orm';
-import { iso } from '../shared/lib';
+import { iso } from '#shared/lib';
 
-// Outgoing webhook subscriptions on a project. A subscription targets a `url`,
-// carries a per-subscription `secret` used to sign delivered payloads, and lists
-// the event types it wants. Delivery is handled separately; this layer only
-// stores and returns the subscription.
+// Outgoing webhook subscriptions on a project. A subscription targets a `url` and
+// lists the event types it wants. It carries its own `secret`, which signs the
+// payloads sent to that url. This layer only stores and returns the subscription.
+// The delivery side is separate.
 
-// The event types a subscription can listen to. Keep in sync with the events the
-// delivery side emits (issues/store.ts, issues/activity.ts, issues/links.ts) and
-// the frontend list (apps/web src/lib/api.ts). issue.updated fires on any field
-// change; the granular issue.assigned / issue.state_changed / issue.label_changed
-// fire in addition, only when that specific field changes on an existing issue.
-// issue.state_changed fires when the issue moves to a different state (column).
-// issue.link_changed fires for both issues of an added or removed relation, and
-// without issue.updated: no field of either issue changed.
+// The event types a subscription can select. Keep this list in sync with the events
+// the delivery side emits (issues/store.ts, issues/activity.ts, issues/links.ts) and
+// with the frontend list (apps/web src/lib/api.ts).
+//
+// issue.updated fires on any field change. The granular issue.assigned,
+// issue.state_changed, and issue.label_changed fire in addition, and only when that
+// specific field changes on an existing issue. issue.state_changed fires when the
+// issue moves to a different state (column). issue.link_changed fires for both issues
+// of an added or removed relation, and without issue.updated: no field of either
+// issue changed.
 export const WEBHOOK_EVENT_TYPES = [
   'issue.created',
   'issue.updated',
@@ -50,8 +52,8 @@ function mapWebhook(row: typeof webhook.$inferSelect): WebhookRow {
   };
 }
 
-// A signing secret for a new subscription. Shown to the client so it can verify
-// delivered payloads; generated server-side and never derived from user input.
+// A signing secret for a new subscription. The client gets it back so it can verify
+// delivered payloads. The server generates it, and never derives it from user input.
 function generateSecret(): string {
   return `whsec_${randomBytes(24).toString('hex')}`;
 }
@@ -89,7 +91,7 @@ export async function getWebhook(id: number): Promise<WebhookRow | null> {
   return rows[0] ? mapWebhook(rows[0]) : null;
 }
 
-// Updates only the provided fields. The secret is not user-editable here.
+// Updates only the fields the patch provides. A caller cannot change the secret.
 export async function updateWebhook(
   id: number,
   patch: { url?: string; events?: WebhookEventType[]; isActive?: boolean },
@@ -126,7 +128,7 @@ export interface WebhookDeliveryRow {
 
 export interface WebhookDeliveryPage {
   items: WebhookDeliveryRow[];
-  // The id to pass as `before` to load the next page, or null when at the end.
+  // The id to pass as `before` to load the next page, or null on the last page.
   nextCursor: number | null;
 }
 
@@ -146,9 +148,9 @@ function mapDelivery(row: typeof webhookDelivery.$inferSelect): WebhookDeliveryR
   };
 }
 
-// One page of the webhook's deliveries, newest first. Keyset pagination by id
-// (deliveries are id-monotonic): pass the previous page's nextCursor as `before`
-// to get the next page. limit is clamped to 1..50.
+// One page of the webhook's deliveries, newest first. Keyset pagination by id, which
+// works because delivery ids only grow: pass the previous page's nextCursor as
+// `before` to get the next page. This clamps limit to 1..50.
 export async function listWebhookDeliveries(
   webhookId: number,
   opts: { before?: number; limit?: number } = {},

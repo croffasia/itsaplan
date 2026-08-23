@@ -1486,7 +1486,7 @@ export interface ActionPatch {
   effect?: ActionEffect;
 }
 
-// Outgoing webhook subscription (mirrors apps/api webhooks/store.ts). The event
+// Outgoing webhook subscription (mirrors apps/api modules/webhooks/service.ts). The event
 // types must stay in sync with WEBHOOK_EVENT_TYPES on the server.
 export type WebhookEventType =
   | 'issue.created'

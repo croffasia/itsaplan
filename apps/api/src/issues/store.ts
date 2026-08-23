@@ -54,7 +54,7 @@ import {
 import { autoWatchIssue } from './watchers';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
 import { notifyIssueChange, notifyTextMentions } from '#modules/notifications/service';
-import { emitWebhookEvent } from '../webhooks/emit';
+import { emitWebhookEvent } from '#modules/webhooks/emit';
 import {
   getAssignTriggerAgent,
   getFieldTriggerAgent,

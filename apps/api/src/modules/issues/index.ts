@@ -1,14 +1,14 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '../mcp/generate';
-import { noContent } from '../shared/http';
-import { guards, entityGuard } from '../shared/guards';
-import { authContext } from '../shared/auth-context';
-import { assertPermission, assertMcpEnabled, requireUser } from '../shared/access';
-import { isMcpRequest } from '../shared/mcp-request';
+import { mcpTool } from '#mcp/generate';
+import { noContent } from '#shared/http';
+import { guards, entityGuard } from '#shared/guards';
+import { authContext } from '#shared/auth-context';
+import { assertPermission, assertMcpEnabled, requireUser } from '#shared/access';
+import { isMcpRequest } from '#shared/mcp-request';
 import { getProjectById } from '#modules/projects/service';
-import { HttpError } from '../shared/lib';
-import { accessErrors, commonErrors, errors } from '../shared/responses';
-import { deleteObject } from '../shared/s3';
+import { HttpError } from '#shared/lib';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
+import { deleteObject } from '#shared/s3';
 import {
   createIssue,
   searchIssues,
@@ -28,7 +28,7 @@ import {
   setIssueLabels,
   setIssueFieldValue,
   getIssueFieldValues,
-} from './store';
+} from './service';
 import {
   listFeed,
   listFeedRange,
@@ -62,9 +62,50 @@ import {
   updateChecklistItem,
 } from './checklists';
 
-// Numeric path params are validated (and coerced string -> number) with t.Numeric,
-// so a non-numeric id is rejected with a 400 before reaching the store.
-const issueParams = t.Object({ issueId: t.Numeric() });
+import {
+  issueParams,
+  IssueResponse,
+  IssueLinkResponse,
+  IssueWatcherResponse,
+  ChecklistItemResponse,
+  ChecklistResponse,
+  OrderedIdsSchema,
+  checklistParams,
+  checklistItemParams,
+  IssueWithFieldsResponse,
+  IssueSearchHitResponse,
+  FeedItemResponse,
+  FeedPageResponse,
+  GroupedFeedPageResponse,
+  feedPageQuery,
+  TimelineSegmentResponse,
+  projectKeyParams,
+  createIssueBody,
+  bulkUpdateIssuesBody,
+  bulkAddLabelsBody,
+  bulkArchiveIssuesBody,
+  bulkDeleteIssuesBody,
+  searchIssuesQuery,
+  listIssuesQuery,
+  issueSequenceParams,
+  updateIssueBody,
+  subtaskDispositionQuery,
+  setIssueFieldValueBody,
+  issueFieldParams,
+  addIssueLinkBody,
+  issueLinkParams,
+  checklistTitleBody,
+  createChecklistItemBody,
+  updateChecklistItemBody,
+  feedRangeQuery,
+  createCommentBody,
+  archiveIssueBody,
+  BulkUpdatedResponse,
+  BulkArchivedResponse,
+  BulkDeletedResponse,
+  BoardResponse,
+  WatchStateResponse,
+} from './model';
 
 // The subtask choice a delete or archive request carries, or undefined when it
 // carries none.
@@ -90,265 +131,7 @@ async function purgeObjects(attachments: { s3Key: string }[]): Promise<void> {
   );
 }
 
-// --- Response DTO schemas (mirror the store interfaces the handlers return) -------
-
-// IssueFieldValueEntry from the store: a compact custom field value carried on an
-// issue (scalar value, the end of a datetime_range, and selected option ids).
-const IssueFieldValueEntry = t.Object({
-  fieldId: t.Number(),
-  value: t.Nullable(t.Union([t.String(), t.Number(), t.Boolean()])),
-  valueEnd: t.Nullable(t.String()),
-  optionIds: t.Array(t.Number()),
-});
-
-// IssueRow from the store.
-const IssueResponse = t.Object({
-  id: t.Number(),
-  projectId: t.Number(),
-  sequenceNumber: t.Number(),
-  identifier: t.String(),
-  typeId: t.Nullable(t.Number()),
-  // The linked initiative expanded to id + title for rendering and status for
-  // ordering the lanes of a board grouped by initiative, or null. Set through
-  // create/update by initiativeId.
-  initiative: t.Nullable(t.Object({ id: t.Number(), title: t.String(), status: t.String() })),
-  // The cycle this issue is planned into, expanded to id + name for rendering and
-  // status for filtering by the running or the upcoming ones, or null. Set through
-  // create/update by cycleId.
-  cycle: t.Nullable(t.Object({ id: t.Number(), name: t.String(), status: t.String() })),
-  assigneeUserId: t.Nullable(t.String()),
-  delegateUserId: t.Nullable(t.String()),
-  columnId: t.Number(),
-  // The issue this one is a subtask of, or null. Set through create/update.
-  parentId: t.Nullable(t.Number()),
-  title: t.String(),
-  description: t.String(),
-  priority: t.Nullable(t.String()),
-  startDate: t.Nullable(t.String()),
-  dueDate: t.Nullable(t.String()),
-  position: t.Number(),
-  createdAt: t.String(),
-  updatedAt: t.String(),
-  archivedAt: t.Nullable(t.String()),
-  statusSince: t.String(),
-  shareToken: t.Nullable(t.String()),
-  shareExtended: t.Boolean(),
-  labelIds: t.Array(t.Number()),
-  fieldValues: t.Array(IssueFieldValueEntry),
-});
-
-// IssueFieldValueRow from the store: one applicable custom field joined with its
-// value on the issue. fieldType is the CustomFieldType union (a string).
-const IssueFieldValueRow = t.Object({
-  fieldId: t.Number(),
-  name: t.String(),
-  fieldType: t.String(),
-  value: t.Nullable(t.Union([t.String(), t.Number(), t.Boolean()])),
-  valueEnd: t.Nullable(t.String()),
-  optionIds: t.Array(t.Number()),
-});
-
-// IssueRef from subtasks.ts: another issue named with the state it is in — an
-// issue's parent, one of its subtasks, or the other end of a relation.
-const IssueRefResponse = t.Object({
-  id: t.Number(),
-  sequenceNumber: t.Number(),
-  identifier: t.String(),
-  title: t.String(),
-  columnId: t.Number(),
-  typeId: t.Nullable(t.Number()),
-  archived: t.Boolean(),
-});
-
-// The kinds a relation is stored under (IssueLinkKind in links.ts).
-const StoredLinkKind = t.Union([
-  t.Literal('blocks'),
-  t.Literal('relates'),
-  t.Literal('duplicates'),
-]);
-
-// IssueLinkRow from links.ts: one relation to another issue, as it reads from the
-// issue it was loaded for.
-const IssueLinkResponse = t.Object({
-  id: t.Number(),
-  kind: StoredLinkKind,
-  direction: t.Union([t.Literal('outward'), t.Literal('inward')]),
-  issue: IssueRefResponse,
-});
-
-// A relation as one of its two issues reads it (IssueLinkInputKind in links.ts):
-// what a caller states when creating one, and what a board issue carries.
-const IssueLinkKindSchema = t.Union(
-  [
-    t.Literal('blocks'),
-    t.Literal('blocked_by'),
-    t.Literal('relates'),
-    t.Literal('duplicates'),
-    t.Literal('duplicated_by'),
-  ],
-  {
-    description:
-      'How one issue relates to the other: blocks, blocked_by, relates, duplicates, or duplicated_by.',
-  },
-);
-
-// BoardIssueLink from links.ts: one relation on the issue carrying it, with the
-// other end as an id.
-const BoardIssueLinkResponse = t.Object({
-  id: t.Number(),
-  relation: IssueLinkKindSchema,
-  issueId: t.Number(),
-});
-
-// What a delete or an archive does with the issue's subtasks. Required when it has
-// any, ignored when it has none.
-const SubtaskModeSchema = t.Union(
-  [t.Literal('cascade'), t.Literal('detach'), t.Literal('reassign')],
-  {
-    description:
-      "What happens to the issue's subtasks: 'cascade' removes them with it, 'detach' turns them into ordinary issues, 'reassign' moves them to newParentId.",
-  },
-);
-
-const NewParentIdSchema = t.Integer({
-  description: "Numeric id of the issue the subtasks move to. Required by 'reassign'.",
-});
-
-// IssueWatcherRow from watchers.ts: one member following the issue.
-const IssueWatcherResponse = t.Object({
-  userId: t.String(),
-  name: t.String(),
-  image: t.Nullable(t.String()),
-});
-
-// ChecklistItemRow / ChecklistRow from checklists.ts.
-const ChecklistItemResponse = t.Object({
-  id: t.Number(),
-  content: t.String(),
-  done: t.Boolean(),
-  position: t.Number(),
-});
-
-const ChecklistResponse = t.Object({
-  id: t.Number(),
-  title: t.String(),
-  position: t.Number(),
-  items: t.Array(ChecklistItemResponse),
-});
-
-const ChecklistTitleSchema = t.String({
-  minLength: 1,
-  maxLength: 200,
-  description: 'Title of the checklist.',
-});
-
-const ChecklistItemContentSchema = t.String({
-  minLength: 1,
-  maxLength: 500,
-  description: 'Text of the checklist item.',
-});
-
-// A reorder sends the ids in their new order. Ids outside the parent in the path
-// are ignored, and ones left out keep their position after the listed ones.
-const OrderedIdsSchema = t.Object({
-  orderedIds: t.Array(t.Integer(), { minItems: 1 }),
-});
-
-const checklistParams = t.Object({ checklistId: t.Numeric() });
-const checklistItemParams = t.Object({ itemId: t.Numeric() });
-
-// GET /issues/:issueId returns the full issue plus its custom field values, its
-// relations to other issues, the members watching it, and its checklists.
-const IssueWithFieldsResponse = t.Composite([
-  IssueResponse,
-  t.Object({
-    fields: t.Array(IssueFieldValueRow),
-    links: t.Array(IssueLinkResponse),
-    watchers: t.Array(IssueWatcherResponse),
-    parent: t.Nullable(IssueRefResponse),
-    subtasks: t.Array(IssueRefResponse),
-    checklists: t.Array(ChecklistResponse),
-  }),
-]);
-
-// The board carries each issue's relations on the issue itself.
-const BoardIssueResponse = t.Composite([
-  IssueResponse,
-  t.Object({
-    links: t.Array(BoardIssueLinkResponse),
-    // How many subtasks the issue has, archived ones included — the board lists
-    // only active issues, so it cannot count them from the payload itself.
-    subtaskCount: t.Number(),
-  }),
-]);
-
-// IssueSearchHit from the store: a light search result (no description/field values).
-const IssueSearchHitResponse = t.Object({
-  id: t.Number(),
-  sequenceNumber: t.Number(),
-  identifier: t.String(),
-  title: t.String(),
-  columnId: t.Number(),
-  typeId: t.Nullable(t.Number()),
-  initiativeId: t.Nullable(t.Number()),
-  cycleId: t.Nullable(t.Number()),
-  parentId: t.Nullable(t.Number()),
-  assigneeUserId: t.Nullable(t.String()),
-  delegateUserId: t.Nullable(t.String()),
-  priority: t.Nullable(t.String()),
-  dueDate: t.Nullable(t.String()),
-  labelIds: t.Array(t.Number()),
-  archived: t.Boolean(),
-});
-
-// FeedItemRow from activity.ts: one timeline entry (comment or change-log).
-// kind is the FeedKind union (a string).
-const FeedItemResponse = t.Object({
-  id: t.Number(),
-  issueId: t.Number(),
-  kind: t.String(),
-  replyToId: t.Nullable(t.Number()),
-  actorUserId: t.Nullable(t.String()),
-  actorName: t.Nullable(t.String()),
-  body: t.Nullable(t.String()),
-  action: t.Nullable(t.String()),
-  subject: t.Nullable(t.String()),
-  fromText: t.Nullable(t.String()),
-  toText: t.Nullable(t.String()),
-  createdAt: t.String(),
-});
-
-const FeedCursorResponse = t.Nullable(t.Object({ ts: t.String(), id: t.Number() }));
-
-// FeedPage from activity.ts: one page of the feed with the keyset cursor.
-const FeedPageResponse = t.Object({
-  items: t.Array(FeedItemResponse),
-  nextCursor: FeedCursorResponse,
-});
-
-// GroupedFeedPage from activity.ts: the same page, split into the stretches the issue
-// spent in one column.
-const GroupedFeedPageResponse = t.Object({
-  groups: t.Array(
-    t.Object({
-      status: t.Nullable(t.String()),
-      from: t.String(),
-      to: t.Nullable(t.String()),
-      durationMs: t.Number(),
-      repeat: t.Boolean(),
-      items: t.Array(FeedItemResponse),
-    }),
-  ),
-  nextCursor: FeedCursorResponse,
-});
-
-// Both feed routes are paged the same way: a limit and the previous page's cursor.
-const feedPageQuery = t.Object({
-  limit: t.Optional(t.Numeric({ description: 'Max items per page (1-100). Default 25.' })),
-  cursor: t.Optional(t.String({ description: 'nextCursor from the previous page, for paging.' })),
-});
-
-// The cursor travels as JSON in the query string. A malformed one is ignored, which
+// The cursor travels as JSON in the query string. A malformed one gives null, which
 // serves the first page.
 function feedCursor(raw?: string): FeedCursor | null {
   if (!raw) return null;
@@ -359,20 +142,12 @@ function feedCursor(raw?: string): FeedCursor | null {
   }
 }
 
-// TimelineSegment from activity.ts: one stretch the issue spent in a column.
-const TimelineSegmentResponse = t.Object({
-  status: t.Nullable(t.String()),
-  from: t.String(),
-  to: t.Nullable(t.String()),
-  durationMs: t.Number(),
-});
-
 export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues'] } })
   .use(authContext)
   .use(guards)
   // Guards for routes that address an entity by its own id (no :projectKey in the
   // path). Set `workItem` / `checklist` / `checklistItem` to the action in the
-  // route options. A checklist and its items are part of the issue they hang on,
+  // route options. A checklist and its items belong to the issue that carries them,
   // so all three resolve to the same work_items permission.
   .macro({
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
@@ -394,67 +169,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return createIssue(project, body, requireUser(user).id);
     },
     {
-      body: t.Object({
-        typeId: t.Optional(
-          t.Nullable(t.Integer({ description: 'Issue type id, or null. From get_project.' })),
-        ),
-        initiativeId: t.Optional(
-          t.Nullable(
-            t.Integer({
-              description: 'Initiative id to link this issue to, or null. From list_initiatives.',
-            }),
-          ),
-        ),
-        cycleId: t.Optional(
-          t.Nullable(
-            t.Integer({
-              description:
-                'Cycle id to plan this issue into, or null. From list_cycles; a completed cycle is rejected.',
-            }),
-          ),
-        ),
-        assigneeUserId: t.Optional(
-          t.Nullable(
-            t.String({
-              description:
-                "Assignee user id (a project member), or null. From get_project.assignees where kind is 'member'.",
-            }),
-          ),
-        ),
-        delegateUserId: t.Optional(
-          t.Nullable(
-            t.String({
-              description:
-                "Delegate user id (an AI agent), or null. From get_project.assignees where kind is 'agent'.",
-            }),
-          ),
-        ),
-        columnId: t.Integer({ description: 'Target column (state) id. From get_project.columns.' }),
-        parentId: t.Optional(
-          t.Nullable(
-            t.Integer({
-              description:
-                'Numeric id of the issue this one is a subtask of, or null. The parent must be in this project and must not be a subtask itself.',
-            }),
-          ),
-        ),
-        title: t.String({ minLength: 1, description: 'Issue title.' }),
-        description: t.Optional(
-          t.String({ description: 'Issue description (plain text or markdown).' }),
-        ),
-        priority: t.Optional(
-          t.Nullable(t.String({ description: 'One of: urgent, high, medium, low. Or null.' })),
-        ),
-        startDate: t.Optional(
-          t.Nullable(t.String({ description: "Start date 'YYYY-MM-DD', or null." })),
-        ),
-        dueDate: t.Optional(
-          t.Nullable(t.String({ description: "Due date 'YYYY-MM-DD', or null." })),
-        ),
-        labelIds: t.Optional(
-          t.Array(t.Integer(), { description: 'Label ids to attach. From get_project.labels.' }),
-        ),
-      }),
+      body: createIssueBody,
       permission: ['work_items', 'create'],
       response: { 201: IssueResponse, ...commonErrors, ...errors(409) },
       detail: {
@@ -468,9 +183,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   )
 
   // --- Bulk actions (board multi-select) -----------------------------------------
-  // Project-scoped so the `permission` guard resolves the project and asserts
-  // access once; the store filters the ids to this project, so a bulk action can
-  // never touch another project's issues.
+  // Project-scoped, so the `permission` guard resolves the project and asserts access
+  // once. The service filters the ids to this project, so a bulk action can never
+  // touch another project's issues.
 
   // Applies one patch to every listed issue.
   .patch(
@@ -485,23 +200,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return { updated };
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({
-        ids: t.Array(t.Integer(), { minItems: 1, description: 'Issue ids to update.' }),
-        patch: t.Object({
-          columnId: t.Optional(t.Integer()),
-          typeId: t.Optional(t.Nullable(t.Integer())),
-          initiativeId: t.Optional(t.Nullable(t.Integer())),
-          cycleId: t.Optional(t.Nullable(t.Integer())),
-          assigneeUserId: t.Optional(t.Nullable(t.String())),
-          delegateUserId: t.Optional(t.Nullable(t.String())),
-          priority: t.Optional(t.Nullable(t.String())),
-          startDate: t.Optional(t.Nullable(t.String())),
-          dueDate: t.Optional(t.Nullable(t.String())),
-        }),
-      }),
+      params: projectKeyParams,
+      body: bulkUpdateIssuesBody,
       permission: ['work_items', 'edit'],
-      response: { 200: t.Object({ updated: t.Number() }), ...commonErrors, ...errors(409) },
+      response: { 200: BulkUpdatedResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Bulk update issues' },
     },
   )
@@ -514,13 +216,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return { updated };
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({
-        ids: t.Array(t.Integer(), { minItems: 1, description: 'Issue ids to label.' }),
-        add: t.Array(t.Integer(), { minItems: 1, description: 'Label ids to add.' }),
-      }),
+      params: projectKeyParams,
+      body: bulkAddLabelsBody,
       permission: ['work_items', 'edit'],
-      response: { 200: t.Object({ updated: t.Number() }), ...commonErrors },
+      response: { 200: BulkUpdatedResponse, ...commonErrors },
       detail: { summary: 'Bulk add labels to issues' },
     },
   )
@@ -535,14 +234,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return { archived };
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({
-        ids: t.Array(t.Integer(), { minItems: 1, description: 'Issue ids to archive.' }),
-        subtasks: t.Optional(SubtaskModeSchema),
-        newParentId: t.Optional(NewParentIdSchema),
-      }),
+      params: projectKeyParams,
+      body: bulkArchiveIssuesBody,
       permission: ['work_items', 'edit'],
-      response: { 200: t.Object({ archived: t.Number() }), ...commonErrors, ...errors(409) },
+      response: { 200: BulkArchivedResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Bulk archive issues' },
     },
   )
@@ -563,23 +258,19 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return { deleted };
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      body: t.Object({
-        ids: t.Array(t.Integer(), { minItems: 1, description: 'Issue ids to delete.' }),
-        subtasks: t.Optional(SubtaskModeSchema),
-        newParentId: t.Optional(NewParentIdSchema),
-      }),
+      params: projectKeyParams,
+      body: bulkDeleteIssuesBody,
       permission: ['work_items', 'delete'],
-      response: { 200: t.Object({ deleted: t.Number() }), ...commonErrors, ...errors(409) },
+      response: { 200: BulkDeletedResponse, ...commonErrors, ...errors(409) },
       detail: { summary: 'Bulk delete issues' },
     },
   )
 
   // Text search: matches q (case-insensitive substring) against the title,
   // description, issue number, and custom field text. Always searches every issue,
-  // archived included (each hit carries an 'archived' flag); filtering by fields is
-  // a separate concern (see list_issues). Declared before /issues/:sequenceNumber so
-  // the static "search" segment wins over the numeric param.
+  // archived included, and each hit carries an 'archived' flag. Filtering by fields is
+  // a separate concern (see list_issues). This route comes before
+  // /issues/:sequenceNumber so the static "search" segment wins over the numeric param.
   .get(
     '/projects/:projectKey/issues/search',
     async ({ project, query }) => {
@@ -587,16 +278,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return searchIssues(project, { query: query.q, limit }, { includeArchived: true });
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      query: t.Object({
-        q: t.Optional(
-          t.String({
-            description:
-              'Case-insensitive substring, matched against the title, description, issue number, and custom field text.',
-          }),
-        ),
-        limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
-      }),
+      params: projectKeyParams,
+      query: searchIssuesQuery,
       permission: ['work_items', 'read'],
       response: { 200: t.Array(IssueSearchHitResponse), ...commonErrors },
       detail: {
@@ -607,9 +290,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // Filtered list: no text query, only exact field filters. Every filter is optional
-  // and all supplied ones must match; with no filters this lists the project's active
-  // issues. Archived are excluded unless includeArchived is 'true'.
+  // Filtered list: no text query, only exact field filters. Every filter is optional,
+  // and every filter the caller sets must match. With no filters this lists the
+  // project's active issues. It leaves out archived issues unless includeArchived is
+  // 'true'.
   .get(
     '/projects/:projectKey/issues',
     async ({ project, query }) => {
@@ -644,28 +328,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       );
     },
     {
-      params: t.Object({ projectKey: t.String() }),
-      query: t.Object({
-        columnId: t.Optional(t.Numeric({ description: 'Exact column (state) id.' })),
-        typeId: t.Optional(t.Numeric({ description: 'Exact issue type id.' })),
-        initiativeId: t.Optional(t.Numeric({ description: 'Exact initiative id.' })),
-        cycleId: t.Optional(t.Numeric({ description: 'Exact cycle id.' })),
-        parentId: t.Optional(
-          t.Numeric({ description: 'Parent issue id, to list that issue’s subtasks.' }),
-        ),
-        assigneeUserId: t.Optional(t.String({ description: 'Exact assignee user id.' })),
-        delegateUserId: t.Optional(t.String({ description: 'Exact delegate agent id.' })),
-        priority: t.Optional(t.String({ description: 'Exact priority value.' })),
-        labelIds: t.Optional(
-          t.String({ description: 'CSV of label ids; the issue must carry all.' }),
-        ),
-        dueFrom: t.Optional(t.String({ description: "Inclusive earliest due date 'YYYY-MM-DD'." })),
-        dueTo: t.Optional(t.String({ description: "Inclusive latest due date 'YYYY-MM-DD'." })),
-        includeArchived: t.Optional(
-          t.String({ description: "'true' to include archived issues. Default false." }),
-        ),
-        limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
-      }),
+      params: projectKeyParams,
+      query: listIssuesQuery,
       permission: ['work_items', 'read'],
       response: { 200: t.Array(IssueSearchHitResponse), ...commonErrors },
       detail: {
@@ -690,9 +354,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       ),
     }),
     {
-      params: t.Object({ projectKey: t.String() }),
+      params: projectKeyParams,
       permission: ['work_items', 'read'],
-      response: { 200: t.Object({ issues: t.Array(BoardIssueResponse) }), ...accessErrors },
+      response: { 200: BoardResponse, ...accessErrors },
       detail: { summary: 'Get board issues' },
     },
   )
@@ -703,7 +367,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     '/projects/:projectKey/issues/archived',
     async ({ project }) => listArchivedIssues(project),
     {
-      params: t.Object({ projectKey: t.String() }),
+      params: projectKeyParams,
       permission: ['work_items', 'read'],
       response: { 200: t.Array(IssueResponse), ...accessErrors },
       detail: { summary: 'List archived issues' },
@@ -727,7 +391,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return { ...issue, fields, links, watchers, parent, subtasks, checklists };
     },
     {
-      params: t.Object({ projectKey: t.String(), sequenceNumber: t.Numeric() }),
+      params: issueSequenceParams,
       permission: ['work_items', 'read'],
       response: { 200: IssueWithFieldsResponse, ...commonErrors },
       detail: {
@@ -739,9 +403,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // Reads the full issue including its custom field values. The issue is fetched
-  // for the response, so access is asserted on the fetched row rather than
-  // through the workItem guard (which would re-resolve the project id).
+  // Reads the full issue including its custom field values. The handler fetches the
+  // issue for the response, so it asserts access on that row instead of using the
+  // workItem guard, which would resolve the project id a second time.
   .get(
     '/issues/:issueId',
     async ({ params, user, request }) => {
@@ -790,59 +454,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return issue;
     },
     {
-      body: t.Object({
-        columnId: t.Optional(
-          t.Integer({ description: 'Move the issue to this column (state) id.' }),
-        ),
-        position: t.Optional(t.Number({ description: 'Ordering position within the column.' })),
-        typeId: t.Optional(t.Nullable(t.Integer({ description: 'New issue type id, or null.' }))),
-        parentId: t.Optional(
-          t.Nullable(
-            t.Integer({
-              description:
-                'Make this issue a subtask of that issue id, or null to detach it. The parent must be in this project and must not be a subtask itself; an issue that has subtasks cannot become one.',
-            }),
-          ),
-        ),
-        initiativeId: t.Optional(
-          t.Nullable(
-            t.Integer({
-              description:
-                'Link this issue to an initiative id, or null to unlink. From list_initiatives.',
-            }),
-          ),
-        ),
-        cycleId: t.Optional(
-          t.Nullable(
-            t.Integer({
-              description:
-                'Plan this issue into a cycle id, or null to unplan it. From list_cycles; a completed cycle is rejected.',
-            }),
-          ),
-        ),
-        assigneeUserId: t.Optional(
-          t.Nullable(
-            t.String({ description: 'New assignee user id (a project member), or null.' }),
-          ),
-        ),
-        delegateUserId: t.Optional(
-          t.Nullable(t.String({ description: 'New delegate user id (an AI agent), or null.' })),
-        ),
-        title: t.Optional(t.String({ minLength: 1, description: 'New title.' })),
-        description: t.Optional(t.String({ description: 'New description.' })),
-        priority: t.Optional(
-          t.Nullable(t.String({ description: 'One of: urgent, high, medium, low. Or null.' })),
-        ),
-        startDate: t.Optional(
-          t.Nullable(t.String({ description: "Start date 'YYYY-MM-DD', or null." })),
-        ),
-        dueDate: t.Optional(
-          t.Nullable(t.String({ description: "Due date 'YYYY-MM-DD', or null." })),
-        ),
-        labelIds: t.Optional(
-          t.Array(t.Integer(), { description: "Replace the issue's labels with these ids." }),
-        ),
-      }),
+      body: updateIssueBody,
       params: issueParams,
       workItem: 'edit',
       response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
@@ -856,10 +468,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // Deletes an issue. Its custom field values, labels, attachments, comments and
-  // activity are removed with it. Attachment objects are then deleted from the
-  // object store; a failed object delete only orphans bytes, so it does not fail
-  // the request.
+  // Deletes an issue, together with its custom field values, labels, attachments,
+  // comments and activity. It then deletes the attachment objects from the object
+  // store. A failed object delete only orphans bytes, so it does not fail the
+  // request.
   .delete(
     '/issues/:issueId',
     async ({ params, query, user, projectId }) => {
@@ -877,10 +489,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
     {
       params: issueParams,
-      query: t.Object({
-        subtasks: t.Optional(SubtaskModeSchema),
-        newParentId: t.Optional(t.Numeric(NewParentIdSchema)),
-      }),
+      query: subtaskDispositionQuery,
       workItem: 'delete',
       response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
@@ -912,12 +521,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
     {
       params: issueParams,
-      body: t.Optional(
-        t.Object({
-          subtasks: t.Optional(SubtaskModeSchema),
-          newParentId: t.Optional(NewParentIdSchema),
-        }),
-      ),
+      body: archiveIssueBody,
       workItem: 'edit',
       response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
       detail: {
@@ -953,11 +557,11 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // Sets one custom field's value on one issue. For select/multi_select fields,
-  // body.optionIds replaces the full selection; for every other field type,
-  // body.value must match the field's type (text/number/boolean/date/datetime,
-  // and the user id of a project member for a member field). A datetime_range takes
-  // its end in body.valueEnd.
+  // Sets one custom field's value on one issue. For a select or multi_select field,
+  // body.optionIds replaces the full selection. For every other field type, body.value
+  // must match the field's type (text/number/boolean/date/datetime, and the user id of
+  // a project member for a member field). A datetime_range takes its end in
+  // body.valueEnd.
   .put(
     '/issues/:issueId/fields/:fieldId',
     async ({ params, body, user, projectId }) => {
@@ -971,14 +575,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return { ok: true };
     },
     {
-      body: t.Object({
-        value: t.Optional(t.Nullable(t.Union([t.String(), t.Number(), t.Boolean()]))),
-        valueEnd: t.Optional(t.Nullable(t.String())),
-        optionIds: t.Optional(t.Array(t.Integer())),
-      }),
-      params: t.Object({ issueId: t.Numeric(), fieldId: t.Numeric() }),
+      body: setIssueFieldValueBody,
+      params: issueFieldParams,
       workItem: 'edit',
-      response: { 200: t.Object({ ok: t.Boolean() }), ...commonErrors },
+      response: { 200: WatchStateResponse, ...commonErrors },
       detail: {
         summary: 'Set a custom field value',
         description:
@@ -1000,12 +600,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return addIssueLink(params.issueId, body.targetIssueId, body.kind, requireUser(user).id);
     },
     {
-      body: t.Object({
-        targetIssueId: t.Integer({
-          description: 'Numeric id of the issue on the other end of the relation.',
-        }),
-        kind: IssueLinkKindSchema,
-      }),
+      body: addIssueLinkBody,
       params: issueParams,
       workItem: 'edit',
       response: { 201: IssueLinkResponse, ...commonErrors, ...errors(409) },
@@ -1028,7 +623,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return noContent();
     },
     {
-      params: t.Object({ issueId: t.Numeric(), linkId: t.Numeric() }),
+      params: issueLinkParams,
       workItem: 'edit',
       response: { 204: t.Void(), ...commonErrors },
       detail: {
@@ -1059,7 +654,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return createChecklist(params.issueId, body.title, requireUser(user).id);
     },
     {
-      body: t.Object({ title: ChecklistTitleSchema }),
+      body: checklistTitleBody,
       params: issueParams,
       workItem: 'edit',
       response: { 201: ChecklistResponse, ...commonErrors },
@@ -1092,7 +687,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     async ({ params, body, user }) =>
       renameChecklist(params.checklistId, body.title, requireUser(user).id),
     {
-      body: t.Object({ title: ChecklistTitleSchema }),
+      body: checklistTitleBody,
       params: checklistParams,
       checklist: 'edit',
       response: { 200: ChecklistResponse, ...commonErrors },
@@ -1126,7 +721,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       return createChecklistItem(params.checklistId, body.content, requireUser(user).id);
     },
     {
-      body: t.Object({ content: ChecklistItemContentSchema }),
+      body: createChecklistItemBody,
       params: checklistParams,
       checklist: 'edit',
       response: { 201: ChecklistItemResponse, ...commonErrors },
@@ -1153,15 +748,12 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   )
 
   // Edits the text, the checked state, or both. Checking a box is the most
-  // frequent write here, so it is deliberately not written to the activity feed.
+  // frequent write here, so it deliberately does not reach the activity feed.
   .patch(
     '/checklists/items/:itemId',
     async ({ params, body }) => updateChecklistItem(params.itemId, body),
     {
-      body: t.Object({
-        content: t.Optional(ChecklistItemContentSchema),
-        done: t.Optional(t.Boolean({ description: 'Whether the item is checked off.' })),
-      }),
+      body: updateChecklistItemBody,
       params: checklistItemParams,
       checklistItem: 'edit',
       response: { 200: ChecklistItemResponse, ...commonErrors },
@@ -1211,8 +803,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // Stops following the issue. The unsubscription is recorded rather than
-  // forgotten, so commenting on the issue again does not silently re-subscribe.
+  // Stops following the issue. The route records the unsubscription instead of
+  // forgetting it, so a later comment on the issue does not silently re-subscribe
+  // the caller.
   .delete(
     '/issues/:issueId/watch',
     async ({ params, projectId, user }) => {
@@ -1233,7 +826,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // One page of an issue's timeline, newest first: comments and change-log
   // activity merged in issue_activity. `limit` (default 25) and an opaque
   // `cursor` (the JSON-encoded nextCursor from the previous page) drive keyset
-  // pagination; the response is { items, nextCursor }, nextCursor null at the end.
+  // pagination. The response is { items, nextCursor }, and nextCursor is null on the
+  // last page.
   .get(
     '/issues/:issueId/feed',
     async ({ params, query }) =>
@@ -1275,7 +869,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
 
   // The stretches the issue spent in one column, oldest first, with the duration of
   // each. Entry-free and unpaged: the change log holds a handful of status entries,
-  // and what happened inside a stretch is read separately when it is opened.
+  // and a client reads the entries of one stretch separately when it opens that
+  // stretch.
   .get('/issues/:issueId/timeline', async ({ params }) => listStatusTimeline(params.issueId), {
     params: issueParams,
     workItem: 'read',
@@ -1293,12 +888,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     async ({ params, query }) => listFeedRange(params.issueId, query.from, query.to),
     {
       params: issueParams,
-      query: t.Object({
-        from: t.String({ description: 'Start of the stretch (ISO datetime), inclusive.' }),
-        to: t.Optional(
-          t.String({ description: 'End of the stretch (ISO datetime), exclusive. Open-ended.' }),
-        ),
-      }),
+      query: feedRangeQuery,
       workItem: 'read',
       response: { 200: t.Array(FeedItemResponse), ...commonErrors },
       detail: {
@@ -1322,12 +912,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       });
     },
     {
-      body: t.Object({
-        body: t.String({ minLength: 1, description: 'Comment text.' }),
-        replyToId: t.Optional(
-          t.Number({ description: 'Reply to this comment of the same issue.' }),
-        ),
-      }),
+      body: createCommentBody,
       params: issueParams,
       workItem: 'create',
       response: { 201: FeedItemResponse, ...commonErrors },

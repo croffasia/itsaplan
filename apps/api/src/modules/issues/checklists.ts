@@ -1,6 +1,6 @@
 import { db, issueChecklist, issueChecklistItem } from '@repo/db';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
-import { HttpError } from '../shared/lib';
+import { HttpError } from '#shared/lib';
 import { recordActivity } from './activity';
 
 // Checklists on an issue: a list of steps too small to be subtasks of their own.

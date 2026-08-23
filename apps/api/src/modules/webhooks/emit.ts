@@ -22,7 +22,7 @@ const EVENT_SHAPE: Record<WebhookEventType, { action: string; type: string }> = 
 // Fan-out for outgoing webhooks. Queues one delivery per active webhook of the
 // project that subscribes to eventType. The deliveries share one eventId, which stays
 // the same across retries so a receiver can deduplicate. Call it right after a domain
-// mutation, next to the activity log, the same way the issue store handles its other
+// mutation, next to the activity log, the same way the issue service handles its other
 // post-write side effects. It does nothing when no webhook matches, so a project with
 // no webhooks pays one indexed SELECT.
 //

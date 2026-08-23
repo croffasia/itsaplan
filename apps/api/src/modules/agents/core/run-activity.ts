@@ -1,4 +1,4 @@
-import { recordActivity } from '../../../issues/activity';
+import { recordActivity } from '#modules/issues/activity';
 
 // Records that an agent took a queued run of the issue. Only the first claim is
 // logged: a re-claim after an expired lease is the same task handed out again.

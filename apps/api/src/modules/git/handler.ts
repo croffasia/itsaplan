@@ -1,5 +1,5 @@
-import { getIssueBySequence, updateIssue } from '../../issues/store';
-import { recordActivity, type ActivityActor } from '../../issues/activity';
+import { getIssueBySequence, updateIssue } from '#modules/issues/service';
+import { recordActivity, type ActivityActor } from '#modules/issues/activity';
 import { parseMagicWords, type IssueRef } from './magic-words';
 import type { PullRequestEvent } from './providers';
 import { columnStateTypes, firstCompletedColumnId, type GitSettings } from './service';

@@ -10,7 +10,7 @@ import {
   cycle,
 } from '@repo/db';
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
-import { HttpError, iso } from '../shared/lib';
+import { HttpError, iso } from '#shared/lib';
 import { emitWebhookEvent } from '#modules/webhooks/emit';
 import { parseMentionHandles, resolveMentionHandles } from '#shared/mentions';
 import { isAgentUser, listMentionTriggerAgents } from '#modules/agents/core/service';

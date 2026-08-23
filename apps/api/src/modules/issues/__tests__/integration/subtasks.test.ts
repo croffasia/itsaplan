@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Subtasks: an issue carries the id of the issue it hangs under (parentId), set on
 // create or through an update. The hierarchy is one level deep and stays inside one

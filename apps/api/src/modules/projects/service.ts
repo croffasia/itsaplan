@@ -376,7 +376,7 @@ export async function setAutoArchiveSettings(
 // completeParent moves a parent into the column of its last closed subtask once
 // every subtask is closed; closeSubtasks moves the still-open subtasks of an issue
 // into the column the issue was closed in. Both off unless a project turns them on:
-// they rewrite states nobody asked to change. Applied in issues/automation.ts.
+// they rewrite states nobody asked to change. Applied in modules/issues/automation.ts.
 const SUBTASK_AUTOMATION_KEY = 'subtask_automation';
 
 export interface SubtaskAutomationSettings {

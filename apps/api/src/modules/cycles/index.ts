@@ -6,7 +6,7 @@ import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors } from '#shared/responses';
-import { transferCycleIssues } from '../../issues/store';
+import { transferCycleIssues } from '#modules/issues/service';
 import {
   CycleListResponse,
   CycleOptionListResponse,

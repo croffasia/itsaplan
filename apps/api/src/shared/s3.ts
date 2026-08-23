@@ -7,7 +7,7 @@ import {
 
 // S3-compatible object store (MinIO) for issue attachments. Only the file
 // bytes live here; the metadata and object key are rows in issue_attachment
-// (see ../attachments/store.ts).
+// (see modules/attachments/service.ts).
 //
 // Config comes from env. forcePathStyle is required for MinIO (and most
 // self-hosted S3 gateways) because they do not serve virtual-host-style buckets;
@@ -49,7 +49,7 @@ export async function putObject(key: string, body: Buffer, contentType: string):
 
 // Returns a web ReadableStream of the object body so a route can stream it to
 // the client without buffering the whole file (matters for video). contentType
-// and contentLength fall back to sensible defaults when the store omits them.
+// and contentLength fall back to sensible defaults when the object store omits them.
 export async function getObject(
   key: string,
 ): Promise<{ body: ReadableStream; contentType: string; contentLength?: number }> {

@@ -5,7 +5,7 @@ import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
-import { createComment } from '../../../../../issues/activity';
+import { createComment } from '#modules/issues/activity';
 import { claimDueRuns } from '../../run-queue';
 
 // Mentioning an agent in a comment queues an agent_run so the agent can reply. The

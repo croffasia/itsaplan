@@ -1,4 +1,4 @@
-import type { IssueRow } from '../../issues/store';
+import type { IssueRow } from '#modules/issues/service';
 import type { ColumnRow } from '#modules/columns/service';
 
 // Server-side copy of the view filter engine. The web app (utils/filters.ts) stores

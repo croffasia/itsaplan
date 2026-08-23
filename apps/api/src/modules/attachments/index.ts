@@ -8,7 +8,7 @@ import { putObject, getObject, deleteObject } from '#shared/s3';
 import { assertPublicHttpUrl } from '#shared/net';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
-import { getIssueProjectId } from '../../issues/store';
+import { getIssueProjectId } from '#modules/issues/service';
 import {
   getStorageSettings,
   mimeAllowed,

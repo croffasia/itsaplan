@@ -4,7 +4,7 @@ import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { HttpError } from '#shared/lib';
 import { commonErrors, errors } from '#shared/responses';
-import { getIssueProjectId } from '../../issues/store';
+import { getIssueProjectId } from '#modules/issues/service';
 import { getView } from '#modules/views/service';
 import {
   BundleResponse,

@@ -1,8 +1,8 @@
 // Shared helpers for the planner API (projects, issues, and their dependent
-// entities). Each feature folder holds a store.ts (Drizzle data access) and a
-// routes.ts (Elysia routes) that exposes it over HTTP.
+// entities). Each feature folder under modules/ holds a service.ts (Drizzle data
+// access) and an index.ts (Elysia routes) that exposes it over HTTP.
 
-// An error carrying an HTTP status. Thrown from stores and routes; the planner
+// An error carrying an HTTP status. Services and routes throw it. The planner
 // plugin's onError maps it to a { error } JSON response with that status.
 //
 // `code` names the failure for a caller that has to branch on it rather than show

@@ -7,15 +7,15 @@ import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { listAssigneeCandidates } from '#modules/members/service';
-import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '../../issues/store';
-import { listFeed, type FeedItemRow } from '../../issues/activity';
+import { getIssue, getIssueFieldValues, listIssues, type IssueRow } from '#modules/issues/service';
+import { listFeed, type FeedItemRow } from '#modules/issues/activity';
 import {
   attachBoardLinks,
   listIssueLinks,
   type BoardIssueLink,
   type IssueLinkRow,
-} from '../../issues/links';
-import { getParentRef, listSubtasks, type IssueRef } from '../../issues/subtasks';
+} from '#modules/issues/links';
+import { getParentRef, listSubtasks, type IssueRef } from '#modules/issues/subtasks';
 import { applyFilters } from '#modules/views/filters';
 
 // Public read-only sharing: an issue or a saved view carries an unguessable

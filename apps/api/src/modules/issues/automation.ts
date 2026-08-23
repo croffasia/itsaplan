@@ -2,7 +2,7 @@ import { db, issue, projectColumn } from '@repo/db';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { getSubtaskAutomationSettings } from '#modules/projects/service';
 import { listSubtasks } from './subtasks';
-import { updateIssue, type IssueRow } from './store';
+import { updateIssue, type IssueRow } from './service';
 import type { ActivityActor } from './activity';
 
 // The subtask automations a column change triggers, both off unless the project

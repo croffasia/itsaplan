@@ -9,7 +9,7 @@ import { iso } from '#shared/lib';
 // The delivery side is separate.
 
 // The event types a subscription can select. Keep this list in sync with the events
-// the delivery side emits (issues/store.ts, issues/activity.ts, issues/links.ts) and
+// the delivery side emits (modules/issues/service.ts, activity.ts, links.ts) and
 // with the frontend list (apps/web src/lib/api.ts).
 //
 // issue.updated fires on any field change. The granular issue.assigned,

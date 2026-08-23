@@ -10,13 +10,13 @@ import {
 } from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
 import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
-import { autoWatchIssue, watcherUserIds } from '../../issues/watchers';
+import { autoWatchIssue, watcherUserIds } from '#modules/issues/watchers';
 import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
 
 // Inbox notifications. A notification is one (recipient, event) row: a user is told
 // about an issue they are involved in. What happens on the issue ('commented',
-// 'state_changed') goes to its watchers (issue_watcher, see issues/watchers.ts);
+// 'state_changed') goes to its watchers (issue_watcher, see modules/issues/watchers.ts);
 // what is addressed to one person ('assigned', 'mentioned') goes to them whether
 // they watch the issue or not, and subscribes them to it. The actor is never
 // notified about their own action, and only project members receive notifications,

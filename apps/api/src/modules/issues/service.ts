@@ -32,7 +32,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
-import { iso, num, HttpError } from '../shared/lib';
+import { iso, num, HttpError } from '#shared/lib';
 import type { ProjectRow } from '#modules/projects/service';
 import {
   getCustomFieldById,

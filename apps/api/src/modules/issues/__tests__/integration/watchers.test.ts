@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Who follows an issue. A watcher receives the notifications the issue produces;
 // the list comes back with the issue (GET /issues/:issueId → `watchers`) and is

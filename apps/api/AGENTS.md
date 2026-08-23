@@ -22,9 +22,9 @@ Rules and invariants for this package below; read the code for the walkthrough.
 - `model.ts`: the `t` schemas of the feature's requests and responses. An update body
   is `t.Partial(<create body>)` where it accepts the same fields.
 - `service.ts`: plain async functions, no Elysia/HTTP types, returns DTOs never rows.
-- The features still sitting in `src/<feature>/` as `routes.ts` + `store.ts` predate
-  this layout. Move one to `src/modules/` when you next change it; do not add a new
-  feature in the old shape.
+- Every feature lives under `src/modules/`. A feature that needs more than the three
+  files adds one per concern next to them (`emit.ts`, `internal-routes.ts`), it does
+  not grow a `routes.ts` + `store.ts` pair.
 - Imports inside a module are relative (`./model`); everything it reaches outside
   itself goes through the subpath aliases in `apps/api/package.json` — `#shared/*`,
   `#mcp/*`, `#modules/*`, `#tests/*`. They map to a `.ts` file (`"#shared/*":

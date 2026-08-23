@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '../../../__tests__/helpers/app';
-import { signUpTestUser } from '../../../__tests__/helpers/auth';
-import { resetDb } from '../../../__tests__/helpers/db';
+import { authedApi, type Api } from '#tests/helpers/app';
+import { signUpTestUser } from '#tests/helpers/auth';
+import { resetDb } from '#tests/helpers/db';
 
 // Issues live under a project. Create is /projects/:projectKey/issues (permission
 // guard on :projectKey); the other routes address the issue by its own id
@@ -637,7 +637,7 @@ describe('issues', () => {
         .put({ value: 8 });
       expect(put.status).toBe(200);
 
-      // The number column stores a string; the store coerces it back to a number.
+      // The number column stores a string. The service coerces it back to a number.
       expect((await fieldValue(asOwner, issue.id, field.id))?.value).toBe(8);
     });
 

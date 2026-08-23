@@ -1,12 +1,12 @@
 import { db, issue, project as projectTable } from '@repo/db';
 import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { HttpError } from '../shared/lib';
-import { archiveIssue, deleteIssue, restoreIssue, updateIssue } from './store';
+import { HttpError } from '#shared/lib';
+import { archiveIssue, deleteIssue, restoreIssue, updateIssue } from './service';
 import type { AttachmentRow } from '#modules/attachments/service';
 
 // An issue's subtasks: issues carrying its id in parent_id. The hierarchy is one
-// level deep (see assertParent in store.ts), so a subtask has no subtasks of its
+// level deep (see assertParent in service.ts), so a subtask has no subtasks of its
 // own and every issue is either a parent, a subtask, or neither.
 
 // A subtask or a parent as the issue page renders it: enough to name the issue and

@@ -1,10 +1,10 @@
 import { db, issue, issueLink, project as projectTable } from '@repo/db';
 import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
-import { HttpError } from '../shared/lib';
+import { HttpError } from '#shared/lib';
 import { recordActivityEntries, type ActivityInput } from './activity';
 import { emitWebhookEvents } from '#modules/webhooks/emit';
-import { getIssues } from './store';
+import { getIssues } from './service';
 
 // Relations between issues of one project. A relation is one row (issue_link);
 // which side of it an issue sits on decides how the relation reads for that

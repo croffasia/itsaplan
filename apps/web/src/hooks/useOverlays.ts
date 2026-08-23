@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import type { NewIssueDefaults } from '@/utils/project';
 
@@ -7,20 +7,13 @@ import type { NewIssueDefaults } from '@/utils/project';
 // one object instead of four flags, and so the keyboard shortcut layer can ask
 // whether any overlay is open through `anyOpen`. Project settings are their own
 // pages, not an overlay.
-// `showChatByDefault` is the account preference: it shows the floating chat button
-// from the start, with the chat window collapsed.
-export function useOverlays(showChatByDefault: boolean) {
+export function useOverlays() {
   const [showNewProject, setShowNewProject] = useState(false);
   const [showCommand, setShowCommand] = useState(false);
   // Initial field values for a new issue (null = the new-issue modal is closed).
   const [newIssueDefaults, setNewIssueDefaults] = useState<NewIssueDefaults | null>(null);
   // Which issue the detail panel shows (null = the panel is closed).
   const [openIssueId, setOpenIssueId] = useState<number | null>(null);
-  // The floating AI chat. `chatEnabled` is the header toggle (shows the floating
-  // button); `chatOpen` is whether the chat window is expanded. Kept out of
-  // `anyOpen` so the chat does not suppress the keyboard shortcuts.
-  const [chatEnabled, setChatEnabled] = useState(false);
-  const [chatOpen, setChatOpen] = useState(false);
 
   // The panel is not addressed by the URL, so a link inside it navigates the page
   // behind it and leaves the panel standing over the new page.
@@ -28,23 +21,6 @@ export function useOverlays(showChatByDefault: boolean) {
   useEffect(() => {
     setOpenIssueId(null);
   }, [pathname]);
-
-  // The preference arrives after the first render, so it is applied in an effect,
-  // and only once — a manual toggle afterwards stays as the user left it.
-  const defaultApplied = useRef(false);
-  useEffect(() => {
-    if (defaultApplied.current || !showChatByDefault) return;
-    defaultApplied.current = true;
-    setChatEnabled(true);
-  }, [showChatByDefault]);
-
-  // Turning the chat on opens the window immediately; turning it off hides both
-  // the button and the window.
-  const toggleChat = () => {
-    const next = !chatEnabled;
-    setChatEnabled(next);
-    setChatOpen(next);
-  };
 
   const anyOpen = showNewProject || showCommand || newIssueDefaults != null || openIssueId != null;
 
@@ -57,10 +33,6 @@ export function useOverlays(showChatByDefault: boolean) {
     setNewIssueDefaults,
     openIssueId,
     setOpenIssueId,
-    chatEnabled,
-    chatOpen,
-    setChatOpen,
-    toggleChat,
     anyOpen,
   };
 }

@@ -67,6 +67,7 @@ export default function AgentChatMessage({
               ),
             )}
           </Bubble>
+          {message.error && <p className="text-xs text-destructive">{message.error}</p>}
           <MessageFooter>
             {message.stopped
               ? `${t('stopped')} · ${formatTime(message.createdAt)}`

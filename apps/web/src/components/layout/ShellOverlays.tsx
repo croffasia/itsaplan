@@ -7,11 +7,10 @@ import type { useOverlays } from '@/hooks/useOverlays';
 import NewProjectModal from '@/components/layout/NewProjectModal';
 import NewIssueModal from '@/features/issue/components/create/NewIssueModal';
 import IssueDetail from '@/features/issue/components/detail/IssueDetail';
-import { FloatingChat } from '@/features/ai-chat/components/floating/FloatingChat';
 
 // The project-level overlays the Shell mounts above its content: the new-project
-// modal, the new-issue modal, the issue detail panel and the floating AI chat.
-// Each renders only while its overlay state says it is open.
+// modal, the new-issue modal and the issue detail panel. Each renders only while its
+// overlay state says it is open.
 export default function ShellOverlays({
   project,
   projectKey,
@@ -59,10 +58,6 @@ export default function ShellOverlays({
             overlays.setOpenIssueId(null);
           }}
         />
-      )}
-
-      {project && overlays.chatEnabled && (
-        <FloatingChat open={overlays.chatOpen} onOpenChange={overlays.setChatOpen} />
       )}
     </>
   );

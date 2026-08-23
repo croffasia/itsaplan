@@ -1,5 +1,9 @@
 {
   "noAccess": "You do not have access to AI agents in this project.",
+  "chatPanel": "AI chat",
+  "pushMode": "Dock the panel",
+  "overlayMode": "Float the panel",
+  "resizePanel": "Resize the chat panel",
   "emptyTitle": "No agents to chat with",
   "emptyDescription": "Chat with an agent of this project: an internal one, or an external one through its runner.",
   "createAgent": "Create an agent",

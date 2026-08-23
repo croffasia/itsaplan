@@ -22,11 +22,15 @@ export function AiChatThread({
   agent,
   threadId,
   onThreadCreated,
+  onRunningChange,
 }: {
   projectKey: string;
   agent: AiAgent;
   threadId: string | null;
   onThreadCreated: (threadId: string) => void;
+  // Reported so a host that keeps the conversation out of sight can still show that a
+  // reply is being produced in it.
+  onRunningChange?: (running: boolean) => void;
 }) {
   const {
     messages,
@@ -50,6 +54,10 @@ export function AiChatThread({
     if (status !== 'ready') return;
     void qc.invalidateQueries({ queryKey: qk.agentThreads(projectKey, agent.id) });
   }, [status, qc, projectKey, agent.id]);
+
+  useEffect(() => {
+    onRunningChange?.(status !== 'ready');
+  }, [status, onRunningChange]);
 
   // How many transcript pages of the active thread are already in the conversation.
   // Page 0 counts as merged from the start: for a restored thread it is what

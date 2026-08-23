@@ -1,12 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { toast } from 'sonner';
 import { ApiError, streamAiAgentChat, streamAiAgentRun } from '@/lib/api';
 import type { AiChatMessage, AiChatPart, AiChatToolPart } from '@/lib/api';
 import { useTranslations } from 'next-intl';
 
-export type ChatMessage = AiChatMessage;
+// `error` is what a stream that failed left behind. It is not part of a stored
+// transcript: a restored thread holds the answer the agent produced, not the run that
+// broke.
+export type ChatMessage = AiChatMessage & { error?: string };
 
 // Only a tool call between two chunks of the answer starts a new text part.
 function appendText(parts: AiChatPart[], chunk: string): AiChatPart[] {
@@ -84,6 +86,9 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
       setRunning(true);
       const stopper = new AbortController();
       stopRef.current = stopper;
+      // Kept for the transcript rather than reported at once: the session may not be
+      // the one on screen, and the answer is where the user looks for what happened.
+      let failure: string | null = null;
 
       const assistantId = crypto.randomUUID();
       const createdAt = new Date().toISOString();
@@ -155,7 +160,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
               setThreadId(event.threadId);
               break;
             case 'error':
-              toast.error(event.message);
+              failure = event.message;
               setQueuePaused(true);
               break;
           }
@@ -164,7 +169,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
         // A stop ends the stream by aborting it; that is what was asked for, not a
         // failure to report.
         if (!stopper.signal.aborted) {
-          toast.error(err instanceof ApiError ? err.message : t('unreachable'));
+          failure = err instanceof ApiError ? err.message : t('unreachable');
         }
         setQueuePaused(true);
       } finally {
@@ -173,13 +178,22 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
         setRunning(false);
         setStatus('ready');
         setActiveTool(null);
-        // Drop the assistant placeholder if the agent never produced anything (an error
-        // or a stop before the first chunk), so an empty bubble is not left behind.
+        // Drop the assistant placeholder if the agent never produced anything and there
+        // is nothing to say about it, so an empty bubble is not left behind. A failure
+        // keeps the bubble: it carries the message.
         const stopped = stopper.signal.aborted;
         setMessages((m) =>
           m
-            .filter((msg) => !(msg.id === assistantId && msg.parts.length === 0))
-            .map((msg) => (stopped && msg.id === assistantId ? { ...msg, stopped: true } : msg)),
+            .filter((msg) => !(msg.id === assistantId && msg.parts.length === 0 && !failure))
+            .map((msg) =>
+              msg.id === assistantId
+                ? {
+                    ...msg,
+                    ...(stopped && { stopped: true }),
+                    ...(failure && { error: failure }),
+                  }
+                : msg,
+            ),
         );
       }
     },
@@ -209,6 +223,10 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
   const stop = useCallback(() => {
     stopRef.current?.abort();
   }, []);
+
+  // A closed conversation unmounts this hook. Its reply goes with it: nothing can show
+  // the rest of the answer, and the stream would otherwise be read to the end.
+  useEffect(() => () => stopRef.current?.abort(), []);
 
   // Sends the next waiting message once the reply before it has ended.
   useEffect(() => {

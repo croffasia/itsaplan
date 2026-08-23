@@ -1,5 +1,9 @@
 {
   "noAccess": "你无权访问此项目的 AI 代理。",
+  "chatPanel": "AI 聊天",
+  "pushMode": "固定面板",
+  "overlayMode": "浮动面板",
+  "resizePanel": "调整聊天面板宽度",
   "emptyTitle": "暂无可对话的代理",
   "emptyDescription": "与本项目的代理对话：内置代理，或通过运行器连接的外部代理。",
   "createAgent": "新建代理",

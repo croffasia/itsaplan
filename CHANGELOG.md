@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.14.0](https://github.com/croffasia/itsaplan/compare/v0.13.0...v0.14.0) (2026-08-23)
+
+
+### Features
+
+* rework the agent chat as a right side panel with session tabs ([#204](https://github.com/croffasia/itsaplan/issues/204)) ([e1f68be](https://github.com/croffasia/itsaplan/commit/e1f68be54f40507c073d77ee7d0b6005dfcf894c))
+* stop a running agent reply from the chat ([#202](https://github.com/croffasia/itsaplan/issues/202)) ([79ae3d5](https://github.com/croffasia/itsaplan/commit/79ae3d5b9fd496885ebdd7b67559e5045c492fb0))
+* **web:** highlight code in agent tool output ([#199](https://github.com/croffasia/itsaplan/issues/199)) ([e43ecbd](https://github.com/croffasia/itsaplan/commit/e43ecbdfab10e54d591e4fda71c23eb6727c9f65))
+* **web:** pin one column on the board layout ([#203](https://github.com/croffasia/itsaplan/issues/203)) ([23aebe1](https://github.com/croffasia/itsaplan/commit/23aebe1de7ed62a57c3b712275ee94a33035fc0f))
+* **web:** queue messages typed while an agent is answering ([#200](https://github.com/croffasia/itsaplan/issues/200)) ([b480ae9](https://github.com/croffasia/itsaplan/commit/b480ae9e222949dc22f2469fe815d40459bbe4d8))
+
+
+### Improvements
+
+* **web:** use shadcn tooltips for control labels ([#207](https://github.com/croffasia/itsaplan/issues/207)) ([2fa0ea8](https://github.com/croffasia/itsaplan/commit/2fa0ea81db9d8f7f6e5223dd00fd4d0b6e2086b7))
+
+
+### Bug Fixes
+
+* draw a chart the model wrapped loosely ([#208](https://github.com/croffasia/itsaplan/issues/208)) ([104209b](https://github.com/croffasia/itsaplan/commit/104209b71f1a30d6a7eb6ed9da91df0453bf3452))
+* **web:** keep the full-page top bar visible while scrolling ([#205](https://github.com/croffasia/itsaplan/issues/205)) ([43d9cfe](https://github.com/croffasia/itsaplan/commit/43d9cfe93136e98aab194dab0aadd9b3efaf0a21))
+
+
+### Refactoring
+
+* **api:** move every remaining feature to the modules/ layout ([#197](https://github.com/croffasia/itsaplan/issues/197)) ([bf46c5b](https://github.com/croffasia/itsaplan/commit/bf46c5b9c62e3716c163f95672cb4730bcc0a59f))
+
+
+### Chores
+
+* **runner:** release 0.4.0 ([#206](https://github.com/croffasia/itsaplan/issues/206)) ([86ba5fd](https://github.com/croffasia/itsaplan/commit/86ba5fd9c72dc7a0bf12ea03ac87f621192efd31))
+
 ## [0.13.0](https://github.com/croffasia/itsaplan/compare/v0.12.0...v0.13.0) (2026-08-22)
 
 

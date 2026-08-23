@@ -1,13 +1,13 @@
 'use client';
 
 import { useMemo } from 'react';
-import { highlightJson } from '@/lib/highlight';
+import { highlight } from '@/lib/highlight';
 
 // What a tool call was given or answered. `md-content` carries the highlighter's
 // colours, the fill behind the block, and the left-to-right direction a mirrored page
 // would otherwise impose on it.
 export default function AgentChatToolBlock({ label, text }: { label: string; text: string }) {
-  const highlighted = useMemo(() => highlightJson(text), [text]);
+  const highlighted = useMemo(() => highlight(text), [text]);
 
   return (
     <div className="min-w-0">

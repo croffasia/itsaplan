@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowUp, Bot, RotateCw } from 'lucide-react';
+import { ArrowUp, Bot, RotateCw, Square } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
 import type { ChatMessage, ChatStatus, PendingMessage } from '@/hooks/useAgentChat';
 import { AgentChatTranscript } from './AgentChatTranscript';
@@ -26,6 +26,9 @@ import { useTranslations } from 'next-intl';
 // The running transcript and the composer for one agent conversation. The
 // conversation state lives above this panel (in the agent chat host), so it is
 // presentational: it renders what it is given and reports sends.
+//
+// The stop control appears next to the send button while a reply is running rather than
+// in its place: a message typed meanwhile is still queued for the next turn.
 export function AgentChatPanel({
   agent,
   messages,
@@ -33,6 +36,7 @@ export function AgentChatPanel({
   activeTool,
   pending,
   onSend,
+  onStop,
   onRemovePending,
   onReset,
   hasEarlierMessages,
@@ -45,6 +49,7 @@ export function AgentChatPanel({
   activeTool: string | null;
   pending: PendingMessage[];
   onSend: (prompt: string) => void;
+  onStop: () => void;
   onRemovePending: (id: string) => void;
   onReset?: () => void;
   hasEarlierMessages?: boolean;
@@ -144,16 +149,31 @@ export function AgentChatPanel({
                     <span className="sr-only">{t('reset')}</span>
                   </InputGroupButton>
                 )}
-                <InputGroupButton
-                  type="submit"
-                  variant="default"
-                  size="icon-sm"
-                  className="ml-auto rounded-lg"
-                  disabled={!input.trim() || runnerOffline}
-                >
-                  <ArrowUp />
-                  <span className="sr-only">{t('send')}</span>
-                </InputGroupButton>
+                <div className="ms-auto flex items-center gap-1">
+                  {status !== 'ready' && (
+                    <InputGroupButton
+                      type="button"
+                      variant="outline"
+                      size="icon-sm"
+                      className="rounded-lg"
+                      title={t('stop')}
+                      onClick={onStop}
+                    >
+                      <Square className="fill-current" />
+                      <span className="sr-only">{t('stop')}</span>
+                    </InputGroupButton>
+                  )}
+                  <InputGroupButton
+                    type="submit"
+                    variant="default"
+                    size="icon-sm"
+                    className="rounded-lg"
+                    disabled={!input.trim() || runnerOffline}
+                  >
+                    <ArrowUp />
+                    <span className="sr-only">{t('send')}</span>
+                  </InputGroupButton>
+                </div>
               </InputGroupAddon>
             </InputGroup>
           </form>

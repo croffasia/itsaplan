@@ -46,12 +46,14 @@ export type ChatPart =
     };
 
 // One message of a conversation. Only user and assistant turns are returned; a tool
-// turn is folded into the parts of the turn that called it.
+// turn is folded into the parts of the turn that called it. `stopped` marks an answer
+// the member ended part-way.
 export type ChatMessageDTO = {
   id: string;
   role: 'user' | 'assistant';
   parts: ChatPart[];
   createdAt: string;
+  stopped?: boolean;
 };
 
 export type ChatMessagePage = {

@@ -10,6 +10,11 @@ import { execute } from './execute';
 // A thread with no session yet is answered by a command started without one, and the
 // session it reports is sent with the first batch of events after it is named, which
 // binds the thread.
+//
+// `stop` is aborted when the server says the member stopped the answer — on the events
+// report while the command is writing, on the heartbeat while it is silent. The server
+// has already closed the answer by then, so the command is killed and nothing more is
+// reported for it.
 
 // Often enough to read as typing, rarely enough that a chatty command does not become a
 // request per line.
@@ -19,6 +24,7 @@ export async function answer(
   config: RunnerConfig,
   client: Client,
   message: ChatMessage,
+  stop: AbortController,
 ): Promise<void> {
   // Reported once: repeating it on every batch is a field the server has to ignore.
   let reported = message.sessionId !== null;
@@ -26,10 +32,10 @@ export async function answer(
     config.outputFormat,
     message.threadId,
     String(message.id),
-    (events) => {
+    async (events) => {
       const started = reported ? undefined : (stream.startedSession() ?? undefined);
       if (started) reported = true;
-      return client.chatEvents(message.id, events, started);
+      if (await client.chatEvents(message.id, events, started)) stop.abort();
     },
   );
   // A flush that fails is not fatal: the next one carries what it left behind.
@@ -50,8 +56,9 @@ export async function answer(
         ITSAPLAN_SESSION_ID: message.sessionId ?? '',
       },
     },
-    (chunk) => stream.write(chunk),
+    { onData: (chunk) => stream.write(chunk), signal: stop.signal },
   ).finally(() => clearInterval(flushing));
+  if (stop.signal.aborted) return;
   if (outcome.status === 'success') {
     await stream.finish(outcome.output);
     await client.chatResult(message.id, { status: 'success' });

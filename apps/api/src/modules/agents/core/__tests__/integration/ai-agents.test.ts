@@ -613,6 +613,7 @@ describe('ai agents', () => {
       'POST /projects/:projectKey/ai-agents/:agentId/chat',
       'GET /projects/:projectKey/ai-agents/:agentId/chat/:messageId/events',
       'GET /projects/:projectKey/ai-agents/:agentId/chat/:messageId/stream',
+      'POST /projects/:projectKey/ai-agents/:agentId/chat/:messageId/cancel',
     ]);
   });
 });

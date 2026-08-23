@@ -78,6 +78,8 @@
     "messagePlaceholder": "راسل {agent}…",
     "reset": "إعادة تعيين المحادثة",
     "send": "إرسال",
+    "stop": "إيقاف",
+    "stopped": "أُوقف",
     "loadingEarlier": "جارٍ تحميل الرسائل السابقة…",
     "messages": "رسائل المحادثة",
     "usingTool": "يستخدم {tool}…",

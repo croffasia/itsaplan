@@ -9,6 +9,7 @@ import { Marker, MarkerContent } from '@/components/ui/marker';
 import { Message, MessageContent, MessageFooter } from '@/components/ui/message';
 import { MessageScrollerItem } from '@/components/ui/message-scroller';
 import AgentChatToolCalls from './AgentChatToolCalls';
+import { useTranslations } from 'next-intl';
 
 type Block = { text: string } | { tools: AiChatToolPart[] };
 
@@ -35,6 +36,7 @@ export default function AgentChatMessage({
   message: ChatMessage;
   showDate: boolean;
 }) {
+  const t = useTranslations('common.agentChat');
   const isUser = message.role === 'user';
 
   return (
@@ -65,7 +67,11 @@ export default function AgentChatMessage({
               ),
             )}
           </Bubble>
-          <MessageFooter>{formatTime(message.createdAt)}</MessageFooter>
+          <MessageFooter>
+            {message.stopped
+              ? `${t('stopped')} · ${formatTime(message.createdAt)}`
+              : formatTime(message.createdAt)}
+          </MessageFooter>
         </MessageContent>
       </Message>
     </MessageScrollerItem>

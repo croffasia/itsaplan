@@ -249,9 +249,13 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
   // per JSON-encoded AgentRunEvent (text chunks, the tools the agent uses, then a
   // final `done` with the thread id). Lets the UI show the answer and what the
   // agent is doing as it happens. Errors mid-stream arrive as an `error` event.
+  //
+  // The run is bound to this connection: the caller dropping it — by pressing stop in
+  // the chat, or by closing the page — aborts the run instead of leaving it going with
+  // nobody reading it.
   .post(
     '/projects/:projectKey/ai-agents/:agentId/run/stream',
-    ({ params, project, body, user }) =>
+    ({ params, project, body, user, request }) =>
       sseResponse(
         runFrames(
           streamAgent(
@@ -259,6 +263,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
             project.id,
             body.prompt,
             chatRunOpts(user, params.agentId, body.threadId),
+            request.signal,
           ),
         ),
       ),

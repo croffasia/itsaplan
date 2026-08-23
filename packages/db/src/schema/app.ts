@@ -567,7 +567,7 @@ export const agentChatMessage = pgTable(
     check('agent_chat_message_role_check', sql`${t.role} IN ('user', 'assistant')`),
     check(
       'agent_chat_message_status_check',
-      sql`${t.status} IN ('pending', 'streaming', 'success', 'failed')`,
+      sql`${t.status} IN ('pending', 'streaming', 'success', 'failed', 'canceled')`,
     ),
     index('agent_chat_message_thread_idx').on(t.threadId, t.id),
     index('agent_chat_message_due_idx')

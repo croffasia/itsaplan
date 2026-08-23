@@ -72,6 +72,9 @@ async function handle(config: RunnerConfig, client: Client, log: Log, run: Run):
   }
 }
 
+// The stop the member pressed comes back on whichever call the runner was making: the
+// events report while the command writes, the heartbeat while it is silent. Both abort
+// the same controller, which kills the command.
 async function handleChat(
   config: RunnerConfig,
   client: Client,
@@ -79,19 +82,26 @@ async function handleChat(
   message: ChatMessage,
 ): Promise<void> {
   log(`chat ${message.id}: answering`);
+  const stop = new AbortController();
   try {
     await withHeartbeat(
       log,
-      () => client.chatHeartbeat(message.id),
-      answer(config, client, message),
+      async () => {
+        if (await client.chatHeartbeat(message.id)) stop.abort();
+      },
+      answer(config, client, message, stop),
     );
-    log(`chat ${message.id}: answered`);
   } catch (err) {
     // Without a reported failure the chat waits for an answer that is no longer coming.
-    const text = err instanceof Error ? err.message : String(err);
-    log(`chat ${message.id}: runner error — ${text}`);
-    await client.chatResult(message.id, { status: 'failed', error: text }).catch(() => {});
+    // A stopped answer is already closed, so nothing is reported for it.
+    if (!stop.signal.aborted) {
+      const text = err instanceof Error ? err.message : String(err);
+      log(`chat ${message.id}: runner error — ${text}`);
+      await client.chatResult(message.id, { status: 'failed', error: text }).catch(() => {});
+      return;
+    }
   }
+  log(`chat ${message.id}: ${stop.signal.aborted ? 'stopped' : 'answered'}`);
 }
 
 // Both feeds are drained the same way; they differ in what asking for work means — a poll

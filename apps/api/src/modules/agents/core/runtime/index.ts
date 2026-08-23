@@ -129,15 +129,20 @@ export async function runAgent(
 // AgentRunEvent). Same preconditions and memory/thread handling as runAgent. A
 // failure raised while streaming is yielded as an `error` event rather than thrown,
 // so a caller consuming the stream sees it inline and the stream still ends.
+//
+// `signal` is the request's: aborting it ends the model call and the tool loop, so a
+// reader that goes away — by pressing stop or by closing the chat — does not leave the
+// run going. An aborted run yields nothing further, not an error: it ended as asked.
 export async function* streamAgent(
   agentId: number,
   projectId: number,
   prompt: string,
   opts: RunOpts,
+  signal?: AbortSignal,
 ): AsyncGenerator<AgentRunEvent> {
   try {
     const { agent, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
-    const result = await agent.stream(prompt, options);
+    const result = await agent.stream(prompt, { ...options, abortSignal: signal });
     for await (const chunk of result.fullStream) {
       switch (chunk.type) {
         case 'text-delta':
@@ -166,6 +171,7 @@ export async function* streamAgent(
     }
     yield { type: 'done', threadId };
   } catch (err) {
+    if (signal?.aborted) return;
     yield { type: 'error', message: errorMessage(err, 'Agent run failed') };
   }
 }
@@ -233,4 +239,5 @@ type RunOptions = {
   maxSteps: number;
   modelSettings?: { temperature: number };
   memory?: { thread: string; resource: string };
+  abortSignal?: AbortSignal;
 };

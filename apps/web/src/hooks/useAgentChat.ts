@@ -49,9 +49,14 @@ export type PendingMessage = { id: string; text: string };
 // one. threadId is null while a new conversation has not produced its first reply.
 //
 // A message sent while a reply is running is held in `pending` and sent on its own once
-// that reply ends, one at a time and in the order it was typed. A reply that failed
-// stops the queue: what is left waits until the next send, so a message is not thrown
-// at an agent that is not answering.
+// that reply ends, one at a time and in the order it was typed. A reply that failed or
+// was stopped pauses the queue: what is left waits until the next send, so a message is
+// not thrown at an agent that is not answering.
+//
+// stop() ends the reply being produced. What the agent wrote before it stays in the
+// transcript, marked stopped. An internal agent's run is bound to the stream, so
+// dropping it is the stop; an external one is answered on the operator's machine and is
+// stopped through the API, which its runner reads on its next report.
 export function useAgentChat(projectKey: string, agentId: number, external: boolean) {
   const t = useTranslations('common.agentChat');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -69,13 +74,16 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
   // not start is still streaming, and the end of that turn then changes nothing.
   const runningRef = useRef(false);
   const [running, setRunning] = useState(false);
-  const [stopped, setStopped] = useState(false);
+  const [queuePaused, setQueuePaused] = useState(false);
+  const stopRef = useRef<AbortController | null>(null);
 
   const runTurn = useCallback(
     async (text: string) => {
       if (runningRef.current) return;
       runningRef.current = true;
       setRunning(true);
+      const stopper = new AbortController();
+      stopRef.current = stopper;
 
       const assistantId = crypto.randomUUID();
       const createdAt = new Date().toISOString();
@@ -94,10 +102,12 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
 
       const stream = external ? streamAiAgentChat : streamAiAgentRun;
       try {
-        for await (const event of stream(projectKey, agentId, {
-          prompt: text,
-          threadId: threadRef.current,
-        })) {
+        for await (const event of stream(
+          projectKey,
+          agentId,
+          { prompt: text, threadId: threadRef.current },
+          stopper.signal,
+        )) {
           switch (event.type) {
             case 'text':
               // The first thing the agent produces is what says a runner took the
@@ -146,21 +156,31 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
               break;
             case 'error':
               toast.error(event.message);
-              setStopped(true);
+              setQueuePaused(true);
               break;
           }
         }
       } catch (err) {
-        toast.error(err instanceof ApiError ? err.message : t('unreachable'));
-        setStopped(true);
+        // A stop ends the stream by aborting it; that is what was asked for, not a
+        // failure to report.
+        if (!stopper.signal.aborted) {
+          toast.error(err instanceof ApiError ? err.message : t('unreachable'));
+        }
+        setQueuePaused(true);
       } finally {
         runningRef.current = false;
+        stopRef.current = null;
         setRunning(false);
         setStatus('ready');
         setActiveTool(null);
         // Drop the assistant placeholder if the agent never produced anything (an error
-        // before the first chunk), so an empty bubble is not left behind.
-        setMessages((m) => m.filter((msg) => !(msg.id === assistantId && msg.parts.length === 0)));
+        // or a stop before the first chunk), so an empty bubble is not left behind.
+        const stopped = stopper.signal.aborted;
+        setMessages((m) =>
+          m
+            .filter((msg) => !(msg.id === assistantId && msg.parts.length === 0))
+            .map((msg) => (stopped && msg.id === assistantId ? { ...msg, stopped: true } : msg)),
+        );
       }
     },
     [projectKey, agentId, external, t],
@@ -170,7 +190,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     (prompt: string) => {
       const text = prompt.trim();
       if (!text) return;
-      setStopped(false);
+      setQueuePaused(false);
       if (runningRef.current || pending.length > 0) {
         setPending((queue) => [...queue, { id: crypto.randomUUID(), text }]);
         return;
@@ -184,13 +204,19 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     setPending((queue) => queue.filter((message) => message.id !== id));
   }, []);
 
+  // Ends the reply being produced. Whatever is queued stays queued: stopping this reply
+  // is not a reason to discard what was typed while it ran.
+  const stop = useCallback(() => {
+    stopRef.current?.abort();
+  }, []);
+
   // Sends the next waiting message once the reply before it has ended.
   useEffect(() => {
-    if (stopped || running || runningRef.current || pending.length === 0) return;
+    if (queuePaused || running || runningRef.current || pending.length === 0) return;
     const [next] = pending;
     setPending((queue) => queue.filter((message) => message.id !== next.id));
     void runTurn(next.text);
-  }, [stopped, running, pending, runTurn]);
+  }, [queuePaused, running, pending, runTurn]);
 
   // Restores a past conversation: shows its transcript and continues its thread.
   const loadThread = useCallback((id: string, history: AiChatMessage[]) => {
@@ -200,7 +226,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     setStatus('ready');
     setActiveTool(null);
     setPending([]);
-    setStopped(false);
+    setQueuePaused(false);
   }, []);
 
   const prependHistory = useCallback((history: AiChatMessage[]) => {
@@ -218,7 +244,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     setStatus('ready');
     setActiveTool(null);
     setPending([]);
-    setStopped(false);
+    setQueuePaused(false);
   }, []);
 
   return {
@@ -228,6 +254,7 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     threadId,
     pending,
     send,
+    stop,
     removePending,
     loadThread,
     prependHistory,

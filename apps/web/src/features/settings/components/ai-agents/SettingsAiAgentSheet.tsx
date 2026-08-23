@@ -135,6 +135,7 @@ function SheetBody({
               activeTool={chat.activeTool}
               pending={chat.pending}
               onSend={chat.send}
+              onStop={chat.stop}
               onRemovePending={chat.removePending}
               onReset={chat.newChat}
             />

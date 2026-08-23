@@ -35,6 +35,7 @@ export function AiChatThread({
     threadId: activeThreadId,
     pending,
     send,
+    stop,
     removePending,
     loadThread,
     prependHistory,
@@ -100,6 +101,7 @@ export function AiChatThread({
       activeTool={activeTool}
       pending={pending}
       onSend={send}
+      onStop={stop}
       onRemovePending={removePending}
       hasEarlierMessages={messagesQuery.hasNextPage}
       isLoadingEarlier={messagesQuery.isFetchingNextPage}

@@ -673,6 +673,13 @@
       "when": 1787352480541,
       "tag": "0095_square_mysterio",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1787485270149,
+      "tag": "0096_wooden_dazzler",
+      "breakpoints": true
     }
   ]
 }

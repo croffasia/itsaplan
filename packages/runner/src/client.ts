@@ -92,16 +92,21 @@ export class Client {
     return body.message;
   }
 
-  // `sessionId` binds the thread to that session for every later message in it.
-  async chatEvents(messageId: number, events: AgUiEvent[], sessionId?: string): Promise<void> {
-    await this.post(`/agent-chats/${messageId}/events`, {
+  // `sessionId` binds the thread to that session for every later message in it. True
+  // when the member stopped the answer: the server has no connection to this machine, so
+  // the stop is returned on the calls the runner already makes.
+  async chatEvents(messageId: number, events: AgUiEvent[], sessionId?: string): Promise<boolean> {
+    const res = await this.post(`/agent-chats/${messageId}/events`, {
       events,
       ...(sessionId && { sessionId }),
     });
+    return canceled(res);
   }
 
-  async chatHeartbeat(messageId: number): Promise<void> {
-    await this.post(`/agent-chats/${messageId}/heartbeat`);
+  // True when the member stopped the answer. This is how a command that is writing
+  // nothing learns of the stop.
+  async chatHeartbeat(messageId: number): Promise<boolean> {
+    return canceled(await this.post(`/agent-chats/${messageId}/heartbeat`));
   }
 
   async chatResult(
@@ -110,4 +115,11 @@ export class Client {
   ): Promise<void> {
     await this.post(`/agent-chats/${messageId}/result`, result);
   }
+}
+
+// An instance too old to know about stopping answers this with 204 and no body, which
+// reads the same way as an answer nobody stopped.
+async function canceled(res: Response): Promise<boolean> {
+  const body = (await res.json().catch(() => ({}))) as { canceled?: boolean };
+  return body.canceled === true;
 }

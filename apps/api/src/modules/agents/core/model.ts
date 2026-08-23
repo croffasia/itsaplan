@@ -211,6 +211,7 @@ export const ChatMessagesResponse = t.Object({
       role: t.Union([t.Literal('user'), t.Literal('assistant')]),
       parts: t.Array(ChatPartResponse),
       createdAt: t.String(),
+      stopped: t.Optional(t.Boolean()),
     }),
   ),
   nextPage: t.Nullable(t.Number()),

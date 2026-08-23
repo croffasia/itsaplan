@@ -1,0 +1,2 @@
+ALTER TABLE "agent_chat_message" DROP CONSTRAINT "agent_chat_message_status_check";--> statement-breakpoint
+ALTER TABLE "agent_chat_message" ADD CONSTRAINT "agent_chat_message_status_check" CHECK ("agent_chat_message"."status" IN ('pending', 'streaming', 'success', 'failed', 'canceled'));

@@ -78,6 +78,8 @@
     "messagePlaceholder": "给 {agent} 发送消息…",
     "reset": "重置对话",
     "send": "发送",
+    "stop": "停止",
+    "stopped": "已停止",
     "loadingEarlier": "正在加载更早的消息…",
     "messages": "对话消息",
     "usingTool": "正在使用 {tool}…",

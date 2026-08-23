@@ -9,6 +9,7 @@ import { commonErrors, errors } from '#shared/responses';
 import { getAgentById, isTriggerableBy } from '../core/service';
 import { runnerAuth } from '../runner-auth';
 import {
+  ChatAckResponse,
   ChatEventsResponse,
   ClaimChatResponse,
   SendChatResponse,
@@ -20,10 +21,12 @@ import {
   runnerMessageParams,
   sendChatBody,
   type AgUiEventBody,
+  type ChatMessageStatus,
 } from './model';
 import {
   agentChatConfig,
   appendEvents,
+  cancelMessage,
   claimNextMessage,
   finishMessage,
   heartbeatMessage,
@@ -141,6 +144,33 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
     },
   )
 
+  // Stops the answer being produced. The runner learns of it on its next report and
+  // kills the command; what the agent wrote before it stays in the transcript.
+  .post(
+    '/projects/:projectKey/ai-agents/:agentId/chat/:messageId/cancel',
+    async ({ params, project, user }) => {
+      const caller = requireUser(user);
+      const agent = await requireExternalAgent(params.agentId, project.id);
+      if (!isTriggerableBy(agent, caller.id)) {
+        throw new HttpError(403, 'This agent only takes tasks from its owner');
+      }
+      const ok = await cancelMessage(params.messageId, params.agentId, caller.id);
+      if (!ok) throw new HttpError(404, 'Message not found');
+      return noContent();
+    },
+    {
+      params: chatMessageParams,
+      permission: ['ai_agents', 'read'],
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Stop an answer',
+        description:
+          'Stop the answer being produced for this message. Terminal: it is not claimed ' +
+          'again and not retried.',
+      },
+    },
+  )
+
   .post('/agent-chats/claim', async ({ agent }) => ({ message: await claimNextMessage(agent) }), {
     runnerAgent: true,
     response: { 200: ClaimChatResponse, ...errors(401, 403) },
@@ -156,22 +186,23 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
   .post(
     '/agent-chats/:messageId/events',
     async ({ agent, params, body }) => {
-      const ok = await appendEvents(agent.id, params.messageId, body.events);
-      if (!ok) throw new HttpError(404, 'Message not found');
+      const ack = await appendEvents(agent.id, params.messageId, body.events);
+      if (!ack) throw new HttpError(404, 'Message not found');
       if (body.sessionId) await setThreadSession(agent.id, params.messageId, body.sessionId);
-      return noContent();
+      return ack;
     },
     {
       runnerAgent: true,
       params: runnerMessageParams,
       body: chatEventsBody,
-      response: { 204: t.Void(), ...commonErrors },
+      response: { 200: ChatAckResponse, ...commonErrors },
       detail: {
         summary: 'Report answer events',
         description:
           'Append AG-UI events to a claimed answer: text deltas, tool calls, run ' +
           'lifecycle. Reporting also extends the lease, and binds the thread to the ' +
-          'session when `sessionId` is given.',
+          'session when `sessionId` is given. Answers `canceled` when the member stopped ' +
+          'the answer: kill the command and stop reporting.',
       },
     },
   )
@@ -179,17 +210,20 @@ export const agentChatRoutes = new Elysia({ name: 'agent-chat', detail: { tags: 
   .post(
     '/agent-chats/:messageId/heartbeat',
     async ({ agent, params }) => {
-      const ok = await heartbeatMessage(agent.id, params.messageId);
-      if (!ok) throw new HttpError(404, 'Message not found');
-      return noContent();
+      const ack = await heartbeatMessage(agent.id, params.messageId);
+      if (!ack) throw new HttpError(404, 'Message not found');
+      return ack;
     },
     {
       runnerAgent: true,
       params: runnerMessageParams,
-      response: { 204: t.Void(), ...commonErrors },
+      response: { 200: ChatAckResponse, ...commonErrors },
       detail: {
         summary: 'Extend an answer lease',
-        description: 'Keep a claimed answer leased while the runner is still working on it.',
+        description:
+          'Keep a claimed answer leased while the runner is still working on it. Answers ' +
+          '`canceled` when the member stopped the answer, which is how a runner writing ' +
+          'nothing learns of it.',
       },
     },
   )
@@ -245,7 +279,7 @@ async function* streamChatEvents(
     // More is already stored than one read hands out: take it before deciding the
     // answer is over or waiting for the next tick.
     if (page.hasMore) continue;
-    if (page.status === 'success' || page.status === 'failed') {
+    if (page.status !== 'pending' && page.status !== 'streaming') {
       if (!ended) yield sseFrame(terminalEvent(page.status, page.error), cursor);
       return;
     }
@@ -258,8 +292,11 @@ async function* streamChatEvents(
   }
 }
 
-function terminalEvent(status: 'success' | 'failed', error: string | null): AgUiEventBody {
-  return status === 'success'
-    ? { type: 'RUN_FINISHED' }
-    : { type: 'RUN_ERROR', message: error ?? 'The agent did not finish the answer' };
+// A stopped answer ends the stream the same way a finished one does: the stop was asked
+// for, so it is not an error, and what the agent wrote before it is already in the frames
+// the reader has.
+function terminalEvent(status: ChatMessageStatus, error: string | null): AgUiEventBody {
+  return status === 'failed'
+    ? { type: 'RUN_ERROR', message: error ?? 'The agent did not finish the answer' }
+    : { type: 'RUN_FINISHED' };
 }

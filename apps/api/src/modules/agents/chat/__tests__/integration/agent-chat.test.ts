@@ -199,7 +199,8 @@ describe('external agent chat', () => {
         { type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'are left.' },
       ],
     });
-    expect(reported.status).toBe(204);
+    expect(reported.status).toBe(200);
+    expect(reported.data).toEqual({ canceled: false });
 
     const events = await chatOf(asOwner, agent.id).chat({ messageId: answer.id }).events.get();
     expect(events.status).toBe(200);
@@ -288,9 +289,77 @@ describe('external agent chat', () => {
     await send(asOwner, agent.id, 'Hello');
     const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
 
-    expect((await asRunner['agent-chats']({ messageId: answer.id }).heartbeat.post()).status).toBe(
-      204,
+    const beat = await asRunner['agent-chats']({ messageId: answer.id }).heartbeat.post();
+    expect(beat.status).toBe(200);
+    expect(beat.data).toEqual({ canceled: false });
+  });
+
+  // The server has no connection to the operator's machine: the stop is returned on the
+  // calls the runner already makes.
+  it('tells the runner on its next report that the answer was stopped', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Summarise the sprint');
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: answer.id }).events.post({
+      events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Two things ' }],
+    });
+
+    const stopped = await chatOf(asOwner, agent.id).chat({ messageId: answer.id }).cancel.post();
+    expect(stopped.status).toBe(204);
+
+    const reported = await asRunner['agent-chats']({ messageId: answer.id }).events.post({
+      events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'are left.' }],
+    });
+    expect(reported.data).toEqual({ canceled: true });
+    // A runner writing nothing learns of it on the heartbeat instead.
+    expect((await asRunner['agent-chats']({ messageId: answer.id }).heartbeat.post()).data).toEqual(
+      { canceled: true },
     );
+
+    // What arrived before the stop stays; what was reported after it did not.
+    const transcript = await chatOf(asOwner, agent.id)
+      .threads({ threadId: sent.data!.threadId })
+      .messages.get();
+    expect(transcript.data!.items).toMatchObject([
+      { role: 'user' },
+      { role: 'assistant', parts: [{ type: 'text', text: 'Two things ' }], stopped: true },
+    ]);
+  });
+
+  it('does not hand a stopped answer out again', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await send(asOwner, agent.id, 'Ping');
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await chatOf(asOwner, agent.id).chat({ messageId: answer.id }).cancel.post();
+
+    expect((await asRunner['agent-chats'].claim.post()).data!.message).toBeNull();
+  });
+
+  // The stop was asked for, so the stream ends the way a finished answer does rather
+  // than reporting an error to the member who pressed it.
+  it('ends a stopped answer without an error', async () => {
+    const { owner, asOwner, asRunner, agent } = await setup();
+    await send(asOwner, agent.id, 'Ping');
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: answer.id }).events.post({
+      events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Po' }],
+    });
+    await chatOf(asOwner, agent.id).chat({ messageId: answer.id }).cancel.post();
+
+    const stream = await readStream(owner.cookie, agent.id, answer.id);
+    expect(stream.frames[0]).toContain('Po');
+    expect(stream.frames.at(-1)).toContain('RUN_FINISHED');
+  });
+
+  it("refuses to stop another member's answer", async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await send(asOwner, agent.id, 'Private question');
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    const asMember = await addProjectMember(asOwner, 'MKT');
+
+    expect(
+      (await chatOf(asMember, agent.id).chat({ messageId: answer.id }).cancel.post()).status,
+    ).toBe(404);
   });
 
   it('records the failure the runner reports and stops taking events', async () => {

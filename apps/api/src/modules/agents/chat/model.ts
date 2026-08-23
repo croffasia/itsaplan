@@ -118,12 +118,14 @@ export const SendChatResponse = t.Object({
 // Events are read with a cursor: `after` is the id of the last event already seen.
 export const chatEventsQuery = t.Object({ after: t.Optional(t.Numeric({ minimum: 0 })) });
 
-// Where an answer stands: queued, being produced by a runner, or closed either way.
+// Where an answer stands: queued, being produced by a runner, or closed — finished,
+// failed, or stopped from the chat.
 export const chatMessageStatus = t.Union([
   t.Literal('pending'),
   t.Literal('streaming'),
   t.Literal('success'),
   t.Literal('failed'),
+  t.Literal('canceled'),
 ]);
 
 export type ChatMessageStatus = typeof chatMessageStatus.static;
@@ -173,4 +175,13 @@ export const chatEventsBody = t.Object({
 export const chatResultBody = t.Object({
   status: t.Union([t.Literal('success'), t.Literal('failed')]),
   error: t.Optional(t.Nullable(t.String())),
+});
+
+// The answer of every runner call that reports progress. `canceled` is how the stop
+// reaches the runner: it is returned on the calls the runner already makes, so the
+// server needs no connection to the operator's machine.
+export const ChatAckResponse = t.Object({
+  canceled: t.Boolean({
+    description: 'The answer was stopped from the chat: kill the command and stop reporting.',
+  }),
 });

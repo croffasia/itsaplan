@@ -94,6 +94,7 @@ export async function getThreadMessages(
           ? (answers.get(r.id) ?? [])
           : [{ type: 'text' as const, text: r.content }],
       createdAt: iso(r.createdAt),
+      ...(r.status === 'canceled' ? { stopped: true } : {}),
     }))
     // An answer whose runner has reported nothing yet has nothing to show; the browser
     // is streaming it.
@@ -442,14 +443,24 @@ function liveAnswer(agentId: number, messageId: number) {
   );
 }
 
+// Whether the answer a runner call addressed was stopped from the chat, as opposed to
+// not being this agent's or having ended some other way.
+async function wasCanceled(agentId: number, messageId: number): Promise<boolean> {
+  const rows = await db
+    .select({ status: agentChatMessage.status })
+    .from(agentChatMessage)
+    .where(and(eq(agentChatMessage.id, messageId), eq(agentChatMessage.agentId, agentId)))
+    .limit(1);
+  return rows[0]?.status === 'canceled';
+}
+
 // Records what the runner reported. Text deltas also grow the answer's own text, so the
-// transcript reads correctly even if the browser never watched the stream. False when
-// the answer is not this agent's or is already finished.
+// transcript reads correctly even if the browser never watched the stream.
 export async function appendEvents(
   agentId: number,
   messageId: number,
   events: AgUiEventBody[],
-): Promise<boolean> {
+): Promise<ChatAck | null> {
   const claimed = await db
     .update(agentChatMessage)
     .set({
@@ -458,23 +469,57 @@ export async function appendEvents(
     })
     .where(liveAnswer(agentId, messageId))
     .returning({ id: agentChatMessage.id });
-  if (!claimed[0]) return false;
+  if (!claimed[0]) return (await wasCanceled(agentId, messageId)) ? { canceled: true } : null;
   await db.insert(agentChatEvent).values(events.map((event) => ({ messageId, payload: event })));
-  return true;
+  return { canceled: false };
 }
 
 function textOf(events: AgUiEventBody[]): string {
   return events.map((e) => (e.type === 'TEXT_MESSAGE_CONTENT' ? e.delta : '')).join('');
 }
 
-export async function heartbeatMessage(agentId: number, messageId: number): Promise<boolean> {
+export async function heartbeatMessage(
+  agentId: number,
+  messageId: number,
+): Promise<ChatAck | null> {
   await touchRunner(agentId);
   const rows = await db
     .update(agentChatMessage)
     .set({ nextAttemptAt: leaseUntil() })
     .where(liveAnswer(agentId, messageId))
     .returning({ id: agentChatMessage.id });
-  return rows.length > 0;
+  if (rows.length > 0) return { canceled: false };
+  return (await wasCanceled(agentId, messageId)) ? { canceled: true } : null;
+}
+
+// Stops the answer on the member's word. Terminal, like a failure: no claim, retry or
+// lease extension looks at a canceled row again, so the runner learns of the stop on
+// its next report and nothing hands the answer out afterwards. True once the answer is
+// the caller's, whether or not it was still running — pressing stop as it ends is not
+// an error.
+export async function cancelMessage(
+  messageId: number,
+  agentId: number,
+  userId: string,
+): Promise<boolean> {
+  const owned = await db
+    .select({ id: agentChatMessage.id })
+    .from(agentChatMessage)
+    .innerJoin(agentChatThread, eq(agentChatThread.id, agentChatMessage.threadId))
+    .where(
+      and(
+        eq(agentChatMessage.id, messageId),
+        eq(agentChatMessage.agentId, agentId),
+        eq(agentChatThread.userId, userId),
+      ),
+    )
+    .limit(1);
+  if (!owned[0]) return false;
+  await db
+    .update(agentChatMessage)
+    .set({ status: 'canceled', finishedAt: new Date() })
+    .where(liveAnswer(agentId, messageId));
+  return true;
 }
 
 // Closes the answer. A failure is terminal: the runner ran the command and it failed,
@@ -495,7 +540,15 @@ export async function finishMessage(
     })
     .where(liveAnswer(agentId, messageId))
     .returning({ id: agentChatMessage.id });
-  return rows.length > 0;
+  if (rows.length > 0) return true;
+  // Stopped from the chat while the command was ending: the answer is already closed,
+  // so there is nothing to record and nothing wrong.
+  return wasCanceled(agentId, messageId);
+}
+
+// What a runner is told on every report: whether the answer it is producing was stopped.
+export interface ChatAck {
+  canceled: boolean;
 }
 
 export interface ChatEventPage {

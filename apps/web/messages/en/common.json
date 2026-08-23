@@ -78,6 +78,8 @@
     "messagePlaceholder": "Message {agent}…",
     "reset": "Reset conversation",
     "send": "Send",
+    "stop": "Stop",
+    "stopped": "Stopped",
     "loadingEarlier": "Loading earlier messages…",
     "messages": "Conversation messages",
     "usingTool": "Using {tool}…",

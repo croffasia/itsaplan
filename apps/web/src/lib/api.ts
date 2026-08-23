@@ -548,12 +548,14 @@ export interface AiChatToolPart {
 
 export type AiChatPart = { type: 'text'; text: string } | AiChatToolPart;
 
-// One restored message of a chat thread's transcript.
+// One restored message of a chat thread's transcript. `stopped` marks an answer the
+// member ended part-way: what the agent had written by then is all there is.
 export interface AiChatMessage {
   id: string;
   role: 'user' | 'assistant';
   parts: AiChatPart[];
   createdAt: string;
+  stopped?: boolean;
 }
 
 export interface AiChatMessagePage {
@@ -565,10 +567,14 @@ export interface AiChatMessagePage {
 // arrives. Sends the session cookie like every other call. Throws ApiError when the
 // request itself fails before the stream starts (e.g. 403/404); a failure during
 // the run arrives as an `error` event, not a throw.
+//
+// The run is bound to this connection, so aborting `signal` is the whole stop: the API
+// drops the run with it.
 export async function* streamAiAgentRun(
   projectKey: string,
   agentId: number,
   input: { prompt: string; threadId?: string | null },
+  signal?: AbortSignal,
 ): AsyncGenerator<AgentRunEvent> {
   const body = input.threadId
     ? { prompt: input.prompt, threadId: input.threadId }
@@ -578,6 +584,7 @@ export async function* streamAiAgentRun(
     credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal,
   });
   for await (const frame of readSseFrames(res)) {
     yield JSON.parse(frame.data) as AgentRunEvent;
@@ -630,10 +637,15 @@ const CHAT_STREAM_RETRIES = 3;
 // yielding the same events as an internal agent's run so the chat consumes one shape.
 // The answer starts only once a runner takes the message: until then the stream is open
 // with nothing on it.
+//
+// Dropping the stream stops nothing here — the runner is on the operator's machine and
+// only ever calls the API itself — so aborting `signal` also asks the API to cancel the
+// answer, which is what the runner reads on its next report.
 export async function* streamAiAgentChat(
   projectKey: string,
   agentId: number,
   input: { prompt: string; threadId?: string | null },
+  signal?: AbortSignal,
 ): AsyncGenerator<AgentRunEvent> {
   const body = input.threadId
     ? { prompt: input.prompt, threadId: input.threadId }
@@ -642,14 +654,20 @@ export async function* streamAiAgentChat(
     `/projects/${projectKey}/ai-agents/${agentId}/chat`,
     { method: 'POST', body: JSON.stringify(body) },
   );
-  const base = `${API_URL}/projects/${projectKey}/ai-agents/${agentId}/chat/${sent.messageId}/stream`;
+  const chat = `/projects/${projectKey}/ai-agents/${agentId}/chat/${sent.messageId}`;
+  const cancel = () => {
+    request(`${chat}/cancel`, { method: 'POST' }).catch(() => {});
+  };
+  if (signal?.aborted) cancel();
+  else signal?.addEventListener('abort', cancel, { once: true });
+  const base = `${API_URL}${chat}/stream`;
   let after = 0;
   // The answer always ends on a terminal event, so a stream that closed without one was
   // cut: pick it up again from the last event already shown.
   for (let attempt = 0; attempt <= CHAT_STREAM_RETRIES; attempt++) {
     let ended = false;
     try {
-      const res = await fetch(`${base}?after=${after}`, { credentials: 'include' });
+      const res = await fetch(`${base}?after=${after}`, { credentials: 'include', signal });
       for await (const frame of readSseFrames(res)) {
         after = frame.id ?? after;
         const event = JSON.parse(frame.data) as AgUiEvent;
@@ -666,6 +684,12 @@ export async function* streamAiAgentChat(
         if (mapped) yield mapped;
       }
     } catch (err) {
+      // A stop still has to name the thread: the reader binds it on `done`, and without
+      // that the next message would open a second conversation.
+      if (signal?.aborted) {
+        yield { type: 'done', threadId: sent.threadId };
+        throw err;
+      }
       if (attempt === CHAT_STREAM_RETRIES) throw err;
     }
     if (ended) break;

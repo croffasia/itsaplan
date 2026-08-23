@@ -46,8 +46,9 @@ function childEnv(config: RunnerConfig, task: Task): Record<string, string> {
 }
 
 // The command gets its own process group, so the Ctrl-C that stops the runner does not
-// reach it — the runner promises to finish what is in flight. The timeout then has to
-// kill that group itself, or a command that is a pipeline leaves its children behind.
+// reach it — the runner promises to finish what is in flight. The timeout and the
+// member's stop then have to kill that group themselves, or a command that is a
+// pipeline leaves its children behind.
 function killGroup(pid: number): void {
   try {
     process.kill(-pid, 'SIGKILL');
@@ -79,11 +80,12 @@ function stdinText(preset: Preset | undefined, task: Task): string {
 }
 
 // `onData` sees stdout as it arrives, for a caller that reports the output while the
-// command is still running.
+// command is still running. `signal` ends the command the way the timeout does, for a
+// chat answer the member stopped.
 export async function execute(
   config: RunnerConfig,
   task: Task,
-  onData?: (chunk: string) => void,
+  opts: { onData?: (chunk: string) => void; signal?: AbortSignal } = {},
 ): Promise<Outcome> {
   const preset = presetOf(config);
   const [bin, args] = spawnArgs(config, preset, task);
@@ -93,11 +95,15 @@ export async function execute(
     detached: true,
   });
 
+  const kill = () => {
+    if (child.pid !== undefined) killGroup(child.pid);
+  };
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
-    if (child.pid !== undefined) killGroup(child.pid);
+    kill();
   }, config.timeoutMs);
+  opts.signal?.addEventListener('abort', kill, { once: true });
 
   let stdout = '';
   let stderr = '';
@@ -105,7 +111,7 @@ export async function execute(
   child.stderr.setEncoding('utf8');
   child.stdout.on('data', (chunk: string) => {
     stdout = tail(stdout + chunk, OUTPUT_LIMIT);
-    onData?.(chunk);
+    opts.onData?.(chunk);
   });
   child.stderr.on('data', (chunk: string) => {
     stderr = tail(stderr + chunk, ERROR_LIMIT);
@@ -126,6 +132,7 @@ export async function execute(
     ({ code, signal } = await exited);
   } finally {
     clearTimeout(timer);
+    opts.signal?.removeEventListener('abort', kill);
   }
 
   const output = stdout.trim();

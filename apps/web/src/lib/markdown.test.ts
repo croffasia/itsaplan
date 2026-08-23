@@ -25,6 +25,24 @@ describe('markdownSegments', () => {
     assert.deepEqual(kinds('text\n\n```chart\n{"type":"bar"'), ['markdown', 'pending']);
   });
 
+  it('draws a fence a model left a stray token in', () => {
+    assert.deepEqual(kinds(`\`\`\`chart\n${spec}</br>\n\`\`\``), ['chart']);
+  });
+
+  it('draws a spec the model tagged as json or left untagged', () => {
+    assert.deepEqual(kinds(`\`\`\`json\n${spec}\n\`\`\``), ['chart']);
+    assert.deepEqual(kinds(`\`\`\`\n${spec}\n\`\`\``), ['chart']);
+  });
+
+  it('draws a spec written on the fence line itself', () => {
+    assert.deepEqual(kinds(`\`\`\`chart ${spec}\n\`\`\``), ['chart']);
+    assert.deepEqual(kinds(`\`\`\`chart ${spec}\`\`\``), ['chart']);
+  });
+
+  it('leaves an unclosed untagged fence as markdown, so code being typed still shows', () => {
+    assert.deepEqual(kinds('text\n\n```js\nconst a = 1;'), ['markdown']);
+  });
+
   it('leaves a fence whose body is not a spec as markdown', () => {
     assert.deepEqual(kinds('```chart\n{ broken\n```'), ['markdown']);
   });

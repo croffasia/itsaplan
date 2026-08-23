@@ -26,6 +26,10 @@ describe('parseChartSpec', () => {
     assert.deepEqual(parse(), spec);
   });
 
+  it('parses a spec a model wrote a stray token next to', () => {
+    assert.deepEqual(parseChartSpec(`${JSON.stringify(spec)}</br>`), spec);
+  });
+
   it('rejects anything that is not a spec object', () => {
     assert.equal(parseChartSpec('not json'), null);
     assert.equal(parseChartSpec('[]'), null);

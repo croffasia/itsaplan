@@ -119,9 +119,15 @@ function isSeries(value: unknown): boolean {
 // data — are checked here: recharts throws on a missing dataKey rather than drawing an
 // empty chart.
 export function parseChartSpec(text: string): ChartSpec | null {
+  // Read from the first brace to the last one rather than parsing the text whole: a
+  // model writes the odd stray token next to the spec — a trailing `</br>` is the one
+  // seen — and dropping it draws the chart instead of showing the JSON raw.
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end < start) return null;
   let value: unknown;
   try {
-    value = JSON.parse(text);
+    value = JSON.parse(text.slice(start, end + 1));
   } catch {
     return null;
   }

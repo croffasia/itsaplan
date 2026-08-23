@@ -55,12 +55,37 @@ export type MarkdownSegment =
   // every streamed token, so it is what tells an unchanged chart from a new one.
   | { kind: 'chart'; spec: ChartSpec; source: string };
 
-const OPEN_FENCE = '```chart';
-const CLOSE_FENCE = '```';
+const CHART_TAG = 'chart';
 
-// The markdown between the chart fences, and the specs of the fences themselves. A
-// fence whose body is not a valid spec is left in the markdown, so a model that wrote
-// malformed JSON shows it as the code block it is instead of vanishing.
+interface OpenFence {
+  // The run of backticks or tildes the block is closed by.
+  marker: string;
+  // The word between the marker and the body, lowercased.
+  tag: string;
+  // What of the body the opening line already carries, for a model that started the
+  // JSON on it rather than on the next line.
+  body: string;
+  // That line closed the block as well, so the whole block is one line.
+  closed: boolean;
+}
+
+function openFence(line: string): OpenFence | null {
+  const match = /^(`{3,}|~{3,})(.*)$/.exec(line.trim());
+  if (!match) return null;
+  const [, marker, rest] = match;
+  const brace = rest.indexOf('{');
+  const tag = (brace === -1 ? rest : rest.slice(0, brace)).trim().toLowerCase();
+  let body = brace === -1 ? '' : rest.slice(brace).trim();
+  const closed = body.endsWith(marker);
+  if (closed) body = body.slice(0, -marker.length);
+  return { marker, tag, body, closed };
+}
+
+// The markdown between the chart fences, and the specs of the fences themselves. Every
+// fenced block is offered to parseChartSpec, not only one tagged `chart`: the tag is
+// written by a model, and the check a spec goes through is strict enough that a block
+// passing it is a chart. A block that is not one stays in the markdown, so a model that
+// wrote malformed JSON shows it as the code block it is instead of vanishing.
 export function markdownSegments(value: string, options?: HtmlOptions): MarkdownSegment[] {
   const lines = value.split('\n');
   const segments: MarkdownSegment[] = [];
@@ -73,18 +98,29 @@ export function markdownSegments(value: string, options?: HtmlOptions): Markdown
   }
 
   for (let i = 0; i < lines.length; i++) {
-    if (lines[i].trim() !== OPEN_FENCE) {
+    const fence = openFence(lines[i]);
+    if (!fence) {
       buffer.push(lines[i]);
       continue;
     }
-    let end = i + 1;
-    while (end < lines.length && lines[end].trim() !== CLOSE_FENCE) end++;
-    if (end === lines.length) {
-      flush();
-      segments.push({ kind: 'pending' });
-      return segments;
+    let end = i;
+    let source = fence.body;
+    if (!fence.closed) {
+      end = i + 1;
+      while (end < lines.length && lines[end].trim() !== fence.marker) end++;
+      if (end === lines.length) {
+        // Only a fence the model tagged holds a place while it streams in: an untagged
+        // one is as likely to be the code block it looks like.
+        if (fence.tag !== CHART_TAG) {
+          buffer.push(...lines.slice(i));
+          break;
+        }
+        flush();
+        segments.push({ kind: 'pending' });
+        return segments;
+      }
+      source = [...(fence.body ? [fence.body] : []), ...lines.slice(i + 1, end)].join('\n');
     }
-    const source = lines.slice(i + 1, end).join('\n');
     const spec = parseChartSpec(source);
     if (spec) {
       flush();

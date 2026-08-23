@@ -146,7 +146,14 @@ export function chartPreamble(): string {
   return [
     '## Charts',
     'When the person asks for a chart or a graph, build it with the create_chart tool',
-    'and put the block it gives back into your answer instead of drawing one as text.',
+    'instead of drawing one as text. Put the spec it answers with into your reply as a',
+    'fenced block tagged chart, where the chart belongs in the text:',
+    '',
+    '```chart',
+    '{"type":"bar","x":"week","series":[{"key":"created"}],"data":[{"week":"W10","created":8}]}',
+    '```',
+    '',
+    'The block holds the spec and nothing else — the app draws it as the chart.',
     '',
     '',
   ].join('\n');

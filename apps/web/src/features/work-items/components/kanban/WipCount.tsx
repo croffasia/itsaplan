@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { type WipState, WIP_FULL_TEXT, wipFullColor } from '../../utils/wipLimit';
 
 // The issue count in a column header. Without a WIP limit it is the bare number
@@ -27,20 +28,24 @@ export function WipCount({
   const partial = filtered && filteredCount !== wip.count;
 
   return (
-    <span
-      className={cn(
-        'tabular-nums',
-        wip.full ? `font-medium ${WIP_FULL_TEXT[wipFullColor(wip)]}` : 'text-muted-foreground',
-      )}
-      title={
-        partial
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span
+          className={cn(
+            'tabular-nums',
+            wip.full ? `font-medium ${WIP_FULL_TEXT[wipFullColor(wip)]}` : 'text-muted-foreground',
+          )}
+        >
+          {partial
+            ? t('filteredCount', { shown: filteredCount, total: wip.count, max: wip.limit })
+            : t('count', { count: wip.count, max: wip.limit })}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>
+        {partial
           ? t('filteredTooltip', { shown: filteredCount, total: wip.count, max: wip.limit })
-          : t('tooltip', { max: wip.limit })
-      }
-    >
-      {partial
-        ? t('filteredCount', { shown: filteredCount, total: wip.count, max: wip.limit })
-        : t('count', { count: wip.count, max: wip.limit })}
-    </span>
+          : t('tooltip', { max: wip.limit })}
+      </TooltipContent>
+    </Tooltip>
   );
 }

@@ -2,6 +2,7 @@ import { ListTree } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type Maps } from '@/utils/project';
 import { subtaskProgress } from '@/utils/subtasks';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSubtasks } from '../../context/useSubtasks';
 
 // How far an issue's subtasks have got, shown next to its title on the row the
@@ -14,12 +15,14 @@ export function SubtaskProgress({ issueId, maps }: { issueId: number; maps: Maps
   if (total === 0) return null;
 
   return (
-    <span
-      className="flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground tabular-nums"
-      title={t('subtasksDone', { done, total })}
-    >
-      <ListTree className="size-3" />
-      {done}/{total}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="flex shrink-0 items-center gap-1 text-[11px] text-muted-foreground tabular-nums">
+          <ListTree className="size-3" />
+          {done}/{total}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>{t('subtasksDone', { done, total })}</TooltipContent>
+    </Tooltip>
   );
 }

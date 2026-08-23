@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { type Issue } from '@/lib/api';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // The "+N more" control for a day cell: a popover listing every issue on that day
 // when there are more than the cell shows inline.
@@ -34,25 +35,28 @@ export function CalendarDayOverflow({
         </div>
         <div className="flex max-h-72 flex-col overflow-y-auto">
           {issues.map((issue) => (
-            <button
-              key={issue.id}
-              type="button"
-              onClick={() => {
-                setOpen(false);
-                onOpen(issue.id);
-              }}
-              className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-xs hover:bg-accent"
-              title={`${issue.identifier} ${issue.title}`}
-            >
-              <span
-                className="inline-block size-1.5 shrink-0 rounded-full"
-                style={{ backgroundColor: dot(issue) }}
-              />
-              <span className="shrink-0 text-muted-foreground tabular-nums">
-                {issue.identifier}
-              </span>
-              <span className="truncate text-foreground">{issue.title}</span>
-            </button>
+            <Tooltip key={issue.id}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpen(false);
+                    onOpen(issue.id);
+                  }}
+                  className="flex w-full items-center gap-1.5 rounded px-2 py-1 text-left text-xs hover:bg-accent"
+                >
+                  <span
+                    className="inline-block size-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: dot(issue) }}
+                  />
+                  <span className="shrink-0 text-muted-foreground tabular-nums">
+                    {issue.identifier}
+                  </span>
+                  <span className="truncate text-foreground">{issue.title}</span>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>{`${issue.identifier} ${issue.title}`}</TooltipContent>
+            </Tooltip>
           ))}
         </div>
       </PopoverContent>

@@ -21,6 +21,7 @@ import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useSelection } from '../../context/useSelection';
 import { boardCollision, issuesToMove } from '../../utils/kanban';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
 import { CardOverlay } from './CardOverlay';
 import { BoardColumn } from './BoardColumn';
@@ -202,15 +203,20 @@ export default function FlatBoard({
                       filtered={filtered}
                     />
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-6 text-muted-foreground"
-                    onClick={() => setHidden(group.key, false)}
-                    title={t('show')}
-                  >
-                    <Eye />
-                  </Button>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-6 text-muted-foreground"
+                        onClick={() => setHidden(group.key, false)}
+                        aria-label={t('show')}
+                      >
+                        <Eye />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('show')}</TooltipContent>
+                  </Tooltip>
                 </div>
               ))}
             </div>

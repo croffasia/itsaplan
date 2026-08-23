@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl';
 import { type IssueGroup } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
 import { TableDropZone } from './TableDropZone';
 
@@ -55,15 +56,20 @@ export function TableSectionHeader({
         <span className="text-muted-foreground">{count}</span>
       </button>
       {canCreateIssue && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6 text-muted-foreground"
-          onClick={onAddIssue}
-          title={t('newIssue')}
-        >
-          <Plus />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6 text-muted-foreground"
+              onClick={onAddIssue}
+              aria-label={t('newIssue')}
+            >
+              <Plus />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('newIssue')}</TooltipContent>
+        </Tooltip>
       )}
     </TableDropZone>
   );

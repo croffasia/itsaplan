@@ -2,6 +2,7 @@ import { CornerDownRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { issueColor, type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useSubtasks } from '../../context/useSubtasks';
 import { effSpan, LINK_ROW_H } from '../../utils/timeline';
 
@@ -80,19 +81,27 @@ export function TimelineSubtaskRows({
               )}
               {/* Thinner than the issue bar, so the sub-rows read as one level
                   down without having to be greyed out. */}
-              <div
-                onClick={() => onOpen(subtask.id)}
-                className="absolute top-1/2 z-10 flex h-3.5 -translate-y-1/2 cursor-pointer items-center rounded-sm px-1.5 text-white opacity-80"
-                style={{
-                  left: rect.left,
-                  width: rect.width,
-                  backgroundColor: issueColor(subtask, maps),
-                  borderLeft: span.inferredStart ? '2px dashed rgba(255,255,255,0.75)' : undefined,
-                }}
-                title={span.inferredStart ? t('inferredStart') : subtask.title}
-              >
-                <span className="truncate text-[10px] leading-none">{subtask.title}</span>
-              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div
+                    onClick={() => onOpen(subtask.id)}
+                    className="absolute top-1/2 z-10 flex h-3.5 -translate-y-1/2 cursor-pointer items-center rounded-sm px-1.5 text-white opacity-80"
+                    style={{
+                      left: rect.left,
+                      width: rect.width,
+                      backgroundColor: issueColor(subtask, maps),
+                      borderLeft: span.inferredStart
+                        ? '2px dashed rgba(255,255,255,0.75)'
+                        : undefined,
+                    }}
+                  >
+                    <span className="truncate text-[10px] leading-none">{subtask.title}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {span.inferredStart ? t('inferredStart') : subtask.title}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </div>
         );

@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { useTranslations } from 'next-intl';
 import { DEFAULT_COLOR, type IssueGroup } from '@/utils/project';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
 import { GROUP_H } from '../../utils/timeline';
 
@@ -44,25 +45,30 @@ export function TimelineGroupRow({
       className={cn('flex border-b bg-muted/40', isDrop && 'bg-accent/60')}
       style={{ height: GROUP_H }}
     >
-      <button
-        type="button"
-        title={collapsed ? t('expandGroup') : t('collapseGroup')}
-        onClick={onToggle}
-        className={cn(
-          'sticky left-0 z-10 flex shrink-0 items-center gap-2 overflow-hidden border-r px-3 text-left text-sm font-medium',
-          isDrop ? 'bg-accent/60' : 'bg-muted/40',
-        )}
-        style={{ width: labelW }}
-      >
-        {collapsed ? (
-          <ChevronRight className="size-3.5 shrink-0" />
-        ) : (
-          <ChevronDown className="size-3.5 shrink-0" />
-        )}
-        <GroupDot group={group} />
-        <span className="min-w-0 flex-1 truncate">{group.name}</span>
-        <span className="shrink-0 text-muted-foreground">{count}</span>
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label={collapsed ? t('expandGroup') : t('collapseGroup')}
+            onClick={onToggle}
+            className={cn(
+              'sticky left-0 z-10 flex shrink-0 items-center gap-2 overflow-hidden border-r px-3 text-left text-sm font-medium',
+              isDrop ? 'bg-accent/60' : 'bg-muted/40',
+            )}
+            style={{ width: labelW }}
+          >
+            {collapsed ? (
+              <ChevronRight className="size-3.5 shrink-0" />
+            ) : (
+              <ChevronDown className="size-3.5 shrink-0" />
+            )}
+            <GroupDot group={group} />
+            <span className="min-w-0 flex-1 truncate">{group.name}</span>
+            <span className="shrink-0 text-muted-foreground">{count}</span>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{collapsed ? t('expandGroup') : t('collapseGroup')}</TooltipContent>
+      </Tooltip>
       <div className="relative" style={{ width: trackWidth }}>
         {collapsed && aggregateRect && (
           <div

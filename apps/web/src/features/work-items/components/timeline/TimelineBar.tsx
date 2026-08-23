@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 import { type BoardIssue, type Issue } from '@/lib/api';
 import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
 import { type Span } from '../../utils/timeline';
 
@@ -38,7 +39,7 @@ export function TimelineBar({
   let cursor = 'cursor-ew-resize';
   if (readOnly) cursor = 'cursor-pointer';
   else if (active) cursor = 'cursor-grabbing';
-  return (
+  const bar = (
     <div
       onPointerDown={readOnly ? undefined : (e) => onBeginDrag(e, issue, 'move')}
       onClick={readOnly ? () => onOpen(issue.id) : undefined}
@@ -58,7 +59,6 @@ export function TimelineBar({
         opacity: span.inferredStart ? 0.8 : 1,
         borderLeft: span.inferredStart ? '2px dashed rgba(255,255,255,0.75)' : undefined,
       }}
-      title={span.inferredStart ? t('inferredStartDraggable') : undefined}
     >
       {!readOnly && (
         <span
@@ -76,5 +76,12 @@ export function TimelineBar({
         />
       )}
     </div>
+  );
+  if (!span.inferredStart) return bar;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{bar}</TooltipTrigger>
+      <TooltipContent>{t('inferredStartDraggable')}</TooltipContent>
+    </Tooltip>
   );
 }

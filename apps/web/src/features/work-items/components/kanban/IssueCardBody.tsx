@@ -101,14 +101,14 @@ export function IssueCardBody({
             <DateBadge
               icon={<CalendarArrowUp className="size-2.5" />}
               date={issue.startDate}
-              title={t('columns.startDate')}
+              label={t('columns.startDate')}
             />
           )}
           {has('dueDate') && issue.dueDate && (
             <DateBadge
               icon={<CalendarClock className="size-2.5" />}
               date={issue.dueDate}
-              title={t('columns.dueDate')}
+              label={t('columns.dueDate')}
               overdue={isDueOverdue(issue.dueDate, column?.stateType)}
             />
           )}

@@ -48,26 +48,34 @@ export function LabelBadge({ color, name }: { color: string; name: string }) {
 
 // A date pill: a calendar icon (passed in, since start vs due use different
 // glyphs) plus the short date. `overdue` renders it red (used for a past due date).
+// `label` names which date it is, in a tooltip; the table column heading already
+// says it, so its cells pass none.
 export function DateBadge({
   icon,
   date,
-  title,
+  label,
   overdue,
 }: {
   icon: ReactNode;
   date: string;
-  title?: string;
+  label?: string;
   overdue?: boolean;
 }) {
-  return (
+  const badge = (
     <Badge
       variant="outline"
-      title={title}
       className={cn(PILL, overdue && 'border-destructive/40 text-destructive')}
     >
       {icon}
       {formatShortDate(date)}
     </Badge>
+  );
+  if (!label) return badge;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{badge}</TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   );
 }
 

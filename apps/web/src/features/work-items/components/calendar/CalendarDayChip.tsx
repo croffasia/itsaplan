@@ -3,6 +3,7 @@ import { type ProjectDetail, type Issue } from '@/lib/api';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 
 // A draggable chip inside a day cell. A click (no drag) opens the issue; a drag
@@ -27,27 +28,31 @@ export function CalendarDayChip({
     disabled: useIsPhone() || !can('work_items', 'edit'),
   });
   return (
-    <IssueContextMenu project={project} issue={issue}>
-      <div
-        ref={setNodeRef}
-        {...attributes}
-        {...listeners}
-        onClick={(e) => {
-          e.stopPropagation();
-          onOpen(issue.id);
-        }}
-        className={cn(
-          'flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-accent sm:touch-none',
-          isDragging && 'opacity-40',
-        )}
-        title={`${issue.identifier} ${issue.title}`}
-      >
-        <span
-          className="inline-block size-1.5 shrink-0 rounded-full"
-          style={{ backgroundColor: color }}
-        />
-        <span className="truncate text-foreground">{issue.title}</span>
-      </div>
-    </IssueContextMenu>
+    <Tooltip>
+      <IssueContextMenu project={project} issue={issue}>
+        <TooltipTrigger asChild>
+          <div
+            ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpen(issue.id);
+            }}
+            className={cn(
+              'flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-accent sm:touch-none',
+              isDragging && 'opacity-40',
+            )}
+          >
+            <span
+              className="inline-block size-1.5 shrink-0 rounded-full"
+              style={{ backgroundColor: color }}
+            />
+            <span className="truncate text-foreground">{issue.title}</span>
+          </div>
+        </TooltipTrigger>
+      </IssueContextMenu>
+      <TooltipContent>{`${issue.identifier} ${issue.title}`}</TooltipContent>
+    </Tooltip>
   );
 }

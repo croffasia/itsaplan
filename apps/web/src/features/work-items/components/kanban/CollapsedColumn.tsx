@@ -4,6 +4,7 @@ import { type IssueGroup } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
 import { PINNED_COLUMN } from '../../utils/kanban';
 import { type WipState, WIP_FULL_TEXT, wipFullColor } from '../../utils/wipLimit';
@@ -43,34 +44,49 @@ export function CollapsedColumn({
         pinned && PINNED_COLUMN,
       )}
     >
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-6 text-muted-foreground"
-        onClick={onExpand}
-        title={t('expand')}
-      >
-        <ChevronsLeftRight />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="hidden size-6 text-muted-foreground md:inline-flex"
-        onClick={onTogglePin}
-        title={pinned ? t('unpin') : t('pin')}
-      >
-        {pinned ? <PinOff /> : <Pin />}
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6 text-muted-foreground"
+            onClick={onExpand}
+            aria-label={t('expand')}
+          >
+            <ChevronsLeftRight />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{t('expand')}</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden size-6 text-muted-foreground md:inline-flex"
+            onClick={onTogglePin}
+            aria-label={pinned ? t('unpin') : t('pin')}
+          >
+            {pinned ? <PinOff /> : <Pin />}
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{pinned ? t('unpin') : t('pin')}</TooltipContent>
+      </Tooltip>
       {canCreateIssue && (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-6 text-muted-foreground"
-          onClick={onAddIssue}
-          title={t('newIssue')}
-        >
-          <Plus />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6 text-muted-foreground"
+              onClick={onAddIssue}
+              aria-label={t('newIssue')}
+            >
+              <Plus />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('newIssue')}</TooltipContent>
+        </Tooltip>
       )}
       <GroupDot group={group} />
       <div className="flex flex-1 items-start gap-2 text-sm font-medium [writing-mode:vertical-rl]">

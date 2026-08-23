@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
 import { BoardCard } from './BoardCard';
 import { CardDropSlot } from './CardDropSlot';
@@ -130,43 +131,63 @@ export function BoardColumn({
         </div>
         <div className="flex items-center gap-1">
           {!readOnly && <SelectAllToggle ids={issues.map((i) => i.id)} />}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden size-6 text-muted-foreground md:inline-flex"
-            onClick={onTogglePin}
-            title={pinned ? t('unpin') : t('pin')}
-          >
-            {pinned ? <PinOff /> : <Pin />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-6 text-muted-foreground"
-            onClick={onCollapse}
-            title={t('collapse')}
-          >
-            <ChevronsRightLeft />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-6 text-muted-foreground"
-            onClick={onHide}
-            title={t('hide')}
-          >
-            <EyeOff />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden size-6 text-muted-foreground md:inline-flex"
+                onClick={onTogglePin}
+                aria-label={pinned ? t('unpin') : t('pin')}
+              >
+                {pinned ? <PinOff /> : <Pin />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{pinned ? t('unpin') : t('pin')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-6 text-muted-foreground"
+                onClick={onCollapse}
+                aria-label={t('collapse')}
+              >
+                <ChevronsRightLeft />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('collapse')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-6 text-muted-foreground"
+                onClick={onHide}
+                aria-label={t('hide')}
+              >
+                <EyeOff />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('hide')}</TooltipContent>
+          </Tooltip>
           {canCreateIssue && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6 text-muted-foreground"
-              onClick={onAddIssue}
-              title={t('newIssue')}
-            >
-              <Plus />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 text-muted-foreground"
+                  onClick={onAddIssue}
+                  aria-label={t('newIssue')}
+                >
+                  <Plus />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('newIssue')}</TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>
@@ -226,15 +247,20 @@ export function BoardColumn({
             <DropLine style={{ top: cardsHeight + 3 }} />
           )}
           {canCreateIssue && (
-            <Button
-              variant="outline"
-              className="invisible absolute left-0 w-full text-muted-foreground opacity-0 group-focus-within/column:visible group-focus-within/column:opacity-100 group-hover/column:visible group-hover/column:opacity-100"
-              style={{ top: cardsHeight + ADD_BUTTON_GAP }}
-              onClick={onAddIssue}
-              title={t('newIssue')}
-            >
-              <Plus />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="invisible absolute left-0 w-full text-muted-foreground opacity-0 group-focus-within/column:visible group-focus-within/column:opacity-100 group-hover/column:visible group-hover/column:opacity-100"
+                  style={{ top: cardsHeight + ADD_BUTTON_GAP }}
+                  onClick={onAddIssue}
+                  aria-label={t('newIssue')}
+                >
+                  <Plus />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('newIssue')}</TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>

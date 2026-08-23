@@ -13,6 +13,7 @@ import { cn } from '@/lib/utils';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
 import { useSelection } from '../../context/useSelection';
@@ -234,15 +235,20 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
 
           <div className="mx-1 h-5 w-px bg-border" />
 
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground"
-            onClick={selection.clear}
-            title={t('clearSelection')}
-          >
-            <X />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-muted-foreground"
+                onClick={selection.clear}
+                aria-label={t('clearSelection')}
+              >
+                <X />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('clearSelection')}</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

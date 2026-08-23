@@ -43,7 +43,7 @@ import {
   projectParams,
   userParams,
 } from './model';
-import { getInstanceBotSettings, setInstanceBotSettings } from '../../telegram/store';
+import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
 import {
   getStorageSettings,
   setStorageSettings,

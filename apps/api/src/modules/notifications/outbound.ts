@@ -3,7 +3,7 @@ import { eq, inArray } from 'drizzle-orm';
 import { getProjectEmailConfig } from '@repo/auth';
 import { emailSource, readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
-import { getTelegramChatIds, hasUsableInstanceBot } from '../../telegram/store';
+import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
 import { escapeHtml } from '#shared/lib';
 import type { NotificationType, NewNotificationRow } from './service';
 

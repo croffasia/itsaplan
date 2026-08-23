@@ -1,16 +1,17 @@
 import { Elysia, t } from 'elysia';
-import { authContext } from '../shared/auth-context';
-import { requireUser } from '../shared/access';
-import { HttpError } from '../shared/lib';
-import { errors } from '../shared/responses';
-import { noContent } from '../shared/http';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
+import { HttpError } from '#shared/lib';
+import { errors } from '#shared/responses';
+import { noContent } from '#shared/http';
+import { TelegramAccountResponse, TelegramLinkStartResponse } from './model';
 import {
   getInstanceBotConfig,
   getTelegramLink,
   isInstanceBotUsable,
   startTelegramLink,
   unlinkTelegram,
-} from './store';
+} from './service';
 
 // The session user's own Telegram account link. Linking runs through the instance
 // bot: this mints a one-time code and returns the deep link that opens the bot with
@@ -19,22 +20,6 @@ import {
 //
 // `botUsername` is null when no instance bot is configured, which is how the UI
 // knows not to offer Telegram at all.
-
-const TelegramAccountResponse = t.Object({
-  botUsername: t.Nullable(t.String()),
-  link: t.Nullable(
-    t.Object({
-      username: t.Nullable(t.String()),
-      firstName: t.Nullable(t.String()),
-      linkedAt: t.String(),
-    }),
-  ),
-});
-
-const TelegramLinkStartResponse = t.Object({
-  url: t.String(),
-  expiresAt: t.String(),
-});
 
 export const telegramRoutes = new Elysia({ name: 'telegram', detail: { tags: ['Telegram'] } })
   .use(authContext)

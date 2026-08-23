@@ -1,5 +1,6 @@
-import { Elysia, t } from 'elysia';
-import { confirmTelegramLink, getInstanceBotConfig, isInstanceBotUsable } from './store';
+import { Elysia } from 'elysia';
+import { confirmLinkBody } from './model';
+import { confirmTelegramLink, getInstanceBotConfig, isInstanceBotUsable } from './service';
 
 // Internal endpoints the bot service calls. The bot holds no database connection and
 // no encryption key: it asks for its token here and posts back the `/start` codes it
@@ -9,13 +10,6 @@ import { confirmTelegramLink, getInstanceBotConfig, isInstanceBotUsable } from '
 //
 // The config endpoint returns the bot token in plaintext. It is reachable only with
 // that token, on the internal network, and the bot cannot work without it.
-
-const linkBody = t.Object({
-  code: t.String({ minLength: 1, maxLength: 64 }),
-  chatId: t.String({ minLength: 1, maxLength: 128 }),
-  username: t.Nullable(t.String()),
-  firstName: t.Nullable(t.String()),
-});
 
 function authorized(headers: Record<string, string | undefined>): boolean {
   const expected = process.env.WORKER_INTERNAL_TOKEN;
@@ -59,7 +53,7 @@ export const internalTelegramRoutes = new Elysia({
       return confirmTelegramLink(body);
     },
     {
-      body: linkBody,
+      body: confirmLinkBody,
       detail: {
         summary: 'Confirm a Telegram link code',
         description:

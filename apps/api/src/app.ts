@@ -14,7 +14,7 @@ import { mountMcp } from './mcp/mount';
 import { setMcpApp } from './mcp/app-ref';
 import { internalAgentRunRoutes } from './modules/agents/core/internal-routes';
 import { internalNotificationRoutes } from './modules/notifications/internal-routes';
-import { internalTelegramRoutes } from './telegram/internal-routes';
+import { internalTelegramRoutes } from './modules/telegram/internal-routes';
 import { gitWebhookRoutes } from './modules/git/webhook';
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and

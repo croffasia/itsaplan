@@ -36,7 +36,7 @@ import { notificationRoutes } from './modules/notifications';
 import { notificationSettingsRoutes } from './modules/notification-settings';
 import { notificationPreferenceRoutes } from './modules/notification-preferences';
 import { userPreferenceRoutes } from './modules/user-preferences';
-import { telegramRoutes } from './telegram/routes';
+import { telegramRoutes } from './modules/telegram';
 import { syncRoutes } from './modules/sync';
 
 // The planner API: projects and their columns, issue types, labels, AI agents,

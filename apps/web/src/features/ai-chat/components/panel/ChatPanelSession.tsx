@@ -4,7 +4,8 @@ import { useCallback } from 'react';
 import type { AiAgent } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { AiChatThread } from '../shared/AiChatThread';
-import type { ChatSession } from '../../hooks/useChatSessions';
+import { ChatPanelAgentSwitcher } from './ChatPanelAgentSwitcher';
+import type { ChatSession, ChatSessionState } from '../../hooks/useChatSessions';
 
 // One open session of the chat panel. Every session is mounted, and the ones that are
 // not shown are hidden rather than dropped: that is what keeps their transcript and
@@ -14,26 +15,32 @@ import type { ChatSession } from '../../hooks/useChatSessions';
 // fresh conversation with it.
 export function ChatPanelSession({
   projectKey,
+  agents,
   agent,
   session,
   active,
+  providerLabel,
   onThreadCreated,
-  onRunningChange,
+  onStateChange,
+  onSelectAgent,
 }: {
   projectKey: string;
+  agents: AiAgent[];
   agent: AiAgent;
   session: ChatSession;
   active: boolean;
+  providerLabel: (key: string) => string;
   onThreadCreated: (sessionId: string, threadId: string) => void;
-  onRunningChange: (sessionId: string, running: boolean) => void;
+  onStateChange: (sessionId: string, state: ChatSessionState) => void;
+  onSelectAgent: (session: ChatSession, agentId: number) => void;
 }) {
   const handleThreadCreated = useCallback(
     (threadId: string) => onThreadCreated(session.id, threadId),
     [session.id, onThreadCreated],
   );
-  const handleRunningChange = useCallback(
-    (running: boolean) => onRunningChange(session.id, running),
-    [session.id, onRunningChange],
+  const handleStateChange = useCallback(
+    (state: ChatSessionState) => onStateChange(session.id, state),
+    [session.id, onStateChange],
   );
 
   return (
@@ -44,7 +51,16 @@ export function ChatPanelSession({
         agent={agent}
         threadId={session.threadId}
         onThreadCreated={handleThreadCreated}
-        onRunningChange={handleRunningChange}
+        onStateChange={handleStateChange}
+        composerStart={
+          <ChatPanelAgentSwitcher
+            agents={agents}
+            selected={agent}
+            providerLabel={providerLabel}
+            disabled={session.running}
+            onSelect={(agentId) => onSelectAgent(session, agentId)}
+          />
+        }
       />
     </div>
   );

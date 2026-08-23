@@ -3,16 +3,13 @@
 import { Columns2, PanelRight, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Direction } from 'radix-ui';
-import { useAiAgentsQuery } from '@/services/aiAgents.service';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { usePersistedWidth } from '@/hooks/usePersistedWidth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import ResizeGrip from '@/components/common/ResizeGrip';
-import { AiChatThreadSkeleton } from '../shared/AiChatThreadSkeleton';
-import { ChatPanelSession } from './ChatPanelSession';
+import { ChatPanelBody } from './ChatPanelBody';
 import { chatPanelWidthKey, type ChatPanelMode } from '../../hooks/useChatPanel';
-import { useChatSessions } from '../../hooks/useChatSessions';
 
 const DEFAULT_WIDTH = 400;
 const MIN_WIDTH = 320;
@@ -43,12 +40,6 @@ export function ChatPanel({
   const tCommon = useTranslations('common');
   const direction = Direction.useDirection();
   const isMobile = useIsMobile();
-  const agentsQuery = useAiAgentsQuery(projectKey);
-  const agents = agentsQuery.data ?? [];
-  const { sessions, active, setThread, setRunning } = useChatSessions(
-    projectKey,
-    agents[0]?.id ?? null,
-  );
   const { width, setWidth } = usePersistedWidth(
     chatPanelWidthKey(projectKey),
     DEFAULT_WIDTH,
@@ -106,31 +97,7 @@ export function ChatPanel({
         </Button>
       </div>
 
-      <div className="relative min-h-0 flex-1">
-        {agentsQuery.isLoading ? (
-          <AiChatThreadSkeleton />
-        ) : agents.length === 0 ? (
-          <div className="flex h-full items-center justify-center px-6 text-center text-sm text-muted-foreground">
-            {t('noAgentsYet')}
-          </div>
-        ) : (
-          sessions.map((session) => {
-            const agent = agents.find((candidate) => candidate.id === session.agentId);
-            if (!agent) return null;
-            return (
-              <ChatPanelSession
-                key={session.id}
-                projectKey={projectKey}
-                agent={agent}
-                session={session}
-                active={session.id === active?.id}
-                onThreadCreated={setThread}
-                onRunningChange={setRunning}
-              />
-            );
-          })
-        )}
-      </div>
+      <ChatPanelBody projectKey={projectKey} />
     </aside>
   );
 }

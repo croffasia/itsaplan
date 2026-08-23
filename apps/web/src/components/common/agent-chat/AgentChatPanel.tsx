@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { ArrowUp, Bot, RotateCw, Square } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
 import type { ChatMessage, ChatStatus, PendingMessage } from '@/hooks/useAgentChat';
@@ -39,6 +39,7 @@ export function AgentChatPanel({
   onStop,
   onRemovePending,
   onReset,
+  composerStart,
   hasEarlierMessages,
   isLoadingEarlier,
   onLoadEarlier,
@@ -52,6 +53,9 @@ export function AgentChatPanel({
   onStop: () => void;
   onRemovePending: (id: string) => void;
   onReset?: () => void;
+  // Rendered at the start of the composer's button row, before the panel's own
+  // buttons.
+  composerStart?: ReactNode;
   hasEarlierMessages?: boolean;
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
@@ -135,6 +139,7 @@ export function AgentChatPanel({
                 rows={1}
               />
               <InputGroupAddon align="block-end">
+                {composerStart}
                 {onReset && (
                   <InputGroupButton
                     type="button"

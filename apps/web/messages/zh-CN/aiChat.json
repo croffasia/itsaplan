@@ -11,6 +11,7 @@
   "agentsAvailable": "{count, plural, other {# 个代理可用}}",
   "chats": "对话",
   "newChat": "新建对话",
+  "closeTab": "关闭标签页",
   "memoryOff": "记忆已关闭",
   "noAgents": "暂无代理",
   "addAgent": "添加代理",

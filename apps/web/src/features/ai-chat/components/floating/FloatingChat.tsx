@@ -7,10 +7,10 @@ import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { AiChatHistory } from '../shared/AiChatHistory';
 import { AiChatThread } from '../shared/AiChatThread';
 import { AiChatThreadSkeleton } from '../shared/AiChatThreadSkeleton';
 import { FloatingChatHeader } from './FloatingChatHeader';
-import { FloatingChatHistory } from './FloatingChatHistory';
 import { useAiChatSelection } from '../../hooks/useAiChatSelection';
 
 // The floating AI chat: a launcher button anchored to the corner and a chat window
@@ -103,7 +103,7 @@ export function FloatingChat({
               is kept when the list is opened and closed without picking a thread. */}
           {view === 'history' && selected && (
             <div className="absolute inset-0 bg-background">
-              <FloatingChatHistory
+              <AiChatHistory
                 projectKey={project.project.key}
                 agentId={selected.id}
                 selectedThreadId={selectedThreadId}

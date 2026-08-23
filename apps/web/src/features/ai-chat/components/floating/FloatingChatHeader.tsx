@@ -1,21 +1,13 @@
 'use client';
 
-import { Bot, Check, ChevronDown, History, MessageSquarePlus } from 'lucide-react';
+import { Bot, ChevronDown, History, MessageSquarePlus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
+import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AiChatAgentMenu } from '../shared/AiChatAgentMenu';
 import { AiChatSessionBadge } from '../shared/AiChatSessionBadge';
 import { useThreadSessionId } from '../../hooks/useThreadSessionId';
-import { agentModelLabel } from '../../utils/agentModelLabel';
 
 // The top bar of the floating chat: the agent picker plus the session, history, new-chat
 // and minimize actions. `selected` is null when the project has no agents, which disables
@@ -66,30 +58,12 @@ export function FloatingChatHeader({
             {selected && <ChevronDown className="size-4 shrink-0 text-muted-foreground" />}
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-64">
-          <DropdownMenuLabel>{t('agents')}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {agents.map((agent) => (
-            <DropdownMenuItem
-              key={agent.id}
-              onSelect={() => onSelectAgent(agent.id)}
-              className="gap-2"
-            >
-              <Bot className="size-4 shrink-0" />
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm">{agent.name}</div>
-                <div className="truncate text-xs text-muted-foreground">
-                  {agent.kind === 'external' ? (
-                    <AgentRunnerStatus agent={agent} compact />
-                  ) : (
-                    agentModelLabel(agent, providerLabel, t('noModel'))
-                  )}
-                </div>
-              </div>
-              {agent.id === selected?.id && <Check className="size-4 shrink-0" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
+        <AiChatAgentMenu
+          agents={agents}
+          selectedId={selected?.id ?? null}
+          providerLabel={providerLabel}
+          onSelect={onSelectAgent}
+        />
       </DropdownMenu>
 
       {sessionId && <AiChatSessionBadge compact sessionId={sessionId} />}

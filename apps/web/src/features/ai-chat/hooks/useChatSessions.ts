@@ -3,44 +3,122 @@
 import { useCallback, useEffect, useState } from 'react';
 
 // One open conversation in the chat panel. `threadId` is null until the agent answers
-// the first message. `running` is what the session's transcript reports back, so the
-// panel knows a reply is being produced in a session it is not showing.
+// the first message, and stays null for an agent that keeps no memory. `running` and
+// `hasMessages` are what the session's transcript reports back, so the panel knows what
+// is going on in a session it is not showing.
 export type ChatSession = {
   id: string;
   agentId: number;
   threadId: string | null;
   running: boolean;
+  hasMessages: boolean;
 };
+
+export type ChatSessionState = Pick<ChatSession, 'running' | 'hasMessages'>;
+
+const storageKey = (projectKey: string) => `aiChat:panel:tabs:${projectKey}`;
 
 const newSession = (agentId: number, threadId: string | null = null): ChatSession => ({
   id: crypto.randomUUID(),
   agentId,
   threadId,
   running: false,
+  hasMessages: false,
 });
+
+type StoredTabs = {
+  sessions: { id: string; agentId: number; threadId: string }[];
+  activeId: string | null;
+};
+
+function isStored(value: unknown): value is StoredTabs {
+  if (typeof value !== 'object' || value === null) return false;
+  const tabs = value as StoredTabs;
+  return (
+    Array.isArray(tabs.sessions) &&
+    tabs.sessions.every(
+      (session) =>
+        typeof session.id === 'string' &&
+        typeof session.agentId === 'number' &&
+        typeof session.threadId === 'string',
+    ) &&
+    (typeof tabs.activeId === 'string' || tabs.activeId === null)
+  );
+}
+
+function read(projectKey: string): { sessions: ChatSession[]; activeId: string | null } {
+  try {
+    const raw = localStorage.getItem(storageKey(projectKey));
+    const parsed: unknown = raw ? JSON.parse(raw) : null;
+    if (!isStored(parsed)) return { sessions: [], activeId: null };
+    return {
+      sessions: parsed.sessions.map((session) => ({
+        ...session,
+        running: false,
+        hasMessages: true,
+      })),
+      activeId: parsed.activeId,
+    };
+  } catch {
+    return { sessions: [], activeId: null };
+  }
+}
+
+function write(projectKey: string, sessions: ChatSession[], activeId: string | null) {
+  // A session with no thread is a chat that has not started: there is nothing to
+  // restore it from, so it is not kept.
+  const stored = sessions.flatMap((session) =>
+    session.threadId
+      ? [{ id: session.id, agentId: session.agentId, threadId: session.threadId }]
+      : [],
+  );
+  try {
+    localStorage.setItem(storageKey(projectKey), JSON.stringify({ sessions: stored, activeId }));
+  } catch {
+    // Storage unavailable (private mode / quota); the tabs still work in this tab.
+  }
+}
 
 // The sessions the chat panel holds open, for one project. Every session stays mounted
 // while it is open, so a session that is not shown keeps its transcript and its composer
 // and continues to receive its reply.
 //
 // The panel always holds at least one session: closing the last one leaves a fresh chat
-// in its place.
+// in its place. The tabs and the active one are kept on the device, so a reload opens
+// the same conversations.
 export function useChatSessions(projectKey: string | null, defaultAgentId: number | null) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  // The agent a new tab starts with: the one the user picked last.
+  const [lastAgentId, setLastAgentId] = useState<number | null>(null);
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
 
-  // The panel outlives the route, so a move to a different project starts over.
+  // The panel outlives the route, so a move to a different project loads that
+  // project's tabs. Storage is read here rather than in the state initializer: this
+  // component also renders on the server, where there is none.
   useEffect(() => {
-    setSessions([]);
-    setActiveId(null);
+    if (!projectKey) return;
+    const stored = read(projectKey);
+    setSessions(stored.sessions);
+    setActiveId(stored.activeId);
+    setLastAgentId(null);
+    setLoadedKey(projectKey);
   }, [projectKey]);
 
+  // Only once this project's tabs have been read: a fresh chat made before that would
+  // take the place of the kept ones.
   useEffect(() => {
-    if (defaultAgentId == null || sessions.length > 0) return;
+    if (defaultAgentId == null || loadedKey !== projectKey || sessions.length > 0) return;
     const first = newSession(defaultAgentId);
     setSessions([first]);
     setActiveId(first.id);
-  }, [defaultAgentId, sessions.length]);
+  }, [defaultAgentId, projectKey, loadedKey, sessions.length]);
+
+  // Only once this project's tabs have been read: an empty state on the way there
+  // would overwrite them.
+  useEffect(() => {
+    if (projectKey && loadedKey === projectKey) write(projectKey, sessions, activeId);
+  }, [projectKey, loadedKey, sessions, activeId]);
 
   const update = useCallback((id: string, change: Partial<ChatSession>) => {
     setSessions((prev) =>
@@ -48,22 +126,25 @@ export function useChatSessions(projectKey: string | null, defaultAgentId: numbe
     );
   }, []);
 
-  // Opens a thread as a session: a thread that is already open is brought forward
-  // instead of opening a second session for it.
-  const openSession = useCallback(
-    (agentId: number, threadId: string | null = null) => {
-      const existing = threadId
-        ? sessions.find((session) => session.threadId === threadId)
-        : undefined;
+  const openTab = useCallback((agentId: number, threadId: string | null = null) => {
+    const session = newSession(agentId, threadId);
+    setSessions((prev) => [...prev, session]);
+    setActiveId(session.id);
+    setLastAgentId(agentId);
+  }, []);
+
+  // Opens a past conversation: one that is already open is brought forward instead of
+  // opening a second tab for it.
+  const openThread = useCallback(
+    (agentId: number, threadId: string) => {
+      const existing = sessions.find((session) => session.threadId === threadId);
       if (existing) {
         setActiveId(existing.id);
         return;
       }
-      const session = newSession(agentId, threadId);
-      setSessions((prev) => [...prev, session]);
-      setActiveId(session.id);
+      openTab(agentId, threadId);
     },
-    [sessions],
+    [sessions, openTab],
   );
 
   // The session next to the closed one takes over. Closing the last session leaves an
@@ -91,16 +172,31 @@ export function useChatSessions(projectKey: string | null, defaultAgentId: numbe
     sessions,
     active,
     setActive: setActiveId,
-    openSession,
+    newTab: useCallback(() => {
+      const agentId = lastAgentId ?? defaultAgentId;
+      if (agentId != null) openTab(agentId);
+    }, [openTab, lastAgentId, defaultAgentId]),
+    openTab,
+    openThread,
     closeSession,
     setThread: useCallback((id: string, threadId: string) => update(id, { threadId }), [update]),
-    setAgent: useCallback((id: string, agentId: number) => update(id, { agentId }), [update]),
+    setAgent: useCallback(
+      (id: string, agentId: number) => {
+        setLastAgentId(agentId);
+        update(id, { agentId });
+      },
+      [update],
+    ),
     // A session reports its state on every render of its transcript. Keeping the array
     // as it is when nothing changed is what stops that from re-rendering the panel.
-    setRunning: useCallback((id: string, running: boolean) => {
+    setState: useCallback((id: string, state: ChatSessionState) => {
       setSessions((prev) =>
-        prev.some((session) => session.id === id && session.running !== running)
-          ? prev.map((session) => (session.id === id ? { ...session, running } : session))
+        prev.some(
+          (session) =>
+            session.id === id &&
+            (session.running !== state.running || session.hasMessages !== state.hasMessages),
+        )
+          ? prev.map((session) => (session.id === id ? { ...session, ...state } : session))
           : prev,
       );
     }, []),

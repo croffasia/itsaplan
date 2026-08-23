@@ -11,6 +11,7 @@
   "agentsAvailable": "{count, plural, zero {مفيش وكلاء متاحين} one {وكيل واحد متاح} two {وكيلين متاحين} few {# وكلاء متاحين} many {# وكيل متاح} other {# وكيل متاح}}",
   "chats": "المحادثات",
   "newChat": "محادثة جديدة",
+  "closeTab": "إغلاق علامة التبويب",
   "memoryOff": "الذاكرة معطّلة",
   "noAgents": "لا يوجد وكلاء",
   "addAgent": "إضافة وكيل",

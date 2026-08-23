@@ -3,10 +3,11 @@
 import { ChevronLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { AiChatThreadList } from '../shared/AiChatThreadList';
+import { AiChatThreadList } from './AiChatThreadList';
 
-// The history layer of the floating chat, shown over the conversation.
-export function FloatingChatHistory({
+// The past conversations with one agent, shown over the conversation by the host. The
+// conversation below stays mounted, so a reply that runs while the list is open goes on.
+export function AiChatHistory({
   projectKey,
   agentId,
   selectedThreadId,

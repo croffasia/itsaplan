@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAiAgentsQuery } from '@/services/aiAgents.service';
-import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { qk } from '@/services/queryKeys';
+import { useProviderLabel } from './useProviderLabel';
 
 // The agents available for chat and which conversation is shown, shared by the AI Chat
 // page and the floating chat. Both kinds appear: an internal agent answers in the API
@@ -17,8 +17,7 @@ export function useAiChatSelection(projectKey: string | null) {
   const qc = useQueryClient();
   const agentsQuery = useAiAgentsQuery(projectKey);
   const agents = agentsQuery.data ?? [];
-  const catalog = useIntegrationCatalogQuery(projectKey).data ?? [];
-  const providerLabel = (key: string) => catalog.find((entry) => entry.key === key)?.label ?? key;
+  const providerLabel = useProviderLabel(projectKey);
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const selected = agents.find((agent) => agent.id === selectedId) ?? agents[0] ?? null;

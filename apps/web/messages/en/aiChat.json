@@ -11,6 +11,7 @@
   "agentsAvailable": "{count, plural, one {# agent} other {# agents}} available",
   "chats": "Chats",
   "newChat": "New chat",
+  "closeTab": "Close the tab",
   "memoryOff": "Memory off",
   "noAgents": "No agents",
   "addAgent": "Add an agent",

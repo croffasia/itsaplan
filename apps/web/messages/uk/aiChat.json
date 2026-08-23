@@ -11,6 +11,7 @@
   "agentsAvailable": "Доступно: {count, plural, one {# агент} few {# агенти} many {# агентів} other {# агента}}",
   "chats": "Чати",
   "newChat": "Новий чат",
+  "closeTab": "Закрити вкладку",
   "memoryOff": "Памʼять вимкнена",
   "noAgents": "Немає агентів",
   "addAgent": "Додайте агента",

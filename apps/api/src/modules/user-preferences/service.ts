@@ -12,7 +12,7 @@ export const DEFAULT_TIMEZONE = 'UTC';
 
 export const THEMES = ['light', 'dark', 'system'] as const;
 export const ISSUE_OPEN_MODES = ['panel', 'page'] as const;
-export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat'] as const;
+export const START_PAGES = ['inbox', 'dashboard', 'work-items', 'initiatives'] as const;
 export const ISSUE_STATS_VIEWS = ['compact', 'timeline'] as const;
 export const ISSUE_ACTIVITY_VIEWS = ['flat', 'grouped'] as const;
 

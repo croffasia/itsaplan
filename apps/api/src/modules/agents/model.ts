@@ -60,3 +60,8 @@ export type ChatMessagePage = {
   items: ChatMessageDTO[];
   nextPage: number | null;
 };
+
+export type ChatThreadPage = {
+  items: ChatThreadSummary[];
+  nextPage: number | null;
+};

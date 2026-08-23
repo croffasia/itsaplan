@@ -1,10 +1,16 @@
 // An agent is also an assignee, so writes here invalidate the project detail as
 // well, keeping the assignee picker in sync.
 
-import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type InfiniteData,
+} from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { api } from '@/lib/api';
+import { api, type AiChatThreadPage } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 import { useInvalidateProject } from '@/services/projects.service';
 
@@ -34,14 +40,23 @@ export function useAgentRuns(projectKey: string | null, agentId: number | null) 
   });
 }
 
-// The caller's chat threads with one agent (the AI Chat history rail), newest
-// first. Only fetched when an agent is selected.
+// The caller's chat threads with one agent (the chat history), newest first and a
+// page at a time. Only fetched when an agent is selected.
 export function useAgentThreadsQuery(projectKey: string | null, agentId: number | null) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: qk.agentThreads(projectKey ?? '', agentId ?? 0),
-    queryFn: () => api.listAiAgentThreads(projectKey!, agentId!),
+    queryFn: ({ pageParam }) => api.listAiAgentThreads(projectKey!, agentId!, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last) => last.nextPage ?? undefined,
     enabled: projectKey != null && agentId != null,
   });
+}
+
+// The threads loaded so far, as one list. The pages the history has not reached are
+// simply not in it: a tab of an older conversation falls back to its default title.
+export function useLoadedAgentThreads(projectKey: string | null, agentId: number | null) {
+  const query = useAgentThreadsQuery(projectKey, agentId);
+  return query.data?.pages.flatMap((page) => page.items) ?? [];
 }
 
 // The transcript of one chat thread, to restore the conversation when a thread is
@@ -58,6 +73,32 @@ export function useAgentThreadMessagesQuery(
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextPage ?? undefined,
     enabled: projectKey != null && agentId != null && threadId != null,
+  });
+}
+
+// Renames one of the caller's chat threads. The new title is put into the loaded
+// history right away: it is what the tab of that conversation is called.
+export function useRenameAgentThread(projectKey: string | null, agentId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ threadId, title }: { threadId: string; title: string }) =>
+      api.renameAiAgentThread(projectKey!, agentId!, threadId, title),
+    onSuccess: (_res, { threadId, title }) => {
+      if (!projectKey || agentId == null) return;
+      qc.setQueryData<InfiniteData<AiChatThreadPage>>(
+        qk.agentThreads(projectKey, agentId),
+        (prev) =>
+          prev && {
+            ...prev,
+            pages: prev.pages.map((page) => ({
+              ...page,
+              items: page.items.map((thread) =>
+                thread.id === threadId ? { ...thread, title } : thread,
+              ),
+            })),
+          },
+      );
+    },
   });
 }
 

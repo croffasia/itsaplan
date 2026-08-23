@@ -58,6 +58,9 @@
       "sidebar": {
         "toggle": "Show or hide the sidebar"
       },
+      "chat": {
+        "toggle": "Show or hide the AI chat"
+      },
       "issue": {
         "new": "New issue"
       },
@@ -78,6 +81,7 @@
     "messagePlaceholder": "Message {agent}…",
     "reset": "Reset conversation",
     "send": "Send",
+    "sendHint": "Enter to send, ⌘/Ctrl+Enter for a new line",
     "stop": "Stop",
     "stopped": "Stopped",
     "loadingEarlier": "Loading earlier messages…",

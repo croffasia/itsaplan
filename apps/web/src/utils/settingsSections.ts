@@ -21,7 +21,7 @@ import type { PermissionResource } from '@/lib/api';
 // The sidebar group a section is listed under: the project-level general
 // settings, workflow configuration, automation/integrations, or the AI section
 // (agents, providers, skills). 'ai-team' and 'ai' sections are listed in the main
-// sidebar's AI Team group — 'ai-team' next to the chat, 'ai' inside the
+// sidebar's AI Team group — 'ai-team' at its top level, 'ai' inside the
 // "Configure" item — not in the project settings sidebar.
 export type SettingsGroup = 'general' | 'configuration' | 'automation' | 'ai' | 'ai-team';
 

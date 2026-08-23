@@ -30,7 +30,7 @@ const THEMES: ThemePreference[] = ['system', 'light', 'dark'];
 const ISSUE_OPEN_MODES: IssueOpenMode[] = ['panel', 'page'];
 const ISSUE_STATS_VIEWS: IssueStatsView[] = ['compact', 'timeline'];
 const ISSUE_ACTIVITY_VIEWS: IssueActivityView[] = ['flat', 'grouped'];
-const START_PAGES: StartPage[] = ['work-items', 'inbox', 'dashboard', 'initiatives', 'ai-chat'];
+const START_PAGES: StartPage[] = ['work-items', 'inbox', 'dashboard', 'initiatives'];
 
 // Personal interface preferences (/account/preferences). Each choice saves as soon
 // as it is made and applies on every device the user signs in from.

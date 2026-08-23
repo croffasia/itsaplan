@@ -66,10 +66,11 @@ export function AgentChatPanel({
   // in the queue with nothing to take it. The composer says so instead of accepting it.
   // A message typed while the agent is answering is not refused — it waits its turn.
   const runnerOffline = agent.kind === 'external' && !isRunnerOnline(agent);
+  const canSend = input.trim().length > 0 && !runnerOffline;
 
   function submit() {
     const text = input.trim();
-    if (!text || runnerOffline) return;
+    if (!canSend) return;
     setInput('');
     onSend(text);
   }
@@ -102,7 +103,7 @@ export function AgentChatPanel({
           )}
         </div>
 
-        <div className="p-4 pt-2">
+        <div className="chat-composer px-3 pt-2 pb-3">
           {runnerOffline && (
             <div className="mx-auto mb-2 flex w-full max-w-3xl flex-wrap items-center gap-x-2 gap-y-0.5">
               <AgentRunnerStatus agent={agent} />
@@ -116,19 +117,28 @@ export function AgentChatPanel({
               submit();
             }}
           >
-            <InputGroup className="rounded-xl">
+            <InputGroup className="rounded-2xl border-transparent bg-muted has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0 dark:bg-muted/50">
               <InputGroupTextarea
                 // `auto` once there is something to read, so a message keeps the
                 // script it was typed in. An empty box has nothing to read from.
                 dir={input ? 'auto' : undefined}
-                className="max-h-40 min-h-10 py-2.5"
+                className="max-h-[calc(5lh+1.25rem)] min-h-9 px-3.5 py-2.5"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key !== 'Enter') return;
+                  if (e.metaKey || e.ctrlKey) {
                     e.preventDefault();
-                    submit();
+                    // Written into the field rather than appended to the state, so the
+                    // break lands where the caret is and the browser keeps its undo.
+                    const field = e.currentTarget;
+                    field.setRangeText('\n', field.selectionStart, field.selectionEnd, 'end');
+                    setInput(field.value);
+                    return;
                   }
+                  if (e.shiftKey) return;
+                  e.preventDefault();
+                  submit();
                 }}
                 placeholder={
                   runnerOffline
@@ -138,14 +148,23 @@ export function AgentChatPanel({
                 disabled={runnerOffline}
                 rows={1}
               />
-              <InputGroupAddon align="block-end">
+              <InputGroupAddon
+                align="block-end"
+                className="gap-1 px-2.5 pb-2"
+                // The row carries a text cursor, and its own handler focuses an
+                // `input` — this group holds a textarea.
+                onClick={(e) => {
+                  if ((e.target as HTMLElement).closest('button')) return;
+                  e.currentTarget.parentElement?.querySelector('textarea')?.focus();
+                }}
+              >
                 {composerStart}
                 {onReset && (
                   <InputGroupButton
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
-                    className="rounded-lg text-muted-foreground hover:text-foreground"
+                    size="icon-xs"
+                    className="rounded-md text-muted-foreground hover:text-foreground"
                     title={t('reset')}
                     disabled={status !== 'ready' || messages.length === 0}
                     onClick={onReset}
@@ -160,7 +179,7 @@ export function AgentChatPanel({
                       type="button"
                       variant="outline"
                       size="icon-sm"
-                      className="rounded-lg"
+                      className="rounded-full"
                       title={t('stop')}
                       onClick={onStop}
                     >
@@ -170,10 +189,13 @@ export function AgentChatPanel({
                   )}
                   <InputGroupButton
                     type="submit"
-                    variant="default"
+                    // Solid only once the message can go, so the button reads as the
+                    // state of the composer and not as an always-armed action.
+                    variant={canSend ? 'default' : 'secondary'}
                     size="icon-sm"
-                    className="rounded-lg"
-                    disabled={!input.trim() || runnerOffline}
+                    className="rounded-full"
+                    title={t('sendHint')}
+                    disabled={!canSend}
                   >
                     <ArrowUp />
                     <span className="sr-only">{t('send')}</span>

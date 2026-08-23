@@ -151,7 +151,7 @@ describe('external agent chat', () => {
     });
 
     const threads = await chatOf(asOwner, agent.id).threads.get();
-    expect(threads.data!.find((t) => t.id === sent.data!.threadId)!.cliSessionId).toBe(
+    expect(threads.data!.items.find((t) => t.id === sent.data!.threadId)!.cliSessionId).toBe(
       'sess-first',
     );
   });
@@ -161,7 +161,7 @@ describe('external agent chat', () => {
     const sent = await send(asOwner, agent.id, 'Status?');
 
     const before = await chatOf(asOwner, agent.id).threads.get();
-    expect(before.data!.find((t) => t.id === sent.data!.threadId)!.cliSessionId).toBeNull();
+    expect(before.data!.items.find((t) => t.id === sent.data!.threadId)!.cliSessionId).toBeNull();
 
     const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
     await asRunner['agent-chats']({ messageId: answer.id }).events.post({
@@ -170,7 +170,9 @@ describe('external agent chat', () => {
     });
 
     const after = await chatOf(asOwner, agent.id).threads.get();
-    expect(after.data!.find((t) => t.id === sent.data!.threadId)!.cliSessionId).toBe('sess-abc');
+    expect(after.data!.items.find((t) => t.id === sent.data!.threadId)!.cliSessionId).toBe(
+      'sess-abc',
+    );
   });
 
   it('hands a claimed answer to no one else until its lease expires', async () => {
@@ -387,17 +389,35 @@ describe('external agent chat', () => {
     ).toBe(404);
   });
 
+  it("renames an external agent's conversation", async () => {
+    const { asOwner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'First question');
+
+    expect(
+      (
+        await chatOf(asOwner, agent.id)
+          .threads({ threadId: sent.data!.threadId })
+          .patch({ title: 'Release plan' })
+      ).status,
+    ).toBe(204);
+    expect((await chatOf(asOwner, agent.id).threads.get()).data!.items[0].title).toBe(
+      'Release plan',
+    );
+  });
+
   it('lists and deletes the conversations of an external agent', async () => {
     const { asOwner, agent } = await setup();
     const sent = await send(asOwner, agent.id, 'First question');
 
     const threads = await chatOf(asOwner, agent.id).threads.get();
-    expect(threads.data!).toMatchObject([{ id: sent.data!.threadId, title: 'First question' }]);
+    expect(threads.data!.items).toMatchObject([
+      { id: sent.data!.threadId, title: 'First question' },
+    ]);
 
     expect(
       (await chatOf(asOwner, agent.id).threads({ threadId: sent.data!.threadId }).delete()).status,
     ).toBe(204);
-    expect((await chatOf(asOwner, agent.id).threads.get()).data!).toEqual([]);
+    expect((await chatOf(asOwner, agent.id).threads.get()).data!.items).toEqual([]);
   });
 
   it("refuses another member's thread and another agent's answer", async () => {

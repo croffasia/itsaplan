@@ -6,6 +6,7 @@
   "selectAllIssues": "Select all issues",
   "newIssue": "New issue",
   "newProject": "New project",
+  "toggleChat": "Show or hide the AI chat",
   "board": "Board",
   "commands": "Commands",
   "switchProject": "Switch project"

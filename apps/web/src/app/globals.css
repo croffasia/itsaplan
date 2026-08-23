@@ -126,6 +126,10 @@
   /* A panel on a side edge casts to the side, so the glow has no offset. */
   --side-panel-shadow: 0 0 28px 6px rgb(0 0 0 / 0.16);
   --modal-shadow: 0 32px 64px -16px rgb(0 0 0 / 0.28), 0 12px 24px -12px rgb(0 0 0 / 0.16);
+  /* The chat tab row casts down on the transcript under it; the composer is a
+     rounded surface the transcript scrolls up to, so it casts all round. */
+  --chat-tabs-shadow: 0 10px 16px -6px rgb(0 0 0 / 0.28);
+  --chat-composer-shadow: 0 -2px 20px 2px rgb(0 0 0 / 0.22);
 }
 
 .dark {
@@ -180,6 +184,8 @@
   --pinned-column-shadow: 0 0 20px 4px rgb(0 0 0 / 0.6);
   --side-panel-shadow: 0 0 28px 8px rgb(0 0 0 / 0.65);
   --modal-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.85), 0 16px 32px -16px rgb(0 0 0 / 0.7);
+  --chat-tabs-shadow: 0 12px 18px -6px rgb(0 0 0 / 0.75);
+  --chat-composer-shadow: 0 -2px 22px 4px rgb(0 0 0 / 0.7);
 }
 
 /* Every floating surface lifts off the page with the same shadow. It is set here
@@ -202,6 +208,22 @@
 [data-slot='dialog-content'],
 [data-slot='sheet-content'] {
   box-shadow: var(--modal-shadow);
+}
+
+/* The composer's own box casts the shadow, not the row around it. Set here because
+   the input group is a generated component carrying a `shadow-xs` of its own, which
+   tailwind-merge does not drop for a `shadow-[var(…)]` utility — it reads that as a
+   shadow colour. */
+.chat-composer [data-slot='input-group'] {
+  box-shadow: var(--chat-composer-shadow);
+}
+
+/* The class the generated message scroller puts on its viewport, with no rule of
+   its own. A message the composer cuts at the bottom edge fades out there instead
+   of ending mid-glyph; the transcript's own bottom padding is deeper than the fade,
+   so the last message is whole once it is scrolled to. */
+.scroll-fade-b {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5rem), transparent);
 }
 
 /* Kanban card surface — it sits on --kanban-column, so it is lighter than the

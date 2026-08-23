@@ -1,19 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAgentThreadsQuery, useDeleteAgentThread } from '@/services/aiAgents.service';
-import { Skeleton } from '@/components/ui/skeleton';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import type { AiChatThread } from '@/lib/api';
 import { AiChatThreadItem } from './AiChatThreadItem';
+import { AiChatThreadItemSkeleton } from './AiChatThreadItemSkeleton';
 
-// The caller's own past conversations with one agent, newest first. Used by both the
-// AI Chat page's thread rail and the floating chat's history layer; each host supplies
-// its own header. `selectedThreadId` marks the conversation currently shown; a thread
-// that has not produced its first reply yet has no id and so is not in this list.
-// Deleting a conversation removes it and its messages; `onDeleted` lets the host reset
-// the chat when the deleted one was open.
+// The caller's own past conversations with one agent, newest first, loaded a page at a
+// time as the end of the list comes into view. The host supplies the header around it.
+// `selectedThreadId` marks the conversation currently shown; a thread that has not
+// produced its first reply yet has no id and so is not in this list. Deleting a
+// conversation removes it and its messages; `onDeleted` lets the host reset the chat
+// when the deleted one was open.
 export function AiChatThreadList({
   projectKey,
   agentId,
@@ -30,9 +30,25 @@ export function AiChatThreadList({
   const t = useTranslations('aiChat');
   const tCommon = useTranslations('common');
   const threadsQuery = useAgentThreadsQuery(projectKey, agentId);
-  const threads = threadsQuery.data ?? [];
+  const threads = threadsQuery.data?.pages.flatMap((page) => page.items) ?? [];
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = threadsQuery;
   const deleteThread = useDeleteAgentThread(projectKey, agentId);
   const [pending, setPending] = useState<AiChatThread | null>(null);
+
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasNextPage) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isFetchingNextPage) void fetchNextPage();
+      },
+      // Start loading a bit before the sentinel is fully visible.
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   async function confirmDelete() {
     if (!pending) return;
@@ -45,13 +61,7 @@ export function AiChatThreadList({
     return (
       <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
         {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-start gap-2 px-1.5 py-2">
-            <Skeleton className="mt-0.5 size-3.5 shrink-0 rounded" />
-            <div className="min-w-0 flex-1 space-y-1.5">
-              <Skeleton className="h-3.5 w-4/5 rounded" />
-              <Skeleton className="h-3 w-12 rounded" />
-            </div>
-          </div>
+          <AiChatThreadItemSkeleton key={i} />
         ))}
       </div>
     );
@@ -77,6 +87,8 @@ export function AiChatThreadList({
             onDelete={() => setPending(thread)}
           />
         ))}
+        <div ref={sentinelRef} />
+        {isFetchingNextPage && <AiChatThreadItemSkeleton />}
       </div>
 
       {pending && (

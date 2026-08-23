@@ -7,8 +7,6 @@
   "cycles": "Циклы",
   "notes": "Заметки",
   "aiTeam": "AI-команда",
-  "chat": "Чат",
-  "chatWithAiTeam": "Чат с AI-командой",
   "configure": "Настроить",
   "aiAgents": "AI-агенты",
   "configuration": "Конфигурация",
@@ -34,7 +32,7 @@
   "search": "Поиск или команда…",
   "searchHint": "Поиск или команда ({key})",
   "newIssueHint": "Новая задача ({key})",
-  "aiChat": "AI-чат",
+  "aiChatHint": "Чат с ИИ-командой ({key})",
   "sections": "Разделы",
   "doubleClickToRename": "Двойной клик, чтобы переименовать",
   "groups": {

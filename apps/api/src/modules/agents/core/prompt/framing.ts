@@ -140,6 +140,18 @@ export function projectPreamble(project: { key: string; name: string }): string 
   ].join('\n');
 }
 
+// Only the chat paths carry this: a chart is drawn where the answer is read in the
+// app, while an autonomous run writes its answer into a comment, which draws none.
+export function chartPreamble(): string {
+  return [
+    '## Charts',
+    'When the person asks for a chart or a graph, build it with the create_chart tool',
+    'and put the block it gives back into your answer instead of drawing one as text.',
+    '',
+    '',
+  ].join('\n');
+}
+
 export function peopleContext(run: RunForPrompt): string {
   const requester: Person | null = run.requesterName
     ? { name: run.requesterName, username: run.requesterUsername ?? null }

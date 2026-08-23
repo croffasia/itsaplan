@@ -51,9 +51,10 @@ export type PendingMessage = { id: string; text: string };
 // one. threadId is null while a new conversation has not produced its first reply.
 //
 // A message sent while a reply is running is held in `pending` and sent on its own once
-// that reply ends, one at a time and in the order it was typed. A reply that failed or
-// was stopped pauses the queue: what is left waits until the next send, so a message is
-// not thrown at an agent that is not answering.
+// that reply ends, one at a time and in the order it was typed. A reply that failed
+// pauses the queue: what is left waits until the next send, so a message is not thrown
+// at an agent that is not answering. A stop is not a failure — it ends the reply being
+// produced and the message waiting behind it is sent next.
 //
 // stop() ends the reply being produced. What the agent wrote before it stays in the
 // transcript, marked stopped. An internal agent's run is bound to the stream, so
@@ -167,11 +168,11 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
         }
       } catch (err) {
         // A stop ends the stream by aborting it; that is what was asked for, not a
-        // failure to report.
+        // failure to report, and the queue behind it goes on.
         if (!stopper.signal.aborted) {
           failure = err instanceof ApiError ? err.message : t('unreachable');
+          setQueuePaused(true);
         }
-        setQueuePaused(true);
       } finally {
         runningRef.current = false;
         stopRef.current = null;
@@ -218,15 +219,11 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     setPending((queue) => queue.filter((message) => message.id !== id));
   }, []);
 
-  // Ends the reply being produced. Whatever is queued stays queued: stopping this reply
-  // is not a reason to discard what was typed while it ran.
+  // Ends the reply being produced. What is queued behind it is sent next: stopping this
+  // reply is what clears the way for the message typed while it ran.
   const stop = useCallback(() => {
     stopRef.current?.abort();
   }, []);
-
-  // A closed conversation unmounts this hook. Its reply goes with it: nothing can show
-  // the rest of the answer, and the stream would otherwise be read to the end.
-  useEffect(() => () => stopRef.current?.abort(), []);
 
   // Sends the next waiting message once the reply before it has ended.
   useEffect(() => {

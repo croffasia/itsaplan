@@ -4,9 +4,9 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { iso } from '#shared/lib';
 import { appendTextPart } from '../chat-parts';
 import { intEnv } from '../core/helpers/env';
-import { projectPreamble } from '../core/prompt/framing';
+import { chartPreamble, projectPreamble } from '../core/prompt/framing';
 import { peoplePreamble, type Person } from '../core/prompt/run-context';
-import type { ChatMessagePage, ChatPart, ChatThreadSummary } from '../model';
+import type { ChatMessagePage, ChatPart, ChatThreadPage } from '../model';
 import { newChatThreadId } from '../core/runtime/thread-ids';
 import { touchRunner, type RunnerAgent } from '../runner/service';
 import type { AgUiEventBody, ChatMessageStatus } from './model';
@@ -48,20 +48,28 @@ const EVENT_PAGE = 500;
 // these take events, heartbeats and a result.
 const LIVE_STATUSES = ['pending', 'streaming'];
 
-// The caller's conversations with one external agent, newest first.
-export async function listThreads(userId: string, agentId: number): Promise<ChatThreadSummary[]> {
+// One page of the caller's conversations with one external agent, newest first.
+export async function listThreads(
+  userId: string,
+  agentId: number,
+  page = 0,
+): Promise<ChatThreadPage> {
   const rows = await db
     .select()
     .from(agentChatThread)
     .where(and(eq(agentChatThread.agentId, agentId), eq(agentChatThread.userId, userId)))
-    .orderBy(desc(agentChatThread.updatedAt));
-  return rows.map((r) => ({
+    .orderBy(desc(agentChatThread.updatedAt))
+    .limit(PAGE_SIZE + 1)
+    .offset(page * PAGE_SIZE);
+  const hasMore = rows.length > PAGE_SIZE;
+  const items = (hasMore ? rows.slice(0, PAGE_SIZE) : rows).map((r) => ({
     id: r.id,
     title: r.title && r.title.length > 0 ? r.title : null,
     cliSessionId: r.cliSessionId,
     createdAt: iso(r.createdAt),
     updatedAt: iso(r.updatedAt),
   }));
+  return { items, nextPage: hasMore ? page + 1 : null };
 }
 
 // One page of a thread's transcript, oldest first within the page, page 0 being the
@@ -167,6 +175,21 @@ async function readAnswerParts(messageIds: number[]): Promise<Map<number, ChatPa
     }
   }
   return parts;
+}
+
+// Renames one of the caller's conversations. False when it is not theirs, which the
+// route maps to a 404.
+export async function renameThread(
+  threadId: string,
+  userId: string,
+  title: string,
+): Promise<boolean> {
+  const rows = await db
+    .update(agentChatThread)
+    .set({ title: title.slice(0, TITLE_LIMIT), updatedAt: new Date() })
+    .where(and(eq(agentChatThread.id, threadId), eq(agentChatThread.userId, userId)))
+    .returning({ id: agentChatThread.id });
+  return rows.length > 0;
 }
 
 export async function deleteThread(threadId: string, userId: string): Promise<boolean> {
@@ -398,6 +421,7 @@ function buildSystemPrompt(agent: RunnerAgent, requester: Person): string {
   return (
     projectPreamble({ key: agent.projectKey, name: agent.projectName }) +
     chatModePreamble() +
+    chartPreamble() +
     peoplePreamble({ requester }) +
     (instructions ? `## Instructions\n${instructions}\n` : '')
   );

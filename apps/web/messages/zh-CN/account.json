@@ -128,8 +128,7 @@
       "work-items": "工作项",
       "inbox": "收件箱",
       "dashboard": "仪表盘",
-      "initiatives": "计划",
-      "ai-chat": "AI 聊天"
+      "initiatives": "计划"
     },
     "showStats": "显示统计",
     "showStatsDescription": "打开工作项时是否默认展开统计区域。",
@@ -147,7 +146,7 @@
     },
     "autoWatch": "自动关注工作项",
     "autoWatchDescription": "自动关注你创建、获指派、评论或被提及的工作项。",
-    "showChatByDefault": "默认显示聊天入口",
-    "showChatByDefaultDescription": "在项目中始终显示聊天按钮，点击后才打开聊天窗口。"
+    "showChatByDefault": "默认显示聊天",
+    "showChatByDefaultDescription": "打开项目页面时同时打开聊天面板。可随时通过面板标题栏或聊天图标关闭。"
   }
 }

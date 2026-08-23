@@ -1,8 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { memo } from 'react';
 import { useAiAgentsQuery } from '@/services/aiAgents.service';
-import { AiChatHistory } from '../shared/AiChatHistory';
 import { AiChatThreadSkeleton } from '../shared/AiChatThreadSkeleton';
 import { ChatPanelEmpty } from './ChatPanelEmpty';
 import { ChatPanelSession } from './ChatPanelSession';
@@ -10,9 +9,10 @@ import { ChatPanelTabs } from './ChatPanelTabs';
 import { useChatSessions, type ChatSession } from '../../hooks/useChatSessions';
 import { useProviderLabel } from '../../hooks/useProviderLabel';
 
-// What the chat panel holds under its header: the open sessions, the tab row over them,
-// and the history of the session in front.
-export function ChatPanelBody({ projectKey }: { projectKey: string }) {
+// What the chat panel holds under its header: the open sessions and the tab row over
+// them. Memoised because resizing the panel re-renders it on every pointer move, and a
+// render here reaches every transcript.
+export const ChatPanelBody = memo(function ChatPanelBody({ projectKey }: { projectKey: string }) {
   const agentsQuery = useAiAgentsQuery(projectKey);
   const agents = agentsQuery.data ?? [];
   const providerLabel = useProviderLabel(projectKey);
@@ -24,11 +24,12 @@ export function ChatPanelBody({ projectKey }: { projectKey: string }) {
     openTab,
     openThread,
     closeSession,
+    moveTab,
+    swapTabs,
     setThread,
     setAgent,
     setState,
   } = useChatSessions(projectKey, agents[0]?.id ?? null);
-  const [historyOpen, setHistoryOpen] = useState(false);
 
   // A session that has said nothing changes its agent in place; one with a transcript
   // keeps it, and the other agent is chatted with in a tab of its own.
@@ -69,7 +70,8 @@ export function ChatPanelBody({ projectKey }: { projectKey: string }) {
         onSelect={setActive}
         onClose={closeSession}
         onNewTab={newTab}
-        onShowHistory={() => setHistoryOpen(true)}
+        onMoveTab={moveTab}
+        onSwapTabs={swapTabs}
       />
 
       <div className="relative min-h-0 flex-1">
@@ -88,26 +90,12 @@ export function ChatPanelBody({ projectKey }: { projectKey: string }) {
               onThreadCreated={setThread}
               onStateChange={setState}
               onSelectAgent={selectAgent}
+              onSelectThread={openThread}
+              onThreadDeleted={handleThreadDeleted}
             />
           );
         })}
-
-        {historyOpen && active && (
-          <div className="absolute inset-0 z-10 bg-background">
-            <AiChatHistory
-              projectKey={projectKey}
-              agentId={active.agentId}
-              selectedThreadId={active.threadId}
-              onSelect={(threadId) => {
-                openThread(active.agentId, threadId);
-                setHistoryOpen(false);
-              }}
-              onDeleted={handleThreadDeleted}
-              onBack={() => setHistoryOpen(false)}
-            />
-          </div>
-        )}
       </div>
     </>
   );
-}
+});

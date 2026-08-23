@@ -219,7 +219,11 @@ export const ChatMessagesResponse = t.Object({
 
 export const AiAgentListResponse = t.Array(AiAgentResponse);
 
-export const ChatThreadListResponse = t.Array(ChatThreadResponse);
+// One page of a caller's chat threads with an agent (ChatThreadPage).
+export const ChatThreadListResponse = t.Object({
+  items: t.Array(ChatThreadResponse),
+  nextPage: t.Nullable(t.Number()),
+});
 
 export const createAgentBody = t.Object({
   name: t.String({ minLength: 1, description: 'Display name.' }),
@@ -241,4 +245,9 @@ export const runsQuery = t.Object({
   limit: t.Optional(t.Numeric()),
 });
 
-export const threadMessagesQuery = t.Object({ page: t.Optional(t.Numeric({ minimum: 0 })) });
+export const renameThreadBody = t.Object({
+  title: t.String({ minLength: 1, maxLength: 80, description: 'New title of the conversation.' }),
+});
+
+// Both the thread list and a thread's transcript are read a page at a time.
+export const threadPageQuery = t.Object({ page: t.Optional(t.Numeric({ minimum: 0 })) });

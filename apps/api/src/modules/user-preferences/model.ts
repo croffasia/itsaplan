@@ -15,7 +15,6 @@ const StartPage = t.Union([
   t.Literal('dashboard'),
   t.Literal('work-items'),
   t.Literal('initiatives'),
-  t.Literal('ai-chat'),
 ]);
 const IssueStatsView = t.Union([t.Literal('compact'), t.Literal('timeline')]);
 const IssueActivityView = t.Union([t.Literal('flat'), t.Literal('grouped')]);

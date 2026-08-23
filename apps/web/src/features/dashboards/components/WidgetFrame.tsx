@@ -100,7 +100,10 @@ export default function WidgetFrame({
           </DropdownMenu>
         )}
       </header>
-      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+      {/* The gutter is reserved whether or not the scrollbar is there: a widget that
+          sizes itself to this width would otherwise lose the room to the scrollbar,
+          fit less, become shorter, and take the scrollbar away again. */}
+      <div className="min-h-0 flex-1 [scrollbar-gutter:stable] overflow-y-auto">{children}</div>
     </section>
   );
 }

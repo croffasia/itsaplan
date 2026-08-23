@@ -9,6 +9,7 @@ import { ensureThread, buildMemory } from '../../runtime/memory';
 //   GET /projects/:key/ai-agents/:agentId/threads             — the caller's own chat
 //                                                               threads with the agent
 //   GET .../ai-agents/:agentId/threads/:threadId/messages     — one thread's transcript
+//   PATCH  .../ai-agents/:agentId/threads/:threadId           — rename one conversation
 //   DELETE .../ai-agents/:agentId/threads/:threadId           — delete one conversation
 //
 // plus the thread scoping of a chat run: the thread id names the agent and the user it
@@ -100,7 +101,7 @@ describe('agent chat history', () => {
 
     const res = await agents(asOwner)({ agentId: agent.id }).threads.get();
     expect(res.status).toBe(200);
-    expect(res.data).toEqual([]);
+    expect(res.data!.items).toEqual([]);
   });
 
   it("lists the caller's threads for the agent, newest first, with the title", async () => {
@@ -112,8 +113,8 @@ describe('agent chat history', () => {
 
     const res = await agents(asOwner)({ agentId: agent.id }).threads.get();
     expect(res.status).toBe(200);
-    expect(res.data!.map((t) => t.id)).toEqual(['t-new', 't-old']);
-    expect(res.data![0]).toMatchObject({ id: 't-new', title: 'newer question' });
+    expect(res.data!.items.map((t) => t.id)).toEqual(['t-new', 't-old']);
+    expect(res.data!.items[0]).toMatchObject({ id: 't-new', title: 'newer question' });
   });
 
   it('scopes threads to the requesting user', async () => {
@@ -124,7 +125,25 @@ describe('agent chat history', () => {
     await seedThread('theirs', 'another-user-id', agent, 'theirs');
 
     const res = await agents(asOwner)({ agentId: agent.id }).threads.get();
-    expect(res.data!.map((t) => t.id)).toEqual(['mine']);
+    expect(res.data!.items.map((t) => t.id)).toEqual(['mine']);
+  });
+
+  it('hands out the threads a page at a time, newest first', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    // One more than a page holds, so the last one falls onto the second page.
+    for (let i = 0; i < 26; i++) await seedThread(`t-${i}`, owner.userId, agent, `question ${i}`);
+
+    const first = await agents(asOwner)({ agentId: agent.id }).threads.get();
+    expect(first.data!.items).toHaveLength(25);
+    expect(first.data!.nextPage).toBe(1);
+
+    const second = await agents(asOwner)({ agentId: agent.id }).threads.get({ query: { page: 1 } });
+    expect(second.data!.items).toHaveLength(1);
+    expect(second.data!.nextPage).toBeNull();
+    // No thread is on both pages.
+    const ids = new Set([...first.data!.items, ...second.data!.items].map((t) => t.id));
+    expect(ids.size).toBe(26);
   });
 
   it('scopes threads to the requested agent', async () => {
@@ -134,9 +153,9 @@ describe('agent chat history', () => {
     await seedThread('for-a', owner.userId, a, 'for a');
 
     const res = await agents(asOwner)({ agentId: b.id }).threads.get();
-    expect(res.data).toEqual([]);
+    expect(res.data!.items).toEqual([]);
     const resA = await agents(asOwner)({ agentId: a.id }).threads.get();
-    expect(resA.data!.map((t) => t.id)).toEqual(['for-a']);
+    expect(resA.data!.items.map((t) => t.id)).toEqual(['for-a']);
   });
 
   it('404s the thread list for an agent that does not exist', async () => {
@@ -285,6 +304,31 @@ describe('agent chat history', () => {
     expect(res.status).toBe(404);
   });
 
+  it("renames the caller's thread", async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('mine', owner.userId, agent, 'Untitled');
+
+    const res = await agents(asOwner)({ agentId: agent.id })
+      .threads({ threadId: 'mine' })
+      .patch({ title: 'Release plan' });
+    expect(res.status).toBe(204);
+
+    const list = await agents(asOwner)({ agentId: agent.id }).threads.get();
+    expect(list.data!.items[0].title).toBe('Release plan');
+  });
+
+  it("404s renaming another user's thread", async () => {
+    const { asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('theirs', 'another-user-id', agent, 'theirs');
+
+    const res = await agents(asOwner)({ agentId: agent.id })
+      .threads({ threadId: 'theirs' })
+      .patch({ title: 'Mine now' });
+    expect(res.status).toBe(404);
+  });
+
   it("deletes the caller's thread with its messages", async () => {
     const { owner, asOwner } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
@@ -294,7 +338,7 @@ describe('agent chat history', () => {
     expect(res.status).toBe(204);
 
     const list = await agents(asOwner)({ agentId: agent.id }).threads.get();
-    expect(list.data).toEqual([]);
+    expect(list.data!.items).toEqual([]);
     const messages = await agents(asOwner)({ agentId: agent.id })
       .threads({ threadId: 'mine' })
       .messages.get();

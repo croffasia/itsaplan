@@ -7,8 +7,6 @@
   "cycles": "周期",
   "notes": "便签",
   "aiTeam": "AI 团队",
-  "chat": "聊天",
-  "chatWithAiTeam": "与 AI 团队聊天",
   "configure": "配置",
   "aiAgents": "AI 代理",
   "configuration": "配置",
@@ -34,7 +32,7 @@
   "search": "搜索或运行命令…",
   "searchHint": "搜索或运行命令（{key}）",
   "newIssueHint": "新建工作项（{key}）",
-  "aiChat": "AI 聊天",
+  "aiChatHint": "与 AI 队友聊天（{key}）",
   "sections": "功能区",
   "doubleClickToRename": "双击重命名",
   "groups": {

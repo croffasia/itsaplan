@@ -4,19 +4,13 @@ import { Check, Copy, Terminal } from 'lucide-react';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { InputGroupButton } from '@/components/ui/input-group';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 // The coding agent session the agent's runner keeps for this conversation on its own
 // machine. It is what the operator resumes to read the full transcript — `claude
-// --resume <id>` in the runner's working directory. `compact` drops the id from the
-// trigger, for the floating window, where the header has no room for it.
-export function AiChatSessionBadge({
-  sessionId,
-  compact = false,
-}: {
-  sessionId: string;
-  compact?: boolean;
-}) {
+// --resume <id>` in the runner's working directory.
+export function AiChatSessionBadge({ sessionId }: { sessionId: string }) {
   const t = useTranslations('aiChat');
   const [copied, setCopied] = useState(false);
 
@@ -29,25 +23,16 @@ export function AiChatSessionBadge({
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button
+        <InputGroupButton
+          type="button"
           variant="ghost"
-          size={compact ? 'icon' : 'sm'}
+          size="icon-xs"
           title={t('sessionLabel')}
-          className={
-            compact
-              ? 'size-7 shrink-0 text-muted-foreground hover:text-foreground'
-              : 'h-7 min-w-0 gap-1.5 px-2 text-muted-foreground hover:text-foreground'
-          }
+          className="rounded-md text-muted-foreground hover:text-foreground"
         >
-          <Terminal className="size-3.5 shrink-0" />
-          {compact ? (
-            <span className="sr-only">{t('sessionLabel')}</span>
-          ) : (
-            <span className="max-w-56 truncate font-mono text-xs" dir="ltr">
-              {sessionId}
-            </span>
-          )}
-        </Button>
+          <Terminal className="shrink-0" />
+          <span className="sr-only">{t('sessionLabel')}</span>
+        </InputGroupButton>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-96 space-y-2">
         <p className="text-sm font-medium">{t('sessionLabel')}</p>

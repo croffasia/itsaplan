@@ -58,6 +58,9 @@
       "sidebar": {
         "toggle": "显示或隐藏侧边栏"
       },
+      "chat": {
+        "toggle": "显示或隐藏 AI 聊天"
+      },
       "issue": {
         "new": "新建工作项"
       },
@@ -78,6 +81,7 @@
     "messagePlaceholder": "给 {agent} 发送消息…",
     "reset": "重置对话",
     "send": "发送",
+    "sendHint": "Enter 发送，⌘/Ctrl+Enter 换行",
     "stop": "停止",
     "stopped": "已停止",
     "loadingEarlier": "正在加载更早的消息…",

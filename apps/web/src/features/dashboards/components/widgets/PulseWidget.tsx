@@ -52,12 +52,25 @@ export default function PulseWidget({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
+  // Measured in whole pixels and applied on the next frame: the columns are laid out
+  // from this width, and laying them out resizes the element again. Without the
+  // rounding a sub-pixel width feeds back into itself, and without the frame the
+  // observer and the render that follows it chain within one frame — which is the
+  // update depth React gives up on.
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver((entries) => setWidth(entries[0].contentRect.width));
+    let frame = 0;
+    const ro = new ResizeObserver((entries) => {
+      const measured = Math.floor(entries[0].contentRect.width);
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => setWidth(measured));
+    });
     ro.observe(el);
-    return () => ro.disconnect();
+    return () => {
+      cancelAnimationFrame(frame);
+      ro.disconnect();
+    };
   }, []);
 
   // Columns that fully fit the measured width (drawn), and a slightly larger fetch
@@ -94,10 +107,17 @@ export default function PulseWidget({
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">{t(`caption.${unit}`)}</p>
 
-      {/* Full-width measuring wrapper; the grid draws only what fits (no scroll). */}
-      <div ref={containerRef} className="w-full overflow-hidden">
+      {/* Full-width measuring wrapper; the grid draws only what fits (no scroll). Its
+          height is the one the cells add up to, whatever is inside it: a widget that
+          grew or shrank with the loading state would take the scrollbar of the frame
+          around it away and back, and the width this measures with it. */}
+      <div
+        ref={containerRef}
+        className="w-full overflow-hidden"
+        style={{ height: geo.rows * geo.cell + (geo.rows - 1) * geo.gap }}
+      >
         {isLoading || cols.length === 0 ? (
-          <Skeleton className="h-24 w-full" />
+          <Skeleton className="size-full" />
         ) : (
           <div style={{ display: 'flex', gap: geo.gap }}>
             {cols.map((col, ci) => (

@@ -128,8 +128,7 @@
       "work-items": "Work items",
       "inbox": "Inbox",
       "dashboard": "Dashboards",
-      "initiatives": "Initiatives",
-      "ai-chat": "AI chat"
+      "initiatives": "Initiatives"
     },
     "showStats": "Show stats",
     "showStatsDescription": "Whether the stats section starts expanded when you open an issue.",
@@ -147,7 +146,7 @@
     },
     "autoWatch": "Watch issues automatically",
     "autoWatchDescription": "The ones you create, get assigned, comment on, or are mentioned in.",
-    "showChatByDefault": "Show chat by default",
-    "showChatByDefaultDescription": "The chat button stays on screen in a project. The chat window opens only when you click it."
+    "showChatByDefault": "Show the chat by default",
+    "showChatByDefaultDescription": "The chat panel opens with a project page. Close it any time from its header or the chat icon."
   }
 }

@@ -184,12 +184,18 @@ function radar(spec: ChartSpec) {
 
 // The stages of a funnel, widest first. Recharts draws no legend for it, so the name
 // of every stage is written into the trapezoid it belongs to — white, because it sits
-// on the slice color in either theme.
+// on the slice color in either theme. The last stage is a trapezoid like the rest:
+// recharts otherwise runs it into a point, which reads as a stage that ends at zero.
 function funnel(spec: ChartSpec, legend: ChartLegendEntry[]) {
   return (
     <FunnelChart>
       <ChartTooltip content={<ChartTooltipContent nameKey={spec.x} />} />
-      <Funnel dataKey={spec.series[0].key} nameKey={spec.x} data={spec.data}>
+      <Funnel
+        dataKey={spec.series[0].key}
+        nameKey={spec.x}
+        data={spec.data}
+        lastShapeType="rectangle"
+      >
         {legend.map((entry, index) => (
           <Cell key={index} fill={entry.color} />
         ))}

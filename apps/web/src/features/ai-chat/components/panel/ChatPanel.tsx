@@ -1,6 +1,7 @@
 'use client';
 
-import { Columns2, PanelRight, X } from 'lucide-react';
+import { useRef } from 'react';
+import { Maximize2, Minimize2, Pin, PinOff, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Direction } from 'radix-ui';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -22,18 +23,24 @@ const MAX_WIDTH = 720;
 //
 // In push mode the panel is a column of the content row, which narrows the page next to
 // it; in overlay mode it stands over that page. A narrow screen has no room for a
-// narrower page, so it is always overlay, over the full width.
+// narrower page, so it is always overlay, over the full width. Fullscreen takes the
+// panel out of the content row and over the whole viewport, the same way a dialog
+// expands.
 export function ChatPanel({
   projectKey,
   open,
   mode,
+  fullscreen,
   onToggleMode,
+  onToggleFullscreen,
   onClose,
 }: {
   projectKey: string;
   open: boolean;
   mode: ChatPanelMode;
+  fullscreen: boolean;
   onToggleMode: () => void;
+  onToggleFullscreen: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations('aiChat');
@@ -49,32 +56,39 @@ export function ChatPanel({
 
   const overlay = isMobile || mode === 'overlay';
 
+  // The body is what loads the agents, the tabs and their transcripts, so it waits for
+  // the first open: a panel nobody opens costs no requests. Once mounted it stays, which
+  // is what keeps a running reply alive while the panel is closed.
+  const opened = useRef(false);
+  if (open) opened.current = true;
+
   return (
     <aside
       className={cn(
-        'flex h-full min-h-0 flex-col border-s bg-background',
+        'flex h-full min-h-0 flex-col bg-background',
         !open && 'hidden',
-        // The panel carries the same surface as the page, so standing over it is read
-        // from the shadow it casts on the content next to it.
-        overlay
-          ? 'absolute inset-y-0 end-0 z-30 shadow-[var(--side-panel-shadow)]'
-          : 'relative shrink-0',
+        fullscreen
+          ? 'fixed inset-0 z-50'
+          : cn(
+              'border-s',
+              overlay
+                ? 'absolute inset-y-0 end-0 z-30 shadow-[var(--side-panel-shadow)]'
+                : 'relative shrink-0',
+            ),
       )}
-      style={{ width: isMobile ? '100%' : width }}
+      style={fullscreen ? undefined : { width: isMobile ? '100%' : width }}
     >
-      {!isMobile && (
+      {!isMobile && !fullscreen && (
         <ResizeGrip
           label={t('resizePanel')}
           className="absolute inset-y-0 start-0 z-10"
-          // The panel grows towards the content, so the pointer moving away from the
-          // edge it sits on is what widens it.
           onDrag={(deltaX) => setWidth(width + (direction === 'rtl' ? deltaX : -deltaX))}
         />
       )}
 
       <div className="flex items-center gap-1 border-b px-3 py-2">
         <span className="min-w-0 flex-1 truncate text-sm font-medium">{t('chatPanel')}</span>
-        {!isMobile && (
+        {!isMobile && !fullscreen && (
           <Button
             variant="ghost"
             size="icon"
@@ -83,9 +97,19 @@ export function ChatPanel({
             title={t(mode === 'push' ? 'overlayMode' : 'pushMode')}
             aria-pressed={mode === 'push'}
           >
-            {mode === 'push' ? <Columns2 /> : <PanelRight />}
+            {mode === 'push' ? <PinOff /> : <Pin />}
           </Button>
         )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7 text-muted-foreground hover:text-foreground"
+          onClick={onToggleFullscreen}
+          title={tCommon(fullscreen ? 'exitFullscreen' : 'fullscreen')}
+          aria-pressed={fullscreen}
+        >
+          {fullscreen ? <Minimize2 /> : <Maximize2 />}
+        </Button>
         <Button
           variant="ghost"
           size="icon"
@@ -97,7 +121,7 @@ export function ChatPanel({
         </Button>
       </div>
 
-      <ChatPanelBody projectKey={projectKey} />
+      {opened.current && <ChatPanelBody projectKey={projectKey} />}
     </aside>
   );
 }

@@ -3,8 +3,11 @@
 import { useCallback } from 'react';
 import type { AiAgent } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { AiChatSessionBadge } from '../shared/AiChatSessionBadge';
 import { AiChatThread } from '../shared/AiChatThread';
 import { ChatPanelAgentSwitcher } from './ChatPanelAgentSwitcher';
+import { ChatPanelHistory } from './ChatPanelHistory';
+import { useThreadSessionId } from '../../hooks/useThreadSessionId';
 import type { ChatSession, ChatSessionState } from '../../hooks/useChatSessions';
 
 // One open session of the chat panel. Every session is mounted, and the ones that are
@@ -23,6 +26,8 @@ export function ChatPanelSession({
   onThreadCreated,
   onStateChange,
   onSelectAgent,
+  onSelectThread,
+  onThreadDeleted,
 }: {
   projectKey: string;
   agents: AiAgent[];
@@ -33,6 +38,8 @@ export function ChatPanelSession({
   onThreadCreated: (sessionId: string, threadId: string) => void;
   onStateChange: (sessionId: string, state: ChatSessionState) => void;
   onSelectAgent: (session: ChatSession, agentId: number) => void;
+  onSelectThread: (agentId: number, threadId: string) => void;
+  onThreadDeleted: (threadId: string) => void;
 }) {
   const handleThreadCreated = useCallback(
     (threadId: string) => onThreadCreated(session.id, threadId),
@@ -42,6 +49,7 @@ export function ChatPanelSession({
     (state: ChatSessionState) => onStateChange(session.id, state),
     [session.id, onStateChange],
   );
+  const sessionId = useThreadSessionId(projectKey, agent.id, session.threadId);
 
   return (
     <div className={cn('absolute inset-0', !active && 'hidden')}>
@@ -53,13 +61,24 @@ export function ChatPanelSession({
         onThreadCreated={handleThreadCreated}
         onStateChange={handleStateChange}
         composerStart={
-          <ChatPanelAgentSwitcher
-            agents={agents}
-            selected={agent}
-            providerLabel={providerLabel}
-            disabled={session.running}
-            onSelect={(agentId) => onSelectAgent(session, agentId)}
-          />
+          <>
+            <ChatPanelAgentSwitcher
+              agents={agents}
+              selected={agent}
+              providerLabel={providerLabel}
+              disabled={session.running}
+              onSelect={(agentId) => onSelectAgent(session, agentId)}
+            />
+            <ChatPanelHistory
+              projectKey={projectKey}
+              agentId={agent.id}
+              agentName={agent.name}
+              selectedThreadId={session.threadId}
+              onSelect={(threadId) => onSelectThread(agent.id, threadId)}
+              onDeleted={onThreadDeleted}
+            />
+            {sessionId && <AiChatSessionBadge sessionId={sessionId} />}
+          </>
         }
       />
     </div>

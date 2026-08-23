@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { arrayMove } from '@dnd-kit/sortable';
 
 // One open conversation in the chat panel. `threadId` is null until the agent answers
 // the first message, and stays null for an agent that keeps no memory. `running` and
@@ -166,6 +167,31 @@ export function useChatSessions(projectKey: string | null, defaultAgentId: numbe
     [sessions, activeId],
   );
 
+  // A tab dragged onto another one takes its place in the row. The order is what is
+  // kept on the device, so it is also the order a reload opens the chats in.
+  const moveTab = useCallback((id: string, overId: string) => {
+    setSessions((prev) => {
+      const from = prev.findIndex((session) => session.id === id);
+      const to = prev.findIndex((session) => session.id === overId);
+      if (from < 0 || to < 0) return prev;
+      return arrayMove(prev, from, to);
+    });
+  }, []);
+
+  // A chat picked from the menu of the tabs the row did not fit takes the place of the
+  // tab it appears in, so it stays in the row once another tab is selected.
+  const swapTabs = useCallback((id: string, otherId: string) => {
+    setSessions((prev) => {
+      const from = prev.findIndex((session) => session.id === id);
+      const to = prev.findIndex((session) => session.id === otherId);
+      if (from < 0 || to < 0) return prev;
+      const next = [...prev];
+      next[from] = prev[to];
+      next[to] = prev[from];
+      return next;
+    });
+  }, []);
+
   const active = sessions.find((session) => session.id === activeId) ?? sessions[0] ?? null;
 
   return {
@@ -179,6 +205,8 @@ export function useChatSessions(projectKey: string | null, defaultAgentId: numbe
     openTab,
     openThread,
     closeSession,
+    moveTab,
+    swapTabs,
     setThread: useCallback((id: string, threadId: string) => update(id, { threadId }), [update]),
     setAgent: useCallback(
       (id: string, agentId: number) => {

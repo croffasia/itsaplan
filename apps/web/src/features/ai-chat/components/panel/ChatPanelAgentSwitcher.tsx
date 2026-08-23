@@ -30,13 +30,13 @@ export function ChatPanelAgentSwitcher({
         <InputGroupButton
           type="button"
           variant="ghost"
-          size="sm"
-          className="max-w-40 rounded-lg text-muted-foreground hover:text-foreground"
+          size="xs"
+          className="max-w-44 rounded-md text-muted-foreground hover:text-foreground"
           title={t('agents')}
         >
           <Bot className="shrink-0" />
           <span className="truncate">{selected.name}</span>
-          <ChevronDown className="shrink-0" />
+          <ChevronDown className="shrink-0 opacity-60" />
         </InputGroupButton>
       </DropdownMenuTrigger>
       <AiChatAgentMenu

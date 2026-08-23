@@ -31,6 +31,7 @@ export default function AppHeader({
   const { can } = usePermissions();
   const paletteKey = useHotkeyLabel('palette.toggle');
   const newIssueKey = useHotkeyLabel('issue.new');
+  const chatKey = useHotkeyLabel('chat.toggle');
   const canCreateIssue = hasProject && can('work_items', 'create');
   const canUseChat = hasProject && can('ai_agents', 'read');
   return (
@@ -72,7 +73,7 @@ export default function AppHeader({
           variant={chatActive ? 'default' : 'outline'}
           size="icon"
           className="size-8 shrink-0"
-          title={t('aiChat')}
+          title={t('aiChatHint', { key: chatKey ?? '' })}
           aria-pressed={chatActive}
           onClick={onToggleChat}
         >

@@ -97,6 +97,7 @@ export default function Shell({
 
   useKeyboardShortcuts({
     hasProject: !!project,
+    hasChat: chatAvailable,
     projects,
     overlayOpen: overlays.anyOpen,
     onToggleCommand: () => overlays.setShowCommand((v) => !v),
@@ -105,6 +106,7 @@ export default function Shell({
     onNewIssue: () => canCreateIssue && openNewIssue(),
     onNewProject: () => overlays.setShowNewProject(true),
     onSettings: () => firstSettingsHref && router.push(firstSettingsHref),
+    onToggleChat: chatPanel.toggle,
   });
 
   // Every view opens an issue through this one callback, so the user's choice
@@ -167,8 +169,6 @@ export default function Shell({
             </div>
           )}
 
-          {/* The row the chat panel joins: in push mode it is a column next to the
-              content, in overlay mode it stands over it. */}
           <div className="relative flex min-h-0 flex-1 overflow-hidden">
             <div className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <ShellBody
@@ -187,7 +187,9 @@ export default function Shell({
                 projectKey={projectKey}
                 open={chatPanel.open}
                 mode={chatPanel.mode}
+                fullscreen={chatPanel.fullscreen}
                 onToggleMode={chatPanel.toggleMode}
+                onToggleFullscreen={chatPanel.toggleFullscreen}
                 onClose={chatPanel.toggle}
               />
             )}
@@ -211,6 +213,7 @@ export default function Shell({
           onSelectProject={(key) => router.push(projectPath(key))}
           onOpenIssue={(seq) => projectKey && router.push(issuePath(projectKey, seq))}
           onIssueDeleted={onIssueDeleted}
+          onToggleChat={chatPanel.toggle}
         />
 
         <ShellOverlays project={project} projectKey={projectKey} overlays={overlays} />

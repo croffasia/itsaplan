@@ -28,12 +28,9 @@ export const notePath = (key: string, boardId: number) => `${notesPath(key)}/${b
 export const settingsPath = (key: string, section: string) =>
   `${projectPath(key)}/settings/${section}`;
 
-// The AI Team destinations: the chat and the sections listed next to it in the
-// main sidebar (see AI_TEAM_SECTIONS).
+// The AI Team destinations listed in the main sidebar (see AI_TEAM_SECTIONS).
 export const aiTeamPath = (key: string, section: string) =>
   `${projectPath(key)}/ai-team/${section}`;
-
-export const aiChatPath = (key: string) => aiTeamPath(key, 'chat');
 
 export const inboxPath = (key: string) => `${projectPath(key)}/inbox`;
 
@@ -130,8 +127,6 @@ export const startPagePath = (key: string, startPage: StartPage) => {
       return dashboardsPath(key);
     case 'initiatives':
       return initiativesPath(key);
-    case 'ai-chat':
-      return aiChatPath(key);
     default:
       return projectPath(key);
   }

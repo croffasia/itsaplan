@@ -1,6 +1,7 @@
 'use client';
 
 import type { ChatMessage } from '@/hooks/useAgentChat';
+import { cn } from '@/lib/utils';
 import type { AiChatPart, AiChatToolPart } from '@/lib/api';
 import { formatLongDate, formatTime } from '@/utils/dates';
 import Markdown from '@/components/common/Markdown';
@@ -52,12 +53,12 @@ export default function AgentChatMessage({
       )}
       <Message align={isUser ? 'end' : 'start'}>
         <MessageContent>
-          <Bubble variant={isUser ? 'muted' : 'ghost'} className="gap-2">
+          <Bubble variant={isUser ? 'muted' : 'ghost'} className={cn('gap-2', !isUser && 'w-full')}>
             {blocksOf(message.parts).map((block, index) =>
               'tools' in block ? (
                 <AgentChatToolCalls key={index} tools={block.tools} />
               ) : (
-                <BubbleContent key={index}>
+                <BubbleContent key={index} className={cn(!isUser && 'w-full')}>
                   {isUser ? (
                     <span className="whitespace-pre-wrap">{block.text}</span>
                   ) : (

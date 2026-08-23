@@ -6,6 +6,7 @@
   "selectAllIssues": "选择所有工作项",
   "newIssue": "新建工作项",
   "newProject": "新建项目",
+  "toggleChat": "显示或隐藏 AI 聊天",
   "board": "看板",
   "commands": "命令",
   "switchProject": "切换项目"

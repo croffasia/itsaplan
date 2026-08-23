@@ -7,8 +7,6 @@
   "cycles": "Цикли",
   "notes": "Нотатки",
   "aiTeam": "AI-команда",
-  "chat": "Чат",
-  "chatWithAiTeam": "Чат з AI-командою",
   "configure": "Налаштувати",
   "aiAgents": "AI-агенти",
   "configuration": "Конфігурація",
@@ -34,7 +32,7 @@
   "search": "Пошук або команда…",
   "searchHint": "Пошук або команда ({key})",
   "newIssueHint": "Нова задача ({key})",
-  "aiChat": "AI-чат",
+  "aiChatHint": "Чат зі ШІ-командою ({key})",
   "sections": "Розділи",
   "doubleClickToRename": "Подвійний клік, щоб перейменувати",
   "groups": {

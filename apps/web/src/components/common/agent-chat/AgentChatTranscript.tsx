@@ -89,7 +89,7 @@ export function AgentChatTranscript({
       >
         <MessageScrollerContent
           aria-busy={status !== 'ready' || isLoadingEarlier}
-          className="mx-auto w-full max-w-3xl gap-6 p-4"
+          className="mx-auto w-full max-w-3xl gap-6 p-4 pb-10"
         >
           {messages.map((message, index) => {
             const previous = messages[index - 1];

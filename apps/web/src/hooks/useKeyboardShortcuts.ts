@@ -19,6 +19,8 @@ const VIEW_HOTKEYS: [HotkeyId, WorkItemsView][] = [
 // combination is a plain key that would land in the text being typed.
 export function useKeyboardShortcuts(opts: {
   hasProject: boolean;
+  // Whether this project has a chat panel to show at all.
+  hasChat: boolean;
   projects: Project[];
   // True while any modal/overlay is open, which suppresses the app bindings.
   overlayOpen: boolean;
@@ -28,9 +30,11 @@ export function useKeyboardShortcuts(opts: {
   onNewIssue: () => void;
   onNewProject: () => void;
   onSettings: () => void;
+  onToggleChat: () => void;
 }) {
   const {
     hasProject,
+    hasChat,
     projects,
     overlayOpen,
     onToggleCommand,
@@ -39,6 +43,7 @@ export function useKeyboardShortcuts(opts: {
     onNewIssue,
     onNewProject,
     onSettings,
+    onToggleChat,
   } = opts;
   const { matches, digit } = useHotkeyMatch();
 
@@ -85,12 +90,18 @@ export function useKeyboardShortcuts(opts: {
       if (hasProject && matches(e, 'project.settings')) {
         e.preventDefault();
         onSettings();
+        return;
+      }
+      if (hasChat && matches(e, 'chat.toggle')) {
+        e.preventDefault();
+        onToggleChat();
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [
     hasProject,
+    hasChat,
     projects,
     overlayOpen,
     matches,
@@ -101,5 +112,6 @@ export function useKeyboardShortcuts(opts: {
     onNewIssue,
     onNewProject,
     onSettings,
+    onToggleChat,
   ]);
 }

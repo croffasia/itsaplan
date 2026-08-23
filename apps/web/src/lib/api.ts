@@ -558,6 +558,11 @@ export interface AiChatMessage {
   stopped?: boolean;
 }
 
+export interface AiChatThreadPage {
+  items: AiChatThread[];
+  nextPage: number | null;
+}
+
 export interface AiChatMessagePage {
   items: AiChatMessage[];
   nextPage: number | null;
@@ -656,7 +661,11 @@ export async function* streamAiAgentChat(
   );
   const chat = `/projects/${projectKey}/ai-agents/${agentId}/chat/${sent.messageId}`;
   const cancel = () => {
-    request(`${chat}/cancel`, { method: 'POST' }).catch(() => {});
+    // A stop the API refused leaves the answer being produced. The stream this belongs
+    // to is already gone, so the console is the only place left to report it.
+    request(`${chat}/cancel`, { method: 'POST' }).catch((err) => {
+      console.error('Could not stop the answer', err);
+    });
   };
   if (signal?.aborted) cancel();
   else signal?.addEventListener('abort', cancel, { once: true });
@@ -1193,7 +1202,7 @@ export interface TelegramLinkStart {
 // project the app root reopens (null until the user has opened one).
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type IssueOpenMode = 'panel' | 'page';
-export type StartPage = 'inbox' | 'dashboard' | 'work-items' | 'initiatives' | 'ai-chat';
+export type StartPage = 'inbox' | 'dashboard' | 'work-items' | 'initiatives';
 export type IssueStatsView = 'compact' | 'timeline';
 export type IssueActivityView = 'flat' | 'grouped';
 
@@ -2899,13 +2908,19 @@ export const api = {
       `/projects/${projectKey}/agent-schedules/${scheduleId}/runs${runId != null ? `/${runId}` : ''}/cancel`,
       { method: 'POST' },
     ),
-  // The caller's own chat threads with an agent, newest first.
-  listAiAgentThreads: (projectKey: string, agentId: number) =>
-    request<AiChatThread[]>(`/projects/${projectKey}/ai-agents/${agentId}/threads`),
+  // One page of the caller's own chat threads with an agent, newest first.
+  listAiAgentThreads: (projectKey: string, agentId: number, page: number) =>
+    request<AiChatThreadPage>(`/projects/${projectKey}/ai-agents/${agentId}/threads?page=${page}`),
   // The transcript of one chat thread, to restore the conversation.
   getAiAgentThreadMessages: (projectKey: string, agentId: number, threadId: string, page: number) =>
     request<AiChatMessagePage>(
       `/projects/${projectKey}/ai-agents/${agentId}/threads/${encodeURIComponent(threadId)}/messages?page=${page}`,
+    ),
+  // Renames one of the caller's chat threads.
+  renameAiAgentThread: (projectKey: string, agentId: number, threadId: string, title: string) =>
+    request<void>(
+      `/projects/${projectKey}/ai-agents/${agentId}/threads/${encodeURIComponent(threadId)}`,
+      { method: 'PATCH', body: JSON.stringify({ title }) },
     ),
   deleteAiAgentThread: (projectKey: string, agentId: number, threadId: string) =>
     request<void>(

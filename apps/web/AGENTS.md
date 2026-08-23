@@ -95,6 +95,9 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   outside `@layer`: Tailwind orders its layers `theme, base, components, utilities`, so anything
   in `@layer components` loses to the utility classes on the element. When the change is a prop
   the component already exposes (`Sidebar side`), pass it from the caller rather than writing CSS.
+  One prop reaches neither the caller nor CSS and has to be re-applied after a re-add:
+  `chart.tsx` passes `debounce` to recharts' `ResponsiveContainer`, without which a chart in a
+  container that resizes itself loops until React reports "Maximum update depth exceeded".
 - Tailwind v4: no `tailwind.config`; tokens live in `src/app/globals.css` (`@theme`, CSS vars).
 - `NEXT_PUBLIC_*` are build-time — set them in `apps/web/.env` before `next build`, or as
   web Dockerfile build args.

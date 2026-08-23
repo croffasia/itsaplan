@@ -1,4 +1,4 @@
-import { LayoutGrid, ListChecks, Plus, SquarePlus } from 'lucide-react';
+import { LayoutGrid, ListChecks, MessagesSquare, Plus, SquarePlus } from 'lucide-react';
 import type { Project } from '@/lib/api';
 import { useTranslations } from 'next-intl';
 import { VIEWS, type WorkItemsView } from '@/utils/viewTypes';
@@ -21,6 +21,7 @@ export function useAppCommands({
   onSelectAll,
   onNewProject,
   onSelectProject,
+  onToggleChat,
 }: {
   hasProject: boolean;
   // True on the work items routes, where the layout and selection commands apply.
@@ -33,6 +34,7 @@ export function useAppCommands({
   onSelectAll: () => void;
   onNewProject: () => void;
   onSelectProject: (key: string) => void;
+  onToggleChat: () => void;
 }): {
   board: CommandSection | null;
   general: CommandSection | null;
@@ -78,6 +80,16 @@ export function useAppCommands({
       keywords: 'create add task',
       shortcut: hotkey('issue.new') ?? undefined,
       run: onNewIssue,
+    });
+  }
+  if (hasProject && can('ai_agents', 'read')) {
+    generalItems.push({
+      id: 'general.ai-chat',
+      label: tPalette('toggleChat'),
+      icon: <MessagesSquare />,
+      keywords: 'ai agents chat panel',
+      shortcut: hotkey('chat.toggle') ?? undefined,
+      run: onToggleChat,
     });
   }
   generalItems.push({

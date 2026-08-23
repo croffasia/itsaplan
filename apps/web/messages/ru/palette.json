@@ -6,6 +6,7 @@
   "selectAllIssues": "Выбрать все задачи",
   "newIssue": "Новая задача",
   "newProject": "Новый проект",
+  "toggleChat": "Показать или скрыть ИИ-чат",
   "board": "Доска",
   "commands": "Команды",
   "switchProject": "Сменить проект"

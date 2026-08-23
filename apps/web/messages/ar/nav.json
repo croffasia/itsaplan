@@ -7,8 +7,6 @@
   "cycles": "الدورات (cycles)",
   "notes": "الملاحظات",
   "aiTeam": "فريق الذكاء الاصطناعي",
-  "chat": "المحادثة",
-  "chatWithAiTeam": "محادثة فريق الذكاء الاصطناعي",
   "configure": "تهيئة",
   "aiAgents": "وكلاء الذكاء الاصطناعي (AI agents)",
   "configuration": "التهيئة",
@@ -34,7 +32,7 @@
   "search": "ابحث أو نفّذ أمرًا…",
   "searchHint": "ابحث أو نفّذ أمرًا ({key})",
   "newIssueHint": "مهمة جديدة ({key})",
-  "aiChat": "محادثة الذكاء الاصطناعي",
+  "aiChatHint": "الدردشة مع فريق الذكاء الاصطناعي ({key})",
   "sections": "الأقسام",
   "doubleClickToRename": "انقر نقرًا مزدوجًا لإعادة التسمية",
   "groups": {

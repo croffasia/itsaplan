@@ -22,26 +22,34 @@ import {
   ChatMessagesResponse,
   ChatThreadListResponse,
   CreateAgentResponse,
+  renameThreadBody,
   RegenerateKeyResponse,
   RunAgentResponse,
   agentParams,
   createAgentBody,
   runBody,
   runsQuery,
-  threadMessagesQuery,
+  threadPageQuery,
   threadParams,
   updateAgentBody,
 } from './model';
 import { runAgent, streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
 import { peoplePreamble } from './prompt/run-context';
+import { chartPreamble } from './prompt/framing';
 import type { SessionUser } from '#shared/auth-context';
 import { listAgentRuns } from './run-queue';
-import { listChatThreads, getChatThreadMessages, deleteChatThread } from './runtime/memory';
+import {
+  listChatThreads,
+  getChatThreadMessages,
+  deleteChatThread,
+  renameChatThread,
+} from './runtime/memory';
 import { isOwnChatThread } from './runtime/thread-ids';
 import {
   listThreads as listExternalThreads,
   getThreadMessages as getExternalThreadMessages,
   deleteThread as deleteExternalThread,
+  renameThread as renameExternalThread,
 } from '../chat/service';
 
 // Run options for an interactive chat run (the test chat): the caller owns the memory
@@ -56,9 +64,14 @@ function chatRunOpts(user: SessionUser | null, agentId: number, threadId?: strin
   return {
     callerUserId: caller.id,
     threadId: threadId ?? null,
-    contextPreamble: peoplePreamble({
-      requester: { name: user?.name ?? caller.email ?? 'User', username: user?.username ?? null },
-    }),
+    contextPreamble:
+      chartPreamble() +
+      peoplePreamble({
+        requester: {
+          name: user?.name ?? caller.email ?? 'User',
+          username: user?.username ?? null,
+        },
+      }),
   };
 }
 
@@ -74,9 +87,15 @@ function threadStore(kind: AgentKind) {
     ? {
         list: listExternalThreads,
         messages: getExternalThreadMessages,
+        rename: renameExternalThread,
         remove: deleteExternalThread,
       }
-    : { list: listChatThreads, messages: getChatThreadMessages, remove: deleteChatThread };
+    : {
+        list: listChatThreads,
+        messages: getChatThreadMessages,
+        rename: renameChatThread,
+        remove: deleteChatThread,
+      };
 }
 
 export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['AI Agents'] } })
@@ -284,18 +303,20 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
   )
 
-  // The caller's own chat threads with this agent, newest first. Scoped to the
-  // caller (the thread's owner), so a user only sees their own conversations.
+  // The caller's own chat threads with this agent, newest first, a page at a time.
+  // Scoped to the caller (the thread's owner), so a user only sees their own
+  // conversations.
   .get(
     '/projects/:projectKey/ai-agents/:agentId/threads',
-    async ({ params, project, user }) => {
+    async ({ params, project, query, user }) => {
       const caller = requireUser(user);
       const agent = await getAgentById(params.agentId, project.id);
       if (!agent) throw new HttpError(404, 'Agent not found');
-      return threadStore(agent.kind).list(caller.id, params.agentId);
+      return threadStore(agent.kind).list(caller.id, params.agentId, query.page);
     },
     {
       params: agentParams,
+      query: threadPageQuery,
       permission: ['ai_agents', 'read'],
       response: { 200: ChatThreadListResponse, ...commonErrors },
       detail: { summary: 'List chat threads' },
@@ -320,10 +341,31 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
     {
       params: threadParams,
-      query: threadMessagesQuery,
+      query: threadPageQuery,
       permission: ['ai_agents', 'read'],
       response: { 200: ChatMessagesResponse, ...commonErrors },
       detail: { summary: 'Get thread messages' },
+    },
+  )
+
+  // Renames one of the caller's chat threads. Scoped the same way as reading it: a
+  // thread owned by another user is a 404.
+  .patch(
+    '/projects/:projectKey/ai-agents/:agentId/threads/:threadId',
+    async ({ params, project, body, user }) => {
+      const caller = requireUser(user);
+      const agent = await getAgentById(params.agentId, project.id);
+      if (!agent) throw new HttpError(404, 'Agent not found');
+      const renamed = await threadStore(agent.kind).rename(params.threadId, caller.id, body.title);
+      if (!renamed) throw new HttpError(404, 'Thread not found');
+      return noContent();
+    },
+    {
+      params: threadParams,
+      body: renameThreadBody,
+      permission: ['ai_agents', 'read'],
+      response: { 204: t.Void(), ...commonErrors },
+      detail: { summary: 'Rename a chat thread' },
     },
   )
 

@@ -144,7 +144,7 @@ export const userPreference = pgTable(
     check('user_preference_issue_open_mode_check', sql`${t.issueOpenMode} IN ('panel', 'page')`),
     check(
       'user_preference_start_page_check',
-      sql`${t.startPage} IN ('inbox', 'dashboard', 'work-items', 'initiatives', 'ai-chat')`,
+      sql`${t.startPage} IN ('inbox', 'dashboard', 'work-items', 'initiatives')`,
     ),
     check(
       'user_preference_issue_stats_view_check',

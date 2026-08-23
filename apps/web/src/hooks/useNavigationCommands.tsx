@@ -5,7 +5,6 @@ import {
   FolderKanban,
   Inbox,
   LayoutDashboard,
-  MessagesSquare,
   Server,
   Shield,
   SquareKanban,
@@ -15,7 +14,6 @@ import {
 import { useTranslations } from 'next-intl';
 import { useSession } from '@/lib/auth-client';
 import {
-  aiChatPath,
   aiSectionPath,
   aiTeamPath,
   apiDocsPath,
@@ -80,8 +78,6 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
     );
     if (features.initiatives && can('initiatives', 'read'))
       add('nav.initiatives', t('initiatives'), <Target />, initiativesPath(key), 'epics');
-    if (can('ai_agents', 'read'))
-      add('nav.ai-chat', t('chatWithAiTeam'), <MessagesSquare />, aiChatPath(key), 'ai agents');
     for (const s of AI_TEAM_SECTIONS) {
       if (can(s.resource, 'read'))
         add(

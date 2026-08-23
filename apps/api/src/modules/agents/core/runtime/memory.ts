@@ -2,7 +2,7 @@ import { Memory } from '@mastra/memory';
 import { PostgresStore } from '@mastra/pg';
 import { toIso } from '../helpers/dates';
 import { appendTextPart, toolArgsText, toolText } from '../../chat-parts';
-import type { ChatMessageDTO, ChatMessagePage, ChatPart, ChatThreadSummary } from '../../model';
+import type { ChatMessageDTO, ChatMessagePage, ChatPart, ChatThreadPage } from '../../model';
 
 // Conversation memory for internal agents. Threads and their messages are
 // persisted in a Postgres-backed store (Mastra manages its own tables), reusing
@@ -20,6 +20,11 @@ import type { ChatMessageDTO, ChatMessagePage, ChatPart, ChatThreadSummary } fro
 
 // Default recency window when an agent has memory enabled but no count set.
 export const DEFAULT_LAST_MESSAGES = 20;
+
+const THREAD_PAGE_SIZE = 25;
+// The length a title is cut to, the same for one the agent was given and one a member
+// typed.
+const TITLE_LIMIT = 80;
 
 let store: PostgresStore | null = null;
 
@@ -74,10 +79,24 @@ export async function ensureThread(
   await memory.createThread({
     threadId,
     resourceId,
-    title: title.slice(0, 80),
+    title: title.slice(0, TITLE_LIMIT),
     metadata: meta,
     saveThread: true,
   });
+}
+
+// Renames one of the caller's chat threads. Returns false when the thread does not
+// exist or belongs to someone else, so the caller maps it to a 404.
+export async function renameChatThread(
+  threadId: string,
+  resourceId: string,
+  title: string,
+): Promise<boolean> {
+  const memory = getReadMemory();
+  const thread = await memory.getThreadById({ threadId, resourceId });
+  if (!thread) return false;
+  await memory.updateThread({ id: threadId, title: title.slice(0, TITLE_LIMIT) });
+  return true;
 }
 
 // Deletes one of the caller's chat threads with its messages. Returns false when the
@@ -102,25 +121,28 @@ export async function deleteThreadsWhere(
   return threads.length;
 }
 
-// Lists a user's chat threads with one agent, newest first. Scoped by resourceId
+// One page of a user's chat threads with one agent, newest first. Scoped by resourceId
 // (the caller) and the agent binding in metadata, so a caller only ever sees their
 // own conversations with that agent.
 export async function listChatThreads(
   resourceId: string,
   agentId: number,
-): Promise<ChatThreadSummary[]> {
+  page = 0,
+): Promise<ChatThreadPage> {
   const res = await getReadMemory().listThreads({
     filter: { resourceId, metadata: { agentId, kind: 'chat' } },
     orderBy: { field: 'updatedAt', direction: 'DESC' },
-    perPage: false,
+    perPage: THREAD_PAGE_SIZE,
+    page,
   });
-  return res.threads.map((t) => ({
+  const items = res.threads.map((t) => ({
     id: t.id,
     title: t.title && t.title.length > 0 ? t.title : null,
     cliSessionId: null,
     createdAt: toIso(t.createdAt),
     updatedAt: toIso(t.updatedAt),
   }));
+  return { items, nextPage: res.hasMore ? page + 1 : null };
 }
 
 // Loads the transcript of one chat thread for the given owner. Returns null when

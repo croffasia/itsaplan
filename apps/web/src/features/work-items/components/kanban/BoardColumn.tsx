@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronsRightLeft, EyeOff, Plus } from 'lucide-react';
+import { ChevronsRightLeft, EyeOff, Pin, PinOff, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type ProjectDetail, type BoardIssue } from '@/lib/api';
 import { type Maps, type IssueGroup } from '@/utils/project';
@@ -16,7 +16,7 @@ import { DropLine } from '../shared/DropLine';
 import { SelectAllToggle } from './SelectAllToggle';
 import { useIsOverContainer } from '../../hooks/useIsOverContainer';
 import { useIncomingCount } from '../../hooks/useIncomingCount';
-import { COLUMN_WIDTH } from '../../utils/kanban';
+import { COLUMN_WIDTH, PINNED_COLUMN } from '../../utils/kanban';
 import { wipAllows, wipFullColor, WIP_FULL_TINT, type WipState } from '../../utils/wipLimit';
 import { WipCount } from './WipCount';
 
@@ -42,6 +42,8 @@ export function BoardColumn({
   onAddIssue,
   onHide,
   onCollapse,
+  pinned,
+  onTogglePin,
   wip,
   filtered,
   boardIssues,
@@ -62,6 +64,8 @@ export function BoardColumn({
   onAddIssue: () => void;
   onHide: () => void;
   onCollapse: () => void;
+  pinned: boolean;
+  onTogglePin: () => void;
   // The column's WIP limit, or null when it has none or this board is not grouped
   // by status. `filtered` says whether the cards shown are a subset of the column.
   wip: WipState | null;
@@ -111,11 +115,12 @@ export function BoardColumn({
     <div
       className={cn(
         'group/column flex h-full shrink-0 flex-col rounded-md bg-kanban-column px-3 py-2',
+        pinned && PINNED_COLUMN,
         wip?.full && WIP_FULL_TINT[wipFullColor(wip)],
       )}
       style={{ width: COLUMN_WIDTH }}
     >
-      {/* Stop header clicks (select-all, collapse, hide, add) from reaching the
+      {/* Stop header clicks (select-all, pin, collapse, hide, add) from reaching the
           board background, which clears the selection. */}
       <div className="mb-2 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -125,6 +130,15 @@ export function BoardColumn({
         </div>
         <div className="flex items-center gap-1">
           {!readOnly && <SelectAllToggle ids={issues.map((i) => i.id)} />}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hidden size-6 text-muted-foreground md:inline-flex"
+            onClick={onTogglePin}
+            title={pinned ? t('unpin') : t('pin')}
+          >
+            {pinned ? <PinOff /> : <Pin />}
+          </Button>
           <Button
             variant="ghost"
             size="icon"
@@ -159,7 +173,10 @@ export function BoardColumn({
 
       <div
         ref={mergedRef}
-        className={cn('min-h-0 flex-1 overflow-y-auto rounded-md', isOverColumn && 'bg-accent/40')}
+        className={cn(
+          'min-h-0 flex-1 overflow-y-auto rounded-md',
+          isOverColumn && 'bg-kanban-column-raised',
+        )}
       >
         <div
           style={{

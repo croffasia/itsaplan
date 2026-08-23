@@ -1,10 +1,11 @@
-import { ChevronsLeftRight, Plus } from 'lucide-react';
+import { ChevronsLeftRight, Pin, PinOff, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type IssueGroup } from '@/utils/project';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { GroupDot } from '../shared/GroupDot';
+import { PINNED_COLUMN } from '../../utils/kanban';
 import { type WipState, WIP_FULL_TEXT, wipFullColor } from '../../utils/wipLimit';
 
 // A column collapsed to a narrow vertical strip. It stays in place (in column
@@ -14,7 +15,9 @@ export function CollapsedColumn({
   group,
   count,
   wip,
+  pinned,
   onExpand,
+  onTogglePin,
   onAddIssue,
   readOnly,
 }: {
@@ -23,7 +26,9 @@ export function CollapsedColumn({
   // The column's WIP limit, or null when it has none. The strip is too narrow for
   // the full `count / max`, so a full column only colours its count.
   wip: WipState | null;
+  pinned: boolean;
   onExpand: () => void;
+  onTogglePin: () => void;
   onAddIssue: () => void;
   // In a read-only share the add affordance is hidden.
   readOnly?: boolean;
@@ -32,7 +37,12 @@ export function CollapsedColumn({
   const { can } = usePermissions();
   const canCreateIssue = can('work_items', 'create') && !readOnly;
   return (
-    <div className="flex h-full w-10 shrink-0 flex-col items-center gap-2 rounded-md bg-kanban-column py-2">
+    <div
+      className={cn(
+        'flex h-full w-10 shrink-0 flex-col items-center gap-2 rounded-md bg-kanban-column py-2',
+        pinned && PINNED_COLUMN,
+      )}
+    >
       <Button
         variant="ghost"
         size="icon"
@@ -41,6 +51,15 @@ export function CollapsedColumn({
         title={t('expand')}
       >
         <ChevronsLeftRight />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="hidden size-6 text-muted-foreground md:inline-flex"
+        onClick={onTogglePin}
+        title={pinned ? t('unpin') : t('pin')}
+      >
+        {pinned ? <PinOff /> : <Pin />}
       </Button>
       {canCreateIssue && (
         <Button

@@ -36,6 +36,12 @@ export function issuesToMove(
 // the column header row lines up with the cells below it.
 export const COLUMN_WIDTH = 348;
 
+// A full column's WIP tint still wins over this background: BoardColumn passes it
+// to cn() after this one. Below the mobile breakpoint one column already fills the
+// screen, so the pinned one only leads the column order there.
+export const PINNED_COLUMN =
+  'md:sticky md:start-0 md:z-10 bg-kanban-column-raised shadow-[var(--pinned-column-shadow)]';
+
 export const boardCollision = preferPrefix('card:');
 
 // Collapsed swimlanes are a per-project, per-swimlane-field client-only preference,

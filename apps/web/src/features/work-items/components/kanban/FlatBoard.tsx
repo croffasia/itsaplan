@@ -57,6 +57,8 @@ export default function FlatBoard({
       hiddenGroups: hide
         ? [...settings.hiddenGroups, key]
         : settings.hiddenGroups.filter((k) => k !== key),
+      // A hidden column is off the board, so it cannot stay pinned.
+      pinnedGroup: hide && settings.pinnedGroup === key ? null : settings.pinnedGroup,
     });
 
   // Collapsed columns stay in place as a narrow strip; the state lives in the
@@ -71,6 +73,10 @@ export default function FlatBoard({
         : settings.collapsedGroups.filter((k) => k !== key),
     });
 
+  // At most one column is pinned; it persists the same way as the two sets above.
+  const togglePin = (key: string) =>
+    onSettingsChange({ ...settings, pinnedGroup: settings.pinnedGroup === key ? null : key });
+
   const groups = buildGroups(project, settings.group, groupLabels, filters);
   const sorted = sortIssues(project.issues, settings.sort, project);
   const issuesByGroup = groupIssues(groups, sorted, settings.group);
@@ -83,6 +89,13 @@ export default function FlatBoard({
     : groups.filter((g) => (issuesByGroup.get(g.key)?.length ?? 0) > 0);
   const visibleGroups = baseGroups.filter((g) => !hiddenSet.has(g.key));
   const hiddenGroups = baseGroups.filter((g) => hiddenSet.has(g.key));
+
+  // The pinned column renders first. A key that names no group on the board
+  // (another grouping field, a since-deleted column) pins nothing.
+  const pinnedGroup = visibleGroups.find((g) => g.key === settings.pinnedGroup) ?? null;
+  const orderedGroups = pinnedGroup
+    ? [pinnedGroup, ...visibleGroups.filter((g) => g !== pinnedGroup)]
+    : visibleGroups;
 
   // Reordering inside a column only holds when the view is ordered manually: with
   // any other sort field the card would snap back to where the sort puts it. Cards
@@ -131,14 +144,16 @@ export default function FlatBoard({
         className="flex h-full gap-3 overflow-x-auto p-4"
         onClick={() => selection.isSelecting && selection.clear()}
       >
-        {visibleGroups.map((group) =>
+        {orderedGroups.map((group) =>
           collapsedSet.has(group.key) ? (
             <CollapsedColumn
               key={group.key}
               group={group}
               count={issuesByGroup.get(group.key)?.length ?? 0}
               wip={wipOf(group)}
+              pinned={group === pinnedGroup}
               onExpand={() => setCollapsed(group.key, false)}
+              onTogglePin={() => togglePin(group.key)}
               onAddIssue={() => addIssueTo(group)}
               readOnly={readOnly}
             />
@@ -159,6 +174,8 @@ export default function FlatBoard({
               onAddIssue={() => addIssueTo(group)}
               onHide={() => setHidden(group.key, true)}
               onCollapse={() => setCollapsed(group.key, true)}
+              pinned={group === pinnedGroup}
+              onTogglePin={() => togglePin(group.key)}
               readOnly={readOnly}
             />
           ),

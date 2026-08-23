@@ -144,6 +144,9 @@ export interface ViewSettings {
   // hiddenGroups, empty for every other layout, and part of the display so each
   // saved view keeps its own collapsed set.
   collapsedGroups: string[];
+  // Group key of the column pinned to the start edge of the flat project, or null
+  // when none is. Namespaced like hiddenGroups, and null for every other layout.
+  pinnedGroup: string | null;
 }
 
 const DEFAULT_SORT: Sort = { field: 'manual', dir: 'asc' };
@@ -160,6 +163,7 @@ const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> =
   weekStart: 0,
   hiddenGroups: [],
   collapsedGroups: [],
+  pinnedGroup: null,
 };
 
 // The properties shown by default per view; the Timeline and Calendar lay issues
@@ -299,6 +303,7 @@ export function normalizeViewSettings(
     collapsedGroups: Array.isArray(s.collapsedGroups)
       ? (s.collapsedGroups as unknown[]).filter((x): x is string => typeof x === 'string')
       : d.collapsedGroups,
+    pinnedGroup: typeof s.pinnedGroup === 'string' ? s.pinnedGroup : d.pinnedGroup,
   };
 }
 

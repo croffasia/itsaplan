@@ -44,6 +44,9 @@
   --color-foreground: var(--foreground);
   --color-background: var(--background);
   --color-kanban-column: var(--kanban-column);
+  --color-kanban-column-raised: var(--kanban-column-raised);
+  --color-kanban-column-wip-destructive: var(--kanban-column-wip-destructive);
+  --color-kanban-column-wip-warning: var(--kanban-column-wip-warning);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -108,6 +111,9 @@
   --priority-high: #f97316;
   --priority-urgent: #f2683c;
   --kanban-column: oklch(0.945 0 0);
+  --kanban-column-raised: oklch(0.958 0 0);
+  --kanban-column-wip-destructive: oklch(0.923 0.011 27);
+  --kanban-column-wip-warning: oklch(0.926 0.007 75);
   --kanban-card: oklch(0.972 0 0);
   --kanban-card-hover: oklch(0.995 0 0);
   --kanban-card-blocked: oklch(0.969 0.008 25);
@@ -116,6 +122,7 @@
   --row-blocked-hover: oklch(0.968 0.013 25);
   --kanban-card-selected: oklch(0.925 0.04 265);
   --overlay-shadow: 0 12px 28px -8px rgb(0 0 0 / 0.18), 0 4px 10px -4px rgb(0 0 0 / 0.1);
+  --pinned-column-shadow: 0 0 18px 2px rgb(0 0 0 / 0.16);
   --modal-shadow: 0 32px 64px -16px rgb(0 0 0 / 0.28), 0 12px 24px -12px rgb(0 0 0 / 0.16);
 }
 
@@ -157,6 +164,9 @@
   --priority-high: #f97316;
   --priority-urgent: #f2683c;
   --kanban-column: oklch(0.16 0 0);
+  --kanban-column-raised: oklch(0.19 0 0);
+  --kanban-column-wip-destructive: oklch(0.191 0.009 22);
+  --kanban-column-wip-warning: oklch(0.193 0.007 80);
   --kanban-card: oklch(0.215 0 0);
   --kanban-card-hover: oklch(0.25 0 0);
   --kanban-card-blocked: oklch(0.222 0.012 25);
@@ -165,6 +175,7 @@
   --row-blocked-hover: oklch(0.23 0.016 25);
   --kanban-card-selected: oklch(0.31 0.07 266);
   --overlay-shadow: 0 18px 40px -12px rgb(0 0 0 / 0.7), 0 6px 16px -6px rgb(0 0 0 / 0.55);
+  --pinned-column-shadow: 0 0 20px 4px rgb(0 0 0 / 0.6);
   --modal-shadow: 0 40px 80px -20px rgb(0 0 0 / 0.85), 0 16px 32px -16px rgb(0 0 0 / 0.7);
 }
 

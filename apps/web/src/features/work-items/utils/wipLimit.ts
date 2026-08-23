@@ -51,9 +51,11 @@ export const WIP_FULL_TEXT: Record<WipFullColor, string> = {
   warning: 'text-warning',
 };
 
+// Opaque, not a translucent tint: a pinned column is sticky, and the columns
+// scrolling behind it would show through.
 export const WIP_FULL_TINT: Record<WipFullColor, string> = {
-  destructive: 'bg-destructive/5',
-  warning: 'bg-warning/5',
+  destructive: 'bg-kanban-column-wip-destructive',
+  warning: 'bg-kanban-column-wip-warning',
 };
 
 // Whether `incoming` more issues may enter the column. Only a hard limit refuses;

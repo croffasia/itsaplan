@@ -1,5 +1,7 @@
 {
   "newIssue": "New issue",
+  "pin": "Pin",
+  "unpin": "Unpin",
   "collapse": "Collapse",
   "expand": "Expand",
   "hide": "Hide",

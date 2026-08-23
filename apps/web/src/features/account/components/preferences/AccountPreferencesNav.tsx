@@ -39,9 +39,7 @@ export default function AccountPreferencesNav() {
       activeId={activeId}
       label={t('label')}
       onJump={jump}
-      // The page scrolls under a static top bar, so the rail keeps a margin of its
-      // own once it pins.
-      className="top-8"
+      className="top-16"
     />
   );
 }

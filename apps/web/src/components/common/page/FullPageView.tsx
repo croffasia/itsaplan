@@ -30,7 +30,7 @@ export default function FullPageView({
   const t = useTranslations('common');
   return (
     <div className="min-h-svh bg-background">
-      <header className="flex h-12 items-center gap-2 border-b px-4">
+      <header className="sticky top-0 z-20 flex h-12 items-center gap-2 border-b bg-background px-4">
         <Button asChild variant="ghost" size="icon" className="size-8" title={t('back')}>
           <Link href="/">
             <ArrowLeft />

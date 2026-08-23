@@ -17,7 +17,7 @@ export default function AccountPreferencesSection({
   children: ReactNode;
 }) {
   return (
-    <section id={id} className="scroll-mt-4 border-t py-8 first:border-t-0 first:pt-0">
+    <section id={id} className="scroll-mt-16 border-t py-8 first:border-t-0 first:pt-0">
       <div className="mb-1">
         <h2 className="text-sm font-medium">{title}</h2>
         {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}

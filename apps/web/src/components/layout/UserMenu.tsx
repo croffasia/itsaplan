@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Signed-in user control in the header: shows the account avatar and a menu with
 // the email, the role, links to preferences, connected accounts, account security
@@ -52,11 +53,16 @@ export default function UserMenu() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button type="button" title={user.email} className="rounded-full outline-none">
-          <Avatar name={user.name || user.email} image={image} className="size-7 text-[11px]" />
-        </button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <button type="button" aria-label={user.email} className="rounded-full outline-none">
+              <Avatar name={user.name || user.email} image={image} className="size-7 text-[11px]" />
+            </button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>{user.email}</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="flex flex-col gap-1">
           <span className="truncate text-sm font-medium">{user.email}</span>

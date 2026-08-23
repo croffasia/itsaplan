@@ -6,6 +6,7 @@ import { useHotkeyLabel } from '@/context/useHotkeys';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LocaleToggle } from '@/components/locale-toggle';
 import UserMenu from '@/components/layout/UserMenu';
@@ -40,45 +41,60 @@ export default function AppHeader({
       <Separator orientation="vertical" className="me-1 h-4" />
       <div className="min-w-0 truncate text-sm font-medium">{title}</div>
 
-      <button
-        type="button"
-        onClick={onOpenCommand}
-        title={t('searchHint', { key: paletteKey ?? '' })}
-        className="ms-auto flex size-8 shrink-0 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:bg-accent sm:w-auto sm:max-w-xs sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:gap-2 sm:px-3"
-      >
-        <Search className="size-4 shrink-0" />
-        <span className="hidden truncate sm:inline">{t('search')}</span>
-        <kbd
-          dir="ltr"
-          className="ms-auto hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] sm:inline"
-        >
-          {paletteKey}
-        </kbd>
-      </button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={onOpenCommand}
+            aria-label={t('searchHint', { key: paletteKey ?? '' })}
+            className="ms-auto flex size-8 shrink-0 items-center justify-center rounded-md border text-sm text-muted-foreground transition-colors hover:bg-accent sm:w-auto sm:max-w-xs sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:gap-2 sm:px-3"
+          >
+            <Search className="size-4 shrink-0" />
+            <span className="hidden truncate sm:inline">{t('search')}</span>
+            <kbd
+              dir="ltr"
+              className="ms-auto hidden rounded bg-muted px-1.5 py-0.5 font-mono text-[11px] sm:inline"
+            >
+              {paletteKey}
+            </kbd>
+          </button>
+        </TooltipTrigger>
+        <TooltipContent>{t('searchHint', { key: paletteKey ?? '' })}</TooltipContent>
+      </Tooltip>
 
       {canCreateIssue && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-8 shrink-0"
-          title={t('newIssueHint', { key: newIssueKey ?? '' })}
-          onClick={onNewIssue}
-        >
-          <Plus />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8 shrink-0"
+              aria-label={t('newIssueHint', { key: newIssueKey ?? '' })}
+              onClick={onNewIssue}
+            >
+              <Plus />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('newIssueHint', { key: newIssueKey ?? '' })}</TooltipContent>
+        </Tooltip>
       )}
 
       {canUseChat && (
-        <Button
-          variant={chatActive ? 'default' : 'outline'}
-          size="icon"
-          className="size-8 shrink-0"
-          title={t('aiChatHint', { key: chatKey ?? '' })}
-          aria-pressed={chatActive}
-          onClick={onToggleChat}
-        >
-          <MessagesSquare />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant={chatActive ? 'default' : 'outline'}
+              size="icon"
+              className="size-8 shrink-0"
+              aria-label={t('aiChatHint', { key: chatKey ?? '' })}
+              aria-pressed={chatActive}
+              onClick={onToggleChat}
+            >
+              <MessagesSquare />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t('aiChatHint', { key: chatKey ?? '' })}</TooltipContent>
+        </Tooltip>
       )}
 
       <LocaleToggle />

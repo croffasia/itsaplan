@@ -5,6 +5,7 @@ import { useTheme } from 'next-themes';
 import { useTranslations } from 'next-intl';
 import { Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useUpdateAccountPreferences } from '@/services/preferences.service';
 
 // Toggles between the light and dark theme. The choice is saved to the account, the
@@ -22,19 +23,23 @@ export function ThemeToggle() {
   const isDark = resolvedTheme === 'dark';
 
   return (
-    <Button
-      variant="outline"
-      size="icon"
-      className="size-8 shrink-0"
-      title={t('toggleTheme')}
-      aria-label={t('toggleTheme')}
-      onClick={() => {
-        const next = isDark ? 'light' : 'dark';
-        setTheme(next);
-        update.mutate({ theme: next });
-      }}
-    >
-      {mounted && (isDark ? <Sun /> : <Moon />)}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-8 shrink-0"
+          aria-label={t('toggleTheme')}
+          onClick={() => {
+            const next = isDark ? 'light' : 'dark';
+            setTheme(next);
+            update.mutate({ theme: next });
+          }}
+        >
+          {mounted && (isDark ? <Sun /> : <Moon />)}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{t('toggleTheme')}</TooltipContent>
+    </Tooltip>
   );
 }

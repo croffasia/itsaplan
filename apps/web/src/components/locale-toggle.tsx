@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { LOCALES, LOCALE_FLAGS, LOCALE_LABELS, type Locale } from '@/i18n/locales';
 import { useUpdateAccountPreferences } from '@/services/preferences.service';
 
@@ -22,17 +23,21 @@ export function LocaleToggle() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-8 shrink-0"
-          title={t('language')}
-          aria-label={t('language')}
-        >
-          <Languages />
-        </Button>
-      </DropdownMenuTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              size="icon"
+              className="size-8 shrink-0"
+              aria-label={t('language')}
+            >
+              <Languages />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>{t('language')}</TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="end">
         {LOCALES.map((value) => (
           <DropdownMenuItem key={value} onSelect={() => update.mutate({ locale: value })}>

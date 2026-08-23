@@ -33,7 +33,9 @@ export function AiChatThread({
     status,
     activeTool,
     threadId: activeThreadId,
+    pending,
     send,
+    removePending,
     loadThread,
     prependHistory,
   } = useAgentChat(projectKey, agent.id, agent.kind === 'external');
@@ -96,7 +98,9 @@ export function AiChatThread({
       messages={messages}
       status={status}
       activeTool={activeTool}
+      pending={pending}
       onSend={send}
+      onRemovePending={removePending}
       hasEarlierMessages={messagesQuery.hasNextPage}
       isLoadingEarlier={messagesQuery.isFetchingNextPage}
       onLoadEarlier={() => void messagesQuery.fetchNextPage()}

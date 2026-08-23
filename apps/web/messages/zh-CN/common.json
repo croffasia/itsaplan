@@ -87,6 +87,8 @@
     "toolOutput": "输出",
     "thinking": "正在思考…",
     "waitingForRunner": "正在等待运行器…",
+    "waitingToSend": "等待发送",
+    "removePending": "删除消息",
     "title": "与 {agent} 对话",
     "unreachable": "无法连接代理，请重试。",
     "runnerOffline": "运行器未连接",

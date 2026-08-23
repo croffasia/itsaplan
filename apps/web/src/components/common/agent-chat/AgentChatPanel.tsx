@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { ArrowUp, Bot, RotateCw } from 'lucide-react';
 import type { AiAgent } from '@/lib/api';
-import type { ChatMessage, ChatStatus } from '@/hooks/useAgentChat';
+import type { ChatMessage, ChatStatus, PendingMessage } from '@/hooks/useAgentChat';
 import { AgentChatTranscript } from './AgentChatTranscript';
 import { AgentRunnerStatus } from './AgentRunnerStatus';
 import { isRunnerOnline } from './runnerOnline';
@@ -31,7 +31,9 @@ export function AgentChatPanel({
   messages,
   status,
   activeTool,
+  pending,
   onSend,
+  onRemovePending,
   onReset,
   hasEarlierMessages,
   isLoadingEarlier,
@@ -41,7 +43,9 @@ export function AgentChatPanel({
   messages: ChatMessage[];
   status: ChatStatus;
   activeTool: string | null;
+  pending: PendingMessage[];
   onSend: (prompt: string) => void;
+  onRemovePending: (id: string) => void;
   onReset?: () => void;
   hasEarlierMessages?: boolean;
   isLoadingEarlier?: boolean;
@@ -51,22 +55,12 @@ export function AgentChatPanel({
   const [input, setInput] = useState('');
   // An external agent answers on its runner, so with none polling the message would sit
   // in the queue with nothing to take it. The composer says so instead of accepting it.
+  // A message typed while the agent is answering is not refused — it waits its turn.
   const runnerOffline = agent.kind === 'external' && !isRunnerOnline(agent);
-  const isBusy = status !== 'ready';
-  const canWrite = !isBusy && !runnerOffline;
-
-  // The textarea is disabled while a reply is on its way, which drops focus. Restore
-  // it once the reply ends so the user can keep typing without clicking back in.
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const wasBusy = useRef(false);
-  useEffect(() => {
-    if (wasBusy.current && !isBusy) textareaRef.current?.focus();
-    wasBusy.current = isBusy;
-  }, [isBusy]);
 
   function submit() {
     const text = input.trim();
-    if (!text || !canWrite) return;
+    if (!text || runnerOffline) return;
     setInput('');
     onSend(text);
   }
@@ -75,7 +69,7 @@ export function AgentChatPanel({
     <div className="flex h-full min-h-0 flex-col">
       <MessageScrollerProvider>
         <div className="min-h-0 flex-1 overflow-hidden">
-          {messages.length === 0 ? (
+          {messages.length === 0 && pending.length === 0 ? (
             <Empty className="h-full">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
@@ -90,6 +84,8 @@ export function AgentChatPanel({
               messages={messages}
               status={status}
               activeTool={activeTool}
+              pending={pending}
+              onRemovePending={onRemovePending}
               hasEarlierMessages={hasEarlierMessages}
               isLoadingEarlier={isLoadingEarlier}
               onLoadEarlier={onLoadEarlier}
@@ -113,7 +109,6 @@ export function AgentChatPanel({
           >
             <InputGroup className="rounded-xl">
               <InputGroupTextarea
-                ref={textareaRef}
                 // `auto` once there is something to read, so a message keeps the
                 // script it was typed in. An empty box has nothing to read from.
                 dir={input ? 'auto' : undefined}
@@ -131,7 +126,7 @@ export function AgentChatPanel({
                     ? t('runnerOffline')
                     : t('messagePlaceholder', { agent: agent.name })
                 }
-                disabled={!canWrite}
+                disabled={runnerOffline}
                 rows={1}
               />
               <InputGroupAddon align="block-end">
@@ -142,7 +137,7 @@ export function AgentChatPanel({
                     size="icon-sm"
                     className="rounded-lg text-muted-foreground hover:text-foreground"
                     title={t('reset')}
-                    disabled={isBusy || messages.length === 0}
+                    disabled={status !== 'ready' || messages.length === 0}
                     onClick={onReset}
                   >
                     <RotateCw />
@@ -154,7 +149,7 @@ export function AgentChatPanel({
                   variant="default"
                   size="icon-sm"
                   className="ml-auto rounded-lg"
-                  disabled={!input.trim() || !canWrite}
+                  disabled={!input.trim() || runnerOffline}
                 >
                   <ArrowUp />
                   <span className="sr-only">{t('send')}</span>

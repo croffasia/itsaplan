@@ -87,6 +87,8 @@
     "toolOutput": "Відповідь",
     "thinking": "Думає…",
     "waitingForRunner": "Чекаємо на раннер…",
+    "waitingToSend": "Чекає на надсилання",
+    "removePending": "Видалити повідомлення",
     "title": "Чат з {agent}",
     "unreachable": "Не вдалося зв'язатися з агентом. Спробуйте ще раз.",
     "runnerOffline": "Раннер не на зв’язку",

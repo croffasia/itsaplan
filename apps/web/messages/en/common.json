@@ -87,6 +87,8 @@
     "toolOutput": "Output",
     "thinking": "Thinking…",
     "waitingForRunner": "Waiting for the runner…",
+    "waitingToSend": "Waiting to send",
+    "removePending": "Remove message",
     "title": "Chat with {agent}",
     "unreachable": "Could not reach the agent. Try again.",
     "runnerOffline": "Runner offline",

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 import type { UIEvent, WheelEvent } from 'react';
-import type { ChatMessage, ChatStatus } from '@/hooks/useAgentChat';
+import type { ChatMessage, ChatStatus, PendingMessage } from '@/hooks/useAgentChat';
 import { dayKey } from '@/utils/dates';
 import AgentChatMessage from './AgentChatMessage';
+import AgentChatPendingMessage from './AgentChatPendingMessage';
 import InitialScrollToEnd from './InitialScrollToEnd';
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import {
@@ -22,6 +23,8 @@ export function AgentChatTranscript({
   messages,
   status,
   activeTool,
+  pending,
+  onRemovePending,
   hasEarlierMessages = false,
   isLoadingEarlier = false,
   onLoadEarlier,
@@ -29,6 +32,8 @@ export function AgentChatTranscript({
   messages: ChatMessage[];
   status: ChatStatus;
   activeTool: string | null;
+  pending: PendingMessage[];
+  onRemovePending: (id: string) => void;
   hasEarlierMessages?: boolean;
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
@@ -104,6 +109,14 @@ export function AgentChatTranscript({
               </Marker>
             </MessageScrollerItem>
           )}
+
+          {pending.map((message) => (
+            <AgentChatPendingMessage
+              key={message.id}
+              message={message}
+              onRemove={onRemovePending}
+            />
+          ))}
         </MessageScrollerContent>
       </MessageScrollerViewport>
       <MessageScrollerButton />

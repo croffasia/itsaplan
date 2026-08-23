@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ApiError, streamAiAgentChat, streamAiAgentRun } from '@/lib/api';
 import type { AiChatMessage, AiChatPart, AiChatToolPart } from '@/lib/api';
@@ -30,6 +30,9 @@ function updateToolPart(
 // no runner has taken it yet, so nothing is being written.
 export type ChatStatus = 'ready' | 'queued' | 'streaming';
 
+// A message typed while the agent was answering, waiting for its turn.
+export type PendingMessage = { id: string; text: string };
+
 // Drives one conversation with an agent. Sends a prompt, streams the response over
 // SSE, and exposes the running transcript, the stream status, and the tool the agent
 // is currently using (for the status marker).
@@ -44,6 +47,11 @@ export type ChatStatus = 'ready' | 'queued' | 'streaming';
 // and it is surfaced as `threadId` so the host can reflect the new thread in the
 // history list. loadThread() restores a past conversation; newChat() starts a fresh
 // one. threadId is null while a new conversation has not produced its first reply.
+//
+// A message sent while a reply is running is held in `pending` and sent on its own once
+// that reply ends, one at a time and in the order it was typed. A reply that failed
+// stops the queue: what is left waits until the next send, so a message is not thrown
+// at an agent that is not answering.
 export function useAgentChat(projectKey: string, agentId: number, external: boolean) {
   const t = useTranslations('common.agentChat');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -54,10 +62,20 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
   // thread without re-creating the callback on every thread change.
   const threadRef = useRef<string | null>(null);
 
-  const send = useCallback(
-    async (prompt: string) => {
-      const text = prompt.trim();
-      if (!text || status !== 'ready') return;
+  const [pending, setPending] = useState<PendingMessage[]>([]);
+  // A running turn is held twice: the ref so a second send in the same frame sees it
+  // before the re-render, the state so the end of a turn re-runs the drain effect.
+  // `status` cannot do that job — loadThread sets it to 'ready' while a turn it did
+  // not start is still streaming, and the end of that turn then changes nothing.
+  const runningRef = useRef(false);
+  const [running, setRunning] = useState(false);
+  const [stopped, setStopped] = useState(false);
+
+  const runTurn = useCallback(
+    async (text: string) => {
+      if (runningRef.current) return;
+      runningRef.current = true;
+      setRunning(true);
 
       const assistantId = crypto.randomUUID();
       const createdAt = new Date().toISOString();
@@ -128,12 +146,16 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
               break;
             case 'error':
               toast.error(event.message);
+              setStopped(true);
               break;
           }
         }
       } catch (err) {
         toast.error(err instanceof ApiError ? err.message : t('unreachable'));
+        setStopped(true);
       } finally {
+        runningRef.current = false;
+        setRunning(false);
         setStatus('ready');
         setActiveTool(null);
         // Drop the assistant placeholder if the agent never produced anything (an error
@@ -141,8 +163,34 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
         setMessages((m) => m.filter((msg) => !(msg.id === assistantId && msg.parts.length === 0)));
       }
     },
-    [projectKey, agentId, status, external, t],
+    [projectKey, agentId, external, t],
   );
+
+  const send = useCallback(
+    (prompt: string) => {
+      const text = prompt.trim();
+      if (!text) return;
+      setStopped(false);
+      if (runningRef.current || pending.length > 0) {
+        setPending((queue) => [...queue, { id: crypto.randomUUID(), text }]);
+        return;
+      }
+      void runTurn(text);
+    },
+    [pending, runTurn],
+  );
+
+  const removePending = useCallback((id: string) => {
+    setPending((queue) => queue.filter((message) => message.id !== id));
+  }, []);
+
+  // Sends the next waiting message once the reply before it has ended.
+  useEffect(() => {
+    if (stopped || running || runningRef.current || pending.length === 0) return;
+    const [next] = pending;
+    setPending((queue) => queue.filter((message) => message.id !== next.id));
+    void runTurn(next.text);
+  }, [stopped, running, pending, runTurn]);
 
   // Restores a past conversation: shows its transcript and continues its thread.
   const loadThread = useCallback((id: string, history: AiChatMessage[]) => {
@@ -151,6 +199,8 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     setMessages(history);
     setStatus('ready');
     setActiveTool(null);
+    setPending([]);
+    setStopped(false);
   }, []);
 
   const prependHistory = useCallback((history: AiChatMessage[]) => {
@@ -167,7 +217,20 @@ export function useAgentChat(projectKey: string, agentId: number, external: bool
     setMessages([]);
     setStatus('ready');
     setActiveTool(null);
+    setPending([]);
+    setStopped(false);
   }, []);
 
-  return { messages, status, activeTool, threadId, send, loadThread, prependHistory, newChat };
+  return {
+    messages,
+    status,
+    activeTool,
+    threadId,
+    pending,
+    send,
+    removePending,
+    loadThread,
+    prependHistory,
+    newChat,
+  };
 }

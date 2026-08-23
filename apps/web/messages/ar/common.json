@@ -87,6 +87,8 @@
     "toolOutput": "المخرجات",
     "thinking": "جارٍ التفكير…",
     "waitingForRunner": "مستني الرانر…",
+    "waitingToSend": "في انتظار الإرسال",
+    "removePending": "حذف الرسالة",
     "title": "محادثة مع {agent}",
     "unreachable": "تعذّر الوصول إلى الوكيل. حاول مرة أخرى.",
     "runnerOffline": "المنفّذ (runner) مش متصل",

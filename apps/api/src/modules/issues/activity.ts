@@ -575,8 +575,20 @@ export interface IssueSnapshot {
   assigneeUserId: string | null;
   delegateUserId: string | null;
   priority: string | null;
+  estimatePoints: number | null;
+  estimateMinutes: number | null;
   startDate: string | null;
   dueDate: string | null;
+}
+
+// A time estimate as the feed shows it, the same wording the issue properties use:
+// 90 -> '1h 30m', 120 -> '2h', 30 -> '30m'.
+function estimateTimeText(minutes: number | null): string | null {
+  if (minutes == null) return null;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (!hours) return `${rest}m`;
+  return rest ? `${hours}h ${rest}m` : `${hours}h`;
 }
 
 // Diffs an issue's before/after state and records one event per changed field.
@@ -635,6 +647,20 @@ export async function logIssueUpdate(
       action: 'priority',
       from: textSide(before.priority),
       to: textSide(after.priority),
+    });
+  if (before.estimatePoints !== after.estimatePoints)
+    events.push({
+      action: 'estimate',
+      subject: { value: 'points' },
+      from: textSide(before.estimatePoints?.toString()),
+      to: textSide(after.estimatePoints?.toString()),
+    });
+  if (before.estimateMinutes !== after.estimateMinutes)
+    events.push({
+      action: 'estimate',
+      subject: { value: 'time' },
+      from: textSide(estimateTimeText(before.estimateMinutes)),
+      to: textSide(estimateTimeText(after.estimateMinutes)),
     });
   if (before.startDate !== after.startDate)
     events.push({

@@ -72,6 +72,11 @@ export const project = pgTable('project', {
   subtasksEnabled: boolean('subtasks_enabled').notNull().default(true),
   checklistsEnabled: boolean('checklists_enabled').notNull().default(true),
   issueStatsEnabled: boolean('issue_stats_enabled').notNull().default(true),
+  // Which kinds of estimate the issues of this project carry, set in Settings ->
+  // Configuration. Both off by default; turning one off hides its UI and keeps the
+  // values, which show again when it is turned back on.
+  pointsEstimateEnabled: boolean('points_estimate_enabled').notNull().default(false),
+  timeEstimateEnabled: boolean('time_estimate_enabled').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -1029,6 +1034,10 @@ export const issue = pgTable(
     title: text('title').notNull(),
     description: text('description').notNull().default(''),
     priority: text('priority'),
+    // How big the work is, one column per estimate kind the project can turn on.
+    // Time is held in minutes; the UI enters and shows it as hours and minutes.
+    estimatePoints: numeric('estimate_points'),
+    estimateMinutes: integer('estimate_minutes'),
     startDate: date('start_date'),
     dueDate: date('due_date'),
     position: doublePrecision('position').notNull().default(0),
@@ -1047,6 +1056,8 @@ export const issue = pgTable(
   },
   (t) => [
     unique().on(t.projectId, t.sequenceNumber),
+    check('issue_estimate_points_check', sql`${t.estimatePoints} >= 0`),
+    check('issue_estimate_minutes_check', sql`${t.estimateMinutes} >= 0`),
     // Backs the board/list read (active issues of a project) and the worker's
     // auto-archive sweep (still-active issues in a project).
     index('issue_project_active_idx')

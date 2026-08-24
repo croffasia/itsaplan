@@ -30,6 +30,8 @@ export const COLUMN_META: Record<TableColumn, { width: string }> = {
   initiative: { width: 'minmax(140px,220px)' },
   cycle: { width: 'minmax(120px,180px)' },
   labels: { width: 'minmax(120px,220px)' },
+  estimatePoints: { width: '110px' },
+  estimateTime: { width: '88px' },
   startDate: { width: '96px' },
   dueDate: { width: '96px' },
   created: { width: '96px' },

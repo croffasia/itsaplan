@@ -4,7 +4,7 @@
 // shows only the controls that apply to the active view. Missing fields fall
 // back to per-view defaults, so the store grows new options without a migration.
 
-import type { ProjectFeatures } from '@/lib/api';
+import type { ProjectFeatureSet } from '@/utils/projectFeatures';
 import type { Sort, WorkItemsView } from '@/utils/viewTypes';
 
 // Field the Project columns / Table sections group by. 'none' is a single flat
@@ -29,6 +29,8 @@ export type DisplayProperty =
   | 'initiative'
   | 'cycle'
   | 'labels'
+  | 'estimatePoints'
+  | 'estimateTime'
   | 'startDate'
   | 'dueDate'
   | 'created'
@@ -59,6 +61,8 @@ export const DISPLAY_PROPERTIES: DisplayProperty[] = [
   'initiative',
   'cycle',
   'labels',
+  'estimatePoints',
+  'estimateTime',
   'startDate',
   'dueDate',
   'created',
@@ -66,28 +70,32 @@ export const DISPLAY_PROPERTIES: DisplayProperty[] = [
   'statusAge',
 ];
 
-// The grouping fields and display properties that name an optional section's
-// entity, with the section each one needs. Grouping by one while its section is off
-// would render columns for something the project does not show, and its property
-// would print a value from there.
-const SECTION_FIELDS: Partial<Record<BuiltinGroupField | DisplayProperty, keyof ProjectFeatures>> =
-  {
-    initiative: 'initiatives',
-    cycle: 'cycles',
-  };
+// The grouping fields and display properties that need a section or an estimate
+// kind the project can have off. Grouping by one while its section is off would
+// render columns for something the project does not show, and its property would
+// print a value from there; an estimate property would offer a field the project
+// does not use.
+const SECTION_FIELDS: Partial<
+  Record<BuiltinGroupField | DisplayProperty, keyof ProjectFeatureSet>
+> = {
+  initiative: 'initiatives',
+  cycle: 'cycles',
+  estimatePoints: 'pointsEstimate',
+  estimateTime: 'timeEstimate',
+};
 
 // Whether a grouping field or display property applies to a project: the ones behind
 // an optional section only while it is on. A custom field key is never section-bound.
 export function isFieldEnabled(
   field: GroupField | PropertyKey,
-  features: ProjectFeatures,
+  features: ProjectFeatureSet,
 ): boolean {
   const section = SECTION_FIELDS[field as BuiltinGroupField];
   return section === undefined || features[section];
 }
 
 // The display properties a project offers, without the ones whose section is off.
-export function offeredDisplayProperties(features: ProjectFeatures): DisplayProperty[] {
+export function offeredDisplayProperties(features: ProjectFeatureSet): DisplayProperty[] {
   return DISPLAY_PROPERTIES.filter((p) => isFieldEnabled(p, features));
 }
 
@@ -312,7 +320,7 @@ export function normalizeViewSettings(
 // section was on then renders no dead column, lane, property or row.
 export function withoutHiddenSections(
   settings: ViewSettings,
-  features: ProjectFeatures,
+  features: ProjectFeatureSet,
 ): ViewSettings {
   return {
     ...settings,
@@ -332,7 +340,7 @@ export function withoutHiddenSections(
 export function restoreHiddenSections(
   edited: ViewSettings,
   stored: ViewSettings,
-  features: ProjectFeatures,
+  features: ProjectFeatureSet,
 ): ViewSettings {
   const hidden = (field: GroupField | PropertyKey) => !isFieldEnabled(field, features);
   // Stored order is ascending, so every insert lands at the index it had once the

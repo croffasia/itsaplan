@@ -318,6 +318,23 @@ describe('projects', () => {
       });
     });
 
+    it('copies the estimate kinds the source project carries', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await api.projects({ projectKey: 'SRC' }).settings.estimates.patch({
+        points: true,
+        time: true,
+      });
+
+      await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
+
+      const view = await viewOf(api, 'DST');
+      expect(view.data?.project).toMatchObject({
+        pointsEstimateEnabled: true,
+        timeEstimateEnabled: true,
+      });
+    });
+
     it("remaps a saved view's filter ids to the copied project's entities", async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });
@@ -791,6 +808,72 @@ describe('projects', () => {
       const res = await autoArchive(member).patch({ completedDays: 14, canceledDays: 3 });
       expect(res.status).toBe(200);
       expect(res.data).toMatchObject({ completedDays: 14, canceledDays: 3 });
+    });
+  });
+
+  describe('estimate settings', () => {
+    const estimates = (client: Api) => client.projects({ projectKey: 'MKT' }).settings.estimates;
+
+    it('defaults a new project to both kinds off', async () => {
+      const { api } = await signUpClient();
+      const created = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      expect(created.data).toMatchObject({
+        pointsEstimateEnabled: false,
+        timeEstimateEnabled: false,
+      });
+    });
+
+    it('lets an owner turn a kind on and reads it back with the project', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const patch = await estimates(api).patch({ points: true, time: false });
+      expect(patch.status).toBe(200);
+      expect(patch.data).toMatchObject({ points: true, time: false });
+
+      const view = await viewOf(api, 'MKT');
+      expect(view.data?.project).toMatchObject({
+        pointsEstimateEnabled: true,
+        timeEstimateEnabled: false,
+      });
+    });
+
+    it('keeps the estimates on the issues when a kind is turned off', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const view = await viewOf(api, 'MKT');
+      await estimates(api).patch({ points: true, time: true });
+      const issue = await api
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId: view.data!.columns[0].id, title: 'Sized', estimatePoints: 5 });
+
+      await estimates(api).patch({ points: false, time: false });
+      expect((await api.issues({ issueId: issue.data!.id }).get()).data).toMatchObject({
+        estimatePoints: 5,
+      });
+    });
+
+    it('holds the default member role out of the section', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const member = await addProjectMember(owner.api, 'MKT');
+
+      expect((await estimates(member).patch({ points: true, time: true })).status).toBe(403);
+    });
+
+    it('lets a role with edit change the kinds', async () => {
+      const owner = await signUpClient();
+      await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      const role = await owner.api.projects({ projectKey: 'MKT' }).roles.post({
+        name: 'Planner',
+        permissions: { workflow_config: { read: true, edit: true } },
+      });
+      const member = await addProjectMember(owner.api, 'MKT', role.data!.id);
+
+      const res = await estimates(member).patch({ points: true, time: true });
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ points: true, time: true });
     });
   });
 

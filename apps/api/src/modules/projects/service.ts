@@ -36,6 +36,8 @@ export interface ProjectRow {
   subtasksEnabled: boolean;
   checklistsEnabled: boolean;
   issueStatsEnabled: boolean;
+  pointsEstimateEnabled: boolean;
+  timeEstimateEnabled: boolean;
   createdAt: string;
 }
 
@@ -75,6 +77,8 @@ function mapProject(row: typeof project.$inferSelect): ProjectRow {
     subtasksEnabled: row.subtasksEnabled,
     checklistsEnabled: row.checklistsEnabled,
     issueStatsEnabled: row.issueStatsEnabled,
+    pointsEstimateEnabled: row.pointsEstimateEnabled,
+    timeEstimateEnabled: row.timeEstimateEnabled,
     createdAt: iso(row.createdAt),
   };
 }
@@ -104,6 +108,8 @@ export async function listProjects(
       subtasksEnabled: project.subtasksEnabled,
       checklistsEnabled: project.checklistsEnabled,
       issueStatsEnabled: project.issueStatsEnabled,
+      pointsEstimateEnabled: project.pointsEstimateEnabled,
+      timeEstimateEnabled: project.timeEstimateEnabled,
       createdAt: project.createdAt,
       role: projectMember.role,
       rolePermissions: projectRole.permissions,
@@ -325,6 +331,28 @@ export async function setProjectFeatures(
   if (Object.keys(values).length === 0) return getProjectById(projectId);
   const [row] = await db.update(project).set(values).where(eq(project.id, projectId)).returning();
   return row ? mapProject(row) : null;
+}
+
+// Which estimate kinds the project's issues carry. Held on the project row rather
+// than in project_setting: every member's project payload already carries it, so a
+// board knows whether estimates are on without a request of its own.
+export interface EstimateSettings {
+  points: boolean;
+  time: boolean;
+}
+
+// Turns the estimate kinds on or off. A kind turned off keeps the estimates already
+// set on the issues; they show again when it is turned back on.
+export async function setEstimateSettings(
+  projectId: number,
+  input: EstimateSettings,
+): Promise<EstimateSettings | null> {
+  const [row] = await db
+    .update(project)
+    .set({ pointsEstimateEnabled: input.points, timeEstimateEnabled: input.time })
+    .where(eq(project.id, projectId))
+    .returning();
+  return row ? { points: row.pointsEstimateEnabled, time: row.timeEstimateEnabled } : null;
 }
 
 // Auto-archive thresholds for a project. Stored in project_setting under

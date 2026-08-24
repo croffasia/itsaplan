@@ -14,6 +14,7 @@ import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import {
   AutoArchiveResponse,
+  EstimatesResponse,
   ProjectBoardResponse,
   ProjectListResponse,
   ProjectResponse,
@@ -23,6 +24,7 @@ import {
   createProjectBody,
   listProjectsQuery,
   updateAutoArchiveBody,
+  updateEstimatesBody,
   updateProjectBody,
   updateProjectSettingsBody,
   updateSubtaskAutomationBody,
@@ -39,6 +41,7 @@ import {
   setAutoArchiveSettings,
   getSubtaskAutomationSettings,
   setSubtaskAutomationSettings,
+  setEstimateSettings,
 } from './service';
 import { copyProject } from './copy';
 
@@ -275,6 +278,23 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       permission: ['workflow_config', 'edit'],
       response: { 200: SubtaskAutomationResponse, ...commonErrors },
       detail: { summary: "Update a project's subtask automations" },
+    },
+  )
+
+  // The estimate kinds the issues carry. The current state comes with the project
+  // payload every member already gets, so only the write lives here.
+  .patch(
+    '/projects/:projectKey/settings/estimates',
+    async ({ project, body }) => {
+      const updated = await setEstimateSettings(project.id, body);
+      if (!updated) throw new HttpError(404, 'Project not found');
+      return updated;
+    },
+    {
+      body: updateEstimatesBody,
+      permission: ['workflow_config', 'edit'],
+      response: { 200: EstimatesResponse, ...commonErrors },
+      detail: { summary: "Update a project's estimate kinds" },
     },
   )
 

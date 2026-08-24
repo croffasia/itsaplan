@@ -120,6 +120,11 @@ export interface Project {
   subtasksEnabled: boolean;
   checklistsEnabled: boolean;
   issueStatsEnabled: boolean;
+  // Which estimate kinds the issues carry, set in Settings -> Configuration. Read
+  // through useProjectFeatures, which hides the estimate rows and their display
+  // properties while a kind is off.
+  pointsEstimateEnabled: boolean;
+  timeEstimateEnabled: boolean;
   createdAt: string;
   // The caller's role in this project. Only present on the /projects list
   // response (used to gate owner-only actions like deletion); absent on the
@@ -799,6 +804,9 @@ export interface Issue {
   title: string;
   description: string;
   priority: string | null;
+  // Time is in minutes; the UI enters and shows it as hours and minutes.
+  estimatePoints: number | null;
+  estimateMinutes: number | null;
   startDate: string | null;
   dueDate: string | null;
   position: number;
@@ -846,6 +854,13 @@ export interface IssueSearchHit {
 export interface AutoArchiveSettings {
   completedDays: number | null;
   canceledDays: number | null;
+}
+
+// Which estimate kinds a project's issues carry, both off by default. A kind
+// turned off hides its UI and keeps the estimates already set.
+export interface EstimateSettings {
+  points: boolean;
+  time: boolean;
 }
 
 // Per-project subtask automations, both off by default. completeParent closes a
@@ -1604,6 +1619,7 @@ export type ActivityAction =
   | 'assignee'
   | 'delegate'
   | 'priority'
+  | 'estimate'
   | 'type'
   | 'cycle'
   | 'start_date'
@@ -1947,6 +1963,8 @@ export interface NewIssueInput {
   title: string;
   description?: string;
   priority?: string | null;
+  estimatePoints?: number | null;
+  estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
   labelIds?: number[];
@@ -1962,6 +1980,8 @@ export interface BulkIssuePatch {
   assigneeUserId?: string | null;
   delegateUserId?: string | null;
   priority?: string | null;
+  estimatePoints?: number | null;
+  estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
 }
@@ -1978,6 +1998,8 @@ export interface IssuePatch {
   title?: string;
   description?: string;
   priority?: string | null;
+  estimatePoints?: number | null;
+  estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
   labelIds?: number[];
@@ -3164,7 +3186,8 @@ export const api = {
     }),
 
   // The workflow configuration (workflow_config: read to view, edit to change):
-  // the auto-archive thresholds and the subtask automations.
+  // the auto-archive thresholds, the subtask automations, and the estimate kinds.
+  // The estimate kinds have no read of their own — they come with the project.
   getAutoArchive: (projectKey: string) =>
     request<AutoArchiveSettings>(`/projects/${projectKey}/settings/auto-archive`),
   updateAutoArchive: (projectKey: string, input: AutoArchiveSettings) =>
@@ -3176,6 +3199,12 @@ export const api = {
     request<SubtaskAutomationSettings>(`/projects/${projectKey}/settings/subtasks`),
   updateSubtaskAutomation: (projectKey: string, input: SubtaskAutomationSettings) =>
     request<SubtaskAutomationSettings>(`/projects/${projectKey}/settings/subtasks`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+
+  updateEstimates: (projectKey: string, input: EstimateSettings) =>
+    request<EstimateSettings>(`/projects/${projectKey}/settings/estimates`, {
       method: 'PATCH',
       body: JSON.stringify(input),
     }),

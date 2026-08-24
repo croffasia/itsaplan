@@ -39,6 +39,8 @@
     "initiative": "Инициатива",
     "cycle": "Цикл",
     "labels": "Метки",
+    "estimatePoints": "Стори-поинты",
+    "estimateTime": "Оценка по времени",
     "startDate": "Дата начала",
     "dueDate": "Дедлайн",
     "created": "Создано",

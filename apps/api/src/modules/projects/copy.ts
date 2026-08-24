@@ -231,6 +231,8 @@ function mapProjectRow(row: typeof project.$inferSelect): ProjectRow {
     subtasksEnabled: row.subtasksEnabled,
     checklistsEnabled: row.checklistsEnabled,
     issueStatsEnabled: row.issueStatsEnabled,
+    pointsEstimateEnabled: row.pointsEstimateEnabled,
+    timeEstimateEnabled: row.timeEstimateEnabled,
     createdAt: iso(row.createdAt),
   };
 }
@@ -276,9 +278,9 @@ export async function copyProject(
   const agentMap = new Map<number, number>();
 
   const newProject = await db.transaction(async (tx) => {
-    // The optional sections the source project shows are part of its configuration,
-    // so the copy starts with the same ones. mcpEnabled is not carried: a copy opts
-    // into MCP on its own.
+    // The optional sections the source project shows and the estimate kinds it
+    // carries are part of its configuration, so the copy starts with the same ones.
+    // mcpEnabled is not carried: a copy opts into MCP on its own.
     const [sourceFeatures] = await tx
       .select({
         initiativesEnabled: project.initiativesEnabled,
@@ -288,6 +290,8 @@ export async function copyProject(
         subtasksEnabled: project.subtasksEnabled,
         checklistsEnabled: project.checklistsEnabled,
         issueStatsEnabled: project.issueStatsEnabled,
+        pointsEstimateEnabled: project.pointsEstimateEnabled,
+        timeEstimateEnabled: project.timeEstimateEnabled,
       })
       .from(project)
       .where(eq(project.id, sourceProjectId));

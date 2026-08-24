@@ -39,6 +39,9 @@ export const IssueResponse = t.Object({
   title: t.String(),
   description: t.String(),
   priority: t.Nullable(t.String()),
+  // Time is in minutes; the UI enters and shows it as hours and minutes.
+  estimatePoints: t.Nullable(t.Number()),
+  estimateMinutes: t.Nullable(t.Number()),
   startDate: t.Nullable(t.String()),
   dueDate: t.Nullable(t.String()),
   position: t.Number(),
@@ -128,6 +131,16 @@ export const SubtaskModeSchema = t.Union(
 export const NewParentIdSchema = t.Integer({
   description: "Numeric id of the issue the subtasks move to. Required by 'reassign'.",
 });
+
+// The estimate a create or an update sets. Time arrives as whole minutes: the
+// hours-and-minutes field is the UI's, and it sends what it parsed.
+export const EstimatePointsSchema = t.Nullable(
+  t.Number({ minimum: 0, description: 'Story point estimate, or null to clear it.' }),
+);
+
+export const EstimateMinutesSchema = t.Nullable(
+  t.Integer({ minimum: 0, description: 'Time estimate in minutes, or null to clear it.' }),
+);
 
 // IssueWatcherRow from watchers.ts: one member following the issue.
 export const IssueWatcherResponse = t.Object({
@@ -335,6 +348,8 @@ export const createIssueBody = t.Object({
   priority: t.Optional(
     t.Nullable(t.String({ description: 'One of: urgent, high, medium, low. Or null.' })),
   ),
+  estimatePoints: t.Optional(EstimatePointsSchema),
+  estimateMinutes: t.Optional(EstimateMinutesSchema),
   startDate: t.Optional(t.Nullable(t.String({ description: "Start date 'YYYY-MM-DD', or null." }))),
   dueDate: t.Optional(t.Nullable(t.String({ description: "Due date 'YYYY-MM-DD', or null." }))),
   labelIds: t.Optional(
@@ -352,6 +367,8 @@ export const bulkUpdateIssuesBody = t.Object({
     assigneeUserId: t.Optional(t.Nullable(t.String())),
     delegateUserId: t.Optional(t.Nullable(t.String())),
     priority: t.Optional(t.Nullable(t.String())),
+    estimatePoints: t.Optional(EstimatePointsSchema),
+    estimateMinutes: t.Optional(EstimateMinutesSchema),
     startDate: t.Optional(t.Nullable(t.String())),
     dueDate: t.Optional(t.Nullable(t.String())),
   }),
@@ -448,6 +465,8 @@ export const updateIssueBody = t.Object({
   priority: t.Optional(
     t.Nullable(t.String({ description: 'One of: urgent, high, medium, low. Or null.' })),
   ),
+  estimatePoints: t.Optional(EstimatePointsSchema),
+  estimateMinutes: t.Optional(EstimateMinutesSchema),
   startDate: t.Optional(t.Nullable(t.String({ description: "Start date 'YYYY-MM-DD', or null." }))),
   dueDate: t.Optional(t.Nullable(t.String({ description: "Due date 'YYYY-MM-DD', or null." }))),
   labelIds: t.Optional(

@@ -24,6 +24,7 @@ import {
 } from '../../utils/attachmentEmbed';
 import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSectionId } from '../../utils/bodySections';
 import { hasFieldValue } from '../../utils/fieldValues';
+import EstimatePill from '../fields/EstimatePill';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 import NewIssueAttachButton from './NewIssueAttachButton';
 import NewIssueAttachmentStrip from './NewIssueAttachmentStrip';
@@ -98,6 +99,8 @@ export default function NewIssueModal({
     defaults.delegateUserId ?? null,
   );
   const [priority, setPriority] = useState(defaults.priority ?? '');
+  const [estimatePoints, setEstimatePoints] = useState<number | null>(null);
+  const [estimateMinutes, setEstimateMinutes] = useState<number | null>(null);
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [labelIds, setLabelIds] = useState<number[]>(defaults.labelIds ?? []);
@@ -227,6 +230,8 @@ export default function NewIssueModal({
           assigneeUserId,
           delegateUserId,
           priority: priority || null,
+          estimatePoints,
+          estimateMinutes,
           startDate: startDate || null,
           dueDate: dueDate || null,
           labelIds,
@@ -388,6 +393,14 @@ export default function NewIssueModal({
               value={labelIds}
               onToggle={toggleLabel}
             />
+          )}
+
+          {project.project.pointsEstimateEnabled && (
+            <EstimatePill kind="points" value={estimatePoints} onChange={setEstimatePoints} />
+          )}
+
+          {project.project.timeEstimateEnabled && (
+            <EstimatePill kind="time" value={estimateMinutes} onChange={setEstimateMinutes} />
           )}
 
           <DatePill

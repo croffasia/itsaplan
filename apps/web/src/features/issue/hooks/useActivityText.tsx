@@ -81,6 +81,13 @@ export function useActivityText() {
         return {
           line: from ? rich('cycleMoved', { from, to }) : rich('cycleSet', { cycle: to }),
         };
+      case 'estimate': {
+        // The value arrives formatted, unlike a date or a priority.
+        const kind = subject === 'time' ? 'Time' : 'Points';
+        return to
+          ? { line: rich(`estimate${kind}Set`, { value: to }) }
+          : { line: line(`estimate${kind}Removed`) };
+      }
       case 'start_date':
         return to
           ? { line: rich('startDateSet', { date: fmtDate(to) }) }

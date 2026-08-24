@@ -1,8 +1,17 @@
-import { CalendarArrowUp, CalendarClock, RefreshCw, Target, Timer } from 'lucide-react';
+import {
+  CalendarArrowUp,
+  CalendarClock,
+  Clock,
+  Hash,
+  RefreshCw,
+  Target,
+  Timer,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
+import { formatMinutes } from '@/utils/estimate';
 import type { DisplayProperty, PropertyKey } from '@/utils/viewSettings';
 import {
   AssigneeAvatar,
@@ -47,6 +56,8 @@ export function IssueCardBody({
     (has('type') && type) ||
     (has('initiative') && initiative) ||
     (has('cycle') && cycle) ||
+    (has('estimatePoints') && issue.estimatePoints != null) ||
+    (has('estimateTime') && issue.estimateMinutes != null) ||
     (has('labels') && issue.labelIds.length > 0);
   const footerShown =
     has('created') ||
@@ -140,6 +151,24 @@ export function IssueCardBody({
             >
               <RefreshCw className="size-2.5 shrink-0" />
               <span className="truncate">{cycle.name}</span>
+            </Badge>
+          )}
+          {has('estimatePoints') && issue.estimatePoints != null && (
+            <Badge
+              variant="outline"
+              className="rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
+            >
+              <Hash className="size-2.5" />
+              {issue.estimatePoints}
+            </Badge>
+          )}
+          {has('estimateTime') && issue.estimateMinutes != null && (
+            <Badge
+              variant="outline"
+              className="rounded-full px-1.5 py-0.5 text-[10px] text-muted-foreground"
+            >
+              <Clock className="size-2.5" />
+              {formatMinutes(issue.estimateMinutes)}
             </Badge>
           )}
           {has('labels') &&

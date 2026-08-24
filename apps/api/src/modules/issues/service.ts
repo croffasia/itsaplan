@@ -32,7 +32,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
-import { iso, num, HttpError } from '#shared/lib';
+import { iso, num, numOrNull, HttpError } from '#shared/lib';
 import type { ProjectRow } from '#modules/projects/service';
 import {
   getCustomFieldById,
@@ -109,6 +109,9 @@ export interface IssueRow {
   title: string;
   description: string;
   priority: string | null;
+  // Time is in minutes; the UI enters and shows it as hours and minutes.
+  estimatePoints: number | null;
+  estimateMinutes: number | null;
   startDate: string | null;
   dueDate: string | null;
   position: number;
@@ -153,6 +156,8 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     title: row.title,
     description: row.description,
     priority: row.priority,
+    estimatePoints: numOrNull(row.estimatePoints),
+    estimateMinutes: row.estimateMinutes,
     startDate: row.startDate,
     dueDate: row.dueDate,
     position: num(row.position),
@@ -211,6 +216,8 @@ function snapshot(row: IssueRow): IssueSnapshot {
     assigneeUserId: row.assigneeUserId,
     delegateUserId: row.delegateUserId,
     priority: row.priority,
+    estimatePoints: row.estimatePoints,
+    estimateMinutes: row.estimateMinutes,
     startDate: row.startDate,
     dueDate: row.dueDate,
   };
@@ -618,12 +625,15 @@ async function loadSnapshot(
       assigneeUserId: issue.assigneeUserId,
       delegateUserId: issue.delegateUserId,
       priority: issue.priority,
+      estimatePoints: issue.estimatePoints,
+      estimateMinutes: issue.estimateMinutes,
       startDate: issue.startDate,
       dueDate: issue.dueDate,
     })
     .from(issue)
     .where(eq(issue.id, id));
-  return rows[0] ?? null;
+  const row = rows[0];
+  return row ? { ...row, estimatePoints: numOrNull(row.estimatePoints) } : null;
 }
 
 export async function getIssue(id: number): Promise<IssueRow | null> {
@@ -685,6 +695,8 @@ export interface NewIssueInput {
   title: string;
   description?: string;
   priority?: string | null;
+  estimatePoints?: number | null;
+  estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
   labelIds?: number[];
@@ -855,6 +867,8 @@ export async function createIssue(
         title: input.title,
         description: input.description ?? '',
         priority: input.priority ?? null,
+        estimatePoints: input.estimatePoints == null ? null : String(input.estimatePoints),
+        estimateMinutes: input.estimateMinutes ?? null,
         startDate: input.startDate ?? null,
         dueDate: input.dueDate ?? null,
         position: Number(posRow.pos),
@@ -959,6 +973,8 @@ export interface IssuePatch {
   title?: string;
   description?: string;
   priority?: string | null;
+  estimatePoints?: number | null;
+  estimateMinutes?: number | null;
   startDate?: string | null;
   dueDate?: string | null;
 }
@@ -1016,6 +1032,9 @@ export async function updateIssue(
   if (patch.title !== undefined) set.title = patch.title;
   if (patch.description !== undefined) set.description = patch.description;
   if (patch.priority !== undefined) set.priority = patch.priority;
+  if (patch.estimatePoints !== undefined)
+    set.estimatePoints = patch.estimatePoints == null ? null : String(patch.estimatePoints);
+  if (patch.estimateMinutes !== undefined) set.estimateMinutes = patch.estimateMinutes;
   if (patch.startDate !== undefined) set.startDate = patch.startDate;
   if (patch.dueDate !== undefined) set.dueDate = patch.dueDate;
 

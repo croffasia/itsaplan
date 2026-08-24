@@ -34,6 +34,8 @@
     "initiative": "计划",
     "cycle": "周期",
     "labels": "标签",
+    "estimatePoints": "故事点",
+    "estimateTime": "工时",
     "startDate": "开始",
     "dueDate": "截止",
     "created": "创建时间",

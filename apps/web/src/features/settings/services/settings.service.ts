@@ -10,6 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   api,
   type AutoArchiveSettings,
+  type EstimateSettings,
   type NotificationSettingsPatch,
   type NotificationPreferences,
   type ProjectFeatures,
@@ -141,6 +142,14 @@ export function useUpdateSubtaskAutomation(projectKey: string) {
       api.updateSubtaskAutomation(projectKey, input),
     onSuccess: (data) => qc.setQueryData(qk.subtaskAutomation(projectKey), data),
   });
+}
+
+// The estimate kinds live on the project row, so the write invalidates the project
+// detail the whole app reads them from rather than caching a payload of its own.
+export function useUpdateEstimates(projectKey: string) {
+  return useProjectMutation(projectKey, (input: EstimateSettings) =>
+    api.updateEstimates(projectKey, input),
+  );
 }
 
 // Repository section: the inbound webhook connection and its pull request automations.

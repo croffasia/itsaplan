@@ -2,6 +2,7 @@ import { CalendarClock } from 'lucide-react';
 import { type Issue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
+import { formatMinutes } from '@/utils/estimate';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import {
   AssigneeAvatar,
@@ -114,6 +115,14 @@ export function TableBuiltinCell({
                 return <LabelBadge key={id} color={label.color} name={label.name} />;
               })
             : DASH}
+        </div>
+      );
+    case 'estimatePoints':
+      return <div className="text-xs text-muted-foreground">{issue.estimatePoints ?? DASH}</div>;
+    case 'estimateTime':
+      return (
+        <div className="text-xs text-muted-foreground">
+          {issue.estimateMinutes == null ? DASH : formatMinutes(issue.estimateMinutes)}
         </div>
       );
     case 'startDate':

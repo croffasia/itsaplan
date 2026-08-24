@@ -26,6 +26,10 @@ export const iso = (value: Date): string => value.toISOString();
 // numeric columns come back as strings; coerce to a JS number.
 export const num = (value: unknown): number => (value == null ? 0 : Number(value));
 
+// The same coercion for a nullable numeric column, where null is a value.
+export const numOrNull = (value: string | null): number | null =>
+  value == null ? null : Number(value);
+
 // Escapes the five characters that are significant in HTML/XML text, so a value
 // (an issue title, a user name) is safe to interpolate into an HTML email body or a
 // Telegram HTML message.

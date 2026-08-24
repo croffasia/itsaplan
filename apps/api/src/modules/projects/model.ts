@@ -68,6 +68,8 @@ export const ProjectResponse = t.Object({
   subtasksEnabled: t.Boolean(),
   checklistsEnabled: t.Boolean(),
   issueStatsEnabled: t.Boolean(),
+  pointsEstimateEnabled: t.Boolean(),
+  timeEstimateEnabled: t.Boolean(),
   createdAt: t.String(),
 });
 
@@ -153,6 +155,15 @@ export const updateAutoArchiveBody = t.Object({
   completedDays: t.Nullable(t.Integer({ minimum: 1 })),
   canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
 });
+
+// The estimate kinds the project's issues carry (EstimateSettings from the
+// service). Sent together, the same as the automations below.
+export const EstimatesResponse = t.Object({
+  points: t.Boolean(),
+  time: t.Boolean(),
+});
+
+export const updateEstimatesBody = EstimatesResponse;
 
 // The subtask automations (SubtaskAutomationSettings from the service).
 export const SubtaskAutomationResponse = t.Object({

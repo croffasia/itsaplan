@@ -39,6 +39,8 @@
     "initiative": "Initiative",
     "cycle": "Cycle",
     "labels": "Labels",
+    "estimatePoints": "Story points",
+    "estimateTime": "Time estimate",
     "startDate": "Start date",
     "dueDate": "Due date",
     "created": "Created",

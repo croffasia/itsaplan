@@ -388,6 +388,73 @@ describe('issues', () => {
     });
   });
 
+  describe('estimates', () => {
+    it('stores both estimates on create and reads them back', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const created = await createIssue(asOwner, columnId, {
+        title: 'Sized',
+        estimatePoints: 3,
+        estimateMinutes: 90,
+      });
+      expect(created.status).toBe(201);
+      expect(created.data).toMatchObject({ estimatePoints: 3, estimateMinutes: 90 });
+
+      const read = await asOwner.issues({ issueId: created.data!.id }).get();
+      expect(read.data).toMatchObject({ estimatePoints: 3, estimateMinutes: 90 });
+    });
+
+    it('leaves both estimates unset on an issue created without them', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const created = await createIssue(asOwner, columnId);
+      expect(created.data).toMatchObject({ estimatePoints: null, estimateMinutes: null });
+    });
+
+    it('clears an estimate set back to null', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId, { estimateMinutes: 90 })).data!;
+
+      const patched = await asOwner.issues({ issueId: issue.id }).patch({ estimateMinutes: null });
+      expect(patched.status).toBe(200);
+      expect(patched.data).toMatchObject({ estimateMinutes: null });
+    });
+
+    it('keeps a fractional points estimate', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const created = await createIssue(asOwner, columnId, { estimatePoints: 0.5 });
+      expect(created.data).toMatchObject({ estimatePoints: 0.5 });
+    });
+
+    it('rejects a negative estimate', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      expect((await createIssue(asOwner, columnId, { estimatePoints: -1 })).status).toBe(400);
+      expect(
+        (await asOwner.issues({ issueId: issue.id }).patch({ estimateMinutes: -30 })).status,
+      ).toBe(400);
+    });
+
+    it('rejects a time estimate that is not a whole number of minutes', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const res = await createIssue(asOwner, columnId, { estimateMinutes: 1.5 });
+      expect(res.status).toBe(400);
+    });
+
+    it('sets an estimate on many issues at once', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const first = (await createIssue(asOwner, columnId)).data!;
+      const second = (await createIssue(asOwner, columnId)).data!;
+
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.bulk.patch({ ids: [first.id, second.id], patch: { estimatePoints: 2 } });
+      expect(res.status).toBe(200);
+      expect((await asOwner.issues({ issueId: second.id }).get()).data).toMatchObject({
+        estimatePoints: 2,
+      });
+    });
+  });
+
   describe('delete', () => {
     it('deletes the issue', async () => {
       const { asOwner, columnId } = await setupProject();

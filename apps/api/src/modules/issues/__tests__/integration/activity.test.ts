@@ -273,6 +273,48 @@ describe('issue activity', () => {
       expect(status?.payload.to).toMatchObject({ id: columnIds[1], stateType: 'unstarted' });
     });
 
+    it('logs an estimate change with the value it had before', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId, { estimatePoints: 3 })).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ estimatePoints: 5 });
+
+      const entry = (await actions(asOwner, issue.id)).find((a) => a.action === 'estimate');
+      expect(entry?.payload).toMatchObject({
+        subject: { value: 'points' },
+        from: { value: '3' },
+        to: { value: '5' },
+      });
+    });
+
+    it('logs the time estimate as hours and minutes', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ estimateMinutes: 90 });
+
+      const entry = (await actions(asOwner, issue.id)).find((a) => a.action === 'estimate');
+      expect(entry?.payload).toMatchObject({ subject: { value: 'time' }, to: { value: '1h 30m' } });
+      expect(entry?.payload.from).toBeUndefined();
+    });
+
+    it('logs a cleared estimate with only the value it had', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId, { estimateMinutes: 120 })).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ estimateMinutes: null });
+
+      const entry = (await actions(asOwner, issue.id)).find((a) => a.action === 'estimate');
+      expect(entry?.payload).toMatchObject({ from: { value: '2h' } });
+      expect(entry?.payload.to).toBeUndefined();
+    });
+
+    it('logs one entry per estimate kind changed in the same update', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).patch({ estimatePoints: 2, estimateMinutes: 30 });
+
+      const entries = (await actions(asOwner, issue.id)).filter((a) => a.action === 'estimate');
+      expect(entries.map((e) => e.payload.subject?.value).sort()).toEqual(['points', 'time']);
+    });
+
     it('logs added and removed labels', async () => {
       const { asOwner, columnId } = await setupProject();
       const label = (await asOwner.projects({ projectKey: 'MKT' }).labels.post({ name: 'bug' }))

@@ -42,6 +42,12 @@ server and database.
 Heads-up: this is under active development. Expect breaking changes before the first
 stable release.
 
+## Need a feature sooner?
+
+The roadmap is ours, but the order is negotiable. If you need a feature with a high
+priority, write to [@croffasia on Telegram](https://telegram.me/croffasia) - for a
+donation we can discuss moving it up the queue.
+
 ## Features
 
 **Tracking**

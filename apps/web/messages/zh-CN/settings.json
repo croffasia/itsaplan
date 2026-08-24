@@ -421,6 +421,8 @@
     "pointsEstimateHint": "每个工作项上的一个数字。",
     "timeEstimate": "工时",
     "timeEstimateHint": "按小时和分钟填写，例如 1h 30m。",
+    "timeLogging": "工时记录",
+    "timeLoggingHint": "成员记录他们在事项上花费的时间。",
     "archive": "归档",
     "archiveHint": "归档已关闭的工作项，使看板保持整洁。",
     "completedIssues": "已完成的工作项",

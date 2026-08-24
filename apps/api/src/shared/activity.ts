@@ -12,6 +12,8 @@ const ActivitySide = t.Object({
   // 'git_pr' carries the repository and the number behind "owner/repo#42".
   repo: t.Optional(t.String()),
   number: t.Optional(t.Number()),
+  // 'worklog' carries the day its time was spent on, per side.
+  date: t.Optional(t.Nullable(t.String())),
 });
 
 export const ActivityPayloadResponse = t.Object({

@@ -38,6 +38,7 @@ export interface ProjectRow {
   issueStatsEnabled: boolean;
   pointsEstimateEnabled: boolean;
   timeEstimateEnabled: boolean;
+  timeLoggingEnabled: boolean;
   createdAt: string;
 }
 
@@ -79,6 +80,7 @@ function mapProject(row: typeof project.$inferSelect): ProjectRow {
     issueStatsEnabled: row.issueStatsEnabled,
     pointsEstimateEnabled: row.pointsEstimateEnabled,
     timeEstimateEnabled: row.timeEstimateEnabled,
+    timeLoggingEnabled: row.timeLoggingEnabled,
     createdAt: iso(row.createdAt),
   };
 }
@@ -110,6 +112,7 @@ export async function listProjects(
       issueStatsEnabled: project.issueStatsEnabled,
       pointsEstimateEnabled: project.pointsEstimateEnabled,
       timeEstimateEnabled: project.timeEstimateEnabled,
+      timeLoggingEnabled: project.timeLoggingEnabled,
       createdAt: project.createdAt,
       role: projectMember.role,
       rolePermissions: projectRole.permissions,
@@ -333,26 +336,39 @@ export async function setProjectFeatures(
   return row ? mapProject(row) : null;
 }
 
-// Which estimate kinds the project's issues carry. Held on the project row rather
-// than in project_setting: every member's project payload already carries it, so a
-// board knows whether estimates are on without a request of its own.
+// Which estimate kinds the project's issues carry, and whether its members log the
+// time they spend. Held on the project row rather than in project_setting: every
+// member's project payload already carries it, so a board knows whether estimates
+// are on without a request of its own. Logging is independent of the time estimate:
+// a team can log time without estimating first.
 export interface EstimateSettings {
   points: boolean;
   time: boolean;
+  logging: boolean;
 }
 
-// Turns the estimate kinds on or off. A kind turned off keeps the estimates already
-// set on the issues; they show again when it is turned back on.
+// Turns them on or off. One turned off keeps what the issues already carry — the
+// estimates, the logged entries — which show again when it is turned back on.
 export async function setEstimateSettings(
   projectId: number,
   input: EstimateSettings,
 ): Promise<EstimateSettings | null> {
   const [row] = await db
     .update(project)
-    .set({ pointsEstimateEnabled: input.points, timeEstimateEnabled: input.time })
+    .set({
+      pointsEstimateEnabled: input.points,
+      timeEstimateEnabled: input.time,
+      timeLoggingEnabled: input.logging,
+    })
     .where(eq(project.id, projectId))
     .returning();
-  return row ? { points: row.pointsEstimateEnabled, time: row.timeEstimateEnabled } : null;
+  return row
+    ? {
+        points: row.pointsEstimateEnabled,
+        time: row.timeEstimateEnabled,
+        logging: row.timeLoggingEnabled,
+      }
+    : null;
 }
 
 // Auto-archive thresholds for a project. Stored in project_setting under

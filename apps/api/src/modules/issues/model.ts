@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 import { ActivityPayloadResponse } from '#shared/activity';
+import { isoDate } from '#shared/schemas';
 
 // t.Numeric validates a numeric path param and coerces the string to a number. A
 // non-numeric id gets a 400 before it reaches the service.
@@ -42,6 +43,8 @@ export const IssueResponse = t.Object({
   // Time is in minutes; the UI enters and shows it as hours and minutes.
   estimatePoints: t.Nullable(t.Number()),
   estimateMinutes: t.Nullable(t.Number()),
+  // The sum of the issue's logged time entries, 0 when nothing was logged.
+  loggedMinutes: t.Number(),
   startDate: t.Nullable(t.String()),
   dueDate: t.Nullable(t.String()),
   position: t.Number(),
@@ -184,6 +187,34 @@ export const OrderedIdsSchema = t.Object({
 
 export const checklistParams = t.Object({ checklistId: t.Numeric() });
 export const checklistItemParams = t.Object({ itemId: t.Numeric() });
+
+export const worklogParams = t.Object({ worklogId: t.Numeric() });
+
+// WorklogRow from worklogs.ts: one entry of the time a member spent on the issue,
+// with the author it belongs to.
+export const WorklogResponse = t.Object({
+  id: t.Number(),
+  issueId: t.Number(),
+  userId: t.String(),
+  userName: t.Nullable(t.String()),
+  userImage: t.Nullable(t.String()),
+  minutes: t.Number(),
+  spentOn: t.String(),
+  note: t.Nullable(t.String()),
+  createdAt: t.String(),
+});
+
+export const createWorklogBody = t.Object({
+  // Whole minutes: the hours-and-minutes field is the UI's, and it sends what it
+  // parsed.
+  minutes: t.Integer({ minimum: 1, description: 'Time spent, in minutes.' }),
+  spentOn: isoDate("The day the work was done on, 'YYYY-MM-DD'. Not a day in the future."),
+  note: t.Optional(
+    t.Nullable(t.String({ maxLength: 500, description: 'What the time went into. One line.' })),
+  ),
+});
+
+export const updateWorklogBody = t.Partial(createWorklogBody);
 
 // GET /issues/:issueId returns the full issue plus its custom field values, its
 // relations to other issues, the members watching it, and its checklists.

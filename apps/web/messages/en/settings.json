@@ -421,6 +421,8 @@
     "pointsEstimateHint": "A plain number on each issue.",
     "timeEstimate": "Time",
     "timeEstimateHint": "Entered as hours and minutes, for example 1h 30m.",
+    "timeLogging": "Time logging",
+    "timeLoggingHint": "Members log the time they spend on an issue.",
     "archive": "Archive",
     "archiveHint": "Archive stale closed issues so the board stays clear.",
     "completedIssues": "Completed issues",

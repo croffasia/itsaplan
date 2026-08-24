@@ -53,6 +53,7 @@ import {
   type IssueSnapshot,
 } from './activity';
 import { autoWatchIssue } from './watchers';
+import { attachLoggedMinutes } from './worklogs';
 import { recordCycleChange } from './cycle-history';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
 import { notifyIssueChange, notifyTextMentions } from '#modules/notifications/service';
@@ -112,6 +113,10 @@ export interface IssueRow {
   // Time is in minutes; the UI enters and shows it as hours and minutes.
   estimatePoints: number | null;
   estimateMinutes: number | null;
+  // The time logged against the issue: the sum of its worklog entries, 0 when
+  // nothing was logged. Carried here so a board reads it without a request per
+  // issue. Populated by attachLoggedMinutes; mapIssue alone leaves it at 0.
+  loggedMinutes: number;
   startDate: string | null;
   dueDate: string | null;
   position: number;
@@ -158,6 +163,7 @@ function mapIssue(row: typeof issue.$inferSelect, projectKey: string): IssueRow 
     priority: row.priority,
     estimatePoints: numOrNull(row.estimatePoints),
     estimateMinutes: row.estimateMinutes,
+    loggedMinutes: 0,
     startDate: row.startDate,
     dueDate: row.dueDate,
     position: num(row.position),
@@ -234,6 +240,7 @@ export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
   await attachFieldValues(issues);
   await attachStatusSince(issues);
   await attachGroupings(issues);
+  await attachLoggedMinutes(issues);
   return issues;
 }
 
@@ -250,6 +257,7 @@ export async function listArchivedIssues(project: ProjectRow): Promise<IssueRow[
   await attachFieldValues(issues);
   await attachStatusSince(issues);
   await attachGroupings(issues);
+  await attachLoggedMinutes(issues);
   return issues;
 }
 
@@ -654,6 +662,7 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
   await attachLabels(issues);
   await attachStatusSince(issues);
   await attachGroupings(issues);
+  await attachLoggedMinutes(issues);
   return issues;
 }
 
@@ -674,6 +683,7 @@ export async function getIssueBySequence(
   await attachLabels([mapped]);
   await attachStatusSince([mapped]);
   await attachGroupings([mapped]);
+  await attachLoggedMinutes([mapped]);
   return mapped;
 }
 

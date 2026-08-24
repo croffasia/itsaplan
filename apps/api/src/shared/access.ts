@@ -103,6 +103,19 @@ export async function assertPermission(
   }
 }
 
+// Asserts the user is an owner of the project, addressed by id — the parallel of
+// assertPermission for a rule the role matrix cannot express, such as touching an
+// entry another member owns.
+export async function assertProjectOwner(
+  projectId: number,
+  user: AuthUser | undefined | null,
+): Promise<void> {
+  const current = requireUser(user);
+  const role = await getMembership(projectId, current.id);
+  if (!role) throw new HttpError(403, 'You do not have access to this project');
+  if (role !== 'owner') throw new HttpError(403, 'Only a project owner can do this');
+}
+
 // Whether the user may perform the action, without throwing. For field-level
 // shaping inside a handler that is already access-gated (e.g. redacting a
 // secret for callers who may read but not edit).

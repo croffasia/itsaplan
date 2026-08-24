@@ -318,12 +318,13 @@ describe('projects', () => {
       });
     });
 
-    it('copies the estimate kinds the source project carries', async () => {
+    it('copies the estimate kinds and time logging the source project carries', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });
       await api.projects({ projectKey: 'SRC' }).settings.estimates.patch({
         points: true,
         time: true,
+        logging: true,
       });
 
       await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
@@ -332,6 +333,7 @@ describe('projects', () => {
       expect(view.data?.project).toMatchObject({
         pointsEstimateEnabled: true,
         timeEstimateEnabled: true,
+        timeLoggingEnabled: true,
       });
     });
 
@@ -814,13 +816,14 @@ describe('projects', () => {
   describe('estimate settings', () => {
     const estimates = (client: Api) => client.projects({ projectKey: 'MKT' }).settings.estimates;
 
-    it('defaults a new project to both kinds off', async () => {
+    it('defaults a new project to both kinds and time logging off', async () => {
       const { api } = await signUpClient();
       const created = await api.projects.post({ key: 'MKT', name: 'Marketing' });
 
       expect(created.data).toMatchObject({
         pointsEstimateEnabled: false,
         timeEstimateEnabled: false,
+        timeLoggingEnabled: false,
       });
     });
 
@@ -828,14 +831,15 @@ describe('projects', () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
 
-      const patch = await estimates(api).patch({ points: true, time: false });
+      const patch = await estimates(api).patch({ points: true, time: false, logging: true });
       expect(patch.status).toBe(200);
-      expect(patch.data).toMatchObject({ points: true, time: false });
+      expect(patch.data).toMatchObject({ points: true, time: false, logging: true });
 
       const view = await viewOf(api, 'MKT');
       expect(view.data?.project).toMatchObject({
         pointsEstimateEnabled: true,
         timeEstimateEnabled: false,
+        timeLoggingEnabled: true,
       });
     });
 
@@ -843,12 +847,12 @@ describe('projects', () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
       const view = await viewOf(api, 'MKT');
-      await estimates(api).patch({ points: true, time: true });
+      await estimates(api).patch({ points: true, time: true, logging: false });
       const issue = await api
         .projects({ projectKey: 'MKT' })
         .issues.post({ columnId: view.data!.columns[0].id, title: 'Sized', estimatePoints: 5 });
 
-      await estimates(api).patch({ points: false, time: false });
+      await estimates(api).patch({ points: false, time: false, logging: false });
       expect((await api.issues({ issueId: issue.data!.id }).get()).data).toMatchObject({
         estimatePoints: 5,
       });
@@ -859,7 +863,9 @@ describe('projects', () => {
       await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
       const member = await addProjectMember(owner.api, 'MKT');
 
-      expect((await estimates(member).patch({ points: true, time: true })).status).toBe(403);
+      expect(
+        (await estimates(member).patch({ points: true, time: true, logging: true })).status,
+      ).toBe(403);
     });
 
     it('lets a role with edit change the kinds', async () => {
@@ -871,9 +877,9 @@ describe('projects', () => {
       });
       const member = await addProjectMember(owner.api, 'MKT', role.data!.id);
 
-      const res = await estimates(member).patch({ points: true, time: true });
+      const res = await estimates(member).patch({ points: true, time: true, logging: true });
       expect(res.status).toBe(200);
-      expect(res.data).toMatchObject({ points: true, time: true });
+      expect(res.data).toMatchObject({ points: true, time: true, logging: true });
     });
   });
 

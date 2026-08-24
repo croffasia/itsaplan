@@ -128,6 +128,9 @@ export const qk = {
   anyCycles: ['cycles'] as const,
   anyCycle: ['cycle'] as const,
   attachments: (id: number) => ['attachments', id] as const,
+  // The time entries of one issue. Their sum comes with the issue, so a write
+  // refreshes that read too.
+  worklogs: (id: number) => ['worklogs', id] as const,
   // A project's inbox notifications (the list, scoped by the active filters) and the
   // project's unread count (the sidebar badge + live-refresh target).
   notifications: (projectKey: string, filters?: unknown) =>

@@ -581,14 +581,17 @@ export interface IssueSnapshot {
   dueDate: string | null;
 }
 
-// A time estimate as the feed shows it, the same wording the issue properties use:
+// A duration as the feed shows it, the same wording the issue properties use:
 // 90 -> '1h 30m', 120 -> '2h', 30 -> '30m'.
-function estimateTimeText(minutes: number | null): string | null {
-  if (minutes == null) return null;
+export function timeText(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   const rest = minutes % 60;
   if (!hours) return `${rest}m`;
   return rest ? `${hours}h ${rest}m` : `${hours}h`;
+}
+
+function estimateTimeText(minutes: number | null): string | null {
+  return minutes == null ? null : timeText(minutes);
 }
 
 // Diffs an issue's before/after state and records one event per changed field.

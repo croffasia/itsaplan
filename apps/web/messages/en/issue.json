@@ -18,8 +18,12 @@
     "initiative": "Initiative",
     "cycle": "Cycle",
     "estimatePoints": "Story points",
-    "estimateTime": "Time",
+    "estimateTime": "Time estimate",
     "estimateTimePlaceholder": "1h 30m",
+    "timeTracking": "Time tracking",
+    "timeLoggedValue": "{time} logged",
+    "timeRemainingValue": "{time} remaining",
+    "timeOverBy": "{time} over",
     "startDate": "Start date",
     "dueDate": "Due date",
     "properties": "Properties",
@@ -151,6 +155,17 @@
     "removeItem": "Remove {item}",
     "deleteChecklist": "Delete checklist {title}",
     "addItemButton": "Add an item"
+  },
+  "worklog": {
+    "title": "Time logged",
+    "empty": "No time logged yet.",
+    "emptyHint": "Use Add to log the time you spent on this issue.",
+    "time": "Time spent",
+    "timePlaceholder": "1h 30m",
+    "note": "Note",
+    "notePlaceholder": "What the time went into",
+    "edit": "Change this entry",
+    "remove": "Delete this entry"
   },
   "links": {
     "title": "Links",
@@ -299,7 +314,10 @@
     "agentFinished": "finished working on the issue",
     "agentFailed": "could not finish the issue",
     "pullRequestMerged": "merged pull request <v>{pr}</v>",
-    "pullRequestOpened": "opened pull request <v>{pr}</v>"
+    "pullRequestOpened": "opened pull request <v>{pr}</v>",
+    "worklogAdded": "logged <v>{time}</v> on <v>{date}</v>",
+    "worklogChanged": "changed the logged <v>{from}</v> on <v>{fromDate}</v> to <v>{to}</v> on <v>{date}</v>",
+    "worklogRemoved": "removed the <v>{time}</v> logged on <v>{date}</v>"
   },
   "archived": "Archived",
   "activityHeading": "Activity",

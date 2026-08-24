@@ -21,6 +21,7 @@ import InitiativeSelect from '../fields/InitiativeSelect';
 import CycleSelect from '../fields/CycleSelect';
 import CycleHistoryBadge from '../fields/CycleHistoryBadge';
 import EstimatePill from '../fields/EstimatePill';
+import IssueTimeTracking from '../fields/IssueTimeTracking';
 import IssueCustomFieldControl from '../fields/IssueCustomFieldControl';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueWatchers from './IssueWatchers';
@@ -213,6 +214,15 @@ export default function IssueProperties({
               value={issue.estimateMinutes}
               onChange={(v) => onPatch({ estimateMinutes: v })}
               readOnly={readOnly}
+            />
+          </IssuePropertyRow>
+        ),
+
+        project.project.timeLoggingEnabled && issue.loggedMinutes > 0 && (
+          <IssuePropertyRow key="timeTracking" label={t('timeTracking')}>
+            <IssueTimeTracking
+              logged={issue.loggedMinutes}
+              estimate={project.project.timeEstimateEnabled ? issue.estimateMinutes : null}
             />
           </IssuePropertyRow>
         ),

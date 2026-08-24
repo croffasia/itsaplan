@@ -77,6 +77,10 @@ export const project = pgTable('project', {
   // values, which show again when it is turned back on.
   pointsEstimateEnabled: boolean('points_estimate_enabled').notNull().default(false),
   timeEstimateEnabled: boolean('time_estimate_enabled').notNull().default(false),
+  // Whether members log the time they spend on the issues of this project, set in
+  // the same place. Independent of the time estimate: a team can log time without
+  // estimating first. Turning it off hides the entries and keeps them.
+  timeLoggingEnabled: boolean('time_logging_enabled').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -1270,6 +1274,37 @@ export const issueChecklistItem = pgTable(
   (t) => [index('issue_checklist_item_checklist_idx').on(t.checklistId, t.position)],
 );
 
+// The time a member spent on an issue, one row per entry. The time an issue took is
+// the sum of its entries and the time left is the estimate minus that sum; neither
+// is stored, since two numbers kept next to the entries drift apart. Each entry
+// belongs to the member who logged it, so several people log their own days on the
+// same issue and one member's correction never overwrites another's.
+export const issueWorklog = pgTable(
+  'issue_worklog',
+  {
+    id: serial('id').primaryKey(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    // Who logged the entry. Their entries go with the account when it is deleted.
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    minutes: integer('minutes').notNull(),
+    // The day the work happened on, which is not the day it was logged: a member
+    // enters yesterday's work today.
+    spentOn: date('spent_on').notNull(),
+    note: text('note'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('issue_worklog_minutes_check', sql`${t.minutes} > 0`),
+    // Backs the entries of an issue, read newest day first, and the sums the issue
+    // payload carries.
+    index('issue_worklog_issue_idx').on(t.issueId, t.spentOn.desc()),
+  ],
+);
+
 // One side of a change: the text the feed shows, and the id of the row behind it
 // when the side names one. The text is a snapshot, so an entry still reads
 // correctly after that row is renamed or deleted; the id is what makes the entry
@@ -1281,6 +1316,9 @@ export interface ActivitySide {
   stateType?: string | null;
   repo?: string;
   number?: number;
+  // A 'worklog' side carries the day its time was spent on: a change of an entry
+  // can move it to another day.
+  date?: string | null;
 }
 
 // What an activity entry says changed. `subject` names the sub-item the action

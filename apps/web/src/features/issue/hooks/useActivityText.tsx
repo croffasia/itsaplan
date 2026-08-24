@@ -136,6 +136,16 @@ export function useActivityText() {
             checklist: subject ?? '',
           }),
         };
+      case 'worklog': {
+        // Each side carries the time it held and the day it was spent on.
+        const fromDay = fmtDate(a.payload.from?.date ?? null);
+        const toDay = fmtDate(a.payload.to?.date ?? null);
+        if (!to) return { line: rich('worklogRemoved', { time: from ?? '', date: fromDay }) };
+        if (!from) return { line: rich('worklogAdded', { time: to, date: toDay }) };
+        return {
+          line: rich('worklogChanged', { from, fromDate: fromDay, to, date: toDay }),
+        };
+      }
       case 'field':
         if (isLongValue(to))
           return { line: rich('fieldUpdated', { field: subject ?? '' }), popover: to };

@@ -91,6 +91,13 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     always: false,
   },
   {
+    key: 'create_worklog',
+    group: 'issues',
+    label: 'Log time',
+    description: 'Log the time spent on an issue, for example what a run of this agent took.',
+    always: false,
+  },
+  {
     key: 'add_attachment',
     group: 'issues',
     label: 'Add attachments',

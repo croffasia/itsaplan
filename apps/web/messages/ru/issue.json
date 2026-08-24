@@ -18,8 +18,12 @@
     "initiative": "Инициатива",
     "cycle": "Цикл",
     "estimatePoints": "Стори-поинты",
-    "estimateTime": "Время",
+    "estimateTime": "Оценка по времени",
     "estimateTimePlaceholder": "1h 30m",
+    "timeTracking": "Учёт времени",
+    "timeLoggedValue": "записано {time}",
+    "timeRemainingValue": "осталось {time}",
+    "timeOverBy": "{time} сверх",
     "startDate": "Дата начала",
     "dueDate": "Дедлайн",
     "properties": "Свойства",
@@ -151,6 +155,17 @@
     "removeItem": "Убрать {item}",
     "deleteChecklist": "Удалить чек-лист {title}",
     "addItemButton": "Добавить пункт"
+  },
+  "worklog": {
+    "title": "Затраченное время",
+    "empty": "Время пока не записано.",
+    "emptyHint": "Нажмите «Добавить», чтобы записать время, потраченное на задачу.",
+    "time": "Затрачено",
+    "timePlaceholder": "1h 30m",
+    "note": "Заметка",
+    "notePlaceholder": "На что ушло время",
+    "edit": "Изменить запись",
+    "remove": "Удалить запись"
   },
   "links": {
     "title": "Связи",
@@ -299,7 +314,10 @@
     "agentFinished": "завершил(а) работу над задачей",
     "agentFailed": "не смог(ла) завершить работу над задачей",
     "pullRequestMerged": "смержил(а) пул-реквест <v>{pr}</v>",
-    "pullRequestOpened": "открыл(а) пул-реквест <v>{pr}</v>"
+    "pullRequestOpened": "открыл(а) пул-реквест <v>{pr}</v>",
+    "worklogAdded": "записал(а) <v>{time}</v> за <v>{date}</v>",
+    "worklogChanged": "изменил(а) запись <v>{from}</v> за <v>{fromDate}</v> на <v>{to}</v> за <v>{date}</v>",
+    "worklogRemoved": "удалил(а) запись <v>{time}</v> за <v>{date}</v>"
   },
   "archived": "В архиве",
   "activityHeading": "Активность",

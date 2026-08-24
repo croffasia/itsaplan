@@ -1,10 +1,8 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
+import { isoDate } from '#shared/schemas';
 
-const IsoDate = t.String({
-  pattern: '^\\d{4}-\\d{2}-\\d{2}$',
-  description: "Date 'YYYY-MM-DD'.",
-});
+const IsoDate = isoDate("Date 'YYYY-MM-DD'.");
 
 export const cycleParams = t.Object({ cycleId: t.Numeric() });
 

@@ -16,6 +16,7 @@ import {
   SignalHigh,
   Bot,
   Tag,
+  Timer,
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
@@ -49,6 +50,7 @@ export const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   checklist_remove: ListChecks,
   checklist_item_add: ListChecks,
   checklist_item_remove: ListChecks,
+  worklog: Timer,
   field: Pencil,
   archived: Archive,
   restored: ArchiveRestore,

@@ -281,8 +281,9 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     },
   )
 
-  // The estimate kinds the issues carry. The current state comes with the project
-  // payload every member already gets, so only the write lives here.
+  // The estimate kinds the issues carry and whether members log the time they
+  // spend. The current state comes with the project payload every member already
+  // gets, so only the write lives here.
   .patch(
     '/projects/:projectKey/settings/estimates',
     async ({ project, body }) => {
@@ -294,7 +295,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       body: updateEstimatesBody,
       permission: ['workflow_config', 'edit'],
       response: { 200: EstimatesResponse, ...commonErrors },
-      detail: { summary: "Update a project's estimate kinds" },
+      detail: { summary: "Update a project's estimate kinds and time logging" },
     },
   )
 

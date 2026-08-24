@@ -1,11 +1,9 @@
 import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
-import { guards, entityGuard } from '#shared/guards';
+import { guards, entityGuard, assertMcpAllowed } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { assertPermission, assertMcpEnabled, requireUser } from '#shared/access';
-import { isMcpRequest } from '#shared/mcp-request';
-import { getProjectById } from '#modules/projects/service';
+import { assertPermission, assertProjectOwner, requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '#shared/s3';
@@ -48,6 +46,13 @@ import {
   type SubtaskMode,
 } from './subtasks';
 import { listIssueWatchers, setIssueWatching } from './watchers';
+import {
+  createWorklog,
+  deleteWorklog,
+  getWorklogRef,
+  listWorklogs,
+  updateWorklog,
+} from './worklogs';
 import { listIssueCycles } from './cycle-history';
 import {
   createChecklist,
@@ -73,6 +78,10 @@ import {
   OrderedIdsSchema,
   checklistParams,
   checklistItemParams,
+  worklogParams,
+  WorklogResponse,
+  createWorklogBody,
+  updateWorklogBody,
   IssueWithFieldsResponse,
   IssueSearchHitResponse,
   FeedItemResponse,
@@ -149,8 +158,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .use(guards)
   // Guards for routes that address an entity by its own id (no :projectKey in the
   // path). Set `workItem` / `checklist` / `checklistItem` to the action in the
-  // route options. A checklist and its items belong to the issue that carries them,
-  // so all three resolve to the same work_items permission.
+  // route options, `worklog` to true. A checklist, its items and a time entry
+  // belong to the issue that carries them, so they all resolve to the same
+  // work_items permission.
   .macro({
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
@@ -163,6 +173,24 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const issueId = await getChecklistItemIssueId(Number(p.itemId));
       return issueId == null ? null : getIssueProjectId(issueId);
     }),
+    // A time entry belongs to the member who logged it: they change and delete
+    // their own with the work_items edit this asserts. Someone else's is a record
+    // of what that member did, so only a project owner may touch it — no
+    // permission on the matrix grants it. Hence not an ordinary entityGuard: the
+    // rule depends on the row, not on the route.
+    worklog(_enabled: boolean) {
+      return {
+        async resolve({ params, user, request }) {
+          const entry = await getWorklogRef(Number((params as { worklogId: string }).worklogId));
+          if (!entry) throw new HttpError(404, 'Time entry not found');
+          await assertPermission(entry.projectId, user, 'work_items', 'edit');
+          if (entry.userId !== requireUser(user).id)
+            await assertProjectOwner(entry.projectId, user);
+          await assertMcpAllowed(entry.projectId, request.headers);
+          return { projectId: entry.projectId };
+        },
+      };
+    },
   })
   .post(
     '/projects/:projectKey/issues',
@@ -416,10 +444,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       await assertPermission(issue.projectId, user, 'work_items', 'read');
       // This route resolves the project itself, so it also enforces the per-project
       // MCP toggle itself (it does not run through the workItem guard).
-      if (isMcpRequest(request.headers)) {
-        const project = await getProjectById(issue.projectId);
-        if (project) assertMcpEnabled(project, true);
-      }
+      await assertMcpAllowed(issue.projectId, request.headers);
       const fields = await getIssueFieldValues(issue.id);
       const links = await listIssueLinks(issue.id);
       const watchers = await listIssueWatchers(issue.projectId, issue.id);
@@ -780,6 +805,78 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Delete a checklist item',
         description: 'Remove one item from a checklist.',
+      },
+    },
+  )
+
+  // The time logged on the issue. The entries are their own read: the issue payload
+  // carries their sum, which is what a board and the Time property show, and only
+  // the section that lists them needs the entries themselves.
+  .get('/issues/:issueId/worklogs', async ({ params }) => listWorklogs(params.issueId), {
+    params: issueParams,
+    workItem: 'read',
+    response: { 200: t.Array(WorklogResponse), ...commonErrors },
+    detail: {
+      summary: "List an issue's logged time",
+      description:
+        'Every time entry on an issue, the newest day first. The time an issue took is the sum of them.',
+      ...mcpTool('list_worklogs'),
+    },
+  })
+
+  .post(
+    '/issues/:issueId/worklogs',
+    async ({ params, body, user, set }) => {
+      set.status = 201;
+      return createWorklog(params.issueId, requireUser(user).id, body);
+    },
+    {
+      body: createWorklogBody,
+      params: issueParams,
+      workItem: 'edit',
+      response: { 201: WorklogResponse, ...commonErrors },
+      detail: {
+        summary: 'Log time on an issue',
+        description:
+          'Log the time spent on an issue. The entry belongs to whoever logs it, and the day it was spent on cannot be in the future.',
+        ...mcpTool('create_worklog'),
+      },
+    },
+  )
+
+  .patch(
+    '/worklogs/:worklogId',
+    async ({ params, body, user }) => updateWorklog(params.worklogId, body, requireUser(user).id),
+    {
+      body: updateWorklogBody,
+      params: worklogParams,
+      worklog: true,
+      response: { 200: WorklogResponse, ...commonErrors },
+      detail: {
+        summary: 'Change a time entry',
+        description:
+          "Change the time, the day or the note of an entry. Another member's entry needs work_items delete.",
+        ...mcpTool('update_worklog'),
+      },
+    },
+  )
+
+  .delete(
+    '/worklogs/:worklogId',
+    async ({ params, user }) => {
+      const removed = await deleteWorklog(params.worklogId, requireUser(user).id);
+      if (!removed) throw new HttpError(404, 'Time entry not found');
+      return noContent();
+    },
+    {
+      params: worklogParams,
+      worklog: true,
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Delete a time entry',
+        description:
+          "Remove one entry, lowering the issue's logged time by it. Another member's entry needs work_items delete.",
+        ...mcpTool('delete_worklog'),
       },
     },
   )

@@ -125,6 +125,9 @@ export interface Project {
   // properties while a kind is off.
   pointsEstimateEnabled: boolean;
   timeEstimateEnabled: boolean;
+  // Whether members log the time they spend on the issues, set in the same place.
+  // Independent of the time estimate.
+  timeLoggingEnabled: boolean;
   createdAt: string;
   // The caller's role in this project. Only present on the /projects list
   // response (used to gate owner-only actions like deletion); absent on the
@@ -807,6 +810,9 @@ export interface Issue {
   // Time is in minutes; the UI enters and shows it as hours and minutes.
   estimatePoints: number | null;
   estimateMinutes: number | null;
+  // The sum of the issue's logged time entries, 0 when nothing was logged. The
+  // entries themselves are read separately (listWorklogs).
+  loggedMinutes: number;
   startDate: string | null;
   dueDate: string | null;
   position: number;
@@ -856,11 +862,13 @@ export interface AutoArchiveSettings {
   canceledDays: number | null;
 }
 
-// Which estimate kinds a project's issues carry, both off by default. A kind
-// turned off hides its UI and keeps the estimates already set.
+// Which estimate kinds a project's issues carry and whether its members log the
+// time they spend, all off by default. One turned off hides its UI and keeps what
+// the issues already carry.
 export interface EstimateSettings {
   points: boolean;
   time: boolean;
+  logging: boolean;
 }
 
 // Per-project subtask automations, both off by default. completeParent closes a
@@ -1636,6 +1644,7 @@ export type ActivityAction =
   | 'checklist_remove'
   | 'checklist_item_add'
   | 'checklist_item_remove'
+  | 'worklog'
   | 'field'
   | 'archived'
   | 'restored'
@@ -1655,6 +1664,8 @@ export interface ActivitySide {
   stateType?: string | null;
   repo?: string;
   number?: number;
+  // A 'worklog' side carries the day its time was spent on.
+  date?: string | null;
 }
 
 // What an activity row says changed. `subject` names the sub-item where the action
@@ -1906,6 +1917,28 @@ export interface Checklist {
   title: string;
   position: number;
   items: ChecklistItem[];
+}
+
+// One entry of the time a member logged on an issue: how long they worked, the day
+// the work happened on, an optional note, and the member it belongs to. The time an
+// issue took is the sum of its entries (Issue.loggedMinutes).
+export interface Worklog {
+  id: number;
+  issueId: number;
+  userId: string;
+  userName: string | null;
+  userImage: string | null;
+  minutes: number;
+  spentOn: string;
+  note: string | null;
+  createdAt: string;
+}
+
+// What a new entry carries. A change sends the same fields, any subset of them.
+export interface WorklogInput {
+  minutes: number;
+  spentOn: string;
+  note?: string | null;
 }
 
 // The issue with its relations and its place in the subtask hierarchy. Shared
@@ -2669,6 +2702,23 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ orderedIds }),
     }),
+
+  // The time logged on an issue. Unlike the checklists these are not part of the
+  // issue read — it carries their sum, and only the section listing them needs the
+  // entries.
+  listWorklogs: (issueId: number) => request<Worklog[]>(`/issues/${issueId}/worklogs`),
+  createWorklog: (issueId: number, input: WorklogInput) =>
+    request<Worklog>(`/issues/${issueId}/worklogs`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateWorklog: (worklogId: number, patch: Partial<WorklogInput>) =>
+    request<Worklog>(`/worklogs/${worklogId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteWorklog: (worklogId: number) =>
+    request<void>(`/worklogs/${worklogId}`, { method: 'DELETE' }),
 
   listAttachments: (issueId: number) =>
     request<Attachment[]>(`/issues/${issueId}/attachments`).then((rows) =>

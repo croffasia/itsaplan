@@ -18,8 +18,12 @@
     "initiative": "计划",
     "cycle": "周期",
     "estimatePoints": "故事点",
-    "estimateTime": "工时",
+    "estimateTime": "工时估算",
     "estimateTimePlaceholder": "1h 30m",
+    "timeTracking": "工时跟踪",
+    "timeLoggedValue": "已记录 {time}",
+    "timeRemainingValue": "剩余 {time}",
+    "timeOverBy": "超出 {time}",
     "startDate": "开始日期",
     "dueDate": "截止日期",
     "properties": "属性",
@@ -151,6 +155,17 @@
     "removeItem": "移除 {item}",
     "deleteChecklist": "删除检查清单 {title}",
     "addItemButton": "添加清单项"
+  },
+  "worklog": {
+    "title": "已记录工时",
+    "empty": "尚未记录工时。",
+    "emptyHint": "点击“添加”记录你在该事项上花费的时间。",
+    "time": "花费时间",
+    "timePlaceholder": "1h 30m",
+    "note": "备注",
+    "notePlaceholder": "时间花在了什么上",
+    "edit": "修改这条记录",
+    "remove": "删除这条记录"
   },
   "links": {
     "title": "关联",
@@ -299,7 +314,10 @@
     "agentFinished": "完成了该工作项的处理",
     "agentFailed": "未能完成该工作项",
     "pullRequestMerged": "合并了拉取请求 <v>{pr}</v>",
-    "pullRequestOpened": "打开了拉取请求 <v>{pr}</v>"
+    "pullRequestOpened": "打开了拉取请求 <v>{pr}</v>",
+    "worklogAdded": "记录了 <v>{date}</v> 的 <v>{time}</v>",
+    "worklogChanged": "将 <v>{fromDate}</v> 的 <v>{from}</v> 改为 <v>{date}</v> 的 <v>{to}</v>",
+    "worklogRemoved": "删除了 <v>{date}</v> 的 <v>{time}</v>"
   },
   "archived": "已归档",
   "activityHeading": "活动记录",

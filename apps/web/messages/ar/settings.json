@@ -421,6 +421,8 @@
     "pointsEstimateHint": "رقم عادي على كل مهمة.",
     "timeEstimate": "الوقت",
     "timeEstimateHint": "بيتكتب بالساعات والدقايق، مثلاً 1h 30m.",
+    "timeLogging": "تسجيل الوقت",
+    "timeLoggingHint": "يسجّل الأعضاء الوقت الذي يقضونه على المهمة.",
     "archive": "الأرشفة",
     "archiveHint": "أرشف المهام المقفولة الواقفة من زمان عشان اللوحة تفضل واضحة.",
     "completedIssues": "المهام المكتملة",

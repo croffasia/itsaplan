@@ -70,6 +70,7 @@ export const ProjectResponse = t.Object({
   issueStatsEnabled: t.Boolean(),
   pointsEstimateEnabled: t.Boolean(),
   timeEstimateEnabled: t.Boolean(),
+  timeLoggingEnabled: t.Boolean(),
   createdAt: t.String(),
 });
 
@@ -156,11 +157,13 @@ export const updateAutoArchiveBody = t.Object({
   canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
 });
 
-// The estimate kinds the project's issues carry (EstimateSettings from the
-// service). Sent together, the same as the automations below.
+// The estimate kinds the project's issues carry and whether its members log time
+// (EstimateSettings from the service). Sent together, the same as the automations
+// below.
 export const EstimatesResponse = t.Object({
   points: t.Boolean(),
   time: t.Boolean(),
+  logging: t.Boolean(),
 });
 
 export const updateEstimatesBody = EstimatesResponse;

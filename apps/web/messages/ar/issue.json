@@ -18,8 +18,12 @@
     "initiative": "المبادرة",
     "cycle": "الدورة",
     "estimatePoints": "نقاط القصة",
-    "estimateTime": "الوقت",
+    "estimateTime": "تقدير الوقت",
     "estimateTimePlaceholder": "1h 30m",
+    "timeTracking": "تتبع الوقت",
+    "timeLoggedValue": "{time} مُسجَّل",
+    "timeRemainingValue": "{time} متبقٍ",
+    "timeOverBy": "{time} زيادة",
     "startDate": "تاريخ البدء",
     "dueDate": "تاريخ الاستحقاق",
     "properties": "الخصائص",
@@ -151,6 +155,17 @@
     "removeItem": "إزالة {item}",
     "deleteChecklist": "حذف قائمة التحقّق {title}",
     "addItemButton": "إضافة عنصر"
+  },
+  "worklog": {
+    "title": "الوقت المسجّل",
+    "empty": "لا يوجد وقت مسجّل بعد.",
+    "emptyHint": "استخدم إضافة لتسجيل الوقت الذي قضيته على هذه المهمة.",
+    "time": "الوقت المستغرق",
+    "timePlaceholder": "1h 30m",
+    "note": "ملاحظة",
+    "notePlaceholder": "فيمَ ذهب الوقت",
+    "edit": "تعديل هذا السجل",
+    "remove": "حذف هذا السجل"
   },
   "links": {
     "title": "الروابط",
@@ -299,7 +314,10 @@
     "agentFinished": "أنهى العمل على المهمة",
     "agentFailed": "لم يتمكن من إنهاء المهمة",
     "pullRequestMerged": "دمج طلب السحب <v>{pr}</v>",
-    "pullRequestOpened": "فتح طلب السحب <v>{pr}</v>"
+    "pullRequestOpened": "فتح طلب السحب <v>{pr}</v>",
+    "worklogAdded": "سجّل <v>{time}</v> ليوم <v>{date}</v>",
+    "worklogChanged": "غيّر التسجيل من <v>{from}</v> ليوم <v>{fromDate}</v> إلى <v>{to}</v> ليوم <v>{date}</v>",
+    "worklogRemoved": "حذف تسجيل <v>{time}</v> ليوم <v>{date}</v>"
   },
   "archived": "مؤرشفة",
   "activityHeading": "النشاط",

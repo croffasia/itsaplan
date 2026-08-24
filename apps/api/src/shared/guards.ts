@@ -49,13 +49,19 @@ export function entityGuard(
       const projectId = await resolveProjectId(params as Record<string, string>);
       if (projectId == null) throw new HttpError(404, notFound);
       await assertPermission(projectId, user, resource, action);
-      if (isMcpRequest(request.headers)) {
-        const project = await getProjectById(projectId);
-        if (project) assertMcpEnabled(project, true);
-      }
+      await assertMcpAllowed(projectId, request.headers);
       return { projectId };
     },
   });
+}
+
+// The per-project MCP toggle, for a route or a guard that resolved the project by
+// its id rather than through one of the :projectKey macros. A plain request passes
+// untouched.
+export async function assertMcpAllowed(projectId: number, headers: Headers): Promise<void> {
+  if (!isMcpRequest(headers)) return;
+  const project = await getProjectById(projectId);
+  if (project) assertMcpEnabled(project, true);
 }
 
 // The path param carried by every project-scoped route. The macros read it off

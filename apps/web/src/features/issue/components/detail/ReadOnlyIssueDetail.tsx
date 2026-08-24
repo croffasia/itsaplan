@@ -1,6 +1,6 @@
 import { type SharedIssueBundle } from '@/lib/api';
 import { toPublicProjectDetail } from '@/utils/publicProject';
-import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { usePersistedOpen, usePersistedOpenGroups } from '../../hooks/usePersistedOpen';
 import { fieldDefsForType } from '../../utils/fieldDefs';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
@@ -34,6 +34,7 @@ export default function ReadOnlyIssueDetail({
   const t = useTranslations('issue');
   const { project: scaffold, issue, feed } = bundle;
   const properties = usePersistedOpen('issue-properties-open');
+  const propertyGroups = usePersistedOpenGroups('issue-property-groups-closed');
   const project = toPublicProjectDetail(scaffold);
   const imageByUserId = new Map(scaffold.assignees.map((a) => [a.userId, a.image]));
 
@@ -92,6 +93,7 @@ export default function ReadOnlyIssueDetail({
           className="mt-0 border-t-0 pt-0"
           open={properties.open}
           onToggle={properties.toggle}
+          groupsOpen={propertyGroups}
         />
       </aside>
     </div>

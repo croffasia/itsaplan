@@ -23,6 +23,11 @@
     "startDate": "Дата начала",
     "dueDate": "Дедлайн",
     "properties": "Свойства",
+    "groupState": "Статус",
+    "groupPeople": "Люди",
+    "groupPlanning": "Планирование",
+    "groupLabels": "Метки",
+    "groupCustom": "Свои поля",
     "empty": "Пусто",
     "openInNewTab": "Открыть в новой вкладке"
   },

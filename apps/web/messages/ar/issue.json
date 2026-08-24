@@ -23,6 +23,11 @@
     "startDate": "تاريخ البدء",
     "dueDate": "تاريخ الاستحقاق",
     "properties": "الخصائص",
+    "groupState": "الحالة",
+    "groupPeople": "الأشخاص",
+    "groupPlanning": "التخطيط",
+    "groupLabels": "الوسوم",
+    "groupCustom": "حقول مخصصة",
     "empty": "فارغ",
     "openInNewTab": "فتح في تبويب جديد"
   },

@@ -23,6 +23,11 @@
     "startDate": "Start date",
     "dueDate": "Due date",
     "properties": "Properties",
+    "groupState": "State",
+    "groupPeople": "People",
+    "groupPlanning": "Planning",
+    "groupLabels": "Labels",
+    "groupCustom": "Custom fields",
     "empty": "Empty",
     "openInNewTab": "Open in new tab"
   },

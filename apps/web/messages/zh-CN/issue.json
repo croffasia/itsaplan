@@ -23,6 +23,11 @@
     "startDate": "开始日期",
     "dueDate": "截止日期",
     "properties": "属性",
+    "groupState": "状态",
+    "groupPeople": "人员",
+    "groupPlanning": "规划",
+    "groupLabels": "标签",
+    "groupCustom": "自定义字段",
     "empty": "空",
     "openInNewTab": "在新标签页中打开"
   },

@@ -31,3 +31,36 @@ export function usePersistedOpen(storageKey: string) {
 
   return { open, toggle };
 }
+
+// Which groups of a section are closed, remembered in localStorage under
+// `storageKey` as a list of group keys. A group starts open, so only the closed
+// ones are stored. Read in an effect for the same reason as above.
+export function usePersistedOpenGroups(storageKey: string) {
+  const [closed, setClosed] = useState<string[]>([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(storageKey);
+      setClosed(stored ? (JSON.parse(stored) as string[]) : []);
+    } catch {
+      // Storage unavailable or unreadable: every group stays open.
+    }
+  }, [storageKey]);
+
+  const toggle = useCallback(
+    (key: string) => {
+      setClosed((prev) => {
+        const next = prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(next));
+        } catch {
+          // Ignore write failures (private mode / quota); the state still updates.
+        }
+        return next;
+      });
+    },
+    [storageKey],
+  );
+
+  return { isOpen: (key: string) => !closed.includes(key), toggle };
+}

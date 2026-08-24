@@ -48,6 +48,7 @@ import {
   type SubtaskMode,
 } from './subtasks';
 import { listIssueWatchers, setIssueWatching } from './watchers';
+import { listIssueCycles } from './cycle-history';
 import {
   createChecklist,
   createChecklistItem,
@@ -79,6 +80,7 @@ import {
   GroupedFeedPageResponse,
   feedPageQuery,
   TimelineSegmentResponse,
+  IssueCycleResponse,
   projectKeyParams,
   createIssueBody,
   bulkUpdateIssuesBody,
@@ -897,6 +899,19 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       },
     },
   )
+
+  // Read on its own, not as part of the issue: only the issue screen shows the
+  // cycles, and every board carries the issue payload.
+  .get('/issues/:issueId/cycles', async ({ params }) => listIssueCycles(params.issueId), {
+    params: issueParams,
+    workItem: 'read',
+    response: { 200: t.Array(IssueCycleResponse), ...commonErrors },
+    detail: {
+      summary: 'Get an issue cycle history',
+      description:
+        'Get the cycles an issue was in, oldest first: the ones it was still planned into when they ended, plus its current one.',
+    },
+  })
 
   // Post a comment on an issue. The author is the session user (a member or an
   // agent's bot user).

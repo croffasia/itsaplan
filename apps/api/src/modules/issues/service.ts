@@ -52,6 +52,7 @@ import {
   type IssueSnapshot,
 } from './activity';
 import { autoWatchIssue } from './watchers';
+import { recordCycleChange } from './cycle-history';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
 import { notifyIssueChange, notifyTextMentions } from '#modules/notifications/service';
 import { emitWebhookEvent } from '#modules/webhooks/emit';
@@ -861,6 +862,7 @@ export async function createIssue(
   });
 
   await recordActivity(issueId, [{ action: 'created' }], actorUserId);
+  if (input.cycleId != null) await recordCycleChange(issueId, null, input.cycleId);
   if (input.parentId != null) await recordParentChange(issueId, null, input.parentId, actorUserId);
   // Suppress the label_changed event on creation — the initial labels are part of
   // the issue.created payload, so a separate change event would be redundant.
@@ -1024,7 +1026,9 @@ export async function updateIssue(
   }
   const after = await getIssue(id);
   if (after) {
-    await logIssueUpdate(before, snapshot(after), actor);
+    const afterSnapshot = snapshot(after);
+    await logIssueUpdate(before, afterSnapshot, actor);
+    await recordCycleChange(id, before.cycleId, afterSnapshot.cycleId);
     if (before.parentId !== after.parentId)
       await recordParentChange(id, before.parentId, after.parentId, actor);
     if (changed) {

@@ -33,6 +33,15 @@ export function useIssueQuery(id: number | null) {
   });
 }
 
+// The cycles an issue was planned into. Read only where the badge that shows them
+// is, so a project without cycles never asks for it.
+export function useIssueCyclesQuery(issueId: number) {
+  return useQuery({
+    queryKey: qk.issueCycles(issueId),
+    queryFn: () => api.listIssueCycles(issueId),
+  });
+}
+
 // Resolves an issue by its project-scoped number (the identifier-based URL). Seeds
 // the by-id cache from the result so the detail's useIssueQuery(id) is instant and
 // shares one fetch. Enabled only when a number is present.

@@ -86,6 +86,8 @@ export const qk = {
   agentToolLinks: (projectKey: string, agentId: number) =>
     ['aiAgents', projectKey, agentId, 'tool-configs'] as const,
   issue: (id: number) => ['issue', id] as const,
+  // Under the issue prefix, so every issue mutation refreshes the cycles with it.
+  issueCycles: (id: number) => ['issue', id, 'cycles'] as const,
   anyIssue: ['issue'] as const,
   // Resolving an issue by its project-scoped number (the identifier-based URL).
   issueBySeq: (projectKey: string, seq: number) => ['issueBySeq', projectKey, seq] as const,

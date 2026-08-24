@@ -19,6 +19,7 @@ import StatusSelect from '@/components/common/fields/StatusSelect';
 import TypeSelect from '@/components/common/fields/TypeSelect';
 import InitiativeSelect from '../fields/InitiativeSelect';
 import CycleSelect from '../fields/CycleSelect';
+import CycleHistoryBadge from '../fields/CycleHistoryBadge';
 import IssueCustomFieldControl from '../fields/IssueCustomFieldControl';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueWatchers from './IssueWatchers';
@@ -187,11 +188,14 @@ export default function IssueProperties({
               </Pill>
             </ReadOnlyPill>
           ) : (
-            <CycleSelect
-              projectKey={project.project.key}
-              value={issue.cycle}
-              onChange={(cycle) => onPatch({ cycleId: cycle?.id ?? null })}
-            />
+            <div className="flex min-w-0 items-center gap-1.5">
+              <CycleSelect
+                projectKey={project.project.key}
+                value={issue.cycle}
+                onChange={(cycle) => onPatch({ cycleId: cycle?.id ?? null })}
+              />
+              <CycleHistoryBadge issueId={issue.id} />
+            </div>
           )}
         </PropertyRow>
       )}

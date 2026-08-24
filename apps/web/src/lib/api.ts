@@ -1739,6 +1739,18 @@ export interface InitiativeRef {
   status: InitiativeStatus;
 }
 
+// One cycle an issue was in. The cycle history of an issue is a list of these,
+// oldest first.
+export interface IssueCycleEntry {
+  cycleId: number;
+  name: string;
+  startDate: string;
+  endDate: string;
+  status: CycleStatus;
+  enteredAt: string;
+  leftAt: string | null;
+}
+
 export interface CycleRef {
   id: number;
   name: string;
@@ -2486,6 +2498,7 @@ export const api = {
       body: JSON.stringify(input),
     }),
   getIssue: (id: number) => request<IssueWithWatchers>(`/issues/${id}`),
+  listIssueCycles: (id: number) => request<IssueCycleEntry[]>(`/issues/${id}/cycles`),
 
   // Public read-only sharing. Enabling returns the link token and sets how much it
   // exposes; calling it again on a shared entity keeps the link and only changes

@@ -1,0 +1,1 @@
+CREATE INDEX "issue_cycle_cycle_idx" ON "issue_cycle" USING btree ("cycle_id");

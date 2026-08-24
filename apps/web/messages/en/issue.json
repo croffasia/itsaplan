@@ -223,6 +223,9 @@
     "empty": "No cycles.",
     "none": "No cycle"
   },
+  "cycleHistory": {
+    "title": "Cycle history"
+  },
   "annotator": {
     "title": "Annotate image",
     "loading": "Loading the image…",

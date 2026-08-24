@@ -223,6 +223,9 @@
     "empty": "暂无周期。",
     "none": "无周期"
   },
+  "cycleHistory": {
+    "title": "周期历史"
+  },
   "annotator": {
     "title": "标注图片",
     "loading": "正在加载图片…",

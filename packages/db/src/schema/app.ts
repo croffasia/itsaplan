@@ -1059,6 +1059,37 @@ export const issue = pgTable(
   ],
 );
 
+// One stretch an issue spent on a cycle: a record is opened when the issue is
+// planned into the cycle and closed when it leaves it. This is what the cycle
+// history of an issue reads, and what carry-over metrics are counted from.
+// Deleting a cycle removes its records, so an issue stops counting a cycle that no
+// longer exists.
+export const issueCycle = pgTable(
+  'issue_cycle',
+  {
+    id: serial('id').primaryKey(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    cycleId: integer('cycle_id')
+      .notNull()
+      .references(() => cycle.id, { onDelete: 'cascade' }),
+    enteredAt: timestamp('entered_at', { withTimezone: true }).notNull().defaultNow(),
+    // NULL while the issue still sits on the cycle.
+    leftAt: timestamp('left_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('issue_cycle_issue_idx').on(t.issueId, t.enteredAt),
+    // The ON DELETE CASCADE a cycle delete runs.
+    index('issue_cycle_cycle_idx').on(t.cycleId),
+    // An issue sits on one cycle at a time, so it never holds two open records for
+    // the same cycle.
+    uniqueIndex('issue_cycle_open_idx')
+      .on(t.issueId, t.cycleId)
+      .where(sql`${t.leftAt} IS NULL`),
+  ],
+);
+
 export const issueLabel = pgTable(
   'issue_label',
   {

@@ -271,6 +271,18 @@ export const TimelineSegmentResponse = t.Object({
   durationMs: t.Number(),
 });
 
+// One cycle an issue was in, with the stretch it spent on it. status follows from
+// the cycle's dates, as in CycleResponse.
+export const IssueCycleResponse = t.Object({
+  cycleId: t.Number(),
+  name: t.String(),
+  startDate: t.String(),
+  endDate: t.String(),
+  status: t.String(),
+  enteredAt: t.String(),
+  leftAt: t.Nullable(t.String()),
+});
+
 // --- Request schemas -------------------------------------------------------------
 
 export const projectKeyParams = t.Object({ projectKey: t.String() });

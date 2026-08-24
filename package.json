@@ -1,6 +1,6 @@
 {
   "name": "itsaplan",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "license": "AGPL-3.0-only",
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.15.0](https://github.com/croffasia/itsaplan/compare/v0.14.0...v0.15.0) (2026-08-24)
+
+
+### Features
+
+* add story point and time estimates to issues ([#214](https://github.com/croffasia/itsaplan/issues/214)) ([3795e10](https://github.com/croffasia/itsaplan/commit/3795e10eb4d72bbc0c4a1b6499faf52088b6f11e))
+* finish a cycle early and start the next one today ([#212](https://github.com/croffasia/itsaplan/issues/212)) ([3863a1c](https://github.com/croffasia/itsaplan/commit/3863a1c009a2cf5c26d412814c2933c7cc977961))
+* log the time spent on an issue ([#216](https://github.com/croffasia/itsaplan/issues/216)) ([71d9cc7](https://github.com/croffasia/itsaplan/commit/71d9cc79f6a09ccd03d922e5a5718fdf71ac6dab))
+* publish release images to GHCR and run deploys from them ([#220](https://github.com/croffasia/itsaplan/issues/220)) ([fad6d0f](https://github.com/croffasia/itsaplan/commit/fad6d0f8750c04e714cd401da5d39ea4b5eac08c))
+* show the cycle history of an issue ([#211](https://github.com/croffasia/itsaplan/issues/211)) ([54594f5](https://github.com/croffasia/itsaplan/commit/54594f51f05a3e8f2156d80606ab57f83bcfa578))
+
+
+### Improvements
+
+* record the status history in its own table ([#219](https://github.com/croffasia/itsaplan/issues/219)) ([b56adbe](https://github.com/croffasia/itsaplan/commit/b56adbee131122c7ba96cb0e5d9cab2e6f13f3a4))
+* **web:** clean up the shared view header ([#209](https://github.com/croffasia/itsaplan/issues/209)) ([2d215e7](https://github.com/croffasia/itsaplan/commit/2d215e78f05d138a2fa374d50e545b1230fa1a4d))
+* **web:** group the issue properties into foldable blocks ([#215](https://github.com/croffasia/itsaplan/issues/215)) ([661af03](https://github.com/croffasia/itsaplan/commit/661af03348e92e81a8cac972ee8e7dbb084c9470))
+
+
+### Refactoring
+
+* move activity log entries to a JSON payload ([#213](https://github.com/croffasia/itsaplan/issues/213)) ([1feedf0](https://github.com/croffasia/itsaplan/commit/1feedf0f9d92be809204a138a2ca2132946efae5))
+
+
+### Documentation
+
+* add a paid priority feature section to README ([#218](https://github.com/croffasia/itsaplan/issues/218)) ([a97781a](https://github.com/croffasia/itsaplan/commit/a97781a7481a7470b3deaba4d49c5f28be7e329b))
+* add Product Hunt strip to README ([#217](https://github.com/croffasia/itsaplan/issues/217)) ([c9430c2](https://github.com/croffasia/itsaplan/commit/c9430c257b5a9ac3b9ad81cda87fec33f25cf34a))
+
 ## [0.14.0](https://github.com/croffasia/itsaplan/compare/v0.13.0...v0.14.0) (2026-08-23)
 
 

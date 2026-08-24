@@ -28,8 +28,8 @@ import { BoardColumn } from './BoardColumn';
 import { CollapsedColumn } from './CollapsedColumn';
 import { WipCount } from './WipCount';
 
-// Flat board: one vertically-virtualized column per group, laid out horizontally,
-// with a trailing "Hidden" panel for manually-hidden columns.
+// Flat board: one vertically-virtualized column per group, in a horizontal row. A
+// trailing "Hidden" panel holds the columns that the user hid.
 export default function FlatBoard({
   project,
   filters,
@@ -48,9 +48,9 @@ export default function FlatBoard({
   const selection = useSelection();
   const filtered = isActiveFilterSet(filters);
 
-  // Hidden columns live in the view's display (settings.hiddenGroups); toggling
-  // one writes through onSettingsChange (a display edit on a saved view, saved on
-  // Save; immediate localStorage on the All tab).
+  // Hidden columns are stored in the view's display (settings.hiddenGroups). A
+  // toggle writes through onSettingsChange. On a saved view that is a display edit,
+  // applied on Save. On the All tab it reaches localStorage at once.
   const hiddenSet = new Set(settings.hiddenGroups);
   const setHidden = (key: string, hide: boolean) =>
     onSettingsChange({
@@ -62,8 +62,8 @@ export default function FlatBoard({
       pinnedGroup: hide && settings.pinnedGroup === key ? null : settings.pinnedGroup,
     });
 
-  // Collapsed columns stay in place as a narrow strip; the state lives in the
-  // view's display (settings.collapsedGroups) and persists the same way as
+  // Collapsed columns keep their position as a narrow strip. The state is stored in
+  // the view's display (settings.collapsedGroups) and persists the same way as
   // hiddenGroups.
   const collapsedSet = new Set(settings.collapsedGroups);
   const setCollapsed = (key: string, collapse: boolean) =>
@@ -74,7 +74,7 @@ export default function FlatBoard({
         : settings.collapsedGroups.filter((k) => k !== key),
     });
 
-  // At most one column is pinned; it persists the same way as the two sets above.
+  // At most one column is pinned. It persists the same way as the two sets above.
   const togglePin = (key: string) =>
     onSettingsChange({ ...settings, pinnedGroup: settings.pinnedGroup === key ? null : key });
 
@@ -83,8 +83,8 @@ export default function FlatBoard({
   const issuesByGroup = groupIssues(groups, sorted, settings.group);
   const maps = buildMaps(project);
 
-  // Empty groups drop out entirely when "Show empty columns" is off; manual hide
-  // moves the rest into the "Hidden" panel.
+  // Empty groups are removed when "Show empty columns" is off. A manual hide moves
+  // any of the remaining groups into the "Hidden" panel.
   const baseGroups = settings.showEmptyGroups
     ? groups
     : groups.filter((g) => (issuesByGroup.get(g.key)?.length ?? 0) > 0);
@@ -98,11 +98,11 @@ export default function FlatBoard({
     ? [pinnedGroup, ...visibleGroups.filter((g) => g !== pinnedGroup)]
     : visibleGroups;
 
-  // Reordering inside a column only holds when the view is ordered manually: with
-  // any other sort field the card would snap back to where the sort puts it. Cards
-  // already in the target column are then skipped, and a drop left with nothing to
-  // move is refused and explained; a card from another column still goes through,
-  // since that changes the grouping field rather than the order.
+  // A reorder inside a column only holds when the view is ordered manually. With
+  // any other sort field, the card returns to the position that the sort gives it.
+  // The board then skips cards that are already in the target column. A drop with
+  // no card left to move is refused, and the reason is shown. A card from another
+  // column is still moved, because that changes the grouping field, not the order.
   const manualOrder = settings.sort.field === 'manual';
 
   const wipOf = (group: IssueGroup) => wipStateFor(group, project.columns, columnCounts);
@@ -116,8 +116,9 @@ export default function FlatBoard({
       toast.info(sortedOrderMessage(settings.sort.field));
       return;
     }
-    // Refused here rather than left to the server: the move is optimistic, so a
-    // card would otherwise land in the column and snap back out of it.
+    // The board refuses the move instead of the server, because the move is
+    // optimistic. The card would otherwise appear in the column and then return to
+    // its old column.
     const wip = wipOf(group);
     if (wip && !wipAllows(wip, countEntering(ids, sorted, group))) {
       toast.info(wipLimitMessage(group.name, wip.limit));
@@ -139,8 +140,6 @@ export default function FlatBoard({
       onDragCancel={dnd.onDragCancel}
       onDragEnd={dnd.onDragEnd}
     >
-      {/* A click that reaches the board background (not a card or control, which
-          stop propagation) clears the selection, like Escape. */}
       <div
         className="flex h-full gap-3 overflow-x-auto p-4"
         onClick={() => selection.isSelecting && selection.clear()}
@@ -203,20 +202,22 @@ export default function FlatBoard({
                       filtered={filtered}
                     />
                   </div>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-6 text-muted-foreground"
-                        onClick={() => setHidden(group.key, false)}
-                        aria-label={t('show')}
-                      >
-                        <Eye />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('show')}</TooltipContent>
-                  </Tooltip>
+                  {!readOnly && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-6 text-muted-foreground"
+                          onClick={() => setHidden(group.key, false)}
+                          aria-label={t('show')}
+                        >
+                          <Eye />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{t('show')}</TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               ))}
             </div>

@@ -9,9 +9,9 @@ import { GroupDot } from '../shared/GroupDot';
 import { PINNED_COLUMN } from '../../utils/kanban';
 import { type WipState, WIP_FULL_TEXT, wipFullColor } from '../../utils/wipLimit';
 
-// A column collapsed to a narrow vertical strip. It stays in place (in column
-// order) with its name reading vertically and its count visible; collapsing only
-// gives the column's horizontal space back.
+// A column collapsed to a narrow vertical strip. It keeps its position in column
+// order, and shows its name vertically with its count. A collapse only releases the
+// column's horizontal space.
 export function CollapsedColumn({
   group,
   count,
@@ -24,19 +24,18 @@ export function CollapsedColumn({
 }: {
   group: IssueGroup;
   count: number;
-  // The column's WIP limit, or null when it has none. The strip is too narrow for
-  // the full `count / max`, so a full column only colours its count.
+  // The column's WIP limit. It is null when the column has no limit. The strip is
+  // too narrow for the full `count / max`, so a full column only colours its count.
   wip: WipState | null;
   pinned: boolean;
   onExpand: () => void;
   onTogglePin: () => void;
   onAddIssue: () => void;
-  // In a read-only share the add affordance is hidden.
   readOnly?: boolean;
 }) {
   const t = useTranslations('workItems');
   const { can } = usePermissions();
-  const canCreateIssue = can('work_items', 'create') && !readOnly;
+  const canCreateIssue = can('work_items', 'create');
   return (
     <div
       className={cn(
@@ -44,49 +43,53 @@ export function CollapsedColumn({
         pinned && PINNED_COLUMN,
       )}
     >
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-6 text-muted-foreground"
-            onClick={onExpand}
-            aria-label={t('expand')}
-          >
-            <ChevronsLeftRight />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{t('expand')}</TooltipContent>
-      </Tooltip>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden size-6 text-muted-foreground md:inline-flex"
-            onClick={onTogglePin}
-            aria-label={pinned ? t('unpin') : t('pin')}
-          >
-            {pinned ? <PinOff /> : <Pin />}
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>{pinned ? t('unpin') : t('pin')}</TooltipContent>
-      </Tooltip>
-      {canCreateIssue && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6 text-muted-foreground"
-              onClick={onAddIssue}
-              aria-label={t('newIssue')}
-            >
-              <Plus />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('newIssue')}</TooltipContent>
-        </Tooltip>
+      {!readOnly && (
+        <>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-6 text-muted-foreground"
+                onClick={onExpand}
+                aria-label={t('expand')}
+              >
+                <ChevronsLeftRight />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('expand')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="hidden size-6 text-muted-foreground md:inline-flex"
+                onClick={onTogglePin}
+                aria-label={pinned ? t('unpin') : t('pin')}
+              >
+                {pinned ? <PinOff /> : <Pin />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{pinned ? t('unpin') : t('pin')}</TooltipContent>
+          </Tooltip>
+          {canCreateIssue && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 text-muted-foreground"
+                  onClick={onAddIssue}
+                  aria-label={t('newIssue')}
+                >
+                  <Plus />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('newIssue')}</TooltipContent>
+            </Tooltip>
+          )}
+        </>
       )}
       <GroupDot group={group} />
       <div className="flex flex-1 items-start gap-2 text-sm font-medium [writing-mode:vertical-rl]">

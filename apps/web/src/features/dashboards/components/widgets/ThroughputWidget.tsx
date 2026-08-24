@@ -15,9 +15,9 @@ import { useThroughputQuery } from '../../services/analytics.service';
 
 const SERIES_COLOR = { created: '#6366f1', closed: '#22c55e' };
 
-// Created vs closed issues per week, as grouped bars. "Closed" is a status change
-// into a completed column (from the activity log); see the analytics store. The
-// window is a configured setting (edited from the header settings popover, see
+// Created vs closed issues per week, as grouped bars. "Closed" is an issue entering
+// the completed state it is still in; see the analytics store. The window is a
+// configured setting (edited from the header settings popover, see
 // ThroughputWidgetSettings), not a live control.
 export default function ThroughputWidget({
   projectKey,

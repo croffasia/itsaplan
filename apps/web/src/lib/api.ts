@@ -1736,11 +1736,11 @@ function feedPageQuery(params: { cursor?: FeedCursor | null; limit?: number }): 
   return qs ? `?${qs}` : '';
 }
 
-// One stretch the issue spent in a single column. `status` is the column-name
-// snapshot taken at the time (null only when the issue has no status history and its
-// column was deleted); `to` is null for the stretch the issue is in now. The entries
-// written inside a stretch are a separate read (listTimelineItems), made when one is
-// opened.
+// One stretch the issue spent in a single column. `status` is the column under the
+// name it carries now, falling back to the name it had at the time once it is
+// deleted (null only when the stretch recorded none); `to` is null for the stretch
+// the issue is in now. The entries written inside a stretch are a separate read
+// (listTimelineItems), made when one is opened.
 export interface TimelineSegment {
   status: string | null;
   from: string;

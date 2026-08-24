@@ -1111,6 +1111,43 @@ export const issueCycle = pgTable(
   ],
 );
 
+// One stretch an issue spent in one column: a row is opened when the issue enters
+// the column and closed when it leaves it. This is what the status timeline reads,
+// and what the closing metrics are counted from. The name and the state type are
+// copied in rather than read through column_id, because both are editable: renaming
+// a column or switching its type would otherwise rewrite what past stretches say.
+export const issueStatus = pgTable(
+  'issue_status',
+  {
+    id: serial('id').primaryKey(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    // NULL once the column is deleted, which keeps the stretches spent in it.
+    columnId: integer('column_id').references(() => projectColumn.id, { onDelete: 'set null' }),
+    // The name the column had at that moment. NULL only in a backfilled row whose
+    // change-log entry recorded none.
+    columnName: text('column_name'),
+    // The type the column had at that moment. NULL only in a backfilled row whose
+    // column could not be resolved; such a stretch never counts as completed.
+    stateType: text('state_type'),
+    enteredAt: timestamp('entered_at', { withTimezone: true }).notNull().defaultNow(),
+    // NULL while the issue still sits in the column.
+    leftAt: timestamp('left_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('issue_status_issue_idx').on(t.issueId, t.enteredAt),
+    // The ON DELETE SET NULL a column delete runs.
+    index('issue_status_column_idx')
+      .on(t.columnId)
+      .where(sql`${t.columnId} IS NOT NULL`),
+    // An issue sits in one column at a time, so it never holds two open rows.
+    uniqueIndex('issue_status_open_idx')
+      .on(t.issueId)
+      .where(sql`${t.leftAt} IS NULL`),
+  ],
+);
+
 export const issueLabel = pgTable(
   'issue_label',
   {

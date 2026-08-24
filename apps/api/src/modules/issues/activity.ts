@@ -22,6 +22,7 @@ import {
   notifyIssueChange,
   notifyTextMentions,
 } from '#modules/notifications/service';
+import { listStatusTimeline } from './status-history';
 
 // Issue timeline: comments and change-log activity in one table (issue_activity).
 // kind selects which columns a row uses. The author is the session user
@@ -151,70 +152,6 @@ async function listReplies(parentIds: number[]): Promise<FeedItemRow[]> {
     level = rows.map((row) => row.id);
   }
   return replies;
-}
-
-// --- Status timeline --------------------------------------------------------------
-// The issue's life split into the stretches it spent in one column. Backs the
-// timeline view of the activity section (a lane per column, bars on a time axis).
-// The stretches carry no feed entries: what happened inside one is read on demand
-// with listFeedRange when the person opens it.
-
-export interface TimelineSegment {
-  // The column name snapshot the issue was in. Null only when the issue has no
-  // status history and its current column was deleted.
-  status: string | null;
-  from: string;
-  // When the issue left this column, or null for the stretch it is in now.
-  to: string | null;
-  durationMs: number;
-}
-
-// Every stretch the issue spent in one column, oldest first. The boundaries are the
-// 'status' entries of the change log; the first stretch starts at the issue's
-// creation. The opening column is what the first status change moved away from, or —
-// for an issue that never changed column — its current one. Both are name snapshots,
-// so a renamed column reads under the name it had at the time and splits into two lanes.
-export async function listStatusTimeline(issueId: number): Promise<TimelineSegment[]> {
-  const [issueRow] = await db
-    .select({ createdAt: issue.createdAt, columnName: projectColumn.name })
-    .from(issue)
-    .leftJoin(projectColumn, eq(projectColumn.id, issue.columnId))
-    .where(eq(issue.id, issueId));
-  if (!issueRow) return [];
-
-  const changes = await db
-    .select({
-      payload: issueActivity.payload,
-      createdAt: issueActivity.createdAt,
-    })
-    .from(issueActivity)
-    .where(and(eq(issueActivity.issueId, issueId), eq(issueActivity.action, 'status')))
-    .orderBy(issueActivity.createdAt, issueActivity.id);
-
-  let current: TimelineSegment = {
-    status: changes[0]?.payload.from?.value ?? issueRow.columnName,
-    from: iso(issueRow.createdAt),
-    to: null,
-    durationMs: 0,
-  };
-  const segments = [current];
-  for (const change of changes) {
-    current.to = iso(change.createdAt);
-    current = {
-      status: change.payload.to?.value ?? null,
-      from: iso(change.createdAt),
-      to: null,
-      durationMs: 0,
-    };
-    segments.push(current);
-  }
-
-  const now = Date.now();
-  for (const segment of segments) {
-    const end = segment.to ? Date.parse(segment.to) : now;
-    segment.durationMs = Math.max(0, end - Date.parse(segment.from));
-  }
-  return segments;
 }
 
 // The feed entries written inside one stretch of the timeline: created at or after

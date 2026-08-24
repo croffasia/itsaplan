@@ -7,7 +7,7 @@ import { formatDuration, formatShortDate } from '@/utils/dates';
 // layout gives them.
 
 // The default project_column color, used when a segment's status no longer matches
-// a live column (renamed or deleted since the change was logged).
+// a live column (deleted since the issue passed through it).
 const FALLBACK_COLOR = '#6b7280';
 
 // Roughly how many labelled ticks the axis aims for.
@@ -24,8 +24,8 @@ export interface TimelineBar {
 }
 
 export interface TimelineLane {
-  // The status name, or a stand-in when the segment carries none (no status history
-  // and the column was deleted). Unique per lane, so it doubles as the render key.
+  // The status name, or a stand-in when the segment carries none. Unique per lane,
+  // so it doubles as the render key.
   label: string;
   color: string;
   stateType: StateType | undefined;

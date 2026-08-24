@@ -306,7 +306,7 @@ export const feedPageQuery = t.Object({
   cursor: t.Optional(t.String({ description: 'nextCursor from the previous page, for paging.' })),
 });
 
-// TimelineSegment from activity.ts: one stretch the issue spent in a column.
+// TimelineSegment from status-history.ts: one stretch the issue spent in a column.
 export const TimelineSegmentResponse = t.Object({
   status: t.Nullable(t.String()),
   from: t.String(),

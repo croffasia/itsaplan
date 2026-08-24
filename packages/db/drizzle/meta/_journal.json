@@ -736,6 +736,13 @@
       "when": 1787584764123,
       "tag": "0104_chunky_loki",
       "breakpoints": true
+    },
+    {
+      "idx": 105,
+      "version": "7",
+      "when": 1787597427470,
+      "tag": "0105_goofy_vanisher",
+      "breakpoints": true
     }
   ]
 }

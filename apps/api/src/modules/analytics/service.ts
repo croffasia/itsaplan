@@ -15,15 +15,30 @@ import { and, desc, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
 
 // Read-only project metrics for the dashboards feature. Every figure is derived
-// from the existing issue / project_column / issue_activity tables — there is no
-// analytics storage. This module is the only place in the API that uses GROUP BY
-// and date_trunc; counts are cast to int (Postgres count() returns bigint, which
-// would otherwise arrive as a string).
+// from the existing issue / project_column / issue_activity / issue_status tables —
+// there is no analytics storage. This module is the only place in the API that uses
+// GROUP BY and date_trunc; counts are cast to int (Postgres count() returns bigint,
+// which would otherwise arrive as a string).
 
-// "Closed" work is a status change into a completed column, read from the state type
-// the entry recorded at the moment of the move. Renaming a column later does not
-// change what is counted.
-const CLOSED = sql`${issueActivity.action} = 'status' and ${issueActivity.payload} -> 'to' ->> 'stateType' = 'completed'`;
+// One row per closed issue: when it entered the completed state it is still in. A
+// move between two completed columns falls inside that stretch of the history, so it
+// is not a second closing, and an issue that was reopened counts once, at the last
+// entry — the one it never left. An issue that is not in a completed state now has
+// no row here.
+function closings(projectId: number) {
+  return sql`
+    SELECT s.issue_id, min(s.entered_at) AS closed_at
+      FROM issue_status s
+      JOIN issue i ON i.id = s.issue_id
+     WHERE i.project_id = ${projectId}
+       AND s.state_type = 'completed'
+       AND NOT EXISTS (
+             SELECT 1 FROM issue_status p
+              WHERE p.issue_id = s.issue_id
+                AND p.state_type IS DISTINCT FROM 'completed'
+                AND (p.entered_at, p.id) > (s.entered_at, s.id))
+     GROUP BY s.issue_id`;
+}
 
 // --- Stats -----------------------------------------------------------------------
 
@@ -69,17 +84,11 @@ export async function getStats(projectId: number): Promise<StatsDto> {
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
     .where(and(eq(issue.projectId, projectId), isNull(issue.assigneeUserId), OPEN_STATES));
 
-  const [{ closedLast7d }] = await db
-    .select({ closedLast7d: sql<number>`count(*)::int` })
-    .from(issueActivity)
-    .innerJoin(issue, eq(issue.id, issueActivity.issueId))
-    .where(
-      and(
-        eq(issue.projectId, projectId),
-        CLOSED,
-        sql`${issueActivity.createdAt} >= now() - interval '7 days'`,
-      ),
-    );
+  const closedRows = (await db.execute(sql`
+    SELECT count(*)::int AS count
+      FROM (${closings(projectId)}) c
+     WHERE c.closed_at >= now() - interval '7 days'`)) as unknown as { count: number }[];
+  const closedLast7d = Number(closedRows[0]!.count);
 
   return { open, inProgress, backlog, overdue, unassigned, closedLast7d };
 }
@@ -296,24 +305,30 @@ export interface ThroughputWeek {
   closed: number;
 }
 
+// Creations come from the change log, closings from the status history; the two are
+// counted in one pass over their union so the weeks need no merging afterwards. A
+// week with neither is absent from the result.
 export async function getThroughput(projectId: number, weeks: number): Promise<ThroughputWeek[]> {
-  const rows = await db
-    .select({
-      week: sql<string>`to_char(date_trunc('week', ${issueActivity.createdAt}), 'YYYY-MM-DD')`,
-      created: sql<number>`(count(*) filter (where ${issueActivity.action} = 'created'))::int`,
-      closed: sql<number>`(count(*) filter (where ${CLOSED}))::int`,
-    })
-    .from(issueActivity)
-    .innerJoin(issue, eq(issue.id, issueActivity.issueId))
-    .where(
-      and(
-        eq(issue.projectId, projectId),
-        sql`${issueActivity.createdAt} >= date_trunc('week', now()) - make_interval(weeks => ${weeks - 1})`,
-      ),
-    )
-    .groupBy(sql`1`)
-    .orderBy(sql`1`);
-  return rows.map((r) => ({ week: r.week, created: r.created, closed: r.closed }));
+  const since = sql`date_trunc('week', now()) - make_interval(weeks => ${weeks - 1})`;
+  const rows = (await db.execute(sql`
+    SELECT to_char(e.week, 'YYYY-MM-DD') AS week,
+           (count(*) FILTER (WHERE e.kind = 'created'))::int AS created,
+           (count(*) FILTER (WHERE e.kind = 'closed'))::int AS closed
+      FROM (
+        SELECT date_trunc('week', a.created_at) AS week, 'created' AS kind
+          FROM issue_activity a
+          JOIN issue i ON i.id = a.issue_id
+         WHERE i.project_id = ${projectId}
+           AND a.action = 'created'
+           AND a.created_at >= ${since}
+        UNION ALL
+        SELECT date_trunc('week', c.closed_at), 'closed'
+          FROM (${closings(projectId)}) c
+         WHERE c.closed_at >= ${since}
+      ) e
+     GROUP BY e.week
+     ORDER BY e.week`)) as unknown as ThroughputWeek[];
+  return rows.map((r) => ({ week: r.week, created: Number(r.created), closed: Number(r.closed) }));
 }
 
 // --- Project-wide activity feed --------------------------------------------------

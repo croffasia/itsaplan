@@ -3,6 +3,7 @@ import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { getMembership } from '#modules/members/service';
 import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
+import { recordStatusChange } from '#modules/issues/status-history';
 
 export interface ColumnRow {
   id: number;
@@ -248,12 +249,12 @@ export async function deleteColumn(
     return moved;
   });
 
-  // The status timeline reads its stretches from the change log: without an entry
-  // the issue keeps counting time under the column it no longer sits in.
-  if (target)
+  if (target) {
+    await recordStatusChange(movedIssueIds, target.id);
     await recordActivityForIssues(
       movedIssueIds,
       { action: 'status', from: statusSide(column), to: statusSide(target) },
       actorUserId,
     );
+  }
 }

@@ -5,10 +5,10 @@ import { resetDb } from '#tests/helpers/db';
 import { pulseRows } from '../../service';
 
 // Read-only project analytics. Every figure is derived from the issue /
-// project_column / issue_activity tables, so the tests build state through the
-// real create/move API (which seeds the "created" and "status" activity the
-// metrics read) rather than inserting rows. createProject seeds five default
-// columns, one per state type.
+// project_column / issue_activity / issue_status tables, so the tests build state
+// through the real create/move API (which seeds the "created" activity and the
+// status history the metrics read) rather than inserting rows. createProject seeds
+// five default columns, one per state type.
 
 // Owner + project MKT with the seeded default columns. `col` maps a state type to
 // its column id so a test can place an issue in a known state without hardcoding
@@ -43,8 +43,8 @@ async function createIssue(
   return res.data;
 }
 
-// Moving an issue to another column writes a "status" activity carrying the state
-// type of the destination — the signal closed/throughput metrics read.
+// Moving an issue to another column opens a stretch of its status history carrying
+// the state type of the destination — what the closing metrics are counted from.
 function moveIssue(asOwner: Api, issueId: number, columnId: number) {
   return asOwner.issues({ issueId }).patch({ columnId });
 }
@@ -125,6 +125,53 @@ describe('analytics', () => {
       expect(res.data?.closedLast7d).toBe(1);
       const throughput = await asOwner.projects({ projectKey: 'MKT' }).analytics.throughput.get();
       expect(throughput.data?.[0]).toMatchObject({ closed: 1 });
+    });
+
+    it('keeps counting a closing after its column stops being a completed one', async () => {
+      const { asOwner, col } = await setupProject();
+      const issue = await createIssue(asOwner, col.started);
+      await moveIssue(asOwner, issue.id, col.completed);
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: col.completed })
+        .patch({ stateType: 'started' });
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
+      expect(res.data?.closedLast7d).toBe(1);
+    });
+
+    it('does not count a move between two completed columns as a second closing', async () => {
+      const { asOwner, col } = await setupProject();
+      const released = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns.post({ name: 'Released', stateType: 'completed' });
+      const issue = await createIssue(asOwner, col.started);
+      await moveIssue(asOwner, issue.id, col.completed);
+      await moveIssue(asOwner, issue.id, released.data!.id);
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
+      expect(res.data?.closedLast7d).toBe(1);
+    });
+
+    it('counts an issue closed, reopened and closed again once', async () => {
+      const { asOwner, col } = await setupProject();
+      const issue = await createIssue(asOwner, col.started);
+      await moveIssue(asOwner, issue.id, col.completed);
+      await moveIssue(asOwner, issue.id, col.started);
+      await moveIssue(asOwner, issue.id, col.completed);
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
+      expect(res.data?.closedLast7d).toBe(1);
+    });
+
+    it('counts no closing for an issue that was reopened and left open', async () => {
+      const { asOwner, col } = await setupProject();
+      const issue = await createIssue(asOwner, col.started);
+      await moveIssue(asOwner, issue.id, col.completed);
+      await moveIssue(asOwner, issue.id, col.started);
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
+      expect(res.data?.closedLast7d).toBe(0);
     });
   });
 

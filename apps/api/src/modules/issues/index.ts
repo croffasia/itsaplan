@@ -31,10 +31,10 @@ import {
   listFeed,
   listFeedRange,
   listGroupedFeed,
-  listStatusTimeline,
   createComment,
   type FeedCursor,
 } from './activity';
+import { listStatusTimeline } from './status-history';
 import { addIssueLink, attachBoardLinks, listIssueLinks, removeIssueLink } from './links';
 import {
   attachSubtaskCounts,

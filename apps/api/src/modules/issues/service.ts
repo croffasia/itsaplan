@@ -483,6 +483,7 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
       cycleName: cycle.name,
       cycleStart: cycle.startDate,
       cycleEnd: cycle.endDate,
+      cycleCompletedAt: cycle.completedAt,
     })
     .from(issue)
     .leftJoin(initiative, eq(initiative.id, issue.initiativeId))
@@ -508,7 +509,7 @@ async function attachGroupings(issues: IssueRow[]): Promise<void> {
         ? {
             id: r.cycleId,
             name: r.cycleName!,
-            status: cycleStatus(r.cycleStart!, r.cycleEnd!),
+            status: cycleStatus(r.cycleStart!, r.cycleEnd!, r.cycleCompletedAt),
           }
         : null;
   }

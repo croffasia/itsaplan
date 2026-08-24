@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import type { Cycle } from '@/lib/api';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import type { CompletedCycles } from '../../hooks/useCompletedCycles';
@@ -17,10 +18,12 @@ export default function CycleTableArchive({
   completed,
   projectKey,
   gridTemplate,
+  onTransfer,
 }: {
   completed: CompletedCycles;
   projectKey: string;
   gridTemplate: string;
+  onTransfer: (cycle: Cycle) => void;
 }) {
   const t = useTranslations('cycles');
   const [collapsed, setCollapsed] = useState(true);
@@ -43,6 +46,7 @@ export default function CycleTableArchive({
               cycle={cycle}
               projectKey={projectKey}
               gridTemplate={gridTemplate}
+              onTransfer={onTransfer}
             />
           ))}
           {completed.hasMore && (

@@ -1,11 +1,12 @@
 'use client';
 
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { Cycle } from '@/lib/api';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { groupCycles } from '../../utils/cycleGroups';
 import type { CompletedCycles } from '../../hooks/useCompletedCycles';
+import TransferIssuesDialog from '../TransferIssuesDialog';
 import CycleTableSection from './CycleTableSection';
 import CycleTableRow from './CycleTableRow';
 import CycleTableArchive from './CycleTableArchive';
@@ -17,6 +18,10 @@ const GRID = 'minmax(200px,1fr) 200px 60px 56px 132px 32px';
 // The project's cycles as one table: the planned ones grouped by the status their
 // dates put them in, then the archive of the finished ones. Each planned group folds
 // away, and which ones are folded is remembered per project.
+//
+// The transfer dialog is held here rather than in the row that asked for it: a cycle
+// finished from its menu moves to another group, and the row it was on is gone by
+// the time the dialog would open.
 export default function CyclesTable({
   cycles,
   completed,
@@ -28,6 +33,7 @@ export default function CyclesTable({
 }) {
   const t = useTranslations('cycles');
   const collapsed = usePersistedSet(`cycles-collapsed:${projectKey}`);
+  const [transferring, setTransferring] = useState<Cycle | null>(null);
 
   return (
     <div className="flex-1 overflow-auto">
@@ -62,6 +68,7 @@ export default function CyclesTable({
                     cycle={cycle}
                     projectKey={projectKey}
                     gridTemplate={GRID}
+                    onTransfer={setTransferring}
                   />
                 ))}
             </Fragment>
@@ -69,9 +76,22 @@ export default function CyclesTable({
         })}
 
         {completed.total > 0 && (
-          <CycleTableArchive completed={completed} projectKey={projectKey} gridTemplate={GRID} />
+          <CycleTableArchive
+            completed={completed}
+            projectKey={projectKey}
+            gridTemplate={GRID}
+            onTransfer={setTransferring}
+          />
         )}
       </div>
+
+      {transferring && (
+        <TransferIssuesDialog
+          cycle={transferring}
+          projectKey={projectKey}
+          onClose={() => setTransferring(null)}
+        />
+      )}
     </div>
   );
 }

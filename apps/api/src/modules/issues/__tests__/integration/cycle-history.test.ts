@@ -185,6 +185,23 @@ describe('issue cycle history', () => {
     }
   });
 
+  it('counts a cycle the issue was still on when it was finished early', async () => {
+    const { asOwner, columnId } = await setup();
+    const { first, second } = await twoCycles(asOwner);
+    const carried = (await createIssue(asOwner, columnId, { cycleId: first.id })).data!;
+    const dropped = (await createIssue(asOwner, columnId, { cycleId: first.id })).data!;
+    await asOwner.issues({ issueId: dropped.id }).patch({ cycleId: null });
+
+    await asOwner.cycles({ cycleId: first.id }).finish.post();
+    await asOwner.issues({ issueId: carried.id }).patch({ cycleId: second.id });
+
+    expect((await history(asOwner, carried.id)).data!.map((e) => e.name)).toEqual([
+      'Sprint 1',
+      'Sprint 2',
+    ]);
+    expect((await history(asOwner, dropped.id)).data).toEqual([]);
+  });
+
   it('drops a deleted cycle from the history', async () => {
     const { asOwner, columnId } = await setup();
     const { first, second } = await twoCycles(asOwner);

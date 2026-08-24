@@ -22,7 +22,8 @@
   "nothingPlannedTitle": "暂无周期计划",
   "nothingPlannedDescription": "时间线显示当前和即将开始的周期，已结束的周期显示在表格中。",
   "options": "周期选项",
-  "transferIssues": "转移未完成的工作项",
+  "transferIssues": "转移 {count} 个未完成的工作项",
+  "finishedEarly": "提前结束，原计划至 {date}",
   "form": {
     "editTitle": "编辑周期",
     "newTitle": "新建周期",
@@ -38,13 +39,30 @@
   "weeks": "{count, plural, other {# 周}}",
   "transfer": {
     "title": "转移未完成的工作项",
-    "description": "未处于已完成或已取消状态的工作项会移至所选周期，其余工作项保留在此周期。",
+    "description": "未完成的工作项会移至所选周期，已完成和已取消的留在这里。",
     "moveTo": "移至",
     "noCycle": "不属于任何周期",
     "submit": "移动工作项",
     "moving": "正在移动…",
     "moved": "{count, plural, other {已移动 # 个工作项}}",
     "failed": "无法移动工作项"
+  },
+  "finish": {
+    "action": "结束周期",
+    "title": "提前结束周期",
+    "description": "{cycle} 将于今天结束，而不是 {date}，且无法重新打开。{count, plural, =0 {没有未完成的工作项。} other {# 个未完成的工作项会留在这里。}}",
+    "submit": "结束周期"
+  },
+  "startNext": {
+    "action": "今天开始下一个周期",
+    "title": "今天开始下一个周期",
+    "description": "{cycle} 将于今天结束，且无法重新打开。{next} 从今天开始，结束日期仍为 {date}。{count, plural, =0 {没有需要转移的工作项。} other {# 个未完成的工作项会转移过去。}}已完成和已取消的工作项留在 {cycle}。",
+    "submit": "开始周期",
+    "started": "{cycle} 已开始。{count, plural, =0 {没有转移工作项。} other {已转移 # 个工作项。}}"
+  },
+  "delete": {
+    "title": "删除周期",
+    "description": "{cycle} 将被永久删除。{count, plural, =0 {里面没有工作项。} other {# 个工作项会留在项目中，不属于任何周期。}}"
   },
   "details": "周期详情",
   "goal": "目标",

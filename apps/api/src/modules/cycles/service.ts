@@ -1,10 +1,12 @@
 import { db, cycle, issue, projectColumn } from '@repo/db';
-import { and, asc, desc, eq, ne, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 
 // Data access for cycles: a time-boxed period of work inside a project (a sprint).
 // Issues link to a cycle through issue.cycle_id. The status is derived from the
 // dates, not stored, and progress is derived from the linked issues' state types.
+// The one thing that is stored is completed_at, set when a cycle is finished ahead
+// of its dates.
 
 export type CycleStatus = 'upcoming' | 'active' | 'completed';
 
@@ -21,6 +23,8 @@ export interface CycleRow {
   goal: string;
   startDate: string;
   endDate: string;
+  // When the cycle was finished ahead of its planned end date, or null.
+  completedAt: string | null;
   status: CycleStatus;
   createdAt: string;
   updatedAt: string;
@@ -28,8 +32,14 @@ export interface CycleRow {
 }
 
 // Compared in UTC against the date columns, so a cycle turns active and completed on
-// its own boundary days regardless of the reader's zone.
-export function cycleStatus(startDate: string, endDate: string): CycleStatus {
+// its own boundary days regardless of the reader's zone. A cycle finished early is
+// completed from the moment it was finished, whatever its dates say.
+export function cycleStatus(
+  startDate: string,
+  endDate: string,
+  completedAt: Date | null,
+): CycleStatus {
+  if (completedAt) return 'completed';
   const today = new Date().toISOString().slice(0, 10);
   if (today < startDate) return 'upcoming';
   if (today > endDate) return 'completed';
@@ -44,7 +54,8 @@ function toCycle(row: typeof cycle.$inferSelect, progress: CycleProgress): Cycle
     goal: row.goal,
     startDate: row.startDate,
     endDate: row.endDate,
-    status: cycleStatus(row.startDate, row.endDate),
+    completedAt: row.completedAt ? iso(row.completedAt) : null,
+    status: cycleStatus(row.startDate, row.endDate, row.completedAt),
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
     progress,
@@ -83,6 +94,18 @@ function mapCycle(r: CycleAggregate): CycleRow {
 // Today in UTC, the same boundary cycleStatus compares against.
 const TODAY = sql`(now() at time zone 'utc')::date`;
 
+const NOW = sql`now()` as unknown as Date;
+
+// The last day a cycle blocks another one from starting. A cycle finished early gave
+// up the rest of its planned range, and it shares the day it was finished with
+// whatever starts next — which is what "start the next cycle today" does — so it
+// blocks only up to the day before that.
+const OCCUPIED_UNTIL = sql`coalesce((${cycle.completedAt} at time zone 'utc')::date - 1, ${cycle.endDate})`;
+
+// A cycle has finished when it was finished early or when its planned end date has
+// passed. The planned list and the archive split on exactly this.
+const FINISHED = sql`(${cycle.completedAt} is not null or ${cycle.endDate} < ${TODAY})`;
+
 // Every cycle of a project, oldest first, so the list reads as a timeline.
 export async function listCycles(projectId: number): Promise<CycleRow[]> {
   const rows = await selectCycles(eq(cycle.projectId, projectId)).orderBy(
@@ -97,7 +120,7 @@ export async function listCycles(projectId: number): Promise<CycleRow[]> {
 // while the finished ones only accumulate and are paged separately.
 export async function listPlannedCycles(projectId: number): Promise<CycleRow[]> {
   const rows = await selectCycles(
-    and(eq(cycle.projectId, projectId), sql`${cycle.endDate} >= ${TODAY}`),
+    and(eq(cycle.projectId, projectId), sql`not ${FINISHED}`),
   ).orderBy(asc(cycle.startDate), asc(cycle.id));
   return rows.map(mapCycle);
 }
@@ -113,7 +136,7 @@ export async function listCompletedCycles(
   projectId: number,
   { limit, offset }: { limit: number; offset: number },
 ): Promise<CyclePage> {
-  const where = and(eq(cycle.projectId, projectId), sql`${cycle.endDate} < ${TODAY}`);
+  const where = and(eq(cycle.projectId, projectId), FINISHED);
   const rows = await selectCycles(where)
     .orderBy(desc(cycle.startDate), desc(cycle.id))
     .limit(limit)
@@ -138,11 +161,21 @@ export async function getCycleRef(
   id: number,
 ): Promise<{ projectId: number; status: CycleStatus } | null> {
   const rows = await db
-    .select({ projectId: cycle.projectId, startDate: cycle.startDate, endDate: cycle.endDate })
+    .select({
+      projectId: cycle.projectId,
+      startDate: cycle.startDate,
+      endDate: cycle.endDate,
+      completedAt: cycle.completedAt,
+    })
     .from(cycle)
     .where(eq(cycle.id, id));
   const row = rows[0];
-  return row ? { projectId: row.projectId, status: cycleStatus(row.startDate, row.endDate) } : null;
+  return row
+    ? {
+        projectId: row.projectId,
+        status: cycleStatus(row.startDate, row.endDate, row.completedAt),
+      }
+    : null;
 }
 
 // Used by the access check on routes that address a cycle by its own id.
@@ -163,7 +196,7 @@ async function assertRange(
   if (endDate < startDate) throw new HttpError(400, 'Cycle end date must not precede its start');
   const conds = [
     eq(cycle.projectId, projectId),
-    sql`${cycle.startDate} <= ${endDate} and ${cycle.endDate} >= ${startDate}`,
+    sql`${cycle.startDate} <= ${endDate} and ${OCCUPIED_UNTIL} >= ${startDate}`,
   ];
   if (excludeId !== undefined) conds.push(ne(cycle.id, excludeId));
   const rows = await db
@@ -223,7 +256,11 @@ export async function updateCycle(id: number, patch: CyclePatch): Promise<CycleR
   if (!before) return null;
   const movesStart = patch.startDate !== undefined && patch.startDate !== before.startDate;
   const movesEnd = patch.endDate !== undefined && patch.endDate !== before.endDate;
-  assertDatesMovable(cycleStatus(before.startDate, before.endDate), movesStart, movesEnd);
+  assertDatesMovable(
+    cycleStatus(before.startDate, before.endDate, before.completedAt),
+    movesStart,
+    movesEnd,
+  );
   if (movesStart || movesEnd) {
     await assertRange(
       before.projectId,
@@ -239,7 +276,7 @@ export async function updateCycle(id: number, patch: CyclePatch): Promise<CycleR
   if (patch.startDate !== undefined) set.startDate = patch.startDate;
   if (patch.endDate !== undefined) set.endDate = patch.endDate;
   if (Object.keys(set).length > 0) {
-    set.updatedAt = sql`now()` as unknown as Date;
+    set.updatedAt = NOW;
     await db.update(cycle).set(set).where(eq(cycle.id, id));
   }
   return getCycle(id);
@@ -248,4 +285,60 @@ export async function updateCycle(id: number, patch: CyclePatch): Promise<CycleR
 // Linked issues keep existing (issue.cycle_id is set null by the FK).
 export async function deleteCycle(id: number): Promise<void> {
   await db.delete(cycle).where(eq(cycle.id, id));
+}
+
+// The cycle a finish acts on. Only a running one can be finished: an upcoming cycle
+// has nothing to close, and a finished one stays finished — there is no way to
+// reopen it.
+async function loadRunning(id: number): Promise<typeof cycle.$inferSelect | null> {
+  const [row] = await db.select().from(cycle).where(eq(cycle.id, id));
+  if (!row) return null;
+  if (cycleStatus(row.startDate, row.endDate, row.completedAt) !== 'active')
+    throw new HttpError(400, 'Only a running cycle can be finished');
+  return row;
+}
+
+// Marks a cycle as finished from now on, leaving its dates and its issues alone.
+async function markFinished(id: number): Promise<void> {
+  await db.update(cycle).set({ completedAt: NOW, updatedAt: NOW }).where(eq(cycle.id, id));
+}
+
+// Finishes a running cycle before its planned end date. The issues keep their
+// cycle_id, so the cycle keeps recording what it held; the transfer route moves the
+// unfinished ones out afterwards. Returns null if the cycle does not exist, which
+// the route maps to a 404.
+export async function finishCycle(id: number): Promise<CycleRow | null> {
+  const running = await loadRunning(id);
+  if (!running) return null;
+  await markFinished(id);
+  return getCycle(id);
+}
+
+// Finishes the running cycle and moves the project's next upcoming cycle to start
+// today; the caller carries the unfinished issues over. The started cycle keeps its
+// planned end date, so starting it early makes it longer. Returns null if the cycle
+// does not exist.
+export async function startNextCycle(id: number): Promise<CycleRow | null> {
+  const running = await loadRunning(id);
+  if (!running) return null;
+  const [next] = await db
+    .select({ id: cycle.id })
+    .from(cycle)
+    .where(
+      and(
+        eq(cycle.projectId, running.projectId),
+        isNull(cycle.completedAt),
+        sql`${cycle.startDate} > ${TODAY}`,
+      ),
+    )
+    .orderBy(asc(cycle.startDate), asc(cycle.id))
+    .limit(1);
+  if (!next) throw new HttpError(400, 'The project has no upcoming cycle to start');
+
+  await markFinished(id);
+  await db
+    .update(cycle)
+    .set({ startDate: TODAY as unknown as string, updatedAt: NOW })
+    .where(eq(cycle.id, next.id));
+  return getCycle(next.id);
 }

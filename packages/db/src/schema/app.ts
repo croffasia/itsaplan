@@ -956,8 +956,10 @@ export const initiativeLabel = pgTable(
 // A time-boxed period of work inside a project (a sprint). Issues point at it
 // through issue.cycle_id. The state of a cycle — upcoming, active, completed — is
 // not stored: it follows from start_date/end_date against the current date, so a
-// cycle never has to be started or closed by hand. Cycles of one project may not
-// overlap, which is what makes at most one of them active; the API enforces that.
+// cycle never has to be started or closed by hand. completed_at is the one override:
+// a cycle finished ahead of its dates counts as completed from that moment on.
+// Cycles of one project may not overlap, which is what makes at most one of them
+// active; the API enforces that.
 export const cycle = pgTable(
   'cycle',
   {
@@ -970,6 +972,10 @@ export const cycle = pgTable(
     goal: text('goal').notNull().default(''),
     startDate: date('start_date').notNull(),
     endDate: date('end_date').notNull(),
+    // When the cycle was finished before its planned end date. NULL while it still
+    // runs on its dates; once set it is never cleared, and end_date keeps the date
+    // the cycle was planned to run until.
+    completedAt: timestamp('completed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

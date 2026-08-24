@@ -97,6 +97,27 @@ export function useDeleteCycle(projectKey: string) {
   });
 }
 
+// Finishing a cycle takes it out of the planned list and the pickers, and starting
+// the next one also moves issues between cycles.
+export function useFinishCycle(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.finishCycle(id),
+    onSuccess: () => invalidateCycles(qc, projectKey),
+  });
+}
+
+export function useStartNextCycle(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.startNextCycle(id),
+    onSuccess: () => {
+      invalidateCycles(qc, projectKey);
+      invalidateCycleIssues(qc, projectKey);
+    },
+  });
+}
+
 export function useTransferCycleIssues(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({

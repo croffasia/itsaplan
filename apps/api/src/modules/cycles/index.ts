@@ -12,6 +12,7 @@ import {
   CycleOptionListResponse,
   CyclePageResponse,
   CycleResponse,
+  StartNextCycleResponse,
   TransferCycleResponse,
   completedCyclesQuery,
   createCycleBody,
@@ -29,6 +30,8 @@ import {
   createCycle,
   updateCycle,
   deleteCycle,
+  finishCycle,
+  startNextCycle,
 } from './service';
 
 export const cycleRoutes = new Elysia({
@@ -173,6 +176,54 @@ export const cycleRoutes = new Elysia({
         summary: 'Delete a cycle',
         description: 'Delete a cycle by its numeric id. Its issues stay, without a cycle.',
         ...mcpTool('delete_cycle'),
+      },
+    },
+  )
+
+  .post(
+    '/cycles/:cycleId/finish',
+    async ({ params }) => {
+      const finished = await finishCycle(params.cycleId);
+      if (!finished) throw new HttpError(404, 'Cycle not found');
+      return finished;
+    },
+    {
+      params: cycleParams,
+      cycle: 'edit',
+      response: { 200: CycleResponse, ...commonErrors },
+      detail: {
+        summary: 'Finish a cycle',
+        description:
+          'Close a running cycle before its planned end date. Final: a finished cycle cannot be reopened, keeps its planned end date, and keeps its issues.',
+        ...mcpTool('finish_cycle', { destructiveHint: true }),
+      },
+    },
+  )
+
+  .post(
+    '/cycles/:cycleId/start-next',
+    async ({ params, user, projectId }) => {
+      const started = await startNextCycle(params.cycleId);
+      if (!started) throw new HttpError(404, 'Cycle not found');
+      const moved = await transferCycleIssues(
+        projectId,
+        params.cycleId,
+        started.id,
+        requireUser(user).id,
+      );
+      // Read back after the transfer, so the started cycle carries the issues it
+      // just received in its progress counts.
+      return { cycle: (await getCycle(started.id)) ?? started, moved };
+    },
+    {
+      params: cycleParams,
+      cycle: 'edit',
+      response: { 200: StartNextCycleResponse, ...commonErrors },
+      detail: {
+        summary: 'Start the next cycle today',
+        description:
+          "Finish the running cycle and start the project's next upcoming cycle today, moving the unfinished issues over. The started cycle keeps its planned end date.",
+        ...mcpTool('start_next_cycle', { destructiveHint: true }),
       },
     },
   )

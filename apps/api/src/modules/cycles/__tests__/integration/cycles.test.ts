@@ -29,6 +29,7 @@ async function setup() {
     columnId: columns[0].id,
     startedColumnId: columns.find((c) => c.stateType === 'started')!.id,
     doneColumnId: columns.find((c) => c.stateType === 'completed')!.id,
+    canceledColumnId: columns.find((c) => c.stateType === 'canceled')!.id,
   };
 }
 
@@ -442,6 +443,147 @@ describe('cycles', () => {
     });
   });
 
+  describe('finish', () => {
+    it('completes a running cycle without touching its planned end date', async () => {
+      const { asOwner } = await setup();
+      const cycle = (await createCycle(asOwner, {})).data!;
+
+      const res = await asOwner.cycles({ cycleId: cycle.id }).finish.post();
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ status: 'completed', endDate: cycle.endDate });
+      expect(res.data!.completedAt).not.toBeNull();
+    });
+
+    it('moves the cycle out of the planned list and the options into the archive', async () => {
+      const { asOwner } = await setup();
+      const cycle = (await createCycle(asOwner, {})).data!;
+      await asOwner.cycles({ cycleId: cycle.id }).finish.post();
+
+      expect((await cycles(asOwner).get({ query: { status: 'planned' } })).data).toEqual([]);
+      expect((await cycles(asOwner).options.get()).data).toEqual([]);
+      const archive = await cycles(asOwner).completed.get({ query: {} });
+      expect(archive.data!.items.map((c) => c.id)).toEqual([cycle.id]);
+    });
+
+    it('takes no new issue once it is finished', async () => {
+      const { asOwner, columnId } = await setup();
+      const cycle = (await createCycle(asOwner, {})).data!;
+      await asOwner.cycles({ cycleId: cycle.id }).finish.post();
+
+      expect((await createIssue(asOwner, columnId, { cycleId: cycle.id })).status).toBe(400);
+    });
+
+    it('keeps its issues, which the transfer route still moves out', async () => {
+      const { asOwner, columnId } = await setup();
+      const cycle = (await createCycle(asOwner, {})).data!;
+      const issue = (await createIssue(asOwner, columnId, { cycleId: cycle.id })).data!;
+      await asOwner.cycles({ cycleId: cycle.id }).finish.post();
+
+      expect((await asOwner.issues({ issueId: issue.id }).get()).data!.cycle).toMatchObject({
+        id: cycle.id,
+      });
+
+      const moved = await asOwner
+        .cycles({ cycleId: cycle.id })
+        .transfer.post({ targetCycleId: null });
+      expect(moved.data).toMatchObject({ moved: 1 });
+      expect((await asOwner.issues({ issueId: issue.id }).get()).data!.cycle).toBeNull();
+    });
+
+    it('rejects an upcoming cycle and one that is already finished', async () => {
+      const { asOwner } = await setup();
+      const upcoming = (await createCycle(asOwner, { startDate: day(10), endDate: day(16) })).data!;
+      expect((await asOwner.cycles({ cycleId: upcoming.id }).finish.post()).status).toBe(400);
+
+      const past = (await createCycle(asOwner, { startDate: day(-14), endDate: day(-8) })).data!;
+      expect((await asOwner.cycles({ cycleId: past.id }).finish.post()).status).toBe(400);
+
+      const cycle = (await createCycle(asOwner, {})).data!;
+      expect((await asOwner.cycles({ cycleId: cycle.id }).finish.post()).status).toBe(200);
+      expect((await asOwner.cycles({ cycleId: cycle.id }).finish.post()).status).toBe(400);
+    });
+
+    it('frees the days it gave up and keeps the ones it ran', async () => {
+      const { asOwner } = await setup();
+      const cycle = (await createCycle(asOwner, { startDate: day(-2), endDate: day(6) })).data!;
+      await asOwner.cycles({ cycleId: cycle.id }).finish.post();
+
+      expect((await createCycle(asOwner, { startDate: day(1), endDate: day(6) })).status).toBe(201);
+      expect((await createCycle(asOwner, { startDate: day(-4), endDate: day(-2) })).status).toBe(
+        400,
+      );
+    });
+
+    it('404s on an unknown cycle', async () => {
+      const { asOwner } = await setup();
+      expect((await asOwner.cycles({ cycleId: 999999 }).finish.post()).status).toBe(404);
+    });
+  });
+
+  describe('start next', () => {
+    it('finishes the running cycle, starts the next one today and carries the work over', async () => {
+      const { asOwner, columnId, doneColumnId, canceledColumnId } = await setup();
+      const running = (await createCycle(asOwner, { startDate: day(-2), endDate: day(6) })).data!;
+      const next = (await createCycle(asOwner, { startDate: day(10), endDate: day(16) })).data!;
+      const open = (await createIssue(asOwner, columnId, { cycleId: running.id })).data!;
+      const done = (await createIssue(asOwner, doneColumnId, { cycleId: running.id })).data!;
+      const canceled = (await createIssue(asOwner, canceledColumnId, { cycleId: running.id }))
+        .data!;
+
+      const res = await asOwner.cycles({ cycleId: running.id })['start-next'].post();
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({
+        moved: 1,
+        cycle: { id: next.id, endDate: next.endDate, status: 'active' },
+      });
+      expect(new Date(res.data!.cycle.startDate).toISOString().slice(0, 10)).toBe(day(0));
+
+      const finished = (await asOwner.cycles({ cycleId: running.id }).get()).data!;
+      expect(finished.status).toBe('completed');
+      expect(finished.endDate).toEqual(running.endDate);
+
+      expect((await asOwner.issues({ issueId: open.id }).get()).data!.cycle).toMatchObject({
+        id: next.id,
+      });
+      for (const stayed of [done, canceled]) {
+        expect((await asOwner.issues({ issueId: stayed.id }).get()).data!.cycle).toMatchObject({
+          id: running.id,
+        });
+      }
+    });
+
+    it('rejects a project with no upcoming cycle', async () => {
+      const { asOwner } = await setup();
+      const running = (await createCycle(asOwner, {})).data!;
+      await createCycle(asOwner, { startDate: day(-14), endDate: day(-8) });
+
+      const res = await asOwner.cycles({ cycleId: running.id })['start-next'].post();
+      expect(res.status).toBe(400);
+      expect((await asOwner.cycles({ cycleId: running.id }).get()).data!.status).toBe('active');
+    });
+
+    it('leaves the started cycle free to move its end date', async () => {
+      const { asOwner } = await setup();
+      const running = (await createCycle(asOwner, { startDate: day(-2), endDate: day(6) })).data!;
+      const next = (await createCycle(asOwner, { startDate: day(10), endDate: day(16) })).data!;
+      await asOwner.cycles({ cycleId: running.id })['start-next'].post();
+
+      expect((await asOwner.cycles({ cycleId: next.id }).patch({ endDate: day(20) })).status).toBe(
+        200,
+      );
+    });
+
+    it('rejects a cycle that is not running', async () => {
+      const { asOwner } = await setup();
+      const upcoming = (await createCycle(asOwner, { startDate: day(10), endDate: day(16) })).data!;
+      await createCycle(asOwner, { startDate: day(20), endDate: day(26) });
+
+      expect((await asOwner.cycles({ cycleId: upcoming.id })['start-next'].post()).status).toBe(
+        400,
+      );
+    });
+  });
+
   describe('options', () => {
     it('offers the cycles that have not finished', async () => {
       const { asOwner } = await setup();
@@ -504,6 +646,8 @@ describe('cycles', () => {
         (await outsider.cycles({ cycleId: cycle.id }).transfer.post({ targetCycleId: null }))
           .status,
       ).toBe(403);
+      expect((await outsider.cycles({ cycleId: cycle.id }).finish.post()).status).toBe(403);
+      expect((await outsider.cycles({ cycleId: cycle.id })['start-next'].post()).status).toBe(403);
       expect((await outsider.cycles({ cycleId: cycle.id }).delete()).status).toBe(403);
     });
   });

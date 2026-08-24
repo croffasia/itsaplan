@@ -2,9 +2,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Cycle } from '@/lib/api';
 import { cyclePath } from '@/utils/paths';
-import { formatShortDate } from '@/utils/dates';
 import ProgressBar from '@/components/common/ProgressBar';
 import CycleActions from '../CycleActions';
+import CycleRange from '../CycleRange';
 import { cycleLength, daysLeft } from '../../utils/cycleDates';
 
 // One cycle as a table row. The whole row navigates to the cycle; the name is also
@@ -13,10 +13,12 @@ export default function CycleTableRow({
   cycle,
   projectKey,
   gridTemplate,
+  onTransfer,
 }: {
   cycle: Cycle;
   projectKey: string;
   gridTemplate: string;
+  onTransfer: (cycle: Cycle) => void;
 }) {
   const router = useRouter();
   const href = cyclePath(projectKey, cycle.id);
@@ -39,7 +41,7 @@ export default function CycleTableRow({
       </div>
 
       <span className="text-xs text-muted-foreground">
-        {formatShortDate(cycle.startDate)} – {formatShortDate(cycle.endDate)}
+        <CycleRange cycle={cycle} />
         {cycle.status === 'active' && ` · ${daysLeft(cycle)}d left`}
       </span>
 
@@ -50,7 +52,7 @@ export default function CycleTableRow({
       <ProgressBar progress={cycle.progress} />
 
       <div onClick={(e) => e.stopPropagation()} className="flex justify-end">
-        <CycleActions cycle={cycle} projectKey={projectKey} />
+        <CycleActions cycle={cycle} projectKey={projectKey} onTransfer={onTransfer} />
       </div>
     </div>
   );

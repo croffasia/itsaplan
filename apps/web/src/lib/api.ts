@@ -2006,7 +2006,8 @@ export interface InitiativeOption {
 }
 
 // A time-boxed period of work (a sprint). status follows from the dates against
-// today and progress from the linked issues' states — neither is stored.
+// today, unless the cycle was finished ahead of them; progress follows from the
+// linked issues' states.
 export type CycleStatus = 'upcoming' | 'active' | 'completed';
 
 // A cycle as a picker option, for planning an issue into one.
@@ -2030,6 +2031,9 @@ export interface Cycle {
   goal: string;
   startDate: string;
   endDate: string;
+  // When the cycle was finished ahead of its planned end date, or null. endDate
+  // keeps the date it was planned to run until either way.
+  completedAt: string | null;
   status: CycleStatus;
   createdAt: string;
   updatedAt: string;
@@ -2727,6 +2731,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ targetCycleId }),
     }),
+  finishCycle: (id: number) => request<Cycle>(`/cycles/${id}/finish`, { method: 'POST' }),
+  startNextCycle: (id: number) =>
+    request<{ cycle: Cycle; moved: number }>(`/cycles/${id}/start-next`, { method: 'POST' }),
 
   listViews: (projectKey: string) => request<View[]>(`/projects/${projectKey}/views`),
   createView: (projectKey: string, input: NewViewInput) =>

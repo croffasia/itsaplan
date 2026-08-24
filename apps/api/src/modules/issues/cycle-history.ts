@@ -58,6 +58,7 @@ export async function listIssueCycles(issueId: number): Promise<IssueCycleRow[]>
       name: cycle.name,
       startDate: cycle.startDate,
       endDate: cycle.endDate,
+      completedAt: cycle.completedAt,
       enteredAt: issueCycle.enteredAt,
       leftAt: issueCycle.leftAt,
     })
@@ -67,10 +68,11 @@ export async function listIssueCycles(issueId: number): Promise<IssueCycleRow[]>
       and(
         eq(issueCycle.issueId, issueId),
         // Compared in UTC, the zone a cycle's dates are read in everywhere else. A
-        // cycle covers its end date, so it ends the day after.
+        // cycle covers its end date, so it ends the day after — unless it was
+        // finished early, which ended it at that moment.
         or(
           isNull(issueCycle.leftAt),
-          sql`${issueCycle.leftAt} at time zone 'utc' >= ${cycle.endDate} + interval '1 day'`,
+          sql`${issueCycle.leftAt} >= coalesce(${cycle.completedAt}, (${cycle.endDate} + interval '1 day') at time zone 'utc')`,
         ),
       ),
     )
@@ -89,7 +91,7 @@ export async function listIssueCycles(issueId: number): Promise<IssueCycleRow[]>
       name: r.name,
       startDate: r.startDate,
       endDate: r.endDate,
-      status: cycleStatus(r.startDate, r.endDate),
+      status: cycleStatus(r.startDate, r.endDate, r.completedAt),
       enteredAt: iso(r.enteredAt),
       leftAt: r.leftAt ? iso(r.leftAt) : null,
     });

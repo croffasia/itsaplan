@@ -4,12 +4,12 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, Info } from 'lucide-react';
 import type { Cycle } from '@/lib/api';
-import { formatShortDate } from '@/utils/dates';
 import { cyclePath } from '@/utils/paths';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { colorDot } from '@/components/common/fields/colorDot';
 import ProgressBar from '@/components/common/ProgressBar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import CycleRange from '../CycleRange';
 import { cycleLength } from '../../utils/cycleDates';
 
 // The cycle's name in the timeline's label column, opening what does not fit on the
@@ -49,8 +49,7 @@ export default function CycleInfoPopover({
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            {formatShortDate(cycle.startDate)} – {formatShortDate(cycle.endDate)} ·{' '}
-            {cycleLength(cycle)}d
+            <CycleRange cycle={cycle} /> · {cycleLength(cycle)}d
           </p>
         </div>
 

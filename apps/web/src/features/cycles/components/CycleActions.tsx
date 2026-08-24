@@ -2,11 +2,19 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRightLeft, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import {
+  ArrowRightLeft,
+  CircleCheck,
+  MoreHorizontal,
+  Pencil,
+  SkipForward,
+  Trash2,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Cycle } from '@/lib/api';
 import { cyclesPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
+import { unfinishedCount } from '@/utils/progress';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,29 +22,46 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useDeleteCycle } from '@/services/cycles.service';
+import { usePlannedCyclesQuery } from '@/services/cycles.service';
 import CycleFormDialog from './CycleFormDialog';
-import TransferIssuesDialog from './TransferIssuesDialog';
+import DeleteCycleDialog from './DeleteCycleDialog';
+import FinishCycleDialog from './FinishCycleDialog';
+import StartNextCycleDialog from './StartNextCycleDialog';
 
 // The cycle's overflow menu. Deleting returns to the cycles list; the issues of a
-// deleted cycle stay, without one.
-export default function CycleActions({ cycle, projectKey }: { cycle: Cycle; projectKey: string }) {
+// deleted cycle stay, without one. Finishing a running cycle early and handing over
+// to the next one are offered only while it runs — both are final.
+//
+// The transfer dialog is the caller's to render: finishing a cycle moves it into
+// another group of the cycles list, which unmounts this menu along with anything it
+// was showing. `onTransfer` asks for the dialog, both from the menu item and once a
+// finish leaves unfinished issues behind.
+export default function CycleActions({
+  cycle,
+  projectKey,
+  onTransfer,
+}: {
+  cycle: Cycle;
+  projectKey: string;
+  onTransfer: (cycle: Cycle) => void;
+}) {
   const t = useTranslations('cycles');
   const tCommon = useTranslations('common');
   const { can } = usePermissions();
-  const del = useDeleteCycle(projectKey);
   const router = useRouter();
   const [editing, setEditing] = useState(false);
-  const [transferring, setTransferring] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const [startingNext, setStartingNext] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  // The planned list is ordered by start date, so the first upcoming cycle is the
+  // one "start next cycle today" hands over to.
+  const next = (usePlannedCyclesQuery(projectKey).data ?? []).find((c) => c.status === 'upcoming');
 
   const canEdit = can('cycles', 'edit');
   const canDelete = can('cycles', 'delete');
   if (!canEdit && !canDelete) return null;
-
-  const remove = async () => {
-    await del.mutateAsync(cycle.id);
-    router.push(cyclesPath(projectKey));
-  };
+  const running = cycle.status === 'active';
+  const unfinished = unfinishedCount(cycle.progress);
 
   return (
     <>
@@ -57,18 +82,38 @@ export default function CycleActions({ cycle, projectKey }: { cycle: Cycle; proj
               {tCommon('edit')}
             </DropdownMenuItem>
           )}
-          {canEdit && (
-            <DropdownMenuItem onClick={() => setTransferring(true)}>
-              <ArrowRightLeft className="size-4" />
-              {t('transferIssues')}
-            </DropdownMenuItem>
+          {canEdit && unfinished > 0 && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onTransfer(cycle)}>
+                <ArrowRightLeft className="size-4" />
+                {t('transferIssues', { count: unfinished })}
+              </DropdownMenuItem>
+            </>
           )}
-          {canEdit && canDelete && <DropdownMenuSeparator />}
+          {canEdit && running && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setFinishing(true)}>
+                <CircleCheck className="size-4" />
+                {t('finish.action')}
+              </DropdownMenuItem>
+              {next && (
+                <DropdownMenuItem onClick={() => setStartingNext(true)}>
+                  <SkipForward className="size-4" />
+                  {t('startNext.action')}
+                </DropdownMenuItem>
+              )}
+            </>
+          )}
           {canDelete && (
-            <DropdownMenuItem variant="destructive" onClick={() => void remove()}>
-              <Trash2 className="size-4" />
-              {tCommon('delete')}
-            </DropdownMenuItem>
+            <>
+              {canEdit && <DropdownMenuSeparator />}
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleting(true)}>
+                <Trash2 className="size-4" />
+                {tCommon('delete')}
+              </DropdownMenuItem>
+            </>
           )}
         </DropdownMenuContent>
       </DropdownMenu>
@@ -76,11 +121,30 @@ export default function CycleActions({ cycle, projectKey }: { cycle: Cycle; proj
       {editing && (
         <CycleFormDialog cycle={cycle} projectKey={projectKey} onClose={() => setEditing(false)} />
       )}
-      {transferring && (
-        <TransferIssuesDialog
+      {finishing && (
+        <FinishCycleDialog
           cycle={cycle}
           projectKey={projectKey}
-          onClose={() => setTransferring(false)}
+          onClose={() => setFinishing(false)}
+          onFinished={() => {
+            if (unfinished > 0) onTransfer(cycle);
+          }}
+        />
+      )}
+      {startingNext && next && (
+        <StartNextCycleDialog
+          cycle={cycle}
+          next={next}
+          projectKey={projectKey}
+          onClose={() => setStartingNext(false)}
+        />
+      )}
+      {deleting && (
+        <DeleteCycleDialog
+          cycle={cycle}
+          projectKey={projectKey}
+          onClose={() => setDeleting(false)}
+          onDeleted={() => router.push(cyclesPath(projectKey))}
         />
       )}
     </>

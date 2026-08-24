@@ -19,7 +19,8 @@ export const listCyclesQuery = t.Object({
 export const completedCyclesQuery = t.Object(pageQueryFields);
 
 // CycleRow from the service. status follows from the dates against today (upcoming /
-// active / completed) and progress is derived issue counts; neither is stored.
+// active / completed), unless completedAt marks the cycle as finished early; progress
+// is derived issue counts.
 export const CycleResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
@@ -27,6 +28,7 @@ export const CycleResponse = t.Object({
   goal: t.String(),
   startDate: t.String(),
   endDate: t.String(),
+  completedAt: t.Nullable(t.String()),
   status: t.String(),
   createdAt: t.String(),
   updatedAt: t.String(),
@@ -59,3 +61,7 @@ export const transferCycleBody = t.Object({
 });
 
 export const TransferCycleResponse = t.Object({ moved: t.Number() });
+
+// The cycle that was started, with how many issues came over from the one that was
+// finished to start it.
+export const StartNextCycleResponse = t.Object({ cycle: CycleResponse, moved: t.Number() });

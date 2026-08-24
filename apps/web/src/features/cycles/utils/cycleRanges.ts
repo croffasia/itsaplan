@@ -12,12 +12,21 @@ function others(cycles: Cycle[], editedId: number | undefined): Cycle[] {
   return editedId === undefined ? cycles : cycles.filter((c) => c.id !== editedId);
 }
 
+// The last day a cycle keeps another one out of, mirroring the API: one finished
+// early gave up the rest of its planned range, and shares the day it was finished
+// with whatever starts next. completedAt is a timestamp, and the API reads its day
+// in UTC, the zone the cycle dates themselves are compared in.
+export function occupiedUntil(cycle: Cycle): Date | null {
+  const finished = parseDate(cycle.completedAt?.slice(0, 10) ?? null);
+  return finished ? addDays(finished, -1) : parseDate(cycle.endDate);
+}
+
 // The days already taken by another cycle. A start date may not land on one.
 export function busyRanges(cycles: Cycle[], editedId?: number): { from: Date; to: Date }[] {
   return others(cycles, editedId).flatMap((c) => {
     const from = parseDate(c.startDate);
-    const to = parseDate(c.endDate);
-    return from && to ? [{ from, to }] : [];
+    const to = occupiedUntil(c);
+    return from && to && to >= from ? [{ from, to }] : [];
   });
 }
 

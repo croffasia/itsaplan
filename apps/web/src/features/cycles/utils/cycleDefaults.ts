@@ -1,5 +1,6 @@
 import type { Cycle } from '@/lib/api';
-import { addDays, daysBetween, parseDate, toDateStr } from '@/utils/dates';
+import { addDays, daysBetween, toDateStr } from '@/utils/dates';
+import { occupiedUntil } from './cycleRanges';
 
 // The lengths offered as one click each, in days. Two weeks is what a new cycle
 // opens with.
@@ -40,7 +41,8 @@ function nextMonday(from: Date): Date {
 // mid-week.
 export function cycleDefaults(cycles: Cycle[], fallbackName: (n: number) => string): CycleDefaults {
   const today = new Date();
-  const previousEnd = parseDate(cycles[cycles.length - 1]?.endDate ?? null);
+  const last = cycles[cycles.length - 1];
+  const previousEnd = last ? occupiedUntil(last) : null;
   const start =
     previousEnd && daysBetween(today, previousEnd) >= 0
       ? addDays(previousEnd, 1)

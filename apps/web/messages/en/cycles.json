@@ -22,7 +22,8 @@
   "nothingPlannedTitle": "Nothing planned",
   "nothingPlannedDescription": "The timeline shows active and upcoming cycles. Finished ones are in the table.",
   "options": "Cycle options",
-  "transferIssues": "Transfer unfinished issues",
+  "transferIssues": "{count, plural, one {Move # unfinished issue} other {Move # unfinished issues}}",
+  "finishedEarly": "Finished early, planned to end {date}",
   "form": {
     "editTitle": "Edit cycle",
     "newTitle": "New cycle",
@@ -37,14 +38,31 @@
   },
   "weeks": "{count, plural, one {# week} other {# weeks}}",
   "transfer": {
-    "title": "Transfer unfinished issues",
-    "description": "Issues that are not completed or canceled move to the cycle you pick. The rest stay here.",
+    "title": "Move unfinished issues",
+    "description": "Unfinished issues move to the cycle you pick. Finished and canceled ones stay here.",
     "moveTo": "Move to",
     "noCycle": "No cycle",
     "submit": "Move issues",
     "moving": "Moving…",
     "moved": "{count, plural, one {# issue moved} other {# issues moved}}",
     "failed": "Could not move the issues"
+  },
+  "finish": {
+    "action": "Finish cycle",
+    "title": "Finish cycle early",
+    "description": "{cycle} closes today instead of {date}. You can't reopen it. {count, plural, =0 {Nothing is left unfinished.} one {# unfinished issue stays on it.} other {# unfinished issues stay on it.}}",
+    "submit": "Finish cycle"
+  },
+  "startNext": {
+    "action": "Start next cycle today",
+    "title": "Start the next cycle today",
+    "description": "{cycle} closes today and you can't reopen it. {next} starts today and still ends on {date}. {count, plural, =0 {Nothing carries over.} one {# unfinished issue moves to it.} other {# unfinished issues move to it.}} Finished and canceled issues stay on {cycle}.",
+    "submit": "Start next cycle",
+    "started": "{cycle} started. {count, plural, =0 {No issues carried over.} one {# issue carried over.} other {# issues carried over.}}"
+  },
+  "delete": {
+    "title": "Delete cycle",
+    "description": "{cycle} is deleted for good. {count, plural, =0 {It holds no issues.} one {# issue stays in the project, without a cycle.} other {# issues stay in the project, without a cycle.}}"
   },
   "details": "Cycle details",
   "goal": "Goal",

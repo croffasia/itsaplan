@@ -114,8 +114,9 @@ bun run dev                                       # api :3000 + web :3001
 - Root `.env` (copy from `.env.example`) feeds api, drizzle, and docker-compose.
   Bun apps load it via `--env-file=../../.env`; drizzle via `dotenv` in `drizzle.config.ts`.
 - `apps/web/.env` is **separate** — Next reads env only from its own folder. It holds
-  `NEXT_PUBLIC_API_URL` (same value as the root `API_URL`); in the Docker build it comes
-  from a build arg. `NEXT_PUBLIC_*` are inlined at **build time**.
+  `API_URL` (same value as the root one) and the legal document URLs. web reads them from
+  its process at **startup**, never through `NEXT_PUBLIC_*`, which `next build` would inline
+  into the bundle and pin the image to one instance.
 - Local dev DB: `docker compose -f docker-compose.dev.yml up -d` (the deploy composes do
   NOT publish the DB port). **Host 5432 is often taken** → use `POSTGRES_PORT=5433` and set
   `DATABASE_URL=...localhost:5433...` in `.env`.
@@ -127,8 +128,8 @@ bun run dev                                       # api :3000 + web :3001
 | File                         | Purpose                                                                                                                                           |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `docker-compose.dev.yml`     | local backing services only: Postgres + MinIO. The apps run on the host.                                                                          |
-| `docker-compose.yml`         | self-hosting stack. Builds every service from source (`docker compose up -d --build`), reads a plain `.env`, requires the secrets via `${VAR:?}`. |
-| `docker-compose.coolify.yml` | the same stack for Coolify: reads its generated `SERVICE_*` variables and builds the images from source.                                          |
+| `docker-compose.yml`         | self-hosting stack. Runs the published images (`docker compose pull && up -d`) or builds them from source (`up -d --build`); reads a plain `.env`, requires the secrets via `${VAR:?}`. |
+| `docker-compose.coolify.yml` | the same stack for Coolify: reads its generated `SERVICE_*` variables and builds from source. No `image:` here — with both fields Coolify still builds, and stops creating rollback images. |
 | `docker-compose.test.yml`    | test gate against a throwaway Postgres.                                                                                                           |
 
 A change to the deploy stack usually has to land in **both** `docker-compose.yml` and
@@ -163,8 +164,11 @@ same commands.
 `typecheck`, an app build, and the compose test gate. `codeql.yml` scans for security
 issues. Do not add a workflow that duplicates a job an existing one already runs.
 
-Images are not published to a registry: every deploy builds from source
-(`docker compose up -d --build`).
+`publish-images.yml` pushes the four service images to GHCR
+(`ghcr.io/croffasia/itsaplan-<service>`), one manifest per service covering amd64 and
+arm64, each architecture built on a runner of its own. `release.yml` calls it once a
+release is tagged: a `release: published` event raised by GITHUB_TOKEN starts no workflow
+run, so the trigger has to be chained to the job that cut the release.
 
 ## Commits and releases
 

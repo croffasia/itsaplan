@@ -111,11 +111,12 @@ Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
 cp .env.example .env      # set API_URL, APP_URL, and the secrets
-docker compose up -d --build
+docker compose up -d
 ```
 
-One command brings up the whole stack: Postgres, MinIO, api, worker, bot, and web. The
-first account registered becomes the instance admin.
+One command brings up the whole stack: Postgres, MinIO, api, worker, bot, and web, the four
+services from the images published on each release. `docker compose up -d --build` builds
+them from the checkout instead. The first account registered becomes the instance admin.
 
 - [Deploy on Railway](docs/railway.md) — one-click hosted deploy from the template
 - [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates

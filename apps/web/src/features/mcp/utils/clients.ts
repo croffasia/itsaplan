@@ -1,6 +1,7 @@
-// The MCP endpoint clients connect to. NEXT_PUBLIC_API_URL is the API origin
-// (mandatory build-time config); the transport is Streamable HTTP at /mcp.
-export const MCP_URL = `${process.env.NEXT_PUBLIC_API_URL}/mcp`;
+import { API_URL } from '@/lib/api';
+
+// The MCP endpoint clients connect to; the transport is Streamable HTTP at /mcp.
+export const MCP_URL = `${API_URL}/mcp`;
 
 interface McpClient {
   // Product names stay as they are written by their makers; only the generic entry

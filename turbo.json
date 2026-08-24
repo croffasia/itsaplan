@@ -1,14 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "globalEnv": [
-    "NODE_ENV",
-    "DATABASE_URL",
-    "BETTER_AUTH_SECRET",
-    "API_URL",
-    "APP_URL",
-    "API_PORT",
-    "NEXT_PUBLIC_API_URL"
-  ],
+  "globalEnv": ["NODE_ENV", "DATABASE_URL", "BETTER_AUTH_SECRET", "API_URL", "APP_URL", "API_PORT"],
   "tasks": {
     "dev": {
       "cache": false,

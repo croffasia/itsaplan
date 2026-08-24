@@ -4,17 +4,18 @@
 # (backing services only).
 #
 #   cp .env.example .env      # fill in the required values below
-#   docker compose up -d --build
+#   docker compose up -d
 #
 # Required in .env (the stack refuses to start without them):
 #   POSTGRES_PASSWORD, BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY, WORKER_INTERNAL_TOKEN,
 #   S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, API_URL, APP_URL
 # Generate each secret with: openssl rand -base64 32
 #
-# Every service is built from this checkout. Bring the stack up with a build:
+# The four services run from images published on each release; update with
+#   docker compose pull && docker compose up -d
+# VERSION in .env pins a release (defaults to the latest one). To run this
+# checkout instead of the published images, build them:
 #   docker compose up -d --build
-# web bakes API_URL into its bundle at build time, so rebuild it after changing
-# API_URL:  docker compose up -d --build web
 # ─────────────────────────────────────────────────────────────
 name: itsaplan
 
@@ -73,6 +74,7 @@ services:
 
   # Applies database migrations on startup, then serves the API.
   api:
+    image: ghcr.io/croffasia/itsaplan-api:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -118,6 +120,7 @@ services:
   # Webhook delivery, notification delivery, agent schedules, and agent runs.
   # Shares the database with the api. No public ports.
   worker:
+    image: ghcr.io/croffasia/itsaplan-worker:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
@@ -146,6 +149,7 @@ services:
   # Must stay at one replica: Telegram hands each getUpdates call to a single
   # caller, so a second instance would take updates away from the first.
   bot:
+    image: ghcr.io/croffasia/itsaplan-bot:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/bot/Dockerfile
@@ -158,18 +162,13 @@ services:
       SERVICE_URL_API: http://api:3000
       WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
 
-  # The api origin is inlined into the bundle at build time, so the image is bound
-  # to the origin it was built with. Sourced from the shared API_URL so the root
-  # .env keeps it in one place; rebuild web after changing API_URL.
+  # The origins are read at startup and handed to the browser by the server render,
+  # so the image carries none of them and a changed API_URL only needs a restart.
   web:
+    image: ghcr.io/croffasia/itsaplan-web:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${API_URL:?public origin of the api, e.g. https://api.example.com}
-        # Legal document URLs shown on the logged-out screens; empty hides the notice.
-        NEXT_PUBLIC_PRIVACY_URL: ${PRIVACY_URL:-}
-        NEXT_PUBLIC_TERMS_URL: ${TERMS_URL:-}
     restart: unless-stopped
     depends_on:
       - api
@@ -177,6 +176,14 @@ services:
       NODE_ENV: production
       PORT: 3001
       HOSTNAME: 0.0.0.0
+      # The api origin the browser uses.
+      API_URL: ${API_URL:?public origin of the api, e.g. https://api.example.com}
+      # Where web itself reaches the api: it streams avatars and attachments from
+      # there (/media) so they are served from the web origin.
+      SERVICE_URL_API: http://api:3000
+      # Legal document URLs shown on the logged-out screens; empty hides the notice.
+      PRIVACY_URL: ${PRIVACY_URL:-}
+      TERMS_URL: ${TERMS_URL:-}
     # /login renders without a session, and without reaching the api.
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3001/login']

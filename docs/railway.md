@@ -27,8 +27,8 @@ Press the button and fill in the two fields on the **web** service:
 | `API_URL` | `https://api.example.com` |
 | `APP_URL` | `https://app.example.com` |
 
-Full origins, including `https://`. The api reads both by reference, and web bakes the api
-origin into its bundle at build time.
+Full origins, including `https://`. The api reads both by reference, and web reads `API_URL`
+at startup and hands it to the browser on every render.
 
 ## 3. Attach the hostnames
 
@@ -49,9 +49,8 @@ variables.
 
 ## Changing a hostname later
 
-Edit `API_URL` or `APP_URL` **on the web service**. Web rebuilds, which is what has to
-happen: Next.js inlines the api origin at build time, so a restart alone would keep serving
-the old address. The api picks the new value up by reference and only restarts.
+Edit `API_URL` or `APP_URL` **on the web service**. Both services restart and serve the new
+address; no rebuild is involved.
 
 ## Notes
 

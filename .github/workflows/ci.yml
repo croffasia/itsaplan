@@ -64,12 +64,8 @@ jobs:
 
       - run: bun install --frozen-lockfile
 
-      # NEXT_PUBLIC_API_URL is inlined into the web bundle at build time. It only has
-      # to be a syntactically valid URL for the build to succeed.
       - name: Build
         run: bun run build
-        env:
-          NEXT_PUBLIC_API_URL: http://localhost:3000
 
   test:
     name: Test suite

@@ -43,10 +43,10 @@ the host:
 | Domains for web | `https://plan.example.com:3001` |
 
 Coolify turns those into `SERVICE_URL_API` and `SERVICE_URL_WEB`, which the compose file
-reads as the api's `API_URL` / `APP_URL` and as the api origin baked into the web bundle.
+reads as the api's `API_URL` / `APP_URL` and as the api origin web hands to the browser.
 
-Set both **before the first deploy**. Next.js inlines the api origin at build time, so
-changing the api domain later needs a redeploy.
+Changing a domain later takes a redeploy, which is how Coolify applies an environment
+change.
 
 ## 4. Deploy
 

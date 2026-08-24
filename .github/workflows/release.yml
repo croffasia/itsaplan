@@ -41,6 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    # Empty on a push that cut no release; the image job keys off it.
+    outputs:
+      tag: ${{ steps.move.outputs.tag }}
     steps:
       # `fetch-depth: 0` fetches the tags read below, and the object for the
       # current `release` head — without it git cannot prove the push is a
@@ -55,11 +58,27 @@ jobs:
       # because git resolves a bare `release` against the remote, which fails
       # while the branch does not exist yet.
       - name: Move the release branch to the released commit
+        id: move
         run: |
           tag=$(git tag --points-at HEAD --list 'v*')
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
           if [ -z "$tag" ]; then
             echo "No release tag on $(git rev-parse --short HEAD), nothing to move."
             exit 0
           fi
           echo "Moving the release branch to $tag."
           git push origin HEAD:refs/heads/release
+
+  # Prebuilt images for self-hosters: `docker compose pull` instead of a build.
+  # Chained here for the same reason as the job above — a `release: published`
+  # event raised by GITHUB_TOKEN starts no workflow run.
+  publish-images:
+    name: Publish images
+    needs: move-release-branch
+    if: ${{ needs.move-release-branch.outputs.tag != '' }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-images.yml
+    with:
+      tag: ${{ needs.move-release-branch.outputs.tag }}

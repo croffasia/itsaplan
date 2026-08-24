@@ -3,7 +3,7 @@
 import { forwardRef, useState, type ComponentProps } from 'react';
 import Image from 'next/image';
 import { avatarColor, initials } from '@/utils/avatar';
-import { resolveApiUrl } from '@/lib/api';
+import { mediaUrl } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 // A person's avatar. With an uploaded `image` it shows that picture; otherwise
@@ -38,7 +38,7 @@ const Avatar = forwardRef<
     >
       {showImage ? (
         <Image
-          src={resolveApiUrl(image!)}
+          src={mediaUrl(image!)}
           alt={name}
           fill
           // The largest avatar in the app is size-16 (64px); everything else is

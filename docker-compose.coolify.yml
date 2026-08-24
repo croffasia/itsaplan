@@ -1,7 +1,12 @@
 # ─────────────────────────────────────────────────────────────
 # Coolify stack: postgres + minio + api + worker + bot + web.
 # In Coolify: New Resource → Docker Compose → point to this file, then set the
-# environment variables (see .env.example) in the UI. Builds from source.
+# environment variables (see .env.example) in the UI.
+#
+# The four services carry the images published on each release; VERSION pins one
+# instead of the newest. Compose builds them from this checkout when the image
+# cannot be pulled.
+#
 # For self-hosting anywhere else, use docker-compose.yml.
 #
 # SERVICE_PASSWORD_* / SERVICE_URL_* are Coolify magic variables: generated and
@@ -71,6 +76,7 @@ services:
       "
 
   api:
+    image: ghcr.io/croffasia/itsaplan-api:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
@@ -116,6 +122,7 @@ services:
   # Background worker for webhook delivery, agent schedules, and autonomous agent
   # runs. Shares the database with the api. No public ports, so nothing to probe.
   worker:
+    image: ghcr.io/croffasia/itsaplan-worker:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/worker/Dockerfile
@@ -150,6 +157,7 @@ services:
   # Must stay at one replica: Telegram hands each getUpdates call to a single caller,
   # so a second instance would take updates away from the first.
   bot:
+    image: ghcr.io/croffasia/itsaplan-bot:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/bot/Dockerfile
@@ -168,16 +176,10 @@ services:
       # BOT_CONFIG_POLL_INTERVAL_MS, BOT_API_TIMEOUT_MS.
 
   web:
+    image: ghcr.io/croffasia/itsaplan-web:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args:
-        # The api origin, inlined into the web bundle at build time. Sourced from
-        # Coolify's Domain for the api service.
-        NEXT_PUBLIC_API_URL: ${SERVICE_URL_API:-http://localhost:3000}
-        # Legal document URLs shown on the logged-out screens; empty hides the notice.
-        NEXT_PUBLIC_PRIVACY_URL: ${PRIVACY_URL:-}
-        NEXT_PUBLIC_TERMS_URL: ${TERMS_URL:-}
     restart: unless-stopped
     depends_on:
       - api
@@ -185,6 +187,14 @@ services:
       NODE_ENV: production
       PORT: 3001
       HOSTNAME: 0.0.0.0
+      # The api origin the browser uses, from Coolify's Domain for the api service.
+      # web reaches the api at the same address to stream avatars and attachments
+      # (/media), so they are served from the web origin.
+      API_URL: ${SERVICE_URL_API:-http://localhost:3000}
+      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      # Legal document URLs shown on the logged-out screens; empty hides the notice.
+      PRIVACY_URL: ${PRIVACY_URL:-}
+      TERMS_URL: ${TERMS_URL:-}
     # /login renders without a session, and without reaching the api.
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3001/login']

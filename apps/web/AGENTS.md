@@ -85,8 +85,15 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
 - A screen that has to stay live calls `useLiveRefresh({ scope, targets })` with a scope from
   `@/utils/revScopes` — never its own polling. `SyncProvider` polls every registered scope in one
   request and invalidates the targets of the ones that moved.
-- Call the backend over HTTP at the API origin. `lib/api.ts` reads `NEXT_PUBLIC_API_URL`
-  from `apps/web/.env` (same value as the root `API_URL`), inlined at build time.
+- Call the backend over HTTP at the API origin. `lib/api.ts` takes it from
+  `utils/runtimeEnv`, which reads `API_URL` in the server process and hands it to the
+  browser through the inline script in `components/runtime-env-script.tsx`. A per-instance
+  value goes through there — never `process.env.NEXT_PUBLIC_*` in a component, which
+  `next build` inlines and which pins the image to one instance.
+- Avatars and attachments render from `/media/...` on the web origin (`app/media`, which
+  streams them from the api), not from an absolute api url. That keeps them local images
+  for `next/image`: `images.remotePatterns` is frozen into the standalone build, so an
+  api origin listed there would only be valid for the instance that built the image.
 - Add shadcn components with `bunx shadcn@latest add <name>` (config in `components.json`).
 - **Don't edit `src/components/ui/`** — those files are generated and re-adding a component
   overwrites them. Style them from the outside instead: every primitive carries a `data-slot`
@@ -99,8 +106,8 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   `chart.tsx` passes `debounce` to recharts' `ResponsiveContainer`, without which a chart in a
   container that resizes itself loops until React reports "Maximum update depth exceeded".
 - Tailwind v4: no `tailwind.config`; tokens live in `src/app/globals.css` (`@theme`, CSS vars).
-- `NEXT_PUBLIC_*` are build-time — set them in `apps/web/.env` before `next build`, or as
-  web Dockerfile build args.
+- Nothing per-instance may reach the bundle: the image is published once and serves every
+  instance. New config of that kind belongs in `utils/runtimeEnv`.
 - Don't remove `output: "standalone"` + `outputFileTracingRoot` from `next.config` — the Docker
   image depends on them.
 - When touching `localStorage`/`window` in a render path (e.g. a `useState` initializer), guard

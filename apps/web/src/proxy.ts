@@ -11,7 +11,9 @@ const PUBLIC_PATHS = ['/login', '/register'];
 // reason: a reset link opened in a browser that still holds a session must show the
 // form, not bounce to the app. The public read-only share pages (/share/*) open for
 // anyone with the link, signed in or not.
-const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share'];
+// `/media` streams avatars and attachments from the api, which serves them without
+// a session — a share page opened by a logged-out visitor shows them too.
+const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', '/media'];
 
 // Gate the whole app behind a session. This is an optimistic check: it only looks
 // for the presence of the better-auth session cookie, not its validity — the API

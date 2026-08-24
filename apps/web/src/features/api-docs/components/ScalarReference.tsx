@@ -3,10 +3,11 @@
 import { ApiReferenceReact } from '@scalar/api-reference-react';
 import '@scalar/api-reference-react/style.css';
 import './scalar-theme.css';
+import { API_URL } from '@/lib/api';
 
 // The API mounts /docs/json outside the session guard, so the browser fetches it
 // directly.
-const SPEC_URL = `${process.env.NEXT_PUBLIC_API_URL}/docs/json`;
+const SPEC_URL = `${API_URL}/docs/json`;
 
 // The app owns the light/dark switch (next-themes), so Scalar's mode is forced to
 // match and its own toggle is hidden. Theming: scalar-theme.css.

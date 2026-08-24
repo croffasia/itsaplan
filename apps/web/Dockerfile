@@ -28,18 +28,18 @@ RUN bun install --frozen-lockfile
 FROM base AS build
 COPY --from=install /app ./
 COPY . .
-# NEXT_PUBLIC_* are inlined into the bundle at build time — pass them as build args.
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ARG NEXT_PUBLIC_PRIVACY_URL
-ENV NEXT_PUBLIC_PRIVACY_URL=$NEXT_PUBLIC_PRIVACY_URL
-ARG NEXT_PUBLIC_TERMS_URL
-ENV NEXT_PUBLIC_TERMS_URL=$NEXT_PUBLIC_TERMS_URL
+# No per-instance value is baked in: the origins are read from the environment at
+# startup (apps/web/src/utils/runtimeEnv.ts), so one image serves any instance.
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN cd apps/web && bun run build
 
-# 3) Minimal final image (standalone output).
-FROM base AS release
+# 3) Minimal final image (standalone output). Node, not Bun: turbopack imports a
+# serverExternalPackage under an internal alias that Next resolves through a Node
+# module hook, and Bun does not honour it — every page rendering markdown then fails
+# with "Failed to load external module isomorphic-dompurify-<hash>". Alpine keeps the
+# musl build of the traced native modules (sharp) valid.
+FROM node:22-alpine AS release
+WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3001
@@ -50,4 +50,4 @@ COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /app/apps/web/public ./apps/web/public
 
 EXPOSE 3001
-CMD ["bun", "apps/web/server.js"]
+CMD ["node", "apps/web/server.js"]

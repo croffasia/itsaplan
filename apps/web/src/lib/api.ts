@@ -1,22 +1,25 @@
 // Typed client for the planner API (apps/api/src/planner). Row shapes mirror the
-// store DTOs. The API is a separate service; the browser reaches it at
-// NEXT_PUBLIC_API_URL. The planner routes require a better-auth session, so every
+// store DTOs. The API is a separate service; the browser reaches it at the API
+// origin below. The planner routes require a better-auth session, so every
 // request sends credentials (the session cookie).
 
 import type { Locale } from '@/i18n/locales';
 import type { FilterSet } from '@/utils/filters';
 import type { SavedViewDisplay } from '@/utils/viewSettings';
 import type { DashboardLayout, BreakdownBy } from '@/utils/dashboardWidgets';
+import { runtimeEnv } from '@/utils/runtimeEnv';
 
-// NEXT_PUBLIC_* is inlined at build time, so a build without it ships a client
-// that cannot reach the API. Fail at import instead of pointing at a wrong origin.
-export const API_URL = process.env.NEXT_PUBLIC_API_URL as string;
-if (!API_URL) throw new Error('NEXT_PUBLIC_API_URL is not set');
+// The API origin, read from the running server rather than from the build (see
+// utils/runtimeEnv). A deployment without it ships a client that cannot reach the
+// API. Fail at import instead of pointing at a wrong origin.
+export const API_URL = runtimeEnv().apiUrl;
+if (!API_URL) throw new Error('API_URL is not set on the web service');
 
-// Resolves a possibly-relative API path (e.g. a stored avatar/attachment URL) to
-// an absolute one against the API origin. Leaves absolute URLs untouched.
-export function resolveApiUrl(url: string): string {
-  return url.startsWith('http') ? url : `${API_URL}${url}`;
+// Points a relative media path (a stored avatar or attachment URL) at the web
+// origin's media route (app/media), which streams it from the API. Leaves an
+// absolute URL — an embed stored before this, or an external image — untouched.
+export function mediaUrl(url: string): string {
+  return url.startsWith('http') ? url : `/media${url}`;
 }
 
 // An error carrying the HTTP status so callers can tell apart 401 (no session),
@@ -2342,10 +2345,10 @@ export interface InviteView {
   hasAccount: boolean;
 }
 
-// The attachment DTO's url is relative to the API origin; make it absolute so it
-// works in <img>/<video> and markdown rendered on the web origin.
-function absolutizeAttachment(a: Attachment): Attachment {
-  return { ...a, url: a.url.startsWith('http') ? a.url : `${API_URL}${a.url}` };
+// The attachment DTO's url is relative to the API origin; point it at the web
+// origin's media route so it works in <img>/<video> and markdown rendered there.
+function withMediaUrl(a: Attachment): Attachment {
+  return { ...a, url: mediaUrl(a.url) };
 }
 
 // Multipart upload — cannot use request(), which forces a JSON Content-Type; the
@@ -2359,7 +2362,7 @@ async function sendAttachmentFile(
   form.append('file', file);
   const res = await fetch(`${API_URL}${path}`, { method, credentials: 'include', body: form });
   if (!res.ok) throw await apiFailure(res);
-  return absolutizeAttachment(await res.json());
+  return withMediaUrl(await res.json());
 }
 
 // Inbox notifications. Each row is enriched with the issue and project it points at
@@ -2721,9 +2724,7 @@ export const api = {
     request<void>(`/worklogs/${worklogId}`, { method: 'DELETE' }),
 
   listAttachments: (issueId: number) =>
-    request<Attachment[]>(`/issues/${issueId}/attachments`).then((rows) =>
-      rows.map(absolutizeAttachment),
-    ),
+    request<Attachment[]>(`/issues/${issueId}/attachments`).then((rows) => rows.map(withMediaUrl)),
   uploadAttachment: (issueId: number, file: File) =>
     sendAttachmentFile(`/issues/${issueId}/attachments`, 'POST', file),
   // Keeps the attachment's id and URL, so an embed of it in a description shows

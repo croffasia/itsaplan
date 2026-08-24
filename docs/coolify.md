@@ -58,5 +58,21 @@ are generated on the first deploy and stay stable across later ones — nothing 
 hand. Optional variables from `.env.example` — legal document URLs, telemetry opt-out,
 worker tuning — go in **Configuration → Environment Variables**.
 
+## 5. Deploy the published images
+
+A Public Repository resource always builds from source. To run the images published to GHCR on
+each release, create the stack as a service instead:
+
+1. **New Resource → Docker Compose Empty**, then pick the server.
+2. Paste the whole of `docker-compose.coolify-images.yml` into **Docker Compose file** and
+   press **Save**. It carries no `build:` sections — nothing is built.
+3. In **Environment Variables**, set `VERSION` to a release (e.g. `0.10.1`); leave it out for
+   the newest.
+4. Press **Deploy**. Coolify generates a domain for api and one for web on the first
+   deploy; rename them under the service if you want your own.
+
+To keep an existing Public Repository resource and pull instead of build, set **Custom build
+command** in **Configuration → General** to `docker compose pull` and redeploy.
+
 To run the same stack outside Coolify, see [self-hosting.md](self-hosting.md) or
 [railway.md](railway.md).

@@ -130,10 +130,11 @@ bun run dev                                       # api :3000 + web :3001
 | `docker-compose.dev.yml`     | local backing services only: Postgres + MinIO. The apps run on the host.                                                                          |
 | `docker-compose.yml`         | self-hosting stack. Runs the published images (`docker compose pull && up -d`) or builds them from source (`up -d --build`); reads a plain `.env`, requires the secrets via `${VAR:?}`. |
 | `docker-compose.coolify.yml` | the same stack for Coolify: reads its generated `SERVICE_*` variables and builds from source. No `image:` here — with both fields Coolify still builds, and stops creating rollback images. |
+| `docker-compose.coolify-images.yml` | the same stack as a Coolify service (New Resource → Docker Compose Empty): the published images, no `build:`, no `ports:`, and the two domains declared with `SERVICE_URL_API_3000` / `SERVICE_URL_WEB_3001`. |
 | `docker-compose.test.yml`    | test gate against a throwaway Postgres.                                                                                                           |
 
-A change to the deploy stack usually has to land in **both** `docker-compose.yml` and
-`docker-compose.coolify.yml`. The **api applies migrations on startup** (`migrate.ts` in
+A change to the deploy stack usually has to land in **all three** of `docker-compose.yml`,
+`docker-compose.coolify.yml`, and `docker-compose.coolify-images.yml`. The **api applies migrations on startup** (`migrate.ts` in
 its Dockerfile CMD). `bot` runs Telegram long polling and must stay at one replica.
 
 ## Test gate (Docker)

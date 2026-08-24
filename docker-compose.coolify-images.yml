@@ -1,16 +1,19 @@
 # ─────────────────────────────────────────────────────────────
-# Coolify stack: postgres + minio + api + worker + bot + web.
-# In Coolify: New Resource → Docker Compose → point to this file, then set the
-# environment variables (see .env.example) in the UI.
+# Coolify stack on the published images: postgres + minio + api + worker + bot + web.
+# In Coolify: New Resource → Docker Compose Empty → paste this file. Nothing is built;
+# the four services run the images published to GHCR on each release, and VERSION picks
+# one (unset means the newest).
 #
-# Every service is built from the checkout Coolify clones. To run the images published
-# on each release instead, use docker-compose.coolify-images.yml.
-#
-# For self-hosting anywhere else, use docker-compose.yml.
+# For a Coolify resource that builds from source, use docker-compose.coolify.yml.
 #
 # SERVICE_PASSWORD_* / SERVICE_URL_* are Coolify magic variables: generated and
-# persisted on first deploy, stable across deploys. SERVICE_URL_* come from the
-# Domains fields, so the public URLs live in one place.
+# persisted on first deploy, stable across deploys. api and web each declare their own
+# domain by listing SERVICE_URL_API_3000 / SERVICE_URL_WEB_3001 without a value; everything
+# else reads them back. A SERVICE_URL_* key in any other service declares a domain there
+# too, which is why worker and bot address the api through API_URL instead.
+#
+# No host port is published: Coolify's proxy reaches the containers over the internal
+# network, and a `ports:` entry here turns into a second, malformed domain.
 #
 # Coolify reports the worst container health as the resource status, so a service
 # without a healthcheck holds the whole stack at "running (unknown)". Services that
@@ -75,9 +78,7 @@ services:
       "
 
   api:
-    build:
-      context: .
-      dockerfile: apps/api/Dockerfile
+    image: ghcr.io/croffasia/itsaplan-api:${VERSION:-latest}
     restart: unless-stopped
     depends_on:
       postgres:
@@ -86,26 +87,30 @@ services:
         condition: service_started
     # Applies migrations on startup, then starts the server (see api Dockerfile CMD).
     environment:
-      NODE_ENV: production
-      API_PORT: 3000
-      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      BETTER_AUTH_SECRET: ${SERVICE_PASSWORD_64_BETTERAUTH}
+      # Listed without a value, this asks Coolify for the public domain of this
+      # service on port 3000. The port belongs to the declaration only — the value read
+      # back below is SERVICE_URL_API, which Coolify derives from it without the port.
+      - SERVICE_URL_API_3000
+      - NODE_ENV=production
+      - API_PORT=3000
+      - DATABASE_URL=postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      - BETTER_AUTH_SECRET=${SERVICE_PASSWORD_64_BETTERAUTH}
       # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
       # existing stored credentials undecryptable.
-      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
+      - APP_ENCRYPTION_KEY=${SERVICE_PASSWORD_64_ENCRYPTION}
       # The worker and the bot authenticate to /internal/* with this same token.
-      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      - WORKER_INTERNAL_TOKEN=${SERVICE_PASSWORD_64_WORKER}
       # API_URL is the api origin; APP_URL is the web origin.
-      API_URL: ${SERVICE_URL_API:-http://localhost:3000}
-      APP_URL: ${SERVICE_URL_WEB:-http://localhost:3001}
+      - API_URL=${SERVICE_URL_API}
+      - APP_URL=${SERVICE_URL_WEB}
       # To override the cookie parent domain (multi-label TLDs / deep subdomains),
       # add a COOKIE_DOMAIN env in Coolify — the code reads it if present.
-      S3_ENDPOINT: http://minio:9000
-      S3_BUCKET: ${S3_BUCKET:-planner-attachments}
-      S3_ACCESS_KEY_ID: ${SERVICE_USER_MINIO}
-      S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
-      S3_REGION: ${S3_REGION:-us-east-1}
-      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=${S3_BUCKET:-planner-attachments}
+      - S3_ACCESS_KEY_ID=${SERVICE_USER_MINIO}
+      - S3_SECRET_ACCESS_KEY=${SERVICE_PASSWORD_MINIO}
+      - S3_REGION=${S3_REGION:-us-east-1}
+      - S3_FORCE_PATH_STYLE=${S3_FORCE_PATH_STYLE:-}
     # start_period covers the migrations the container applies before it listens.
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
@@ -113,16 +118,11 @@ services:
       timeout: 5s
       retries: 5
       start_period: 90s
-    # Set API_PORT in Coolify if 3000 is taken on the host.
-    ports:
-      - '${API_PORT:-3000}:3000'
 
   # Background worker for webhook delivery, agent schedules, and autonomous agent
   # runs. Shares the database with the api. No public ports, so nothing to probe.
   worker:
-    build:
-      context: .
-      dockerfile: apps/worker/Dockerfile
+    image: ghcr.io/croffasia/itsaplan-worker:${VERSION:-latest}
     restart: unless-stopped
     exclude_from_hc: true
     depends_on:
@@ -133,7 +133,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      API_URL: http://api:3000
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
@@ -154,9 +154,7 @@ services:
   # Must stay at one replica: Telegram hands each getUpdates call to a single caller,
   # so a second instance would take updates away from the first.
   bot:
-    build:
-      context: .
-      dockerfile: apps/bot/Dockerfile
+    image: ghcr.io/croffasia/itsaplan-bot:${VERSION:-latest}
     restart: unless-stopped
     exclude_from_hc: true
     depends_on:
@@ -164,7 +162,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      API_URL: http://api:3000
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # The bot token itself is not set here: it is stored in the database and edited
       # in god mode, so the service picks up a change without a redeploy.
@@ -172,24 +170,22 @@ services:
       # BOT_CONFIG_POLL_INTERVAL_MS, BOT_API_TIMEOUT_MS.
 
   web:
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
+    image: ghcr.io/croffasia/itsaplan-web:${VERSION:-latest}
     restart: unless-stopped
     depends_on:
       - api
     environment:
-      NODE_ENV: production
-      PORT: 3001
-      HOSTNAME: 0.0.0.0
-      # The api origin the browser uses, from Coolify's Domain for the api service.
-      # web reaches the api at the same address to stream avatars and attachments
-      # (/media), so they are served from the web origin.
-      API_URL: ${SERVICE_URL_API:-http://localhost:3000}
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      # Declares this service's public domain on port 3001; see the api service.
+      - SERVICE_URL_WEB_3001
+      - NODE_ENV=production
+      - PORT=3001
+      - HOSTNAME=0.0.0.0
+      # The api origin the browser uses. web streams avatars and attachments from the
+      # same origin (/media), so they are served from the web origin.
+      - API_URL=${SERVICE_URL_API}
       # Legal document URLs shown on the logged-out screens; empty hides the notice.
-      PRIVACY_URL: ${PRIVACY_URL:-}
-      TERMS_URL: ${TERMS_URL:-}
+      - PRIVACY_URL=${PRIVACY_URL:-}
+      - TERMS_URL=${TERMS_URL:-}
     # /login renders without a session, and without reaching the api.
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3001/login']
@@ -197,9 +193,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-    # Set WEB_PORT in Coolify if 3001 is taken on the host.
-    ports:
-      - '${WEB_PORT:-3001}:3001'
 
 volumes:
   postgres-data:

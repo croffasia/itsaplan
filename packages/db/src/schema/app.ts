@@ -1259,11 +1259,34 @@ export const issueChecklistItem = pgTable(
   (t) => [index('issue_checklist_item_checklist_idx').on(t.checklistId, t.position)],
 );
 
+// One side of a change: the text the feed shows, and the id of the row behind it
+// when the side names one. The text is a snapshot, so an entry still reads
+// correctly after that row is renamed or deleted; the id is what makes the entry
+// readable as data. Some actions carry more: a status change carries the state
+// type its column had at the time, a pull request its repository and number.
+export interface ActivitySide {
+  value: string | null;
+  id?: number | string | null;
+  stateType?: string | null;
+  repo?: string;
+  number?: number;
+}
+
+// What an activity entry says changed. `subject` names the sub-item the action
+// applies to (the custom field for 'field', the checklist for a checklist item);
+// `from` and `to` are the two sides of the change. A side the action does not
+// have is absent, and an action that describes nothing carries {}.
+export interface ActivityPayload {
+  subject?: ActivitySide;
+  from?: ActivitySide;
+  to?: ActivitySide;
+}
+
 // Timeline of comments and change-log activity for issues and initiatives, in one
 // table. Each row belongs to exactly one owner: an issue (issue_id) or an
-// initiative (initiative_id) — enforced by owner_check. kind selects which payload
-// columns a row uses — a comment sets body; activity sets action/subject/from_text/
-// to_text. actor_user_id is the author, taken from the session user (a member or an
+// initiative (initiative_id) — enforced by owner_check. kind selects which columns
+// a row uses — a comment sets body; activity sets action and payload.
+// actor_user_id is the author, taken from the session user (a member or an
 // agent's bot user). actor_name is a snapshot so an entry still reads correctly
 // after that user is renamed or deleted.
 export const issueActivity = pgTable(
@@ -1289,9 +1312,7 @@ export const issueActivity = pgTable(
     actorName: text('actor_name'),
     body: text('body'),
     action: text('action'),
-    subject: text('subject'),
-    fromText: text('from_text'),
-    toText: text('to_text'),
+    payload: jsonb('payload').$type<ActivityPayload>().notNull().default({}),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

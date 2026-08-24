@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { ActivityPayloadResponse } from '#shared/activity';
 
 // t.Numeric validates a numeric path param and coerces the string to a number. A
 // non-numeric id gets a 400 before it reaches the service.
@@ -227,9 +228,7 @@ export const FeedItemResponse = t.Object({
   actorName: t.Nullable(t.String()),
   body: t.Nullable(t.String()),
   action: t.Nullable(t.String()),
-  subject: t.Nullable(t.String()),
-  fromText: t.Nullable(t.String()),
-  toText: t.Nullable(t.String()),
+  payload: ActivityPayloadResponse,
   createdAt: t.String(),
 });
 

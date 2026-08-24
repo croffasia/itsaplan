@@ -2,7 +2,7 @@ import { db, projectColumn, issue, issueLabel, issueFieldValue, issueFieldOption
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import { getMembership } from '#modules/members/service';
-import { recordActivityForIssues } from '#modules/issues/activity';
+import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
 
 export interface ColumnRow {
   id: number;
@@ -253,7 +253,7 @@ export async function deleteColumn(
   if (target)
     await recordActivityForIssues(
       movedIssueIds,
-      { action: 'status', fromText: column.name, toText: target.name },
+      { action: 'status', from: statusSide(column), to: statusSide(target) },
       actorUserId,
     );
 }

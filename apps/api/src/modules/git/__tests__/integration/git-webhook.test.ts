@@ -165,12 +165,17 @@ describe('Repository webhook', () => {
     const prEntry = items.find((i: { action: string | null }) => i.action === 'git_pr');
     expect(prEntry).toMatchObject({
       actorName: 'GitHub',
-      subject: 'merged',
-      fromText: 'acme/site#42',
-      toText: 'https://github.com/acme/site/pull/42',
+      payload: {
+        subject: { value: 'merged' },
+        from: { value: 'acme/site#42', repo: 'acme/site', number: 42 },
+        to: { value: 'https://github.com/acme/site/pull/42' },
+      },
     });
     const statusEntry = items.find((i: { action: string | null }) => i.action === 'status');
-    expect(statusEntry).toMatchObject({ actorName: 'GitHub', toText: done.name });
+    expect(statusEntry).toMatchObject({
+      actorName: 'GitHub',
+      payload: { to: { value: done.name, id: done.id } },
+    });
   });
 
   it('moves the issue to the configured merge column', async () => {
@@ -324,7 +329,10 @@ describe('Repository webhook', () => {
     expect((await issueState(asOwner, issue.id)).columnId).toBe(columns[0].id);
     const feed = await asOwner.issues({ issueId: issue.id }).feed.get({ query: {} });
     const prEntry = feed.data!.items.find((i: { action: string | null }) => i.action === 'git_pr');
-    expect(prEntry).toMatchObject({ actorName: 'GitHub', subject: 'opened' });
+    expect(prEntry).toMatchObject({
+      actorName: 'GitHub',
+      payload: { subject: { value: 'opened' } },
+    });
   });
 
   it('does not demote a started issue on PR open', async () => {
@@ -492,8 +500,7 @@ describe('Repository webhook', () => {
     expect((await issueState(asOwner, issue.id)).columnId).toBe(done.id);
     expect(await prActor(asOwner, issue.id)).toMatchObject({
       actorName: 'GitLab',
-      subject: 'merged',
-      fromText: 'acme/site#7',
+      payload: { subject: { value: 'merged' }, from: { value: 'acme/site#7' } },
     });
   });
 

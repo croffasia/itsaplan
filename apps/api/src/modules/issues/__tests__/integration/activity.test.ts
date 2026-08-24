@@ -257,7 +257,7 @@ describe('issue activity', () => {
       await asOwner.issues({ issueId: issue.id }).patch({ title: 'New' });
 
       const title = (await actions(asOwner, issue.id)).find((a) => a.action === 'title');
-      expect(title).toMatchObject({ fromText: 'Old', toText: 'New' });
+      expect(title?.payload).toMatchObject({ from: { value: 'Old' }, to: { value: 'New' } });
     });
 
     it('logs a column move as a status change with column names', async () => {
@@ -267,9 +267,10 @@ describe('issue activity', () => {
 
       const status = (await actions(asOwner, issue.id)).find((a) => a.action === 'status');
       expect(status).toBeDefined();
-      expect(status?.fromText).not.toBeNull();
-      expect(status?.toText).not.toBeNull();
-      expect(status?.fromText).not.toBe(status?.toText);
+      expect(status?.payload.from?.value).toBeTruthy();
+      expect(status?.payload.to?.value).toBeTruthy();
+      expect(status?.payload.from?.value).not.toBe(status?.payload.to?.value);
+      expect(status?.payload.to).toMatchObject({ id: columnIds[1], stateType: 'unstarted' });
     });
 
     it('logs added and removed labels', async () => {
@@ -280,11 +281,11 @@ describe('issue activity', () => {
 
       await asOwner.issues({ issueId: issue.id }).patch({ labelIds: [label.id] });
       const added = (await actions(asOwner, issue.id)).find((a) => a.action === 'label_add');
-      expect(added?.toText).toBe('bug');
+      expect(added?.payload.to).toMatchObject({ value: 'bug', id: label.id });
 
       await asOwner.issues({ issueId: issue.id }).patch({ labelIds: [] });
       const removed = (await actions(asOwner, issue.id)).find((a) => a.action === 'label_remove');
-      expect(removed?.fromText).toBe('bug');
+      expect(removed?.payload.from).toMatchObject({ value: 'bug', id: label.id });
     });
 
     it("does not log the name of another project's label", async () => {
@@ -315,7 +316,47 @@ describe('issue activity', () => {
         .put({ value: 'written' });
 
       const entry = (await actions(asOwner, issue.id)).find((a) => a.action === 'field');
-      expect(entry).toMatchObject({ subject: 'Notes', toText: 'written' });
+      expect(entry?.payload).toMatchObject({
+        subject: { value: 'Notes', id: field.id },
+        to: { value: 'written' },
+      });
+    });
+
+    it('logs the chosen option of a select field with its id', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Size', fieldType: 'select', options: ['S', 'M'] })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const option = field.options[0];
+
+      await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ optionIds: [option.id] });
+
+      const entry = (await actions(asOwner, issue.id)).find((a) => a.action === 'field');
+      expect(entry?.payload.to).toMatchObject({ value: option.value, id: option.id });
+    });
+
+    it('logs the chosen person of a member field with their id', async () => {
+      const { asOwner, owner, columnId } = await setupProject();
+      const field = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          ['custom-fields'].post({ name: 'Reviewer', fieldType: 'member' })
+      ).data!;
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      await asOwner
+        .issues({ issueId: issue.id })
+        .fields({ fieldId: field.id })
+        .put({ value: owner.userId });
+
+      const entry = (await actions(asOwner, issue.id)).find((a) => a.action === 'field');
+      expect(entry?.payload.to).toMatchObject({ id: owner.userId });
     });
 
     it('does not log a position-only reorder', async () => {

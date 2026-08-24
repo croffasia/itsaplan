@@ -1,4 +1,4 @@
-import { recordActivity } from '#modules/issues/activity';
+import { recordActivity, textSide } from '#modules/issues/activity';
 
 // Records that an agent took a queued run of the issue. Only the first claim is
 // logged: a re-claim after an expired lease is the same task handed out again.
@@ -19,7 +19,7 @@ export async function recordAgentRunFinished(
   if (run.issueId == null) return;
   await recordActivity(
     run.issueId,
-    [{ action: 'agent_finished', subject: status }],
+    [{ action: 'agent_finished', subject: textSide(status) }],
     run.agentUserId,
   );
 }

@@ -1,7 +1,7 @@
 import { db, issueChecklist, issueChecklistItem } from '@repo/db';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
-import { recordActivity } from './activity';
+import { recordActivity, rowSide } from './activity';
 
 // Checklists on an issue: a list of steps too small to be subtasks of their own.
 // An issue holds several checklists, each holding its items; both are ordered by
@@ -122,7 +122,11 @@ export async function createChecklist(
     })
     .returning(checklistColumns);
 
-  await recordActivity(issueId, [{ action: 'checklist_add', toText: title }], actorUserId);
+  await recordActivity(
+    issueId,
+    [{ action: 'checklist_add', to: rowSide(title, row.id) }],
+    actorUserId,
+  );
   return { ...row, items: [] };
 }
 
@@ -142,7 +146,13 @@ export async function renameChecklist(
   if (previous.title !== title) {
     await recordActivity(
       previous.issueId,
-      [{ action: 'checklist_rename', fromText: previous.title, toText: title }],
+      [
+        {
+          action: 'checklist_rename',
+          from: rowSide(previous.title, checklistId),
+          to: rowSide(title, checklistId),
+        },
+      ],
       actorUserId,
     );
   }
@@ -163,7 +173,7 @@ export async function deleteChecklist(
 
   await recordActivity(
     removed.issueId,
-    [{ action: 'checklist_remove', fromText: removed.title }],
+    [{ action: 'checklist_remove', from: rowSide(removed.title, checklistId) }],
     actorUserId,
   );
   return true;
@@ -212,7 +222,13 @@ export async function createChecklistItem(
 
   await recordActivity(
     checklist.issueId,
-    [{ action: 'checklist_item_add', subject: checklist.title, toText: content }],
+    [
+      {
+        action: 'checklist_item_add',
+        subject: rowSide(checklist.title, checklistId),
+        to: rowSide(content, row.id),
+      },
+    ],
     actorUserId,
   );
   return row;
@@ -261,8 +277,8 @@ export async function deleteChecklistItem(
     [
       {
         action: 'checklist_item_remove',
-        subject: checklist.title,
-        fromText: removed.content,
+        subject: rowSide(checklist.title, removed.checklistId),
+        from: rowSide(removed.content, itemId),
       },
     ],
     actorUserId,

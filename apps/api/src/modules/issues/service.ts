@@ -48,6 +48,7 @@ import {
   actorId,
   type ActivityActor,
   userName,
+  rowSide,
   type ActivityInput,
   type IssueSnapshot,
 } from './activity';
@@ -925,21 +926,24 @@ async function recordParentChange(
   const names = await identifiers(
     [childId, before, after].filter((id): id is number => id !== null),
   );
-  const child = names.get(childId) ?? null;
+  const child = rowSide(names.get(childId), childId);
+  const parentSide = (id: number | null) => rowSide(id === null ? null : names.get(id), id);
   const entries: { issueId: number; event: ActivityInput }[] = [
     {
       issueId: childId,
-      event: {
-        action: 'parent',
-        fromText: before === null ? null : (names.get(before) ?? null),
-        toText: after === null ? null : (names.get(after) ?? null),
-      },
+      event: { action: 'parent', from: parentSide(before), to: parentSide(after) },
     },
   ];
   if (before !== null)
-    entries.push({ issueId: before, event: { action: 'subtask_remove', fromText: child } });
+    entries.push({
+      issueId: before,
+      event: { action: 'subtask_remove', from: child },
+    });
   if (after !== null)
-    entries.push({ issueId: after, event: { action: 'subtask_add', toText: child } });
+    entries.push({
+      issueId: after,
+      event: { action: 'subtask_add', to: child },
+    });
   await recordActivityEntries(entries, actor);
 }
 
@@ -1137,9 +1141,9 @@ export async function setIssueLabels(
   const names = await labelNames(projectId, [...added, ...removed]);
   const events: ActivityInput[] = [];
   for (const labelId of added)
-    events.push({ action: 'label_add', toText: names.get(labelId) ?? null });
+    events.push({ action: 'label_add', to: rowSide(names.get(labelId), labelId) });
   for (const labelId of removed)
-    events.push({ action: 'label_remove', fromText: names.get(labelId) ?? null });
+    events.push({ action: 'label_remove', from: rowSide(names.get(labelId), labelId) });
   await recordActivity(issueId, events, actorUserId);
 
   if (emitEvent && (added.length > 0 || removed.length > 0)) {
@@ -1518,9 +1522,12 @@ export async function setIssueFieldValue(
   const previousMemberUserId =
     field.fieldType === 'member' ? await fieldMemberUserId(issueId, fieldId) : null;
 
-  // to_text is the display-ready new value logged to the activity feed: option
-  // value names for select/multi_select, the raw value for everything else.
-  let toText: string | null;
+  // The display-ready new value logged to the activity feed: option value names for
+  // select/multi_select, the raw value for everything else. loggedId is the row that
+  // value names — the chosen option, the chosen member — so the entry reads as data
+  // like every other one. A multi_select names several rows and keeps its text.
+  let loggedValue: string | null;
+  let loggedId: number | string | null = null;
 
   if (field.fieldType === 'select' || field.fieldType === 'multi_select') {
     const optionIds = input.optionIds ?? [];
@@ -1541,7 +1548,8 @@ export async function setIssueFieldValue(
         .insert(issueFieldOption)
         .values(optionIds.map((optionId) => ({ issueId, fieldId, optionId })));
     }
-    toText = names.length ? names.join(', ') : null;
+    loggedValue = names.length ? names.join(', ') : null;
+    loggedId = optionIds.length === 1 ? optionIds[0] : null;
   } else {
     // The value column matching the field's type; the others stay NULL. Both the
     // insert and the on-conflict update write only that one column.
@@ -1584,21 +1592,28 @@ export async function setIssueFieldValue(
       });
     const value = input.value;
     if (value == null || value === '') {
-      toText = null;
+      loggedValue = null;
     } else if (field.fieldType === 'member') {
-      toText = await userName(memberUserId);
+      loggedValue = await userName(memberUserId);
+      loggedId = memberUserId;
     } else if (field.fieldType === 'boolean') {
-      toText = value ? 'true' : 'false';
+      loggedValue = value ? 'true' : 'false';
     } else if (field.fieldType === 'datetime_range' && input.valueEnd) {
-      toText = `${String(value)} — ${input.valueEnd}`;
+      loggedValue = `${String(value)} — ${input.valueEnd}`;
     } else {
-      toText = String(value);
+      loggedValue = String(value);
     }
   }
 
   const [entry] = await recordActivity(
     issueId,
-    [{ action: 'field', subject: field.name, toText }],
+    [
+      {
+        action: 'field',
+        subject: rowSide(field.name, field.id),
+        to: rowSide(loggedValue, loggedId),
+      },
+    ],
     actorUserId,
   );
 

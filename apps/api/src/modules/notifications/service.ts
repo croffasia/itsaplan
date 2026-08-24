@@ -7,6 +7,7 @@ import {
   issueActivity,
   project,
   projectColumn,
+  type ActivityPayload,
 } from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
 import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
@@ -250,8 +251,7 @@ function mapRow(r: {
   projectId: number;
   projectKey: string;
   projectName: string;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload | null;
 }): NotificationRow {
   const stateChange = r.type === 'state_changed';
   return {
@@ -269,8 +269,8 @@ function mapRow(r: {
     projectId: r.projectId,
     projectKey: r.projectKey,
     projectName: r.projectName,
-    fromState: stateChange ? r.fromText : null,
-    toState: stateChange ? r.toText : null,
+    fromState: stateChange ? (r.payload?.from?.value ?? null) : null,
+    toState: stateChange ? (r.payload?.to?.value ?? null) : null,
   };
 }
 
@@ -314,8 +314,7 @@ export async function listNotifications(
       projectId: project.id,
       projectKey: project.key,
       projectName: project.name,
-      fromText: issueActivity.fromText,
-      toText: issueActivity.toText,
+      payload: issueActivity.payload,
     })
     .from(notification)
     .innerJoin(issue, eq(issue.id, notification.issueId))

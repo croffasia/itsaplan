@@ -1,5 +1,5 @@
 import { getIssueBySequence, updateIssue } from '#modules/issues/service';
-import { recordActivity, type ActivityActor } from '#modules/issues/activity';
+import { recordActivity, textSide, type ActivityActor } from '#modules/issues/activity';
 import { parseMagicWords, type IssueRef } from './magic-words';
 import type { PullRequestEvent } from './providers';
 import { columnStateTypes, firstCompletedColumnId, type GitSettings } from './service';
@@ -27,11 +27,13 @@ export async function handlePullRequestEvent(
   const parsed = parseMagicWords(`${event.title}\n${event.body}`);
   const projectKey = project.key.toUpperCase();
   const inProject = (refs: IssueRef[]) => refs.filter((r) => r.key === projectKey);
-  const prEntry = (subject: string) => ({
+  const prEntry = (outcome: string) => ({
     action: 'git_pr',
-    subject,
-    fromText: `${event.repo}#${event.number}`,
-    toText: event.url,
+    subject: textSide(outcome),
+    // The pull request is not a row of this database: the repository and the number
+    // are what identifies it.
+    from: { value: `${event.repo}#${event.number}`, repo: event.repo, number: event.number },
+    to: textSide(event.url),
   });
 
   if (event.action === 'merged') {

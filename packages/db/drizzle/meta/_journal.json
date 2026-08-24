@@ -708,6 +708,20 @@
       "when": 1787566900135,
       "tag": "0100_modern_sabretooth",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1787574302584,
+      "tag": "0101_numerous_spot",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1787574307701,
+      "tag": "0102_parched_captain_marvel",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "issue_activity" ADD COLUMN "payload" jsonb DEFAULT '{}'::jsonb NOT NULL;

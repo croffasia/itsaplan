@@ -175,17 +175,25 @@ describe('subtasks', () => {
       expect(subtaskFeed.data!.items).toContainEqual(
         expect.objectContaining({
           action: 'parent',
-          fromText: parent.identifier,
-          toText: next.identifier,
+          payload: {
+            from: { value: parent.identifier, id: parent.id },
+            to: { value: next.identifier, id: next.id },
+          },
         }),
       );
       const oldParentFeed = await asOwner.issues({ issueId: parent.id }).feed.get({ query: {} });
       expect(oldParentFeed.data!.items).toContainEqual(
-        expect.objectContaining({ action: 'subtask_remove', fromText: subtask.identifier }),
+        expect.objectContaining({
+          action: 'subtask_remove',
+          payload: { from: { value: subtask.identifier, id: subtask.id } },
+        }),
       );
       const newParentFeed = await asOwner.issues({ issueId: next.id }).feed.get({ query: {} });
       expect(newParentFeed.data!.items).toContainEqual(
-        expect.objectContaining({ action: 'subtask_add', toText: subtask.identifier }),
+        expect.objectContaining({
+          action: 'subtask_add',
+          payload: { to: { value: subtask.identifier, id: subtask.id } },
+        }),
       );
     });
 

@@ -8,6 +8,8 @@ import {
   label,
   initiative,
   cycle,
+  type ActivityPayload,
+  type ActivitySide,
 } from '@repo/db';
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
@@ -22,7 +24,7 @@ import {
 } from '#modules/notifications/service';
 
 // Issue timeline: comments and change-log activity in one table (issue_activity).
-// kind selects which payload columns a row uses. The author is the session user
+// kind selects which columns a row uses. The author is the session user
 // (a member or an agent's bot user); actor_name is a snapshot taken at write time,
 // so an entry keeps reading correctly after that user is renamed or deleted. The
 // issue detail panel renders the feed newest first and pages through it with a
@@ -40,9 +42,7 @@ export interface FeedItemRow {
   actorName: string | null;
   body: string | null;
   action: string | null;
-  subject: string | null;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload;
   createdAt: string;
 }
 
@@ -69,9 +69,7 @@ function mapFeedItem(row: {
   actorName: string | null;
   body: string | null;
   action: string | null;
-  subject: string | null;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload;
   createdAt: Date;
 }): FeedItemRow {
   return {
@@ -83,9 +81,7 @@ function mapFeedItem(row: {
     actorName: row.actorName,
     body: row.body,
     action: row.action,
-    subject: row.subject,
-    fromText: row.fromText,
-    toText: row.toText,
+    payload: row.payload,
     createdAt: iso(row.createdAt),
   };
 }
@@ -111,9 +107,7 @@ export async function listFeed(
       actorName: issueActivity.actorName,
       body: issueActivity.body,
       action: issueActivity.action,
-      subject: issueActivity.subject,
-      fromText: issueActivity.fromText,
-      toText: issueActivity.toText,
+      payload: issueActivity.payload,
       createdAt: issueActivity.createdAt,
       cursorTs: sql<string>`${issueActivity.createdAt}::text`,
     })
@@ -177,9 +171,9 @@ export interface TimelineSegment {
 
 // Every stretch the issue spent in one column, oldest first. The boundaries are the
 // 'status' entries of the change log; the first stretch starts at the issue's
-// creation. The opening column is the first status change's from_text, or — for an
-// issue that never changed column — its current one. Both are name snapshots, so a
-// renamed column reads under the name it had at the time and splits into two lanes.
+// creation. The opening column is what the first status change moved away from, or —
+// for an issue that never changed column — its current one. Both are name snapshots,
+// so a renamed column reads under the name it had at the time and splits into two lanes.
 export async function listStatusTimeline(issueId: number): Promise<TimelineSegment[]> {
   const [issueRow] = await db
     .select({ createdAt: issue.createdAt, columnName: projectColumn.name })
@@ -190,8 +184,7 @@ export async function listStatusTimeline(issueId: number): Promise<TimelineSegme
 
   const changes = await db
     .select({
-      fromText: issueActivity.fromText,
-      toText: issueActivity.toText,
+      payload: issueActivity.payload,
       createdAt: issueActivity.createdAt,
     })
     .from(issueActivity)
@@ -199,7 +192,7 @@ export async function listStatusTimeline(issueId: number): Promise<TimelineSegme
     .orderBy(issueActivity.createdAt, issueActivity.id);
 
   let current: TimelineSegment = {
-    status: changes[0]?.fromText ?? issueRow.columnName,
+    status: changes[0]?.payload.from?.value ?? issueRow.columnName,
     from: iso(issueRow.createdAt),
     to: null,
     durationMs: 0,
@@ -207,7 +200,12 @@ export async function listStatusTimeline(issueId: number): Promise<TimelineSegme
   const segments = [current];
   for (const change of changes) {
     current.to = iso(change.createdAt);
-    current = { status: change.toText, from: iso(change.createdAt), to: null, durationMs: 0 };
+    current = {
+      status: change.payload.to?.value ?? null,
+      from: iso(change.createdAt),
+      to: null,
+      durationMs: 0,
+    };
     segments.push(current);
   }
 
@@ -409,11 +407,33 @@ async function enqueueMentionRuns(
 // the issue mutation functions call it. The issue detail panel renders these
 // together with comments as one timeline.
 
-export interface ActivityInput {
+// Every side of every entry is built here, so the log holds one shape: the text as
+// the feed shows it, and the id of the row behind it wherever there is one.
+
+// A value with no row of its own — a title, a priority, a date. Dropped when there
+// is nothing to say.
+export function textSide(value: string | null | undefined): ActivitySide | undefined {
+  return value == null ? undefined : { value };
+}
+
+// A value that names a row: its text snapshot, so the entry keeps reading after a
+// rename or a delete, and its id, so the entry stays readable as data. Falls back to
+// text when there is no row behind the value.
+export function rowSide(
+  value: string | null | undefined,
+  id: number | string | null | undefined,
+): ActivitySide | undefined {
+  return id == null ? textSide(value) : { value: value ?? null, id };
+}
+
+// The side a status change writes: the column, plus the state type it carries at
+// this moment — what it was later is not recoverable, and the metrics read it.
+export function statusSide(column: { id: number; name: string; stateType: string }): ActivitySide {
+  return { value: column.name, id: column.id, stateType: column.stateType };
+}
+
+export interface ActivityInput extends ActivityPayload {
   action: string;
-  subject?: string | null;
-  fromText?: string | null;
-  toText?: string | null;
 }
 
 // The actor behind a write: the session user's id (a member or an agent's bot
@@ -479,50 +499,50 @@ export async function recordActivityEntries(
   return on
     .insert(issueActivity)
     .values(
-      entries.map(({ issueId, event }) => ({
+      entries.map(({ issueId, event: { action, ...payload } }) => ({
         issueId,
         kind: 'activity' as const,
         actorUserId: resolvedActorId,
         actorName,
-        action: event.action,
-        subject: event.subject ?? null,
-        fromText: event.fromText ?? null,
-        toText: event.toText ?? null,
+        action,
+        payload,
       })),
     )
     .returning({ id: issueActivity.id, action: issueActivity.action });
 }
 
-// Name snapshots for the referenced rows, resolved at change time so a log entry
-// keeps reading correctly after the column/type/user/label is renamed or deleted.
-async function columnName(id: number | null): Promise<string | null> {
-  if (id == null) return null;
+// The sides that read their text from the row they name, looked up at change time.
+async function columnSide(id: number | null): Promise<ActivitySide | undefined> {
+  if (id == null) return undefined;
   const rows = await db
-    .select({ name: projectColumn.name })
+    .select({ id: projectColumn.id, name: projectColumn.name, stateType: projectColumn.stateType })
     .from(projectColumn)
     .where(eq(projectColumn.id, id));
-  return rows[0]?.name ?? null;
+  return rows[0] ? statusSide(rows[0]) : undefined;
 }
-async function typeName(id: number | null): Promise<string | null> {
-  if (id == null) return null;
+async function typeSide(id: number | null): Promise<ActivitySide | undefined> {
+  if (id == null) return undefined;
   const rows = await db
     .select({ name: issueType.name })
     .from(issueType)
     .where(eq(issueType.id, id));
-  return rows[0]?.name ?? null;
+  return rowSide(rows[0]?.name, id);
 }
-async function initiativeName(id: number | null): Promise<string | null> {
-  if (id == null) return null;
+async function initiativeSide(id: number | null): Promise<ActivitySide | undefined> {
+  if (id == null) return undefined;
   const rows = await db
     .select({ title: initiative.title })
     .from(initiative)
     .where(eq(initiative.id, id));
-  return rows[0]?.title ?? null;
+  return rowSide(rows[0]?.title, id);
 }
-async function cycleName(id: number | null): Promise<string | null> {
-  if (id == null) return null;
+async function cycleSide(id: number | null): Promise<ActivitySide | undefined> {
+  if (id == null) return undefined;
   const rows = await db.select({ name: cycle.name }).from(cycle).where(eq(cycle.id, id));
-  return rows[0]?.name ?? null;
+  return rowSide(rows[0]?.name, id);
+}
+export async function userSide(id: string | null): Promise<ActivitySide | undefined> {
+  return rowSide(await userName(id), id);
 }
 export async function userName(id: string | null): Promise<string | null> {
   if (id == null) return null;
@@ -571,51 +591,63 @@ export async function logIssueUpdate(
 ): Promise<void> {
   const events: ActivityInput[] = [];
   if (before.title !== after.title)
-    events.push({ action: 'title', fromText: before.title, toText: after.title });
+    events.push({ action: 'title', from: textSide(before.title), to: textSide(after.title) });
   if (before.description !== after.description)
-    events.push({ action: 'description', toText: after.description });
+    events.push({ action: 'description', to: textSide(after.description) });
   if (before.columnId !== after.columnId)
     events.push({
       action: 'status',
-      fromText: await columnName(before.columnId),
-      toText: await columnName(after.columnId),
+      from: await columnSide(before.columnId),
+      to: await columnSide(after.columnId),
     });
   if (before.typeId !== after.typeId)
     events.push({
       action: 'type',
-      fromText: await typeName(before.typeId),
-      toText: await typeName(after.typeId),
+      from: await typeSide(before.typeId),
+      to: await typeSide(after.typeId),
     });
   if (before.initiativeId !== after.initiativeId)
     events.push({
       action: 'initiative',
-      fromText: await initiativeName(before.initiativeId),
-      toText: await initiativeName(after.initiativeId),
+      from: await initiativeSide(before.initiativeId),
+      to: await initiativeSide(after.initiativeId),
     });
   if (before.cycleId !== after.cycleId)
     events.push({
       action: 'cycle',
-      fromText: await cycleName(before.cycleId),
-      toText: await cycleName(after.cycleId),
+      from: await cycleSide(before.cycleId),
+      to: await cycleSide(after.cycleId),
     });
   if (before.assigneeUserId !== after.assigneeUserId)
     events.push({
       action: 'assignee',
-      fromText: await userName(before.assigneeUserId),
-      toText: await userName(after.assigneeUserId),
+      from: await userSide(before.assigneeUserId),
+      to: await userSide(after.assigneeUserId),
     });
   if (before.delegateUserId !== after.delegateUserId)
     events.push({
       action: 'delegate',
-      fromText: await userName(before.delegateUserId),
-      toText: await userName(after.delegateUserId),
+      from: await userSide(before.delegateUserId),
+      to: await userSide(after.delegateUserId),
     });
   if ((before.priority ?? '') !== (after.priority ?? ''))
-    events.push({ action: 'priority', fromText: before.priority, toText: after.priority });
+    events.push({
+      action: 'priority',
+      from: textSide(before.priority),
+      to: textSide(after.priority),
+    });
   if (before.startDate !== after.startDate)
-    events.push({ action: 'start_date', fromText: before.startDate, toText: after.startDate });
+    events.push({
+      action: 'start_date',
+      from: textSide(before.startDate),
+      to: textSide(after.startDate),
+    });
   if (before.dueDate !== after.dueDate)
-    events.push({ action: 'due_date', fromText: before.dueDate, toText: after.dueDate });
+    events.push({
+      action: 'due_date',
+      from: textSide(before.dueDate),
+      to: textSide(after.dueDate),
+    });
   const inserted = await recordActivity(after.id, events, actor);
 
   // Inbox notifications for the events with a dedicated notification type: a new

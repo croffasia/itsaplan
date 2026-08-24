@@ -78,7 +78,7 @@ describe('agent runner queue', () => {
     expect(feed.data!.items).toContainEqual(
       expect.objectContaining({
         action: 'agent_finished',
-        subject: 'failed',
+        payload: { subject: { value: 'failed' } },
         actorUserId: agent.userId,
       }),
     );

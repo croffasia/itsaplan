@@ -56,11 +56,13 @@ interface StateChange {
 
 async function readStateChange(activityId: number): Promise<StateChange | null> {
   const [row] = await db
-    .select({ fromText: issueActivity.fromText, toText: issueActivity.toText })
+    .select({ payload: issueActivity.payload })
     .from(issueActivity)
     .where(eq(issueActivity.id, activityId));
-  if (!row?.fromText || !row.toText) return null;
-  return { from: row.fromText, to: row.toText };
+  const from = row?.payload.from?.value;
+  const to = row?.payload.to?.value;
+  if (!from || !to) return null;
+  return { from, to };
 }
 
 // Email copy, addressed to the recipient in the second person.

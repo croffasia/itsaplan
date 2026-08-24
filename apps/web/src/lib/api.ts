@@ -1473,9 +1473,7 @@ export interface ActivityItem {
   actorName: string | null;
   body: string | null;
   action: ActivityAction | null;
-  subject: string | null;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload;
   createdAt: string;
 }
 
@@ -1596,10 +1594,8 @@ export interface Attachment {
   url: string;
 }
 
-// `action` selects how the UI renders an activity row; from_text/to_text are
-// display-ready value snapshots (column/label/type/assignee name, raw priority,
-// ISO date, or the new text of a long field). `subject` names the changed
-// sub-item where the action alone is not enough (the custom field name for 'field').
+// `action` selects how the UI renders an activity row; the payload carries what
+// changed (see ActivityPayload).
 export type ActivityAction =
   | 'created'
   | 'title'
@@ -1633,8 +1629,30 @@ export type ActivityAction =
   | 'agent_started'
   | 'agent_finished';
 
-// One entry in an issue's timeline. kind selects which payload fields are set:
-// a 'comment' carries body; an 'activity' carries action/subject/fromText/toText.
+// One side of a change: the display-ready text snapshot (column/label/type/assignee
+// name, raw priority, ISO date, or the new text of a long field) and the id of the
+// row behind it when the side names one. A status side also carries the state type
+// its column had at the time, a pull request its repository and number.
+export interface ActivitySide {
+  value: string | null;
+  id?: number | string | null;
+  stateType?: string | null;
+  repo?: string;
+  number?: number;
+}
+
+// What an activity row says changed. `subject` names the sub-item where the action
+// alone is not enough (the custom field for 'field', the checklist of an item, the
+// relation of a link); `from` and `to` are the two sides of the change. A side the
+// action does not have is absent.
+export interface ActivityPayload {
+  subject?: ActivitySide;
+  from?: ActivitySide;
+  to?: ActivitySide;
+}
+
+// One entry in an issue's timeline. kind selects which fields are set: a 'comment'
+// carries body; an 'activity' carries action and payload.
 // actorName is the author/actor snapshot (null when it was never set).
 export interface FeedItem {
   id: number;
@@ -1646,9 +1664,7 @@ export interface FeedItem {
   actorName: string | null;
   body: string | null;
   action: ActivityAction | null;
-  subject: string | null;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload;
   createdAt: string;
 }
 
@@ -2128,9 +2144,7 @@ export interface InitiativeFeedItem {
   actorName: string | null;
   body: string | null;
   action: string | null;
-  subject: string | null;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload;
   createdAt: string;
   issueId: number | null;
   issueIdentifier: string | null;

@@ -2,7 +2,7 @@ import { db, issue, issueLink, project as projectTable } from '@repo/db';
 import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { HttpError } from '#shared/lib';
-import { recordActivityEntries, type ActivityInput } from './activity';
+import { recordActivityEntries, rowSide, textSide, type ActivityInput } from './activity';
 import { emitWebhookEvents } from '#modules/webhooks/emit';
 import { getIssues } from './service';
 
@@ -181,11 +181,19 @@ function historyEntries(
   return [
     {
       issueId: first.issueId,
-      event: { action, subject: first.subject, toText: second.identifier },
+      event: {
+        action,
+        subject: textSide(first.subject),
+        to: rowSide(second.identifier, second.issueId),
+      },
     },
     {
       issueId: second.issueId,
-      event: { action, subject: second.subject, toText: first.identifier },
+      event: {
+        action,
+        subject: textSide(second.subject),
+        to: rowSide(first.identifier, first.issueId),
+      },
     },
   ];
 }

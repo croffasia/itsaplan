@@ -309,27 +309,38 @@ describe('checklists', () => {
       await asOwner.checklists.items({ itemId: item.id }).delete();
 
       const feed = await asOwner.issues({ issueId: issue.id }).feed.get({ query: {} });
-      expect(feed.data!.items).toContainEqual(
-        expect.objectContaining({ action: 'checklist_add', toText: 'Release steps' }),
+      const entries = feed.data!.items;
+      expect(entries).toContainEqual(
+        expect.objectContaining({
+          action: 'checklist_add',
+          payload: { to: { value: 'Release steps', id: checklist.id } },
+        }),
       );
-      expect(feed.data!.items).toContainEqual(
+      expect(entries).toContainEqual(
         expect.objectContaining({
           action: 'checklist_item_add',
-          subject: 'Release steps',
-          toText: 'Tag the release',
+          payload: {
+            subject: { value: 'Release steps', id: checklist.id },
+            to: { value: 'Tag the release', id: item.id },
+          },
         }),
       );
-      expect(feed.data!.items).toContainEqual(
+      expect(entries).toContainEqual(
         expect.objectContaining({
           action: 'checklist_rename',
-          fromText: 'Release steps',
-          toText: 'Launch steps',
+          payload: {
+            from: { value: 'Release steps', id: checklist.id },
+            to: { value: 'Launch steps', id: checklist.id },
+          },
         }),
       );
-      expect(feed.data!.items).toContainEqual(
+      expect(entries).toContainEqual(
         expect.objectContaining({
           action: 'checklist_item_remove',
-          fromText: 'Tag the release',
+          payload: {
+            subject: { value: 'Launch steps', id: checklist.id },
+            from: { value: 'Tag the release', id: item.id },
+          },
         }),
       );
     });
@@ -341,7 +352,10 @@ describe('checklists', () => {
 
       const feed = await asOwner.issues({ issueId: issue.id }).feed.get({ query: {} });
       expect(feed.data!.items).toContainEqual(
-        expect.objectContaining({ action: 'checklist_remove', fromText: 'Release steps' }),
+        expect.objectContaining({
+          action: 'checklist_remove',
+          payload: { from: { value: 'Release steps', id: checklist.id } },
+        }),
       );
     });
 

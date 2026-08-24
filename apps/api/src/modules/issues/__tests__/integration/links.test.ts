@@ -194,16 +194,20 @@ describe('issue links', () => {
       expect(sourceFeed.data!.items).toContainEqual(
         expect.objectContaining({
           action: 'link_add',
-          subject: 'blocks',
-          toText: second.identifier,
+          payload: {
+            subject: { value: 'blocks' },
+            to: { value: second.identifier, id: second.id },
+          },
         }),
       );
       const targetFeed = await asOwner.issues({ issueId: second.id }).feed.get({ query: {} });
       expect(targetFeed.data!.items).toContainEqual(
         expect.objectContaining({
           action: 'link_add',
-          subject: 'blocked_by',
-          toText: first.identifier,
+          payload: {
+            subject: { value: 'blocked_by' },
+            to: { value: first.identifier, id: first.id },
+          },
         }),
       );
     });
@@ -316,16 +320,20 @@ describe('issue links', () => {
       expect(sourceFeed.data!.items).toContainEqual(
         expect.objectContaining({
           action: 'link_remove',
-          subject: 'duplicates',
-          toText: second.identifier,
+          payload: {
+            subject: { value: 'duplicates' },
+            to: { value: second.identifier, id: second.id },
+          },
         }),
       );
       const targetFeed = await asOwner.issues({ issueId: second.id }).feed.get({ query: {} });
       expect(targetFeed.data!.items).toContainEqual(
         expect.objectContaining({
           action: 'link_remove',
-          subject: 'duplicated_by',
-          toText: first.identifier,
+          payload: {
+            subject: { value: 'duplicated_by' },
+            to: { value: first.identifier, id: first.id },
+          },
         }),
       );
     });

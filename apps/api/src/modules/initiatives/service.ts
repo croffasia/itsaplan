@@ -1,6 +1,6 @@
 import { db, initiative, initiativeLabel, issue, label, projectColumn, user } from '@repo/db';
 import { and, asc, desc, eq, ilike, inArray, or, sql } from 'drizzle-orm';
-import { labelNames } from '#modules/issues/activity';
+import { labelNames, rowSide } from '#modules/issues/activity';
 import { getMembership } from '#modules/members/service';
 import { HttpError, iso, num } from '#shared/lib';
 import { computeHealth, type Health } from './health';
@@ -454,8 +454,8 @@ async function setInitiativeLabels(
   const names = await labelNames(projectId, [...added, ...removed]);
   const events = [];
   for (const labelId of added)
-    events.push({ action: 'label_add', toText: names.get(labelId) ?? null });
+    events.push({ action: 'label_add', to: rowSide(names.get(labelId), labelId) });
   for (const labelId of removed)
-    events.push({ action: 'label_remove', fromText: names.get(labelId) ?? null });
+    events.push({ action: 'label_remove', from: rowSide(names.get(labelId), labelId) });
   await recordActivity(initiativeId, events, actorUserId);
 }

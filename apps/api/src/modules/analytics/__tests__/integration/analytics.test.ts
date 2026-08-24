@@ -43,8 +43,8 @@ async function createIssue(
   return res.data;
 }
 
-// Moving an issue to another column writes a "status" activity whose toText is the
-// destination column name — the signal closed/throughput metrics read.
+// Moving an issue to another column writes a "status" activity carrying the state
+// type of the destination — the signal closed/throughput metrics read.
 function moveIssue(asOwner: Api, issueId: number, columnId: number) {
   return asOwner.issues({ issueId }).patch({ columnId });
 }
@@ -110,6 +110,21 @@ describe('analytics', () => {
 
       const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
       expect(res.data?.closedLast7d).toBe(1);
+    });
+
+    it('keeps counting a closing after its column is renamed', async () => {
+      const { asOwner, col } = await setupProject();
+      const issue = await createIssue(asOwner, col.started);
+      await moveIssue(asOwner, issue.id, col.completed);
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: col.completed })
+        .patch({ name: 'Shipped' });
+
+      const res = await asOwner.projects({ projectKey: 'MKT' }).analytics.stats.get();
+      expect(res.data?.closedLast7d).toBe(1);
+      const throughput = await asOwner.projects({ projectKey: 'MKT' }).analytics.throughput.get();
+      expect(throughput.data?.[0]).toMatchObject({ closed: 1 });
     });
   });
 
@@ -352,7 +367,10 @@ describe('analytics', () => {
         .projects({ projectKey: 'MKT' })
         .analytics.activity.get({ query: { action: 'status' } });
       expect(status.data?.items).toHaveLength(1);
-      expect(status.data?.items[0]).toMatchObject({ action: 'status', toText: 'Done' });
+      expect(status.data?.items[0]).toMatchObject({
+        action: 'status',
+        payload: { to: { value: 'Done', id: col.completed, stateType: 'completed' } },
+      });
 
       const created = await asOwner
         .projects({ projectKey: 'MKT' })

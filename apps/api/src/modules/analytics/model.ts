@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { ActivityPayloadResponse } from '#shared/activity';
 
 export const StatsDto = t.Object({
   open: t.Number(),
@@ -37,9 +38,7 @@ const ActivityItem = t.Object({
   actorName: t.Nullable(t.String()),
   body: t.Nullable(t.String()),
   action: t.Nullable(t.String()),
-  subject: t.Nullable(t.String()),
-  fromText: t.Nullable(t.String()),
-  toText: t.Nullable(t.String()),
+  payload: ActivityPayloadResponse,
   createdAt: t.String(),
 });
 

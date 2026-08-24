@@ -61,48 +61,42 @@ export default function InitiativeFeedRow({
   // issue-source rows describe the issue change (the issue is named separately).
   const describe = (a: InitiativeFeedItem): string => {
     const onInitiative = a.source === 'initiative';
+    const from = a.payload.from?.value ?? null;
+    const to = a.payload.to?.value ?? null;
     switch (a.action) {
       case 'created':
         return onInitiative ? t('createdInitiative') : t('createdIssue');
       case 'title':
-        return t('renamed', { title: a.toText ?? '' });
+        return t('renamed', { title: to ?? '' });
       case 'description':
-        return a.toText ? t('descriptionUpdated') : t('descriptionCleared');
+        return to ? t('descriptionUpdated') : t('descriptionCleared');
       case 'status':
-        if (onInitiative) return t('statusSet', { status: statusLabel(a.toText) ?? '' });
-        return a.fromText
-          ? t('statusMoved', { from: a.fromText, to: a.toText ?? '' })
-          : t('statusSet', { status: a.toText ?? '' });
+        if (onInitiative) return t('statusSet', { status: statusLabel(to) ?? '' });
+        return from
+          ? t('statusMoved', { from, to: to ?? '' })
+          : t('statusSet', { status: to ?? '' });
       case 'priority':
-        return a.toText
-          ? t('prioritySet', { priority: priorityLabel(a.toText) })
-          : t('priorityRemoved');
+        return to ? t('prioritySet', { priority: priorityLabel(to) }) : t('priorityRemoved');
       case 'owner':
-        return a.toText
-          ? t('ownerSet', { name: a.toText })
-          : t('ownerRemoved', { name: a.fromText ?? '' });
+        return to ? t('ownerSet', { name: to }) : t('ownerRemoved', { name: from ?? '' });
       case 'assignee':
-        return a.toText
-          ? t('assigneeSet', { name: a.toText })
-          : t('assigneeRemoved', { name: a.fromText ?? '' });
+        return to ? t('assigneeSet', { name: to }) : t('assigneeRemoved', { name: from ?? '' });
       case 'delegate':
-        return a.toText
-          ? t('delegateSet', { name: a.toText })
-          : t('delegateRemoved', { name: a.fromText ?? '' });
+        return to ? t('delegateSet', { name: to }) : t('delegateRemoved', { name: from ?? '' });
       case 'target_date':
-        return a.toText ? t('targetDateSet', { date: fmtDate(a.toText) }) : t('targetDateRemoved');
+        return to ? t('targetDateSet', { date: fmtDate(to) }) : t('targetDateRemoved');
       case 'start_date':
-        return a.toText ? t('startDateSet', { date: fmtDate(a.toText) }) : t('startDateRemoved');
+        return to ? t('startDateSet', { date: fmtDate(to) }) : t('startDateRemoved');
       case 'due_date':
-        return a.toText ? t('dueDateSet', { date: fmtDate(a.toText) }) : t('dueDateRemoved');
+        return to ? t('dueDateSet', { date: fmtDate(to) }) : t('dueDateRemoved');
       case 'label_add':
-        return t('labelAdded', { label: a.toText ?? '' });
+        return t('labelAdded', { label: to ?? '' });
       case 'label_remove':
-        return t('labelRemoved', { label: a.fromText ?? '' });
+        return t('labelRemoved', { label: from ?? '' });
       case 'type':
-        return a.toText ? t('typeSet', { type: a.toText }) : t('typeRemoved');
+        return to ? t('typeSet', { type: to }) : t('typeRemoved');
       case 'initiative':
-        return a.toText ? t('linked', { name: a.toText }) : t('unlinked');
+        return to ? t('linked', { name: to }) : t('unlinked');
       default:
         return a.action ?? '';
     }

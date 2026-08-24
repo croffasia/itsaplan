@@ -9,6 +9,7 @@ import {
   agentRun,
   webhook,
   webhookDelivery,
+  type ActivityPayload,
 } from '@repo/db';
 import { and, desc, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
@@ -19,17 +20,10 @@ import { iso } from '#shared/lib';
 // and date_trunc; counts are cast to int (Postgres count() returns bigint, which
 // would otherwise arrive as a string).
 
-// The names of a project's completed-type columns. "Closed" work is detected in
-// the activity log by matching a status change's to_text (a column-name snapshot)
-// against these. Correct until a completed column is renamed; acceptable for the
-// rolling windows the dashboards show. Historical CFD reconstruction is out of scope.
-async function completedColumnNames(projectId: number): Promise<string[]> {
-  const rows = await db
-    .select({ name: projectColumn.name })
-    .from(projectColumn)
-    .where(and(eq(projectColumn.projectId, projectId), eq(projectColumn.stateType, 'completed')));
-  return rows.map((r) => r.name);
-}
+// "Closed" work is a status change into a completed column, read from the state type
+// the entry recorded at the moment of the move. Renaming a column later does not
+// change what is counted.
+const CLOSED = sql`${issueActivity.action} = 'status' and ${issueActivity.payload} -> 'to' ->> 'stateType' = 'completed'`;
 
 // --- Stats -----------------------------------------------------------------------
 
@@ -75,23 +69,17 @@ export async function getStats(projectId: number): Promise<StatsDto> {
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
     .where(and(eq(issue.projectId, projectId), isNull(issue.assigneeUserId), OPEN_STATES));
 
-  const completed = await completedColumnNames(projectId);
-  let closedLast7d = 0;
-  if (completed.length) {
-    const [{ closed }] = await db
-      .select({ closed: sql<number>`count(*)::int` })
-      .from(issueActivity)
-      .innerJoin(issue, eq(issue.id, issueActivity.issueId))
-      .where(
-        and(
-          eq(issue.projectId, projectId),
-          eq(issueActivity.action, 'status'),
-          inArray(issueActivity.toText, completed),
-          sql`${issueActivity.createdAt} >= now() - interval '7 days'`,
-        ),
-      );
-    closedLast7d = closed;
-  }
+  const [{ closedLast7d }] = await db
+    .select({ closedLast7d: sql<number>`count(*)::int` })
+    .from(issueActivity)
+    .innerJoin(issue, eq(issue.id, issueActivity.issueId))
+    .where(
+      and(
+        eq(issue.projectId, projectId),
+        CLOSED,
+        sql`${issueActivity.createdAt} >= now() - interval '7 days'`,
+      ),
+    );
 
   return { open, inProgress, backlog, overdue, unassigned, closedLast7d };
 }
@@ -309,16 +297,11 @@ export interface ThroughputWeek {
 }
 
 export async function getThroughput(projectId: number, weeks: number): Promise<ThroughputWeek[]> {
-  const completed = await completedColumnNames(projectId);
-  const closedCond = completed.length
-    ? and(eq(issueActivity.action, 'status'), inArray(issueActivity.toText, completed))
-    : sql`false`;
-
   const rows = await db
     .select({
       week: sql<string>`to_char(date_trunc('week', ${issueActivity.createdAt}), 'YYYY-MM-DD')`,
       created: sql<number>`(count(*) filter (where ${issueActivity.action} = 'created'))::int`,
-      closed: sql<number>`(count(*) filter (where ${closedCond}))::int`,
+      closed: sql<number>`(count(*) filter (where ${CLOSED}))::int`,
     })
     .from(issueActivity)
     .innerJoin(issue, eq(issue.id, issueActivity.issueId))
@@ -350,9 +333,7 @@ export interface ActivityItem {
   actorName: string | null;
   body: string | null;
   action: string | null;
-  subject: string | null;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload;
   createdAt: string;
 }
 
@@ -401,9 +382,7 @@ export async function listActivity(
       actorName: issueActivity.actorName,
       body: issueActivity.body,
       action: issueActivity.action,
-      subject: issueActivity.subject,
-      fromText: issueActivity.fromText,
-      toText: issueActivity.toText,
+      payload: issueActivity.payload,
       createdAt: issueActivity.createdAt,
       cursorTs: sql<string>`${issueActivity.createdAt}::text`,
     })
@@ -429,9 +408,7 @@ export async function listActivity(
       actorName: row.actorName,
       body: row.body,
       action: row.action,
-      subject: row.subject,
-      fromText: row.fromText,
-      toText: row.toText,
+      payload: row.payload,
       createdAt: iso(row.createdAt),
     })),
     nextCursor: hasMore && last ? { ts: last.cursorTs, id: last.id } : null,

@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
+import { ActivityPayloadResponse } from '#shared/activity';
 
 // The initiative lifecycle enum, validated at the edge so an invalid value is a
 // 400 (not a Postgres CHECK violation → 500). Mirrors the DB check constraint.
@@ -91,9 +92,7 @@ const FeedItemResponse = t.Object({
   actorName: t.Nullable(t.String()),
   body: t.Nullable(t.String()),
   action: t.Nullable(t.String()),
-  subject: t.Nullable(t.String()),
-  fromText: t.Nullable(t.String()),
-  toText: t.Nullable(t.String()),
+  payload: ActivityPayloadResponse,
   createdAt: t.String(),
   issueId: t.Nullable(t.Number()),
   issueIdentifier: t.Nullable(t.String()),

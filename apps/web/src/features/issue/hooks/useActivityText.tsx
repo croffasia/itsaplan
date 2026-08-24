@@ -15,6 +15,11 @@ const fmtDate = (v: string | null) => (v ? formatDate(v) : '');
 const isLong = (text: string | null): text is string =>
   !!text && (text.length > 80 || text.includes('\n'));
 
+// A custom field value shares its row with the field name as well as the actor, so
+// it runs out of width sooner than a title does — a datetime range already wraps.
+const isLongValue = (text: string | null): text is string =>
+  !!text && (text.length > 40 || text.includes('\n'));
+
 // The verb phrase for one activity event (everything after the actor's name),
 // with a popover node when the change carries a long value worth expanding. The
 // changed values are wrapped in <v>, which reads slightly brighter than the
@@ -29,6 +34,9 @@ export function useActivityText() {
     isLinkRelation(subject) ? phrase(subject) : t('linkedTo');
 
   return function describeActivity(a: FeedItem): { line: ReactNode; popover?: string } {
+    const subject = a.payload.subject?.value ?? null;
+    const from = a.payload.from?.value ?? null;
+    const to = a.payload.to?.value ?? null;
     const line = (key: string, values: Record<string, string> = {}): ReactNode =>
       byKey(t)(key, values) as unknown as ReactNode;
     const rich = (key: string, values: Record<string, string> = {}): ReactNode =>
@@ -41,98 +49,92 @@ export function useActivityText() {
       case 'created':
         return { line: line('created') };
       case 'title':
-        return isLong(a.toText)
-          ? { line: line('titleChanged'), popover: a.toText }
-          : { line: rich('renamed', { title: a.toText ?? '' }) };
+        return isLong(to)
+          ? { line: line('titleChanged'), popover: to }
+          : { line: rich('renamed', { title: to ?? '' }) };
       case 'description':
-        return a.toText
-          ? { line: line('descriptionUpdated'), popover: a.toText }
+        return to
+          ? { line: line('descriptionUpdated'), popover: to }
           : { line: line('descriptionCleared') };
       case 'status':
-        return a.fromText
-          ? { line: rich('statusMoved', { from: a.fromText, to: a.toText ?? '' }) }
-          : { line: rich('statusSet', { status: a.toText ?? '' }) };
+        return from
+          ? { line: rich('statusMoved', { from, to: to ?? '' }) }
+          : { line: rich('statusSet', { status: to ?? '' }) };
       case 'assignee':
-        if (!a.toText) return { line: rich('assigneeRemoved', { name: a.fromText ?? '' }) };
+        if (!to) return { line: rich('assigneeRemoved', { name: from ?? '' }) };
         return {
-          line: rich(a.fromText ? 'assigneeChanged' : 'assigneeSet', { name: a.toText }),
+          line: rich(from ? 'assigneeChanged' : 'assigneeSet', { name: to }),
         };
       case 'delegate':
-        if (!a.toText) return { line: rich('delegateRemoved', { name: a.fromText ?? '' }) };
+        if (!to) return { line: rich('delegateRemoved', { name: from ?? '' }) };
         return {
-          line: rich(a.fromText ? 'delegateChanged' : 'delegateSet', { name: a.toText }),
+          line: rich(from ? 'delegateChanged' : 'delegateSet', { name: to }),
         };
       case 'priority':
-        return a.toText
-          ? { line: rich('prioritySet', { priority: priorityLabel(a.toText) }) }
+        return to
+          ? { line: rich('prioritySet', { priority: priorityLabel(to) }) }
           : { line: line('priorityRemoved') };
       case 'type':
-        return a.toText
-          ? { line: rich('typeSet', { type: a.toText }) }
-          : { line: line('typeRemoved') };
+        return to ? { line: rich('typeSet', { type: to }) } : { line: line('typeRemoved') };
       case 'cycle':
-        if (!a.toText) return { line: rich('cycleRemoved', { cycle: a.fromText ?? '' }) };
+        if (!to) return { line: rich('cycleRemoved', { cycle: from ?? '' }) };
         return {
-          line: a.fromText
-            ? rich('cycleMoved', { from: a.fromText, to: a.toText })
-            : rich('cycleSet', { cycle: a.toText }),
+          line: from ? rich('cycleMoved', { from, to }) : rich('cycleSet', { cycle: to }),
         };
       case 'start_date':
-        return a.toText
-          ? { line: rich('startDateSet', { date: fmtDate(a.toText) }) }
+        return to
+          ? { line: rich('startDateSet', { date: fmtDate(to) }) }
           : { line: line('startDateRemoved') };
       case 'due_date':
-        return a.toText
-          ? { line: rich('dueDateSet', { date: fmtDate(a.toText) }) }
+        return to
+          ? { line: rich('dueDateSet', { date: fmtDate(to) }) }
           : { line: line('dueDateRemoved') };
       case 'label_add':
-        return { line: rich('labelAdded', { label: a.toText ?? '' }) };
+        return { line: rich('labelAdded', { label: to ?? '' }) };
       case 'label_remove':
-        return { line: rich('labelRemoved', { label: a.fromText ?? '' }) };
+        return { line: rich('labelRemoved', { label: from ?? '' }) };
       case 'link_add':
         return {
-          line: rich('linkAdded', { relation: linkPhrase(a.subject), issue: a.toText ?? '' }),
+          line: rich('linkAdded', { relation: linkPhrase(subject), issue: to ?? '' }),
         };
       case 'link_remove':
         return {
-          line: rich('linkRemoved', { relation: linkPhrase(a.subject), issue: a.toText ?? '' }),
+          line: rich('linkRemoved', { relation: linkPhrase(subject), issue: to ?? '' }),
         };
       case 'parent':
-        if (!a.toText) return { line: rich('parentDetached', { parent: a.fromText ?? '' }) };
+        if (!to) return { line: rich('parentDetached', { parent: from ?? '' }) };
         return {
-          line: a.fromText
-            ? rich('parentMoved', { from: a.fromText, to: a.toText })
-            : rich('parentSet', { parent: a.toText }),
+          line: from ? rich('parentMoved', { from, to }) : rich('parentSet', { parent: to }),
         };
       case 'subtask_add':
-        return { line: rich('subtaskAdded', { subtask: a.toText ?? '' }) };
+        return { line: rich('subtaskAdded', { subtask: to ?? '' }) };
       case 'subtask_remove':
-        return { line: rich('subtaskRemoved', { subtask: a.fromText ?? '' }) };
+        return { line: rich('subtaskRemoved', { subtask: from ?? '' }) };
       case 'checklist_add':
-        return { line: rich('checklistAdded', { checklist: a.toText ?? '' }) };
+        return { line: rich('checklistAdded', { checklist: to ?? '' }) };
       case 'checklist_rename':
         return {
-          line: rich('checklistRenamed', { from: a.fromText ?? '', to: a.toText ?? '' }),
+          line: rich('checklistRenamed', { from: from ?? '', to: to ?? '' }),
         };
       case 'checklist_remove':
-        return { line: rich('checklistRemoved', { checklist: a.fromText ?? '' }) };
+        return { line: rich('checklistRemoved', { checklist: from ?? '' }) };
       case 'checklist_item_add':
         return {
-          line: rich('checklistItemAdded', { item: a.toText ?? '', checklist: a.subject ?? '' }),
+          line: rich('checklistItemAdded', { item: to ?? '', checklist: subject ?? '' }),
         };
       case 'checklist_item_remove':
         return {
           line: rich('checklistItemRemoved', {
-            item: a.fromText ?? '',
-            checklist: a.subject ?? '',
+            item: from ?? '',
+            checklist: subject ?? '',
           }),
         };
       case 'field':
-        if (isLong(a.toText))
-          return { line: rich('fieldUpdated', { field: a.subject ?? '' }), popover: a.toText };
-        return a.toText
-          ? { line: rich('fieldSet', { field: a.subject ?? '', value: a.toText }) }
-          : { line: rich('fieldCleared', { field: a.subject ?? '' }) };
+        if (isLongValue(to))
+          return { line: rich('fieldUpdated', { field: subject ?? '' }), popover: to };
+        return to
+          ? { line: rich('fieldSet', { field: subject ?? '', value: to }) }
+          : { line: rich('fieldCleared', { field: subject ?? '' }) };
       case 'archived':
         return { line: line('archived') };
       case 'restored':
@@ -140,15 +142,15 @@ export function useActivityText() {
       case 'agent_started':
         return { line: line('agentStarted') };
       case 'agent_finished':
-        return { line: line(a.subject === 'failed' ? 'agentFailed' : 'agentFinished') };
+        return { line: line(subject === 'failed' ? 'agentFailed' : 'agentFinished') };
       case 'git_pr':
       case 'github_pr': {
-        // fromText is "owner/repo#42", toText the pull request's URL.
-        const key = a.subject === 'merged' ? 'pullRequestMerged' : 'pullRequestOpened';
+        // The from side is "owner/repo#42", the to side the pull request's URL.
+        const key = subject === 'merged' ? 'pullRequestMerged' : 'pullRequestOpened';
         const pr = (chunks: ReactNode) =>
-          a.toText ? (
+          to ? (
             <a
-              href={a.toText}
+              href={to}
               target="_blank"
               rel="noreferrer"
               className="text-foreground/70 underline underline-offset-2 hover:text-foreground"
@@ -161,7 +163,7 @@ export function useActivityText() {
         return {
           line: (t.rich as unknown as (k: string, vals: Record<string, unknown>) => ReactNode)(
             key,
-            { pr: a.fromText ?? '', v: pr },
+            { pr: from ?? '', v: pr },
           ),
         };
       }

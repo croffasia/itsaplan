@@ -1,6 +1,7 @@
-import { db, issue, issueActivity, project, user } from '@repo/db';
+import { db, issue, issueActivity, project, type ActivityPayload } from '@repo/db';
 import { and, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
+import { textSide, userName, userSide, type ActivityInput } from '#modules/issues/activity';
 
 // An initiative's activity feed merges two kinds of rows from issue_activity:
 // events of the initiative itself (initiative_id set) and the activity of the
@@ -20,9 +21,7 @@ export interface InitiativeFeedItemRow {
   actorName: string | null;
   body: string | null;
   action: string | null;
-  subject: string | null;
-  fromText: string | null;
-  toText: string | null;
+  payload: ActivityPayload;
   createdAt: string;
   // Set only for 'issue' rows, so the UI can link the entry to its issue.
   issueId: number | null;
@@ -62,9 +61,7 @@ export async function listFeed(
       actorName: issueActivity.actorName,
       body: issueActivity.body,
       action: issueActivity.action,
-      subject: issueActivity.subject,
-      fromText: issueActivity.fromText,
-      toText: issueActivity.toText,
+      payload: issueActivity.payload,
       createdAt: issueActivity.createdAt,
       cursorTs: sql<string>`${issueActivity.createdAt}::text`,
       seq: issue.sequenceNumber,
@@ -99,9 +96,7 @@ export async function listFeed(
       actorName: row.actorName,
       body: row.body,
       action: row.action,
-      subject: row.subject,
-      fromText: row.fromText,
-      toText: row.toText,
+      payload: row.payload,
       createdAt: iso(row.createdAt),
       issueId: row.issueId,
       issueIdentifier: row.seq != null && row.projectKey ? `${row.projectKey}-${row.seq}` : null,
@@ -114,19 +109,6 @@ export async function listFeed(
 // recordActivity writes initiative-level change-log entries (kind 'activity',
 // initiative_id set). The initiative mutation functions call it.
 
-export interface ActivityInput {
-  action: string;
-  subject?: string | null;
-  fromText?: string | null;
-  toText?: string | null;
-}
-
-async function userName(id: string | null): Promise<string | null> {
-  if (id == null) return null;
-  const rows = await db.select({ name: user.name }).from(user).where(eq(user.id, id));
-  return rows[0]?.name ?? null;
-}
-
 export async function recordActivity(
   initiativeId: number,
   events: ActivityInput[],
@@ -136,16 +118,14 @@ export async function recordActivity(
   const resolvedActorId = actorUserId ?? null;
   const actorName = await userName(resolvedActorId);
   await db.insert(issueActivity).values(
-    events.map((e) => ({
+    events.map(({ action, ...payload }) => ({
       issueId: null,
       initiativeId,
       kind: 'activity' as const,
       actorUserId: resolvedActorId,
       actorName,
-      action: e.action,
-      subject: e.subject ?? null,
-      fromText: e.fromText ?? null,
-      toText: e.toText ?? null,
+      action,
+      payload,
     })),
   );
 }
@@ -172,22 +152,34 @@ export async function logInitiativeUpdate(
 ): Promise<void> {
   const events: ActivityInput[] = [];
   if (before.title !== after.title)
-    events.push({ action: 'title', fromText: before.title, toText: after.title });
+    events.push({ action: 'title', from: textSide(before.title), to: textSide(after.title) });
   if (before.description !== after.description)
-    events.push({ action: 'description', toText: after.description });
+    events.push({ action: 'description', to: textSide(after.description) });
   if (before.status !== after.status)
-    events.push({ action: 'status', fromText: before.status, toText: after.status });
+    events.push({ action: 'status', from: textSide(before.status), to: textSide(after.status) });
   if (before.ownerUserId !== after.ownerUserId)
     events.push({
       action: 'owner',
-      fromText: await userName(before.ownerUserId),
-      toText: await userName(after.ownerUserId),
+      from: await userSide(before.ownerUserId),
+      to: await userSide(after.ownerUserId),
     });
   if ((before.priority ?? '') !== (after.priority ?? ''))
-    events.push({ action: 'priority', fromText: before.priority, toText: after.priority });
+    events.push({
+      action: 'priority',
+      from: textSide(before.priority),
+      to: textSide(after.priority),
+    });
   if (before.startDate !== after.startDate)
-    events.push({ action: 'start_date', fromText: before.startDate, toText: after.startDate });
+    events.push({
+      action: 'start_date',
+      from: textSide(before.startDate),
+      to: textSide(after.startDate),
+    });
   if (before.targetDate !== after.targetDate)
-    events.push({ action: 'target_date', fromText: before.targetDate, toText: after.targetDate });
+    events.push({
+      action: 'target_date',
+      from: textSide(before.targetDate),
+      to: textSide(after.targetDate),
+    });
   await recordActivity(after.id, events, actorUserId);
 }

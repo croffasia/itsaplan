@@ -19,6 +19,10 @@ on:
         description: The release tag to build, e.g. v0.10.1
         required: true
         type: string
+  # TEMPORARY: exercises this workflow before it reaches main, where the manual
+  # trigger first becomes available. Remove before merging.
+  push:
+    branches: [ghcr-images]
 
 env:
   REGISTRY: ghcr.io
@@ -103,7 +107,7 @@ jobs:
       - name: Tag the manifest
         env:
           IMAGE: ${{ env.REGISTRY }}/${{ github.repository }}-${{ matrix.service }}
-          TAG: ${{ inputs.tag }}
+          TAG: ${{ inputs.tag || 'v0.0.0-test' }}
         run: |
           set -euo pipefail
           version=${TAG#v}

@@ -541,12 +541,12 @@ describe('projects', () => {
     // MCP toggle. A test forges it to exercise that path without going through /mcp.
     const asMcp = { headers: { 'x-mcp-loopback': '1' } };
 
-    it('defaults a new project to MCP disabled', async () => {
+    it('defaults a new project to the instance project default (MCP on)', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
 
       const view = await viewOf(api, 'MKT');
-      expect(view.data?.project.mcpEnabled).toBe(false);
+      expect(view.data?.project.mcpEnabled).toBe(true);
     });
 
     it('lets an owner enable then disable MCP for the project', async () => {
@@ -578,6 +578,7 @@ describe('projects', () => {
     it('blocks an MCP call to a project with MCP disabled, but not a web call', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await api.projects({ projectKey: 'MKT' }).settings.patch({ mcpEnabled: false });
 
       // Web request (no MCP marker) reaches the disabled project fine.
       expect((await api.projects({ projectKey: 'MKT' }).get()).status).toBe(200);
@@ -598,6 +599,7 @@ describe('projects', () => {
     it('blocks an MCP call on an entity-by-id route of a disabled project', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await api.projects({ projectKey: 'MKT' }).settings.patch({ mcpEnabled: false });
       const backlog = (await viewOf(api, 'MKT')).data!.columns.find((c) => c.name === 'Backlog')!;
       const issue = (
         await api
@@ -614,7 +616,7 @@ describe('projects', () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'ON', name: 'Enabled' });
       await api.projects.post({ key: 'OFF', name: 'Disabled' });
-      await api.projects({ projectKey: 'ON' }).settings.patch({ mcpEnabled: true });
+      await api.projects({ projectKey: 'OFF' }).settings.patch({ mcpEnabled: false });
 
       // A web list shows both; an MCP list shows only the enabled project.
       expect((await api.projects.get()).data?.map((p) => p.key).sort()).toEqual(['OFF', 'ON']);
@@ -623,13 +625,13 @@ describe('projects', () => {
   });
 
   describe('settings', () => {
-    it('defaults a new project to MCP off', async () => {
+    it('defaults a new project to the instance project default (MCP on)', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
 
       const res = await api.projects({ projectKey: 'MKT' }).settings.get();
       expect(res.status).toBe(200);
-      expect(res.data).toMatchObject({ mcpEnabled: false });
+      expect(res.data).toMatchObject({ mcpEnabled: true });
     });
 
     it('starts a new project with every optional section enabled', async () => {

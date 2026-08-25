@@ -977,6 +977,10 @@ export interface NotificationSettingsPatch {
 
 // The instance upload limits. Readable by any signed-in user, because the upload UI
 // states them before a file is picked; only god mode can change them.
+export interface ProjectDefaults {
+  mcpEnabled: boolean;
+}
+
 export interface StorageSettings {
   maxAttachmentMb: number;
   maxAvatarMb: number;
@@ -3399,6 +3403,13 @@ export const api = {
   // instance owner is the one who upgrades.
   getUpdateStatus: () => request<UpdateStatus>('/god/updates'),
   checkForUpdates: () => request<UpdateStatus>('/god/updates/check', { method: 'POST' }),
+
+  getInstanceProjectDefaults: () => request<ProjectDefaults>('/god/project-defaults'),
+  updateInstanceProjectDefaults: (body: ProjectDefaults) =>
+    request<ProjectDefaults>('/god/project-defaults', {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    }),
 
   getInstanceStorageSettings: () => request<StorageSettings>('/god/storage-settings'),
   updateInstanceStorageSettings: (patch: StorageSettingsPatch) =>

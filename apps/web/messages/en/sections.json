@@ -19,6 +19,10 @@
       "label": "Projects",
       "description": "Every project on this instance: what each one holds, when it was last active, and who can reach it."
     },
+    "general": {
+      "label": "General",
+      "description": "The instance-wide defaults a new project starts with. Each one stays editable per project afterwards."
+    },
     "authentication": {
       "label": "Authentication",
       "description": "Who may register on this instance, how accounts are confirmed, and the providers people sign in with."

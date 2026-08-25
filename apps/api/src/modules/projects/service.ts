@@ -17,6 +17,7 @@ import {
 } from '#shared/permissions';
 import { getProjectSetting, setProjectSetting } from '#shared/project-settings';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
+import { getProjectDefaults } from '#modules/settings/service';
 
 // Data access for projects: the top-level container that groups its own columns,
 // issue types, labels, assignees, custom fields, issues, saved views, and
@@ -235,10 +236,18 @@ export async function createProject(
   },
   ownerId: string,
 ): Promise<ProjectRow> {
+  // What a new project starts with, set instance-wide in god mode. Read before the
+  // transaction opens so the settings lookup is not part of it.
+  const defaults = await getProjectDefaults();
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(project)
-      .values({ key: input.key, name: input.name, description: input.description ?? '' })
+      .values({
+        key: input.key,
+        name: input.name,
+        description: input.description ?? '',
+        mcpEnabled: defaults.mcpEnabled,
+      })
       .returning();
     await tx.insert(projectMember).values({ projectId: row.id, userId: ownerId, role: 'owner' });
     // Every project starts with a default "Member" role, assigned to members that

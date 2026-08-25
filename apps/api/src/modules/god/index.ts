@@ -49,10 +49,13 @@ import {
   setStorageSettings,
   getHotkeySettings,
   setHotkeySettings,
+  getProjectDefaults,
+  setProjectDefaults,
 } from '#modules/settings/service';
 import { getUpdateStatus } from '#modules/settings/updates';
 import {
   HotkeyCombosSchema,
+  ProjectDefaultsSchema,
   StorageSettingsSchema,
   UpdateStatusSchema,
 } from '#modules/settings/model';
@@ -180,6 +183,24 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       summary: 'Update storage limits',
       description:
         'Update the instance upload limits. They apply to new uploads only; files already stored are untouched.',
+    },
+  })
+
+  .get('/god/project-defaults', () => getProjectDefaults(), {
+    response: { 200: ProjectDefaultsSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get project defaults',
+      description: 'Get what a newly created project starts with on this instance.',
+    },
+  })
+
+  .put('/god/project-defaults', ({ body }) => setProjectDefaults(body), {
+    body: ProjectDefaultsSchema,
+    response: { 200: ProjectDefaultsSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update project defaults',
+      description:
+        'Update what a newly created project starts with. Projects that already exist are untouched; each setting stays editable per project.',
     },
   })
 

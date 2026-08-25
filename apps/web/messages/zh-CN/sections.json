@@ -19,6 +19,10 @@
       "label": "项目",
       "description": "此实例中的所有项目，包括项目内容、最近活动时间和访问成员。"
     },
+    "general": {
+      "label": "General",
+      "description": "The instance-wide defaults a new project starts with. Each one stays editable per project afterwards."
+    },
     "authentication": {
       "label": "身份验证",
       "description": "设置谁可以注册、如何验证账户以及可用的外部登录提供商。"

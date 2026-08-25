@@ -68,6 +68,19 @@ describe('integrations', () => {
     expect(res.data).toMatchObject({ integrationKey: 'jina' });
   });
 
+  it('stores a Gitea credential, showing the URL and masking the token', async () => {
+    const { asOwner } = await setup();
+    const res = await integrations(asOwner).post({
+      integrationKey: 'gitea',
+      credential: { baseUrl: 'https://git.example.com', token: 'token-secret-abcd' },
+    });
+    expect(res.status).toBe(201);
+    expect(res.data!.redacted).toMatchObject({
+      baseUrl: 'https://git.example.com',
+      token: '••••abcd',
+    });
+  });
+
   it('rejects an unknown integration', async () => {
     const { asOwner } = await setup();
     const res = await integrations(asOwner).post({

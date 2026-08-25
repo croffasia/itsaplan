@@ -76,7 +76,7 @@ donation we can discuss moving it up the queue.
   Claude Code, Codex, Antigravity CLI, GitHub Copilot CLI, opencode, or any command that reads stdin —
   on your own machine, under your own account
 - A run starts on an @mention in a comment, on an assignment, or on a schedule
-- Tools that reach outside the tracker: Notion, Telegram, Threads, Instagram, Jina, and Firecrawl
+- Tools that reach outside the tracker: Notion, Telegram, Threads, Instagram, Jina, Firecrawl, and Gitea
 - Built-in chat with per-agent conversation history, with an external agent too: the runner
   answers from your machine, streaming the reply and the tools it uses, and resumes the same
   coding agent session on every message of the conversation

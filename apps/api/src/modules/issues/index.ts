@@ -688,6 +688,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Add a checklist',
         description: 'Add a checklist to an issue. It starts empty; add its items separately.',
+        ...mcpTool('create_checklist'),
       },
     },
   )
@@ -755,6 +756,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Add a checklist item',
         description: 'Append an item to a checklist.',
+        ...mcpTool('create_checklist_item'),
       },
     },
   )
@@ -787,6 +789,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Update a checklist item',
         description: "Change a checklist item's text, its checked state, or both.",
+        ...mcpTool('update_checklist_item'),
       },
     },
   )
@@ -805,6 +808,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Delete a checklist item',
         description: 'Remove one item from a checklist.',
+        ...mcpTool('delete_checklist_item'),
       },
     },
   )

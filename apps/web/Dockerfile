@@ -38,7 +38,7 @@ RUN cd apps/web && bun run build
 # module hook, and Bun does not honour it — every page rendering markdown then fails
 # with "Failed to load external module isomorphic-dompurify-<hash>". Alpine keeps the
 # musl build of the traced native modules (sharp) valid.
-FROM node:22-alpine AS release
+FROM node:26-alpine AS release
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

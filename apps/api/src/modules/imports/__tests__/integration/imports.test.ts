@@ -124,7 +124,9 @@ describe('imports', () => {
     const titles = issues.data!.map((i) => i.title).sort();
     expect(titles).toEqual(['First', 'Second']);
     const first = issues.data!.find((i) => i.title === 'First');
-    expect(first!.dueDate).toBe('2026-09-01');
+    // Treaty revives the iso() date into a Date on the client, though its type
+    // still says string — hence the cast.
+    expect(new Date(first!.dueDate as string).toISOString().slice(0, 10)).toBe('2026-09-01');
   });
 
   it('cancels a draft and refuses to confirm it afterwards', async () => {

@@ -114,7 +114,7 @@ export default function DashboardsPage() {
       />
 
       <div className="flex-1 overflow-y-auto">
-        <div className="w-full px-6 py-8 lg:px-10">
+        <div className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
           <WidgetGrid projectKey={projectKey} project={project} editor={editor} editing={editing} />
         </div>
       </div>

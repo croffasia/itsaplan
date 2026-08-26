@@ -30,6 +30,11 @@ export const ROW_GAP = 16; // px between rows
 export const MIN_W = 2;
 export const MIN_H = 2;
 
+// Below this container width a half-width widget is too narrow to read anything
+// in, so the grid drops to STACK_COLS columns (see stackLayout).
+export const STACK_WIDTH = 640;
+export const STACK_COLS = 2;
+
 // Per-type config. All fields optional — a widget renders with catalog defaults
 // when its config is missing (an older layout, or a freshly added widget).
 export interface WidgetConfig {
@@ -156,6 +161,29 @@ export function normalizeLayout(layout: unknown): DashboardLayout {
     const placed = { ...it, x, y };
     x += it.w;
     rowH = Math.max(rowH, it.h);
+    return placed;
+  });
+}
+
+// The saved layout laid out for a narrow screen: widgets keep their reading order
+// (top row first, then left to right), a tile that took a quarter of the desktop
+// width or less takes one column, and everything wider takes the full width.
+// Derived on render — what is stored stays the desktop layout.
+export function stackLayout(layout: DashboardLayout): DashboardLayout {
+  const ordered = [...layout].sort((a, b) => a.y - b.y || a.x - b.x);
+  let x = 0;
+  let y = 0;
+  let rowHeight = 0;
+  return ordered.map((widget) => {
+    const w = widget.w <= GRID_COLS / 4 ? 1 : STACK_COLS;
+    if (x + w > STACK_COLS) {
+      x = 0;
+      y += rowHeight;
+      rowHeight = 0;
+    }
+    const placed = { ...widget, x, y, w };
+    x += w;
+    rowHeight = Math.max(rowHeight, widget.h);
     return placed;
   });
 }

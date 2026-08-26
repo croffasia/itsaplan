@@ -12,15 +12,15 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 // A borderless widget section: a quiet header (title + edit affordances) over a
 // hairline divider, then the body directly on the page. No card box — surfaces are
-// separated by space and the header rule, per DESIGN.md. Edit affordances (drag
-// handle, settings, actions menu) are always visible while editing. Widget settings
-// live in a popover opened from the header, not inline in the body, so shrinking the
-// widget's height never hides them. The `.widget-drag-handle` grip is
-// react-grid-layout's drag handle; size is set from the corner (see WidgetGrid). The
-// body scrolls when its content exceeds the widget's height.
+// separated by space and the header rule, per DESIGN.md. Widget settings live in a
+// popover opened from the header, not inline in the body, so shrinking the widget's
+// height never hides them. The `.widget-drag-handle` grip is react-grid-layout's
+// drag handle; `movable` is off when the grid does not accept drags, and size is
+// set from the corner instead (see WidgetGrid).
 export default function WidgetFrame({
   widget,
   editing,
+  movable,
   settings,
   onRename,
   onRemove,
@@ -28,6 +28,7 @@ export default function WidgetFrame({
 }: {
   widget: WidgetInstance;
   editing: boolean;
+  movable: boolean;
   settings?: ReactNode;
   onRename: (title: string) => void;
   onRemove: () => void;
@@ -43,7 +44,7 @@ export default function WidgetFrame({
   return (
     <section className="flex h-full flex-col">
       <header className="mb-4 flex items-center gap-2 border-b border-border/60 pb-2">
-        {editing && (
+        {movable && (
           <button
             type="button"
             title={t('dragToMove')}

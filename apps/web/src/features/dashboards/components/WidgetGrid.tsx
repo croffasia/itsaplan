@@ -10,6 +10,9 @@ import {
   MIN_W,
   ROW_GAP,
   ROW_UNIT,
+  STACK_COLS,
+  STACK_WIDTH,
+  stackLayout,
   WIDGET_DEFAULTS,
 } from '@/utils/dashboardWidgets';
 import type { DashboardEditor } from '../hooks/useDashboardEditor';
@@ -21,6 +24,10 @@ import WidgetSettings, { hasWidgetSettings } from './WidgetSettings';
 // by (x, y, w, h); in edit mode they drag by the header handle and resize from the
 // corner, with vertical compaction so short widgets stack to fill gaps. Drag and
 // resize write back through editor.applyGrid; the layout persists on save.
+//
+// Below STACK_WIDTH the saved positions are replaced by a two-column layout
+// derived from them (stackLayout), and dragging and resizing are off: what is
+// stored is the desktop layout, and a drag on the derived one would overwrite it.
 export default function WidgetGrid({
   projectKey,
   project,
@@ -34,11 +41,17 @@ export default function WidgetGrid({
 }) {
   const direction = Direction.useDirection();
   const t = useTranslations('dashboards');
-  const { layout } = editor;
   // useContainerWidth starts at a sane default width and refines it after mount,
   // so the grid can render immediately — child charts always measure a nonzero
   // width instead of flashing empty on the first paint.
   const { width, containerRef } = useContainerWidth();
+  const stacked = width < STACK_WIDTH;
+  const movable = editing && !stacked;
+
+  const layout = useMemo(
+    () => (stacked ? stackLayout(editor.layout) : editor.layout),
+    [stacked, editor.layout],
+  );
 
   const rglLayout: Layout = useMemo(
     () =>
@@ -48,10 +61,10 @@ export default function WidgetGrid({
         y: w.y,
         w: w.w,
         h: w.h,
-        minW: MIN_W,
+        minW: stacked ? 1 : MIN_W,
         minH: WIDGET_DEFAULTS[w.type]?.minH ?? 2,
       })),
-    [layout],
+    [layout, stacked],
   );
 
   if (layout.length === 0) {
@@ -72,23 +85,24 @@ export default function WidgetGrid({
           width={width}
           layout={rglLayout}
           gridConfig={{
-            cols: GRID_COLS,
+            cols: stacked ? STACK_COLS : GRID_COLS,
             rowHeight: ROW_UNIT,
             margin: [COL_GAP, ROW_GAP],
             containerPadding: [0, 0],
           }}
-          dragConfig={{ enabled: editing, handle: '.widget-drag-handle', threshold: 4 }}
-          resizeConfig={{ enabled: editing, handles: ['se'] }}
+          dragConfig={{ enabled: movable, handle: '.widget-drag-handle', threshold: 4 }}
+          resizeConfig={{ enabled: movable, handles: ['se'] }}
           compactor={verticalCompactor}
           onDragStop={(l) => editor.applyGrid(l)}
           onResizeStop={(l) => editor.applyGrid(l)}
-          className={cn(editing && 'rounded-lg outline-1 outline-border/50 outline-dashed')}
+          className={cn(movable && 'rounded-lg outline-1 outline-border/50 outline-dashed')}
         >
           {layout.map((widget) => (
             <div key={widget.id} dir={direction} className="min-w-0 overflow-hidden">
               <WidgetFrame
                 widget={widget}
                 editing={editing}
+                movable={movable}
                 settings={
                   editing && hasWidgetSettings(widget.type) ? (
                     <WidgetSettings

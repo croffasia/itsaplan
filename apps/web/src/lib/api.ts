@@ -673,11 +673,7 @@ export async function confirmImport(importId: string): Promise<ImportConfirmResu
 }
 
 export async function discardImport(importId: string): Promise<void> {
-  const res = await fetch(`${API_URL}/imports/${importId}/cancel`, {
-    method: 'POST',
-    credentials: 'include',
-  });
-  if (!res.ok) throw await apiFailure(res);
+  await request(`/imports/${importId}/cancel`, { method: 'POST' });
 }
 
 // What an external agent's runner reports while it answers, as AG-UI events

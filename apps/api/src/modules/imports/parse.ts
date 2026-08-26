@@ -10,6 +10,10 @@ export interface ParsedSheet {
   headers: string[];
   rows: string[][];
   totalRows: number;
+  // The 1-based sheet row each entry of `rows` came from, blank rows included, so
+  // a skipped row names the line the user sees in their spreadsheet. Optional so a
+  // hand-built sheet can rely on the by-order fallback.
+  rowNumbers?: number[];
 }
 
 // Bound on what one import may hold. A bigger file is refused at upload-parse time
@@ -30,6 +34,8 @@ export function assertImportFilename(filename: string): void {
 
 function cellText(value: ExcelJS.CellValue): string {
   if (value == null) return '';
+  if (typeof value === 'object' && 'richText' in value)
+    return ((value.richText as { text?: string }[]) ?? []).map((part) => part.text ?? '').join('');
   if (typeof value === 'object' && 'text' in value) return String(value.text ?? '');
   if (typeof value === 'object' && 'result' in value) return String(value.result ?? '');
   const text = String(value);
@@ -140,7 +146,8 @@ async function parseDocx(bytes: Buffer): Promise<ParsedSheet> {
 }
 
 // Takes raw grid rows, makes the first non-empty one the header, and keeps the
-// rest that carry any value.
+// rest that carry any value. Kept rows remember their grid position so skips can
+// name the row the spreadsheet shows.
 function fromTable(table: string[][], emptyMessage: string): ParsedSheet {
   const firstRow = table.findIndex((row) => row.some((cell) => cell.trim() !== ''));
   if (firstRow === -1) throw new HttpError(400, emptyMessage);
@@ -149,18 +156,22 @@ function fromTable(table: string[][], emptyMessage: string): ParsedSheet {
   const headers = table[firstRow].map((cell) => cell.trim());
   while (headers.length < width) headers.push('');
 
-  const rows = table
-    .slice(firstRow + 1)
-    .filter((row) => row.some((cell) => cell.trim() !== ''))
-    .map((row) => {
-      const filled = row.map((cell) => cell.trim());
-      while (filled.length < width) filled.push('');
-      return filled;
-    });
-  if (rows.length > MAX_IMPORT_ROWS) {
+  const kept: { row: string[]; sheetRow: number }[] = [];
+  for (let i = firstRow + 1; i < table.length; i++) {
+    if (!table[i].some((cell) => cell.trim() !== '')) continue;
+    const filled = table[i].map((cell) => cell.trim());
+    while (filled.length < width) filled.push('');
+    kept.push({ row: filled, sheetRow: i + 1 });
+  }
+  if (kept.length > MAX_IMPORT_ROWS) {
     throw new HttpError(400, `The file holds more than ${MAX_IMPORT_ROWS} rows; split it first.`);
   }
-  return { headers, rows, totalRows: rows.length };
+  return {
+    headers,
+    rows: kept.map((entry) => entry.row),
+    totalRows: kept.length,
+    rowNumbers: kept.map((entry) => entry.sheetRow),
+  };
 }
 
 export async function parseImportFile(bytes: Buffer, filename: string): Promise<ParsedSheet> {

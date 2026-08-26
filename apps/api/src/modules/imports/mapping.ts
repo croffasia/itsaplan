@@ -90,7 +90,7 @@ export function applyMapping(
   }
 
   return parsed.rows.map((_, index) => {
-    const rowNumber = index + 1;
+    const rowNumber = parsed.rowNumbers?.[index] ?? index + 1;
     const title = titleCells[index]?.trim();
     if (!title) return { rowNumber, reason: 'Empty title' };
 

@@ -55,6 +55,7 @@ describe('applyMapping', () => {
   const parsed = {
     headers: ['Task', 'Details', 'Urgency', 'Deadline', 'Tags', 'Owner'],
     totalRows: 4,
+    rowNumbers: [2, 3, 4, 5],
     rows: [
       ['A', 'first', 'high', '2026-09-01', 'api, Docs', 'ann@example.com'],
       ['B', '', '', '07/09/2026', 'nope', 'Nobody'],
@@ -86,7 +87,8 @@ describe('applyMapping', () => {
     });
     // An unknown label and an unmatched assignee resolve to nothing, not to an error.
     expect(applied[1].draft).toEqual({ title: 'B', dueDate: '2026-09-07' });
-    expect(applied[2]).toEqual({ rowNumber: 3, reason: 'Empty title' });
+    // Skips name the sheet row, blank lines included.
+    expect(applied[2]).toEqual({ rowNumber: 4, reason: 'Empty title' });
     expect(applied[3].reason).toBe('"bad-date" is not a readable date');
   });
 

@@ -62,7 +62,7 @@ describe('imports', () => {
     });
     // Parsing happens on read, so an unsheeted-but-valid upload is accepted here
     // and fails when the agent reads it; an empty body is refused outright.
-    expect([201, 400]).toContain(empty.status);
+    expect(empty.status).toBe(201);
     const zero = await asOwner.projects({ projectKey: 'MKT' }).imports.post({
       file: new File([], 'zero.xlsx', { type: 'application/octet-stream' }),
     });
@@ -97,7 +97,10 @@ describe('imports', () => {
       description: 'Notes',
       dueDate: 'Deadline',
     });
-    expect(saved.totalRows).toBe(4);
+    // The all-blank row is dropped at parse time, so three rows remain: two
+    // import cleanly, the one with an unreadable date is reported as skipped
+    // with its sheet row number (blank lines included in the count).
+    expect(saved.totalRows).toBe(3);
 
     const draft = await asOwner.imports({ importId: id }).get();
     expect(draft.data!.status).toBe('mapped');
@@ -105,9 +108,11 @@ describe('imports', () => {
 
     const confirm = await asOwner.imports({ importId: id }).confirm.post();
     expect(confirm.status).toBe(200);
-    expect(confirm.data!.imported).toHaveLength(3);
+    expect(confirm.data!.imported).toHaveLength(2);
     expect(confirm.data!.imported[0]).toMatchObject({ key: 'MKT-1', title: 'First' });
-    expect(confirm.data!.skipped).toEqual([{ row: 3, reason: 'Empty title' }]);
+    expect(confirm.data!.skipped).toEqual([
+      { row: 5, reason: '"not-a-date" is not a readable date' },
+    ]);
 
     const again = await asOwner.imports({ importId: id }).confirm.post();
     expect(again.status).toBe(409);
@@ -117,7 +122,7 @@ describe('imports', () => {
 
     const issues = await asOwner.projects({ projectKey: 'MKT' }).issues.get();
     const titles = issues.data!.map((i) => i.title).sort();
-    expect(titles).toEqual(['Bad date', 'First', 'Second']);
+    expect(titles).toEqual(['First', 'Second']);
     const first = issues.data!.find((i) => i.title === 'First');
     expect(first!.dueDate).toBe('2026-09-01');
   });

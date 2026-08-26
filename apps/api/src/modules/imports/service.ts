@@ -1,7 +1,7 @@
 import { db, issueImport, label, projectColumn, projectMember, user } from '@repo/db';
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
-import { getObject } from '#shared/s3';
+import { deleteObject, getObject } from '#shared/s3';
 import { createIssue } from '#modules/issues/service';
 import type { ProjectRow } from '#modules/projects/service';
 import { applyMapping, validateMapping, type ImportMapping } from './mapping';
@@ -68,17 +68,22 @@ async function requireImport(publicId: string): Promise<SelectRow> {
   return rows[0];
 }
 
-// The draft must still be open to change: once confirmed it records what was
-// created, and a canceled one was refused by hand.
+// The draft must still be open to change. A confirmed one records what was
+// created, a canceled one was refused by hand, and a failed one may already hold
+// created issues from the run that failed — re-running it would duplicate them,
+// so the file has to be uploaded again instead.
 function assertOpen(status: IssueImportStatus): void {
   if (status === 'confirmed') throw new HttpError(409, 'This import was already confirmed');
   if (status === 'canceled') throw new HttpError(409, 'This import was canceled');
+  if (status === 'failed')
+    throw new HttpError(409, 'This import failed; upload the file again to start over');
 }
 
 export async function cancelImport(publicId: string): Promise<void> {
   const row = await requireImport(publicId);
   assertOpen(row.status as IssueImportStatus);
   await setStatus(publicId, 'canceled');
+  removeStoredFile(row.s3Key);
 }
 
 // Saves the agent's column mapping after checking every named column exists.
@@ -128,6 +133,15 @@ export async function confirmImport(
   if (row.status !== 'mapped' || !row.mapping) {
     throw new HttpError(409, 'This import has no mapping to confirm');
   }
+  // Claim the draft atomically: a second concurrent confirm finds nothing to
+  // update and stops here instead of running the creation loop twice.
+  const claimed = await db
+    .update(issueImport)
+    .set({ status: 'confirmed', updatedAt: new Date() })
+    .where(and(eq(issueImport.publicId, publicId), eq(issueImport.status, 'mapped')))
+    .returning({ id: issueImport.id });
+  if (!claimed[0]) throw new HttpError(409, 'This import was already confirmed');
+
   const [parsed, ctx] = await Promise.all([readStoredFile(row), mappingContext(project.id)]);
   const applied = applyMapping(parsed, row.mapping as ImportMapping, ctx);
   if (!ctx.defaultColumnId)
@@ -152,9 +166,11 @@ export async function confirmImport(
     }
   } catch (err) {
     await setStatus(publicId, 'failed', err instanceof Error ? err.message : String(err));
+    removeStoredFile(row.s3Key);
     throw err;
   }
-  await setStatus(publicId, 'confirmed');
+  // The rows are materialized as issues; the source file has served its purpose.
+  removeStoredFile(row.s3Key);
   return result;
 }
 
@@ -182,6 +198,17 @@ async function readStoredFile(row: SelectRow): Promise<ParsedSheet> {
   if (!obj) throw new HttpError(404, 'The uploaded file is gone from the object store');
   const bytes = Buffer.from(await new Response(obj.body).arrayBuffer());
   return parseImportFile(bytes, row.filename);
+}
+
+// Best-effort, like every object-store delete here: the row is already terminal,
+// so a failed delete only orphans bytes.
+function removeStoredFile(s3Key: string): void {
+  void deleteObject(s3Key).catch((err) => {
+    console.error(
+      `[planner] failed to delete import object ${s3Key}:`,
+      err instanceof Error ? err.message : err,
+    );
+  });
 }
 
 // The labels, members, and first workflow column a mapping resolves values against.

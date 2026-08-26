@@ -5,6 +5,7 @@ import {
   KeyRound,
   Mail,
   Send,
+  SlidersHorizontal,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -37,6 +38,11 @@ export const GOD_SECTIONS: GodSection[] = [
     slug: 'projects',
     group: 'management',
     icon: FolderKanban,
+  },
+  {
+    slug: 'general',
+    group: 'instance',
+    icon: SlidersHorizontal,
   },
   {
     slug: 'authentication',

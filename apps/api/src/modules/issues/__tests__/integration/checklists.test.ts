@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { untaggedRoutes } from '#tests/helpers/mcp';
 
 // Checklists: an issue holds several checklists, each holding checkbox items. Both
 // are ordered by position within their parent and come back with the issue read
@@ -370,5 +371,19 @@ describe('checklists', () => {
 
       expect(await feedActions(asOwner, issue.id)).toEqual(before);
     });
+  });
+
+  // An agent fills a checklist in over MCP, so the writes it needs are tagged. The
+  // rest stay session-only: the list comes with the issue read, order is a drag in
+  // the UI, and removing a checklist takes its items with it, including ones a
+  // person wrote.
+  it('exposes the checklist writes an agent needs to MCP', () => {
+    expect(untaggedRoutes((route) => route.includes('checklist'))).toEqual([
+      'GET /issues/:issueId/checklists',
+      'PUT /issues/:issueId/checklists/reorder',
+      'PATCH /checklists/:checklistId',
+      'DELETE /checklists/:checklistId',
+      'PUT /checklists/:checklistId/items/reorder',
+    ]);
   });
 });

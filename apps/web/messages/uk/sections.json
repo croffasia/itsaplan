@@ -19,6 +19,10 @@
       "label": "Проєкти",
       "description": "Усі проєкти цього інстансу: що в кожному, коли була остання активність і хто має доступ."
     },
+    "general": {
+      "label": "General",
+      "description": "The instance-wide defaults a new project starts with. Each one stays editable per project afterwards."
+    },
     "authentication": {
       "label": "Автентифікація",
       "description": "Хто може реєструватися в цьому інстансі, як підтверджуються акаунти і через яких провайдерів люди входять."

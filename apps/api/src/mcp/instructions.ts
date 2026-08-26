@@ -23,6 +23,9 @@ labelIds, assigneeUserId, custom field ids, member user ids — comes from
 get_project. Never invent an id, and never reuse one across projects: ids are per
 project.
 
+A checklistId and a checklist item's id come from get_issue: an issue carries its
+checklists and their items.
+
 search_issues and list_issues are for finding issues by text or by field, not for
 resolving an identifier.
 

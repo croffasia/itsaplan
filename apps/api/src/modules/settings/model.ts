@@ -7,6 +7,10 @@ export const StorageSettingsSchema = t.Object({
   projectQuotaMb: t.Number(),
 });
 
+export const ProjectDefaultsSchema = t.Object({
+  mcpEnabled: t.Boolean(),
+});
+
 // A command id bound to a combination written as modifier tokens plus a key
 // ('mod+k', 'n'). The set of commands lives in the web app (its lib/hotkeys), so
 // the API checks the shape and stores the map as given.

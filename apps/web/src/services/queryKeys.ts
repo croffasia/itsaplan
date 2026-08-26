@@ -155,6 +155,7 @@ export const qk = {
   instanceEmailSettings: ['instanceEmailSettings'] as const,
   instanceGoogleSettings: ['instanceGoogleSettings'] as const,
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,
+  instanceProjectDefaults: ['instanceProjectDefaults'] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
   // The upload limits as read by the upload UI (open to any signed-in user).
   storageSettings: ['storageSettings'] as const,

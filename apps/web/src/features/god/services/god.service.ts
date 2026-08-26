@@ -8,6 +8,7 @@ import {
   type InstanceGoogleSettingsPatch,
   type InstanceTelegramSettingsPatch,
   type InstanceUserKind,
+  type ProjectDefaults,
   type StorageSettingsPatch,
 } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
@@ -79,6 +80,23 @@ export function useUpdateInstanceTelegramSettings() {
   return useMutation({
     mutationFn: (patch: InstanceTelegramSettingsPatch) => api.updateInstanceTelegramSettings(patch),
     onSuccess: (data) => qc.setQueryData(qk.instanceTelegramSettings, data),
+  });
+}
+
+// What a new project starts with on this instance. Projects that already exist are
+// untouched by a change here.
+export function useInstanceProjectDefaultsQuery() {
+  return useQuery({
+    queryKey: qk.instanceProjectDefaults,
+    queryFn: () => api.getInstanceProjectDefaults(),
+  });
+}
+
+export function useUpdateInstanceProjectDefaults() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: ProjectDefaults) => api.updateInstanceProjectDefaults(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceProjectDefaults, data),
   });
 }
 

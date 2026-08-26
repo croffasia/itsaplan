@@ -19,6 +19,10 @@
       "label": "المشاريع",
       "description": "كل مشروع على النسخة دي: كل واحد فيه إيه، وآخر مرة كان نشط فيها، ومين يقدر يدخله."
     },
+    "general": {
+      "label": "General",
+      "description": "The instance-wide defaults a new project starts with. Each one stays editable per project afterwards."
+    },
     "authentication": {
       "label": "المصادقة",
       "description": "مين يقدر يسجّل في النسخة دي، والحسابات بتتأكّد إزاي، والمزوّدين اللي الناس بتدخل عن طريقهم."

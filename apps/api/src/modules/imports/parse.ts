@@ -113,14 +113,29 @@ function sniffDelimiter(text: string): ',' | ';' {
   return semicolons > commas ? ';' : ',';
 }
 
+// Reads the first table out of mammoth's HTML through the built-in HTMLRewriter:
+// a real parser, so no tag stripping or entity unescaping happens here — text
+// chunks already arrive decoded.
+// Decodes the handful of entities mammoth emits, in one pass over a lookup table:
+// nothing is re-scanned after replacement, so an encoded ampersand can never
+// turn into the start of another entity.
 function decodeEntities(text: string): string {
-  return text
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
+  return text.replace(
+    /&(amp|lt|gt|quot|apos|#\d+|#x[0-9a-f]+);/gi,
+    (entity: string, name: string): string => {
+      const lower = name.toLowerCase();
+      if (lower === 'amp') return '&';
+      if (lower === 'lt') return '<';
+      if (lower === 'gt') return '>';
+      if (lower === 'quot') return '"';
+      if (lower === 'apos') return "'";
+      if (lower === 'nbsp') return ' ';
+      const code = lower.startsWith('#x')
+        ? parseInt(lower.slice(2), 16)
+        : parseInt(lower.slice(1), 10);
+      return Number.isNaN(code) ? entity : String.fromCodePoint(code);
+    },
+  );
 }
 
 async function parseDocx(bytes: Buffer): Promise<ParsedSheet> {
@@ -130,19 +145,59 @@ async function parseDocx(bytes: Buffer): Promise<ParsedSheet> {
   } catch {
     throw new HttpError(400, 'The file is not a readable .docx document');
   }
-  const tableHtml = html.match(/<table[\s\S]*?<\/table>/i)?.[0];
-  if (!tableHtml) {
+
+  const rows: string[][] = [];
+  let row: string[] | null = null;
+  let cell: string | null = null;
+
+  function endCell(): void {
+    if (row !== null && cell !== null) row.push(decodeEntities(cell.replace(/\s+/g, ' ').trim()));
+    cell = null;
+  }
+  function endRow(): void {
+    endCell();
+    if (row !== null && row.some((value) => value !== '')) rows.push(row);
+    row = null;
+  }
+
+  try {
+    // Draining the body is what runs the handlers.
+    await new HTMLRewriter()
+      .on('tr', {
+        element() {
+          endRow();
+          row = [];
+        },
+      })
+      .on('br', {
+        element() {
+          if (cell !== null) cell += ' ';
+        },
+      })
+      .on('td, th', {
+        element() {
+          if (row === null) row = [];
+          endCell();
+          cell = '';
+        },
+        text(text) {
+          if (cell !== null) cell += text.text;
+        },
+      })
+      .transform(new Response(html))
+      .arrayBuffer();
+  } catch {
+    throw new HttpError(400, 'The file is not a readable .docx document');
+  }
+  endRow();
+
+  if (rows.length === 0) {
     throw new HttpError(
       400,
       'No table found in the document. Put the tasks in a table, or use .xlsx/.csv.',
     );
   }
-  const table = [...tableHtml.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map((rowMatch) =>
-    [...rowMatch[1].matchAll(/<t[dh][^>]*>([\s\S]*?)<\/t[dh]>/gi)].map((cellMatch) =>
-      decodeEntities(cellMatch[1].replace(/<[^>]+>/g, '')).trim(),
-    ),
-  );
-  return fromTable(table, 'The table in the document is empty');
+  return fromTable(rows, 'The table in the document is empty');
 }
 
 // Takes raw grid rows, makes the first non-empty one the header, and keeps the

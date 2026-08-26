@@ -10,6 +10,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { type BoardIssue } from '@/lib/api';
 import { type Maps } from '@/utils/project';
+import { cn } from '@/lib/utils';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
 import { formatMinutes } from '@/utils/estimate';
 import type { DisplayProperty, PropertyKey } from '@/utils/viewSettings';
@@ -23,6 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
+import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { IssueCardLinks } from './IssueCardLinks';
 import { IssueCardSubtasks } from './IssueCardSubtasks';
 
@@ -68,8 +70,16 @@ export function IssueCardBody({
   return (
     <>
       {(has('id') || (has('priority') && issue.priority)) && (
-        <div className="mb-1.5 flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">{has('id') ? issue.identifier : ''}</span>
+        <div
+          className={cn('mb-1.5 flex items-center', has('id') ? 'justify-between' : 'justify-end')}
+        >
+          {has('id') && (
+            <IssueIdentifier
+              issue={issue}
+              className="text-xs text-muted-foreground"
+              onOpenParent={onOpen}
+            />
+          )}
           {has('priority') && issue.priority && <PriorityBadge priority={issue.priority} />}
         </div>
       )}

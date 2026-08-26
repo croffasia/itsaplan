@@ -8,6 +8,9 @@ import { type Issue } from '@/lib/api';
 // filter bar narrows them, so a parent shows every subtask it has.
 const SubtaskContext = createContext<Map<number, Issue[]>>(new Map());
 
+// Every issue by id, which is how a subtask resolves the parent it names.
+const IssueContext = createContext<Map<number, Issue>>(new Map());
+
 const NONE: Issue[] = [];
 
 // Holds the project's subtasks by parent for the cards and rows below. Empty
@@ -34,10 +37,22 @@ export function SubtasksProvider({
     for (const list of map.values()) list.sort((a, b) => a.sequenceNumber - b.sequenceNumber);
     return map;
   }, [enabled, issues]);
-  return <SubtaskContext.Provider value={byParent}>{children}</SubtaskContext.Provider>;
+  const byId = useMemo(() => new Map(issues.map((issue) => [issue.id, issue])), [issues]);
+  return (
+    <IssueContext.Provider value={byId}>
+      <SubtaskContext.Provider value={byParent}>{children}</SubtaskContext.Provider>
+    </IssueContext.Provider>
+  );
 }
 
 // The issue's subtasks, by issue number. Empty for a subtask, which has none.
 export function useSubtasks(issueId: number): Issue[] {
   return useContext(SubtaskContext).get(issueId) ?? NONE;
+}
+
+// The issue a subtask belongs to. Undefined for an issue that stands on its own,
+// and for one whose parent is archived and therefore not on the board.
+export function useParentIssue(parentId: number | null): Issue | undefined {
+  const byId = useContext(IssueContext);
+  return parentId === null ? undefined : byId.get(parentId);
 }

@@ -8,6 +8,7 @@ import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { DropLine } from '../shared/DropLine';
+import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
 import { columnKey, type OrderedColumn } from '../../utils/table';
 import { TableBuiltinCell } from './TableBuiltinCell';
@@ -95,9 +96,11 @@ export function TableRow({
         {showDropLine && <DropLine className="top-0" />}
         <div className="flex min-w-0 items-center gap-2">
           {showId && (
-            <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-              {issue.identifier}
-            </span>
+            <IssueIdentifier
+              issue={issue}
+              className="text-xs text-muted-foreground tabular-nums"
+              onOpenParent={onOpenIssue}
+            />
           )}
           <span dir="auto" className="truncate text-foreground">
             {issue.title}

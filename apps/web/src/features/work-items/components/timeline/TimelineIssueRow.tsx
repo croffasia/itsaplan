@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { type TimelineDragMode } from '../../hooks/useTimelineDrag';
 import { ROW_H, type Span } from '../../utils/timeline';
+import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
 import { TimelineBar } from './TimelineBar';
 
@@ -76,9 +77,11 @@ export function TimelineIssueRow({
           style={{ width: labelW }}
           onClick={() => onOpen(issue.id)}
         >
-          <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
-            {issue.identifier}
-          </span>
+          <IssueIdentifier
+            issue={issue}
+            className="text-xs text-muted-foreground tabular-nums"
+            onOpenParent={onOpen}
+          />
           <span className="min-w-0 flex-1 truncate text-sm text-foreground">{issue.title}</span>
           <SubtaskProgress issueId={issue.id} maps={maps} />
         </div>

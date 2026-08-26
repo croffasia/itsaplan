@@ -121,11 +121,11 @@
     "noMembersHint": "محدش هيقدر يوصل للمشروع ده لحد ما حد يتدعى ليه."
   },
   "general": {
-    "saved": "Project defaults saved",
-    "projectDefaults": "Project defaults",
-    "projectDefaultsHint": "What a project starts with when it is created. Projects that already exist are untouched, and every default here stays editable per project.",
-    "mcpEnabled": "Enable MCP on new projects",
-    "mcpEnabledHint": "A new project is reachable over MCP straight away, instead of waiting for the per-project toggle. It stays visible only to members holding a key, exactly as it is today."
+    "saved": "تم حفظ الإعدادات الافتراضية للمشاريع",
+    "projectDefaults": "الإعدادات الافتراضية للمشاريع",
+    "projectDefaultsHint": "المشروع الجديد بيتعمل بإيه. المشاريع الموجودة مش بتتغير، وكل إعداد تقدر تغيّره في المشروع نفسه.",
+    "mcpEnabled": "تفعيل MCP في المشاريع الجديدة",
+    "mcpEnabledHint": "المشروع الجديد بيبقى متاح على MCP على طول. وزي دلوقتي، مش بيشوفه غير الأعضاء اللي معاهم مفتاح."
   },
   "authentication": {
     "saved": "تم حفظ إعدادات المصادقة",

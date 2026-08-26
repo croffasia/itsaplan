@@ -121,11 +121,11 @@
     "noMembersHint": "Ніхто не бачить цей проєкт, доки когось не запросять."
   },
   "general": {
-    "saved": "Project defaults saved",
-    "projectDefaults": "Project defaults",
-    "projectDefaultsHint": "What a project starts with when it is created. Projects that already exist are untouched, and every default here stays editable per project.",
-    "mcpEnabled": "Enable MCP on new projects",
-    "mcpEnabledHint": "A new project is reachable over MCP straight away, instead of waiting for the per-project toggle. It stays visible only to members holding a key, exactly as it is today."
+    "saved": "Налаштування проєкту за замовчуванням збережено",
+    "projectDefaults": "Налаштування проєкту за замовчуванням",
+    "projectDefaultsHint": "З чим створюється новий проєкт. Наявні проєкти не змінюються, і кожне налаштування можна перевизначити в самому проєкті.",
+    "mcpEnabled": "Вмикати MCP у нових проєктах",
+    "mcpEnabledHint": "Новий проєкт одразу доступний через MCP. Як і зараз, його бачать лише учасники з ключем."
   },
   "authentication": {
     "saved": "Налаштування автентифікації збережено",

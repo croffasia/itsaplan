@@ -20,8 +20,8 @@
       "description": "Все проекты этого инстанса: что в каждом, когда была последняя активность и у кого есть доступ."
     },
     "general": {
-      "label": "General",
-      "description": "The instance-wide defaults a new project starts with. Each one stays editable per project afterwards."
+      "label": "Общее",
+      "description": "Настройки, с которыми создаётся новый проект. Каждую можно переопределить в самом проекте."
     },
     "authentication": {
       "label": "Аутентификация",

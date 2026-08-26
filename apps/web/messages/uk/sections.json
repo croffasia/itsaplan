@@ -20,8 +20,8 @@
       "description": "Усі проєкти цього інстансу: що в кожному, коли була остання активність і хто має доступ."
     },
     "general": {
-      "label": "General",
-      "description": "The instance-wide defaults a new project starts with. Each one stays editable per project afterwards."
+      "label": "Загальне",
+      "description": "Налаштування, з якими створюється новий проєкт. Кожне можна перевизначити в самому проєкті."
     },
     "authentication": {
       "label": "Автентифікація",

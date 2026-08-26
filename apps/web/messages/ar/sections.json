@@ -20,8 +20,8 @@
       "description": "كل مشروع على النسخة دي: كل واحد فيه إيه، وآخر مرة كان نشط فيها، ومين يقدر يدخله."
     },
     "general": {
-      "label": "General",
-      "description": "The instance-wide defaults a new project starts with. Each one stays editable per project afterwards."
+      "label": "عام",
+      "description": "الإعدادات اللي المشروع الجديد بيبدأ بيها. وكل واحدة تقدر تغيّرها في المشروع نفسه."
     },
     "authentication": {
       "label": "المصادقة",

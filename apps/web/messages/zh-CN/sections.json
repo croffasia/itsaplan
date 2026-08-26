@@ -21,7 +21,7 @@
     },
     "general": {
       "label": "通用",
-      "description": "新建项目时采用的默认设置。每一项在项目中仍可修改。"
+      "description": "新建项目的默认设置。"
     },
     "authentication": {
       "label": "身份验证",

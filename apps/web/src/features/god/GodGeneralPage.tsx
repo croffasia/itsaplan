@@ -14,9 +14,6 @@ import {
 } from './services/god.service';
 import type { ProjectDefaults } from '@/lib/api';
 
-// General: the instance-wide defaults that decide what a new project starts with.
-// Each one stays editable per project afterwards, and projects that already exist
-// are untouched by a change here.
 export default function GodGeneralPage() {
   const query = useInstanceProjectDefaultsQuery();
 
@@ -43,23 +40,21 @@ function GeneralForm({ defaults }: { defaults: ProjectDefaults }) {
 
   return (
     <GodSectionPage slug="general">
-      <div className="space-y-8">
-        <SettingsSection title={t('projectDefaults')} description={t('projectDefaultsHint')}>
-          <SettingsCard className="divide-y divide-border/60">
-            <SettingsRow
-              title={t('mcpEnabled')}
-              description={t('mcpEnabledHint')}
-              control={
-                <Switch
-                  checked={defaults.mcpEnabled}
-                  disabled={update.isPending}
-                  onCheckedChange={(checked) => void setMcpEnabled(checked)}
-                />
-              }
-            />
-          </SettingsCard>
-        </SettingsSection>
-      </div>
+      <SettingsSection title={t('projectDefaults')}>
+        <SettingsCard>
+          <SettingsRow
+            title={t('mcpEnabled')}
+            description={t('mcpEnabledHint')}
+            control={
+              <Switch
+                checked={defaults.mcpEnabled}
+                disabled={update.isPending}
+                onCheckedChange={(checked) => void setMcpEnabled(checked)}
+              />
+            }
+          />
+        </SettingsCard>
+      </SettingsSection>
     </GodSectionPage>
   );
 }

@@ -21,7 +21,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Defaults a new project starts with. Each one stays editable per project."
+      "description": "Defaults for new projects."
     },
     "authentication": {
       "label": "Authentication",

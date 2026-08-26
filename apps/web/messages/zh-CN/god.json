@@ -123,9 +123,8 @@
   "general": {
     "saved": "项目默认设置已保存",
     "projectDefaults": "项目默认设置",
-    "projectDefaultsHint": "新建项目时的初始设置。已有项目不受影响，每一项在项目中仍可修改。",
     "mcpEnabled": "新项目默认启用 MCP",
-    "mcpEnabledHint": "新项目创建后即可通过 MCP 访问。与当前一样，仅持有密钥的成员可见。"
+    "mcpEnabledHint": "新项目创建后即可通过 MCP 访问。"
   },
   "authentication": {
     "saved": "身份验证设置已保存",

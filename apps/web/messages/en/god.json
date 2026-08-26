@@ -123,9 +123,8 @@
   "general": {
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",
-    "projectDefaultsHint": "What a new project starts with. Existing projects don't change, and every default stays editable per project.",
     "mcpEnabled": "Enable MCP on new projects",
-    "mcpEnabledHint": "New projects are reachable over MCP right away. Only members with a key can see them, as today."
+    "mcpEnabledHint": "A new project is reachable over MCP as soon as it is created."
   },
   "authentication": {
     "saved": "Authentication settings saved",

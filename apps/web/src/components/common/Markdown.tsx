@@ -8,6 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 // recharts is loaded only by the answers that actually carry a chart, so the views
 // that just show markdown do not pull it in.
 const ChartBlock = dynamic(() => import('./chart/ChartBlock'));
+// The import review card pulls its draft over HTTP, so only answers carrying one
+// load it.
+const AgentChatImportCard = dynamic(() => import('./agent-chat/AgentChatImportCard'));
 
 // Renders markdown text as formatted HTML with the shared `.md-content` styles
 // (headings, lists, code, blockquote, links), without the virtualized-table image
@@ -23,6 +26,9 @@ export default function Markdown({ children }: { children: string }) {
       {segments.map((segment, index) => {
         if (segment.kind === 'chart') {
           return <ChartBlock key={index} spec={segment.spec} source={segment.source} />;
+        }
+        if (segment.kind === 'issue-import') {
+          return <AgentChatImportCard key={index} importId={segment.importId} />;
         }
         // The fence is still streaming in: hold its place rather than showing the
         // half-written JSON that would turn into the chart a moment later.

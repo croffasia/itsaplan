@@ -34,6 +34,8 @@
     "croner": "^10.0.1",
     "drizzle-orm": "^0.45.2",
     "elysia": "^1.4.29",
+    "exceljs": "^4.4.0",
+    "mammoth": "^1.12.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

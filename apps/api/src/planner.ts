@@ -17,6 +17,7 @@ import { issueRoutes } from './modules/issues';
 import { initiativeRoutes } from './modules/initiatives';
 import { cycleRoutes } from './modules/cycles';
 import { attachmentRoutes } from './modules/attachments';
+import { importRoutes } from './modules/imports';
 import { avatarRoutes } from './modules/avatars';
 import { viewRoutes } from './modules/views';
 import { shareRoutes } from './modules/share';
@@ -92,6 +93,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(initiativeRoutes)
   .use(cycleRoutes)
   .use(attachmentRoutes)
+  .use(importRoutes)
   .use(avatarRoutes)
   .use(viewRoutes)
   .use(shareRoutes)

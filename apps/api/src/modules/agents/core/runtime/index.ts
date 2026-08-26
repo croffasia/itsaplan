@@ -94,7 +94,7 @@ async function buildAgent(row: AiAgentRow, contextPreamble: string): Promise<Age
     // are the external integrations configured on the project and enabled here.
     tools: {
       ...buildRouteTools(project, apiKey, row.tools),
-      ...buildLocalTools(),
+      ...buildLocalTools(row.projectId, row.tools),
       ...(skills.length > 0 ? buildSkillTool(row.projectId, skills) : {}),
       ...buildCustomTools(customTools),
     },

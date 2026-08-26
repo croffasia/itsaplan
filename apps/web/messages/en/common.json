@@ -98,7 +98,20 @@
     "title": "Chat with {agent}",
     "unreachable": "Could not reach the agent. Try again.",
     "runnerOffline": "Runner offline",
-    "runnerOfflineHint": "Start the runner on your machine to chat with this agent."
+    "runnerOfflineHint": "Start the runner on your machine to chat with this agent.",
+    "attachFile": "Attach a spreadsheet or document for the agent to import",
+    "removeAttachment": "Remove attachment",
+    "uploadFailed": "Could not upload the file.",
+    "importRows": "{count, plural, one {# row} other {# rows}}",
+    "confirmImport": "Confirm import",
+    "cancelImport": "Cancel",
+    "importWorking": "Creating issues…",
+    "importAdjustHint": "Ask the agent to adjust the mapping if anything looks wrong.",
+    "importPendingHint": "The agent is still reading this file and mapping its columns.",
+    "importCanceled": "This import was canceled. Nothing was created.",
+    "importFailed": "The import failed.",
+    "importConfirmed": "{count, plural, one {Created # issue} other {Created # issues}}",
+    "importSkippedRow": "Skipped row {row}: {reason}"
   },
   "share": {
     "createFailed": "Could not create the link. Try again.",

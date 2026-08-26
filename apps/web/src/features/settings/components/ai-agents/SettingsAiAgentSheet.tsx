@@ -130,6 +130,7 @@ function SheetBody({
           <div className="flex min-h-0 flex-1 basis-0 flex-col">
             <AgentChatPanel
               agent={agent}
+              projectKey={projectKey}
               messages={chat.messages}
               status={chat.status}
               activeTool={chat.activeTool}

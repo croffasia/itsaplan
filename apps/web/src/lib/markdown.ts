@@ -53,9 +53,30 @@ export type MarkdownSegment =
   | { kind: 'pending' }
   // `source` is the fence body the spec was parsed from: the answer is re-split on
   // every streamed token, so it is what tells an unchanged chart from a new one.
-  | { kind: 'chart'; spec: ChartSpec; source: string };
+  | { kind: 'chart'; spec: ChartSpec; source: string }
+  // An import review card the user confirms or discards (see AgentChatImportCard).
+  | { kind: 'issue-import'; importId: string; source: string };
 
 const CHART_TAG = 'chart';
+const IMPORT_TAG = 'issue-import';
+
+// The one field an issue-import fence carries: which draft the card shows. The
+// draft itself is read from the API by the card, so a model writing extra JSON
+// around it cannot forge rows.
+function parseImportRef(text: string): string | null {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end < start) return null;
+  let value: unknown;
+  try {
+    value = JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return null;
+  }
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
+  const id = (value as Record<string, unknown>).importId;
+  return typeof id === 'string' && id ? id : null;
+}
 
 interface OpenFence {
   // The run of backticks or tildes the block is closed by.
@@ -111,7 +132,7 @@ export function markdownSegments(value: string, options?: HtmlOptions): Markdown
       if (end === lines.length) {
         // Only a fence the model tagged holds a place while it streams in: an untagged
         // one is as likely to be the code block it looks like.
-        if (fence.tag !== CHART_TAG) {
+        if (fence.tag !== CHART_TAG && fence.tag !== IMPORT_TAG) {
           buffer.push(...lines.slice(i));
           break;
         }
@@ -122,9 +143,13 @@ export function markdownSegments(value: string, options?: HtmlOptions): Markdown
       source = [...(fence.body ? [fence.body] : []), ...lines.slice(i + 1, end)].join('\n');
     }
     const spec = parseChartSpec(source);
+    const importId = spec ? null : parseImportRef(source);
     if (spec) {
       flush();
       segments.push({ kind: 'chart', spec, source });
+    } else if (importId) {
+      flush();
+      segments.push({ kind: 'issue-import', importId, source });
     } else {
       buffer.push(...lines.slice(i, end + 1));
     }

@@ -743,6 +743,13 @@
       "when": 1787597427470,
       "tag": "0105_goofy_vanisher",
       "breakpoints": true
+    },
+    {
+      "idx": 106,
+      "version": "7",
+      "when": 1787705359137,
+      "tag": "0106_violet_manta",
+      "breakpoints": true
     }
   ]
 }

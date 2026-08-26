@@ -98,7 +98,20 @@
     "title": "与 {agent} 对话",
     "unreachable": "无法连接代理，请重试。",
     "runnerOffline": "运行器未连接",
-    "runnerOfflineHint": "在你的机器上启动运行器，才能与该智能体聊天。"
+    "runnerOfflineHint": "在你的机器上启动运行器，才能与该智能体聊天。",
+    "attachFile": "附加电子表格或文档供智能体导入",
+    "removeAttachment": "移除附件",
+    "uploadFailed": "文件上传失败。",
+    "importRows": "{count} 行",
+    "confirmImport": "确认导入",
+    "cancelImport": "取消",
+    "importWorking": "正在创建任务…",
+    "importAdjustHint": "如有不妥，请让智能体调整映射。",
+    "importPendingHint": "智能体仍在读取该文件并映射其列。",
+    "importCanceled": "该导入已取消，未创建任何内容。",
+    "importFailed": "导入失败。",
+    "importConfirmed": "已创建 {count} 个任务",
+    "importSkippedRow": "已跳过第 {row} 行：{reason}"
   },
   "share": {
     "createFailed": "无法创建链接，请重试。",

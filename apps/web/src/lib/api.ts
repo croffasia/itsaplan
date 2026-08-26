@@ -633,6 +633,53 @@ async function* readSseFrames(res: Response): AsyncGenerator<{ id: number | null
   }
 }
 
+// --- Issue imports: a file uploaded in an agent chat that an agent maps into issues.
+
+export interface IssueImport {
+  id: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  status: 'pending' | 'mapped' | 'confirmed' | 'canceled' | 'failed';
+  mapping: Record<string, string> | null;
+  errorText: string | null;
+  createdAt: string;
+  preview?: { headers: string[]; rows: string[][]; totalRows: number };
+}
+
+export interface ImportConfirmResult {
+  imported: { key: string; title: string }[];
+  skipped: { row: number; reason: string }[];
+}
+
+export async function uploadImport(projectKey: string, file: File): Promise<IssueImport> {
+  const body = new FormData();
+  body.append('file', file);
+  const res = await fetch(`${API_URL}/projects/${projectKey}/imports`, {
+    method: 'POST',
+    credentials: 'include',
+    body,
+  });
+  if (!res.ok) throw await apiFailure(res);
+  return res.json();
+}
+
+export async function getImport(importId: string): Promise<IssueImport> {
+  return request(`/imports/${importId}`);
+}
+
+export async function confirmImport(importId: string): Promise<ImportConfirmResult> {
+  return request(`/imports/${importId}/confirm`, { method: 'POST' });
+}
+
+export async function discardImport(importId: string): Promise<void> {
+  const res = await fetch(`${API_URL}/imports/${importId}/cancel`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) throw await apiFailure(res);
+}
+
 // What an external agent's runner reports while it answers, as AG-UI events
 // (https://docs.ag-ui.com). Only the ones the chat renders are named; the rest of the
 // protocol passes through and is ignored here.

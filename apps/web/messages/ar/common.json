@@ -98,7 +98,20 @@
     "title": "محادثة مع {agent}",
     "unreachable": "تعذّر الوصول إلى الوكيل. حاول مرة أخرى.",
     "runnerOffline": "المنفّذ (runner) مش متصل",
-    "runnerOfflineHint": "شغّل المنفّذ على جهازك عشان تقدر تكلّم الوكيل ده."
+    "runnerOfflineHint": "شغّل المنفّذ على جهازك عشان تقدر تكلّم الوكيل ده.",
+    "attachFile": "أرفق جدول بيانات أو مستند ليستورده الوكيل",
+    "removeAttachment": "إزالة المرفق",
+    "uploadFailed": "تعذّر رفع الملف.",
+    "importRows": "{count, plural, one {صف واحد} other {# صفوف}}",
+    "confirmImport": "تأكيد الاستيراد",
+    "cancelImport": "إلغاء",
+    "importWorking": "جارٍ إنشاء المهام…",
+    "importAdjustHint": "اطلب من الوكيل تعديل الربط إذا كان هناك شيء غير صحيح.",
+    "importPendingHint": "لا يزال الوكيل يقرأ هذا الملف ويربط أعمدته.",
+    "importCanceled": "تم إلغاء هذا الاستيراد. لم يتم إنشاء أي شيء.",
+    "importFailed": "فشل الاستيراد.",
+    "importConfirmed": "{count, plural, one {تم إنشاء مهمة واحدة} other {تم إنشاء # مهام}}",
+    "importSkippedRow": "تم تخطي الصف {row}: {reason}"
   },
   "share": {
     "createFailed": "تعذّر إنشاء الرابط. حاول مرة أخرى.",

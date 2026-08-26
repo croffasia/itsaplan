@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
-import { ArrowUp, Bot, RotateCw, Square } from 'lucide-react';
+import { useRef, useState, type ReactNode } from 'react';
+import { ArrowUp, Bot, Paperclip, RotateCw, Square, X } from 'lucide-react';
+import { uploadImport, type IssueImport } from '@/lib/api';
 import type { AiAgent } from '@/lib/api';
 import type { ChatMessage, ChatStatus, PendingMessage } from '@/hooks/useAgentChat';
 import { AgentChatTranscript } from './AgentChatTranscript';
@@ -43,6 +44,7 @@ export function AgentChatPanel({
   hasEarlierMessages,
   isLoadingEarlier,
   onLoadEarlier,
+  projectKey,
 }: {
   agent: AiAgent;
   messages: ChatMessage[];
@@ -59,9 +61,16 @@ export function AgentChatPanel({
   hasEarlierMessages?: boolean;
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
+  // Given, the composer offers attaching a spreadsheet or document for the agent
+  // to import issues from.
+  projectKey?: string;
 }) {
   const t = useTranslations('common.agentChat');
   const [input, setInput] = useState('');
+  const [attachments, setAttachments] = useState<IssueImport[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   // An external agent answers on its runner, so with none polling the message would sit
   // in the queue with nothing to take it. The composer says so instead of accepting it.
   // A message typed while the agent is answering is not refused — it waits its turn.
@@ -72,7 +81,29 @@ export function AgentChatPanel({
     const text = input.trim();
     if (!canSend) return;
     setInput('');
-    onSend(text);
+    // The attached files ride along as text the agent reads; each id is what its
+    // read_import_file tool takes.
+    const marker = attachments
+      .map((a) => `[file for import: "${a.filename}" (import id: ${a.id})]`)
+      .join('\n');
+    setAttachments([]);
+    onSend(marker ? `${text}\n\n${marker}` : text);
+  }
+
+  async function attach(files: FileList | null) {
+    const file = files?.[0];
+    if (!file || uploading) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const draft = await uploadImport(projectKey!, file);
+      setAttachments((current) => [...current, draft]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : t('uploadFailed'));
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
   }
 
   return (
@@ -117,6 +148,38 @@ export function AgentChatPanel({
               submit();
             }}
           >
+            {(attachments.length > 0 || uploadError) && (
+              <div className="mb-2 flex flex-wrap items-center gap-1.5">
+                {attachments.map((a) => (
+                  <span
+                    key={a.id}
+                    className="flex items-center gap-1 rounded-md bg-muted px-2 py-1 text-xs"
+                    dir="auto"
+                  >
+                    {a.filename}
+                    <button
+                      type="button"
+                      className="text-muted-foreground hover:text-foreground"
+                      title={t('removeAttachment')}
+                      onClick={() =>
+                        setAttachments((current) => current.filter((x) => x.id !== a.id))
+                      }
+                    >
+                      <X className="size-3" />
+                      <span className="sr-only">{t('removeAttachment')}</span>
+                    </button>
+                  </span>
+                ))}
+                {uploadError && <span className="text-xs text-destructive">{uploadError}</span>}
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".xlsx,.csv,.docx"
+              className="hidden"
+              onChange={(e) => void attach(e.target.files)}
+            />
             <InputGroup className="rounded-2xl border-transparent bg-muted has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0 dark:bg-muted/50">
               <InputGroupTextarea
                 // `auto` once there is something to read, so a message keeps the
@@ -159,6 +222,20 @@ export function AgentChatPanel({
                 }}
               >
                 {composerStart}
+                {projectKey && (
+                  <InputGroupButton
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    className="rounded-md text-muted-foreground hover:text-foreground"
+                    title={t('attachFile')}
+                    disabled={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <Paperclip />
+                    <span className="sr-only">{t('attachFile')}</span>
+                  </InputGroupButton>
+                )}
                 {onReset && (
                   <InputGroupButton
                     type="button"

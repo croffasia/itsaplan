@@ -112,6 +112,22 @@ export const AGENT_ACTIONS: ToolMeta[] = [
     always: false,
   },
   {
+    key: 'read_import_file',
+    group: 'issues',
+    label: 'Read an uploaded import file',
+    description:
+      'Read a spreadsheet or document uploaded in chat so an agent can turn its rows into issues.',
+    always: false,
+  },
+  {
+    key: 'save_import_mapping',
+    group: 'issues',
+    label: 'Save an import column mapping',
+    description:
+      "Save which columns of an uploaded file feed each issue field, for the user's review before anything is created.",
+    always: false,
+  },
+  {
     key: 'create_initiative',
     group: 'initiatives',
     label: 'Create initiatives',

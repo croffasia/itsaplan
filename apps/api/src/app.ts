@@ -82,6 +82,7 @@ export const app = new Elysia()
           },
           { name: 'Cycles', description: 'Cycles (time-boxed periods of work) and their issues' },
           { name: 'Attachments', description: 'Issue attachments and raw bytes' },
+          { name: 'Imports', description: 'Files uploaded for an agent to turn into issues' },
           { name: 'Avatars', description: "Current user's avatar image (upload and raw bytes)" },
           { name: 'Views', description: 'Saved work items views' },
           { name: 'Share', description: 'Public read-only sharing of issues and views' },

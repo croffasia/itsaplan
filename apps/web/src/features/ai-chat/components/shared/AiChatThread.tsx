@@ -107,6 +107,7 @@ export function AiChatThread({
   return (
     <AgentChatPanel
       agent={agent}
+      projectKey={projectKey}
       messages={messages}
       status={status}
       activeTool={activeTool}

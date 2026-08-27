@@ -538,10 +538,14 @@ export type AgentRunEvent =
 // prompt (truncated); null when it was never set. `cliSessionId` is the coding agent
 // session an external agent's runner keeps for the thread on its own machine — null
 // before the runner has reported one, and always null for an internal agent.
+// `contextTokens` is the size of the conversation's context after its last completed
+// answer: absent while no answer has completed, null where the agent reports no counts
+// that can be read as one.
 export interface AiChatThread {
   id: string;
   title: string | null;
   cliSessionId: string | null;
+  contextTokens?: number | null;
   createdAt: string;
   updatedAt: string;
 }

@@ -602,6 +602,26 @@ export const agentChatEvent = pgTable(
   (t) => [index('agent_chat_event_message_idx').on(t.messageId, t.id)],
 );
 
+// The token counts of the last completed answer of one chat thread, which is what the
+// chat panel shows as the size of that conversation's context. One row per thread,
+// overwritten by every answer: only the last number says how close the conversation is
+// to the agent's limit. Null counts mean the agent reports none that can be read as a
+// context size, which the panel shows as a dash.
+//
+// Threads of external agents live in agent_chat_thread and those of internal agents in
+// Mastra's own tables, so the row carries no foreign key to a thread; both ids come from
+// the same generator (see runtime/thread-ids) and cannot collide. The row is deleted
+// where the thread is deleted, and the cascade covers the deletion of the agent.
+export const agentChatUsage = pgTable('agent_chat_usage', {
+  threadId: text('thread_id').primaryKey(),
+  agentId: integer('agent_id')
+    .notNull()
+    .references(() => aiAgent.id, { onDelete: 'cascade' }),
+  inputTokens: integer('input_tokens'),
+  outputTokens: integer('output_tokens'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 // Stored credentials for a project's integrations. One store for every secret: the
 // API keys of LLM providers (kind 'llm', addressed by an internal agent's model) and
 // the credentials of tool integrations (kind 'tool', bound to configured tools).

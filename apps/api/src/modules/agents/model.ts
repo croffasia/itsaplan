@@ -23,10 +23,14 @@ export type AgentRunTrigger = typeof agentRunTrigger.static;
 
 // One chat thread in the history list. `cliSessionId` belongs to an external agent's
 // threads, where a runner keeps the session; an internal agent runs here and has none.
+// `contextTokens` is the size of the conversation's context after its last completed
+// answer: absent while no answer has completed, null where the agent reports no counts
+// that can be read as one.
 export type ChatThreadSummary = {
   id: string;
   title: string | null;
   cliSessionId: string | null;
+  contextTokens?: number | null;
   createdAt: string;
   updatedAt: string;
 };

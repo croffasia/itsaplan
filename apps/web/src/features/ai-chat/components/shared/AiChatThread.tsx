@@ -24,6 +24,7 @@ export function AiChatThread({
   onThreadCreated,
   onStateChange,
   composerStart,
+  composerEnd,
 }: {
   projectKey: string;
   agent: AiAgent;
@@ -34,6 +35,8 @@ export function AiChatThread({
   onStateChange?: (state: { running: boolean; hasMessages: boolean }) => void;
   // A control of the host that belongs to this conversation, put next to its composer.
   composerStart?: ReactNode;
+  // What the host says about this conversation, put at the end of the same row.
+  composerEnd?: ReactNode;
 }) {
   const {
     messages,
@@ -116,6 +119,7 @@ export function AiChatThread({
       onStop={stop}
       onRemovePending={removePending}
       composerStart={composerStart}
+      composerEnd={composerEnd}
       hasEarlierMessages={messagesQuery.hasNextPage}
       isLoadingEarlier={messagesQuery.isFetchingNextPage}
       onLoadEarlier={() => void messagesQuery.fetchNextPage()}

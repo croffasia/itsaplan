@@ -750,6 +750,13 @@
       "when": 1787806565058,
       "tag": "0106_unusual_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 107,
+      "version": "7",
+      "when": 1787849917963,
+      "tag": "0107_lazy_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

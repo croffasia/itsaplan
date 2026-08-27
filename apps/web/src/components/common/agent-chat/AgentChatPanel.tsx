@@ -41,6 +41,7 @@ export function AgentChatPanel({
   onRemovePending,
   onReset,
   composerStart,
+  composerEnd,
   hasEarlierMessages,
   isLoadingEarlier,
   onLoadEarlier,
@@ -58,6 +59,8 @@ export function AgentChatPanel({
   // Rendered at the start of the composer's button row, before the panel's own
   // buttons.
   composerStart?: ReactNode;
+  // Rendered at the end of that row, before the stop and send buttons.
+  composerEnd?: ReactNode;
   hasEarlierMessages?: boolean;
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
@@ -252,6 +255,7 @@ export function AgentChatPanel({
                   </InputGroupButton>
                 )}
                 <div className="ms-auto flex items-center gap-1">
+                  {composerEnd}
                   {status !== 'ready' && (
                     <InputGroupButton
                       type="button"

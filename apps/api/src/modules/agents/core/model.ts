@@ -185,6 +185,16 @@ export const ChatThreadResponse = t.Object({
         'own machine. Always null for an internal agent, which runs in this process.',
     }),
   ),
+  contextTokens: t.Optional(
+    t.Nullable(
+      t.Number({
+        description:
+          'The tokens the last completed answer of this thread read and wrote, which is ' +
+          'the size of its context. Absent while no answer has completed; null where the ' +
+          'agent reports no counts that can be read as a context size.',
+      }),
+    ),
+  ),
   createdAt: t.String(),
   updatedAt: t.String(),
 });

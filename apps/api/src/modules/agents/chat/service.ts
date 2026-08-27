@@ -3,6 +3,7 @@ import { and, asc, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { iso } from '#shared/lib';
 import { appendTextPart } from '../chat-parts';
+import { deleteContextUsage, readContextTokens } from '../chat-usage';
 import { intEnv } from '../core/helpers/env';
 import { chartPreamble, projectPreamble } from '../core/prompt/framing';
 import { peoplePreamble, type Person } from '../core/prompt/run-context';
@@ -62,10 +63,13 @@ export async function listThreads(
     .limit(PAGE_SIZE + 1)
     .offset(page * PAGE_SIZE);
   const hasMore = rows.length > PAGE_SIZE;
-  const items = (hasMore ? rows.slice(0, PAGE_SIZE) : rows).map((r) => ({
+  const threads = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
+  const sizes = await readContextTokens(threads.map((r) => r.id));
+  const items = threads.map((r) => ({
     id: r.id,
     title: r.title && r.title.length > 0 ? r.title : null,
     cliSessionId: r.cliSessionId,
+    ...(sizes.has(r.id) ? { contextTokens: sizes.get(r.id) } : {}),
     createdAt: iso(r.createdAt),
     updatedAt: iso(r.updatedAt),
   }));
@@ -197,7 +201,9 @@ export async function deleteThread(threadId: string, userId: string): Promise<bo
     .delete(agentChatThread)
     .where(and(eq(agentChatThread.id, threadId), eq(agentChatThread.userId, userId)))
     .returning({ id: agentChatThread.id });
-  return rows.length > 0;
+  if (rows.length === 0) return false;
+  await deleteContextUsage(threadId);
+  return true;
 }
 
 async function ownsThread(threadId: string, userId: string): Promise<boolean> {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useFormatter, useTranslations } from 'next-intl';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // How large the conversation's context is after its last completed answer, which is
 // what says how close it is to the agent's limit. Null where the agent reports no
@@ -9,21 +10,19 @@ export function AiChatContextSize({ tokens }: { tokens: number | null }) {
   const t = useTranslations('aiChat');
   const format = useFormatter();
 
-  if (tokens === null) {
-    return (
-      <span className="text-xs text-muted-foreground" title={t('contextUnavailable')}>
-        —
-      </span>
-    );
-  }
   return (
-    <span
-      className="text-xs text-muted-foreground"
-      title={t('contextSizeHint', { tokens: format.number(tokens) })}
-      dir="ltr"
-    >
-      {compact(tokens)}
-    </span>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="text-xs text-muted-foreground" dir="ltr">
+          {tokens === null ? '—' : compact(tokens)}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent>
+        {tokens === null
+          ? t('contextUnavailable')
+          : t('contextSizeHint', { tokens: format.number(tokens) })}
+      </TooltipContent>
+    </Tooltip>
   );
 }
 

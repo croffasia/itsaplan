@@ -3,7 +3,7 @@ import mammoth from 'mammoth';
 import { HttpError } from '#shared/lib';
 
 // Turns an uploaded file into a flat table: the first non-empty row is the header,
-// everything after it is data. Only what the two ends of the import need — no
+// everything after it is data. Only what reading and importing one need — no
 // formatting, formulas, or multiple sheets; the first sheet wins.
 
 export interface ParsedSheet {
@@ -16,20 +16,18 @@ export interface ParsedSheet {
   rowNumbers?: number[];
 }
 
-// Bound on what one import may hold. A bigger file is refused at upload-parse time
-// rather than half-imported later.
+// Bound on what one import may hold. A bigger file is refused at parse time rather
+// than half-imported later.
 export const MAX_IMPORT_ROWS = 1000;
 
-const ALLOWED_EXTENSIONS = ['.xlsx', '.csv', '.docx'] as const;
+// The extensions parseImportFile reads. An upload is not restricted to them — a
+// chat attachment can be anything the instance accepts — but only these parse
+// into a table.
+export const TABLE_EXTENSIONS = ['.xlsx', '.csv', '.docx'] as const;
 
-export function assertImportFilename(filename: string): void {
+export function isTableFilename(filename: string): boolean {
   const lower = filename.toLowerCase();
-  if (!ALLOWED_EXTENSIONS.some((ext) => lower.endsWith(ext))) {
-    throw new HttpError(
-      400,
-      'Unsupported file type. Use .xlsx, .csv, or .docx (an old .xls file can be saved as .xlsx).',
-    );
-  }
+  return TABLE_EXTENSIONS.some((ext) => lower.endsWith(ext));
 }
 
 function cellText(value: ExcelJS.CellValue): string {
@@ -235,5 +233,8 @@ export async function parseImportFile(bytes: Buffer, filename: string): Promise<
   if (lower.endsWith('.csv'))
     return fromTable(parseCsv(bytes.toString('utf8')), 'The CSV file is empty');
   if (lower.endsWith('.docx')) return parseDocx(bytes);
-  throw new HttpError(400, 'Unsupported file type');
+  throw new HttpError(
+    400,
+    'Unsupported file type. Use .xlsx, .csv, or .docx (an old .xls file can be saved as .xlsx).',
+  );
 }

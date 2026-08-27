@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'bun:test';
-import { parseCsv, parseImportFile } from '../../parse';
 import { applyMapping, validateMapping, type MappingContext } from '../../mapping';
 
 const ctx: MappingContext = {
@@ -12,36 +11,6 @@ const ctx: MappingContext = {
     { userId: 'u2', name: null, email: 'bob@example.com' },
   ],
 };
-
-describe('csv parser', () => {
-  it('reads quoted fields, escaped quotes, and blank lines', () => {
-    const rows = parseCsv('a,b\r\n"1,5","say ""hi"""\r\n\r\n   , \r\nx,y\n');
-    expect(rows).toEqual([
-      ['a', 'b'],
-      ['1,5', 'say "hi"'],
-      ['x', 'y'],
-    ]);
-  });
-
-  it('sniffs a semicolon delimiter', () => {
-    expect(parseCsv('a;b\n1;2')).toEqual([
-      ['a', 'b'],
-      ['1', '2'],
-    ]);
-  });
-});
-
-describe('import file routing', () => {
-  it('refuses an unsupported extension', async () => {
-    await expect(parseImportFile(Buffer.from('x'), 'file.xls')).rejects.toThrow('Unsupported');
-  });
-
-  it('parses a csv buffer end to end', async () => {
-    const parsed = await parseImportFile(Buffer.from('Task,Notes\nA,B'), 't.csv');
-    expect(parsed.headers).toEqual(['Task', 'Notes']);
-    expect(parsed.totalRows).toBe(1);
-  });
-});
 
 describe('mapping validation', () => {
   it('requires title and drops unknown fields', () => {

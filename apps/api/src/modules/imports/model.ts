@@ -1,10 +1,6 @@
 import { t } from 'elysia';
 
-export { projectKeyParams } from '../issues/model';
-
 export const importIdParams = t.Object({ importId: t.String() });
-
-export const uploadImportBody = t.Object({ file: t.File() });
 
 // The draft the UI renders and confirms against. `mapping` passes through as the
 // agent saved it (field -> column header); it is only ever read back, not edited
@@ -15,7 +11,6 @@ export const ImportResponse = t.Object({
   contentType: t.String(),
   sizeBytes: t.Number(),
   status: t.Union([
-    t.Literal('pending'),
     t.Literal('mapped'),
     t.Literal('confirmed'),
     t.Literal('canceled'),

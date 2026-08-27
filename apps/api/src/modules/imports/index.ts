@@ -1,59 +1,24 @@
 import { Elysia, t } from 'elysia';
-import { randomUUID } from 'node:crypto';
 import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
 import { guards, entityGuard } from '#shared/guards';
 import { HttpError } from '#shared/lib';
-import { putObject } from '#shared/s3';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { requireUser } from '#shared/access';
-import { getStorageSettings, MB, type StorageSettings } from '#modules/settings/service';
-import { getProjectAttachmentBytes } from '#modules/attachments/service';
 import { getProjectById } from '#modules/projects/service';
-import {
-  ConfirmResponse,
-  ImportResponse,
-  projectKeyParams,
-  importIdParams,
-  uploadImportBody,
-} from './model';
-import { assertImportFilename } from './parse';
+import { ConfirmResponse, ImportResponse, importIdParams } from './model';
 import {
   cancelImport,
   confirmImport,
-  createImport,
   getImport,
   getImportProjectId,
   readImportTable,
 } from './service';
 
-// Imports: a file uploaded so an agent can turn its rows into issues. The upload
-// stores bytes and a pending row; the agent maps columns; creation happens only on
-// the confirm route, called by the UI after the user approves the preview.
-
-async function assertUploadAllowed(
-  limits: StorageSettings,
-  projectId: number,
-  size: number,
-): Promise<void> {
-  if (size > limits.maxAttachmentMb * MB) {
-    throw new HttpError(413, `File exceeds the ${limits.maxAttachmentMb} MB limit`);
-  }
-  if (limits.projectQuotaMb > 0) {
-    const used = await getProjectAttachmentBytes(projectId);
-    if (used + size > limits.projectQuotaMb * MB) {
-      throw new HttpError(
-        413,
-        `The project has used its ${limits.projectQuotaMb} MB storage quota.`,
-      );
-    }
-  }
-}
-
-function importKey(projectId: number, filename: string): string {
-  const safeName = filename.replace(/[^\w.-]+/g, '_').slice(-100);
-  return `projects/${projectId}/imports/${randomUUID()}-${safeName}`;
-}
+// Imports: a chat attachment an agent mapped into issues. The file is uploaded and
+// read through the chat-attachments routes; the draft appears when the agent saves
+// a mapping (the prepare_issue_import tool); creation happens only on the confirm
+// route, called by the UI after the user approves the preview.
 
 function importDto(row: Awaited<ReturnType<typeof getImport>>) {
   if (!row) throw new HttpError(404, 'Import not found');
@@ -71,46 +36,6 @@ export const importRoutes = new Elysia({
       getImportProjectId(p.importId),
     ),
   })
-
-  // Multipart upload of one file. The extension decides the parser, so it is
-  // checked here before anything is stored.
-  .post(
-    '/projects/:projectKey/imports',
-    async ({ body, set, project, user }) => {
-      const file = body.file;
-      if (!(file instanceof File)) throw new HttpError(400, 'No file uploaded (form field "file")');
-      if (file.size === 0) throw new HttpError(400, 'Uploaded file is empty');
-      const filename = file.name || 'file';
-      assertImportFilename(filename);
-      await assertUploadAllowed(await getStorageSettings(), project.id, file.size);
-
-      const contentType = file.type || 'application/octet-stream';
-      const key = importKey(project.id, filename);
-      try {
-        await putObject(key, Buffer.from(await file.arrayBuffer()), contentType);
-      } catch (err) {
-        throw new HttpError(502, `Object store error: ${err instanceof Error ? err.message : err}`);
-      }
-
-      const row = await createImport({
-        projectId: project.id,
-        createdByUserId: requireUser(user).id,
-        s3Key: key,
-        filename,
-        contentType,
-        sizeBytes: file.size,
-      });
-      set.status = 201;
-      return row;
-    },
-    {
-      body: uploadImportBody,
-      params: projectKeyParams,
-      permission: ['work_items', 'create'],
-      response: { 201: ImportResponse, ...commonErrors, ...errors(413, 502) },
-      detail: { summary: 'Upload a file for issue import' },
-    },
-  )
 
   .get(
     '/imports/:importId',

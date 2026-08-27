@@ -107,7 +107,6 @@
     "cancelImport": "Cancel",
     "importWorking": "Creating issues…",
     "importAdjustHint": "Ask the agent to adjust the mapping if anything looks wrong.",
-    "importPendingHint": "The agent is still reading this file and mapping its columns.",
     "importCanceled": "This import was canceled. Nothing was created.",
     "importFailed": "The import failed.",
     "importConfirmed": "{count, plural, one {Created # issue} other {Created # issues}}",

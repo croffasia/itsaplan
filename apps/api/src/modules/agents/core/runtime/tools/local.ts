@@ -1,16 +1,16 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { getImport, readImportTable, saveMapping } from '#modules/imports/service';
-import { IMPORT_FIELDS } from '#modules/imports/mapping';
+import { createMappedImport } from '#modules/imports/service';
 
 // The agent tools with no route behind them. Everything an agent does to a project
 // goes through the real API (see route-tools.ts); this is what is left over.
 //
 // The current date is not a project resource, so exposing it over REST would add an
-// endpoint that exists only for the agent. It is answered in process instead. The
-// two import tools are the same kind of thing — they work on a file already stored
-// by the uploads route — but they are gated like any capability: they are built
-// only when the agent has them enabled.
+// endpoint that exists only for the agent. It is answered in process instead.
+// prepare_issue_import is the same kind of thing: it works on a file already
+// stored by the chat-attachments routes, and the draft it creates exists for the
+// user's review, not for the API's surface. It is gated like any capability: built
+// only when the agent has it enabled.
 
 export function buildLocalTools(
   projectId: number,
@@ -18,64 +18,37 @@ export function buildLocalTools(
 ): Record<string, ReturnType<typeof createTool>> {
   const enabled = new Set(enabledTools);
 
-  // Reads the stored file and answers with its table shape.
-  const read_import_file = createTool({
-    id: 'read_import_file',
+  // The mapping step of an issue import: reading the file is covered by the
+  // read_chat_attachment route tool; what is left is turning the attachment into
+  // the draft the review card renders. Issues are still created by the confirm
+  // route alone, when the user presses the button.
+  const prepare_issue_import = createTool({
+    id: 'prepare_issue_import',
     description:
-      'Read a file the user uploaded for issue import (.xlsx, .csv, or .docx with a table). ' +
-      'Returns the column headers and the first rows. Decide next which column feeds which ' +
-      'issue field and save that with save_import_mapping.',
+      'Turn a file uploaded in the chat into an issue import draft: save which column of the ' +
+      'file feeds which issue field ("title" required; description, priority, dueDate, labels, ' +
+      'and assignee optional). Read the file first with read_chat_attachment to see its headers ' +
+      'and rows. Issues are NOT created here — after saving, tell the user to review the preview ' +
+      'below and end the reply with a ```issue-import fenced code block whose content is exactly ' +
+      '{"importId": "<the returned id>"} so the review card renders.',
     inputSchema: z.object({
-      importId: z
+      attachmentId: z
         .string()
-        .describe(
-          'The import id the uploaded file carries, e.g. from [file for import: "tasks.xlsx" (import id: …)].',
-        ),
-    }),
-    execute: async ({ importId }) => {
-      const row = await getImport(importId);
-      if (!row || row.projectId !== projectId) throw new Error('Import not found.');
-      const parsed = await readImportTable(importId);
-      return {
-        filename: row.filename,
-        headers: parsed.headers,
-        sampleRows: parsed.rows.slice(0, 10),
-        totalRows: parsed.totalRows,
-        mappableFields: IMPORT_FIELDS,
-        nextStep:
-          'Choose the header that feeds each field and call save_import_mapping with ' +
-          '{ field: header } pairs. "title" is required.',
-      };
-    },
-  });
-
-  // Stores the chosen column mapping on the draft and tells the model how the
-  // confirmation reaches the user.
-  const save_import_mapping = createTool({
-    id: 'save_import_mapping',
-    description:
-      'Save the column mapping of an uploaded import file: which header feeds title, ' +
-      'description, priority, dueDate, labels, or assignee ("title" required). Issues are ' +
-      'NOT created here — after saving, tell the user to review the preview below and ' +
-      'include a ```issue-import fenced code block whose content is exactly ' +
-      '{"importId": "<the id>"} so the review card renders.',
-    inputSchema: z.object({
-      importId: z.string(),
+        .describe('The attachment id from the [file: "name" (attachment id: …)] marker.'),
       mapping: z
         .record(z.string(), z.string())
         .describe('Issue field -> column header, e.g. {"title": "Task", "dueDate": "Deadline"}.'),
     }),
-    execute: async ({ importId, mapping }) => {
-      const row = await getImport(importId);
-      if (!row || row.projectId !== projectId) throw new Error('Import not found.');
-      await saveMapping(importId, mapping);
+    execute: async ({ attachmentId, mapping }) => {
+      const draft = await createMappedImport(projectId, attachmentId, mapping);
       return {
         ok: true,
-        status: 'mapped',
+        importId: draft.id,
+        status: draft.status,
         nextStep:
           'Tell the user the mapping is ready for their review, and end the reply with a ' +
           '```issue-import fenced code block containing {"importId": "' +
-          importId +
+          draft.id +
           '"}. Nothing is created until they press Confirm.',
       };
     },
@@ -92,7 +65,6 @@ export function buildLocalTools(
         return { iso: now.toISOString(), date: now.toISOString().slice(0, 10) };
       },
     }),
-    ...(enabled.has('read_import_file') ? { read_import_file } : {}),
-    ...(enabled.has('save_import_mapping') ? { save_import_mapping } : {}),
+    ...(enabled.has('prepare_issue_import') ? { prepare_issue_import } : {}),
   };
 }

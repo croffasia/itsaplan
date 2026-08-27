@@ -1,6 +1,7 @@
 import { marked } from 'marked';
 import DOMPurify from 'isomorphic-dompurify';
 import { parseChartSpec, type ChartSpec } from '@/utils/chartSpec';
+import { mediaUrl } from '@/lib/api';
 
 // Content whose links lead away from the current view (release notes, agent chat)
 // asks for newTabLinks, so following one does not replace what the reader was on.
@@ -36,6 +37,24 @@ export function sanitizeHtml(html: string, options?: HtmlOptions): string {
 export function renderMarkdown(value: string, options?: HtmlOptions): string {
   const html = marked.parse(value, { async: false, breaks: true }) as string;
   return sanitizeHtml(html, options);
+}
+
+// A file the user attached to a chat message arrives as a marker with the
+// attachment id: [file: "Jira.csv" (attachment id: 7e01be81-…)]. Shown as-is it
+// would be raw text with a uuid, so it renders the way charts and the import
+// card do — replaced with the file name and a download link, here for markdown
+// content and in AgentChatMessage for the plain-text user bubble.
+export const FILE_MARKER = /\[file: "([^"]+)" \(attachment id: ([0-9a-f-]{36})\)\]/gi;
+
+export function fileMarkerUrl(id: string): string {
+  return mediaUrl(`/chat-attachments/${id}/raw?download=1`);
+}
+
+function linkFileMarkers(text: string): string {
+  return text.replace(FILE_MARKER, (_, name: string, id: string) => {
+    const label = name.replace(/[[\]\\]/g, '\\$&');
+    return `[${label}](${fileMarkerUrl(id)})`;
+  });
 }
 
 // A chart an agent embedded in its answer, as one fenced block:
@@ -115,7 +134,8 @@ export function markdownSegments(value: string, options?: HtmlOptions): Markdown
   function flush(): void {
     const text = buffer.join('\n');
     buffer = [];
-    if (text.trim()) segments.push({ kind: 'markdown', html: renderMarkdown(text, options) });
+    if (text.trim())
+      segments.push({ kind: 'markdown', html: renderMarkdown(linkFileMarkers(text), options) });
   }
 
   for (let i = 0; i < lines.length; i++) {

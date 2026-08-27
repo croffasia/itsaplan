@@ -1,5 +1,5 @@
 {
-  "id": "b4dbb734-a62c-4280-9105-bd3efa06c479",
+  "id": "c95254d3-1f12-453d-b6ba-35abaa96c94d",
   "prevId": "4ec3f86c-7e21-4142-ab42-5a01bc1ea0bd",
   "version": "7",
   "dialect": "postgresql",
@@ -2279,6 +2279,126 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.chat_attachment": {
+      "name": "chat_attachment",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "public_id": {
+          "name": "public_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uploaded_by_user_id": {
+          "name": "uploaded_by_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "s3_key": {
+          "name": "s3_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "filename": {
+          "name": "filename",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_type": {
+          "name": "content_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "size_bytes": {
+          "name": "size_bytes",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "chat_attachment_project_idx": {
+          "name": "chat_attachment_project_idx",
+          "columns": [
+            {
+              "expression": "project_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "chat_attachment_project_id_project_id_fk": {
+          "name": "chat_attachment_project_id_project_id_fk",
+          "tableFrom": "chat_attachment",
+          "tableTo": "project",
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "chat_attachment_uploaded_by_user_id_user_id_fk": {
+          "name": "chat_attachment_uploaded_by_user_id_user_id_fk",
+          "tableFrom": "chat_attachment",
+          "tableTo": "user",
+          "columnsFrom": [
+            "uploaded_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "chat_attachment_public_id_unique": {
+          "name": "chat_attachment_public_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "public_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.custom_field": {
       "name": "custom_field",
       "schema": "",
@@ -4046,33 +4166,9 @@
           "primaryKey": false,
           "notNull": true
         },
-        "created_by_user_id": {
-          "name": "created_by_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "s3_key": {
-          "name": "s3_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "filename": {
-          "name": "filename",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "content_type": {
-          "name": "content_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "size_bytes": {
-          "name": "size_bytes",
-          "type": "bigint",
+        "attachment_id": {
+          "name": "attachment_id",
+          "type": "integer",
           "primaryKey": false,
           "notNull": true
         },
@@ -4081,7 +4177,7 @@
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "default": "'pending'"
+          "default": "'mapped'"
         },
         "mapping": {
           "name": "mapping",
@@ -4141,17 +4237,17 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "issue_import_created_by_user_id_user_id_fk": {
-          "name": "issue_import_created_by_user_id_user_id_fk",
+        "issue_import_attachment_id_chat_attachment_id_fk": {
+          "name": "issue_import_attachment_id_chat_attachment_id_fk",
           "tableFrom": "issue_import",
-          "tableTo": "user",
+          "tableTo": "chat_attachment",
           "columnsFrom": [
-            "created_by_user_id"
+            "attachment_id"
           ],
           "columnsTo": [
             "id"
           ],
-          "onDelete": "set null",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },

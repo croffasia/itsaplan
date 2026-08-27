@@ -2,7 +2,7 @@
 
 import { useRef, useState, type ReactNode } from 'react';
 import { ArrowUp, Bot, Paperclip, RotateCw, Square, X } from 'lucide-react';
-import { uploadImport, type IssueImport } from '@/lib/api';
+import { uploadChatAttachment, type ChatAttachment } from '@/lib/api';
 import type { AiAgent } from '@/lib/api';
 import type { ChatMessage, ChatStatus, PendingMessage } from '@/hooks/useAgentChat';
 import { AgentChatTranscript } from './AgentChatTranscript';
@@ -61,13 +61,13 @@ export function AgentChatPanel({
   hasEarlierMessages?: boolean;
   isLoadingEarlier?: boolean;
   onLoadEarlier?: () => void;
-  // Given, the composer offers attaching a spreadsheet or document for the agent
-  // to import issues from.
+  // Given, the composer offers attaching a file for the agent to work with (to
+  // import issues from, or to read).
   projectKey?: string;
 }) {
   const t = useTranslations('common.agentChat');
   const [input, setInput] = useState('');
-  const [attachments, setAttachments] = useState<IssueImport[]>([]);
+  const [attachments, setAttachments] = useState<ChatAttachment[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,9 +82,10 @@ export function AgentChatPanel({
     if (!canSend) return;
     setInput('');
     // The attached files ride along as text the agent reads; each id is what its
-    // read_import_file tool takes.
+    // read_chat_attachment tool takes. The transcript renders a marker as the
+    // file name with a download link (see lib/markdown.ts).
     const marker = attachments
-      .map((a) => `[file for import: "${a.filename}" (import id: ${a.id})]`)
+      .map((a) => `[file: "${a.filename}" (attachment id: ${a.id})]`)
       .join('\n');
     setAttachments([]);
     onSend(marker ? `${text}\n\n${marker}` : text);
@@ -96,8 +97,8 @@ export function AgentChatPanel({
     setUploading(true);
     setUploadError(null);
     try {
-      const draft = await uploadImport(projectKey!, file);
-      setAttachments((current) => [...current, draft]);
+      const uploaded = await uploadChatAttachment(projectKey!, file);
+      setAttachments((current) => [...current, uploaded]);
     } catch (err) {
       setUploadError(err instanceof Error ? err.message : t('uploadFailed'));
     } finally {

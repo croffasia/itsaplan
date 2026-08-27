@@ -56,7 +56,7 @@ export default function AgentChatImportCard({ importId }: { importId: string }) 
         </div>
       ) : (
         <>
-          {(draft.status === 'mapped' || draft.status === 'pending') && draft.preview ? (
+          {draft.status === 'mapped' && draft.preview ? (
             <AgentChatImportPreview
               headers={draft.preview.headers}
               rows={draft.preview.rows}
@@ -78,8 +78,6 @@ export default function AgentChatImportCard({ importId }: { importId: string }) 
                 )}
               </div>
             </>
-          ) : draft.status === 'pending' ? (
-            <p className="text-xs text-muted-foreground">{t('importPendingHint')}</p>
           ) : draft.status === 'canceled' ? (
             <p className="text-xs text-muted-foreground">{t('importCanceled')}</p>
           ) : draft.status === 'failed' ? (

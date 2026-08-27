@@ -633,14 +633,48 @@ async function* readSseFrames(res: Response): AsyncGenerator<{ id: number | null
   }
 }
 
-// --- Issue imports: a file uploaded in an agent chat that an agent maps into issues.
+// --- Chat attachments: a file dropped in an agent chat, for an agent to read or
+// import issues from.
+
+export interface ChatAttachment {
+  id: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  createdAt: string;
+  url: string;
+}
+
+// The upload route takes the bytes as base64 rather than multipart, so the chat
+// composer and an MCP client call the same route.
+export async function uploadChatAttachment(
+  projectKey: string,
+  file: File,
+): Promise<ChatAttachment> {
+  const dataUrl = await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error ?? new Error('Could not read the file'));
+    reader.readAsDataURL(file);
+  });
+  return request(`/projects/${projectKey}/chat-attachments`, {
+    method: 'POST',
+    body: JSON.stringify({
+      filename: file.name,
+      contentBase64: dataUrl.slice(dataUrl.indexOf(',') + 1),
+      contentType: file.type || undefined,
+    }),
+  });
+}
+
+// --- Issue imports: a chat attachment an agent mapped into issues, awaiting confirmation.
 
 export interface IssueImport {
   id: string;
   filename: string;
   contentType: string;
   sizeBytes: number;
-  status: 'pending' | 'mapped' | 'confirmed' | 'canceled' | 'failed';
+  status: 'mapped' | 'confirmed' | 'canceled' | 'failed';
   mapping: Record<string, string> | null;
   errorText: string | null;
   createdAt: string;
@@ -650,18 +684,6 @@ export interface IssueImport {
 export interface ImportConfirmResult {
   imported: { key: string; title: string }[];
   skipped: { row: number; reason: string }[];
-}
-
-export async function uploadImport(projectKey: string, file: File): Promise<IssueImport> {
-  const body = new FormData();
-  body.append('file', file);
-  const res = await fetch(`${API_URL}/projects/${projectKey}/imports`, {
-    method: 'POST',
-    credentials: 'include',
-    body,
-  });
-  if (!res.ok) throw await apiFailure(res);
-  return res.json();
 }
 
 export async function getImport(importId: string): Promise<IssueImport> {

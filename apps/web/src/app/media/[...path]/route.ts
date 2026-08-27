@@ -5,10 +5,10 @@ import { serverRuntimeEnv } from '@/utils/runtimeEnv';
 // frozen into the build, so an absolute api url cannot be optimized by an image that
 // has to serve any instance.
 //
-// Only the api's two public, unauthenticated media routes are reachable here, and no
+// Only the api's public, unauthenticated media routes are reachable here, and no
 // request header is forwarded — this must never become a way to reach the rest of the
 // api through the web server.
-const MEDIA_ROOTS = ['avatars', 'attachments'];
+const MEDIA_ROOTS = ['avatars', 'attachments', 'chat-attachments'];
 
 // Copied from the api's response, including the headers that keep attacker-controlled
 // bytes inert (nosniff, the disposition that forces a download, the sandbox CSP).

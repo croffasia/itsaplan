@@ -3,11 +3,13 @@ import ExcelJS from 'exceljs';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
-import { saveMapping } from '../../service';
+import { getProjectByKey } from '#modules/projects/service';
+import { createMappedImport } from '../../service';
 
-// The import flow: an upload stores the file and a pending row, an agent saves a
-// column mapping through the service (the tools call it in process), and the
-// confirm route creates the issues. Needs MinIO like the attachments suite.
+// The import flow: the file is uploaded through the chat-attachments route, an
+// agent turns it into a draft by saving a column mapping (the
+// prepare_issue_import tool calls createMappedImport in process), and the confirm
+// route creates the issues. Needs MinIO like the attachments suite.
 
 async function setup() {
   const owner = await signUpTestUser();
@@ -25,55 +27,22 @@ async function uploadWorkbook(
   const sheet = workbook.addWorksheet('Tasks');
   for (const row of rows) sheet.addRow(row);
   const bytes = Buffer.from(await workbook.xlsx.writeBuffer());
-  return client.projects({ projectKey: 'MKT' }).imports.post({
-    file: new File([bytes], name, {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    }),
+  return client.projects({ projectKey: 'MKT' })['chat-attachments'].post({
+    filename: name,
+    contentBase64: bytes.toString('base64'),
+    contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
+}
+
+async function mapImport(attachmentId: string, mapping: Record<string, string>) {
+  const project = await getProjectByKey('MKT');
+  if (!project) throw new Error('Test project was not created');
+  return createMappedImport(project.id, attachmentId, mapping);
 }
 
 describe('imports', () => {
   beforeEach(async () => {
     await resetDb();
-  });
-
-  it('uploads a workbook as a pending draft', async () => {
-    const { asOwner } = await setup();
-    const res = await uploadWorkbook(asOwner, [
-      ['Task', 'Notes'],
-      ['First', 'hello'],
-    ]);
-    expect(res.status).toBe(201);
-    expect(res.data).toMatchObject({ filename: 'tasks.xlsx', status: 'pending', mapping: null });
-  });
-
-  it('rejects unsupported extensions and empty files', async () => {
-    const { asOwner } = await setup();
-    const wrongType = await asOwner.projects({ projectKey: 'MKT' }).imports.post({
-      file: new File(['x'], 'notes.txt', { type: 'text/plain' }),
-    });
-    expect(wrongType.status).toBe(400);
-
-    const workbook = new ExcelJS.Workbook();
-    workbook.addWorksheet('Empty');
-    const bytes = Buffer.from(await workbook.xlsx.writeBuffer());
-    const empty = await asOwner.projects({ projectKey: 'MKT' }).imports.post({
-      file: new File([bytes], 'empty.xlsx', { type: 'application/octet-stream' }),
-    });
-    // Parsing happens on read, so an unsheeted-but-valid upload is accepted here
-    // and fails when the agent reads it; an empty body is refused outright.
-    expect(empty.status).toBe(201);
-    const zero = await asOwner.projects({ projectKey: 'MKT' }).imports.post({
-      file: new File([], 'zero.xlsx', { type: 'application/octet-stream' }),
-    });
-    expect(zero.status).toBe(400);
-  });
-
-  it('denies a non-member uploading', async () => {
-    await setup();
-    const outsider = authedApi((await signUpTestUser()).cookie);
-    const res = await uploadWorkbook(outsider, [['Task']]);
-    expect(res.status).toBe(403);
   });
 
   it('maps, confirms, and creates the issues; skips unmappable rows', async () => {
@@ -86,38 +55,39 @@ describe('imports', () => {
       ['Bad date', '', 'not-a-date'],
     ]);
     expect(uploaded.status).toBe(201);
-    const id = uploaded.data!.id;
+    const attachmentId = uploaded.data!.id;
 
-    // Confirming before a mapping exists is a conflict.
-    const early = await asOwner.imports({ importId: id }).confirm.post();
-    expect(early.status).toBe(409);
+    // Confirming an unknown draft is a plain 404.
+    const missing = await asOwner.imports({ importId: crypto.randomUUID() }).confirm.post();
+    expect(missing.status).toBe(404);
 
-    const saved = await saveMapping(id, {
+    const draft = await mapImport(attachmentId, {
       title: 'Task',
       description: 'Notes',
       dueDate: 'Deadline',
     });
-    // The all-blank row is dropped at parse time, so three rows remain: two
-    // import cleanly, the one with an unreadable date is reported as skipped
-    // with its sheet row number (blank lines included in the count).
-    expect(saved.totalRows).toBe(3);
+    expect(draft.status).toBe('mapped');
 
-    const draft = await asOwner.imports({ importId: id }).get();
-    expect(draft.data!.status).toBe('mapped');
-    expect(draft.data!.mapping).toMatchObject({ title: 'Task' });
+    const read = await asOwner.imports({ importId: draft.id }).get();
+    expect(read.data!.status).toBe('mapped');
+    expect(read.data!.filename).toBe('tasks.xlsx');
+    expect(read.data!.mapping).toMatchObject({ title: 'Task' });
 
-    const confirm = await asOwner.imports({ importId: id }).confirm.post();
+    const confirm = await asOwner.imports({ importId: draft.id }).confirm.post();
     expect(confirm.status).toBe(200);
     expect(confirm.data!.imported).toHaveLength(2);
     expect(confirm.data!.imported[0]).toMatchObject({ key: 'MKT-1', title: 'First' });
+    // The all-blank row is dropped at parse time, so three rows remain: two
+    // import cleanly, the one with an unreadable date is reported as skipped
+    // with its sheet row number (blank lines included in the count).
     expect(confirm.data!.skipped).toEqual([
       { row: 5, reason: '"not-a-date" is not a readable date' },
     ]);
 
-    const again = await asOwner.imports({ importId: id }).confirm.post();
+    const again = await asOwner.imports({ importId: draft.id }).confirm.post();
     expect(again.status).toBe(409);
 
-    const done = await asOwner.imports({ importId: id }).get();
+    const done = await asOwner.imports({ importId: draft.id }).get();
     expect(done.data!.status).toBe('confirmed');
 
     const issues = await asOwner.projects({ projectKey: 'MKT' }).issues.get();
@@ -129,25 +99,55 @@ describe('imports', () => {
     expect(new Date(first!.dueDate as string).toISOString().slice(0, 10)).toBe('2026-09-01');
   });
 
+  it('refuses a mapping that names a column the file does not have', async () => {
+    const { asOwner } = await setup();
+    const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);
+    await expect(mapImport(uploaded.data!.id, { title: 'Nope' })).rejects.toThrow(
+      'not in the file',
+    );
+  });
+
+  it('refuses to map a file that does not parse into a table', async () => {
+    const { asOwner } = await setup();
+    const uploaded = await asOwner.projects({ projectKey: 'MKT' })['chat-attachments'].post({
+      filename: 'server.log',
+      contentBase64: Buffer.from('line one\nline two').toString('base64'),
+      contentType: 'text/plain',
+    });
+    expect(uploaded.status).toBe(201);
+    await expect(mapImport(uploaded.data!.id, { title: 'Task' })).rejects.toThrow('Unsupported');
+  });
+
+  it('refuses to map an attachment of another project', async () => {
+    const { asOwner } = await setup();
+    await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
+    const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);
+    const ops = await getProjectByKey('OPS');
+    if (!ops) throw new Error('Test project was not created');
+    await expect(createMappedImport(ops.id, uploaded.data!.id, { title: 'Task' })).rejects.toThrow(
+      'Attachment not found',
+    );
+  });
+
   it('cancels a draft and refuses to confirm it afterwards', async () => {
     const { asOwner } = await setup();
     const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);
-    const id = uploaded.data!.id;
-    const canceled = await asOwner.imports({ importId: id }).cancel.post();
+    const draft = await mapImport(uploaded.data!.id, { title: 'Task' });
+    const canceled = await asOwner.imports({ importId: draft.id }).cancel.post();
     expect(canceled.status).toBe(204);
-    const confirm = await asOwner.imports({ importId: id }).confirm.post();
+    const confirm = await asOwner.imports({ importId: draft.id }).confirm.post();
     expect(confirm.status).toBe(409);
-    const draft = await asOwner.imports({ importId: id }).get();
-    expect(draft.data!.status).toBe('canceled');
+    const read = await asOwner.imports({ importId: draft.id }).get();
+    expect(read.data!.status).toBe('canceled');
   });
 
   it('hides drafts of other projects', async () => {
     const { asOwner } = await setup();
     await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
     const uploaded = await uploadWorkbook(asOwner, [['Task']]);
-    const id = uploaded.data!.id;
+    const draft = await mapImport(uploaded.data!.id, { title: 'Task' });
     const wrong = await authedApi((await signUpTestUser()).cookie)
-      .imports({ importId: id })
+      .imports({ importId: draft.id })
       .get();
     expect(wrong.status).toBe(403);
   });

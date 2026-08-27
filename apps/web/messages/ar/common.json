@@ -107,7 +107,6 @@
     "cancelImport": "إلغاء",
     "importWorking": "جارٍ إنشاء المهام…",
     "importAdjustHint": "اطلب من الوكيل تعديل الربط إذا كان هناك شيء غير صحيح.",
-    "importPendingHint": "لا يزال الوكيل يقرأ هذا الملف ويربط أعمدته.",
     "importCanceled": "تم إلغاء هذا الاستيراد. لم يتم إنشاء أي شيء.",
     "importFailed": "فشل الاستيراد.",
     "importConfirmed": "{count, plural, one {تم إنشاء مهمة واحدة} other {تم إنشاء # مهام}}",

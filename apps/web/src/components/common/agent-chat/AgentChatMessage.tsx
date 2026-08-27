@@ -1,10 +1,12 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import type { ChatMessage } from '@/hooks/useAgentChat';
 import { cn } from '@/lib/utils';
 import type { AiChatPart, AiChatToolPart } from '@/lib/api';
 import { formatLongDate, formatTime } from '@/utils/dates';
 import Markdown from '@/components/common/Markdown';
+import { FILE_MARKER, fileMarkerUrl } from '@/lib/markdown';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';
 import { Marker, MarkerContent } from '@/components/ui/marker';
 import { Message, MessageContent, MessageFooter } from '@/components/ui/message';
@@ -13,6 +15,30 @@ import AgentChatToolCalls from './AgentChatToolCalls';
 import { useTranslations } from 'next-intl';
 
 type Block = { text: string } | { tools: AiChatToolPart[] };
+
+// The user bubble shows plain text, except the marker an attached file arrives
+// as, which renders as the file name with a download link (see lib/markdown.ts).
+function UserMessageText({ text }: { text: string }) {
+  const parts: ReactNode[] = [];
+  let last = 0;
+  for (const match of text.matchAll(new RegExp(FILE_MARKER))) {
+    if (match.index > last) parts.push(text.slice(last, match.index));
+    parts.push(
+      <a
+        key={parts.length}
+        href={fileMarkerUrl(match[2])}
+        target="_blank"
+        rel="noreferrer"
+        className="underline underline-offset-2"
+      >
+        {match[1]}
+      </a>,
+    );
+    last = match.index + match[0].length;
+  }
+  parts.push(text.slice(last));
+  return <span className="whitespace-pre-wrap">{parts}</span>;
+}
 
 // Tool calls that follow one another are shown as one block, in the place between the
 // two stretches of text where they were made.
@@ -60,7 +86,7 @@ export default function AgentChatMessage({
               ) : (
                 <BubbleContent key={index} className={cn(!isUser && 'w-full')}>
                   {isUser ? (
-                    <span className="whitespace-pre-wrap">{block.text}</span>
+                    <UserMessageText text={block.text} />
                   ) : (
                     <Markdown>{block.text}</Markdown>
                   )}

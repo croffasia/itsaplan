@@ -107,7 +107,6 @@
     "cancelImport": "取消",
     "importWorking": "正在创建任务…",
     "importAdjustHint": "如有不妥，请让智能体调整映射。",
-    "importPendingHint": "智能体仍在读取该文件并映射其列。",
     "importCanceled": "该导入已取消，未创建任何内容。",
     "importFailed": "导入失败。",
     "importConfirmed": "已创建 {count} 个任务",

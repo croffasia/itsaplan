@@ -1,4 +1,4 @@
-import type { ParsedSheet } from './parse';
+import type { ParsedSheet } from '#modules/chat-attachments/parse';
 
 // The column mapping an agent saves: which spreadsheet header feeds which issue
 // field. Rows are never stored with the mapping — the confirm step re-reads the

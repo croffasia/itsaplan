@@ -13,6 +13,7 @@
   "renameHint": "Double-click to rename",
   "moreTabs": "More chats ({count})",
   "history": "History",
+  "noHistory": "The agent keeps no history. This chat is lost on reload.",
   "untitledThread": "New conversation",
   "deleteThread": "Delete conversation",
   "deleteThreadConfirm": "“{title}” and its messages are deleted permanently.",

@@ -1,8 +1,12 @@
 'use client';
 
 import { useCallback } from 'react';
+import { MessageSquareOff } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { AiAgent } from '@/lib/api';
 import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
+import { InputGroupButton } from '@/components/ui/input-group';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { AiChatSessionBadge } from '../shared/AiChatSessionBadge';
 import { AiChatThread } from '../shared/AiChatThread';
@@ -51,6 +55,10 @@ export function ChatPanelSession({
     [session.id, onStateChange],
   );
   const thread = useShownThread(projectKey, agent.id, session.threadId);
+  const t = useTranslations('aiChat');
+  // An internal agent with memory off stores no thread and no message, so it has no
+  // history to list and its conversation ends with the page.
+  const keepsHistory = agent.kind === 'external' || agent.memoryEnabled;
 
   return (
     <div className={cn('absolute inset-0', !active && 'hidden')}>
@@ -70,14 +78,31 @@ export function ChatPanelSession({
               disabled={session.running}
               onSelect={(agentId) => onSelectAgent(session, agentId)}
             />
-            <ChatPanelHistory
-              projectKey={projectKey}
-              agentId={agent.id}
-              agentName={agent.name}
-              selectedThreadId={session.threadId}
-              onSelect={(threadId) => onSelectThread(agent.id, threadId)}
-              onDeleted={onThreadDeleted}
-            />
+            {keepsHistory ? (
+              <ChatPanelHistory
+                projectKey={projectKey}
+                agentId={agent.id}
+                agentName={agent.name}
+                selectedThreadId={session.threadId}
+                onSelect={(threadId) => onSelectThread(agent.id, threadId)}
+                onDeleted={onThreadDeleted}
+              />
+            ) : (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <InputGroupButton
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    className="rounded-md text-muted-foreground"
+                  >
+                    <MessageSquareOff />
+                    <span className="sr-only">{t('noHistory')}</span>
+                  </InputGroupButton>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-56">{t('noHistory')}</TooltipContent>
+              </Tooltip>
+            )}
             {thread?.cliSessionId && <AiChatSessionBadge sessionId={thread.cliSessionId} />}
           </>
         }

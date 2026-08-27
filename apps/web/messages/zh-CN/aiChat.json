@@ -13,6 +13,7 @@
   "renameHint": "双击重命名",
   "moreTabs": "更多聊天（{count}）",
   "history": "历史记录",
+  "noHistory": "该代理不保存历史记录。刷新后此对话会丢失。",
   "untitledThread": "新对话",
   "deleteThread": "删除对话",
   "deleteThreadConfirm": "将永久删除“{title}”及其中的消息。",

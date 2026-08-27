@@ -21,6 +21,6 @@
   "copySession": "Copy session id",
   "sessionLabel": "Local session id",
   "sessionHint": "The session the agent's runner keeps on its own machine. Resume it there to read the full transcript with its tool calls.",
-  "contextSizeHint": "{tokens} tokens in the context of the last answer",
+  "contextSizeHint": "{tokens} tokens",
   "contextUnavailable": "The context size is not available for this agent"
 }

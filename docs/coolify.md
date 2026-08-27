@@ -1,7 +1,7 @@
 # Deploy on Coolify
 
-Coolify builds the stack from source and generates the secrets itself, so the setup is a
-resource, a branch, and two domains.
+[Coolify](https://coolify.io) builds the stack from source and generates the secrets itself,
+so the setup is a resource, a branch, and two domains.
 
 ## 1. Create the application
 

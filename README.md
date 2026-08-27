@@ -2,64 +2,77 @@
 
 <img src="assets/banner.png" alt="It's a Plan — open-source project management and issue tracking where people and AI agents ship together" width="100%" />
 
-<a href="https://www.producthunt.com/products/it-s-a-plan/reviews/new?utm_source=badge-product_review&utm_medium=badge">
-  <img src="assets/product-hunt-strip.svg" alt="It's a Plan is on Product Hunt — leave a review" width="100%" />
-</a>
+### Open-source alternative to Linear, Jira, Trello, and Plane, with AI agents built in
 
-### Open-source project management and issue tracking, with AI agents built in
-
-Self-hosted, open-source project management and issue tracking, and an alternative to Linear,
-Plane, and Jira. The difference: AI agents work here like any teammate. Hand them issues, or
-run the whole thing over the REST API, webhooks, and MCP.
+Self-hosted project management and issue tracking. The difference: AI agents work here like any
+teammate — and everything is available over the REST API, webhooks, and MCP.
 
 If It's a Plan looks useful to you, star the repo ⭐ — it helps other people find it.
 
-[Website](https://itsaplan.dev) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
+<a href="https://railway.com/deploy/its-a-plan?referralCode=lQ5O6i&utm_medium=integration&utm_source=button&utm_campaign=itsaplan"><img src="https://railway.com/button.svg" alt="Deploy on Railway" height="40" /></a>
+<a href="docs/coolify.md"><img src="assets/coolify-button.svg" alt="Deploy on Coolify" height="40" /></a>
+<a href="docs/self-hosting.md"><img src="assets/docker-button.svg" alt="Self-host with Docker" height="40" /></a>
+
+[Website](https://itsaplan.dev) · [Discussions](https://github.com/croffasia/itsaplan/discussions) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md) · [Leave a review](https://www.producthunt.com/products/it-s-a-plan/reviews/new?utm_source=badge-product_review&utm_medium=badge)
 
 [![License: AGPL v3](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](LICENSE)
 [![CI](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml/badge.svg)](https://github.com/croffasia/itsaplan/actions/workflows/ci.yml)
 [![Stars](https://img.shields.io/github/stars/croffasia/itsaplan?style=flat)](https://github.com/croffasia/itsaplan/stargazers)
 [![Last commit](https://img.shields.io/github/last-commit/croffasia/itsaplan)](https://github.com/croffasia/itsaplan/commits/main)
 
-<img src="assets/screenshots/board-app-dark.png" alt="Work items board with issues across Backlog, Todo, In Progress, Done, and Canceled" width="100%" />
+<img src="assets/screenshots/tour.gif" alt="Board, AI chat, initiatives, timeline, calendar, and agent schedules" width="100%" />
 
 </div>
 
 ## About
 
-Most trackers bolt AI on as a chatbot. Here an agent is a real member of the team. It has
-a role, permissions, and an assignee slot, and it works the same board your people do.
+It's a Plan is a full issue tracker on its own: projects, boards, cycles, custom fields,
+and dashboards. Use it that way and never turn on a single agent.
 
-It's a self-hosted, open alternative to Linear, Plane, and Jira. You run it on your own
-server and database.
+Add agents when you need them. An agent gets a role, permissions, and an assignee slot, and
+it takes issues on the same board as your people. You run all of it on your own server, on
+your own database.
 
-- **Own your stack.** Your server, your database. No per-seat fees, no lock-in.
-- **Agents as teammates.** Give an agent a model, a prompt, skills, and tools. Assign it
-  issues like you would a person.
-- **One board for both.** People and agents share the same board, threads, and cards.
-- **Automate anything.** Drive it all through the REST API, MCP, and signed webhooks.
+- **Own your stack.** Your server, your database, your API keys. No per-seat fees, no lock-in.
+- **Agents as teammates.** Give one a model, a prompt, skills, and tools, then assign it an issue.
+- **Any model.** Internal agents take a key from any of 150+ providers, or a local endpoint.
+- **Your coding CLI.** External agents run on your machine: Claude Code, Codex, Antigravity,
+  Copilot CLI, opencode.
+- **One board for both.** A run starts on an @mention, an assignment, or a schedule.
+- **Automate anything.** Everything the UI does is a REST API call, an MCP tool, or a webhook.
 
-Heads-up: this is under active development. Expect breaking changes before the first
-stable release.
+It's a Plan is under active development. Expect breaking changes before the first stable
+release.
 
-## Need a feature sooner?
+## How to help
 
-The roadmap is ours, but the order is negotiable. If you need a feature with a high
-priority, write to [@croffasia on Telegram](https://telegram.me/croffasia) - for a
-donation we can discuss moving it up the queue.
+1. **Star the repo** if you think more people should see it. That is the whole cost, and it
+   is what makes the project findable.
+2. **Contribute.** Issues, bug reports, and pull requests are all welcome — start with
+   [CONTRIBUTING.md](CONTRIBUTING.md).
+3. **Donate.** Any amount helps the project grow and keeps the work going.
+
+   | Network | Address |
+   | ------- | ------- |
+   | USDT (ERC-20) | `0x625d8E7e800E863d1b00D90c8937A10094D9380C` |
+   | USDT (TON) | `UQBTE0qA7ZPKOkjbrCyqVopXFKNbbcDd-RcKeR9wkoyAjNb4` |
+   | USDT (TRC-20) | `TMSdmfoEVkC4sA1ejmhimcZC4eSremmkjV` |
+
+A commercial licence is available if AGPL-3.0 does not fit your company, and a feature can
+be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
 
 ## Features
 
 **Tracking**
 
 - Configure issues per project: custom fields, labels, states, and issue types
-- Kanban, table, timeline, and calendar views, saved as tabs with their own filters, display
-  fields, and two-level grouping
-- Cycles that time-box the work, with the unfinished issues carried into the next one
+- Kanban, table, timeline, and calendar views. Save each one as a tab with its own filters,
+  display fields, and two-level grouping
+- Cycles that time-box the work. Unfinished issues move to the next cycle
 - Subtasks, checklists, attachments, and links between issues: blocks, relates, duplicates
 - Comment threads with replies, and @username mentions of people and agents
 - Configurable dashboards for project analytics: throughput, breakdown, pulse
-- Quick actions that run on an issue, and auto-assignment when an issue enters a state
+- Quick actions that run on an issue, and auto-assignment when an issue moves into a state
 - Freeform notes boards: sticky notes on a canvas, with colors, checklists, and connections
 - Share a view or an issue by public link, read-only and without sign-in
 - Initiatives that group and track work across projects
@@ -67,26 +80,26 @@ donation we can discuss moving it up the queue.
 
 **AI agents**
 
-- Agents as project members with their own permissions and assigned issues
-- Internal agents run on the instance: configure the model, system prompt, tools, and reusable
-  skills, written inline or imported from a GitHub repository — built on the
-  [Mastra](https://github.com/mastra-ai/mastra) agent framework
-- External agents run wherever you want: drive the run queue through the API with your own
-  implementation, or install [`@itsaplan/runner`](packages/runner) and let it hand every task to
-  Claude Code, Codex, Antigravity CLI, GitHub Copilot CLI, opencode, or any command that reads stdin —
-  on your own machine, under your own account
+- Agents as project members, with their own permissions and assigned issues
+- Internal agents run on the instance. Configure the model, system prompt, tools, and
+  reusable skills, written inline or imported from a GitHub repository
+- External agents run on your own machine, under your own account. Install
+  [`@itsaplan/runner`](packages/runner) and it gives every task to Claude Code, Codex,
+  Antigravity CLI, GitHub Copilot CLI, opencode, or any command that reads stdin
+- Or control the run queue through the API and do the work in your own implementation
 - A run starts on an @mention in a comment, on an assignment, or on a schedule
-- Tools that reach outside the tracker: Notion, Telegram, Threads, Instagram, Jina, Firecrawl, and Gitea
-- Built-in chat with per-agent conversation history, with an external agent too: the runner
-  answers from your machine, streaming the reply and the tools it uses, and resumes the same
-  coding agent session on every message of the conversation
+- Tools for the services outside the tracker: Notion, Telegram, Threads, Instagram, Jina,
+  Firecrawl, and Gitea
+- Built-in chat with each agent, with its own conversation history
+- Chat with an external agent too. The runner answers from your machine, streams the reply
+  and its tool calls, and resumes the same coding agent session on each message
 
 **Platform**
 
 - REST API with an OpenAPI reference and API keys
 - MCP server, so an external assistant can read and change issues through the same API
-- Pull requests from GitHub, GitLab, Gitea, Forgejo, and Bitbucket: "Fixes KEY-42" links the pull
-  request to the issue and moves it when the pull request opens and merges
+- Pull requests from GitHub, GitLab, Gitea, Forgejo, and Bitbucket. "Fixes KEY-42" links the
+  pull request to the issue, and the issue moves when the pull request opens and merges
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
 - Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
@@ -99,9 +112,9 @@ donation we can discuss moving it up the queue.
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/its-a-plan?referralCode=lQ5O6i&utm_medium=integration&utm_source=button&utm_campaign=itsaplan)
 
-The whole stack in one click, no server to run. You supply two hostnames and Railway
-generates every secret. A domain of your own is required — see
-[the guide](docs/railway.md) for why, and for the steps after the deploy.
+The whole stack in one click, with no server to maintain. You give Railway two hostnames,
+and it generates every secret. You need a domain of your own: [the guide](docs/railway.md)
+explains why, and what to do after the deploy.
 
 ### Run it on your own server
 
@@ -114,9 +127,9 @@ cp .env.example .env      # set API_URL, APP_URL, and the secrets
 docker compose up -d
 ```
 
-One command brings up the whole stack: Postgres, MinIO, api, worker, bot, and web, the four
-services from the images published on each release. `docker compose up -d --build` builds
-them from the checkout instead. The first account registered becomes the instance admin.
+This starts Postgres, MinIO, and the four services (api, worker, bot, web) from the images
+published on each release. Add `--build` to build them from the checkout instead. The first
+account you register becomes the instance admin.
 
 - [Deploy on Railway](docs/railway.md) — one-click hosted deploy from the template
 - [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates
@@ -136,30 +149,6 @@ them from the checkout instead. The first account registered becomes the instanc
 | Database  | [Drizzle](https://orm.drizzle.team/) + PostgreSQL        |
 | Storage   | S3-compatible object store (MinIO)                       |
 | AI agents | [Mastra](https://github.com/mastra-ai/mastra)            |
-
-```
-apps/api             Elysia HTTP API, mounts better-auth at /api/auth/*
-apps/web             Next.js app, server-side rendered
-apps/worker          webhooks, notifications, agent runs
-apps/bot             Telegram bot
-packages/db          Drizzle client, schema, migrations
-packages/auth        better-auth server instance
-packages/crypto      AES-256-GCM encryption for secrets at rest
-packages/mailer      SMTP and Resend transport
-packages/agent-tools tool integrations for the agent runtime
-packages/runner      CLI that runs an external agent's tasks on your own machine
-```
-
-The web app never imports the packages directly, it talks to the API over HTTP.
-
-## More from us
-
-**[Vibe Code Kit](https://vibecodekit.dev)** — a Claude Code plugin with 20+ expert skills
-that turn AI slop into senior-level code. It teaches your AI agent professional development
-and design practices, so you ship production-ready code on the first try. Works with Claude
-Code, Codex, Antigravity, and Cursor.
-
-It's a Plan is built with it — the code you are reading is the proof.
 
 ## Contributing
 

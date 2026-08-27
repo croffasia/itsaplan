@@ -46,7 +46,11 @@ export default function IssueRefRow({
       );
     if (readOnly) return <div className={labelClass}>{label}</div>;
     return (
-      <Link href={issuePath(project.project.key, issue.sequenceNumber)} className={labelClass}>
+      <Link
+        href={issuePath(project.project.key, issue.sequenceNumber)}
+        scroll={false}
+        className={labelClass}
+      >
         {label}
       </Link>
     );

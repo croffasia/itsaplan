@@ -1,6 +1,6 @@
 # ── Next.js (standalone) — built from the monorepo root ──
 # build context in docker-compose = repository root (.)
-FROM oven/bun:1.3.14-alpine AS base
+FROM oven/bun:1.4.0-alpine AS base
 WORKDIR /app
 
 # 1) Install dependencies from manifests (cacheable layer). All workspace
@@ -38,7 +38,7 @@ RUN cd apps/web && bun run build
 # module hook, and Bun does not honour it — every page rendering markdown then fails
 # with "Failed to load external module isomorphic-dompurify-<hash>". Alpine keeps the
 # musl build of the traced native modules (sharp) valid.
-FROM node:22-alpine AS release
+FROM node:24-alpine AS release
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

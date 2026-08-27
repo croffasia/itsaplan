@@ -296,6 +296,9 @@ export interface AgentRun {
   attempts: number;
   lastError: string | null;
   output: string | null;
+  // What the last model call of the run read and wrote: absent for a run that finished
+  // before this was recorded and for one whose agent reports no counts.
+  contextTokens?: number;
   nextAttemptAt: string;
   createdAt: string;
 }
@@ -341,6 +344,9 @@ export interface AgentScheduleRun {
   attempts: number;
   lastError: string | null;
   output: string | null;
+  // What the last model call of the run read and wrote: absent for a run that finished
+  // before this was recorded and for one whose agent reports no counts.
+  contextTokens?: number;
   scheduledFor: string | null;
   startedAt: string | null;
   finishedAt: string | null;

@@ -20,7 +20,5 @@
   "noModel": "未设置模型",
   "copySession": "复制会话 ID",
   "sessionLabel": "本地会话 ID",
-  "sessionHint": "智能体运行器在自己机器上保留的会话。在那里恢复它，可查看包含工具调用的完整记录。",
-  "contextSizeHint": "{tokens} tokens",
-  "contextUnavailable": "该智能体不提供上下文大小"
+  "sessionHint": "智能体运行器在自己机器上保留的会话。在那里恢复它，可查看包含工具调用的完整记录。"
 }

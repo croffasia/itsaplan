@@ -71,10 +71,17 @@ async function claimDueRuns(): Promise<ClaimedRun[]> {
 // was in flight keeps that outcome instead of being finished or retried.
 async function processRun(run: ClaimedRun): Promise<void> {
   try {
-    const output = await executeRun(run);
+    const { output, usage } = await executeRun(run);
     await db
       .update(agentRun)
-      .set({ status: 'success', output, lastError: null, finishedAt: new Date() })
+      .set({
+        status: 'success',
+        output,
+        lastError: null,
+        inputTokens: usage?.inputTokens ?? null,
+        outputTokens: usage?.outputTokens ?? null,
+        finishedAt: new Date(),
+      })
       .where(and(eq(agentRun.id, run.id), eq(agentRun.status, 'pending')));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -114,7 +121,11 @@ export async function deleteIssueAgentThreads(issueIds: number[]): Promise<void>
   }
 }
 
-async function executeRun(run: ClaimedRun): Promise<string> {
+// `usage` is what the last model call of the run read and wrote. An api still running
+// the previous build reports none, and the run is stored without counts.
+async function executeRun(
+  run: ClaimedRun,
+): Promise<{ output: string; usage: { inputTokens: number; outputTokens: number } | null }> {
   const response = await postInternal(
     '/internal/agent-runs/execute',
     run,
@@ -123,7 +134,8 @@ async function executeRun(run: ClaimedRun): Promise<string> {
   const body = (await response.json().catch(() => null)) as {
     output?: string;
     error?: string;
+    usage?: { inputTokens: number; outputTokens: number } | null;
   } | null;
   if (!response.ok) throw new Error(body?.error ?? `Agent API returned ${response.status}`);
-  return body?.output ?? '';
+  return { output: body?.output ?? '', usage: body?.usage ?? null };
 }

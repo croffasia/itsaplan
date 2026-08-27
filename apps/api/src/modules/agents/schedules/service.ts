@@ -2,6 +2,7 @@ import { db, agentRun, agentSchedule, aiAgent, user } from '@repo/db';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import { canTriggerAgent, isTriggerableBy } from '../core/service';
+import { contextTokensOf } from '../core/run-queue';
 import { deleteThreadsWhere } from '../core/runtime/memory';
 
 export type AgentScheduleStatus = 'active' | 'paused';
@@ -240,6 +241,9 @@ export interface ScheduleRunRow {
   attempts: number;
   lastError: string | null;
   output: string | null;
+  // What the last model call of the run read and wrote. Absent for a run that finished
+  // before this was recorded and for one whose agent reports no counts.
+  contextTokens?: number;
   scheduledFor: string | null;
   startedAt: string | null;
   finishedAt: string | null;
@@ -267,6 +271,7 @@ export async function listScheduleRuns(
     attempts: row.attempts,
     lastError: row.lastError,
     output: row.output,
+    ...contextTokensOf(row),
     scheduledFor: row.scheduledFor ? iso(row.scheduledFor) : null,
     startedAt: row.startedAt ? iso(row.startedAt) : null,
     finishedAt: row.finishedAt ? iso(row.finishedAt) : null,

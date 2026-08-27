@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { Ban, ChevronDown, ChevronRight } from 'lucide-react';
 import type { AgentScheduleRun } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
+import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SettingsScheduleRunBlock } from './SettingsScheduleRunBlock';
@@ -39,7 +40,14 @@ export function SettingsScheduleRunRow({
             {running ? t('runStatus.running') : t(`runStatus.${run.status}`)}
           </Badge>
           <span className="capitalize">{run.trigger}</span>
-          <span className="ms-auto text-muted-foreground">{formatDateTime(run.createdAt)}</span>
+          <span className="ms-auto flex shrink-0 items-center gap-4">
+            <span className="w-12 text-end">
+              {run.contextTokens !== undefined && <AgentContextSize tokens={run.contextTokens} />}
+            </span>
+            <span className="text-muted-foreground tabular-nums">
+              {formatDateTime(run.createdAt)}
+            </span>
+          </span>
         </button>
         {onCancel && (
           <Button

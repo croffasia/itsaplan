@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 
-import { agentRunTrigger } from '../model';
+import { agentRunTrigger, runContextTokens } from '../model';
 
 export { agentParams } from '../model';
 
@@ -164,6 +164,7 @@ export const AgentRunResponse = t.Object({
   attempts: t.Number(),
   lastError: t.Nullable(t.String()),
   output: t.Nullable(t.String()),
+  contextTokens: runContextTokens,
   nextAttemptAt: t.String(),
   createdAt: t.String(),
 });

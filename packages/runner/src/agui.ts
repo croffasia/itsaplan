@@ -58,11 +58,9 @@ export class AnswerStream {
   // that text, and emitting both would say everything twice.
   private sawPartialText = false;
   private sawAnyText = false;
-  // The counts of the last model call the command reported, which is what the context
-  // size is measured on.
-  private lastUsage: ContextUsage | null = null;
   // The flush in flight, so the next one waits for it instead of racing it.
   private sending: Promise<void> = Promise.resolve();
+  private readonly usage: UsageReader;
 
   constructor(
     private readonly format: OutputFormat,
@@ -70,6 +68,7 @@ export class AnswerStream {
     private readonly runId: string,
     private readonly send: (events: AgUiEvent[]) => Promise<void>,
   ) {
+    this.usage = new UsageReader(format);
     this.messageId = `msg-${runId}`;
     this.queued.push({ type: 'RUN_STARTED', threadId, runId });
   }
@@ -90,12 +89,9 @@ export class AnswerStream {
     return this.sessionId;
   }
 
-  // The size of the conversation's context after this answer. Null for a command that
-  // reports no counts a context size can be read from, so the chat says so; undefined
-  // where this answer reported none at all, which leaves the thread the number it has.
+  // The size of the conversation's context after this answer, as the reader saw it.
   contextUsage(): ContextUsage | null | undefined {
-    if (this.format === 'copilot-json') return null;
-    return this.lastUsage ?? undefined;
+    return this.usage.value();
   }
 
   // Two flushes can overlap — the timer and the close — so they are chained to keep the
@@ -187,6 +183,7 @@ export class AnswerStream {
     // A line that parses to null, a number or a string carries none of the fields below,
     // and reading them off it would end the run with a type error.
     if (!parsed || typeof parsed !== 'object') return;
+    this.usage.readLine(parsed);
     switch (this.format) {
       case 'claude-stream-json':
         this.readClaudeLine(parsed as StreamJsonLine);
@@ -250,13 +247,6 @@ export class AnswerStream {
     const conversationId =
       message.conversation_id ?? step?.conversation_id ?? message.result?.conversation_id;
     if (conversationId) this.sessionId ??= conversationId;
-    const usage = message.usage ?? step?.usage;
-    if (usage) {
-      this.lastUsage = {
-        inputTokens: (usage.input_tokens ?? 0) + (usage.cache_read_tokens ?? 0),
-        outputTokens: usage.output_tokens ?? 0,
-      };
-    }
     if (message.event === 'result') {
       // The result repeats the text of the turn; it is the fallback for a run that
       // streamed none.
@@ -295,16 +285,6 @@ export class AnswerStream {
       this.sessionId ??= message.thread_id;
       return;
     }
-    // Codex reports usage once for the whole turn and nothing per model call, so this is
-    // the only number it has. It sums the calls of the answer and is therefore larger
-    // than the context.
-    if (message.type === 'turn.completed' && message.usage) {
-      this.lastUsage = {
-        inputTokens: message.usage.input_tokens ?? 0,
-        outputTokens: message.usage.output_tokens ?? 0,
-      };
-      return;
-    }
     const item = message.item;
     if (message.type !== 'item.completed' || !item) return;
     if (item.type === 'agent_message' && item.text) {
@@ -323,14 +303,6 @@ export class AnswerStream {
     if (message.sessionID) this.sessionId ??= message.sessionID;
     const part = message.part;
     if (!part) return;
-    if (part.type === 'step-finish' && part.tokens) {
-      const tokens = part.tokens;
-      this.lastUsage = {
-        inputTokens: (tokens.input ?? 0) + (tokens.cache?.read ?? 0) + (tokens.cache?.write ?? 0),
-        outputTokens: tokens.output ?? 0,
-      };
-      return;
-    }
     if (part.type === 'text' && part.text) {
       const grown = part.text.startsWith(this.openTextPart)
         ? part.text.slice(this.openTextPart.length)
@@ -375,36 +347,11 @@ export class AnswerStream {
 
   private readPartial(event: StreamEvent | undefined): void {
     if (!event) return;
-    this.readClaudeUsage(event);
     if (event.type !== 'content_block_delta') return;
     if (event.delta?.type === 'text_delta' && event.delta.text) {
       this.sawPartialText = true;
       this.appendText(event.delta.text);
     }
-  }
-
-  // Claude reports one model call in two events: message_start opens it with the tokens
-  // read, message_delta closes it with the tokens written. They belong to the same call,
-  // so the second completes the first rather than replacing it. The `result` line is not
-  // read: it sums every call of the answer, which grows with the steps taken and not with
-  // the context.
-  private readClaudeUsage(event: StreamEvent): void {
-    const usage = event.type === 'message_start' ? event.message?.usage : event.usage;
-    if (!usage) return;
-    const read =
-      (usage.input_tokens ?? 0) +
-      (usage.cache_read_input_tokens ?? 0) +
-      (usage.cache_creation_input_tokens ?? 0);
-    const written = usage.output_tokens ?? 0;
-    if (event.type === 'message_start') {
-      this.lastUsage = { inputTokens: read, outputTokens: written };
-      return;
-    }
-    if (event.type !== 'message_delta') return;
-    this.lastUsage = {
-      inputTokens: read || (this.lastUsage?.inputTokens ?? 0),
-      outputTokens: written,
-    };
   }
 
   private readAssistant(content: ContentBlock[]): void {
@@ -444,6 +391,130 @@ export class AnswerStream {
       toolCallId,
       content: tail(content, TOOL_TEXT_LIMIT),
     });
+  }
+}
+
+// Reads the token counts out of a command's output, apart from the events the chat
+// shows. A run reports its answer in one piece and streams nothing, so it needs the
+// counts without the transcript; the chat needs both, and its stream owns one of these.
+//
+// Every command reports the counts of a model call in a shape of its own, and this is
+// where they become one pair: the tokens read, cache included, and the tokens written,
+// reasoning and thinking among them. Each call replaces the one before it — the size of
+// the context is what the last call read, not what the answer cost in total.
+export class UsageReader {
+  private last: ContextUsage | null = null;
+  private buffered = '';
+
+  constructor(private readonly format: OutputFormat) {}
+
+  // Reads whatever arrived, whole lines first and the rest on the next chunk. Lets a
+  // caller that only wants the counts pass the command's output straight through.
+  write(chunk: string): void {
+    if (this.format === 'text') return;
+    this.buffered += chunk;
+    const lines = this.buffered.split('\n');
+    this.buffered = lines.pop() ?? '';
+    for (const line of lines) this.readText(line);
+  }
+
+  // Closes the output, reading the last line if it arrived without a newline.
+  end(): void {
+    if (!this.buffered) return;
+    this.readText(this.buffered);
+    this.buffered = '';
+  }
+
+  // Null for a command that reports no counts a context size can be read from, so the
+  // chat says so; undefined where nothing was reported at all, which leaves whatever
+  // number is already stored.
+  value(): ContextUsage | null | undefined {
+    if (this.format === 'copilot-json') return null;
+    return this.last ?? undefined;
+  }
+
+  private readText(line: string): void {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    try {
+      const parsed: unknown = JSON.parse(trimmed);
+      if (parsed && typeof parsed === 'object') this.readLine(parsed);
+    } catch {
+      // A line that is not the format the runner was configured with carries no counts.
+    }
+  }
+
+  readLine(parsed: object): void {
+    switch (this.format) {
+      case 'claude-stream-json':
+        this.readClaude(parsed as StreamJsonLine);
+        return;
+      case 'codex-jsonl':
+        this.readCodex(parsed as CodexLine);
+        return;
+      case 'opencode-json':
+        this.readOpencode(parsed as OpencodeLine);
+        return;
+      case 'antigravity-stream-json':
+        this.readAntigravity(parsed as AntigravityLine);
+        return;
+    }
+  }
+
+  // Claude reports one model call in two events: message_start opens it with the tokens
+  // read, message_delta closes it with the tokens written. They belong to the same call,
+  // so the second completes the first rather than replacing it. The `result` line is not
+  // read: it sums every call of the answer, which grows with the steps taken and not with
+  // the context.
+  private readClaude(message: StreamJsonLine): void {
+    const event = message.type === 'stream_event' ? message.event : undefined;
+    if (!event) return;
+    const usage = event.type === 'message_start' ? event.message?.usage : event.usage;
+    if (!usage) return;
+    const read =
+      (usage.input_tokens ?? 0) +
+      (usage.cache_read_input_tokens ?? 0) +
+      (usage.cache_creation_input_tokens ?? 0);
+    const written = usage.output_tokens ?? 0;
+    if (event.type === 'message_start') {
+      this.last = { inputTokens: read, outputTokens: written };
+      return;
+    }
+    if (event.type !== 'message_delta') return;
+    this.last = { inputTokens: read || (this.last?.inputTokens ?? 0), outputTokens: written };
+  }
+
+  // Codex reports usage once for the whole turn and nothing per model call, so this is
+  // the only number it has. It sums the calls of the answer and is therefore larger than
+  // the context.
+  private readCodex(message: CodexLine): void {
+    if (message.type !== 'turn.completed' || !message.usage) return;
+    this.last = {
+      inputTokens: message.usage.input_tokens ?? 0,
+      outputTokens: message.usage.output_tokens ?? 0,
+    };
+  }
+
+  private readOpencode(message: OpencodeLine): void {
+    const tokens = message.part?.type === 'step-finish' ? message.part.tokens : undefined;
+    if (!tokens) return;
+    this.last = {
+      inputTokens: (tokens.input ?? 0) + (tokens.cache?.read ?? 0) + (tokens.cache?.write ?? 0),
+      outputTokens: (tokens.output ?? 0) + (tokens.reasoning ?? 0),
+    };
+  }
+
+  // Read off a step and never off a line without one, so the total the closing result
+  // carries cannot replace the counts of the last model call.
+  private readAntigravity(message: AntigravityLine): void {
+    const step = message.step_update;
+    if (!step) return;
+    const usage = step.usage ?? message.usage;
+    if (!usage) return;
+    this.last = {
+      inputTokens: (usage.input_tokens ?? 0) + (usage.cache_read_tokens ?? 0),
+      outputTokens: (usage.output_tokens ?? 0) + (usage.thinking_tokens ?? 0),
+    };
   }
 }
 
@@ -506,7 +577,12 @@ interface OpencodeLine {
     callID?: string;
     tool?: string;
     // On a step-finish part, the counts of the model call that step made.
-    tokens?: { input?: number; output?: number; cache?: { read?: number; write?: number } };
+    tokens?: {
+      input?: number;
+      output?: number;
+      reasoning?: number;
+      cache?: { read?: number; write?: number };
+    };
     // A call ends 'completed' with its output, or 'error' with what went wrong.
     state?: { status?: string; input?: unknown; output?: string; error?: string };
   };
@@ -518,6 +594,7 @@ interface OpencodeLine {
 interface AntigravityUsage {
   input_tokens?: number;
   output_tokens?: number;
+  thinking_tokens?: number;
   cache_read_tokens?: number;
 }
 

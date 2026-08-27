@@ -57,7 +57,9 @@ export const internalAgentRunRoutes = new Elysia({
           contextPreamble: runModePreamble(body.trigger) + peopleContext(body),
         });
         await recordAgentRunFinished(body, 'success');
-        return { output: result.text };
+        // The worker owns the run row, so the counts go back with the answer for it to
+        // store. Null where the model reports none, which the run history shows as a dash.
+        return { output: result.text, usage: result.usage };
       } catch (error) {
         if (body.attempts >= agentRunConfig.maxAttempts())
           await recordAgentRunFinished(body, 'failed');

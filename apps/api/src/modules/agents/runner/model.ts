@@ -1,5 +1,5 @@
 import { t } from 'elysia';
-import { agentRunTrigger } from '../model';
+import { agentRunTrigger, contextUsageBody } from '../model';
 
 // The run handed to a runner (RunnerRun from the service). `prompt` is the framed
 // task, `systemPrompt` the instructions about the run itself; a runner passes the
@@ -26,4 +26,5 @@ export const resultBody = t.Object({
   }),
   output: t.Optional(t.Nullable(t.String({ description: 'What the run produced, for history.' }))),
   error: t.Optional(t.Nullable(t.String({ description: 'Why the run failed.' }))),
+  usage: contextUsageBody,
 });

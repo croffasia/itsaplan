@@ -110,7 +110,9 @@
     "importCanceled": "Импорт отменён. Ничего не создано.",
     "importFailed": "Не удалось выполнить импорт.",
     "importConfirmed": "{count, plural, one {Создана # задача} few {Создано # задачи} many {Создано # задач} other {Создано # задач}}",
-    "importSkippedRow": "Строка {row} пропущена: {reason}"
+    "importSkippedRow": "Строка {row} пропущена: {reason}",
+    "contextSize": "Контекст диалога: {count, plural, one {# токен} few {# токена} many {# токенов} other {# токена}}",
+    "contextUnavailable": "Размер контекста для этого агента недоступен"
   },
   "share": {
     "createFailed": "Не удалось создать ссылку. Попробуйте ещё раз.",

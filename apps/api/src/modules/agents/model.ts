@@ -17,6 +17,29 @@ export const agentRunTrigger = t.Union([
 
 export type AgentRunTrigger = typeof agentRunTrigger.static;
 
+// The token counts of one run, in the agent's run history and in a schedule's. Shared
+// by both listings, which return the same runs under different filters.
+export const runContextTokens = t.Optional(
+  t.Number({
+    description:
+      'The tokens the last model call of this run read and wrote. Absent for a run that ' +
+      'finished before this was recorded and for one whose agent reports no counts.',
+  }),
+);
+
+// What the last model call of an answer read, cache included, and what it wrote, as a
+// runner reports it. Left out by a command that reported nothing about it, which leaves
+// the counts already stored; null where the command reports none a context size can be
+// read from. Shared by the chat result and the run result, which report the same thing.
+export const contextUsageBody = t.Optional(
+  t.Nullable(
+    t.Object({
+      inputTokens: t.Integer({ minimum: 0 }),
+      outputTokens: t.Integer({ minimum: 0 }),
+    }),
+  ),
+);
+
 // The transcript of a chat, shared by both kinds of agent: an internal agent's
 // conversations are held by the runtime's memory, an external agent's by the feed its
 // runner drains, and the routes serving them return these shapes either way.

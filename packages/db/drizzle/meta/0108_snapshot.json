@@ -1,6 +1,6 @@
 {
-  "id": "8a435733-fc78-4284-9750-0c87ebee6a81",
-  "prevId": "c95254d3-1f12-453d-b6ba-35abaa96c94d",
+  "id": "3a4af565-eb5e-4ae8-a2df-e2ab0904a152",
+  "prevId": "8a435733-fc78-4284-9750-0c87ebee6a81",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1307,6 +1307,18 @@
         "output": {
           "name": "output",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "input_tokens": {
+          "name": "input_tokens",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "output_tokens": {
+          "name": "output_tokens",
+          "type": "integer",
           "primaryKey": false,
           "notNull": false
         },

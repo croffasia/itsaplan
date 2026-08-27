@@ -175,9 +175,8 @@ describe('external agent chat', () => {
     );
   });
 
-  // The context size of a thread is what its chat panel shows as the weight of the
-  // conversation. It is the runner that measures it, so the thread list is where the
-  // member reads it back.
+  // The runner is what measures the context size, so the thread list is where the member
+  // reads it back.
   it('keeps the context size the runner reported with the answer', async () => {
     const { asOwner, asRunner, agent } = await setup();
     const sent = await send(asOwner, agent.id, 'Status?');
@@ -212,8 +211,8 @@ describe('external agent chat', () => {
     const { asOwner, asRunner, agent } = await setup();
     const sent = await send(asOwner, agent.id, 'Status?');
 
-    // An older runner sends no field at all: the answer is stored as before, with no
-    // number and no error.
+    // An older runner sends no field at all: the answer is stored with no number and no
+    // error.
     const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
     const closed = await asRunner['agent-chats']({ messageId: answer.id }).result.post({
       status: 'success',

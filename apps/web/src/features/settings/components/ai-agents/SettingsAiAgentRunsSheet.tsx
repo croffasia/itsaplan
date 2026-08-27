@@ -5,6 +5,7 @@ import type { AgentRun, AiAgent } from '@/lib/api';
 import { formatDateTime } from '@/utils/dates';
 import { useAgentRuns } from '@/services/aiAgents.service';
 import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';
+import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -118,14 +119,19 @@ function RunItem({ run: r }: { run: AgentRun }) {
         {r.attempts > 1 && (
           <span className="shrink-0 text-muted-foreground">·{r.attempts} attempts</span>
         )}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <span className="ms-auto shrink-0 text-muted-foreground">
-              {formatDistanceToNow(parseISO(r.createdAt), { addSuffix: true, locale })}
-            </span>
-          </TooltipTrigger>
-          <TooltipContent>{formatDateTime(r.createdAt)}</TooltipContent>
-        </Tooltip>
+        <span className="ms-auto flex shrink-0 items-center gap-4">
+          <span className="w-12 text-end">
+            {r.contextTokens !== undefined && <AgentContextSize tokens={r.contextTokens} />}
+          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="text-muted-foreground">
+                {formatDistanceToNow(parseISO(r.createdAt), { addSuffix: true, locale })}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{formatDateTime(r.createdAt)}</TooltipContent>
+          </Tooltip>
+        </span>
       </button>
       {open && (
         <div className="space-y-3 px-4 pb-3">

@@ -110,7 +110,9 @@
     "importCanceled": "تم إلغاء هذا الاستيراد. لم يتم إنشاء أي شيء.",
     "importFailed": "فشل الاستيراد.",
     "importConfirmed": "{count, plural, one {تم إنشاء مهمة واحدة} other {تم إنشاء # مهام}}",
-    "importSkippedRow": "تم تخطي الصف {row}: {reason}"
+    "importSkippedRow": "تم تخطي الصف {row}: {reason}",
+    "contextSize": "سياق المحادثة: {count, plural, zero {# رمز} one {رمز واحد} two {رمزان} few {# رموز} many {# رمزًا} other {# رمز}}",
+    "contextUnavailable": "حجم السياق غير متاح لهذا الوكيل"
   },
   "share": {
     "createFailed": "تعذّر إنشاء الرابط. حاول مرة أخرى.",

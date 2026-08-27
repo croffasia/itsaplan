@@ -201,6 +201,50 @@ describe('agent schedules', () => {
     });
   });
 
+  it('shows the token counts of each run of a schedule', async () => {
+    const { asOwner } = await setup();
+    const { agentId, asRunner } = await createRunnerAgent(asOwner);
+    const scheduleId = (await createSchedule(asOwner, agentId)).data!.id;
+    const runs = () => schedules(asOwner)({ scheduleId }).runs.get();
+
+    await schedules(asOwner)({ scheduleId }).run.post();
+    const first = (await asRunner['agent-runs'].claim.post()).data!.run!;
+    await asRunner['agent-runs']({ runId: first.id }).result.post({
+      status: 'success',
+      output: 'Triaged.',
+      usage: { inputTokens: 30_000, outputTokens: 400 },
+    });
+    expect((await runs()).data![0].contextTokens).toBe(30_400);
+
+    // Each run carries its own counts, so a later one does not restate the one before.
+    await schedules(asOwner)({ scheduleId }).run.post();
+    const second = (await asRunner['agent-runs'].claim.post()).data!.run!;
+    await asRunner['agent-runs']({ runId: second.id }).result.post({
+      status: 'success',
+      output: 'Triaged again.',
+      usage: { inputTokens: 12_000, outputTokens: 100 },
+    });
+    const both = (await runs()).data!;
+    expect(both.map((r) => r.contextTokens)).toEqual([12_100, 30_400]);
+  });
+
+  it('leaves a run without counts where its runner reports none', async () => {
+    const { asOwner } = await setup();
+    const { agentId, asRunner } = await createRunnerAgent(asOwner);
+    const scheduleId = (await createSchedule(asOwner, agentId)).data!.id;
+
+    await schedules(asOwner)({ scheduleId }).run.post();
+    const run = (await asRunner['agent-runs'].claim.post()).data!.run!;
+    await asRunner['agent-runs']({ runId: run.id }).result.post({
+      status: 'success',
+      output: 'Done.',
+    });
+
+    expect(
+      (await schedules(asOwner)({ scheduleId }).runs.get()).data![0].contextTokens,
+    ).toBeUndefined();
+  });
+
   it('ends every pending run of a schedule', async () => {
     const { asOwner } = await setup();
     const agentId = await createAgent(asOwner, { username: 'hook', kind: 'external' });

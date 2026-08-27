@@ -110,7 +110,9 @@
     "importCanceled": "This import was canceled. Nothing was created.",
     "importFailed": "The import failed.",
     "importConfirmed": "{count, plural, one {Created # issue} other {Created # issues}}",
-    "importSkippedRow": "Skipped row {row}: {reason}"
+    "importSkippedRow": "Skipped row {row}: {reason}",
+    "contextSize": "Conversation context: {count, plural, one {# token} other {# tokens}}",
+    "contextUnavailable": "The context size is not available for this agent"
   },
   "share": {
     "createFailed": "Could not create the link. Try again.",

@@ -4,8 +4,9 @@ import { setTimeout as sleep } from 'node:timers/promises';
 import { iso } from '#shared/lib';
 import { appendTextPart } from '../chat-parts';
 import {
+  contextField,
   deleteContextUsage,
-  readContextTokens,
+  readContextSizes,
   recordContextUsage,
   type ContextUsage,
 } from '../chat-usage';
@@ -69,12 +70,12 @@ export async function listThreads(
     .offset(page * PAGE_SIZE);
   const hasMore = rows.length > PAGE_SIZE;
   const threads = hasMore ? rows.slice(0, PAGE_SIZE) : rows;
-  const sizes = await readContextTokens(threads.map((r) => r.id));
+  const sizes = await readContextSizes(threads.map((r) => r.id));
   const items = threads.map((r) => ({
     id: r.id,
     title: r.title && r.title.length > 0 ? r.title : null,
     cliSessionId: r.cliSessionId,
-    ...(sizes.has(r.id) ? { contextTokens: sizes.get(r.id) } : {}),
+    ...contextField(sizes, r.id),
     createdAt: iso(r.createdAt),
     updatedAt: iso(r.updatedAt),
   }));

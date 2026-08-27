@@ -1,5 +1,7 @@
 import { t } from 'elysia';
 
+import { runContextTokens } from '../model';
+
 export const scheduleParams = t.Object({
   projectKey: t.String(),
   scheduleId: t.Numeric({ description: 'Schedule id from list_agent_schedules.' }),
@@ -67,6 +69,7 @@ export const ScheduleRunResponse = t.Object({
   attempts: t.Number(),
   lastError: t.Nullable(t.String()),
   output: t.Nullable(t.String()),
+  contextTokens: runContextTokens,
   scheduledFor: t.Nullable(t.String()),
   startedAt: t.Nullable(t.String()),
   finishedAt: t.Nullable(t.String()),

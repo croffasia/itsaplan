@@ -2,8 +2,8 @@
 
 import { useCallback } from 'react';
 import type { AiAgent } from '@/lib/api';
+import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
 import { cn } from '@/lib/utils';
-import { AiChatContextSize } from '../shared/AiChatContextSize';
 import { AiChatSessionBadge } from '../shared/AiChatSessionBadge';
 import { AiChatThread } from '../shared/AiChatThread';
 import { ChatPanelAgentSwitcher } from './ChatPanelAgentSwitcher';
@@ -82,7 +82,7 @@ export function ChatPanelSession({
           </>
         }
         composerEnd={
-          thread?.contextTokens !== undefined && <AiChatContextSize tokens={thread.contextTokens} />
+          thread?.contextTokens !== undefined && <AgentContextSize tokens={thread.contextTokens} />
         }
       />
     </div>

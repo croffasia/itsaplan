@@ -1,5 +1,6 @@
 import { db, aiAgent, agentRun, project } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
+import { type ContextUsage } from '../chat-usage';
 import { agentRunConfig, loadThreadContext } from '../core/run-queue';
 import { recordAgentRunFinished, recordAgentRunStarted } from '../core/run-activity';
 import type { AgentKind } from '../core/service';
@@ -211,7 +212,12 @@ export async function heartbeatRun(agentId: number, runId: number): Promise<bool
 export async function finishRun(
   agent: RunnerAgent,
   runId: number,
-  result: { status: 'success' | 'failed'; output?: string | null; error?: string | null },
+  result: {
+    status: 'success' | 'failed';
+    output?: string | null;
+    error?: string | null;
+    usage?: ContextUsage | null;
+  },
 ): Promise<boolean> {
   await touchRunner(agent.id);
   const rows = await db
@@ -220,6 +226,8 @@ export async function finishRun(
       status: result.status,
       output: result.output?.slice(0, 10_000) ?? null,
       lastError: result.status === 'failed' ? (result.error?.slice(0, 500) ?? 'Run failed') : null,
+      inputTokens: result.usage?.inputTokens ?? null,
+      outputTokens: result.usage?.outputTokens ?? null,
       finishedAt: new Date(),
     })
     .where(

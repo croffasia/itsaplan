@@ -198,8 +198,19 @@ export interface AgentRunRow {
   // What the run produced: the runtime's reply, or whatever the runner's command
   // printed. Null until the run finishes.
   output: string | null;
+  contextTokens?: number;
   nextAttemptAt: string;
   createdAt: string;
+}
+
+// The size of a run's context as its DTO carries it. The field is left out where there
+// is nothing to report: a run stored before the counts were recorded, and one whose
+// agent reports none.
+export function contextTokensOf(row: { inputTokens: number | null; outputTokens: number | null }): {
+  contextTokens?: number;
+} {
+  if (row.inputTokens == null && row.outputTokens == null) return {};
+  return { contextTokens: (row.inputTokens ?? 0) + (row.outputTokens ?? 0) };
 }
 
 export interface AgentRunPage {
@@ -226,6 +237,8 @@ export async function listAgentRuns(
       attempts: agentRun.attempts,
       lastError: agentRun.lastError,
       output: agentRun.output,
+      inputTokens: agentRun.inputTokens,
+      outputTokens: agentRun.outputTokens,
       nextAttemptAt: agentRun.nextAttemptAt,
       createdAt: agentRun.createdAt,
       issueSeq: issue.sequenceNumber,
@@ -254,6 +267,7 @@ export async function listAgentRuns(
       attempts: r.attempts,
       lastError: r.lastError,
       output: r.output,
+      ...contextTokensOf(r),
       nextAttemptAt: iso(r.nextAttemptAt),
       createdAt: iso(r.createdAt),
     })),

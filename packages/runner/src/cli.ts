@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { setTimeout as sleep } from 'node:timers/promises';
+import { UsageReader } from './agui';
 import { answer } from './chat';
 import { Client, RequestError, type ChatMessage, type Run } from './client';
 import { loadConfig, type RunnerConfig } from './config';
@@ -56,12 +57,16 @@ async function handle(config: RunnerConfig, client: Client, log: Log, run: Run):
   const label = run.issueIdentifier ?? `run ${run.id}`;
   log(`${label}: started (${run.trigger})`);
   try {
+    // Read as the command writes, not off the outcome: only the tail of the output is
+    // kept, and the line carrying the counts can fall outside it.
+    const usage = new UsageReader(config.outputFormat);
     const outcome = await withHeartbeat(
       log,
       () => client.heartbeat(run.id),
-      execute(config, taskOf(run)),
+      execute(config, taskOf(run), { onData: (chunk) => usage.write(chunk) }),
     );
-    await client.report(run.id, outcome);
+    usage.end();
+    await client.report(run.id, { ...outcome, usage: usage.value() });
     log(`${label}: ${outcome.status}${outcome.error ? ` — ${outcome.error}` : ''}`);
   } catch (err) {
     // The command itself never throws here; this is the runner failing to run or

@@ -79,9 +79,16 @@ export class Client {
     await this.post(`/agent-runs/${runId}/heartbeat`);
   }
 
+  // `usage` is what the last model call of the run read and wrote. Left out where the
+  // command reported nothing about it, which stores the run without counts.
   async report(
     runId: number,
-    result: { status: 'success' | 'failed'; output?: string; error?: string },
+    result: {
+      status: 'success' | 'failed';
+      output?: string;
+      error?: string;
+      usage?: ContextUsage | null;
+    },
   ): Promise<void> {
     await this.post(`/agent-runs/${runId}/result`, result);
   }

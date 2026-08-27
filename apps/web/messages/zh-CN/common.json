@@ -110,7 +110,9 @@
     "importCanceled": "该导入已取消，未创建任何内容。",
     "importFailed": "导入失败。",
     "importConfirmed": "已创建 {count} 个任务",
-    "importSkippedRow": "已跳过第 {row} 行：{reason}"
+    "importSkippedRow": "已跳过第 {row} 行：{reason}",
+    "contextSize": "对话上下文：{count, plural, other {# 个 token}}",
+    "contextUnavailable": "该智能体不提供上下文大小"
   },
   "share": {
     "createFailed": "无法创建链接，请重试。",

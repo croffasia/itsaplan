@@ -106,9 +106,10 @@ async function buildAgent(row: AiAgentRow, contextPreamble: string): Promise<Age
   });
 }
 
-// Runs the internal agent identified by (agentId, projectId) against the prompt
-// and returns the generated text. Throws 404 if the agent does not exist in the
-// project and 400 if it is an external agent (which carries no model config).
+// Runs the internal agent identified by (agentId, projectId) against the prompt and
+// returns the generated text with the counts of the last model call it took. Throws 404
+// if the agent does not exist in the project and 400 if it is an external agent (which
+// carries no model config).
 //
 // When the agent has memory enabled, the run participates in a conversation
 // thread: threadId identifies the conversation (a new one is created when omitted)
@@ -119,11 +120,14 @@ export async function runAgent(
   projectId: number,
   prompt: string,
   opts: RunOpts,
-): Promise<{ text: string; threadId: string | null }> {
+): Promise<{ text: string; threadId: string | null; usage: ContextUsage | null }> {
   const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
   const result = await agent.generate(prompt, options);
-  if (threadId) await recordContextUsage(threadId, row.id, contextOf(result.usage));
-  return { text: (result.text ?? '').trim(), threadId };
+  const usage = contextOf(result.usage);
+  // A chat thread keeps one number, replaced by each answer. An autonomous run keeps
+  // the counts of that run instead, on its own row, so its caller stores them.
+  if (threadId && isChatThreadId(threadId)) await recordContextUsage(threadId, row.id, usage);
+  return { text: (result.text ?? '').trim(), threadId, usage };
 }
 
 // What the model reported about the last call of an answer, as the pair the chat keeps.
@@ -135,7 +139,6 @@ function contextOf(usage: ModelUsage | undefined): ContextUsage | null {
   return { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens ?? 0 };
 }
 
-// As much of Mastra's usage as the context size is read from.
 type ModelUsage = { inputTokens?: number; outputTokens?: number };
 
 // Streams the internal agent's response as it is produced. Yields text chunks and

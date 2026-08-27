@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { AnswerStream, type AgUiEvent } from '../agui';
+import { AnswerStream, UsageReader, type AgUiEvent } from '../agui';
 
 // The adapter is what a chat answer is read through, and the coding agents it reads
 // print several shapes of the same thing, so the mapping is pinned here.
@@ -467,9 +467,9 @@ describe('answer stream', () => {
   });
 });
 
-// The context size is what the chat shows as the weight of the conversation, so what
-// each command reports has to end up as the same pair of numbers, measured on the last
-// model call and never summed over the calls an answer took.
+// The context size is what the chat shows as the size of the conversation, so what each
+// command reports has to end up as the same pair of numbers, measured on the last model
+// call and never summed over the calls an answer took.
 describe('context size', () => {
   it("adds Claude's cache reads to the tokens read, and keeps the last call", async () => {
     const sink = collect();
@@ -529,7 +529,7 @@ describe('context size', () => {
     expect(stream.contextUsage()).toEqual({ inputTokens: 46_356, outputTokens: 800 });
   });
 
-  it("adds opencode's cache counts to the tokens the last step read", async () => {
+  it("adds opencode's cache and reasoning counts to the tokens the last step read", async () => {
     const sink = collect();
     const stream = new AnswerStream('opencode-json', 'chat:1:u:x', '7', sink.send);
 
@@ -544,7 +544,12 @@ describe('context size', () => {
         JSON.stringify({
           part: {
             type: 'step-finish',
-            tokens: { input: 1200, output: 90, cache: { read: 30_000, write: 800 } },
+            tokens: {
+              input: 1200,
+              output: 90,
+              reasoning: 40,
+              cache: { read: 30_000, write: 800 },
+            },
           },
         }),
         '',
@@ -552,26 +557,41 @@ describe('context size', () => {
     );
     await stream.finish('');
 
-    expect(stream.contextUsage()).toEqual({ inputTokens: 32_000, outputTokens: 90 });
+    expect(stream.contextUsage()).toEqual({ inputTokens: 32_000, outputTokens: 130 });
   });
 
-  it("adds Antigravity's cache reads to the tokens read", async () => {
+  it("adds Antigravity's cache reads and thinking tokens to the counts of its last step", async () => {
     const sink = collect();
     const stream = new AnswerStream('antigravity-stream-json', 'chat:1:u:x', '7', sink.send);
 
     stream.write(
-      `${JSON.stringify({
-        event: 'step_update',
-        step_update: {
-          step_index: 1,
-          step_type: 'agent_response',
-          usage: { input_tokens: 2000, cache_read_tokens: 18_000, output_tokens: 250 },
-        },
-      })}\n`,
+      [
+        JSON.stringify({
+          event: 'step_update',
+          step_update: {
+            step_index: 1,
+            step_type: 'agent_response',
+            usage: {
+              input_tokens: 2000,
+              cache_read_tokens: 18_000,
+              output_tokens: 250,
+              thinking_tokens: 60,
+            },
+          },
+        }),
+        // The closing result carries the total of the turn; taking it would report the
+        // steps added up instead of the context.
+        JSON.stringify({
+          event: 'result',
+          usage: { input_tokens: 90_000, output_tokens: 4000 },
+          result: { conversation_id: 'c3b6', response: 'Done.' },
+        }),
+        '',
+      ].join('\n'),
     );
     await stream.finish('');
 
-    expect(stream.contextUsage()).toEqual({ inputTokens: 20_000, outputTokens: 250 });
+    expect(stream.contextUsage()).toEqual({ inputTokens: 20_000, outputTokens: 310 });
   });
 
   it('says Copilot reports no context size, rather than saying nothing', async () => {
@@ -592,5 +612,51 @@ describe('context size', () => {
     await stream.finish('Done.');
 
     expect(stream.contextUsage()).toBeUndefined();
+  });
+});
+
+// A run streams nothing to a chat, so it reads the counts straight off the command's
+// output. The chat's stream owns a reader of the same kind, which the tests above cover.
+describe('usage of a run', () => {
+  it('reads the counts across the chunks the output arrived in', () => {
+    const reader = new UsageReader('claude-stream-json');
+    const line = JSON.stringify({
+      type: 'stream_event',
+      event: { type: 'message_start', message: { usage: { input_tokens: 8000 } } },
+    });
+
+    reader.write(line.slice(0, 30));
+    reader.write(`${line.slice(30)}\n`);
+    // A last line the command wrote without a newline still counts.
+    reader.write(
+      JSON.stringify({
+        type: 'stream_event',
+        event: { type: 'message_delta', usage: { output_tokens: 120 } },
+      }),
+    );
+    reader.end();
+
+    expect(reader.value()).toEqual({ inputTokens: 8000, outputTokens: 120 });
+  });
+
+  it('reports nothing for an output that said nothing about its counts', () => {
+    const reader = new UsageReader('codex-jsonl');
+    reader.write(`${JSON.stringify({ type: 'thread.started', thread_id: '01a0' })}\n`);
+    reader.end();
+    expect(reader.value()).toBeUndefined();
+  });
+
+  it('says Copilot reports no counts, rather than saying nothing', () => {
+    const reader = new UsageReader('copilot-json');
+    reader.write('{"type":"result"}\n');
+    reader.end();
+    expect(reader.value()).toBeNull();
+  });
+
+  it('reads nothing from the plain output of a command with no format', () => {
+    const reader = new UsageReader('text');
+    reader.write('Done.\n');
+    reader.end();
+    expect(reader.value()).toBeUndefined();
   });
 });

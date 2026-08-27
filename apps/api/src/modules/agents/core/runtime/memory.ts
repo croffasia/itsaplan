@@ -2,7 +2,7 @@ import { Memory } from '@mastra/memory';
 import { PostgresStore } from '@mastra/pg';
 import { toIso } from '../helpers/dates';
 import { appendTextPart, toolArgsText, toolText } from '../../chat-parts';
-import { deleteContextUsage, readContextTokens } from '../../chat-usage';
+import { contextField, deleteContextUsage, readContextSizes } from '../../chat-usage';
 import type { ChatMessageDTO, ChatMessagePage, ChatPart, ChatThreadPage } from '../../model';
 
 // Conversation memory for internal agents. Threads and their messages are
@@ -140,12 +140,12 @@ export async function listChatThreads(
     perPage: THREAD_PAGE_SIZE,
     page,
   });
-  const sizes = await readContextTokens(res.threads.map((t) => t.id));
+  const sizes = await readContextSizes(res.threads.map((t) => t.id));
   const items = res.threads.map((t) => ({
     id: t.id,
     title: t.title && t.title.length > 0 ? t.title : null,
     cliSessionId: null,
-    ...(sizes.has(t.id) ? { contextTokens: sizes.get(t.id) } : {}),
+    ...contextField(sizes, t.id),
     createdAt: toIso(t.createdAt),
     updatedAt: toIso(t.updatedAt),
   }));

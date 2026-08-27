@@ -26,16 +26,19 @@ export const ChatAttachmentResponse = t.Object({
 // The read route answers with the metadata plus the content in the shape the
 // file holds: a parsed table for a spreadsheet or document, a text excerpt for
 // a text file, neither for a binary one.
-export const ChatAttachmentContentResponse = t.Intersect([
-  ChatAttachmentResponse,
-  t.Object({
-    table: t.Optional(
-      t.Object({
-        headers: t.Array(t.String()),
-        sampleRows: t.Array(t.Array(t.String())),
-        totalRows: t.Number(),
-      }),
-    ),
-    text: t.Optional(t.String()),
-  }),
-]);
+export const ChatAttachmentContentResponse = t.Object({
+  id: t.String(),
+  filename: t.String(),
+  contentType: t.String(),
+  sizeBytes: t.Number(),
+  createdAt: t.String(),
+  url: t.String(),
+  table: t.Optional(
+    t.Object({
+      headers: t.Array(t.String()),
+      sampleRows: t.Array(t.Array(t.String())),
+      totalRows: t.Number(),
+    }),
+  ),
+  text: t.Optional(t.String()),
+});

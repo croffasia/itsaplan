@@ -1,5 +1,5 @@
 import { db, chatAttachment } from '@repo/db';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { HttpError, iso, num } from '#shared/lib';
 import { getObject } from '#shared/s3';
 import { isTableFilename, parseImportFile } from './parse';
@@ -60,6 +60,16 @@ export async function getChatAttachmentProjectId(publicId: string): Promise<numb
     .from(chatAttachment)
     .where(eq(chatAttachment.publicId, publicId));
   return rows[0]?.projectId ?? null;
+}
+
+// Bytes currently stored for a project as chat attachments. Read before an upload
+// to enforce the instance project quota.
+export async function getProjectChatAttachmentBytes(projectId: number): Promise<number> {
+  const rows = await db
+    .select({ total: sql<string>`coalesce(sum(${chatAttachment.sizeBytes}), 0)` })
+    .from(chatAttachment)
+    .where(eq(chatAttachment.projectId, projectId));
+  return num(rows[0]?.total ?? 0);
 }
 
 export async function readAttachmentBytes(s3Key: string): Promise<Buffer> {

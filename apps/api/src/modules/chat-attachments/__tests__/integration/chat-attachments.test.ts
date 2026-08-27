@@ -69,7 +69,7 @@ describe('chat attachments', () => {
       contentBase64: '',
       contentType: 'text/csv',
     });
-    expect(empty.status).toBe(422);
+    expect(empty.status).toBe(400);
     // ...and the route refuses input that does not decode to any bytes.
     const garbage = await asOwner.projects({ projectKey: 'MKT' })['chat-attachments'].post({
       filename: 'zero.csv',

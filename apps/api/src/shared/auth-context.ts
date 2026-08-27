@@ -9,7 +9,7 @@ import { HttpError } from './lib';
 // GET renders a public read-only shared issue or view, keyed by an unguessable
 // token. All ids are unguessable.
 const PUBLIC_GET =
-  /^\/attachments\/[^/]+\/raw$|^\/avatars\/[^/]+\/raw$|^\/invites\/[^/]+$|^\/share\//;
+  /^\/attachments\/[^/]+\/raw$|^\/chat-attachments\/[^/]+\/raw$|^\/avatars\/[^/]+\/raw$|^\/invites\/[^/]+$|^\/share\//;
 
 type SessionResult = NonNullable<Awaited<ReturnType<typeof auth.api.getSession>>>;
 

@@ -26,6 +26,7 @@ import {
   createChatAttachment,
   getChatAttachmentByPublicId,
   getChatAttachmentProjectId,
+  getProjectChatAttachmentBytes,
   readChatAttachmentContent,
   type ChatAttachmentRow,
 } from './service';
@@ -36,7 +37,7 @@ import {
 // attachment's, so the link a chat message renders works for anyone viewing it.
 
 // The upload limits are instance settings, read per request. The quota counts
-// issue attachments, the store's other tenant of project bytes.
+// both issue and chat attachments, the two tenants of a project's stored bytes.
 async function assertUploadAllowed(
   limits: StorageSettings,
   projectId: number,
@@ -50,7 +51,9 @@ async function assertUploadAllowed(
     throw new HttpError(400, `Files of type "${contentType}" are not accepted on this instance`);
   }
   if (limits.projectQuotaMb > 0) {
-    const used = await getProjectAttachmentBytes(projectId);
+    const used =
+      (await getProjectAttachmentBytes(projectId)) +
+      (await getProjectChatAttachmentBytes(projectId));
     if (used + size > limits.projectQuotaMb * MB) {
       throw new HttpError(
         413,
@@ -153,7 +156,7 @@ export const chatAttachmentRoutes = new Elysia({
     {
       params: publicIdParams,
       chatAttachment: 'read',
-      response: { 200: ChatAttachmentContentResponse, ...accessErrors },
+      response: { 200: ChatAttachmentContentResponse, ...accessErrors, ...errors(400) },
       detail: {
         summary: 'Read a chat attachment',
         description:

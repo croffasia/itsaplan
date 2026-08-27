@@ -12,7 +12,6 @@ import {
   Zap,
 } from 'lucide-react';
 import type { AgentSchedule } from '@/lib/api';
-import { getDisplayLocale } from '@/utils/dates';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -27,7 +26,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils';
 import SettingsIconButton from '../SettingsIconButton';
 import { useSettingsCan } from '../../context/settingsPermission';
-import { parseScheduleInput } from '../../utils/cronSchedule';
+import { formatUtc, parseScheduleInput } from '../../utils/cronSchedule';
 import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleRow({
@@ -194,14 +193,6 @@ export function SettingsScheduleRow({
       </TableCell>
     </TableRow>
   );
-}
-
-function formatUtc(value: string): string {
-  return `${new Intl.DateTimeFormat(getDisplayLocale(), {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'UTC',
-  }).format(new Date(value))} UTC`;
 }
 
 function statusDotClass(status: AgentSchedule['status']): string {

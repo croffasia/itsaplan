@@ -4,6 +4,7 @@ import {
   useCancelAgentScheduleRuns,
 } from '@/services/agentSchedules.service';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -13,6 +14,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { useSettingsCan } from '../../context/settingsPermission';
+import { formatUtc, parseScheduleInput } from '../../utils/cronSchedule';
 import { SettingsScheduleRunRow } from './SettingsScheduleRunRow';
 import { useTranslations } from 'next-intl';
 
@@ -31,6 +33,8 @@ export function SettingsScheduleRunsSheet({
   const cancelRuns = useCancelAgentScheduleRuns(projectKey);
   const canCancel = can('edit') && schedule?.canTrigger === true;
   const runs = query.data ?? [];
+  const parsed = schedule ? parseScheduleInput(schedule.cron) : null;
+  const cron = parsed?.ok ? parsed.description : (schedule?.cron ?? '');
 
   function cancel(runId?: number) {
     if (schedule) cancelRuns.mutate({ scheduleId: schedule.id, runId });
@@ -57,9 +61,23 @@ export function SettingsScheduleRunsSheet({
   return (
     <Sheet open={schedule != null} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-xl">
-        <SheetHeader className="border-b">
-          <SheetTitle>{t('runHistory')}</SheetTitle>
-          <SheetDescription>{schedule?.name}</SheetDescription>
+        <SheetHeader className="border-b bg-muted/30">
+          <div className="flex min-w-0 items-center gap-2">
+            <Badge
+              variant={schedule?.status === 'active' ? 'secondary' : 'outline'}
+              className="shrink-0 px-1.5 py-0 text-[10px] font-medium"
+            >
+              {t(schedule?.status === 'active' ? 'statusActive' : 'statusPaused')}
+            </Badge>
+            <SheetTitle className="truncate text-base">{schedule?.name}</SheetTitle>
+          </div>
+          <SheetDescription className="flex flex-wrap items-center gap-x-2 text-xs">
+            <span>{cron}</span>
+            <span>·</span>
+            <span className="tabular-nums">
+              {t('nextRun')}: {schedule ? formatUtc(schedule.nextRunAt) : ''}
+            </span>
+          </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto">
           {query.isLoading ? (

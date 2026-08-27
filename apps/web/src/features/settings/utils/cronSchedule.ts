@@ -1,3 +1,4 @@
+import { getDisplayLocale } from '@/utils/dates';
 import { describeCron } from './cronDescription';
 import { formatCron, parseCron } from './cronFields';
 import { parseCronText } from './cronTextParser';
@@ -31,4 +32,14 @@ export function parseScheduleInput(input: string): ScheduleInputResult {
 function looksLikeCron(value: string): boolean {
   const parts = value.split(/\s+/);
   return parts.length === 5 && /^[\d*/,-]+$/.test(parts[0]);
+}
+
+// A schedule's times are stored and shown in UTC, which is the only zone a cron here
+// runs in, so the zone is written out with them.
+export function formatUtc(value: string): string {
+  return `${new Intl.DateTimeFormat(getDisplayLocale(), {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'UTC',
+  }).format(new Date(value))} UTC`;
 }

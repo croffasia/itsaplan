@@ -1,4 +1,4 @@
-import type { AgUiEvent } from './agui';
+import type { AgUiEvent, ContextUsage } from './agui';
 import type { RunnerConfig } from './config';
 
 // The agent's API key is the whole authorization: it identifies the agent, and the server
@@ -109,9 +109,11 @@ export class Client {
     return canceled(await this.post(`/agent-chats/${messageId}/heartbeat`));
   }
 
+  // `usage` is the size of the context the answer left behind. Left out where the
+  // command reported nothing about it, which keeps the number the thread already has.
   async chatResult(
     messageId: number,
-    result: { status: 'success' | 'failed'; error?: string },
+    result: { status: 'success' | 'failed'; error?: string; usage?: ContextUsage | null },
   ): Promise<void> {
     await this.post(`/agent-chats/${messageId}/result`, result);
   }

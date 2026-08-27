@@ -175,6 +175,100 @@ describe('external agent chat', () => {
     );
   });
 
+  // The context size of a thread is what its chat panel shows as the weight of the
+  // conversation. It is the runner that measures it, so the thread list is where the
+  // member reads it back.
+  it('keeps the context size the runner reported with the answer', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Status?');
+
+    const fresh = await chatOf(asOwner, agent.id).threads.get();
+    expect(fresh.data!.items[0].contextTokens).toBeUndefined();
+
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: answer.id }).result.post({
+      status: 'success',
+      usage: { inputTokens: 44_945, outputTokens: 300 },
+    });
+
+    const answered = await chatOf(asOwner, agent.id).threads.get();
+    expect(answered.data!.items.find((t) => t.id === sent.data!.threadId)!.contextTokens).toBe(
+      45_245,
+    );
+
+    // Every answer replaces the number: only the last one says how large the context is.
+    await send(asOwner, agent.id, 'And now?', sent.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: second.id }).result.post({
+      status: 'success',
+      usage: { inputTokens: 50_000, outputTokens: 100 },
+    });
+
+    const again = await chatOf(asOwner, agent.id).threads.get();
+    expect(again.data!.items.find((t) => t.id === sent.data!.threadId)!.contextTokens).toBe(50_100);
+  });
+
+  it('tells a command that reports no counts apart from a runner that reports none', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Status?');
+
+    // An older runner sends no field at all: the answer is stored as before, with no
+    // number and no error.
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    const closed = await asRunner['agent-chats']({ messageId: answer.id }).result.post({
+      status: 'success',
+    });
+    expect(closed.status).toBe(204);
+    const silent = await chatOf(asOwner, agent.id).threads.get();
+    expect(silent.data!.items[0].contextTokens).toBeUndefined();
+
+    // A runner whose command has no usable counts says so with null, which the chat
+    // shows as a dash.
+    await send(asOwner, agent.id, 'And now?', sent.data!.threadId);
+    const second = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: second.id }).result.post({
+      status: 'success',
+      usage: null,
+    });
+
+    const dashed = await chatOf(asOwner, agent.id).threads.get();
+    expect(dashed.data!.items.find((t) => t.id === sent.data!.threadId)!.contextTokens).toBeNull();
+  });
+
+  it('keeps the counts of an answer that failed', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await send(asOwner, agent.id, 'Status?');
+
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: answer.id }).result.post({
+      status: 'failed',
+      error: 'Command exited with 1',
+      usage: { inputTokens: 900, outputTokens: 100 },
+    });
+
+    const threads = await chatOf(asOwner, agent.id).threads.get();
+    expect(threads.data!.items[0].contextTokens).toBe(1000);
+  });
+
+  it('drops the context size with the thread', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Status?');
+    const answer = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: answer.id }).result.post({
+      status: 'success',
+      usage: { inputTokens: 100, outputTokens: 10 },
+    });
+
+    expect(
+      (await chatOf(asOwner, agent.id).threads({ threadId: sent.data!.threadId }).delete()).status,
+    ).toBe(204);
+
+    // The next thread takes ids of its own, so nothing is left to inherit the number: it
+    // is gone with the thread it belonged to.
+    const after = await chatOf(asOwner, agent.id).threads.get();
+    expect(after.data!.items).toHaveLength(0);
+  });
+
   it('hands a claimed answer to no one else until its lease expires', async () => {
     const { asOwner, asRunner, agent } = await setup();
     await send(asOwner, agent.id, 'Hello');

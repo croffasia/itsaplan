@@ -172,9 +172,19 @@ export const chatEventsBody = t.Object({
   ),
 });
 
+// `usage` is the size of the context this answer left behind: what its last model call
+// read, cache included, and what it wrote. Left out by a runner whose command reported
+// nothing about it, which leaves the thread the number it has; null where the command
+// reports no counts a context size can be read from, which the chat shows as a dash.
+export const contextUsageBody = t.Object({
+  inputTokens: t.Integer({ minimum: 0 }),
+  outputTokens: t.Integer({ minimum: 0 }),
+});
+
 export const chatResultBody = t.Object({
   status: t.Union([t.Literal('success'), t.Literal('failed')]),
   error: t.Optional(t.Nullable(t.String())),
+  usage: t.Optional(t.Nullable(contextUsageBody)),
 });
 
 // The answer of every runner call that reports progress. `canceled` is how the stop

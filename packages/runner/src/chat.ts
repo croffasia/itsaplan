@@ -59,12 +59,15 @@ export async function answer(
     { onData: (chunk) => stream.write(chunk), signal: stop.signal },
   ).finally(() => clearInterval(flushing));
   if (stop.signal.aborted) return;
+  // The context size is read after the stream is closed, which is where the last line of
+  // the output is parsed. An answer that failed reports it too: what the command read
+  // before it broke is still the size of its session's context.
   if (outcome.status === 'success') {
     await stream.finish(outcome.output);
-    await client.chatResult(message.id, { status: 'success' });
+    await client.chatResult(message.id, { status: 'success', usage: stream.contextUsage() });
     return;
   }
   const error = outcome.error ?? 'The command failed';
   await stream.fail(error, outcome.output);
-  await client.chatResult(message.id, { status: 'failed', error });
+  await client.chatResult(message.id, { status: 'failed', error, usage: stream.contextUsage() });
 }

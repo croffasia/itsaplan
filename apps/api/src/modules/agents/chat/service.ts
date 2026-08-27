@@ -3,7 +3,12 @@ import { and, asc, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { iso } from '#shared/lib';
 import { appendTextPart } from '../chat-parts';
-import { deleteContextUsage, readContextTokens } from '../chat-usage';
+import {
+  deleteContextUsage,
+  readContextTokens,
+  recordContextUsage,
+  type ContextUsage,
+} from '../chat-usage';
 import { intEnv } from '../core/helpers/env';
 import { chartPreamble, projectPreamble } from '../core/prompt/framing';
 import { peoplePreamble, type Person } from '../core/prompt/run-context';
@@ -557,7 +562,11 @@ export async function cancelMessage(
 export async function finishMessage(
   agentId: number,
   messageId: number,
-  result: { status: 'success' | 'failed'; error?: string | null },
+  result: {
+    status: 'success' | 'failed';
+    error?: string | null;
+    usage?: ContextUsage | null;
+  },
 ): Promise<boolean> {
   await touchRunner(agentId);
   const rows = await db
@@ -569,8 +578,15 @@ export async function finishMessage(
       finishedAt: new Date(),
     })
     .where(liveAnswer(agentId, messageId))
-    .returning({ id: agentChatMessage.id });
-  if (rows.length > 0) return true;
+    .returning({ id: agentChatMessage.id, threadId: agentChatMessage.threadId });
+  if (rows.length > 0) {
+    // Undefined is a runner that said nothing about the context — an older one, or a
+    // command that reports no counts at all — and the thread keeps the number it has.
+    if (result.usage !== undefined) {
+      await recordContextUsage(rows[0].threadId, agentId, result.usage);
+    }
+    return true;
+  }
   // Stopped from the chat while the command was ending: the answer is already closed,
   // so there is nothing to record and nothing wrong.
   return wasCanceled(agentId, messageId);

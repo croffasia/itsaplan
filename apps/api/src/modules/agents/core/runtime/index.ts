@@ -10,6 +10,7 @@ import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
 import { toolArgsText, toolText } from '../../chat-parts';
+import { recordContextUsage, type ContextUsage } from '../../chat-usage';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { projectPreamble } from '../prompt/framing';
@@ -119,10 +120,23 @@ export async function runAgent(
   prompt: string,
   opts: RunOpts,
 ): Promise<{ text: string; threadId: string | null }> {
-  const { agent, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
+  const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
   const result = await agent.generate(prompt, options);
+  if (threadId) await recordContextUsage(threadId, row.id, contextOf(result.usage));
   return { text: (result.text ?? '').trim(), threadId };
 }
+
+// What the model reported about the last call of an answer, as the pair the chat keeps.
+// Mastra's counts already hold the tokens read from cache inside `inputTokens`, so they
+// are taken as they are. Null for a model that reports none, which the chat shows as a
+// dash.
+function contextOf(usage: ModelUsage | undefined): ContextUsage | null {
+  if (usage?.inputTokens == null) return null;
+  return { inputTokens: usage.inputTokens, outputTokens: usage.outputTokens ?? 0 };
+}
+
+// As much of Mastra's usage as the context size is read from.
+type ModelUsage = { inputTokens?: number; outputTokens?: number };
 
 // Streams the internal agent's response as it is produced. Yields text chunks and
 // the tool calls the agent makes, then a final `done` with the thread id (see
@@ -141,10 +155,16 @@ export async function* streamAgent(
   signal?: AbortSignal,
 ): AsyncGenerator<AgentRunEvent> {
   try {
-    const { agent, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
+    const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
     const result = await agent.stream(prompt, { ...options, abortSignal: signal });
+    // The size of the context is what the last call of the answer read, so each step
+    // replaces the one before it rather than being added to it.
+    let usage: ModelUsage | undefined;
     for await (const chunk of result.fullStream) {
       switch (chunk.type) {
+        case 'step-finish':
+          usage = chunk.payload.output.usage;
+          break;
         case 'text-delta':
           if (chunk.payload.text) yield { type: 'text', value: chunk.payload.text };
           break;
@@ -169,6 +189,9 @@ export async function* streamAgent(
           break;
       }
     }
+    // An answer the member stopped never reaches here: the stream is aborted and the
+    // thread keeps the number of the answer before it.
+    if (threadId) await recordContextUsage(threadId, row.id, contextOf(usage));
     yield { type: 'done', threadId };
   } catch (err) {
     if (signal?.aborted) return;
@@ -184,7 +207,7 @@ async function prepareRun(
   projectId: number,
   prompt: string,
   opts: RunOpts,
-): Promise<{ agent: Agent; options: RunOptions; threadId: string | null }> {
+): Promise<{ agent: Agent; row: AiAgentRow; options: RunOptions; threadId: string | null }> {
   const row = await getAgentById(agentId, projectId);
   if (!row) throw new HttpError(404, 'Agent not found');
   if (row.kind !== 'internal') {
@@ -219,7 +242,7 @@ async function prepareRun(
     );
     options.memory = { thread: threadId, resource: opts.callerUserId };
   }
-  return { agent, options, threadId };
+  return { agent, row, options, threadId };
 }
 
 // Options for a single run. callerUserId owns the memory thread; threadId continues a

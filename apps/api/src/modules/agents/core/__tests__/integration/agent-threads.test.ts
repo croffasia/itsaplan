@@ -4,6 +4,7 @@ import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { ensureThread, buildMemory } from '../../runtime/memory';
+import { recordContextUsage } from '../../../chat-usage';
 
 // The chat-history endpoints:
 //   GET /projects/:key/ai-agents/:agentId/threads             — the caller's own chat
@@ -378,6 +379,29 @@ describe('agent chat history', () => {
       .delete();
     expect(res.status).toBe(403);
     expect(await threadExists('mine')).toBe(true);
+  });
+
+  // The context size is written by the run itself, which needs a model, so it is
+  // recorded here the way a run would and read back through the thread list.
+  it('shows the context size a run recorded, and drops it with the thread', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const threadId = `chat:${agent.id}:${owner.userId}:t1`;
+    await seedThread(threadId, owner.userId, agent, 'sizing');
+    const threads = () => agents(asOwner)({ agentId: agent.id }).threads.get();
+
+    expect((await threads()).data!.items[0].contextTokens).toBeUndefined();
+
+    await recordContextUsage(threadId, agent.id, { inputTokens: 12_000, outputTokens: 213 });
+    expect((await threads()).data!.items[0].contextTokens).toBe(12_213);
+
+    // A model that reports no counts is told apart from an answer that never ran.
+    await recordContextUsage(threadId, agent.id, null);
+    expect((await threads()).data!.items[0].contextTokens).toBeNull();
+
+    await agents(asOwner)({ agentId: agent.id }).threads({ threadId }).delete();
+    await seedThread(threadId, owner.userId, agent, 'sizing');
+    expect((await threads()).data!.items[0].contextTokens).toBeUndefined();
   });
 
   it("404s a run continuing another user's chat thread", async () => {

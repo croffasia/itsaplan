@@ -22,7 +22,7 @@ export function AiChatContextSize({ tokens }: { tokens: number | null }) {
       title={t('contextSizeHint', { tokens: format.number(tokens) })}
       dir="ltr"
     >
-      {t('contextSize', { tokens: compact(tokens) })}
+      {compact(tokens)}
     </span>
   );
 }

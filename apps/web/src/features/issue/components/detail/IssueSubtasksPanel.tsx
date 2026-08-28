@@ -67,6 +67,7 @@ export default function IssueSubtasksPanel({
         <IssueRefRow
           project={project}
           issue={parent}
+          scrollAnchorKey={`parent:${parent.id}`}
           removeLabel={t('detachFromParent', { parent: parent.identifier })}
           readOnly={readOnly}
           onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
@@ -84,6 +85,7 @@ export default function IssueSubtasksPanel({
         key={subtask.id}
         project={project}
         issue={subtask}
+        scrollAnchorKey={`subtask:${subtask.id}`}
         removeLabel={t('detach', { subtask: subtask.identifier })}
         readOnly={readOnly}
         onOpen={onOpenIssue && (() => onOpenIssue(subtask.id))}

@@ -4,7 +4,10 @@ import { type IssueRef, type ProjectDetail } from '@/lib/api';
 import { issuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import ArchivedBadge from '@/components/common/ArchivedBadge';
-import { historyScrollRestorationLinkProps } from '@/hooks/useHistoryScrollRestoration';
+import {
+  historyScrollRestorationAnchorProps,
+  historyScrollRestorationLinkProps,
+} from '@/hooks/useHistoryScrollRestoration';
 import { StateIcon } from '../shared/IssueIcons';
 
 // One other issue in the Links or Subtasks panel — the far end of a relation, a
@@ -17,6 +20,7 @@ import { StateIcon } from '../shared/IssueIcons';
 export default function IssueRefRow({
   project,
   issue,
+  scrollAnchorKey,
   removeLabel,
   onRemove,
   onOpen,
@@ -24,6 +28,7 @@ export default function IssueRefRow({
 }: {
   project: ProjectDetail;
   issue: IssueRef;
+  scrollAnchorKey: string;
   removeLabel: string;
   onRemove?: () => void;
   onOpen?: () => void;
@@ -49,6 +54,7 @@ export default function IssueRefRow({
     return (
       <Link
         {...historyScrollRestorationLinkProps}
+        {...historyScrollRestorationAnchorProps(scrollAnchorKey)}
         href={issuePath(project.project.key, issue.sequenceNumber)}
         className={labelClass}
       >

@@ -10,18 +10,31 @@ import {
 } from 'react';
 
 const SCROLL_SAVE_DELAY_MS = 100;
+const SCROLL_ANCHOR_ATTRIBUTE = 'data-history-scroll-restoration-anchor';
 const scrollContainerStyle = { overflowAnchor: 'none' } satisfies CSSProperties;
 const scrollPositions = new Map<string, number>();
 let nextHistoryEntryId = 0;
 
 export const historyScrollRestorationLinkProps = { scroll: false } as const;
 
+export function historyScrollRestorationAnchorProps(key: string) {
+  return { [SCROLL_ANCHOR_ATTRIBUTE]: key };
+}
+
+interface ScrollRestorationAnchor {
+  key: string;
+  offsetTop: number;
+}
+
+interface ScrollRestorationPosition {
+  entryId: string;
+  pathname: string;
+  scrollTop: number;
+  anchor?: ScrollRestorationAnchor;
+}
+
 interface ScrollRestorationHistoryState {
-  __itsaplanScrollRestoration?: {
-    entryId: string;
-    pathname: string;
-    scrollTop: number;
-  };
+  __itsaplanScrollRestoration?: ScrollRestorationPosition;
 }
 
 interface HistoryScrollRestorationOptions {
@@ -36,6 +49,42 @@ interface ScrollRestorationProps<T extends HTMLElement> {
   onPointerDownCapture: PointerEventHandler<T>;
 }
 
+function findAnchorElement(container: HTMLElement, key: string) {
+  return Array.from(container.querySelectorAll<HTMLElement>(`[${SCROLL_ANCHOR_ATTRIBUTE}]`)).find(
+    (element) => element.getAttribute(SCROLL_ANCHOR_ATTRIBUTE) === key,
+  );
+}
+
+function captureAnchor(container: HTMLElement, target: EventTarget | null) {
+  if (!(target instanceof Element)) return undefined;
+  const element = target.closest(`[${SCROLL_ANCHOR_ATTRIBUTE}]`);
+  if (!(element instanceof HTMLElement) || !container.contains(element)) return undefined;
+  const key = element.getAttribute(SCROLL_ANCHOR_ATTRIBUTE);
+  if (!key) return undefined;
+  return {
+    key,
+    offsetTop: element.getBoundingClientRect().top - container.getBoundingClientRect().top,
+  };
+}
+
+function validAnchor(value: unknown): value is ScrollRestorationAnchor {
+  if (!value || typeof value !== 'object') return false;
+  const anchor = value as Partial<ScrollRestorationAnchor>;
+  return (
+    typeof anchor.key === 'string' &&
+    anchor.key.length > 0 &&
+    typeof anchor.offsetTop === 'number' &&
+    Number.isFinite(anchor.offsetTop)
+  );
+}
+
+function replaceHistoryPosition(position: ScrollRestorationPosition) {
+  window.history.replaceState(
+    { ...window.history.state, __itsaplanScrollRestoration: position },
+    '',
+  );
+}
+
 export function useHistoryScrollRestoration<T extends HTMLElement = HTMLDivElement>({
   pathname,
 }: HistoryScrollRestorationOptions): ScrollRestorationProps<T> {
@@ -46,12 +95,14 @@ export function useHistoryScrollRestoration<T extends HTMLElement = HTMLDivEleme
   const restoredScrollTopRef = useRef<number | null>(null);
   const restoreObserverRef = useRef<ResizeObserver | null>(null);
   const pendingScrollTopRef = useRef<number | null>(null);
+  const pendingAnchorRef = useRef<ScrollRestorationAnchor | undefined>(undefined);
   const saveTimerRef = useRef<number | null>(null);
 
   const clearPendingSave = useCallback(() => {
     if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current);
     saveTimerRef.current = null;
     pendingScrollTopRef.current = null;
+    pendingAnchorRef.current = undefined;
   }, []);
 
   const stopRestoration = useCallback(() => {
@@ -65,6 +116,7 @@ export function useHistoryScrollRestoration<T extends HTMLElement = HTMLDivEleme
     const activeEntryId = activeEntryIdRef.current;
     const activePathname = activePathnameRef.current;
     const scrollTop = pendingScrollTopRef.current;
+    const anchor = pendingAnchorRef.current;
     if (activeEntryId == null || activePathname == null || scrollTop == null) return;
 
     scrollPositions.set(activeEntryId, scrollTop);
@@ -76,25 +128,24 @@ export function useHistoryScrollRestoration<T extends HTMLElement = HTMLDivEleme
     }
 
     clearPendingSave();
-    window.history.replaceState(
-      {
-        ...window.history.state,
-        __itsaplanScrollRestoration: {
-          entryId: activeEntryId,
-          pathname: activePathname,
-          scrollTop,
-        },
-      },
-      '',
-    );
+    replaceHistoryPosition({
+      entryId: activeEntryId,
+      pathname: activePathname,
+      scrollTop,
+      ...(anchor ? { anchor } : {}),
+    });
   }, [clearPendingSave]);
 
-  const saveCurrentScrollPosition = useCallback(() => {
-    if (!scrollRef.current) return;
-    stopRestoration();
-    pendingScrollTopRef.current = scrollRef.current.scrollTop;
-    saveScrollPosition();
-  }, [saveScrollPosition, stopRestoration]);
+  const saveCurrentScrollPosition = useCallback(
+    (target?: EventTarget | null) => {
+      if (!scrollRef.current) return;
+      stopRestoration();
+      pendingScrollTopRef.current = scrollRef.current.scrollTop;
+      pendingAnchorRef.current = captureAnchor(scrollRef.current, target ?? null);
+      saveScrollPosition();
+    },
+    [saveScrollPosition, stopRestoration],
+  );
 
   useLayoutEffect(() => {
     stopRestoration();
@@ -116,19 +167,22 @@ export function useHistoryScrollRestoration<T extends HTMLElement = HTMLDivEleme
       : `${performance.timeOrigin}:${++nextHistoryEntryId}`;
     const persistedScrollTop = ownsHistoryEntry ? savedPosition.scrollTop : 0;
     const scrollTop = scrollPositions.get(entryId) ?? persistedScrollTop;
+    const anchor =
+      ownsHistoryEntry && validAnchor(savedPosition.anchor) ? savedPosition.anchor : undefined;
 
     activeEntryIdRef.current = entryId;
     activePathnameRef.current = pathname;
     isRestoringRef.current = true;
     scrollPositions.set(entryId, scrollTop);
-    window.history.replaceState(
-      {
-        ...window.history.state,
-        __itsaplanScrollRestoration: { entryId, pathname, scrollTop },
-      },
-      '',
-    );
+    replaceHistoryPosition({
+      entryId,
+      pathname,
+      scrollTop,
+      ...(anchor ? { anchor } : {}),
+    });
 
+    let absoluteScrollRestored = false;
+    let anchorWasFound = false;
     const restore = () => {
       if (
         isRestoringRef.current &&
@@ -136,9 +190,37 @@ export function useHistoryScrollRestoration<T extends HTMLElement = HTMLDivEleme
         activePathnameRef.current === pathname &&
         scrollRef.current
       ) {
-        scrollRef.current.scrollTop = scrollTop;
-        restoredScrollTopRef.current = scrollRef.current.scrollTop;
-        if (Math.abs(scrollRef.current.scrollTop - scrollTop) < 1) stopRestoration();
+        const container = scrollRef.current;
+        const anchorElement = anchor ? findAnchorElement(container, anchor.key) : undefined;
+        if (anchor && anchorElement) {
+          anchorWasFound = true;
+          const currentOffset =
+            anchorElement.getBoundingClientRect().top - container.getBoundingClientRect().top;
+          container.scrollTop += currentOffset - anchor.offsetTop;
+          restoredScrollTopRef.current = container.scrollTop;
+          scrollPositions.set(entryId, container.scrollTop);
+          const currentState = window.history.state as ScrollRestorationHistoryState | null;
+          if (
+            window.location.pathname === pathname &&
+            currentState?.__itsaplanScrollRestoration?.entryId === entryId
+          ) {
+            replaceHistoryPosition({
+              entryId,
+              pathname,
+              scrollTop: container.scrollTop,
+              anchor,
+            });
+          }
+        } else if (anchorWasFound) {
+          stopRestoration();
+        } else if (!absoluteScrollRestored) {
+          container.scrollTop = scrollTop;
+          restoredScrollTopRef.current = container.scrollTop;
+          if (Math.abs(container.scrollTop - scrollTop) < 1) {
+            absoluteScrollRestored = true;
+            if (!anchor) stopRestoration();
+          }
+        }
       }
     };
 
@@ -170,16 +252,16 @@ export function useHistoryScrollRestoration<T extends HTMLElement = HTMLDivEleme
     }
 
     pendingScrollTopRef.current = scrollTop;
+    pendingAnchorRef.current = undefined;
     const activeEntryId = activeEntryIdRef.current;
     if (activeEntryId != null) scrollPositions.set(activeEntryId, scrollTop);
     if (saveTimerRef.current != null) window.clearTimeout(saveTimerRef.current);
     saveTimerRef.current = window.setTimeout(saveScrollPosition, SCROLL_SAVE_DELAY_MS);
   };
 
-  const onPointerDownCapture: PointerEventHandler<T> = saveCurrentScrollPosition;
-  const onClickCapture: MouseEventHandler<T> = (event) => {
-    if (event.detail === 0) saveCurrentScrollPosition();
-  };
+  const onPointerDownCapture: PointerEventHandler<T> = (event) =>
+    saveCurrentScrollPosition(event.target);
+  const onClickCapture: MouseEventHandler<T> = (event) => saveCurrentScrollPosition(event.target);
 
   return {
     ref: scrollRef,

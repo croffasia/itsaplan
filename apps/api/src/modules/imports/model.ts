@@ -19,12 +19,14 @@ export const ImportResponse = t.Object({
   mapping: t.Any(),
   errorText: t.Nullable(t.String()),
   createdAt: t.String(),
-  // The head of the parsed table, so the review card can draw real rows without
-  // a second round trip.
+  // The parsed table narrowed to the mapped columns, so the review card can draw
+  // every row and the reason confirm would pass it over, without a second round trip.
+  // A file exported from a tracker repeats a column per value it holds and runs into
+  // the thousands, so the unmapped columns never leave the server.
   preview: t.Optional(
     t.Object({
-      headers: t.Array(t.String()),
-      rows: t.Array(t.Array(t.String())),
+      columns: t.Array(t.Object({ field: t.String(), header: t.String() })),
+      rows: t.Array(t.Object({ cells: t.Array(t.String()), skip: t.Nullable(t.String()) })),
       totalRows: t.Number(),
     }),
   ),

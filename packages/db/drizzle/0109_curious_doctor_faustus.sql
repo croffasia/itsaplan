@@ -1,0 +1,1 @@
+CREATE INDEX "issue_project_title_idx" ON "issue" USING btree ("project_id",lower(btrim("title")));

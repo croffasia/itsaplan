@@ -99,6 +99,31 @@ describe('imports', () => {
     expect(new Date(first!.dueDate as string).toISOString().slice(0, 10)).toBe('2026-09-01');
   });
 
+  it('marks a row whose title the project already has and skips it on confirm', async () => {
+    const { asOwner } = await setup();
+    const uploaded = await uploadWorkbook(asOwner, [['Task'], ['First'], ['Second'], [' first ']]);
+    const first = await mapImport(uploaded.data!.id, { title: 'Task' });
+    expect((await asOwner.imports({ importId: first.id }).confirm.post()).status).toBe(200);
+
+    const second = await mapImport(
+      (await uploadWorkbook(asOwner, [['Task'], ['First']])).data!.id,
+      {
+        title: 'Task',
+      },
+    );
+    const read = await asOwner.imports({ importId: second.id }).get();
+    expect(read.data!.preview!.rows).toEqual([
+      { cells: ['First'], skip: 'An issue with this title exists' },
+    ]);
+
+    const confirm = await asOwner.imports({ importId: second.id }).confirm.post();
+    expect(confirm.data!.imported).toEqual([]);
+    expect(confirm.data!.skipped).toEqual([{ row: 2, reason: 'An issue with this title exists' }]);
+
+    const issues = await asOwner.projects({ projectKey: 'MKT' }).issues.get();
+    expect(issues.data!.map((i) => i.title).sort()).toEqual(['First', 'Second']);
+  });
+
   it('refuses a mapping that names a column the file does not have', async () => {
     const { asOwner } = await setup();
     const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);

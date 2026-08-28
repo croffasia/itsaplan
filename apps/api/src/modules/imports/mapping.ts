@@ -40,8 +40,71 @@ export interface AppliedRow {
   reason?: string;
 }
 
+export function titleKey(title: string): string {
+  return title.trim().toLowerCase();
+}
+
+function headerIndex(header: string, parsed: ParsedSheet): number {
+  return parsed.headers.findIndex((h) => h.toLowerCase() === header.toLowerCase());
+}
+
+// The title of every row, normalised the way the duplicate check compares them.
+export function titleKeys(
+  parsed: ParsedSheet,
+  mapping: Partial<Record<ImportField, string>>,
+): string[] {
+  const index = mapping.title ? headerIndex(mapping.title, parsed) : -1;
+  if (index === -1) return [];
+  return [...new Set(parsed.rows.map((row) => titleKey(row[index] ?? '')).filter(Boolean))];
+}
+
+// A title the project already holds or an earlier row of the same file already
+// claimed. `taken` grows as rows claim theirs, so a repeat inside one file counts
+// the same as a title that was already there.
+export function duplicateTitle(title: string, taken: Set<string>): string | null {
+  const key = titleKey(title);
+  if (taken.has(key)) return 'An issue with this title exists';
+  taken.add(key);
+  return null;
+}
+
+function skipReason(item: AppliedRow | undefined, taken: Set<string>): string | null {
+  if (!item) return null;
+  if (!item.draft) return item.reason ?? null;
+  return duplicateTitle(item.draft.title, taken);
+}
+
+// Cells are cut short: a preview line is one row of a table, not the whole
+// description. `skip` is the reason confirmImport will pass the row over, from the
+// same checks it runs, so the review shows what the confirm will do.
+export function previewTable(
+  parsed: ParsedSheet,
+  mapping: Partial<Record<ImportField, string>>,
+  existingTitles: Set<string>,
+): {
+  columns: { field: ImportField; header: string }[];
+  rows: { cells: string[]; skip: string | null }[];
+} {
+  const columns = IMPORT_FIELDS.flatMap((field) => {
+    const header = mapping[field];
+    const index = header ? headerIndex(header, parsed) : -1;
+    return index === -1 ? [] : [{ field, header: parsed.headers[index]!, index }];
+  });
+  const applied = columns.some((column) => column.field === 'title')
+    ? applyMapping(parsed, mapping as ImportMapping, { labels: [], members: [] })
+    : [];
+  const taken = new Set(existingTitles);
+  return {
+    columns: columns.map(({ field, header }) => ({ field, header })),
+    rows: parsed.rows.map((row, index) => ({
+      cells: columns.map(({ index: column }) => (row[column] ?? '').slice(0, 200)),
+      skip: skipReason(applied[index], taken),
+    })),
+  };
+}
+
 function cellFor(header: string, parsed: ParsedSheet): string[] {
-  const index = parsed.headers.findIndex((h) => h.toLowerCase() === header.toLowerCase());
+  const index = headerIndex(header, parsed);
   if (index === -1) return [];
   return parsed.rows.map((row) => row[index] ?? '');
 }

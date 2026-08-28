@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { applyMapping, validateMapping, type MappingContext } from '../../mapping';
+import { applyMapping, previewTable, validateMapping, type MappingContext } from '../../mapping';
 
 const ctx: MappingContext = {
   labels: [
@@ -65,5 +65,64 @@ describe('applyMapping', () => {
     expect(() =>
       applyMapping({ ...parsed, headers: ['Name'] }, validateMapping({ title: 'Task' }), ctx),
     ).toThrow('not in the file anymore');
+  });
+});
+
+describe('previewTable', () => {
+  const parsed = {
+    headers: ['Task', 'Details', 'Due', 'Watchers'],
+    totalRows: 4,
+    rows: [
+      ['A', 'x'.repeat(250), '', 'ann'],
+      ['B', 'short', '', ''],
+      [' a ', 'again', '', ''],
+      ['', 'no title', '', ''],
+    ],
+  };
+
+  it('keeps the mapped columns in field order, cuts cells short, and holds every row', () => {
+    const { columns, rows } = previewTable(
+      parsed,
+      { description: 'details', title: 'Task' },
+      new Set(),
+    );
+    expect(columns).toEqual([
+      { field: 'title', header: 'Task' },
+      { field: 'description', header: 'Details' },
+    ]);
+    expect(rows).toHaveLength(4);
+    expect(rows[0]!.cells[1]).toHaveLength(200);
+    expect(rows[1]!.cells).toEqual(['B', 'short']);
+  });
+
+  it('marks a title the project already has, and a repeat of an earlier row', () => {
+    const { rows } = previewTable(parsed, { title: 'Task' }, new Set(['b']));
+    expect(rows.map((row) => row.skip)).toEqual([
+      null,
+      'An issue with this title exists',
+      'An issue with this title exists',
+      'Empty title',
+    ]);
+  });
+
+  it('gives a row confirm rejects that reason, and leaves its title for a later row', () => {
+    const { rows } = previewTable(
+      {
+        ...parsed,
+        rows: [
+          ['A', '', 'someday', ''],
+          ['A', '', '', ''],
+        ],
+      },
+      { title: 'Task', dueDate: 'Due' },
+      new Set(),
+    );
+    expect(rows.map((row) => row.skip)).toEqual(['"someday" is not a readable date', null]);
+  });
+
+  it('drops a mapped column the file no longer has', () => {
+    expect(previewTable(parsed, { title: 'Task', labels: 'Gone' }, new Set()).columns).toEqual([
+      { field: 'title', header: 'Task' },
+    ]);
   });
 });

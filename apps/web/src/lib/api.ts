@@ -688,7 +688,11 @@ export interface IssueImport {
   mapping: Record<string, string> | null;
   errorText: string | null;
   createdAt: string;
-  preview?: { headers: string[]; rows: string[][]; totalRows: number };
+  preview?: {
+    columns: { field: string; header: string }[];
+    rows: { cells: string[]; skip: string | null }[];
+    totalRows: number;
+  };
 }
 
 export interface ImportConfirmResult {

@@ -1098,6 +1098,9 @@ export const issue = pgTable(
     index('issue_project_active_idx')
       .on(t.projectId, t.columnId)
       .where(sql`${t.archivedAt} IS NULL`),
+    // Backs the import duplicate check: the titles a project already holds,
+    // archived ones included, normalised the way titleKey compares them.
+    index('issue_project_title_idx').on(t.projectId, sql`lower(btrim(${t.title}))`),
     // Backs reading a parent's subtasks, on the issue page and on every write that
     // has to know whether an issue has any.
     index('issue_parent_idx')

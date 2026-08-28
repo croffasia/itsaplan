@@ -115,9 +115,8 @@ export const AGENT_ACTIONS: ToolMeta[] = [
   {
     key: 'prepare_issue_import',
     group: 'issues',
-    label: 'Prepare issue imports',
-    description:
-      "Map the columns of a file uploaded in the chat to issue fields and draft the import for the user's review. Issues are created only when the user confirms.",
+    label: 'Import issues from files',
+    description: 'Turn a table attached in the chat (.xlsx, .csv, .docx) into issues.',
     always: false,
   },
   {

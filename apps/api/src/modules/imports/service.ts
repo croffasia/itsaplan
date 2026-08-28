@@ -1,19 +1,27 @@
 import {
   db,
   chatAttachment,
+  issue,
   issueImport,
   label,
   projectColumn,
   projectMember,
   user,
 } from '@repo/db';
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { HttpError, iso, num } from '#shared/lib';
 import { createIssue } from '#modules/issues/service';
 import type { ProjectRow } from '#modules/projects/service';
 import { readAttachmentBytes } from '#modules/chat-attachments/service';
 import { parseImportFile, type ParsedSheet } from '#modules/chat-attachments/parse';
-import { applyMapping, validateMapping, type ImportMapping } from './mapping';
+import {
+  applyMapping,
+  duplicateTitle,
+  titleKey,
+  titleKeys,
+  validateMapping,
+  type ImportMapping,
+} from './mapping';
 
 // Data access for issue imports and the confirm flow. An import is only the state
 // of the draft — the status and the column mapping an agent saved; the file itself
@@ -109,6 +117,19 @@ export async function readImportTable(publicId: string): Promise<ParsedSheet> {
   return readStoredFile(row.chat_attachment.s3Key, row.chat_attachment.filename);
 }
 
+// Which of the file's titles the project already holds, archived issues included:
+// their title is taken just as much. Only the file's own titles are asked for — a
+// project's issue list has no bound, and `issue_project_title_idx` answers this
+// shape of query without reading it.
+export async function existingTitles(projectId: number, keys: string[]): Promise<Set<string>> {
+  if (keys.length === 0) return new Set();
+  const rows = await db
+    .select({ title: issue.title })
+    .from(issue)
+    .where(and(eq(issue.projectId, projectId), inArray(sql`lower(btrim(${issue.title}))`, keys)));
+  return new Set(rows.map((row) => titleKey(row.title)));
+}
+
 export interface ConfirmResult {
   imported: { key: string; title: string }[];
   skipped: { row: number; reason: string }[];
@@ -137,11 +158,13 @@ export async function confirmImport(
     .returning({ id: issueImport.id });
   if (!claimed[0]) throw new HttpError(409, 'This import was already confirmed');
 
+  const mapping = row.issue_import.mapping as ImportMapping;
   const [parsed, ctx] = await Promise.all([
     readStoredFile(row.chat_attachment.s3Key, row.chat_attachment.filename),
     mappingContext(project.id),
   ]);
-  const applied = applyMapping(parsed, row.issue_import.mapping as ImportMapping, ctx);
+  const applied = applyMapping(parsed, mapping, ctx);
+  const taken = await existingTitles(project.id, titleKeys(parsed, mapping));
   if (!ctx.defaultColumnId)
     throw new HttpError(400, 'The project has no workflow column to create issues in');
 
@@ -150,6 +173,12 @@ export async function confirmImport(
     for (const item of applied) {
       if (item.reason || !item.draft) {
         result.skipped.push({ row: item.rowNumber, reason: item.reason! });
+        continue;
+      }
+      // The same check the preview showed, with `taken` growing as rows are created.
+      const duplicate = duplicateTitle(item.draft.title, taken);
+      if (duplicate) {
+        result.skipped.push({ row: item.rowNumber, reason: duplicate });
         continue;
       }
       const created = await createIssue(

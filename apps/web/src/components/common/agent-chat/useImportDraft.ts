@@ -9,9 +9,6 @@ import {
   type IssueImport,
 } from '@/lib/api';
 
-// The issue fields an import mapping can feed.
-export type ImportField = 'title' | 'description' | 'priority' | 'dueDate' | 'labels' | 'assignee';
-
 // One import draft, read by the review card the agent's ```issue-import fence
 // renders. The card is drawn wherever the answer sits, so it re-reads the draft
 // from its id and keeps the confirm/cancel outcomes local to itself.

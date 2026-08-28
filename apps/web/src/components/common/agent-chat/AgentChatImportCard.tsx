@@ -57,11 +57,7 @@ export default function AgentChatImportCard({ importId }: { importId: string }) 
       ) : (
         <>
           {draft.status === 'mapped' && draft.preview ? (
-            <AgentChatImportPreview
-              headers={draft.preview.headers}
-              rows={draft.preview.rows}
-              mapping={draft.mapping ?? {}}
-            />
+            <AgentChatImportPreview columns={draft.preview.columns} rows={draft.preview.rows} />
           ) : null}
           {draft.status === 'mapped' ? (
             <>

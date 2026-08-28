@@ -6,10 +6,12 @@ import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { requireUser } from '#shared/access';
 import { getProjectById } from '#modules/projects/service';
+import { previewTable, titleKeys, type ImportField } from './mapping';
 import { ConfirmResponse, ImportResponse, importIdParams } from './model';
 import {
   cancelImport,
   confirmImport,
+  existingTitles,
   getImport,
   getImportProjectId,
   readImportTable,
@@ -41,17 +43,14 @@ export const importRoutes = new Elysia({
     '/imports/:importId',
     async ({ params }) => {
       const row = importDto(await getImport(params.importId));
-      // The head of the parsed table rides along, so the review card draws real
-      // rows. A file that stopped parsing (deleted object, bad content) leaves the
-      // preview off rather than failing the read.
-      const preview = await readImportTable(params.importId)
-        .then((parsed) => ({
-          headers: parsed.headers,
-          rows: parsed.rows.slice(0, 5),
-          totalRows: parsed.totalRows,
-        }))
-        .catch(() => undefined);
-      return { ...row, ...(preview ? { preview } : {}) };
+      // A file that stopped parsing (deleted object, bad content) leaves the preview
+      // off rather than failing the read.
+      const parsed = await readImportTable(params.importId).catch(() => undefined);
+      if (!parsed) return row;
+      const mapping = (row.mapping ?? {}) as Partial<Record<ImportField, string>>;
+      const taken = await existingTitles(row.projectId, titleKeys(parsed, mapping));
+      const preview = { ...previewTable(parsed, mapping, taken), totalRows: parsed.totalRows };
+      return { ...row, preview };
     },
     {
       params: importIdParams,

@@ -1,5 +1,6 @@
 import { peoplePreamble, type Person } from './run-context';
 import { parseMentionHandles } from '#shared/mentions';
+import { PROJECT_DESCRIPTION_LIMIT } from '#modules/projects/model';
 import type { AgentRunTrigger } from '../../model';
 
 // Frames a triggered run into the text an agent receives: the framed user
@@ -129,12 +130,18 @@ function frameMention(run: RunForPrompt, titled: string): string {
 // A leading system-instruction block naming the project the agent works in. Grounds
 // every run — the test chat, the issue-triggered runs, and the ones a runner executes
 // — so the agent knows which project its tools act on and how issue keys are formed.
-export function projectPreamble(project: { key: string; name: string }): string {
+export function projectPreamble(project: {
+  key: string;
+  name: string;
+  description: string;
+}): string {
+  const description = project.description.trim().slice(0, PROJECT_DESCRIPTION_LIMIT);
   return [
     '## Current project',
     `You are working in the project "${project.name}" (key ${project.key}). All your`,
     `work-item tools act on this project only, and its issues are addressed by keys`,
     `like ${project.key}-123.`,
+    ...(description ? ['', description] : []),
     '',
     '',
   ].join('\n');

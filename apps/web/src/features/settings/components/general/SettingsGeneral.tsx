@@ -34,6 +34,7 @@ export default function SettingsGeneral({ form }: { form: GeneralForm }) {
           <Textarea
             id="project-description"
             rows={3}
+            maxLength={2000}
             value={form.description}
             onChange={(e) => form.setDescription(e.target.value)}
             disabled={!form.editable}

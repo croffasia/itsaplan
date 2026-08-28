@@ -162,6 +162,16 @@ describe('projects', () => {
       });
     });
 
+    it('rejects a description over the limit', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const res = await api
+        .projects({ projectKey: 'MKT' })
+        .patch({ description: 'x'.repeat(2001) });
+      expect(res.status).toBe(400);
+    });
+
     it('denies a non-member (owner-only)', async () => {
       const owner = await signUpClient();
       await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });

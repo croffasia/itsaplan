@@ -34,6 +34,7 @@ export interface RunnerAgent {
   // which go into the system prompt handed out with a run.
   projectKey: string;
   projectName: string;
+  projectDescription: string;
   instructions: string | null;
 }
 
@@ -50,6 +51,7 @@ export async function getRunnerAgent(userId: string): Promise<RunnerAgent | null
       username: aiAgent.username,
       projectKey: project.key,
       projectName: project.name,
+      projectDescription: project.description,
       instructions: aiAgent.instructions,
     })
     .from(aiAgent)
@@ -183,7 +185,11 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
 function buildSystemPrompt(agent: RunnerAgent, run: RunForPrompt): string {
   const instructions = agent.instructions?.trim();
   return (
-    projectPreamble({ key: agent.projectKey, name: agent.projectName }) +
+    projectPreamble({
+      key: agent.projectKey,
+      name: agent.projectName,
+      description: agent.projectDescription,
+    }) +
     runModePreamble(run.trigger) +
     peopleContext(run) +
     (instructions ? `## Instructions\n${instructions}\n` : '')

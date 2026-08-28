@@ -7,10 +7,14 @@ import { PermissionMatrixSchema } from '#shared/permissions';
 import { ISSUE_TYPE_PRESET_KEYS } from './service';
 import { COPY_INCLUDE_KEYS } from './copy';
 
+// The description goes into the system prompt of every agent run, where it costs
+// input tokens each time, so it is capped on the way in and cut again in the prompt.
+export const PROJECT_DESCRIPTION_LIMIT = 2000;
+
 const projectBody = t.Object({
   key: t.String({ minLength: 1 }),
   name: t.String({ minLength: 1 }),
-  description: t.Optional(t.String()),
+  description: t.Optional(t.String({ maxLength: PROJECT_DESCRIPTION_LIMIT })),
 });
 
 // Create adds the issue-type preset: which set of types the new project starts with.
@@ -43,7 +47,7 @@ export const copyProjectBody = t.Composite([
 
 export const updateProjectBody = t.Object({
   name: t.Optional(t.String({ minLength: 1 })),
-  description: t.Optional(t.String()),
+  description: t.Optional(t.String({ maxLength: PROJECT_DESCRIPTION_LIMIT })),
 });
 
 export const listProjectsQuery = t.Object({

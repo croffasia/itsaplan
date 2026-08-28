@@ -431,7 +431,11 @@ async function readHistory(
 function buildSystemPrompt(agent: RunnerAgent, requester: Person): string {
   const instructions = agent.instructions?.trim();
   return (
-    projectPreamble({ key: agent.projectKey, name: agent.projectName }) +
+    projectPreamble({
+      key: agent.projectKey,
+      name: agent.projectName,
+      description: agent.projectDescription,
+    }) +
     chatModePreamble() +
     chartPreamble() +
     attachmentPreamble() +

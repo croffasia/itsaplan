@@ -18,6 +18,7 @@ import { internalNotificationRoutes } from './modules/notifications/internal-rou
 import { internalTelegramRoutes } from './modules/telegram/internal-routes';
 import { gitWebhookRoutes } from './modules/git/webhook';
 import { scimRoutes } from './modules/scim';
+import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
@@ -152,8 +153,17 @@ export const app = new Elysia()
       },
     }),
   )
-  // better-auth: forward every /api/auth/* request to its handler.
-  .all('/api/auth/*', ({ request }) => auth.handler(request))
+  // better-auth: forward every /api/auth/* request to its handler. The OIDC
+  // callback gets one extra step afterwards: folding the provider's `groups` claim
+  // into the SCIM group tables, so a group mapped to a project in god mode grants
+  // access on an OIDC-only instance too, not just one that also runs a SCIM sync.
+  .all('/api/auth/*', async ({ request }) => {
+    const response = await auth.handler(request);
+    if (new URL(request.url).pathname.startsWith('/api/auth/oauth2/callback/')) {
+      await syncOidcGroupsAfterCallback(response);
+    }
+    return response;
+  })
   // Example protected handler: read the session from better-auth.
   .get(
     '/me',

@@ -64,6 +64,12 @@ from that list takes away the memberships the group gave it. A membership someon
 through an invite is never touched by a sync, and one the sync created cannot be edited from
 the project's members page — it changes at the identity provider.
 
+A group also appears here without any explicit push, in two cases: a SCIM user whose
+payload embeds a `groups` attribute instead of being assigned through a separate group
+push, and anyone who signs in through OIDC while their identity provider puts a `groups`
+claim on the token — set that up as a claim mapping on the OIDC client if the provider
+supports one. Either way, map the group the same way once it shows up.
+
 ## Updating
 
 ```bash

@@ -268,18 +268,19 @@ export function memberIds(value: unknown): string[] {
   });
 }
 
-// The `groups` attribute a User create or replace body can carry (RFC 7643 §4.1.2):
-// the groups the provider says this account belongs to, embedded on the user
-// instead of, or as well as, pushed as separate Group resources. `display` is meant
-// to be the group's human-readable name and `value` the provider's own opaque id
-// for it, but a provider that skips Group resources entirely often has no `display`
-// to send and puts the name in `value` instead — so `value` is read as a fallback
-// name rather than dropped as meaningless.
+// Group names out of a loosely-typed "which groups does this account belong to"
+// value. Two shapes reach this: the `groups` attribute a SCIM User body can carry
+// (RFC 7643 §4.1.2) — `{ value, display }` refs, where `display` is meant to be the
+// human-readable name and `value` the provider's own opaque id, but a provider that
+// skips Group resources entirely often has no `display` to send and puts the name
+// in `value` instead — and an OIDC `groups` claim, which is conventionally a plain
+// array of name strings. Both are accepted so the same sync feeds from either.
 export function groupDisplayNames(value: unknown): string[] {
   if (value === undefined) return [];
   const list = Array.isArray(value) ? value : [value];
   const names = list
     .map((entry) => {
+      if (typeof entry === 'string') return entry;
       const ref = entry as { display?: unknown; value?: unknown } | null;
       return ref?.display ?? ref?.value;
     })

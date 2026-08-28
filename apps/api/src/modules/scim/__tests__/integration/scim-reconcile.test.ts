@@ -306,6 +306,22 @@ describe('SCIM group reconciliation', () => {
       );
     });
 
+    // The same parser reads an OIDC `groups` claim, which is conventionally a bare
+    // array of names rather than SCIM's `{ value, display }` refs.
+    it('accepts a plain array of group names', async () => {
+      const setup = await setupScim();
+
+      await setup.scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        groups: ['Engineering', 'Design'],
+      });
+
+      const groups = await setup.god.api.god['scim-groups'].get();
+      expect(groups.data!.map((g) => g.displayName).sort()).toEqual(['Design', 'Engineering']);
+    });
+
     it('grants project access right away when the group is already mapped', async () => {
       const setup = await setupScim();
       const project = await createProject(setup.god, 'Marketing', 'MKT');

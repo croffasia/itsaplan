@@ -62,6 +62,17 @@ function extractToken(authorization: string | undefined): string | null {
 // which raises SCIM errors rather than the planner's validation error.
 const anyBody = { body: t.Any() };
 
+// A create or replace body, cast and checked. Guards the four spots that read
+// `doc.<attribute>` straight off the request body: without this, a request that
+// reached the handler with no body (a client-parse mismatch, or a body Elysia
+// left unparsed) would throw inside the handler instead of answering a SCIM 400.
+function asDoc(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== 'object') {
+    throw new ScimError(400, 'A JSON object body is required', 'invalidSyntax');
+  }
+  return body as Record<string, unknown>;
+}
+
 function requestedPage(query: { startIndex?: number; count?: number }) {
   return {
     startIndex: Math.max(1, query.startIndex ?? 1),
@@ -70,6 +81,15 @@ function requestedPage(query: { startIndex?: number; count?: number }) {
 }
 
 const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
+  // RFC 7644 §3.1 allows a SCIM client to send `application/scim+json`, and real
+  // identity providers (Okta, Entra, Authentik) do. Elysia's default body parser
+  // matches `Content-Type` exactly against `application/json`, so a request sent
+  // with the SCIM type would otherwise leave `body` undefined instead of parsed.
+  // Falling through (returning undefined) for anything else keeps plain
+  // `application/json` on Elysia's own parser.
+  .onParse(({ request, contentType }) => {
+    if (contentType?.includes('json')) return request.json();
+  })
   .onBeforeHandle(async ({ headers, set }) => {
     set.headers['content-type'] = SCIM_CONTENT_TYPE;
     const token = extractToken(headers.authorization);
@@ -147,7 +167,7 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
   .post(
     '/Users',
     async ({ body, set }) => {
-      const doc = body as Record<string, unknown>;
+      const doc = asDoc(body);
       const email = readUserName(doc);
       const record = await createScimUser({
         email,
@@ -175,7 +195,7 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
     '/Users/:id',
     async ({ params, body }) => {
       const current = await requireUser(params.id);
-      const doc = body as Record<string, unknown>;
+      const doc = asDoc(body);
       const email = readUserName(doc);
       const updated = await updateScimUser(params.id, {
         email,
@@ -273,7 +293,7 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
   .post(
     '/Groups',
     async ({ body, set }) => {
-      const doc = body as Record<string, unknown>;
+      const doc = asDoc(body);
       const record = await createScimGroup({
         displayName: asString(doc.displayName, 'displayName'),
         externalId: typeof doc.externalId === 'string' ? doc.externalId : null,
@@ -299,7 +319,7 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
     '/Groups/:id',
     async ({ params, body }) => {
       await requireGroup(params.id);
-      const doc = body as Record<string, unknown>;
+      const doc = asDoc(body);
       const updated = await updateScimGroup(params.id, {
         displayName: asString(doc.displayName, 'displayName'),
         externalId: typeof doc.externalId === 'string' ? doc.externalId : null,

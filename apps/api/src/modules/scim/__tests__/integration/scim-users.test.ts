@@ -66,6 +66,29 @@ describe('SCIM users', () => {
       expect(res.error!.value).toMatchObject({ scimType: 'uniqueness', status: '409' });
     });
 
+    // RFC 7644 §3.1 lets a SCIM client send this content type instead of
+    // application/json, and real identity providers (Okta, Entra, Authentik) do.
+    // Eden Treaty always sends application/json, so this goes through app.handle
+    // directly with the header set by hand.
+    it('accepts a body sent as application/scim+json', async () => {
+      const { token } = await setupScim();
+
+      const res = await app.handle(
+        new Request('http://localhost/scim/v2/Users', {
+          method: 'POST',
+          headers: {
+            authorization: `Bearer ${token}`,
+            'content-type': 'application/scim+json',
+          },
+          body: JSON.stringify(scimUserBody()),
+        }),
+      );
+
+      expect(res.status).toBe(201);
+      const body = (await res.json()) as { userName: string };
+      expect(body.userName).toBe('ada@example.com');
+    });
+
     it('provisions on a closed instance, where signing up is refused', async () => {
       const { god, scim } = await setupScim();
       await god.api.god['auth-settings'].put({ registration: 'closed' });

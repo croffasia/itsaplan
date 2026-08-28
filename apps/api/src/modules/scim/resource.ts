@@ -3,9 +3,12 @@ import { HttpError } from '#shared/lib';
 // SCIM 2.0 representation: the JSON shapes of RFC 7643, the filter and PATCH
 // grammar of RFC 7644, and the mapping between them and this app's DTOs.
 //
-// `userName` maps to the account's email address, which is what an identity
-// provider sends and what an OIDC sign-in matches on. `user.username` is the app's
-// own handle (used in @mentions) and is derived at creation, so SCIM never sets it.
+// The account's email comes from the `emails` attribute, not `userName`: RFC 7643
+// does not require `userName` to be an email address, and some directories set it
+// to a login id that is not one, while `emails` is what SCIM actually calls an
+// email. `userName` is read only as a fallback, for a provider that omits `emails`
+// altogether. `user.username` (the app's own handle, used in @mentions) is a
+// different thing entirely and is derived at creation — SCIM never sets it.
 
 const API_URL = process.env.API_URL ?? '';
 
@@ -76,12 +79,21 @@ export function joinName(
   return joined || fallback;
 }
 
-// The login identifier a create or replace carries. Providers send it as `userName`,
-// and some send it only in the primary email, so both are accepted.
-export function readUserName(doc: Record<string, unknown>): string {
-  if (typeof doc.userName === 'string' && doc.userName.trim()) return doc.userName.trim();
+// The address a create or replace request assigns as the account's email. `emails`
+// is preferred; `userName` is read only when a provider sends no `emails` at all,
+// and is then checked for an "@" so a bare login id is refused rather than written
+// into `user.email`, where it would break sign-in and password reset links that
+// assume the value is a real address.
+export function readAccountEmail(doc: Record<string, unknown>): string {
   if (doc.emails !== undefined) return readEmail(doc.emails);
-  throw new ScimError(400, 'userName is required', 'invalidValue');
+  if (typeof doc.userName === 'string' && doc.userName.trim()) {
+    const userName = doc.userName.trim();
+    if (!userName.includes('@')) {
+      throw new ScimError(400, 'userName is not an email address', 'invalidValue');
+    }
+    return userName;
+  }
+  throw new ScimError(400, 'userName or emails is required', 'invalidValue');
 }
 
 // One address out of a multi-valued `emails` attribute: the one marked primary, or
@@ -254,4 +266,24 @@ export function memberIds(value: unknown): string[] {
     const id = (entry as { value?: unknown } | null)?.value;
     return asString(id, 'member id');
   });
+}
+
+// The `groups` attribute a User create or replace body can carry (RFC 7643 §4.1.2):
+// the groups the provider says this account belongs to, embedded on the user
+// instead of, or as well as, pushed as separate Group resources. `display` is meant
+// to be the group's human-readable name and `value` the provider's own opaque id
+// for it, but a provider that skips Group resources entirely often has no `display`
+// to send and puts the name in `value` instead — so `value` is read as a fallback
+// name rather than dropped as meaningless.
+export function groupDisplayNames(value: unknown): string[] {
+  if (value === undefined) return [];
+  const list = Array.isArray(value) ? value : [value];
+  const names = list
+    .map((entry) => {
+      const ref = entry as { display?: unknown; value?: unknown } | null;
+      return ref?.display ?? ref?.value;
+    })
+    .filter((name): name is string => typeof name === 'string' && name.trim().length > 0)
+    .map((name) => name.trim());
+  return [...new Set(names)];
 }

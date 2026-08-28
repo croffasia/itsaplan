@@ -8,12 +8,13 @@ import {
   ScimError,
   asBoolean,
   asString,
+  groupDisplayNames,
   joinName,
   memberIds,
   parseFilter,
   parsePatch,
   readEmail,
-  readUserName,
+  readAccountEmail,
   scimErrorBody,
   splitName,
   toListResponse,
@@ -45,6 +46,7 @@ import {
   listScimGroups,
   listScimUsers,
   removeScimGroupMembers,
+  syncEmbeddedGroups,
   updateScimGroup,
   updateScimUser,
 } from './service';
@@ -168,13 +170,14 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
     '/Users',
     async ({ body, set }) => {
       const doc = asDoc(body);
-      const email = readUserName(doc);
+      const email = readAccountEmail(doc);
       const record = await createScimUser({
         email,
         name: joinName(doc.name as never, (doc.displayName as string) || email),
         active: doc.active === undefined ? true : asBoolean(doc.active),
         externalId: typeof doc.externalId === 'string' ? doc.externalId : null,
       });
+      await syncEmbeddedGroups(record.id, groupDisplayNames(doc.groups));
       set.status = 201;
       return toScimUser(record);
     },
@@ -196,13 +199,14 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
     async ({ params, body }) => {
       const current = await requireUser(params.id);
       const doc = asDoc(body);
-      const email = readUserName(doc);
+      const email = readAccountEmail(doc);
       const updated = await updateScimUser(params.id, {
         email,
         name: joinName(doc.name as never, (doc.displayName as string) || current.name),
         active: doc.active === undefined ? true : asBoolean(doc.active),
         externalId: typeof doc.externalId === 'string' ? doc.externalId : null,
       });
+      await syncEmbeddedGroups(params.id, groupDisplayNames(doc.groups));
       return toScimUser(requireUpdated(updated, 'User', params.id));
     },
     {

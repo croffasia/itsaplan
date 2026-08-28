@@ -44,6 +44,48 @@ describe('SCIM users', () => {
       expect(res.data).toMatchObject({ userName: 'grace@example.com' });
     });
 
+    it('prefers the emails attribute over userName when both are present', async () => {
+      const { scim } = await setupScim();
+
+      const res = await scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        // A directory that mixes a non-email login id into userName while still
+        // reporting the real address in emails.
+        userName: 'ada.lovelace',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        displayName: 'Ada Lovelace',
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ userName: 'ada@example.com' });
+    });
+
+    it('accepts userName as a fallback address when it looks like one', async () => {
+      const { scim } = await setupScim();
+
+      const res = await scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        displayName: 'Ada Lovelace',
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({ userName: 'ada@example.com' });
+    });
+
+    it('refuses a userName that is not an email when emails is absent', async () => {
+      const { scim } = await setupScim();
+
+      const res = await scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada.lovelace',
+        displayName: 'Ada Lovelace',
+      });
+
+      expect(res.status).toBe(400);
+      expect(res.error!.value).toMatchObject({ scimType: 'invalidValue' });
+    });
+
     it('refuses a body with no identifier', async () => {
       const { scim } = await setupScim();
 
@@ -56,14 +98,35 @@ describe('SCIM users', () => {
       expect(res.error!.value).toMatchObject({ scimType: 'invalidValue' });
     });
 
-    it('refuses an address that already has an account', async () => {
+    it('claims an existing account by address instead of duplicating it', async () => {
       const { scim } = await setupScim();
-      await scim.scim.v2.Users.post(scimUserBody());
+      const first = await scim.scim.v2.Users.post(scimUserBody({ externalId: 'idp-1' }));
 
-      const res = await scim.scim.v2.Users.post(scimUserBody());
+      const second = await scim.scim.v2.Users.post(
+        scimUserBody({ externalId: 'idp-1-reprovisioned' }),
+      );
 
-      expect(res.status).toBe(409);
-      expect(res.error!.value).toMatchObject({ scimType: 'uniqueness', status: '409' });
+      expect(second.status).toBe(201);
+      expect(second.data!.id).toBe(first.data!.id);
+      expect(second.data!.externalId).toBe('idp-1-reprovisioned');
+      const list = await scim.scim.v2.Users.get({
+        query: { filter: 'userName eq "ada@example.com"' },
+      });
+      expect(list.data).toMatchObject({ totalResults: 1 });
+    });
+
+    it('claims an account that predates the sync, matching the address by case', async () => {
+      const { scim } = await setupScim();
+      const existing = await signUpTestUser({ email: 'Ada.Lovelace@Example.com' });
+
+      const res = await scim.scim.v2.Users.post(
+        scimUserBody({ userName: 'ada.lovelace@example.com' }),
+      );
+
+      expect(res.status).toBe(201);
+      expect(res.data!.id).toBe(existing.userId);
+      const list = await scim.scim.v2.Users.get({ query: {} });
+      expect(list.data!.Resources.filter((u) => u.id === existing.userId)).toHaveLength(1);
     });
 
     // RFC 7644 §3.1 lets a SCIM client send this content type instead of

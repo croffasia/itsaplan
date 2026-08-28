@@ -267,4 +267,101 @@ describe('SCIM group reconciliation', () => {
       ).toBe(403);
     });
   });
+
+  // A directory that never calls POST /Groups still grants access this way: it
+  // embeds the groups a user belongs to right on the user payload, which is what
+  // "push groups" means in some identity providers instead of a separate sync.
+  describe('groups embedded on a user', () => {
+    it('creates the group from a userless sync and adds the account to it', async () => {
+      const setup = await setupScim();
+
+      const created = await setup.scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        groups: [{ display: 'Engineering' }],
+      });
+
+      const groups = await setup.god.api.god['scim-groups'].get();
+      expect(groups.data).toContainEqual(
+        expect.objectContaining({ displayName: 'Engineering', memberCount: 1 }),
+      );
+      expect(groups.data!.find((g) => g.displayName === 'Engineering')!.mappings).toEqual([]);
+      expect(created.status).toBe(201);
+    });
+
+    it('falls back to value when the provider sends no display name', async () => {
+      const setup = await setupScim();
+
+      await setup.scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        groups: [{ value: 'Engineering' }],
+      });
+
+      const groups = await setup.god.api.god['scim-groups'].get();
+      expect(groups.data).toContainEqual(
+        expect.objectContaining({ displayName: 'Engineering', memberCount: 1 }),
+      );
+    });
+
+    it('grants project access right away when the group is already mapped', async () => {
+      const setup = await setupScim();
+      const project = await createProject(setup.god, 'Marketing', 'MKT');
+      const groupId = await provisionGroup(setup, 'Engineering', []);
+      await setup.god.api.god['scim-groups']({ groupId }).mappings.put({
+        mappings: [{ projectId: project.id, role: 'member', roleId: null }],
+      });
+
+      const created = await setup.scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        groups: [{ display: 'Engineering' }],
+      });
+
+      const members = await membersOf(setup.god, 'MKT');
+      expect(members).toContainEqual(
+        expect.objectContaining({ userId: created.data!.id, role: 'member', source: 'scim' }),
+      );
+    });
+
+    it('does not duplicate a group already pushed through POST /Groups', async () => {
+      const setup = await setupScim();
+      const groupId = await provisionGroup(setup, 'Engineering', []);
+
+      await setup.scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        groups: [{ display: 'Engineering' }],
+      });
+
+      const groups = await setup.god.api.god['scim-groups'].get();
+      expect(groups.data!.filter((g) => g.displayName === 'Engineering')).toHaveLength(1);
+      expect(groups.data!.find((g) => g.id === groupId)!.memberCount).toBe(1);
+    });
+
+    it('adds an updated group without removing the ones already there', async () => {
+      const setup = await setupScim();
+
+      const created = await setup.scim.scim.v2.Users.post({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        groups: [{ display: 'Engineering' }],
+      });
+      await setup.scim.scim.v2.Users({ id: created.data!.id }).put({
+        schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+        userName: 'ada@example.com',
+        emails: [{ value: 'ada@example.com', primary: true }],
+        groups: [{ display: 'Design' }],
+      });
+
+      const groups = await setup.god.api.god['scim-groups'].get();
+      expect(groups.data!.find((g) => g.displayName === 'Engineering')!.memberCount).toBe(1);
+      expect(groups.data!.find((g) => g.displayName === 'Design')!.memberCount).toBe(1);
+    });
+  });
 });

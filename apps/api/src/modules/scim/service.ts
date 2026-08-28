@@ -32,6 +32,15 @@ const notAnAgent = notExists(
     .where(eq(aiAgent.userId, user.id)),
 );
 
+// The address is the identity a SCIM sync and an OIDC/password sign-up share, but
+// the two paths do not agree on case: better-auth stores whatever case a sign-up or
+// an OIDC profile carried, while a SCIM `userName` typically arrives lowercased from
+// a directory. Matching case-sensitively would miss an account that predates the
+// sync and provision a duplicate instead of claiming it.
+function emailEq(email: string) {
+  return eq(sql`lower(${user.email})`, email.trim().toLowerCase());
+}
+
 interface UserRow {
   id: string;
   email: string;
@@ -72,7 +81,7 @@ function userWhere(filter: ScimFilter | null) {
   if (filter.attribute === 'externalid') {
     return and(notAnAgent, eq(user.scimExternalId, filter.value));
   }
-  return and(notAnAgent, eq(user.email, filter.value.trim().toLowerCase()));
+  return and(notAnAgent, emailEq(filter.value));
 }
 
 export async function listScimUsers(options: {
@@ -115,9 +124,19 @@ export async function createScimUser(input: {
   const existing = await db
     .select({ id: user.id })
     .from(user)
-    .where(and(eq(user.email, email), notAnAgent));
-  if (existing.length > 0) {
-    throw new ScimError(409, `A user with userName '${input.email}' already exists`, 'uniqueness');
+    .where(and(emailEq(email), notAnAgent));
+  // An account with this address already exists — created by a sign-up, an OIDC
+  // sign-in, or an earlier sync — so provisioning claims it instead of creating a
+  // second one for the same person. Its name and username are left as they are:
+  // both may already be the ones the person set for themselves, and the identity
+  // provider is only the authority on whether the account should exist and be active.
+  if (existing[0]) {
+    const linked = await db
+      .update(user)
+      .set({ active: input.active, scimExternalId: input.externalId, updatedAt: new Date() })
+      .where(eq(user.id, existing[0].id))
+      .returning(userColumns);
+    return toUserRecord(linked[0]!);
   }
   const rows = await db
     .insert(user)
@@ -146,7 +165,7 @@ export async function updateScimUser(
     const clash = await db
       .select({ id: user.id })
       .from(user)
-      .where(and(eq(user.email, email), notAnAgent));
+      .where(and(emailEq(email), notAnAgent));
     if (clash[0] && clash[0].id !== id) {
       throw new ScimError(
         409,
@@ -167,6 +186,46 @@ export async function updateScimUser(
     .where(and(eq(user.id, id), notAnAgent))
     .returning(userColumns);
   return rows[0] ? toUserRecord(rows[0]) : null;
+}
+
+// Some identity providers embed group membership on the user instead of, or as well
+// as, pushing separate Group resources — this is what makes a sync grant project
+// access without the operator ever configuring a Group push. A named group that
+// does not exist yet is created, the way a group pushed through POST /Groups would
+// be; the user is added to each one, and every project already mapped to one of
+// them is reconciled so membership takes effect immediately.
+//
+// Additive only: a name missing from a later sync is not removed here. Which
+// provider is authoritative for a group is a per-instance choice — a provider that
+// also pushes Group resources removes a member through PATCH /Groups, and one that
+// only ever embeds `groups` on the user never lists a name it wants revoked, so
+// there is nothing to compare against without one of the two mechanisms winning
+// over the other by accident.
+export async function syncEmbeddedGroups(userId: string, displayNames: string[]): Promise<void> {
+  if (displayNames.length === 0) return;
+  const groupIds: string[] = [];
+  for (const displayName of displayNames) {
+    const created = await db
+      .insert(scimGroup)
+      .values({ displayName })
+      .onConflictDoNothing({ target: scimGroup.displayName })
+      .returning({ id: scimGroup.id });
+    if (created[0]) {
+      groupIds.push(created[0].id);
+      continue;
+    }
+    const existing = await db
+      .select({ id: scimGroup.id })
+      .from(scimGroup)
+      .where(eq(scimGroup.displayName, displayName));
+    groupIds.push(existing[0]!.id);
+  }
+  await db
+    .insert(scimGroupMember)
+    .values(groupIds.map((groupId) => ({ groupId, userId })))
+    .onConflictDoNothing();
+  const projectIds = (await Promise.all(groupIds.map(mappedProjectIds))).flat();
+  await reconcileProjects(projectIds);
 }
 
 // Removing the account for real, the way god mode does. Deprovisioning normally

@@ -18,12 +18,17 @@ export async function setupScim(): Promise<ScimSetup> {
   return { god, token, scim: scimApi(token) };
 }
 
+// `emails` follows `userName` by default, so overriding just `userName` in a test
+// still produces a distinct, matching address — the api reads the account's email
+// from `emails` first. Pass `emails` explicitly to test the two attributes
+// disagreeing.
 export function scimUserBody(overrides: Record<string, unknown> = {}) {
+  const userName = (overrides.userName as string | undefined) ?? 'ada@example.com';
   return {
     schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
-    userName: 'ada@example.com',
+    userName,
     name: { givenName: 'Ada', familyName: 'Lovelace' },
-    emails: [{ value: 'ada@example.com', primary: true, type: 'work' }],
+    emails: [{ value: userName, primary: true, type: 'work' }],
     active: true,
     ...overrides,
   };

@@ -1,6 +1,6 @@
 {
   "name": "@itsaplan/runner",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Runs an Itsaplan external agent's queued tasks and answers its chat on your own machine",
   "keywords": [
     "itsaplan",

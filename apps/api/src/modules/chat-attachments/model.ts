@@ -24,7 +24,7 @@ export const ChatAttachmentResponse = t.Object({
 });
 
 // The read route answers with the metadata plus the content in the shape the
-// file holds: a parsed table for a spreadsheet or document, a text excerpt for
+// file holds: a parsed table for a spreadsheet or document, the full text for
 // a text file, neither for a binary one.
 export const ChatAttachmentContentResponse = t.Object({
   id: t.String(),

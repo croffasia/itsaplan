@@ -35,7 +35,7 @@ import {
 } from './model';
 import { runAgent, streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
 import { peoplePreamble } from './prompt/run-context';
-import { chartPreamble } from './prompt/framing';
+import { attachmentPreamble, chartPreamble } from './prompt/framing';
 import type { SessionUser } from '#shared/auth-context';
 import { listAgentRuns } from './run-queue';
 import {
@@ -66,6 +66,7 @@ function chatRunOpts(user: SessionUser | null, agentId: number, threadId?: strin
     threadId: threadId ?? null,
     contextPreamble:
       chartPreamble() +
+      attachmentPreamble() +
       peoplePreamble({
         requester: {
           name: user?.name ?? caller.email ?? 'User',

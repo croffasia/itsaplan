@@ -22,6 +22,7 @@ import {
   rawAttachmentQuery,
   uploadChatAttachmentBody,
 } from './model';
+import { pdfToMarkdown } from './pdf';
 import {
   createChatAttachment,
   getChatAttachmentByPublicId,
@@ -62,6 +63,13 @@ async function assertUploadAllowed(
     }
   }
 }
+
+// A browser reports no type for a .md or .txt file on some platforms, and the
+// instance allowlist matches on the type, so the extension answers for it.
+const EXTENSION_TYPES: Record<string, string> = {
+  md: 'text/markdown',
+  txt: 'text/plain',
+};
 
 // Object keys are grouped by project so a project's bytes sit under one prefix in
 // the bucket, which is what makes per-project listing, cleanup, and policies
@@ -106,13 +114,24 @@ export const chatAttachmentRoutes = new Elysia({
       if (bytes.length === 0) {
         throw new HttpError(400, 'contentBase64 is empty or not valid base64');
       }
-      const filename = body.filename;
-      const contentType = body.contentType || 'application/octet-stream';
+      let filename = body.filename;
+      const extension = filename.toLowerCase().split('.').pop() ?? '';
+      let contentType =
+        body.contentType || EXTENSION_TYPES[extension] || 'application/octet-stream';
       await assertUploadAllowed(await getStorageSettings(), project.id, bytes.length, contentType);
+
+      // A PDF is stored as the Markdown it converts to: the original is
+      // discarded, so the row, the download link, and the agent all see text.
+      let content = bytes;
+      if (/\.pdf$/i.test(filename) || contentType === 'application/pdf') {
+        content = Buffer.from(await pdfToMarkdown(bytes), 'utf8');
+        filename = filename.replace(/\.pdf$/i, '') + '.md';
+        contentType = 'text/markdown';
+      }
 
       const key = chatAttachmentKey(project.id, filename);
       try {
-        await putObject(key, bytes, contentType);
+        await putObject(key, content, contentType);
       } catch (err) {
         throw new HttpError(502, `Object store error: ${err instanceof Error ? err.message : err}`);
       }
@@ -123,7 +142,7 @@ export const chatAttachmentRoutes = new Elysia({
         s3Key: key,
         filename,
         contentType,
-        sizeBytes: bytes.length,
+        sizeBytes: content.length,
       });
       set.status = 201;
       return chatAttachmentDto(row);
@@ -137,6 +156,7 @@ export const chatAttachmentRoutes = new Elysia({
         summary: 'Upload a chat attachment',
         description:
           'Store a file for the agent chat: a spreadsheet to import issues from, a spec, or a log. ' +
+          'A PDF is converted to Markdown and stored as a .md file; a scanned PDF is refused. ' +
           'Send the bytes as base64 in `contentBase64`. Read it back with read_chat_attachment.',
         ...mcpTool('upload_chat_attachment'),
       },
@@ -144,7 +164,7 @@ export const chatAttachmentRoutes = new Elysia({
   )
 
   // Reads a stored file back: its metadata and, when the file holds one, its
-  // content — a parsed table for a spreadsheet or document, an excerpt for a
+  // content — a parsed table for a spreadsheet or document, the full text for a
   // text file.
   .get(
     '/chat-attachments/:publicId',
@@ -160,10 +180,13 @@ export const chatAttachmentRoutes = new Elysia({
       detail: {
         summary: 'Read a chat attachment',
         description:
-          'Read a file uploaded in the chat: its metadata and, for a spreadsheet or document ' +
-          '(.xlsx, .csv, .docx), the column headers and first rows; for a text file, its first ' +
-          'characters. The id comes from the [file: "name" (attachment id: …)] marker in the ' +
-          "user's message. To turn a table into issues, map its columns with prepare_issue_import.",
+          'Read a file the person attached in the chat. A [file: "name" (attachment id: …)] ' +
+          'marker in their message means that file is attached: it is stored in the chat and ' +
+          'is not on your filesystem, so read it with this tool and the id from the marker — ' +
+          'never look for it on disk. Answers with the file metadata and, for a spreadsheet or ' +
+          'document (.xlsx, .csv, .docx), the column headers and first rows; for a text file ' +
+          '(.md, .txt, and a PDF converted to Markdown on upload), its full text. To turn a ' +
+          'table into issues, map its columns with prepare_issue_import.',
         ...mcpTool('read_chat_attachment'),
       },
     },

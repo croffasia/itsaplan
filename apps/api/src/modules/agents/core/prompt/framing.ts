@@ -159,6 +159,18 @@ export function chartPreamble(): string {
   ].join('\n');
 }
 
+// Only the chat paths carry this: a file is attached to a chat message, so an
+// autonomous run never meets the marker.
+export function attachmentPreamble(): string {
+  return [
+    '## Attached files',
+    'A [file: "name" (attachment id: …)] marker in the person\'s message means they attached',
+    'that file. Read it with the read_chat_attachment tool.',
+    '',
+    '',
+  ].join('\n');
+}
+
 export function peopleContext(run: RunForPrompt): string {
   const requester: Person | null = run.requesterName
     ? { name: run.requesterName, username: run.requesterUsername ?? null }

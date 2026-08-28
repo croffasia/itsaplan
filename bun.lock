@@ -22,6 +22,7 @@
         "@aws-sdk/client-s3": "^3.1109.0",
         "@elysiajs/cors": "^1.4.2",
         "@elysiajs/swagger": "^1.3.1",
+        "@firecrawl/pdf-inspector": "^1.17.0",
         "@mastra/core": "^1.58.0",
         "@mastra/memory": "^1.26.1",
         "@mastra/pg": "^1.20.0",
@@ -508,6 +509,20 @@
     "@fast-csv/format": ["@fast-csv/format@4.3.5", "", { "dependencies": { "@types/node": "^14.0.1", "lodash.escaperegexp": "^4.1.2", "lodash.isboolean": "^3.0.3", "lodash.isequal": "^4.5.0", "lodash.isfunction": "^3.0.9", "lodash.isnil": "^4.0.0" } }, "sha512-8iRn6QF3I8Ak78lNAa+Gdl5MJJBM5vRHivFtMRUWINdevNo00K7OXxS2PshawLKTejVwieIlPmK5YlLu6w4u8A=="],
 
     "@fast-csv/parse": ["@fast-csv/parse@4.3.6", "", { "dependencies": { "@types/node": "^14.0.1", "lodash.escaperegexp": "^4.1.2", "lodash.groupby": "^4.6.0", "lodash.isfunction": "^3.0.9", "lodash.isnil": "^4.0.0", "lodash.isundefined": "^3.0.1", "lodash.uniq": "^4.5.0" } }, "sha512-uRsLYksqpbDmWaSmzvJcuApSEe38+6NQZBUsuAyMZKqHxH0g1wcJgsKUvN3WC8tewaqFjBMMGrkHmC+T7k8LvA=="],
+
+    "@firecrawl/pdf-inspector": ["@firecrawl/pdf-inspector@1.17.0", "", { "optionalDependencies": { "@firecrawl/pdf-inspector-darwin-arm64": "1.17.0", "@firecrawl/pdf-inspector-linux-arm64-gnu": "1.17.0", "@firecrawl/pdf-inspector-linux-arm64-musl": "1.17.0", "@firecrawl/pdf-inspector-linux-x64-gnu": "1.17.0", "@firecrawl/pdf-inspector-linux-x64-musl": "1.17.0", "@firecrawl/pdf-inspector-win32-x64-msvc": "1.17.0" }, "bin": { "pdf-inspector": "bin/pdf-inspector.mjs" } }, "sha512-qSXKbJ6s3psJSjwFopssxUzUfpdwwTJ0f0IFj8xqzF/ZeO4dDTpZG0mpo+D8iLlfH+ks3CEIC72dedzevnoohQ=="],
+
+    "@firecrawl/pdf-inspector-darwin-arm64": ["@firecrawl/pdf-inspector-darwin-arm64@1.17.0", "", { "os": "darwin", "cpu": "arm64" }, "sha512-1Bbri4vHGAmsCot/wHHku9BiXO1DQMy3N2aSEK4vDpWrkV/n7hyuSt/0ErE1k/3952/Ng4Z7Dxrw5gsYFxDXAw=="],
+
+    "@firecrawl/pdf-inspector-linux-arm64-gnu": ["@firecrawl/pdf-inspector-linux-arm64-gnu@1.17.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-ssduGacOBq1MoZJANAovcb6wLQFqnIx7bvnkZ64ZgUxK6tXPwZoW0JWVb2EKjB/EnHNrEplAGs/GNE36Hl68Vw=="],
+
+    "@firecrawl/pdf-inspector-linux-arm64-musl": ["@firecrawl/pdf-inspector-linux-arm64-musl@1.17.0", "", { "os": "linux", "cpu": "arm64" }, "sha512-bR/crKWcJZWT7bZfMC9+GWEWrbfrE8m2x3azMUUAFWwpRChNJzHCMQeat8X6/JHilWJKMABV2aghwilgTU1Gqw=="],
+
+    "@firecrawl/pdf-inspector-linux-x64-gnu": ["@firecrawl/pdf-inspector-linux-x64-gnu@1.17.0", "", { "os": "linux", "cpu": "x64" }, "sha512-S38w/sigwvTPk57hGBPjYyogPdmHvUCdsi4OU6xzOo3pyJVjvXO7lCpywU1QhzDH1l5a3weCzgK3+zZPiIb3kQ=="],
+
+    "@firecrawl/pdf-inspector-linux-x64-musl": ["@firecrawl/pdf-inspector-linux-x64-musl@1.17.0", "", { "os": "linux", "cpu": "x64" }, "sha512-Ow1zQgS0vroLXxXdvDq4KMXhqE5n9TtqnQ8O2SQxTqi/o8WEzDdFAylGQ95WMZg/Nbddyi89eEFTpOdfn1P7nA=="],
+
+    "@firecrawl/pdf-inspector-win32-x64-msvc": ["@firecrawl/pdf-inspector-win32-x64-msvc@1.17.0", "", { "os": "win32", "cpu": "x64" }, "sha512-P4Z9s34DHoG6g/b9zcvmCGhg1RB7yilLRo1+p1GVSW9RBh+IN4ZWqZpgBDErcQ0eHjPKw0spzZ9mGex8tHewKA=="],
 
     "@floating-ui/core": ["@floating-ui/core@1.8.0", "", { "dependencies": { "@floating-ui/utils": "^0.2.12" } }, "sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ=="],
 

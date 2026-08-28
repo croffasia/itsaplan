@@ -24,6 +24,8 @@ import {
 } from '@/components/ui/input-group';
 import { useTranslations } from 'next-intl';
 
+const MAX_ATTACHMENTS = 10;
+
 // The running transcript and the composer for one agent conversation. The
 // conversation state lives above this panel (in the agent chat host), so it is
 // presentational: it renders what it is given and reports sends.
@@ -94,20 +96,36 @@ export function AgentChatPanel({
     onSend(marker ? `${text}\n\n${marker}` : text);
   }
 
+  // The upload route takes one file per request, so a multi-file pick is sent as
+  // one request each and a file that fails does not lose the ones that succeeded.
   async function attach(files: FileList | null) {
-    const file = files?.[0];
-    if (!file || uploading) return;
+    const picked = Array.from(files ?? []);
+    if (picked.length === 0 || uploading) return;
+    if (fileInputRef.current) fileInputRef.current.value = '';
+    if (attachments.length + picked.length > MAX_ATTACHMENTS) {
+      setUploadError(t('tooManyAttachments', { max: MAX_ATTACHMENTS }));
+      return;
+    }
     setUploading(true);
     setUploadError(null);
-    try {
-      const uploaded = await uploadChatAttachment(projectKey!, file);
-      setAttachments((current) => [...current, uploaded]);
-    } catch (err) {
-      setUploadError(err instanceof Error ? err.message : t('uploadFailed'));
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
+    const results = await Promise.allSettled(
+      picked.map((file) => uploadChatAttachment(projectKey!, file)),
+    );
+    const uploaded: ChatAttachment[] = [];
+    const failed: string[] = [];
+    results.forEach((result, i) => {
+      if (result.status === 'fulfilled') {
+        uploaded.push(result.value);
+      } else {
+        const reason = result.reason;
+        failed.push(
+          `${picked[i].name}: ${reason instanceof Error ? reason.message : t('uploadFailed')}`,
+        );
+      }
+    });
+    setAttachments((current) => [...current, ...uploaded]);
+    setUploadError(failed.length > 0 ? failed.join('; ') : null);
+    setUploading(false);
   }
 
   return (
@@ -174,13 +192,16 @@ export function AgentChatPanel({
                     </button>
                   </span>
                 ))}
-                {uploadError && <span className="text-xs text-destructive">{uploadError}</span>}
+                {uploadError && (
+                  <span className="w-full text-xs text-destructive">{uploadError}</span>
+                )}
               </div>
             )}
             <input
               ref={fileInputRef}
               type="file"
-              accept=".xlsx,.csv,.docx"
+              accept=".xlsx,.csv,.docx,.pdf,.md,.txt"
+              multiple
               className="hidden"
               onChange={(e) => void attach(e.target.files)}
             />

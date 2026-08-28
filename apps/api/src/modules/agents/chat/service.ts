@@ -11,7 +11,7 @@ import {
   type ContextUsage,
 } from '../chat-usage';
 import { intEnv } from '../core/helpers/env';
-import { chartPreamble, projectPreamble } from '../core/prompt/framing';
+import { attachmentPreamble, chartPreamble, projectPreamble } from '../core/prompt/framing';
 import { peoplePreamble, type Person } from '../core/prompt/run-context';
 import type { ChatMessagePage, ChatPart, ChatThreadPage } from '../model';
 import { newChatThreadId } from '../core/runtime/thread-ids';
@@ -434,6 +434,7 @@ function buildSystemPrompt(agent: RunnerAgent, requester: Person): string {
     projectPreamble({ key: agent.projectKey, name: agent.projectName }) +
     chatModePreamble() +
     chartPreamble() +
+    attachmentPreamble() +
     peoplePreamble({ requester }) +
     (instructions ? `## Instructions\n${instructions}\n` : '')
   );

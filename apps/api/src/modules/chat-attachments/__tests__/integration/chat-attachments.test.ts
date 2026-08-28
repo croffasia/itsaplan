@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { readFileSync } from 'node:fs';
 import { api, authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -12,6 +13,15 @@ async function setup() {
   const asOwner = authedApi(owner.cookie);
   await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
   return { asOwner };
+}
+
+function uploadPdf(client: ReturnType<typeof authedApi>, fixture: string) {
+  const bytes = readFileSync(new URL(`../fixtures/${fixture}`, import.meta.url));
+  return client.projects({ projectKey: 'MKT' })['chat-attachments'].post({
+    filename: fixture,
+    contentBase64: bytes.toString('base64'),
+    contentType: 'application/pdf',
+  });
 }
 
 function upload(client: ReturnType<typeof authedApi>, filename: string, text: string) {
@@ -48,17 +58,59 @@ describe('chat attachments', () => {
     });
   });
 
-  it('reads a text file as an excerpt', async () => {
+  it('reads a text file in full, however long', async () => {
     const { asOwner } = await setup();
+    const long = 'line one\nline two\n' + 'x'.repeat(10_000);
     const uploaded = await asOwner.projects({ projectKey: 'MKT' })['chat-attachments'].post({
       filename: 'server.log',
-      contentBase64: Buffer.from('line one\nline two').toString('base64'),
+      contentBase64: Buffer.from(long).toString('base64'),
       contentType: 'text/plain',
     });
     expect(uploaded.status).toBe(201);
     const read = await asOwner['chat-attachments']({ publicId: uploaded.data!.id }).get();
-    expect(read.data!.text).toBe('line one\nline two');
+    expect(read.data!.text).toBe(long);
     expect(read.data!.table).toBeUndefined();
+  });
+
+  // A browser reports no type for a .md file on some platforms; the extension
+  // has to answer for it, or the instance allowlist refuses the upload.
+  it('accepts a markdown file the browser could not type', async () => {
+    const { asOwner } = await setup();
+    const uploaded = await asOwner.projects({ projectKey: 'MKT' })['chat-attachments'].post({
+      filename: 'spec.md',
+      contentBase64: Buffer.from('# Spec\n\nThe body.').toString('base64'),
+    });
+    expect(uploaded.status).toBe(201);
+    expect(uploaded.data).toMatchObject({ contentType: 'text/markdown' });
+    const read = await asOwner['chat-attachments']({ publicId: uploaded.data!.id }).get();
+    expect(read.data!.text).toBe('# Spec\n\nThe body.');
+  });
+
+  it('stores a text PDF as the markdown it converts to', async () => {
+    const { asOwner } = await setup();
+    const uploaded = await uploadPdf(asOwner, 'text.pdf');
+    expect(uploaded.status).toBe(201);
+    expect(uploaded.data).toMatchObject({
+      filename: 'text.md',
+      contentType: 'text/markdown',
+    });
+
+    const read = await asOwner['chat-attachments']({ publicId: uploaded.data!.id }).get();
+    expect(read.data!.text).toContain('# Release Notes');
+    expect(read.data!.text).toContain('accepts documents as well as spreadsheets');
+
+    // The public link serves the markdown, not the discarded PDF.
+    const raw = await api['chat-attachments']({ publicId: uploaded.data!.id }).raw.get({
+      query: { download: '1' },
+    });
+    expect(String(raw.data)).toBe(read.data!.text!);
+  });
+
+  it('refuses a scanned PDF, naming the missing text layer', async () => {
+    const { asOwner } = await setup();
+    const refused = await uploadPdf(asOwner, 'scanned.pdf');
+    expect(refused.status).toBe(400);
+    expect(refused.error!.value).toMatchObject({ error: expect.stringContaining('no text layer') });
   });
 
   it('rejects an empty upload', async () => {

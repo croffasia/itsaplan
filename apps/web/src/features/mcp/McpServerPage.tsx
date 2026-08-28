@@ -5,7 +5,7 @@ import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import McpStatusRow from './components/McpStatusRow';
-import McpConnectionGuide from './components/McpConnectionGuide';
+import McpAuthConfiguration from './components/McpAuthConfiguration';
 
 export default function McpServerPage() {
   const t = useTranslations('mcp');
@@ -26,7 +26,7 @@ export default function McpServerPage() {
           isLoading={!project}
           canManage={isOwner}
         />
-        <McpConnectionGuide />
+        <McpAuthConfiguration />
       </div>
     </SectionPageView>
   );

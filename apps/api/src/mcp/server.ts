@@ -4,13 +4,14 @@ import type { McpApp } from './types';
 import { routeTools } from './generate';
 import { dispatchTool } from './dispatch';
 import { SERVER_INSTRUCTIONS } from './instructions';
+import type { McpCredential } from './credential';
 
 // A low-level MCP Server for one request. tools/list returns every route tagged
 // with x-mcp; tools/call dispatches to the real route via app.handle with the
 // caller's API key. The low-level Server (not McpServer) is used so the route's
 // TypeBox JSON Schema can be served as the tool inputSchema without converting to
 // Zod. Arguments are validated by the route itself, not here.
-export function buildMcpServer(app: McpApp, apiKey: string): Server {
+export function buildMcpServer(app: McpApp, credential: McpCredential): Server {
   const server = new Server(
     // `name` is the stable programmatic identifier; `title` is the human-readable
     // display name a client shows to the user (per the MCP Implementation spec).
@@ -41,9 +42,15 @@ export function buildMcpServer(app: McpApp, apiKey: string): Server {
         isError: true,
       };
     }
-    const { text, isError } = await dispatchTool(app, tool, req.params.arguments ?? {}, apiKey, {
-      viaMcpEndpoint: true,
-    });
+    const { text, isError } = await dispatchTool(
+      app,
+      tool,
+      req.params.arguments ?? {},
+      credential,
+      {
+        viaMcpEndpoint: true,
+      },
+    );
     return { content: [{ type: 'text', text }], isError };
   });
 

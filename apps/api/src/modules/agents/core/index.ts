@@ -29,6 +29,7 @@ import {
   createAgentBody,
   runBody,
   runsQuery,
+  threadListQuery,
   threadPageQuery,
   threadParams,
   updateAgentBody,
@@ -43,13 +44,16 @@ import {
   getChatThreadMessages,
   deleteChatThread,
   renameChatThread,
+  ownsChatThread,
 } from './runtime/memory';
+import { addFavorite, removeFavorite } from '../chat-favorites';
 import { isOwnChatThread } from './runtime/thread-ids';
 import {
   listThreads as listExternalThreads,
   getThreadMessages as getExternalThreadMessages,
   deleteThread as deleteExternalThread,
   renameThread as renameExternalThread,
+  ownsThread as ownsExternalThread,
 } from '../chat/service';
 
 // Run options for an interactive chat run (the test chat): the caller owns the memory
@@ -90,12 +94,14 @@ function threadStore(kind: AgentKind) {
         messages: getExternalThreadMessages,
         rename: renameExternalThread,
         remove: deleteExternalThread,
+        owns: ownsExternalThread,
       }
     : {
         list: listChatThreads,
         messages: getChatThreadMessages,
         rename: renameChatThread,
         remove: deleteChatThread,
+        owns: ownsChatThread,
       };
 }
 
@@ -306,21 +312,62 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
 
   // The caller's own chat threads with this agent, newest first, a page at a time.
   // Scoped to the caller (the thread's owner), so a user only sees their own
-  // conversations.
+  // conversations. `q` searches them and `favorites` returns the starred ones instead.
   .get(
     '/projects/:projectKey/ai-agents/:agentId/threads',
     async ({ params, project, query, user }) => {
       const caller = requireUser(user);
       const agent = await getAgentById(params.agentId, project.id);
       if (!agent) throw new HttpError(404, 'Agent not found');
-      return threadStore(agent.kind).list(caller.id, params.agentId, query.page);
+      return threadStore(agent.kind).list(caller.id, params.agentId, query);
     },
     {
       params: agentParams,
-      query: threadPageQuery,
+      query: threadListQuery,
       permission: ['ai_agents', 'read'],
       response: { 200: ChatThreadListResponse, ...commonErrors },
       detail: { summary: 'List chat threads' },
+    },
+  )
+
+  // Stars one of the caller's conversations, so it stays in the favorites group of the
+  // history. Scoped the same way as reading it: a thread that is not the caller's own
+  // with this agent is a 404.
+  .put(
+    '/projects/:projectKey/ai-agents/:agentId/threads/:threadId/favorite',
+    async ({ params, project, user }) => {
+      const caller = requireUser(user);
+      const agent = await getAgentById(params.agentId, project.id);
+      if (!agent) throw new HttpError(404, 'Agent not found');
+      if (!(await threadStore(agent.kind).owns(params.threadId, caller.id, params.agentId)))
+        throw new HttpError(404, 'Thread not found');
+      await addFavorite(caller.id, params.agentId, params.threadId);
+      return noContent();
+    },
+    {
+      params: threadParams,
+      permission: ['ai_agents', 'read'],
+      response: { 204: t.Void(), ...commonErrors },
+      detail: { summary: 'Star a chat thread' },
+    },
+  )
+
+  .delete(
+    '/projects/:projectKey/ai-agents/:agentId/threads/:threadId/favorite',
+    async ({ params, project, user }) => {
+      const caller = requireUser(user);
+      const agent = await getAgentById(params.agentId, project.id);
+      if (!agent) throw new HttpError(404, 'Agent not found');
+      if (!(await threadStore(agent.kind).owns(params.threadId, caller.id, params.agentId)))
+        throw new HttpError(404, 'Thread not found');
+      await removeFavorite(caller.id, params.threadId);
+      return noContent();
+    },
+    {
+      params: threadParams,
+      permission: ['ai_agents', 'read'],
+      response: { 204: t.Void(), ...commonErrors },
+      detail: { summary: 'Unstar a chat thread' },
     },
   )
 

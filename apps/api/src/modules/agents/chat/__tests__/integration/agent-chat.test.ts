@@ -36,6 +36,16 @@ function send(api: Api, agentId: number, prompt: string, threadId?: string) {
   return chatOf(api, agentId).chat.post(threadId ? { prompt, threadId } : { prompt });
 }
 
+// Claims the agent's queued answer and closes it with the given text, the way a runner
+// does, so the conversation carries a reply the search can match.
+async function answer(asRunner: Api, text: string) {
+  const claimed = (await asRunner['agent-chats'].claim.post()).data!.message!;
+  await asRunner['agent-chats']({ messageId: claimed.id }).events.post({
+    events: [{ type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: text }],
+  });
+  await asRunner['agent-chats']({ messageId: claimed.id }).result.post({ status: 'success' });
+}
+
 // The stream is a raw Response rather than a JSON body, so it is driven through the
 // app directly: Treaty has nothing to hand back for an event stream.
 async function readStream(
@@ -511,6 +521,85 @@ describe('external agent chat', () => {
       (await chatOf(asOwner, agent.id).threads({ threadId: sent.data!.threadId }).delete()).status,
     ).toBe(204);
     expect((await chatOf(asOwner, agent.id).threads.get()).data!.items).toEqual([]);
+  });
+
+  it('finds a conversation by its title and by the text of both roles', async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    const byTitle = await send(asOwner, agent.id, 'the launch plan');
+    await answer(asRunner, 'noted');
+    // Asked in the second turn, so the title of that conversation does not match too.
+    const byQuestion = await send(asOwner, agent.id, 'status update');
+    await answer(asRunner, 'all green');
+    await send(asOwner, agent.id, 'when is the launch?', byQuestion.data!.threadId);
+    await answer(asRunner, 'in May');
+    const byAnswer = await send(asOwner, agent.id, 'what is next?');
+    await answer(asRunner, 'the launch, then the retro');
+    await send(asOwner, agent.id, 'invoices');
+    await answer(asRunner, 'paid');
+
+    const res = await chatOf(asOwner, agent.id).threads.get({ query: { q: 'launch' } });
+    expect(res.status).toBe(200);
+    // Ranked: the title first, then the member's own message, then the agent's reply.
+    expect(res.data!.items.map((t) => t.id)).toEqual([
+      byTitle.data!.threadId,
+      byQuestion.data!.threadId,
+      byAnswer.data!.threadId,
+    ]);
+    expect(res.data!.items.map((t) => t.match)).toEqual(['title', 'user', 'assistant']);
+    expect(res.data!.items[2].snippet).toContain('the launch, then the retro');
+  });
+
+  it("does not match a tool call's arguments or result", async () => {
+    const { asOwner, asRunner, agent } = await setup();
+    await send(asOwner, agent.id, 'what is left?');
+    const claimed = (await asRunner['agent-chats'].claim.post()).data!.message!;
+    await asRunner['agent-chats']({ messageId: claimed.id }).events.post({
+      events: [
+        { type: 'TOOL_CALL_START', toolCallId: 'call-1', toolCallName: 'list_issues' },
+        { type: 'TOOL_CALL_ARGS', toolCallId: 'call-1', delta: '{"status":"kryptonite"}' },
+        { type: 'TOOL_CALL_RESULT', messageId: 'm1', toolCallId: 'call-1', content: 'kryptonite' },
+        { type: 'TEXT_MESSAGE_CONTENT', messageId: 'm1', delta: 'Two things.' },
+      ],
+    });
+    await asRunner['agent-chats']({ messageId: claimed.id }).result.post({ status: 'success' });
+
+    const res = await chatOf(asOwner, agent.id).threads.get({ query: { q: 'kryptonite' } });
+    expect(res.data!.items).toEqual([]);
+  });
+
+  it('stars a conversation, lists it as its own group, and drops the star with it', async () => {
+    const { asOwner, agent } = await setup();
+    const kept = await send(asOwner, agent.id, 'kept');
+    const plain = await send(asOwner, agent.id, 'plain');
+    const thread = chatOf(asOwner, agent.id).threads({ threadId: kept.data!.threadId });
+
+    expect((await thread.favorite.put()).status).toBe(204);
+
+    const favorites = await chatOf(asOwner, agent.id).threads.get({ query: { favorites: true } });
+    expect(favorites.data!.items.map((t) => t.id)).toEqual([kept.data!.threadId]);
+    expect(favorites.data!.nextPage).toBeNull();
+
+    // The group holds it, so the list below no longer shows it a second time.
+    const rest = await chatOf(asOwner, agent.id).threads.get();
+    expect(rest.data!.items.map((t) => t.id)).toEqual([plain.data!.threadId]);
+
+    expect((await thread.favorite.delete()).status).toBe(204);
+    expect(
+      (await chatOf(asOwner, agent.id).threads.get({ query: { favorites: true } })).data!.items,
+    ).toEqual([]);
+    const back = await chatOf(asOwner, agent.id).threads.get();
+    expect(back.data!.items.map((t) => t.id)).toEqual([plain.data!.threadId, kept.data!.threadId]);
+  });
+
+  it("404s starring another member's conversation", async () => {
+    const { asOwner, agent } = await setup();
+    const sent = await send(asOwner, agent.id, 'Private question');
+    const asMember = await addProjectMember(asOwner, 'MKT');
+
+    expect(
+      (await chatOf(asMember, agent.id).threads({ threadId: sent.data!.threadId }).favorite.put())
+        .status,
+    ).toBe(404);
   });
 
   it("refuses another member's thread and another agent's answer", async () => {

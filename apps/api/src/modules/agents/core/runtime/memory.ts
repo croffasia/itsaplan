@@ -1,8 +1,24 @@
 import { Memory } from '@mastra/memory';
 import { PostgresStore } from '@mastra/pg';
-import { toIso } from '../helpers/dates';
+import { db } from '@repo/db';
+import { sql } from 'drizzle-orm';
 import { appendTextPart, toolArgsText, toolText } from '../../chat-parts';
-import { contextField, deleteContextUsage, readContextSizes } from '../../chat-usage';
+import { deleteContextUsage } from '../../chat-usage';
+import {
+  deleteFavorite,
+  favoriteThreadIds,
+  readFavorites,
+  FAVORITES_LIMIT,
+} from '../../chat-favorites';
+import {
+  likePattern,
+  searchTerm,
+  snippetOf,
+  summarize,
+  type ThreadListOpts,
+  type ThreadRow,
+} from '../../chat-history';
+import { toIso } from '../helpers/dates';
 import type { ChatMessageDTO, ChatMessagePage, ChatPart, ChatThreadPage } from '../../model';
 
 // Conversation memory for internal agents. Threads and their messages are
@@ -108,6 +124,7 @@ export async function deleteChatThread(threadId: string, resourceId: string): Pr
   if (!thread) return false;
   await memory.deleteThread(threadId);
   await deleteContextUsage(threadId);
+  await deleteFavorite(threadId);
   return true;
 }
 
@@ -126,30 +143,138 @@ export async function deleteThreadsWhere(
   return threads.length;
 }
 
-// One page of a user's chat threads with one agent, newest first. Scoped by resourceId
-// (the caller) and the agent binding in metadata, so a caller only ever sees their
-// own conversations with that agent.
+// A user's chat threads with one agent: the favorites group, the hits of a search, or
+// one page of the rest of them, newest first. Scoped by resourceId (the caller) and the
+// agent binding in metadata, so a caller only ever sees their own conversations with
+// that agent.
 export async function listChatThreads(
   resourceId: string,
   agentId: number,
-  page = 0,
+  opts: ThreadListOpts = {},
 ): Promise<ChatThreadPage> {
-  const res = await getReadMemory().listThreads({
-    filter: { resourceId, metadata: { agentId, kind: 'chat' } },
-    orderBy: { field: 'updatedAt', direction: 'DESC' },
-    perPage: THREAD_PAGE_SIZE,
-    page,
-  });
-  const sizes = await readContextSizes(res.threads.map((t) => t.id));
-  const items = res.threads.map((t) => ({
-    id: t.id,
-    title: t.title && t.title.length > 0 ? t.title : null,
-    cliSessionId: null,
-    ...contextField(sizes, t.id),
-    createdAt: toIso(t.createdAt),
-    updatedAt: toIso(t.updatedAt),
-  }));
-  return { items, nextPage: res.hasMore ? page + 1 : null };
+  if (opts.favorites) return favoriteChatThreads(resourceId, agentId);
+  const term = searchTerm(opts.q);
+  const page = opts.page ?? 0;
+  const rows = term
+    ? await searchChatThreads(resourceId, agentId, term, page)
+    : await unstarredChatThreads(resourceId, agentId, page);
+  const hasMore = rows.length > THREAD_PAGE_SIZE;
+  const items = await summarize(hasMore ? rows.slice(0, THREAD_PAGE_SIZE) : rows);
+  return { items, nextPage: hasMore ? page + 1 : null };
+}
+
+// One page of the conversations that are not starred, newest first, with one row over
+// the page to tell whether there is another. The starred ones are left out because the
+// group above the list already holds them — which is also why this reads the threads
+// directly instead of through Mastra's storage API, which filters on metadata only.
+async function unstarredChatThreads(
+  resourceId: string,
+  agentId: number,
+  page: number,
+): Promise<ThreadRow[]> {
+  const rows = await db.execute(sql`
+    SELECT ${threadFields}, false AS favorite
+    FROM mastra_threads t
+    WHERE ${ownedChatThreads(resourceId, agentId)}
+      AND NOT EXISTS (
+        SELECT 1 FROM agent_chat_favorite f
+        WHERE f.user_id = ${resourceId} AND f.thread_id = t.id
+      )
+    ORDER BY t."updatedAt" DESC
+    LIMIT ${THREAD_PAGE_SIZE + 1} OFFSET ${page * THREAD_PAGE_SIZE}
+  `);
+  return rows as unknown as ThreadRow[];
+}
+
+// The conversations the caller starred, newest first. The stars are ours and the
+// threads are Mastra's, so the two are read one after the other rather than joined.
+async function favoriteChatThreads(resourceId: string, agentId: number): Promise<ChatThreadPage> {
+  const ids = await favoriteThreadIds(resourceId, agentId);
+  if (ids.length === 0) return { items: [], nextPage: null };
+  const rows = await db.execute(sql`
+    SELECT ${threadFields}, true AS favorite
+    FROM mastra_threads t
+    WHERE ${ownedChatThreads(resourceId, agentId)}
+      AND t.id IN (${sql.join(
+        ids.map((id) => sql`${id}`),
+        sql`, `,
+      )})
+    ORDER BY t."updatedAt" DESC
+    LIMIT ${FAVORITES_LIMIT}
+  `);
+  return { items: await summarize(rows as unknown as ThreadRow[]), nextPage: null };
+}
+
+// The columns of a thread the history list reads. Mastra owns these tables, so they are
+// addressed in raw SQL: its storage API searches no text and returns no snippet.
+const threadFields = sql`t.id, t.title, NULL AS "cliSessionId", t."createdAt", t."updatedAt"`;
+
+// The caller's own chat threads with one agent. A thread is bound to its agent through
+// the metadata written when it was created, and 'chat' is what tells a conversation
+// apart from an autonomous run's thread.
+function ownedChatThreads(resourceId: string, agentId: number) {
+  return sql`t."resourceId" = ${resourceId}
+      AND t.metadata->>'agentId' = ${String(agentId)}
+      AND t.metadata->>'kind' = 'chat'`;
+}
+
+// The conversations whose title or message text contains the term. A message is stored
+// as JSON, so its text parts are taken out one by one: matching the whole document would
+// also match the arguments and the result of a tool call, which are not what the member
+// wrote or read.
+//
+// The snippet is cut from the newest matching message, in the database. The rank puts a
+// title hit first, then the ones where the member's own message matches, then the ones
+// matching only in the agent's reply.
+async function searchChatThreads(
+  resourceId: string,
+  agentId: number,
+  term: string,
+  page: number,
+): Promise<ThreadRow[]> {
+  const like = likePattern(term);
+  const snippet = snippetOf(sql`part->>'text'`, term);
+  const rows = await db.execute(sql`
+    SELECT ${threadFields},
+           hit.snippet,
+           CASE
+             WHEN t.title ILIKE ${like} THEN 1
+             WHEN coalesce(hit.user_match, false) THEN 2
+             ELSE 3
+           END AS rank
+    FROM mastra_threads t
+    LEFT JOIN LATERAL (
+      SELECT bool_or(msg.role = 'user') AS user_match,
+             (array_agg(${snippet} ORDER BY msg."createdAt" DESC))[1] AS snippet
+      FROM mastra_messages msg
+      CROSS JOIN LATERAL jsonb_array_elements(msg.content::jsonb -> 'parts') AS part
+      WHERE msg.thread_id = t.id
+        AND part->>'type' = 'text'
+        AND part->>'text' ILIKE ${like}
+    ) hit ON true
+    WHERE ${ownedChatThreads(resourceId, agentId)}
+      AND (t.title ILIKE ${like} OR hit.snippet IS NOT NULL)
+    ORDER BY rank, t."updatedAt" DESC
+    LIMIT ${THREAD_PAGE_SIZE + 1} OFFSET ${page * THREAD_PAGE_SIZE}
+  `);
+  // The stars are in our own table, so they are read for the hits rather than joined.
+  const hits = rows as unknown as ThreadRow[];
+  const favorites = await readFavorites(
+    resourceId,
+    hits.map((row) => row.id),
+  );
+  return hits.map((row) => ({ ...row, favorite: favorites.has(row.id) }));
+}
+
+// Whether the conversation is the caller's own with this agent, which is what a star is
+// checked against.
+export async function ownsChatThread(
+  threadId: string,
+  resourceId: string,
+  agentId: number,
+): Promise<boolean> {
+  const thread = await getReadMemory().getThreadById({ threadId, resourceId });
+  return thread?.metadata?.agentId === agentId;
 }
 
 // Loads the transcript of one chat thread for the given owner. Returns null when

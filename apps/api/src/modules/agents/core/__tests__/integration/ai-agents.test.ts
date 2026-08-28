@@ -608,6 +608,8 @@ describe('ai agents', () => {
       'GET /projects/:projectKey/ai-agents/:agentId/runs',
       'POST /projects/:projectKey/ai-agents/:agentId/run/stream',
       'GET /projects/:projectKey/ai-agents/:agentId/threads',
+      'PUT /projects/:projectKey/ai-agents/:agentId/threads/:threadId/favorite',
+      'DELETE /projects/:projectKey/ai-agents/:agentId/threads/:threadId/favorite',
       'GET /projects/:projectKey/ai-agents/:agentId/threads/:threadId/messages',
       'PATCH /projects/:projectKey/ai-agents/:agentId/threads/:threadId',
       'DELETE /projects/:projectKey/ai-agents/:agentId/threads/:threadId',

@@ -633,6 +633,24 @@ export const agentChatUsage = pgTable(
   (t) => [index('agent_chat_usage_agent_idx').on(t.agentId)],
 );
 
+// The conversations a member has starred, so they stay within reach in the chat
+// history. Like agent_chat_usage the row carries no foreign key to the thread: an
+// internal agent's thread lives in Mastra's own tables. Deleting a thread deletes its
+// row; a row left behind is harmless, since the history is built from the threads.
+export const agentChatFavorite = pgTable(
+  'agent_chat_favorite',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id, { onDelete: 'cascade' }),
+    threadId: text('thread_id').notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.threadId] })],
+);
+
 // Stored credentials for a project's integrations. One store for every secret: the
 // API keys of LLM providers (kind 'llm', addressed by an internal agent's model) and
 // the credentials of tool integrations (kind 'tool', bound to configured tools).

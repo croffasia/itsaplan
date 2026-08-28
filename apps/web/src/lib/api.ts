@@ -547,11 +547,16 @@ export type AgentRunEvent =
 // `contextTokens` is the size of the conversation's context after its last completed
 // answer: absent while no answer has completed, null where the agent reports no counts
 // that can be read as one.
+// `favorite` is the star the caller put on the conversation. `snippet` and `match` come
+// back from a search: the text around the hit, and where it was found.
 export interface AiChatThread {
   id: string;
   title: string | null;
   cliSessionId: string | null;
   contextTokens?: number | null;
+  favorite: boolean;
+  snippet?: string;
+  match?: 'title' | 'user' | 'assistant';
   createdAt: string;
   updatedAt: string;
 }
@@ -3098,9 +3103,29 @@ export const api = {
       `/projects/${projectKey}/agent-schedules/${scheduleId}/runs${runId != null ? `/${runId}` : ''}/cancel`,
       { method: 'POST' },
     ),
-  // One page of the caller's own chat threads with an agent, newest first.
-  listAiAgentThreads: (projectKey: string, agentId: number, page: number) =>
-    request<AiChatThreadPage>(`/projects/${projectKey}/ai-agents/${agentId}/threads?page=${page}`),
+  // One page of the caller's own chat threads with an agent, newest first. `q` searches
+  // them by title and message text instead, over every page.
+  listAiAgentThreads: (projectKey: string, agentId: number, page: number, q = '') =>
+    request<AiChatThreadPage>(
+      `/projects/${projectKey}/ai-agents/${agentId}/threads?page=${page}` +
+        (q ? `&q=${encodeURIComponent(q)}` : ''),
+    ),
+  // The conversations the caller starred with an agent, newest first, in one go.
+  listAiAgentFavoriteThreads: (projectKey: string, agentId: number) =>
+    request<AiChatThreadPage>(
+      `/projects/${projectKey}/ai-agents/${agentId}/threads?favorites=true`,
+    ),
+  // Stars one of the caller's conversations, or takes the star off it.
+  setAiAgentThreadFavorite: (
+    projectKey: string,
+    agentId: number,
+    threadId: string,
+    favorite: boolean,
+  ) =>
+    request<void>(
+      `/projects/${projectKey}/ai-agents/${agentId}/threads/${encodeURIComponent(threadId)}/favorite`,
+      { method: favorite ? 'PUT' : 'DELETE' },
+    ),
   // The transcript of one chat thread, to restore the conversation.
   getAiAgentThreadMessages: (projectKey: string, agentId: number, threadId: string, page: number) =>
     request<AiChatMessagePage>(

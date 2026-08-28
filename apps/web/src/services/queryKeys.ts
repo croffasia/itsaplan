@@ -63,9 +63,16 @@ export const qk = {
   agentScheduleRuns: (projectKey: string, scheduleId: number) =>
     ['agentSchedules', projectKey, scheduleId, 'runs'] as const,
   // The caller's chat threads with one agent (the AI Chat history rail) and the
-  // transcript of one thread (restored when a thread is opened).
-  agentThreads: (projectKey: string, agentId: number) =>
-    ['aiAgents', projectKey, agentId, 'threads'] as const,
+  // transcript of one thread (restored when a thread is opened). A search is a list of
+  // its own, so the unsearched list stays cached while one is typed.
+  agentThreadLists: (projectKey: string, agentId: number) =>
+    ['aiAgents', projectKey, agentId, 'threadList'] as const,
+  agentThreads: (projectKey: string, agentId: number, q = '') =>
+    ['aiAgents', projectKey, agentId, 'threadList', q] as const,
+  // The conversations starred with one agent: the group on top of the history, and what
+  // the star in the tabs bar reads its state from.
+  agentFavoriteThreads: (projectKey: string, agentId: number) =>
+    ['aiAgents', projectKey, agentId, 'favoriteThreads'] as const,
   agentThreadMessages: (projectKey: string, agentId: number, threadId: string) =>
     ['aiAgents', projectKey, agentId, 'threads', threadId] as const,
   // Stored integration credentials, the integration catalog, and an LLM provider's

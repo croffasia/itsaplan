@@ -404,6 +404,142 @@ describe('agent chat history', () => {
     expect((await threads()).data!.items[0].contextTokens).toBeUndefined();
   });
 
+  it('finds a thread by its title and by the text of both roles', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('by-title', owner.userId, agent, 'the launch plan');
+    await seedThread('by-question', owner.userId, agent, 'sprint', [
+      { role: 'user', text: 'when is the launch?' },
+      { role: 'assistant', text: 'in May' },
+    ]);
+    await seedThread('by-answer', owner.userId, agent, 'roadmap', [
+      { role: 'user', text: 'what is next?' },
+      { role: 'assistant', text: 'the launch, then the retro' },
+    ]);
+    await seedThread('no-match', owner.userId, agent, 'billing', [
+      { role: 'user', text: 'invoices' },
+    ]);
+
+    const res = await agents(asOwner)({ agentId: agent.id }).threads.get({
+      query: { q: 'launch' },
+    });
+    expect(res.status).toBe(200);
+    // Ranked: the title first, then the member's own message, then the agent's reply.
+    expect(res.data!.items.map((t) => t.id)).toEqual(['by-title', 'by-question', 'by-answer']);
+    expect(res.data!.items.map((t) => t.match)).toEqual(['title', 'user', 'assistant']);
+    expect(res.data!.items[2].snippet).toContain('the launch, then the retro');
+  });
+
+  it('searches nothing for a query of one character', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('t1', owner.userId, agent, 'billing');
+
+    const res = await agents(asOwner)({ agentId: agent.id }).threads.get({ query: { q: 'b' } });
+    expect(res.data!.items.map((t) => t.id)).toEqual(['t1']);
+    expect(res.data!.items[0].match).toBeUndefined();
+  });
+
+  it("does not match a tool call's arguments or result", async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('tools', owner.userId, agent, 'sprint', [
+      { role: 'user', text: 'what is left?' },
+      {
+        role: 'assistant',
+        text: 'Two things.',
+        parts: [
+          {
+            type: 'tool-invocation',
+            toolInvocation: {
+              toolCallId: 'call-1',
+              toolName: 'list_issues',
+              args: { status: 'kryptonite' },
+              state: 'result',
+              result: 'kryptonite',
+            },
+          },
+          { type: 'text', text: 'Two things.' },
+        ],
+      },
+    ]);
+
+    const res = await agents(asOwner)({ agentId: agent.id }).threads.get({
+      query: { q: 'kryptonite' },
+    });
+    expect(res.data!.items).toEqual([]);
+  });
+
+  it('stars a thread, lists it as its own group, and unstars it', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('kept', owner.userId, agent, 'kept');
+    await backdateThread('kept');
+    await seedThread('plain', owner.userId, agent, 'plain');
+    const thread = agents(asOwner)({ agentId: agent.id }).threads({ threadId: 'kept' });
+
+    expect((await thread.favorite.put()).status).toBe(204);
+
+    const favorites = await agents(asOwner)({ agentId: agent.id }).threads.get({
+      query: { favorites: true },
+    });
+    expect(favorites.data!.items.map((t) => t.id)).toEqual(['kept']);
+    expect(favorites.data!.nextPage).toBeNull();
+
+    // The group holds it, so the list below no longer shows it a second time.
+    const rest = await agents(asOwner)({ agentId: agent.id }).threads.get();
+    expect(rest.data!.items.map((t) => t.id)).toEqual(['plain']);
+
+    expect((await thread.favorite.delete()).status).toBe(204);
+    const cleared = await agents(asOwner)({ agentId: agent.id }).threads.get({
+      query: { favorites: true },
+    });
+    expect(cleared.data!.items).toEqual([]);
+    const back = await agents(asOwner)({ agentId: agent.id }).threads.get();
+    expect(back.data!.items.map((t) => t.id)).toEqual(['plain', 'kept']);
+  });
+
+  it('covers the starred conversations in a search', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('kept', owner.userId, agent, 'the launch plan');
+    await agents(asOwner)({ agentId: agent.id }).threads({ threadId: 'kept' }).favorite.put();
+
+    const res = await agents(asOwner)({ agentId: agent.id }).threads.get({
+      query: { q: 'launch' },
+    });
+    expect(res.data!.items.map((t) => [t.id, t.favorite])).toEqual([['kept', true]]);
+  });
+
+  it("404s starring another user's thread and a thread of another agent", async () => {
+    const { owner, asOwner } = await setup();
+    const a = await createInternalAgent(asOwner, 'Bot A', 'bota');
+    const b = await createInternalAgent(asOwner, 'Bot B', 'botb');
+    await seedThread('theirs', 'another-user-id', a, 'theirs');
+    await seedThread('mine', owner.userId, a, 'mine');
+
+    expect(
+      (await agents(asOwner)({ agentId: a.id }).threads({ threadId: 'theirs' }).favorite.put())
+        .status,
+    ).toBe(404);
+    expect(
+      (await agents(asOwner)({ agentId: b.id }).threads({ threadId: 'mine' }).favorite.put())
+        .status,
+    ).toBe(404);
+  });
+
+  it('drops the star with the thread', async () => {
+    const { owner, asOwner } = await setup();
+    const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    await seedThread('kept', owner.userId, agent, 'kept');
+    await agents(asOwner)({ agentId: agent.id }).threads({ threadId: 'kept' }).favorite.put();
+    await agents(asOwner)({ agentId: agent.id }).threads({ threadId: 'kept' }).delete();
+
+    await seedThread('kept', owner.userId, agent, 'kept');
+    const all = await agents(asOwner)({ agentId: agent.id }).threads.get();
+    expect(all.data!.items.map((t) => [t.id, t.favorite])).toEqual([['kept', false]]);
+  });
+
   it("404s a run continuing another user's chat thread", async () => {
     const { asOwner } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');

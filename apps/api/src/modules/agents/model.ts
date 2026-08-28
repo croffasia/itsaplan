@@ -1,5 +1,7 @@
 import { t } from 'elysia';
 
+import type { ThreadMatch } from './chat-history';
+
 // Shared by every route in the domain that addresses an agent by its id.
 export const agentParams = t.Object({
   projectKey: t.String(),
@@ -49,11 +51,16 @@ export const contextUsageBody = t.Optional(
 // `contextTokens` is the size of the conversation's context after its last completed
 // answer: absent while no answer has completed, null where the agent reports no counts
 // that can be read as one.
+// `favorite` is the star the caller put on the conversation. `snippet` and `match` are
+// set by a search: the text around the hit, and where it was found.
 export type ChatThreadSummary = {
   id: string;
   title: string | null;
   cliSessionId: string | null;
   contextTokens?: number | null;
+  favorite: boolean;
+  snippet?: string;
+  match?: ThreadMatch;
   createdAt: string;
   updatedAt: string;
 };

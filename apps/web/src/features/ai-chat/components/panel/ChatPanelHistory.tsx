@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { History } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import * as PopoverPrimitive from '@radix-ui/react-popover';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { InputGroupButton } from '@/components/ui/input-group';
 import { AiChatThreadList } from '../shared/AiChatThreadList';
@@ -42,8 +43,8 @@ export function ChatPanelHistory({
         </InputGroupButton>
       </PopoverTrigger>
       <PopoverContent
-        align="start"
-        className="flex max-h-96 w-80 flex-col p-0"
+        align="center"
+        className="flex h-[28rem] max-h-(--radix-popover-content-available-height) w-96 flex-col p-0"
         // Picking a conversation hides the session this popover is anchored to, and a
         // hidden trigger reports a zero rect in the top left corner, where the popover
         // would be moved while it plays its closing animation. Without that animation it
@@ -56,6 +57,8 @@ export function ChatPanelHistory({
             event.preventDefault();
         }}
       >
+        <PopoverPrimitive.Arrow className="size-2.5 translate-y-[calc(-50%_-_1px)] rotate-45 rounded-[2px] border border-t-0 border-l-0 bg-popover fill-popover" />
+
         <div className="flex min-w-0 items-baseline gap-1.5 border-b px-3 py-2">
           <span className="text-sm font-medium">{t('history')}</span>
           <span className="truncate text-xs text-muted-foreground">{agentName}</span>

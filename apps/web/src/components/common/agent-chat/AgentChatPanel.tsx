@@ -240,8 +240,12 @@ export function AgentChatPanel({
                 align="block-end"
                 className="gap-1 px-2.5 pb-2"
                 // The row carries a text cursor, and its own handler focuses an
-                // `input` — this group holds a textarea.
+                // `input` — this group holds a textarea. A control of the row that
+                // opens a popover keeps this row as its React parent while rendering
+                // into a portal, so its clicks arrive here too: refocusing on those
+                // would pull the focus out of the popover and close it.
                 onClick={(e) => {
+                  if (!e.currentTarget.contains(e.target as Node)) return;
                   if ((e.target as HTMLElement).closest('button')) return;
                   e.currentTarget.parentElement?.querySelector('textarea')?.focus();
                 }}

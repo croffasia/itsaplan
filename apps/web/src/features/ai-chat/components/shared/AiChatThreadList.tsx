@@ -1,12 +1,25 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Search } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useAgentThreadsQuery, useDeleteAgentThread } from '@/services/aiAgents.service';
+import {
+  useAgentFavoriteThreadsQuery,
+  useAgentThreadsQuery,
+  useDeleteAgentThread,
+  useToggleAgentThreadFavorite,
+} from '@/services/aiAgents.service';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import { Input } from '@/components/ui/input';
 import type { AiChatThread } from '@/lib/api';
 import { AiChatThreadItem } from './AiChatThreadItem';
 import { AiChatThreadItemSkeleton } from './AiChatThreadItemSkeleton';
+
+// Below this the search runs nothing, the way the API reads it: one character matches
+// nearly every conversation.
+const MIN_QUERY = 2;
+const SEARCH_DEBOUNCE_MS = 300;
 
 // The caller's own past conversations with one agent, newest first, loaded a page at a
 // time as the end of the list comes into view. The host supplies the header around it.
@@ -14,6 +27,10 @@ import { AiChatThreadItemSkeleton } from './AiChatThreadItemSkeleton';
 // produced its first reply yet has no id and so is not in this list. Deleting a
 // conversation removes it and its messages; `onDeleted` lets the host reset the chat
 // when the deleted one was open.
+//
+// The starred conversations are shown as a group of their own on top, and the list
+// below holds the rest, so a conversation appears once. A search replaces both with its
+// hits, over all of them.
 export function AiChatThreadList({
   projectKey,
   agentId,
@@ -29,9 +46,16 @@ export function AiChatThreadList({
 }) {
   const t = useTranslations('aiChat');
   const tCommon = useTranslations('common');
-  const threadsQuery = useAgentThreadsQuery(projectKey, agentId);
+  const [query, setQuery] = useState('');
+  const debounced = useDebouncedValue(query.trim(), SEARCH_DEBOUNCE_MS);
+  const search = debounced.length >= MIN_QUERY ? debounced : '';
+
+  const threadsQuery = useAgentThreadsQuery(projectKey, agentId, search);
   const threads = threadsQuery.data?.pages.flatMap((page) => page.items) ?? [];
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = threadsQuery;
+  const favoritesQuery = useAgentFavoriteThreadsQuery(projectKey, agentId);
+  const favorites = search ? [] : (favoritesQuery.data?.items ?? []);
+  const toggleFavorite = useToggleAgentThreadFavorite(projectKey, agentId);
   const deleteThread = useDeleteAgentThread(projectKey, agentId);
   const [pending, setPending] = useState<AiChatThread | null>(null);
 
@@ -57,39 +81,60 @@ export function AiChatThreadList({
     onDeleted(pending.id);
   }
 
-  if (threadsQuery.isLoading) {
-    return (
-      <div className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <AiChatThreadItemSkeleton key={i} />
-        ))}
-      </div>
-    );
-  }
+  const renderThread = (thread: AiChatThread) => (
+    <AiChatThreadItem
+      key={thread.id}
+      thread={thread}
+      active={thread.id === selectedThreadId}
+      query={search}
+      onSelect={() => onSelect(thread.id)}
+      onToggleFavorite={() =>
+        toggleFavorite.mutate({ threadId: thread.id, favorite: !thread.favorite })
+      }
+      onDelete={() => setPending(thread)}
+    />
+  );
 
-  if (threads.length === 0) {
+  function renderList() {
+    if (threadsQuery.isLoading) {
+      return Array.from({ length: 5 }).map((_, i) => <AiChatThreadItemSkeleton key={i} />);
+    }
+    if (threads.length === 0 && favorites.length === 0) {
+      return (
+        <div className="px-2 py-6 text-center text-xs text-muted-foreground">
+          {search ? t('noMatches') : t('noThreads')}
+        </div>
+      );
+    }
     return (
-      <div className="min-h-0 flex-1 px-4 py-6 text-center text-xs text-muted-foreground">
-        {t('noThreads')}
-      </div>
+      <>
+        {favorites.length > 0 && (
+          <>
+            <ListLabel>{t('favorites')}</ListLabel>
+            {favorites.map(renderThread)}
+            {threads.length > 0 && <ListLabel>{t('otherThreads')}</ListLabel>}
+          </>
+        )}
+        {threads.map(renderThread)}
+        <div ref={sentinelRef} />
+        {isFetchingNextPage && <AiChatThreadItemSkeleton />}
+      </>
     );
   }
 
   return (
     <>
-      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">
-        {threads.map((thread) => (
-          <AiChatThreadItem
-            key={thread.id}
-            thread={thread}
-            active={thread.id === selectedThreadId}
-            onSelect={() => onSelect(thread.id)}
-            onDelete={() => setPending(thread)}
-          />
-        ))}
-        <div ref={sentinelRef} />
-        {isFetchingNextPage && <AiChatThreadItemSkeleton />}
+      <div className="relative border-b p-2">
+        <Search className="pointer-events-none absolute start-4 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder={t('searchThreads')}
+          className="h-8 ps-8 text-sm"
+        />
       </div>
+
+      <div className="min-h-0 flex-1 space-y-0.5 overflow-y-auto p-2">{renderList()}</div>
 
       {pending && (
         <ConfirmDialog
@@ -104,5 +149,11 @@ export function AiChatThreadList({
         </ConfirmDialog>
       )}
     </>
+  );
+}
+
+function ListLabel({ children }: { children: string }) {
+  return (
+    <div className="px-2.5 pt-2 pb-1 text-xs font-medium text-muted-foreground">{children}</div>
   );
 }

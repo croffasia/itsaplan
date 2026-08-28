@@ -95,9 +95,36 @@ Enforced declaratively through macros, never imperative calls in handlers.
   `assertPermission` on the fetched row.
 - Guards/macros wrap the `shared/access.ts` primitives. Handlers that still need
   `user` (project create, invite accept/reject, self-removal) call `requireUser(user)`.
-- **Members join only through invites/**, not a direct add. One pending invite per
-  (project, email) — partial unique index → 409. `members/` removes only (last owner
-  protected).
+- **Members join through invites or a provisioned group**, never a direct add from
+  `members/`. One pending invite per (project, email) — partial unique index → 409.
+  `members/` removes only (last owner protected). `project_member.source` says which path
+  a row came from: `modules/scim/reconcile.ts` only ever writes, re-roles or removes its own
+  `'scim'` rows, and `members/` refuses to edit or remove one (409) because the next sync
+  would undo the change.
+
+## SCIM
+
+`modules/scim/` serves SCIM 2.0 (RFC 7643 / 7644) at `/scim/v2` for an identity provider
+to provision users and groups with. Three things make it unlike every other module:
+
+- **Mounted on the root app in `app.ts`, not under `planner`.** The planner's `authContext`
+  answers 401 before the bearer check could run. Authentication is one `onBeforeHandle`
+  against the instance SCIM token from `@repo/auth`.
+- **Its own error document.** `onError` sits on a parent instance that `.use()`s the routes
+  and answers only for paths under `/scim/v2`, handing everything else back to the planner's
+  handler. Two reasons for that shape: an `onError` beside the routes widens the inferred
+  response type of every one of them with the body it returns (which then reaches the Eden
+  client as a success shape), and Elysia propagates the handler to the root app either way.
+- **Bodies are `t.Any()`.** SCIM defines its own schemas and clients send attributes this app
+  ignores, so `resource.ts` validates instead and raises `ScimError`, which carries the
+  `scimType` a provisioning client branches on. Responses are declared per route from
+  `model.ts` — `scimErrors(...)` is the SCIM-shaped counterpart of `shared/responses.ts`.
+
+Filtering is `<attribute> eq "<value>"` only, over the attributes each resource lists in
+`service.ts`; that is what Okta, Entra and Authentik send, and `ServiceProviderConfig`
+advertises exactly that. A create inserts the `user` row directly, the way `createAgent`
+does, which deliberately skips the registration gate — with SCIM on, the identity provider
+decides who exists, and that is what makes `registration: 'closed'` plus SSO work.
 
 ## Security
 

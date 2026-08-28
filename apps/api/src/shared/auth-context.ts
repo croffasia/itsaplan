@@ -25,11 +25,18 @@ export type SessionUser = SessionResult['user'];
 // session-gated. A feature also uses it directly when its handlers or local
 // macros reference `user`, which is what makes the `user` type flow there. The
 // plugin is named, so its resolve runs once per request (dedup).
+//
+// A deactivated account is refused here rather than at sign-in: deactivation
+// arrives over SCIM while sessions and API keys are already open, and this is the
+// one place every planner route and the MCP surface pass through.
 export const authContext = new Elysia({ name: 'auth-context' }).resolve(
   { as: 'scoped' },
   async ({ request, path }): Promise<{ user: SessionUser | null }> => {
     const session = await auth.api.getSession({ headers: request.headers });
-    if (session) return { user: session.user };
+    if (session) {
+      if (session.user.active === false) throw new HttpError(401, 'This account is deactivated');
+      return { user: session.user };
+    }
     // The public raw-attachment route has no session and needs none.
     if (request.method === 'GET' && PUBLIC_GET.test(path)) return { user: null };
     throw new HttpError(401, 'Authentication required');

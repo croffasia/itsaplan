@@ -17,6 +17,9 @@ const MemberResponse = t.Object({
   roleName: t.Nullable(t.String()),
   description: t.String(),
   isAgent: t.Boolean(),
+  // 'scim' when an identity provider's group granted this membership. Such a row is
+  // rewritten on every sync, so the role and remove actions are refused.
+  source: t.UnionEnum(['invite', 'scim']),
   createdAt: t.String(),
 });
 

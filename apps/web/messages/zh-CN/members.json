@@ -104,5 +104,6 @@
   },
   "promoted": "成员已晋升为所有者",
   "roleUpdated": "成员角色已更新",
-  "descriptionUpdated": "成员描述已更新"
+  "descriptionUpdated": "成员描述已更新",
+  "provisioned": "由 SCIM 管理"
 }

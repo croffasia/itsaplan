@@ -221,11 +221,17 @@ export const projectMember = pgTable(
     // members page and given to agents so they can pick who to tag on an unassigned
     // issue. Empty string when unset.
     description: text('description').notNull().default(''),
+    // How this membership came about. 'invite' is a person accepting an invite;
+    // 'scim' is a row the SCIM group reconciliation created and therefore owns —
+    // it only ever updates or removes its own rows, so a sync never undoes a
+    // membership someone set up by hand.
+    source: text('source').notNull().default('invite'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     primaryKey({ columns: [t.projectId, t.userId] }),
     check('project_member_role_check', sql`${t.role} IN ('owner', 'member')`),
+    check('project_member_source_check', sql`${t.source} IN ('invite', 'scim')`),
     index('project_member_user_idx').on(t.userId),
   ],
 );

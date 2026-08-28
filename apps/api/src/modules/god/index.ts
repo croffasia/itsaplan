@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import {
   GOOGLE_REDIRECT_URI,
+  OIDC_REDIRECT_URI,
   getAuthSettings,
   setAuthSettings,
   getEmailSettings,
@@ -8,6 +9,13 @@ import {
   hasConfiguredEmailProvider,
   getGoogleSettings,
   setGoogleSettings,
+  hasConfiguredGoogle,
+  getOidcSettings,
+  setOidcSettings,
+  hasConfiguredOidc,
+  getScimSettings,
+  setScimSettings,
+  rotateScimToken,
 } from '@repo/auth';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';
@@ -21,6 +29,8 @@ import {
   getInstanceUser,
   listInstanceProjects,
   listInstanceUsers,
+  listScimGroups,
+  setScimGroupMappings,
   verifyInstanceUserEmail,
 } from './service';
 import {
@@ -34,6 +44,13 @@ import {
   InstanceProjectListResponse,
   InstanceUserDetailResponse,
   InstanceUserListResponse,
+  OidcSettingsBody,
+  OidcSettingsResponse,
+  ScimGroupMappingsBody,
+  ScimGroupResponse,
+  ScimSettingsBody,
+  ScimSettingsResponse,
+  ScimTokenResponse,
   StorageSettingsBody,
   TelegramSettingsBody,
   TelegramSettingsResponse,
@@ -41,9 +58,11 @@ import {
   listProjectsQuery,
   listUsersQuery,
   projectParams,
+  scimGroupParams,
   userParams,
 } from './model';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
+import { SCIM_BASE_URL } from '#modules/scim/resource';
 import {
   getStorageSettings,
   setStorageSettings,
@@ -62,13 +81,19 @@ import {
 
 // God mode: instance-wide administration, open only to the "god" user (the first
 // registered account). It covers how people may register, the mail provider that
-// sends authentication email, and the Google OAuth credentials. Invites are per
-// project (project_invite), managed in the project's Members section — there is
-// nothing instance-level to add here.
+// sends authentication email, the OAuth credentials, and SCIM provisioning. Invites
+// are per project (project_invite), managed in the project's Members section — there
+// is nothing instance-level to add here.
 //
 // The settings themselves are owned by @repo/auth, which reads them at sign-up and
 // when sending mail; these routes only expose them over HTTP. Secrets are never
 // returned — each is replaced by a boolean telling whether a value is stored.
+
+// Whether any single sign-on provider can run right now. Password sign-in may only
+// be turned off while one can.
+async function hasSsoProvider(): Promise<boolean> {
+  return (await hasConfiguredOidc()) || (await hasConfiguredGoogle());
+}
 
 export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   .use(authContext)
@@ -83,6 +108,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     async () => ({
       ...(await getAuthSettings()),
       hasEmailProvider: await hasConfiguredEmailProvider(),
+      hasSsoProvider: await hasSsoProvider(),
     }),
     {
       response: { 200: AuthSettingsResponse, ...errors(401, 403) },
@@ -102,8 +128,14 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       if (!ready && (body.requireEmailVerification || body.magicLink)) {
         throw new HttpError(400, 'Configure an email provider first');
       }
+      const sso = await hasSsoProvider();
+      // Without another way in, turning the password form off would lock everyone
+      // out, the instance owner included.
+      if (body.emailPassword === false && !sso) {
+        throw new HttpError(400, 'Configure a single sign-on provider first');
+      }
       const next = await setAuthSettings(body);
-      return { ...next, hasEmailProvider: ready };
+      return { ...next, hasEmailProvider: ready, hasSsoProvider: sso };
     },
     {
       body: AuthSettingsBody,
@@ -164,6 +196,116 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: 'Update Google sign-in settings',
         description: 'Update the Google OAuth credentials and whether Google sign-in is offered.',
+      },
+    },
+  )
+
+  .get(
+    '/god/oidc-settings',
+    async () => ({ ...(await getOidcSettings()), redirectUri: OIDC_REDIRECT_URI }),
+    {
+      response: { 200: OidcSettingsResponse, ...errors(401, 403) },
+      detail: {
+        summary: 'Get OIDC sign-in settings',
+        description: 'Get the generic OIDC/OAuth2 provider settings (the client secret redacted).',
+      },
+    },
+  )
+
+  .put(
+    '/god/oidc-settings',
+    async ({ body }) => {
+      const current = await getOidcSettings();
+      const discoveryUrl = body.discoveryUrl ?? current.discoveryUrl;
+      const clientId = body.clientId ?? current.clientId;
+      const hasClientSecret = (body.clientSecret?.length ?? 0) > 0 || current.hasClientSecret;
+      // Turning it on without credentials would only offer a button that fails at
+      // the provider, the same rule the Google settings apply.
+      if (
+        body.enabled &&
+        (discoveryUrl.length === 0 || clientId.length === 0 || !hasClientSecret)
+      ) {
+        throw new HttpError(400, 'Add the discovery URL, client ID and secret first');
+      }
+      const next = await setOidcSettings(body);
+      return { ...next, redirectUri: OIDC_REDIRECT_URI };
+    },
+    {
+      body: OidcSettingsBody,
+      response: { 200: OidcSettingsResponse, ...errors(400, 401, 403) },
+      detail: {
+        summary: 'Update OIDC sign-in settings',
+        description:
+          'Update the generic OIDC/OAuth2 credentials and whether the provider is offered.',
+      },
+    },
+  )
+
+  .get(
+    '/god/scim-settings',
+    async () => ({ ...(await getScimSettings()), baseUrl: SCIM_BASE_URL }),
+    {
+      response: { 200: ScimSettingsResponse, ...errors(401, 403) },
+      detail: {
+        summary: 'Get SCIM provisioning settings',
+        description: 'Get whether SCIM provisioning is on and whether a token has been generated.',
+      },
+    },
+  )
+
+  .put(
+    '/god/scim-settings',
+    async ({ body }) => {
+      const current = await getScimSettings();
+      // Enabling it without a token would leave the endpoint answering 401 to
+      // everything, which reads as a broken integration rather than a missing step.
+      if (body.enabled && !current.hasToken) {
+        throw new HttpError(400, 'Generate a SCIM token first');
+      }
+      return { ...(await setScimSettings(body)), baseUrl: SCIM_BASE_URL };
+    },
+    {
+      body: ScimSettingsBody,
+      response: { 200: ScimSettingsResponse, ...errors(400, 401, 403) },
+      detail: {
+        summary: 'Update SCIM provisioning settings',
+        description: 'Turn SCIM provisioning on or off.',
+      },
+    },
+  )
+
+  .post('/god/scim-settings/token', async () => ({ token: await rotateScimToken() }), {
+    response: { 200: ScimTokenResponse, ...errors(401, 403) },
+    detail: {
+      summary: 'Generate a SCIM token',
+      description:
+        'Generate the bearer token an identity provider sends to /scim/v2, replacing any ' +
+        'previous one. The value is returned once and cannot be read back.',
+    },
+  })
+
+  .get('/god/scim-groups', () => listScimGroups(), {
+    response: { 200: t.Array(ScimGroupResponse), ...errors(401, 403) },
+    detail: {
+      summary: 'List provisioned groups',
+      description:
+        'List the groups an identity provider has pushed, with their member counts and the ' +
+        'projects they grant membership in.',
+    },
+  })
+
+  .put(
+    '/god/scim-groups/:groupId/mappings',
+    ({ params, body }) => setScimGroupMappings(params.groupId, body.mappings),
+    {
+      params: scimGroupParams,
+      body: ScimGroupMappingsBody,
+      response: { 200: ScimGroupResponse, ...commonErrors },
+      detail: {
+        summary: "Set a group's project mappings",
+        description:
+          'Replace the list of projects a provisioned group grants membership in, then ' +
+          'reconcile the membership of every project the change touched.',
       },
     },
   )

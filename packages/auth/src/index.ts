@@ -6,13 +6,16 @@ import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { passkey } from '@better-auth/passkey';
 import { apiKey } from '@better-auth/api-key';
-import { openAPI, magicLink, username } from 'better-auth/plugins';
+import { openAPI, magicLink, username, genericOAuth } from 'better-auth/plugins';
+import type { GenericOAuthConfig } from 'better-auth/plugins/generic-oauth';
 import * as schema from '@repo/db/schema';
 import {
   getAuthSettings,
   hasPendingInvite,
   getGoogleConfig,
   isGoogleUsable,
+  getOidcConfig,
+  isOidcUsable,
   hasConfiguredEmailProvider,
 } from './instance';
 import { sendAuthEmail } from './mail';
@@ -96,6 +99,60 @@ async function refreshGoogleOptions(): Promise<boolean> {
   }
 }
 
+// The generic OIDC provider. One per instance, so its id is a constant: it is what
+// the `account` rows store, and better-auth materialises the provider list once at
+// startup — the config array can neither grow nor be re-keyed afterwards. As with
+// Google, the plugin keeps this object by reference and reads its fields on every
+// call, so refreshing it per request is what lets the owner change the credentials
+// without a restart. Assign the fields, never replace the object.
+export const OIDC_PROVIDER_ID = 'oidc';
+
+const oidcOptions: GenericOAuthConfig = {
+  providerId: OIDC_PROVIDER_ID,
+  clientId: '',
+  clientSecret: '',
+  discoveryUrl: '',
+  scopes: [],
+  pkce: true,
+};
+
+// The exact value that has to be registered as a redirect URI with the identity
+// provider. god mode shows it so the owner can copy it instead of assembling it.
+export const OIDC_REDIRECT_URI = `${baseURL}/api/auth/oauth2/callback/${OIDC_PROVIDER_ID}`;
+
+// Loads the stored credentials into that object and reports whether OIDC sign-in can
+// run. A read failure disables the provider rather than failing the request with a
+// stale secret.
+async function refreshOidcOptions(): Promise<boolean> {
+  try {
+    const config = await getOidcConfig();
+    oidcOptions.clientId = config.clientId;
+    oidcOptions.clientSecret = config.clientSecret;
+    oidcOptions.discoveryUrl = config.discoveryUrl;
+    oidcOptions.scopes = config.scopes;
+    oidcOptions.pkce = config.pkce;
+    return isOidcUsable(config);
+  } catch (error) {
+    console.error('[auth] could not read the OIDC credentials:', error);
+    return false;
+  }
+}
+
+// The endpoints of the email/password form, including the two the magic link uses.
+// Turning password authentication off refuses all of them, so a link issued before
+// the switch was flipped cannot still be redeemed. Passkey sign-in is not here: a
+// passkey is only ever added to an account that already exists, so it cannot be used
+// to get around single sign-on.
+const PASSWORD_PATHS = new Set([
+  '/sign-up/email',
+  '/sign-in/email',
+  '/sign-in/username',
+  '/forget-password',
+  '/reset-password',
+  '/sign-in/magic-link',
+  '/magic-link/verify',
+]);
+
 // The registration gate: who may create an account. Both sign-up paths run it — the
 // email form checks it up front (below), and the user create hook catches every other
 // path, which is what stops a Google sign-up on a closed or invite-only instance.
@@ -161,7 +218,7 @@ async function isAgentHandle(handle: string): Promise<boolean> {
 // local part, with everything the plugin's validator rejects removed — and the owner
 // changes it later in the profile. A name already in use gets a random suffix, and
 // the check repeats until the name is free.
-async function generateUsername(email: string): Promise<string> {
+export async function generateUsername(email: string): Promise<string> {
   const stem =
     email
       .split('@')[0]
@@ -255,6 +312,21 @@ export const auth = betterAuth({
         defaultValue: 'user',
         input: false,
       },
+      // Deprovisioning flag, written only over SCIM. Nullable, so every check is
+      // `active !== false` — an account that predates the column has no value.
+      active: {
+        type: 'boolean',
+        required: false,
+        defaultValue: true,
+        input: false,
+      },
+      // The identity provider's own id for this account, used by SCIM to correlate
+      // a user it did not create the id for.
+      scimExternalId: {
+        type: 'string',
+        required: false,
+        input: false,
+      },
     },
   },
 
@@ -262,8 +334,33 @@ export const auth = betterAuth({
   // per request, so god mode can change them without a restart.
   hooks: {
     before: createAuthMiddleware(async (ctx) => {
+      // Read here so the two sign-in endpoints, which also go through the
+      // verification gate below, make one query instead of two.
+      const passwordSettings = PASSWORD_PATHS.has(ctx.path) ? await getAuthSettings() : null;
+      // The api will not let the switch be turned off while no OAuth provider is
+      // configured, so this cannot leave an instance with no way in.
+      if (passwordSettings && !passwordSettings.emailPassword) {
+        throw new APIError('FORBIDDEN', {
+          code: 'PASSWORD_AUTH_DISABLED',
+          message: 'Password sign-in is disabled on this instance',
+        });
+      }
+
       if (ctx.path === '/sign-up/email') {
         await assertRegistrationAllowed((ctx.body as { email?: string } | undefined)?.email ?? '');
+        return;
+      }
+
+      // Both halves of the OIDC round trip. The refusal carries a code because the
+      // callback turns it into the ?error= it redirects with; without one the
+      // callback fails the request instead.
+      if (ctx.path === '/sign-in/oauth2' || ctx.path.startsWith('/oauth2/callback/')) {
+        if (!(await refreshOidcOptions())) {
+          throw new APIError('FORBIDDEN', {
+            code: 'OIDC_DISABLED',
+            message: 'Single sign-on is disabled on this instance',
+          });
+        }
         return;
       }
 
@@ -283,7 +380,7 @@ export const auth = betterAuth({
       // /sign-in/email or /sign-in/username depending on what was typed, and the
       // instance gate has to apply either way.
       if (ctx.path === '/sign-in/email' || ctx.path === '/sign-in/username') {
-        const settings = await getAuthSettings();
+        const settings = passwordSettings ?? (await getAuthSettings());
         if (!settings.requireEmailVerification) return;
         // Holding an account back is only fair while a confirmation link can still
         // be sent: with the mail provider gone, an unconfirmed account has no way
@@ -350,6 +447,25 @@ export const auth = betterAuth({
         },
       },
     },
+    session: {
+      create: {
+        // Every sign-in method ends here, so one check covers password, magic link,
+        // passkey, Google and OIDC. Deactivation arrives over SCIM; apps/api refuses
+        // the sessions that are already open.
+        before: async (session) => {
+          const rows = await db
+            .select({ active: schema.user.active })
+            .from(schema.user)
+            .where(eq(schema.user.id, session.userId));
+          if (rows[0]?.active === false) {
+            throw new APIError('FORBIDDEN', {
+              code: 'ACCOUNT_DEACTIVATED',
+              message: 'This account is deactivated',
+            });
+          }
+        },
+      },
+    },
   },
 
   plugins: [
@@ -400,6 +516,12 @@ export const auth = betterAuth({
         });
       },
     }),
+    // A single generic OIDC/OAuth2 provider, configured by the instance owner and
+    // discovered from its well-known document. Adds /sign-in/oauth2 and
+    // /oauth2/callback/:providerId; it reuses the `account` table, so it adds none.
+    // The config array is materialised at startup — see oidcOptions above for why
+    // there is exactly one entry and why its fields are mutated rather than replaced.
+    genericOAuth({ config: [oidcOptions] }),
     // Usernames: a second identifier next to the address, unique across the
     // instance. Adds `username` / `display_username` to the user table and the
     // /sign-in/username endpoint the sign-in screen uses when the visitor typed a
@@ -420,11 +542,13 @@ export const auth = betterAuth({
   // The frontend runs on a different origin (Next :3001) — allow its requests.
   trustedOrigins,
 
-  // The username plugin's /is-username-available answers for anyone, and a username
-  // is derived from the address, so the endpoint would tell a stranger which
-  // addresses are registered. Nothing in the app calls it — the profile form learns
-  // a name is taken from updateUser's error.
-  disabledPaths: ['/is-username-available'],
+  // /is-username-available answers for anyone, and a username is derived from the
+  // address, so it would tell a stranger which addresses are registered. Nothing in
+  // the app calls it — the profile form learns a name is taken from updateUser's
+  // error. /oauth2/link attaches an OIDC identity to the signed-in account, which no
+  // screen offers: better-auth already links a sign-in to a matching confirmed
+  // address on its own.
+  disabledPaths: ['/is-username-available', '/oauth2/link'],
 
   advanced: {
     // Share the session cookie across subdomains when COOKIE_DOMAIN is the parent
@@ -468,6 +592,16 @@ export {
   setGoogleSettings,
   getGoogleConfig,
   hasConfiguredGoogle,
+  getOidcSettings,
+  setOidcSettings,
+  getOidcConfig,
+  getOidcLabel,
+  hasConfiguredOidc,
+  getScimSettings,
+  setScimSettings,
+  rotateScimToken,
+  isScimEnabled,
+  verifyScimToken,
 } from './instance';
 export type {
   RegistrationMode,
@@ -478,4 +612,8 @@ export type {
   InstanceGoogleDto,
   InstanceGooglePatch,
   InstanceGoogleConfig,
+  InstanceOidcDto,
+  InstanceOidcPatch,
+  InstanceOidcConfig,
+  InstanceScimDto,
 } from './instance';

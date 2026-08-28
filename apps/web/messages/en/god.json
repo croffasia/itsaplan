@@ -145,12 +145,15 @@
       }
     },
     "signIn": "Sign-in options",
-    "signInHint": "Options that need outbound mail. They stay off until a provider is configured.",
+    "signInHint": "How people sign in. The options that send mail stay off until a provider is configured.",
     "needsProvider": "Set up the Email provider under Integrations first.",
     "requireVerification": "Require email confirmation",
     "requireVerificationHint": "A new account must confirm its address before it can sign in.",
     "magicLink": "Sign-in links",
-    "magicLinkHint": "Offer signing in with a link sent by email, alongside the password."
+    "magicLinkHint": "Offer signing in with a link sent by email, alongside the password.",
+    "emailPassword": "Email and password",
+    "emailPasswordHint": "Offer the sign-in and sign-up form. Turn it off to let people in through a sign-in provider only.",
+    "needsSso": "Set up a sign-in provider under Integrations first."
   },
   "hotkeys": {
     "saved": "Keyboard shortcuts saved"
@@ -212,6 +215,61 @@
     "clientSecret": "Client secret",
     "redirectUri": "Redirect URI",
     "redirectUriHint": "Register this on the OAuth client in the Google Cloud console. Google refuses the sign-in if it does not match exactly.",
-    "copyRedirectUri": "Copy redirect URI"
+    "copyRedirectUri": "Copy redirect URI",
+    "oidc": "OpenID Connect",
+    "oidcConfigured": "An address without an account gets one; an address that already has a confirmed account signs into it.",
+    "oidcMissing": "Add the discovery URL, client ID and secret first.",
+    "discoveryUrl": "Discovery URL",
+    "discoveryUrlHint": "Your provider's .well-known/openid-configuration. The authorization, token and userinfo endpoints are read from it.",
+    "oidcLabel": "Button label",
+    "oidcLabelPlaceholder": "Sign in with Acme SSO",
+    "oidcLabelHint": "Names your provider on the sign-in button. Leave it empty for a generic label.",
+    "scopes": "Scopes",
+    "scopesHint": "Separated by spaces. openid is required; profile and email fill in the name and address.",
+    "oidcRedirectUriHint": "Register this as a redirect URI on the client at your identity provider. The provider refuses the sign-in if it does not match exactly."
+  },
+  "scim": {
+    "saved": "SCIM settings saved",
+    "provisioning": "Provisioning",
+    "provisioningConfigured": "Your identity provider creates, updates and deactivates accounts on this instance.",
+    "provisioningMissing": "Generate a token first.",
+    "token": "Token",
+    "noToken": "No token generated yet",
+    "tokenHint": "The bearer token your identity provider sends. It is shown once; generating a new one stops the old one working.",
+    "generateToken": "Generate token",
+    "replaceToken": "Replace token",
+    "baseUrl": "SCIM endpoint",
+    "baseUrlHint": "Point your identity provider at this address.",
+    "copyBaseUrl": "Copy SCIM endpoint",
+    "groups": "Groups",
+    "groupsHint": "The groups your identity provider has pushed. The list is theirs; what each group grants is set here.",
+    "groupsEmpty": "No groups have been pushed yet.",
+    "memberCount": "{count, plural, =0 {No members} one {# member} other {# members}}",
+    "grantsNothing": "grants nothing yet",
+    "editMappings": "Edit access",
+    "roleOwner": "Owner",
+    "roleMember": "Member",
+    "tokenDialog": {
+      "title": "Generate a SCIM token",
+      "description": "The token is shown once and cannot be read back. Any token already in use stops working.",
+      "submit": "Generate",
+      "submitPending": "Generating…",
+      "createdTitle": "Your SCIM token",
+      "createdDescription": "Copy it into your identity provider now. It cannot be shown again.",
+      "copy": "Copy token"
+    },
+    "mappings": {
+      "title": "What {group} grants",
+      "description": "Members of this group join the projects listed here. Removing a project takes away the memberships this group gave it.",
+      "empty": "This group grants nothing yet.",
+      "addProject": "Add a project…",
+      "role": "Role",
+      "roleOwner": "Owner",
+      "roleMember": "Member",
+      "projectRole": "Project role",
+      "defaultRole": "Default role",
+      "remove": "Remove project",
+      "saved": "Group access saved"
+    }
   }
 }

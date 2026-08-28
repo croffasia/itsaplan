@@ -104,5 +104,6 @@
   },
   "promoted": "Участник назначен владельцем",
   "roleUpdated": "Роль участника обновлена",
-  "descriptionUpdated": "Описание участника обновлено"
+  "descriptionUpdated": "Описание участника обновлено",
+  "provisioned": "Управляется SCIM"
 }

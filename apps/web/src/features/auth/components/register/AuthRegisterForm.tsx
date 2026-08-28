@@ -9,14 +9,18 @@ import {
   FieldDescription,
   FieldError,
   FieldGroup,
-  FieldLabel,
   FieldSeparator,
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import GoogleIcon from '@/components/common/GoogleIcon';
 import AuthFormHeader from '../AuthFormHeader';
 import AuthMessagePanel from '../AuthMessagePanel';
-import { signInWithGoogle, signOutUnverified, signUpWithEmail } from '../../services/auth.service';
+import AuthRegisterPasswordFields from './AuthRegisterPasswordFields';
+import AuthRegisterProviders from './AuthRegisterProviders';
+import {
+  signInWithGoogle,
+  signInWithOidc,
+  signOutUnverified,
+  signUpWithEmail,
+} from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';
 
@@ -30,6 +34,10 @@ export default function AuthRegisterForm() {
   const authConfig = useAuthConfig();
   const inviteOnly = authConfig?.registration === 'invite';
   const needsConfirmation = authConfig?.requireEmailVerification === true;
+  // With the password form off, the identity provider is what creates the account,
+  // so this screen keeps only the buttons that start that round trip.
+  const passwordEnabled = authConfig?.emailPassword !== false;
+  const hasProvider = authConfig?.oidc === true || authConfig?.google === true;
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -87,81 +95,47 @@ export default function AuthRegisterForm() {
     );
   }
 
+  function subtitle() {
+    if (!passwordEnabled) return t('register.subtitleSso');
+    if (inviteOnly) return t('register.subtitleInviteOnly');
+    return t('register.subtitle');
+  }
+
   return (
     <form onSubmit={onSubmit} className="p-6 md:p-8">
       <FieldGroup>
-        <AuthFormHeader
-          title={t('register.title')}
-          description={inviteOnly ? t('register.subtitleInviteOnly') : t('register.subtitle')}
-        />
+        <AuthFormHeader title={t('register.title')} description={subtitle()} />
 
-        <Field>
-          <FieldLabel htmlFor="email">{t('fields.email')}</FieldLabel>
-          <Input
-            id="email"
-            type="email"
-            placeholder={t('fields.emailPlaceholder')}
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={pending}
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="password">{t('fields.password')}</FieldLabel>
-          <Input
-            id="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={pending}
-          />
-          <FieldDescription>{t('fields.passwordHint')}</FieldDescription>
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="confirm-password">{t('fields.confirmPassword')}</FieldLabel>
-          <Input
-            id="confirm-password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            disabled={pending}
-          />
-        </Field>
-
-        {error && <FieldError>{error}</FieldError>}
-
-        <Field>
-          <Button type="submit" disabled={pending}>
-            {pending ? t('register.submitPending') : t('register.submit')}
-          </Button>
-        </Field>
-
-        {/* Google covers sign-up too: an address without an account gets one, subject
-            to the same registration mode as the form above. */}
-        {authConfig?.google && (
+        {passwordEnabled && (
           <>
-            <FieldSeparator>{t('register.or')}</FieldSeparator>
+            <AuthRegisterPasswordFields
+              email={email}
+              password={password}
+              confirm={confirm}
+              pending={pending}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+              onConfirmChange={setConfirm}
+            />
+
+            {error && <FieldError>{error}</FieldError>}
+
             <Field>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => run(signInWithGoogle, { redirect: false })}
-                disabled={pending}
-              >
-                <GoogleIcon className="size-4" />
-                {t('register.withGoogle')}
+              <Button type="submit" disabled={pending}>
+                {pending ? t('register.submitPending') : t('register.submit')}
               </Button>
             </Field>
+          </>
+        )}
+
+        {hasProvider && (
+          <>
+            {passwordEnabled && <FieldSeparator>{t('register.or')}</FieldSeparator>}
+            <AuthRegisterProviders
+              pending={pending}
+              onOidc={() => run(signInWithOidc, { redirect: false })}
+              onGoogle={() => run(signInWithGoogle, { redirect: false })}
+            />
           </>
         )}
 

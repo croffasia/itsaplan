@@ -21,4 +21,10 @@ export function apiKeyApi(apiKey: string) {
   return treaty(app, { headers: { 'x-api-key': apiKey } });
 }
 
+// Treaty client that authenticates with the instance SCIM token — how an identity
+// provider calls /scim/v2.
+export function scimApi(token: string) {
+  return treaty(app, { headers: { authorization: `Bearer ${token}` } });
+}
+
 export type Api = typeof api;

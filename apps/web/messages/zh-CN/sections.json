@@ -46,6 +46,10 @@
     "auth-provider": {
       "label": "身份验证提供商",
       "description": "设置用户可以用于登录的外部账户。"
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "让身份提供方在此实例上创建、更新和停用账号，并通过其群组授予项目访问权限。"
     }
   },
   "settings": {

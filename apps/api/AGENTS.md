@@ -129,6 +129,12 @@ decides who exists, and that is what makes `registration: 'closed'` plus SSO wor
 `createScimUser`/`updateScimUser` refuse a `god`-role account outright (409): the role is
 what grants god mode, and nothing about the instance owner's account is provider-owned.
 
+A group member removal arrives in two shapes: `path: 'members'` with the id(s) to drop in
+`value`, or RFC 7644 §3.5.2.2's path filter, `path: 'members[value eq "<id>"]'`, which Okta
+sends and which carries no `value` at all. `resource.ts`'s `memberFilterIds` reads the
+second shape; a `PATCH /Groups/:id` remove that only checked `value` would silently drop
+nothing for a provider that sends the filter form.
+
 The `scim_group` / `scim_group_member` tables have two writers, not one. A SCIM sync is
 the obvious one, but a group can also be embedded right on a resource instead of pushed on
 its own: `resource.ts`'s `groupDisplayNames` reads a SCIM User's `groups` attribute, and

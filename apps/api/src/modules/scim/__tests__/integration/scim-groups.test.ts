@@ -140,6 +140,21 @@ describe('SCIM groups', () => {
       expect(removed.data!.members.map((m) => m.value)).toEqual([grace.data!.id]);
     });
 
+    it('removes a member addressed by the RFC 7644 path filter, as Okta sends it', async () => {
+      const { scim } = await setupScim();
+      const ada = await scim.scim.v2.Users.post(scimUserBody());
+      const grace = await scim.scim.v2.Users.post(scimUserBody({ userName: 'grace@example.com' }));
+      const created = await scim.scim.v2.Groups.post(
+        groupBody({ members: [{ value: ada.data!.id }, { value: grace.data!.id }] }),
+      );
+
+      const res = await scim.scim.v2
+        .Groups({ id: created.data!.id })
+        .patch(patchOps([{ op: 'remove', path: `members[value eq "${ada.data!.id}"]` }]));
+
+      expect(res.data!.members.map((m) => m.value)).toEqual([grace.data!.id]);
+    });
+
     it('renames the group', async () => {
       const { scim } = await setupScim();
       const created = await scim.scim.v2.Groups.post(groupBody());

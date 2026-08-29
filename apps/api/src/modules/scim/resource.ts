@@ -268,6 +268,19 @@ export function memberIds(value: unknown): string[] {
   });
 }
 
+const MEMBER_PATH_FILTER = /^members\[(.+)]$/i;
+const VALUE_EQ = /value\s+eq\s+"((?:[^"\\]|\\.)*)"/gi;
+
+// RFC 7644 §3.5.2.2's canonical way to remove one group member puts the id in a
+// filter on the path itself — `path: 'members[value eq "<id>"]'`, no `value` — which
+// is what Okta sends. Returns null for the other shape, `path: 'members'` with the
+// id(s) in `value` the ordinary way, so a caller can fall back to `memberIds`.
+export function memberFilterIds(path: string): string[] | null {
+  const match = MEMBER_PATH_FILTER.exec(path.trim());
+  if (!match) return null;
+  return [...match[1]!.matchAll(VALUE_EQ)].map((m) => m[1]!.replace(/\\(.)/g, '$1'));
+}
+
 // Group names out of a loosely-typed "which groups does this account belong to"
 // value. Two shapes reach this: the `groups` attribute a SCIM User body can carry
 // (RFC 7643 §4.1.2) — `{ value, display }` refs, where `display` is meant to be the

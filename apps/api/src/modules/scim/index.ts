@@ -10,6 +10,7 @@ import {
   asString,
   groupDisplayNames,
   joinName,
+  memberFilterIds,
   memberIds,
   parseFilter,
   parsePatch,
@@ -349,7 +350,10 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
       for (const op of parsePatch(body)) {
         const path = op.path!.toLowerCase();
         if (path.startsWith('members')) {
-          const ids = op.value === undefined ? [] : memberIds(op.value);
+          // A remove sent as a path filter (RFC 7644 §3.5.2.2, e.g. Okta) carries
+          // the id in the path itself, not in `value`.
+          const ids =
+            memberFilterIds(op.path!) ?? (op.value === undefined ? [] : memberIds(op.value));
           if (op.op === 'remove') await removeScimGroupMembers(params.id, ids);
           else if (op.op === 'add') await addScimGroupMembers(params.id, ids);
           else patch.members = ids;

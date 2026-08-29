@@ -8,6 +8,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useGitSettingsQuery, useUpdateGitSettings } from '../../services/settings.service';
 import GitConnectionCard from './GitConnectionCard';
 import GitAutomationsCard from './GitAutomationsCard';
+import GitProviderConnections from './GitProviderConnections';
 
 // The repository integration tab: a master switch, and — while it is on — the
 // webhook connection and the pull request automations. Every control writes
@@ -41,6 +42,7 @@ export default function SettingsGit({ project }: { project: ProjectDetail }) {
       </SettingsCard>
       {settings.enabled && (
         <>
+          <GitProviderConnections projectKey={projectKey} editable={editable} />
           <GitConnectionCard projectKey={projectKey} settings={settings} editable={editable} />
           <GitAutomationsCard
             columns={project.columns}

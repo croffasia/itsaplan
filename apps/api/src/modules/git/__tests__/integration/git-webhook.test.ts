@@ -386,6 +386,18 @@ describe('Repository webhook', () => {
     expect(forViewer.status).toBe(200);
     expect(forViewer.data!.secret).toBeNull();
 
+    const connections = await asViewer
+      .projects({ projectKey: 'MKT' })
+      .settings.git.connections.get();
+    expect(connections.status).toBe(200);
+    expect(connections.data).toEqual([]);
+
+    const repositoryDiscovery = await asViewer
+      .projects({ projectKey: 'MKT' })
+      .settings.git.connections({ connectionId: 1 })
+      .repositories.get({ query: {} });
+    expect(repositoryDiscovery.status).toBe(403);
+
     const forOwner = await asOwner.projects({ projectKey: 'MKT' }).settings.git.get();
     expect(typeof forOwner.data!.secret).toBe('string');
 

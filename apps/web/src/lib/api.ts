@@ -990,6 +990,40 @@ export interface GitRepository {
   lastEventAt: string;
 }
 
+export type GitConnectionProvider = 'github' | 'gitlab';
+
+export interface GitManagedRepository {
+  id: number;
+  externalId: string;
+  fullName: string;
+  webUrl: string;
+  status: 'connected' | 'error';
+  lastError: string | null;
+}
+
+export interface GitProviderConnection {
+  id: number;
+  provider: GitConnectionProvider;
+  baseUrl: string;
+  accountLogin: string;
+  repositories: GitManagedRepository[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AvailableGitRepository {
+  externalId: string;
+  fullName: string;
+  webUrl: string;
+  private: boolean;
+  managedRepositoryId: number | null;
+}
+
+export interface AvailableGitRepositoryPage {
+  repositories: AvailableGitRepository[];
+  nextPage: number | null;
+}
+
 // Which optional sections a project shows. All on by default; turning one off
 // hides its navigation entry and its section, keeping the rows behind it.
 export interface ProjectFeatures {
@@ -3464,6 +3498,42 @@ export const api = {
     request<GitSettings>(`/projects/${projectKey}/settings/git/secret`, {
       method: 'POST',
     }),
+  listGitProviderConnections: (projectKey: string) =>
+    request<GitProviderConnection[]>(`/projects/${projectKey}/settings/git/connections`),
+  connectGitProvider: (
+    projectKey: string,
+    input: { provider: GitConnectionProvider; baseUrl?: string; token: string },
+  ) =>
+    request<GitProviderConnection>(`/projects/${projectKey}/settings/git/connections`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  disconnectGitProvider: (projectKey: string, connectionId: number) =>
+    request<void>(`/projects/${projectKey}/settings/git/connections/${connectionId}`, {
+      method: 'DELETE',
+    }),
+  listAvailableGitRepositories: (
+    projectKey: string,
+    connectionId: number,
+    params: { page?: number; search?: string },
+  ) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.search) query.set('search', params.search);
+    return request<AvailableGitRepositoryPage>(
+      `/projects/${projectKey}/settings/git/connections/${connectionId}/repositories?${query}`,
+    );
+  },
+  connectGitRepositories: (projectKey: string, connectionId: number, externalIds: string[]) =>
+    request<GitProviderConnection>(
+      `/projects/${projectKey}/settings/git/connections/${connectionId}/repositories`,
+      { method: 'POST', body: JSON.stringify({ externalIds }) },
+    ),
+  disconnectGitRepository: (projectKey: string, connectionId: number, repositoryId: number) =>
+    request<void>(
+      `/projects/${projectKey}/settings/git/connections/${connectionId}/repositories/${repositoryId}`,
+      { method: 'DELETE' },
+    ),
 
   // Notification provider credentials (danger_zone: read to view, edit to change).
   getNotificationSettings: (projectKey: string) =>

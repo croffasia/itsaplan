@@ -122,7 +122,7 @@ export async function createScimUser(input: {
 }): Promise<ScimUserRecord> {
   const email = input.email.trim().toLowerCase();
   const existing = await db
-    .select({ id: user.id })
+    .select({ id: user.id, role: user.role })
     .from(user)
     .where(and(emailEq(email), notAnAgent));
   // An account with this address already exists — created by a sign-up, an OIDC
@@ -131,6 +131,12 @@ export async function createScimUser(input: {
   // both may already be the ones the person set for themselves, and the identity
   // provider is only the authority on whether the account should exist and be active.
   if (existing[0]) {
+    // The role is what grants god mode, so linking this account into a sync would
+    // let the identity provider rename, reassign or deactivate the instance owner
+    // with no route back except SQL.
+    if (existing[0].role === 'god') {
+      throw new ScimError(409, 'An instance owner cannot be provisioned through SCIM');
+    }
     const linked = await db
       .update(user)
       .set({ active: input.active, scimExternalId: input.externalId, updatedAt: new Date() })
@@ -160,6 +166,15 @@ export async function updateScimUser(
   id: string,
   patch: { email?: string; name?: string; active?: boolean; externalId?: string | null },
 ): Promise<ScimUserRecord | null> {
+  const target = await db
+    .select({ role: user.role })
+    .from(user)
+    .where(and(eq(user.id, id), notAnAgent));
+  // Same reason as the create guard above: nothing about this account is
+  // provider-owned, so PUT and PATCH — this function backs both — refuse it too.
+  if (target[0]?.role === 'god') {
+    throw new ScimError(409, 'An instance owner cannot be updated through SCIM');
+  }
   const email = patch.email?.trim().toLowerCase();
   if (email) {
     const clash = await db

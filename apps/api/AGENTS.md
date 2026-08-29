@@ -126,6 +126,9 @@ advertises exactly that. A create inserts the `user` row directly, the way `crea
 does, which deliberately skips the registration gate — with SCIM on, the identity provider
 decides who exists, and that is what makes `registration: 'closed'` plus SSO work.
 
+`createScimUser`/`updateScimUser` refuse a `god`-role account outright (409): the role is
+what grants god mode, and nothing about the instance owner's account is provider-owned.
+
 The `scim_group` / `scim_group_member` tables have two writers, not one. A SCIM sync is
 the obvious one, but a group can also be embedded right on a resource instead of pushed on
 its own: `resource.ts`'s `groupDisplayNames` reads a SCIM User's `groups` attribute, and

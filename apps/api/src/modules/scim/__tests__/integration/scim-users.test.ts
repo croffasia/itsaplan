@@ -129,6 +129,17 @@ describe('SCIM users', () => {
       expect(list.data!.Resources.filter((u) => u.id === existing.userId)).toHaveLength(1);
     });
 
+    it("refuses to claim the instance owner's account", async () => {
+      const { god, scim } = await setupScim();
+
+      const res = await scim.scim.v2.Users.post(scimUserBody({ userName: god.email }));
+
+      expect(res.status).toBe(409);
+      expect(res.error!.value).toMatchObject({
+        detail: 'An instance owner cannot be provisioned through SCIM',
+      });
+    });
+
     // RFC 7644 §3.1 lets a SCIM client send this content type instead of
     // application/json, and real identity providers (Okta, Entra, Authentik) do.
     // Eden Treaty always sends application/json, so this goes through app.handle
@@ -293,6 +304,17 @@ describe('SCIM users', () => {
 
       expect(res.status).toBe(409);
     });
+
+    it('refuses the instance owner', async () => {
+      const { god, scim } = await setupScim();
+
+      const res = await scim.scim.v2.Users({ id: god.id }).put(scimUserBody());
+
+      expect(res.status).toBe(409);
+      expect(res.error!.value).toMatchObject({
+        detail: 'An instance owner cannot be updated through SCIM',
+      });
+    });
   });
 
   describe('PATCH /scim/v2/Users/:id', () => {
@@ -390,6 +412,19 @@ describe('SCIM users', () => {
 
       expect(res.status).toBe(400);
       expect(res.error!.value).toMatchObject({ scimType: 'invalidSyntax' });
+    });
+
+    it('refuses to deactivate the instance owner', async () => {
+      const { god, scim } = await setupScim();
+
+      const res = await scim.scim.v2
+        .Users({ id: god.id })
+        .patch(patchOps([{ op: 'replace', path: 'active', value: false }]));
+
+      expect(res.status).toBe(409);
+      expect(res.error!.value).toMatchObject({
+        detail: 'An instance owner cannot be updated through SCIM',
+      });
     });
   });
 

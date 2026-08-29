@@ -56,7 +56,10 @@ project access through its groups.
 3. Push users, and groups if you use them.
 
 Deactivating someone at the provider (`active: false`) ends their sessions and refuses
-their API keys; reactivating restores them with their projects intact.
+their API keys; reactivating restores them with their projects intact. The instance owner's
+own account is outside SCIM's reach — a provisioning run can neither change nor deactivate
+it, and a repeated create for an address it already provisioned answers "already exists"
+rather than overwriting the link back to the provider.
 
 A pushed group grants nothing until you say what it is for: on the same page, open a group
 and add the projects its members should join, and the role they join on. Removing a project

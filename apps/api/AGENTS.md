@@ -127,7 +127,9 @@ does, which deliberately skips the registration gate — with SCIM on, the ident
 decides who exists, and that is what makes `registration: 'closed'` plus SSO work.
 
 `createScimUser`/`updateScimUser` refuse a `god`-role account outright (409): the role is
-what grants god mode, and nothing about the instance owner's account is provider-owned.
+what grants god mode, and nothing about the instance owner's account is provider-owned. A
+create for an address already linked (`user.scimExternalId` set) is refused the same way —
+it is a retry, not a new person, and must not overwrite the link a first create wrote.
 
 A group member removal arrives in two shapes: `path: 'members'` with the id(s) to drop in
 `value`, or RFC 7644 §3.5.2.2's path filter, `path: 'members[value eq "<id>"]'`, which Okta

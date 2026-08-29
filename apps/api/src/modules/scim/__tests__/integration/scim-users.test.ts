@@ -98,7 +98,9 @@ describe('SCIM users', () => {
       expect(res.error!.value).toMatchObject({ scimType: 'invalidValue' });
     });
 
-    it('claims an existing account by address instead of duplicating it', async () => {
+    it('refuses to provision an address already linked to the provider', async () => {
+      // A retry (Okta repeats a create after a timeout) must not silently
+      // overwrite the id that links the account back to the provider.
       const { scim } = await setupScim();
       const first = await scim.scim.v2.Users.post(scimUserBody({ externalId: 'idp-1' }));
 
@@ -106,13 +108,10 @@ describe('SCIM users', () => {
         scimUserBody({ externalId: 'idp-1-reprovisioned' }),
       );
 
-      expect(second.status).toBe(201);
-      expect(second.data!.id).toBe(first.data!.id);
-      expect(second.data!.externalId).toBe('idp-1-reprovisioned');
-      const list = await scim.scim.v2.Users.get({
-        query: { filter: 'userName eq "ada@example.com"' },
-      });
-      expect(list.data).toMatchObject({ totalResults: 1 });
+      expect(second.status).toBe(409);
+      expect(second.error!.value).toMatchObject({ scimType: 'uniqueness' });
+      const unchanged = await scim.scim.v2.Users({ id: first.data!.id }).get();
+      expect(unchanged.data!.externalId).toBe('idp-1');
     });
 
     it('claims an account that predates the sync, matching the address by case', async () => {

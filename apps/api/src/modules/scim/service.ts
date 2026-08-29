@@ -122,14 +122,9 @@ export async function createScimUser(input: {
 }): Promise<ScimUserRecord> {
   const email = input.email.trim().toLowerCase();
   const existing = await db
-    .select({ id: user.id, role: user.role })
+    .select({ id: user.id, role: user.role, scimExternalId: user.scimExternalId })
     .from(user)
     .where(and(emailEq(email), notAnAgent));
-  // An account with this address already exists — created by a sign-up, an OIDC
-  // sign-in, or an earlier sync — so provisioning claims it instead of creating a
-  // second one for the same person. Its name and username are left as they are:
-  // both may already be the ones the person set for themselves, and the identity
-  // provider is only the authority on whether the account should exist and be active.
   if (existing[0]) {
     // The role is what grants god mode, so linking this account into a sync would
     // let the identity provider rename, reassign or deactivate the instance owner
@@ -137,6 +132,23 @@ export async function createScimUser(input: {
     if (existing[0].role === 'god') {
       throw new ScimError(409, 'An instance owner cannot be provisioned through SCIM');
     }
+    // A second create for an address already linked to the provider is a retry,
+    // not a new person — Okta repeats a create after a timeout — and must not
+    // silently overwrite what the first one wrote, including the id the second
+    // request left out, with whatever the retry happens to carry.
+    if (existing[0].scimExternalId) {
+      throw new ScimError(
+        409,
+        `A user with userName '${input.email}' already exists`,
+        'uniqueness',
+      );
+    }
+    // Otherwise this address belongs to an account that predates the sync —
+    // created by a sign-up or an OIDC sign-in — so provisioning claims it instead
+    // of creating a second one for the same person. Its name and username are left
+    // as they are: both may already be the ones the person set for themselves, and
+    // the identity provider is only the authority on whether the account should
+    // exist and be active.
     const linked = await db
       .update(user)
       .set({ active: input.active, scimExternalId: input.externalId, updatedAt: new Date() })

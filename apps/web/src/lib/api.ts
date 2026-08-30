@@ -2485,6 +2485,14 @@ export interface InviteRow {
   invitedByEmail: string | null;
 }
 
+export interface InviteCreateResult extends InviteRow {
+  emailQueued: boolean;
+}
+
+export interface InviteEmailResult {
+  emailQueued: boolean;
+}
+
 // An invite as shown to the invitee opening the link: enough project context to
 // decide, never the internal project id.
 export interface InviteView {
@@ -3344,15 +3352,19 @@ export const api = {
   deleteRole: (projectKey: string, roleId: number) =>
     request<void>(`/projects/${projectKey}/roles/${roleId}`, { method: 'DELETE' }),
 
-  // Invites — owner side: create, list, and revoke a project's invite links.
+  // Invites — owner side: create, list, email, and revoke a project's invite links.
   listInvites: (projectKey: string) => request<InviteRow[]>(`/projects/${projectKey}/invites`),
   createInvite: (
     projectKey: string,
     input: { email: string; role: MemberRole; roleId?: number | null },
   ) =>
-    request<InviteRow>(`/projects/${projectKey}/invites`, {
+    request<InviteCreateResult>(`/projects/${projectKey}/invites`, {
       method: 'POST',
       body: JSON.stringify(input),
+    }),
+  sendInviteEmail: (projectKey: string, inviteId: number) =>
+    request<InviteEmailResult>(`/projects/${projectKey}/invites/${inviteId}/email`, {
+      method: 'POST',
     }),
   deleteInvite: (projectKey: string, inviteId: number) =>
     request<void>(`/projects/${projectKey}/invites/${inviteId}`, { method: 'DELETE' }),

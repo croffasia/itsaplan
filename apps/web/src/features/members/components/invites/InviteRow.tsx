@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, X } from 'lucide-react';
+import { Check, Copy, Mail, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type InviteRow as Invite } from '@/lib/api';
 import { inviteLink } from '@/utils/paths';
@@ -13,14 +13,18 @@ import { Item, ItemActions, ItemContent, ItemTitle } from '@/components/ui/item'
 const STATUS_VARIANT = { pending: 'secondary', accepted: 'default', rejected: 'outline' } as const;
 
 // One invite row: the invited email and role, its status, who sent it, and — for
-// a pending invite — a copy-link button and a revoke action. Copy reads the link
-// from the current web origin so it works in any deployment.
+// a pending invite — email, copy-link, and revoke actions. Copy reads the link from
+// the current web origin so it works in any deployment.
 export default function InviteRow({
   invite,
+  onResend,
   onRevoke,
+  resending,
 }: {
   invite: Invite;
+  onResend: (invite: Invite) => void;
   onRevoke: (invite: Invite) => void;
+  resending: boolean;
 }) {
   const t = useTranslations('members.invites');
   const tCommon = useTranslations('common');
@@ -44,6 +48,14 @@ export default function InviteRow({
     } catch {
       // Clipboard can be blocked (no permission / insecure origin); ignore.
     }
+  }
+
+  function resend() {
+    onResend(invite);
+  }
+
+  function revoke() {
+    onRevoke(invite);
   }
 
   const invitedBy = invite.invitedByName || invite.invitedByEmail;
@@ -81,6 +93,18 @@ export default function InviteRow({
             variant="ghost"
             size="sm"
             className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+            disabled={resending}
+            onClick={resend}
+          >
+            <Mail className="size-3.5" />
+            {resending ? t('resendingEmail') : t('resendEmail')}
+          </Button>
+        )}
+        {pending && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
             onClick={copy}
           >
             {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -92,7 +116,7 @@ export default function InviteRow({
           size="icon"
           className="size-7 text-muted-foreground hover:text-destructive"
           title={pending ? t('revokeAction') : t('removeAction')}
-          onClick={() => onRevoke(invite)}
+          onClick={revoke}
         >
           <X className="size-4" />
         </Button>

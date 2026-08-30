@@ -1,5 +1,5 @@
 import { sendEmail, emailBody, type EmailConfig, type SendResult } from '@repo/mailer';
-import { getProjectEmailConfig } from '@repo/auth';
+import { getEmailConfig, getProjectEmailConfig } from '@repo/auth';
 import { emailSource, type NotificationConfig } from '#modules/notification-settings/service';
 import type { DeliveryPayload } from './outbound';
 import { getInstanceBotConfig, isInstanceBotUsable } from '#modules/telegram/service';
@@ -30,11 +30,13 @@ async function sendNotificationEmail(input: SendInput): Promise<SendResult> {
   // provider stops sending when the administrator withdraws it.
   const source = emailSource(input.config);
   const config: EmailConfig | null =
-    source === 'system'
-      ? await getProjectEmailConfig()
-      : source === 'none'
-        ? null
-        : { smtp: input.config.smtp, resend: input.config.resend };
+    input.payload.emailSource === 'instance'
+      ? await getEmailConfig()
+      : source === 'system'
+        ? await getProjectEmailConfig()
+        : source === 'none'
+          ? null
+          : { smtp: input.config.smtp, resend: input.config.resend };
   if (!config) return { ok: false, retryable: false, error: 'email not configured' };
   const { text, html } = emailBody(input.payload.text, input.payload.url);
   return sendEmail(config, {
@@ -42,6 +44,7 @@ async function sendNotificationEmail(input: SendInput): Promise<SendResult> {
     subject: input.payload.subject ?? '',
     text,
     html,
+    idempotencyKey: input.payload.idempotencyKey,
   });
 }
 

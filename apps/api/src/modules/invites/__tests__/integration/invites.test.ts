@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, notificationDelivery } from '@repo/db';
+import { and, eq, sql } from 'drizzle-orm';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -16,6 +18,15 @@ async function setupOwner(): Promise<{ user: TestUser; api: ReturnType<typeof au
   const api = authedApi(user.cookie);
   await api.projects.post({ key: 'MKT', name: 'Marketing' });
   return { user, api };
+}
+
+async function configureEmail(owner: ReturnType<typeof authedApi>) {
+  const result = await owner.god['email-settings'].put({
+    from: "It's a Plan <noreply@example.com>",
+    resend: { enabled: true, apiKey: 're_test_key' },
+    allowProjects: false,
+  });
+  expect(result.status).toBe(200);
 }
 
 describe('invites', () => {
@@ -36,11 +47,24 @@ describe('invites', () => {
         email: 'invitee@example.com',
         role: 'member',
         status: 'pending',
+        emailQueued: false,
         respondedAt: null,
         invitedByEmail: owner.user.email,
       });
       expect(typeof res.data?.token).toBe('string');
       expect(res.data?.token.length).toBeGreaterThan(0);
+    });
+
+    it('queues an email from the instance provider without project opt-in', async () => {
+      const owner = await setupOwner();
+      await configureEmail(owner.api);
+
+      const res = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'invitee@example.com', role: 'member' });
+
+      expect(res.status).toBe(201);
+      expect(res.data?.emailQueued).toBe(true);
     });
 
     it('normalizes the email to lowercase', async () => {
@@ -130,6 +154,68 @@ describe('invites', () => {
       const res = await outsider
         .projects({ projectKey: 'MKT' })
         .invites.post({ email: 'x@example.com', role: 'member' });
+      expect(res.status).toBe(403);
+    });
+  });
+
+  describe('email — POST /projects/:projectKey/invites/:inviteId/email', () => {
+    it('reports that email is unavailable without blocking the invite', async () => {
+      const owner = await setupOwner();
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'invitee@example.com', role: 'member' });
+
+      const res = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: invite.data!.id })
+        .email.post();
+
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual({ emailQueued: false });
+    });
+
+    it('queues a pending invite and deduplicates repeated requests', async () => {
+      const owner = await setupOwner();
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'invitee@example.com', role: 'member' });
+      await configureEmail(owner.api);
+      const client = owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: invite.data!.id }).email;
+
+      const first = await client.post();
+      const second = await client.post();
+
+      expect(first.status).toBe(200);
+      expect(first.data).toEqual({ emailQueued: true });
+      expect(second.status).toBe(200);
+      expect(second.data).toEqual({ emailQueued: true });
+
+      const [outbox] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(notificationDelivery)
+        .where(
+          and(
+            eq(notificationDelivery.recipient, 'invitee@example.com'),
+            eq(notificationDelivery.status, 'pending'),
+          ),
+        );
+      expect(Number(outbox?.count)).toBe(1);
+    });
+
+    it('denies a non-member', async () => {
+      const owner = await setupOwner();
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'invitee@example.com', role: 'member' });
+      const outsider = authedApi((await signUpTestUser()).cookie);
+
+      const res = await outsider
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: invite.data!.id })
+        .email.post();
+
       expect(res.status).toBe(403);
     });
   });

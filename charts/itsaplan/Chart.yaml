@@ -1,0 +1,6 @@
+apiVersion: v2
+name: itsaplan
+description: Self-hosted project management and issue tracking platform
+version: 0.1.0
+appVersion: "0.15.0"
+type: application

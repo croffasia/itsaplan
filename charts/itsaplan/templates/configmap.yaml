@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "itsaplan.fullname" . }}
+  labels:
+    {{- include "itsaplan.labels" . | nindent 4 }}
+data:
+  NODE_ENV: "production"
+  API_URL: {{ .Values.api.env.API_URL | quote }}
+  APP_URL: {{ .Values.api.env.APP_URL | quote }}
+  API_PORT: {{ .Values.api.port | quote }}
+  PORT: {{ .Values.web.port | quote }}
+  HOSTNAME: {{ .Values.web.env.HOSTNAME | quote }}
+  {{- with .Values.api.env.COOKIE_DOMAIN }}
+  COOKIE_DOMAIN: {{ . | quote }}
+  {{- end }}
+  S3_BUCKET: {{ .Values.api.env.S3_BUCKET | quote }}
+  S3_REGION: {{ .Values.api.env.S3_REGION | quote }}
+  S3_ENDPOINT: {{ include "itsaplan.s3Endpoint" . | quote }}
+  S3_FORCE_PATH_STYLE: {{ .Values.api.env.S3_FORCE_PATH_STYLE | quote }}
+  SERVICE_URL_API: {{ include "itsaplan.internalApiUrl" . | quote }}
+  TELEMETRY_DISABLED: {{ .Values.api.env.TELEMETRY_DISABLED | quote }}
+  DO_NOT_TRACK: {{ .Values.worker.env.DO_NOT_TRACK | default "1" | quote }}
+  PRIVACY_URL: {{ .Values.web.env.PRIVACY_URL | quote }}
+  TERMS_URL: {{ .Values.web.env.TERMS_URL | quote }}

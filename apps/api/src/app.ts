@@ -79,6 +79,7 @@ export const app = new Elysia()
             description: 'Tools configured on a credential and given to agents',
           },
           { name: 'Custom Fields', description: 'Global and type-scoped custom fields' },
+          { name: 'Issue Templates', description: 'Presets a new issue can be created from' },
           { name: 'Issues', description: 'Issues, their fields, feed, and comments' },
           {
             name: 'Initiatives',

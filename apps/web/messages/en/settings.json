@@ -600,6 +600,23 @@
     "optionsRemovedWarning": "A removed option is cleared from the issues that hold it.",
     "memberScopeWarning": "Members the new scope does not allow are cleared from this field."
   },
+  "issueTemplates": {
+    "addTemplate": "New template",
+    "editTemplate": "Edit template",
+    "deleteTemplate": "Delete template",
+    "deleteTitle": "Delete template \"{name}\"",
+    "deleteMessage": "The template is removed. The issues created from it are untouched. This cannot be undone.",
+    "namePlaceholder": "Template name",
+    "descriptionPlaceholder": "What this template is for",
+    "issueTitle": "Issue title",
+    "issueTitlePlaceholder": "The title the issue starts with",
+    "issueDescription": "Issue description",
+    "issueDescriptionPlaceholder": "The description the issue starts with, in Markdown",
+    "properties": "Default properties",
+    "propertiesHint": "Applied when the issue is created, and editable before it is.",
+    "emptyTitle": "No templates yet",
+    "emptyDescription": "A template fills a new issue with a title, a description and properties."
+  },
   "actions": {
     "new": "New action",
     "emptyTitle": "No actions yet",

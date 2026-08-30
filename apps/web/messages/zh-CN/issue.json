@@ -114,7 +114,10 @@
     "noFields": "暂无字段。",
     "description": "描述",
     "other": "其他",
-    "submit": "新建工作项"
+    "submit": "新建工作项",
+    "template": "模板",
+    "applyTemplate": "套用模板…",
+    "noTemplates": "没有模板。"
   },
   "attachments": {
     "title": "附件",
@@ -328,6 +331,7 @@
     "changeState": "更改状态…",
     "changeType": "更改类型…",
     "noType": "无类型",
+    "unsetState": "无状态",
     "noAssignee": "无负责人",
     "assignTo": "指派给…",
     "you": "你",

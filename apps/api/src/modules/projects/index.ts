@@ -12,6 +12,7 @@ import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
+import { listIssueTemplates } from '#modules/issue-templates/service';
 import {
   AutoArchiveResponse,
   EstimatesResponse,
@@ -131,16 +132,25 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
   .get(
     '/projects/:projectKey',
     async ({ project, user }) => {
-      const [columns, issueTypes, labels, labelGroups, assignees, customFields, viewer] =
-        await Promise.all([
-          listColumns(project.id),
-          listIssueTypes(project.id),
-          listLabels(project.id),
-          listLabelGroups(project.id),
-          listAssigneeCandidates(project.id),
-          listCustomFields(project.id, { allTypes: true }),
-          getMemberContext(project.id, requireUser(user).id),
-        ]);
+      const [
+        columns,
+        issueTypes,
+        labels,
+        labelGroups,
+        assignees,
+        customFields,
+        issueTemplates,
+        viewer,
+      ] = await Promise.all([
+        listColumns(project.id),
+        listIssueTypes(project.id),
+        listLabels(project.id),
+        listLabelGroups(project.id),
+        listAssigneeCandidates(project.id),
+        listCustomFields(project.id, { allTypes: true }),
+        listIssueTemplates(project.id),
+        getMemberContext(project.id, requireUser(user).id),
+      ]);
       // The permission guard already asserted membership, so a context always
       // exists here; guard against a race (membership revoked mid-request).
       if (!viewer) throw new HttpError(403, 'You do not have access to this project');
@@ -152,6 +162,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         labelGroups,
         assignees,
         customFields,
+        issueTemplates,
         viewer: { role: viewer.role },
         permissions: viewer.permissions,
       };
@@ -162,8 +173,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Get a project',
         description:
-          'Get a project setup by key: columns, issue types, labels, custom fields, and ' +
-          'assignable users and agents. Resolves the ids create_issue and update_issue ' +
+          'Get a project setup by key: columns, issue types, labels, custom fields, issue ' +
+          'templates, and assignable users and agents. Resolves the ids create_issue and update_issue ' +
           'take. For issues use list_issues or search_issues.',
         ...mcpTool('get_project'),
       },

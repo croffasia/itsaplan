@@ -77,6 +77,10 @@
       "label": "自定义字段",
       "description": "设置工作项的额外字段，可应用于所有类型或指定工作项类型。"
     },
+    "issue-templates": {
+      "label": "问题模板",
+      "description": "创建新问题时可套用的预设：标题、描述和属性。"
+    },
     "configuration": {
       "label": "配置",
       "description": "设置子任务与父工作项的联动方式，以及何时归档长期无活动的工作项。"

@@ -600,6 +600,23 @@
     "optionsRemovedWarning": "删除的选项会从选中它的任务中清除。",
     "memberScopeWarning": "新范围不允许的成员会被清除。"
   },
+  "issueTemplates": {
+    "addTemplate": "新建模板",
+    "editTemplate": "编辑模板",
+    "deleteTemplate": "删除模板",
+    "deleteTitle": "删除模板“{name}”",
+    "deleteMessage": "模板将被删除，由它创建的问题不受影响。此操作无法撤销。",
+    "namePlaceholder": "模板名称",
+    "descriptionPlaceholder": "该模板的用途",
+    "issueTitle": "问题标题",
+    "issueTitlePlaceholder": "问题的初始标题",
+    "issueDescription": "问题描述",
+    "issueDescriptionPlaceholder": "问题的初始描述，使用 Markdown",
+    "properties": "默认属性",
+    "propertiesHint": "创建问题时套用，创建前仍可修改。",
+    "emptyTitle": "还没有模板",
+    "emptyDescription": "模板会为新问题预填标题、描述和属性。"
+  },
   "actions": {
     "new": "新建操作",
     "emptyTitle": "暂无操作",

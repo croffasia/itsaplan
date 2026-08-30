@@ -31,6 +31,7 @@ const GROUP_DEFS: PermissionGroup[] = [
       'issue_types',
       'labels',
       'custom_fields',
+      'issue_templates',
       'workflow_config',
       'actions',
       'webhooks',

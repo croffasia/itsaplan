@@ -18,6 +18,7 @@
     "agent_skills": "Agent skills",
     "agent_tools": "Agent tools",
     "custom_fields": "Custom fields",
+    "issue_templates": "Issue templates",
     "workflow_config": "Workflow configuration",
     "actions": "Actions",
     "webhooks": "Webhooks",

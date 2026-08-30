@@ -1,6 +1,7 @@
 import { t } from 'elysia';
 import { ColumnResponse } from '#modules/columns/model';
 import { CustomFieldResponse } from '#modules/custom-fields/model';
+import { IssueTemplateResponse } from '#modules/issue-templates/model';
 import { IssueTypeResponse } from '#modules/issue-types/model';
 import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
 import { PermissionMatrixSchema } from '#shared/permissions';
@@ -111,8 +112,8 @@ const ViewerResponse = t.Object({
 });
 
 // The project board scaffold (GET /projects/:projectKey): the project plus its
-// columns, issue types, labels, label groups, assignable users, custom fields, and
-// the caller's own effective access. The issues themselves come from
+// columns, issue types, labels, label groups, assignable users, custom fields,
+// issue templates, and the caller's own effective access. The issues themselves come from
 // GET /projects/:projectKey/issues/board.
 export const ProjectBoardResponse = t.Object({
   project: ProjectResponse,
@@ -122,6 +123,7 @@ export const ProjectBoardResponse = t.Object({
   labelGroups: t.Array(LabelGroupResponse),
   assignees: t.Array(AssigneeCandidateResponse),
   customFields: t.Array(CustomFieldResponse),
+  issueTemplates: t.Array(IssueTemplateResponse),
   viewer: ViewerResponse,
   // The caller's resolved permission matrix (owners get every flag).
   permissions: PermissionMatrixSchema,

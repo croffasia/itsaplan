@@ -18,6 +18,7 @@
     "agent_skills": "مهارات الوكلاء (agent skills)",
     "agent_tools": "أدوات الوكلاء (agent tools)",
     "custom_fields": "الحقول المخصّصة",
+    "issue_templates": "قوالب المهام",
     "workflow_config": "تهيئة سير العمل",
     "actions": "الإجراءات",
     "webhooks": "خطافات الويب (webhooks)",

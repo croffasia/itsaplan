@@ -600,6 +600,23 @@
     "optionsRemovedWarning": "الخيار اللي هيتشال هيتمسح من المهام اللي مختاراه.",
     "memberScopeWarning": "الأعضاء اللي النطاق الجديد مش بيسمح بيهم هيتمسحوا."
   },
+  "issueTemplates": {
+    "addTemplate": "قالب جديد",
+    "editTemplate": "تعديل القالب",
+    "deleteTemplate": "حذف القالب",
+    "deleteTitle": "حذف القالب \"{name}\"",
+    "deleteMessage": "سيُحذف القالب. المهام المنشأة منه لن تتغير. لا يمكن التراجع عن هذا الإجراء.",
+    "namePlaceholder": "اسم القالب",
+    "descriptionPlaceholder": "الغرض من هذا القالب",
+    "issueTitle": "عنوان المهمة",
+    "issueTitlePlaceholder": "العنوان الذي تبدأ به المهمة",
+    "issueDescription": "وصف المهمة",
+    "issueDescriptionPlaceholder": "الوصف الذي تبدأ به المهمة، بصيغة Markdown",
+    "properties": "الخصائص الافتراضية",
+    "propertiesHint": "تُطبَّق عند إنشاء المهمة، ويمكن تعديلها قبل ذلك.",
+    "emptyTitle": "لا توجد قوالب بعد",
+    "emptyDescription": "يملأ القالب المهمة الجديدة بعنوان ووصف وخصائص."
+  },
   "actions": {
     "new": "إجراء جديد",
     "emptyTitle": "لا توجد إجراءات بعد",

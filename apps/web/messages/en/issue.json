@@ -114,7 +114,10 @@
     "noFields": "No fields.",
     "description": "Description",
     "other": "Other",
-    "submit": "Create issue"
+    "submit": "Create issue",
+    "template": "Template",
+    "applyTemplate": "Apply template…",
+    "noTemplates": "No templates."
   },
   "attachments": {
     "title": "Attachments",
@@ -328,6 +331,7 @@
     "changeState": "Change state…",
     "changeType": "Change type…",
     "noType": "No type",
+    "unsetState": "No state",
     "noAssignee": "No assignee",
     "assignTo": "Assign to…",
     "you": "You",

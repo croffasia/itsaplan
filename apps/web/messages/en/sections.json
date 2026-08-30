@@ -77,6 +77,10 @@
       "label": "Custom fields",
       "description": "Extra fields shown on issues, global or scoped to an issue type."
     },
+    "issue-templates": {
+      "label": "Issue templates",
+      "description": "Presets a new issue can be created from: its title, description, and properties."
+    },
     "configuration": {
       "label": "Configuration",
       "description": "How subtasks close with their parent, and when stale issues are archived."

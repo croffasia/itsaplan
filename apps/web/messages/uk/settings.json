@@ -600,6 +600,23 @@
     "optionsRemovedWarning": "Видалений варіант зникне із задач, де він вибраний.",
     "memberScopeWarning": "Учасників, яких новий режим не допускає, буде очищено."
   },
+  "issueTemplates": {
+    "addTemplate": "Новий шаблон",
+    "editTemplate": "Змінити шаблон",
+    "deleteTemplate": "Видалити шаблон",
+    "deleteTitle": "Видалити шаблон «{name}»",
+    "deleteMessage": "Шаблон буде видалено. Створені за ним задачі не зміняться. Цю дію не можна скасувати.",
+    "namePlaceholder": "Назва шаблону",
+    "descriptionPlaceholder": "Для чого цей шаблон",
+    "issueTitle": "Заголовок задачі",
+    "issueTitlePlaceholder": "Заголовок, з якого починається задача",
+    "issueDescription": "Опис задачі",
+    "issueDescriptionPlaceholder": "Опис, з якого починається задача, у Markdown",
+    "properties": "Властивості за замовчуванням",
+    "propertiesHint": "Застосовуються при створенні задачі, їх можна змінити до створення.",
+    "emptyTitle": "Шаблонів ще немає",
+    "emptyDescription": "Шаблон заповнює нову задачу заголовком, описом і властивостями."
+  },
   "actions": {
     "new": "Нова дія",
     "emptyTitle": "Дій ще немає",

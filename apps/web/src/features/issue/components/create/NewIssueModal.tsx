@@ -5,6 +5,7 @@ import {
   type CycleRef,
   type Issue,
   type IssueFieldValueInput,
+  type IssueTemplate,
   type ProjectDetail,
 } from '@/lib/api';
 import { type NewIssueDefaults } from '@/utils/project';
@@ -29,6 +30,7 @@ import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 import NewIssueAttachButton from './NewIssueAttachButton';
 import NewIssueAttachmentStrip from './NewIssueAttachmentStrip';
 import NewIssueDropOverlay from './NewIssueDropOverlay';
+import NewIssueTemplatePill from './NewIssueTemplatePill';
 import Modal from '@/components/common/overlay/Modal';
 import NewIssueBody from './NewIssueBody';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
@@ -124,6 +126,11 @@ export default function NewIssueModal({
     Object.fromEntries((defaults.fieldValues ?? []).map((f) => [f.fieldId, { value: f.userId }])),
   );
   const [justAddedId, setJustAddedId] = useState<number | null>(null);
+  // The template applied last, named on its pill, and how many times one has been
+  // applied. Every apply remounts the body: its editors read their markdown once,
+  // when they are created, so applying the same template twice has to remount too.
+  const [template, setTemplate] = useState<IssueTemplate | null>(null);
+  const [applyCount, setApplyCount] = useState(0);
 
   const createIssue = useCreateIssue();
   const updateIssue = useUpdateIssue(project.project.key);
@@ -213,6 +220,20 @@ export default function NewIssueModal({
     setFieldValues((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   }
 
+  // Fills the dialog in from a template. A property the template leaves unset
+  // presets nothing, so what the dialog already holds stays.
+  function applyTemplate(next: IssueTemplate) {
+    setTemplate(next);
+    setApplyCount((n) => n + 1);
+    if (next.titleTemplate) setTitle(next.titleTemplate);
+    setDescription(next.descriptionTemplate);
+    if (next.columnId != null) setColumnId(next.columnId);
+    if (next.typeId != null) setTypeId(next.typeId);
+    if (next.priority != null) setPriority(next.priority);
+    if (next.assigneeUserId != null) setAssigneeUserId(next.assigneeUserId);
+    if (next.labelIds.length > 0) setLabelIds(next.labelIds);
+  }
+
   async function submit() {
     setSaving(true);
     setError(null);
@@ -299,8 +320,23 @@ export default function NewIssueModal({
     <Modal
       title={t('title')}
       crumb={crumb}
+      headerAction={
+        project.issueTemplates.length > 0 && (
+          <NewIssueTemplatePill
+            templates={project.issueTemplates}
+            applied={template}
+            onApply={applyTemplate}
+          />
+        )
+      }
       projectKey={project.project.key}
       onClose={onClose}
+      // The template pill comes before the title in the DOM, so the title has to
+      // claim the focus itself.
+      onOpenAutoFocus={(event) => {
+        event.preventDefault();
+        titleRef.current?.focus();
+      }}
       wide
       fullscreen={fullscreen}
       onToggleFullscreen={() => setFullscreen((v) => !v)}
@@ -323,10 +359,10 @@ export default function NewIssueModal({
           placeholder={t('titlePlaceholder')}
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          autoFocus
         />
         <div className={cn('flex min-h-0 flex-col overflow-hidden', fullscreen && 'flex-1')}>
           <NewIssueBody
+            key={applyCount}
             section={bodySection}
             onSectionChange={setBodySection}
             fullscreen={fullscreen}

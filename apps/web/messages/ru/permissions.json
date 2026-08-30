@@ -18,6 +18,7 @@
     "agent_skills": "Навыки агентов",
     "agent_tools": "Инструменты агентов",
     "custom_fields": "Пользовательские поля",
+    "issue_templates": "Шаблоны задач",
     "workflow_config": "Настройки рабочего процесса",
     "actions": "Действия",
     "webhooks": "Вебхуки",

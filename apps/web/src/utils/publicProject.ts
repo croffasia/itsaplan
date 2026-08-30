@@ -18,6 +18,8 @@ export function toPublicProjectDetail(
     labelGroups: scaffold.labelGroups,
     assignees: scaffold.assignees.map((a) => ({ ...a, email: '', username: null })),
     customFields: scaffold.customFields,
+    // A public page creates nothing, so it needs no templates.
+    issueTemplates: [],
     viewer: { role: 'member' },
     permissions: {} as Permissions,
     issues,

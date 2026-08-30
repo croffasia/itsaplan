@@ -967,6 +967,45 @@ export const agentFieldTrigger = pgTable(
   ],
 );
 
+// A preset a new issue can be created from. It carries the title and description
+// the issue starts with plus the properties applied on top of it — every one of
+// them optional, and one left NULL leaves the create dialog on its own default.
+// The labels are in issue_template_label.
+export const issueTemplate = pgTable(
+  'issue_template',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // What the template is for, shown under its name in the picker.
+    description: text('description').notNull().default(''),
+    // The title and body the issue starts with, both editable before it is created.
+    titleTemplate: text('title_template').notNull().default(''),
+    descriptionTemplate: text('description_template').notNull().default(''),
+    typeId: integer('type_id').references(() => issueType.id, { onDelete: 'set null' }),
+    columnId: integer('column_id').references(() => projectColumn.id, { onDelete: 'set null' }),
+    priority: text('priority'),
+    assigneeUserId: text('assignee_user_id').references(() => user.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.projectId, t.name)],
+);
+
+export const issueTemplateLabel = pgTable(
+  'issue_template_label',
+  {
+    templateId: integer('template_id')
+      .notNull()
+      .references(() => issueTemplate.id, { onDelete: 'cascade' }),
+    labelId: integer('label_id')
+      .notNull()
+      .references(() => label.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.templateId, t.labelId] })],
+);
+
 // A strategic grouping of issues inside a project (project-scoped, not
 // cross-project). Issues point at it through issue.initiative_id. status is a
 // fixed lifecycle enum; health is not stored — it is computed on the fly from the

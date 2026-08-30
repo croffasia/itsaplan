@@ -21,6 +21,7 @@ export const PERMISSION_RESOURCES = [
   'agent_skills',
   'agent_tools',
   'custom_fields',
+  'issue_templates',
   'workflow_config',
   'actions',
   'webhooks',
@@ -70,6 +71,7 @@ export function defaultMemberPermissions(): Permissions {
   p.labels.read = true;
   p.ai_agents.read = true;
   p.custom_fields.read = true;
+  p.issue_templates.read = true;
   return p;
 }
 

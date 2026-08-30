@@ -1,10 +1,15 @@
 import { t } from 'elysia';
 import { ActivityPayloadResponse } from '#shared/activity';
+import { DevelopmentLinkResponse } from '#modules/git/model';
 import { isoDate } from '#shared/schemas';
 
 // t.Numeric validates a numeric path param and coerces the string to a number. A
 // non-numeric id gets a 400 before it reaches the service.
 export const issueParams = t.Object({ issueId: t.Numeric() });
+export const issueDevelopmentLinkParams = t.Object({
+  issueId: t.Numeric(),
+  linkId: t.Numeric(),
+});
 
 // --- Response DTO schemas (mirror the service interfaces the handlers return) -----
 
@@ -227,6 +232,7 @@ export const IssueWithFieldsResponse = t.Composite([
     parent: t.Nullable(IssueRefResponse),
     subtasks: t.Array(IssueRefResponse),
     checklists: t.Array(ChecklistResponse),
+    development: t.Array(DevelopmentLinkResponse),
   }),
 ]);
 

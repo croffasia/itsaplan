@@ -89,7 +89,7 @@ export const gitSettingsRoutes = new Elysia({
       permission: ['integrations', 'edit'],
       body: createGitProviderConnectionBody,
       response: { 201: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
-      detail: { summary: 'Connect a GitHub or GitLab account' },
+      detail: { summary: 'Connect a Git provider account' },
     },
   )
   .delete(

@@ -20,6 +20,16 @@ function titleSlug(title: string): string {
     .replace(/-+$/, '');
 }
 
+export function buildIssueBranchName(
+  issue: Pick<Issue, 'identifier' | 'title'>,
+  user?: { name?: string | null; email?: string | null },
+): string {
+  const handle = userHandle(user?.name, user?.email);
+  const slug = titleSlug(issue.title);
+  const id = issue.identifier.toLowerCase();
+  return `${handle ? `${handle}/` : ''}${slug ? `${id}-${slug}` : id}`;
+}
+
 // Builds the prompt copied by "Copy Prompt", matching Linear's format: a lead
 // instruction, a suggested branch name, then the issue as XML-like tags with the
 // full Markdown description inside <description>. IDs (status, assignee, labels,
@@ -44,10 +54,7 @@ export function buildIssuePrompt(
     .filter((name): name is string => Boolean(name));
   const url = `${window.location.origin}${issuePath(project.project.key, issue.sequenceNumber)}`;
 
-  const handle = userHandle(user?.name, user?.email);
-  const slug = titleSlug(issue.title);
-  const id = issue.identifier.toLowerCase();
-  const branch = `${handle ? `${handle}/` : ''}${slug ? `${id}-${slug}` : id}`;
+  const branch = buildIssueBranchName(issue, user);
 
   const tags: string[] = [
     `<issue identifier="${issue.identifier}">`,

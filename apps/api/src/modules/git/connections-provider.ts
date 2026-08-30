@@ -1,7 +1,7 @@
 import { HttpError } from '#shared/lib';
 import { assertPublicHttpUrl } from '#shared/net';
 
-export type GitProvider = 'github' | 'gitlab';
+export type GitProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
 
 export interface ProviderRepository {
   externalId: string;
@@ -50,10 +50,21 @@ export async function normalizeProviderBaseUrl(
   provider: GitProvider,
   raw: string | undefined,
 ): Promise<string> {
-  const fallback = provider === 'github' ? 'https://github.com' : 'https://gitlab.com';
-  const url = await assertPublicHttpUrl(raw?.trim() || fallback);
+  const fallback =
+    provider === 'github'
+      ? 'https://github.com'
+      : provider === 'gitlab'
+        ? 'https://gitlab.com'
+        : provider === 'bitbucket'
+          ? 'https://bitbucket.org'
+          : undefined;
+  if (!raw?.trim() && !fallback) throw new HttpError(400, 'baseUrl is required');
+  const url = await assertPublicHttpUrl(raw?.trim() || fallback!);
   if (url.username || url.password || url.search || url.hash || !['', '/'].includes(url.pathname)) {
     throw new HttpError(400, 'baseUrl must contain only the provider origin');
+  }
+  if (provider === 'bitbucket' && url.origin !== 'https://bitbucket.org') {
+    throw new HttpError(400, 'Only Bitbucket Cloud is supported');
   }
   return url.origin;
 }
@@ -62,15 +73,23 @@ function apiBase(provider: GitProvider, baseUrl: string): string {
   if (provider === 'github') {
     return baseUrl === 'https://github.com' ? 'https://api.github.com' : `${baseUrl}/api/v3`;
   }
+  if (provider === 'bitbucket') {
+    return 'https://api.bitbucket.org/2.0';
+  }
+  if (provider === 'gitea' || provider === 'forgejo') return `${baseUrl}/api/v1`;
   return `${baseUrl}/api/v4`;
 }
 
 function providerHeaders(provider: GitProvider, token: string): Headers {
   const headers = new Headers({ accept: 'application/json' });
-  if (provider === 'github') {
-    headers.set('accept', 'application/vnd.github+json');
+  if (provider === 'github' || provider === 'bitbucket') {
     headers.set('authorization', `Bearer ${token}`);
-    headers.set('x-github-api-version', '2022-11-28');
+    if (provider === 'github') {
+      headers.set('accept', 'application/vnd.github+json');
+      headers.set('x-github-api-version', '2022-11-28');
+    }
+  } else if (provider === 'gitea' || provider === 'forgejo') {
+    headers.set('authorization', `token ${token}`);
   } else {
     headers.set('private-token', token);
   }
@@ -102,7 +121,10 @@ async function providerRequest(
 export async function getProviderAccount(input: ProviderConnectionInput): Promise<string> {
   const response = await providerRequest(input, '/user');
   const body = record(await response.json());
-  const login = text(body?.[input.provider === 'github' ? 'login' : 'username']);
+  const login =
+    input.provider === 'bitbucket'
+      ? (text(body?.nickname) ?? text(body?.username) ?? text(body?.display_name))
+      : text(body?.[input.provider === 'gitlab' ? 'username' : 'login']);
   if (!login) throw new HttpError(502, `${input.provider} returned an invalid account`);
   return login;
 }
@@ -127,33 +149,118 @@ export function gitlabRepository(value: unknown): ProviderRepository | null {
   return { externalId: String(id), fullName, webUrl, private: row?.visibility !== 'public' };
 }
 
+export function giteaRepository(value: unknown): ProviderRepository | null {
+  return githubRepository(value);
+}
+
+export function bitbucketRepository(value: unknown): ProviderRepository | null {
+  const row = record(value);
+  const fullName = text(row?.full_name);
+  const webUrl =
+    httpUrl(record(record(row?.links)?.html)?.href) ??
+    (fullName && fullName.split('/').length === 2
+      ? `https://bitbucket.org/${fullName.split('/').map(encodeURIComponent).join('/')}`
+      : null);
+  if (!fullName || !webUrl) return null;
+  return { externalId: fullName, fullName, webUrl, private: row?.is_private !== false };
+}
+
+async function listBitbucketRepositories(
+  input: ProviderConnectionInput,
+  page: number,
+  search: string,
+  perPage: number,
+): Promise<ProviderRepositoryPage> {
+  const workspacesResponse = await providerRequest(input, '/user/workspaces?pagelen=100');
+  const workspaceRows = record(await workspacesResponse.json())?.values;
+  if (!Array.isArray(workspaceRows))
+    throw new HttpError(502, 'bitbucket returned an invalid workspace list');
+  const slugs = workspaceRows
+    .map((item) => text(record(record(item)?.workspace)?.slug))
+    .filter((slug): slug is string => slug !== null);
+  const repositories: ProviderRepository[] = [];
+  for (const slug of slugs) {
+    let permissionPage = 1;
+    let hasNext = true;
+    while (hasNext && permissionPage <= 10) {
+      const params = new URLSearchParams({
+        pagelen: '100',
+        page: String(permissionPage),
+        q: 'permission="admin"',
+      });
+      const response = await providerRequest(
+        input,
+        `/user/workspaces/${encodeURIComponent(slug)}/permissions/repositories?${params}`,
+      );
+      const body = record(await response.json());
+      const values = body?.values;
+      if (!Array.isArray(values))
+        throw new HttpError(502, 'bitbucket returned an invalid repository permission list');
+      repositories.push(
+        ...values
+          .map((item) => bitbucketRepository(record(item)?.repository))
+          .filter((repo): repo is ProviderRepository => repo !== null),
+      );
+      hasNext = text(body?.next) !== null;
+      permissionPage += 1;
+    }
+  }
+  const needle = search.toLowerCase();
+  const filtered = [
+    ...new Map(repositories.map((repository) => [repository.fullName, repository])).values(),
+  ]
+    .filter((repository) => !needle || repository.fullName.toLowerCase().includes(needle))
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
+  const start = (page - 1) * perPage;
+  return {
+    repositories: filtered.slice(start, start + perPage),
+    nextPage: start + perPage < filtered.length ? page + 1 : null,
+  };
+}
+
 export async function listProviderRepositories(
   input: ProviderConnectionInput,
   page: number,
   search: string,
 ): Promise<ProviderRepositoryPage> {
   const perPage = 30;
-  const params = new URLSearchParams({ per_page: String(perPage), page: String(page) });
+  if (input.provider === 'bitbucket')
+    return listBitbucketRepositories(input, page, search, perPage);
+  const params = new URLSearchParams({ page: String(page) });
   if (input.provider === 'gitlab') {
+    params.set('per_page', String(perPage));
     params.set('membership', 'true');
     params.set('min_access_level', '40');
     params.set('simple', 'true');
     params.set('order_by', 'last_activity_at');
     params.set('sort', 'desc');
     if (search) params.set('search', search);
-  } else {
+  } else if (input.provider === 'github') {
+    params.set('per_page', String(perPage));
     params.set('affiliation', 'owner,collaborator,organization_member');
     params.set('sort', 'pushed');
     params.set('direction', 'desc');
+  } else if (input.provider === 'gitea' || input.provider === 'forgejo') {
+    params.set('limit', String(perPage));
+    if (search) params.set('q', search);
   }
-  const endpoint = input.provider === 'github' ? '/user/repos' : '/projects';
+  const endpoint = input.provider === 'gitlab' ? '/projects' : '/user/repos';
   const response = await providerRequest(input, `${endpoint}?${params}`);
-  const body: unknown = await response.json();
+  const responseBody: unknown = await response.json();
+  const body = responseBody;
   if (!Array.isArray(body))
     throw new HttpError(502, `${input.provider} returned an invalid repository list`);
-  const map = input.provider === 'github' ? githubRepository : gitlabRepository;
+  const map =
+    input.provider === 'github'
+      ? githubRepository
+      : input.provider === 'gitlab'
+        ? gitlabRepository
+        : giteaRepository;
   let repositories = body.map(map).filter((repo): repo is ProviderRepository => repo !== null);
-  if (input.provider === 'github' && search) {
+  if (
+    (input.provider === 'github' || input.provider === 'gitea' || input.provider === 'forgejo') &&
+    search
+  ) {
     const needle = search.toLowerCase();
     repositories = repositories.filter((repo) => repo.fullName.toLowerCase().includes(needle));
   }
@@ -171,14 +278,21 @@ export async function getProviderRepository(
   externalId: string,
 ): Promise<ProviderRepository> {
   const endpoint =
-    input.provider === 'github'
-      ? `/repositories/${encodeURIComponent(externalId)}`
-      : `/projects/${encodeURIComponent(externalId)}`;
+    input.provider === 'gitlab'
+      ? `/projects/${encodeURIComponent(externalId)}`
+      : input.provider === 'bitbucket'
+        ? `/repositories/${externalId.split('/').map(encodeURIComponent).join('/')}`
+        : `/repositories/${encodeURIComponent(externalId)}`;
   const response = await providerRequest(input, endpoint);
+  const body = await response.json();
   const repository =
     input.provider === 'github'
-      ? githubRepository(await response.json())
-      : gitlabRepository(await response.json());
+      ? githubRepository(body)
+      : input.provider === 'gitlab'
+        ? gitlabRepository(body)
+        : input.provider === 'bitbucket'
+          ? bitbucketRepository(body)
+          : giteaRepository(body);
   if (!repository) throw new HttpError(400, 'Repository is unavailable or cannot manage webhooks');
   return repository;
 }
@@ -188,6 +302,13 @@ function githubRepoPath(fullName: string): string {
   if (parts.length !== 2 || parts.some((part) => !part))
     throw new HttpError(400, 'Invalid repository name');
   return `/repos/${parts.map(encodeURIComponent).join('/')}`;
+}
+
+function bitbucketRepoPath(fullName: string): string {
+  const parts = fullName.split('/');
+  if (parts.length !== 2 || parts.some((part) => !part))
+    throw new HttpError(400, 'Invalid repository name');
+  return `/repositories/${parts.map(encodeURIComponent).join('/')}`;
 }
 
 export async function installProviderWebhook(
@@ -214,6 +335,7 @@ export async function installProviderWebhook(
         url: payloadUrl,
         token: secret,
         merge_requests_events: true,
+        pipeline_events: true,
         enable_ssl_verification: true,
       }),
     });
@@ -221,6 +343,62 @@ export async function installProviderWebhook(
     if (typeof id !== 'number' && typeof id !== 'string')
       throw new HttpError(502, 'GitLab returned an invalid webhook');
     return String(id);
+  }
+
+  if (input.provider === 'gitea' || input.provider === 'forgejo') {
+    const hooksPath = `${githubRepoPath(repository.fullName)}/hooks`;
+    const hooksResponse = await providerRequest(input, `${hooksPath}?limit=100`);
+    const hooks: unknown = await hooksResponse.json();
+    const existing = Array.isArray(hooks)
+      ? hooks.map(record).find((hook) => text(record(hook?.config)?.url) === payloadUrl)
+      : undefined;
+    const existingId = existing?.id;
+    const path =
+      typeof existingId === 'number' || typeof existingId === 'string'
+        ? `${hooksPath}/${encodeURIComponent(String(existingId))}`
+        : hooksPath;
+    const response = await providerRequest(input, path, {
+      method: existing ? 'PATCH' : 'POST',
+      body: JSON.stringify({
+        ...(existing ? {} : { type: 'gitea' }),
+        active: true,
+        events: ['pull_request'],
+        config: { url: payloadUrl, content_type: 'json', secret },
+      }),
+    });
+    const id = record(await response.json())?.id;
+    if (typeof id !== 'number' && typeof id !== 'string')
+      throw new HttpError(502, `${input.provider} returned an invalid webhook`);
+    return String(id);
+  }
+
+  if (input.provider === 'bitbucket') {
+    const hooksPath = `${bitbucketRepoPath(repository.fullName)}/hooks`;
+    const hooksResponse = await providerRequest(input, `${hooksPath}?pagelen=100`);
+    const hooks = record(await hooksResponse.json())?.values;
+    const existing = Array.isArray(hooks)
+      ? hooks.map(record).find((hook) => text(hook?.url) === payloadUrl)
+      : undefined;
+    const existingId = text(existing?.uuid);
+    const path = existingId ? `${hooksPath}/${encodeURIComponent(existingId)}` : hooksPath;
+    const response = await providerRequest(input, path, {
+      method: existing ? 'PUT' : 'POST',
+      body: JSON.stringify({
+        description: "It's a Plan",
+        url: payloadUrl,
+        active: true,
+        secret,
+        events: [
+          'pullrequest:created',
+          'pullrequest:updated',
+          'pullrequest:fulfilled',
+          'pullrequest:rejected',
+        ],
+      }),
+    });
+    const id = text(record(await response.json())?.uuid);
+    if (!id) throw new HttpError(502, 'Bitbucket returned an invalid webhook');
+    return id;
   }
 
   const hooksPath = `${githubRepoPath(repository.fullName)}/hooks`;
@@ -239,7 +417,7 @@ export async function installProviderWebhook(
     body: JSON.stringify({
       ...(existing ? {} : { name: 'web' }),
       active: true,
-      events: ['pull_request'],
+      events: ['pull_request', 'check_run'],
       config: { url: payloadUrl, content_type: 'json', insecure_ssl: '0', secret },
     }),
   });
@@ -257,6 +435,28 @@ export async function deleteProviderWebhook(
   const path =
     input.provider === 'gitlab'
       ? `/projects/${encodeURIComponent(repository.externalId)}/hooks/${encodeURIComponent(webhookExternalId)}`
-      : `${githubRepoPath(repository.fullName)}/hooks/${encodeURIComponent(webhookExternalId)}`;
+      : `${
+          input.provider === 'bitbucket'
+            ? bitbucketRepoPath(repository.fullName)
+            : githubRepoPath(repository.fullName)
+        }/hooks/${encodeURIComponent(webhookExternalId)}`;
   await providerRequest(input, path, { method: 'DELETE' });
+}
+
+export async function createPullRequestComment(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+  body: string,
+): Promise<void> {
+  const path =
+    input.provider === 'gitlab'
+      ? `/projects/${encodeURIComponent(repository.externalId)}/merge_requests/${number}/notes`
+      : input.provider === 'bitbucket'
+        ? `${bitbucketRepoPath(repository.fullName)}/pullrequests/${number}/comments`
+        : `${githubRepoPath(repository.fullName)}/issues/${number}/comments`;
+  await providerRequest(input, path, {
+    method: 'POST',
+    body: JSON.stringify(input.provider === 'bitbucket' ? { content: { raw: body } } : { body }),
+  });
 }

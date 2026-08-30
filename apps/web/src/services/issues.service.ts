@@ -33,6 +33,14 @@ export function useIssueQuery(id: number | null) {
   });
 }
 
+export function useRemoveIssueDevelopmentLink(issueId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (linkId: number) => api.removeIssueDevelopmentLink(issueId, linkId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.issue(issueId) }),
+  });
+}
+
 // The cycles an issue was planned into. Read only where the badge that shows them
 // is, so a project without cycles never asks for it.
 export function useIssueCyclesQuery(issueId: number) {

@@ -1,7 +1,16 @@
 import { useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Archive, ArchiveRestore, Check, ClipboardCopy, Globe, Share2, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  ArchiveRestore,
+  Check,
+  ClipboardCopy,
+  GitBranch,
+  Globe,
+  Share2,
+  Trash2,
+} from 'lucide-react';
 import {
   api,
   type ActionDef,
@@ -15,7 +24,7 @@ import { qk } from '@/services/queryKeys';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
-import { buildIssuePrompt } from '../../utils/issuePrompt';
+import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
 import { useSession } from '@/lib/auth-client';
 import { shareIssuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
@@ -86,6 +95,11 @@ export default function IssueActionsBar({
     toast.success(t('shortLinkCopied'));
   }
 
+  async function copyBranch() {
+    await navigator.clipboard.writeText(buildIssueBranchName(issue, session?.user));
+    toast.success(t('branchCopied'));
+  }
+
   // In the panel header the action buttons sit next to the size-7 expand/close
   // buttons, so they match that size; the row uses the roomier size.
   const btnSize = variant === 'header' ? 'icon-xs' : 'icon-sm';
@@ -104,6 +118,19 @@ export default function IssueActionsBar({
           </Button>
         </TooltipTrigger>
         <TooltipContent>{t('copyShortLink')}</TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size={btnSize}
+            className="text-muted-foreground hover:text-foreground"
+            onClick={copyBranch}
+          >
+            <GitBranch className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{t('copyBranch')}</TooltipContent>
       </Tooltip>
       <Tooltip>
         <TooltipTrigger asChild>

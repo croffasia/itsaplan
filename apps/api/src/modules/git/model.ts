@@ -6,6 +6,48 @@ export const webhookBody = t.String();
 
 export const WebhookAckResponse = t.Object({ ok: t.Boolean(), handled: t.String() });
 
+const PipelineStatusResponse = t.Union([
+  t.Literal('pending'),
+  t.Literal('running'),
+  t.Literal('success'),
+  t.Literal('failed'),
+  t.Literal('canceled'),
+  t.Literal('skipped'),
+]);
+
+const DevelopmentCheckResponse = t.Object({
+  id: t.Number(),
+  name: t.String(),
+  status: PipelineStatusResponse,
+  url: t.Nullable(t.String()),
+  updatedAt: t.String(),
+});
+
+export const DevelopmentLinkResponse = t.Object({
+  id: t.Number(),
+  provider: t.Union([
+    t.Literal('github'),
+    t.Literal('gitlab'),
+    t.Literal('gitea'),
+    t.Literal('forgejo'),
+    t.Literal('bitbucket'),
+  ]),
+  repository: t.String(),
+  number: t.Number(),
+  title: t.String(),
+  url: t.Nullable(t.String()),
+  state: t.Union([t.Literal('open'), t.Literal('merged'), t.Literal('closed')]),
+  draft: t.Boolean(),
+  sourceBranch: t.Nullable(t.String()),
+  targetBranch: t.String(),
+  headSha: t.Nullable(t.String()),
+  pipelineStatus: t.Nullable(PipelineStatusResponse),
+  pipelineUrl: t.Nullable(t.String()),
+  checkStatus: t.Nullable(PipelineStatusResponse),
+  checks: t.Array(DevelopmentCheckResponse),
+  updatedAt: t.String(),
+});
+
 // The repository integration DTO (GitSettings from the service). Unlike outgoing
 // webhook secrets, this secret authorizes issue moves through the receiver, so
 // it is shown only to members with integrations edit access; read-only callers
@@ -27,7 +69,13 @@ export const updateGitSettingsBody = t.Object({
   onOpenColumnId: t.Optional(t.Nullable(t.Number())),
 });
 
-export const GitProvider = t.Union([t.Literal('github'), t.Literal('gitlab')]);
+export const GitProvider = t.Union([
+  t.Literal('github'),
+  t.Literal('gitlab'),
+  t.Literal('gitea'),
+  t.Literal('forgejo'),
+  t.Literal('bitbucket'),
+]);
 
 export const GitManagedRepositoryResponse = t.Object({
   id: t.Number(),

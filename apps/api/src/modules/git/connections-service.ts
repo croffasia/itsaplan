@@ -4,6 +4,7 @@ import { and, asc, eq, inArray } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import {
   deleteProviderWebhook,
+  createPullRequestComment,
   getProviderAccount,
   getProviderRepository,
   installProviderWebhook,
@@ -112,11 +113,11 @@ async function connectionSecret(id: number, projectId: number): Promise<Connecti
     .limit(1);
   const row = rows[0];
   if (!row) throw new HttpError(404, 'Provider connection not found');
-  if (row.provider !== 'github' && row.provider !== 'gitlab') {
+  if (!['github', 'gitlab', 'gitea', 'forgejo', 'bitbucket'].includes(row.provider)) {
     throw new HttpError(400, 'Unknown Git provider');
   }
   return {
-    provider: row.provider,
+    provider: row.provider as GitProvider,
     baseUrl: row.baseUrl,
     token: decryptSecret(row),
   };
@@ -325,4 +326,55 @@ export async function reconcileManagedWebhooks(
       }
     }
   }
+}
+
+export async function postPullRequestLinkback(
+  projectId: number,
+  provider: GitProvider,
+  repository: string,
+  number: number,
+  body: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({
+      connectionId: gitProviderConnection.id,
+      provider: gitProviderConnection.provider,
+      baseUrl: gitProviderConnection.baseUrl,
+      ciphertext: gitProviderConnection.ciphertext,
+      iv: gitProviderConnection.iv,
+      authTag: gitProviderConnection.authTag,
+      externalId: gitManagedRepository.externalId,
+      fullName: gitManagedRepository.fullName,
+      webUrl: gitManagedRepository.webUrl,
+    })
+    .from(gitManagedRepository)
+    .innerJoin(
+      gitProviderConnection,
+      eq(gitManagedRepository.connectionId, gitProviderConnection.id),
+    )
+    .where(
+      and(
+        eq(gitProviderConnection.projectId, projectId),
+        eq(gitProviderConnection.provider, provider),
+        eq(gitManagedRepository.fullName, repository),
+      ),
+    )
+    .limit(1);
+  if (!row) return false;
+  await createPullRequestComment(
+    {
+      provider,
+      baseUrl: row.baseUrl,
+      token: decryptSecret(row),
+    },
+    {
+      externalId: row.externalId,
+      fullName: row.fullName,
+      webUrl: row.webUrl,
+      private: false,
+    },
+    number,
+    body,
+  );
+  return true;
 }

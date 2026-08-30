@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useGitProviderConnectionsQuery } from '../../services/settings.service';
 import GitProviderConnectDialog from './GitProviderConnectDialog';
 import GitProviderConnectionCard from './GitProviderConnectionCard';
+import { GIT_CONNECTION_PROVIDERS, GIT_PROVIDER_CONFIG } from './providerConfig';
 
 export default function GitProviderConnections({
   projectKey,
@@ -31,14 +32,19 @@ export default function GitProviderConnections({
       <div className="space-y-3">
         {editable && (
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => open('gitlab')}>
-              <GitBranch className="size-4" />
-              {t('nativeConnectProvider', { provider: 'GitLab' })}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => open('github')}>
-              <GitBranch className="size-4" />
-              {t('nativeConnectProvider', { provider: 'GitHub' })}
-            </Button>
+            {GIT_CONNECTION_PROVIDERS.map((providerKey) => (
+              <Button
+                key={providerKey}
+                type="button"
+                variant="outline"
+                onClick={() => open(providerKey)}
+              >
+                <GitBranch className="size-4" />
+                {t('nativeConnectProvider', {
+                  provider: GIT_PROVIDER_CONFIG[providerKey].label,
+                })}
+              </Button>
+            ))}
           </div>
         )}
         {connections.isPending ? (

@@ -10,6 +10,7 @@ import { useRegenerateGitSecret } from '../../services/settings.service';
 import GitCopyField from './GitCopyField';
 import GitRepositoryList from './GitRepositoryList';
 import GithubCliCommand from './GithubCliCommand';
+import GitlabCliCommand from './GitlabCliCommand';
 
 // One tab per supported host: each takes the same payload URL and secret, but
 // names the fields and the pull request trigger differently. Gitea and Forgejo
@@ -107,6 +108,9 @@ export default function GitConnectionCard({
                     {hint(p.hint)}
                     {p.key === 'github' && (
                       <GithubCliCommand payloadUrl={payloadUrl} secret={secret} />
+                    )}
+                    {p.key === 'gitlab' && (
+                      <GitlabCliCommand payloadUrl={payloadUrl} secret={secret} />
                     )}
                   </TabsContent>
                 ))}

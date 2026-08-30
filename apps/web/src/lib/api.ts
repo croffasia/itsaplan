@@ -990,7 +990,7 @@ export interface GitRepository {
   lastEventAt: string;
 }
 
-export type GitConnectionProvider = 'github' | 'gitlab';
+export type GitConnectionProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
 
 export interface GitManagedRepository {
   id: number;
@@ -2033,6 +2033,37 @@ export interface IssueDetail extends Issue {
   fields: IssueFieldValue[];
 }
 
+export type GitProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
+export type PullRequestState = 'open' | 'merged' | 'closed';
+export type PipelineStatus = 'pending' | 'running' | 'success' | 'failed' | 'canceled' | 'skipped';
+
+export interface DevelopmentCheck {
+  id: number;
+  name: string;
+  status: PipelineStatus;
+  url: string | null;
+  updatedAt: string;
+}
+
+export interface DevelopmentLink {
+  id: number;
+  provider: GitProvider;
+  repository: string;
+  number: number;
+  title: string;
+  url: string | null;
+  state: PullRequestState;
+  draft: boolean;
+  sourceBranch: string | null;
+  targetBranch: string;
+  headSha: string | null;
+  pipelineStatus: PipelineStatus | null;
+  pipelineUrl: string | null;
+  checkStatus: PipelineStatus | null;
+  checks: DevelopmentCheck[];
+  updatedAt: string;
+}
+
 // A relation between two issues (mirrors apps/api modules/issues/links.ts). 'blocks' and
 // 'duplicates' are directional and read differently on each end, which direction
 // selects: 'outward' is the side that blocks/duplicates, 'inward' the side that is
@@ -2145,6 +2176,7 @@ export interface IssueRelations extends IssueDetail {
 export interface IssueWithWatchers extends IssueRelations {
   watchers: IssueWatcher[];
   checklists: Checklist[];
+  development: DevelopmentLink[];
 }
 
 // Public read-only share bundles, returned by the /share/* routes with no session.
@@ -2800,6 +2832,8 @@ export const api = {
     request<IssueWithWatchers>(`/projects/${projectKey}/issues/${seq}`),
   updateIssue: (id: number, patch: IssuePatch) =>
     request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  removeIssueDevelopmentLink: (issueId: number, linkId: number) =>
+    request<void>(`/issues/${issueId}/development/${linkId}`, { method: 'DELETE' }),
   // An issue that has subtasks needs a disposition saying what happens to them;
   // without one the server rejects the delete with a 409.
   deleteIssue: (id: number, subtasks?: SubtaskDisposition) =>

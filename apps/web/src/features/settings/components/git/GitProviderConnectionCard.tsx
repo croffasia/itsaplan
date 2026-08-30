@@ -11,6 +11,7 @@ import {
   useDisconnectGitRepository,
 } from '../../services/settings.service';
 import GitRepositoryPickerDialog from './GitRepositoryPickerDialog';
+import { GIT_PROVIDER_CONFIG } from './providerConfig';
 
 export default function GitProviderConnectionCard({
   projectKey,
@@ -25,7 +26,7 @@ export default function GitProviderConnectionCard({
   const [pickerOpen, setPickerOpen] = useState(false);
   const disconnectProvider = useDisconnectGitProvider(projectKey);
   const disconnectRepository = useDisconnectGitRepository(projectKey, connection.id);
-  const providerLabel = connection.provider === 'github' ? 'GitHub' : 'GitLab';
+  const providerLabel = GIT_PROVIDER_CONFIG[connection.provider].label;
 
   async function removeRepository(repositoryId: number) {
     try {

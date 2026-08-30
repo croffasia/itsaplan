@@ -2,27 +2,57 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 
 // The provider adapters behind the one inbound webhook receiver. An adapter
 // recognises a delivery by its headers, verifies it with the credential its
-// platform sends, and normalizes it to a PullRequestEvent. The handler then reads
-// one shape for every platform.
+// platform sends, and normalizes pull request and CI events for the handler.
 
 // A pull request delivery in provider-neutral form. `defaultBranch` is null when
 // the payload does not carry it, which turns off the merged-into-default-branch
 // check for that delivery.
+export type GitProviderKey = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
+export type PullRequestState = 'open' | 'merged' | 'closed';
+export type PipelineStatus = 'pending' | 'running' | 'success' | 'failed' | 'canceled' | 'skipped';
+
 export interface PullRequestEvent {
-  action: 'opened' | 'merged';
+  kind: 'pull_request';
+  action: 'opened' | 'updated' | 'merged' | 'closed';
   number: number;
   title: string;
   body: string;
   url: string | null;
   repo: string;
+  sourceBranch: string | null;
   targetBranch: string;
+  headSha: string | null;
   defaultBranch: string | null;
   draft: boolean;
 }
 
+export interface PipelineEvent {
+  kind: 'pipeline';
+  repo: string;
+  pullRequestNumber: number | null;
+  headSha: string | null;
+  status: PipelineStatus;
+  url: string | null;
+}
+
+export interface CheckEvent {
+  kind: 'check';
+  repo: string;
+  pullRequestNumbers: number[];
+  headSha: string;
+  externalId: string;
+  appId: string;
+  name: string;
+  status: PipelineStatus;
+  url: string | null;
+}
+
+export type GitEvent = PullRequestEvent | PipelineEvent | CheckEvent;
+
 export type DeliveryHeaders = Record<string, string | undefined>;
 
 export interface GitProvider {
+  key(headers: DeliveryHeaders): GitProviderKey;
   // The actor of the activity entry the delivery creates. Gitea and Forgejo share
   // an adapter, so the name comes from the headers rather than a fixed string.
   label(headers: DeliveryHeaders): string;
@@ -31,7 +61,7 @@ export interface GitProvider {
   deliveryId(headers: DeliveryHeaders): string | undefined;
   // The repository the delivery came from, recorded as telemetry for any event.
   repo(payload: unknown): string | undefined;
-  parse(payload: unknown, headers: DeliveryHeaders): PullRequestEvent | null;
+  parse(payload: unknown, headers: DeliveryHeaders): GitEvent | null;
 }
 
 // An HMAC-SHA256 hex digest of the raw body, with or without the "sha256=" prefix
@@ -76,6 +106,18 @@ interface GithubPayload {
     merged?: boolean;
     draft?: boolean;
     base?: { ref?: string };
+    head?: { ref?: string; sha?: string };
+  };
+  check_run?: {
+    id?: number;
+    name?: string;
+    status?: string;
+    conclusion?: string | null;
+    head_sha?: string;
+    html_url?: string;
+    details_url?: string | null;
+    pull_requests?: { number?: number }[];
+    app?: { id?: number };
   };
   repository?: { full_name?: string; default_branch?: string };
 }
@@ -84,28 +126,90 @@ function githubRepo(payload: unknown): string | undefined {
   return (payload as GithubPayload).repository?.full_name;
 }
 
-function parseGithubPayload(payload: unknown): PullRequestEvent | null {
+function pipelineStatus(status: string | undefined): PipelineStatus | null {
+  const value = status;
+  if (!value) return null;
+  if (value === 'success' || value === 'passed') return 'success';
+  if (
+    value === 'failure' ||
+    value === 'failed' ||
+    value === 'timed_out' ||
+    value === 'action_required' ||
+    value === 'startup_failure'
+  )
+    return 'failed';
+  if (value === 'cancelled' || value === 'canceled') return 'canceled';
+  if (value === 'skipped' || value === 'neutral' || value === 'stale') return 'skipped';
+  if (
+    value === 'created' ||
+    value === 'queued' ||
+    value === 'waiting' ||
+    value === 'waiting_for_resource' ||
+    value === 'preparing' ||
+    value === 'pending' ||
+    value === 'manual' ||
+    value === 'scheduled'
+  )
+    return 'pending';
+  if (value === 'running' || value === 'in_progress') return 'running';
+  return null;
+}
+
+function parseGithubPullRequest(payload: unknown): PullRequestEvent | null {
   const { action, pull_request: pr, repository } = payload as GithubPayload;
   if (!pr?.number || !repository?.full_name) return null;
   const merged = action === 'closed' && pr.merged === true;
-  // A pull request opened as a draft is ignored until it is marked ready, which
-  // GitHub reports as its own action. Gitea and Forgejo never send it: their draft
-  // is a title prefix, so leaving it is an ordinary edit with nothing to key on.
-  if (action !== 'opened' && action !== 'ready_for_review' && !merged) return null;
+  const closed = action === 'closed' && !merged;
+  const opened = action === 'opened' || action === 'reopened' || action === 'ready_for_review';
+  const updated =
+    action === 'edited' || action === 'synchronize' || action === 'converted_to_draft';
+  if (!opened && !updated && !merged && !closed) return null;
   return {
-    action: merged ? 'merged' : 'opened',
+    kind: 'pull_request',
+    action: merged ? 'merged' : closed ? 'closed' : opened ? 'opened' : 'updated',
     number: pr.number,
     title: pr.title ?? '',
     body: pr.body ?? '',
     url: httpUrl(pr.html_url),
     repo: repository.full_name,
+    sourceBranch: pr.head?.ref ?? null,
     targetBranch: pr.base?.ref ?? '',
+    headSha: pr.head?.sha ?? null,
     defaultBranch: repository.default_branch ?? null,
     draft: pr.draft === true,
   };
 }
 
+function parseGithubCheck(payload: unknown): CheckEvent | null {
+  const { check_run: check, repository } = payload as GithubPayload;
+  if (!check?.id || !check.name || !check.head_sha || !repository?.full_name) return null;
+  const status =
+    check.status === 'completed'
+      ? pipelineStatus(check.conclusion ?? undefined)
+      : pipelineStatus(check.status);
+  if (!status) return null;
+  return {
+    kind: 'check',
+    repo: repository.full_name,
+    pullRequestNumbers: (check.pull_requests ?? [])
+      .map((pullRequest) => pullRequest.number)
+      .filter((number): number is number => number != null),
+    headSha: check.head_sha,
+    externalId: String(check.id),
+    appId: String(check.app?.id ?? 'unknown'),
+    name: check.name,
+    status,
+    url: httpUrl(check.details_url ?? check.html_url),
+  };
+}
+
+function parseGithubPayload(payload: unknown, headers: DeliveryHeaders): GitEvent | null {
+  if (headers['x-github-event'] === 'check_run') return parseGithubCheck(payload);
+  return parseGithubPullRequest(payload);
+}
+
 const github: GitProvider = {
+  key: () => 'github',
   label: () => 'GitHub',
   matches: (h) => h['x-github-event'] != null,
   verify: (secret, body, h) => hmacValid(secret, body, h['x-hub-signature-256']),
@@ -119,6 +223,7 @@ const github: GitProvider = {
 // repeat the same digest under every signature header they know, and a Forgejo
 // delivery carries X-Gitea-Event too, so either header can be the one that arrives.
 const gitea: GitProvider = {
+  key: (h) => (h['x-forgejo-event'] != null ? 'forgejo' : 'gitea'),
   label: (h) => (h['x-forgejo-event'] != null ? 'Forgejo' : 'Gitea'),
   matches: (h) => h['x-gitea-event'] != null || h['x-forgejo-event'] != null,
   verify: (secret, body, h) =>
@@ -129,7 +234,7 @@ const gitea: GitProvider = {
     ),
   deliveryId: (h) => h['x-forgejo-delivery'] ?? h['x-gitea-delivery'],
   repo: githubRepo,
-  parse: parseGithubPayload,
+  parse: (payload) => parseGithubPullRequest(payload),
 };
 
 interface GitlabPayload {
@@ -140,15 +245,24 @@ interface GitlabPayload {
     description?: string | null;
     url?: string;
     action?: string;
+    status?: string;
+    ref?: string;
+    web_url?: string;
+    id?: number;
+    source_branch?: string;
     target_branch?: string;
+    sha?: string;
+    last_commit?: { id?: string };
     draft?: boolean;
     work_in_progress?: boolean;
   };
-  project?: { path_with_namespace?: string; default_branch?: string };
+  project?: { path_with_namespace?: string; default_branch?: string; web_url?: string };
+  merge_request?: { iid?: number; source_branch?: string };
   changes?: { draft?: { previous?: boolean; current?: boolean } };
 }
 
 const gitlab: GitProvider = {
+  key: () => 'gitlab',
   label: () => 'GitLab',
   matches: (h) => h['x-gitlab-event'] != null,
   // GitLab sends the secret token as-is instead of signing the body.
@@ -160,22 +274,49 @@ const gitlab: GitProvider = {
   repo: (payload) => (payload as GitlabPayload).project?.path_with_namespace,
   parse: (payload) => {
     const { object_kind: kind, object_attributes: mr, project, changes } = payload as GitlabPayload;
-    if (kind !== 'merge_request' || !mr?.iid || !project?.path_with_namespace) return null;
+    if (!project?.path_with_namespace) return null;
+    if (kind === 'pipeline') {
+      const pipeline = mr;
+      const status = pipelineStatus(pipeline?.status);
+      if (!status) return null;
+      const pipelineUrl =
+        pipeline?.url ??
+        pipeline?.web_url ??
+        (project.web_url && pipeline?.id
+          ? `${project.web_url}/-/pipelines/${pipeline.id}`
+          : undefined);
+      return {
+        kind: 'pipeline',
+        repo: project.path_with_namespace,
+        pullRequestNumber: (payload as GitlabPayload).merge_request?.iid ?? null,
+        headSha: pipeline?.sha ?? null,
+        status,
+        url: httpUrl(pipelineUrl),
+      };
+    }
+    if (kind !== 'merge_request' || !mr?.iid) return null;
     // Marking a draft merge request ready is one of the many edits GitLab reports
     // as "update"; only the changes diff says which one it was.
     const readied =
       mr.action === 'update' &&
       changes?.draft?.previous === true &&
       changes.draft.current === false;
-    if (mr.action !== 'open' && mr.action !== 'merge' && !readied) return null;
+    const opened = mr.action === 'open' || mr.action === 'reopen' || readied;
+    const merged = mr.action === 'merge';
+    const closed = mr.action === 'close';
+    const updated = mr.action === 'update' && !readied;
+    if (!opened && !merged && !closed && !updated) return null;
     return {
-      action: mr.action === 'merge' ? 'merged' : 'opened',
+      kind: 'pull_request',
+      action: merged ? 'merged' : closed ? 'closed' : opened ? 'opened' : 'updated',
       number: mr.iid,
       title: mr.title ?? '',
       body: mr.description ?? '',
       url: httpUrl(mr.url),
       repo: project.path_with_namespace,
+      sourceBranch: mr.source_branch ?? null,
       targetBranch: mr.target_branch ?? '',
+      headSha: mr.last_commit?.id ?? null,
       defaultBranch: project.default_branch ?? null,
       draft: mr.draft === true || mr.work_in_progress === true,
     };
@@ -189,12 +330,14 @@ interface BitbucketPayload {
     description?: string | null;
     draft?: boolean;
     destination?: { branch?: { name?: string } };
+    source?: { branch?: { name?: string }; commit?: { hash?: string } };
     links?: { html?: { href?: string } };
   };
   repository?: { full_name?: string; mainbranch?: { name?: string } };
 }
 
 const bitbucket: GitProvider = {
+  key: () => 'bitbucket',
   label: () => 'Bitbucket',
   matches: (h) => h['x-event-key'] != null,
   // Bitbucket signs the body with the webhook secret and sends the digest as
@@ -204,17 +347,24 @@ const bitbucket: GitProvider = {
   repo: (payload) => (payload as BitbucketPayload).repository?.full_name,
   parse: (payload, headers) => {
     const key = headers['x-event-key'];
-    if (key !== 'pullrequest:created' && key !== 'pullrequest:fulfilled') return null;
+    const opened = key === 'pullrequest:created';
+    const merged = key === 'pullrequest:fulfilled';
+    const closed = key === 'pullrequest:rejected';
+    const updated = key === 'pullrequest:updated';
+    if (!opened && !merged && !closed && !updated) return null;
     const { pullrequest: pr, repository } = payload as BitbucketPayload;
     if (!pr?.id || !repository?.full_name) return null;
     return {
-      action: key === 'pullrequest:fulfilled' ? 'merged' : 'opened',
+      kind: 'pull_request',
+      action: merged ? 'merged' : closed ? 'closed' : opened ? 'opened' : 'updated',
       number: pr.id,
       title: pr.title ?? '',
       body: pr.description ?? '',
       url: httpUrl(pr.links?.html?.href),
       repo: repository.full_name,
+      sourceBranch: pr.source?.branch?.name ?? null,
       targetBranch: pr.destination?.branch?.name ?? '',
+      headSha: pr.source?.commit?.hash ?? null,
       // Not part of the documented repository entity, so it is usually absent and
       // the merged-into-default-branch check is off for Bitbucket.
       defaultBranch: repository.mainbranch?.name ?? null,

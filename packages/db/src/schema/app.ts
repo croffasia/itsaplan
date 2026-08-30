@@ -1385,6 +1385,56 @@ export const issueAttachment = pgTable(
   (t) => [index('issue_attachment_issue_idx').on(t.issueId)],
 );
 
+export const issueDevelopmentLink = pgTable(
+  'issue_development_link',
+  {
+    id: serial('id').primaryKey(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    repository: text('repository').notNull(),
+    number: integer('number').notNull(),
+    title: text('title').notNull(),
+    url: text('url'),
+    state: text('state').notNull(),
+    draft: boolean('draft').notNull().default(false),
+    sourceBranch: text('source_branch'),
+    targetBranch: text('target_branch').notNull(),
+    headSha: text('head_sha'),
+    pipelineStatus: text('pipeline_status'),
+    pipelineUrl: text('pipeline_url'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.issueId, t.provider, t.repository, t.number),
+    index('issue_development_link_issue_idx').on(t.issueId, t.updatedAt.desc()),
+    index('issue_development_link_pr_idx').on(t.provider, t.repository, t.number),
+    index('issue_development_link_sha_idx').on(t.provider, t.repository, t.headSha),
+  ],
+);
+
+export const issueDevelopmentCheck = pgTable(
+  'issue_development_check',
+  {
+    id: serial('id').primaryKey(),
+    developmentLinkId: integer('development_link_id')
+      .notNull()
+      .references(() => issueDevelopmentLink.id, { onDelete: 'cascade' }),
+    externalId: text('external_id').notNull(),
+    appId: text('app_id').notNull(),
+    name: text('name').notNull(),
+    status: text('status').notNull(),
+    url: text('url'),
+    headSha: text('head_sha').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.developmentLinkId, t.appId, t.name),
+    index('issue_development_check_link_sha_idx').on(t.developmentLinkId, t.headSha),
+  ],
+);
+
 // A file uploaded in an agent chat. Bytes live in the S3-compatible object store;
 // this table holds the metadata and the object key. public_id is the unguessable
 // id used in the public download URL. Kept free of any workflow state so an

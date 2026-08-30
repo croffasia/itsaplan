@@ -39,22 +39,54 @@ function createIssue(client: Api, columnId: number, title = 'Task') {
 // A minimal pull_request payload with the fields the handler reads.
 function prPayload(overrides: {
   action?: string;
+  number?: number;
   merged?: boolean;
   draft?: boolean;
   baseRef?: string;
   title?: string;
   body?: string;
+  headSha?: string;
 }) {
+  const number = overrides.number ?? 42;
   return {
     action: overrides.action ?? 'closed',
     pull_request: {
-      number: 42,
+      number,
       title: overrides.title ?? 'Some change',
       body: overrides.body ?? null,
-      html_url: 'https://github.com/acme/site/pull/42',
+      html_url: `https://github.com/acme/site/pull/${number}`,
       merged: overrides.merged ?? true,
       draft: overrides.draft ?? false,
       base: { ref: overrides.baseRef ?? 'main' },
+      head: { ref: 'feature/site', sha: overrides.headSha ?? 'head-sha-1' },
+    },
+    repository: { full_name: 'acme/site', default_branch: 'main' },
+  };
+}
+
+function checkPayload({
+  id,
+  name,
+  conclusion,
+  headSha = 'head-sha-1',
+  pullRequestNumbers = [42],
+}: {
+  id: number;
+  name: string;
+  conclusion: string;
+  headSha?: string;
+  pullRequestNumbers?: number[];
+}) {
+  return {
+    action: 'completed',
+    check_run: {
+      id,
+      name,
+      status: 'completed',
+      conclusion,
+      head_sha: headSha,
+      details_url: `https://github.com/acme/site/actions/runs/${id}`,
+      pull_requests: pullRequestNumbers.map((number) => ({ number })),
     },
     repository: { full_name: 'acme/site', default_branch: 'main' },
   };
@@ -101,7 +133,7 @@ async function deliverRaw(webhookId: string, payload: unknown, headers: Record<s
   return { status: res.status, data: (await res.json().catch(() => null)) as unknown };
 }
 
-function gitlabPayload(body: string, action = 'merge') {
+function gitlabPayload(body: string, action = 'merge', headSha = 'gitlab-head-1') {
   return {
     object_kind: 'merge_request',
     object_attributes: {
@@ -110,7 +142,9 @@ function gitlabPayload(body: string, action = 'merge') {
       description: body,
       url: 'https://gitlab.com/acme/site/-/merge_requests/7',
       action,
+      source_branch: 'feature/site',
       target_branch: 'main',
+      last_commit: { id: headSha },
     },
     project: { path_with_namespace: 'acme/site', default_branch: 'main' },
   };
@@ -189,6 +223,27 @@ describe('Repository webhook', () => {
     await deliver(webhookId, secret, prPayload({ title: `Closes MKT-${issue.sequenceNumber}` }));
     const after = await issueState(asOwner, issue.id);
     expect(after.columnId).toBe(canceled.id);
+  });
+
+  it('waits for every linked pull request before closing the issue', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const reference = `Fixes MKT-${issue.sequenceNumber}`;
+    const done = columns.find((c) => c.stateType === 'completed')!;
+
+    for (const number of [42, 43]) {
+      await deliver(
+        webhookId,
+        secret,
+        prPayload({ action: 'opened', merged: false, number, body: reference }),
+      );
+    }
+
+    await deliver(webhookId, secret, prPayload({ number: 42, body: reference }));
+    expect((await issueState(asOwner, issue.id)).columnId).toBe(columns[0].id);
+
+    await deliver(webhookId, secret, prPayload({ number: 43, body: reference }));
+    expect((await issueState(asOwner, issue.id)).columnId).toBe(done.id);
   });
 
   it('rejects a delivery with a bad signature', async () => {
@@ -307,6 +362,10 @@ describe('Repository webhook', () => {
     );
     expect(draft.data).toMatchObject({ handled: 'ignored' });
     expect((await issueState(asOwner, issue.id)).columnId).toBe(columns[0].id);
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      state: 'open',
+      draft: true,
+    });
 
     const ready = await deliver(
       webhookId,
@@ -315,6 +374,10 @@ describe('Repository webhook', () => {
     );
     expect(ready.data).toMatchObject({ handled: 'opened' });
     expect((await issueState(asOwner, issue.id)).columnId).toBe(started.id);
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      state: 'open',
+      draft: false,
+    });
   });
 
   it('links but does not move on PR open when no column is configured', async () => {
@@ -332,6 +395,132 @@ describe('Repository webhook', () => {
     expect(prEntry).toMatchObject({
       actorName: 'GitHub',
       payload: { subject: { value: 'opened' } },
+    });
+    expect((await issueState(asOwner, issue.id)).development).toMatchObject([
+      {
+        provider: 'github',
+        repository: 'acme/site',
+        number: 42,
+        title: 'Some change',
+        state: 'open',
+        draft: false,
+        sourceBranch: 'feature/site',
+        targetBranch: 'main',
+        headSha: 'head-sha-1',
+        pipelineStatus: null,
+        checkStatus: null,
+        checks: [],
+      },
+    ]);
+  });
+
+  it('lets an editor unlink a pull request from the issue', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    await deliver(
+      webhookId,
+      secret,
+      prPayload({ action: 'opened', merged: false, body: `Refs MKT-${issue.sequenceNumber}` }),
+    );
+    const [link] = (await issueState(asOwner, issue.id)).development;
+    expect(link).toBeDefined();
+
+    const removed = await asOwner
+      .issues({ issueId: issue.id })
+      .development({ linkId: link!.id })
+      .delete();
+    expect(removed.status).toBe(204);
+    expect((await issueState(asOwner, issue.id)).development).toEqual([]);
+  });
+
+  it('stores every GitHub check and aggregates the current result', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    await deliver(
+      webhookId,
+      secret,
+      prPayload({ action: 'opened', merged: false, body: `Refs MKT-${issue.sequenceNumber}` }),
+    );
+
+    await deliver(
+      webhookId,
+      secret,
+      checkPayload({ id: 1, name: 'Build', conclusion: 'success' }),
+      {
+        event: 'check_run',
+      },
+    );
+    await deliver(
+      webhookId,
+      secret,
+      checkPayload({ id: 2, name: 'Tests', conclusion: 'failure' }),
+      {
+        event: 'check_run',
+      },
+    );
+
+    const development = (await issueState(asOwner, issue.id)).development[0];
+    expect(development).toMatchObject({ checkStatus: 'failed' });
+    expect(development.checks).toMatchObject([
+      { name: 'Build', status: 'success' },
+      { name: 'Tests', status: 'failed' },
+    ]);
+
+    await deliver(
+      webhookId,
+      secret,
+      checkPayload({ id: 3, name: 'Tests', conclusion: 'success' }),
+      { event: 'check_run' },
+    );
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      checkStatus: 'success',
+      checks: [
+        { name: 'Build', status: 'success' },
+        { name: 'Tests', status: 'success' },
+      ],
+    });
+  });
+
+  it('hides old checks after a push and matches fork checks by head SHA', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const body = `Refs MKT-${issue.sequenceNumber}`;
+    await deliver(webhookId, secret, prPayload({ action: 'opened', merged: false, body }));
+    await deliver(
+      webhookId,
+      secret,
+      checkPayload({ id: 1, name: 'Build', conclusion: 'failure' }),
+      {
+        event: 'check_run',
+      },
+    );
+
+    await deliver(
+      webhookId,
+      secret,
+      prPayload({ action: 'synchronize', merged: false, body, headSha: 'head-sha-2' }),
+    );
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      headSha: 'head-sha-2',
+      checkStatus: null,
+      checks: [],
+    });
+
+    await deliver(
+      webhookId,
+      secret,
+      checkPayload({
+        id: 2,
+        name: 'Build',
+        conclusion: 'success',
+        headSha: 'head-sha-2',
+        pullRequestNumbers: [],
+      }),
+      { event: 'check_run' },
+    );
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      checkStatus: 'success',
+      checks: [{ name: 'Build', status: 'success' }],
     });
   });
 
@@ -513,6 +702,84 @@ describe('Repository webhook', () => {
     expect(await prActor(asOwner, issue.id)).toMatchObject({
       actorName: 'GitLab',
       payload: { subject: { value: 'merged' }, from: { value: 'acme/site#7' } },
+    });
+  });
+
+  it('updates a linked GitLab merge request from a pipeline event', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    await deliverRaw(webhookId, gitlabPayload(`Refs MKT-${issue.sequenceNumber}`, 'open'), {
+      'x-gitlab-event': 'Merge Request Hook',
+      'x-gitlab-token': secret,
+      'idempotency-key': crypto.randomUUID(),
+    });
+
+    const pipeline = await deliverRaw(
+      webhookId,
+      {
+        object_kind: 'pipeline',
+        object_attributes: { id: 99, status: 'failed', ref: 'feature/site' },
+        merge_request: { iid: 7, source_branch: 'feature/site' },
+        project: {
+          path_with_namespace: 'acme/site',
+          default_branch: 'main',
+          web_url: 'https://gitlab.com/acme/site',
+        },
+      },
+      {
+        'x-gitlab-event': 'Pipeline Hook',
+        'x-gitlab-token': secret,
+        'idempotency-key': crypto.randomUUID(),
+      },
+    );
+    expect(pipeline.data).toMatchObject({ handled: 'pipeline' });
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      provider: 'gitlab',
+      number: 7,
+      pipelineStatus: 'failed',
+      pipelineUrl: 'https://gitlab.com/acme/site/-/pipelines/99',
+    });
+  });
+
+  it('ignores a late GitLab pipeline from the previous head SHA', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const body = `Refs MKT-${issue.sequenceNumber}`;
+    await deliverRaw(webhookId, gitlabPayload(body, 'open'), {
+      'x-gitlab-event': 'Merge Request Hook',
+      'x-gitlab-token': secret,
+      'idempotency-key': crypto.randomUUID(),
+    });
+    await deliverRaw(webhookId, gitlabPayload(body, 'update', 'gitlab-head-2'), {
+      'x-gitlab-event': 'Merge Request Hook',
+      'x-gitlab-token': secret,
+      'idempotency-key': crypto.randomUUID(),
+    });
+
+    const pipelinePayload = (sha: string, status: string) => ({
+      object_kind: 'pipeline',
+      object_attributes: { id: 99, status, ref: 'feature/site', sha },
+      merge_request: { iid: 7, source_branch: 'feature/site' },
+      project: { path_with_namespace: 'acme/site', web_url: 'https://gitlab.com/acme/site' },
+    });
+    await deliverRaw(webhookId, pipelinePayload('gitlab-head-1', 'failed'), {
+      'x-gitlab-event': 'Pipeline Hook',
+      'x-gitlab-token': secret,
+      'idempotency-key': crypto.randomUUID(),
+    });
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      headSha: 'gitlab-head-2',
+      pipelineStatus: null,
+    });
+
+    await deliverRaw(webhookId, pipelinePayload('gitlab-head-2', 'success'), {
+      'x-gitlab-event': 'Pipeline Hook',
+      'x-gitlab-token': secret,
+      'idempotency-key': crypto.randomUUID(),
+    });
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      headSha: 'gitlab-head-2',
+      pipelineStatus: 'success',
     });
   });
 

@@ -14,6 +14,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useConnectGitProvider } from '../../services/settings.service';
+import { GIT_PROVIDER_CONFIG } from './providerConfig';
 
 export default function GitProviderConnectDialog({
   projectKey,
@@ -28,13 +29,11 @@ export default function GitProviderConnectDialog({
 }) {
   const t = useTranslations('settings.git');
   const connect = useConnectGitProvider(projectKey);
-  const [baseUrl, setBaseUrl] = useState(
-    provider === 'github' ? 'https://github.com' : 'https://gitlab.com',
-  );
+  const [baseUrl, setBaseUrl] = useState(GIT_PROVIDER_CONFIG[provider].defaultBaseUrl);
   const [token, setToken] = useState('');
 
   useEffect(() => {
-    setBaseUrl(provider === 'github' ? 'https://github.com' : 'https://gitlab.com');
+    setBaseUrl(GIT_PROVIDER_CONFIG[provider].defaultBaseUrl);
     setToken('');
   }, [provider, open]);
 
@@ -42,25 +41,21 @@ export default function GitProviderConnectDialog({
     event.preventDefault();
     try {
       await connect.mutateAsync({ provider, baseUrl, token });
-      toast.success(
-        t('nativeConnected', { provider: provider === 'github' ? 'GitHub' : 'GitLab' }),
-      );
+      toast.success(t('nativeConnected', { provider: GIT_PROVIDER_CONFIG[provider].label }));
       onOpenChange(false);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('nativeConnectFailed'));
     }
   }
 
-  const label = provider === 'github' ? 'GitHub' : 'GitLab';
+  const label = GIT_PROVIDER_CONFIG[provider].label;
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <form onSubmit={(event) => void submit(event)} className="space-y-5">
           <DialogHeader>
             <DialogTitle>{t('nativeConnectTitle', { provider: label })}</DialogTitle>
-            <DialogDescription>
-              {provider === 'github' ? t('nativeTokenHint.github') : t('nativeTokenHint.gitlab')}
-            </DialogDescription>
+            <DialogDescription>{t(`nativeTokenHint.${provider}`)}</DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor={`git-${provider}-url`}>{t('nativeBaseUrl')}</Label>

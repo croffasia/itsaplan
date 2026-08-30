@@ -1,10 +1,18 @@
 import { getIssueBySequence, updateIssue } from '#modules/issues/service';
 import { recordActivity, textSide, type ActivityActor } from '#modules/issues/activity';
 import { parseMagicWords, type IssueRef } from './magic-words';
-import type { PullRequestEvent } from './providers';
+import {
+  hasOpenDevelopmentLinks,
+  updateCheckLinks,
+  updatePipelineLinks,
+  updatePullRequestLinks,
+  upsertPullRequestLinks,
+} from './development';
+import type { GitEvent, GitProviderKey, PullRequestEvent } from './providers';
 import { columnStateTypes, firstCompletedColumnId, type GitSettings } from './service';
+import { postPullRequestLinkback } from './connections-service';
 
-// Applies a normalized pull request event to the project's issues:
+// Stores normalized repository events and applies pull request automation:
 // - a pull request merged into the repository's default branch moves the issues
 //   named by a closing magic word to the configured (or first completed) column;
 // - a pull request opened, or a draft marked ready, links every issue it names,
@@ -17,14 +25,75 @@ const CLOSED_STATE_TYPES = ['completed', 'canceled'];
 
 export type PullRequestOutcome = 'merged' | 'opened' | 'ignored';
 
+export async function handleGitEvent(
+  project: { id: number; key: string },
+  settings: GitSettings,
+  providerKey: GitProviderKey,
+  providerLabel: string,
+  event: GitEvent,
+): Promise<PullRequestOutcome | 'pipeline' | 'check'> {
+  if (event.kind === 'check') {
+    await updateCheckLinks(project.id, providerKey, event);
+    return 'check';
+  }
+  if (event.kind === 'pipeline') {
+    await updatePipelineLinks(project.id, providerKey, event);
+    return 'pipeline';
+  }
+
+  await updatePullRequestLinks(project.id, providerKey, event);
+  const refs = parseMagicWords(`${event.title}\n${event.body}`);
+  const projectKey = project.key.toUpperCase();
+  const linkedIssues: { id: number; sequenceNumber: number }[] = [];
+  for (const ref of [...refs.closes, ...refs.references]) {
+    if (ref.key !== projectKey) continue;
+    const linkedIssue = await getIssueBySequence(project.id, ref.sequenceNumber);
+    if (linkedIssue && !linkedIssue.archivedAt)
+      linkedIssues.push({
+        id: linkedIssue.id,
+        sequenceNumber: linkedIssue.sequenceNumber,
+      });
+  }
+  const uniqueIssues = [...new Map(linkedIssues.map((item) => [item.id, item])).values()];
+  const newIssueIds = await upsertPullRequestLinks(
+    uniqueIssues.map((item) => item.id),
+    providerKey,
+    event,
+  );
+  if (newIssueIds.length > 0) {
+    const appUrl = process.env.APP_URL?.replace(/\/$/, '');
+    const items = uniqueIssues
+      .filter((item) => newIssueIds.includes(item.id))
+      .map((item) => {
+        const identifier = `${projectKey}-${item.sequenceNumber}`;
+        return appUrl
+          ? `- [${identifier}](${appUrl}/project/${project.key}/issue/${item.sequenceNumber})`
+          : `- ${identifier}`;
+      });
+    try {
+      await postPullRequestLinkback(
+        project.id,
+        providerKey,
+        event.repo,
+        event.number,
+        `Linked to ${items.length === 1 ? 'an issue' : 'issues'} in It's a Plan:\n\n${items.join('\n')}`,
+      );
+    } catch {
+      // Development linking is the primary action. A revoked provider token must
+      // not make a verified webhook fail or repeat its issue automation.
+    }
+  }
+  return handlePullRequestEvent(project, settings, providerLabel, event, refs);
+}
+
 export async function handlePullRequestEvent(
   project: { id: number; key: string },
   settings: GitSettings,
   providerLabel: string,
   event: PullRequestEvent,
+  parsed = parseMagicWords(`${event.title}\n${event.body}`),
 ): Promise<PullRequestOutcome> {
   const actor: ActivityActor = { system: providerLabel };
-  const parsed = parseMagicWords(`${event.title}\n${event.body}`);
   const projectKey = project.key.toUpperCase();
   const inProject = (refs: IssueRef[]) => refs.filter((r) => r.key === projectKey);
   const prEntry = (outcome: string) => ({
@@ -43,6 +112,9 @@ export async function handlePullRequestEvent(
     for (const ref of inProject(parsed.closes)) {
       const issue = await getIssueBySequence(project.id, ref.sequenceNumber);
       if (!issue || issue.archivedAt) continue;
+      // A task may need several pull requests. Wait for all linked work to leave
+      // the open state before applying the merge automation, as Linear does.
+      if (await hasOpenDevelopmentLinks(issue.id)) continue;
       const stateType = (await columnStateTypes([issue.columnId])).get(issue.columnId);
       if (stateType && CLOSED_STATE_TYPES.includes(stateType)) continue;
       await recordActivity(issue.id, [prEntry('merged')], actor);
@@ -52,6 +124,8 @@ export async function handlePullRequestEvent(
     }
     return 'merged';
   }
+
+  if (event.action === 'updated' || event.action === 'closed') return 'ignored';
 
   if (event.draft) return 'ignored';
   const targetId = await openTargetColumnId(settings);

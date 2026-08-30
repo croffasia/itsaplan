@@ -524,6 +524,36 @@ describe('Repository webhook', () => {
     });
   });
 
+  it('ignores a late check from the previous head SHA', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const body = `Refs MKT-${issue.sequenceNumber}`;
+    await deliver(webhookId, secret, prPayload({ action: 'opened', merged: false, body }));
+    await deliver(
+      webhookId,
+      secret,
+      prPayload({ action: 'synchronize', merged: false, body, headSha: 'head-sha-2' }),
+    );
+    await deliver(
+      webhookId,
+      secret,
+      checkPayload({ id: 2, name: 'Build', conclusion: 'success', headSha: 'head-sha-2' }),
+      { event: 'check_run' },
+    );
+    await deliver(
+      webhookId,
+      secret,
+      checkPayload({ id: 1, name: 'Build', conclusion: 'failure', headSha: 'head-sha-1' }),
+      { event: 'check_run' },
+    );
+
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      headSha: 'head-sha-2',
+      checkStatus: 'success',
+      checks: [{ name: 'Build', status: 'success' }],
+    });
+  });
+
   it('does not demote a started issue on PR open', async () => {
     const { asOwner, webhookId, secret, columns } = await setupProject();
     const started = columns.find((c) => c.stateType === 'started')!;

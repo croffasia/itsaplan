@@ -56,6 +56,7 @@ function aggregateChecks(checks: DevelopmentCheck[]): PipelineStatus | null {
   if (checks.some((check) => check.status === 'running')) return 'running';
   if (checks.some((check) => check.status === 'pending')) return 'pending';
   if (checks.some((check) => check.status === 'canceled')) return 'canceled';
+  if (checks.every((check) => check.status === 'skipped')) return 'skipped';
   return 'success';
 }
 
@@ -256,6 +257,7 @@ export async function updateCheckLinks(
         eq(issueDevelopmentLink.provider, provider),
         eq(issueDevelopmentLink.repository, event.repo),
         identity,
+        eq(issueDevelopmentLink.headSha, event.headSha),
         projectIssue(projectId),
       ),
     );

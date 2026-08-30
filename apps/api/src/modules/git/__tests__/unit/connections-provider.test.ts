@@ -11,22 +11,22 @@ describe('Git provider repository responses', () => {
     expect(
       githubRepository({
         id: 42,
-        full_name: 'sekta/app',
-        html_url: 'https://github.com/sekta/app',
+        full_name: 'acme/app',
+        html_url: 'https://github.com/acme/app',
         private: true,
         permissions: { admin: true },
       }),
     ).toEqual({
       externalId: '42',
-      fullName: 'sekta/app',
-      webUrl: 'https://github.com/sekta/app',
+      fullName: 'acme/app',
+      webUrl: 'https://github.com/acme/app',
       private: true,
     });
     expect(
       githubRepository({
         id: 42,
-        full_name: 'sekta/app',
-        html_url: 'https://github.com/sekta/app',
+        full_name: 'acme/app',
+        html_url: 'https://github.com/acme/app',
         permissions: { admin: false },
       }),
     ).toBeNull();
@@ -36,21 +36,21 @@ describe('Git provider repository responses', () => {
     expect(
       gitlabRepository({
         id: 81,
-        path_with_namespace: 'sekta/api',
-        web_url: 'https://gitlab.com/sekta/api',
+        path_with_namespace: 'acme/api',
+        web_url: 'https://gitlab.com/acme/api',
         visibility: 'private',
       }),
     ).toEqual({
       externalId: '81',
-      fullName: 'sekta/api',
-      webUrl: 'https://gitlab.com/sekta/api',
+      fullName: 'acme/api',
+      webUrl: 'https://gitlab.com/acme/api',
       private: true,
     });
     expect(
       gitlabRepository({
         id: 82,
-        path_with_namespace: 'sekta/internal',
-        web_url: 'https://gitlab.com/sekta/internal',
+        path_with_namespace: 'acme/internal',
+        web_url: 'https://gitlab.com/acme/internal',
         visibility: 'internal',
       }),
     ).toMatchObject({ private: true });
@@ -60,15 +60,15 @@ describe('Git provider repository responses', () => {
     expect(
       giteaRepository({
         id: 12,
-        full_name: 'sekta/infra',
-        html_url: 'https://git.example.com/sekta/infra',
+        full_name: 'acme/infra',
+        html_url: 'https://git.example.com/acme/infra',
         private: false,
         permissions: { admin: true },
       }),
     ).toEqual({
       externalId: '12',
-      fullName: 'sekta/infra',
-      webUrl: 'https://git.example.com/sekta/infra',
+      fullName: 'acme/infra',
+      webUrl: 'https://git.example.com/acme/infra',
       private: false,
     });
   });
@@ -77,30 +77,30 @@ describe('Git provider repository responses', () => {
     expect(
       bitbucketRepository({
         uuid: '{repo-uuid}',
-        full_name: 'sekta/mobile',
-        links: { html: { href: 'https://bitbucket.org/sekta/mobile' } },
+        full_name: 'acme/mobile',
+        links: { html: { href: 'https://bitbucket.org/acme/mobile' } },
         is_private: true,
       }),
     ).toEqual({
-      externalId: 'sekta/mobile',
-      fullName: 'sekta/mobile',
-      webUrl: 'https://bitbucket.org/sekta/mobile',
+      externalId: 'acme/mobile',
+      fullName: 'acme/mobile',
+      webUrl: 'https://bitbucket.org/acme/mobile',
       private: true,
     });
-    expect(bitbucketRepository({ full_name: 'sekta/fallback' })).toMatchObject({
-      webUrl: 'https://bitbucket.org/sekta/fallback',
+    expect(bitbucketRepository({ full_name: 'acme/fallback' })).toMatchObject({
+      webUrl: 'https://bitbucket.org/acme/fallback',
       private: true,
     });
   });
 
   it('rejects malformed provider responses', () => {
     expect(githubRepository({ id: 1, permissions: { admin: true } })).toBeNull();
-    expect(gitlabRepository({ id: 1, path_with_namespace: 'sekta/api' })).toBeNull();
+    expect(gitlabRepository({ id: 1, path_with_namespace: 'acme/api' })).toBeNull();
     expect(bitbucketRepository({})).toBeNull();
     expect(
       gitlabRepository({
         id: 1,
-        path_with_namespace: 'sekta/api',
+        path_with_namespace: 'acme/api',
         web_url: 'javascript:alert(1)',
       }),
     ).toBeNull();

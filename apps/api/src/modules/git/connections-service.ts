@@ -337,7 +337,6 @@ export async function postPullRequestLinkback(
 ): Promise<boolean> {
   const [row] = await db
     .select({
-      connectionId: gitProviderConnection.id,
       provider: gitProviderConnection.provider,
       baseUrl: gitProviderConnection.baseUrl,
       ciphertext: gitProviderConnection.ciphertext,

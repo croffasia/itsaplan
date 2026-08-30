@@ -35,4 +35,25 @@ ALTER TABLE "issue_development_link" ADD CONSTRAINT "issue_development_link_issu
 CREATE INDEX "issue_development_check_link_sha_idx" ON "issue_development_check" USING btree ("development_link_id","head_sha");--> statement-breakpoint
 CREATE INDEX "issue_development_link_issue_idx" ON "issue_development_link" USING btree ("issue_id","updated_at" DESC NULLS LAST);--> statement-breakpoint
 CREATE INDEX "issue_development_link_pr_idx" ON "issue_development_link" USING btree ("provider","repository","number");--> statement-breakpoint
-CREATE INDEX "issue_development_link_sha_idx" ON "issue_development_link" USING btree ("provider","repository","head_sha");
+CREATE INDEX "issue_development_link_sha_idx" ON "issue_development_link" USING btree ("provider","repository","head_sha");--> statement-breakpoint
+CREATE FUNCTION rev_issue_development_check() RETURNS trigger AS $$
+DECLARE
+	link_id integer;
+	target_id integer;
+	p integer;
+	i integer;
+BEGIN
+	IF TG_OP = 'DELETE' THEN link_id := OLD.development_link_id; ELSE link_id := NEW.development_link_id; END IF;
+	SELECT l.issue_id, s.project_id, s.initiative_id INTO target_id, p, i
+	FROM issue_development_link l JOIN issue s ON s.id = l.issue_id
+	WHERE l.id = link_id;
+	IF p IS NULL THEN RETURN NULL; END IF;
+	PERFORM bump_rev('issue:' || target_id, p);
+	IF i IS NOT NULL THEN PERFORM bump_rev('initiative:' || i, p); END IF;
+	RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;--> statement-breakpoint
+CREATE TRIGGER issue_development_link_rev AFTER INSERT OR UPDATE OR DELETE ON issue_development_link
+	FOR EACH ROW EXECUTE FUNCTION rev_issue_child('issue_id', 'detail');--> statement-breakpoint
+CREATE TRIGGER issue_development_check_rev AFTER INSERT OR UPDATE OR DELETE ON issue_development_check
+	FOR EACH ROW EXECUTE FUNCTION rev_issue_development_check();

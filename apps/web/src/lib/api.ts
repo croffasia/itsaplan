@@ -2070,6 +2070,46 @@ export interface DevelopmentLink {
   updatedAt: string;
 }
 
+export interface DevelopmentRepository {
+  id: number;
+  provider: 'github' | 'gitlab';
+  fullName: string;
+  webUrl: string;
+}
+
+export interface LinkablePullRequest {
+  number: number;
+  title: string;
+  url: string | null;
+  state: PullRequestState;
+  draft: boolean;
+  sourceBranch: string | null;
+  targetBranch: string;
+  headSha: string | null;
+  updatedAt: string;
+  linked: boolean;
+}
+
+export interface LinkablePullRequestPage {
+  pullRequests: LinkablePullRequest[];
+  nextPage: number | null;
+}
+
+export interface DevelopmentBranchPage {
+  branches: string[];
+  defaultBranch: string | null;
+  nextPage: number | null;
+}
+
+export interface CreateIssuePullRequestInput {
+  repositoryId: number;
+  sourceBranch: string;
+  targetBranch: string;
+  title: string;
+  description: string;
+  draft: boolean;
+}
+
 // A relation between two issues (mirrors apps/api modules/issues/links.ts). 'blocks' and
 // 'duplicates' are directional and read differently on each end, which direction
 // selects: 'outward' is the side that blocks/duplicates, 'inward' the side that is
@@ -2840,6 +2880,32 @@ export const api = {
     request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   removeIssueDevelopmentLink: (issueId: number, linkId: number) =>
     request<void>(`/issues/${issueId}/development/${linkId}`, { method: 'DELETE' }),
+  listIssueDevelopmentRepositories: (issueId: number) =>
+    request<DevelopmentRepository[]>(`/issues/${issueId}/development/repositories`),
+  listLinkablePullRequests: (
+    issueId: number,
+    repositoryId: number,
+    input: { state: 'open' | 'all'; page: number },
+  ) =>
+    request<LinkablePullRequestPage>(
+      `/issues/${issueId}/development/repositories/${repositoryId}/pull-requests?${new URLSearchParams(
+        { state: input.state, page: String(input.page) },
+      )}`,
+    ),
+  listDevelopmentBranches: (issueId: number, repositoryId: number, page: number) =>
+    request<DevelopmentBranchPage>(
+      `/issues/${issueId}/development/repositories/${repositoryId}/branches?page=${page}`,
+    ),
+  linkIssueDevelopment: (issueId: number, input: { repositoryId: number; number: number }) =>
+    request<DevelopmentLink>(`/issues/${issueId}/development`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  createIssuePullRequest: (issueId: number, input: CreateIssuePullRequestInput) =>
+    request<DevelopmentLink>(`/issues/${issueId}/development/pull-requests`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
   // An issue that has subtasks needs a disposition saying what happens to them;
   // without one the server rejects the delete with a 409.
   deleteIssue: (id: number, subtasks?: SubtaskDisposition) =>

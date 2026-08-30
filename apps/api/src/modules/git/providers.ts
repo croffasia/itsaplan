@@ -144,7 +144,7 @@ function githubRepo(payload: unknown): string | undefined {
   return (payload as GithubPayload).repository?.full_name;
 }
 
-function pipelineStatus(status: string | undefined): PipelineStatus | null {
+export function pipelineStatus(status: string | undefined): PipelineStatus | null {
   const value = status;
   if (!value) return null;
   if (value === 'success' || value === 'passed') return 'success';

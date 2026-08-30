@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import {
   api,
   type BulkIssuePatch,
@@ -41,6 +47,61 @@ export function useRemoveIssueDevelopmentLink(issueId: number) {
   });
 }
 
+export function useIssueDevelopmentRepositoriesQuery(issueId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: qk.issueDevelopmentRepositories(issueId),
+    queryFn: () => api.listIssueDevelopmentRepositories(issueId),
+    enabled,
+  });
+}
+
+export function useLinkablePullRequestsQuery(
+  issueId: number,
+  repositoryId: number | null,
+  state: 'open' | 'all',
+  enabled: boolean,
+) {
+  return useInfiniteQuery({
+    queryKey: qk.issueDevelopmentPullRequests(issueId, repositoryId ?? -1, state),
+    queryFn: ({ pageParam }) =>
+      api.listLinkablePullRequests(issueId, repositoryId!, { state, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (page) => page.nextPage ?? undefined,
+    enabled: enabled && repositoryId !== null,
+  });
+}
+
+export function useDevelopmentBranchesQuery(
+  issueId: number,
+  repositoryId: number | null,
+  enabled: boolean,
+) {
+  return useInfiniteQuery({
+    queryKey: qk.issueDevelopmentBranches(issueId, repositoryId ?? -1),
+    queryFn: ({ pageParam }) => api.listDevelopmentBranches(issueId, repositoryId!, pageParam),
+    initialPageParam: 1,
+    getNextPageParam: (page) => page.nextPage ?? undefined,
+    enabled: enabled && repositoryId !== null,
+  });
+}
+
+export function useLinkIssueDevelopment(issueId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { repositoryId: number; number: number }) =>
+      api.linkIssueDevelopment(issueId, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.issue(issueId) }),
+  });
+}
+
+export function useCreateIssuePullRequest(issueId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof api.createIssuePullRequest>[1]) =>
+      api.createIssuePullRequest(issueId, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.issue(issueId) }),
+  });
+}
 // The cycles an issue was planned into. Read only where the badge that shows them
 // is, so a project without cycles never asks for it.
 export function useIssueCyclesQuery(issueId: number) {

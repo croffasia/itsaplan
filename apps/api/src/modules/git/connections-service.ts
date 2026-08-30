@@ -3,15 +3,24 @@ import { decryptSecret, encryptSecret } from '@repo/crypto';
 import { and, asc, eq, inArray } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import {
+  createProviderPullRequest,
   deleteProviderWebhook,
   createPullRequestComment,
   getProviderAccount,
+  getProviderPullRequest,
   getProviderRepository,
   installProviderWebhook,
+  listProviderBranches,
+  listProviderPullRequests,
   listProviderRepositories,
   normalizeProviderBaseUrl,
+  type CreateProviderPullRequestInput,
   type GitProvider,
+  type ProviderBranchPage,
   type ProviderConnectionInput,
+  type ProviderPullRequestDetails,
+  type ProviderPullRequestPage,
+  type ProviderRepository,
 } from './connections-provider';
 import { getOrCreateGitSettings, type GitSettings } from './service';
 
@@ -32,6 +41,13 @@ export interface GitManagedRepositoryDto {
   webUrl: string;
   status: 'connected' | 'error';
   lastError: string | null;
+}
+
+export interface DevelopmentRepositoryDto {
+  id: number;
+  provider: 'github' | 'gitlab';
+  fullName: string;
+  webUrl: string;
 }
 
 interface ConnectionSecret {
@@ -58,6 +74,126 @@ function mapRepository(row: {
   lastError: string | null;
 }): GitManagedRepositoryDto {
   return { ...row, status: row.status === 'error' ? 'error' : 'connected' };
+}
+
+interface ManagedDevelopmentRepository {
+  input: ProviderConnectionInput & { provider: 'github' | 'gitlab' };
+  repository: ProviderRepository;
+}
+
+async function managedDevelopmentRepository(
+  projectId: number,
+  repositoryId: number,
+): Promise<ManagedDevelopmentRepository> {
+  const [row] = await db
+    .select({
+      provider: gitProviderConnection.provider,
+      baseUrl: gitProviderConnection.baseUrl,
+      ciphertext: gitProviderConnection.ciphertext,
+      iv: gitProviderConnection.iv,
+      authTag: gitProviderConnection.authTag,
+      externalId: gitManagedRepository.externalId,
+      fullName: gitManagedRepository.fullName,
+      webUrl: gitManagedRepository.webUrl,
+    })
+    .from(gitManagedRepository)
+    .innerJoin(
+      gitProviderConnection,
+      eq(gitManagedRepository.connectionId, gitProviderConnection.id),
+    )
+    .where(
+      and(
+        eq(gitManagedRepository.id, repositoryId),
+        eq(gitProviderConnection.projectId, projectId),
+        eq(gitManagedRepository.status, 'connected'),
+      ),
+    )
+    .limit(1);
+  if (!row) throw new HttpError(404, 'Managed repository not found');
+  if (row.provider !== 'github' && row.provider !== 'gitlab')
+    throw new HttpError(400, 'Creating and linking pull requests supports GitHub and GitLab');
+  return {
+    input: { provider: row.provider, baseUrl: row.baseUrl, token: decryptSecret(row) },
+    repository: {
+      externalId: row.externalId,
+      fullName: row.fullName,
+      webUrl: row.webUrl,
+      private: false,
+    },
+  };
+}
+
+export async function listDevelopmentRepositories(
+  projectId: number,
+): Promise<DevelopmentRepositoryDto[]> {
+  const rows = await db
+    .select({
+      id: gitManagedRepository.id,
+      provider: gitProviderConnection.provider,
+      fullName: gitManagedRepository.fullName,
+      webUrl: gitManagedRepository.webUrl,
+    })
+    .from(gitManagedRepository)
+    .innerJoin(
+      gitProviderConnection,
+      eq(gitManagedRepository.connectionId, gitProviderConnection.id),
+    )
+    .where(
+      and(
+        eq(gitProviderConnection.projectId, projectId),
+        eq(gitManagedRepository.status, 'connected'),
+        inArray(gitProviderConnection.provider, ['github', 'gitlab']),
+      ),
+    )
+    .orderBy(asc(gitProviderConnection.provider), asc(gitManagedRepository.fullName));
+  return rows.map((row) => ({ ...row, provider: row.provider as 'github' | 'gitlab' }));
+}
+
+export async function listManagedPullRequests(
+  projectId: number,
+  repositoryId: number,
+  state: 'open' | 'all',
+  page: number,
+): Promise<{ provider: 'github' | 'gitlab'; repository: string; page: ProviderPullRequestPage }> {
+  const managed = await managedDevelopmentRepository(projectId, repositoryId);
+  return {
+    provider: managed.input.provider,
+    repository: managed.repository.fullName,
+    page: await listProviderPullRequests(managed.input, managed.repository, state, page),
+  };
+}
+
+export async function getManagedPullRequest(
+  projectId: number,
+  repositoryId: number,
+  number: number,
+): Promise<{ provider: 'github' | 'gitlab'; details: ProviderPullRequestDetails }> {
+  const managed = await managedDevelopmentRepository(projectId, repositoryId);
+  return {
+    provider: managed.input.provider,
+    details: await getProviderPullRequest(managed.input, managed.repository, number),
+  };
+}
+
+export async function listManagedBranches(
+  projectId: number,
+  repositoryId: number,
+  page: number,
+): Promise<ProviderBranchPage> {
+  const managed = await managedDevelopmentRepository(projectId, repositoryId);
+  return listProviderBranches(managed.input, managed.repository, page);
+}
+
+export async function createManagedPullRequest(
+  projectId: number,
+  repositoryId: number,
+  input: CreateProviderPullRequestInput,
+): Promise<{ provider: 'github' | 'gitlab'; details: ProviderPullRequestDetails }> {
+  const managed = await managedDevelopmentRepository(projectId, repositoryId);
+  return {
+    provider: managed.input.provider,
+    details: await createProviderPullRequest(managed.input, managed.repository, input),
+  };
 }
 
 async function repositoriesByConnection(

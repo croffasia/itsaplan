@@ -96,6 +96,12 @@ export const qk = {
   agentToolLinks: (projectKey: string, agentId: number) =>
     ['aiAgents', projectKey, agentId, 'tool-configs'] as const,
   issue: (id: number) => ['issue', id] as const,
+  issueDevelopmentRepositories: (id: number) =>
+    ['issue', id, 'development', 'repositories'] as const,
+  issueDevelopmentPullRequests: (id: number, repositoryId: number, state: 'open' | 'all') =>
+    ['issue', id, 'development', 'repositories', repositoryId, 'pullRequests', state] as const,
+  issueDevelopmentBranches: (id: number, repositoryId: number) =>
+    ['issue', id, 'development', 'repositories', repositoryId, 'branches'] as const,
   // Under the issue prefix, so every issue mutation refreshes the cycles with it.
   issueCycles: (id: number) => ['issue', id, 'cycles'] as const,
   anyIssue: ['issue'] as const,

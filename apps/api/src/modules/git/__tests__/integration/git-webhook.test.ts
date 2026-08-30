@@ -188,6 +188,41 @@ describe('Repository webhook', () => {
     await resetDb();
   });
 
+  it('exposes connected development repositories from an issue', async () => {
+    const owner = await signUpTestUser({ name: 'Owner' });
+    const asOwner = authedApi(owner.cookie);
+    await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+    const project = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await createIssue(asOwner, project.data!.columns[0]!.id);
+
+    const response = await app.handle(
+      new Request(`http://localhost/issues/${issue.data!.id}/development/repositories`, {
+        headers: { cookie: owner.cookie },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual([]);
+  });
+
+  it('rejects linking from a repository outside the issue project', async () => {
+    const owner = await signUpTestUser({ name: 'Owner' });
+    const asOwner = authedApi(owner.cookie);
+    await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+    const project = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const issue = await createIssue(asOwner, project.data!.columns[0]!.id);
+
+    const response = await app.handle(
+      new Request(`http://localhost/issues/${issue.data!.id}/development`, {
+        method: 'POST',
+        headers: { cookie: owner.cookie, 'content-type': 'application/json' },
+        body: JSON.stringify({ repositoryId: 999, number: 1 }),
+      }),
+    );
+
+    expect(response.status).toBe(404);
+  });
+
   it('closes the issue named by a closing magic word when the PR merges', async () => {
     const { asOwner, webhookId, secret, columns } = await setupProject();
     const issue = (await createIssue(asOwner, columns[0].id)).data!;

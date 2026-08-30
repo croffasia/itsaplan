@@ -1,5 +1,7 @@
 import { HttpError } from '#shared/lib';
 import { assertPublicHttpUrl } from '#shared/net';
+import { pipelineStatus } from './providers';
+import type { PipelineEvent, PullRequestEvent, PullRequestState } from './providers';
 
 export type GitProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
 
@@ -8,6 +10,7 @@ export interface ProviderRepository {
   fullName: string;
   webUrl: string;
   private: boolean;
+  defaultBranch?: string | null;
 }
 
 export interface ProviderRepositoryPage {
@@ -19,6 +22,43 @@ export interface ProviderConnectionInput {
   provider: GitProvider;
   baseUrl: string;
   token: string;
+}
+
+export interface ProviderPullRequest {
+  number: number;
+  title: string;
+  url: string | null;
+  state: PullRequestState;
+  draft: boolean;
+  sourceBranch: string | null;
+  targetBranch: string;
+  headSha: string | null;
+  updatedAt: string;
+}
+
+export interface ProviderPullRequestPage {
+  pullRequests: ProviderPullRequest[];
+  nextPage: number | null;
+}
+
+export interface ProviderPullRequestDetails {
+  pullRequest: ProviderPullRequest;
+  event: PullRequestEvent;
+  run: PipelineEvent | null;
+}
+
+export interface ProviderBranchPage {
+  branches: string[];
+  defaultBranch: string | null;
+  nextPage: number | null;
+}
+
+export interface CreateProviderPullRequestInput {
+  sourceBranch: string;
+  targetBranch: string;
+  title: string;
+  description: string;
+  draft: boolean;
 }
 
 function record(value: unknown): Record<string, unknown> | null {
@@ -203,7 +243,14 @@ export function githubRepository(value: unknown): ProviderRepository | null {
   const permissions = record(row?.permissions);
   if ((typeof id !== 'number' && typeof id !== 'string') || !fullName || !webUrl) return null;
   if (!bool(permissions?.admin)) return null;
-  return { externalId: String(id), fullName, webUrl, private: bool(row?.private) };
+  const defaultBranch = text(row?.default_branch);
+  return {
+    externalId: String(id),
+    fullName,
+    webUrl,
+    private: bool(row?.private),
+    ...(defaultBranch ? { defaultBranch } : {}),
+  };
 }
 
 export function gitlabRepository(value: unknown): ProviderRepository | null {
@@ -212,7 +259,14 @@ export function gitlabRepository(value: unknown): ProviderRepository | null {
   const fullName = text(row?.path_with_namespace);
   const webUrl = httpUrl(row?.web_url);
   if ((typeof id !== 'number' && typeof id !== 'string') || !fullName || !webUrl) return null;
-  return { externalId: String(id), fullName, webUrl, private: row?.visibility !== 'public' };
+  const defaultBranch = text(row?.default_branch);
+  return {
+    externalId: String(id),
+    fullName,
+    webUrl,
+    private: row?.visibility !== 'public',
+    ...(defaultBranch ? { defaultBranch } : {}),
+  };
 }
 
 export function giteaRepository(value: unknown): ProviderRepository | null {
@@ -375,6 +429,296 @@ function bitbucketRepoPath(fullName: string): string {
   if (parts.length !== 2 || parts.some((part) => !part))
     throw new HttpError(400, 'Invalid repository name');
   return `/repositories/${parts.map(encodeURIComponent).join('/')}`;
+}
+
+function isoText(value: unknown): string | null {
+  const raw = text(value);
+  if (!raw || Number.isNaN(Date.parse(raw))) return null;
+  return new Date(raw).toISOString();
+}
+
+export function githubPullRequest(value: unknown): ProviderPullRequest | null {
+  const row = record(value);
+  const number = row?.number;
+  const title = text(row?.title);
+  const targetBranch = text(record(row?.base)?.ref);
+  const stateValue = text(row?.state);
+  const updatedAt = isoText(row?.updated_at);
+  if (typeof number !== 'number' || !title || !targetBranch || !stateValue || !updatedAt)
+    return null;
+  return {
+    number,
+    title,
+    url: httpUrl(row?.html_url),
+    state: text(row?.merged_at) ? 'merged' : stateValue === 'closed' ? 'closed' : 'open',
+    draft: bool(row?.draft),
+    sourceBranch: text(record(row?.head)?.ref),
+    targetBranch,
+    headSha: text(record(row?.head)?.sha),
+    updatedAt,
+  };
+}
+
+export function gitlabPullRequest(value: unknown): ProviderPullRequest | null {
+  const row = record(value);
+  const number = row?.iid;
+  const title = text(row?.title);
+  const targetBranch = text(row?.target_branch);
+  const stateValue = text(row?.state);
+  const updatedAt = isoText(row?.updated_at);
+  if (typeof number !== 'number' || !title || !targetBranch || !stateValue || !updatedAt)
+    return null;
+  return {
+    number,
+    title,
+    url: httpUrl(row?.web_url),
+    state: stateValue === 'merged' ? 'merged' : stateValue === 'closed' ? 'closed' : 'open',
+    draft: bool(row?.draft) || bool(row?.work_in_progress),
+    sourceBranch: text(row?.source_branch),
+    targetBranch,
+    headSha: text(row?.sha) ?? text(record(row?.diff_refs)?.head_sha),
+    updatedAt,
+  };
+}
+
+function pullRequestEvent(
+  provider: GitProvider,
+  repository: ProviderRepository,
+  row: Record<string, unknown>,
+  pullRequest: ProviderPullRequest,
+): PullRequestEvent {
+  return {
+    kind: 'pull_request',
+    action:
+      pullRequest.state === 'merged'
+        ? 'merged'
+        : pullRequest.state === 'closed'
+          ? 'closed'
+          : 'opened',
+    number: pullRequest.number,
+    title: pullRequest.title,
+    body: text(provider === 'gitlab' ? row.description : row.body) ?? '',
+    url: pullRequest.url,
+    repo: repository.fullName,
+    sourceBranch: pullRequest.sourceBranch,
+    targetBranch: pullRequest.targetBranch,
+    headSha: pullRequest.headSha,
+    defaultBranch: repository.defaultBranch ?? null,
+    draft: pullRequest.draft,
+  };
+}
+
+function gitlabPipeline(
+  value: unknown,
+  repository: ProviderRepository,
+  pullRequest: ProviderPullRequest,
+): PipelineEvent | null {
+  const row = record(value);
+  const id = row?.id;
+  const status = pipelineStatus(text(row?.status) ?? undefined);
+  const headSha = text(row?.sha) ?? pullRequest.headSha;
+  if ((typeof id !== 'number' && typeof id !== 'string') || !status || !headSha) return null;
+  return {
+    kind: 'pipeline',
+    repo: repository.fullName,
+    pullRequestNumber: pullRequest.number,
+    headSha,
+    status,
+    url: httpUrl(row?.web_url),
+  };
+}
+
+function githubWorkflowRun(
+  value: unknown,
+  repository: ProviderRepository,
+  pullRequest: ProviderPullRequest,
+): PipelineEvent | null {
+  const row = record(value);
+  const id = row?.id;
+  const status = pipelineStatus(text(row?.conclusion) ?? text(row?.status) ?? undefined);
+  const headSha = text(row?.head_sha);
+  if ((typeof id !== 'number' && typeof id !== 'string') || !status || !headSha) return null;
+  return {
+    kind: 'pipeline',
+    repo: repository.fullName,
+    pullRequestNumber: pullRequest.number,
+    headSha,
+    status,
+    url: httpUrl(row?.html_url),
+  };
+}
+
+function ensureDevelopmentProvider(provider: GitProvider): asserts provider is 'github' | 'gitlab' {
+  if (provider !== 'github' && provider !== 'gitlab')
+    throw new HttpError(400, 'Creating and linking pull requests supports GitHub and GitLab');
+}
+
+export async function listProviderPullRequests(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  state: 'open' | 'all',
+  page: number,
+): Promise<ProviderPullRequestPage> {
+  ensureDevelopmentProvider(input.provider);
+  const perPage = 50;
+  const params = new URLSearchParams({
+    page: String(page),
+    per_page: String(perPage),
+  });
+  if (input.provider === 'github') {
+    params.set('state', state);
+    params.set('sort', 'updated');
+    params.set('direction', 'desc');
+  } else {
+    params.set('scope', 'all');
+    params.set('state', state === 'open' ? 'opened' : 'all');
+    params.set('order_by', 'updated_at');
+    params.set('sort', 'desc');
+  }
+  const path =
+    input.provider === 'github'
+      ? `${githubRepoPath(repository.fullName)}/pulls?${params}`
+      : `/projects/${encodeURIComponent(repository.externalId)}/merge_requests?${params}`;
+  const response = await providerRequest(input, path);
+  const body: unknown = await response.json();
+  if (!Array.isArray(body))
+    throw new HttpError(502, `${input.provider} returned an invalid pull request list`);
+  const normalize = input.provider === 'github' ? githubPullRequest : gitlabPullRequest;
+  const pullRequests = body
+    .map(normalize)
+    .filter((pullRequest): pullRequest is ProviderPullRequest => pullRequest !== null);
+  const providerNext = response.headers.get('x-next-page');
+  return {
+    pullRequests,
+    nextPage: providerNext
+      ? Number(providerNext) || null
+      : body.length === perPage
+        ? page + 1
+        : null,
+  };
+}
+
+export async function getProviderPullRequest(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  number: number,
+): Promise<ProviderPullRequestDetails> {
+  ensureDevelopmentProvider(input.provider);
+  const currentRepository = await getProviderRepository(input, repository.externalId);
+  const path =
+    input.provider === 'github'
+      ? `${githubRepoPath(repository.fullName)}/pulls/${number}`
+      : `/projects/${encodeURIComponent(repository.externalId)}/merge_requests/${number}`;
+  const response = await providerRequest(input, path);
+  const body = record(await response.json());
+  if (!body) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
+  const pullRequest =
+    input.provider === 'github' ? githubPullRequest(body) : gitlabPullRequest(body);
+  if (!pullRequest) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
+
+  let run: PipelineEvent | null = null;
+  if (input.provider === 'gitlab') {
+    run = gitlabPipeline(body.head_pipeline, currentRepository, pullRequest);
+  } else if (pullRequest.headSha) {
+    try {
+      const params = new URLSearchParams({ head_sha: pullRequest.headSha, per_page: '1' });
+      const runsResponse = await providerRequest(
+        input,
+        `${githubRepoPath(repository.fullName)}/actions/runs?${params}`,
+      );
+      const runs = record(await runsResponse.json())?.workflow_runs;
+      if (Array.isArray(runs)) run = githubWorkflowRun(runs[0], currentRepository, pullRequest);
+    } catch {
+      run = null;
+    }
+  }
+  return {
+    pullRequest,
+    event: pullRequestEvent(input.provider, currentRepository, body, pullRequest),
+    run,
+  };
+}
+
+export async function listProviderBranches(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  page: number,
+): Promise<ProviderBranchPage> {
+  ensureDevelopmentProvider(input.provider);
+  const perPage = 100;
+  const currentRepository = await getProviderRepository(input, repository.externalId);
+  const params = new URLSearchParams({ page: String(page), per_page: String(perPage) });
+  const path =
+    input.provider === 'github'
+      ? `${githubRepoPath(repository.fullName)}/branches?${params}`
+      : `/projects/${encodeURIComponent(repository.externalId)}/repository/branches?${params}`;
+  const response = await providerRequest(input, path);
+  const body: unknown = await response.json();
+  if (!Array.isArray(body))
+    throw new HttpError(502, `${input.provider} returned an invalid branch list`);
+  const branches = body
+    .map((item) => text(record(item)?.name))
+    .filter((name): name is string => name !== null);
+  const providerNext = response.headers.get('x-next-page');
+  return {
+    branches,
+    defaultBranch: currentRepository.defaultBranch ?? null,
+    nextPage: providerNext
+      ? Number(providerNext) || null
+      : body.length === perPage
+        ? page + 1
+        : null,
+  };
+}
+
+export async function createProviderPullRequest(
+  input: ProviderConnectionInput,
+  repository: ProviderRepository,
+  values: CreateProviderPullRequestInput,
+): Promise<ProviderPullRequestDetails> {
+  ensureDevelopmentProvider(input.provider);
+  const path =
+    input.provider === 'github'
+      ? `${githubRepoPath(repository.fullName)}/pulls`
+      : `/projects/${encodeURIComponent(repository.externalId)}/merge_requests`;
+  const title =
+    input.provider === 'gitlab' && values.draft && !/^(draft:|wip:)/i.test(values.title)
+      ? `Draft: ${values.title}`
+      : values.title;
+  const body =
+    input.provider === 'github'
+      ? {
+          title,
+          body: values.description,
+          head: values.sourceBranch,
+          base: values.targetBranch,
+          draft: values.draft,
+          maintainer_can_modify: true,
+        }
+      : {
+          title,
+          description: values.description,
+          source_branch: values.sourceBranch,
+          target_branch: values.targetBranch,
+          allow_collaboration: true,
+        };
+  const response = await providerRequest(input, path, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+  const created = record(await response.json());
+  if (!created) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
+  const pullRequest =
+    input.provider === 'github' ? githubPullRequest(created) : gitlabPullRequest(created);
+  if (!pullRequest) throw new HttpError(502, `${input.provider} returned an invalid pull request`);
+  return {
+    pullRequest,
+    event: pullRequestEvent(input.provider, repository, created, pullRequest),
+    run:
+      input.provider === 'gitlab'
+        ? gitlabPipeline(created.head_pipeline, repository, pullRequest)
+        : null,
+  };
 }
 
 export async function installProviderWebhook(

@@ -32,6 +32,8 @@ import {
   listFeedRange,
   listGroupedFeed,
   createComment,
+  recordActivity,
+  textSide,
   type FeedCursor,
 } from './activity';
 import { listStatusTimeline } from './status-history';
@@ -54,7 +56,15 @@ import {
   updateWorklog,
 } from './worklogs';
 import { listIssueCycles } from './cycle-history';
-import { listIssueDevelopmentLinks, removeIssueDevelopmentLink } from '#modules/git/development';
+import {
+  createAndLinkPullRequest,
+  linkExistingPullRequest,
+  listLinkablePullRequests,
+  listIssueDevelopmentLinks,
+  removeIssueDevelopmentLink,
+} from '#modules/git/development';
+import { listDevelopmentRepositories, listManagedBranches } from '#modules/git/connections-service';
+import { DevelopmentLinkResponse } from '#modules/git/model';
 import {
   createChecklist,
   createChecklistItem,
@@ -72,6 +82,13 @@ import {
 import {
   issueParams,
   issueDevelopmentLinkParams,
+  issueDevelopmentRepositoryParams,
+  issueDevelopmentListQuery,
+  linkIssueDevelopmentBody,
+  createIssuePullRequestBody,
+  DevelopmentRepositoryResponse,
+  LinkablePullRequestPageResponse,
+  DevelopmentBranchPageResponse,
   IssueResponse,
   IssueLinkResponse,
   IssueWatcherResponse,
@@ -165,6 +182,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // work_items permission.
   .macro({
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
+      getIssueProjectId(Number(p.issueId)),
+    ),
+    developmentIntegration: entityGuard('integrations', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
     checklist: entityGuard('work_items', 'Checklist not found', async (p) => {
@@ -495,6 +515,140 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'Update an issue by its numeric id. Moving it into a column that is at a ' +
           'hard WIP limit fails with 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
+      },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/development/repositories',
+    async ({ projectId }) => listDevelopmentRepositories(projectId),
+    {
+      params: issueParams,
+      developmentIntegration: 'edit',
+      response: { 200: t.Array(DevelopmentRepositoryResponse), ...accessErrors },
+      detail: {
+        summary: 'List repositories available to an issue',
+        description:
+          'List connected GitHub and GitLab repositories that can link development work.',
+      },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/development/repositories/:repositoryId/pull-requests',
+    async ({ params, query, projectId }) =>
+      listLinkablePullRequests(
+        projectId,
+        params.issueId,
+        params.repositoryId,
+        query.state ?? 'open',
+        query.page ?? 1,
+      ),
+    {
+      params: issueDevelopmentRepositoryParams,
+      query: issueDevelopmentListQuery,
+      developmentIntegration: 'edit',
+      response: { 200: LinkablePullRequestPageResponse, ...commonErrors },
+      detail: {
+        summary: 'List pull requests available to an issue',
+        description: 'List current pull requests or merge requests from a connected repository.',
+      },
+    },
+  )
+
+  .get(
+    '/issues/:issueId/development/repositories/:repositoryId/branches',
+    async ({ params, query, projectId }) =>
+      listManagedBranches(projectId, params.repositoryId, query.page ?? 1),
+    {
+      params: issueDevelopmentRepositoryParams,
+      query: issueDevelopmentListQuery,
+      developmentIntegration: 'edit',
+      response: { 200: DevelopmentBranchPageResponse, ...commonErrors },
+      detail: {
+        summary: 'List repository branches available to an issue',
+        description: 'List source and target branches for creating a pull request.',
+      },
+    },
+  )
+
+  .post(
+    '/issues/:issueId/development',
+    async ({ params, body, projectId, user, set }) => {
+      const result = await linkExistingPullRequest(
+        projectId,
+        params.issueId,
+        body.repositoryId,
+        body.number,
+      );
+      if (result.created) {
+        if (result.link.number == null)
+          throw new HttpError(500, 'Linked pull request has no number');
+        await recordActivity(
+          params.issueId,
+          [
+            {
+              action: 'git_pr',
+              subject: textSide(result.link.state === 'merged' ? 'merged' : 'opened'),
+              from: {
+                value: `${result.link.repository}#${result.link.number}`,
+                repo: result.link.repository,
+                number: result.link.number,
+              },
+              to: textSide(result.link.url),
+            },
+          ],
+          requireUser(user).id,
+        );
+      }
+      set.status = result.created ? 201 : 200;
+      return result.link;
+    },
+    {
+      params: issueParams,
+      body: linkIssueDevelopmentBody,
+      developmentIntegration: 'edit',
+      response: {
+        200: DevelopmentLinkResponse,
+        201: DevelopmentLinkResponse,
+        ...commonErrors,
+      },
+      detail: {
+        summary: 'Link an existing pull request',
+        description: 'Link a current pull request or merge request from a connected repository.',
+      },
+    },
+  )
+
+  .post(
+    '/issues/:issueId/development/pull-requests',
+    async ({ params, body, projectId, set }) => {
+      const sourceBranch = body.sourceBranch.trim();
+      const targetBranch = body.targetBranch.trim();
+      const title = body.title.trim();
+      if (!sourceBranch || !targetBranch || !title)
+        throw new HttpError(400, 'Branches and title are required');
+      if (sourceBranch === targetBranch)
+        throw new HttpError(400, 'Source and target branches must be different');
+      const result = await createAndLinkPullRequest(projectId, params.issueId, body.repositoryId, {
+        sourceBranch,
+        targetBranch,
+        title,
+        description: body.description,
+        draft: body.draft,
+      });
+      set.status = 201;
+      return result.link;
+    },
+    {
+      params: issueParams,
+      body: createIssuePullRequestBody,
+      developmentIntegration: 'edit',
+      response: { 201: DevelopmentLinkResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Create a pull request for an issue',
+        description:
+          'Create a GitHub pull request or GitLab merge request from an existing branch.',
       },
     },
   )

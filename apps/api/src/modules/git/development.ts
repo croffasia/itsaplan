@@ -1,6 +1,16 @@
 import { db, issue, issueDevelopmentCheck, issueDevelopmentLink } from '@repo/db';
 import { and, desc, eq, inArray, isNull, or, sql } from 'drizzle-orm';
-import { iso } from '#shared/lib';
+import { HttpError, iso } from '#shared/lib';
+import {
+  createManagedPullRequest,
+  getManagedPullRequest,
+  listManagedPullRequests,
+} from './connections-service';
+import type {
+  CreateProviderPullRequestInput,
+  ProviderPullRequest,
+  ProviderPullRequestDetails,
+} from './connections-provider';
 import type {
   BranchEvent,
   CheckEvent,
@@ -37,6 +47,15 @@ export interface DevelopmentLink {
   checkStatus: PipelineStatus | null;
   checks: DevelopmentCheck[];
   updatedAt: string;
+}
+
+export interface LinkablePullRequest extends ProviderPullRequest {
+  linked: boolean;
+}
+
+export interface LinkablePullRequestPage {
+  pullRequests: LinkablePullRequest[];
+  nextPage: number | null;
 }
 
 function pullRequestState(event: PullRequestEvent): PullRequestState {
@@ -101,6 +120,79 @@ export async function listIssueDevelopmentLinks(issueId: number): Promise<Develo
       updatedAt: iso(link.updatedAt),
     };
   });
+}
+
+export async function listLinkablePullRequests(
+  projectId: number,
+  issueId: number,
+  repositoryId: number,
+  state: 'open' | 'all',
+  page: number,
+): Promise<LinkablePullRequestPage> {
+  const result = await listManagedPullRequests(projectId, repositoryId, state, page);
+  const linked = result.page.pullRequests.length
+    ? await db
+        .select({ number: issueDevelopmentLink.number })
+        .from(issueDevelopmentLink)
+        .where(
+          and(
+            eq(issueDevelopmentLink.issueId, issueId),
+            eq(issueDevelopmentLink.provider, result.provider),
+            eq(issueDevelopmentLink.repository, result.repository),
+            inArray(
+              issueDevelopmentLink.number,
+              result.page.pullRequests.map((pullRequest) => pullRequest.number),
+            ),
+          ),
+        )
+    : [];
+  const linkedNumbers = new Set(linked.map((item) => item.number));
+  return {
+    pullRequests: result.page.pullRequests.map((pullRequest) => ({
+      ...pullRequest,
+      linked: linkedNumbers.has(pullRequest.number),
+    })),
+    nextPage: result.page.nextPage,
+  };
+}
+
+async function storePullRequestLink(
+  projectId: number,
+  issueId: number,
+  provider: 'github' | 'gitlab',
+  details: ProviderPullRequestDetails,
+): Promise<{ link: DevelopmentLink; created: boolean }> {
+  const createdIssueIds = await upsertPullRequestLinks([issueId], provider, details.event);
+  if (details.run) await updatePipelineLinks(projectId, provider, details.run);
+  const links = await listIssueDevelopmentLinks(issueId);
+  const link = links.find(
+    (item) =>
+      item.provider === provider &&
+      item.repository === details.event.repo &&
+      item.number === details.event.number,
+  );
+  if (!link) throw new HttpError(500, 'Development link was not stored');
+  return { link, created: createdIssueIds.includes(issueId) };
+}
+
+export async function linkExistingPullRequest(
+  projectId: number,
+  issueId: number,
+  repositoryId: number,
+  number: number,
+): Promise<{ link: DevelopmentLink; created: boolean }> {
+  const result = await getManagedPullRequest(projectId, repositoryId, number);
+  return storePullRequestLink(projectId, issueId, result.provider, result.details);
+}
+
+export async function createAndLinkPullRequest(
+  projectId: number,
+  issueId: number,
+  repositoryId: number,
+  input: CreateProviderPullRequestInput,
+): Promise<{ link: DevelopmentLink; created: boolean }> {
+  const result = await createManagedPullRequest(projectId, repositoryId, input);
+  return storePullRequestLink(projectId, issueId, result.provider, result.details);
 }
 
 export async function hasOpenDevelopmentLinks(issueId: number): Promise<boolean> {

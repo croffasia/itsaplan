@@ -73,6 +73,7 @@ export default function IssueDetailContent({
     setDescEditor,
   } = useIssueDetail(project, issueId, onIssueLoaded);
   const canEdit = usePermissions(project).can('work_items', 'edit');
+  const canManageDevelopment = usePermissions(project).can('integrations', 'edit');
   const features = useProjectFeatures();
   useFilePaste(canEdit && issue ? (files) => void attachFiles(files) : null);
   const properties = usePersistedOpen('issue-properties-open');
@@ -183,7 +184,14 @@ export default function IssueDetailContent({
 
       {features.timeLogging && <IssueWorklogPanel project={project} issue={issue} />}
 
-      <IssueDevelopmentPanel issueId={issue.id} links={issue.development ?? []} canEdit={canEdit} />
+      <IssueDevelopmentPanel
+        issueId={issue.id}
+        identifier={issue.identifier}
+        issueTitle={issue.title}
+        links={issue.development ?? []}
+        canEdit={canEdit}
+        canManage={canManageDevelopment}
+      />
 
       <IssueLinksPanel project={project} issue={issue} />
     </>

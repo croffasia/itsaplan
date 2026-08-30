@@ -64,6 +64,7 @@ import {
   scimGroupParams,
   userParams,
 } from './model';
+import { emailTestError } from './email-test';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
 import { SCIM_BASE_URL } from '#modules/scim/resource';
 import {
@@ -106,35 +107,6 @@ async function assertUsableSignInMethod(
   if (!auth.emailPassword && !nextProviderUsable && !otherProviderUsable) {
     throw new HttpError(400, 'Enable password sign-in or another single sign-on provider first');
   }
-}
-
-function emailTestError(error: string | undefined): string {
-  const value = error?.toLowerCase() ?? '';
-  if (value.includes('timeout') || value.includes('aborted')) {
-    return 'The email provider timed out';
-  }
-  if (
-    value.includes('sender') ||
-    value.includes('from address') ||
-    value.includes('domain') ||
-    value.includes('validation_error')
-  ) {
-    return 'The email provider rejected the From address';
-  }
-  if (value.includes('429') || value.includes('rate') || value.includes('quota')) {
-    return 'The email provider rate limit or quota was reached';
-  }
-  if (
-    value.includes('auth') ||
-    value.includes('credential') ||
-    value.includes('invalid login') ||
-    value.includes('401') ||
-    value.includes('403') ||
-    value.includes('535')
-  ) {
-    return 'The email provider rejected the credentials';
-  }
-  return 'The email provider rejected the test message';
 }
 
 export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })

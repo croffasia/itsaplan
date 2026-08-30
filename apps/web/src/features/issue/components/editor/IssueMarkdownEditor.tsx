@@ -23,6 +23,11 @@ import { useTranslations } from 'next-intl';
 // highlightAuto, so there is no language picker.
 const lowlight = createLowlight(common);
 
+export const issueEditorStarterKitOptions = {
+  codeBlock: false,
+  link: false,
+} as const;
+
 // A minimal WYSIWYG editor over markdown text — no persistent toolbar, just a
 // bubble menu on selection and a "/" command list (Linear/Notion-style). Content
 // in and out is plain markdown (via tiptap-markdown), matching how descriptions
@@ -84,7 +89,7 @@ export default function IssueMarkdownEditor({
     editable,
     extensions: [
       // Replaces StarterKit's plain code block, keeping the node name codeBlock.
-      StarterKit.configure({ codeBlock: false }),
+      StarterKit.configure(issueEditorStarterKitOptions),
       CodeBlockLowlight.configure({ lowlight }),
       Placeholder.configure({ placeholder }),
       Link.configure({ openOnClick: false, autolink: true }),

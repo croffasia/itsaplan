@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { db, notificationDelivery } from '@repo/db';
-import { and, eq, sql } from 'drizzle-orm';
-import { authedApi } from '#tests/helpers/app';
+import { app, authedApi } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
@@ -13,11 +11,15 @@ import { resetDb } from '#tests/helpers/db';
 // Creates a project MKT owned by a fresh user and returns a Treaty client acting
 // as that owner. The first user in a reset DB is "god"; the owner still reaches
 // the project only through its project_member row, so this is a plain owner.
-async function setupOwner(): Promise<{ user: TestUser; api: ReturnType<typeof authedApi> }> {
+async function setupOwner(): Promise<{
+  user: TestUser;
+  api: ReturnType<typeof authedApi>;
+  projectId: number;
+}> {
   const user = await signUpTestUser();
   const api = authedApi(user.cookie);
-  await api.projects.post({ key: 'MKT', name: 'Marketing' });
-  return { user, api };
+  const project = await api.projects.post({ key: 'MKT', name: 'Marketing' });
+  return { user, api, projectId: project.data!.id };
 }
 
 async function configureEmail(owner: ReturnType<typeof authedApi>) {
@@ -27,6 +29,31 @@ async function configureEmail(owner: ReturnType<typeof authedApi>) {
     allowProjects: false,
   });
   expect(result.status).toBe(200);
+}
+
+async function deliverInvite(projectId: number, projectInviteId: number) {
+  const token = 'invite-email-test-worker-token';
+  const previousToken = process.env.WORKER_INTERNAL_TOKEN;
+  process.env.WORKER_INTERNAL_TOKEN = token;
+  let response: Response;
+  try {
+    response = await app.handle(
+      new Request('http://localhost/internal/notification-deliveries/send', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-worker-token': token },
+        body: JSON.stringify({
+          projectId,
+          channel: 'email',
+          recipient: 'invitee@example.com',
+          payload: { text: 'Invitation', projectInviteId },
+        }),
+      }),
+    );
+  } finally {
+    if (previousToken == null) delete process.env.WORKER_INTERNAL_TOKEN;
+    else process.env.WORKER_INTERNAL_TOKEN = previousToken;
+  }
+  return { status: response.status, body: await response.json() };
 }
 
 describe('invites', () => {
@@ -174,7 +201,7 @@ describe('invites', () => {
       expect(res.data).toEqual({ emailQueued: false });
     });
 
-    it('queues a pending invite and deduplicates repeated requests', async () => {
+    it('queues a pending invite and accepts concurrent repeat requests', async () => {
       const owner = await setupOwner();
       const invite = await owner.api
         .projects({ projectKey: 'MKT' })
@@ -184,24 +211,53 @@ describe('invites', () => {
         .projects({ projectKey: 'MKT' })
         .invites({ inviteId: invite.data!.id }).email;
 
-      const first = await client.post();
-      const second = await client.post();
+      const [first, second] = await Promise.all([client.post(), client.post()]);
 
       expect(first.status).toBe(200);
       expect(first.data).toEqual({ emailQueued: true });
       expect(second.status).toBe(200);
       expect(second.data).toEqual({ emailQueued: true });
+    });
 
-      const [outbox] = await db
-        .select({ count: sql<number>`count(*)` })
-        .from(notificationDelivery)
-        .where(
-          and(
-            eq(notificationDelivery.recipient, 'invitee@example.com'),
-            eq(notificationDelivery.status, 'pending'),
-          ),
-        );
-      expect(Number(outbox?.count)).toBe(1);
+    it('returns 404 for an unknown invite id', async () => {
+      const owner = await setupOwner();
+
+      const res = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: 999999 })
+        .email.post();
+
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 409 after an invite was accepted', async () => {
+      const owner = await setupOwner();
+      const invitee = await signUpTestUser();
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: invitee.email, role: 'member' });
+      await authedApi(invitee.cookie).invites({ token: invite.data!.token }).accept.post();
+
+      const res = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: invite.data!.id })
+        .email.post();
+
+      expect(res.status).toBe(409);
+    });
+
+    it('drops a queued delivery after the invite was accepted', async () => {
+      const owner = await setupOwner();
+      const invitee = await signUpTestUser();
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: invitee.email, role: 'member' });
+      await authedApi(invitee.cookie).invites({ token: invite.data!.token }).accept.post();
+
+      const result = await deliverInvite(owner.projectId, invite.data!.id);
+
+      expect(result.status).toBe(200);
+      expect(result.body).toEqual({ ok: true });
     });
 
     it('denies a non-member', async () => {

@@ -122,6 +122,21 @@ export async function getInviteById(projectId: number, id: number): Promise<Invi
   };
 }
 
+export async function isInvitePending(projectId: number, id: number): Promise<boolean> {
+  const rows = await db
+    .select({ id: projectInvite.id })
+    .from(projectInvite)
+    .where(
+      and(
+        eq(projectInvite.projectId, projectId),
+        eq(projectInvite.id, id),
+        eq(projectInvite.status, 'pending'),
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
 export async function listInvites(projectId: number): Promise<InviteRow[]> {
   const rows = await db
     .select({

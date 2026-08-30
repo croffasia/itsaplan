@@ -74,5 +74,6 @@ export const sendDeliveryBody = t.Object({
     url: t.Optional(t.String()),
     emailSource: t.Optional(t.UnionEnum(['project', 'instance'])),
     idempotencyKey: t.Optional(t.String()),
+    projectInviteId: t.Optional(t.Integer({ minimum: 1 })),
   }),
 });

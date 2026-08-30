@@ -22,8 +22,8 @@ export default function InviteRow({
   resending,
 }: {
   invite: Invite;
-  onResend: (invite: Invite) => void;
-  onRevoke: (invite: Invite) => void;
+  onResend?: (invite: Invite) => void;
+  onRevoke?: (invite: Invite) => void;
   resending: boolean;
 }) {
   const t = useTranslations('members.invites');
@@ -51,11 +51,11 @@ export default function InviteRow({
   }
 
   function resend() {
-    onResend(invite);
+    onResend?.(invite);
   }
 
   function revoke() {
-    onRevoke(invite);
+    onRevoke?.(invite);
   }
 
   const invitedBy = invite.invitedByName || invite.invitedByEmail;
@@ -67,11 +67,11 @@ export default function InviteRow({
   return (
     <Item
       size="sm"
-      className="h-14 border-0 border-b border-border last:border-b-0 hover:bg-accent/50"
+      className="min-h-14 border-0 border-b border-border last:border-b-0 hover:bg-accent/50"
     >
-      <ItemContent className="gap-0.5">
-        <ItemTitle className="flex items-center gap-2">
-          {invite.email}
+      <ItemContent className="min-w-0 gap-0.5">
+        <ItemTitle className="max-w-full flex-wrap">
+          <span className="break-all">{invite.email}</span>
           <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
             {roleLabel}
           </Badge>
@@ -87,8 +87,8 @@ export default function InviteRow({
           {timestamp}
         </span>
       </ItemContent>
-      <ItemActions>
-        {pending && (
+      <ItemActions className="ms-auto w-full justify-end sm:w-auto">
+        {pending && onResend && (
           <Button
             variant="ghost"
             size="sm"
@@ -111,15 +111,17 @@ export default function InviteRow({
             {copied ? t('copied') : t('copyLink')}
           </Button>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-7 text-muted-foreground hover:text-destructive"
-          title={pending ? t('revokeAction') : t('removeAction')}
-          onClick={revoke}
-        >
-          <X className="size-4" />
-        </Button>
+        {onRevoke && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-7 text-muted-foreground hover:text-destructive"
+            title={pending ? t('revokeAction') : t('removeAction')}
+            onClick={revoke}
+          >
+            <X className="size-4" />
+          </Button>
+        )}
       </ItemActions>
     </Item>
   );

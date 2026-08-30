@@ -19,6 +19,7 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
   const { can } = usePermissions();
   const canRead = can('members_invite', 'read');
   const canCreate = can('members_invite', 'create');
+  const canDelete = can('members_invite', 'delete');
   const invitesQuery = useInvitesQuery(projectKey, canRead);
   const deleteInvite = useDeleteInvite(projectKey);
   const sendEmail = useSendInviteEmail(projectKey);
@@ -47,8 +48,8 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
               <InviteRow
                 key={invite.id}
                 invite={invite}
-                onResend={resendInvite}
-                onRevoke={setTarget}
+                onResend={canCreate ? resendInvite : undefined}
+                onRevoke={canDelete ? setTarget : undefined}
                 resending={sendEmail.isPending && sendEmail.variables === invite.id}
               />
             ))}
@@ -56,7 +57,7 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
         </div>
       )}
 
-      {target && (
+      {canDelete && target && (
         <ConfirmDialog
           title={t('revokeTitle', { email: target.email })}
           confirmLabel={t('revokeConfirm')}

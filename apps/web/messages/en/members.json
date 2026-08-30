@@ -36,6 +36,7 @@
     "copied": "Copied",
     "emailQueued": "Invitation email queued",
     "emailUnavailable": "Invite created, but email was not queued. Copy the link to share it.",
+    "resendUnavailable": "Email is not configured. Copy the invitation link to share it.",
     "resendEmail": "Send email",
     "resendingEmail": "Queueing…",
     "revokeAction": "Revoke invite",

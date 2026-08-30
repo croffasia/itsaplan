@@ -31,6 +31,7 @@ export interface DeliveryPayload {
   emailSource?: 'project' | 'instance';
   idempotencyKey?: string;
   dedupeKey?: string;
+  projectInviteId?: number;
 }
 
 interface OutboxRow {

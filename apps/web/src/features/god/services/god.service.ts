@@ -59,6 +59,10 @@ export function useUpdateInstanceEmailSettings() {
   });
 }
 
+export function useTestInstanceEmailSettings() {
+  return useMutation({ mutationFn: () => api.testInstanceEmailSettings() });
+}
+
 export function useInstanceGoogleSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceGoogleSettings,

@@ -72,6 +72,7 @@ async function sendSmtp(
     auth: smtp.username ? { user: smtp.username, pass: smtp.password } : undefined,
     connectionTimeout: timeoutMs,
     greetingTimeout: timeoutMs,
+    socketTimeout: timeoutMs,
   });
   try {
     await transporter.sendMail({

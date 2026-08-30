@@ -5,6 +5,7 @@ import {
   getAuthSettings,
   setAuthSettings,
   getEmailSettings,
+  getEmailConfig,
   setEmailSettings,
   hasConfiguredEmailProvider,
   getGoogleSettings,
@@ -17,6 +18,7 @@ import {
   setScimSettings,
   rotateScimToken,
 } from '@repo/auth';
+import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';
 import { HttpError } from '#shared/lib';
@@ -38,6 +40,7 @@ import {
   AuthSettingsResponse,
   EmailSettingsBody,
   EmailSettingsResponse,
+  EmailTestResponse,
   GoogleSettingsBody,
   GoogleSettingsResponse,
   InstanceProjectDetailResponse,
@@ -103,6 +106,35 @@ async function assertUsableSignInMethod(
   if (!auth.emailPassword && !nextProviderUsable && !otherProviderUsable) {
     throw new HttpError(400, 'Enable password sign-in or another single sign-on provider first');
   }
+}
+
+function emailTestError(error: string | undefined): string {
+  const value = error?.toLowerCase() ?? '';
+  if (value.includes('timeout') || value.includes('aborted')) {
+    return 'The email provider timed out';
+  }
+  if (
+    value.includes('sender') ||
+    value.includes('from address') ||
+    value.includes('domain') ||
+    value.includes('validation_error')
+  ) {
+    return 'The email provider rejected the From address';
+  }
+  if (value.includes('429') || value.includes('rate') || value.includes('quota')) {
+    return 'The email provider rate limit or quota was reached';
+  }
+  if (
+    value.includes('auth') ||
+    value.includes('credential') ||
+    value.includes('invalid login') ||
+    value.includes('401') ||
+    value.includes('403') ||
+    value.includes('535')
+  ) {
+    return 'The email provider rejected the credentials';
+  }
+  return 'The email provider rejected the test message';
 }
 
 export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
@@ -173,6 +205,42 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       description: 'Update the mail provider used for authentication email.',
     },
   })
+
+  .post(
+    '/god/email-settings/test',
+    async ({ user }) => {
+      const current = requireGod(user);
+      if (!current.email) throw new HttpError(400, 'The instance owner has no email address');
+      const config = await getEmailConfig();
+      if (!config || !hasEmailProvider(config)) {
+        throw new HttpError(400, 'Configure an email provider first');
+      }
+
+      const body = emailBody(
+        "This test confirms that It's a Plan can send email through the configured provider.",
+      );
+      const result = await sendEmail(
+        { ...config, smtp: { ...config.smtp, timeout: config.smtp.timeout ?? 15 } },
+        {
+          to: current.email,
+          subject: "It's a Plan email test",
+          ...body,
+        },
+      );
+      if (!result.ok) {
+        console.error('[god] test email failed:', result.error);
+        throw new HttpError(502, emailTestError(result.error));
+      }
+      return { recipient: current.email };
+    },
+    {
+      response: { 200: EmailTestResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Send a test email',
+        description: 'Send a test message through the saved instance provider to its owner.',
+      },
+    },
+  )
 
   .get(
     '/god/google-settings',

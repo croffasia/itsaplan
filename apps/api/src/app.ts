@@ -19,6 +19,30 @@ import { internalTelegramRoutes } from './modules/telegram/internal-routes';
 import { gitWebhookRoutes } from './modules/git/webhook';
 import { scimRoutes } from './modules/scim';
 import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
+import { normalizeOpenApiResponse } from './openapi';
+import pkg from '../../../package.json';
+
+const apiUrl = (process.env.API_URL ?? 'http://localhost:3000').replace(/\/+$/, '');
+const appUrl = (process.env.APP_URL?.split(',')[0]?.trim() || 'http://localhost:3001').replace(
+  /\/+$/,
+  '',
+);
+const apiDescription = `REST API for projects, work items, AI agents, Git integrations, analytics, and instance administration.
+
+## Quick start
+
+1. Create a personal API key in [Account settings](${appUrl}/account/api-keys). The key is shown once and carries the same permissions as its owner.
+2. Send it in the \`x-api-key\` header. Never put a key in a URL, issue, comment, or source file.
+3. Use the project key from the URL in routes containing \`{projectKey}\`. This page is opened from a project, but the API document is instance-wide.
+
+\`\`\`sh
+curl "${apiUrl}/projects" \\
+  --header "x-api-key: YOUR_PERSONAL_API_KEY"
+\`\`\`
+
+JSON errors use \`{ "error": "message" }\` and may also include a stable \`code\`. Pagination parameters and response envelopes are documented per operation.
+
+For agent clients, use the MCP endpoint at [${apiUrl}/mcp](${apiUrl}/mcp). SCIM, worker-internal routes, and repository webhooks use the separate credentials shown on their operations.`;
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
@@ -29,8 +53,11 @@ export const app = new Elysia()
       origin: trustedOrigins,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'x-api-key'],
     }),
+  )
+  .onAfterHandle({ as: 'global' }, ({ request, response }) =>
+    normalizeOpenApiResponse(request, response),
   )
   // OpenAPI docs. Mounted on the main app (outside the planner's session guard)
   // so the UI at /docs and the spec at /docs/json are reachable without a
@@ -49,9 +76,10 @@ export const app = new Elysia()
       documentation: {
         info: {
           title: "It's a Plan API",
-          version: '1.0.0',
-          description: 'REST API for projects, issues, and their dependent entities.\n\n',
+          version: pkg.version,
+          description: apiDescription,
         },
+        servers: [{ url: apiUrl, description: 'Configured public API origin' }],
         tags: [
           { name: 'Projects', description: 'Projects and the full work items view' },
           { name: 'Members', description: 'Project membership and roles' },
@@ -147,6 +175,48 @@ export const app = new Elysia()
         components: {
           securitySchemes: {
             apiKey: { type: 'apiKey', in: 'header', name: 'x-api-key' },
+            scimBearer: {
+              type: 'http',
+              scheme: 'bearer',
+              bearerFormat: 'opaque',
+              description: 'Instance SCIM token generated in God mode.',
+            },
+            workerToken: {
+              type: 'apiKey',
+              in: 'header',
+              name: 'x-worker-token',
+              description: 'Shared token used only by the worker and bot services.',
+            },
+            gitHubSignature: {
+              type: 'apiKey',
+              in: 'header',
+              name: 'x-hub-signature-256',
+              description: 'GitHub HMAC signature generated from the raw request body.',
+            },
+            gitLabToken: {
+              type: 'apiKey',
+              in: 'header',
+              name: 'x-gitlab-token',
+              description: 'GitLab secret token configured on the project webhook.',
+            },
+            giteaSignature: {
+              type: 'apiKey',
+              in: 'header',
+              name: 'x-gitea-signature',
+              description: 'Gitea HMAC signature generated from the raw request body.',
+            },
+            forgejoSignature: {
+              type: 'apiKey',
+              in: 'header',
+              name: 'x-forgejo-signature',
+              description: 'Forgejo HMAC signature generated from the raw request body.',
+            },
+            bitbucketSignature: {
+              type: 'apiKey',
+              in: 'header',
+              name: 'x-hub-signature',
+              description: 'Bitbucket HMAC signature generated from the raw request body.',
+            },
           },
         },
         security: [{ apiKey: [] }],

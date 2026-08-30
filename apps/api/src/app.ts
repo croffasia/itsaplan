@@ -6,6 +6,8 @@ import {
   getAuthSettings,
   hasConfiguredEmailProvider,
   hasConfiguredGoogle,
+  hasConfiguredOidc,
+  getOidcLabel,
 } from '@repo/auth';
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
@@ -17,6 +19,8 @@ import { internalAgentRunRoutes } from './modules/agents/core/internal-routes';
 import { internalNotificationRoutes } from './modules/notifications/internal-routes';
 import { internalTelegramRoutes } from './modules/telegram/internal-routes';
 import { gitWebhookRoutes } from './modules/git/webhook';
+import { scimRoutes } from './modules/scim';
+import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
@@ -120,7 +124,12 @@ export const app = new Elysia()
           {
             name: 'God',
             description:
-              'Instance administration: registration policy, email provider, Google sign-in',
+              'Instance administration: registration policy, email provider, sign-in providers, ' +
+              'SCIM provisioning',
+          },
+          {
+            name: 'SCIM',
+            description: 'SCIM 2.0 provisioning, authenticated with the instance SCIM bearer token',
           },
           {
             name: 'System',
@@ -155,14 +164,26 @@ export const app = new Elysia()
   .get('/.well-known/oauth-protected-resource/mcp', ({ request }) =>
     oAuthProtectedResourceMetadata(auth)(request),
   )
-  // better-auth: forward every /api/auth/* request to its handler.
-  .all('/api/auth/*', ({ request }) => auth.handler(request))
+  // better-auth: forward every /api/auth/* request to its handler. The OIDC
+  // callback gets one extra step afterwards: folding the provider's `groups` claim
+  // into the SCIM group tables, so a group mapped to a project in god mode grants
+  // access on an OIDC-only instance too, not just one that also runs a SCIM sync.
+  .all('/api/auth/*', async ({ request }) => {
+    const response = await auth.handler(request);
+    if (new URL(request.url).pathname.startsWith('/api/auth/oauth2/callback/')) {
+      await syncOidcGroupsAfterCallback(response);
+    }
+    return response;
+  })
   // Example protected handler: read the session from better-auth.
   .get(
     '/me',
     async ({ request }) => {
       const session = await auth.api.getSession({ headers: request.headers });
-      if (!session) return { authenticated: false };
+      // A deactivated account is not signed in as far as the app is concerned:
+      // every planner route answers 401 for it, and this is what the screens ask
+      // first. Deactivation arrives over SCIM, after the session was opened.
+      if (!session || session.user.active === false) return { authenticated: false };
       return { authenticated: true, user: session.user };
     },
     {
@@ -171,7 +192,8 @@ export const app = new Elysia()
         summary: 'Get the current session user',
         description:
           'Resolve the request credentials to a session and return the user it belongs to. ' +
-          'Without a session it answers `{ authenticated: false }` instead of failing.',
+          'Without a session, or for a deactivated account, it answers ' +
+          '`{ authenticated: false }` instead of failing.',
       },
     },
   )
@@ -190,7 +212,14 @@ export const app = new Elysia()
         magicLink: settings.magicLink && emailEnabled,
         requireEmailVerification: settings.requireEmailVerification && emailEnabled,
         emailEnabled,
+        // Whether the email/password form is offered at all. The api refuses to turn
+        // it off while no provider below is usable, so this is never false alone.
+        emailPassword: settings.emailPassword,
         google: await hasConfiguredGoogle(),
+        oidc: await hasConfiguredOidc(),
+        // Names the operator's own identity provider, so the button shows it as
+        // given. Empty falls back to a translated default.
+        oidcLabel: await getOidcLabel(),
       };
     },
     {
@@ -216,6 +245,11 @@ export const app = new Elysia()
   .use(internalTelegramRoutes)
   // Inbound repository webhook receiver (authenticated by its per-project secret).
   .use(gitWebhookRoutes)
+  // SCIM 2.0 provisioning (authenticated by the instance SCIM bearer token). Mounted
+  // here rather than under the planner: the planner's session guard would answer 401
+  // before the bearer check runs, and its error handler emits a body SCIM does not
+  // understand.
+  .use(scimRoutes)
   // Planner API: projects, issues, and their dependent entities.
   .use(planner);
 

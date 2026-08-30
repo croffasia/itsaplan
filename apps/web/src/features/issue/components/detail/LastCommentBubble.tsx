@@ -1,9 +1,8 @@
 import { useEffect, useState, type RefObject } from 'react';
 import { X } from 'lucide-react';
-import { formatDistanceToNow, parseISO } from 'date-fns';
 import { useTranslations } from 'next-intl';
 import Avatar from '@/components/common/Avatar';
-import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';
+import { useRelativeTime } from '@/context/relativeTimeContext';
 import { cn } from '@/lib/utils';
 import { useLastComment } from '../../hooks/useLastComment';
 import { commentPreview } from '../../utils/commentPreview';
@@ -26,7 +25,7 @@ export default function LastCommentBubble({
 }) {
   const t = useTranslations('issue.comments');
   const tCommon = useTranslations('common');
-  const locale = useDateFnsLocale();
+  const relativeTime = useRelativeTime();
   const comment = useLastComment(issueId);
   const preview = commentPreview(comment?.body ?? '');
   // One turn per mounted issue: it waits for the feed to leave the screen, runs its few
@@ -98,7 +97,7 @@ export default function LastCommentBubble({
               <span className="flex items-baseline gap-2">
                 <span className="truncate text-sm font-medium">{author}</span>
                 <span className="shrink-0 text-xs text-muted-foreground">
-                  · {formatDistanceToNow(parseISO(comment.createdAt), { addSuffix: true, locale })}
+                  · {relativeTime(comment.createdAt)}
                 </span>
               </span>
               <span dir="auto" className="line-clamp-2 text-sm text-foreground/85">

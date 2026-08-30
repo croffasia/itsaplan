@@ -95,9 +95,57 @@ Enforced declaratively through macros, never imperative calls in handlers.
   `assertPermission` on the fetched row.
 - Guards/macros wrap the `shared/access.ts` primitives. Handlers that still need
   `user` (project create, invite accept/reject, self-removal) call `requireUser(user)`.
-- **Members join only through invites/**, not a direct add. One pending invite per
-  (project, email) — partial unique index → 409. `members/` removes only (last owner
-  protected).
+- **Members join through invites or a provisioned group**, never a direct add from
+  `members/`. One pending invite per (project, email) — partial unique index → 409.
+  `members/` removes only (last owner protected). `project_member.source` says which path
+  a row came from: `modules/scim/reconcile.ts` only ever writes, re-roles or removes its own
+  `'scim'` rows, and `members/` refuses to edit or remove one (409) because the next sync
+  would undo the change.
+
+## SCIM
+
+`modules/scim/` serves SCIM 2.0 (RFC 7643 / 7644) at `/scim/v2` for an identity provider
+to provision users and groups with. Three things make it unlike every other module:
+
+- **Mounted on the root app in `app.ts`, not under `planner`.** The planner's `authContext`
+  answers 401 before the bearer check could run. Authentication is one `onBeforeHandle`
+  against the instance SCIM token from `@repo/auth`.
+- **Its own error document.** `onError` sits on a parent instance that `.use()`s the routes
+  and answers only for paths under `/scim/v2`, handing everything else back to the planner's
+  handler. Two reasons for that shape: an `onError` beside the routes widens the inferred
+  response type of every one of them with the body it returns (which then reaches the Eden
+  client as a success shape), and Elysia propagates the handler to the root app either way.
+- **Bodies are `t.Any()`.** SCIM defines its own schemas and clients send attributes this app
+  ignores, so `resource.ts` validates instead and raises `ScimError`, which carries the
+  `scimType` a provisioning client branches on. Responses are declared per route from
+  `model.ts` — `scimErrors(...)` is the SCIM-shaped counterpart of `shared/responses.ts`.
+
+Filtering is `<attribute> eq "<value>"` only, over the attributes each resource lists in
+`service.ts`; that is what Okta, Entra and Authentik send, and `ServiceProviderConfig`
+advertises exactly that. A create inserts the `user` row directly, the way `createAgent`
+does, which deliberately skips the registration gate — with SCIM on, the identity provider
+decides who exists, and that is what makes `registration: 'closed'` plus SSO work.
+
+`createScimUser`/`updateScimUser` refuse a `god`-role account outright (409): the role is
+what grants god mode, and nothing about the instance owner's account is provider-owned. A
+create for an address already linked (`user.scimExternalId` set) is refused the same way —
+it is a retry, not a new person, and must not overwrite the link a first create wrote.
+
+A group member removal arrives in two shapes: `path: 'members'` with the id(s) to drop in
+`value`, or RFC 7644 §3.5.2.2's path filter, `path: 'members[value eq "<id>"]'`, which Okta
+sends and which carries no `value` at all. `resource.ts`'s `memberFilterIds` reads the
+second shape; a `PATCH /Groups/:id` remove that only checked `value` would silently drop
+nothing for a provider that sends the filter form.
+
+The `scim_group` / `scim_group_member` tables have two writers, not one. A SCIM sync is
+the obvious one, but a group can also be embedded right on a resource instead of pushed on
+its own: `resource.ts`'s `groupDisplayNames` reads a SCIM User's `groups` attribute, and
+`oidc-sync.ts` reads an OIDC sign-in's `groups` claim off the ID token stored on the linked
+`account` row, decoded with no signature check since it already crossed a trusted, TLS
+channel and is read only for a claim, not for authentication. Both funnel into
+`syncEmbeddedGroups`, the same additive-only join a group pushed through `POST /Groups`
+gets — a name missing from a later sync is never removed by this path, only by an explicit
+`PATCH /Groups/:id` or an unmapping in god mode.
 
 ## Security
 

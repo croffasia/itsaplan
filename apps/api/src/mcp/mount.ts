@@ -46,7 +46,10 @@ export function mountMcp(app: any): void {
         headers.set('x-api-key', apiKey);
         try {
           const session = await auth.api.getSession({ headers });
-          if (session) return serve({ kind: 'api-key', apiKey });
+          // A deactivated account is refused here too, the way shared/auth-context.ts
+          // refuses it for every planner route. Deactivation arrives over SCIM, after
+          // the key was issued.
+          if (session && session.user.active !== false) return serve({ kind: 'api-key', apiKey });
         } catch {
           // Not an API key: let the native OAuth handler validate the bearer token.
         }

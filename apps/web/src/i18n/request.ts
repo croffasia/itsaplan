@@ -16,9 +16,8 @@ export default getRequestConfig(async () => {
   return {
     locale,
     messages: await loadMessages(locale),
-    // What "3 hours ago" is measured against. One value per request, shared by the
-    // server render and the client, so a relative time is not computed from two
-    // different clocks and the markup matches on hydration.
+    // The initial reference for relative times. Sharing it between the server and
+    // client keeps hydration stable; RelativeTimeProvider advances it once mounted.
     now: new Date(),
   };
 });

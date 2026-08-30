@@ -1,3 +1,4 @@
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { db, appSecret, projectInvite, getSetting, setSetting } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
@@ -9,18 +10,22 @@ import {
 } from '@repo/mailer';
 
 // Instance-wide authentication settings: who may register, whether email has to be
-// confirmed, the mail provider used for authentication email, and the Google OAuth
-// credentials. Read by the better-auth instance in ./index.ts (the registration gate,
-// the mail senders, the Google provider) and written by god mode in the api, so it
-// lives here rather than in the api.
+// confirmed, which sign-in methods are offered, the mail provider used for
+// authentication email, and the credentials of the OAuth providers. Read by the
+// better-auth instance in ./index.ts (the registration gate, the mail senders, the
+// Google and OIDC providers) and written by god mode in the api, so it lives here
+// rather than in the api.
 //
 // Non-secret settings are one jsonb blob in app_setting under the 'auth' key; the
-// credentials are encrypted in app_secret under 'auth.email' and 'auth.google', each
-// with a `redacted` mirror the settings UI can read without decrypting.
+// credentials are encrypted in app_secret under 'auth.email', 'auth.google',
+// 'auth.oidc' and 'auth.scim', each with a `redacted` mirror the settings UI can read
+// without decrypting.
 
 const AUTH_SETTING_KEY = 'auth';
 const EMAIL_SECRET_KEY = 'auth.email';
 const GOOGLE_SECRET_KEY = 'auth.google';
+const OIDC_SECRET_KEY = 'auth.oidc';
+const SCIM_SECRET_KEY = 'auth.scim';
 
 // Who may create an account.
 //   open   — anyone can sign up
@@ -36,10 +41,19 @@ export interface AuthSettings {
   requireEmailVerification: boolean;
   // Offer sign-in by emailed link alongside the password.
   magicLink: boolean;
+  // Offer the email/password form at all. Turning it off leaves single sign-on (and
+  // passkeys, which are added to an account that already exists) as the way in, so
+  // the api refuses to turn it off while no OAuth provider is configured.
+  emailPassword: boolean;
 }
 
 function defaultAuthSettings(): AuthSettings {
-  return { registration: 'open', requireEmailVerification: false, magicLink: false };
+  return {
+    registration: 'open',
+    requireEmailVerification: false,
+    magicLink: false,
+    emailPassword: true,
+  };
 }
 
 export async function getAuthSettings(): Promise<AuthSettings> {
@@ -56,9 +70,9 @@ export async function setAuthSettings(patch: Partial<AuthSettings>): Promise<Aut
 
 // ── Encrypted config storage ──────────────────────────────────────────────────
 
-// The mail provider and the Google credentials are stored the same way: one JSON
-// blob per key in app_secret, encrypted as a whole, with a `redacted` mirror the
-// settings UI reads without decrypting.
+// Every credential is stored the same way: one JSON blob per key in app_secret,
+// encrypted as a whole, with a `redacted` mirror the settings UI reads without
+// decrypting.
 
 async function readSecret<T>(key: string): Promise<T | null> {
   const rows = await db
@@ -296,6 +310,197 @@ export async function setGoogleSettings(patch: InstanceGooglePatch): Promise<Ins
   const redacted = toGoogleDto(next);
   await writeSecret(GOOGLE_SECRET_KEY, next, redacted);
   return redacted;
+}
+
+// ── Generic OIDC / OAuth2 ─────────────────────────────────────────────────────
+
+// One OIDC provider per instance, discovered from its well-known document. The
+// stored, decrypted credentials; read by the provider in ./index.ts on every
+// request, never returned over HTTP.
+export interface InstanceOidcConfig {
+  enabled: boolean;
+  // Text of the sign-in button. Free-form because it names the operator's own
+  // identity provider, so the sign-in screen renders it as given rather than
+  // translating it. Empty falls back to a translated default.
+  label: string;
+  // The provider's .well-known/openid-configuration. The authorization, token and
+  // userinfo endpoints are read from it, so none of them is configured by hand.
+  discoveryUrl: string;
+  clientId: string;
+  clientSecret: string;
+  scopes: string[];
+  pkce: boolean;
+}
+
+// The config as returned to the client: the secret replaced by a boolean telling
+// whether a value is stored.
+export interface InstanceOidcDto {
+  enabled: boolean;
+  label: string;
+  discoveryUrl: string;
+  clientId: string;
+  hasClientSecret: boolean;
+  scopes: string[];
+  pkce: boolean;
+}
+
+// A partial write. The secret keeps its stored value when omitted or sent empty (a
+// masked field the user did not edit).
+export interface InstanceOidcPatch {
+  enabled?: boolean;
+  label?: string;
+  discoveryUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  scopes?: string[];
+  pkce?: boolean;
+}
+
+function defaultOidcConfig(): InstanceOidcConfig {
+  return {
+    enabled: false,
+    label: '',
+    discoveryUrl: '',
+    clientId: '',
+    clientSecret: '',
+    scopes: ['openid', 'profile', 'email'],
+    pkce: true,
+  };
+}
+
+function toOidcDto(config: InstanceOidcConfig): InstanceOidcDto {
+  return {
+    enabled: config.enabled,
+    label: config.label,
+    discoveryUrl: config.discoveryUrl,
+    clientId: config.clientId,
+    hasClientSecret: config.clientSecret.length > 0,
+    scopes: config.scopes,
+    pkce: config.pkce,
+  };
+}
+
+export async function getOidcConfig(): Promise<InstanceOidcConfig> {
+  const stored = await readSecret<InstanceOidcConfig>(OIDC_SECRET_KEY);
+  // Merge over the default so a config written before a field was added stays valid.
+  return { ...defaultOidcConfig(), ...(stored ?? {}) };
+}
+
+export async function getOidcSettings(): Promise<InstanceOidcDto> {
+  return toOidcDto(await getOidcConfig());
+}
+
+// Whether OIDC sign-in can run right now. The provider is always mounted, so this is
+// what both the god settings and the public sign-in screen ask before offering it.
+export function isOidcUsable(config: InstanceOidcConfig): boolean {
+  return (
+    config.enabled &&
+    config.discoveryUrl.length > 0 &&
+    config.clientId.length > 0 &&
+    config.clientSecret.length > 0
+  );
+}
+
+export async function hasConfiguredOidc(): Promise<boolean> {
+  return isOidcUsable(await getOidcConfig());
+}
+
+// The button text the sign-in screen shows, or an empty string when OIDC is not
+// usable. Read by the public /auth-config.
+export async function getOidcLabel(): Promise<string> {
+  const config = await getOidcConfig();
+  return isOidcUsable(config) ? config.label : '';
+}
+
+export async function setOidcSettings(patch: InstanceOidcPatch): Promise<InstanceOidcDto> {
+  const current = await getOidcConfig();
+  const next: InstanceOidcConfig = {
+    enabled: patch.enabled ?? current.enabled,
+    label: patch.label ?? current.label,
+    discoveryUrl: patch.discoveryUrl ?? current.discoveryUrl,
+    clientId: patch.clientId ?? current.clientId,
+    clientSecret: mergeSecret(current.clientSecret, patch.clientSecret),
+    scopes: patch.scopes ?? current.scopes,
+    pkce: patch.pkce ?? current.pkce,
+  };
+  const redacted = toOidcDto(next);
+  await writeSecret(OIDC_SECRET_KEY, next, redacted);
+  return redacted;
+}
+
+// ── SCIM provisioning token ───────────────────────────────────────────────────
+
+// The bearer token an identity provider sends to /scim/v2. One token per instance,
+// generated here and shown to the owner once: only its prefix is kept in the
+// redacted mirror, so a lost token is replaced rather than recovered.
+export interface InstanceScimConfig {
+  enabled: boolean;
+  token: string;
+}
+
+export interface InstanceScimDto {
+  enabled: boolean;
+  hasToken: boolean;
+  // First characters of the stored token, so the owner can tell which one an IdP
+  // is configured with.
+  tokenPrefix: string;
+}
+
+const SCIM_TOKEN_PREFIX = 'scim_';
+
+function defaultScimConfig(): InstanceScimConfig {
+  return { enabled: false, token: '' };
+}
+
+function toScimDto(config: InstanceScimConfig): InstanceScimDto {
+  return {
+    enabled: config.enabled,
+    hasToken: config.token.length > 0,
+    tokenPrefix: config.token.slice(0, SCIM_TOKEN_PREFIX.length + 6),
+  };
+}
+
+async function getScimConfig(): Promise<InstanceScimConfig> {
+  const stored = await readSecret<InstanceScimConfig>(SCIM_SECRET_KEY);
+  return { ...defaultScimConfig(), ...(stored ?? {}) };
+}
+
+export async function getScimSettings(): Promise<InstanceScimDto> {
+  return toScimDto(await getScimConfig());
+}
+
+export async function setScimSettings(patch: { enabled?: boolean }): Promise<InstanceScimDto> {
+  const current = await getScimConfig();
+  const next: InstanceScimConfig = { ...current, enabled: patch.enabled ?? current.enabled };
+  const redacted = toScimDto(next);
+  await writeSecret(SCIM_SECRET_KEY, next, redacted);
+  return redacted;
+}
+
+// Mints a token, replacing any previous one, and returns it in the clear. This is
+// the only time the value leaves the server.
+export async function rotateScimToken(): Promise<string> {
+  const current = await getScimConfig();
+  const token = `${SCIM_TOKEN_PREFIX}${randomBytes(24).toString('hex')}`;
+  const next: InstanceScimConfig = { ...current, token };
+  await writeSecret(SCIM_SECRET_KEY, next, toScimDto(next));
+  return token;
+}
+
+export async function isScimEnabled(): Promise<boolean> {
+  const config = await getScimConfig();
+  return config.enabled && config.token.length > 0;
+}
+
+// Constant-time comparison, so a wrong token cannot be recovered by timing the
+// answer. Lengths are compared first because timingSafeEqual rejects buffers of
+// different sizes.
+export async function verifyScimToken(candidate: string): Promise<boolean> {
+  const config = await getScimConfig();
+  if (!config.enabled || config.token.length === 0) return false;
+  const expected = Buffer.from(config.token);
+  const given = Buffer.from(candidate);
+  return expected.length === given.length && timingSafeEqual(expected, given);
 }
 
 // ── Invites ───────────────────────────────────────────────────────────────────

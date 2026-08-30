@@ -104,5 +104,6 @@
   },
   "promoted": "تمت ترقية العضو إلى مالك",
   "roleUpdated": "تم تحديث دور العضو",
-  "descriptionUpdated": "تم تحديث وصف العضو"
+  "descriptionUpdated": "تم تحديث وصف العضو",
+  "provisioned": "مُدار عبر SCIM"
 }

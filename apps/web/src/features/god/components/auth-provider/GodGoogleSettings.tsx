@@ -1,11 +1,9 @@
-import { useState } from 'react';
-import { Check, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import SettingsCard from '@/components/common/page/SettingsCard';
+import CopyableValue from '@/components/common/page/CopyableValue';
 import EnabledSwitch from '@/components/common/inputs/EnabledSwitch';
 import SecretInput from '@/components/common/inputs/SecretInput';
 import type { GodGoogleForm } from '../../hooks/useGodGoogleForm';
@@ -15,17 +13,6 @@ import type { GodGoogleForm } from '../../hooks/useGodGoogleForm';
 // registered on the OAuth client for the round trip to work at all.
 export default function GodGoogleSettings({ form }: { form: GodGoogleForm }) {
   const t = useTranslations('god.authProvider');
-  const [copied, setCopied] = useState(false);
-
-  async function copyRedirectUri() {
-    try {
-      await navigator.clipboard.writeText(form.settings.redirectUri);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      // Clipboard can be blocked (no permission / insecure origin); ignore.
-    }
-  }
 
   return (
     <SettingsSection
@@ -64,25 +51,12 @@ export default function GodGoogleSettings({ form }: { form: GodGoogleForm }) {
           </div>
         </div>
 
-        {/* Read-only, so it reads as something to copy out rather than a field to fill
-            in. It is not part of the form and never saved. */}
-        <div className="flex items-start justify-between gap-4 border-t border-border/60 pt-4">
-          <div className="min-w-0 space-y-1">
-            <div className="text-sm font-medium">{t('redirectUri')}</div>
-            <p className="truncate font-mono text-xs">{form.settings.redirectUri}</p>
-            <p className="text-xs text-muted-foreground">{t('redirectUriHint')}</p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="shrink-0"
-            title={t('copyRedirectUri')}
-            onClick={() => void copyRedirectUri()}
-          >
-            {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-          </Button>
-        </div>
+        <CopyableValue
+          title={t('redirectUri')}
+          value={form.settings.redirectUri}
+          hint={t('redirectUriHint')}
+          copyLabel={t('copyRedirectUri')}
+        />
       </SettingsCard>
     </SettingsSection>
   );

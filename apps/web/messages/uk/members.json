@@ -104,5 +104,6 @@
   },
   "promoted": "Учасника призначено власником",
   "roleUpdated": "Роль учасника оновлено",
-  "descriptionUpdated": "Опис учасника оновлено"
+  "descriptionUpdated": "Опис учасника оновлено",
+  "provisioned": "Керується SCIM"
 }

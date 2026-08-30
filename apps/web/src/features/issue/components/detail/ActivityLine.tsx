@@ -1,7 +1,7 @@
-import { parseISO } from 'date-fns';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { CircleDot } from 'lucide-react';
 import { type FeedItem } from '@/lib/api';
+import { useRelativeTime } from '@/context/relativeTimeContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ACTION_ICON } from '../../utils/activityIcons';
 import { useActivityText } from '../../hooks/useActivityText';
@@ -14,7 +14,7 @@ import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 
 export default function ActivityLine({ item }: { item: FeedItem }) {
   const t = useTranslations('issue');
-  const format = useFormatter();
+  const relativeTime = useRelativeTime();
   const describeActivity = useActivityText();
   const Icon = (item.action && ACTION_ICON[item.action]) || CircleDot;
   const { line, popover } = describeActivity(item);
@@ -41,7 +41,7 @@ export default function ActivityLine({ item }: { item: FeedItem }) {
             </PopoverContent>
           </Popover>
         )}
-        <span className="ml-1.5 text-xs">· {format.relativeTime(parseISO(item.createdAt))}</span>
+        <span className="ml-1.5 text-xs">· {relativeTime(item.createdAt)}</span>
       </span>
     </li>
   );

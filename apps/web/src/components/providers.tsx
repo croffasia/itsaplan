@@ -9,6 +9,7 @@ import { ApiError } from '@/lib/api';
 import { localeDirection, type Locale } from '@/i18n/locales';
 import { HotkeysProvider } from '@/context/useHotkeys';
 import { SyncProvider } from '@/context/syncContext';
+import { RelativeTimeProvider } from '@/context/relativeTimeContext';
 import { Toaster } from '@/components/ui/sonner';
 import PreferencesSync from '@/components/preferences-sync';
 import SessionScope from '@/components/session-scope';
@@ -64,7 +65,9 @@ export function Providers({ children }: { children: ReactNode }) {
         <SessionScope />
         <PreferencesSync />
         <SyncProvider>
-          <HotkeysProvider>{children}</HotkeysProvider>
+          <RelativeTimeProvider>
+            <HotkeysProvider>{children}</HotkeysProvider>
+          </RelativeTimeProvider>
         </SyncProvider>
         <Toaster position={dir === 'rtl' ? 'bottom-left' : 'bottom-right'} dir={dir} richColors />
       </Direction.Provider>

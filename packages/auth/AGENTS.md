@@ -6,7 +6,8 @@ The **server-side** better-auth instance. Consumed by `apps/api`. See root `AGEN
   (`provider: "pg"`) over `@repo/db`. Email+password enabled (no email confirmation:
   `requireEmailVerification: false`, `autoSignIn: true`), plus the WebAuthn passkey
   plugin (`@better-auth/passkey`).
-- Exports `auth`, `USER_ROLES` / `UserRole`, plus `Auth` / `Session` types.
+- Exports `auth`, `USER_ROLES` / `UserRole`, `generateUsername` (the SCIM module derives a
+  handle with the same rule), plus `Auth` / `Session` types.
 
 ## User role
 
@@ -16,13 +17,16 @@ hook sets it: the first user to register gets `"god"`, everyone after gets `"use
 
 ## Instance settings (`src/instance.ts`)
 
-Registration mode, the email-dependent auth options, and the mail provider are stored
-in the database, not in env, so god mode can change them without a restart. Read them
+Registration mode, which sign-in methods are offered, the mail provider, the OAuth
+credentials and the SCIM token are stored in the database, not in env, so god mode can
+change them without a restart. Read them
 through this module — never inline a query on `app_setting` / `app_secret` elsewhere.
 
-- `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink }`.
-- `app_secret` key `auth.email` → the mail provider, encrypted with `@repo/crypto`,
-  with a `redacted` mirror for the settings UI. Secrets never leave the server.
+- `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
+  emailPassword }`.
+- `app_secret` keys `auth.email`, `auth.google`, `auth.oidc` and `auth.scim` → the mail
+  provider, the two OAuth providers and the SCIM token, encrypted with `@repo/crypto`,
+  each with a `redacted` mirror for the settings UI. Secrets never leave the server.
 
 "Invite only" means the address has a pending `project_invite` (`hasPendingInvite`).
 Invites are created and revoked inside a project, so there is no instance-level invite
@@ -75,6 +79,52 @@ The sign-in screen has one field for both identifiers and picks the endpoint by 
 what was typed contains an "@". `/sign-in/username` checks only the static
 `emailAndPassword.requireEmailVerification`, which is `false` here, so the instance
 verification gate in `hooks.before` covers that path as well as `/sign-in/email`.
+
+## Generic OIDC
+
+`genericOAuth({ config: [oidcOptions] })` adds one OIDC/OAuth2 provider, discovered from
+the well-known document the operator points it at (`app_secret` key `auth.oidc`). It adds
+`/sign-in/oauth2` and `/oauth2/callback/:providerId`, and reuses the `account` table, so it
+adds none of its own.
+
+`providerId` is the constant `OIDC_PROVIDER_ID` (`"oidc"`): it is what the `account` rows
+store, and better-auth materialises the provider list once at startup, so the config array
+can neither grow nor be re-keyed afterwards. That is also why there is exactly one
+provider. `oidcOptions` is refreshed per request by `refreshOidcOptions()` in
+`hooks.before` — the same by-reference rule as `googleOptions`: assign its fields, never
+replace the object.
+
+`/oauth2/link` is in `disabledPaths`. No screen offers linking an OIDC identity to the
+signed-in account, and better-auth already attaches a sign-in to a matching confirmed
+address on its own.
+
+## Turning password authentication off
+
+`AuthSettings.emailPassword` (default `true`). When it is off, the first branch of
+`hooks.before` refuses every path in `PASSWORD_PATHS` — the two sign-in endpoints, sign-up,
+password reset, and both halves of the magic link, so a link issued before the switch was
+flipped cannot still be redeemed. Passkeys stay available: a passkey is only ever added to
+an account that already exists.
+
+Like every other instance setting this is read per request, so it cannot be
+`emailAndPassword.enabled: false` (evaluated at startup) and cannot live in `disabledPaths`
+(a static array). The api refuses to turn it off while neither Google nor OIDC is usable,
+which is what stops an instance being left with no way in.
+
+## Deactivation and SCIM
+
+Two more `additionalFields` on the user table, both written only over SCIM and both
+nullable, so every check is `active !== false` rather than `!active`:
+
+- `active` — the deprovisioning flag. `databaseHooks.session.create.before` refuses to open
+  a session for an inactive account, which covers every sign-in method at once; `apps/api`
+  refuses the sessions and API keys that were already open.
+- `scimExternalId` — the identity provider's own id, used to correlate an account it did
+  not choose the id for.
+
+`getScimSettings` / `rotateScimToken` / `verifyScimToken` hold the bearer token the SCIM
+endpoints in `apps/api` authenticate with. The token is returned in the clear exactly once,
+when it is generated; only its prefix is kept in the redacted mirror.
 
 ## Passkey
 

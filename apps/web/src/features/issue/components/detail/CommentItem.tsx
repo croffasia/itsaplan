@@ -1,9 +1,8 @@
-import { formatDistanceToNow, parseISO } from 'date-fns';
 import { Reply } from 'lucide-react';
 import { type FeedItem } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
-import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';
+import { useRelativeTime } from '@/context/relativeTimeContext';
 import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
 import { useTranslations } from 'next-intl';
 
@@ -24,7 +23,7 @@ export default function CommentItem({
   onReply?: () => void;
 }) {
   const t = useTranslations('issue.comments');
-  const locale = useDateFnsLocale();
+  const relativeTime = useRelativeTime();
   const author = item.actorName ?? t('unknownAuthor');
 
   return (
@@ -34,7 +33,7 @@ export default function CommentItem({
         <Avatar name={author} image={image} className="size-5 shrink-0 text-[10px]" />
         <span className="truncate text-sm font-medium">{author}</span>
         <span className="shrink-0 text-xs text-muted-foreground">
-          · {formatDistanceToNow(parseISO(item.createdAt), { addSuffix: true, locale })}
+          · {relativeTime(item.createdAt)}
         </span>
         {onReply && (
           <Button

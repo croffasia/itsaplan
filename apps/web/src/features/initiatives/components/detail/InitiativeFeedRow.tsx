@@ -1,8 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { parseISO } from 'date-fns';
-import { useFormatter, useTranslations } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import {
   CircleDot,
   CirclePlus,
@@ -15,6 +14,7 @@ import {
   Flag,
 } from 'lucide-react';
 import type { InitiativeFeedItem } from '@/lib/api';
+import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatDate } from '@/utils/dates';
 import { issuePath } from '@/utils/paths';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
@@ -50,7 +50,7 @@ export default function InitiativeFeedRow({
   const t = useTranslations('initiatives.feed');
   const tStatus = useTranslations('initiatives.status');
   const priorityLabel = usePriorityLabel();
-  const format = useFormatter();
+  const relativeTime = useRelativeTime();
 
   // A status the initiative lifecycle knows is named in the reader's language; an
   // issue status is a project column and keeps the name the project gave it.
@@ -122,7 +122,7 @@ export default function InitiativeFeedRow({
             </Link>
           </>
         )}
-        <span className="ml-1.5">· {format.relativeTime(parseISO(item.createdAt))}</span>
+        <span className="ml-1.5">· {relativeTime(item.createdAt)}</span>
       </span>
     </li>
   );

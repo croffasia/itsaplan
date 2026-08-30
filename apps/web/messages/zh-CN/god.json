@@ -145,12 +145,15 @@
       }
     },
     "signIn": "登录选项",
-    "signInHint": "这些选项需要发送邮件，配置邮件服务商后才可启用。",
+    "signInHint": "登录方式。需要发送邮件的选项在配置邮件服务前不可用。",
     "needsProvider": "请先在“邮件服务商”中完成配置。",
     "requireVerification": "要求验证邮箱",
     "requireVerificationHint": "新账户必须验证邮箱后才能登录。",
     "magicLink": "邮箱登录链接",
-    "magicLinkHint": "通过邮件发送免密码登录链接。"
+    "magicLinkHint": "通过邮件发送免密码登录链接。",
+    "emailPassword": "邮箱和密码",
+    "emailPasswordHint": "提供登录和注册表单。关闭后只能通过登录提供方进入。",
+    "needsSso": "请先在「集成」中配置登录提供方。"
   },
   "hotkeys": {
     "saved": "键盘快捷键已保存"
@@ -212,6 +215,61 @@
     "clientSecret": "客户端密钥",
     "redirectUri": "重定向 URI",
     "redirectUriHint": "请在 Google Cloud 控制台的 OAuth 客户端中添加此地址。地址不完全匹配时，Google 会拒绝登录。",
-    "copyRedirectUri": "复制重定向 URI"
+    "copyRedirectUri": "复制重定向 URI",
+    "oidc": "OpenID Connect",
+    "oidcConfigured": "没有账号的邮箱会自动创建账号；已有已确认账号的邮箱将登录该账号。",
+    "oidcMissing": "请先填写发现地址、客户端 ID 和密钥。",
+    "discoveryUrl": "发现地址",
+    "discoveryUrlHint": "身份提供方的 .well-known/openid-configuration 地址，授权、令牌和用户信息端点都从中读取。",
+    "oidcLabel": "按钮文字",
+    "oidcLabelPlaceholder": "使用 Acme SSO 登录",
+    "oidcLabelHint": "在登录按钮上标明你的提供方。留空则使用通用文字。",
+    "scopes": "权限范围",
+    "scopesHint": "以空格分隔。openid 为必需；profile 和 email 用于填充姓名和邮箱。",
+    "oidcRedirectUriHint": "将此地址注册为身份提供方客户端的重定向 URI。不完全一致时提供方会拒绝登录。"
+  },
+  "scim": {
+    "saved": "SCIM 设置已保存",
+    "provisioning": "账号预配",
+    "provisioningConfigured": "身份提供方会在此实例上创建、更新和停用账号。",
+    "provisioningMissing": "请先生成令牌。",
+    "token": "令牌",
+    "noToken": "尚未生成令牌",
+    "tokenHint": "身份提供方发送的持有者令牌。仅显示一次；生成新令牌会使旧令牌失效。",
+    "generateToken": "生成令牌",
+    "replaceToken": "更换令牌",
+    "baseUrl": "SCIM 地址",
+    "baseUrlHint": "在身份提供方中填入此地址。",
+    "copyBaseUrl": "复制 SCIM 地址",
+    "groups": "群组",
+    "groupsHint": "身份提供方推送的群组。列表由其维护；每个群组授予什么在这里设置。",
+    "groupsEmpty": "尚未推送任何群组。",
+    "memberCount": "{count, plural, =0 {没有成员} other {# 位成员}}",
+    "grantsNothing": "尚未授予任何权限",
+    "editMappings": "编辑权限",
+    "roleOwner": "所有者",
+    "roleMember": "成员",
+    "tokenDialog": {
+      "title": "生成 SCIM 令牌",
+      "description": "令牌仅显示一次，之后无法查看。正在使用的令牌将立即失效。",
+      "submit": "生成",
+      "submitPending": "正在生成…",
+      "createdTitle": "你的 SCIM 令牌",
+      "createdDescription": "现在把它复制到身份提供方。之后无法再次显示。",
+      "copy": "复制令牌"
+    },
+    "mappings": {
+      "title": "{group} 授予的权限",
+      "description": "该群组的成员会加入这里列出的项目。移除项目会收回此群组授予的成员资格。",
+      "empty": "该群组尚未授予任何权限。",
+      "addProject": "添加项目…",
+      "role": "角色",
+      "roleOwner": "所有者",
+      "roleMember": "成员",
+      "projectRole": "项目角色",
+      "defaultRole": "默认角色",
+      "remove": "移除项目",
+      "saved": "群组权限已保存"
+    }
   }
 }

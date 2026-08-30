@@ -87,6 +87,7 @@ export default function IssueLinksPanel({
                     key={link.id}
                     project={project}
                     issue={link.issue}
+                    scrollAnchorKey={`link:${link.id}`}
                     removeLabel={t('remove', { issue: link.issue.identifier })}
                     readOnly={readOnly}
                     onOpen={onOpenIssue && (() => onOpenIssue(link.issue.id))}

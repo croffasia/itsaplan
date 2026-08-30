@@ -7,6 +7,7 @@ import {
   Send,
   SlidersHorizontal,
   Users,
+  UsersRound,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -75,6 +76,12 @@ export const GOD_SECTIONS: GodSection[] = [
     slug: 'auth-provider',
     group: 'instance',
     icon: KeyRound,
+    integration: true,
+  },
+  {
+    slug: 'scim',
+    group: 'instance',
+    icon: UsersRound,
     integration: true,
   },
 ];

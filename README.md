@@ -134,6 +134,7 @@ account you register becomes the instance admin.
 - [Deploy on Railway](docs/railway.md) — one-click hosted deploy from the template
 - [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates
 - [Deploy on Coolify](docs/coolify.md) — the same stack on a Coolify instance
+- [Deploy on Kubernetes](docs/helm.md) — Helm chart for any Kubernetes cluster
 - [Local development](docs/development.md) — running the apps on the host, and the tests
 - [Coding agent setup](docs/runner.md) — the config for each CLI that `@itsaplan/runner` runs
 

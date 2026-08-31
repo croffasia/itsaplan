@@ -1,0 +1,179 @@
+{
+  "cancel": "Annuler",
+  "done": "Terminé",
+  "loading": "Chargement…",
+  "signOut": "Se déconnecter",
+  "member": "Membre",
+  "owner": "Propriétaire",
+  "delete": "Supprimer",
+  "more": "Plus",
+  "back": "Retour",
+  "save": "Enregistrer",
+  "saving": "Enregistrement…",
+  "close": "Fermer",
+  "name": "Nom",
+  "edit": "Modifier",
+  "language": "Langue",
+  "toggleTheme": "Changer de thème",
+  "priority": {
+    "label": "Priorité",
+    "tooltip": "Priorité {priority}",
+    "setTo": "Définir la priorité sur…",
+    "none": "Aucune priorité",
+    "urgent": "Urgente",
+    "high": "Haute",
+    "medium": "Moyenne",
+    "low": "Basse"
+  },
+  "add": "Ajouter",
+  "showMore": "Afficher plus",
+  "archived": "Archivé",
+  "clear": "Effacer",
+  "noLabels": "Aucune étiquette.",
+  "enabled": "Activé",
+  "fullscreen": "Plein écran",
+  "exitFullscreen": "Quitter le plein écran",
+  "resizePropertiesPanel": "Redimensionner le panneau des propriétés",
+  "resizeTitleColumn": "Redimensionner la colonne du titre",
+  "openGeneralSettings": "Ouvrir les paramètres généraux",
+  "noSectionAccess": "Vous n'avez pas accès à cette section.",
+  "brandSubtitle": "Organisez vos tickets sur un tableau. Connectez-vous pour ouvrir vos projets.",
+  "hotkeys": {
+    "pressKeys": "Appuyez sur les touches",
+    "fixed": "Fixe",
+    "resetShortcut": "Réinitialiser ce raccourci",
+    "groups": {
+      "general": "Général",
+      "workItems": "Tickets"
+    },
+    "commands": {
+      "palette": {
+        "toggle": "Ouvrir la palette de commandes"
+      },
+      "project": {
+        "switch": "Basculer vers le projet 1 à 9",
+        "new": "Nouveau projet",
+        "settings": "Ouvrir les paramètres du projet"
+      },
+      "sidebar": {
+        "toggle": "Afficher ou masquer la barre latérale"
+      },
+      "chat": {
+        "toggle": "Afficher ou masquer le chat IA"
+      },
+      "issue": {
+        "new": "Nouveau ticket"
+      },
+      "view": {
+        "kanban": "Affichage tableau",
+        "table": "Affichage liste",
+        "timeline": "Affichage chronologique",
+        "calendar": "Affichage calendrier"
+      },
+      "board": {
+        "select-all": "Sélectionner tous les tickets du tableau"
+      }
+    },
+    "conflict": "Déjà utilisé par {command}"
+  },
+  "agentChat": {
+    "emptyHint": "Envoyez un message pour tester les réponses de cet agent et les outils qu'il utilise.",
+    "messagePlaceholder": "Écrire à {agent}…",
+    "reset": "Réinitialiser la conversation",
+    "send": "Envoyer",
+    "sendHint": "Entrée pour envoyer, ⌘/Ctrl+Entrée pour un retour à la ligne",
+    "stop": "Arrêter",
+    "stopped": "Arrêté",
+    "loadingEarlier": "Chargement des messages précédents…",
+    "messages": "Messages de la conversation",
+    "usingTool": "Utilisation de {tool}…",
+    "usedTool": "{tool} utilisé",
+    "usedTools": "{count, plural, one {# outil utilisé} other {# outils utilisés}}",
+    "toolInput": "Entrée",
+    "toolOutput": "Sortie",
+    "thinking": "Réflexion…",
+    "waitingForRunner": "En attente du runner…",
+    "waitingToSend": "En attente d'envoi",
+    "removePending": "Supprimer le message",
+    "title": "Discussion avec {agent}",
+    "unreachable": "Impossible de joindre l'agent. Réessayez.",
+    "runnerOffline": "Runner hors ligne",
+    "runnerOfflineHint": "Démarrez le runner sur votre machine pour discuter avec cet agent.",
+    "attachFile": "Joindre un tableur, un document, un PDF ou un fichier texte à faire lire à l'agent",
+    "removeAttachment": "Supprimer la pièce jointe",
+    "uploadFailed": "Impossible d'envoyer le fichier.",
+    "tooManyAttachments": "Vous pouvez joindre jusqu'à {max} fichiers à un même message.",
+    "importRows": "{count, plural, one {# ligne} other {# lignes}}",
+    "confirmImport": "Confirmer l'import",
+    "cancelImport": "Annuler",
+    "importWorking": "Création des tickets…",
+    "importShowAllRows": "Afficher les {count} lignes",
+    "importShowFewerRows": "Afficher les {count} premières lignes",
+    "importRowState": "Importer",
+    "importRowNew": "Sera créé",
+    "importSkipHint": "Les lignes marquées ✕ seront ignorées à la confirmation.",
+    "importAdjustHint": "Demandez à l'agent d'ajuster la correspondance si quelque chose ne va pas.",
+    "importCanceled": "Cet import a été annulé. Rien n'a été créé.",
+    "importFailed": "L'import a échoué.",
+    "importConfirmed": "{count, plural, one {# ticket créé} other {# tickets créés}}",
+    "importSkippedRow": "Ligne {row} ignorée : {reason}",
+    "contextSize": "Contexte de la conversation : {count, plural, one {# token} other {# tokens}}",
+    "contextUnavailable": "La taille du contexte n'est pas disponible pour cet agent"
+  },
+  "share": {
+    "createFailed": "Impossible de créer le lien. Réessayez.",
+    "changeFailed": "Impossible de modifier ce que le lien affiche. Réessayez.",
+    "stopFailed": "Impossible d'arrêter le partage. Réessayez.",
+    "copyFailed": "Impossible de copier le lien. Sélectionnez-le et copiez-le manuellement.",
+    "hint": "Toute personne disposant du lien peut le consulter. Aucun compte requis.",
+    "shareLink": "Lien de partage",
+    "fullDetails": "Détails complets du ticket",
+    "fullDetailsHint": "Responsables, étiquettes, champs personnalisés et activité.",
+    "stopSharing": "Arrêter le partage",
+    "createLink": "Créer un lien",
+    "copy": "Copier",
+    "copied": "Copié"
+  },
+  "actions": "Actions",
+  "clearSearch": "Effacer la recherche",
+  "hide": "Masquer",
+  "show": "Afficher",
+  "copy": "Copier",
+  "copied": "Copié",
+  "change": "Modifier",
+  "featureOffHint": "Un propriétaire peut réactiver cette section dans les paramètres généraux.",
+  "description": "Description",
+  "pickColor": "Choisir une couleur",
+  "new": "Nouveau",
+  "features": {
+    "initiatives": "Initiatives",
+    "cycles": "Cycles",
+    "dashboards": "Tableaux de bord",
+    "notes": "Notes",
+    "subtasks": "Sous-tâches",
+    "checklists": "Checklists",
+    "issueStats": "Statistiques de tickets"
+  },
+  "featureOffTitle": "La section {feature} est désactivée",
+  "toggleSidebar": "Afficher ou masquer la barre latérale",
+  "system": "Système",
+  "genericError": "Une erreur est survenue",
+  "commandPalette": "Palette de commandes",
+  "commandPaletteHint": "Rechercher une commande à lancer…",
+  "scrollToEnd": "Aller à la fin",
+  "scrollToStart": "Aller au début",
+  "editor": {
+    "linkUrl": "URL du lien",
+    "codeBlock": "Bloc de code",
+    "table": "Tableau",
+    "tableAddRow": "Ajouter une ligne",
+    "tableDeleteRow": "Supprimer la ligne",
+    "tableAddColumn": "Ajouter une colonne",
+    "tableDeleteColumn": "Supprimer la colonne",
+    "tableDelete": "Supprimer le tableau"
+  },
+  "chart": {
+    "download": "Enregistrer le graphique",
+    "downloadFailed": "Le graphique n'a pas pu être enregistré"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "updateAvailable": "Mise à jour disponible",
+  "releaseHistory": "Historique des versions",
+  "runningOutdated": "Vous utilisez la version {current}. La dernière est la {latest}.",
+  "runningUnknown": "Vous utilisez la version {current}. Dernière version inconnue.",
+  "runningLatest": "Vous utilisez la version {current}, la plus récente.",
+  "noReleases": "Aucune note de version fournie avec cette build.",
+  "badgeRunning": "En cours",
+  "badgeNew": "Nouveau",
+  "earlier": "Versions précédentes",
+  "check": "Rechercher des mises à jour",
+  "checking": "Recherche",
+  "lastChecked": "Dernière vérification {date}",
+  "allReleases": "Toutes les versions",
+  "noNotes": "Cette version n'a pas de notes."
+}

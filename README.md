@@ -103,7 +103,7 @@ be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
 - Outgoing webhooks: subscribe to events, signed payloads, and retries with a delivery log
 - Sign in with an email or a username and a password, a passkey, or Google
 - Notifications by email (SMTP or Resend) and Telegram, with per-member preferences
-- Interface in English, Ukrainian, Russian, Simplified Chinese, and Arabic
+- Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, and French
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
 ## Getting started

@@ -1,0 +1,29 @@
+{
+  "title": "Serveur MCP",
+  "description": "Connectez des agents IA à ce projet via le Model Context Protocol. Un agent hérite des droits de la clé d'API qu'il utilise.",
+  "access": "Accès MCP",
+  "enabled": "Activé",
+  "disabled": "Désactivé",
+  "ownerOnly": "Seul un propriétaire du projet peut activer ou désactiver l'accès MCP.",
+  "toggleAria": "Activer ou désactiver l'accès MCP",
+  "connectClient": "Connecter un client",
+  "keyHint": "Créez une clé personnelle sur la page <link>Clés d'API</link>, puis remplacez <code>{apiKey}</code> dans l'extrait.",
+  "endpoint": "Point d'accès",
+  "clientTabsAria": "Client",
+  "addToFile": "À ajouter dans <code>{file}</code>",
+  "copyAria": "Copier",
+  "copied": "Copié dans le presse-papiers",
+  "notes": {
+    "claudeCode": "Lancez ceci dans votre terminal.",
+    "vscode": "Nécessite GitHub Copilot.",
+    "claudeDesktop": "Claude Desktop atteint les serveurs distants via le pont mcp-remote. Nécessite Node.js.",
+    "other": "Tout client compatible MCP sur Streamable HTTP fonctionne. Faites-le pointer vers le point d'accès et envoyez un en-tête Authorization: Bearer {apiKey}."
+  },
+  "clients": {
+    "other": "Autre"
+  },
+  "toast": {
+    "enabled": "Accès MCP activé",
+    "disabled": "Accès MCP désactivé"
+  }
+}

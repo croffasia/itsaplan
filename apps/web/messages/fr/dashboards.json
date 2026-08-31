@@ -1,0 +1,204 @@
+{
+  "noAccess": "Vous n'avez pas accès aux tableaux de bord.",
+  "defaultName": "Vue d'ensemble",
+  "newDashboard": "Nouveau tableau de bord",
+  "renameDashboard": "Renommer le tableau de bord",
+  "namePlaceholder": "Nom du tableau de bord",
+  "options": "Options du tableau de bord",
+  "rename": "Renommer",
+  "editLayout": "Modifier la disposition",
+  "discard": "Abandonner",
+  "saveDashboard": "Enregistrer le tableau de bord",
+  "saveChanges": "Enregistrer les modifications",
+  "noWidgets": "Aucun widget pour l'instant. Ajoutez-en un pour construire ce tableau de bord.",
+  "addWidget": "Ajouter un widget",
+  "addWidgetTitle": "Ajouter un widget",
+  "addWidgetDescription": "Choisissez un widget à ajouter à ce tableau de bord.",
+  "searchWidgets": "Rechercher un widget",
+  "clearSearch": "Effacer la recherche",
+  "noWidgetMatches": "Aucun widget ne correspond à « {query} ».",
+  "dragToMove": "Faites glisser pour déplacer",
+  "widgetName": "Nom du widget",
+  "widgetSettings": "Paramètres du widget",
+  "widgetOptions": "Options du widget",
+  "removeWidget": "Supprimer le widget",
+  "lastDays": "{days} derniers jours",
+  "showRows": "Afficher {count}",
+  "widgetGroups": {
+    "issues": "Tickets",
+    "agents": "Agents IA et webhooks"
+  },
+  "widgets": {
+    "stat": {
+      "label": "Nombre",
+      "description": "Nombre de tickets correspondant à un filtre"
+    },
+    "recent_issues": {
+      "label": "Tickets récents",
+      "description": "Les derniers tickets par date de création ou de mise à jour"
+    },
+    "activity_feed": {
+      "label": "Flux d'activité",
+      "description": "Journal des changements du projet, filtrable par auteur et par action"
+    },
+    "pulse": {
+      "label": "Pulsation",
+      "description": "Carte de chaleur de l'activité quotidienne, à la façon de GitHub"
+    },
+    "throughput": {
+      "label": "Débit",
+      "description": "Tickets créés et fermés par semaine"
+    },
+    "breakdown": {
+      "label": "Répartition",
+      "description": "Nombre de tickets par état, priorité, type ou responsable"
+    },
+    "agent_runs": {
+      "label": "Exécutions d'agents",
+      "description": "Les exécutions récentes des agents IA et leur résultat"
+    },
+    "agent_health": {
+      "label": "Santé des agents",
+      "description": "Taux de réussite et échecs des exécutions d'agents sur une période"
+    },
+    "webhook_health": {
+      "label": "Santé des webhooks",
+      "description": "Résultats des livraisons de webhooks et points d'accès désactivés"
+    },
+    "agent_workload": {
+      "label": "Charge des agents",
+      "description": "Tickets délégués et résultats des exécutions, par agent"
+    }
+  },
+  "breakdown": {
+    "empty": "Aucun ticket pour l'instant.",
+    "by": {
+      "status": "État",
+      "priority": "Priorité",
+      "type": "Type",
+      "assignee": "Responsable",
+      "delegate": "Délégué"
+    },
+    "caption": {
+      "status": "Par état",
+      "priority": "Par priorité",
+      "type": "Par type",
+      "assignee": "Par responsable",
+      "delegate": "Par délégué"
+    }
+  },
+  "recentIssues": {
+    "empty": "Aucun ticket ne correspond à ce filtre.",
+    "captionCreated": "Les plus récents d'abord",
+    "captionUpdated": "Récemment mis à jour",
+    "filterCount": "{count, plural, one {# filtre} other {# filtres}}",
+    "sort": {
+      "created": "Les plus récents",
+      "updated": "Mis à jour"
+    }
+  },
+  "activityFeed": {
+    "empty": "Aucune activité ne correspond à ce filtre.",
+    "someone": "Quelqu'un",
+    "filterCount": "{count, plural, one {# filtre} other {# filtres}}",
+    "actions": {
+      "all": "Toute l'activité",
+      "status": "Changements d'état",
+      "assignee": "Assignations",
+      "priority": "Priorité",
+      "created": "Créations"
+    },
+    "verbs": {
+      "comment": "a commenté",
+      "created": "a créé",
+      "title": "a renommé",
+      "description": "a mis à jour la description de",
+      "status": "a changé l'état de",
+      "assignee": "a changé le responsable de",
+      "priority": "a changé la priorité de",
+      "type": "a changé le type de",
+      "start_date": "a changé la date de début de",
+      "due_date": "a changé l'échéance de",
+      "label_add": "a ajouté une étiquette à",
+      "label_remove": "a retiré une étiquette de",
+      "field": "a mis à jour un champ de",
+      "other": "a mis à jour"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "Par heure",
+      "day": "Par jour",
+      "week": "Par semaine"
+    },
+    "unit": {
+      "hour": "Heures",
+      "day": "Jours",
+      "week": "Semaines"
+    },
+    "events": "{count, plural, one {# événement} other {# événements}}",
+    "eventNoun": "{count, plural, one {événement} other {événements}}",
+    "active": "{count} actifs",
+    "less": "Moins",
+    "more": "Plus"
+  },
+  "throughput": {
+    "empty": "Aucune activité sur cette période.",
+    "lastWeeks": "{weeks} dernières semaines",
+    "created": "Créés",
+    "closed": "Fermés"
+  },
+  "agentRuns": {
+    "empty": "Aucune exécution d'agent pour l'instant.",
+    "filters": {
+      "all": "Toutes les exécutions",
+      "failed": "En échec",
+      "pending": "En file d'attente",
+      "success": "Réussies"
+    },
+    "status": {
+      "pending": "en file d'attente",
+      "success": "réussie",
+      "failed": "en échec",
+      "canceled": "annulée"
+    },
+    "trigger": {
+      "mention": "lancée sur mention dans",
+      "delegation": "lancée sur délégation de",
+      "field": "lancée sur un champ de",
+      "manual": "lancée manuellement",
+      "schedule": "lancée par planification"
+    }
+  },
+  "agentHealth": {
+    "empty": "Aucune exécution d'agent.",
+    "successRate": "de réussite",
+    "runs": "{count, plural, one {# exécution} other {# exécutions}}",
+    "failed": "{count} en échec",
+    "queued": "{count} en file d'attente"
+  },
+  "webhookHealth": {
+    "deliveries": "livraisons",
+    "failed": "{count} en échec",
+    "pending": "{count} en attente",
+    "allDelivered": "toutes livrées",
+    "disabled": "{count, plural, one {# point d'accès désactivé} other {# points d'accès désactivés}}"
+  },
+  "agentWorkload": {
+    "empty": "Aucun agent dans ce projet.",
+    "agent": "Agent",
+    "delegated": "Délégués",
+    "runs": "Exécutions",
+    "failed": "{count} en échec",
+    "kind": {
+      "external": "Externe",
+      "internal": "Interne"
+    }
+  },
+  "defaultWidgets": {
+    "open": "Ouverts",
+    "inProgress": "En cours",
+    "backlog": "Backlog",
+    "unassigned": "Non assignés"
+  }
+}

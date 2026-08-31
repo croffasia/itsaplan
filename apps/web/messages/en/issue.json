@@ -323,7 +323,8 @@
   },
   "development": {
     "title": "Development",
-    "unlink": "Unlink pull request",
+    "unlink": "Unlink development item",
+    "branch": "Branch",
     "draft": "Draft",
     "ready": "Ready",
     "open": "Open",

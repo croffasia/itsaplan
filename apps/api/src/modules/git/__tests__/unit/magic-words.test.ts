@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { parseMagicWords } from '../../magic-words';
+import { parseIssueIdentifiers, parseMagicWords } from '../../magic-words';
 
 const ids = (refs: { key: string; sequenceNumber: number }[]) =>
   refs.map((r) => `${r.key}-${r.sequenceNumber}`);
@@ -42,6 +42,7 @@ describe('parseMagicWords', () => {
   it('drops identifiers named by skip/ignore anywhere in the text', () => {
     const parsed = parseMagicWords('Fixes MKT-1 and MKT-2.\n\nskip MKT-2');
     expect(ids(parsed.closes)).toEqual(['MKT-1']);
+    expect(ids(parsed.skipped)).toEqual(['MKT-2']);
   });
 
   it('counts an identifier as closing when both word kinds name it', () => {
@@ -69,5 +70,15 @@ describe('parseMagicWords', () => {
   it('dedupes repeated identifiers', () => {
     const parsed = parseMagicWords('Fixes MKT-1. Closes MKT-1');
     expect(ids(parsed.closes)).toEqual(['MKT-1']);
+  });
+});
+
+describe('parseIssueIdentifiers', () => {
+  it('finds an issue key in a conventional branch name', () => {
+    expect(ids(parseIssueIdentifiers('feature/MKT-42-short-title'))).toEqual(['MKT-42']);
+  });
+
+  it('does not treat a later dashed word as another issue key', () => {
+    expect(ids(parseIssueIdentifiers('feature/MKT-42-extra-7'))).toEqual(['MKT-42']);
   });
 });

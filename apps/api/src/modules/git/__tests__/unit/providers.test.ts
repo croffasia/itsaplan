@@ -86,4 +86,106 @@ describe('repository provider events', () => {
       ),
     ).toMatchObject({ kind: 'check', pullRequestNumbers: [], status: 'pending' });
   });
+
+  it('normalizes a GitHub branch creation', () => {
+    const headers = { 'x-github-event': 'create' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          ref: 'feature/MKT-42-summary',
+          ref_type: 'branch',
+          sha: 'abc123',
+          repository: {
+            full_name: 'acme/site',
+            default_branch: 'main',
+            html_url: 'https://github.com/acme/site',
+          },
+        },
+        headers,
+      ),
+    ).toEqual({
+      kind: 'branch',
+      action: 'created',
+      repo: 'acme/site',
+      branch: 'feature/MKT-42-summary',
+      url: 'https://github.com/acme/site/tree/feature/MKT-42-summary',
+      headSha: 'abc123',
+      defaultBranch: 'main',
+    });
+  });
+
+  it('normalizes a new GitLab branch push', () => {
+    const headers = { 'x-gitlab-event': 'Push Hook' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          object_kind: 'push',
+          before: '0'.repeat(40),
+          after: 'abc123',
+          checkout_sha: 'abc123',
+          ref: 'refs/heads/MKT-9-branch',
+          project: {
+            path_with_namespace: 'acme/site',
+            default_branch: 'main',
+            web_url: 'https://gitlab.com/acme/site',
+          },
+        },
+        headers,
+      ),
+    ).toMatchObject({
+      kind: 'branch',
+      action: 'created',
+      branch: 'MKT-9-branch',
+      headSha: 'abc123',
+    });
+  });
+
+  it('normalizes an explicit Bitbucket branch creation', () => {
+    const headers = { 'x-event-key': 'repo:branch_created' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          branch: {
+            name: 'feature/MKT-11-summary',
+            target: { hash: 'def456' },
+            links: { html: { href: 'https://bitbucket.org/acme/site/branch/MKT-11-summary' } },
+          },
+          repository: { full_name: 'acme/site', mainbranch: { name: 'main' } },
+        },
+        headers,
+      ),
+    ).toEqual({
+      kind: 'branch',
+      action: 'created',
+      repo: 'acme/site',
+      branch: 'feature/MKT-11-summary',
+      url: 'https://bitbucket.org/acme/site/branch/MKT-11-summary',
+      headSha: 'def456',
+      defaultBranch: 'main',
+    });
+  });
+
+  it('accepts the Bitbucket push-shaped branch deletion payload', () => {
+    const headers = { 'x-event-key': 'repo:branch_deleted' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          push: {
+            changes: [{ old: { type: 'branch', name: 'MKT-12-cleanup' }, new: null }],
+          },
+          repository: { full_name: 'acme/site', mainbranch: { name: 'main' } },
+        },
+        headers,
+      ),
+    ).toMatchObject({
+      kind: 'branch',
+      action: 'deleted',
+      branch: 'MKT-12-cleanup',
+      headSha: null,
+    });
+  });
 });

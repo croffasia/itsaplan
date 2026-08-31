@@ -11,7 +11,6 @@ export default function GitRepositoryList({ repositories }: { repositories: GitR
 
   return (
     <div className="space-y-3 p-4">
-      <div className="text-xs font-medium">{t('repositories')}</div>
       {repositories.length === 0 && (
         <p className="text-xs text-muted-foreground">{t('noDelivery')}</p>
       )}

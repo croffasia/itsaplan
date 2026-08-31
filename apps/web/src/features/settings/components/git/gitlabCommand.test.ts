@@ -10,6 +10,7 @@ describe('gitlabWebhookCommand', () => {
     assert.ok(command.includes("--raw-field token='secret'"));
     assert.ok(command.includes('--field merge_requests_events=true'));
     assert.ok(command.includes('--field pipeline_events=true'));
+    assert.ok(command.includes('--field push_events=true'));
     assert.ok(command.includes('--field enable_ssl_verification=true'));
   });
 

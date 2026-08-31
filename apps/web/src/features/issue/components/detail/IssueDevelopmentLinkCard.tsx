@@ -1,4 +1,4 @@
-import { ExternalLink, GitPullRequest, Unlink } from 'lucide-react';
+import { ExternalLink, GitBranch, GitPullRequest, Unlink } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
 import { type DevelopmentLink } from '@/lib/api';
 import IssueDevelopmentChecks from './IssueDevelopmentChecks';
@@ -36,11 +36,16 @@ export default function IssueDevelopmentLinkCard({
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <GitPullRequest className="size-3.5" />
+            {link.kind === 'branch' ? (
+              <GitBranch className="size-3.5" />
+            ) : (
+              <GitPullRequest className="size-3.5" />
+            )}
             <span>{PROVIDER_LABEL[link.provider]}</span>
             <span>·</span>
             <span className="truncate">
-              {link.repository}#{link.number}
+              {link.repository}
+              {link.number == null ? '' : `#${link.number}`}
             </span>
           </div>
           {link.url ? (
@@ -60,7 +65,7 @@ export default function IssueDevelopmentLinkCard({
               {link.title}
             </p>
           )}
-          {(link.sourceBranch || link.targetBranch) && (
+          {link.kind === 'pull_request' && (link.sourceBranch || link.targetBranch) && (
             <p className="mt-1 truncate font-mono text-[11px] text-muted-foreground" dir="ltr">
               {link.sourceBranch ?? '?'} → {link.targetBranch}
             </p>

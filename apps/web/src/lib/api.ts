@@ -979,6 +979,7 @@ export interface GitSettings {
   secret: string | null;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;
+  linkbackComments: boolean;
   repositories: GitRepository[];
 }
 
@@ -2049,7 +2050,8 @@ export interface DevelopmentLink {
   id: number;
   provider: GitProvider;
   repository: string;
-  number: number;
+  kind: 'pull_request' | 'branch';
+  number: number | null;
   title: string;
   url: string | null;
   state: PullRequestState;
@@ -3522,7 +3524,12 @@ export const api = {
     request<GitSettings>(`/projects/${projectKey}/settings/git`),
   updateGitSettings: (
     projectKey: string,
-    patch: { enabled?: boolean; onMergeColumnId?: number | null; onOpenColumnId?: number | null },
+    patch: {
+      enabled?: boolean;
+      onMergeColumnId?: number | null;
+      onOpenColumnId?: number | null;
+      linkbackComments?: boolean;
+    },
   ) =>
     request<GitSettings>(`/projects/${projectKey}/settings/git`, {
       method: 'PATCH',

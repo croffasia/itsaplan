@@ -96,6 +96,49 @@ function providerHeaders(provider: GitProvider, token: string): Headers {
   return headers;
 }
 
+const PROVIDER_LABEL: Record<GitProvider, string> = {
+  github: 'GitHub',
+  gitlab: 'GitLab',
+  gitea: 'Gitea',
+  forgejo: 'Forgejo',
+  bitbucket: 'Bitbucket',
+};
+
+export function providerErrorMessage(
+  provider: GitProvider,
+  status: number,
+  message = '',
+  rateRemaining?: string | null,
+): string {
+  const label = PROVIDER_LABEL[provider];
+  const detail = message.toLowerCase();
+  if (status === 401) return `${label} rejected the access token. Check that it is valid.`;
+  if (status === 403 && (rateRemaining === '0' || detail.includes('rate limit'))) {
+    return `${label} API rate limit reached. Wait for it to reset and try again.`;
+  }
+  if (provider === 'github' && status === 403 && detail.includes('sso')) {
+    return 'GitHub requires this token to be authorized for organization SSO.';
+  }
+  if (
+    status === 403 &&
+    (detail.includes('not accessible') ||
+      detail.includes('permission') ||
+      detail.includes('forbidden'))
+  ) {
+    return `${label} token is missing permission to read the repository or manage its webhooks.`;
+  }
+  if (status === 403) {
+    return `${label} denied access. Check the token permissions and organization policy.`;
+  }
+  if (status === 404) {
+    return `${label} could not find this repository, or the token cannot access it.`;
+  }
+  if (status === 422) {
+    return `${label} rejected the webhook configuration. Check repository permissions and existing hooks.`;
+  }
+  return `${label} request failed with status ${status}.`;
+}
+
 async function providerRequest(
   input: ProviderConnectionInput,
   path: string,
@@ -104,16 +147,39 @@ async function providerRequest(
   await assertPublicHttpUrl(input.baseUrl);
   const headers = providerHeaders(input.provider, input.token);
   if (init.body !== undefined) headers.set('content-type', 'application/json');
-  const response = await fetch(`${apiBase(input.provider, input.baseUrl)}${path}`, {
-    ...init,
-    headers,
-    redirect: 'manual',
-    signal: AbortSignal.timeout(15_000),
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiBase(input.provider, input.baseUrl)}${path}`, {
+      ...init,
+      headers,
+      redirect: 'manual',
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    throw new HttpError(
+      502,
+      `${PROVIDER_LABEL[input.provider]} could not be reached. Check the provider URL and network access.`,
+    );
+  }
   const missingDelete = init.method === 'DELETE' && response.status === 404;
   if (!response.ok && !missingDelete) {
-    const status = response.status === 401 || response.status === 403 ? 400 : 502;
-    throw new HttpError(status, `${input.provider} request failed with status ${response.status}`);
+    const body = record(
+      await response
+        .clone()
+        .json()
+        .catch(() => null),
+    );
+    const message = text(body?.message) ?? text(body?.error_description) ?? text(body?.error) ?? '';
+    const actionable = [401, 403, 404, 422].includes(response.status);
+    throw new HttpError(
+      actionable ? 400 : 502,
+      providerErrorMessage(
+        input.provider,
+        response.status,
+        message,
+        response.headers.get('x-ratelimit-remaining'),
+      ),
+    );
   }
   return response;
 }
@@ -336,6 +402,7 @@ export async function installProviderWebhook(
         token: secret,
         merge_requests_events: true,
         pipeline_events: true,
+        push_events: true,
         enable_ssl_verification: true,
       }),
     });
@@ -362,7 +429,7 @@ export async function installProviderWebhook(
       body: JSON.stringify({
         ...(existing ? {} : { type: 'gitea' }),
         active: true,
-        events: ['pull_request'],
+        events: ['pull_request', 'create', 'delete'],
         config: { url: payloadUrl, content_type: 'json', secret },
       }),
     });
@@ -393,6 +460,8 @@ export async function installProviderWebhook(
           'pullrequest:updated',
           'pullrequest:fulfilled',
           'pullrequest:rejected',
+          'repo:branch_created',
+          'repo:branch_deleted',
         ],
       }),
     });
@@ -417,7 +486,7 @@ export async function installProviderWebhook(
     body: JSON.stringify({
       ...(existing ? {} : { name: 'web' }),
       active: true,
-      events: ['pull_request', 'check_run'],
+      events: ['pull_request', 'check_run', 'create', 'delete'],
       config: { url: payloadUrl, content_type: 'json', insecure_ssl: '0', secret },
     }),
   });

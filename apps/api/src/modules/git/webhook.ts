@@ -61,7 +61,7 @@ const options = {
   detail: {
     summary: 'Receive a repository webhook',
     description:
-      'Receive pull request and CI webhooks from supported repository providers, verify ' +
+      'Receive branch, pull request, and CI webhooks from supported repository providers, verify ' +
       'them against the project secret, and update linked issues.',
   },
 };

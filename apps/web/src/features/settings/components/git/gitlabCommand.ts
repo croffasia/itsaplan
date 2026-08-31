@@ -10,6 +10,7 @@ export function gitlabWebhookCommand(payloadUrl: string, secret: string): string
     `--raw-field token=${shellQuote(secret)}`,
     '--field merge_requests_events=true',
     '--field pipeline_events=true',
+    '--field push_events=true',
     '--field enable_ssl_verification=true',
     '--silent',
   ].join(' \\\n  ');

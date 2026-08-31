@@ -4,6 +4,7 @@ import {
   giteaRepository,
   githubRepository,
   gitlabRepository,
+  providerErrorMessage,
 } from '../../connections-provider';
 
 describe('Git provider repository responses', () => {
@@ -104,5 +105,23 @@ describe('Git provider repository responses', () => {
         web_url: 'javascript:alert(1)',
       }),
     ).toBeNull();
+  });
+});
+
+describe('Git provider errors', () => {
+  it('explains GitHub permission and SSO failures', () => {
+    expect(
+      providerErrorMessage('github', 403, 'Resource not accessible by personal access token'),
+    ).toContain('missing permission');
+    expect(providerErrorMessage('github', 403, 'Resource protected by organization SSO')).toContain(
+      'organization SSO',
+    );
+  });
+
+  it('distinguishes invalid tokens and rate limits', () => {
+    expect(providerErrorMessage('github', 401)).toContain('rejected the access token');
+    expect(providerErrorMessage('github', 403, 'API rate limit exceeded', '0')).toContain(
+      'rate limit reached',
+    );
   });
 });

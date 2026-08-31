@@ -511,8 +511,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       workItem: 'edit',
       response: { 204: t.Void(), ...commonErrors },
       detail: {
-        summary: 'Unlink a pull request',
-        description: 'Remove one pull request or merge request from an issue.',
+        summary: 'Unlink a development item',
+        description: 'Remove one branch, pull request, or merge request from an issue.',
       },
     },
   )

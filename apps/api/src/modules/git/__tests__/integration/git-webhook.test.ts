@@ -46,6 +46,7 @@ function prPayload(overrides: {
   title?: string;
   body?: string;
   headSha?: string;
+  headRef?: string;
 }) {
   const number = overrides.number ?? 42;
   return {
@@ -58,7 +59,7 @@ function prPayload(overrides: {
       merged: overrides.merged ?? true,
       draft: overrides.draft ?? false,
       base: { ref: overrides.baseRef ?? 'main' },
-      head: { ref: 'feature/site', sha: overrides.headSha ?? 'head-sha-1' },
+      head: { ref: overrides.headRef ?? 'feature/site', sha: overrides.headSha ?? 'head-sha-1' },
     },
     repository: { full_name: 'acme/site', default_branch: 'main' },
   };
@@ -133,7 +134,12 @@ async function deliverRaw(webhookId: string, payload: unknown, headers: Record<s
   return { status: res.status, data: (await res.json().catch(() => null)) as unknown };
 }
 
-function gitlabPayload(body: string, action = 'merge', headSha = 'gitlab-head-1') {
+function gitlabPayload(
+  body: string,
+  action = 'merge',
+  headSha = 'gitlab-head-1',
+  sourceBranch = 'feature/site',
+) {
   return {
     object_kind: 'merge_request',
     object_attributes: {
@@ -142,11 +148,15 @@ function gitlabPayload(body: string, action = 'merge', headSha = 'gitlab-head-1'
       description: body,
       url: 'https://gitlab.com/acme/site/-/merge_requests/7',
       action,
-      source_branch: 'feature/site',
+      source_branch: sourceBranch,
       target_branch: 'main',
       last_commit: { id: headSha },
     },
-    project: { path_with_namespace: 'acme/site', default_branch: 'main' },
+    project: {
+      path_with_namespace: 'acme/site',
+      default_branch: 'main',
+      web_url: 'https://gitlab.com/acme/site',
+    },
   };
 }
 
@@ -412,6 +422,152 @@ describe('Repository webhook', () => {
         checks: [],
       },
     ]);
+  });
+
+  it('links an issue when a matching GitHub branch is created', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const branch = `feature/MKT-${issue.sequenceNumber}-summary`;
+
+    const res = await deliver(
+      webhookId,
+      secret,
+      {
+        ref: branch,
+        ref_type: 'branch',
+        repository: {
+          full_name: 'acme/site',
+          default_branch: 'main',
+          html_url: 'https://github.com/acme/site',
+        },
+      },
+      { event: 'create' },
+    );
+
+    expect(res.data).toMatchObject({ handled: 'branch' });
+    expect((await issueState(asOwner, issue.id)).development).toMatchObject([
+      {
+        kind: 'branch',
+        number: null,
+        repository: 'acme/site',
+        sourceBranch: branch,
+      },
+    ]);
+  });
+
+  it('links from the PR branch name and replaces the branch-only link', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const branch = `MKT-${issue.sequenceNumber}-summary`;
+
+    await deliver(
+      webhookId,
+      secret,
+      {
+        ref: branch,
+        ref_type: 'branch',
+        repository: { full_name: 'acme/site', default_branch: 'main' },
+      },
+      { event: 'create' },
+    );
+    await deliver(
+      webhookId,
+      secret,
+      prPayload({ action: 'opened', merged: false, body: '', headRef: branch }),
+    );
+
+    expect((await issueState(asOwner, issue.id)).development).toMatchObject([
+      { kind: 'pull_request', number: 42, sourceBranch: branch },
+    ]);
+  });
+
+  it('keeps branch CI when the branch becomes a GitLab merge request', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const branch = `MKT-${issue.sequenceNumber}-pipeline`;
+    const headSha = 'gitlab-branch-head';
+    const headers = () => ({
+      'x-gitlab-token': secret,
+      'x-gitlab-event-uuid': crypto.randomUUID(),
+    });
+
+    await deliverRaw(
+      webhookId,
+      {
+        object_kind: 'push',
+        before: '0'.repeat(40),
+        after: headSha,
+        checkout_sha: headSha,
+        ref: `refs/heads/${branch}`,
+        project: {
+          path_with_namespace: 'acme/site',
+          default_branch: 'main',
+          web_url: 'https://gitlab.com/acme/site',
+        },
+      },
+      { 'x-gitlab-event': 'Push Hook', ...headers() },
+    );
+    await deliverRaw(
+      webhookId,
+      {
+        object_kind: 'pipeline',
+        object_attributes: { id: 88, status: 'success', sha: headSha, ref: branch },
+        project: {
+          path_with_namespace: 'acme/site',
+          default_branch: 'main',
+          web_url: 'https://gitlab.com/acme/site',
+        },
+      },
+      { 'x-gitlab-event': 'Pipeline Hook', ...headers() },
+    );
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      kind: 'branch',
+      pipelineStatus: 'success',
+    });
+
+    await deliverRaw(webhookId, gitlabPayload('', 'open', headSha, branch), {
+      'x-gitlab-event': 'Merge Request Hook',
+      ...headers(),
+    });
+    expect((await issueState(asOwner, issue.id)).development).toMatchObject([
+      {
+        kind: 'pull_request',
+        number: 7,
+        sourceBranch: branch,
+        pipelineStatus: 'success',
+      },
+    ]);
+  });
+
+  it('removes an existing pull request link when an edit adds skip', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const identifier = `MKT-${issue.sequenceNumber}`;
+
+    await deliver(
+      webhookId,
+      secret,
+      prPayload({ action: 'opened', merged: false, body: `Refs ${identifier}` }),
+    );
+    expect((await issueState(asOwner, issue.id)).development).toHaveLength(1);
+
+    await deliver(
+      webhookId,
+      secret,
+      prPayload({ action: 'edited', merged: false, body: `Skip ${identifier}` }),
+    );
+    expect((await issueState(asOwner, issue.id)).development).toEqual([]);
+  });
+
+  it('stores the backlink preference and defaults it on', async () => {
+    const { asOwner } = await setupProject();
+    const before = await asOwner.projects({ projectKey: 'MKT' }).settings.git.get();
+    expect(before.data!.linkbackComments).toBe(true);
+
+    const updated = await asOwner.projects({ projectKey: 'MKT' }).settings.git.patch({
+      linkbackComments: false,
+    });
+    expect(updated.data!.linkbackComments).toBe(false);
   });
 
   it('lets an editor unlink a pull request from the issue', async () => {

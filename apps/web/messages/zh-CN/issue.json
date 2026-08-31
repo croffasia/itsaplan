@@ -323,7 +323,8 @@
   },
   "development": {
     "title": "开发",
-    "unlink": "取消关联拉取请求",
+    "unlink": "取消关联开发项",
+    "branch": "分支",
     "draft": "草稿",
     "ready": "可合并",
     "open": "打开",

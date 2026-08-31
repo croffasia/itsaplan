@@ -1,11 +1,20 @@
 import { getIssueBySequence, updateIssue } from '#modules/issues/service';
 import { recordActivity, textSide, type ActivityActor } from '#modules/issues/activity';
-import { parseMagicWords, type IssueRef } from './magic-words';
+import {
+  parseIssueIdentifiers,
+  parseMagicWords,
+  type IssueRef,
+  type ParsedMagicWords,
+} from './magic-words';
 import {
   hasOpenDevelopmentLinks,
+  promoteBranchLinksToPullRequest,
+  removeBranchLinks,
+  removePullRequestLinks,
   updateCheckLinks,
   updatePipelineLinks,
   updatePullRequestLinks,
+  upsertBranchLinks,
   upsertPullRequestLinks,
 } from './development';
 import type { GitEvent, GitProviderKey, PullRequestEvent } from './providers';
@@ -25,13 +34,34 @@ const CLOSED_STATE_TYPES = ['completed', 'canceled'];
 
 export type PullRequestOutcome = 'merged' | 'opened' | 'ignored';
 
+const refId = (ref: IssueRef) => `${ref.key}-${ref.sequenceNumber}`;
+
+function uniqueRefs(refs: IssueRef[]): IssueRef[] {
+  return [...new Map(refs.map((ref) => [refId(ref), ref])).values()];
+}
+
+async function resolveIssues(
+  project: { id: number; key: string },
+  refs: IssueRef[],
+): Promise<{ id: number; sequenceNumber: number }[]> {
+  const projectKey = project.key.toUpperCase();
+  const linked = [];
+  for (const ref of uniqueRefs(refs)) {
+    if (ref.key !== projectKey) continue;
+    const issue = await getIssueBySequence(project.id, ref.sequenceNumber);
+    if (issue && !issue.archivedAt)
+      linked.push({ id: issue.id, sequenceNumber: issue.sequenceNumber });
+  }
+  return linked;
+}
+
 export async function handleGitEvent(
   project: { id: number; key: string },
   settings: GitSettings,
   providerKey: GitProviderKey,
   providerLabel: string,
   event: GitEvent,
-): Promise<PullRequestOutcome | 'pipeline' | 'check'> {
+): Promise<PullRequestOutcome | 'branch' | 'pipeline' | 'check'> {
   if (event.kind === 'check') {
     await updateCheckLinks(project.id, providerKey, event);
     return 'check';
@@ -41,26 +71,62 @@ export async function handleGitEvent(
     return 'pipeline';
   }
 
-  await updatePullRequestLinks(project.id, providerKey, event);
-  const refs = parseMagicWords(`${event.title}\n${event.body}`);
-  const projectKey = project.key.toUpperCase();
-  const linkedIssues: { id: number; sequenceNumber: number }[] = [];
-  for (const ref of [...refs.closes, ...refs.references]) {
-    if (ref.key !== projectKey) continue;
-    const linkedIssue = await getIssueBySequence(project.id, ref.sequenceNumber);
-    if (linkedIssue && !linkedIssue.archivedAt)
-      linkedIssues.push({
-        id: linkedIssue.id,
-        sequenceNumber: linkedIssue.sequenceNumber,
-      });
+  if (event.kind === 'branch') {
+    if (event.action === 'deleted') {
+      await removeBranchLinks(project.id, null, providerKey, event.repo, event.branch);
+      return 'branch';
+    }
+    const branchIssues = await resolveIssues(project, parseIssueIdentifiers(event.branch));
+    await upsertBranchLinks(
+      branchIssues.map((issue) => issue.id),
+      providerKey,
+      event,
+    );
+    return 'branch';
   }
-  const uniqueIssues = [...new Map(linkedIssues.map((item) => [item.id, item])).values()];
-  const newIssueIds = await upsertPullRequestLinks(
+
+  await updatePullRequestLinks(project.id, providerKey, event);
+  const magic = parseMagicWords(`${event.title}\n${event.body}`);
+  const skipped = new Set(magic.skipped.map(refId));
+  const branchRefs = parseIssueIdentifiers(event.sourceBranch ?? '').filter(
+    (ref) => !skipped.has(refId(ref)),
+  );
+  const refs: ParsedMagicWords = {
+    closes: magic.closes,
+    references: uniqueRefs([...magic.references, ...branchRefs]).filter(
+      (ref) => !magic.closes.some((closing) => refId(closing) === refId(ref)),
+    ),
+    skipped: magic.skipped,
+  };
+  const skippedIssues = await resolveIssues(project, magic.skipped);
+  await removePullRequestLinks(
+    skippedIssues.map((issue) => issue.id),
+    providerKey,
+    event,
+  );
+  if (event.sourceBranch) {
+    await removeBranchLinks(
+      project.id,
+      skippedIssues.map((issue) => issue.id),
+      providerKey,
+      event.repo,
+      event.sourceBranch,
+    );
+  }
+  const projectKey = project.key.toUpperCase();
+  const uniqueIssues = await resolveIssues(project, [...refs.closes, ...refs.references]);
+  const promotedIssueIds = await promoteBranchLinksToPullRequest(
+    uniqueIssues.map((issue) => issue.id),
+    providerKey,
+    event,
+  );
+  const insertedIssueIds = await upsertPullRequestLinks(
     uniqueIssues.map((item) => item.id),
     providerKey,
     event,
   );
-  if (newIssueIds.length > 0) {
+  const newIssueIds = [...new Set([...promotedIssueIds, ...insertedIssueIds])];
+  if (settings.linkbackComments && newIssueIds.length > 0) {
     const appUrl = process.env.APP_URL?.replace(/\/$/, '');
     const items = uniqueIssues
       .filter((item) => newIssueIds.includes(item.id))

@@ -33,7 +33,8 @@ export const DevelopmentLinkResponse = t.Object({
     t.Literal('bitbucket'),
   ]),
   repository: t.String(),
-  number: t.Number(),
+  kind: t.Union([t.Literal('pull_request'), t.Literal('branch')]),
+  number: t.Nullable(t.Number()),
   title: t.String(),
   url: t.Nullable(t.String()),
   state: t.Union([t.Literal('open'), t.Literal('merged'), t.Literal('closed')]),
@@ -58,6 +59,7 @@ export const GitSettingsResponse = t.Object({
   secret: t.Nullable(t.String()),
   onMergeColumnId: t.Nullable(t.Number()),
   onOpenColumnId: t.Nullable(t.Number()),
+  linkbackComments: t.Boolean(),
   repositories: t.Array(
     t.Object({ repo: t.String(), provider: t.String(), lastEventAt: t.String() }),
   ),
@@ -67,6 +69,7 @@ export const updateGitSettingsBody = t.Object({
   enabled: t.Optional(t.Boolean()),
   onMergeColumnId: t.Optional(t.Nullable(t.Number())),
   onOpenColumnId: t.Optional(t.Nullable(t.Number())),
+  linkbackComments: t.Optional(t.Boolean()),
 });
 
 export const GitProvider = t.Union([

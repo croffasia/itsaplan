@@ -26,6 +26,16 @@ export interface PullRequestEvent {
   draft: boolean;
 }
 
+export interface BranchEvent {
+  kind: 'branch';
+  action: 'created' | 'deleted';
+  repo: string;
+  branch: string;
+  url: string | null;
+  headSha: string | null;
+  defaultBranch: string | null;
+}
+
 export interface PipelineEvent {
   kind: 'pipeline';
   repo: string;
@@ -47,7 +57,7 @@ export interface CheckEvent {
   url: string | null;
 }
 
-export type GitEvent = PullRequestEvent | PipelineEvent | CheckEvent;
+export type GitEvent = PullRequestEvent | BranchEvent | PipelineEvent | CheckEvent;
 
 export type DeliveryHeaders = Record<string, string | undefined>;
 
@@ -94,10 +104,18 @@ function httpUrl(url: string | undefined): string | null {
   }
 }
 
+function refPath(ref: string): string {
+  return ref.split('/').map(encodeURIComponent).join('/');
+}
+
 // The slice of a GitHub pull_request payload the adapters read. Gitea and Forgejo
 // send the same shape.
 interface GithubPayload {
   action?: string;
+  ref?: string;
+  ref_type?: string;
+  sha?: string;
+  master_branch?: string;
   pull_request?: {
     number?: number;
     title?: string;
@@ -119,7 +137,7 @@ interface GithubPayload {
     pull_requests?: { number?: number }[];
     app?: { id?: number };
   };
-  repository?: { full_name?: string; default_branch?: string };
+  repository?: { full_name?: string; default_branch?: string; html_url?: string };
 }
 
 function githubRepo(payload: unknown): string | undefined {
@@ -203,8 +221,27 @@ function parseGithubCheck(payload: unknown): CheckEvent | null {
   };
 }
 
+function parseGithubBranch(payload: unknown, headers: DeliveryHeaders): BranchEvent | null {
+  const value = payload as GithubPayload;
+  const event = headers['x-github-event'] ?? headers['x-gitea-event'] ?? headers['x-forgejo-event'];
+  if (!['create', 'delete'].includes(event ?? '') || value.ref_type !== 'branch') return null;
+  if (!value.ref || !value.repository?.full_name) return null;
+  const base = httpUrl(value.repository.html_url);
+  return {
+    kind: 'branch',
+    action: event === 'delete' ? 'deleted' : 'created',
+    repo: value.repository.full_name,
+    branch: value.ref,
+    url: base ? `${base}/tree/${refPath(value.ref)}` : null,
+    headSha: event === 'delete' ? null : (value.sha ?? null),
+    defaultBranch: value.repository.default_branch ?? value.master_branch ?? null,
+  };
+}
+
 function parseGithubPayload(payload: unknown, headers: DeliveryHeaders): GitEvent | null {
-  if (headers['x-github-event'] === 'check_run') return parseGithubCheck(payload);
+  const event = headers['x-github-event'] ?? headers['x-gitea-event'] ?? headers['x-forgejo-event'];
+  if (event === 'check_run') return parseGithubCheck(payload);
+  if (event === 'create' || event === 'delete') return parseGithubBranch(payload, headers);
   return parseGithubPullRequest(payload);
 }
 
@@ -234,10 +271,14 @@ const gitea: GitProvider = {
     ),
   deliveryId: (h) => h['x-forgejo-delivery'] ?? h['x-gitea-delivery'],
   repo: githubRepo,
-  parse: (payload) => parseGithubPullRequest(payload),
+  parse: parseGithubPayload,
 };
 
 interface GitlabPayload {
+  before?: string;
+  after?: string;
+  ref?: string;
+  checkout_sha?: string;
   object_kind?: string;
   object_attributes?: {
     iid?: number;
@@ -275,6 +316,23 @@ const gitlab: GitProvider = {
   parse: (payload) => {
     const { object_kind: kind, object_attributes: mr, project, changes } = payload as GitlabPayload;
     if (!project?.path_with_namespace) return null;
+    if (kind === 'push') {
+      const push = payload as GitlabPayload;
+      const branch = push.ref?.replace(/^refs\/heads\//, '');
+      const zero = /^0+$/;
+      const created = push.before != null && zero.test(push.before) && !zero.test(push.after ?? '');
+      const deleted = push.after != null && zero.test(push.after);
+      if (!branch || (!created && !deleted)) return null;
+      return {
+        kind: 'branch',
+        action: deleted ? 'deleted' : 'created',
+        repo: project.path_with_namespace,
+        branch,
+        url: project.web_url ? httpUrl(`${project.web_url}/-/tree/${refPath(branch)}`) : null,
+        headSha: deleted ? null : (push.checkout_sha ?? push.after ?? null),
+        defaultBranch: project.default_branch ?? null,
+      };
+    }
     if (kind === 'pipeline') {
       const pipeline = mr;
       const status = pipelineStatus(pipeline?.status);
@@ -324,6 +382,29 @@ const gitlab: GitProvider = {
 };
 
 interface BitbucketPayload {
+  branch?: {
+    name?: string;
+    target?: { hash?: string };
+    links?: { html?: { href?: string } };
+  };
+  // Bitbucket documents branch lifecycle payloads using the same change shape
+  // as a repository push. Some deliveries also expose the branch directly.
+  push?: {
+    changes?: {
+      new?: {
+        type?: string;
+        name?: string;
+        target?: { hash?: string };
+        links?: { html?: { href?: string } };
+      } | null;
+      old?: {
+        type?: string;
+        name?: string;
+        target?: { hash?: string };
+        links?: { html?: { href?: string } };
+      } | null;
+    }[];
+  };
   pullrequest?: {
     id?: number;
     title?: string;
@@ -347,6 +428,22 @@ const bitbucket: GitProvider = {
   repo: (payload) => (payload as BitbucketPayload).repository?.full_name,
   parse: (payload, headers) => {
     const key = headers['x-event-key'];
+    if (key === 'repo:branch_created' || key === 'repo:branch_deleted') {
+      const value = payload as BitbucketPayload;
+      const deleted = key === 'repo:branch_deleted';
+      const change = value.push?.changes?.[0];
+      const branch = value.branch ?? (deleted ? change?.old : change?.new);
+      if (!branch?.name || !value.repository?.full_name) return null;
+      return {
+        kind: 'branch',
+        action: deleted ? 'deleted' : 'created',
+        repo: value.repository.full_name,
+        branch: branch.name,
+        url: httpUrl(branch.links?.html?.href),
+        headSha: deleted ? null : (branch.target?.hash ?? null),
+        defaultBranch: value.repository.mainbranch?.name ?? null,
+      };
+    }
     const opened = key === 'pullrequest:created';
     const merged = key === 'pullrequest:fulfilled';
     const closed = key === 'pullrequest:rejected';

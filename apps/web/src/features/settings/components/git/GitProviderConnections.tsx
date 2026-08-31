@@ -28,7 +28,10 @@ export default function GitProviderConnections({
   }
 
   return (
-    <SettingsSection title={t('nativeConnections')} description={t('nativeConnectionsHint')}>
+    <SettingsSection
+      title={t('nativeConnectionsRecommended')}
+      description={t('nativeConnectionsHint')}
+    >
       <div className="space-y-3">
         {editable && (
           <div className="flex flex-wrap gap-2">

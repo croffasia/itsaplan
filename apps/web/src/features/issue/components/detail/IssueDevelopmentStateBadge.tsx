@@ -1,4 +1,5 @@
 import {
+  GitBranch,
   GitMerge,
   GitPullRequest,
   GitPullRequestArrow,
@@ -12,6 +13,16 @@ import { issueDevelopmentBadgeClassName } from './issueDevelopmentBadgeStyles';
 
 export default function IssueDevelopmentStateBadge({ link }: { link: DevelopmentLink }) {
   const t = useTranslations('issue.development');
+  if (link.kind === 'branch')
+    return (
+      <Badge
+        variant="outline"
+        className={`${issueDevelopmentBadgeClassName} border-border/70 bg-muted/30 text-foreground/80`}
+      >
+        <GitBranch />
+        {t('branch')}
+      </Badge>
+    );
   if (link.draft)
     return (
       <Badge

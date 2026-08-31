@@ -207,8 +207,7 @@
     "projectNotificationsHint": "允许项目使用此服务商发送通知。每个项目可以自行选择是否使用。",
     "test": "发送测试邮件",
     "testing": "正在发送…",
-    "testHint": "通过已保存的服务商向您的账户邮箱发送一封真实邮件。",
-    "testSaveFirst": "请先保存服务商设置，再发送测试邮件。",
+    "testHint": "使用当前设置发送真实邮件，无需先保存。",
     "testConfigureFirst": "请先启用服务商并填写所需凭据。",
     "testSent": "测试邮件已发送至 {email}"
   },

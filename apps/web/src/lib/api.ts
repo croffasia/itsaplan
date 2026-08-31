@@ -3564,8 +3564,11 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(patch),
     }),
-  testInstanceEmailSettings: () =>
-    request<InstanceEmailTestResult>('/god/email-settings/test', { method: 'POST' }),
+  testInstanceEmailSettings: (patch: InstanceEmailSettingsPatch) =>
+    request<InstanceEmailTestResult>('/god/email-settings/test', {
+      method: 'POST',
+      body: JSON.stringify(patch),
+    }),
   getInstanceTelegramSettings: () => request<InstanceTelegramSettings>('/god/telegram-settings'),
   updateInstanceTelegramSettings: (patch: InstanceTelegramSettingsPatch) =>
     request<InstanceTelegramSettings>('/god/telegram-settings', {

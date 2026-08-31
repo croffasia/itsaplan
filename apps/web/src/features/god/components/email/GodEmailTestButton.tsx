@@ -18,7 +18,7 @@ export default function GodEmailTestButton({ form }: { form: GodEmailForm }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
       <p className="text-xs text-muted-foreground">
-        {form.dirty ? t('testSaveFirst') : form.testable ? t('testHint') : t('testConfigureFirst')}
+        {form.testable ? t('testHint') : t('testConfigureFirst')}
       </p>
       <Button
         type="button"

@@ -5,7 +5,7 @@ import {
   getAuthSettings,
   setAuthSettings,
   getEmailSettings,
-  getEmailConfig,
+  resolveEmailConfig,
   setEmailSettings,
   hasConfiguredEmailProvider,
   getGoogleSettings,
@@ -180,11 +180,11 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
 
   .post(
     '/god/email-settings/test',
-    async ({ user }) => {
+    async ({ user, body: patch }) => {
       const current = requireGod(user);
       if (!current.email) throw new HttpError(400, 'The instance owner has no email address');
-      const config = await getEmailConfig();
-      if (!config || !hasEmailProvider(config)) {
+      const config = await resolveEmailConfig(patch ?? {});
+      if (!hasEmailProvider(config)) {
         throw new HttpError(400, 'Configure an email provider first');
       }
 
@@ -206,10 +206,12 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       return { recipient: current.email };
     },
     {
+      body: t.Optional(EmailSettingsBody),
       response: { 200: EmailTestResponse, ...commonErrors, ...errors(502) },
       detail: {
         summary: 'Send a test email',
-        description: 'Send a test message through the saved instance provider to its owner.',
+        description:
+          'Send a test message through the supplied provider settings without saving them.',
       },
     },
   )

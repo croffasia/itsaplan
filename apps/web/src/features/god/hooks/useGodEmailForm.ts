@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import type { NotificationEncryption, InstanceEmailSettings } from '@/lib/api';
+import type {
+  NotificationEncryption,
+  InstanceEmailSettings,
+  InstanceEmailSettingsPatch,
+} from '@/lib/api';
 import type { EmailProvider } from '@/components/common/inputs/ProviderToggle';
 import { toPositiveInt } from '@/lib/utils';
 import {
@@ -83,15 +87,15 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
     allowProjects !== settings.allowProjects ||
     (provider === 'smtp' ? smtpDirty : apiKey.length > 0);
   const testable =
-    !dirty &&
-    ((settings.smtp.enabled &&
-      settings.smtp.host.length > 0 &&
-      (settings.smtp.username.length === 0 || settings.smtp.hasPassword) &&
-      (settings.from.length > 0 || settings.smtp.username.length > 0)) ||
-      (settings.resend.enabled && settings.resend.hasApiKey && settings.from.length > 0));
+    enabled &&
+    (provider === 'smtp'
+      ? host.trim().length > 0 &&
+        (username.trim().length === 0 || password.length > 0 || settings.smtp.hasPassword) &&
+        (from.trim().length > 0 || username.trim().length > 0)
+      : (apiKey.length > 0 || settings.resend.hasApiKey) && from.trim().length > 0);
 
-  async function save() {
-    await update.mutateAsync({
+  function currentPatch(): InstanceEmailSettingsPatch {
+    return {
       from: from.trim(),
       allowProjects,
       smtp: {
@@ -107,13 +111,17 @@ export function useGodEmailForm(settings: InstanceEmailSettings): GodEmailForm {
         enabled: provider === 'resend' && enabled,
         ...(apiKey.length > 0 ? { apiKey } : {}),
       },
-    });
+    };
+  }
+
+  async function save() {
+    await update.mutateAsync(currentPatch());
     setPassword('');
     setApiKey('');
   }
 
   async function test() {
-    const result = await testEmail.mutateAsync();
+    const result = await testEmail.mutateAsync(currentPatch());
     return result.recipient;
   }
 

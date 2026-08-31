@@ -586,6 +586,7 @@ export {
   getEmailSettings,
   setEmailSettings,
   getEmailConfig,
+  resolveEmailConfig,
   getProjectEmailConfig,
   hasConfiguredEmailProvider,
   getGoogleSettings,

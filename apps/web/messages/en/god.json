@@ -207,8 +207,7 @@
     "projectNotificationsHint": "Let projects deliver their notifications through this provider instead of configuring one of their own. Each project still chooses whether to use it.",
     "test": "Send test email",
     "testing": "Sending…",
-    "testHint": "Send a real message through the saved provider to your account email.",
-    "testSaveFirst": "Save the provider settings before sending a test email.",
+    "testHint": "Send a real message with the current settings without saving them.",
     "testConfigureFirst": "Enable a provider and add its required credentials first.",
     "testSent": "Test email sent to {email}"
   },

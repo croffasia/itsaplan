@@ -60,7 +60,9 @@ export function useUpdateInstanceEmailSettings() {
 }
 
 export function useTestInstanceEmailSettings() {
-  return useMutation({ mutationFn: () => api.testInstanceEmailSettings() });
+  return useMutation({
+    mutationFn: (patch: InstanceEmailSettingsPatch) => api.testInstanceEmailSettings(patch),
+  });
 }
 
 export function useInstanceGoogleSettingsQuery() {

@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
 import { JSDOM } from 'jsdom';
 import { issueEditorStarterKitOptions } from './IssueMarkdownEditor';
+import { openLinkOnModifierClick } from '../../utils/modifierClickLink';
 
 let dom: JSDOM;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
@@ -47,5 +48,56 @@ describe('IssueMarkdownEditor extensions', () => {
       1,
     );
     editor.destroy();
+  });
+
+  it('opens links only with the platform modifier', () => {
+    const root = dom.window.document.querySelector('div')!;
+    root.innerHTML = '<a href="https://example.com/docs">Docs</a>';
+    const link = root.querySelector('a')!;
+    const opened: Array<unknown> = [];
+    dom.window.open = (...args: Parameters<typeof window.open>) => {
+      opened.push(args);
+      return null;
+    };
+
+    const plain = new dom.window.MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      button: 0,
+    });
+    link.dispatchEvent(plain);
+    assert.equal(openLinkOnModifierClick(plain, root), false);
+
+    for (const modifier of [{ metaKey: true }, { ctrlKey: true }]) {
+      const event = new dom.window.MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        button: 0,
+        ...modifier,
+      });
+      link.dispatchEvent(event);
+      assert.equal(openLinkOnModifierClick(event, root), true);
+      assert.equal(event.defaultPrevented, true);
+    }
+
+    assert.deepEqual(opened, [
+      ['https://example.com/docs', '_blank', 'noopener,noreferrer'],
+      ['https://example.com/docs', '_blank', 'noopener,noreferrer'],
+    ]);
+  });
+
+  it('does not open unsafe link protocols', () => {
+    const root = dom.window.document.querySelector('div')!;
+    root.innerHTML = '<a href="javascript:alert(1)">Unsafe</a>';
+    const link = root.querySelector('a')!;
+    const event = new dom.window.MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      metaKey: true,
+    });
+    link.dispatchEvent(event);
+
+    assert.equal(openLinkOnModifierClick(event, root), false);
+    assert.equal(event.defaultPrevented, false);
   });
 });

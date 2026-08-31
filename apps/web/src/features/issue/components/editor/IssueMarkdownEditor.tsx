@@ -13,6 +13,7 @@ import { SlashCommand } from '@/lib/tiptap-slash-command';
 import { MarkdownTable } from '../../utils/tiptap-table';
 import { Video } from '../../utils/tiptap-video';
 import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
+import { openLinkOnModifierClick } from '../../utils/modifierClickLink';
 import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
 import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
@@ -125,6 +126,9 @@ export default function IssueMarkdownEditor({
       attributes: {
         // flex-1 so the typing area covers a container taller than the text.
         class: 'md-content flex-1 focus:outline-none',
+      },
+      handleClick(view, _pos, event) {
+        return openLinkOnModifierClick(event, view.dom);
       },
       // Files dropped from the OS are uploaded, then inserted at the drop
       // position. Internal moves and attachment-card drags (which carry

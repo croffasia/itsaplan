@@ -34,6 +34,7 @@ export interface EmailMessage {
   subject: string;
   text: string;
   html: string;
+  idempotencyKey?: string;
 }
 
 export interface SendResult {
@@ -101,6 +102,7 @@ async function sendResend(
       headers: {
         authorization: `Bearer ${resend.apiKey}`,
         'content-type': 'application/json',
+        ...(message.idempotencyKey ? { 'idempotency-key': message.idempotencyKey } : {}),
       },
       signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
       body: JSON.stringify({

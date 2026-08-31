@@ -95,6 +95,16 @@ async function hasSsoProvider(): Promise<boolean> {
   return (await hasConfiguredOidc()) || (await hasConfiguredGoogle());
 }
 
+async function assertUsableSignInMethod(
+  nextProviderUsable: boolean,
+  otherProviderUsable: boolean,
+): Promise<void> {
+  const auth = await getAuthSettings();
+  if (!auth.emailPassword && !nextProviderUsable && !otherProviderUsable) {
+    throw new HttpError(400, 'Enable password sign-in or another single sign-on provider first');
+  }
+}
+
 export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
   .use(authContext)
   // Every route in this plugin is instance administration, so the role check runs
@@ -180,13 +190,18 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     '/god/google-settings',
     async ({ body }) => {
       const current = await getGoogleSettings();
+      const enabled = body.enabled ?? current.enabled;
       const clientId = body.clientId ?? current.clientId;
       const hasClientSecret = (body.clientSecret?.length ?? 0) > 0 || current.hasClientSecret;
       // Turning it on without credentials would only offer a button that fails at
       // Google, so the same rule as the mail-dependent options applies here.
-      if (body.enabled && (clientId.length === 0 || !hasClientSecret)) {
+      if (enabled && (clientId.length === 0 || !hasClientSecret)) {
         throw new HttpError(400, 'Add the Google client ID and secret first');
       }
+      await assertUsableSignInMethod(
+        enabled && clientId.length > 0 && hasClientSecret,
+        await hasConfiguredOidc(),
+      );
       const next = await setGoogleSettings(body);
       return { ...next, redirectUri: GOOGLE_REDIRECT_URI };
     },
@@ -216,17 +231,19 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     '/god/oidc-settings',
     async ({ body }) => {
       const current = await getOidcSettings();
+      const enabled = body.enabled ?? current.enabled;
       const discoveryUrl = body.discoveryUrl ?? current.discoveryUrl;
       const clientId = body.clientId ?? current.clientId;
       const hasClientSecret = (body.clientSecret?.length ?? 0) > 0 || current.hasClientSecret;
       // Turning it on without credentials would only offer a button that fails at
       // the provider, the same rule the Google settings apply.
-      if (
-        body.enabled &&
-        (discoveryUrl.length === 0 || clientId.length === 0 || !hasClientSecret)
-      ) {
+      if (enabled && (discoveryUrl.length === 0 || clientId.length === 0 || !hasClientSecret)) {
         throw new HttpError(400, 'Add the discovery URL, client ID and secret first');
       }
+      await assertUsableSignInMethod(
+        enabled && discoveryUrl.length > 0 && clientId.length > 0 && hasClientSecret,
+        await hasConfiguredGoogle(),
+      );
       const next = await setOidcSettings(body);
       return { ...next, redirectUri: OIDC_REDIRECT_URI };
     },

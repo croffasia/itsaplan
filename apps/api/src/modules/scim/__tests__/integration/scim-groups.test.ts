@@ -47,6 +47,10 @@ describe('SCIM groups', () => {
 
       expect(res.status).toBe(400);
       expect(res.error!.value).toMatchObject({ scimType: 'invalidValue' });
+      const groups = await scim.scim.v2.Groups.get({
+        query: { filter: 'displayName eq "Engineering"' },
+      });
+      expect(groups.data).toMatchObject({ totalResults: 0 });
     });
 
     it('refuses a body with no displayName', async () => {
@@ -115,6 +119,19 @@ describe('SCIM groups', () => {
       expect(res.data).toMatchObject({ displayName: 'Platform' });
       expect(res.data!.members.map((m) => m.value)).toEqual([grace.data!.id]);
     });
+
+    it('keeps the existing group when a replacement member is invalid', async () => {
+      const { scim } = await setupScim();
+      const created = await scim.scim.v2.Groups.post(groupBody());
+
+      const res = await scim.scim.v2
+        .Groups({ id: created.data!.id })
+        .put(groupBody({ displayName: 'Platform', members: [{ value: 'nobody' }] }));
+
+      expect(res.status).toBe(400);
+      const group = await scim.scim.v2.Groups({ id: created.data!.id }).get();
+      expect(group.data).toMatchObject({ displayName: 'Engineering', members: [] });
+    });
   });
 
   describe('PATCH /scim/v2/Groups/:id', () => {
@@ -176,6 +193,23 @@ describe('SCIM groups', () => {
 
       expect(res.status).toBe(400);
       expect(res.error!.value).toMatchObject({ scimType: 'invalidPath' });
+    });
+
+    it('does not apply earlier member operations when a later operation is invalid', async () => {
+      const { scim } = await setupScim();
+      const ada = await scim.scim.v2.Users.post(scimUserBody());
+      const created = await scim.scim.v2.Groups.post(groupBody());
+
+      const res = await scim.scim.v2.Groups({ id: created.data!.id }).patch(
+        patchOps([
+          { op: 'add', path: 'members', value: [{ value: ada.data!.id }] },
+          { op: 'replace', path: 'description', value: 'nope' },
+        ]),
+      );
+
+      expect(res.status).toBe(400);
+      const group = await scim.scim.v2.Groups({ id: created.data!.id }).get();
+      expect(group.data!.members).toEqual([]);
     });
   });
 

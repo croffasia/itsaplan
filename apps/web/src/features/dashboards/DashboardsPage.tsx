@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
@@ -15,9 +15,9 @@ import WidgetGrid from './components/WidgetGrid';
 import AddWidgetDialog from './components/AddWidgetDialog';
 
 // The dashboards section: a tab strip of named dashboards over a grid of analytics
-// widgets. The active dashboard comes from the route; with none selected the first
-// saved dashboard shows, or a built-in default when the project has none. Layout
-// edits are local until saved (see useDashboardEditor).
+// widgets. The active dashboard comes from the route; with none selected the
+// built-in Overview stays active even when the project also has saved dashboards.
+// Layout edits are local until saved (see useDashboardEditor).
 export default function DashboardsPage() {
   const t = useTranslations('dashboards');
   const tCommon = useTranslations('common');
@@ -31,15 +31,29 @@ export default function DashboardsPage() {
   const [editing, setEditing] = useState(false);
 
   const list = dashboards ?? [];
-  const routeId = params.dashboardId ? Number(params.dashboardId) : null;
-  // With no id in the URL, fall back to the first saved dashboard.
-  const activeDashboardId = routeId ?? list[0]?.id ?? null;
+  const parsedRouteId = params.dashboardId ? Number(params.dashboardId) : null;
+  const routeId =
+    parsedRouteId != null && Number.isSafeInteger(parsedRouteId) && parsedRouteId > 0
+      ? parsedRouteId
+      : null;
+  const activeDashboardId = routeId;
+  const missingDashboard =
+    !isLoading &&
+    params.dashboardId != null &&
+    (routeId == null || !list.some((dashboard) => dashboard.id === routeId));
 
-  const editor = useDashboardEditor(projectKey, list, activeDashboardId, project, (id) =>
-    router.push(id != null ? dashboardPath(projectKey, id) : dashboardsPath(projectKey)),
-  );
+  const selectDashboard = (id: number | null) => {
+    setEditing(false);
+    router.push(id != null ? dashboardPath(projectKey, id) : dashboardsPath(projectKey));
+  };
 
-  if (!project || isLoading) {
+  const editor = useDashboardEditor(projectKey, list, activeDashboardId, project, selectDashboard);
+
+  useEffect(() => {
+    if (missingDashboard) router.replace(dashboardsPath(projectKey));
+  }, [missingDashboard, projectKey, router]);
+
+  if (!project || isLoading || missingDashboard) {
     return (
       <div className="flex-1 space-y-4 p-6">
         <Skeleton className="h-8 w-full max-w-md" />
@@ -57,7 +71,7 @@ export default function DashboardsPage() {
   }
 
   // Layout editing (add/move/resize/remove widgets, save) is a dashboards edit.
-  const canEditLayout = can('dashboards', 'edit');
+  const canEditLayout = editor.isVirtual ? can('dashboards', 'create') : can('dashboards', 'edit');
 
   function saveLabel() {
     if (editor.saving) return tCommon('saving');
@@ -105,7 +119,7 @@ export default function DashboardsPage() {
         dashboards={list}
         activeDashboardId={activeDashboardId}
         isVirtual={editor.isVirtual}
-        onSelect={(id) => router.push(dashboardPath(projectKey, id))}
+        onSelect={selectDashboard}
         onNewDashboard={(name, preset) => void editor.createDashboard(name, preset)}
         onRename={(d, name) => void editor.renameDashboard(d, name)}
         onDelete={(d) => void editor.deleteDashboard(d)}

@@ -56,6 +56,16 @@ describe('myFocusDashboardLayout', () => {
     }
     assert.equal(layout[1].config?.filters?.conditions[1]?.values[0], 2);
     assert.equal(layout[2].config?.filters?.conditions[1]?.values[0], 3);
+    assert.deepEqual(
+      layout.map((widget) => [widget.x, widget.y, widget.w, widget.config?.tone]),
+      [
+        [0, 0, 4, 'neutral'],
+        [4, 0, 4, 'blue'],
+        [8, 0, 4, 'violet'],
+        [0, 3, 6, 'rose'],
+        [6, 3, 6, 'amber'],
+      ],
+    );
   });
 
   it('uses Todo but does not invent Review in a generic workflow', () => {
@@ -74,6 +84,15 @@ describe('myFocusDashboardLayout', () => {
     );
     assert.equal(layout[0].config?.filters?.conditions[1]?.field, 'status');
     assert.equal(layout[0].config?.filters?.conditions[1]?.values[0], 2);
+    assert.deepEqual(
+      layout.map((widget) => [widget.x, widget.y, widget.w]),
+      [
+        [0, 0, 6],
+        [6, 0, 6],
+        [0, 3, 6],
+        [6, 3, 6],
+      ],
+    );
     assert.equal(
       layout.some((widget) => widget.title === 'review'),
       false,

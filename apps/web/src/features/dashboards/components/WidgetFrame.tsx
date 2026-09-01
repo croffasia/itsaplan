@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { GripVertical, MoreHorizontal, SlidersHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { WidgetInstance } from '@/utils/dashboardWidgets';
+import type { StatTone, WidgetInstance } from '@/utils/dashboardWidgets';
+import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -41,9 +42,29 @@ export default function WidgetFrame({
   const labelKey = `widgets.${widget.type}.label` as const;
   const defaultTitle = t.has(labelKey) ? t(labelKey) : widget.type;
   const title = widget.title || defaultTitle;
+  const tone = widget.type === 'stat' ? widget.config?.tone : undefined;
+  const toneClasses: Record<StatTone, string> = {
+    neutral: 'bg-muted/50 ring-border/70',
+    blue: 'bg-blue-500/[0.08] ring-blue-500/20 dark:bg-blue-400/[0.09]',
+    violet: 'bg-violet-500/[0.08] ring-violet-500/20 dark:bg-violet-400/[0.09]',
+    rose: 'bg-rose-500/[0.09] ring-rose-500/20 dark:bg-rose-400/[0.10]',
+    amber: 'bg-amber-500/[0.10] ring-amber-500/20 dark:bg-amber-400/[0.10]',
+  };
   return (
-    <section className="flex h-full flex-col">
-      <header className="mb-4 flex items-center gap-2 border-b border-border/60 pb-2">
+    <section
+      className={cn(
+        'flex h-full flex-col',
+        tone &&
+          'rounded-xl px-4 py-3 ring-1 transition-[transform,box-shadow] duration-200 ring-inset hover:-translate-y-0.5 hover:shadow-sm',
+        tone && toneClasses[tone],
+      )}
+    >
+      <header
+        className={cn(
+          'flex items-center gap-2',
+          tone ? 'mb-1' : 'mb-4 border-b border-border/60 pb-2',
+        )}
+      >
         {movable && (
           <button
             type="button"
@@ -63,7 +84,10 @@ export default function WidgetFrame({
           />
         ) : (
           <h3 className="min-w-0 flex-1 truncate text-sm font-semibold tracking-tight text-foreground">
-            {title}
+            {tone && (
+              <span className="me-2 inline-block size-1.5 rounded-full bg-current align-middle opacity-45" />
+            )}
+            <span className="align-middle">{title}</span>
           </h3>
         )}
         {editing && settings && (

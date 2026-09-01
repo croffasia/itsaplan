@@ -26,6 +26,7 @@ export type WidgetType =
   | 'agent_workload';
 
 export type BreakdownBy = 'status' | 'priority' | 'type' | 'assignee' | 'delegate';
+export type StatTone = 'neutral' | 'blue' | 'violet' | 'rose' | 'amber';
 
 // The dashboard grid: a react-grid-layout board. Each widget has a position
 // (`x`, `y`) and a size (`w` columns, `h` rows of ROW_UNIT px). In edit mode
@@ -45,6 +46,8 @@ export const STACK_COLS = 2;
 // Per-type config. All fields optional — a widget renders with catalog defaults
 // when its config is missing (an older layout, or a freshly added widget).
 export interface WidgetConfig {
+  // stat — optional semantic styling used by curated dashboard presets
+  tone?: StatTone;
   // recent_issues
   sort?: 'created' | 'updated';
   // recent_issues and activity_feed — how many rows to show
@@ -323,64 +326,68 @@ export function myFocusDashboardLayout(
     op: 'is',
     values: [columnId],
   });
-  const widgets: Omit<WidgetInstance, 'x' | 'y'>[] = [];
+  const workflow: Omit<WidgetInstance, 'x' | 'y'>[] = [];
 
   if (todo) {
-    widgets.push({
+    workflow.push({
       id: 'focus-todo',
       type: 'stat',
-      w: 3,
+      w: 4,
       h: 3,
       title: statTitle('todo'),
-      config: { filters: focusFilters(MINE, status(todo.id)) },
+      config: { tone: 'neutral', filters: focusFilters(MINE, status(todo.id)) },
     });
   }
   if (inProgress) {
-    widgets.push({
+    workflow.push({
       id: 'focus-progress',
       type: 'stat',
-      w: 3,
+      w: 4,
       h: 3,
       title: statTitle('inProgress'),
-      config: { filters: focusFilters(MINE, status(inProgress.id)) },
+      config: { tone: 'blue', filters: focusFilters(MINE, status(inProgress.id)) },
     });
   }
   if (review) {
-    widgets.push({
+    workflow.push({
       id: 'focus-review',
       type: 'stat',
-      w: 3,
+      w: 4,
       h: 3,
       title: statTitle('review'),
-      config: { filters: focusFilters(MINE, status(review.id)) },
+      config: { tone: 'violet', filters: focusFilters(MINE, status(review.id)) },
     });
   }
-  widgets.push(
+  const attention: Omit<WidgetInstance, 'x' | 'y'>[] = [
     {
       id: 'focus-overdue',
       type: 'stat',
-      w: 3,
+      w: 6,
       h: 3,
       title: statTitle('overdue'),
       config: {
+        tone: 'rose',
         filters: focusFilters(MINE, OPEN, { field: 'dueDate', op: 'overdue', values: [] }),
       },
     },
     {
       id: 'focus-next-week',
       type: 'stat',
-      w: 3,
+      w: 6,
       h: 3,
       title: statTitle('next7Days'),
       config: {
+        tone: 'amber',
         filters: focusFilters(MINE, OPEN, { field: 'dueDate', op: 'next_7_days', values: [] }),
       },
     },
-  );
+  ];
 
-  return widgets.map((widget, index) => ({
-    ...widget,
-    x: (index % 4) * 3,
-    y: Math.floor(index / 4) * 3,
-  }));
+  function placeRow(widgets: Omit<WidgetInstance, 'x' | 'y'>[], y: number): DashboardLayout {
+    if (widgets.length === 0) return [];
+    const width = GRID_COLS / widgets.length;
+    return widgets.map((widget, index) => ({ ...widget, x: index * width, y, w: width }));
+  }
+
+  return [...placeRow(workflow, 0), ...placeRow(attention, 3)];
 }

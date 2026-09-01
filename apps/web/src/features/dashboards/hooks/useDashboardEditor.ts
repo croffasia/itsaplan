@@ -44,8 +44,12 @@ export function useDashboardEditor(
   const reorderM = useReorderDashboards(projectKey);
 
   const active = dashboards.find((d) => d.id === activeDashboardId) ?? null;
-  const isVirtual = active == null;
-  const baseLayout: DashboardLayout = active ? normalizeLayout(active.layout) : defaultLayout;
+  const isVirtual = activeDashboardId == null;
+  const baseLayout: DashboardLayout = isVirtual
+    ? defaultLayout
+    : active
+      ? normalizeLayout(active.layout)
+      : [];
 
   // A draft is scoped to one dashboard (keyed by its id, or 'default' for the
   // virtual one). Navigating to another dashboard changes the key, so the draft
@@ -96,7 +100,7 @@ export function useDashboardEditor(
       const created = await createM.mutateAsync({ input: { name: t('defaultName'), layout } });
       setDraft(null);
       onSelectDashboard(created.id);
-    } else {
+    } else if (active) {
       await updateM.mutateAsync({ id: active.id, input: { layout } });
       setDraft(null);
     }

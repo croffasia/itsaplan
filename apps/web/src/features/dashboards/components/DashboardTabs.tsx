@@ -13,13 +13,14 @@ import type { Dashboard } from '@/lib/api';
 import type { DashboardPreset } from '@/utils/dashboardWidgets';
 import { useStripSortSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
+import { cn } from '@/lib/utils';
 import DashboardTab from './DashboardTab';
 import DashboardNameDialog from './DashboardNameDialog';
 
 // The row of dashboard tabs. Each named dashboard is a sortable tab; the active
 // one exposes Rename/Delete. A "New dashboard" button and a name dialog handle
-// create/rename. When the project has no dashboards, a single non-clickable
-// "Overview" chip stands in for the built-in default.
+// create/rename. The built-in Overview is always the first tab, so creating a
+// saved dashboard never makes the project's default analytics disappear.
 export default function DashboardTabs({
   dashboards,
   activeDashboardId,
@@ -35,7 +36,7 @@ export default function DashboardTabs({
   activeDashboardId: number | null;
   isVirtual: boolean;
   actions?: React.ReactNode;
-  onSelect: (id: number) => void;
+  onSelect: (id: number | null) => void;
   onNewDashboard: (name: string, preset: DashboardPreset) => void;
   onRename: (d: Dashboard, name: string) => void;
   onDelete: (d: Dashboard) => void;
@@ -62,12 +63,22 @@ export default function DashboardTabs({
   return (
     <div className="flex items-center gap-1 border-b px-2 py-1.5 sm:px-3">
       <div className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto">
-        {dashboards.length === 0 ? (
-          <span className="flex shrink-0 items-center gap-1.5 rounded-md bg-secondary px-2 py-1 text-sm font-medium text-foreground">
-            <LayoutDashboard className="size-3.5" />
-            {t('defaultName')}
-          </span>
-        ) : (
+        <button
+          type="button"
+          aria-current={isVirtual ? 'page' : undefined}
+          onClick={() => onSelect(null)}
+          className={cn(
+            'flex shrink-0 items-center gap-1.5 rounded-md px-2 py-1 text-sm transition-colors',
+            isVirtual
+              ? 'bg-secondary font-medium text-foreground'
+              : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+          )}
+        >
+          <LayoutDashboard className="size-3.5" />
+          {t('defaultName')}
+        </button>
+
+        {dashboards.length > 0 && (
           <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}

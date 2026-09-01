@@ -13,6 +13,8 @@ const PUBLIC_PATHS = ['/login', '/register'];
 // anyone with the link, signed in or not.
 // `/media` streams avatars and attachments from the api, which serves them without
 // a session — a share page opened by a logged-out visitor shows them too.
+// `/protected-media` is intentionally absent: document assets carry private project
+// content and must pass this session gate before their route forwards the cookie.
 const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', '/media'];
 
 // Gate the whole app behind a session. This is an optimistic check: it only looks
@@ -46,5 +48,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Run on every route except Next internals and static assets.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.).*)'],
+  // Protected media is listed first so a valid project key containing a dot is
+  // still session-gated instead of falling through the static-file exclusion.
+  matcher: ['/protected-media/:path*', '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)'],
 };

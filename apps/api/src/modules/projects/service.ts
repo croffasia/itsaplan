@@ -1,10 +1,15 @@
 import {
   db,
+  chatAttachment,
+  documentAsset,
+  issue,
+  issueAttachment,
   issueType,
   project,
   projectColumn,
   projectMember,
   projectRole,
+  projectDocument,
   projectSetting,
 } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
@@ -18,6 +23,8 @@ import {
 import { getProjectSetting, setProjectSetting } from '#shared/project-settings';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getProjectDefaults } from '#modules/settings/service';
+import { deleteObjects } from '#shared/s3';
+import { lockAttachmentStorage } from '#modules/attachments/storage';
 
 // Data access for projects: the top-level container that groups its own columns,
 // issue types, labels, assignees, custom fields, issues, saved views, and
@@ -32,6 +39,7 @@ export interface ProjectRow {
   mcpEnabled: boolean;
   initiativesEnabled: boolean;
   dashboardsEnabled: boolean;
+  documentsEnabled: boolean;
   notesEnabled: boolean;
   cyclesEnabled: boolean;
   subtasksEnabled: boolean;
@@ -48,6 +56,7 @@ export interface ProjectRow {
 export interface ProjectFeatures {
   initiatives: boolean;
   dashboards: boolean;
+  documents: boolean;
   notes: boolean;
   cycles: boolean;
   subtasks: boolean;
@@ -74,6 +83,7 @@ function mapProject(row: typeof project.$inferSelect): ProjectRow {
     mcpEnabled: row.mcpEnabled,
     initiativesEnabled: row.initiativesEnabled,
     dashboardsEnabled: row.dashboardsEnabled,
+    documentsEnabled: row.documentsEnabled,
     notesEnabled: row.notesEnabled,
     cyclesEnabled: row.cyclesEnabled,
     subtasksEnabled: row.subtasksEnabled,
@@ -106,6 +116,7 @@ export async function listProjects(
       mcpEnabled: project.mcpEnabled,
       initiativesEnabled: project.initiativesEnabled,
       dashboardsEnabled: project.dashboardsEnabled,
+      documentsEnabled: project.documentsEnabled,
       notesEnabled: project.notesEnabled,
       cyclesEnabled: project.cyclesEnabled,
       subtasksEnabled: project.subtasksEnabled,
@@ -318,6 +329,7 @@ export function projectFeatures(row: ProjectRow): ProjectFeatures {
   return {
     initiatives: row.initiativesEnabled,
     dashboards: row.dashboardsEnabled,
+    documents: row.documentsEnabled,
     notes: row.notesEnabled,
     cycles: row.cyclesEnabled,
     subtasks: row.subtasksEnabled,
@@ -335,6 +347,7 @@ export async function setProjectFeatures(
   const values: Partial<typeof project.$inferInsert> = {};
   if (patch.initiatives !== undefined) values.initiativesEnabled = patch.initiatives;
   if (patch.dashboards !== undefined) values.dashboardsEnabled = patch.dashboards;
+  if (patch.documents !== undefined) values.documentsEnabled = patch.documents;
   if (patch.notes !== undefined) values.notesEnabled = patch.notes;
   if (patch.cycles !== undefined) values.cyclesEnabled = patch.cycles;
   if (patch.subtasks !== undefined) values.subtasksEnabled = patch.subtasks;
@@ -473,5 +486,26 @@ export async function setSubtaskAutomationSettings(
 // outside those cascades.
 export async function deleteProject(projectId: number): Promise<void> {
   await deleteThreadsWhere({ projectId });
-  await db.delete(project).where(eq(project.id, projectId));
+  const assetKeys = await db.transaction(async (tx) => {
+    // Serialize with the final upload quota check. A concurrent upload either
+    // commits before these reads or loses its FK race and cleans its S3 object.
+    await lockAttachmentStorage(tx, projectId);
+    const issueAssets = await tx
+      .select({ s3Key: issueAttachment.s3Key })
+      .from(issueAttachment)
+      .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
+      .where(eq(issue.projectId, projectId));
+    const chatAssets = await tx
+      .select({ s3Key: chatAttachment.s3Key })
+      .from(chatAttachment)
+      .where(eq(chatAttachment.projectId, projectId));
+    const documentAssets = await tx
+      .select({ s3Key: documentAsset.s3Key })
+      .from(documentAsset)
+      .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
+      .where(eq(projectDocument.projectId, projectId));
+    await tx.delete(project).where(eq(project.id, projectId));
+    return [...issueAssets, ...chatAssets, ...documentAssets].map((asset) => asset.s3Key);
+  });
+  await deleteObjects(assetKeys);
 }

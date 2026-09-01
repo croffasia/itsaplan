@@ -372,7 +372,14 @@
   },
   "watchers": {
     "watch": "关注",
-    "unwatch": "取消关注"
+    "unwatch": "取消关注",
+    "manage": "管理关注者",
+    "search": "搜索项目成员…",
+    "empty": "未找到成员。",
+    "you": "{name}（你）",
+    "add": "将 {name} 添加为关注者",
+    "remove": "从关注者中移除 {name}",
+    "watchingCount": "{count} 位关注者"
   },
   "effects": {
     "cleared": "已清除",

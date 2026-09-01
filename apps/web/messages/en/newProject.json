@@ -26,7 +26,8 @@
     "automation": "Automation",
     "project": "Project",
     "views": "Views",
-    "aiTeam": "AI Team"
+    "aiTeam": "AI Team",
+    "knowledge": "Knowledge"
   },
   "copyItems": {
     "states": "States",
@@ -35,6 +36,7 @@
     "customFields": "Custom fields",
     "views": "Views",
     "dashboards": "Dashboards",
+    "documents": "Docs",
     "actions": "Actions",
     "configuration": "Configuration",
     "roles": "Roles",

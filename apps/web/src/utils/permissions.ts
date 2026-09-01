@@ -22,6 +22,7 @@ export interface PermissionGroup {
 const GROUP_DEFS: PermissionGroup[] = [
   { key: 'workItems', resources: ['work_items', 'initiatives', 'cycles', 'views'] },
   { key: 'dashboards', resources: ['dashboards'] },
+  { key: 'documents', resources: ['documents'] },
   { key: 'notes', resources: ['note_boards'] },
   { key: 'ai', resources: ['ai_agents', 'integrations', 'agent_skills', 'agent_tools'] },
   {

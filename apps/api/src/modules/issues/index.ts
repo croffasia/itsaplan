@@ -45,7 +45,7 @@ import {
   type SubtaskDisposition,
   type SubtaskMode,
 } from './subtasks';
-import { listIssueWatchers, setIssueWatching } from './watchers';
+import { isEligibleIssueWatcher, listIssueWatchers, setIssueWatching } from './watchers';
 import {
   createWorklog,
   deleteWorklog,
@@ -75,6 +75,7 @@ import {
   IssueResponse,
   IssueLinkResponse,
   IssueWatcherResponse,
+  issueWatcherParams,
   ChecklistItemResponse,
   ChecklistResponse,
   OrderedIdsSchema,
@@ -908,9 +909,10 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   )
 
   // Follows the issue: the caller receives every notification it produces until
-  // they unwatch it. Only ever the caller — one member does not subscribe
-  // another. Reading the issue is enough, since watching adds no other access.
-  // Both routes return the resulting list, which the issue read also carries.
+  // they unwatch it. This self-service route only ever changes the caller; editors
+  // use the watcher-management routes below for other members. Reading the issue
+  // is enough, since watching adds no other access. Both routes return the same
+  // watcher list carried by the issue read.
   .post(
     '/issues/:issueId/watch',
     async ({ params, projectId, user }) => {
@@ -944,6 +946,53 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Unwatch an issue',
         description: 'Unsubscribe the current user from an issue and return its watchers.',
+      },
+    },
+  )
+
+  // Editors can curate the full watcher list when a handoff or review needs to
+  // reach someone immediately. The target must be a real project member: agents
+  // have their own delegation flow and must never receive human notifications.
+  .put(
+    '/issues/:issueId/watchers/:userId',
+    async ({ params, projectId }) => {
+      if (!(await isEligibleIssueWatcher(projectId, params.userId))) {
+        throw new HttpError(400, 'Watcher must be a human project member with work item access');
+      }
+      await setIssueWatching(params.issueId, params.userId, true);
+      return listIssueWatchers(projectId, params.issueId);
+    },
+    {
+      params: issueWatcherParams,
+      workItem: 'edit',
+      response: { 200: t.Array(IssueWatcherResponse), ...commonErrors },
+      detail: {
+        summary: 'Add an issue watcher',
+        description:
+          'Subscribe another real project member to the issue. Requires permission to edit work items.',
+        ...mcpTool('add_issue_watcher'),
+      },
+    },
+  )
+
+  .delete(
+    '/issues/:issueId/watchers/:userId',
+    async ({ params, projectId }) => {
+      if (!(await isEligibleIssueWatcher(projectId, params.userId))) {
+        throw new HttpError(400, 'Watcher must be a human project member with work item access');
+      }
+      await setIssueWatching(params.issueId, params.userId, false);
+      return listIssueWatchers(projectId, params.issueId);
+    },
+    {
+      params: issueWatcherParams,
+      workItem: 'edit',
+      response: { 200: t.Array(IssueWatcherResponse), ...commonErrors },
+      detail: {
+        summary: 'Remove an issue watcher',
+        description:
+          'Unsubscribe another real project member from the issue. Requires permission to edit work items.',
+        ...mcpTool('remove_issue_watcher'),
       },
     },
   )

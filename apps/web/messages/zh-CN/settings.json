@@ -187,6 +187,7 @@
     "actionsHint": "代理在项目中可以执行的操作",
     "searchActions": "搜索操作",
     "actionGroup": {
+      "documents": "Docs",
       "issues": "任务",
       "initiatives": "举措",
       "cycles": "周期",
@@ -396,6 +397,7 @@
     "features": "功能",
     "featuresHint": "选择此项目显示的功能区。关闭功能只会隐藏入口，不会删除内容。",
     "featureHints": {
+      "documents": "在 Docs 中组织共享项目文档。",
       "dashboards": "在已保存的仪表盘中显示图表和指标。",
       "initiatives": "将相关工作项作为同一计划跟踪。",
       "cycles": "按固定时间段规划工作项。",

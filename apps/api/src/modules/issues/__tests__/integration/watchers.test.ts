@@ -1,14 +1,17 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, issueWatcher } from '@repo/db';
+import { and, eq } from 'drizzle-orm';
 import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
 // Who follows an issue. A watcher receives the notifications the issue produces;
 // the list comes back with the issue (GET /issues/:issueId → `watchers`) and is
-// changed through POST/DELETE /issues/:issueId/watch, which act on the caller
-// only. Members are subscribed automatically when they create an issue, are
-// assigned one, comment on it or are mentioned in it — unless they turned
-// auto-subscribe off, and never once they have unwatched it by hand.
+// changed through POST/DELETE /issues/:issueId/watch, which act on the caller,
+// or the editor-only /watchers/:userId routes for another human project member.
+// Members are subscribed automatically when they create an issue, are assigned
+// one, comment on it or are mentioned in it — unless they turned auto-subscribe
+// off, and never once they have unwatched it by hand.
 
 interface Member {
   api: Api;
@@ -27,13 +30,19 @@ async function setup(): Promise<{ owner: Member; columnId: number }> {
   };
 }
 
-async function addMember(owner: Member): Promise<Member> {
+async function addMember(owner: Member, opts: { roleId?: number } = {}): Promise<Member> {
   const u = await signUpTestUser();
   const invite = await owner.api
     .projects({ projectKey: 'MKT' })
     .invites.post({ email: u.email, role: 'member' });
   const api = authedApi(u.cookie);
   await api.invites({ token: invite.data!.token }).accept.post();
+  if (opts.roleId != null) {
+    await owner.api
+      .projects({ projectKey: 'MKT' })
+      .members({ userId: u.userId })
+      .patch({ role: 'member', roleId: opts.roleId });
+  }
   return { api, userId: u.userId, username: u.username };
 }
 
@@ -93,6 +102,27 @@ describe('issue watchers', () => {
         .comments.post({ body: `@${member.username} take a look` });
 
       expect(await watcherIds(owner.api, issue.data!.id)).toContain(member.userId);
+    });
+
+    it('does not create a hidden watcher row for a mentioned AI agent', async () => {
+      const { owner, columnId } = await setup();
+      const agent = await owner.api.projects({ projectKey: 'MKT' })['ai-agents'].post({
+        name: 'Watcher Bot',
+        username: 'watcher-bot',
+        kind: 'external',
+      });
+      const issue = await createIssue(owner.api, columnId);
+      const agentUserId = agent.data!.agent.userId;
+
+      await owner.api
+        .issues({ issueId: issue.data!.id })
+        .comments.post({ body: '@watcher-bot take a look' });
+
+      const rows = await db
+        .select({ userId: issueWatcher.userId })
+        .from(issueWatcher)
+        .where(and(eq(issueWatcher.issueId, issue.data!.id), eq(issueWatcher.userId, agentUserId)));
+      expect(rows).toEqual([]);
     });
 
     it('leaves out a member who turned auto-subscribe off', async () => {
@@ -169,6 +199,106 @@ describe('issue watchers', () => {
     });
   });
 
+  describe('managing other watchers', () => {
+    it('lets an editor add and remove a project member', async () => {
+      const { owner, columnId } = await setup();
+      const member = await addMember(owner);
+      const issue = await createIssue(owner.api, columnId);
+      const endpoint = owner.api
+        .issues({ issueId: issue.data!.id })
+        .watchers({ userId: member.userId });
+
+      const added = await endpoint.put();
+      expect(added.status).toBe(200);
+      expect(added.data!.map((watcher) => watcher.userId)).toContain(member.userId);
+
+      const removed = await endpoint.delete();
+      expect(removed.status).toBe(200);
+      expect(removed.data!.map((watcher) => watcher.userId)).not.toContain(member.userId);
+
+      // An editor's explicit removal is sticky just like the member's own unwatch.
+      await member.api
+        .issues({ issueId: issue.data!.id })
+        .comments.post({ body: 'still involved' });
+      expect(await watcherIds(owner.api, issue.data!.id)).not.toContain(member.userId);
+    });
+
+    it('rejects a user outside the project', async () => {
+      const { owner, columnId } = await setup();
+      const outsider = await signUpTestUser();
+      const issue = await createIssue(owner.api, columnId);
+
+      const res = await owner.api
+        .issues({ issueId: issue.data!.id })
+        .watchers({ userId: outsider.userId })
+        .put();
+
+      expect(res.status).toBe(400);
+      expect(await watcherIds(owner.api, issue.data!.id)).not.toContain(outsider.userId);
+    });
+
+    it('rejects an AI agent even though its bot user is a project member', async () => {
+      const { owner, columnId } = await setup();
+      const agent = await owner.api.projects({ projectKey: 'MKT' })['ai-agents'].post({
+        name: 'Watcher Bot',
+        username: 'watcher-bot',
+        kind: 'external',
+      });
+      const issue = await createIssue(owner.api, columnId);
+      const agentUserId = agent.data!.agent.userId;
+
+      const res = await owner.api
+        .issues({ issueId: issue.data!.id })
+        .watchers({ userId: agentUserId })
+        .put();
+
+      expect(res.status).toBe(400);
+      expect(await watcherIds(owner.api, issue.data!.id)).not.toContain(agentUserId);
+    });
+
+    it('rejects a member who cannot read work items', async () => {
+      const { owner, columnId } = await setup();
+      const role = await owner.api.projects({ projectKey: 'MKT' }).roles.post({
+        name: 'No work items',
+        permissions: {},
+      });
+      const restricted = await addMember(owner, { roleId: role.data!.id });
+      const issue = await createIssue(owner.api, columnId);
+
+      const res = await owner.api
+        .issues({ issueId: issue.data!.id })
+        .watchers({ userId: restricted.userId })
+        .put();
+
+      expect(res.status).toBe(400);
+      expect(await watcherIds(owner.api, issue.data!.id)).not.toContain(restricted.userId);
+    });
+
+    it('keeps self-watch available to a reader but denies managing other people', async () => {
+      const { owner, columnId } = await setup();
+      const role = await owner.api.projects({ projectKey: 'MKT' }).roles.post({
+        name: 'Reader',
+        permissions: {
+          work_items: { create: false, edit: false, read: true, delete: false },
+        },
+      });
+      const reader = await addMember(owner, { roleId: role.data!.id });
+      const target = await addMember(owner);
+      const issue = await createIssue(owner.api, columnId);
+
+      const selfWatch = await reader.api.issues({ issueId: issue.data!.id }).watch.post();
+      expect(selfWatch.status).toBe(200);
+      expect(selfWatch.data!.map((watcher) => watcher.userId)).toContain(reader.userId);
+
+      const manage = await reader.api
+        .issues({ issueId: issue.data!.id })
+        .watchers({ userId: target.userId })
+        .put();
+      expect(manage.status).toBe(403);
+      expect(await watcherIds(owner.api, issue.data!.id)).not.toContain(target.userId);
+    });
+  });
+
   describe('notifications', () => {
     it('notifies a watcher of a status change, and stops once they unwatch', async () => {
       const { owner, columnId } = await setup();
@@ -201,6 +331,30 @@ describe('issue watchers', () => {
 
       const inbox = await member.api.notifications.get({ query: { types: 'mentioned' } });
       expect(inbox.data!.items).toHaveLength(1);
+    });
+
+    it('stops exposing watcher events after work-item read access is revoked', async () => {
+      const { owner, columnId } = await setup();
+      const member = await addMember(owner);
+      const view = await owner.api.projects({ projectKey: 'MKT' }).get();
+      const issue = await createIssue(owner.api, columnId);
+      await member.api.issues({ issueId: issue.data!.id }).watch.post();
+      const blockedRole = await owner.api.projects({ projectKey: 'MKT' }).roles.post({
+        name: 'No issue access',
+        permissions: {},
+      });
+
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .members({ userId: member.userId })
+        .patch({ role: 'member', roleId: blockedRole.data!.id });
+      await owner.api.issues({ issueId: issue.data!.id }).patch({
+        columnId: view.data!.columns[1].id,
+      });
+
+      expect(await watcherIds(owner.api, issue.data!.id)).not.toContain(member.userId);
+      const inbox = await member.api.notifications.get({ query: { types: 'state_changed' } });
+      expect(inbox.data!.items).toHaveLength(0);
     });
   });
 });

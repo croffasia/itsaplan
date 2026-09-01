@@ -75,6 +75,50 @@ describe('attachments', () => {
     expect(res.status).toBe(400);
   });
 
+  it('serializes the shared project quota across issue, chat, and document uploads', async () => {
+    const { asOwner, issueId } = await setupIssue();
+    await asOwner.god['storage-settings'].put({ projectQuotaMb: 1 });
+    const initial = 'x'.repeat(256 * 1024);
+
+    expect((await uploadFile(asOwner, issueId, 'issue.txt', 'text/plain', initial)).status).toBe(
+      201,
+    );
+    expect(
+      (
+        await asOwner.projects({ projectKey: 'MKT' })['chat-attachments'].post({
+          filename: 'chat.txt',
+          contentType: 'text/plain',
+          contentBase64: Buffer.from(initial).toString('base64'),
+        })
+      ).status,
+    ).toBe(201);
+    const page = (
+      await asOwner.projects({ projectKey: 'MKT' }).documents.post({ title: 'Handbook' })
+    ).data!;
+    expect(
+      (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .documents({ documentId: page.id })
+          .assets.post({
+            file: new File([initial], 'document.txt', { type: 'text/plain' }),
+          })
+      ).status,
+    ).toBe(201);
+
+    const contender = 'y'.repeat(200 * 1024);
+    const results = await Promise.all([
+      uploadFile(asOwner, issueId, 'parallel-issue.txt', 'text/plain', contender),
+      asOwner
+        .projects({ projectKey: 'MKT' })
+        .documents({ documentId: page.id })
+        .assets.post({
+          file: new File([contender], 'parallel-document.txt', { type: 'text/plain' }),
+        }),
+    ]);
+    expect(results.map((result) => result.status).sort()).toEqual([201, 413]);
+  });
+
   it('denies a non-member uploading to an issue', async () => {
     const { issueId } = await setupIssue();
     const outsider = authedApi((await signUpTestUser()).cookie);
@@ -124,6 +168,35 @@ describe('attachments', () => {
       // Still one attachment: the row was updated, not added to.
       const list = await asOwner.issues({ issueId }).attachments.get();
       expect(list.data).toHaveLength(1);
+    });
+
+    it('counts a replacement as the new bytes minus the current bytes under the quota lock', async () => {
+      const { asOwner, issueId } = await setupIssue();
+      await asOwner.god['storage-settings'].put({ projectQuotaMb: 1 });
+      const first = await uploadFile(
+        asOwner,
+        issueId,
+        'first.txt',
+        'text/plain',
+        'a'.repeat(700 * 1024),
+      );
+      expect(
+        (await uploadFile(asOwner, issueId, 'second.txt', 'text/plain', 'b'.repeat(250 * 1024)))
+          .status,
+      ).toBe(201);
+
+      const replaced = await asOwner.attachments({ publicId: first.data!.id }).put({
+        file: new File(['c'.repeat(750 * 1024)], 'first.txt', { type: 'text/plain' }),
+      });
+      expect(replaced.status).toBe(200);
+      expect(replaced.data?.sizeBytes).toBe(750 * 1024);
+
+      const rejected = await asOwner.attachments({ publicId: first.data!.id }).put({
+        file: new File(['d'.repeat(800 * 1024)], 'first.txt', { type: 'text/plain' }),
+      });
+      expect(rejected.status).toBe(413);
+      const raw = await api.attachments({ publicId: first.data!.id }).raw.get();
+      expect(String(raw.data)).toHaveLength(750 * 1024);
     });
 
     it('serves the replaced bytes to a client holding the old entity tag', async () => {

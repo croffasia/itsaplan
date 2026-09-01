@@ -7,6 +7,7 @@
     "initiatives": "计划",
     "cycles": "周期",
     "dashboards": "仪表盘",
+    "documents": "Docs",
     "views": "工作项视图",
     "members_invite": "邀请",
     "members_manage": "成员",
@@ -33,6 +34,7 @@
   "groups": {
     "workItems": "工作项",
     "dashboards": "仪表盘",
+    "documents": "Docs",
     "notes": "便签",
     "ai": "AI",
     "configuration": "配置",

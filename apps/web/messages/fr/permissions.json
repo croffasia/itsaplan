@@ -7,6 +7,7 @@
     "initiatives": "Initiatives",
     "cycles": "Cycles",
     "dashboards": "Tableaux de bord",
+    "documents": "Docs",
     "views": "Vues de tickets",
     "members_invite": "Invitations",
     "members_manage": "Membres",
@@ -33,6 +34,7 @@
   "groups": {
     "workItems": "Tickets",
     "dashboards": "Tableaux de bord",
+    "documents": "Docs",
     "notes": "Notes",
     "ai": "IA",
     "configuration": "Configuration",

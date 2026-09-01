@@ -1,6 +1,7 @@
 import { db, issue, issueAttachment, issueFieldValue } from '@repo/db';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { iso, num } from '#shared/lib';
+import { assertAttachmentStorageCapacity, lockAttachmentStorage } from './storage';
 
 // Data access for issue attachments. File bytes live in the S3-compatible object
 // store (#shared/s3); these rows hold the metadata and the object key. publicId is
@@ -31,23 +32,28 @@ export function mapAttachment(row: typeof issueAttachment.$inferSelect): Attachm
 }
 
 export async function createAttachment(input: {
+  projectId: number;
   issueId: number;
   s3Key: string;
   filename: string;
   contentType: string;
   sizeBytes: number;
 }): Promise<AttachmentRow> {
-  const [row] = await db
-    .insert(issueAttachment)
-    .values({
-      issueId: input.issueId,
-      s3Key: input.s3Key,
-      filename: input.filename,
-      contentType: input.contentType,
-      sizeBytes: input.sizeBytes,
-    })
-    .returning();
-  return mapAttachment(row);
+  return db.transaction(async (tx) => {
+    await lockAttachmentStorage(tx, input.projectId);
+    await assertAttachmentStorageCapacity(input.projectId, input.sizeBytes, 0, tx);
+    const [row] = await tx
+      .insert(issueAttachment)
+      .values({
+        issueId: input.issueId,
+        s3Key: input.s3Key,
+        filename: input.filename,
+        contentType: input.contentType,
+        sizeBytes: input.sizeBytes,
+      })
+      .returning();
+    return mapAttachment(row);
+  });
 }
 
 export async function listAttachments(issueId: number): Promise<AttachmentRow[]> {
@@ -83,14 +89,34 @@ export async function getAttachmentByPublicId(publicId: string): Promise<Attachm
 // makes editing an attachment in place possible. Returns null if no row matched.
 export async function replaceAttachmentContent(
   publicId: string,
+  projectId: number,
   input: { s3Key: string; filename: string; contentType: string; sizeBytes: number },
-): Promise<AttachmentRow | null> {
-  const rows = await db
-    .update(issueAttachment)
-    .set(input)
-    .where(eq(issueAttachment.publicId, publicId))
-    .returning();
-  return rows[0] ? mapAttachment(rows[0]) : null;
+): Promise<{ attachment: AttachmentRow; replacedS3Key: string } | null> {
+  return db.transaction(async (tx) => {
+    await lockAttachmentStorage(tx, projectId);
+    const [current] = await tx
+      .select({ attachment: issueAttachment })
+      .from(issueAttachment)
+      .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
+      .where(and(eq(issueAttachment.publicId, publicId), eq(issue.projectId, projectId)));
+    if (!current) return null;
+    await assertAttachmentStorageCapacity(
+      projectId,
+      input.sizeBytes,
+      num(current.attachment.sizeBytes),
+      tx,
+    );
+    const rows = await tx
+      .update(issueAttachment)
+      .set(input)
+      .where(eq(issueAttachment.id, current.attachment.id))
+      .returning();
+    if (!rows[0]) return null;
+    return {
+      attachment: mapAttachment(rows[0]),
+      replacedS3Key: current.attachment.s3Key,
+    };
+  });
 }
 
 // Deletes the row and returns it (with its s3Key) so the caller can remove the

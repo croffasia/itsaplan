@@ -25,6 +25,11 @@ export const notesPath = (key: string) => `${projectPath(key)}/notes`;
 
 export const notePath = (key: string, boardId: number) => `${notesPath(key)}/${boardId}`;
 
+export const documentsPath = (key: string) => `${projectPath(key)}/docs`;
+
+export const documentPath = (key: string, documentId: number) =>
+  `${documentsPath(key)}/${documentId}`;
+
 export const settingsPath = (key: string, section: string) =>
   `${projectPath(key)}/settings/${section}`;
 

@@ -7,6 +7,7 @@
     "initiatives": "Ініціативи",
     "cycles": "Цикли",
     "dashboards": "Дашборди",
+    "documents": "Docs",
     "views": "Подання задач",
     "members_invite": "Запрошення",
     "members_manage": "Учасники",
@@ -33,6 +34,7 @@
   "groups": {
     "workItems": "Задачі",
     "dashboards": "Дашборди",
+    "documents": "Docs",
     "notes": "Нотатки",
     "ai": "AI",
     "configuration": "Налаштування",

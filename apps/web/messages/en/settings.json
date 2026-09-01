@@ -187,6 +187,7 @@
     "actionsHint": "What the agent can do in the project",
     "searchActions": "Search actions",
     "actionGroup": {
+      "documents": "Docs",
       "issues": "Issues",
       "initiatives": "Initiatives",
       "cycles": "Cycles",
@@ -396,6 +397,7 @@
     "features": "Features",
     "featuresHint": "Sections this project shows. Turning one off hides it and keeps its content.",
     "featureHints": {
+      "documents": "Shared project documentation organized into pages.",
       "dashboards": "Charts and metrics on saved dashboards.",
       "initiatives": "Groups of issues tracked as one piece of work.",
       "cycles": "Time-boxed periods of work the issues are planned into.",

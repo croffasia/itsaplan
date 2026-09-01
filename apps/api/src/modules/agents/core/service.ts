@@ -19,6 +19,7 @@ import { encryptSecret, decryptSecret } from '@repo/crypto';
 import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
 import { listAgentMemberFieldIds } from '#modules/custom-fields/service';
+import { deleteAccount } from '#shared/account-deletion';
 
 // Data access for AI agents. Each agent is backed by a hidden bot user
 // (ai_agent.user_id -> user.id): that user is what a work item is assigned to,
@@ -724,7 +725,7 @@ export async function deleteAgent(id: number, projectId: number): Promise<boolea
   if (!agent) return false;
   await deleteThreadsWhere({ agentId: id });
   await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
-  await db.delete(user).where(eq(user.id, agent.userId));
+  await deleteAccount(agent.userId);
   return true;
 }
 

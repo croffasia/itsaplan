@@ -35,6 +35,7 @@ import {
 } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { HttpError, iso } from '#shared/lib';
+import { deleteAccount } from '#shared/account-deletion';
 import { mappedProjectIds, reconcileProjects } from '#modules/scim/reconcile';
 import {
   defaultMemberPermissions,
@@ -287,7 +288,7 @@ async function countOwnersByProject(projectIds: number[]): Promise<Map<number, n
 // reference to null (assignee, activity actor, invites), so this is a single
 // delete.
 export async function deleteInstanceUser(userId: string): Promise<void> {
-  await db.delete(user).where(eq(user.id, userId));
+  await deleteAccount(userId);
 }
 
 // ── Project directory ────────────────────────────────────────────────────────

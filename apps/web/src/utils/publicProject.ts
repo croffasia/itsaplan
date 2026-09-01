@@ -16,7 +16,12 @@ export function toPublicProjectDetail(
     issueTypes: scaffold.issueTypes,
     labels: scaffold.labels,
     labelGroups: scaffold.labelGroups,
-    assignees: scaffold.assignees.map((a) => ({ ...a, email: '', username: null })),
+    assignees: scaffold.assignees.map((a) => ({
+      ...a,
+      email: '',
+      username: null,
+      canReadWorkItems: false,
+    })),
     customFields: scaffold.customFields,
     viewer: { role: 'member' },
     permissions: {} as Permissions,

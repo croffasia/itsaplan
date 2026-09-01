@@ -28,7 +28,7 @@ serviceAccount:
 # -- API (Elysia backend)
 api:
   replicaCount: 1
-  port: 3000
+  port: 7002
   image:
     repository: ghcr.io/croffasia/itsaplan-api
     tag: ""  # defaults to .Chart.AppVersion
@@ -64,7 +64,7 @@ api:
 # -- Web (Next.js frontend)
 web:
   replicaCount: 1
-  port: 3001
+  port: 7003
   image:
     repository: ghcr.io/croffasia/itsaplan-web
     tag: ""

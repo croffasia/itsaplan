@@ -67,8 +67,8 @@ thinking.
 ## Layout
 
 ```
-apps/api        Elysia (Bun) — mounts better-auth at /api/auth/*        :3000
-apps/web        Next.js App Router, SSR (not SPA) + shadcn + TanStack Q :3001
+apps/api        Elysia (Bun) — mounts better-auth at /api/auth/*        :7002
+apps/web        Next.js App Router, SSR (not SPA) + shadcn + TanStack Q :7003
 apps/worker     webhook and notification delivery, agent runs, schedules
 apps/bot        Telegram bot, long polling
 packages/db     @repo/db     — Drizzle client, schema, migrations
@@ -106,7 +106,7 @@ cp .env.example .env && cp apps/web/.env.example apps/web/.env
 # set BETTER_AUTH_SECRET in .env:  openssl rand -base64 32
 docker compose -f docker-compose.dev.yml up -d   # dev Postgres + MinIO
 bun run db:migrate                               # apply migrations
-bun run dev                                       # api :3000 + web :3001
+bun run dev                                       # api :7002 + web :7003
 ```
 
 ## Environment

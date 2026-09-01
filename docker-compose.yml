@@ -86,7 +86,7 @@ services:
         condition: service_completed_successfully
     environment:
       NODE_ENV: production
-      API_PORT: 3000
+      API_PORT: 7002
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
       # Encrypts stored provider credentials at rest (AES-256-GCM). Changing it
@@ -109,13 +109,13 @@ services:
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
     # start_period covers the migrations the container applies before it listens.
     healthcheck:
-      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:7002/']
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 90s
     ports:
-      - '${API_PORT:-3000}:3000'
+      - '${API_PORT:-7002}:7002'
 
   # Webhook delivery, notification delivery, agent schedules, and agent runs.
   # Shares the database with the api. No public ports.
@@ -133,7 +133,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      SERVICE_URL_API: http://api:3000
+      SERVICE_URL_API: http://api:7002
       WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
@@ -159,7 +159,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      SERVICE_URL_API: http://api:3000
+      SERVICE_URL_API: http://api:7002
       WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
 
   # The origins are read at startup and handed to the browser by the server render,
@@ -174,25 +174,25 @@ services:
       - api
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: 7003
       HOSTNAME: 0.0.0.0
       # The api origin the browser uses.
       API_URL: ${API_URL:?public origin of the api, e.g. https://api.example.com}
       # Where web itself reaches the api: it streams avatars and attachments from
       # there (/media) so they are served from the web origin.
-      SERVICE_URL_API: http://api:3000
+      SERVICE_URL_API: http://api:7002
       # Legal document URLs shown on the logged-out screens; empty hides the notice.
       PRIVACY_URL: ${PRIVACY_URL:-}
       TERMS_URL: ${TERMS_URL:-}
     # /login renders without a session, and without reaching the api.
     healthcheck:
-      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3001/login']
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:7003/login']
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 20s
     ports:
-      - '${WEB_PORT:-3001}:3001'
+      - '${WEB_PORT:-7003}:7003'
 
 volumes:
   postgres-data:

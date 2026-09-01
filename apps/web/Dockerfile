@@ -42,12 +42,12 @@ FROM node:24-alpine AS release
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3001
+ENV PORT=7003
 ENV HOSTNAME=0.0.0.0
 
 COPY --from=build /app/apps/web/.next/standalone ./
 COPY --from=build /app/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /app/apps/web/public ./apps/web/public
 
-EXPOSE 3001
+EXPOSE 7003
 CMD ["node", "apps/web/server.js"]

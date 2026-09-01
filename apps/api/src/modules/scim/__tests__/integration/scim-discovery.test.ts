@@ -77,7 +77,7 @@ describe('SCIM discovery and authentication', () => {
       expect(res.data).toMatchObject({
         enabled: true,
         hasToken: true,
-        baseUrl: 'http://localhost:3000/scim/v2',
+        baseUrl: 'http://localhost:7002/scim/v2',
       });
       expect(res.data!.tokenPrefix.length).toBeLessThan(token.length);
       expect(token.startsWith(res.data!.tokenPrefix)).toBe(true);

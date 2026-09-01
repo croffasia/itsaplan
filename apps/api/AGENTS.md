@@ -1,6 +1,6 @@
 # api (Elysia)
 
-Elysia server on Bun, port 3000 (`API_PORT`). See root `AGENTS.md` for stack/env.
+Elysia server on Bun, port 7002 (`API_PORT`). See root `AGENTS.md` for stack/env.
 Rules and invariants for this package below; read the code for the walkthrough.
 
 ## Structure

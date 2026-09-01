@@ -20,7 +20,7 @@ bun run db:migrate
 bun run dev                                      # api + web together, via Turborepo
 ```
 
-The apps run on: web <http://localhost:3001>, api <http://localhost:3000>, MinIO console
+The apps run on: web <http://localhost:7003>, api <http://localhost:7002>, MinIO console
 <http://localhost:9001>. `bun run dev` runs the whole workspace in watch mode from the repo
 root; the dev compose brings up only the backing services and the apps run on the host.
 

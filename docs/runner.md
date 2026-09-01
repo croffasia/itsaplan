@@ -24,7 +24,7 @@ Claude Code reads `.mcp.json` from the working directory:
   "mcpServers": {
     "itsaplan": {
       "type": "http",
-      "url": "http://localhost:3000/mcp",
+      "url": "http://localhost:7002/mcp",
       "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
     }
   }
@@ -35,7 +35,7 @@ Claude Code reads `.mcp.json` from the working directory:
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "apiKey": "the key you copied on creation",
   "agent": "claude",
   "cwd": "/Users/me/work/my-repo"
@@ -59,7 +59,7 @@ key from the environment that the runner sets:
 
 ```toml
 [mcp_servers.itsaplan]
-url = "http://localhost:3000/mcp"
+url = "http://localhost:7002/mcp"
 bearer_token_env_var = "ITSAPLAN_API_KEY"
 ```
 
@@ -67,7 +67,7 @@ bearer_token_env_var = "ITSAPLAN_API_KEY"
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "apiKey": "the key you copied on creation",
   "agent": "codex",
   "cwd": "/path/to/working-dir",
@@ -94,7 +94,7 @@ server is named by `serverUrl`, not by `url` or `httpUrl`:
 {
   "mcpServers": {
     "itsaplan": {
-      "serverUrl": "http://localhost:3000/mcp",
+      "serverUrl": "http://localhost:7002/mcp",
       "headers": { "Authorization": "Bearer the-agent-key" }
     }
   }
@@ -105,7 +105,7 @@ server is named by `serverUrl`, not by `url` or `httpUrl`:
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "apiKey": "the key you copied on creation",
   "agent": "antigravity",
   "cwd": "/path/to/working-dir"
@@ -136,7 +136,7 @@ variables. You thus write the key in the file:
   "mcpServers": {
     "itsaplan": {
       "type": "http",
-      "url": "http://localhost:3000/mcp",
+      "url": "http://localhost:7002/mcp",
       "headers": { "Authorization": "Bearer the-agent-key" },
       "tools": ["*"]
     }
@@ -148,7 +148,7 @@ variables. You thus write the key in the file:
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "apiKey": "the key you copied on creation",
   "agent": "copilot",
   "cwd": "/path/to/working-dir",
@@ -178,7 +178,7 @@ thus stays out of the file:
   "mcp": {
     "itsaplan": {
       "type": "remote",
-      "url": "http://localhost:3000/mcp",
+      "url": "http://localhost:7002/mcp",
       "enabled": true,
       "headers": { "Authorization": "Bearer {env:ITSAPLAN_API_KEY}" }
     }
@@ -190,7 +190,7 @@ thus stays out of the file:
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "apiKey": "the key you copied on creation",
   "agent": "opencode",
   "cwd": "/path/to/working-dir"

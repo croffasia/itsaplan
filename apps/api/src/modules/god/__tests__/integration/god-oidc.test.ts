@@ -54,7 +54,7 @@ describe('god OIDC and password settings', () => {
         hasClientSecret: false,
         scopes: ['openid', 'profile', 'email'],
         pkce: true,
-        redirectUri: 'http://localhost:3000/api/auth/oauth2/callback/oidc',
+        redirectUri: 'http://localhost:7002/api/auth/oauth2/callback/oidc',
       });
     });
   });

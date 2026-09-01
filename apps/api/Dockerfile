@@ -35,6 +35,6 @@ ENV NODE_ENV=production
 COPY --from=install /app ./
 COPY . .
 
-EXPOSE 3000
+EXPOSE 7002
 # Apply migrations before starting the server.
 CMD ["sh", "-c", "bun run packages/db/src/migrate.ts && bun run apps/api/src/index.ts"]

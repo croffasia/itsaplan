@@ -8,7 +8,7 @@
 #
 # SERVICE_PASSWORD_* / SERVICE_URL_* are Coolify magic variables: generated and
 # persisted on first deploy, stable across deploys. api and web each declare their own
-# domain by listing SERVICE_URL_API_3000 / SERVICE_URL_WEB_3001 without a value; everything
+# domain by listing SERVICE_URL_API_7002 / SERVICE_URL_WEB_7003 without a value; everything
 # else reads them back. A SERVICE_URL_* key in any other service declares a domain there
 # too, which is why worker and bot address the api through API_URL instead.
 #
@@ -88,11 +88,11 @@ services:
     # Applies migrations on startup, then starts the server (see api Dockerfile CMD).
     environment:
       # Listed without a value, this asks Coolify for the public domain of this
-      # service on port 3000. The port belongs to the declaration only — the value read
+      # service on port 7002. The port belongs to the declaration only — the value read
       # back below is SERVICE_URL_API, which Coolify derives from it without the port.
-      - SERVICE_URL_API_3000
+      - SERVICE_URL_API_7002
       - NODE_ENV=production
-      - API_PORT=3000
+      - API_PORT=7002
       - DATABASE_URL=postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
       - BETTER_AUTH_SECRET=${SERVICE_PASSWORD_64_BETTERAUTH}
       # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
@@ -113,7 +113,7 @@ services:
       - S3_FORCE_PATH_STYLE=${S3_FORCE_PATH_STYLE:-}
     # start_period covers the migrations the container applies before it listens.
     healthcheck:
-      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:7002/']
       interval: 15s
       timeout: 5s
       retries: 5
@@ -133,7 +133,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      API_URL: http://api:3000
+      API_URL: http://api:7002
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
@@ -162,7 +162,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      API_URL: http://api:3000
+      API_URL: http://api:7002
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # The bot token itself is not set here: it is stored in the database and edited
       # in god mode, so the service picks up a change without a redeploy.
@@ -175,10 +175,10 @@ services:
     depends_on:
       - api
     environment:
-      # Declares this service's public domain on port 3001; see the api service.
-      - SERVICE_URL_WEB_3001
+      # Declares this service's public domain on port 7003; see the api service.
+      - SERVICE_URL_WEB_7003
       - NODE_ENV=production
-      - PORT=3001
+      - PORT=7003
       - HOSTNAME=0.0.0.0
       # The api origin the browser uses. web streams avatars and attachments from the
       # same origin (/media), so they are served from the web origin.
@@ -188,7 +188,7 @@ services:
       - TERMS_URL=${TERMS_URL:-}
     # /login renders without a session, and without reaching the api.
     healthcheck:
-      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3001/login']
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:7003/login']
       interval: 15s
       timeout: 5s
       retries: 5

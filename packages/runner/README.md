@@ -29,7 +29,7 @@ from the folder it runs in. For the other four CLIs, see
   "mcpServers": {
     "itsaplan": {
       "type": "http",
-      "url": "http://localhost:3000/mcp",
+      "url": "http://localhost:7002/mcp",
       "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
     }
   }
@@ -43,7 +43,7 @@ one file.
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "apiKey": "the key you just copied",
   "agent": "claude"
 }
@@ -87,7 +87,7 @@ Write the same arguments in the file if a service manager starts the runner:
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "apiKey": "the key you copied on creation",
   "agent": "claude",
   "cwd": "/Users/me/work/my-repo",
@@ -108,7 +108,7 @@ directory and the arguments the file already gives.
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "agent": "claude",
   "cwd": "/Users/me/work/my-repo",
   "apiKeys": ["the first agent's key", "the second agent's key"]
@@ -125,7 +125,7 @@ agent; without it they number the agents `#1`, `#2` in the order of the file.
 
 ```json
 {
-  "url": "http://localhost:3000",
+  "url": "http://localhost:7002",
   "agent": "claude",
   "cwd": "/Users/me/work/my-repo",
   "agents": [
@@ -273,7 +273,7 @@ Do everything else in WSL: Node, the coding agent, the config file, and the runn
 
 - Keep the working directory in the WSL file system (`~/work/repo`), not under
   `/mnt/c/...`. Access between the two file systems is slow.
-- An instance on the Windows host is available at `http://localhost:3000`.
+- An instance on the Windows host is available at `http://localhost:7002`.
 
 ## License
 

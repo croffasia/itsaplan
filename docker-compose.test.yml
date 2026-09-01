@@ -73,8 +73,8 @@ services:
       BETTER_AUTH_SECRET: test-secret-not-for-production-use-only
       # Fixed 32-byte base64 key for the provider-credential encryption tests.
       APP_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVzLWxlbiE=
-      API_URL: http://localhost:3000
-      APP_URL: http://localhost:3001
+      API_URL: http://localhost:7002
+      APP_URL: http://localhost:7003
       # Object store for the attachments test (throwaway MinIO above).
       S3_ENDPOINT: http://minio-test:9000
       S3_REGION: us-east-1

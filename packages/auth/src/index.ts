@@ -539,7 +539,7 @@ export const auth = betterAuth({
     openAPI(),
   ],
 
-  // The frontend runs on a different origin (Next :3001) — allow its requests.
+  // The frontend runs on a different origin (Next :7003) — allow its requests.
   trustedOrigins,
 
   // /is-username-available answers for anyone, and a username is derived from the

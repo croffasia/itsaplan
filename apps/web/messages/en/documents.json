@@ -136,6 +136,20 @@
   "exportFailed": "The export could not include all protected assets. Try again.",
   "exportTooLarge": "This page has too many or too much protected content to export at once (maximum 50 files and 100 MB).",
   "cancel": "Cancel",
+  "linkWorkItem": {
+    "tab": "Work items",
+    "description": "Work items that use this page as context.",
+    "add": "Link",
+    "selectIssue": "Link a work item",
+    "searchIssues": "Search work items…",
+    "empty": "No linked work items yet.",
+    "loadFailed": "Could not load linked work items. Click to retry.",
+    "remove": "Unlink {identifier}",
+    "selectDocument": "Link a Docs page",
+    "searchDocuments": "Search Docs…",
+    "loading": "Loading Docs…",
+    "noDocuments": "No pages available to link."
+  },
   "toolbar": {
     "label": "Formatting toolbar",
     "text": "Text",

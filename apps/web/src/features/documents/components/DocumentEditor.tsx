@@ -34,6 +34,8 @@ export default function DocumentEditor({
   authorName,
   authorNames,
   canEdit,
+  canReadWorkItems,
+  canLinkWorkItems,
   isProjectOwner,
   canCreate,
   canDelete,
@@ -50,6 +52,8 @@ export default function DocumentEditor({
   authorName: string | null;
   authorNames: Record<string, string>;
   canEdit: boolean;
+  canReadWorkItems: boolean;
+  canLinkWorkItems: boolean;
   isProjectOwner: boolean;
   canCreate: boolean;
   canDelete: boolean;
@@ -272,6 +276,8 @@ export default function DocumentEditor({
         authorNames={authorNames}
         canUpload={editorEditable}
         canDeleteAssets={canManageLifecycle && editorEditable}
+        canReadWorkItems={canReadWorkItems}
+        canLinkWorkItems={canLinkWorkItems && document.archivedAt === null}
         onOpenChange={setInspectorOpen}
         onOpenHistory={() => setHistoryOpen(true)}
       />

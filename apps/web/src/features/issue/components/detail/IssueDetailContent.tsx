@@ -12,6 +12,7 @@ import IssueAttachmentsPanel from './IssueAttachmentsPanel';
 import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
 import IssueDevelopmentPanel from './IssueDevelopmentPanel';
+import IssueDocumentsPanel from './IssueDocumentsPanel';
 import IssueWorklogPanel from './IssueWorklogPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
@@ -72,7 +73,10 @@ export default function IssueDetailContent({
     imageAttachments,
     setDescEditor,
   } = useIssueDetail(project, issueId, onIssueLoaded);
-  const canEdit = usePermissions(project).can('work_items', 'edit');
+  const permissions = usePermissions(project);
+  const canEdit = permissions.can('work_items', 'edit');
+  const canReadDocuments = permissions.can('documents', 'read');
+  const canLinkDocuments = canEdit && permissions.can('documents', 'edit');
   const features = useProjectFeatures();
   useFilePaste(canEdit && issue ? (files) => void attachFiles(files) : null);
   const properties = usePersistedOpen('issue-properties-open');
@@ -184,6 +188,15 @@ export default function IssueDetailContent({
       {features.timeLogging && <IssueWorklogPanel project={project} issue={issue} />}
 
       <IssueDevelopmentPanel issueId={issue.id} links={issue.development ?? []} canEdit={canEdit} />
+
+      {features.documents && (
+        <IssueDocumentsPanel
+          projectKey={project.project.key}
+          issueId={issue.id}
+          canRead={canReadDocuments}
+          canLink={canLinkDocuments}
+        />
+      )}
 
       <IssueLinksPanel project={project} issue={issue} />
     </>

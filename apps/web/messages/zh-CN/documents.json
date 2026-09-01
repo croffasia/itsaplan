@@ -136,6 +136,20 @@
   "dragOver": "正在移至 {title}。",
   "dragEnded": "已移至 {title} 附近。",
   "dragCanceled": "已取消移动。",
+  "linkWorkItem": {
+    "tab": "工作项",
+    "description": "将此页面用作上下文的工作项。",
+    "add": "关联",
+    "selectIssue": "关联工作项",
+    "searchIssues": "搜索工作项…",
+    "empty": "暂无关联的工作项。",
+    "loadFailed": "无法加载关联的工作项。点击重试。",
+    "remove": "取消关联 {identifier}",
+    "selectDocument": "关联 Docs 页面",
+    "searchDocuments": "搜索 Docs…",
+    "loading": "正在加载 Docs…",
+    "noDocuments": "没有可关联的页面。"
+  },
   "toolbar": {
     "underline": "下划线",
     "textColor": "文本颜色",

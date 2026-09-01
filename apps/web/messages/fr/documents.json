@@ -136,6 +136,20 @@
   "exportFailed": "L'exportation n'a pas pu inclure tous les fichiers protégés. Réessayez.",
   "exportTooLarge": "Cette page contient trop de contenu protégé pour être exportée en une fois (maximum 50 fichiers et 100 Mo).",
   "cancel": "Annuler",
+  "linkWorkItem": {
+    "tab": "Tâches",
+    "description": "Tâches qui utilisent cette page comme contexte.",
+    "add": "Lier",
+    "selectIssue": "Lier une tâche",
+    "searchIssues": "Rechercher des tâches…",
+    "empty": "Aucune tâche liée.",
+    "loadFailed": "Impossible de charger les tâches liées. Cliquez pour réessayer.",
+    "remove": "Dissocier {identifier}",
+    "selectDocument": "Lier une page Docs",
+    "searchDocuments": "Rechercher dans Docs…",
+    "loading": "Chargement de Docs…",
+    "noDocuments": "Aucune page disponible à lier."
+  },
   "toolbar": {
     "label": "Barre de mise en forme",
     "text": "Texte",

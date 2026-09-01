@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import {
@@ -7,11 +8,14 @@ import {
   File,
   FileImage,
   History,
+  Hash,
   Loader2,
+  Link2,
   Plus,
   RefreshCw,
   Trash2,
   Upload,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { ProjectDocument } from '@/lib/api';
@@ -19,10 +23,16 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatDateTime } from '@/utils/dates';
+import { issuePath } from '@/utils/paths';
+import IssuePickerDialog from '@/components/common/overlay/IssuePickerDialog';
+import ArchivedBadge from '@/components/common/ArchivedBadge';
 import { useTranslations } from 'next-intl';
 import {
   useDeleteDocumentAsset,
   useDocumentAssetsQuery,
+  useDocumentIssueLinksQuery,
+  useLinkDocumentIssue,
+  useUnlinkDocumentIssue,
   useUploadDocumentAsset,
 } from '../services/documents.service';
 
@@ -35,6 +45,8 @@ export default function DocumentSidePanel({
   authorNames,
   canUpload,
   canDeleteAssets,
+  canReadWorkItems,
+  canLinkWorkItems,
   onOpenHistory,
 }: {
   projectKey: string;
@@ -43,14 +55,21 @@ export default function DocumentSidePanel({
   authorNames: Record<string, string>;
   canUpload: boolean;
   canDeleteAssets: boolean;
+  canReadWorkItems: boolean;
+  canLinkWorkItems: boolean;
   onOpenHistory: () => void;
 }) {
   const t = useTranslations('documents');
   const fileInput = useRef<HTMLInputElement>(null);
   const [outlineRevision, setOutlineRevision] = useState(0);
+  const [issuePickerOpen, setIssuePickerOpen] = useState(false);
   const assets = useDocumentAssetsQuery(projectKey, document.id);
+  const issueLinks = useDocumentIssueLinksQuery(projectKey, document.id, canReadWorkItems);
   const upload = useUploadDocumentAsset(projectKey, document.id);
   const remove = useDeleteDocumentAsset(projectKey, document.id);
+  const linkIssue = useLinkDocumentIssue(projectKey);
+  const unlinkIssue = useUnlinkDocumentIssue(projectKey);
+  const linkedIssueIds = new Set((issueLinks.data ?? []).map((link) => link.issueId));
 
   useEffect(() => {
     if (!editor) return;
@@ -106,9 +125,17 @@ export default function DocumentSidePanel({
 
   return (
     <Tabs defaultValue="outline" className="min-h-0 flex-1 gap-0">
-      <TabsList variant="line" className="h-11 w-full shrink-0 justify-start px-3">
+      <TabsList variant="line" className="h-11 w-full shrink-0 justify-start overflow-x-auto px-3">
         <TabsTrigger value="outline">{t('outline')}</TabsTrigger>
         <TabsTrigger value="info">{t('info')}</TabsTrigger>
+        {canReadWorkItems && (
+          <TabsTrigger value="workItems">
+            {t('linkWorkItem.tab')}
+            {linkedIssueIds.size > 0 && (
+              <span className="ms-1 text-muted-foreground tabular-nums">{linkedIssueIds.size}</span>
+            )}
+          </TabsTrigger>
+        )}
         <TabsTrigger value="assets">{t('assets')}</TabsTrigger>
       </TabsList>
 
@@ -182,6 +209,94 @@ export default function DocumentSidePanel({
           {t('versionHistory')}
         </Button>
       </TabsContent>
+
+      {canReadWorkItems && (
+        <TabsContent value="workItems" className="min-h-0 overflow-y-auto p-3">
+          <div className="mb-3 flex items-center justify-between gap-3 px-1">
+            <p className="text-xs leading-4 text-muted-foreground">
+              {t('linkWorkItem.description')}
+            </p>
+            {canLinkWorkItems && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={linkIssue.isPending}
+                onClick={() => setIssuePickerOpen(true)}
+              >
+                <Plus />
+                {t('linkWorkItem.add')}
+              </Button>
+            )}
+          </div>
+
+          {issueLinks.isLoading ? (
+            <div className="space-y-1.5" aria-hidden>
+              <Skeleton className="h-14 w-full" />
+              <Skeleton className="h-14 w-full" />
+            </div>
+          ) : issueLinks.isError ? (
+            <button
+              type="button"
+              className="w-full rounded-md border border-dashed px-3 py-6 text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => void issueLinks.refetch()}
+            >
+              {t('linkWorkItem.loadFailed')}
+            </button>
+          ) : issueLinks.data?.length ? (
+            <ul className="space-y-1.5">
+              {issueLinks.data.map((link) => {
+                const removing =
+                  unlinkIssue.isPending && unlinkIssue.variables?.issueId === link.issueId;
+                return (
+                  <li
+                    key={link.issueId}
+                    className="group flex items-center gap-2 rounded-lg border bg-card/40 px-2.5 py-2"
+                  >
+                    <Link
+                      href={issuePath(projectKey, link.sequenceNumber)}
+                      className="flex min-w-0 flex-1 items-center gap-2 rounded focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                    >
+                      <span className="grid size-7 shrink-0 place-items-center rounded-md border bg-muted/30">
+                        <Hash className="size-3.5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-medium" dir="auto">
+                          {link.title}
+                        </span>
+                        <span className="mt-0.5 block font-mono text-[11px] text-muted-foreground">
+                          {link.identifier}
+                        </span>
+                      </span>
+                      {link.archived && <ArchivedBadge />}
+                    </Link>
+                    {canLinkWorkItems && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-xs"
+                        className="shrink-0 text-muted-foreground opacity-100 hover:text-destructive sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
+                        aria-label={t('linkWorkItem.remove', { identifier: link.identifier })}
+                        disabled={unlinkIssue.isPending}
+                        onClick={() =>
+                          unlinkIssue.mutate({ documentId: document.id, issueId: link.issueId })
+                        }
+                      >
+                        {removing ? <Loader2 className="animate-spin" /> : <X />}
+                      </Button>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <div className="rounded-lg border border-dashed px-4 py-8 text-center">
+              <Link2 className="mx-auto size-5 text-muted-foreground" />
+              <p className="mt-2 text-xs text-muted-foreground">{t('linkWorkItem.empty')}</p>
+            </div>
+          )}
+        </TabsContent>
+      )}
 
       <TabsContent value="assets" className="min-h-0 overflow-y-auto p-3">
         <div className="mb-3 flex items-center justify-between gap-3 px-1">
@@ -307,6 +422,22 @@ export default function DocumentSidePanel({
           <p className="px-4 py-10 text-center text-xs text-muted-foreground">{t('noAssets')}</p>
         )}
       </TabsContent>
+
+      {issuePickerOpen && (
+        <IssuePickerDialog
+          projectKey={projectKey}
+          title={t('linkWorkItem.selectIssue')}
+          prompt={t('linkWorkItem.searchIssues')}
+          exclude={(hit) => linkedIssueIds.has(hit.id)}
+          onClose={() => setIssuePickerOpen(false)}
+          onPick={(hit) => {
+            void linkIssue
+              .mutateAsync({ documentId: document.id, issueId: hit.id })
+              .then(() => setIssuePickerOpen(false))
+              .catch(() => undefined);
+          }}
+        />
+      )}
     </Tabs>
   );
 }

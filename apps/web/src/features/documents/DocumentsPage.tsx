@@ -63,6 +63,8 @@ export default function DocumentsPage() {
   const canCreate = can('documents', 'create');
   const canEdit = can('documents', 'edit');
   const canDelete = can('documents', 'delete');
+  const canReadWorkItems = can('work_items', 'read');
+  const canLinkWorkItems = canEdit && can('work_items', 'edit');
 
   useLiveRefresh({
     scope: project ? revScope.documents(project.project.id) : null,
@@ -74,6 +76,7 @@ export default function DocumentsPage() {
             qk.document(projectKey, documentId),
             qk.documentRevisions(projectKey, documentId),
             qk.documentAssets(projectKey, documentId),
+            qk.documentIssueLinks(projectKey, documentId),
           ]),
     ],
   });
@@ -187,6 +190,8 @@ export default function DocumentsPage() {
         project.assignees.map((candidate) => [candidate.userId, candidate.name]),
       )}
       canEdit={canEdit}
+      canReadWorkItems={canReadWorkItems}
+      canLinkWorkItems={canLinkWorkItems}
       isProjectOwner={isOwner}
       canCreate={canCreate}
       canDelete={canDelete}

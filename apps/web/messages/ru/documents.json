@@ -136,6 +136,20 @@
   "dragOver": "Перемещение над {title}.",
   "dragEnded": "Перемещено рядом с {title}.",
   "dragCanceled": "Перемещение отменено.",
+  "linkWorkItem": {
+    "tab": "Задачи",
+    "description": "Задачи, для которых эта страница служит контекстом.",
+    "add": "Связать",
+    "selectIssue": "Связать задачу",
+    "searchIssues": "Поиск задач…",
+    "empty": "Связанных задач пока нет.",
+    "loadFailed": "Не удалось загрузить связанные задачи. Нажмите, чтобы повторить.",
+    "remove": "Отвязать {identifier}",
+    "selectDocument": "Связать страницу Docs",
+    "searchDocuments": "Поиск в Docs…",
+    "loading": "Загрузка Docs…",
+    "noDocuments": "Нет доступных страниц для связи."
+  },
   "toolbar": {
     "underline": "Подчёркнутый",
     "textColor": "Цвет текста",

@@ -1,6 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { authContext } from '#shared/auth-context';
-import { requireUser } from '#shared/access';
+import { assertPermission, requireUser } from '#shared/access';
 import { guards } from '#shared/guards';
 import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
@@ -30,12 +30,18 @@ import {
   DocumentAssetListResponse,
   DocumentAssetResponse,
   DocumentPreferenceResponse,
+  DocumentIssueLinkListResponse,
+  DocumentIssueLinkResponse,
+  IssueDocumentLinkListResponse,
   DocumentResponse,
   DocumentRevisionListResponse,
   DocumentRevisionResponse,
   DocumentSummaryListResponse,
   documentVersionBody,
+  documentIssueParams,
   duplicateDocumentBody,
+  issueDocumentsParams,
+  linkDocumentIssueBody,
   listDocumentsQuery,
   updateDocumentBody,
   updateDocumentPreferenceBody,
@@ -65,6 +71,12 @@ import {
   updateDocument,
   type DocumentAssetRow,
 } from './service';
+import {
+  addDocumentIssueLink,
+  listDocumentIssueLinks,
+  listIssueDocumentLinks,
+  removeDocumentIssueLink,
+} from './issue-links';
 
 function documentAssetDto(projectKey: string, documentId: number, asset: DocumentAssetRow) {
   return {
@@ -122,6 +134,104 @@ export const documentRoutes = new Elysia({
         summary: 'Get a document',
         description: 'Return one visible project document with its Markdown content.',
         ...mcpTool('get_document'),
+      },
+    },
+  )
+  .get(
+    '/projects/:projectKey/documents/:documentId/issues',
+    async ({ project, params, user }) => {
+      const current = requireUser(user);
+      await assertPermission(project.id, current, 'work_items', 'read');
+      const links = await listDocumentIssueLinks(
+        project.id,
+        project.key,
+        params.documentId,
+        current.id,
+      );
+      if (!links) throw new HttpError(404, 'Document not found');
+      return links;
+    },
+    {
+      permission: ['documents', 'read'],
+      params: documentParams,
+      response: { 200: DocumentIssueLinkListResponse, ...commonErrors },
+      detail: {
+        summary: 'List work items linked to a document',
+        description: 'Return work items explicitly linked to one visible Docs page.',
+        ...mcpTool('list_document_issues'),
+      },
+    },
+  )
+  .post(
+    '/projects/:projectKey/documents/:documentId/issues',
+    async ({ project, params, body, user, set }) => {
+      const current = requireUser(user);
+      await assertPermission(project.id, current, 'work_items', 'edit');
+      const link = await addDocumentIssueLink({
+        projectId: project.id,
+        projectKey: project.key,
+        documentId: params.documentId,
+        issueId: body.issueId,
+        userId: current.id,
+      });
+      set.status = 201;
+      return link;
+    },
+    {
+      permission: ['documents', 'edit'],
+      params: documentParams,
+      body: linkDocumentIssueBody,
+      response: { 201: DocumentIssueLinkResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Link a document to a work item',
+        description:
+          'Link one active Docs page to a work item in the same project. Editing both resources is required.',
+        ...mcpTool('link_document_issue'),
+      },
+    },
+  )
+  .delete(
+    '/projects/:projectKey/documents/:documentId/issues/:issueId',
+    async ({ project, params, user }) => {
+      const current = requireUser(user);
+      await assertPermission(project.id, current, 'work_items', 'edit');
+      const removed = await removeDocumentIssueLink({
+        projectId: project.id,
+        documentId: params.documentId,
+        issueId: params.issueId,
+        userId: current.id,
+      });
+      if (!removed) throw new HttpError(404, 'Document link not found');
+      return noContent();
+    },
+    {
+      permission: ['documents', 'edit'],
+      params: documentIssueParams,
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Unlink a document from a work item',
+        description: 'Remove an explicit Docs-to-work-item link.',
+        ...mcpTool('unlink_document_issue'),
+      },
+    },
+  )
+  .get(
+    '/projects/:projectKey/documents/for-issue/:issueId',
+    async ({ project, params, user }) => {
+      const current = requireUser(user);
+      await assertPermission(project.id, current, 'documents', 'read');
+      const links = await listIssueDocumentLinks(project.id, params.issueId, current.id);
+      if (!links) throw new HttpError(404, 'Issue not found');
+      return links;
+    },
+    {
+      permission: ['work_items', 'read'],
+      params: issueDocumentsParams,
+      response: { 200: IssueDocumentLinkListResponse, ...commonErrors },
+      detail: {
+        summary: 'List Docs linked to a work item',
+        description: 'Return visible Docs pages explicitly linked to one work item.',
+        ...mcpTool('list_issue_documents'),
       },
     },
   )

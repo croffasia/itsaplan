@@ -21,6 +21,8 @@ export default function DocumentEditorInspector({
   authorNames,
   canUpload,
   canDeleteAssets,
+  canReadWorkItems,
+  canLinkWorkItems,
   onOpenChange,
   onOpenHistory,
 }: {
@@ -31,6 +33,8 @@ export default function DocumentEditorInspector({
   authorNames: Record<string, string>;
   canUpload: boolean;
   canDeleteAssets: boolean;
+  canReadWorkItems: boolean;
+  canLinkWorkItems: boolean;
   onOpenChange: (open: boolean) => void;
   onOpenHistory: () => void;
 }) {
@@ -48,6 +52,8 @@ export default function DocumentEditorInspector({
       authorNames={authorNames}
       canUpload={canUpload}
       canDeleteAssets={canDeleteAssets}
+      canReadWorkItems={canReadWorkItems}
+      canLinkWorkItems={canLinkWorkItems}
       onOpenHistory={onOpenHistory}
     />
   );

@@ -342,6 +342,14 @@
       "skipped": "Skipped"
     }
   },
+  "documents": {
+    "title": "Docs",
+    "add": "Link a Docs page",
+    "empty": "No linked Docs yet.",
+    "loadFailed": "Could not load linked Docs. Click to retry.",
+    "remove": "Unlink {title}",
+    "untitled": "Untitled"
+  },
   "archived": "Archived",
   "activityHeading": "Activity",
   "feedFlat": "Flat",

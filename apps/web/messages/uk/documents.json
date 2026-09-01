@@ -136,6 +136,20 @@
   "dragOver": "Переміщення над {title}.",
   "dragEnded": "Переміщено поруч із {title}.",
   "dragCanceled": "Переміщення скасовано.",
+  "linkWorkItem": {
+    "tab": "Задачі",
+    "description": "Задачі, для яких ця сторінка слугує контекстом.",
+    "add": "Пов’язати",
+    "selectIssue": "Пов’язати задачу",
+    "searchIssues": "Пошук задач…",
+    "empty": "Пов’язаних задач ще немає.",
+    "loadFailed": "Не вдалося завантажити пов’язані задачі. Натисніть, щоб повторити.",
+    "remove": "Відв’язати {identifier}",
+    "selectDocument": "Пов’язати сторінку Docs",
+    "searchDocuments": "Пошук у Docs…",
+    "loading": "Завантаження Docs…",
+    "noDocuments": "Немає доступних сторінок для зв’язку."
+  },
   "toolbar": {
     "underline": "Підкреслений",
     "textColor": "Колір тексту",

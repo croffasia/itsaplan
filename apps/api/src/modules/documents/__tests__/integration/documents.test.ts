@@ -375,6 +375,63 @@ describe('documents', () => {
     expect((await documents(blocked.api)({ documentId: document.id }).get()).status).toBe(403);
   });
 
+  it('links visible Docs and work items in both directions with combined permissions', async () => {
+    const owner = await setupOwnerProject();
+    const project = await owner.api.projects({ projectKey: 'MKT' }).get();
+    const workItem = (
+      await owner.api
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId: project.data!.columns[0]!.id, title: 'Ship release' })
+    ).data!;
+    const page = (await documents(owner.api).post({ title: 'Release guide' })).data!;
+
+    const linked = await documents(owner.api)({ documentId: page.id }).issues.post({
+      issueId: workItem.id,
+    });
+    expect(linked.status).toBe(201);
+    expect(linked.data).toMatchObject({
+      issueId: workItem.id,
+      identifier: 'MKT-1',
+      title: 'Ship release',
+    });
+    expect((await documents(owner.api)({ documentId: page.id }).issues.get()).data).toMatchObject([
+      { issueId: workItem.id, identifier: 'MKT-1' },
+    ]);
+    expect(
+      (await documents(owner.api)['for-issue']({ issueId: workItem.id }).get()).data,
+    ).toMatchObject([{ documentId: page.id, title: 'Release guide' }]);
+    expect(
+      (
+        await documents(owner.api)({ documentId: page.id })
+          .issues({ issueId: workItem.id })
+          .delete()
+      ).status,
+    ).toBe(204);
+
+    const readerRole = await owner.api.projects({ projectKey: 'MKT' }).roles.post({
+      name: 'Context reader',
+      permissions: { documents: { read: true }, work_items: { read: true } },
+    });
+    const reader = await addMember(owner.api, readerRole.data!.id);
+    expect((await documents(reader.api)({ documentId: page.id }).issues.get()).status).toBe(200);
+    expect(
+      (
+        await documents(reader.api)({ documentId: page.id }).issues.post({
+          issueId: workItem.id,
+        })
+      ).status,
+    ).toBe(403);
+
+    const privatePage = (await documents(owner.api).post({ title: 'Owner notes', isPrivate: true }))
+      .data!;
+    await documents(owner.api)({ documentId: privatePage.id }).issues.post({
+      issueId: workItem.id,
+    });
+    expect((await documents(reader.api)['for-issue']({ issueId: workItem.id }).get()).data).toEqual(
+      [],
+    );
+  });
+
   it('limits permanent deletion to the page owner or a project owner for public pages', async () => {
     const owner = await setupOwnerProject();
     const member = await addMember(owner.api);

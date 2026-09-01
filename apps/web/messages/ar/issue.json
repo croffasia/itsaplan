@@ -342,6 +342,14 @@
       "skipped": "تم تخطيه"
     }
   },
+  "documents": {
+    "title": "Docs",
+    "add": "ربط صفحة Docs",
+    "empty": "لا توجد صفحات Docs مرتبطة بعد.",
+    "loadFailed": "تعذر تحميل الصفحات المرتبطة. انقر لإعادة المحاولة.",
+    "remove": "إلغاء ربط {title}",
+    "untitled": "بلا عنوان"
+  },
   "archived": "مؤرشفة",
   "activityHeading": "النشاط",
   "feedFlat": "مسطّح",

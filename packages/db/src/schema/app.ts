@@ -1792,6 +1792,30 @@ export const projectDocumentPreference = pgTable(
   ],
 );
 
+// Explicit links between Docs pages and work items. The relation is intentionally
+// separate from page content: renaming either side keeps the link intact, one page
+// can provide context for several work items, and one work item can collect several
+// specs or runbooks. The API verifies that both ends belong to the same project.
+export const projectDocumentIssue = pgTable(
+  'project_document_issue',
+  {
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.documentId, t.issueId] }),
+    index('project_document_issue_issue_idx').on(t.issueId, t.documentId),
+  ],
+);
+
 // Files embedded in Docs pages. Bytes use the same S3-compatible object store as
 // issue/chat attachments; only authenticated document routes expose them, so a
 // private page's unguessable asset id never acts as a public capability URL.

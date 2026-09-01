@@ -42,6 +42,10 @@ export const qk = {
     ['documents', projectKey, 'document', documentId, 'revisions'] as const,
   documentAssets: (projectKey: string, documentId: number) =>
     ['documents', projectKey, 'document', documentId, 'assets'] as const,
+  documentIssueLinks: (projectKey: string, documentId: number) =>
+    ['documents', projectKey, 'document', documentId, 'issues'] as const,
+  issueDocumentLinks: (projectKey: string, issueId: number) =>
+    ['documents', projectKey, 'issue', issueId] as const,
   // Note boards (the notes canvases). `noteBoardsForProject` is the invalidation
   // base for every list/search variant; `noteBoardsSearch` is one paged switcher
   // query (scoped by search text); `noteBoard` is a single board with its canvas.

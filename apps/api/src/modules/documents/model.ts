@@ -107,6 +107,43 @@ export const updateDocumentPreferenceBody = t.Object({
 
 export const DocumentPreferenceResponse = t.Object({ isFavorite: t.Boolean() });
 
+export const documentIssueParams = t.Object({
+  projectKey: t.String(),
+  documentId: t.Numeric(),
+  issueId: t.Numeric(),
+});
+
+export const issueDocumentsParams = t.Object({
+  projectKey: t.String(),
+  issueId: t.Numeric(),
+});
+
+export const linkDocumentIssueBody = t.Object({
+  issueId: t.Integer({ minimum: 1 }),
+});
+
+export const DocumentIssueLinkResponse = t.Object({
+  issueId: t.Number(),
+  sequenceNumber: t.Number(),
+  identifier: t.String(),
+  title: t.String(),
+  archived: t.Boolean(),
+  createdAt: t.String(),
+});
+
+export const DocumentIssueLinkListResponse = t.Array(DocumentIssueLinkResponse);
+
+export const IssueDocumentLinkResponse = t.Object({
+  documentId: t.Number(),
+  title: t.String(),
+  icon: t.Nullable(t.String()),
+  isPrivate: t.Boolean(),
+  archived: t.Boolean(),
+  createdAt: t.String(),
+});
+
+export const IssueDocumentLinkListResponse = t.Array(IssueDocumentLinkResponse);
+
 const DocumentRevisionSummaryResponse = t.Object({
   id: t.Number(),
   documentId: t.Number(),

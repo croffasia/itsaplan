@@ -1639,6 +1639,24 @@ export interface ProjectDocument extends ProjectDocumentSummary {
   contentJson: Record<string, unknown> | null;
 }
 
+export interface DocumentIssueLink {
+  issueId: number;
+  sequenceNumber: number;
+  identifier: string;
+  title: string;
+  archived: boolean;
+  createdAt: string;
+}
+
+export interface IssueDocumentLink {
+  documentId: number;
+  title: string;
+  icon: string | null;
+  isPrivate: boolean;
+  archived: boolean;
+  createdAt: string;
+}
+
 export interface NewProjectDocumentInput {
   title?: string;
   content?: string;
@@ -3266,6 +3284,19 @@ export const api = {
   },
   getDocument: (projectKey: string, documentId: number) =>
     request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}`),
+  listDocumentIssueLinks: (projectKey: string, documentId: number) =>
+    request<DocumentIssueLink[]>(`/projects/${projectKey}/documents/${documentId}/issues`),
+  listIssueDocumentLinks: (projectKey: string, issueId: number) =>
+    request<IssueDocumentLink[]>(`/projects/${projectKey}/documents/for-issue/${issueId}`),
+  linkDocumentIssue: (projectKey: string, documentId: number, issueId: number) =>
+    request<DocumentIssueLink>(`/projects/${projectKey}/documents/${documentId}/issues`, {
+      method: 'POST',
+      body: JSON.stringify({ issueId }),
+    }),
+  unlinkDocumentIssue: (projectKey: string, documentId: number, issueId: number) =>
+    request<void>(`/projects/${projectKey}/documents/${documentId}/issues/${issueId}`, {
+      method: 'DELETE',
+    }),
   createDocument: (projectKey: string, input: NewProjectDocumentInput) =>
     request<ProjectDocument>(`/projects/${projectKey}/documents`, {
       method: 'POST',

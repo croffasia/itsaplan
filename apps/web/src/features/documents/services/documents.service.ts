@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   api,
+  type DocumentIssueLink,
   type DocumentAsset,
+  type IssueDocumentLink,
   type NewProjectDocumentInput,
   type ProjectDocument,
   type ProjectDocumentPatch,
@@ -34,6 +36,56 @@ export function useDocumentQuery(projectKey: string | null, documentId: number |
     queryFn: () => api.getDocument(projectKey!, documentId!),
     enabled: projectKey != null && documentId != null,
     refetchOnMount: 'always',
+  });
+}
+
+export function useDocumentIssueLinksQuery(
+  projectKey: string | null,
+  documentId: number | null,
+  enabled = true,
+) {
+  return useQuery<DocumentIssueLink[]>({
+    queryKey: qk.documentIssueLinks(projectKey ?? '', documentId ?? 0),
+    queryFn: () => api.listDocumentIssueLinks(projectKey!, documentId!),
+    enabled: enabled && projectKey != null && documentId != null,
+  });
+}
+
+export function useIssueDocumentLinksQuery(
+  projectKey: string | null,
+  issueId: number | null,
+  enabled = true,
+) {
+  return useQuery<IssueDocumentLink[]>({
+    queryKey: qk.issueDocumentLinks(projectKey ?? '', issueId ?? 0),
+    queryFn: () => api.listIssueDocumentLinks(projectKey!, issueId!),
+    enabled: enabled && projectKey != null && issueId != null,
+  });
+}
+
+export function useLinkDocumentIssue(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, issueId }: { documentId: number; issueId: number }) =>
+      api.linkDocumentIssue(projectKey!, documentId, issueId),
+    onSuccess: (_link, { documentId, issueId }) => {
+      if (!projectKey) return;
+      void qc.invalidateQueries({ queryKey: qk.documentIssueLinks(projectKey, documentId) });
+      void qc.invalidateQueries({ queryKey: qk.issueDocumentLinks(projectKey, issueId) });
+    },
+  });
+}
+
+export function useUnlinkDocumentIssue(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, issueId }: { documentId: number; issueId: number }) =>
+      api.unlinkDocumentIssue(projectKey!, documentId, issueId),
+    onSuccess: (_result, { documentId, issueId }) => {
+      if (!projectKey) return;
+      void qc.invalidateQueries({ queryKey: qk.documentIssueLinks(projectKey, documentId) });
+      void qc.invalidateQueries({ queryKey: qk.issueDocumentLinks(projectKey, issueId) });
+    },
   });
 }
 

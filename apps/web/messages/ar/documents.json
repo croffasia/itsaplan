@@ -136,6 +136,20 @@
   "dragOver": "يتم النقل فوق {title}.",
   "dragEnded": "تم النقل بالقرب من {title}.",
   "dragCanceled": "تم إلغاء النقل.",
+  "linkWorkItem": {
+    "tab": "عناصر العمل",
+    "description": "عناصر العمل التي تستخدم هذه الصفحة كسياق.",
+    "add": "ربط",
+    "selectIssue": "ربط عنصر عمل",
+    "searchIssues": "البحث في عناصر العمل…",
+    "empty": "لا توجد عناصر عمل مرتبطة بعد.",
+    "loadFailed": "تعذر تحميل عناصر العمل المرتبطة. انقر لإعادة المحاولة.",
+    "remove": "إلغاء ربط {identifier}",
+    "selectDocument": "ربط صفحة Docs",
+    "searchDocuments": "البحث في Docs…",
+    "loading": "جارٍ تحميل Docs…",
+    "noDocuments": "لا توجد صفحات متاحة للربط."
+  },
   "toolbar": {
     "underline": "تسطير",
     "textColor": "لون النص",

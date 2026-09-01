@@ -342,6 +342,14 @@
       "skipped": "Ignoré"
     }
   },
+  "documents": {
+    "title": "Docs",
+    "add": "Lier une page Docs",
+    "empty": "Aucune page Docs liée.",
+    "loadFailed": "Impossible de charger les pages liées. Cliquez pour réessayer.",
+    "remove": "Dissocier {title}",
+    "untitled": "Sans titre"
+  },
   "archived": "Archivé",
   "activityHeading": "Activité",
   "feedFlat": "À plat",

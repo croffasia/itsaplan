@@ -1,6 +1,9 @@
 {
   "noAccess": "ليس لديك صلاحية الوصول إلى لوحات المعلومات.",
   "defaultName": "نظرة عامة",
+  "myFocusName": "تركيزي",
+  "template": "القالب",
+  "openFilteredIssues": "فتح {count} من المهام المصفاة",
   "newDashboard": "لوحة معلومات جديدة",
   "renameDashboard": "إعادة تسمية لوحة المعلومات",
   "namePlaceholder": "اسم لوحة المعلومات",
@@ -200,5 +203,12 @@
     "inProgress": "قيد التنفيذ",
     "backlog": "قائمة الانتظار",
     "unassigned": "غير مُسندة"
+  },
+  "myFocusWidgets": {
+    "todo": "مهامي القادمة",
+    "inProgress": "مهامي قيد التنفيذ",
+    "review": "مهامي قيد المراجعة",
+    "overdue": "مهامي المتأخرة",
+    "next7Days": "مهامي خلال 7 أيام"
   }
 }

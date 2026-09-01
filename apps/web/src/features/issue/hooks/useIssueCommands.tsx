@@ -56,7 +56,7 @@ export function useIssueCommands(
   const format = useFormatter();
   const priorityLabel = usePriorityLabel();
   const presetLabel = useDueDatePresetLabel();
-  const { onOpenIssue } = useShell();
+  const { onOpenIssue, filterContext } = useShell();
   const { data: session } = useSession();
   const projectKey = project?.project.key ?? null;
   const issueQuery = useIssueQuery(issueId);
@@ -98,7 +98,7 @@ export function useIssueCommands(
   const patch = (fields: IssuePatch) => updateIssue.mutate({ id: issue.id, patch: fields });
   const members = project.assignees.filter((a) => a.kind === 'member');
   const agents = delegatableAgents(project.assignees, session?.user.id ?? null);
-  const actions = matchedActions(actionsQuery.data ?? [], project, issue);
+  const actions = matchedActions(actionsQuery.data ?? [], project, issue, filterContext);
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
 
   const copyPrompt = async () => {

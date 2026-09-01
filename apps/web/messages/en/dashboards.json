@@ -1,6 +1,9 @@
 {
   "noAccess": "You do not have access to dashboards.",
   "defaultName": "Overview",
+  "myFocusName": "My focus",
+  "template": "Template",
+  "openFilteredIssues": "Open {count} filtered issues",
   "newDashboard": "New dashboard",
   "renameDashboard": "Rename dashboard",
   "namePlaceholder": "Dashboard name",
@@ -200,5 +203,12 @@
     "inProgress": "In progress",
     "backlog": "Backlog",
     "unassigned": "Unassigned"
+  },
+  "myFocusWidgets": {
+    "todo": "My todo",
+    "inProgress": "My in progress",
+    "review": "My review",
+    "overdue": "My overdue",
+    "next7Days": "My next 7 days"
   }
 }

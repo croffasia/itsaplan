@@ -1,6 +1,9 @@
 {
   "noAccess": "У вас немає доступу до дашбордів.",
   "defaultName": "Огляд",
+  "myFocusName": "Мій фокус",
+  "template": "Шаблон",
+  "openFilteredIssues": "Відкрити задачі за фільтром: {count}",
   "newDashboard": "Новий дашборд",
   "renameDashboard": "Перейменувати дашборд",
   "namePlaceholder": "Назва дашборда",
@@ -200,5 +203,12 @@
     "inProgress": "В роботі",
     "backlog": "Беклог",
     "unassigned": "Без виконавця"
+  },
+  "myFocusWidgets": {
+    "todo": "Мої Todo",
+    "inProgress": "Мої в роботі",
+    "review": "Мої на рев'ю",
+    "overdue": "Мої прострочені",
+    "next7Days": "Мої на найближчі 7 днів"
   }
 }

@@ -20,6 +20,7 @@ import type {
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { PRIORITY_ORDER, PRIORITY_RANK } from '@/utils/fieldOptions';
 import {
+  CURRENT_USER_FILTER_VALUE,
   hasValue,
   isEffectiveCondition,
   parseStatusValue,
@@ -102,6 +103,7 @@ export function defaultsFromFilters(
   };
   const pinnedText = (field: string) => {
     const value = pinned.get(field);
+    if (value === CURRENT_USER_FILTER_VALUE) return undefined;
     return typeof value === 'string' || value === null ? value : undefined;
   };
 

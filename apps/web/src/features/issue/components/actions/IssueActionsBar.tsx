@@ -31,6 +31,7 @@ import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ShareDialog from '@/components/common/share/ShareDialog';
 import { useTranslations } from 'next-intl';
+import { useShell } from '@/context/shellContext';
 
 // The issue detail Actions: the manual actions whose condition matches this
 // issue, plus Copy Prompt and a delete button. Owns the delete/apply
@@ -50,6 +51,7 @@ export default function IssueActionsBar({
   onDeleted?: () => void;
 }) {
   const t = useTranslations('issue.actionsBar');
+  const { filterContext } = useShell();
   const { can } = usePermissions();
   const { data: session } = useSession();
   const qc = useQueryClient();
@@ -80,7 +82,9 @@ export default function IssueActionsBar({
   // Manual actions whose condition matches this issue, applied as one patch.
   // Applying one is a issue edit; Copy Prompt only reads the issue and is always
   // available, so the block always renders.
-  const issueActions = canEdit ? matchedActions(actionsQuery.data ?? [], project, issue) : [];
+  const issueActions = canEdit
+    ? matchedActions(actionsQuery.data ?? [], project, issue, filterContext)
+    : [];
 
   async function copyPrompt() {
     await navigator.clipboard.writeText(buildIssuePrompt(issue, project, session?.user));

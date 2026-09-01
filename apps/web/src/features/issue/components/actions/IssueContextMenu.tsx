@@ -102,7 +102,7 @@ export default function IssueContextMenu({
   if (!shell) return <>{children}</>;
   const onOpenIssue = shell.onOpenIssue;
 
-  const actions = matchedActions(actionsQuery.data ?? [], project, issue);
+  const actions = matchedActions(actionsQuery.data ?? [], project, issue, shell.filterContext);
 
   function patch(fields: IssuePatch) {
     updateIssue.mutate({ id: issue.id, patch: fields });

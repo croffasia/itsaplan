@@ -4,7 +4,13 @@
 // live in the shared layer because api.ts types Dashboard.layout with them and
 // the dashboards feature consumes them.
 
-import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
+import type { ProjectDetail } from '@/lib/api';
+import {
+  CURRENT_USER_FILTER_VALUE,
+  EMPTY_FILTER_SET,
+  type FilterCondition,
+  type FilterSet,
+} from '@/utils/filters';
 import { uuid } from '@/utils/uuid';
 
 export type WidgetType =
@@ -74,6 +80,7 @@ export interface WidgetInstance {
 }
 
 export type DashboardLayout = WidgetInstance[];
+export type DashboardPreset = 'overview' | 'myFocus';
 
 // Default size and config per widget type, applied when a widget is added and as
 // the fallback when a persisted widget omits a value. `minH` is the smallest row
@@ -213,6 +220,7 @@ const UNASSIGNED_FILTER: FilterSet = {
 // row is small metric tiles (each a filtered count), then the charts, pulse, and
 // the two lists.
 export type DefaultStatKey = 'open' | 'inProgress' | 'backlog' | 'unassigned';
+export type MyFocusStatKey = 'todo' | 'inProgress' | 'review' | 'overdue' | 'next7Days';
 
 export function defaultDashboardLayout(
   statTitle: (key: DefaultStatKey) => string,
@@ -280,4 +288,99 @@ export function defaultDashboardLayout(
     },
     { id: 'default-activity', type: 'activity_feed', x: 6, y: 14, w: 6, h: 7, config: {} },
   ];
+}
+
+function focusFilters(...conditions: Omit<FilterCondition, 'id'>[]): FilterSet {
+  return {
+    conditions: conditions.map((condition, index) => ({ ...condition, id: `c${index + 1}` })),
+  };
+}
+
+const MINE: Omit<FilterCondition, 'id'> = {
+  field: 'assignee',
+  op: 'is',
+  values: [CURRENT_USER_FILTER_VALUE],
+};
+const OPEN: Omit<FilterCondition, 'id'> = {
+  field: 'statusType',
+  op: 'is_not',
+  values: ['completed', 'canceled'],
+};
+
+export function myFocusDashboardLayout(
+  project: ProjectDetail | null,
+  statTitle: (key: MyFocusStatKey) => string,
+): DashboardLayout {
+  const unstarted = project?.columns.filter((column) => column.stateType === 'unstarted') ?? [];
+  const namedTodo = unstarted.find((column) => /\bto[\s-]?do\b|сделать/i.test(column.name));
+  const todo = namedTodo ?? (unstarted.length === 1 ? unstarted[0] : null);
+  const started = project?.columns.filter((column) => column.stateType === 'started') ?? [];
+  const namedReview = started.find((column) => /review|ревью/i.test(column.name));
+  const review = namedReview ?? started[1] ?? null;
+  const inProgress = started.find((column) => column.id !== review?.id) ?? null;
+  const status = (columnId: number): Omit<FilterCondition, 'id'> => ({
+    field: 'status',
+    op: 'is',
+    values: [columnId],
+  });
+  const widgets: Omit<WidgetInstance, 'x' | 'y'>[] = [];
+
+  if (todo) {
+    widgets.push({
+      id: 'focus-todo',
+      type: 'stat',
+      w: 3,
+      h: 3,
+      title: statTitle('todo'),
+      config: { filters: focusFilters(MINE, status(todo.id)) },
+    });
+  }
+  if (inProgress) {
+    widgets.push({
+      id: 'focus-progress',
+      type: 'stat',
+      w: 3,
+      h: 3,
+      title: statTitle('inProgress'),
+      config: { filters: focusFilters(MINE, status(inProgress.id)) },
+    });
+  }
+  if (review) {
+    widgets.push({
+      id: 'focus-review',
+      type: 'stat',
+      w: 3,
+      h: 3,
+      title: statTitle('review'),
+      config: { filters: focusFilters(MINE, status(review.id)) },
+    });
+  }
+  widgets.push(
+    {
+      id: 'focus-overdue',
+      type: 'stat',
+      w: 3,
+      h: 3,
+      title: statTitle('overdue'),
+      config: {
+        filters: focusFilters(MINE, OPEN, { field: 'dueDate', op: 'overdue', values: [] }),
+      },
+    },
+    {
+      id: 'focus-next-week',
+      type: 'stat',
+      w: 3,
+      h: 3,
+      title: statTitle('next7Days'),
+      config: {
+        filters: focusFilters(MINE, OPEN, { field: 'dueDate', op: 'next_7_days', values: [] }),
+      },
+    },
+  );
+
+  return widgets.map((widget, index) => ({
+    ...widget,
+    x: (index % 4) * 3,
+    y: Math.floor(index / 4) * 3,
+  }));
 }

@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { arrayMove } from '@dnd-kit/sortable';
 import { useTranslations } from 'next-intl';
-import type { Dashboard } from '@/lib/api';
+import type { Dashboard, ProjectDetail } from '@/lib/api';
 import {
   createWidget,
   defaultDashboardLayout,
   type DefaultStatKey,
+  type DashboardPreset,
+  myFocusDashboardLayout,
+  type MyFocusStatKey,
   normalizeLayout,
   type DashboardLayout,
   type WidgetInstance,
@@ -27,10 +30,14 @@ export function useDashboardEditor(
   projectKey: string | null,
   dashboards: Dashboard[],
   activeDashboardId: number | null,
+  project: ProjectDetail | null,
   onSelectDashboard: (id: number | null) => void,
 ) {
   const t = useTranslations('dashboards');
   const defaultLayout = defaultDashboardLayout((key: DefaultStatKey) => t(`defaultWidgets.${key}`));
+  const myFocusLayout = myFocusDashboardLayout(project, (key: MyFocusStatKey) =>
+    t(`myFocusWidgets.${key}`),
+  );
   const createM = useCreateDashboard(projectKey);
   const updateM = useUpdateDashboard(projectKey);
   const deleteM = useDeleteDashboard(projectKey);
@@ -97,9 +104,9 @@ export function useDashboardEditor(
 
   // --- Dashboard-level operations (the tab strip) --------------------------------
 
-  const createDashboard = async (name: string) => {
+  const createDashboard = async (name: string, preset: DashboardPreset) => {
     const created = await createM.mutateAsync({
-      input: { name, layout: defaultLayout },
+      input: { name, layout: preset === 'myFocus' ? myFocusLayout : defaultLayout },
     });
     onSelectDashboard(created.id);
   };

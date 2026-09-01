@@ -1,6 +1,9 @@
 {
   "noAccess": "Vous n'avez pas accès aux tableaux de bord.",
   "defaultName": "Vue d'ensemble",
+  "myFocusName": "Mon focus",
+  "template": "Modèle",
+  "openFilteredIssues": "Ouvrir {count} tickets filtrés",
   "newDashboard": "Nouveau tableau de bord",
   "renameDashboard": "Renommer le tableau de bord",
   "namePlaceholder": "Nom du tableau de bord",
@@ -200,5 +203,12 @@
     "inProgress": "En cours",
     "backlog": "Backlog",
     "unassigned": "Non assignés"
+  },
+  "myFocusWidgets": {
+    "todo": "Mes tickets à faire",
+    "inProgress": "Mes tickets en cours",
+    "review": "Mes tickets en revue",
+    "overdue": "Mes tickets en retard",
+    "next7Days": "Mes 7 prochains jours"
   }
 }

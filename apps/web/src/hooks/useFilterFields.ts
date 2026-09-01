@@ -21,6 +21,8 @@ import { compareByGroupOrder } from '@/utils/initiativeMeta';
 import { projectFeatures } from '@/utils/projectFeatures';
 import { uuid } from '@/utils/uuid';
 import {
+  CURRENT_USER_FILTER_VALUE,
+  isRelativeDateOperator,
   statusValue,
   type FilterCondition,
   type FilterSet,
@@ -170,6 +172,7 @@ export function useFilterFields(projectKey?: string) {
         label: t('fields.assignee'),
         kind: 'set',
         options: [
+          { value: CURRENT_USER_FILTER_VALUE, label: t('currentUser') },
           ...project.assignees
             .filter((a) => a.kind === 'member')
             .map((a) => ({ value: a.userId, label: a.name })),
@@ -238,7 +241,7 @@ export function useFilterFields(projectKey?: string) {
         kind: 'set',
         options: project.labels.map((l) => ({ value: l.id, label: l.name, color: l.color })),
       },
-      { field: 'dueDate', label: t('fields.dueDate'), kind: 'date' },
+      { field: 'dueDate', label: t('fields.dueDate'), kind: 'due-date' },
       { field: 'startDate', label: t('fields.startDate'), kind: 'date' },
       { field: 'created', label: t('fields.created'), kind: 'date' },
       { field: 'updated', label: t('fields.updated'), kind: 'date' },
@@ -264,7 +267,8 @@ export function useFilterFields(projectKey?: string) {
 
   // Short display of a condition's chosen values for the pill.
   const valuesLabel = (spec: FieldSpec, cond: FilterCondition): string => {
-    if (cond.op === 'is_set' || cond.op === 'is_not_set') return '';
+    if (cond.op === 'is_set' || cond.op === 'is_not_set' || isRelativeDateOperator(cond.op))
+      return '';
     if (cond.values.length === 0) return '…';
     if (spec.kind === 'set' || spec.kind === 'boolean') {
       const opts = spec.kind === 'boolean' ? booleanOptions : (spec.options ?? []);
@@ -273,7 +277,7 @@ export function useFilterFields(projectKey?: string) {
       );
       return labels.length <= 2 ? labels.join(', ') : t('selected', { count: labels.length });
     }
-    if (spec.kind === 'date' && typeof cond.values[0] === 'string') {
+    if ((spec.kind === 'date' || spec.kind === 'due-date') && typeof cond.values[0] === 'string') {
       return formatDate(cond.values[0]);
     }
     return String(cond.values[0] ?? '');
@@ -293,10 +297,13 @@ export function useFilterFields(projectKey?: string) {
     for (const cond of filters.conditions) {
       const spec = byField.get(cond.field);
       if (!spec) continue;
-      const presence = cond.op === 'is_set' || cond.op === 'is_not_set';
-      if (!presence && cond.values.length === 0) continue;
+      const standalone =
+        cond.op === 'is_set' || cond.op === 'is_not_set' || isRelativeDateOperator(cond.op);
+      if (!standalone && cond.values.length === 0) continue;
       const op = operatorLabel(cond.op);
-      out.push(presence ? `${spec.label} ${op}` : `${spec.label} ${op} ${valuesLabel(spec, cond)}`);
+      out.push(
+        standalone ? `${spec.label} ${op}` : `${spec.label} ${op} ${valuesLabel(spec, cond)}`,
+      );
     }
     return out;
   };

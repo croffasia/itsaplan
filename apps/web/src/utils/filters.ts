@@ -28,8 +28,20 @@ export type BuiltinFilterField =
 // - before / after: date comparison (single date value)
 // - is_set / is_not_set: presence (no value needed)
 // - contains / not_contains: substring match on text (single string value)
+// - overdue / today / next_*: relative date ranges (no value needed)
 export type FilterOperator =
-  'is' | 'is_not' | 'before' | 'after' | 'is_set' | 'is_not_set' | 'contains' | 'not_contains';
+  | 'is'
+  | 'is_not'
+  | 'before'
+  | 'after'
+  | 'is_set'
+  | 'is_not_set'
+  | 'contains'
+  | 'not_contains'
+  | 'overdue'
+  | 'today'
+  | 'next_3_days'
+  | 'next_7_days';
 
 export type FilterValue = string | number | boolean | null;
 
@@ -39,7 +51,7 @@ export interface FilterCondition {
   // A BuiltinFilterField or `cf:<fieldId>`.
   field: string;
   op: FilterOperator;
-  // The chosen values (OR-ed within the condition). Empty for is_set/is_not_set.
+  // The chosen values (OR-ed within the condition). Empty for presence and relative-date operators.
   values: FilterValue[];
 }
 
@@ -48,6 +60,28 @@ export interface FilterSet {
 }
 
 export const EMPTY_FILTER_SET: FilterSet = { conditions: [] };
+
+export const CURRENT_USER_FILTER_VALUE = '$currentUser';
+
+export interface FilterEvaluationContext {
+  currentUserId?: string | null;
+  today?: string;
+}
+
+export function filterToday(now: Date, timezone: string): string {
+  return now.toLocaleDateString('en-CA', { timeZone: timezone });
+}
+
+const RELATIVE_DATE_OPERATORS = new Set<FilterOperator>([
+  'overdue',
+  'today',
+  'next_3_days',
+  'next_7_days',
+]);
+
+export function isRelativeDateOperator(op: FilterOperator): boolean {
+  return RELATIVE_DATE_OPERATORS.has(op);
+}
 
 // The value that stands for a whole status of the initiative or the cycle an issue
 // is planned under, instead of one of them by id: "the running cycle", "the active
@@ -72,13 +106,31 @@ export function isActiveFilterSet(filters: FilterSet | null | undefined): boolea
   return !!filters && filters.conditions.some(isEffectiveCondition);
 }
 
-// Whether a condition actually constrains the result. Presence operators
-// (is_set/is_not_set) need no value; every other operator needs at least one.
+// Whether a condition actually constrains the result. Presence and relative-date
+// operators need no value; every other operator needs at least one.
 // `values` is checked for being a list because the whole set comes from a jsonb
 // blob the server stores without inspecting it.
 export function isEffectiveCondition(cond: FilterCondition): boolean {
-  if (cond.op === 'is_set' || cond.op === 'is_not_set') return true;
+  if (cond.op === 'is_set' || cond.op === 'is_not_set' || isRelativeDateOperator(cond.op))
+    return true;
   return Array.isArray(cond.values) && cond.values.length > 0;
+}
+
+export function resolveFilterSet(filters: FilterSet, context: FilterEvaluationContext): FilterSet {
+  const currentUserId = context.currentUserId;
+  if (!currentUserId) return filters;
+  let changed = false;
+  const conditions = filters.conditions.map((condition) => {
+    if (!condition.values.includes(CURRENT_USER_FILTER_VALUE)) return condition;
+    changed = true;
+    return {
+      ...condition,
+      values: condition.values.map((value) =>
+        value === CURRENT_USER_FILTER_VALUE ? currentUserId : value,
+      ),
+    };
+  });
+  return changed ? { conditions } : filters;
 }
 
 // Normalizes any date the store returns to a "YYYY-MM-DD" day for comparison:
@@ -169,9 +221,25 @@ function matchCondition(
   issue: Issue,
   cond: FilterCondition,
   columnStateType: Map<number, StateType>,
+  context: FilterEvaluationContext,
 ): boolean {
   const cfId = parseCustomFieldKey(cond.field);
   const isDate = cfId == null && DATE_FIELDS.includes(cond.field as BuiltinFilterField);
+
+  if (isRelativeDateOperator(cond.op)) {
+    const raw =
+      cfId != null
+        ? (customFieldScalar(issue, cfId) as string | null)
+        : builtinDate(issue, cond.field as BuiltinFilterField);
+    const day = toDay(typeof raw === 'string' ? raw : null);
+    const today = context.today ?? dayKey(new Date().toISOString());
+    if (!day) return false;
+    if (cond.op === 'overdue') return day < today;
+    if (cond.op === 'today') return day === today;
+    const limit = new Date(`${today}T00:00:00Z`);
+    limit.setUTCDate(limit.getUTCDate() + (cond.op === 'next_3_days' ? 3 : 7));
+    return day >= today && day <= limit.toISOString().slice(0, 10);
+  }
 
   // Date operators (built-in date fields; custom date fields also route here
   // when the UI picks before/after/is_set on them).
@@ -211,7 +279,11 @@ function matchCondition(
     cfId != null
       ? customFieldValues(issue, cfId)
       : builtinSetValues(issue, cond.field as BuiltinFilterField, columnStateType);
-  const overlaps = cond.values.some((cv) => issueValues.includes(cv));
+  if (cond.values.includes(CURRENT_USER_FILTER_VALUE) && !context.currentUserId) return false;
+  const values = cond.values.map((value) =>
+    value === CURRENT_USER_FILTER_VALUE && context.currentUserId ? context.currentUserId : value,
+  );
+  const overlaps = values.some((cv) => issueValues.includes(cv));
   return cond.op === 'is' ? overlaps : !overlaps;
 }
 
@@ -222,11 +294,14 @@ export function applyFilters<T extends Issue>(
   issues: T[],
   filters: FilterSet | null | undefined,
   project: ProjectDetail,
+  context: FilterEvaluationContext = {},
 ): T[] {
   if (!isActiveFilterSet(filters)) return issues;
   const columnStateType = new Map(project.columns.map((c) => [c.id, c.stateType]));
   const active = filters!.conditions.filter(isEffectiveCondition);
-  return issues.filter((t) => active.every((cond) => matchCondition(t, cond, columnStateType)));
+  return issues.filter((t) =>
+    active.every((cond) => matchCondition(t, cond, columnStateType, context)),
+  );
 }
 
 // Whether one issue satisfies every effective condition in the set. An empty or
@@ -237,10 +312,11 @@ export function matchesFilterSet(
   issue: Issue,
   filters: FilterSet | null | undefined,
   project: ProjectDetail,
+  context: FilterEvaluationContext = {},
 ): boolean {
   if (!isActiveFilterSet(filters)) return true;
   const columnStateType = new Map(project.columns.map((c) => [c.id, c.stateType]));
   return filters!.conditions
     .filter(isEffectiveCondition)
-    .every((cond) => matchCondition(issue, cond, columnStateType));
+    .every((cond) => matchCondition(issue, cond, columnStateType, context));
 }

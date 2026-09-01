@@ -25,7 +25,7 @@ export default function WidgetBody({
   const config = widget.config ?? {};
   switch (widget.type) {
     case 'stat':
-      return <StatWidget config={config} />;
+      return <StatWidget projectKey={projectKey} config={config} />;
     case 'breakdown':
       return <BreakdownWidget projectKey={projectKey} config={config} />;
     case 'throughput':

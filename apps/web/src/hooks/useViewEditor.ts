@@ -186,6 +186,12 @@ export function useViewEditor(
     setFiltersOpen((open) => !open);
   }
 
+  function applyTransientFilters(next: FilterSet) {
+    setEditing(false);
+    setFilters(next);
+    setFiltersOpen(true);
+  }
+
   // Reset the live filters/display back to the selected view and leave edit mode.
   function cancelEdits() {
     setEditing(false);
@@ -270,6 +276,7 @@ export function useViewEditor(
     changeView,
     changeSettings,
     changeFilters: setFilters,
+    applyTransientFilters,
     toggleFilters,
     // Selecting a saved view (or the All tab when id is null) navigates; the load
     // effect then applies its display and leaves edit mode.

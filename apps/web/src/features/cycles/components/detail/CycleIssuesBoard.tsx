@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import type { Cycle } from '@/lib/api';
 import { useShell } from '@/context/shellContext';
-import { applyFilters } from '@/utils/filters';
+import { applyFilters, resolveFilterSet } from '@/utils/filters';
 import { defaultsFromFilters } from '@/utils/project';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { countIssuesByColumn } from '@/features/work-items/utils/wipLimit';
@@ -21,22 +21,26 @@ const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
 // issues and the live board refresh keeps it current. On a finished cycle a new
 // issue is created without one: nothing is planned into a cycle that has ended.
 export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
-  const { project, customFields, onOpenIssue, onAddIssue } = useShell();
+  const { project, customFields, filterContext, onOpenIssue, onAddIssue } = useShell();
   const cycleId = cycle.id;
   const board = useLocalBoardSettings(CYCLE_BOARD_STORE_KEY, cycleId);
   const initiativeOptions = useInitiativeOptionsQuery(project?.project.key ?? null).data ?? [];
+  const resolvedFilters = useMemo(
+    () => resolveFilterSet(board.filters, filterContext),
+    [board.filters, filterContext],
+  );
 
   const viewProject = useMemo(() => {
     if (!project) return null;
     const issues = project.issues.filter((i) => i.cycle?.id === cycleId);
-    return { ...project, issues: applyFilters(issues, board.filters, project) };
-  }, [project, cycleId, board.filters]);
+    return { ...project, issues: applyFilters(issues, resolvedFilters, project, filterContext) };
+  }, [project, cycleId, resolvedFilters, filterContext]);
 
   if (!project || !viewProject) return null;
 
   const viewProps = {
     project: viewProject,
-    filters: board.filters,
+    filters: resolvedFilters,
     // Counted across the whole project, not just this cycle: the limit belongs to
     // the column, and its other issues occupy it just the same.
     columnCounts: countIssuesByColumn(project.issues),
@@ -46,7 +50,7 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
     onOpenIssue,
     onAddIssue: (defaults: Parameters<typeof onAddIssue>[0]) =>
       onAddIssue({
-        ...defaultsFromFilters(board.filters, {
+        ...defaultsFromFilters(resolvedFilters, {
           cycles: project.plannedCycles,
           initiatives: initiativeOptions,
         }),

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api';
-import type { FilterCondition, FilterValue } from '@/utils/filters';
+import { isRelativeDateOperator, type FilterCondition, type FilterValue } from '@/utils/filters';
 import type { FieldSpec } from '@/utils/filterFields';
 import { useFilterFields } from '@/hooks/useFilterFields';
 import { cn } from '@/lib/utils';
@@ -11,7 +11,7 @@ import DatePill from '@/components/common/fields/DatePill';
 import LabelPicker from '@/components/common/fields/LabelPicker';
 
 // The value editor inside a condition pill, chosen by field kind. Presence
-// operators (is_set/is_not_set) need no editor.
+// Presence and relative-date operators need no editor.
 export default function FilterValueEditor({
   spec,
   cond,
@@ -27,7 +27,8 @@ export default function FilterValueEditor({
   const { booleanOptions, valuesLabel } = useFilterFields();
   const [open, setOpen] = useState(false);
 
-  if (cond.op === 'is_set' || cond.op === 'is_not_set') return null;
+  if (cond.op === 'is_set' || cond.op === 'is_not_set' || isRelativeDateOperator(cond.op))
+    return null;
 
   const trigger = (
     <button type="button" className="max-w-40 truncate rounded px-1 text-xs hover:bg-accent">
@@ -52,7 +53,7 @@ export default function FilterValueEditor({
     );
   }
 
-  if (spec.kind === 'date') {
+  if (spec.kind === 'date' || spec.kind === 'due-date') {
     const current = typeof cond.values[0] === 'string' ? (cond.values[0] as string) : null;
     return <DatePill value={current} onChange={(v) => onChange(v ? [v] : [])} trigger={trigger} />;
   }

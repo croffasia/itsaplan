@@ -1,6 +1,9 @@
 {
   "noAccess": "你无权访问仪表盘。",
   "defaultName": "概览",
+  "myFocusName": "我的重点",
+  "template": "模板",
+  "openFilteredIssues": "打开 {count} 个筛选后的任务",
   "newDashboard": "新建仪表盘",
   "renameDashboard": "重命名仪表盘",
   "namePlaceholder": "仪表盘名称",
@@ -200,5 +203,12 @@
     "inProgress": "进行中",
     "backlog": "待办池",
     "unassigned": "未指派"
+  },
+  "myFocusWidgets": {
+    "todo": "我的待办",
+    "inProgress": "我的进行中",
+    "review": "我的评审",
+    "overdue": "我的逾期任务",
+    "next7Days": "我未来 7 天的任务"
   }
 }

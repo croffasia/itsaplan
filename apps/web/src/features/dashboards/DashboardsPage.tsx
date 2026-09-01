@@ -35,7 +35,7 @@ export default function DashboardsPage() {
   // With no id in the URL, fall back to the first saved dashboard.
   const activeDashboardId = routeId ?? list[0]?.id ?? null;
 
-  const editor = useDashboardEditor(projectKey, list, activeDashboardId, (id) =>
+  const editor = useDashboardEditor(projectKey, list, activeDashboardId, project, (id) =>
     router.push(id != null ? dashboardPath(projectKey, id) : dashboardsPath(projectKey)),
   );
 
@@ -106,7 +106,7 @@ export default function DashboardsPage() {
         activeDashboardId={activeDashboardId}
         isVirtual={editor.isVirtual}
         onSelect={(id) => router.push(dashboardPath(projectKey, id))}
-        onNewDashboard={(name) => void editor.createDashboard(name)}
+        onNewDashboard={(name, preset) => void editor.createDashboard(name, preset)}
         onRename={(d, name) => void editor.renameDashboard(d, name)}
         onDelete={(d) => void editor.deleteDashboard(d)}
         onReorder={(dragged, target) => editor.reorderDashboards(dragged, target)}

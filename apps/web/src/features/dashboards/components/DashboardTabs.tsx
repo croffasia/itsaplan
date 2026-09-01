@@ -10,6 +10,7 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 import { LayoutDashboard, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Dashboard } from '@/lib/api';
+import type { DashboardPreset } from '@/utils/dashboardWidgets';
 import { useStripSortSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
 import DashboardTab from './DashboardTab';
@@ -35,7 +36,7 @@ export default function DashboardTabs({
   isVirtual: boolean;
   actions?: React.ReactNode;
   onSelect: (id: number) => void;
-  onNewDashboard: (name: string) => void;
+  onNewDashboard: (name: string, preset: DashboardPreset) => void;
   onRename: (d: Dashboard, name: string) => void;
   onDelete: (d: Dashboard) => void;
   onReorder: (draggedId: number, targetId: number) => void;
@@ -116,18 +117,21 @@ export default function DashboardTabs({
 
       {actions && <div className="flex shrink-0 items-center gap-2 pl-2">{actions}</div>}
 
-      <DashboardNameDialog
-        key={renaming?.id ?? (dialog === 'new' ? 'new' : 'closed')}
-        open={dialog != null}
-        title={renaming ? t('renameDashboard') : t('newDashboard')}
-        initial={renaming?.name ?? ''}
-        onClose={() => setDialog(null)}
-        onSubmit={(name) => {
-          if (renaming) onRename(renaming, name);
-          else if (dialog === 'new') onNewDashboard(name);
-          setDialog(null);
-        }}
-      />
+      {dialog && (
+        <DashboardNameDialog
+          key={renaming?.id ?? 'new'}
+          open
+          title={renaming ? t('renameDashboard') : t('newDashboard')}
+          initial={renaming?.name ?? ''}
+          showPresets={!renaming}
+          onClose={() => setDialog(null)}
+          onSubmit={(name, preset) => {
+            if (renaming) onRename(renaming, name);
+            else onNewDashboard(name, preset);
+            setDialog(null);
+          }}
+        />
+      )}
     </div>
   );
 }

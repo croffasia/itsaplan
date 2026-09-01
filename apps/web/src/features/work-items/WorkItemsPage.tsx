@@ -17,6 +17,7 @@ import {
   type ViewSettings,
 } from '@/utils/viewSettings';
 import { cn } from '@/lib/utils';
+import { resolveFilterSet } from '@/utils/filters';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ViewTabs from '@/components/layout/ViewTabs';
@@ -41,8 +42,16 @@ interface TimelineCollapseState {
 export default function WorkItemsPage() {
   const t = useTranslations('workItems');
   const tCommon = useTranslations('common');
-  const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
-    useShell();
+  const {
+    project,
+    filteredProject,
+    views,
+    editor,
+    customFields,
+    filterContext,
+    onOpenIssue,
+    onAddIssue,
+  } = useShell();
   const { can } = usePermissions();
   const groupLabels = useGroupLabels();
   const features = useProjectFeatures();
@@ -60,6 +69,7 @@ export default function WorkItemsPage() {
   });
 
   if (!project || !filteredProject) return null;
+  const resolvedFilters = resolveFilterSet(editor.effectiveFilters, filterContext);
 
   // Saving persists the view: editing an existing one is a views edit, a brand-new
   // one is a views create. Filtering/display stay available to everyone (transient,
@@ -77,12 +87,7 @@ export default function WorkItemsPage() {
   // issue in it rather than the ones the active filters leave on screen.
   const columnCounts = countIssuesByColumn(project.issues);
 
-  const timelineGroups = buildGroups(
-    filteredProject,
-    settings.group,
-    groupLabels,
-    editor.effectiveFilters,
-  );
+  const timelineGroups = buildGroups(filteredProject, settings.group, groupLabels, resolvedFilters);
   const timelineIssuesByGroup = groupIssues(timelineGroups, filteredProject.issues, settings.group);
   const visibleTimelineGroupKeys = timelineGroups
     .filter(
@@ -119,7 +124,7 @@ export default function WorkItemsPage() {
 
   const viewProps = {
     project: filteredProject,
-    filters: editor.effectiveFilters,
+    filters: resolvedFilters,
     columnCounts,
     customFields,
     settings,

@@ -23,7 +23,18 @@ type FilterField =
   | 'updated';
 
 type FilterOperator =
-  'is' | 'is_not' | 'before' | 'after' | 'is_set' | 'is_not_set' | 'contains' | 'not_contains';
+  | 'is'
+  | 'is_not'
+  | 'before'
+  | 'after'
+  | 'is_set'
+  | 'is_not_set'
+  | 'contains'
+  | 'not_contains'
+  | 'overdue'
+  | 'today'
+  | 'next_3_days'
+  | 'next_7_days';
 
 type FilterValue = string | number | boolean | null;
 
@@ -38,6 +49,18 @@ interface FilterSet {
 }
 
 const DATE_FIELDS: FilterField[] = ['dueDate', 'startDate', 'created', 'updated'];
+const CURRENT_USER_FILTER_VALUE = '$currentUser';
+const RELATIVE_DATE_OPERATORS = new Set<FilterOperator>([
+  'overdue',
+  'today',
+  'next_3_days',
+  'next_7_days',
+]);
+
+interface FilterEvaluationContext {
+  currentUserId?: string | null;
+  today?: string;
+}
 
 // A condition on the initiative or the cycle names either one of them by id or a
 // whole status this way ("the running cycle"), so an issue matches both its own id
@@ -50,10 +73,11 @@ function parseCustomFieldKey(field: string): number | null {
   return field.startsWith('cf:') ? Number(field.slice(3)) : null;
 }
 
-// A condition constrains the result only when it has a value (presence operators
-// need none), so a half-built condition does not hide everything.
+// A condition constrains the result only when it has a value (presence and
+// relative-date operators need none), so a half-built condition does not hide everything.
 function isEffectiveCondition(cond: FilterCondition): boolean {
-  if (cond.op === 'is_set' || cond.op === 'is_not_set') return true;
+  if (cond.op === 'is_set' || cond.op === 'is_not_set' || RELATIVE_DATE_OPERATORS.has(cond.op))
+    return true;
   return cond.values.length > 0;
 }
 
@@ -138,9 +162,25 @@ function matchCondition(
   issue: IssueRow,
   cond: FilterCondition,
   columnStateType: Map<number, string>,
+  context: FilterEvaluationContext,
 ): boolean {
   const cfId = parseCustomFieldKey(cond.field);
   const isDate = cfId == null && DATE_FIELDS.includes(cond.field as FilterField);
+
+  if (RELATIVE_DATE_OPERATORS.has(cond.op)) {
+    const raw =
+      cfId != null
+        ? (customFieldScalar(issue, cfId) as string | null)
+        : builtinDate(issue, cond.field as FilterField);
+    const day = toDay(typeof raw === 'string' ? raw : null);
+    const today = context.today ?? new Date().toISOString().slice(0, 10);
+    if (!day) return false;
+    if (cond.op === 'overdue') return day < today;
+    if (cond.op === 'today') return day === today;
+    const limit = new Date(`${today}T00:00:00Z`);
+    limit.setUTCDate(limit.getUTCDate() + (cond.op === 'next_3_days' ? 3 : 7));
+    return day >= today && day <= limit.toISOString().slice(0, 10);
+  }
 
   if (cond.op === 'before' || cond.op === 'after') {
     const raw =
@@ -173,7 +213,11 @@ function matchCondition(
     cfId != null
       ? customFieldValues(issue, cfId)
       : builtinSetValues(issue, cond.field as FilterField, columnStateType);
-  const overlaps = cond.values.some((cv) => issueValues.includes(cv));
+  if (cond.values.includes(CURRENT_USER_FILTER_VALUE) && !context.currentUserId) return false;
+  const values = cond.values.map((value) =>
+    value === CURRENT_USER_FILTER_VALUE && context.currentUserId ? context.currentUserId : value,
+  );
+  const overlaps = values.some((cv) => issueValues.includes(cv));
   return cond.op === 'is' ? overlaps : !overlaps;
 }
 
@@ -181,11 +225,12 @@ export function applyFilters(
   issues: IssueRow[],
   rawFilters: unknown,
   columns: ColumnRow[],
+  context: FilterEvaluationContext = {},
 ): IssueRow[] {
   const active = toFilterSet(rawFilters).conditions.filter(isEffectiveCondition);
   if (active.length === 0) return issues;
   const columnStateType = new Map(columns.map((c) => [c.id, c.stateType]));
   return issues.filter((issue) =>
-    active.every((cond) => matchCondition(issue, cond, columnStateType)),
+    active.every((cond) => matchCondition(issue, cond, columnStateType, context)),
   );
 }

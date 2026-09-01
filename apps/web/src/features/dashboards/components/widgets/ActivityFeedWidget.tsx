@@ -8,6 +8,7 @@ import { EMPTY_FILTER_SET, applyFilters, isActiveFilterSet, type FilterSet } fro
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useActivityFeedQuery } from '../../services/analytics.service';
+import { useShell } from '@/context/shellContext';
 
 // The actions that get their own verb phrase, as messages under
 // `dashboards.activityFeed.verbs`. Each phrase ends where the issue link follows,
@@ -54,6 +55,7 @@ export default function ActivityFeedWidget({
   config: WidgetConfig;
 }) {
   const t = useTranslations('dashboards.activityFeed');
+  const { filterContext } = useShell();
   const filters: FilterSet = config.filters ?? EMPTY_FILTER_SET;
   const action = config.action ?? null;
   const limit = config.limit ?? 20;
@@ -62,13 +64,13 @@ export default function ActivityFeedWidget({
   // (show every issue's activity); an empty array = filter matched nothing.
   const issueIds = useMemo(() => {
     if (!isActiveFilterSet(filters)) return null;
-    const matched = applyFilters(project.issues, filters, project);
+    const matched = applyFilters(project.issues, filters, project, filterContext);
     if (matched.length <= MAX_SCOPED_ISSUES) return matched.map((i) => i.id);
     return [...matched]
       .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
       .slice(0, MAX_SCOPED_ISSUES)
       .map((i) => i.id);
-  }, [filters, project]);
+  }, [filters, project, filterContext]);
 
   const { data, isLoading } = useActivityFeedQuery(projectKey, { action, issueIds, limit });
   const items = data?.items ?? [];

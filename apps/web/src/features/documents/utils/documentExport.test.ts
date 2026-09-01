@@ -14,6 +14,14 @@ import {
 const protectedAsset =
   '/protected-media/projects/SEKTA/documents/42/assets/123e4567-e89b-12d3-a456-426614174000/raw';
 
+function assertSanitizedHtml(html: string): void {
+  const normalized = html.toLowerCase();
+  assert.equal(normalized.includes('<script'), false);
+  assert.equal(normalized.includes('javascript:'), false);
+  assert.equal(normalized.includes('onerror='), false);
+  assert.equal(normalized.includes('onload='), false);
+}
+
 describe('document export', () => {
   it('creates a stable filename for either format', () => {
     assert.equal(
@@ -29,9 +37,13 @@ describe('document export', () => {
   });
 
   it('escapes the title and sanitizes exported HTML', () => {
-    const html = documentExportBody('<Guide>', '<script>alert(1)</script>Safe', 'html');
+    const html = documentExportBody(
+      '<Guide>',
+      '<SCRIPT>alert(1)</SCRIPT><img src="x" onerror="alert(2)"><a href="JaVaScRiPt:alert(3)">Unsafe</a><svg onload="alert(4)"></svg>Safe',
+      'html',
+    );
     assert.match(html, /<h1>&lt;Guide&gt;<\/h1>/);
-    assert.doesNotMatch(html, /<script>/);
+    assertSanitizedHtml(html);
     assert.match(html, /Safe/);
   });
 
@@ -40,12 +52,12 @@ describe('document export', () => {
       'Guide',
       'Fallback',
       'html',
-      '<p style="text-align: center"><mark data-color="#fde047" style="background-color: #fde047">Important</mark><script>alert(1)</script></p>',
+      '<p style="text-align: center"><mark data-color="#fde047" style="background-color: #fde047">Important</mark><ScRiPt>alert(1)</ScRiPt><img src="x" onerror="alert(2)"></p>',
     );
     assert.match(html, /text-align: center/);
     assert.match(html, /background-color: #fde047/);
     assert.match(html, /Important/);
-    assert.doesNotMatch(html, /<script>/);
+    assertSanitizedHtml(html);
   });
 
   it('inlines only this document protected assets in portable HTML', async () => {
@@ -81,6 +93,26 @@ describe('document export', () => {
     assert.match(html, /documents\/99\/assets\/123e4567/);
     assert.match(html, /https:\/\/evil\.example\/protected-media\/projects\/SEKTA/);
     assert.match(html, /https:\/\/example\.test\/public\.png/);
+  });
+
+  it('does not preserve active asset MIME types in portable HTML', async () => {
+    const result = await createPortableDocumentExport({
+      title: 'Guide',
+      content: '',
+      richHtml: `<a href="${protectedAsset}">Download diagram</a>`,
+      format: 'html',
+      projectKey: 'SEKTA',
+      documentId: 42,
+      baseUrl: 'https://plan.example.test',
+      fetchImpl: async () =>
+        new Response('<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>', {
+          headers: { 'content-type': 'image/svg+xml' },
+        }),
+    });
+
+    const html = await result.blob.text();
+    assert.equal(html.includes('data:image/svg+xml'), false);
+    assert.match(html, /data:application\/octet-stream;base64,/);
   });
 
   it('packages Markdown with local protected assets and preserves external links', async () => {

@@ -23,6 +23,12 @@ export interface PortableDocumentExport {
 export const MAX_DOCUMENT_EXPORT_ASSETS = 50;
 export const MAX_DOCUMENT_EXPORT_BYTES = 100 * 1024 * 1024;
 const DOCUMENT_EXPORT_FETCH_CONCURRENCY = 4;
+const SAFE_INLINE_IMAGE_CONTENT_TYPES = new Set([
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+]);
 
 export class DocumentExportLimitError extends Error {
   constructor() {
@@ -109,7 +115,7 @@ export async function createPortableDocumentExport({
   if (format === 'html') {
     const replacements = new Map<string, string>();
     for (const asset of assets) {
-      const inlineContentType = asset.contentType.startsWith('image/')
+      const inlineContentType = SAFE_INLINE_IMAGE_CONTENT_TYPES.has(asset.contentType)
         ? asset.contentType
         : 'application/octet-stream';
       const dataUrl = `data:${inlineContentType};base64,${bytesToBase64(asset.bytes)}`;

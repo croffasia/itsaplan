@@ -34,6 +34,11 @@
     "pendingCount": "{count, plural, other {# 个待处理邀请}}",
     "copyLink": "复制链接",
     "copied": "已复制",
+    "emailQueued": "邀请邮件已加入发送队列",
+    "emailUnavailable": "邀请已创建，但邮件未加入发送队列。请复制链接进行分享。",
+    "resendUnavailable": "邮件尚未配置。请复制邀请链接进行分享。",
+    "resendEmail": "发送邮件",
+    "resendingEmail": "正在加入队列…",
     "revokeAction": "撤销邀请",
     "removeAction": "移除邀请",
     "invitedBy": "由 {name} 邀请 · ",
@@ -104,5 +109,6 @@
   },
   "promoted": "成员已晋升为所有者",
   "roleUpdated": "成员角色已更新",
-  "descriptionUpdated": "成员描述已更新"
+  "descriptionUpdated": "成员描述已更新",
+  "provisioned": "由 SCIM 管理"
 }

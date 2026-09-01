@@ -1110,13 +1110,18 @@ export interface InstanceAuthSettings {
   registration: RegistrationMode;
   requireEmailVerification: boolean;
   magicLink: boolean;
+  emailPassword: boolean;
   hasEmailProvider: boolean;
+  // Whether Google or the OIDC provider can run. Password sign-in may only be turned
+  // off while one of them can.
+  hasSsoProvider: boolean;
 }
 
 export interface InstanceAuthSettingsPatch {
   registration?: RegistrationMode;
   requireEmailVerification?: boolean;
   magicLink?: boolean;
+  emailPassword?: boolean;
 }
 
 // The instance mail provider used for authentication email (password reset, address
@@ -1167,6 +1172,57 @@ export interface InstanceGoogleSettingsPatch {
   enabled?: boolean;
   clientId?: string;
   clientSecret?: string;
+}
+
+// The instance's generic OIDC/OAuth2 provider. The client secret is never returned,
+// only a `hasClientSecret` flag. redirectUri is derived from the API origin and has
+// to be registered with the identity provider.
+export interface InstanceOidcSettings {
+  enabled: boolean;
+  label: string;
+  discoveryUrl: string;
+  clientId: string;
+  hasClientSecret: boolean;
+  scopes: string[];
+  pkce: boolean;
+  redirectUri: string;
+}
+
+export interface InstanceOidcSettingsPatch {
+  enabled?: boolean;
+  label?: string;
+  discoveryUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  scopes?: string[];
+  pkce?: boolean;
+}
+
+// SCIM provisioning. The token is never returned, only its prefix; a new one is
+// generated with createInstanceScimToken and shown once.
+export interface InstanceScimSettings {
+  enabled: boolean;
+  hasToken: boolean;
+  tokenPrefix: string;
+  baseUrl: string;
+}
+
+// What a provisioned group grants: membership in a project, at a role. The group and
+// its members come from the identity provider; the mappings are set here.
+export interface InstanceScimGroupMapping {
+  projectId: number;
+  projectKey: string;
+  projectName: string;
+  role: 'owner' | 'member';
+  roleId: number | null;
+}
+
+export interface InstanceScimGroup {
+  id: string;
+  displayName: string;
+  externalId: string | null;
+  memberCount: number;
+  mappings: InstanceScimGroupMapping[];
 }
 
 // The instance Telegram bot: the one bot users link their accounts through, and the
@@ -1268,6 +1324,9 @@ export interface InstanceProjectMember {
 
 export interface InstanceProjectDetail extends InstanceProject {
   members: InstanceProjectMember[];
+  // The custom roles a member of this project can be put on, for the SCIM group
+  // mapping form.
+  roles: { id: number; name: string; isDefault: boolean }[];
 }
 
 export interface InstanceProjectPage {
@@ -1283,7 +1342,14 @@ export interface PublicAuthConfig {
   magicLink: boolean;
   requireEmailVerification: boolean;
   emailEnabled: boolean;
+  // Whether the email/password form is offered at all. False only on an instance
+  // that has a working single sign-on provider.
+  emailPassword: boolean;
   google: boolean;
+  oidc: boolean;
+  // The sign-in button text the operator gave their identity provider. Empty when
+  // OIDC is not offered, or when they left it blank.
+  oidcLabel: string;
 }
 
 // The session member's own notification preferences for a project: which issue
@@ -2392,6 +2458,9 @@ export interface MemberRow {
   // True when this member is an AI agent's bot user. Its role and access are managed
   // on the AI Agents screen, so this list does not let you reassign or revoke it.
   isAgent: boolean;
+  // 'scim' when a provisioned group granted this membership. The sync rewrites such
+  // a row on every run, so the role and remove actions are refused for it.
+  source: 'invite' | 'scim';
   createdAt: string;
 }
 
@@ -2414,6 +2483,14 @@ export interface InviteRow {
   respondedAt: string | null;
   invitedByName: string | null;
   invitedByEmail: string | null;
+}
+
+export interface InviteCreateResult extends InviteRow {
+  emailQueued: boolean;
+}
+
+export interface InviteEmailResult {
+  emailQueued: boolean;
 }
 
 // An invite as shown to the invitee opening the link: enough project context to
@@ -3275,15 +3352,19 @@ export const api = {
   deleteRole: (projectKey: string, roleId: number) =>
     request<void>(`/projects/${projectKey}/roles/${roleId}`, { method: 'DELETE' }),
 
-  // Invites — owner side: create, list, and revoke a project's invite links.
+  // Invites — owner side: create, list, email, and revoke a project's invite links.
   listInvites: (projectKey: string) => request<InviteRow[]>(`/projects/${projectKey}/invites`),
   createInvite: (
     projectKey: string,
     input: { email: string; role: MemberRole; roleId?: number | null },
   ) =>
-    request<InviteRow>(`/projects/${projectKey}/invites`, {
+    request<InviteCreateResult>(`/projects/${projectKey}/invites`, {
       method: 'POST',
       body: JSON.stringify(input),
+    }),
+  sendInviteEmail: (projectKey: string, inviteId: number) =>
+    request<InviteEmailResult>(`/projects/${projectKey}/invites/${inviteId}/email`, {
+      method: 'POST',
     }),
   deleteInvite: (projectKey: string, inviteId: number) =>
     request<void>(`/projects/${projectKey}/invites/${inviteId}`, { method: 'DELETE' }),
@@ -3528,6 +3609,33 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify(patch),
     }),
+  getInstanceOidcSettings: () => request<InstanceOidcSettings>('/god/oidc-settings'),
+  updateInstanceOidcSettings: (patch: InstanceOidcSettingsPatch) =>
+    request<InstanceOidcSettings>('/god/oidc-settings', {
+      method: 'PUT',
+      body: JSON.stringify(patch),
+    }),
+
+  getInstanceScimSettings: () => request<InstanceScimSettings>('/god/scim-settings'),
+  updateInstanceScimSettings: (patch: { enabled: boolean }) =>
+    request<InstanceScimSettings>('/god/scim-settings', {
+      method: 'PUT',
+      body: JSON.stringify(patch),
+    }),
+  // Returns the new token in the clear. It is shown once and cannot be read back.
+  createInstanceScimToken: () =>
+    request<{ token: string }>('/god/scim-settings/token', { method: 'POST' }),
+
+  listInstanceScimGroups: () => request<InstanceScimGroup[]>('/god/scim-groups'),
+  setInstanceScimGroupMappings: (
+    groupId: string,
+    mappings: { projectId: number; role: 'owner' | 'member'; roleId: number | null }[],
+  ) =>
+    request<InstanceScimGroup>(`/god/scim-groups/${groupId}/mappings`, {
+      method: 'PUT',
+      body: JSON.stringify({ mappings }),
+    }),
+
   // The instance user directory: one page of accounts, and one account with the
   // projects it can reach. Search, the kind filter and paging all run on the server.
   listInstanceUsers: (params: {

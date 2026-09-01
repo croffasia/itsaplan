@@ -126,6 +126,18 @@ export async function signInWithGoogle(): Promise<void> {
   if (result.error) throw new Error(result.error.message ?? '');
 }
 
+// Starts the round trip through the instance's own OIDC provider. Same shape as the
+// Google call above: it navigates away, and both callback URLs must be on the web
+// origin. The provider id is fixed — the instance has exactly one.
+export async function signInWithOidc(): Promise<void> {
+  const result = await signIn.oauth2({
+    providerId: 'oidc',
+    callbackURL: appUrl('/'),
+    errorCallbackURL: appUrl('/login'),
+  });
+  if (result.error) throw new Error(result.error.message ?? '');
+}
+
 export async function signInWithPasskey(): Promise<void> {
   const result = await signIn.passkey();
   if (result?.error) throw new Error(result.error.message ?? '');

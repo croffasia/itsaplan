@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { type InviteRow as Invite } from '@/lib/api';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { ItemGroup } from '@/components/ui/item';
-import { useDeleteInvite, useInvitesQuery } from '@/services/members.service';
+import { useDeleteInvite, useInvitesQuery, useSendInviteEmail } from '@/services/members.service';
 import { usePermissions } from '@/hooks/usePermissions';
 import InviteCreateForm from './InviteCreateForm';
 import InviteRow from './InviteRow';
@@ -19,9 +19,15 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
   const { can } = usePermissions();
   const canRead = can('members_invite', 'read');
   const canCreate = can('members_invite', 'create');
+  const canDelete = can('members_invite', 'delete');
   const invitesQuery = useInvitesQuery(projectKey, canRead);
   const deleteInvite = useDeleteInvite(projectKey);
+  const sendEmail = useSendInviteEmail(projectKey);
   const [target, setTarget] = useState<Invite | null>(null);
+
+  function resendInvite(invite: Invite) {
+    sendEmail.mutate(invite.id);
+  }
 
   if (!canRead) return null;
 
@@ -39,13 +45,19 @@ export default function InvitesManager({ projectKey }: { projectKey: string }) {
           </div>
           <ItemGroup>
             {pending.map((invite) => (
-              <InviteRow key={invite.id} invite={invite} onRevoke={setTarget} />
+              <InviteRow
+                key={invite.id}
+                invite={invite}
+                onResend={canCreate ? resendInvite : undefined}
+                onRevoke={canDelete ? setTarget : undefined}
+                resending={sendEmail.isPending && sendEmail.variables === invite.id}
+              />
             ))}
           </ItemGroup>
         </div>
       )}
 
-      {target && (
+      {canDelete && target && (
         <ConfirmDialog
           title={t('revokeTitle', { email: target.email })}
           confirmLabel={t('revokeConfirm')}

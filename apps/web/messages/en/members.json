@@ -34,6 +34,11 @@
     "pendingCount": "{count, plural, one {# pending invite} other {# pending invites}}",
     "copyLink": "Copy link",
     "copied": "Copied",
+    "emailQueued": "Invitation email queued",
+    "emailUnavailable": "Invite created, but email was not queued. Copy the link to share it.",
+    "resendUnavailable": "Email is not configured. Copy the invitation link to share it.",
+    "resendEmail": "Send email",
+    "resendingEmail": "Queueing…",
     "revokeAction": "Revoke invite",
     "removeAction": "Remove invite",
     "invitedBy": "Invited by {name} · ",
@@ -104,5 +109,6 @@
   },
   "promoted": "Member promoted to owner",
   "roleUpdated": "Member role updated",
-  "descriptionUpdated": "Member description updated"
+  "descriptionUpdated": "Member description updated",
+  "provisioned": "Managed by SCIM"
 }

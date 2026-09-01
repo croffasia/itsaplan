@@ -157,10 +157,13 @@ export const qk = {
   // start page). Read app-wide, not just on the preferences page.
   accountPreferences: ['accountPreferences'] as const,
   // Instance administration (god mode): the sign-in policy, the mail provider, the
-  // Google credentials and the Telegram bot. Not scoped to a project.
+  // sign-in providers, SCIM provisioning and the Telegram bot. Not scoped to a project.
   instanceAuthSettings: ['instanceAuthSettings'] as const,
   instanceEmailSettings: ['instanceEmailSettings'] as const,
   instanceGoogleSettings: ['instanceGoogleSettings'] as const,
+  instanceOidcSettings: ['instanceOidcSettings'] as const,
+  instanceScimSettings: ['instanceScimSettings'] as const,
+  instanceScimGroups: ['instanceScimGroups'] as const,
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,
   instanceProjectDefaults: ['instanceProjectDefaults'] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,

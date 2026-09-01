@@ -34,6 +34,11 @@
     "pendingCount": "{count, plural, zero {لا دعوات معلّقة} one {دعوة معلّقة واحدة} two {دعوتان معلّقتان} few {# دعوات معلّقة} many {# دعوة معلّقة} other {# دعوة معلّقة}}",
     "copyLink": "نسخ الرابط",
     "copied": "تم النسخ",
+    "emailQueued": "اتضاف إيميل الدعوة لطابور الإرسال",
+    "emailUnavailable": "الدعوة اتعملت، بس الإيميل ماتضافش لطابور الإرسال. انسخ الرابط وشاركه.",
+    "resendUnavailable": "البريد الإلكتروني غير مهيأ. انسخ رابط الدعوة وشاركه.",
+    "resendEmail": "إرسال إيميل",
+    "resendingEmail": "جارٍ الإضافة…",
     "revokeAction": "إلغاء الدعوة",
     "removeAction": "إزالة الدعوة",
     "invitedBy": "بدعوة من {name} · ",
@@ -104,5 +109,6 @@
   },
   "promoted": "تمت ترقية العضو إلى مالك",
   "roleUpdated": "تم تحديث دور العضو",
-  "descriptionUpdated": "تم تحديث وصف العضو"
+  "descriptionUpdated": "تم تحديث وصف العضو",
+  "provisioned": "مُدار عبر SCIM"
 }

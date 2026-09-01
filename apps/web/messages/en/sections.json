@@ -46,6 +46,10 @@
     "auth-provider": {
       "label": "Auth provider",
       "description": "The external accounts people may sign in with."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Let an identity provider create, update and deactivate accounts on this instance, and grant project access through its groups."
     }
   },
   "settings": {

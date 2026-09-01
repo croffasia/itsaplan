@@ -72,5 +72,8 @@ export const sendDeliveryBody = t.Object({
     // plain-text fallback instead.
     html: t.Optional(t.String()),
     url: t.Optional(t.String()),
+    emailSource: t.Optional(t.UnionEnum(['project', 'instance'])),
+    idempotencyKey: t.Optional(t.String()),
+    projectInviteId: t.Optional(t.Integer({ minimum: 1 })),
   }),
 });

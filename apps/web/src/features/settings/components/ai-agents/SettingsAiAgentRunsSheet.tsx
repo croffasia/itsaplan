@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { formatDistanceToNow, parseISO } from 'date-fns';
 import type { AgentRun, AiAgent } from '@/lib/api';
+import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatDateTime } from '@/utils/dates';
 import { useAgentRuns } from '@/services/aiAgents.service';
-import { useDateFnsLocale } from '@/hooks/useDateFnsLocale';
 import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
@@ -97,7 +96,7 @@ function runSubject(r: AgentRun, t: ReturnType<typeof useTranslations<'settings.
 
 function RunItem({ run: r }: { run: AgentRun }) {
   const t = useTranslations('settings.agents');
-  const locale = useDateFnsLocale();
+  const relativeTime = useRelativeTime();
   const [open, setOpen] = useState(false);
   const subject = runSubject(r, t);
   const outcome = r.status === 'failed' ? (r.lastError ?? t('failed')) : '';
@@ -125,9 +124,7 @@ function RunItem({ run: r }: { run: AgentRun }) {
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="text-muted-foreground">
-                {formatDistanceToNow(parseISO(r.createdAt), { addSuffix: true, locale })}
-              </span>
+              <span className="text-muted-foreground">{relativeTime(r.createdAt)}</span>
             </TooltipTrigger>
             <TooltipContent>{formatDateTime(r.createdAt)}</TooltipContent>
           </Tooltip>

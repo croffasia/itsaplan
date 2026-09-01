@@ -31,6 +31,13 @@ export const InviteRowResponse = t.Object({
   invitedByEmail: t.Nullable(t.String()),
 });
 
+export const InviteCreateResponse = t.Composite([
+  InviteRowResponse,
+  t.Object({ emailQueued: t.Boolean() }),
+]);
+
+export const InviteEmailResponse = t.Object({ emailQueued: t.Boolean() });
+
 export const InviteRowListResponse = t.Array(InviteRowResponse);
 
 // The invitee-facing invite view (InviteView from the service).

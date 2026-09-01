@@ -5,7 +5,7 @@ import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { assertPermission, requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { accessErrors, commonErrors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getRole } from '#modules/roles/service';
 import {
   MemberListResponse,
@@ -16,11 +16,21 @@ import {
 import {
   listMembers,
   getMembership,
+  getMembershipSource,
   removeMember,
   setMembership,
   setMemberDescription,
   countOwners,
 } from './service';
+
+// A membership the SCIM group reconciliation owns is rewritten on every sync, so
+// editing it here would be undone without trace. The identity provider is where it
+// changes.
+async function assertNotProvisioned(projectId: number, userId: string): Promise<void> {
+  if ((await getMembershipSource(projectId, userId)) === 'scim') {
+    throw new HttpError(409, 'This membership is managed by SCIM');
+  }
+}
 
 export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Members'] } })
   .use(authContext)
@@ -47,6 +57,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       }
       const target = await getMembership(project.id, params.userId);
       if (!target) throw new HttpError(404, 'Member not found');
+      await assertNotProvisioned(project.id, params.userId);
 
       if (body.role === 'owner') {
         await setMembership(project.id, params.userId, 'owner', null);
@@ -69,12 +80,13 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       params: memberParams,
       body: setMemberRoleBody,
       projectOwner: true,
-      response: { 204: t.Void(), ...commonErrors },
+      response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: "Update a member's role",
         description:
           "Set a member's role. 'owner' promotes to owner; 'member' assigns a custom role by " +
-          'roleId, or null for the default. The last owner cannot be demoted.',
+          'roleId, or null for the default. The last owner cannot be demoted, and a membership ' +
+          'granted by a provisioned group is managed by the identity provider.',
         ...mcpTool('set_member_role'),
       },
     },
@@ -121,6 +133,7 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
       }
       const target = await getMembership(project.id, params.userId);
       if (!target) throw new HttpError(404, 'Member not found');
+      await assertNotProvisioned(project.id, params.userId);
       if (target === 'owner' && (await countOwners(project.id)) === 1) {
         throw new HttpError(400, 'A project must have at least one owner');
       }
@@ -130,10 +143,12 @@ export const memberRoutes = new Elysia({ name: 'members', detail: { tags: ['Memb
     {
       params: memberParams,
       projectMember: true,
-      response: { 204: t.Void(), ...commonErrors },
+      response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Remove a member',
-        description: 'Remove a member from the project, or leave it yourself.',
+        description:
+          'Remove a member from the project, or leave it yourself. A membership granted by a ' +
+          'provisioned group is managed by the identity provider.',
         ...mcpTool('remove_member'),
       },
     },

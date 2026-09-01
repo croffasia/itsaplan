@@ -37,7 +37,7 @@ export default function DashboardTabs({
   isVirtual: boolean;
   actions?: React.ReactNode;
   onSelect: (id: number | null) => void;
-  onNewDashboard: (name: string, preset: DashboardPreset) => void;
+  onNewDashboard: (name: string, preset: DashboardPreset) => Promise<void>;
   onRename: (d: Dashboard, name: string) => void;
   onDelete: (d: Dashboard) => void;
   onReorder: (draggedId: number, targetId: number) => void;
@@ -137,9 +137,12 @@ export default function DashboardTabs({
           showPresets={!renaming}
           onClose={() => setDialog(null)}
           onSubmit={(name, preset) => {
-            if (renaming) onRename(renaming, name);
-            else onNewDashboard(name, preset);
-            setDialog(null);
+            if (renaming) {
+              onRename(renaming, name);
+              setDialog(null);
+            } else {
+              void onNewDashboard(name, preset).then(() => setDialog(null));
+            }
           }}
         />
       )}

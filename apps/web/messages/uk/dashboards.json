@@ -205,10 +205,10 @@
     "unassigned": "Без виконавця"
   },
   "myFocusWidgets": {
-    "todo": "Мої Todo",
-    "inProgress": "Мої в роботі",
-    "review": "Мої на рев'ю",
-    "overdue": "Мої прострочені",
-    "next7Days": "Мої на найближчі 7 днів"
+    "todo": "До виконання",
+    "inProgress": "У роботі",
+    "review": "На рев'ю",
+    "overdue": "Прострочено",
+    "next7Days": "На найближчі 7 днів"
   }
 }

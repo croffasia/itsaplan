@@ -120,7 +120,7 @@ export default function DashboardsPage() {
         activeDashboardId={activeDashboardId}
         isVirtual={editor.isVirtual}
         onSelect={selectDashboard}
-        onNewDashboard={(name, preset) => void editor.createDashboard(name, preset)}
+        onNewDashboard={(name, preset) => editor.createDashboard(name, preset)}
         onRename={(d, name) => void editor.renameDashboard(d, name)}
         onDelete={(d) => void editor.deleteDashboard(d)}
         onReorder={(dragged, target) => editor.reorderDashboards(dragged, target)}

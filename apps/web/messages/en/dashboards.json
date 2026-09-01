@@ -205,10 +205,10 @@
     "unassigned": "Unassigned"
   },
   "myFocusWidgets": {
-    "todo": "My todo",
-    "inProgress": "My in progress",
-    "review": "My review",
-    "overdue": "My overdue",
-    "next7Days": "My next 7 days"
+    "todo": "To do",
+    "inProgress": "In progress",
+    "review": "Review",
+    "overdue": "Overdue",
+    "next7Days": "Next 7 days"
   }
 }

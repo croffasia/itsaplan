@@ -205,10 +205,10 @@
     "unassigned": "未指派"
   },
   "myFocusWidgets": {
-    "todo": "我的待办",
-    "inProgress": "我的进行中",
-    "review": "我的评审",
-    "overdue": "我的逾期任务",
-    "next7Days": "我未来 7 天的任务"
+    "todo": "待办",
+    "inProgress": "进行中",
+    "review": "评审",
+    "overdue": "已逾期",
+    "next7Days": "未来 7 天"
   }
 }

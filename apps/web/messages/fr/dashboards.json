@@ -205,10 +205,10 @@
     "unassigned": "Non assignés"
   },
   "myFocusWidgets": {
-    "todo": "Mes tickets à faire",
-    "inProgress": "Mes tickets en cours",
-    "review": "Mes tickets en revue",
-    "overdue": "Mes tickets en retard",
-    "next7Days": "Mes 7 prochains jours"
+    "todo": "À faire",
+    "inProgress": "En cours",
+    "review": "En revue",
+    "overdue": "En retard",
+    "next7Days": "7 prochains jours"
   }
 }

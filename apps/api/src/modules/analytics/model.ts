@@ -42,6 +42,9 @@ export const BurnupDto = t.Object({
     velocityPerDay: t.Number(),
     remaining: t.Number(),
     projectedDate: t.Nullable(t.String()),
+    velocityRange: t.Object({ min: t.Number(), max: t.Number() }),
+    optimisticDate: t.Nullable(t.String()),
+    pessimisticDate: t.Nullable(t.String()),
   }),
   targetDate: t.Nullable(t.String()),
 });

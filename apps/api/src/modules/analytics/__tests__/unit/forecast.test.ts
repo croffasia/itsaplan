@@ -21,18 +21,45 @@ describe('forecastCompletion', () => {
       velocityPerDay: 0,
       remaining: 0,
       projectedDate: null,
+      velocityRange: { min: 0, max: 0 },
+      optimisticDate: null,
+      pessimisticDate: null,
     });
   });
 
   it('takes the rate over the window and applies it to what is left', () => {
-    // Last two days: 2 → 4, so 1/day; 6 left → 6 days after 5 March.
+    // Last two days: 2 → 4, so 1/day; 6 left → 6 days after 5 March. Under a week
+    // of history, so the range collapses onto the projection.
     const f = forecastCompletion(series([0, 1, 2, 3, 4]), 2);
     expect(f).toEqual({
       windowDays: 2,
       velocityPerDay: 1,
       remaining: 6,
       projectedDate: '2026-03-11',
+      velocityRange: { min: 1, max: 1 },
+      optimisticDate: '2026-03-11',
+      pessimisticDate: '2026-03-11',
     });
+  });
+
+  it('brackets the projection with the slowest and fastest whole week', () => {
+    // Two weeks: 0 → 7 (1/day), then 7 → 14 (1/day)... make the second week 3/day.
+    const completed = [0, 1, 2, 3, 4, 5, 6, 7, 10, 13, 16, 19, 22, 25, 28];
+    const f = forecastCompletion(series(completed, 100), 14);
+    expect(f.velocityPerDay).toBe(2);
+    expect(f.velocityRange).toEqual({ min: 1, max: 3 });
+    // 72 left: 24 days at 3/day, 36 at 2/day, 72 at 1/day after 15 March.
+    expect(f.optimisticDate).toBe('2026-04-08');
+    expect(f.projectedDate).toBe('2026-04-20');
+    expect(f.pessimisticDate).toBe('2026-05-26');
+  });
+
+  it('leaves the range open when a week closed nothing', () => {
+    const completed = [0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7];
+    const f = forecastCompletion(series(completed, 20), 14);
+    expect(f.velocityRange).toEqual({ min: 0, max: 1 });
+    expect(f.optimisticDate).toBe('2026-03-28');
+    expect(f.pessimisticDate).toBeNull();
   });
 
   it('uses the whole series when it is shorter than the window', () => {

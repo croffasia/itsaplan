@@ -1655,6 +1655,11 @@ export interface BurnupForecast {
   velocityPerDay: number;
   remaining: number;
   projectedDate: string | null;
+  // The slowest and fastest whole week in the window and the dates they give;
+  // pessimisticDate is null when a week closed nothing (open-ended range).
+  velocityRange: { min: number; max: number };
+  optimisticDate: string | null;
+  pessimisticDate: string | null;
 }
 
 export interface Burnup {

@@ -158,7 +158,14 @@
     "started": "Начато",
     "completed": "Завершено",
     "projection": "Прогноз",
+    "band": "Диапазон прогноза",
     "projected": "Прогноз: {date}",
+    "range": "{from} – {to}",
+    "rangeOpen": "{from} или позже",
+    "forecastShape": {
+      "line": "Линия прогноза",
+      "range": "Диапазон прогноза"
+    },
     "noForecast": "Нет прогресса за {weeks, plural, one {последнюю # неделю} few {последние # недели} many {последние # недель} other {последние # недели}}",
     "allDone": "Всё завершено",
     "velocity": "{rate}/день",

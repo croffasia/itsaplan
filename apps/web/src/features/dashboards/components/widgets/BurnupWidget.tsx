@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import type { BurnupForecast } from '@/lib/api';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
-import { formatDate } from '@/utils/dates';
+import { formatDate, formatShortDate } from '@/utils/dates';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ChartConfig } from '@/components/ui/chart';
 import { useBurnupQuery } from '../../services/analytics.service';
@@ -13,12 +13,13 @@ const SERIES_COLOR = {
   started: '#f59e0b',
   completed: '#22c55e',
   projection: '#16a34a',
+  band: '#16a34a',
 };
 
 // Scope, started and completed issues at the end of each day, with a completion
 // date projected from the recent closing rate — the project graph of Linear. The
-// window, the initiative and the forecast window are configured settings (see
-// BurnupWidgetSettings), not live controls.
+// window, the initiative, the forecast window and the forecast shape (a line or a
+// range) are configured settings (see BurnupWidgetSettings), not live controls.
 export default function BurnupWidget({
   projectKey,
   config,
@@ -31,6 +32,7 @@ export default function BurnupWidget({
   const days = config.days ?? 90;
   const forecastWeeks = config.forecastWeeks ?? 4;
   const initiativeId = config.initiativeId ?? null;
+  const range = config.forecast === 'range';
   const { data, isLoading } = useBurnupQuery(projectKey, { days, initiativeId, forecastWeeks });
 
   const chartConfig: ChartConfig = {
@@ -38,7 +40,20 @@ export default function BurnupWidget({
     started: { label: t('started'), color: SERIES_COLOR.started },
     completed: { label: t('completed'), color: SERIES_COLOR.completed },
     projection: { label: t('projection'), color: SERIES_COLOR.projection },
+    band: { label: t('band'), color: SERIES_COLOR.band },
   };
+
+  // "Projected Sep 9" in line mode; "Projected Sep 9 (Sep 7 – Sep 23)" in range
+  // mode, or "(Sep 7 or later)" when the slowest week closed nothing.
+  function projected(forecast: BurnupForecast): string {
+    const date = formatDate(forecast.projectedDate!);
+    if (!range || !forecast.optimisticDate) return t('projected', { date });
+    const from = formatShortDate(forecast.optimisticDate);
+    const span = forecast.pessimisticDate
+      ? t('range', { from, to: formatShortDate(forecast.pessimisticDate) })
+      : t('rangeOpen', { from });
+    return `${t('projected', { date })} (${span})`;
+  }
 
   function caption(forecast: BurnupForecast, targetDate: string | null): string {
     const parts: string[] = [];
@@ -46,7 +61,7 @@ export default function BurnupWidget({
     else if (forecast.projectedDate == null) parts.push(t('noForecast', { weeks: forecastWeeks }));
     else {
       parts.push(
-        t('projected', { date: formatDate(forecast.projectedDate) }),
+        projected(forecast),
         t('velocity', { rate: forecast.velocityPerDay }),
         t('remaining', { count: forecast.remaining }),
       );
@@ -64,7 +79,7 @@ export default function BurnupWidget({
     return (
       <>
         <BurnupChart
-          points={buildBurnupPoints(data)}
+          points={buildBurnupPoints(data, range)}
           config={chartConfig}
           today={today.date}
           target={data.targetDate}

@@ -385,6 +385,9 @@ describe('analytics', () => {
         velocityPerDay: 0,
         remaining: 0,
         projectedDate: null,
+        velocityRange: { min: 0, max: 0 },
+        optimisticDate: null,
+        pessimisticDate: null,
       });
       expect(res.data?.targetDate).toBeNull();
     });
@@ -406,6 +409,13 @@ describe('analytics', () => {
       expect(res.data?.forecast.velocityPerDay).toBeCloseTo(0.04, 2);
       expect(res.data?.forecast.projectedDate).not.toBeNull();
       expect(dayOf(res.data!.forecast.projectedDate) > dayOf(today.date)).toBe(true);
+      // The closing happened this week: the fastest week is 1/7 per day, the slowest
+      // week closed nothing, so the range is open-ended.
+      expect(res.data?.forecast.velocityRange).toEqual({ min: 0, max: 0.14 });
+      expect(
+        dayOf(res.data!.forecast.optimisticDate) < dayOf(res.data!.forecast.projectedDate),
+      ).toBe(true);
+      expect(res.data?.forecast.pessimisticDate).toBeNull();
     });
 
     it('drops canceled issues from the scope and gives no date without closings', async () => {

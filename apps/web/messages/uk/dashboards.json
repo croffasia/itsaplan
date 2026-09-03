@@ -158,7 +158,14 @@
     "started": "Розпочато",
     "completed": "Завершено",
     "projection": "Прогноз",
+    "band": "Діапазон прогнозу",
     "projected": "Прогноз: {date}",
+    "range": "{from} – {to}",
+    "rangeOpen": "{from} або пізніше",
+    "forecastShape": {
+      "line": "Лінія прогнозу",
+      "range": "Діапазон прогнозу"
+    },
     "noForecast": "Немає прогресу за {weeks, plural, one {останній # тиждень} few {останні # тижні} many {останні # тижнів} other {останні # тижні}}",
     "allDone": "Усе завершено",
     "velocity": "{rate}/день",

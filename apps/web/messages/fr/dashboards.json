@@ -158,7 +158,14 @@
     "started": "Commencées",
     "completed": "Terminées",
     "projection": "Projection",
+    "band": "Fourchette de projection",
     "projected": "Fin projetée {date}",
+    "range": "{from} – {to}",
+    "rangeOpen": "{from} ou plus tard",
+    "forecastShape": {
+      "line": "Ligne de projection",
+      "range": "Fourchette de projection"
+    },
     "noForecast": "Aucun progrès {weeks, plural, one {la semaine dernière} other {ces # dernières semaines}}",
     "allDone": "Tout est terminé",
     "velocity": "{rate}/jour",

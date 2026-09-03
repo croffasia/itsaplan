@@ -346,6 +346,12 @@ export interface BurnupForecast {
   velocityPerDay: number;
   remaining: number;
   projectedDate: string | null;
+  // The slowest and fastest week inside the window, and the dates they give: the
+  // range the widget can draw around the projection. pessimisticDate is null when
+  // some week closed nothing — the range is then open-ended.
+  velocityRange: { min: number; max: number };
+  optimisticDate: string | null;
+  pessimisticDate: string | null;
 }
 
 export interface BurnupDto {
@@ -420,20 +426,51 @@ async function initiativeTargetDate(
 // extrapolated, as in Linear's project graph.
 export function forecastCompletion(days: BurnupDay[], windowDays: number): BurnupForecast {
   const last = days[days.length - 1];
-  if (!last) return { windowDays: 0, velocityPerDay: 0, remaining: 0, projectedDate: null };
-  const startIndex = Math.max(0, days.length - 1 - windowDays);
-  const start = days[startIndex]!;
-  const span = days.length - 1 - startIndex;
-  const velocity = span > 0 ? (last.completed - start.completed) / span : 0;
+  if (!last) {
+    return {
+      windowDays: 0,
+      velocityPerDay: 0,
+      remaining: 0,
+      projectedDate: null,
+      velocityRange: { min: 0, max: 0 },
+      optimisticDate: null,
+      pessimisticDate: null,
+    };
+  }
+  const lastIndex = days.length - 1;
+  const startIndex = Math.max(0, lastIndex - windowDays);
+  const span = lastIndex - startIndex;
+  const velocity = span > 0 ? (last.completed - days[startIndex]!.completed) / span : 0;
+  const weekly = weeklyRates(days, startIndex);
+  const min = Math.min(velocity, ...weekly);
+  const max = Math.max(velocity, ...weekly);
   const remaining = Math.max(0, last.scope - last.completed);
-  const projectedDate =
-    velocity > 0 && remaining > 0 ? addDays(last.date, Math.ceil(remaining / velocity)) : null;
+  const dateAt = (rate: number) =>
+    rate > 0 && remaining > 0 ? addDays(last.date, Math.ceil(remaining / rate)) : null;
   return {
     windowDays: span,
-    velocityPerDay: Math.round(velocity * 100) / 100,
+    velocityPerDay: round2(velocity),
     remaining,
-    projectedDate,
+    projectedDate: dateAt(velocity),
+    velocityRange: { min: round2(min), max: round2(max) },
+    optimisticDate: dateAt(max),
+    pessimisticDate: dateAt(min),
   };
+}
+
+// The closing rate of each whole week inside the window, latest week first. A
+// window shorter than a week has no whole week, so the caller's overall rate is
+// the only rate.
+function weeklyRates(days: BurnupDay[], startIndex: number): number[] {
+  const rates: number[] = [];
+  for (let end = days.length - 1; end - 7 >= startIndex; end -= 7) {
+    rates.push((days[end]!.completed - days[end - 7]!.completed) / 7);
+  }
+  return rates;
+}
+
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 // 'YYYY-MM-DD' plus n days, computed in UTC so the local timezone never shifts the

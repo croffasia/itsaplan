@@ -65,6 +65,9 @@ export interface WidgetConfig {
   initiativeId?: number | null;
   // burnup — how many recent weeks the closing rate is taken from
   forecastWeeks?: number;
+  // burnup — a single projection line, or a range between the slowest and the
+  // fastest recent week
+  forecast?: 'line' | 'range';
 }
 
 export interface WidgetInstance {
@@ -93,7 +96,12 @@ export const WIDGET_DEFAULTS: Record<
   activity_feed: { w: 6, h: 7, minH: 3, config: { limit: 20 } },
   pulse: { w: 12, h: 5, minH: 5, config: { granularity: 'day' } },
   throughput: { w: 6, h: 6, minH: 5, config: { weeks: 12 } },
-  burnup: { w: 6, h: 6, minH: 5, config: { days: 90, initiativeId: null, forecastWeeks: 4 } },
+  burnup: {
+    w: 6,
+    h: 6,
+    minH: 5,
+    config: { days: 90, initiativeId: null, forecastWeeks: 4, forecast: 'line' },
+  },
   breakdown: { w: 6, h: 6, minH: 5, config: { by: 'status' } },
   agent_runs: { w: 6, h: 7, minH: 3, config: { limit: 20 } },
   agent_health: { w: 3, h: 3, minH: 3, config: { days: 30 } },

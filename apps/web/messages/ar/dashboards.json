@@ -158,7 +158,14 @@
     "started": "بدأت",
     "completed": "اكتملت",
     "projection": "التوقع",
+    "band": "نطاق التوقع",
     "projected": "الإنجاز المتوقع {date}",
+    "range": "{from} – {to}",
+    "rangeOpen": "{from} أو بعده",
+    "forecastShape": {
+      "line": "خط التوقع",
+      "range": "نطاق التوقع"
+    },
     "noForecast": "لا تقدم خلال {weeks, plural, one {الأسبوع الماضي} two {الأسبوعين الماضيين} few {# أسابيع الماضية} many {# أسبوعًا الماضية} other {# أسبوع الماضية}}",
     "allDone": "اكتمل كل شيء",
     "velocity": "{rate}/يوم",

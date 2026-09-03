@@ -12,10 +12,12 @@ import {
 
 const DAY_OPTIONS = [30, 60, 90, 180, 365];
 const FORECAST_OPTIONS = [2, 4, 8];
+const FORECAST_SHAPES = ['line', 'range'] as const;
 const WHOLE_PROJECT = 'all';
 
-// The window in days, the initiative (or the whole project) and how many recent
-// weeks the closing rate is taken from.
+// The window in days, the initiative (or the whole project), how many recent
+// weeks the closing rate is taken from, and whether the forecast is drawn as one
+// line or as a range between the slowest and the fastest of those weeks.
 export default function BurnupWidgetSettings({
   config,
   onConfigChange,
@@ -27,6 +29,7 @@ export default function BurnupWidgetSettings({
   const { project } = useShell();
   const days = config.days ?? 90;
   const forecastWeeks = config.forecastWeeks ?? 4;
+  const forecast = config.forecast ?? 'line';
   const initiativeId = config.initiativeId ?? null;
   const { data: initiatives } = useInitiativeOptionsQuery(project?.project.key ?? null, {
     include: initiativeId ?? undefined,
@@ -74,6 +77,21 @@ export default function BurnupWidgetSettings({
           {FORECAST_OPTIONS.map((w) => (
             <SelectItem key={w} value={String(w)}>
               {t('burnup.forecastWeeks', { weeks: w })}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={forecast}
+        onValueChange={(v) => onConfigChange({ forecast: v as WidgetConfig['forecast'] })}
+      >
+        <SelectTrigger size="sm" className="w-[150px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {FORECAST_SHAPES.map((shape) => (
+            <SelectItem key={shape} value={shape}>
+              {t(`burnup.forecastShape.${shape}`)}
             </SelectItem>
           ))}
         </SelectContent>

@@ -158,7 +158,14 @@
     "started": "Started",
     "completed": "Completed",
     "projection": "Projection",
+    "band": "Forecast range",
     "projected": "Projected {date}",
+    "range": "{from} – {to}",
+    "rangeOpen": "{from} or later",
+    "forecastShape": {
+      "line": "Forecast line",
+      "range": "Forecast range"
+    },
     "noForecast": "No progress in the last {weeks, plural, one {# week} other {# weeks}}",
     "allDone": "All done",
     "velocity": "{rate}/day",

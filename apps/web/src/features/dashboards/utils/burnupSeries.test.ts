@@ -1,11 +1,25 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import type { Burnup } from '@/lib/api';
+import type { Burnup, BurnupForecast } from '@/lib/api';
 import { buildBurnupPoints, MAX_TAIL_DAYS } from './burnupSeries';
 
 // buildBurnupPoints appends the projection tail to the history: one point per
 // future day, the projection running straight from today's completed count to the
-// scope on the projected date.
+// scope on the projected date, and in range mode a band between the slowest and
+// the fastest recent week.
+
+function forecast(overrides: Partial<BurnupForecast> = {}): BurnupForecast {
+  return {
+    windowDays: 1,
+    velocityPerDay: 2,
+    remaining: 6,
+    projectedDate: '2026-03-05',
+    velocityRange: { min: 1, max: 3 },
+    optimisticDate: '2026-03-04',
+    pessimisticDate: '2026-03-08',
+    ...overrides,
+  };
+}
 
 function burnup(overrides: Partial<Burnup> = {}): Burnup {
   return {
@@ -13,7 +27,7 @@ function burnup(overrides: Partial<Burnup> = {}): Burnup {
       { date: '2026-03-01', scope: 10, started: 4, completed: 2 },
       { date: '2026-03-02', scope: 10, started: 5, completed: 4 },
     ],
-    forecast: { windowDays: 1, velocityPerDay: 2, remaining: 6, projectedDate: '2026-03-05' },
+    forecast: forecast(),
     targetDate: null,
     ...overrides,
   };
@@ -22,9 +36,15 @@ function burnup(overrides: Partial<Burnup> = {}): Burnup {
 describe('buildBurnupPoints', () => {
   it('returns the history untouched when there is no forecast and no target', () => {
     const data = burnup({
-      forecast: { windowDays: 1, velocityPerDay: 0, remaining: 6, projectedDate: null },
+      forecast: forecast({
+        velocityPerDay: 0,
+        projectedDate: null,
+        optimisticDate: null,
+        pessimisticDate: null,
+      }),
     });
     assert.deepEqual(buildBurnupPoints(data), data.days);
+    assert.deepEqual(buildBurnupPoints(data, true), data.days);
   });
 
   it('runs the projection from today to the scope on the projected date', () => {
@@ -44,6 +64,31 @@ describe('buildBurnupPoints', () => {
     ]);
   });
 
+  it('draws the band between the slowest and the fastest week in range mode', () => {
+    const points = buildBurnupPoints(burnup(), true);
+    assert.equal(points.at(-1)?.date, '2026-03-08');
+    assert.deepEqual(points[1]?.band, [4, 4]);
+    assert.deepEqual(points[2], { date: '2026-03-03', projection: 6, band: [5, 7] });
+    assert.deepEqual(points[3], { date: '2026-03-04', projection: 8, band: [6, 10] });
+    assert.deepEqual(points[5], { date: '2026-03-06', band: [8, 10] });
+    assert.deepEqual(points[7], { date: '2026-03-08', band: [10, 10] });
+  });
+
+  it('keeps the slow edge flat to the end of the axis when the range is open-ended', () => {
+    const data = burnup({ forecast: forecast({ pessimisticDate: null }) });
+    const points = buildBurnupPoints(data, true);
+    // The axis still ends on the projected date; the open edge does not stretch it.
+    assert.equal(points.at(-1)?.date, '2026-03-05');
+    assert.deepEqual(points.at(-1)?.band, [4, 10]);
+    assert.deepEqual(points[2]?.band, [4, 7]);
+  });
+
+  it('ignores the range when not asked for it', () => {
+    const points = buildBurnupPoints(burnup());
+    assert.equal(points.at(-1)?.date, '2026-03-05');
+    assert.equal(points[2]?.band, undefined);
+  });
+
   it('extends the axis to a later target date without projecting past the projected date', () => {
     const points = buildBurnupPoints(burnup({ targetDate: '2026-03-07' }));
     assert.deepEqual(points.at(-1), { date: '2026-03-07' });
@@ -58,7 +103,7 @@ describe('buildBurnupPoints', () => {
 
   it('cuts the tail at the cap', () => {
     const data = burnup({
-      forecast: { windowDays: 1, velocityPerDay: 0.01, remaining: 6, projectedDate: '2027-12-31' },
+      forecast: forecast({ velocityPerDay: 0.01, projectedDate: '2027-12-31' }),
     });
     const points = buildBurnupPoints(data);
     assert.equal(points.length, 2 + MAX_TAIL_DAYS);

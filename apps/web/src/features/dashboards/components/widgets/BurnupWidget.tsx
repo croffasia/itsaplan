@@ -1,7 +1,7 @@
 import { useTranslations } from 'next-intl';
 import type { BurnupForecast } from '@/lib/api';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
-import { formatDate, formatShortDate } from '@/utils/dates';
+import { formatDate } from '@/utils/dates';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ChartConfig } from '@/components/ui/chart';
 import { useBurnupQuery } from '../../services/analytics.service';
@@ -43,14 +43,15 @@ export default function BurnupWidget({
     band: { label: t('band'), color: SERIES_COLOR.band },
   };
 
-  // "Projected Sep 9" in line mode; "Projected Sep 9 (Sep 7 – Sep 23)" in range
-  // mode, or "(Sep 7 or later)" when the slowest week closed nothing.
+  // "Projected Sep 9, 2026" in line mode; "Projected Sep 9, 2026 (Sep 7, 2026 –
+  // Aug 31, 2028)" in range mode, or "(Sep 7, 2026 or later)" when the slowest
+  // week closed nothing. The range keeps the year: its far end can be years out.
   function projected(forecast: BurnupForecast): string {
     const date = formatDate(forecast.projectedDate!);
     if (!range || !forecast.optimisticDate) return t('projected', { date });
-    const from = formatShortDate(forecast.optimisticDate);
+    const from = formatDate(forecast.optimisticDate);
     const span = forecast.pessimisticDate
-      ? t('range', { from, to: formatShortDate(forecast.pessimisticDate) })
+      ? t('range', { from, to: formatDate(forecast.pessimisticDate) })
       : t('rangeOpen', { from });
     return `${t('projected', { date })} (${span})`;
   }

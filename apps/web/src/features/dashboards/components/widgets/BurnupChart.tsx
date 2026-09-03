@@ -18,6 +18,19 @@ const TARGET_COLOR = '#ef4444';
 const LEGEND_ORDER = ['scope', 'started', 'completed', 'projection', 'band'];
 const legendOrder = (item: { dataKey?: unknown }) => LEGEND_ORDER.indexOf(String(item.dataKey));
 
+// A tooltip value: a count, or the band's [slow, fast] pair as "168 – 256" (the
+// default would print the array as "168,256", which reads as a decimal in many
+// locales). Both edges start at today's count, so an equal pair is one number.
+function formatValue(value: unknown): string {
+  if (Array.isArray(value)) {
+    const [slow, fast] = value as [number, number];
+    return slow === fast
+      ? fast.toLocaleString()
+      : `${slow.toLocaleString()} – ${fast.toLocaleString()}`;
+  }
+  return typeof value === 'number' ? value.toLocaleString() : String(value);
+}
+
 // The burnup chart itself: scope and completed as areas, started as a line, the
 // projection as a dashed line into the future and, in range mode, a band between
 // the slowest and the fastest recent week. A "today" marker separates the
@@ -55,7 +68,27 @@ export default function BurnupChart({
         />
         <YAxis width={30} tickLine={false} axisLine={false} fontSize={11} allowDecimals={false} />
         <ChartTooltip
-          content={<ChartTooltipContent labelFormatter={(value) => formatDate(String(value))} />}
+          content={
+            <ChartTooltipContent
+              labelFormatter={(value) => formatDate(String(value))}
+              formatter={(value, name, item) => (
+                <>
+                  <div
+                    className="h-2.5 w-2.5 shrink-0 rounded-[2px]"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  <div className="flex flex-1 items-center justify-between gap-3 leading-none">
+                    <span className="text-muted-foreground">
+                      {config[String(name)]?.label ?? String(name)}
+                    </span>
+                    <span className="font-mono font-medium text-foreground tabular-nums">
+                      {formatValue(value)}
+                    </span>
+                  </div>
+                </>
+              )}
+            />
+          }
         />
         <ChartLegend content={<ChartLegendContent />} itemSorter={legendOrder} />
         <Area

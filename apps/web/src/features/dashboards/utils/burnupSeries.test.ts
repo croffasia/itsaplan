@@ -64,14 +64,32 @@ describe('buildBurnupPoints', () => {
     ]);
   });
 
-  it('draws the band between the slowest and the fastest week in range mode', () => {
+  it('drops the days before the first issue existed', () => {
+    const empty = { scope: 0, started: 0, completed: 0 };
+    const data = burnup();
+    data.days = [{ date: '2026-02-27', ...empty }, { date: '2026-02-28', ...empty }, ...data.days];
+    const points = buildBurnupPoints(data);
+    assert.equal(points[0]?.date, '2026-03-01');
+    assert.equal(points.at(-1)?.date, '2026-03-05');
+  });
+
+  it('draws the band in range mode and clips the slow edge at the projected date', () => {
     const points = buildBurnupPoints(burnup(), true);
-    assert.equal(points.at(-1)?.date, '2026-03-08');
+    // The pessimistic date (03-08) does not extend the axis past the projected one.
+    assert.equal(points.length, 5);
     assert.deepEqual(points[1]?.band, [4, 4]);
     assert.deepEqual(points[2], { date: '2026-03-03', projection: 6, band: [5, 7] });
     assert.deepEqual(points[3], { date: '2026-03-04', projection: 8, band: [6, 10] });
-    assert.deepEqual(points[5], { date: '2026-03-06', band: [8, 10] });
-    assert.deepEqual(points[7], { date: '2026-03-08', band: [10, 10] });
+    assert.deepEqual(points[4], { date: '2026-03-05', projection: 10, band: [7, 10] });
+  });
+
+  it('rounds the projected counts to whole issues', () => {
+    const data = burnup({ forecast: forecast({ remaining: 6, projectedDate: '2026-03-09' }) });
+    for (const p of buildBurnupPoints(data, true)) {
+      for (const n of [p.projection, ...(p.band ?? [])]) {
+        if (n !== undefined) assert.ok(Number.isInteger(n), `${p.date}: ${n}`);
+      }
+    }
   });
 
   it('keeps the slow edge flat to the end of the axis when the range is open-ended', () => {

@@ -1640,6 +1640,35 @@ export interface ThroughputWeek {
   closed: number;
 }
 
+// The state of the project's issues at the end of one day (burnup widget).
+export interface BurnupDay {
+  date: string;
+  scope: number;
+  started: number;
+  completed: number;
+}
+
+// A completion date projected from the closing rate over the last windowDays days;
+// null when nothing closed in the window or nothing is left.
+export interface BurnupForecast {
+  windowDays: number;
+  velocityPerDay: number;
+  remaining: number;
+  projectedDate: string | null;
+}
+
+export interface Burnup {
+  days: BurnupDay[];
+  forecast: BurnupForecast;
+  targetDate: string | null;
+}
+
+export interface BurnupParams {
+  days: number;
+  initiativeId: number | null;
+  forecastWeeks: number;
+}
+
 // One agent run in the project-wide feed (agent runs widget).
 export interface AgentRunFeedItem {
   id: number;
@@ -3137,6 +3166,14 @@ export const api = {
     ),
   getThroughput: (projectKey: string, weeks = 12) =>
     request<ThroughputWeek[]>(`/projects/${projectKey}/analytics/throughput?weeks=${weeks}`),
+  getBurnup: (projectKey: string, params: BurnupParams) => {
+    const q = new URLSearchParams({
+      days: String(params.days),
+      forecastWeeks: String(params.forecastWeeks),
+    });
+    if (params.initiativeId != null) q.set('initiativeId', String(params.initiativeId));
+    return request<Burnup>(`/projects/${projectKey}/analytics/burnup?${q}`);
+  },
   listActivity: (
     projectKey: string,
     params: {

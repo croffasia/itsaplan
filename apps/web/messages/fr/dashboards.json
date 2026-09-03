@@ -49,6 +49,10 @@
       "label": "Débit",
       "description": "Tickets créés et fermés par semaine"
     },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Périmètre, tâches commencées et terminées par jour, avec une date de fin projetée"
+    },
     "breakdown": {
       "label": "Répartition",
       "description": "Nombre de tickets par état, priorité, type ou responsable"
@@ -147,6 +151,23 @@
     "lastWeeks": "{weeks} dernières semaines",
     "created": "Créés",
     "closed": "Fermés"
+  },
+  "burnup": {
+    "empty": "Aucune tâche sur cette période.",
+    "scope": "Périmètre",
+    "started": "Commencées",
+    "completed": "Terminées",
+    "projection": "Projection",
+    "projected": "Fin projetée {date}",
+    "noForecast": "Aucun progrès {weeks, plural, one {la semaine dernière} other {ces # dernières semaines}}",
+    "allDone": "Tout est terminé",
+    "velocity": "{rate}/jour",
+    "remaining": "{count, plural, one {# restante} other {# restantes}}",
+    "target": "Objectif {date}",
+    "targetLabel": "Objectif",
+    "today": "Aujourd'hui",
+    "wholeProject": "Projet entier",
+    "forecastWeeks": "Rythme sur {weeks, plural, one {# semaine} other {# semaines}}"
   },
   "agentRuns": {
     "empty": "Aucune exécution d'agent pour l'instant.",

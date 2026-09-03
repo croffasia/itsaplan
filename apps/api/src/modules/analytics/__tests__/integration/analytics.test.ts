@@ -33,6 +33,7 @@ async function createIssue(
     dueDate?: string | null;
     assigneeUserId?: string | null;
     typeId?: number | null;
+    initiativeId?: number | null;
   } = {},
 ) {
   const { title = 'Task', ...rest } = extra;
@@ -365,6 +366,91 @@ describe('analytics', () => {
     });
   });
 
+  describe('burnup', () => {
+    const burnup = (api: Api, query: Record<string, number> = {}) =>
+      api.projects({ projectKey: 'MKT' }).analytics.burnup.get({ query });
+
+    // Treaty turns date-shaped strings into Date objects on the way in; compare the
+    // calendar day.
+    const dayOf = (v: unknown) => new Date(v as string).toISOString().slice(0, 10);
+
+    it('returns a flat zero series and no forecast for an empty project', async () => {
+      const { asOwner } = await setupProject();
+      const res = await burnup(asOwner);
+      expect(res.status).toBe(200);
+      expect(res.data?.days).toHaveLength(90);
+      expect(res.data?.days.at(-1)).toMatchObject({ scope: 0, started: 0, completed: 0 });
+      expect(res.data?.forecast).toEqual({
+        windowDays: 28,
+        velocityPerDay: 0,
+        remaining: 0,
+        projectedDate: null,
+      });
+      expect(res.data?.targetDate).toBeNull();
+    });
+
+    it('counts the state of every issue at the end of today and projects a date', async () => {
+      const { asOwner, col } = await setupProject();
+      const a = await createIssue(asOwner, col.started);
+      await createIssue(asOwner, col.started);
+      await createIssue(asOwner, col.backlog);
+      await moveIssue(asOwner, a.id, col.completed);
+
+      const res = await burnup(asOwner);
+      expect(res.status).toBe(200);
+      const today = res.data!.days.at(-1)!;
+      expect(today).toMatchObject({ scope: 3, started: 2, completed: 1 });
+      expect(dayOf(today.date)).toBe(dayOf(new Date()));
+      // One closing over a 28-day window → 1/28 per day, two issues left.
+      expect(res.data?.forecast).toMatchObject({ windowDays: 28, remaining: 2 });
+      expect(res.data?.forecast.velocityPerDay).toBeCloseTo(0.04, 2);
+      expect(res.data?.forecast.projectedDate).not.toBeNull();
+      expect(dayOf(res.data!.forecast.projectedDate) > dayOf(today.date)).toBe(true);
+    });
+
+    it('drops canceled issues from the scope and gives no date without closings', async () => {
+      const { asOwner, col } = await setupProject();
+      await createIssue(asOwner, col.backlog);
+      const b = await createIssue(asOwner, col.backlog);
+      await moveIssue(asOwner, b.id, col.canceled);
+
+      const res = await burnup(asOwner);
+      expect(res.status).toBe(200);
+      expect(res.data?.days.at(-1)).toMatchObject({ scope: 1, started: 0, completed: 0 });
+      expect(res.data?.forecast).toMatchObject({ remaining: 1, projectedDate: null });
+    });
+
+    it('limits the series to one initiative and returns its target date', async () => {
+      const { asOwner, col } = await setupProject();
+      const created = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .initiatives.post({ title: 'Launch', targetDate: '2030-06-30' });
+      expect(created.status).toBe(201);
+      const initiativeId = created.data!.id;
+      await createIssue(asOwner, col.started, { initiativeId });
+      await createIssue(asOwner, col.started);
+
+      const res = await burnup(asOwner, { initiativeId });
+      expect(res.status).toBe(200);
+      expect(res.data?.days.at(-1)).toMatchObject({ scope: 1, started: 1, completed: 0 });
+      expect(dayOf(res.data?.targetDate)).toBe('2030-06-30');
+    });
+
+    it('returns 404 for an initiative that is not in the project', async () => {
+      const { asOwner } = await setupProject();
+      const res = await burnup(asOwner, { initiativeId: 999999 });
+      expect(res.status).toBe(404);
+    });
+
+    it('clamps the window to at least a week and the forecast window to a week', async () => {
+      const { asOwner } = await setupProject();
+      const res = await burnup(asOwner, { days: 1, forecastWeeks: 0 });
+      expect(res.status).toBe(200);
+      expect(res.data?.days).toHaveLength(7);
+      expect(res.data?.forecast.windowDays).toBe(6);
+    });
+  });
+
   describe('activity', () => {
     it('returns the feed with issue context, newest first', async () => {
       const { asOwner, col } = await setupProject();
@@ -634,6 +720,7 @@ describe('analytics', () => {
       expect((await scope.analytics.breakdown.get({ query: { by: 'status' } })).status).toBe(403);
       expect((await scope.analytics.pulse.get()).status).toBe(403);
       expect((await scope.analytics.throughput.get()).status).toBe(403);
+      expect((await scope.analytics.burnup.get()).status).toBe(403);
       expect((await scope.analytics.activity.get()).status).toBe(403);
       expect((await scope['analytics']['agent-runs'].get()).status).toBe(403);
       expect((await scope['analytics']['agent-run-stats'].get()).status).toBe(403);

@@ -49,6 +49,10 @@
       "label": "Пропускная способность",
       "description": "Созданные и закрытые задачи за неделю"
     },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Объём, начатые и завершённые задачи по дням с прогнозом даты завершения"
+    },
     "breakdown": {
       "label": "Распределение",
       "description": "Количество задач по статусу, приоритету, типу или исполнителю"
@@ -147,6 +151,23 @@
     "lastWeeks": "Последние {weeks} нед.",
     "created": "Создано",
     "closed": "Закрыто"
+  },
+  "burnup": {
+    "empty": "За этот период задач нет.",
+    "scope": "Объём",
+    "started": "Начато",
+    "completed": "Завершено",
+    "projection": "Прогноз",
+    "projected": "Прогноз: {date}",
+    "noForecast": "Нет прогресса за {weeks, plural, one {последнюю # неделю} few {последние # недели} many {последние # недель} other {последние # недели}}",
+    "allDone": "Всё завершено",
+    "velocity": "{rate}/день",
+    "remaining": "{count, plural, one {осталась # задача} few {осталось # задачи} many {осталось # задач} other {осталось # задачи}}",
+    "target": "Цель: {date}",
+    "targetLabel": "Цель",
+    "today": "Сегодня",
+    "wholeProject": "Весь проект",
+    "forecastWeeks": "Скорость за {weeks, plural, one {# неделю} few {# недели} many {# недель} other {# недели}}"
   },
   "agentRuns": {
     "empty": "Запусков агентов пока нет.",

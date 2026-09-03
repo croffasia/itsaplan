@@ -49,6 +49,10 @@
       "label": "吞吐量",
       "description": "每周创建和关闭的工作项数量"
     },
+    "burnup": {
+      "label": "燃尽上升图",
+      "description": "按天统计范围、已开始和已完成的任务，并预测完成日期"
+    },
     "breakdown": {
       "label": "分类统计",
       "description": "按状态、优先级、类型或负责人统计工作项"
@@ -147,6 +151,23 @@
     "lastWeeks": "最近 {weeks} 周",
     "created": "已创建",
     "closed": "已关闭"
+  },
+  "burnup": {
+    "empty": "此期间没有任务。",
+    "scope": "范围",
+    "started": "已开始",
+    "completed": "已完成",
+    "projection": "预测",
+    "projected": "预计 {date} 完成",
+    "noForecast": "最近 {weeks} 周没有进展",
+    "allDone": "全部完成",
+    "velocity": "{rate}/天",
+    "remaining": "剩余 {count} 项",
+    "target": "目标 {date}",
+    "targetLabel": "目标",
+    "today": "今天",
+    "wholeProject": "整个项目",
+    "forecastWeeks": "按最近 {weeks} 周的速度"
   },
   "agentRuns": {
     "empty": "暂无代理运行记录。",

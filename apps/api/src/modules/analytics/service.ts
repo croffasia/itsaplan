@@ -9,10 +9,11 @@ import {
   agentRun,
   webhook,
   webhookDelivery,
+  initiative,
   type ActivityPayload,
 } from '@repo/db';
 import { and, desc, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
-import { iso } from '#shared/lib';
+import { HttpError, iso } from '#shared/lib';
 
 // Read-only project metrics for the dashboards feature. Every figure is derived
 // from the existing issue / project_column / issue_activity / issue_status tables —
@@ -329,6 +330,117 @@ export async function getThroughput(projectId: number, weeks: number): Promise<T
      GROUP BY e.week
      ORDER BY e.week`)) as unknown as ThroughputWeek[];
   return rows.map((r) => ({ week: r.week, created: Number(r.created), closed: Number(r.closed) }));
+}
+
+// --- Burnup (scope / started / completed per day, with a forecast) ---------------
+
+export interface BurnupDay {
+  date: string;
+  scope: number;
+  started: number;
+  completed: number;
+}
+
+export interface BurnupForecast {
+  windowDays: number;
+  velocityPerDay: number;
+  remaining: number;
+  projectedDate: string | null;
+}
+
+export interface BurnupDto {
+  days: BurnupDay[];
+  forecast: BurnupForecast;
+  targetDate: string | null;
+}
+
+export interface BurnupParams {
+  days: number;
+  initiativeId: number | null;
+  forecastWeeks: number;
+}
+
+// Unlike closings() above, which dates each issue by the moment it was closed, the
+// burnup asks what state every issue was in at the end of each day: the status row
+// whose stretch covers that midnight. So an issue that was reopened leaves the
+// completed line for the days it was open again, and a canceled issue leaves the
+// scope line — the chart is a history of the project, not of the events.
+export async function getBurnup(projectId: number, params: BurnupParams): Promise<BurnupDto> {
+  const targetDate = await initiativeTargetDate(projectId, params.initiativeId);
+  const initiativeFilter =
+    params.initiativeId == null ? sql`` : sql`AND i.initiative_id = ${params.initiativeId}::int`;
+  const rows = (await db.execute(sql`
+    WITH d AS (
+      SELECT generate_series(current_date - ${params.days - 1}::int, current_date, '1 day')::date AS day
+    )
+    SELECT to_char(d.day, 'YYYY-MM-DD') AS date,
+           (count(s.issue_id) FILTER (WHERE s.state_type IS DISTINCT FROM 'canceled'))::int AS scope,
+           (count(s.issue_id) FILTER (WHERE s.state_type IN ('started', 'completed')))::int AS started,
+           (count(s.issue_id) FILTER (WHERE s.state_type = 'completed'))::int AS completed
+      FROM d
+      LEFT JOIN (
+        SELECT s.issue_id, s.state_type, s.entered_at, s.left_at
+          FROM issue_status s
+          JOIN issue i ON i.id = s.issue_id
+         WHERE i.project_id = ${projectId} ${initiativeFilter}
+      ) s ON s.entered_at < d.day + 1
+         AND (s.left_at IS NULL OR s.left_at >= d.day + 1)
+     GROUP BY d.day
+     ORDER BY d.day`)) as unknown as BurnupDay[];
+  const days = rows.map((r) => ({
+    date: r.date,
+    scope: Number(r.scope),
+    started: Number(r.started),
+    completed: Number(r.completed),
+  }));
+  return { days, forecast: forecastCompletion(days, params.forecastWeeks * 7), targetDate };
+}
+
+// The initiative's target date, so the chart can draw it; null when the whole
+// project is charted. An initiative from another project is a 404, not an empty
+// chart, so a wrong id does not read as an initiative with no issues.
+async function initiativeTargetDate(
+  projectId: number,
+  initiativeId: number | null,
+): Promise<string | null> {
+  if (initiativeId == null) return null;
+  const [row] = await db
+    .select({ targetDate: initiative.targetDate })
+    .from(initiative)
+    .where(and(eq(initiative.id, initiativeId), eq(initiative.projectId, projectId)))
+    .limit(1);
+  if (!row) throw new HttpError(404, 'Initiative not found');
+  return row.targetDate;
+}
+
+// A linear projection at the current scope: the closing rate over the last
+// `windowDays` days of the series (fewer when the series is shorter), applied to
+// what is left. No date when nothing was closed in the window or nothing is left —
+// the widget says so instead of drawing a line to infinity. Scope growth is not
+// extrapolated, as in Linear's project graph.
+export function forecastCompletion(days: BurnupDay[], windowDays: number): BurnupForecast {
+  const last = days[days.length - 1];
+  if (!last) return { windowDays: 0, velocityPerDay: 0, remaining: 0, projectedDate: null };
+  const startIndex = Math.max(0, days.length - 1 - windowDays);
+  const start = days[startIndex]!;
+  const span = days.length - 1 - startIndex;
+  const velocity = span > 0 ? (last.completed - start.completed) / span : 0;
+  const remaining = Math.max(0, last.scope - last.completed);
+  const projectedDate =
+    velocity > 0 && remaining > 0 ? addDays(last.date, Math.ceil(remaining / velocity)) : null;
+  return {
+    windowDays: span,
+    velocityPerDay: Math.round(velocity * 100) / 100,
+    remaining,
+    projectedDate,
+  };
+}
+
+// 'YYYY-MM-DD' plus n days, computed in UTC so the local timezone never shifts the
+// calendar date.
+function addDays(date: string, n: number): string {
+  const [y, m, d] = date.split('-').map(Number) as [number, number, number];
+  return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
 }
 
 // --- Project-wide activity feed --------------------------------------------------

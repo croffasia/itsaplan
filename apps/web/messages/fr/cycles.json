@@ -1,0 +1,76 @@
+{
+  "title": "Cycles",
+  "newCycle": "Nouveau cycle",
+  "status": {
+    "upcoming": "À venir",
+    "active": "En cours",
+    "completed": "Terminé"
+  },
+  "views": {
+    "table": "Liste",
+    "timeline": "Chronologie"
+  },
+  "columns": {
+    "name": "Nom",
+    "dates": "Dates",
+    "length": "Durée",
+    "issues": "Tickets",
+    "progress": "Avancement"
+  },
+  "emptyTitle": "Aucun cycle pour l'instant",
+  "emptyDescription": "Un cycle est une période délimitée dans laquelle l'équipe planifie ses tickets.",
+  "nothingPlannedTitle": "Rien de planifié",
+  "nothingPlannedDescription": "La chronologie affiche les cycles en cours et à venir. Les cycles terminés se trouvent dans la liste.",
+  "options": "Options du cycle",
+  "transferIssues": "{count, plural, one {Déplacer # ticket non terminé} other {Déplacer # tickets non terminés}}",
+  "finishedEarly": "Terminé en avance, fin prévue le {date}",
+  "form": {
+    "editTitle": "Modifier le cycle",
+    "newTitle": "Nouveau cycle",
+    "name": "Nom",
+    "goal": "Objectif",
+    "goalPlaceholder": "Que doit livrer ce cycle ?",
+    "length": "Durée",
+    "starts": "Début",
+    "ends": "Fin",
+    "create": "Créer le cycle",
+    "saveFailed": "Impossible d'enregistrer le cycle"
+  },
+  "weeks": "{count, plural, one {# semaine} other {# semaines}}",
+  "transfer": {
+    "title": "Déplacer les tickets non terminés",
+    "description": "Les tickets non terminés sont déplacés vers le cycle que vous choisissez. Les tickets terminés et annulés restent ici.",
+    "moveTo": "Déplacer vers",
+    "noCycle": "Aucun cycle",
+    "submit": "Déplacer les tickets",
+    "moving": "Déplacement…",
+    "moved": "{count, plural, one {# ticket déplacé} other {# tickets déplacés}}",
+    "failed": "Impossible de déplacer les tickets"
+  },
+  "finish": {
+    "action": "Terminer le cycle",
+    "title": "Terminer le cycle en avance",
+    "description": "{cycle} se clôt aujourd'hui au lieu du {date}. Vous ne pourrez pas le réouvrir. {count, plural, =0 {Rien ne reste inachevé.} one {# ticket non terminé y reste.} other {# tickets non terminés y restent.}}",
+    "submit": "Terminer le cycle"
+  },
+  "startNext": {
+    "action": "Démarrer le cycle suivant aujourd'hui",
+    "title": "Démarrer le cycle suivant aujourd'hui",
+    "description": "{cycle} se clôt aujourd'hui et vous ne pourrez pas le réouvrir. {next} démarre aujourd'hui et se termine toujours le {date}. {count, plural, =0 {Rien n'est reporté.} one {# ticket non terminé y est déplacé.} other {# tickets non terminés y sont déplacés.}} Les tickets terminés et annulés restent sur {cycle}.",
+    "submit": "Démarrer le cycle suivant",
+    "started": "{cycle} a démarré. {count, plural, =0 {Aucun ticket reporté.} one {# ticket reporté.} other {# tickets reportés.}}"
+  },
+  "delete": {
+    "title": "Supprimer le cycle",
+    "description": "{cycle} est supprimé définitivement. {count, plural, =0 {Il ne contient aucun ticket.} one {# ticket reste dans le projet, sans cycle.} other {# tickets restent dans le projet, sans cycle.}}"
+  },
+  "details": "Détails du cycle",
+  "goal": "Objectif",
+  "noGoal": "Aucun objectif défini.",
+  "progress": "Avancement",
+  "openCycle": "Ouvrir le cycle",
+  "dragFailed": "Impossible de déplacer le cycle",
+  "notFound": "Cycle introuvable.",
+  "defaultName": "Sprint {n}",
+  "issuesDone": "Tickets terminés"
+}

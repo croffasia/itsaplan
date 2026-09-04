@@ -37,7 +37,6 @@ import {
 import {
   GROUP_FILTER_ATTRIBUTES,
   USER_FILTER_ATTRIBUTES,
-  addScimGroupMembers,
   createScimGroup,
   createScimUser,
   deleteScimGroup,
@@ -46,7 +45,6 @@ import {
   getScimUser,
   listScimGroups,
   listScimUsers,
-  removeScimGroupMembers,
   syncEmbeddedGroups,
   updateScimGroup,
   updateScimUser,
@@ -83,7 +81,11 @@ function requestedPage(query: { startIndex?: number; count?: number }) {
   };
 }
 
-const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
+const scimHandlers = new Elysia({
+  name: 'scim-handlers',
+  prefix: SCIM_PREFIX,
+  detail: { tags: ['SCIM'] },
+})
   // RFC 7644 §3.1 allows a SCIM client to send `application/scim+json`, and real
   // identity providers (Okta, Entra, Authentik) do. Elysia's default body parser
   // matches `Content-Type` exactly against `application/json`, so a request sent
@@ -343,10 +345,10 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
   .patch(
     '/Groups/:id',
     async ({ params, body }) => {
-      await requireGroup(params.id);
-      // Members are applied as they arrive so an add and a remove in the same
-      // request compose; the rest is collected and written once.
+      const current = await requireGroup(params.id);
       const patch: { displayName?: string; externalId?: string | null; members?: string[] } = {};
+      let members = new Set(current.members.map((member) => member.userId));
+      let membersChanged = false;
       for (const op of parsePatch(body)) {
         const path = op.path!.toLowerCase();
         if (path.startsWith('members')) {
@@ -354,9 +356,10 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
           // the id in the path itself, not in `value`.
           const ids =
             memberFilterIds(op.path!) ?? (op.value === undefined ? [] : memberIds(op.value));
-          if (op.op === 'remove') await removeScimGroupMembers(params.id, ids);
-          else if (op.op === 'add') await addScimGroupMembers(params.id, ids);
-          else patch.members = ids;
+          if (op.op === 'remove') ids.forEach((id) => members.delete(id));
+          else if (op.op === 'add') ids.forEach((id) => members.add(id));
+          else members = new Set(ids);
+          membersChanged = true;
           continue;
         }
         if (op.op === 'remove') {
@@ -366,6 +369,7 @@ const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
         else if (path === 'externalid') patch.externalId = asString(op.value, 'externalId');
         else throw new ScimError(400, `Attribute '${op.path}' is not writable`, 'invalidPath');
       }
+      if (membersChanged) patch.members = [...members];
       const updated = await updateScimGroup(params.id, patch);
       return toScimGroup(requireUpdated(updated, 'Group', params.id));
     },

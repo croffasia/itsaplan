@@ -84,6 +84,8 @@ export const EmailSettingsBody = t.Object({
   allowProjects: t.Optional(t.Boolean()),
 });
 
+export const EmailTestResponse = t.Object({ recipient: t.String() });
+
 export const GoogleSettingsResponse = t.Object({
   enabled: t.Boolean(),
   clientId: t.String(),

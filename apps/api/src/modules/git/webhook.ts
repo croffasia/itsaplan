@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
 import { getProjectById } from '#modules/projects/service';
-import { handlePullRequestEvent } from './handler';
+import { handleGitEvent } from './handler';
 import { detectProvider } from './providers';
 import { WebhookAckResponse, webhookBody, webhookParams } from './model';
 import { claimGitDelivery, findProjectByGitWebhookId, recordGitEvent } from './service';
@@ -35,6 +35,7 @@ async function receive({
     throw new HttpError(400, 'Invalid JSON payload');
   }
   const providerLabel = provider.label(headers);
+  const providerKey = provider.key(headers);
   const repo = provider.repo(payload);
   if (repo) await recordGitEvent(found.projectId, repo, providerLabel);
 
@@ -48,7 +49,7 @@ async function receive({
     return { ok: true, handled: 'duplicate' };
   const project = await getProjectById(found.projectId);
   if (!project) throw new HttpError(404, 'Unknown webhook');
-  const handled = await handlePullRequestEvent(project, found.settings, providerLabel, event);
+  const handled = await handleGitEvent(project, found.settings, providerKey, providerLabel, event);
   return { ok: true, handled };
 }
 
@@ -60,9 +61,8 @@ const options = {
   detail: {
     summary: 'Receive a repository webhook',
     description:
-      'Receive a pull request webhook from GitHub, GitLab, Gitea, Forgejo, or Bitbucket, ' +
-      'verify it against the project secret, and apply the automations to the issues its ' +
-      'magic words name.',
+      'Receive branch, pull request, and CI webhooks from supported repository providers, verify ' +
+      'them against the project secret, and update linked issues.',
   },
 };
 

@@ -1,0 +1,23 @@
+{{- if and .Values.ingress.enabled (eq .Values.ingress.api.mode "traefik-entrypoint") }}
+# The API is served on the web hostname through a dedicated Traefik entrypoint.
+# A plain Ingress cannot target an entrypoint, hence the Traefik CRD.
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "itsaplan.fullname" . }}-api
+  labels:
+    {{- include "itsaplan.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - {{ .Values.ingress.api.entryPoint }}
+  routes:
+    - match: Host(`{{ .Values.ingress.host }}`)
+      kind: Rule
+      services:
+        - name: {{ include "itsaplan.fullname" . }}-api
+          port: {{ .Values.api.port }}
+  {{- if .Values.ingress.api.tls.enabled }}
+  tls:
+    secretName: {{ .Values.ingress.api.tls.secretName }}
+  {{- end }}
+{{- end }}

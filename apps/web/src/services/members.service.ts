@@ -67,11 +67,27 @@ export function useInvitesQuery(projectKey: string | null, enabled = true) {
 }
 
 export function useCreateInvite(projectKey: string) {
+  const t = useTranslations('members.invites');
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { email: string; role: MemberRole; roleId?: number | null }) =>
       api.createInvite(projectKey, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.invites(projectKey) }),
+    onSuccess: (result) => {
+      qc.invalidateQueries({ queryKey: qk.invites(projectKey) });
+      if (result.emailQueued) toast.success(t('emailQueued'));
+      else toast.info(t('emailUnavailable'));
+    },
+  });
+}
+
+export function useSendInviteEmail(projectKey: string) {
+  const t = useTranslations('members.invites');
+  return useMutation({
+    mutationFn: (inviteId: number) => api.sendInviteEmail(projectKey, inviteId),
+    onSuccess: (result) => {
+      if (result.emailQueued) toast.success(t('emailQueued'));
+      else toast.info(t('resendUnavailable'));
+    },
   });
 }
 

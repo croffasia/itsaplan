@@ -1,5 +1,5 @@
 {
-  "id": "2a75a9cd-6ba3-4659-9c5b-c141a9aeff64",
+  "id": "5267bcc0-7f67-4f8c-9352-fe992169ba76",
   "prevId": "bdd412b9-2d3f-41f7-b1c5-54f9e26580a4",
   "version": "7",
   "dialect": "postgresql",
@@ -2849,6 +2849,243 @@
       },
       "isRLSEnabled": false
     },
+    "public.git_managed_repository": {
+      "name": "git_managed_repository",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "connection_id": {
+          "name": "connection_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_id": {
+          "name": "external_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "web_url": {
+          "name": "web_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "webhook_external_id": {
+          "name": "webhook_external_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'connected'"
+        },
+        "last_error": {
+          "name": "last_error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "git_managed_repository_connection_idx": {
+          "name": "git_managed_repository_connection_idx",
+          "columns": [
+            {
+              "expression": "connection_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "full_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "git_managed_repository_connection_id_git_provider_connection_id_fk": {
+          "name": "git_managed_repository_connection_id_git_provider_connection_id_fk",
+          "tableFrom": "git_managed_repository",
+          "tableTo": "git_provider_connection",
+          "columnsFrom": [
+            "connection_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "git_managed_repository_connection_external_unique": {
+          "name": "git_managed_repository_connection_external_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "connection_id",
+            "external_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.git_provider_connection": {
+      "name": "git_provider_connection",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "project_id": {
+          "name": "project_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "base_url": {
+          "name": "base_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_login": {
+          "name": "account_login",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "ciphertext": {
+          "name": "ciphertext",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "iv": {
+          "name": "iv",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "auth_tag": {
+          "name": "auth_tag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "git_provider_connection_project_idx": {
+          "name": "git_provider_connection_project_idx",
+          "columns": [
+            {
+              "expression": "project_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "git_provider_connection_project_id_project_id_fk": {
+          "name": "git_provider_connection_project_id_project_id_fk",
+          "tableFrom": "git_provider_connection",
+          "tableTo": "project",
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "git_provider_connection_project_provider_url_account_unique": {
+          "name": "git_provider_connection_project_provider_url_account_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "project_id",
+            "provider",
+            "base_url",
+            "account_login"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.initiative": {
       "name": "initiative",
       "schema": "",
@@ -4781,211 +5018,6 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.issue_template": {
-      "name": "issue_template",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "project_id": {
-          "name": "project_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "title_template": {
-          "name": "title_template",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "description_template": {
-          "name": "description_template",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "type_id": {
-          "name": "type_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "column_id": {
-          "name": "column_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "priority": {
-          "name": "priority",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "assignee_user_id": {
-          "name": "assignee_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "issue_template_project_id_project_id_fk": {
-          "name": "issue_template_project_id_project_id_fk",
-          "tableFrom": "issue_template",
-          "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "issue_template_type_id_issue_type_id_fk": {
-          "name": "issue_template_type_id_issue_type_id_fk",
-          "tableFrom": "issue_template",
-          "tableTo": "issue_type",
-          "columnsFrom": [
-            "type_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "issue_template_column_id_project_column_id_fk": {
-          "name": "issue_template_column_id_project_column_id_fk",
-          "tableFrom": "issue_template",
-          "tableTo": "project_column",
-          "columnsFrom": [
-            "column_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "issue_template_assignee_user_id_user_id_fk": {
-          "name": "issue_template_assignee_user_id_user_id_fk",
-          "tableFrom": "issue_template",
-          "tableTo": "user",
-          "columnsFrom": [
-            "assignee_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "issue_template_project_id_name_unique": {
-          "name": "issue_template_project_id_name_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "project_id",
-            "name"
-          ]
-        }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.issue_template_label": {
-      "name": "issue_template_label",
-      "schema": "",
-      "columns": {
-        "template_id": {
-          "name": "template_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "label_id": {
-          "name": "label_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "issue_template_label_template_id_issue_template_id_fk": {
-          "name": "issue_template_label_template_id_issue_template_id_fk",
-          "tableFrom": "issue_template_label",
-          "tableTo": "issue_template",
-          "columnsFrom": [
-            "template_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "issue_template_label_label_id_label_id_fk": {
-          "name": "issue_template_label_label_id_label_id_fk",
-          "tableFrom": "issue_template_label",
-          "tableTo": "label",
-          "columnsFrom": [
-            "label_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {
-        "issue_template_label_template_id_label_id_pk": {
-          "name": "issue_template_label_template_id_label_id_pk",
-          "columns": [
-            "template_id",
-            "label_id"
-          ]
-        }
-      },
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},

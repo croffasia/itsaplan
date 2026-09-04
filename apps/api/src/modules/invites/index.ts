@@ -9,8 +9,9 @@ import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getRole } from '#modules/roles/service';
 import {
   AcceptInviteResponse,
+  InviteCreateResponse,
+  InviteEmailResponse,
   InviteRowListResponse,
-  InviteRowResponse,
   InviteViewResponse,
   createInviteBody,
   inviteParams,
@@ -20,11 +21,13 @@ import {
   createInvite,
   listInvites,
   deleteInvite,
+  getInviteById,
   getInviteByToken,
   getInviteRowByToken,
   acceptInvite,
   rejectInvite,
 } from './service';
+import { enqueueInviteEmail } from './email';
 
 // Shared by accept and reject: an invite is actionable only by the account whose
 // email it names, and only while it is still pending.
@@ -61,19 +64,52 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
         roleId,
         invitedByUserId: requireUser(user).id,
       });
+      let emailQueued = false;
+      try {
+        emailQueued = await enqueueInviteEmail(project, invite);
+      } catch (err) {
+        // Creating the invite link is the primary operation. A transient outbox
+        // failure must not discard a valid link that can still be copied.
+        console.error('[invites] email enqueue failed:', err);
+      }
       set.status = 201;
-      return invite;
+      return { ...invite, emailQueued };
     },
     {
       body: createInviteBody,
       permission: ['members_invite', 'create'],
-      response: { 201: InviteRowResponse, ...commonErrors, ...errors(409) },
+      response: { 201: InviteCreateResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an invite',
         description:
           'Create an invite link for an email and role (owner or member). For a member, roleId ' +
-          'picks the custom role, or null for the default role.',
+          'picks the custom role, or null for the default role. Queues an email when the ' +
+          'instance email provider is configured.',
         ...mcpTool('create_invite'),
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/invites/:inviteId/email',
+    async ({ project, params }) => {
+      const invite = await getInviteById(project.id, params.inviteId);
+      if (!invite) throw new HttpError(404, 'Invite not found');
+      if (invite.status !== 'pending') {
+        throw new HttpError(409, 'This invite is no longer pending');
+      }
+      return { emailQueued: await enqueueInviteEmail(project, invite) };
+    },
+    {
+      params: inviteParams,
+      permission: ['members_invite', 'create'],
+      response: { 200: InviteEmailResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Send an invite email',
+        description:
+          'Queue an email for a pending project invite. Returns false when the instance email ' +
+          'provider is not configured.',
+        ...mcpTool('send_invite_email'),
       },
     },
   )

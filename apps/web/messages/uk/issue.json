@@ -88,7 +88,9 @@
   },
   "actionsBar": {
     "shortLinkCopied": "Коротке посилання скопійовано",
+    "branchCopied": "Назву гілки скопійовано",
     "copyShortLink": "Скопіювати коротке посилання",
+    "copyBranch": "Скопіювати назву гілки",
     "copied": "Скопійовано!",
     "copyPrompt": "Скопіювати промпт",
     "sharedPublicly": "У спільному доступі",
@@ -321,6 +323,27 @@
     "worklogAdded": "записав(-ла) <v>{time}</v> за <v>{date}</v>",
     "worklogChanged": "змінив(-ла) запис <v>{from}</v> за <v>{fromDate}</v> на <v>{to}</v> за <v>{date}</v>",
     "worklogRemoved": "видалив(-ла) запис <v>{time}</v> за <v>{date}</v>"
+  },
+  "development": {
+    "title": "Розробка",
+    "unlink": "Видалити зв’язок із розробкою",
+    "branch": "Гілка",
+    "draft": "Чернетка",
+    "ready": "Готово до злиття",
+    "open": "Відкрито",
+    "merged": "Змерджено",
+    "closed": "Закрито",
+    "updated": "Оновлено {date}",
+    "openPipeline": "Відкрити pipeline",
+    "checks": "{count, plural, one {# перевірка} few {# перевірки} many {# перевірок} other {# перевірки}}",
+    "pipeline": {
+      "pending": "Очікує",
+      "running": "Виконується",
+      "success": "Пройдено",
+      "failed": "Помилка",
+      "canceled": "Скасовано",
+      "skipped": "Пропущено"
+    }
   },
   "archived": "Архівовано",
   "activityHeading": "Активність",

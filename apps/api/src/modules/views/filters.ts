@@ -54,7 +54,7 @@ function parseCustomFieldKey(field: string): number | null {
 // need none), so a half-built condition does not hide everything.
 function isEffectiveCondition(cond: FilterCondition): boolean {
   if (cond.op === 'is_set' || cond.op === 'is_not_set') return true;
-  return cond.values.length > 0;
+  return Array.isArray(cond.values) && cond.values.length > 0;
 }
 
 function toFilterSet(raw: unknown): FilterSet {

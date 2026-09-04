@@ -19,6 +19,6 @@ describe('localeFromAcceptLanguage', () => {
   });
 
   it('falls back to English when no requested language is supported', () => {
-    expect(localeFromAcceptLanguage('de-DE,fr;q=0.9')).toBe('en');
+    expect(localeFromAcceptLanguage('de-DE,ja;q=0.9')).toBe('en');
   });
 });

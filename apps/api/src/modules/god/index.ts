@@ -5,6 +5,7 @@ import {
   getAuthSettings,
   setAuthSettings,
   getEmailSettings,
+  resolveEmailConfig,
   setEmailSettings,
   hasConfiguredEmailProvider,
   getGoogleSettings,
@@ -17,6 +18,7 @@ import {
   setScimSettings,
   rotateScimToken,
 } from '@repo/auth';
+import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';
 import { HttpError } from '#shared/lib';
@@ -38,6 +40,7 @@ import {
   AuthSettingsResponse,
   EmailSettingsBody,
   EmailSettingsResponse,
+  EmailTestResponse,
   GoogleSettingsBody,
   GoogleSettingsResponse,
   InstanceProjectDetailResponse,
@@ -61,6 +64,7 @@ import {
   scimGroupParams,
   userParams,
 } from './model';
+import { emailTestError } from './email-test';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
 import { SCIM_BASE_URL } from '#modules/scim/resource';
 import {
@@ -93,6 +97,16 @@ import {
 // be turned off while one can.
 async function hasSsoProvider(): Promise<boolean> {
   return (await hasConfiguredOidc()) || (await hasConfiguredGoogle());
+}
+
+async function assertUsableSignInMethod(
+  nextProviderUsable: boolean,
+  otherProviderUsable: boolean,
+): Promise<void> {
+  const auth = await getAuthSettings();
+  if (!auth.emailPassword && !nextProviderUsable && !otherProviderUsable) {
+    throw new HttpError(400, 'Enable password sign-in or another single sign-on provider first');
+  }
 }
 
 export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
@@ -164,6 +178,44 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
   })
 
+  .post(
+    '/god/email-settings/test',
+    async ({ user, body: patch }) => {
+      const current = requireGod(user);
+      if (!current.email) throw new HttpError(400, 'The instance owner has no email address');
+      const config = await resolveEmailConfig(patch ?? {});
+      if (!hasEmailProvider(config)) {
+        throw new HttpError(400, 'Configure an email provider first');
+      }
+
+      const body = emailBody(
+        "This test confirms that It's a Plan can send email through the configured provider.",
+      );
+      const result = await sendEmail(
+        { ...config, smtp: { ...config.smtp, timeout: config.smtp.timeout ?? 15 } },
+        {
+          to: current.email,
+          subject: "It's a Plan email test",
+          ...body,
+        },
+      );
+      if (!result.ok) {
+        console.error('[god] test email failed:', result.error);
+        throw new HttpError(502, emailTestError(result.error));
+      }
+      return { recipient: current.email };
+    },
+    {
+      body: t.Optional(EmailSettingsBody),
+      response: { 200: EmailTestResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Send a test email',
+        description:
+          'Send a test message through the supplied provider settings without saving them.',
+      },
+    },
+  )
+
   .get(
     '/god/google-settings',
     async () => ({ ...(await getGoogleSettings()), redirectUri: GOOGLE_REDIRECT_URI }),
@@ -180,13 +232,18 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     '/god/google-settings',
     async ({ body }) => {
       const current = await getGoogleSettings();
+      const enabled = body.enabled ?? current.enabled;
       const clientId = body.clientId ?? current.clientId;
       const hasClientSecret = (body.clientSecret?.length ?? 0) > 0 || current.hasClientSecret;
       // Turning it on without credentials would only offer a button that fails at
       // Google, so the same rule as the mail-dependent options applies here.
-      if (body.enabled && (clientId.length === 0 || !hasClientSecret)) {
+      if (enabled && (clientId.length === 0 || !hasClientSecret)) {
         throw new HttpError(400, 'Add the Google client ID and secret first');
       }
+      await assertUsableSignInMethod(
+        enabled && clientId.length > 0 && hasClientSecret,
+        await hasConfiguredOidc(),
+      );
       const next = await setGoogleSettings(body);
       return { ...next, redirectUri: GOOGLE_REDIRECT_URI };
     },
@@ -216,17 +273,19 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     '/god/oidc-settings',
     async ({ body }) => {
       const current = await getOidcSettings();
+      const enabled = body.enabled ?? current.enabled;
       const discoveryUrl = body.discoveryUrl ?? current.discoveryUrl;
       const clientId = body.clientId ?? current.clientId;
       const hasClientSecret = (body.clientSecret?.length ?? 0) > 0 || current.hasClientSecret;
       // Turning it on without credentials would only offer a button that fails at
       // the provider, the same rule the Google settings apply.
-      if (
-        body.enabled &&
-        (discoveryUrl.length === 0 || clientId.length === 0 || !hasClientSecret)
-      ) {
+      if (enabled && (discoveryUrl.length === 0 || clientId.length === 0 || !hasClientSecret)) {
         throw new HttpError(400, 'Add the discovery URL, client ID and secret first');
       }
+      await assertUsableSignInMethod(
+        enabled && discoveryUrl.length > 0 && clientId.length > 0 && hasClientSecret,
+        await hasConfiguredGoogle(),
+      );
       const next = await setOidcSettings(body);
       return { ...next, redirectUri: OIDC_REDIRECT_URI };
     },

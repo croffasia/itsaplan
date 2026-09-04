@@ -1,0 +1,67 @@
+{{- if .Values.bot.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "itsaplan.fullname" . }}-bot
+  labels:
+    {{- include "itsaplan.labels" . | nindent 4 }}
+    app.kubernetes.io/component: bot
+spec:
+  # Telegram long-polling supports a single caller only.
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "itsaplan.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: bot
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "itsaplan.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: bot
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "itsaplan.fullname" .) }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.bot.nodeSelector | default .Values.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.bot.tolerations | default .Values.tolerations) }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.bot.affinity | default .Values.affinity) }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: bot
+          image: "{{ .Values.bot.image.repository }}:{{ .Values.bot.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.bot.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "itsaplan.fullname" . }}
+            - secretRef:
+                name: {{ include "itsaplan.fullname" . }}
+          {{- with .Values.bot.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

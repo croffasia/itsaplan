@@ -28,6 +28,10 @@ export interface DeliveryPayload {
   text: string;
   html?: string;
   url?: string;
+  emailSource?: 'project' | 'instance';
+  idempotencyKey?: string;
+  dedupeKey?: string;
+  projectInviteId?: number;
 }
 
 interface OutboxRow {

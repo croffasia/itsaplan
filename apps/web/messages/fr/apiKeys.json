@@ -1,0 +1,32 @@
+{
+  "label": "Clés d'API",
+  "title": "Clés d'API",
+  "description": "Les clés d'API personnelles authentifient les requêtes à l'API en tant que votre compte ({email}). La valeur d'une clé n'est affichée qu'une seule fois, à sa création.",
+  "sectionTitle": "Vos clés d'API",
+  "create": "Créer une clé d'API",
+  "empty": "Aucune clé d'API pour l'instant. Créez-en une pour authentifier vos requêtes à l'API.",
+  "fallbackName": "Clé d'API",
+  "createdAt": "Créée {date}",
+  "deleteAction": "Supprimer la clé d'API",
+  "createDialog": {
+    "title": "Créer une clé d'API",
+    "nameLabel": "Nom",
+    "namePlaceholder": "ex. pipeline CI",
+    "nameHint": "Un libellé pour reconnaître cette clé plus tard.",
+    "submit": "Créer la clé",
+    "submitPending": "Création…",
+    "error": "Impossible de créer la clé d'API."
+  },
+  "createdDialog": {
+    "title": "Clé d'API créée",
+    "description": "Copiez votre clé maintenant. Par sécurité, elle n'est affichée qu'une seule fois et ne pourra pas être récupérée.",
+    "copy": "Copier la clé"
+  },
+  "deleteDialog": {
+    "title": "Supprimer la clé d'API ?",
+    "confirm": "Supprimer la clé",
+    "description": "Toute requête utilisant cette clé cessera immédiatement de fonctionner. Cette action est irréversible.",
+    "error": "Impossible de supprimer la clé d'API."
+  },
+  "loadFailed": "Impossible de charger les clés d'API."
+}

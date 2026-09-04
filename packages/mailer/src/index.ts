@@ -34,6 +34,7 @@ export interface EmailMessage {
   subject: string;
   text: string;
   html: string;
+  idempotencyKey?: string;
 }
 
 export interface SendResult {
@@ -71,6 +72,7 @@ async function sendSmtp(
     auth: smtp.username ? { user: smtp.username, pass: smtp.password } : undefined,
     connectionTimeout: timeoutMs,
     greetingTimeout: timeoutMs,
+    socketTimeout: timeoutMs,
   });
   try {
     await transporter.sendMail({
@@ -101,6 +103,7 @@ async function sendResend(
       headers: {
         authorization: `Bearer ${resend.apiKey}`,
         'content-type': 'application/json',
+        ...(message.idempotencyKey ? { 'idempotency-key': message.idempotencyKey } : {}),
       },
       signal: AbortSignal.timeout(RESEND_TIMEOUT_MS),
       body: JSON.stringify({

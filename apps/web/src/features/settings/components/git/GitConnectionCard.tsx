@@ -8,8 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useRegenerateGitSecret } from '../../services/settings.service';
 import GitCopyField from './GitCopyField';
-import GitRepositoryList from './GitRepositoryList';
 import GithubCliCommand from './GithubCliCommand';
+import GitlabCliCommand from './GitlabCliCommand';
 
 // One tab per supported host: each takes the same payload URL and secret, but
 // names the fields and the pull request trigger differently. Gitea and Forgejo
@@ -75,7 +75,7 @@ export default function GitConnectionCard({
   );
 
   return (
-    <SettingsSection title={t('connection')} description={t('connectionHint')}>
+    <SettingsSection title={t('webhookEndpoint')} description={t('webhookEndpointHint')}>
       <SettingsCard className="divide-y divide-border/60">
         {secret == null ? (
           <p className="p-4 text-xs text-muted-foreground">{t('connectionRestricted')}</p>
@@ -92,29 +92,38 @@ export default function GitConnectionCard({
                 action={regenerateAction}
               />
             </div>
-            <div className="p-4">
-              <div className="mb-3 text-xs font-medium">{t('howToConnect')}</div>
-              <Tabs value={tab} onValueChange={(v) => setTab(v as ProviderKey)}>
-                <TabsList variant="line">
+            <details className="group p-4">
+              <summary className="cursor-pointer list-none text-sm font-medium select-none marker:content-none">
+                <span className="inline-flex items-center gap-2">
+                  <span className="transition-transform group-open:rotate-90">›</span>
+                  {t('manualSetup')}
+                </span>
+              </summary>
+              <div className="mt-4">
+                <Tabs value={tab} onValueChange={(v) => setTab(v as ProviderKey)}>
+                  <TabsList variant="line">
+                    {PROVIDERS.map((p) => (
+                      <TabsTrigger key={p.key} value={p.key}>
+                        {p.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
                   {PROVIDERS.map((p) => (
-                    <TabsTrigger key={p.key} value={p.key}>
-                      {p.label}
-                    </TabsTrigger>
+                    <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
+                      {hint(p.hint)}
+                      {p.key === 'github' && (
+                        <GithubCliCommand payloadUrl={payloadUrl} secret={secret} />
+                      )}
+                      {p.key === 'gitlab' && (
+                        <GitlabCliCommand payloadUrl={payloadUrl} secret={secret} />
+                      )}
+                    </TabsContent>
                   ))}
-                </TabsList>
-                {PROVIDERS.map((p) => (
-                  <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
-                    {hint(p.hint)}
-                    {p.key === 'github' && (
-                      <GithubCliCommand payloadUrl={payloadUrl} secret={secret} />
-                    )}
-                  </TabsContent>
-                ))}
-              </Tabs>
-            </div>
+                </Tabs>
+              </div>
+            </details>
           </>
         )}
-        <GitRepositoryList repositories={settings.repositories} />
       </SettingsCard>
     </SettingsSection>
   );

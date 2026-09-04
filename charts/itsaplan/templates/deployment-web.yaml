@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "itsaplan.fullname" . }}-web
+  labels:
+    {{- include "itsaplan.labels" . | nindent 4 }}
+    app.kubernetes.io/component: web
+spec:
+  replicas: {{ .Values.web.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "itsaplan.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "itsaplan.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: web
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.serviceAccount.create }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "itsaplan.fullname" .) }}
+      {{- end }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.web.nodeSelector | default .Values.nodeSelector) }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.web.tolerations | default .Values.tolerations) }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with (.Values.web.affinity | default .Values.affinity) }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: web
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.web.image.pullPolicy }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.web.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "itsaplan.fullname" . }}
+            - secretRef:
+                name: {{ include "itsaplan.fullname" . }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.web.healthcheck.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.web.healthcheck.initialDelaySeconds }}
+            periodSeconds: {{ .Values.web.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.web.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.web.healthcheck.failureThreshold }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.web.healthcheck.path }}
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: {{ .Values.web.healthcheck.periodSeconds }}
+            timeoutSeconds: {{ .Values.web.healthcheck.timeoutSeconds }}
+            failureThreshold: {{ .Values.web.healthcheck.failureThreshold }}
+          {{- with .Values.web.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

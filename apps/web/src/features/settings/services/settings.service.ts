@@ -6,7 +6,7 @@
 // settings and notification writes return the stored result and put it straight
 // into the cache. This module wraps the low-level fetch client (api.ts).
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   api,
   type AutoArchiveSettings,
@@ -174,6 +174,65 @@ export function useRegenerateGitSecret(projectKey: string) {
   return useMutation({
     mutationFn: () => api.regenerateGitSecret(projectKey),
     onSuccess: (data) => qc.setQueryData(qk.gitSettings(projectKey), data),
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
+  });
+}
+
+export function useGitProviderConnectionsQuery(projectKey: string) {
+  return useQuery({
+    queryKey: qk.gitConnections(projectKey),
+    queryFn: () => api.listGitProviderConnections(projectKey),
+  });
+}
+
+export function useConnectGitProvider(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof api.connectGitProvider>[1]) =>
+      api.connectGitProvider(projectKey, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
+  });
+}
+
+export function useDisconnectGitProvider(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (connectionId: number) => api.disconnectGitProvider(projectKey, connectionId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
+  });
+}
+
+export function useAvailableGitRepositoriesQuery(
+  projectKey: string,
+  connectionId: number,
+  search: string,
+  enabled: boolean,
+) {
+  return useInfiniteQuery({
+    queryKey: qk.gitAvailableRepositories(projectKey, connectionId, search),
+    queryFn: ({ pageParam }) =>
+      api.listAvailableGitRepositories(projectKey, connectionId, { search, page: pageParam }),
+    initialPageParam: 1,
+    getNextPageParam: (page) => page.nextPage ?? undefined,
+    enabled,
+  });
+}
+
+export function useConnectGitRepositories(projectKey: string, connectionId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (externalIds: string[]) =>
+      api.connectGitRepositories(projectKey, connectionId, externalIds),
+    onSettled: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
+  });
+}
+
+export function useDisconnectGitRepository(projectKey: string, connectionId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (repositoryId: number) =>
+      api.disconnectGitRepository(projectKey, connectionId, repositoryId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
   });
 }
 

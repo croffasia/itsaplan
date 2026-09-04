@@ -1,0 +1,94 @@
+{
+  "title": "Affichage",
+  "layouts": {
+    "kanban": "Kanban",
+    "table": "Liste",
+    "timeline": "Chronologie",
+    "calendar": "Calendrier"
+  },
+  "sortFields": {
+    "manual": "Manuel",
+    "title": "Titre",
+    "identifier": "Numéro de ticket",
+    "status": "État",
+    "priority": "Priorité",
+    "assignee": "Responsable",
+    "type": "Type",
+    "startDate": "Date de début",
+    "dueDate": "Échéance",
+    "created": "Date de création",
+    "updated": "Date de mise à jour"
+  },
+  "groupFields": {
+    "none": "Aucun regroupement",
+    "status": "État",
+    "assignee": "Responsable",
+    "delegate": "Délégué",
+    "priority": "Priorité",
+    "type": "Type",
+    "initiative": "Initiative",
+    "cycle": "Cycle"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "État",
+    "priority": "Priorité",
+    "type": "Type",
+    "assignee": "Responsable",
+    "delegate": "Délégué",
+    "initiative": "Initiative",
+    "cycle": "Cycle",
+    "labels": "Étiquettes",
+    "estimatePoints": "Story points",
+    "estimateTime": "Estimation de temps",
+    "startDate": "Date de début",
+    "dueDate": "Échéance",
+    "created": "Date de création",
+    "updated": "Date de mise à jour",
+    "statusAge": "Temps dans l'état"
+  },
+  "stateTypes": {
+    "backlog": "Backlog",
+    "unstarted": "Non démarré",
+    "started": "En cours",
+    "completed": "Terminé",
+    "canceled": "Annulé"
+  },
+  "timelineScales": {
+    "week": "Semaine",
+    "month": "Mois",
+    "quarter": "Trimestre"
+  },
+  "weekStart": {
+    "0": "Dimanche",
+    "1": "Lundi"
+  },
+  "dateFields": {
+    "dueDate": "Échéance",
+    "startDate": "Date de début"
+  },
+  "rows": {
+    "columns": "Colonnes",
+    "grouping": "Regroupement",
+    "swimlanes": "Couloirs",
+    "subGrouping": "Sous-regroupement",
+    "ordering": "Tri",
+    "ascending": "Croissant",
+    "descending": "Décroissant",
+    "showEmptyColumns": "Afficher les colonnes vides",
+    "showEmptyGroups": "Afficher les groupes vides",
+    "showLinks": "Afficher les liens",
+    "separateSubtaskCards": "Afficher les sous-tâches comme des cartes distinctes",
+    "separateSubtaskRows": "Afficher les sous-tâches comme des lignes distinctes",
+    "showNestedSubtasks": "Afficher les sous-tâches imbriquées",
+    "nestedSubtasks": "Sous-tâches imbriquées",
+    "displayProperties": "Propriétés affichées",
+    "placeBy": "Positionner selon",
+    "startWeekOn": "Commencer la semaine le",
+    "startCollapsed": "Démarrer avec les groupes réduits",
+    "scale": "Échelle",
+    "addCustomField": "Ajouter un champ personnalisé",
+    "viewIcon": "Icône de la vue"
+  },
+  "layoutCommand": "Affichage {layout}"
+}

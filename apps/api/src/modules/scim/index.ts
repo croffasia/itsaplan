@@ -81,7 +81,11 @@ function requestedPage(query: { startIndex?: number; count?: number }) {
   };
 }
 
-const scimHandlers = new Elysia({ name: 'scim-handlers', prefix: SCIM_PREFIX })
+const scimHandlers = new Elysia({
+  name: 'scim-handlers',
+  prefix: SCIM_PREFIX,
+  detail: { tags: ['SCIM'] },
+})
   // RFC 7644 §3.1 allows a SCIM client to send `application/scim+json`, and real
   // identity providers (Okta, Entra, Authentik) do. Elysia's default body parser
   // matches `Content-Type` exactly against `application/json`, so a request sent

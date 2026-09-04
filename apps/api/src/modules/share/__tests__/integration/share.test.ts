@@ -177,6 +177,20 @@ describe('share', () => {
       expect(shared.data.issues.map((i: { id: number }) => i.id)).toContain(issueId);
     });
 
+    // A view's filters are stored as an uninspected jsonb blob, so a condition can
+    // reach the server-side engine without the values every value operator reads.
+    it('serves a view whose filter condition carries no values', async () => {
+      const { asOwner, viewId, token, issueId } = await sharedView();
+      const patched = await asOwner
+        .views({ viewId })
+        .patch({ filters: { conditions: [{ field: 'status', op: 'is' }] } });
+      expect(patched.status).toBe(200);
+
+      const shared = await api.share.view({ token }).get();
+      expect(shared.status).toBe(200);
+      expect(shared.data.issues.map((i: { id: number }) => i.id)).toContain(issueId);
+    });
+
     it('opens an issue from a shared board under the same token', async () => {
       const { token, issueId } = await sharedView();
       const res = await api.share.view({ token }).issues({ issueId }).get();

@@ -1,0 +1,119 @@
+{
+  "newIssue": "Nouveau ticket",
+  "pin": "Épingler",
+  "unpin": "Désépingler",
+  "collapse": "Réduire",
+  "expand": "Développer",
+  "hide": "Masquer",
+  "show": "Afficher",
+  "hiddenColumns": "Colonnes masquées",
+  "hiddenGroups": "Groupes masqués",
+  "selectAll": "Tout sélectionner",
+  "deselectAll": "Tout désélectionner",
+  "resizeColumn": "Redimensionner la colonne",
+  "viewNamePlaceholder": "Tous les tickets",
+  "sortedOrder": "Les tickets sont triés par {field}. Passez le tri en Manuel pour les déplacer.",
+  "statusSince": "Dans cet état depuis {date}",
+  "createdOn": "Créé {date}",
+  "updatedOn": "Mis à jour {date}",
+  "subtasksProgress": "Sous-tâches {done}/{total}",
+  "subtasksDone": "{done} sous-tâches terminées sur {total}",
+  "wip": {
+    "reached": "{column} a atteint sa limite de {limit} tickets.",
+    "tooltip": "Limite de travaux en cours : {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} sur {total} / {max}",
+    "filteredTooltip": "{shown} affichés par les filtres actuels. La limite de {max} porte sur les {total} tickets de la colonne."
+  },
+  "columns": {
+    "title": "Titre",
+    "status": "État",
+    "statusAge": "Dans l'état",
+    "priority": "Priorité",
+    "type": "Type",
+    "initiative": "Initiative",
+    "cycle": "Cycle",
+    "labels": "Étiquettes",
+    "estimatePoints": "Story points",
+    "estimateTime": "Temps",
+    "startDate": "Début",
+    "dueDate": "Échéance",
+    "created": "Créé le",
+    "updated": "Mis à jour le"
+  },
+  "calendar": {
+    "previousMonth": "Mois précédent",
+    "nextMonth": "Mois suivant",
+    "today": "Aujourd'hui",
+    "moreIssues": "+{count} de plus",
+    "issueCount": "{count, plural, one {# ticket} other {# tickets}}",
+    "weekdays": {
+      "sun": "dim.",
+      "mon": "lun.",
+      "tue": "mar.",
+      "wed": "mer.",
+      "thu": "jeu.",
+      "fri": "ven.",
+      "sat": "sam."
+    },
+    "noDate": {
+      "dueDate": "Aucune échéance",
+      "startDate": "Aucune date de début",
+      "custom": "Aucune date"
+    },
+    "allDated": {
+      "dueDate": "Tout a une échéance.",
+      "startDate": "Tout a une date de début.",
+      "custom": "Tout a une date."
+    }
+  },
+  "timeline": {
+    "empty": "Aucun ticket à placer sur la chronologie pour l'instant.",
+    "expandGroup": "Développer le groupe",
+    "collapseGroup": "Réduire le groupe",
+    "inferredStart": "Début déduit de la date de création",
+    "inferredStartDraggable": "Début déduit de la date de création — faites glisser pour le définir"
+  },
+  "bulk": {
+    "selected": "{count} sélectionnés",
+    "status": "État",
+    "priority": "Priorité",
+    "assignee": "Responsable",
+    "delegate": "Délégué",
+    "initiative": "Initiative",
+    "cycle": "Cycle",
+    "labels": "Étiquettes",
+    "noAssignee": "Aucun responsable",
+    "noDelegate": "Aucun délégué",
+    "noInitiative": "Aucune initiative",
+    "noCycle": "Aucun cycle",
+    "archive": "Archiver",
+    "clearSelection": "Annuler la sélection"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Archiver le ticket} other {Archiver les tickets}}",
+      "confirm": "{count, plural, one {Archiver # ticket} other {Archiver # tickets}}",
+      "description": "{count, plural, one {Archiver # ticket sélectionné ? Il quitte le tableau et pourra être restauré plus tard.} other {Archiver # tickets sélectionnés ? Ils quittent le tableau et pourront être restaurés plus tard.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Supprimer le ticket} other {Supprimer les tickets}}",
+      "confirm": "{count, plural, one {Supprimer # ticket} other {Supprimer # tickets}}",
+      "description": "{count, plural, one {Supprimer # ticket sélectionné ?} other {Supprimer # tickets sélectionnés ?}} Les commentaires, l'activité et les pièces jointes seront également supprimés. Cette action est irréversible."
+    }
+  },
+  "share": {
+    "issueTitle": "Ticket",
+    "issueUnavailable": "Ce ticket n'est pas disponible.",
+    "boardUnavailable": "Ce tableau partagé n'est pas disponible. Le lien a peut-être été révoqué."
+  },
+  "groups": {
+    "noAssignee": "Aucun responsable",
+    "noDelegate": "Aucun délégué",
+    "noPriority": "Aucune priorité",
+    "noType": "Aucun type",
+    "noInitiative": "Aucune initiative",
+    "noCycle": "Aucun cycle",
+    "noMember": "Aucune valeur"
+  }
+}

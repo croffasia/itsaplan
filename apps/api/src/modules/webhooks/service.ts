@@ -100,6 +100,11 @@ export async function updateWebhook(
   if (patch.url !== undefined) set.url = patch.url;
   if (patch.events !== undefined) set.events = patch.events;
   if (patch.isActive !== undefined) set.isActive = patch.isActive;
+  // The worker keeps a webhook active while its consecutive failures stay under the
+  // disable threshold, and clears that counter only on a delivery that succeeds. A
+  // webhook switched back on therefore starts at the threshold, and its next failed
+  // attempt disables it again, so turning it on clears the counter with it.
+  if (patch.isActive === true) set.consecutiveFailures = 0;
   if (Object.keys(set).length === 0) return getWebhook(id);
   const [row] = await db.update(webhook).set(set).where(eq(webhook.id, id)).returning();
   return row ? mapWebhook(row) : null;

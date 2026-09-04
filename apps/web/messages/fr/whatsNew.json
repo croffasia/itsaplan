@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Mis à jour le",
+  "title": "Nouveautés de la version {version}",
+  "done": "J'ai compris",
+  "backup": {
+    "title": "Une sauvegarde a été faite avant la mise à jour",
+    "body": "La base de données a été exportée avant l'exécution des migrations de cette version : {size}, conservée jusqu'au {expires}, puis supprimée automatiquement. Restaurez-la si vous revenez à la version précédente.",
+    "credentialsHint": "Les noms d'utilisateur et de base de données sont les POSTGRES_USER et POSTGRES_DB de votre fichier .env."
+  },
+  "report": {
+    "title": "Ce qui a changé dans vos données",
+    "subtitle": "Les projets appartiennent désormais à une équipe, et une équipe partage une seule liste de rôles, de compétences, d'agents et d'identifiants d'intégration.",
+    "teamsHeading": "Les équipes et leurs projets",
+    "renamedRoles": "Rôles renommés",
+    "renamedSkills": "Compétences renommées",
+    "renamedAgents": "Identifiants d'agents renommés",
+    "renamedCredentials": "Identifiants d'intégration renommés",
+    "mergedHeading": "Fusionnés et déplacés",
+    "mergedRoles": "{count, plural, one {# rôle par défaut en double est devenu un seul} other {# rôles par défaut en double sont devenus un seul}}",
+    "mergedTools": "{count, plural, one {# outil configuré en double est devenu un seul} other {# outils configurés en double sont devenus un seul}}",
+    "movedInvites": "{count, plural, one {# invitation en attente a été déplacée vers l'équipe} other {# invitations en attente ont été déplacées vers l'équipe}}",
+    "notificationsHeading": "Fournisseurs de notifications",
+    "notificationsBody": "Une équipe conserve une seule configuration de fournisseur de notifications : celle enregistrée en dernier a été gardée. Saisissez à nouveau les paramètres pour : {projects}."
+  }
+}

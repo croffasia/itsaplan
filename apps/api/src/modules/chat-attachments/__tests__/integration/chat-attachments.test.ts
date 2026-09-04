@@ -159,4 +159,11 @@ describe('chat attachments', () => {
     }).raw.get();
     expect(gone.status).toBe(404);
   });
+
+  // The route is public, so a malformed id reaching Postgres would answer 500 with
+  // the driver's message to an anonymous caller.
+  it('returns 400 for a publicId that is not a uuid', async () => {
+    const res = await api['chat-attachments']({ publicId: 'not-a-uuid' }).raw.get();
+    expect(res.status).toBe(400);
+  });
 });

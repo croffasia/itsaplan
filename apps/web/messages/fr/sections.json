@@ -77,6 +77,10 @@
       "label": "Champs personnalisés",
       "description": "Des champs supplémentaires affichés sur les tickets, globaux ou limités à un type de ticket."
     },
+    "issue-templates": {
+      "label": "Modèles de tickets",
+      "description": "Des préréglages à partir desquels créer un ticket : son titre, sa description et ses propriétés."
+    },
     "configuration": {
       "label": "Configuration",
       "description": "Comment les sous-tâches se ferment avec leur parent, et à quel moment les tickets inactifs sont archivés."

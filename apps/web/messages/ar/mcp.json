@@ -1,6 +1,6 @@
 {
   "title": "خادم MCP",
-  "description": "اربط وكلاء الذكاء الاصطناعي بالمشروع ده عبر Model Context Protocol. الوكيل بياخد نفس صلاحيات مفتاح واجهة البرمجة (API key) اللي بيستخدمه.",
+  "description": "اربط وكلاء الذكاء الاصطناعي بالمشروع عبر Model Context Protocol باستخدام OAuth أو مفتاح API شخصي.",
   "access": "الوصول عبر MCP",
   "enabled": "مُفعَّل",
   "disabled": "مُعطَّل",
@@ -21,6 +21,31 @@
   },
   "clients": {
     "other": "أخرى"
+  },
+  "oauth": {
+    "configuration": "إعداد الاتصال",
+    "methodTabsAria": "طريقة مصادقة MCP",
+    "method": "OAuth MCP",
+    "personalKey": "مفتاح API شخصي",
+    "title": "الاتصال باستخدام OAuth",
+    "description": "استخدم هذا الخيار لأي عميل MCP يدعم OAuth، بما في ذلك ChatGPT وClaude. سجّل الدخول بحساب Itsaplan؛ لا تتم مشاركة أي مفتاح API شخصي مع العميل.",
+    "endpoint": "نقطة نهاية MCP",
+    "discovery": "اكتشاف OAuth",
+    "steps": {
+      "add": "أضف تطبيق MCP في عميلك والصق نقطة نهاية MCP.",
+      "choose": "اختر OAuth عندما يطلب العميل المصادقة.",
+      "signIn": "سجّل الدخول إلى Itsaplan ووافق على الوصول المطلوب."
+    },
+    "security": "يستخدم OAuth PKCE (S256) وتسجيل عملاء ديناميكيًا ورموز Bearer مقيّدة بحساب Itsaplan.",
+    "consent": {
+      "title": "تفويض Itsaplan",
+      "description": "اسمح لعميل MCP هذا بالعمل بصلاحيات حساب Itsaplan الخاص بك.",
+      "missingCode": "طلب التفويض هذا يفتقد رمز الموافقة.",
+      "cancel": "إلغاء",
+      "pending": "جارٍ التفويض…",
+      "authorize": "تفويض",
+      "failed": "تعذر إكمال تفويض OAuth."
+    }
   },
   "toast": {
     "enabled": "فُعِّل الوصول عبر MCP",

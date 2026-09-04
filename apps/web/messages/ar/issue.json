@@ -116,7 +116,10 @@
     "noFields": "لا توجد حقول.",
     "description": "الوصف",
     "other": "أخرى",
-    "submit": "إنشاء مهمة"
+    "submit": "إنشاء مهمة",
+    "template": "قالب",
+    "applyTemplate": "تطبيق قالب…",
+    "noTemplates": "لا توجد قوالب."
   },
   "attachments": {
     "title": "المرفقات",
@@ -359,6 +362,7 @@
     "changeState": "تغيير الحالة…",
     "changeType": "تغيير النوع…",
     "noType": "بلا نوع",
+    "unsetState": "بدون حالة",
     "noAssignee": "بلا مسؤول",
     "assignTo": "الإسناد إلى…",
     "you": "أنت",

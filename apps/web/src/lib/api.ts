@@ -864,6 +864,22 @@ export interface CustomField {
   options: CustomFieldOption[];
 }
 
+// A preset a new issue can be created from: the title and description it starts
+// with plus the properties applied on top of them. A property left null presets
+// nothing — the create dialog keeps its own default for it.
+export interface IssueTemplate {
+  id: number;
+  name: string;
+  description: string;
+  titleTemplate: string;
+  descriptionTemplate: string;
+  typeId: number | null;
+  columnId: number | null;
+  priority: string | null;
+  assigneeUserId: string | null;
+  labelIds: number[];
+}
+
 // One custom field value on a project issue: the scalar value (null for
 // select/multi_select and unset fields), the end of a datetime_range, and the
 // selected option ids. Only fields with a value set appear; unset fields are
@@ -2151,6 +2167,7 @@ export interface ProjectScaffold {
   // Every custom field of the project (all type scopes); consumers filter by
   // issueTypeId locally.
   customFields: CustomField[];
+  issueTemplates: IssueTemplate[];
   viewer: ProjectViewer;
   // The caller's resolved permission matrix (owners get every flag).
   permissions: Permissions;
@@ -2604,6 +2621,21 @@ export interface NewCustomFieldInput {
   options?: string[];
 }
 
+export interface NewIssueTemplateInput {
+  name: string;
+  description?: string;
+  titleTemplate?: string;
+  descriptionTemplate?: string;
+  typeId?: number | null;
+  columnId?: number | null;
+  priority?: string | null;
+  assigneeUserId?: string | null;
+  labelIds?: number[];
+}
+
+// A property left out keeps its value; `labelIds` replaces the whole label set.
+export type IssueTemplatePatch = Partial<NewIssueTemplateInput>;
+
 // The project permission matrix (mirrors apps/api shared/permissions.ts): each
 // resource grants or denies 4 actions. A custom role carries one matrix.
 export type PermissionAction = 'create' | 'edit' | 'read' | 'delete';
@@ -2625,6 +2657,7 @@ export type PermissionResource =
   | 'agent_skills'
   | 'agent_tools'
   | 'custom_fields'
+  | 'issue_templates'
   | 'workflow_config'
   | 'actions'
   | 'webhooks'
@@ -2948,6 +2981,19 @@ export const api = {
     }),
   deleteCustomField: (projectKey: string, fieldId: number) =>
     request<void>(`/projects/${projectKey}/custom-fields/${fieldId}`, { method: 'DELETE' }),
+
+  createIssueTemplate: (projectKey: string, input: NewIssueTemplateInput) =>
+    request<IssueTemplate>(`/projects/${projectKey}/issue-templates`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateIssueTemplate: (projectKey: string, templateId: number, patch: IssueTemplatePatch) =>
+    request<IssueTemplate>(`/projects/${projectKey}/issue-templates/${templateId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteIssueTemplate: (projectKey: string, templateId: number) =>
+    request<void>(`/projects/${projectKey}/issue-templates/${templateId}`, { method: 'DELETE' }),
 
   createIssue: (projectKey: string, input: NewIssueInput) =>
     request<Issue>(`/projects/${projectKey}/issues`, {

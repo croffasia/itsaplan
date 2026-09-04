@@ -1,6 +1,6 @@
 // React Query hooks for everything the settings feature reads and writes: the
 // project's structural entities (columns, issue types, labels and label groups,
-// custom fields), the workflow configuration, the project notification delivery
+// custom fields, issue templates), the workflow configuration, the project notification delivery
 // settings, and the session member's own notification preferences. Structural
 // writes go through useProjectMutation and invalidate the project detail; the
 // settings and notification writes return the stored result and put it straight
@@ -302,4 +302,24 @@ export function useUpdateCustomField(projectKey: string) {
 
 export function useDeleteCustomField(projectKey: string) {
   return useProjectMutation(projectKey, (id: number) => api.deleteCustomField(projectKey, id));
+}
+
+// Issue templates. The project detail carries the list, so the writes only have to
+// invalidate it.
+export function useCreateIssueTemplate(projectKey: string) {
+  return useProjectMutation(projectKey, (input: Parameters<typeof api.createIssueTemplate>[1]) =>
+    api.createIssueTemplate(projectKey, input),
+  );
+}
+
+export function useUpdateIssueTemplate(projectKey: string) {
+  return useProjectMutation(
+    projectKey,
+    ({ id, patch }: { id: number; patch: Parameters<typeof api.updateIssueTemplate>[2] }) =>
+      api.updateIssueTemplate(projectKey, id, patch),
+  );
+}
+
+export function useDeleteIssueTemplate(projectKey: string) {
+  return useProjectMutation(projectKey, (id: number) => api.deleteIssueTemplate(projectKey, id));
 }

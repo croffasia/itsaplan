@@ -24,6 +24,7 @@ import { and, eq, inArray, or } from 'drizzle-orm';
 import { iso } from '#shared/lib';
 import { defaultMemberPermissions } from '#shared/permissions';
 import { DEFAULT_COLUMNS, type ProjectRow } from './service';
+import { getProjectDefaults } from '#modules/settings/service';
 import { GIT_SETTING_KEY } from '#modules/git/service';
 import { listAgents, createAgent, type NewAgentInput } from '#modules/agents/core/service';
 import {
@@ -293,10 +294,16 @@ export async function copyProject(
   const agentMap = new Map<number, number>();
 
   const copiedDocumentAssetKeys: string[] = [];
+
+  // What a new project starts with, set instance-wide in god mode. Read before the
+  // transaction opens so the settings lookup is not part of it.
+  const defaults = await getProjectDefaults();
+
   const copyTransaction = db.transaction(async (tx) => {
     // The optional sections the source project shows and the estimate kinds it
     // carries are part of its configuration, so the copy starts with the same ones.
-    // mcpEnabled is not carried: a copy opts into MCP on its own.
+    // mcpEnabled comes from the instance default instead, the same as it does for a
+    // project created from scratch.
     const [sourceFeatures] = await tx
       .select({
         initiativesEnabled: project.initiativesEnabled,
@@ -320,6 +327,7 @@ export async function copyProject(
         key: input.key,
         name: input.name,
         description: input.description ?? '',
+        mcpEnabled: defaults.mcpEnabled,
         ...sourceFeatures,
       })
       .returning();

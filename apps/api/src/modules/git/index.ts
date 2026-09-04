@@ -43,7 +43,11 @@ export const gitSettingsRoutes = new Elysia({
     {
       permission: ['integrations', 'read'],
       response: { 200: GitSettingsResponse, ...accessErrors },
-      detail: { summary: "Get a project's repository integration settings" },
+      detail: {
+        summary: "Get a project's repository integration settings",
+        description:
+          'Return the webhook endpoint, enabled events, merge automation, and the secret only when the caller may edit integrations.',
+      },
     },
   )
   .patch(
@@ -53,7 +57,11 @@ export const gitSettingsRoutes = new Elysia({
       permission: ['integrations', 'edit'],
       body: updateGitSettingsBody,
       response: { 200: GitSettingsResponse, ...commonErrors },
-      detail: { summary: "Update a project's repository integration settings" },
+      detail: {
+        summary: "Update a project's repository integration settings",
+        description:
+          'Enable repository events and configure the issue state change applied after a merge.',
+      },
     },
   )
   .post(
@@ -66,7 +74,11 @@ export const gitSettingsRoutes = new Elysia({
     {
       permission: ['integrations', 'edit'],
       response: { 200: GitSettingsResponse, ...accessErrors },
-      detail: { summary: "Regenerate a project's repository webhook secret" },
+      detail: {
+        summary: "Regenerate a project's repository webhook secret",
+        description:
+          'Replace the shared webhook secret and update every webhook managed through a provider connection.',
+      },
     },
   )
   .get(
@@ -75,7 +87,11 @@ export const gitSettingsRoutes = new Elysia({
     {
       permission: ['integrations', 'read'],
       response: { 200: GitProviderConnectionListResponse, ...accessErrors },
-      detail: { summary: "List a project's Git provider connections" },
+      detail: {
+        summary: "List a project's Git provider connections",
+        description:
+          'List the GitHub and GitLab accounts authorized for this project and their connected repositories.',
+      },
     },
   )
   .post(
@@ -89,7 +105,11 @@ export const gitSettingsRoutes = new Elysia({
       permission: ['integrations', 'edit'],
       body: createGitProviderConnectionBody,
       response: { 201: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
-      detail: { summary: 'Connect a Git provider account' },
+      detail: {
+        summary: 'Connect a Git provider account',
+        description:
+          'Validate a GitHub or GitLab access token, encrypt it, and save the provider account for repository selection.',
+      },
     },
   )
   .delete(
@@ -102,7 +122,11 @@ export const gitSettingsRoutes = new Elysia({
       permission: ['integrations', 'edit'],
       params: gitProviderConnectionParams,
       response: { 204: t.Void(), ...commonErrors, ...errors(502) },
-      detail: { summary: 'Disconnect a Git provider account' },
+      detail: {
+        summary: 'Disconnect a Git provider account',
+        description:
+          'Remove every managed repository webhook for the connection, then delete the encrypted provider credential.',
+      },
     },
   )
   .get(
@@ -119,7 +143,11 @@ export const gitSettingsRoutes = new Elysia({
       params: gitProviderConnectionParams,
       query: availableRepositoriesQuery,
       response: { 200: AvailableGitRepositoryPageResponse, ...commonErrors, ...errors(502) },
-      detail: { summary: 'List repositories available through a Git provider connection' },
+      detail: {
+        summary: 'List repositories available through a Git provider connection',
+        description:
+          'Search repositories visible to the connected provider account and report which ones are already connected.',
+      },
     },
   )
   .post(
@@ -131,7 +159,11 @@ export const gitSettingsRoutes = new Elysia({
       params: gitProviderConnectionParams,
       body: connectRepositoriesBody,
       response: { 200: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
-      detail: { summary: 'Connect repositories and install their webhooks' },
+      detail: {
+        summary: 'Connect repositories and install their webhooks',
+        description:
+          'Add the selected repositories to the project and create or reconcile provider webhooks for pull request and CI events.',
+      },
     },
   )
   .delete(
@@ -144,6 +176,10 @@ export const gitSettingsRoutes = new Elysia({
       permission: ['integrations', 'edit'],
       params: gitManagedRepositoryParams,
       response: { 204: t.Void(), ...commonErrors, ...errors(502) },
-      detail: { summary: 'Disconnect a repository and remove its managed webhook' },
+      detail: {
+        summary: 'Disconnect a repository and remove its managed webhook',
+        description:
+          'Delete the repository connection and remove the webhook that Plan installed at the provider.',
+      },
     },
   );

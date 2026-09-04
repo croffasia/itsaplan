@@ -116,7 +116,10 @@
     "noFields": "Aucun champ.",
     "description": "Description",
     "other": "Autre",
-    "submit": "Créer le ticket"
+    "submit": "Créer le ticket",
+    "template": "Modèle",
+    "applyTemplate": "Appliquer un modèle…",
+    "noTemplates": "Aucun modèle."
   },
   "attachments": {
     "title": "Pièces jointes",
@@ -359,6 +362,7 @@
     "changeState": "Changer l'état…",
     "changeType": "Changer le type…",
     "noType": "Aucun type",
+    "unsetState": "Aucun état",
     "noAssignee": "Aucun responsable",
     "assignTo": "Assigner à…",
     "you": "Vous",

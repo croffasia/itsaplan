@@ -116,7 +116,10 @@
     "noFields": "Полей нет.",
     "description": "Описание",
     "other": "Другое",
-    "submit": "Создать задачу"
+    "submit": "Создать задачу",
+    "template": "Шаблон",
+    "applyTemplate": "Применить шаблон…",
+    "noTemplates": "Шаблонов нет."
   },
   "attachments": {
     "title": "Вложения",
@@ -359,6 +362,7 @@
     "changeState": "Изменить статус…",
     "changeType": "Изменить тип…",
     "noType": "Без типа",
+    "unsetState": "Без статуса",
     "noAssignee": "Без исполнителя",
     "assignTo": "Назначить…",
     "you": "Вы",

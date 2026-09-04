@@ -6,7 +6,7 @@ import { createAuthMiddleware, APIError } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { passkey } from '@better-auth/passkey';
 import { apiKey } from '@better-auth/api-key';
-import { openAPI, magicLink, username, genericOAuth } from 'better-auth/plugins';
+import { mcp, openAPI, magicLink, username, genericOAuth } from 'better-auth/plugins';
 import type { GenericOAuthConfig } from 'better-auth/plugins/generic-oauth';
 import * as schema from '@repo/db/schema';
 import {
@@ -249,6 +249,9 @@ export const auth = betterAuth({
       verification: schema.verification,
       passkey: schema.passkey,
       apikey: schema.apikey,
+      oauthApplication: schema.oauthApplication,
+      oauthAccessToken: schema.oauthAccessToken,
+      oauthConsent: schema.oauthConsent,
     },
   }),
 
@@ -531,6 +534,18 @@ export const auth = betterAuth({
       minUsernameLength: USERNAME_MIN_LENGTH,
       maxUsernameLength: USERNAME_MAX_LENGTH,
     }),
+    // Native OAuth 2.1 provider for Streamable HTTP MCP clients. It uses the
+    // existing Better Auth session, requires PKCE, and supports dynamic public
+    // clients such as ChatGPT without exposing a personal API key.
+    mcp({
+      loginPage: `${trustedOrigins[0]}/login`,
+      resource: `${baseURL}/mcp`,
+      oidcConfig: {
+        loginPage: `${trustedOrigins[0]}/login`,
+        requirePKCE: true,
+        consentPage: `${trustedOrigins[0]}/oauth/consent`,
+      },
+    }),
     // OpenAPI reference for the better-auth handler. Serves a Scalar UI at
     // /api/auth/reference and the raw schema at /api/auth/open-api/generate-schema.
     // The schema is built from every active plugin, so the passkey and apiKey
@@ -618,3 +633,9 @@ export type {
   InstanceOidcConfig,
   InstanceScimDto,
 } from './instance';
+
+export {
+  withMcpAuth,
+  oAuthDiscoveryMetadata,
+  oAuthProtectedResourceMetadata,
+} from 'better-auth/plugins';

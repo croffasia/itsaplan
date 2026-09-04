@@ -34,6 +34,53 @@ describe('repository provider events', () => {
     });
   });
 
+  it('uses the GitLab merge commit SHA after a merge', () => {
+    const headers = { 'x-gitlab-event': 'Merge Request Hook' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          object_kind: 'merge_request',
+          object_attributes: {
+            iid: 7,
+            action: 'merge',
+            title: 'Release',
+            source_branch: 'release/production',
+            target_branch: 'main',
+            last_commit: { id: 'source-head' },
+            merge_commit_sha: 'merge-head',
+          },
+          project: { path_with_namespace: 'acme/site', default_branch: 'main' },
+        },
+        headers,
+      ),
+    ).toMatchObject({ kind: 'pull_request', action: 'merged', headSha: 'merge-head' });
+  });
+
+  it('falls back to the GitLab squash commit SHA after a merge', () => {
+    const headers = { 'x-gitlab-event': 'Merge Request Hook' };
+    const provider = detectProvider(headers)!;
+    expect(
+      provider.parse(
+        {
+          object_kind: 'merge_request',
+          object_attributes: {
+            iid: 8,
+            action: 'merge',
+            title: 'Squashed release',
+            source_branch: 'release/squashed',
+            target_branch: 'main',
+            last_commit: { id: 'source-head' },
+            merge_commit_sha: null,
+            squash_commit_sha: 'squash-head',
+          },
+          project: { path_with_namespace: 'acme/site', default_branch: 'main' },
+        },
+        headers,
+      ),
+    ).toMatchObject({ kind: 'pull_request', action: 'merged', headSha: 'squash-head' });
+  });
+
   it('normalizes a completed GitHub check run', () => {
     const headers = { 'x-github-event': 'check_run' };
     const provider = detectProvider(headers)!;

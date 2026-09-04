@@ -607,13 +607,17 @@
 [dir='rtl'] .sticker-note {
   direction: rtl;
 }
-/* Sticky notes always sit on a light pastel background, so their placeholder and
-   checkboxes are keyed to dark regardless of the app theme. */
+/* Sticky notes always sit on a light pastel background, so their placeholder,
+   checkboxes and links are keyed to dark regardless of the app theme. */
 .sticker-note .md-content p.is-editor-empty:first-child::before {
   color: rgba(0, 0, 0, 0.4);
 }
 .sticker-note .md-content ul[data-type='taskList'] input[type='checkbox'] {
   accent-color: #000;
+}
+/* --primary turns near-white in dark mode, which the pastel card does not follow. */
+.sticker-note .md-content a {
+  color: inherit;
 }
 /* React Flow's default edge stroke is too dark on the canvas in both themes. */
 .react-flow__edge-path,

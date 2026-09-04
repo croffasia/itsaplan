@@ -23,6 +23,8 @@ export function toPublicProjectDetail(
       canReadWorkItems: false,
     })),
     customFields: scaffold.customFields,
+    // A public page creates nothing, so it needs no templates.
+    issueTemplates: [],
     viewer: { role: 'member' },
     permissions: {} as Permissions,
     issues,

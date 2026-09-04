@@ -116,7 +116,10 @@
     "noFields": "Полів немає.",
     "description": "Опис",
     "other": "Інше",
-    "submit": "Створити задачу"
+    "submit": "Створити задачу",
+    "template": "Шаблон",
+    "applyTemplate": "Застосувати шаблон…",
+    "noTemplates": "Шаблонів немає."
   },
   "attachments": {
     "title": "Вкладення",
@@ -359,6 +362,7 @@
     "changeState": "Змінити статус…",
     "changeType": "Змінити тип…",
     "noType": "Без типу",
+    "unsetState": "Без статусу",
     "noAssignee": "Без виконавця",
     "assignTo": "Призначити…",
     "you": "Ви",

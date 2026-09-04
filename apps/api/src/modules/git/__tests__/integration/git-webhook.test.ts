@@ -139,6 +139,7 @@ function gitlabPayload(
   action = 'merge',
   headSha = 'gitlab-head-1',
   sourceBranch = 'feature/site',
+  mergeCommitSha?: string,
 ) {
   return {
     object_kind: 'merge_request',
@@ -151,6 +152,7 @@ function gitlabPayload(
       source_branch: sourceBranch,
       target_branch: 'main',
       last_commit: { id: headSha },
+      merge_commit_sha: mergeCommitSha,
     },
     project: {
       path_with_namespace: 'acme/site',
@@ -924,6 +926,88 @@ describe('Repository webhook', () => {
       number: 7,
       pipelineStatus: 'failed',
       pipelineUrl: 'https://gitlab.com/acme/site/-/pipelines/99',
+    });
+  });
+
+  it('attaches a post-merge GitLab release pipeline to its work item', async () => {
+    const { asOwner, webhookId, secret, columns } = await setupProject();
+    const issue = (await createIssue(asOwner, columns[0].id)).data!;
+    const sourceBranch = 'release/production';
+    const headers = () => ({
+      'x-gitlab-token': secret,
+      'idempotency-key': crypto.randomUUID(),
+    });
+
+    await deliverRaw(
+      webhookId,
+      gitlabPayload(`Refs MKT-${issue.sequenceNumber}`, 'open', 'gitlab-source-head', sourceBranch),
+      { 'x-gitlab-event': 'Merge Request Hook', ...headers() },
+    );
+    await deliverRaw(
+      webhookId,
+      {
+        object_kind: 'pipeline',
+        object_attributes: {
+          id: 99,
+          status: 'success',
+          ref: sourceBranch,
+          sha: 'gitlab-source-head',
+        },
+        merge_request: { iid: 7, source_branch: sourceBranch },
+        project: {
+          path_with_namespace: 'acme/site',
+          default_branch: 'main',
+          web_url: 'https://gitlab.com/acme/site',
+        },
+      },
+      { 'x-gitlab-event': 'Pipeline Hook', ...headers() },
+    );
+
+    await deliverRaw(
+      webhookId,
+      gitlabPayload(
+        `Fixes MKT-${issue.sequenceNumber}`,
+        'merge',
+        'gitlab-source-head',
+        sourceBranch,
+        'gitlab-merge-head',
+      ),
+      { 'x-gitlab-event': 'Merge Request Hook', ...headers() },
+    );
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      state: 'merged',
+      headSha: 'gitlab-merge-head',
+      pipelineStatus: 'success',
+    });
+
+    const pipeline = await deliverRaw(
+      webhookId,
+      {
+        object_kind: 'pipeline',
+        object_attributes: {
+          id: 100,
+          status: 'running',
+          ref: 'v1.2.3',
+          sha: 'gitlab-merge-head',
+        },
+        project: {
+          path_with_namespace: 'acme/site',
+          default_branch: 'main',
+          web_url: 'https://gitlab.com/acme/site',
+        },
+      },
+      { 'x-gitlab-event': 'Pipeline Hook', ...headers() },
+    );
+
+    expect(pipeline.data).toMatchObject({ handled: 'pipeline' });
+    expect((await issueState(asOwner, issue.id)).development[0]).toMatchObject({
+      provider: 'gitlab',
+      number: 7,
+      state: 'merged',
+      sourceBranch,
+      headSha: 'gitlab-merge-head',
+      pipelineStatus: 'running',
+      pipelineUrl: 'https://gitlab.com/acme/site/-/pipelines/100',
     });
   });
 

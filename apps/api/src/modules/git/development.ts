@@ -147,7 +147,7 @@ function pullRequestValues(event: PullRequestEvent, updatedAt: Date) {
 
 function pullRequestUpdateValues(event: PullRequestEvent, updatedAt: Date) {
   const values = pullRequestValues(event, updatedAt);
-  if (!event.headSha) return values;
+  if (!event.headSha || event.action === 'merged') return values;
   return {
     ...values,
     pipelineStatus: sql<

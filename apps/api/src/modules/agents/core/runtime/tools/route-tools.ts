@@ -102,9 +102,13 @@ function buildOne(
       const args: Record<string, unknown> = { ...input };
       for (const name of hidden) delete args[name];
       if (bindsProject) args.projectKey = project.key;
-      const { text, isError } = await dispatchTool(getMcpApp(), route, args, apiKey, {
-        viaMcpEndpoint: false,
-      });
+      const { text, isError } = await dispatchTool(
+        getMcpApp(),
+        route,
+        args,
+        { kind: 'api-key', apiKey },
+        { viaMcpEndpoint: false },
+      );
       const body = parseBody(text);
       // A route failure is returned to the model as a result rather than thrown, so
       // it can correct the call instead of the run aborting. Custom tools do the same.

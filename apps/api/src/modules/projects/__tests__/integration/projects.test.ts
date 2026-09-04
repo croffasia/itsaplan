@@ -282,6 +282,64 @@ describe('projects', () => {
       expect(view.data?.viewer.role).toBe('owner');
     });
 
+    it('does not copy wiki content for a member who cannot read documents', async () => {
+      const owner = await signUpClient();
+      await setupSource(owner.api);
+      const role = await owner.api.projects({ projectKey: 'SRC' }).roles.post({
+        name: 'Work items only',
+        permissions: { work_items: { create: false, edit: false, read: true, delete: false } },
+      });
+      const member = await addProjectMember(owner.api, 'SRC', role.data!.id);
+
+      const defaultCopy = await member.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'LEAK',
+        name: 'Must not copy Docs',
+      });
+      expect(defaultCopy.status).toBe(403);
+
+      const safeCopy = await member.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'SAFE',
+        name: 'Labels only',
+        include: { labels: true },
+      });
+      expect(safeCopy.status).toBe(201);
+    });
+
+    it('only lets an owner copy secret-bearing project sections', async () => {
+      const owner = await signUpClient();
+      await setupSource(owner.api);
+      const role = await owner.api.projects({ projectKey: 'SRC' }).roles.post({
+        name: 'Work items only',
+        permissions: { work_items: { create: false, edit: false, read: true, delete: false } },
+      });
+      const member = await addProjectMember(owner.api, 'SRC', role.data!.id);
+
+      const integrations = await member.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'SECRET1',
+        name: 'No integration secrets',
+        include: { integrations: true },
+      });
+      const webhooks = await member.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'SECRET2',
+        name: 'No webhook secrets',
+        include: { webhooks: true },
+      });
+      const notifications = await member.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'SECRET3',
+        name: 'No notification credentials',
+        include: { notificationProviders: true },
+      });
+      const tools = await member.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'SECRET4',
+        name: 'No tool credentials',
+        include: { tools: true },
+      });
+
+      expect([integrations.status, webhooks.status, notifications.status, tools.status]).toEqual([
+        403, 403, 403, 403,
+      ]);
+    });
+
     it("does not copy the source project's issues", async () => {
       const { api } = await signUpClient();
       await setupSource(api);
@@ -312,7 +370,7 @@ describe('projects', () => {
       await api.projects.post({ key: 'SRC', name: 'Source' });
       await api
         .projects({ projectKey: 'SRC' })
-        .settings.patch({ features: { notes: false, dashboards: false } });
+        .settings.patch({ features: { documents: false, notes: false, dashboards: false } });
 
       await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
 
@@ -321,11 +379,36 @@ describe('projects', () => {
         initiatives: true,
         cycles: true,
         dashboards: false,
+        documents: false,
         notes: false,
         subtasks: true,
         checklists: true,
         issueStats: true,
       });
+    });
+
+    it('takes mcpEnabled from the instance default, not from the source project', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await api.projects({ projectKey: 'SRC' }).settings.patch({ mcpEnabled: false });
+
+      await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
+
+      const settings = await api.projects({ projectKey: 'DST' }).settings.get();
+      expect(settings.data?.mcpEnabled).toBe(true);
+    });
+
+    // The other direction, so the copy is shown to read the default rather than to
+    // carry a fixed value. The first account of a fresh database holds the god role.
+    it('copies a project with MCP off once the instance default is turned off', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'SRC', name: 'Source' });
+      await api.god['project-defaults'].put({ mcpEnabled: false });
+
+      await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
+
+      const settings = await api.projects({ projectKey: 'DST' }).settings.get();
+      expect(settings.data?.mcpEnabled).toBe(false);
     });
 
     it('copies the estimate kinds and time logging the source project carries', async () => {
@@ -652,6 +735,7 @@ describe('projects', () => {
       expect(res.data?.features).toMatchObject({
         initiatives: true,
         dashboards: true,
+        documents: true,
         notes: true,
         subtasks: true,
         checklists: true,
@@ -660,6 +744,7 @@ describe('projects', () => {
       expect((await viewOf(api, 'MKT')).data?.project).toMatchObject({
         initiativesEnabled: true,
         dashboardsEnabled: true,
+        documentsEnabled: true,
         notesEnabled: true,
         subtasksEnabled: true,
         checklistsEnabled: true,
@@ -678,6 +763,7 @@ describe('projects', () => {
       expect(off.data?.features).toMatchObject({
         initiatives: false,
         dashboards: true,
+        documents: true,
         notes: true,
       });
       expect((await viewOf(api, 'MKT')).data?.project.initiativesEnabled).toBe(false);
@@ -782,6 +868,16 @@ describe('projects', () => {
       await api.projects.post({ key: 'MKT', name: 'Marketing' });
 
       const res = await autoArchive(api).patch({ completedDays: 0, canceledDays: 7 });
+      expect(res.status).toBe(400);
+    });
+
+    // The worker subtracts this from now() for every project in one statement, so a
+    // day count no interval can carry fails that statement for the whole instance.
+    it('rejects a day count no interval can carry', async () => {
+      const { api } = await signUpClient();
+      await api.projects.post({ key: 'MKT', name: 'Marketing' });
+
+      const res = await autoArchive(api).patch({ completedDays: 3_000_000, canceledDays: 7 });
       expect(res.status).toBe(400);
     });
 

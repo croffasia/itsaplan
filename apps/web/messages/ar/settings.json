@@ -187,6 +187,7 @@
     "actionsHint": "اللي الوكيل يقدر يعمله في المشروع",
     "searchActions": "بحث في الإجراءات",
     "actionGroup": {
+      "documents": "Docs",
       "issues": "المهام",
       "initiatives": "المبادرات",
       "cycles": "الدورات",
@@ -396,6 +397,7 @@
     "features": "الميزات",
     "featuresHint": "الأقسام اللي المشروع ده بيعرضها. لما توقف واحد بيتخفي بس محتواه بيفضل زي ما هو.",
     "featureHints": {
+      "documents": "وثائق المشروع المشتركة والمنظمة كويكي.",
       "dashboards": "رسوم بيانية ومقاييس على لوحات المعلومات المحفوظة.",
       "initiatives": "مجموعات مهام بتتابعها كشغل واحد.",
       "cycles": "فترات شغل محدّدة المدة بتتخطّط المهام جواها.",
@@ -599,6 +601,23 @@
     "typeChangeWarning": "تغيير النوع هيمسح القيم اللي موجودة في الحقل ده.",
     "optionsRemovedWarning": "الخيار اللي هيتشال هيتمسح من المهام اللي مختاراه.",
     "memberScopeWarning": "الأعضاء اللي النطاق الجديد مش بيسمح بيهم هيتمسحوا."
+  },
+  "issueTemplates": {
+    "addTemplate": "قالب جديد",
+    "editTemplate": "تعديل القالب",
+    "deleteTemplate": "حذف القالب",
+    "deleteTitle": "حذف القالب \"{name}\"",
+    "deleteMessage": "سيُحذف القالب. المهام المنشأة منه لن تتغير. لا يمكن التراجع عن هذا الإجراء.",
+    "namePlaceholder": "اسم القالب",
+    "descriptionPlaceholder": "الغرض من هذا القالب",
+    "issueTitle": "عنوان المهمة",
+    "issueTitlePlaceholder": "العنوان الذي تبدأ به المهمة",
+    "issueDescription": "وصف المهمة",
+    "issueDescriptionPlaceholder": "الوصف الذي تبدأ به المهمة، بصيغة Markdown",
+    "properties": "الخصائص الافتراضية",
+    "propertiesHint": "تُطبَّق عند إنشاء المهمة، ويمكن تعديلها قبل ذلك.",
+    "emptyTitle": "لا توجد قوالب بعد",
+    "emptyDescription": "يملأ القالب المهمة الجديدة بعنوان ووصف وخصائص."
   },
   "actions": {
     "new": "إجراء جديد",

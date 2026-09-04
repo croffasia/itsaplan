@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { untaggedRoutes } from '#tests/helpers/mcp';
@@ -439,12 +439,30 @@ describe('ai agents', () => {
     const { asOwner } = await setup();
     const created = await agents(asOwner).post({ name: 'Bot', username: 'bot', kind: 'external' });
     const agentId = created.data!.agent.id;
+    const asAgent = apiKeyApi(created.data!.apiKey!);
+    const agentDocuments = asAgent.projects({ projectKey: 'MKT' }).documents;
+    const shared = (await agentDocuments.post({ title: 'Agent handbook' })).data!;
+    const privatePage = (
+      await agentDocuments.post({ title: 'Agent private notes', isPrivate: true })
+    ).data!;
     const del = await agents(asOwner)({ agentId }).delete();
     expect(del.status).toBe(204);
     const list = await agents(asOwner).get();
     expect(list.data).toHaveLength(0);
     const project = await asOwner.projects({ projectKey: 'MKT' }).get();
     expect(project.data?.assignees.some((a) => a.kind === 'agent')).toBe(false);
+    expect(
+      (await asOwner.projects({ projectKey: 'MKT' }).documents({ documentId: shared.id }).get())
+        .data,
+    ).toMatchObject({ ownerUserId: null, isPrivate: false });
+    expect(
+      (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .documents({ documentId: privatePage.id })
+          .get()
+      ).status,
+    ).toBe(404);
   });
 
   it('rejects a duplicate username with 409', async () => {

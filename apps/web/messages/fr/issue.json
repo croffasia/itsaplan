@@ -116,7 +116,10 @@
     "noFields": "Aucun champ.",
     "description": "Description",
     "other": "Autre",
-    "submit": "Créer le ticket"
+    "submit": "Créer le ticket",
+    "template": "Modèle",
+    "applyTemplate": "Appliquer un modèle…",
+    "noTemplates": "Aucun modèle."
   },
   "attachments": {
     "title": "Pièces jointes",
@@ -380,6 +383,14 @@
       "skipped": "Ignoré"
     }
   },
+  "documents": {
+    "title": "Docs",
+    "add": "Lier une page Docs",
+    "empty": "Aucune page Docs liée.",
+    "loadFailed": "Impossible de charger les pages liées. Cliquez pour réessayer.",
+    "remove": "Dissocier {title}",
+    "untitled": "Sans titre"
+  },
   "archived": "Archivé",
   "activityHeading": "Activité",
   "feedFlat": "À plat",
@@ -389,6 +400,7 @@
     "changeState": "Changer l'état…",
     "changeType": "Changer le type…",
     "noType": "Aucun type",
+    "unsetState": "Aucun état",
     "noAssignee": "Aucun responsable",
     "assignTo": "Assigner à…",
     "you": "Vous",
@@ -410,7 +422,14 @@
   },
   "watchers": {
     "watch": "Suivre",
-    "unwatch": "Ne plus suivre"
+    "unwatch": "Ne plus suivre",
+    "manage": "Gérer les abonnés",
+    "search": "Rechercher des membres du projet…",
+    "empty": "Aucun membre trouvé.",
+    "you": "{name} (vous)",
+    "add": "Ajouter {name} aux abonnés",
+    "remove": "Retirer {name} des abonnés",
+    "watchingCount": "{count, plural, =0 {Aucun abonné} one {# abonné} other {# abonnés}}"
   },
   "effects": {
     "cleared": "Effacé",

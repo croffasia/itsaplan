@@ -187,6 +187,7 @@
     "actionsHint": "Ce que l'agent peut faire dans le projet",
     "searchActions": "Rechercher une action",
     "actionGroup": {
+      "documents": "Docs",
       "issues": "Tickets",
       "initiatives": "Initiatives",
       "cycles": "Cycles",
@@ -396,6 +397,7 @@
     "features": "Sections",
     "featuresHint": "Les sections que ce projet affiche. En désactiver une la masque et conserve son contenu.",
     "featureHints": {
+      "documents": "Documentation partagée du projet, organisée en pages.",
       "dashboards": "Graphiques et métriques sur des tableaux de bord enregistrés.",
       "initiatives": "Des groupes de tickets suivis comme un seul chantier.",
       "cycles": "Des périodes délimitées dans lesquelles les tickets sont planifiés.",
@@ -599,6 +601,23 @@
     "typeChangeWarning": "Changer le type efface les valeurs que les tickets portent déjà dans ce champ.",
     "optionsRemovedWarning": "Une option supprimée est effacée des tickets qui la portent.",
     "memberScopeWarning": "Les membres que le nouveau périmètre n'autorise pas sont retirés de ce champ."
+  },
+  "issueTemplates": {
+    "addTemplate": "Nouveau modèle",
+    "editTemplate": "Modifier le modèle",
+    "deleteTemplate": "Supprimer le modèle",
+    "deleteTitle": "Supprimer le modèle « {name} »",
+    "deleteMessage": "Le modèle est supprimé. Les tickets créés à partir de lui ne changent pas. Cette action est irréversible.",
+    "namePlaceholder": "Nom du modèle",
+    "descriptionPlaceholder": "À quoi sert ce modèle",
+    "issueTitle": "Titre du ticket",
+    "issueTitlePlaceholder": "Le titre avec lequel le ticket démarre",
+    "issueDescription": "Description du ticket",
+    "issueDescriptionPlaceholder": "La description avec laquelle le ticket démarre, en Markdown",
+    "properties": "Propriétés par défaut",
+    "propertiesHint": "Appliquées à la création du ticket, et modifiables avant.",
+    "emptyTitle": "Aucun modèle pour l'instant",
+    "emptyDescription": "Un modèle remplit un nouveau ticket avec un titre, une description et des propriétés."
   },
   "actions": {
     "new": "Nouvelle action",

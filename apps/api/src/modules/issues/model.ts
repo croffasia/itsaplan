@@ -211,6 +211,11 @@ export const IssueWatcherResponse = t.Object({
   image: t.Nullable(t.String()),
 });
 
+export const issueWatcherParams = t.Object({
+  issueId: t.Numeric(),
+  userId: t.String(),
+});
+
 // ChecklistItemRow / ChecklistRow from checklists.ts.
 export const ChecklistItemResponse = t.Object({
   id: t.Number(),

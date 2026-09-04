@@ -7,6 +7,7 @@
     "initiatives": "计划",
     "cycles": "周期",
     "dashboards": "仪表盘",
+    "documents": "Docs",
     "views": "工作项视图",
     "members_invite": "邀请",
     "members_manage": "成员",
@@ -18,6 +19,7 @@
     "agent_skills": "代理技能",
     "agent_tools": "代理工具",
     "custom_fields": "自定义字段",
+    "issue_templates": "问题模板",
     "workflow_config": "工作流配置",
     "actions": "操作",
     "webhooks": "Webhook",
@@ -33,6 +35,7 @@
   "groups": {
     "workItems": "工作项",
     "dashboards": "仪表盘",
+    "documents": "Docs",
     "notes": "便签",
     "ai": "AI",
     "configuration": "配置",

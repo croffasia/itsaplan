@@ -806,6 +806,34 @@
       "when": 1788173880309,
       "tag": "0114_ordinary_fixer",
       "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1788538405400,
+      "tag": "0115_wooden_polaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 116,
+      "version": "7",
+      "when": 1788539929811,
+      "tag": "0116_modern_jackpot",
+      "breakpoints": true
+    },
+    {
+      "idx": 117,
+      "version": "7",
+      "when": 1788539930251,
+      "tag": "0117_backfill_issue_templates_permission",
+      "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1788542845903,
+      "tag": "0118_left_titanium_man",
+      "breakpoints": true
     }
   ]
 }

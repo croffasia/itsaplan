@@ -294,6 +294,8 @@ interface GitlabPayload {
     target_branch?: string;
     sha?: string;
     last_commit?: { id?: string };
+    merge_commit_sha?: string | null;
+    squash_commit_sha?: string | null;
     draft?: boolean;
     work_in_progress?: boolean;
   };
@@ -374,7 +376,10 @@ const gitlab: GitProvider = {
       repo: project.path_with_namespace,
       sourceBranch: mr.source_branch ?? null,
       targetBranch: mr.target_branch ?? '',
-      headSha: mr.last_commit?.id ?? null,
+      headSha:
+        (merged ? (mr.merge_commit_sha ?? mr.squash_commit_sha) : null) ??
+        mr.last_commit?.id ??
+        null,
       defaultBranch: project.default_branch ?? null,
       draft: mr.draft === true || mr.work_in_progress === true,
     };

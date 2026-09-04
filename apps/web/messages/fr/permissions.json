@@ -7,6 +7,7 @@
     "initiatives": "Initiatives",
     "cycles": "Cycles",
     "dashboards": "Tableaux de bord",
+    "documents": "Docs",
     "views": "Vues de tickets",
     "members_invite": "Invitations",
     "members_manage": "Membres",
@@ -18,6 +19,7 @@
     "agent_skills": "Compétences des agents",
     "agent_tools": "Outils des agents",
     "custom_fields": "Champs personnalisés",
+    "issue_templates": "Modèles de tickets",
     "workflow_config": "Configuration du flux de travail",
     "actions": "Actions",
     "webhooks": "Webhooks",
@@ -33,6 +35,7 @@
   "groups": {
     "workItems": "Tickets",
     "dashboards": "Tableaux de bord",
+    "documents": "Docs",
     "notes": "Notes",
     "ai": "IA",
     "configuration": "Configuration",

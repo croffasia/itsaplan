@@ -67,6 +67,7 @@ export const project = pgTable('project', {
   // come back with it.
   initiativesEnabled: boolean('initiatives_enabled').notNull().default(true),
   dashboardsEnabled: boolean('dashboards_enabled').notNull().default(true),
+  documentsEnabled: boolean('documents_enabled').notNull().default(true),
   notesEnabled: boolean('notes_enabled').notNull().default(true),
   cyclesEnabled: boolean('cycles_enabled').notNull().default(true),
   subtasksEnabled: boolean('subtasks_enabled').notNull().default(true),
@@ -1016,6 +1017,45 @@ export const agentFieldTrigger = pgTable(
   ],
 );
 
+// A preset a new issue can be created from. It carries the title and description
+// the issue starts with plus the properties applied on top of it — every one of
+// them optional, and one left NULL leaves the create dialog on its own default.
+// The labels are in issue_template_label.
+export const issueTemplate = pgTable(
+  'issue_template',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // What the template is for, shown under its name in the picker.
+    description: text('description').notNull().default(''),
+    // The title and body the issue starts with, both editable before it is created.
+    titleTemplate: text('title_template').notNull().default(''),
+    descriptionTemplate: text('description_template').notNull().default(''),
+    typeId: integer('type_id').references(() => issueType.id, { onDelete: 'set null' }),
+    columnId: integer('column_id').references(() => projectColumn.id, { onDelete: 'set null' }),
+    priority: text('priority'),
+    assigneeUserId: text('assignee_user_id').references(() => user.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique().on(t.projectId, t.name)],
+);
+
+export const issueTemplateLabel = pgTable(
+  'issue_template_label',
+  {
+    templateId: integer('template_id')
+      .notNull()
+      .references(() => issueTemplate.id, { onDelete: 'cascade' }),
+    labelId: integer('label_id')
+      .notNull()
+      .references(() => label.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.templateId, t.labelId] })],
+);
+
 // A strategic grouping of issues inside a project (project-scoped, not
 // cross-project). Issues point at it through issue.initiative_id. status is a
 // fixed lifecycle enum; health is not stored — it is computed on the fly from the
@@ -1685,6 +1725,157 @@ export const projectDashboard = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('project_dashboard_project_idx').on(t.projectId, t.position)],
+);
+
+// Shared Markdown pages arranged as a tree. Version rejects stale autosaves.
+// Private pages are visible only to their owner; project permissions still gate
+// access before that page-level rule is applied.
+export const projectDocument = pgTable(
+  'project_document',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    parentId: integer('parent_id').references((): AnyPgColumn => projectDocument.id, {
+      onDelete: 'set null',
+    }),
+    title: text('title').notNull().default(''),
+    content: text('content').notNull().default(''),
+    contentJson: jsonb('content_json').$type<Record<string, unknown>>(),
+    icon: text('icon'),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
+    fullWidth: boolean('full_width').notNull().default(false),
+    isPrivate: boolean('is_private').notNull().default(false),
+    isLocked: boolean('is_locked').notNull().default(false),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    archivedByAncestorId: integer('archived_by_ancestor_id').references(
+      (): AnyPgColumn => projectDocument.id,
+      { onDelete: 'set null' },
+    ),
+    position: doublePrecision('position').notNull().default(0),
+    version: integer('version').notNull().default(1),
+    ownerUserId: text('owner_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    updatedByUserId: text('updated_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('project_document_project_tree_idx').on(t.projectId, t.parentId, t.position, t.id),
+    index('project_document_owner_idx').on(t.ownerUserId),
+    index('project_document_project_archive_idx').on(t.projectId, t.archivedAt),
+    check('project_document_version_check', sql`${t.version} > 0`),
+  ],
+);
+
+// Immutable snapshots of every persisted document version. A database trigger
+// fills this table so project copies and bulk tree operations receive the same
+// history guarantees as writes made through the Documents API.
+export const projectDocumentRevision = pgTable(
+  'project_document_revision',
+  {
+    id: serial('id').primaryKey(),
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    parentId: integer('parent_id'),
+    title: text('title').notNull(),
+    content: text('content').notNull(),
+    contentJson: jsonb('content_json').$type<Record<string, unknown>>(),
+    icon: text('icon'),
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
+    fullWidth: boolean('full_width').notNull().default(false),
+    isPrivate: boolean('is_private').notNull().default(false),
+    isLocked: boolean('is_locked').notNull().default(false),
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
+    position: doublePrecision('position').notNull(),
+    ownerUserId: text('owner_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('project_document_revision_document_version_unique').on(t.documentId, t.version),
+    index('project_document_revision_document_idx').on(t.documentId, t.version),
+  ],
+);
+
+// Per-user page preferences. Keeping favorites outside the shared page row means
+// one person's sidebar choices never affect another project member.
+export const projectDocumentPreference = pgTable(
+  'project_document_preference',
+  {
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    isFavorite: boolean('is_favorite').notNull().default(false),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.documentId, t.userId] }),
+    index('project_document_preference_user_idx').on(t.userId),
+  ],
+);
+
+// Explicit links between Docs pages and work items. The relation is intentionally
+// separate from page content: renaming either side keeps the link intact, one page
+// can provide context for several work items, and one work item can collect several
+// specs or runbooks. The API verifies that both ends belong to the same project.
+export const projectDocumentIssue = pgTable(
+  'project_document_issue',
+  {
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.documentId, t.issueId] }),
+    index('project_document_issue_issue_idx').on(t.issueId, t.documentId),
+  ],
+);
+
+// Files embedded in Docs pages. Bytes use the same S3-compatible object store as
+// issue/chat attachments; only authenticated document routes expose them, so a
+// private page's unguessable asset id never acts as a public capability URL.
+export const documentAsset = pgTable(
+  'document_asset',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    uploadedByUserId: text('uploaded_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    s3Key: text('s3_key').notNull(),
+    filename: text('filename').notNull(),
+    contentType: text('content_type').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('document_asset_document_idx').on(t.documentId, t.createdAt)],
 );
 
 // Note boards: a freeform canvas of sticky notes. canvas is a jsonb blob owned by

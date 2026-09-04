@@ -1,6 +1,6 @@
 {
   "title": "MCP Server",
-  "description": "Connect AI agents to this project over the Model Context Protocol. An agent gets the access of the API key it uses.",
+  "description": "Connect AI agents to this project over the Model Context Protocol using OAuth or a personal API key.",
   "access": "MCP access",
   "enabled": "Enabled",
   "disabled": "Disabled",
@@ -21,6 +21,31 @@
   },
   "clients": {
     "other": "Other"
+  },
+  "oauth": {
+    "configuration": "Connection configuration",
+    "methodTabsAria": "MCP authentication method",
+    "method": "OAuth MCP",
+    "personalKey": "Personal API key",
+    "title": "Connect with OAuth",
+    "description": "Use this option for any MCP client that supports OAuth, including ChatGPT and Claude. You sign in with your Itsaplan account; no personal API key is shared with the client.",
+    "endpoint": "MCP endpoint",
+    "discovery": "OAuth discovery",
+    "steps": {
+      "add": "Add an MCP app in your client and paste the MCP endpoint.",
+      "choose": "Choose OAuth when the client asks for authentication.",
+      "signIn": "Sign in to Itsaplan and approve the requested access."
+    },
+    "security": "OAuth uses PKCE (S256), dynamic client registration, and bearer tokens scoped to your Itsaplan account.",
+    "consent": {
+      "title": "Authorize Itsaplan",
+      "description": "Allow this MCP client to act with the permissions of your Itsaplan account.",
+      "missingCode": "This authorization request is missing its consent code.",
+      "cancel": "Cancel",
+      "pending": "Authorizing…",
+      "authorize": "Authorize",
+      "failed": "Unable to complete OAuth authorization."
+    }
   },
   "toast": {
     "enabled": "MCP access enabled",

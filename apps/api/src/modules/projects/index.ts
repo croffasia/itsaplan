@@ -4,7 +4,7 @@ import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
-import { requireUser } from '#shared/access';
+import { assertPermission, assertProjectOwner, requireUser } from '#shared/access';
 import { isMcpRequest } from '#shared/mcp-request';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getMemberContext, listAssigneeCandidates } from '#modules/members/service';
@@ -12,6 +12,7 @@ import { listColumns } from '#modules/columns/service';
 import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
+import { listIssueTemplates } from '#modules/issue-templates/service';
 import {
   AutoArchiveResponse,
   EstimatesResponse,
@@ -93,9 +94,28 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     '/projects/:projectKey/copy',
     async ({ project, body, user, set }) => {
       const { include, ...meta } = body;
+      const current = requireUser(user);
+      // Omitting include selects the legacy/default structure, which now contains
+      // the wiki. A caller who cannot read Docs must not become owner of a copied
+      // project containing their full text.
+      if (include === undefined || include.documents === true) {
+        await assertPermission(project.id, current, 'documents', 'read');
+      }
+      // These sections contain encrypted credentials or signing secrets. Read
+      // permissions expose only redacted metadata elsewhere; copying them into a
+      // new project owned by the caller would transfer the usable secret itself.
+      if (
+        include &&
+        (include.notificationProviders === true ||
+          include.webhooks === true ||
+          include.integrations === true ||
+          include.tools === true)
+      ) {
+        await assertProjectOwner(project.id, current);
+      }
       try {
         set.status = 201;
-        return await copyProject(project.id, meta, requireUser(user).id, include);
+        return await copyProject(project.id, meta, current.id, include);
       } catch (err) {
         // Return the real cause in the body so the UI shows the actual error.
         console.error('copyProject failed:', err);
@@ -112,7 +132,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         description:
           "Copy a project's configuration into a new project you own, without its issues. " +
           'By default the structure (states, issue types, labels, custom fields, views, ' +
-          'dashboards, actions) is copied. Pass `include` to choose sections; the API ' +
+          'dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
           'force-enables dependencies (e.g. a view pulls in the states it references).',
         ...mcpTool('copy_project'),
       },
@@ -131,16 +151,25 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
   .get(
     '/projects/:projectKey',
     async ({ project, user }) => {
-      const [columns, issueTypes, labels, labelGroups, assignees, customFields, viewer] =
-        await Promise.all([
-          listColumns(project.id),
-          listIssueTypes(project.id),
-          listLabels(project.id),
-          listLabelGroups(project.id),
-          listAssigneeCandidates(project.id),
-          listCustomFields(project.id, { allTypes: true }),
-          getMemberContext(project.id, requireUser(user).id),
-        ]);
+      const [
+        columns,
+        issueTypes,
+        labels,
+        labelGroups,
+        assignees,
+        customFields,
+        issueTemplates,
+        viewer,
+      ] = await Promise.all([
+        listColumns(project.id),
+        listIssueTypes(project.id),
+        listLabels(project.id),
+        listLabelGroups(project.id),
+        listAssigneeCandidates(project.id),
+        listCustomFields(project.id, { allTypes: true }),
+        listIssueTemplates(project.id),
+        getMemberContext(project.id, requireUser(user).id),
+      ]);
       // The permission guard already asserted membership, so a context always
       // exists here; guard against a race (membership revoked mid-request).
       if (!viewer) throw new HttpError(403, 'You do not have access to this project');
@@ -152,6 +181,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         labelGroups,
         assignees,
         customFields,
+        issueTemplates,
         viewer: { role: viewer.role },
         permissions: viewer.permissions,
       };
@@ -162,8 +192,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Get a project',
         description:
-          'Get a project setup by key: columns, issue types, labels, custom fields, and ' +
-          'assignable users and agents. Resolves the ids create_issue and update_issue ' +
+          'Get a project setup by key: columns, issue types, labels, custom fields, issue ' +
+          'templates, and assignable users and agents. Resolves the ids create_issue and update_issue ' +
           'take. For issues use list_issues or search_issues.',
         ...mcpTool('get_project'),
       },

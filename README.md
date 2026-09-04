@@ -75,7 +75,7 @@ be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
 - Quick actions that run on an issue, and auto-assignment when an issue moves into a state
 - Freeform notes boards: sticky notes on a canvas, with colors, checklists, and connections
 - Share a view or an issue by public link, read-only and without sign-in
-- Initiatives that group and track work across projects
+- Initiatives that group and track related work inside a project
 - Auto-archive, a notification inbox, role-based access control, and more
 
 **AI agents**

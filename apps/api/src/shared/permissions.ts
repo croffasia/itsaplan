@@ -10,6 +10,7 @@ export const PERMISSION_RESOURCES = [
   'initiatives',
   'cycles',
   'dashboards',
+  'documents',
   'views',
   'members_invite',
   'members_manage',
@@ -21,6 +22,7 @@ export const PERMISSION_RESOURCES = [
   'agent_skills',
   'agent_tools',
   'custom_fields',
+  'issue_templates',
   'workflow_config',
   'actions',
   'webhooks',
@@ -62,6 +64,7 @@ export function defaultMemberPermissions(): Permissions {
   p.work_items = fill(true);
   p.initiatives = fill(true);
   p.cycles = fill(true);
+  p.documents = fill(true);
   p.note_boards = fill(true);
   p.dashboards.read = true;
   p.views.read = true;
@@ -70,6 +73,7 @@ export function defaultMemberPermissions(): Permissions {
   p.labels.read = true;
   p.ai_agents.read = true;
   p.custom_fields.read = true;
+  p.issue_templates.read = true;
   return p;
 }
 

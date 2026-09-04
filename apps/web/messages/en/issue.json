@@ -116,7 +116,10 @@
     "noFields": "No fields.",
     "description": "Description",
     "other": "Other",
-    "submit": "Create issue"
+    "submit": "Create issue",
+    "template": "Template",
+    "applyTemplate": "Apply template…",
+    "noTemplates": "No templates."
   },
   "attachments": {
     "title": "Attachments",
@@ -380,6 +383,14 @@
       "skipped": "Skipped"
     }
   },
+  "documents": {
+    "title": "Docs",
+    "add": "Link a Docs page",
+    "empty": "No linked Docs yet.",
+    "loadFailed": "Could not load linked Docs. Click to retry.",
+    "remove": "Unlink {title}",
+    "untitled": "Untitled"
+  },
   "archived": "Archived",
   "activityHeading": "Activity",
   "feedFlat": "Flat",
@@ -389,6 +400,7 @@
     "changeState": "Change state…",
     "changeType": "Change type…",
     "noType": "No type",
+    "unsetState": "No state",
     "noAssignee": "No assignee",
     "assignTo": "Assign to…",
     "you": "You",
@@ -410,7 +422,14 @@
   },
   "watchers": {
     "watch": "Watch",
-    "unwatch": "Unwatch"
+    "unwatch": "Unwatch",
+    "manage": "Manage watchers",
+    "search": "Search project members…",
+    "empty": "No members found.",
+    "you": "{name} (you)",
+    "add": "Add {name} as a watcher",
+    "remove": "Remove {name} from watchers",
+    "watchingCount": "{count, plural, =0 {No watchers} one {# watcher} other {# watchers}}"
   },
   "effects": {
     "cleared": "Cleared",

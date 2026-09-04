@@ -13,6 +13,7 @@ const FEATURES = [
   'dashboards',
   'initiatives',
   'cycles',
+  'documents',
   'notes',
   'subtasks',
   'checklists',

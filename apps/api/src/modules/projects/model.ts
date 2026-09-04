@@ -1,6 +1,7 @@
 import { t } from 'elysia';
 import { ColumnResponse } from '#modules/columns/model';
 import { CustomFieldResponse } from '#modules/custom-fields/model';
+import { IssueTemplateResponse } from '#modules/issue-templates/model';
 import { IssueTypeResponse } from '#modules/issue-types/model';
 import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
 import { PermissionMatrixSchema } from '#shared/permissions';
@@ -34,7 +35,7 @@ export const createProjectBody = t.Composite([
 
 // Copy adds an optional selection of which parts of the source project to carry over.
 // Omitted → the source project's structure (states, types, labels, custom fields,
-// views, dashboards, actions). Each flag maps to a section of the project settings
+// views, dashboards, documents, actions). Each flag maps to a project section
 // menu; the service force-enables dependencies.
 export const copyProjectBody = t.Composite([
   projectBody,
@@ -67,6 +68,7 @@ export const ProjectResponse = t.Object({
   // disabled section is hidden in the web app and its rows are kept.
   initiativesEnabled: t.Boolean(),
   dashboardsEnabled: t.Boolean(),
+  documentsEnabled: t.Boolean(),
   notesEnabled: t.Boolean(),
   cyclesEnabled: t.Boolean(),
   subtasksEnabled: t.Boolean(),
@@ -102,6 +104,7 @@ const AssigneeCandidateResponse = t.Object({
   kind: t.Union([t.Literal('member'), t.Literal('agent')]),
   agentKind: t.Nullable(t.Union([t.Literal('external'), t.Literal('internal')])),
   restrictedToUserId: t.Nullable(t.String()),
+  canReadWorkItems: t.Boolean(),
 });
 
 // The caller's own role in a project (from MemberContext in members/service). The
@@ -111,8 +114,8 @@ const ViewerResponse = t.Object({
 });
 
 // The project board scaffold (GET /projects/:projectKey): the project plus its
-// columns, issue types, labels, label groups, assignable users, custom fields, and
-// the caller's own effective access. The issues themselves come from
+// columns, issue types, labels, label groups, assignable users, custom fields,
+// issue templates, and the caller's own effective access. The issues themselves come from
 // GET /projects/:projectKey/issues/board.
 export const ProjectBoardResponse = t.Object({
   project: ProjectResponse,
@@ -122,6 +125,7 @@ export const ProjectBoardResponse = t.Object({
   labelGroups: t.Array(LabelGroupResponse),
   assignees: t.Array(AssigneeCandidateResponse),
   customFields: t.Array(CustomFieldResponse),
+  issueTemplates: t.Array(IssueTemplateResponse),
   viewer: ViewerResponse,
   // The caller's resolved permission matrix (owners get every flag).
   permissions: PermissionMatrixSchema,
@@ -131,6 +135,7 @@ export const ProjectBoardResponse = t.Object({
 const FeaturesResponse = t.Object({
   initiatives: t.Boolean(),
   dashboards: t.Boolean(),
+  documents: t.Boolean(),
   notes: t.Boolean(),
   cycles: t.Boolean(),
   subtasks: t.Boolean(),
@@ -149,6 +154,9 @@ export const updateProjectSettingsBody = t.Object({
   features: t.Optional(t.Partial(FeaturesResponse)),
 });
 
+// Ten years, well inside the range make_interval and a timestamp can hold.
+export const MAX_AUTO_ARCHIVE_DAYS = 3650;
+
 // Auto-archive thresholds (AutoArchiveSettings from the service): days of inactivity
 // in a completed/canceled column before the worker archives an issue; null = off.
 export const AutoArchiveResponse = t.Object({
@@ -156,9 +164,12 @@ export const AutoArchiveResponse = t.Object({
   canceledDays: t.Nullable(t.Number()),
 });
 
+// The upper bound keeps the value inside what an interval can carry: the worker
+// subtracts it from now() for every project in one statement, so a day count large
+// enough to overflow a timestamp fails that statement for the whole instance.
 export const updateAutoArchiveBody = t.Object({
-  completedDays: t.Nullable(t.Integer({ minimum: 1 })),
-  canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
+  completedDays: t.Nullable(t.Integer({ minimum: 1, maximum: MAX_AUTO_ARCHIVE_DAYS })),
+  canceledDays: t.Nullable(t.Integer({ minimum: 1, maximum: MAX_AUTO_ARCHIVE_DAYS })),
 });
 
 // The estimate kinds the project's issues carry and whether its members log time

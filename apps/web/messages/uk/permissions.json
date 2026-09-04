@@ -7,6 +7,7 @@
     "initiatives": "Ініціативи",
     "cycles": "Цикли",
     "dashboards": "Дашборди",
+    "documents": "Docs",
     "views": "Подання задач",
     "members_invite": "Запрошення",
     "members_manage": "Учасники",
@@ -18,6 +19,7 @@
     "agent_skills": "Навички агентів",
     "agent_tools": "Інструменти агентів",
     "custom_fields": "Власні поля",
+    "issue_templates": "Шаблони задач",
     "workflow_config": "Налаштування робочого процесу",
     "actions": "Дії",
     "webhooks": "Вебхуки",
@@ -33,6 +35,7 @@
   "groups": {
     "workItems": "Задачі",
     "dashboards": "Дашборди",
+    "documents": "Docs",
     "notes": "Нотатки",
     "ai": "AI",
     "configuration": "Налаштування",

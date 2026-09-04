@@ -11,6 +11,8 @@ import {
   customFieldOption,
   projectView,
   projectDashboard,
+  projectDocument,
+  documentAsset,
   projectAction,
   integrationCredential,
   agentTool,
@@ -18,10 +20,11 @@ import {
   projectNotificationSetting,
   projectSetting,
 } from '@repo/db';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, or } from 'drizzle-orm';
 import { iso } from '#shared/lib';
 import { defaultMemberPermissions } from '#shared/permissions';
 import { DEFAULT_COLUMNS, type ProjectRow } from './service';
+import { getProjectDefaults } from '#modules/settings/service';
 import { GIT_SETTING_KEY } from '#modules/git/service';
 import { listAgents, createAgent, type NewAgentInput } from '#modules/agents/core/service';
 import {
@@ -35,6 +38,14 @@ import { listAgentToolLinks, setAgentTools } from '#modules/agents/tools/service
 import { listAgentSchedules, createAgentSchedule } from '#modules/agents/schedules/service';
 import { nextCronRun } from '#modules/agents/schedules/cron';
 import { getObject } from '#shared/s3';
+import {
+  assertAttachmentStorageCapacity,
+  assertAttachmentFileAllowed,
+  attachmentObjectKey,
+  cloneAttachmentObject,
+  deleteAttachmentObject,
+} from '#modules/attachments/storage';
+import { assertValidDocumentContentJson, replaceAssetReferences } from '#modules/documents/service';
 
 // Which parts of a source project the copy carries over. Each key mirrors a section
 // of the project settings menu. A key set false skips that entity. Some sections
@@ -48,6 +59,7 @@ export interface CopyProjectInclude {
   customFields: boolean;
   views: boolean;
   dashboards: boolean;
+  documents: boolean;
   actions: boolean;
   configuration: boolean;
   roles: boolean;
@@ -67,6 +79,7 @@ export const COPY_INCLUDE_KEYS: (keyof CopyProjectInclude)[] = [
   'customFields',
   'views',
   'dashboards',
+  'documents',
   'actions',
   'configuration',
   'roles',
@@ -93,6 +106,7 @@ const DEFAULT_INCLUDE: CopyProjectInclude = {
   customFields: true,
   views: true,
   dashboards: true,
+  documents: true,
   actions: true,
 };
 
@@ -226,6 +240,7 @@ function mapProjectRow(row: typeof project.$inferSelect): ProjectRow {
     mcpEnabled: row.mcpEnabled,
     initiativesEnabled: row.initiativesEnabled,
     dashboardsEnabled: row.dashboardsEnabled,
+    documentsEnabled: row.documentsEnabled,
     notesEnabled: row.notesEnabled,
     cyclesEnabled: row.cyclesEnabled,
     subtasksEnabled: row.subtasksEnabled,
@@ -250,7 +265,7 @@ async function readObjectBytes(key: string): Promise<{ bytes: Buffer; contentTyp
 // configuration, but none of its issues. The creator becomes the new project's owner.
 //
 // Pure-database entities (states, types, labels, custom fields, views, dashboards,
-// actions, roles, settings, webhooks, integration credentials, configured tools) are
+// documents, actions, roles, settings, webhooks, integration credentials, configured tools) are
 // copied in one transaction, recording old id → new id so the ids that views/actions
 // and tools/agents reference are remapped to the copied entities. Entities with side
 // effects outside the database are copied after that transaction commits: skills copy
@@ -278,14 +293,22 @@ export async function copyProject(
   const skillMap = new Map<number, number>();
   const agentMap = new Map<number, number>();
 
-  const newProject = await db.transaction(async (tx) => {
+  const copiedDocumentAssetKeys: string[] = [];
+
+  // What a new project starts with, set instance-wide in god mode. Read before the
+  // transaction opens so the settings lookup is not part of it.
+  const defaults = await getProjectDefaults();
+
+  const copyTransaction = db.transaction(async (tx) => {
     // The optional sections the source project shows and the estimate kinds it
     // carries are part of its configuration, so the copy starts with the same ones.
-    // mcpEnabled is not carried: a copy opts into MCP on its own.
+    // mcpEnabled comes from the instance default instead, the same as it does for a
+    // project created from scratch.
     const [sourceFeatures] = await tx
       .select({
         initiativesEnabled: project.initiativesEnabled,
         dashboardsEnabled: project.dashboardsEnabled,
+        documentsEnabled: project.documentsEnabled,
         notesEnabled: project.notesEnabled,
         cyclesEnabled: project.cyclesEnabled,
         subtasksEnabled: project.subtasksEnabled,
@@ -304,6 +327,7 @@ export async function copyProject(
         key: input.key,
         name: input.name,
         description: input.description ?? '',
+        mcpEnabled: defaults.mcpEnabled,
         ...sourceFeatures,
       })
       .returning();
@@ -517,6 +541,112 @@ export async function copyProject(
       }
     }
 
+    if (inc.documents) {
+      const documentRows = await tx
+        .select()
+        .from(projectDocument)
+        .where(
+          and(
+            eq(projectDocument.projectId, sourceProjectId),
+            or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, ownerId)),
+          ),
+        )
+        .orderBy(projectDocument.position, projectDocument.id);
+      const documentMap = new Map<number, number>();
+      for (const d of documentRows) {
+        assertValidDocumentContentJson(d.contentJson);
+        const [created] = await tx
+          .insert(projectDocument)
+          .values({
+            projectId: proj.id,
+            title: d.title,
+            content: d.content,
+            contentJson: d.contentJson,
+            icon: d.icon,
+            metadata: d.metadata,
+            fullWidth: d.fullWidth,
+            isPrivate: d.isPrivate,
+            isLocked: d.isLocked,
+            archivedAt: d.archivedAt,
+            position: d.position,
+            ownerUserId: ownerId,
+            createdByUserId: ownerId,
+            updatedByUserId: ownerId,
+          })
+          .returning({ id: projectDocument.id });
+        documentMap.set(d.id, created.id);
+      }
+      for (const d of documentRows) {
+        if (d.parentId == null) continue;
+        const id = documentMap.get(d.id);
+        const parentId = documentMap.get(d.parentId);
+        if (id == null || parentId == null) continue;
+        await tx.update(projectDocument).set({ parentId }).where(eq(projectDocument.id, id));
+      }
+      const sourceDocumentIds = documentRows.map((document) => document.id);
+      if (sourceDocumentIds.length > 0) {
+        const assetRows = await tx
+          .select()
+          .from(documentAsset)
+          .where(inArray(documentAsset.documentId, sourceDocumentIds));
+        await assertAttachmentStorageCapacity(
+          proj.id,
+          assetRows.reduce((total, asset) => total + asset.sizeBytes, 0),
+          0,
+          tx,
+        );
+        for (const asset of assetRows) {
+          await assertAttachmentFileAllowed(asset.sizeBytes, asset.contentType);
+        }
+        const assetIdsByDocument = new Map<number, Map<string, string>>();
+        for (const asset of assetRows) {
+          const targetDocumentId = documentMap.get(asset.documentId);
+          if (targetDocumentId == null) continue;
+          const key = attachmentObjectKey(proj.id, 'documents', targetDocumentId, asset.filename);
+          await cloneAttachmentObject(asset.s3Key, key, asset.contentType);
+          copiedDocumentAssetKeys.push(key);
+          const [copy] = await tx
+            .insert(documentAsset)
+            .values({
+              documentId: targetDocumentId,
+              uploadedByUserId: ownerId,
+              s3Key: key,
+              filename: asset.filename,
+              contentType: asset.contentType,
+              sizeBytes: asset.sizeBytes,
+            })
+            .returning({ publicId: documentAsset.publicId });
+          const publicIds = assetIdsByDocument.get(asset.documentId) ?? new Map<string, string>();
+          publicIds.set(asset.publicId.toLowerCase(), copy.publicId);
+          assetIdsByDocument.set(asset.documentId, publicIds);
+        }
+        for (const source of documentRows) {
+          const targetDocumentId = documentMap.get(source.id);
+          const publicIds = assetIdsByDocument.get(source.id);
+          if (targetDocumentId == null || !publicIds || publicIds.size === 0) continue;
+          await tx
+            .update(projectDocument)
+            .set({
+              content: replaceAssetReferences(
+                source.content,
+                source.id,
+                input.key,
+                targetDocumentId,
+                publicIds,
+              ),
+              contentJson: replaceAssetReferences(
+                source.contentJson,
+                source.id,
+                input.key,
+                targetDocumentId,
+                publicIds,
+              ),
+            })
+            .where(eq(projectDocument.id, targetDocumentId));
+        }
+      }
+    }
+
     // Actions: their condition (a FilterSet) and effect (a partial patch) hold ids
     // captured above, so they are remapped to the copied entities.
     if (inc.actions) {
@@ -640,6 +770,13 @@ export async function copyProject(
 
     return proj;
   });
+  let newProject: ProjectRow;
+  try {
+    newProject = await copyTransaction;
+  } catch (error) {
+    await Promise.all(copiedDocumentAssetKeys.map(deleteAttachmentObject));
+    throw error;
+  }
 
   // Skills: copy each skill's object-store files into the new project's own prefix,
   // then create the row through the same service the UI uses.

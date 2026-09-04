@@ -10,6 +10,19 @@ import { addUser, createAgentUser, joinProject, setup } from '../helpers';
 
 const ALL = { kind: 'all' as const, limit: 50, offset: 0 };
 
+async function withoutDeadlock<T>(operation: Promise<T>): Promise<T> {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const timeoutResult = new Promise<never>((_resolve, reject) => {
+    timeout = setTimeout(
+      () => reject(new Error('concurrent document/account operation deadlocked')),
+      10_000,
+    );
+  });
+  return Promise.race([operation, timeoutResult]).finally(() => {
+    if (timeout) clearTimeout(timeout);
+  });
+}
+
 describe('god users', () => {
   beforeEach(async () => {
     await resetDb();
@@ -258,6 +271,143 @@ describe('god users', () => {
       const remaining = await god.api.god.users({ userId: bob.id }).get();
       expect(remaining.data?.projects).toHaveLength(1);
       expect(remaining.data?.projects[0]).toMatchObject({ projectKey: 'MKT', ownerCount: 1 });
+    });
+
+    it('removes private documents while public documents remain recoverable', async () => {
+      const { god } = await setup();
+      const alice = await addUser({ email: 'alice@example.com' });
+      await alice.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await joinProject(alice, god, 'MKT', 'owner');
+      const pages = alice.api.projects({ projectKey: 'MKT' }).documents;
+      const shared = (await pages.post({ title: 'Shared handbook' })).data!;
+      const privatePage = (await pages.post({ title: 'Private draft', isPrivate: true })).data!;
+      const publicChild = (await pages.post({ title: 'Published child', parentId: privatePage.id }))
+        .data!;
+
+      expect((await god.api.god.users({ userId: alice.id }).delete()).status).toBe(204);
+
+      const documents = god.api.projects({ projectKey: 'MKT' }).documents;
+      const surviving = await documents({ documentId: shared.id }).get();
+      expect(surviving.data).toMatchObject({ ownerUserId: null, isPrivate: false, version: 2 });
+      expect((await documents({ documentId: privatePage.id }).get()).status).toBe(404);
+      expect((await documents({ documentId: publicChild.id }).get()).data).toMatchObject({
+        ownerUserId: null,
+        parentId: null,
+        version: 2,
+      });
+      expect(
+        (await documents({ documentId: publicChild.id }).revisions.get()).data?.map(
+          (revision) => revision.version,
+        ),
+      ).toEqual([2, 1]);
+      const claimed = await documents({ documentId: shared.id }).ownership.post({
+        version: surviving.data!.version,
+        ownerUserId: god.id,
+      });
+      expect(claimed.data).toMatchObject({ ownerUserId: god.id });
+    });
+
+    it('serializes a document upload with deletion of its uploader account', async () => {
+      const { god } = await setup();
+      const alice = await addUser({ email: 'alice@example.com' });
+      await alice.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await joinProject(alice, god, 'MKT', 'owner');
+      const pages = alice.api.projects({ projectKey: 'MKT' }).documents;
+      const privatePage = (await pages.post({ title: 'Private upload target', isPrivate: true }))
+        .data!;
+
+      const concurrent = Promise.all([
+        pages({ documentId: privatePage.id }).assets.post({
+          file: new File(['concurrent bytes'], 'race.txt', { type: 'text/plain' }),
+        }),
+        god.api.god.users({ userId: alice.id }).delete(),
+      ]);
+      const [upload, deletion] = await withoutDeadlock(concurrent);
+
+      expect(deletion.status).toBe(204);
+      expect([201, 401, 403, 404]).toContain(upload.status);
+      expect(
+        (
+          await god.api
+            .projects({ projectKey: 'MKT' })
+            .documents({ documentId: privatePage.id })
+            .get()
+        ).status,
+      ).toBe(404);
+    });
+
+    it('does not leave an ownerless private page during access change and account deletion', async () => {
+      const { god } = await setup();
+      const alice = await addUser({ email: 'alice@example.com' });
+      await alice.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await joinProject(alice, god, 'MKT', 'owner');
+      const pages = alice.api.projects({ projectKey: 'MKT' }).documents;
+      const page = (await pages.post({ title: 'Public draft' })).data!;
+
+      const [privacy, deletion] = await withoutDeadlock(
+        Promise.all([
+          pages({ documentId: page.id }).access.post({
+            version: page.version,
+            isPrivate: true,
+          }),
+          god.api.god.users({ userId: alice.id }).delete(),
+        ]),
+      );
+
+      expect(deletion.status).toBe(204);
+      expect([200, 401, 403, 404]).toContain(privacy.status);
+      const surviving = await god.api
+        .projects({ projectKey: 'MKT' })
+        .documents({ documentId: page.id })
+        .get();
+      if (surviving.status === 200) {
+        expect(surviving.data).toMatchObject({ isPrivate: false, ownerUserId: null });
+      } else {
+        expect(surviving.status).toBe(404);
+      }
+    });
+
+    it('does not expose or orphan a private revision during account deletion', async () => {
+      const { god } = await setup();
+      const alice = await addUser({ email: 'alice@example.com' });
+      await alice.api.projects.post({ key: 'MKT', name: 'Marketing' });
+      await joinProject(alice, god, 'MKT', 'owner');
+      const pages = alice.api.projects({ projectKey: 'MKT' }).documents;
+      const privatePage = (
+        await pages.post({ title: 'Private history', content: 'Secret', isPrivate: true })
+      ).data!;
+      const privateRevision = (await pages({ documentId: privatePage.id }).revisions.get())
+        .data![0]!;
+      const sanitized = await pages({ documentId: privatePage.id }).patch({
+        version: privatePage.version,
+        content: 'Public body',
+      });
+      const published = await pages({ documentId: privatePage.id }).access.post({
+        version: sanitized.data!.version,
+        isPrivate: false,
+      });
+
+      const [restore, deletion] = await withoutDeadlock(
+        Promise.all([
+          pages({ documentId: privatePage.id })
+            .revisions({ revisionId: privateRevision.id })
+            .restore.post({ version: published.data!.version }),
+          god.api.god.users({ userId: alice.id }).delete(),
+        ]),
+      );
+
+      expect(deletion.status).toBe(204);
+      expect([200, 401, 403, 404]).toContain(restore.status);
+      const surviving = await god.api
+        .projects({ projectKey: 'MKT' })
+        .documents({ documentId: privatePage.id })
+        .get();
+      if (surviving.status === 200) {
+        expect(surviving.data).toMatchObject({ isPrivate: false, ownerUserId: null });
+        expect(surviving.data?.content).not.toBe('Secret');
+      } else {
+        expect(surviving.status).toBe(404);
+      }
     });
 
     it('refuses to delete the instance owner', async () => {

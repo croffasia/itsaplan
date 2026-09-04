@@ -266,6 +266,36 @@ describe('sync', () => {
     });
   });
 
+  describe('documents scope', () => {
+    it('moves for document, preference, and asset changes', async () => {
+      const { asOwner, projectId } = await setup();
+      const scope = `documents:${projectId}`;
+      const initial = await rev(asOwner, scope);
+      const documents = asOwner.projects({ projectKey: 'MKT' }).documents;
+
+      const page = (await documents.post({ title: 'Handbook' })).data!;
+      const created = await rev(asOwner, scope);
+      expect(created).not.toBe(initial);
+
+      await documents({ documentId: page.id }).patch({ version: page.version, content: 'Updated' });
+      const edited = await rev(asOwner, scope);
+      expect(edited).not.toBe(created);
+
+      await documents({ documentId: page.id }).preferences.patch({ isFavorite: true });
+      const favorited = await rev(asOwner, scope);
+      expect(favorited).not.toBe(edited);
+
+      const asset = await documents({ documentId: page.id }).assets.post({
+        file: new File(['diagram'], 'diagram.png', { type: 'image/png' }),
+      });
+      const uploaded = await rev(asOwner, scope);
+      expect(uploaded).not.toBe(favorited);
+
+      await documents({ documentId: page.id }).assets({ publicId: asset.data!.id }).delete();
+      expect(await rev(asOwner, scope)).not.toBe(uploaded);
+    });
+  });
+
   describe('inbox scope', () => {
     it("moves for the notified user only, and not for someone else's inbox", async () => {
       const { asOwner, projectId, columnId } = await setup();
@@ -325,6 +355,27 @@ describe('sync', () => {
         .patch({ role: 'member', roleId: role.id });
 
       expect(await rev(asMember, board)).toBe('0');
+    });
+
+    it('hides a documents scope from a member without documents read access', async () => {
+      const { asOwner, projectId } = await setup();
+      await asOwner.projects({ projectKey: 'MKT' }).documents.post({ title: 'Handbook' });
+      const { userId, api: asMember } = await addMember(asOwner);
+      const scope = `documents:${projectId}`;
+      expect(await rev(asMember, scope)).not.toBe('0');
+
+      const role = (
+        await asOwner.projects({ projectKey: 'MKT' }).roles.post({
+          name: 'Work items only',
+          permissions: { work_items: { read: true } },
+        })
+      ).data!;
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .members({ userId })
+        .patch({ role: 'member', roleId: role.id });
+
+      expect(await rev(asMember, scope)).toBe('0');
     });
 
     it('requires a session', async () => {

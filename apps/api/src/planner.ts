@@ -13,6 +13,7 @@ import { integrationRoutes } from './modules/agents/integrations';
 import { agentSkillRoutes } from './modules/agents/skills';
 import { agentToolRoutes } from './modules/agents/tools';
 import { customFieldRoutes } from './modules/custom-fields';
+import { issueTemplateRoutes } from './modules/issue-templates';
 import { issueRoutes } from './modules/issues';
 import { initiativeRoutes } from './modules/initiatives';
 import { cycleRoutes } from './modules/cycles';
@@ -27,6 +28,7 @@ import { webhookRoutes } from './modules/webhooks';
 import { gitSettingsRoutes } from './modules/git';
 import { dashboardRoutes } from './modules/dashboards';
 import { noteBoardRoutes } from './modules/note-boards';
+import { documentRoutes } from './modules/documents';
 import { analyticsRoutes } from './modules/analytics';
 import { chartRoutes } from './modules/charts';
 import { settingsRoutes } from './modules/settings';
@@ -90,6 +92,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(agentSkillRoutes)
   .use(agentToolRoutes)
   .use(customFieldRoutes)
+  .use(issueTemplateRoutes)
   .use(issueRoutes)
   .use(initiativeRoutes)
   .use(cycleRoutes)
@@ -107,6 +110,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(agentChatRoutes)
   .use(dashboardRoutes)
   .use(noteBoardRoutes)
+  .use(documentRoutes)
   .use(analyticsRoutes)
   .use(chartRoutes)
   .use(notificationRoutes)

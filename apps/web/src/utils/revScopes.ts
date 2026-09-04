@@ -6,4 +6,5 @@ export const revScope = {
   issue: (issueId: number) => `issue:${issueId}`,
   initiative: (initiativeId: number) => `initiative:${initiativeId}`,
   inbox: (projectId: number) => `inbox:${projectId}`,
+  documents: (projectId: number) => `documents:${projectId}`,
 };

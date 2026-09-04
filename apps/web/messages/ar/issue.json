@@ -116,7 +116,10 @@
     "noFields": "لا توجد حقول.",
     "description": "الوصف",
     "other": "أخرى",
-    "submit": "إنشاء مهمة"
+    "submit": "إنشاء مهمة",
+    "template": "قالب",
+    "applyTemplate": "تطبيق قالب…",
+    "noTemplates": "لا توجد قوالب."
   },
   "attachments": {
     "title": "المرفقات",
@@ -380,6 +383,14 @@
       "skipped": "تم تخطيه"
     }
   },
+  "documents": {
+    "title": "Docs",
+    "add": "ربط صفحة Docs",
+    "empty": "لا توجد صفحات Docs مرتبطة بعد.",
+    "loadFailed": "تعذر تحميل الصفحات المرتبطة. انقر لإعادة المحاولة.",
+    "remove": "إلغاء ربط {title}",
+    "untitled": "بلا عنوان"
+  },
   "archived": "مؤرشفة",
   "activityHeading": "النشاط",
   "feedFlat": "مسطّح",
@@ -389,6 +400,7 @@
     "changeState": "تغيير الحالة…",
     "changeType": "تغيير النوع…",
     "noType": "بلا نوع",
+    "unsetState": "بدون حالة",
     "noAssignee": "بلا مسؤول",
     "assignTo": "الإسناد إلى…",
     "you": "أنت",
@@ -410,7 +422,14 @@
   },
   "watchers": {
     "watch": "متابعة",
-    "unwatch": "إلغاء المتابعة"
+    "unwatch": "إلغاء المتابعة",
+    "manage": "إدارة المتابعين",
+    "search": "البحث عن أعضاء المشروع…",
+    "empty": "لم يتم العثور على أعضاء.",
+    "you": "{name} (أنت)",
+    "add": "إضافة {name} كمتابع",
+    "remove": "إزالة {name} من المتابعين",
+    "watchingCount": "{count} متابع"
   },
   "effects": {
     "cleared": "تم المسح",

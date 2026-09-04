@@ -14,6 +14,10 @@ export const AttachmentListResponse = t.Array(AttachmentResponse);
 
 export const issueParams = t.Object({ issueId: t.Numeric() });
 
+// The public id is a UUID column. Validating its format here turns a malformed id
+// into a 400 instead of letting it reach Postgres and surface as a 500.
+export const publicIdParams = t.Object({ publicId: t.String({ format: 'uuid' }) });
+
 export const uploadAttachmentBody = t.Object({ file: t.File() });
 
 export const importAttachmentBody = t.Object({

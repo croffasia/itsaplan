@@ -1,6 +1,7 @@
 import { useRouter } from 'next/navigation';
 import {
   Bell,
+  BookOpenText,
   Braces,
   FolderKanban,
   Inbox,
@@ -18,6 +19,7 @@ import {
   aiTeamPath,
   apiDocsPath,
   dashboardsPath,
+  documentsPath,
   godPath,
   inboxPath,
   initiativesPath,
@@ -78,6 +80,14 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
     );
     if (features.initiatives && can('initiatives', 'read'))
       add('nav.initiatives', t('initiatives'), <Target />, initiativesPath(key), 'epics');
+    if (features.documents && can('documents', 'read'))
+      add(
+        'nav.documents',
+        t('documents'),
+        <BookOpenText />,
+        documentsPath(key),
+        'docs pages documentation',
+      );
     for (const s of AI_TEAM_SECTIONS) {
       if (can(s.resource, 'read'))
         add(

@@ -7,6 +7,7 @@
     "initiatives": "المبادرات (initiatives)",
     "cycles": "الدورات (cycles)",
     "dashboards": "لوحات المعلومات",
+    "documents": "Docs",
     "views": "عروض عناصر العمل",
     "members_invite": "الدعوات",
     "members_manage": "الأعضاء",
@@ -18,6 +19,7 @@
     "agent_skills": "مهارات الوكلاء (agent skills)",
     "agent_tools": "أدوات الوكلاء (agent tools)",
     "custom_fields": "الحقول المخصّصة",
+    "issue_templates": "قوالب المهام",
     "workflow_config": "تهيئة سير العمل",
     "actions": "الإجراءات",
     "webhooks": "خطافات الويب (webhooks)",
@@ -33,6 +35,7 @@
   "groups": {
     "workItems": "عناصر العمل",
     "dashboards": "لوحات المعلومات",
+    "documents": "Docs",
     "notes": "الملاحظات",
     "ai": "الذكاء الاصطناعي",
     "configuration": "التهيئة",

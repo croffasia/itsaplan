@@ -26,7 +26,8 @@
     "automation": "الأتمتة",
     "project": "المشروع",
     "views": "العروض",
-    "aiTeam": "فريق الذكاء الاصطناعي"
+    "aiTeam": "فريق الذكاء الاصطناعي",
+    "knowledge": "المعرفة"
   },
   "copyItems": {
     "states": "الحالات",
@@ -35,6 +36,7 @@
     "customFields": "الحقول المخصّصة",
     "views": "العروض",
     "dashboards": "لوحات المعلومات",
+    "documents": "Docs",
     "actions": "الإجراءات",
     "configuration": "التهيئة",
     "roles": "الأدوار",

@@ -23,6 +23,9 @@ export const qk = {
   notificationSettings: (teamId: number) => ['notificationSettings', teamId] as const,
   // The board scaffold (columns/types/labels/fields/viewer) for a project.
   project: (projectKey: string) => ['workItems', projectKey] as const,
+  // Every project scaffold, for a write outside the project that changes what one
+  // of them shows (a team setting the project inherits).
+  anyProject: ['workItems'] as const,
   // The board's issues, their relations and the change marker for a project.
   // Split from the scaffold so issue writes and live-refresh touch only the
   // issues, not the scaffold.

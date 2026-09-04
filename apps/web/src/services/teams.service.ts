@@ -81,8 +81,7 @@ export function useTeamProjectMembersQuery(
 }
 
 // The team's MCP switch and which of its projects the reach covers, written by an
-// owner or a manager. The current state is read off the team list and its projects,
-// which both carry it, so the write only invalidates them.
+// owner or a manager.
 export function useUpdateTeamMcp(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
@@ -94,6 +93,9 @@ export function useUpdateTeamMcp(teamId: number) {
       void qc.invalidateQueries({ queryKey: qk.teams });
       void qc.invalidateQueries({ queryKey: qk.teamProjects(teamId) });
       void qc.invalidateQueries({ queryKey: qk.projects });
+      // A project's own MCP page reads the state off the project scaffold, which is
+      // cached per project key.
+      void qc.invalidateQueries({ queryKey: qk.anyProject });
     },
   });
 }

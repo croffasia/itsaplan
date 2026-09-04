@@ -73,12 +73,14 @@ export default function BurnupWidget({
     }
     return (
       <>
-        <BurnupChart
-          points={buildBurnupPoints(data, range)}
-          config={chartConfig}
-          today={today.date}
-          target={data.targetDate}
-        />
+        <div className="min-h-0 flex-1">
+          <BurnupChart
+            points={buildBurnupPoints(data, range)}
+            config={chartConfig}
+            today={today.date}
+            target={data.targetDate}
+          />
+        </div>
         <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {caption(data.forecast, data.targetDate).map((part) => (
             <span key={part}>{part}</span>
@@ -89,7 +91,7 @@ export default function BurnupWidget({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="flex h-full flex-col gap-3">
       <p className="text-xs text-muted-foreground">{tDashboards('lastDays', { days })}</p>
       {body()}
     </div>

@@ -54,7 +54,7 @@ export default function BurnupChart({
   // direction, so a mirrored chart would put its axes and series out of step with
   // each other. The labels and the tooltip are still translated.
   return (
-    <ChartContainer dir="ltr" config={config} className="h-[180px] w-full">
+    <ChartContainer dir="ltr" config={config} className="h-full min-h-[180px] w-full">
       <ComposedChart data={points}>
         <CartesianGrid vertical={false} />
         <XAxis

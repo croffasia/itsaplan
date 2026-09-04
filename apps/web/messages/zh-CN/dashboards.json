@@ -166,7 +166,6 @@
       "range": "预测区间"
     },
     "noForecast": "最近 {weeks} 周没有进展",
-    "outpaced": "新增任务多于完成",
     "allDone": "全部完成",
     "velocity": "{rate}/天",
     "growth": "新增 {rate}/天",

@@ -385,6 +385,7 @@ describe('analytics', () => {
         velocityPerDay: 0,
         scopeGrowthPerDay: 0,
         remaining: 0,
+        projectedScope: 0,
         projectedDate: null,
         optimisticDate: null,
         pessimisticDate: null,

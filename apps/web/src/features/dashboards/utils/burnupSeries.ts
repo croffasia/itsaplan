@@ -5,7 +5,8 @@ import { addDays, daysBetween, parseDate, toDateStr } from '@/utils/dates';
 // projection (and, in range mode, the band) on a future one, and both on the last
 // real day, where they meet. `band` is [slow, fast]: the completed count on that
 // day at the pessimistic and at the optimistic pace. `scopeProjection` is the
-// scope extrapolated at its growth rate, present only when the scope is growing.
+// scope extrapolated at its growth rate up to the projected scope, present only
+// when the scope is growing.
 export interface BurnupPoint {
   date: string;
   scope?: number;
@@ -42,7 +43,8 @@ export function buildBurnupPoints(data: Burnup, range = false): BurnupPoint[] {
     Math.max(toProjected, toSlow, daysAfter(lastDate, data.targetDate)),
     MAX_TAIL_DAYS,
   );
-  const scopeAt = (i: number) => Math.round(last.scope + forecast.scopeGrowthPerDay * i);
+  const scopeAt = (i: number) =>
+    Math.min(forecast.projectedScope, Math.round(last.scope + forecast.scopeGrowthPerDay * i));
   const towards = (i: number, span: number) =>
     i >= span
       ? scopeAt(i)

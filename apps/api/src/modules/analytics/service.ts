@@ -345,10 +345,12 @@ export interface BurnupForecast {
   windowDays: number;
   velocityPerDay: number;
   // The scope's growth rate over the same window, never negative: cancellations
-  // are not a trend. The dates are where the completed line, at velocityPerDay,
-  // meets the scope line, at this rate.
+  // are not a trend.
   scopeGrowthPerDay: number;
   remaining: number;
+  // The scope the projection ends at: today's plus the issues expected to appear,
+  // at scopeGrowthPerDay, while today's remaining ones are closed.
+  projectedScope: number;
   projectedDate: string | null;
   // The projected date with the days to go shortened and lengthened by
   // RANGE_BUFFER: the range the widget can draw around the projection. Null
@@ -425,12 +427,14 @@ async function initiativeTargetDate(
 // The buffer Linear's project graph puts around its projected date.
 const RANGE_BUFFER = 0.4;
 
-// A completion date as the intersection of two lines: the completed count rising
-// at the closing rate of the whole weeks inside the last `windowDays` days of the
-// series, the latest week weighted heaviest, and the scope rising at its growth
-// rate over the same weeks; a window with no whole week uses the plain rates. No
-// date when closings do not outpace new issues or nothing is left — the widget
-// says so instead of drawing a line to infinity.
+// A completion date from two rates over the whole weeks inside the last
+// `windowDays` days of the series, the latest week weighted heaviest (a window
+// with no whole week uses the plain rates): the closing rate, and the scope's
+// growth rate. The days to go cover today's remaining issues plus the ones
+// expected to appear while they are closed — one round, not compounded, so a
+// scope growing faster than it is closed still gets a date. No date when nothing
+// was closed in the window or nothing is left — the widget says so instead of
+// drawing a line to infinity.
 export function forecastCompletion(days: BurnupDay[], windowDays: number): BurnupForecast {
   const last = days[days.length - 1];
   if (!last) {
@@ -439,6 +443,7 @@ export function forecastCompletion(days: BurnupDay[], windowDays: number): Burnu
       velocityPerDay: 0,
       scopeGrowthPerDay: 0,
       remaining: 0,
+      projectedScope: 0,
       projectedDate: null,
       optimisticDate: null,
       pessimisticDate: null,
@@ -449,8 +454,9 @@ export function forecastCompletion(days: BurnupDay[], windowDays: number): Burnu
   const velocity = rateOver(days, startIndex, 'completed');
   const growth = Math.max(0, rateOver(days, startIndex, 'scope'));
   const remaining = Math.max(0, last.scope - last.completed);
-  const net = velocity - growth;
-  const daysToGo = net > 0 && remaining > 0 ? remaining / net : null;
+  const daysForRemaining = velocity > 0 && remaining > 0 ? remaining / velocity : null;
+  const expected = daysForRemaining === null ? 0 : Math.round(growth * daysForRemaining);
+  const daysToGo = daysForRemaining === null ? null : (remaining + expected) / velocity;
   const dateAt = (factor: number) =>
     daysToGo === null ? null : addDays(last.date, Math.ceil(daysToGo * factor));
   return {
@@ -458,6 +464,7 @@ export function forecastCompletion(days: BurnupDay[], windowDays: number): Burnu
     velocityPerDay: round2(velocity),
     scopeGrowthPerDay: round2(growth),
     remaining,
+    projectedScope: last.scope + expected,
     projectedDate: dateAt(1),
     optimisticDate: dateAt(1 - RANGE_BUFFER),
     pessimisticDate: dateAt(1 + RANGE_BUFFER),

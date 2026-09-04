@@ -14,6 +14,7 @@ function forecast(overrides: Partial<BurnupForecast> = {}): BurnupForecast {
     velocityPerDay: 2,
     scopeGrowthPerDay: 0,
     remaining: 6,
+    projectedScope: 10,
     projectedDate: '2026-03-05',
     optimisticDate: '2026-03-04',
     pessimisticDate: '2026-03-07',
@@ -84,10 +85,10 @@ describe('buildBurnupPoints', () => {
     assert.deepEqual(points[6], { date: '2026-03-07', band: [10, 10] });
   });
 
-  it('extrapolates a growing scope and runs the projection up to it', () => {
-    // Scope +1/day; the scope on 5 March is 13, the projection climbs 3/day to it,
-    // and the fast edge, done on 4 March, follows the scope from there.
-    const data = burnup({ forecast: forecast({ scopeGrowthPerDay: 1 }) });
+  it('extrapolates a growing scope up to the projected scope', () => {
+    // Scope +2/day up to 14; the projection climbs to 14 on 5 March, the fast
+    // edge is done on 4 March and follows the scope from there.
+    const data = burnup({ forecast: forecast({ scopeGrowthPerDay: 2, projectedScope: 14 }) });
     const points = buildBurnupPoints(data, true);
     assert.deepEqual(points[1], {
       date: '2026-03-02',
@@ -98,13 +99,19 @@ describe('buildBurnupPoints', () => {
       band: [4, 4],
       scopeProjection: 10,
     });
+    assert.deepEqual(points[2], {
+      date: '2026-03-03',
+      projection: 7,
+      band: [6, 9],
+      scopeProjection: 12,
+    });
     assert.deepEqual(points[4], {
       date: '2026-03-05',
-      projection: 13,
-      band: [11, 13],
-      scopeProjection: 13,
+      projection: 14,
+      band: [10, 14],
+      scopeProjection: 14,
     });
-    assert.deepEqual(points[6], { date: '2026-03-07', band: [15, 15], scopeProjection: 15 });
+    assert.deepEqual(points[6], { date: '2026-03-07', band: [14, 14], scopeProjection: 14 });
   });
 
   it('rounds the projected counts to whole issues', () => {

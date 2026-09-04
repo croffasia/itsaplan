@@ -49,10 +49,9 @@ export default function BurnupWidget({
   function caption(forecast: BurnupForecast, targetDate: string | null): string[] {
     const parts: string[] = [];
     if (forecast.remaining === 0) parts.push(t('allDone'));
-    else if (forecast.velocityPerDay <= 0) parts.push(t('noForecast', { weeks: forecastWeeks }));
+    else if (forecast.projectedDate == null) parts.push(t('noForecast', { weeks: forecastWeeks }));
     else {
-      if (forecast.projectedDate == null) parts.push(t('outpaced'));
-      else parts.push(t('projected', { date: formatDate(forecast.projectedDate) }));
+      parts.push(t('projected', { date: formatDate(forecast.projectedDate) }));
       if (range && forecast.optimisticDate && forecast.pessimisticDate) {
         const from = formatDate(forecast.optimisticDate);
         const to = formatDate(forecast.pessimisticDate);

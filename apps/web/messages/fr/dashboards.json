@@ -166,7 +166,6 @@
       "range": "Fourchette de projection"
     },
     "noForecast": "Aucun progrès {weeks, plural, one {la semaine dernière} other {ces # dernières semaines}}",
-    "outpaced": "Les créations dépassent les clôtures",
     "allDone": "Tout est terminé",
     "velocity": "{rate}/jour",
     "growth": "+{rate}/jour créées",

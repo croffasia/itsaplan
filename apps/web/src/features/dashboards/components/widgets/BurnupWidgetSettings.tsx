@@ -17,7 +17,7 @@ const WHOLE_PROJECT = 'all';
 
 // The window in days, the initiative (or the whole project), how many recent
 // weeks the closing rate is taken from, and whether the forecast is drawn as one
-// line or as a range between the slowest and the fastest of those weeks.
+// line or as a range of about ±40% around it.
 export default function BurnupWidgetSettings({
   config,
   onConfigChange,

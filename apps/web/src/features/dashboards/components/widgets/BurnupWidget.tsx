@@ -44,16 +44,15 @@ export default function BurnupWidget({
   };
 
   // "Projected Sep 9, 2026" in line mode; "Projected Sep 9, 2026 (Sep 7, 2026 –
-  // Aug 31, 2028)" in range mode, or "(Sep 7, 2026 or later)" when the slowest
-  // week closed nothing. The range keeps the year: its far end can be years out.
+  // Sep 12, 2026)" in range mode.
   function projected(forecast: BurnupForecast): string {
     const date = formatDate(forecast.projectedDate!);
-    if (!range || !forecast.optimisticDate) return t('projected', { date });
+    if (!range || !forecast.optimisticDate || !forecast.pessimisticDate) {
+      return t('projected', { date });
+    }
     const from = formatDate(forecast.optimisticDate);
-    const span = forecast.pessimisticDate
-      ? t('range', { from, to: formatDate(forecast.pessimisticDate) })
-      : t('rangeOpen', { from });
-    return `${t('projected', { date })} (${span})`;
+    const to = formatDate(forecast.pessimisticDate);
+    return `${t('projected', { date })} (${t('range', { from, to })})`;
   }
 
   function caption(forecast: BurnupForecast, targetDate: string | null): string {

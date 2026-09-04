@@ -161,7 +161,6 @@
     "band": "Fourchette de projection",
     "projected": "Fin projetée {date}",
     "range": "{from} – {to}",
-    "rangeOpen": "{from} ou plus tard",
     "forecastShape": {
       "line": "Ligne de projection",
       "range": "Fourchette de projection"

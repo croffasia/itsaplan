@@ -161,7 +161,6 @@
     "band": "Forecast range",
     "projected": "Projected {date}",
     "range": "{from} – {to}",
-    "rangeOpen": "{from} or later",
     "forecastShape": {
       "line": "Forecast line",
       "range": "Forecast range"

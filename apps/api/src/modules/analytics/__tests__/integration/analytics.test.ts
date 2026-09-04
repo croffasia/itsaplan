@@ -385,7 +385,6 @@ describe('analytics', () => {
         velocityPerDay: 0,
         remaining: 0,
         projectedDate: null,
-        velocityRange: { min: 0, max: 0 },
         optimisticDate: null,
         pessimisticDate: null,
       });
@@ -404,18 +403,15 @@ describe('analytics', () => {
       const today = res.data!.days.at(-1)!;
       expect(today).toMatchObject({ scope: 3, started: 2, completed: 1 });
       expect(dayOf(today.date)).toBe(dayOf(new Date()));
-      // One closing over a 28-day window → 1/28 per day, two issues left.
+      // One closing in the latest of the four weeks, weighted 4 of 10 → 4/70 per
+      // day, two issues left.
       expect(res.data?.forecast).toMatchObject({ windowDays: 28, remaining: 2 });
-      expect(res.data?.forecast.velocityPerDay).toBeCloseTo(0.04, 2);
-      expect(res.data?.forecast.projectedDate).not.toBeNull();
-      expect(dayOf(res.data!.forecast.projectedDate) > dayOf(today.date)).toBe(true);
-      // The closing happened this week: the fastest week is 1/7 per day, the slowest
-      // week closed nothing, so the range is open-ended.
-      expect(res.data?.forecast.velocityRange).toEqual({ min: 0, max: 0.14 });
-      expect(
-        dayOf(res.data!.forecast.optimisticDate) < dayOf(res.data!.forecast.projectedDate),
-      ).toBe(true);
-      expect(res.data?.forecast.pessimisticDate).toBeNull();
+      expect(res.data?.forecast.velocityPerDay).toBeCloseTo(0.06, 2);
+      const { optimisticDate, projectedDate, pessimisticDate } = res.data!.forecast;
+      expect(projectedDate).not.toBeNull();
+      expect(dayOf(projectedDate) > dayOf(today.date)).toBe(true);
+      expect(dayOf(optimisticDate) < dayOf(projectedDate)).toBe(true);
+      expect(dayOf(pessimisticDate) > dayOf(projectedDate)).toBe(true);
     });
 
     it('drops canceled issues from the scope and gives no date without closings', async () => {

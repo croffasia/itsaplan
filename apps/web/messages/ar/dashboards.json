@@ -161,7 +161,6 @@
     "band": "نطاق التوقع",
     "projected": "الإنجاز المتوقع {date}",
     "range": "{from} – {to}",
-    "rangeOpen": "{from} أو بعده",
     "forecastShape": {
       "line": "خط التوقع",
       "range": "نطاق التوقع"

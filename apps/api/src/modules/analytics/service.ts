@@ -346,10 +346,9 @@ export interface BurnupForecast {
   velocityPerDay: number;
   remaining: number;
   projectedDate: string | null;
-  // The slowest and fastest week inside the window, and the dates they give: the
-  // range the widget can draw around the projection. pessimisticDate is null when
-  // some week closed nothing — the range is then open-ended.
-  velocityRange: { min: number; max: number };
+  // The projected date with the days to go shortened and lengthened by
+  // RANGE_BUFFER: the range the widget can draw around the projection. Null
+  // together with projectedDate.
   optimisticDate: string | null;
   pessimisticDate: string | null;
 }
@@ -419,11 +418,15 @@ async function initiativeTargetDate(
   return row.targetDate;
 }
 
-// A linear projection at the current scope: the closing rate over the last
-// `windowDays` days of the series (fewer when the series is shorter), applied to
-// what is left. No date when nothing was closed in the window or nothing is left —
-// the widget says so instead of drawing a line to infinity. Scope growth is not
-// extrapolated, as in Linear's project graph.
+// The buffer Linear's project graph puts around its projected date.
+const RANGE_BUFFER = 0.4;
+
+// A linear projection at the current scope, as in Linear's project graph: the
+// closing rate of the whole weeks inside the last `windowDays` days of the series,
+// the latest week weighted heaviest, applied to what is left; a window with no
+// whole week uses its plain rate. No date when nothing was closed in the window or
+// nothing is left — the widget says so instead of drawing a line to infinity.
+// Scope growth is not extrapolated.
 export function forecastCompletion(days: BurnupDay[], windowDays: number): BurnupForecast {
   const last = days[days.length - 1];
   if (!last) {
@@ -432,7 +435,6 @@ export function forecastCompletion(days: BurnupDay[], windowDays: number): Burnu
       velocityPerDay: 0,
       remaining: 0,
       projectedDate: null,
-      velocityRange: { min: 0, max: 0 },
       optimisticDate: null,
       pessimisticDate: null,
     };
@@ -440,33 +442,37 @@ export function forecastCompletion(days: BurnupDay[], windowDays: number): Burnu
   const lastIndex = days.length - 1;
   const startIndex = Math.max(0, lastIndex - windowDays);
   const span = lastIndex - startIndex;
-  const velocity = span > 0 ? (last.completed - days[startIndex]!.completed) / span : 0;
-  const weekly = weeklyRates(days, startIndex);
-  const min = Math.min(velocity, ...weekly);
-  const max = Math.max(velocity, ...weekly);
+  const velocity =
+    weightedWeeklyRate(days, startIndex) ??
+    (span > 0 ? (last.completed - days[startIndex]!.completed) / span : 0);
   const remaining = Math.max(0, last.scope - last.completed);
-  const dateAt = (rate: number) =>
-    rate > 0 && remaining > 0 ? addDays(last.date, Math.ceil(remaining / rate)) : null;
+  const daysToGo = velocity > 0 && remaining > 0 ? remaining / velocity : null;
+  const dateAt = (factor: number) =>
+    daysToGo === null ? null : addDays(last.date, Math.ceil(daysToGo * factor));
   return {
     windowDays: span,
     velocityPerDay: round2(velocity),
     remaining,
-    projectedDate: dateAt(velocity),
-    velocityRange: { min: round2(min), max: round2(max) },
-    optimisticDate: dateAt(max),
-    pessimisticDate: dateAt(min),
+    projectedDate: dateAt(1),
+    optimisticDate: dateAt(1 - RANGE_BUFFER),
+    pessimisticDate: dateAt(1 + RANGE_BUFFER),
   };
 }
 
-// The closing rate of each whole week inside the window, latest week first. A
-// window shorter than a week has no whole week, so the caller's overall rate is
-// the only rate.
-function weeklyRates(days: BurnupDay[], startIndex: number): number[] {
-  const rates: number[] = [];
-  for (let end = days.length - 1; end - 7 >= startIndex; end -= 7) {
-    rates.push((days[end]!.completed - days[end - 7]!.completed) / 7);
+// The closing rate over the whole weeks between startIndex and the last day, the
+// latest week weighted n, the earliest 1. Null when there is no whole week.
+function weightedWeeklyRate(days: BurnupDay[], startIndex: number): number | null {
+  const weeks = Math.floor((days.length - 1 - startIndex) / 7);
+  if (weeks === 0) return null;
+  let sum = 0;
+  let weightSum = 0;
+  for (let i = 0; i < weeks; i++) {
+    const end = days.length - 1 - i * 7;
+    const weight = weeks - i;
+    sum += (weight * (days[end]!.completed - days[end - 7]!.completed)) / 7;
+    weightSum += weight;
   }
-  return rates;
+  return sum / weightSum;
 }
 
 function round2(n: number): number {

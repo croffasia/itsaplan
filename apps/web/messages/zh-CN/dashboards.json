@@ -161,7 +161,6 @@
     "band": "预测区间",
     "projected": "预计 {date} 完成",
     "range": "{from} – {to}",
-    "rangeOpen": "{from} 或更晚",
     "forecastShape": {
       "line": "预测线",
       "range": "预测区间"

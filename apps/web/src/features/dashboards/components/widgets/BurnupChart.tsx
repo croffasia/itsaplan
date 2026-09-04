@@ -33,7 +33,7 @@ function formatValue(value: unknown): string {
 
 // The burnup chart itself: scope and completed as areas, started as a line, the
 // projection as a dashed line into the future and, in range mode, a band between
-// the slowest and the fastest recent week. A "today" marker separates the
+// the optimistic and the pessimistic date. A "today" marker separates the
 // history from the projection whenever there is one, and the initiative's target
 // date is marked when it falls on the axis.
 export default function BurnupChart({

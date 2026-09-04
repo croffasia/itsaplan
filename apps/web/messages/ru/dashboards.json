@@ -161,7 +161,6 @@
     "band": "Диапазон прогноза",
     "projected": "Прогноз: {date}",
     "range": "{from} – {to}",
-    "rangeOpen": "{from} или позже",
     "forecastShape": {
       "line": "Линия прогноза",
       "range": "Диапазон прогноза"

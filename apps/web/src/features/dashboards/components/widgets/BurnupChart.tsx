@@ -90,7 +90,10 @@ export default function BurnupChart({
             />
           }
         />
-        <ChartLegend content={<ChartLegendContent />} itemSorter={legendOrder} />
+        <ChartLegend
+          content={<ChartLegendContent className="flex-wrap gap-x-4 gap-y-1" />}
+          itemSorter={legendOrder}
+        />
         <Area
           type="monotone"
           dataKey="scope"

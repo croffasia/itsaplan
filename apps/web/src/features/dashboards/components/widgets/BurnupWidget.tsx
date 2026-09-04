@@ -13,7 +13,7 @@ const SERIES_COLOR = {
   started: '#f59e0b',
   completed: '#22c55e',
   projection: '#16a34a',
-  band: '#16a34a',
+  band: '#38bdf8',
 };
 
 // Scope, started and completed issues at the end of each day, with a completion
@@ -43,31 +43,26 @@ export default function BurnupWidget({
     band: { label: t('band'), color: SERIES_COLOR.band },
   };
 
-  // "Projected Sep 9, 2026" in line mode; "Projected Sep 9, 2026 (Sep 7, 2026 –
-  // Sep 12, 2026)" in range mode.
-  function projected(forecast: BurnupForecast): string {
-    const date = formatDate(forecast.projectedDate!);
-    if (!range || !forecast.optimisticDate || !forecast.pessimisticDate) {
-      return t('projected', { date });
-    }
-    const from = formatDate(forecast.optimisticDate);
-    const to = formatDate(forecast.pessimisticDate);
-    return `${t('projected', { date })} (${t('range', { from, to })})`;
-  }
-
-  function caption(forecast: BurnupForecast, targetDate: string | null): string {
+  // The caption parts: the projected date (with the range under its own label in
+  // range mode), the pace and the remaining count, then the target date.
+  function caption(forecast: BurnupForecast, targetDate: string | null): string[] {
     const parts: string[] = [];
     if (forecast.remaining === 0) parts.push(t('allDone'));
     else if (forecast.projectedDate == null) parts.push(t('noForecast', { weeks: forecastWeeks }));
     else {
+      parts.push(t('projected', { date: formatDate(forecast.projectedDate) }));
+      if (range && forecast.optimisticDate && forecast.pessimisticDate) {
+        const from = formatDate(forecast.optimisticDate);
+        const to = formatDate(forecast.pessimisticDate);
+        parts.push(`${t('band')}: ${t('range', { from, to })}`);
+      }
       parts.push(
-        projected(forecast),
         t('velocity', { rate: forecast.velocityPerDay }),
         t('remaining', { count: forecast.remaining }),
       );
     }
     if (targetDate) parts.push(t('target', { date: formatDate(targetDate) }));
-    return parts.join(' · ');
+    return parts;
   }
 
   function body() {
@@ -84,7 +79,11 @@ export default function BurnupWidget({
           today={today.date}
           target={data.targetDate}
         />
-        <p className="text-xs text-muted-foreground">{caption(data.forecast, data.targetDate)}</p>
+        <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          {caption(data.forecast, data.targetDate).map((part) => (
+            <span key={part}>{part}</span>
+          ))}
+        </p>
       </>
     );
   }

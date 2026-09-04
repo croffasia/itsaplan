@@ -1,5 +1,7 @@
 import {
   auth,
+  oAuthDiscoveryMetadata,
+  oAuthProtectedResourceMetadata,
   trustedOrigins,
   getAuthSettings,
   hasConfiguredEmailProvider,
@@ -223,6 +225,15 @@ export const app = new Elysia()
         security: [{ apiKey: [] }],
       },
     }),
+  )
+  // OAuth discovery lives at the API origin because MCP clients resolve the
+  // authorization server from protected-resource metadata before entering the
+  // Better Auth base path.
+  .get('/.well-known/oauth-authorization-server', ({ request }) =>
+    oAuthDiscoveryMetadata(auth)(request),
+  )
+  .get('/.well-known/oauth-protected-resource/mcp', ({ request }) =>
+    oAuthProtectedResourceMetadata(auth)(request),
   )
   // better-auth: forward every /api/auth/* request to its handler. The OIDC
   // callback gets one extra step afterwards: folding the provider's `groups` claim

@@ -1,6 +1,6 @@
 {
   "title": "MCP 服务器",
-  "description": "通过模型上下文协议将 AI 代理连接到此项目。代理获得其所用 API 密钥对应的访问权限。",
+  "description": "通过模型上下文协议使用 OAuth 或个人 API 密钥将 AI 代理连接到此项目。",
   "access": "MCP 访问",
   "enabled": "已启用",
   "disabled": "已禁用",
@@ -21,6 +21,31 @@
   },
   "clients": {
     "other": "其他"
+  },
+  "oauth": {
+    "configuration": "连接配置",
+    "methodTabsAria": "MCP 身份验证方式",
+    "method": "OAuth MCP",
+    "personalKey": "个人 API 密钥",
+    "title": "通过 OAuth 连接",
+    "description": "任何支持 OAuth 的 MCP 客户端（包括 ChatGPT 和 Claude）都可使用此方式。使用您的 Itsaplan 帐户登录；不会向客户端共享个人 API 密钥。",
+    "endpoint": "MCP 端点",
+    "discovery": "OAuth 发现",
+    "steps": {
+      "add": "在客户端中添加 MCP 应用并粘贴 MCP 端点。",
+      "choose": "当客户端要求身份验证时选择 OAuth。",
+      "signIn": "登录 Itsaplan 并批准所请求的访问权限。"
+    },
+    "security": "OAuth 使用 PKCE (S256)、动态客户端注册以及限定到您的 Itsaplan 帐户的 Bearer 令牌。",
+    "consent": {
+      "title": "授权 Itsaplan",
+      "description": "允许此 MCP 客户端使用您的 Itsaplan 帐户权限执行操作。",
+      "missingCode": "此授权请求缺少同意代码。",
+      "cancel": "取消",
+      "pending": "正在授权…",
+      "authorize": "授权",
+      "failed": "无法完成 OAuth 授权。"
+    }
   },
   "toast": {
     "enabled": "MCP 访问已启用",

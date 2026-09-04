@@ -22,6 +22,31 @@
   "clients": {
     "other": "Autre"
   },
+  "oauth": {
+    "configuration": "Configuration de la connexion",
+    "methodTabsAria": "Méthode d'authentification MCP",
+    "method": "MCP OAuth",
+    "personalKey": "Clé d'API personnelle",
+    "title": "Se connecter avec OAuth",
+    "description": "Utilisez cette option pour tout client MCP compatible OAuth, y compris ChatGPT et Claude. Vous vous connectez avec votre compte Itsaplan ; aucune clé d'API personnelle n'est transmise au client.",
+    "endpoint": "Point d'accès MCP",
+    "discovery": "Découverte OAuth",
+    "steps": {
+      "add": "Ajoutez une application MCP dans votre client et collez le point d'accès MCP.",
+      "choose": "Choisissez OAuth lorsque le client demande une authentification.",
+      "signIn": "Connectez-vous à Itsaplan et approuvez l'accès demandé."
+    },
+    "security": "OAuth utilise PKCE (S256), l'enregistrement dynamique des clients et des jetons bearer limités à votre compte Itsaplan.",
+    "consent": {
+      "title": "Autoriser Itsaplan",
+      "description": "Autorisez ce client MCP à agir avec les droits de votre compte Itsaplan.",
+      "missingCode": "Cette demande d'autorisation n'a pas de code de consentement.",
+      "cancel": "Annuler",
+      "pending": "Autorisation…",
+      "authorize": "Autoriser",
+      "failed": "Impossible de terminer l'autorisation OAuth."
+    }
+  },
   "toast": {
     "enabled": "Accès MCP activé",
     "disabled": "Accès MCP désactivé"

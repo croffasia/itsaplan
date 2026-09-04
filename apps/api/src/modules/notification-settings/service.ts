@@ -2,6 +2,7 @@ import { db, teamNotificationSetting } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import type { SmtpConfig, ResendConfig } from '@repo/mailer';
+import { HttpError } from '#shared/lib';
 
 // Data access for a team's notification provider credentials: the outbound channels
 // every project of the team delivers through (SMTP or Resend for email, a Telegram
@@ -145,10 +146,10 @@ function applyPatch(
   if (patch.smtp) {
     next.smtp = {
       enabled: patch.smtp.enabled,
-      host: patch.smtp.host,
+      host: patch.smtp.host.trim(),
       port: patch.smtp.port,
       encryption: patch.smtp.encryption,
-      username: patch.smtp.username,
+      username: patch.smtp.username.trim(),
       password: mergeSecret(current.smtp.password, patch.smtp.password),
       timeout: patch.smtp.timeout,
     };
@@ -167,6 +168,21 @@ function applyPatch(
   }
 
   return next;
+}
+
+// An enabled provider with no usable credentials drops every message in the delivery
+// path without reporting an error. Checked on the merged config, so a save that leaves
+// a stored secret untouched passes.
+function assertSendable(config: NotificationConfig): void {
+  if (config.smtp.enabled) {
+    if (config.smtp.host.length === 0) throw new HttpError(400, 'SMTP host is required');
+    if (config.smtp.username.length > 0 && config.smtp.password.length === 0) {
+      throw new HttpError(400, 'SMTP password is required for this username');
+    }
+  }
+  if (config.resend.enabled && config.resend.apiKey.length === 0) {
+    throw new HttpError(400, 'A Resend API key is required');
+  }
 }
 
 // Reads and decrypts the stored config, or null when the team has none yet.
@@ -199,6 +215,7 @@ export async function setNotificationSettings(
 ): Promise<NotificationSettingsDto> {
   const current = (await readConfig(teamId)) ?? defaultConfig();
   const next = applyPatch(current, patch);
+  assertSendable(next);
   const redacted = toDto(next);
   const enc = encryptSecret(JSON.stringify(next));
   await db

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { TeamBillingSection } from '@/cloud';
 import type { Team } from '@/lib/api';
 import { formatDate } from '@/utils/dates';
 import { useRenameTeam, useTeam } from '@/services/teams.service';
@@ -90,6 +91,8 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
         </SettingsSection>
 
         <TeamLeadsSection teamId={teamId} />
+
+        <TeamBillingSection teamId={teamId} />
 
         {canLeave(team) && (
           <SettingsSection

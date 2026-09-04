@@ -13,6 +13,11 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   `components/common`.
 - The shared layer never imports a feature. `app/` routes stay thin: mount the feature page and
   providers only.
+- **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
+  exports what a self-hosted instance runs — a screen it does not sell renders nothing. A
+  cloud-only component is imported from there and nowhere else. The hosted build points
+  `CLOUD_UI_ENTRY` at its own module exporting the same names, and `WEB_TRACING_ROOT` at the
+  root its workspace has; unset, both are what this repository needs.
 
 ## Feature structure & decomposition
 

@@ -166,9 +166,10 @@
       "range": "Fourchette de projection"
     },
     "noForecast": "Aucun progrès {weeks, plural, one {la semaine dernière} other {ces # dernières semaines}}",
+    "outpaced": "Les créations dépassent les clôtures",
     "allDone": "Tout est terminé",
     "velocity": "{rate}/jour",
-    "remaining": "{count, plural, one {# restante} other {# restantes}}",
+    "growth": "+{rate}/jour créées",
     "target": "Objectif {date}",
     "targetLabel": "Objectif",
     "today": "Aujourd'hui",

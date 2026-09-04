@@ -32,8 +32,8 @@ function formatValue(value: unknown): string {
 }
 
 // The burnup chart itself: scope and completed as areas, started as a line, the
-// projection as a dashed line into the future and, in range mode, a band between
-// the optimistic and the pessimistic date. A "today" marker separates the
+// projection and the growing scope as dashed lines into the future and, in range
+// mode, a band between the optimistic and the pessimistic date. A "today" marker separates the
 // history from the projection whenever there is one, and the initiative's target
 // date is marked when it falls on the axis.
 export default function BurnupChart({
@@ -130,6 +130,16 @@ export default function BurnupChart({
           fillOpacity={0.12}
           dot={false}
           connectNulls
+          isAnimationActive={false}
+        />
+        <Line
+          dataKey="scopeProjection"
+          stroke="var(--color-scope)"
+          strokeWidth={1}
+          strokeDasharray="4 4"
+          dot={false}
+          connectNulls
+          legendType="none"
           isAnimationActive={false}
         />
         <Line

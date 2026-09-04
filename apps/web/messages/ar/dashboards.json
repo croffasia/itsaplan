@@ -166,9 +166,10 @@
       "range": "نطاق التوقع"
     },
     "noForecast": "لا تقدم خلال {weeks, plural, one {الأسبوع الماضي} two {الأسبوعين الماضيين} few {# أسابيع الماضية} many {# أسبوعًا الماضية} other {# أسبوع الماضية}}",
+    "outpaced": "المهام الجديدة تفوق المغلقة",
     "allDone": "اكتمل كل شيء",
     "velocity": "{rate}/يوم",
-    "remaining": "{count, plural, zero {لا شيء متبقٍ} one {مهمة واحدة متبقية} two {مهمتان متبقيتان} few {# مهام متبقية} many {# مهمة متبقية} other {# مهمة متبقية}}",
+    "growth": "+{rate}/يوم جديدة",
     "target": "الهدف {date}",
     "targetLabel": "الهدف",
     "today": "اليوم",

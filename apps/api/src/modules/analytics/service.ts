@@ -344,6 +344,10 @@ export interface BurnupDay {
 export interface BurnupForecast {
   windowDays: number;
   velocityPerDay: number;
+  // The scope's growth rate over the same window, never negative: cancellations
+  // are not a trend. The dates are where the completed line, at velocityPerDay,
+  // meets the scope line, at this rate.
+  scopeGrowthPerDay: number;
   remaining: number;
   projectedDate: string | null;
   // The projected date with the days to go shortened and lengthened by
@@ -421,18 +425,19 @@ async function initiativeTargetDate(
 // The buffer Linear's project graph puts around its projected date.
 const RANGE_BUFFER = 0.4;
 
-// A linear projection at the current scope, as in Linear's project graph: the
-// closing rate of the whole weeks inside the last `windowDays` days of the series,
-// the latest week weighted heaviest, applied to what is left; a window with no
-// whole week uses its plain rate. No date when nothing was closed in the window or
-// nothing is left — the widget says so instead of drawing a line to infinity.
-// Scope growth is not extrapolated.
+// A completion date as the intersection of two lines: the completed count rising
+// at the closing rate of the whole weeks inside the last `windowDays` days of the
+// series, the latest week weighted heaviest, and the scope rising at its growth
+// rate over the same weeks; a window with no whole week uses the plain rates. No
+// date when closings do not outpace new issues or nothing is left — the widget
+// says so instead of drawing a line to infinity.
 export function forecastCompletion(days: BurnupDay[], windowDays: number): BurnupForecast {
   const last = days[days.length - 1];
   if (!last) {
     return {
       windowDays: 0,
       velocityPerDay: 0,
+      scopeGrowthPerDay: 0,
       remaining: 0,
       projectedDate: null,
       optimisticDate: null,
@@ -441,17 +446,17 @@ export function forecastCompletion(days: BurnupDay[], windowDays: number): Burnu
   }
   const lastIndex = days.length - 1;
   const startIndex = Math.max(0, lastIndex - windowDays);
-  const span = lastIndex - startIndex;
-  const velocity =
-    weightedWeeklyRate(days, startIndex) ??
-    (span > 0 ? (last.completed - days[startIndex]!.completed) / span : 0);
+  const velocity = rateOver(days, startIndex, 'completed');
+  const growth = Math.max(0, rateOver(days, startIndex, 'scope'));
   const remaining = Math.max(0, last.scope - last.completed);
-  const daysToGo = velocity > 0 && remaining > 0 ? remaining / velocity : null;
+  const net = velocity - growth;
+  const daysToGo = net > 0 && remaining > 0 ? remaining / net : null;
   const dateAt = (factor: number) =>
     daysToGo === null ? null : addDays(last.date, Math.ceil(daysToGo * factor));
   return {
-    windowDays: span,
+    windowDays: lastIndex - startIndex,
     velocityPerDay: round2(velocity),
+    scopeGrowthPerDay: round2(growth),
     remaining,
     projectedDate: dateAt(1),
     optimisticDate: dateAt(1 - RANGE_BUFFER),
@@ -459,17 +464,22 @@ export function forecastCompletion(days: BurnupDay[], windowDays: number): Burnu
   };
 }
 
-// The closing rate over the whole weeks between startIndex and the last day, the
-// latest week weighted n, the earliest 1. Null when there is no whole week.
-function weightedWeeklyRate(days: BurnupDay[], startIndex: number): number | null {
-  const weeks = Math.floor((days.length - 1 - startIndex) / 7);
-  if (weeks === 0) return null;
+// The daily rate of `key` over the whole weeks between startIndex and the last
+// day, the latest week weighted n, the earliest 1; the plain rate over the span
+// when there is no whole week, 0 for a single point.
+function rateOver(days: BurnupDay[], startIndex: number, key: 'completed' | 'scope'): number {
+  const lastIndex = days.length - 1;
+  const weeks = Math.floor((lastIndex - startIndex) / 7);
+  if (weeks === 0) {
+    const span = lastIndex - startIndex;
+    return span > 0 ? (days[lastIndex]![key] - days[startIndex]![key]) / span : 0;
+  }
   let sum = 0;
   let weightSum = 0;
   for (let i = 0; i < weeks; i++) {
-    const end = days.length - 1 - i * 7;
+    const end = lastIndex - i * 7;
     const weight = weeks - i;
-    sum += (weight * (days[end]!.completed - days[end - 7]!.completed)) / 7;
+    sum += (weight * (days[end]![key] - days[end - 7]![key])) / 7;
     weightSum += weight;
   }
   return sum / weightSum;

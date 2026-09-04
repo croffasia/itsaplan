@@ -41,25 +41,26 @@ export default function BurnupWidget({
     completed: { label: t('completed'), color: SERIES_COLOR.completed },
     projection: { label: t('projection'), color: SERIES_COLOR.projection },
     band: { label: t('band'), color: SERIES_COLOR.band },
+    scopeProjection: { label: t('scope'), color: SERIES_COLOR.scope },
   };
 
   // The caption parts: the projected date (with the range under its own label in
-  // range mode), the pace and the remaining count, then the target date.
+  // range mode), the closing pace and the scope growth, then the target date.
   function caption(forecast: BurnupForecast, targetDate: string | null): string[] {
     const parts: string[] = [];
     if (forecast.remaining === 0) parts.push(t('allDone'));
-    else if (forecast.projectedDate == null) parts.push(t('noForecast', { weeks: forecastWeeks }));
+    else if (forecast.velocityPerDay <= 0) parts.push(t('noForecast', { weeks: forecastWeeks }));
     else {
-      parts.push(t('projected', { date: formatDate(forecast.projectedDate) }));
+      if (forecast.projectedDate == null) parts.push(t('outpaced'));
+      else parts.push(t('projected', { date: formatDate(forecast.projectedDate) }));
       if (range && forecast.optimisticDate && forecast.pessimisticDate) {
         const from = formatDate(forecast.optimisticDate);
         const to = formatDate(forecast.pessimisticDate);
         parts.push(`${t('band')}: ${t('range', { from, to })}`);
       }
-      parts.push(
-        t('velocity', { rate: forecast.velocityPerDay }),
-        t('remaining', { count: forecast.remaining }),
-      );
+      parts.push(t('velocity', { rate: forecast.velocityPerDay }));
+      if (forecast.scopeGrowthPerDay > 0)
+        parts.push(t('growth', { rate: forecast.scopeGrowthPerDay }));
     }
     if (targetDate) parts.push(t('target', { date: formatDate(targetDate) }));
     return parts;

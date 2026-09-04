@@ -40,6 +40,7 @@ export const BurnupDto = t.Object({
   forecast: t.Object({
     windowDays: t.Number(),
     velocityPerDay: t.Number(),
+    scopeGrowthPerDay: t.Number(),
     remaining: t.Number(),
     projectedDate: t.Nullable(t.String()),
     optimisticDate: t.Nullable(t.String()),

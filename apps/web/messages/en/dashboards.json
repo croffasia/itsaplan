@@ -166,9 +166,10 @@
       "range": "Forecast range"
     },
     "noForecast": "No progress in the last {weeks, plural, one {# week} other {# weeks}}",
+    "outpaced": "New issues outpace closings",
     "allDone": "All done",
     "velocity": "{rate}/day",
-    "remaining": "{count, plural, one {# left} other {# left}}",
+    "growth": "+{rate}/day new",
     "target": "Target {date}",
     "targetLabel": "Target",
     "today": "Today",

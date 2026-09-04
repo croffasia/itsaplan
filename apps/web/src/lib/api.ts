@@ -1648,11 +1648,13 @@ export interface BurnupDay {
   completed: number;
 }
 
-// A completion date projected from the closing rate over the last windowDays days;
-// null when nothing closed in the window or nothing is left.
+// A completion date projected over the last windowDays days as the day the
+// completed line, at the closing rate, meets the scope line, at its growth rate;
+// null when closings do not outpace new issues or nothing is left.
 export interface BurnupForecast {
   windowDays: number;
   velocityPerDay: number;
+  scopeGrowthPerDay: number;
   remaining: number;
   projectedDate: string | null;
   // The projected date with the days to go shortened and lengthened by about

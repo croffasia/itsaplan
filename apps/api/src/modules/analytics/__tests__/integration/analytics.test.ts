@@ -383,6 +383,7 @@ describe('analytics', () => {
       expect(res.data?.forecast).toEqual({
         windowDays: 28,
         velocityPerDay: 0,
+        scopeGrowthPerDay: 0,
         remaining: 0,
         projectedDate: null,
         optimisticDate: null,

@@ -166,9 +166,10 @@
       "range": "预测区间"
     },
     "noForecast": "最近 {weeks} 周没有进展",
+    "outpaced": "新增任务多于完成",
     "allDone": "全部完成",
     "velocity": "{rate}/天",
-    "remaining": "剩余 {count} 项",
+    "growth": "新增 {rate}/天",
     "target": "目标 {date}",
     "targetLabel": "目标",
     "today": "今天",

@@ -144,7 +144,7 @@ export const analyticsRoutes = new Elysia({
       detail: {
         summary: 'Get project burnup',
         description:
-          'Scope, started and completed issue counts at the end of each day, with a completion date projected from the recent closing rate. Optionally limited to one initiative.',
+          'Scope, started and completed issue counts at the end of each day, with a completion date projected from the recent closing rate and scope growth. Optionally limited to one initiative.',
         ...mcpTool('get_project_burnup'),
       },
     },

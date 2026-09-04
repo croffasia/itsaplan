@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'bun:test';
 import { forecastCompletion, type BurnupDay } from '../../service';
 
-// forecastCompletion projects a completion date from the closing rate over the
-// last `windowDays` points of a burnup series, at the current scope, and brackets
-// it with a ±40% buffer on the days to go. It gives no date when nothing closed
-// in the window or nothing is left.
+// forecastCompletion projects a completion date from the closing rate and the
+// scope growth rate over the last `windowDays` points of a burnup series, as the
+// day the two lines meet, and brackets it with a ±40% buffer on the days to go. It
+// gives no date when closings do not outpace new issues or nothing is left.
 
 function series(completed: number[], scope = 10): BurnupDay[] {
   return completed.map((c, i) => ({
@@ -20,6 +20,7 @@ describe('forecastCompletion', () => {
     expect(forecastCompletion([], 28)).toEqual({
       windowDays: 0,
       velocityPerDay: 0,
+      scopeGrowthPerDay: 0,
       remaining: 0,
       projectedDate: null,
       optimisticDate: null,
@@ -34,6 +35,7 @@ describe('forecastCompletion', () => {
     expect(f).toEqual({
       windowDays: 2,
       velocityPerDay: 1,
+      scopeGrowthPerDay: 0,
       remaining: 6,
       projectedDate: '2026-03-11',
       optimisticDate: '2026-03-09',
@@ -74,6 +76,33 @@ describe('forecastCompletion', () => {
     expect(f.projectedDate).toBe('2026-03-18');
   });
 
+  it('meets a growing scope where the two lines cross', () => {
+    // Closing 1/day, scope growing 0.5/day (1 issue every other day); 6 left at a
+    // net 0.5/day → 12 days after 5 March, bracketed by 7.2 → 8 and 16.8 → 17.
+    const days = series([0, 1, 2, 3, 4]).map((d, i) => ({ ...d, scope: 8 + Math.floor(i / 2) }));
+    const f = forecastCompletion(days, 4);
+    expect(f).toMatchObject({
+      velocityPerDay: 1,
+      scopeGrowthPerDay: 0.5,
+      remaining: 6,
+      optimisticDate: '2026-03-13',
+      projectedDate: '2026-03-17',
+      pessimisticDate: '2026-03-22',
+    });
+  });
+
+  it('gives no date when new issues outpace closings', () => {
+    const days = series([0, 1, 2]).map((d, i) => ({ ...d, scope: 10 + 2 * i }));
+    const f = forecastCompletion(days, 2);
+    expect(f).toMatchObject({ velocityPerDay: 1, scopeGrowthPerDay: 2, projectedDate: null });
+  });
+
+  it('does not extrapolate a shrinking scope', () => {
+    const days = series([0, 1, 2]).map((d, i) => ({ ...d, scope: 10 - 2 * i }));
+    const f = forecastCompletion(days, 2);
+    expect(f).toMatchObject({ scopeGrowthPerDay: 0, remaining: 4, projectedDate: '2026-03-07' });
+  });
+
   it('gives no date when nothing closed in the window', () => {
     const f = forecastCompletion(series([3, 3, 3]), 2);
     expect(f).toMatchObject({ velocityPerDay: 0, remaining: 7, projectedDate: null });
@@ -100,7 +129,7 @@ describe('forecastCompletion', () => {
       { date: '2026-12-30', scope: 4, started: 2, completed: 2 },
     ];
     expect(forecastCompletion(days, 1).projectedDate).toBe('2026-12-31');
-    days[1]!.scope = 6;
+    for (const d of days) d.scope = 6;
     expect(forecastCompletion(days, 1).projectedDate).toBe('2027-01-01');
   });
 });

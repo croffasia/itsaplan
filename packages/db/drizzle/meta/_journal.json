@@ -789,8 +789,29 @@
     {
       "idx": 112,
       "version": "7",
-      "when": 1788110193094,
-      "tag": "0112_ambiguous_mariko_yashida",
+      "when": 1788033386142,
+      "tag": "0112_sparkling_pandemic",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1788065824575,
+      "tag": "0113_complete_power_pack",
+      "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1788173880309,
+      "tag": "0114_ordinary_fixer",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1788538405400,
+      "tag": "0115_wooden_polaris",
       "breakpoints": true
     }
   ]

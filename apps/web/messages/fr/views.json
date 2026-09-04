@@ -1,0 +1,15 @@
+{
+  "all": "Tout",
+  "newView": "Nouvelle vue",
+  "switchView": "Changer de vue",
+  "searchViews": "Rechercher une vue…",
+  "noViews": "Aucune vue trouvée.",
+  "options": "Options d'affichage",
+  "share": "Partager",
+  "shared": "Partagée",
+  "favorite": "Ajouter aux favoris",
+  "unfavorite": "Retirer des favoris",
+  "shareBoard": "Partager le tableau",
+  "newViewHint": "Créer une vue à partir des filtres et de l'affichage actuels",
+  "filter": "Filtrer"
+}

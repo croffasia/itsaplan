@@ -28,6 +28,7 @@ interface StoredGitSettings {
   secret: EncryptedSecret;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;
+  linkbackComments?: boolean;
   // Every repository that has delivered, newest first, capped at REPOSITORIES_CAP.
   // Written only by recordGitEvent.
   repositories?: GitRepository[];
@@ -48,6 +49,7 @@ export interface GitSettings {
   secret: string;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;
+  linkbackComments: boolean;
   repositories: GitRepository[];
 }
 
@@ -55,6 +57,7 @@ function toDto(stored: StoredGitSettings): GitSettings {
   const { recentDeliveries: _internal, ...rest } = stored;
   return {
     ...rest,
+    linkbackComments: stored.linkbackComments ?? true,
     secret: decryptSecret(stored.secret),
     repositories: stored.repositories ?? [],
   };
@@ -72,6 +75,7 @@ export async function getOrCreateGitSettings(projectId: number): Promise<GitSett
     secret: encryptSecret(newSecret()),
     onMergeColumnId: null,
     onOpenColumnId: null,
+    linkbackComments: true,
     repositories: [],
   };
   // Concurrent first reads race to insert; the loser keeps the winner's row so
@@ -102,7 +106,12 @@ async function mergeGitSettings(
 
 export async function updateGitSettings(
   projectId: number,
-  patch: { enabled?: boolean; onMergeColumnId?: number | null; onOpenColumnId?: number | null },
+  patch: {
+    enabled?: boolean;
+    onMergeColumnId?: number | null;
+    onOpenColumnId?: number | null;
+    linkbackComments?: boolean;
+  },
 ): Promise<GitSettings> {
   await assertProjectColumn(projectId, patch.onMergeColumnId);
   await assertProjectColumn(projectId, patch.onOpenColumnId);
@@ -111,6 +120,7 @@ export async function updateGitSettings(
   if (patch.enabled !== undefined) fields.enabled = patch.enabled;
   if (patch.onMergeColumnId !== undefined) fields.onMergeColumnId = patch.onMergeColumnId;
   if (patch.onOpenColumnId !== undefined) fields.onOpenColumnId = patch.onOpenColumnId;
+  if (patch.linkbackComments !== undefined) fields.linkbackComments = patch.linkbackComments;
   if (Object.keys(fields).length > 0) await mergeGitSettings(projectId, fields);
   return getOrCreateGitSettings(projectId);
 }

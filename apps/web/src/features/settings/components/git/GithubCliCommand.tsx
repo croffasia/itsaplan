@@ -1,6 +1,7 @@
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
+import { githubWebhookCommand } from './githubCommand';
 
 // A copyable `gh` command that registers the repository webhook in one step. The
 // payload URL and secret are already inlined; only <owner>/<repo> is left to
@@ -15,15 +16,11 @@ export default function GithubCliCommand({
 }) {
   const t = useTranslations('settings.git');
   const tCommon = useTranslations('common');
-  const command = (secretText: string) =>
-    [
-      'gh api repos/<owner>/<repo>/hooks',
-      "-f name=web -F active=true -f 'events[]=pull_request'",
-      `-f 'config[url]=${payloadUrl}' -f 'config[content_type]=json' -f 'config[secret]=${secretText}'`,
-    ].join(' \\\n  ');
+  const command = githubWebhookCommand(payloadUrl, secret);
+  const preview = githubWebhookCommand(payloadUrl, '•'.repeat(24) + secret.slice(-4));
 
   async function copy() {
-    await navigator.clipboard.writeText(command(secret));
+    await navigator.clipboard.writeText(command);
     toast.success(t('commandCopied'));
   }
 
@@ -51,7 +48,7 @@ export default function GithubCliCommand({
         </Button>
       </div>
       <pre className="overflow-x-auto rounded-md bg-muted px-3 py-2 font-mono text-xs whitespace-pre">
-        {command('•'.repeat(24) + secret.slice(-4))}
+        {preview}
       </pre>
     </div>
   );

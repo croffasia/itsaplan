@@ -1,0 +1,31 @@
+{
+  "label": "Gérer les projets",
+  "title": "Gérer les projets",
+  "description": "Tous les projets dont vous faites partie, avec vos permissions dans chacun. Copiez-en un pour démarrer un nouveau projet à partir de sa configuration. Les propriétaires peuvent supprimer un projet ; les membres peuvent le quitter. La suppression efface définitivement le projet et tout son contenu.",
+  "empty": "Vous n'êtes membre d'aucun projet pour l'instant.",
+  "columns": {
+    "project": "Projet",
+    "role": "Rôle",
+    "permissions": "Permissions",
+    "actions": "Actions"
+  },
+  "yourPermissions": "Vos permissions",
+  "copyAction": "Copier le projet",
+  "deleteAction": "Supprimer le projet",
+  "leaveAction": "Quitter le projet",
+  "roles": {
+    "owner": "Propriétaire",
+    "member": "Membre"
+  },
+  "deleteDialog": {
+    "title": "Supprimer {name} ?",
+    "confirm": "Supprimer définitivement",
+    "description": "Cette action supprime définitivement <strong>{name}</strong> et tout son contenu : tickets, commentaires, pièces jointes et paramètres. Elle est irréversible.",
+    "typeToConfirm": "Saisissez <code>{key}</code> pour confirmer."
+  },
+  "leaveDialog": {
+    "title": "Quitter {name} ?",
+    "confirm": "Quitter le projet",
+    "description": "Vous perdrez l'accès à <strong>{name}</strong> et à ses tickets. Pour le rejoindre à nouveau, il vous faudra une nouvelle invitation d'un propriétaire."
+  }
+}

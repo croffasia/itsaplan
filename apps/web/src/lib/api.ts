@@ -979,6 +979,7 @@ export interface GitSettings {
   secret: string | null;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;
+  linkbackComments: boolean;
   repositories: GitRepository[];
 }
 
@@ -988,6 +989,40 @@ export interface GitRepository {
   repo: string;
   provider: string;
   lastEventAt: string;
+}
+
+export type GitConnectionProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
+
+export interface GitManagedRepository {
+  id: number;
+  externalId: string;
+  fullName: string;
+  webUrl: string;
+  status: 'connected' | 'error';
+  lastError: string | null;
+}
+
+export interface GitProviderConnection {
+  id: number;
+  provider: GitConnectionProvider;
+  baseUrl: string;
+  accountLogin: string;
+  repositories: GitManagedRepository[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AvailableGitRepository {
+  externalId: string;
+  fullName: string;
+  webUrl: string;
+  private: boolean;
+  managedRepositoryId: number | null;
+}
+
+export interface AvailableGitRepositoryPage {
+  repositories: AvailableGitRepository[];
+  nextPage: number | null;
 }
 
 // Which optional sections a project shows. All on by default; turning one off
@@ -1156,6 +1191,10 @@ export interface InstanceEmailSettingsPatch {
   resend?: { enabled: boolean; apiKey?: string };
   from?: string;
   allowProjects?: boolean;
+}
+
+export interface InstanceEmailTestResult {
+  recipient: string;
 }
 
 // The Google OAuth credentials used for social sign-in. The client secret is never
@@ -1999,6 +2038,38 @@ export interface IssueDetail extends Issue {
   fields: IssueFieldValue[];
 }
 
+export type GitProvider = 'github' | 'gitlab' | 'gitea' | 'forgejo' | 'bitbucket';
+export type PullRequestState = 'open' | 'merged' | 'closed';
+export type PipelineStatus = 'pending' | 'running' | 'success' | 'failed' | 'canceled' | 'skipped';
+
+export interface DevelopmentCheck {
+  id: number;
+  name: string;
+  status: PipelineStatus;
+  url: string | null;
+  updatedAt: string;
+}
+
+export interface DevelopmentLink {
+  id: number;
+  provider: GitProvider;
+  repository: string;
+  kind: 'pull_request' | 'branch';
+  number: number | null;
+  title: string;
+  url: string | null;
+  state: PullRequestState;
+  draft: boolean;
+  sourceBranch: string | null;
+  targetBranch: string;
+  headSha: string | null;
+  pipelineStatus: PipelineStatus | null;
+  pipelineUrl: string | null;
+  checkStatus: PipelineStatus | null;
+  checks: DevelopmentCheck[];
+  updatedAt: string;
+}
+
 // A relation between two issues (mirrors apps/api modules/issues/links.ts). 'blocks' and
 // 'duplicates' are directional and read differently on each end, which direction
 // selects: 'outward' is the side that blocks/duplicates, 'inward' the side that is
@@ -2111,6 +2182,7 @@ export interface IssueRelations extends IssueDetail {
 export interface IssueWithWatchers extends IssueRelations {
   watchers: IssueWatcher[];
   checklists: Checklist[];
+  development: DevelopmentLink[];
 }
 
 // Public read-only share bundles, returned by the /share/* routes with no session.
@@ -2766,6 +2838,8 @@ export const api = {
     request<IssueWithWatchers>(`/projects/${projectKey}/issues/${seq}`),
   updateIssue: (id: number, patch: IssuePatch) =>
     request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  removeIssueDevelopmentLink: (issueId: number, linkId: number) =>
+    request<void>(`/issues/${issueId}/development/${linkId}`, { method: 'DELETE' }),
   // An issue that has subtasks needs a disposition saying what happens to them;
   // without one the server rejects the delete with a 409.
   deleteIssue: (id: number, subtasks?: SubtaskDisposition) =>
@@ -3454,7 +3528,12 @@ export const api = {
     request<GitSettings>(`/projects/${projectKey}/settings/git`),
   updateGitSettings: (
     projectKey: string,
-    patch: { enabled?: boolean; onMergeColumnId?: number | null; onOpenColumnId?: number | null },
+    patch: {
+      enabled?: boolean;
+      onMergeColumnId?: number | null;
+      onOpenColumnId?: number | null;
+      linkbackComments?: boolean;
+    },
   ) =>
     request<GitSettings>(`/projects/${projectKey}/settings/git`, {
       method: 'PATCH',
@@ -3464,6 +3543,42 @@ export const api = {
     request<GitSettings>(`/projects/${projectKey}/settings/git/secret`, {
       method: 'POST',
     }),
+  listGitProviderConnections: (projectKey: string) =>
+    request<GitProviderConnection[]>(`/projects/${projectKey}/settings/git/connections`),
+  connectGitProvider: (
+    projectKey: string,
+    input: { provider: GitConnectionProvider; baseUrl?: string; token: string },
+  ) =>
+    request<GitProviderConnection>(`/projects/${projectKey}/settings/git/connections`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  disconnectGitProvider: (projectKey: string, connectionId: number) =>
+    request<void>(`/projects/${projectKey}/settings/git/connections/${connectionId}`, {
+      method: 'DELETE',
+    }),
+  listAvailableGitRepositories: (
+    projectKey: string,
+    connectionId: number,
+    params: { page?: number; search?: string },
+  ) => {
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.search) query.set('search', params.search);
+    return request<AvailableGitRepositoryPage>(
+      `/projects/${projectKey}/settings/git/connections/${connectionId}/repositories?${query}`,
+    );
+  },
+  connectGitRepositories: (projectKey: string, connectionId: number, externalIds: string[]) =>
+    request<GitProviderConnection>(
+      `/projects/${projectKey}/settings/git/connections/${connectionId}/repositories`,
+      { method: 'POST', body: JSON.stringify({ externalIds }) },
+    ),
+  disconnectGitRepository: (projectKey: string, connectionId: number, repositoryId: number) =>
+    request<void>(
+      `/projects/${projectKey}/settings/git/connections/${connectionId}/repositories/${repositoryId}`,
+      { method: 'DELETE' },
+    ),
 
   // Notification provider credentials (danger_zone: read to view, edit to change).
   getNotificationSettings: (projectKey: string) =>
@@ -3558,6 +3673,11 @@ export const api = {
   updateInstanceEmailSettings: (patch: InstanceEmailSettingsPatch) =>
     request<InstanceEmailSettings>('/god/email-settings', {
       method: 'PUT',
+      body: JSON.stringify(patch),
+    }),
+  testInstanceEmailSettings: (patch: InstanceEmailSettingsPatch) =>
+    request<InstanceEmailTestResult>('/god/email-settings/test', {
+      method: 'POST',
       body: JSON.stringify(patch),
     }),
   getInstanceTelegramSettings: () => request<InstanceTelegramSettings>('/god/telegram-settings'),

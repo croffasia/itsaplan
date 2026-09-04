@@ -88,7 +88,9 @@
   },
   "actionsBar": {
     "shortLinkCopied": "Short link copied",
+    "branchCopied": "Branch name copied",
     "copyShortLink": "Copy short link",
+    "copyBranch": "Copy branch name",
     "copied": "Copied!",
     "copyPrompt": "Copy Prompt",
     "sharedPublicly": "Shared publicly",
@@ -318,6 +320,27 @@
     "worklogAdded": "logged <v>{time}</v> on <v>{date}</v>",
     "worklogChanged": "changed the logged <v>{from}</v> on <v>{fromDate}</v> to <v>{to}</v> on <v>{date}</v>",
     "worklogRemoved": "removed the <v>{time}</v> logged on <v>{date}</v>"
+  },
+  "development": {
+    "title": "Development",
+    "unlink": "Unlink development item",
+    "branch": "Branch",
+    "draft": "Draft",
+    "ready": "Ready",
+    "open": "Open",
+    "merged": "Merged",
+    "closed": "Closed",
+    "updated": "Updated {date}",
+    "openPipeline": "Open pipeline",
+    "checks": "{count, plural, one {# check} other {# checks}}",
+    "pipeline": {
+      "pending": "Pending",
+      "running": "Running",
+      "success": "Passed",
+      "failed": "Failed",
+      "canceled": "Canceled",
+      "skipped": "Skipped"
+    }
   },
   "archived": "Archived",
   "activityHeading": "Activity",

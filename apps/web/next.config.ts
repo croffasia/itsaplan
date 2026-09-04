@@ -11,6 +11,9 @@ const nextConfig: NextConfig = {
   // files (default-stylesheet.css) by a path relative to its module. Bundling it
   // breaks that path, so it is required from node_modules at runtime instead.
   serverExternalPackages: ['isomorphic-dompurify'],
+  // next dev otherwise appends a block of its own to apps/web/AGENTS.md on every
+  // start, which leaves the working tree dirty for anyone running the dev server.
+  agentRules: false,
 };
 
 export default createNextIntlPlugin('./src/i18n/request.ts')(nextConfig);

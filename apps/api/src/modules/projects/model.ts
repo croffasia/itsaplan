@@ -149,6 +149,9 @@ export const updateProjectSettingsBody = t.Object({
   features: t.Optional(t.Partial(FeaturesResponse)),
 });
 
+// Ten years, well inside the range make_interval and a timestamp can hold.
+export const MAX_AUTO_ARCHIVE_DAYS = 3650;
+
 // Auto-archive thresholds (AutoArchiveSettings from the service): days of inactivity
 // in a completed/canceled column before the worker archives an issue; null = off.
 export const AutoArchiveResponse = t.Object({
@@ -156,9 +159,12 @@ export const AutoArchiveResponse = t.Object({
   canceledDays: t.Nullable(t.Number()),
 });
 
+// The upper bound keeps the value inside what an interval can carry: the worker
+// subtracts it from now() for every project in one statement, so a day count large
+// enough to overflow a timestamp fails that statement for the whole instance.
 export const updateAutoArchiveBody = t.Object({
-  completedDays: t.Nullable(t.Integer({ minimum: 1 })),
-  canceledDays: t.Nullable(t.Integer({ minimum: 1 })),
+  completedDays: t.Nullable(t.Integer({ minimum: 1, maximum: MAX_AUTO_ARCHIVE_DAYS })),
+  canceledDays: t.Nullable(t.Integer({ minimum: 1, maximum: MAX_AUTO_ARCHIVE_DAYS })),
 });
 
 // The estimate kinds the project's issues carry and whether its members log time

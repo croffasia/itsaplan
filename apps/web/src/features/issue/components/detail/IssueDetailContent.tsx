@@ -11,6 +11,7 @@ import { useFilePaste } from '../../hooks/useFilePaste';
 import IssueAttachmentsPanel from './IssueAttachmentsPanel';
 import IssueChecklistsPanel from './IssueChecklistsPanel';
 import IssueLinksPanel from './IssueLinksPanel';
+import IssueDevelopmentPanel from './IssueDevelopmentPanel';
 import IssueWorklogPanel from './IssueWorklogPanel';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
 import IssueActivityFeed from './IssueActivityFeed';
@@ -181,6 +182,8 @@ export default function IssueDetailContent({
       {features.checklists && <IssueChecklistsPanel issue={issue} />}
 
       {features.timeLogging && <IssueWorklogPanel project={project} issue={issue} />}
+
+      <IssueDevelopmentPanel issueId={issue.id} links={issue.development ?? []} canEdit={canEdit} />
 
       <IssueLinksPanel project={project} issue={issue} />
     </>

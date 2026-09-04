@@ -20,6 +20,6 @@ describe('localeFromAcceptLanguage', () => {
   });
 
   it('falls back to English when no requested language is supported', () => {
-    assert.equal(localeFromAcceptLanguage('de-DE,fr;q=0.9'), 'en');
+    assert.equal(localeFromAcceptLanguage('de-DE,ja;q=0.9'), 'en');
   });
 });

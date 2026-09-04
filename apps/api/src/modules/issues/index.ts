@@ -54,6 +54,7 @@ import {
   updateWorklog,
 } from './worklogs';
 import { listIssueCycles } from './cycle-history';
+import { listIssueDevelopmentLinks, removeIssueDevelopmentLink } from '#modules/git/development';
 import {
   createChecklist,
   createChecklistItem,
@@ -70,6 +71,7 @@ import {
 
 import {
   issueParams,
+  issueDevelopmentLinkParams,
   IssueResponse,
   IssueLinkResponse,
   IssueWatcherResponse,
@@ -418,7 +420,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
       const checklists = await listChecklists(issue.id);
-      return { ...issue, fields, links, watchers, parent, subtasks, checklists };
+      const development = await listIssueDevelopmentLinks(issue.id);
+      return { ...issue, fields, links, watchers, parent, subtasks, checklists, development };
     },
     {
       params: issueSequenceParams,
@@ -451,7 +454,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
       const checklists = await listChecklists(issue.id);
-      return { ...issue, fields, links, watchers, parent, subtasks, checklists };
+      const development = await listIssueDevelopmentLinks(issue.id);
+      return { ...issue, fields, links, watchers, parent, subtasks, checklists, development };
     },
     {
       params: issueParams,
@@ -491,6 +495,24 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'Update an issue by its numeric id. Moving it into a column that is at a ' +
           'hard WIP limit fails with 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
+      },
+    },
+  )
+
+  .delete(
+    '/issues/:issueId/development/:linkId',
+    async ({ params }) => {
+      if (!(await removeIssueDevelopmentLink(params.issueId, params.linkId)))
+        throw new HttpError(404, 'Development link not found');
+      return noContent();
+    },
+    {
+      params: issueDevelopmentLinkParams,
+      workItem: 'edit',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Unlink a development item',
+        description: 'Remove one branch, pull request, or merge request from an issue.',
       },
     },
   )

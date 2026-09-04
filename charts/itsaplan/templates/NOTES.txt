@@ -1,0 +1,33 @@
+itsaplan has been deployed!
+
+{{- if .Values.ingress.enabled }}
+
+Access the application at:
+{{- if .Values.ingress.host }}
+  Web UI: http{{ if .Values.ingress.tls.enabled }}s{{ end }}://{{ .Values.ingress.host }}
+{{- if eq .Values.ingress.api.mode "separate-host" }}
+  API:    http{{ if .Values.ingress.api.tls.enabled }}s{{ end }}://{{ .Values.ingress.api.host }}
+{{- else if eq .Values.ingress.api.mode "traefik-entrypoint" }}
+  API:    https://{{ .Values.ingress.host }}:{{ .Values.ingress.api.publicPort }} (Traefik entrypoint "{{ .Values.ingress.api.entryPoint }}")
+{{- end }}
+{{- end }}
+{{- else }}
+
+To access the application, set up port forwarding:
+
+  # Web UI
+  kubectl port-forward svc/{{ include "itsaplan.fullname" . }}-web {{ .Values.web.port }}:{{ .Values.web.port }} -n {{ .Release.Namespace }}
+
+  # API
+  kubectl port-forward svc/{{ include "itsaplan.fullname" . }}-api {{ .Values.api.port }}:{{ .Values.api.port }} -n {{ .Release.Namespace }}
+{{- end }}
+
+{{- if .Values.postgresql.enabled }}
+
+PostgreSQL is deployed in-cluster. Data is persisted via a {{ .Values.postgresql.persistence.size }} PVC.
+{{- end }}
+
+{{- if .Values.minio.enabled }}
+
+MinIO is deployed in-cluster for S3-compatible attachment storage ({{ .Values.minio.persistence.size }} PVC).
+{{- end }}

@@ -236,10 +236,11 @@ export const chatAttachmentRoutes = new Elysia({
       return new Response(obj.body, { headers });
     },
     {
+      params: publicIdParams,
       query: rawAttachmentQuery,
       // Public route: no 401/403. Returns a raw Response (bytes), so no typed 200
-      // body — Elysia cannot validate a raw Response. Only the 404 it can throw.
-      response: { ...errors(404) },
+      // body — Elysia cannot validate a raw Response. Only the statuses it can throw.
+      response: { ...errors(400, 404) },
       detail: { summary: 'Download a chat attachment (public, no auth)' },
     },
   );

@@ -51,6 +51,9 @@ export interface ParsedMagicWords {
   closes: IssueRef[];
   // Identifiers named by a non-closing word — linked but never closed.
   references: IssueRef[];
+  // Identifiers explicitly excluded with skip/ignore. The webhook handler uses
+  // these to remove a link that an earlier delivery already created.
+  skipped: IssueRef[];
 }
 
 const IDENTIFIER = String.raw`[A-Za-z][A-Za-z0-9]*-\d+`;
@@ -77,6 +80,20 @@ function toRef(identifier: string): IssueRef {
 
 const refId = (ref: IssueRef) => `${ref.key}-${ref.sequenceNumber}`;
 
+// Branch names do not need a magic word: `feature/MKT-42-summary` is enough to
+// establish a development link. Requiring the key at the start or immediately
+// after a slash avoids treating arbitrary dashed words later in the title as keys.
+const BARE_IDENTIFIER_RE = new RegExp(String.raw`(?<=^|/)(${IDENTIFIER})(?=$|[-_/])`, 'gi');
+
+export function parseIssueIdentifiers(text: string): IssueRef[] {
+  const refs = new Map<string, IssueRef>();
+  for (const match of text.matchAll(BARE_IDENTIFIER_RE)) {
+    const ref = toRef(match[1]);
+    refs.set(refId(ref), ref);
+  }
+  return [...refs.values()];
+}
+
 // Parses PR title + description text. An identifier under a skip word never
 // appears in the result; one named by both a closing and a non-closing word
 // counts as closing.
@@ -100,5 +117,9 @@ export function parseMagicWords(text: string): ParsedMagicWords {
     references.delete(id);
   }
   for (const id of closes.keys()) references.delete(id);
-  return { closes: [...closes.values()], references: [...references.values()] };
+  return {
+    closes: [...closes.values()],
+    references: [...references.values()],
+    skipped: [...skipped].map(toRef),
+  };
 }

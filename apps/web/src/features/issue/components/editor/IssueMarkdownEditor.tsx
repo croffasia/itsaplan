@@ -13,6 +13,7 @@ import { SlashCommand } from '@/lib/tiptap-slash-command';
 import { MarkdownTable } from '../../utils/tiptap-table';
 import { Video } from '../../utils/tiptap-video';
 import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
+import { openLinkOnModifierClick } from '../../utils/modifierClickLink';
 import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
 import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
@@ -22,6 +23,11 @@ import { useTranslations } from 'next-intl';
 // Shared by every editor instance. A block with no language is detected by
 // highlightAuto, so there is no language picker.
 const lowlight = createLowlight(common);
+
+export const issueEditorStarterKitOptions = {
+  codeBlock: false,
+  link: false,
+} as const;
 
 // A minimal WYSIWYG editor over markdown text — no persistent toolbar, just a
 // bubble menu on selection and a "/" command list (Linear/Notion-style). Content
@@ -64,6 +70,14 @@ export default function IssueMarkdownEditor({
   const mentionCandidates = useMentionCandidates();
   const mentionCandidatesRef = useRef(mentionCandidates);
   mentionCandidatesRef.current = mentionCandidates;
+  // Whether the document has changed since this editor was mounted. The markdown
+  // round trip is not an identity: the link extension's autolink parses a bare URL
+  // into a link node, which serialises back in angle brackets. A blur reporting every
+  // time would hand its caller markdown that differs from the stored text after a
+  // focus that changed nothing. Set by onUpdate; a caller keyed on the value it stores
+  // (IssueDetailContent, IssueCustomFieldBody) remounts on a save and starts a fresh
+  // one, so a save that fails still reports on the next blur.
+  const changedRef = useRef(false);
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
 
   // Upload each file and insert it (image/video inline, other files as a link)
@@ -84,7 +98,7 @@ export default function IssueMarkdownEditor({
     editable,
     extensions: [
       // Replaces StarterKit's plain code block, keeping the node name codeBlock.
-      StarterKit.configure({ codeBlock: false }),
+      StarterKit.configure(issueEditorStarterKitOptions),
       CodeBlockLowlight.configure({ lowlight }),
       Placeholder.configure({ placeholder }),
       Link.configure({ openOnClick: false, autolink: true }),
@@ -121,6 +135,9 @@ export default function IssueMarkdownEditor({
         // flex-1 so the typing area covers a container taller than the text.
         class: 'md-content flex-1 focus:outline-none',
       },
+      handleClick(view, _pos, event) {
+        return openLinkOnModifierClick(event, view.dom);
+      },
       // Files dropped from the OS are uploaded, then inserted at the drop
       // position. Internal moves and attachment-card drags (which carry
       // text/html, not files) fall through to tiptap's default handling.
@@ -145,8 +162,13 @@ export default function IssueMarkdownEditor({
         return true;
       },
     },
-    onUpdate: ({ editor }) => onChange?.(editor.storage.markdown.getMarkdown()),
-    onBlur: ({ editor }) => onBlur?.(editor.storage.markdown.getMarkdown()),
+    onUpdate: ({ editor }) => {
+      changedRef.current = true;
+      onChange?.(editor.storage.markdown.getMarkdown());
+    },
+    onBlur: ({ editor }) => {
+      if (changedRef.current) onBlur?.(editor.storage.markdown.getMarkdown());
+    },
   });
 
   useEffect(() => {

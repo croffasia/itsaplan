@@ -1,0 +1,280 @@
+{
+  "pager": {
+    "perPage": "Par page",
+    "rowsPerPage": "Lignes par page",
+    "range": "{first}-{last} sur {total}",
+    "previous": "Page précédente",
+    "next": "Page suivante"
+  },
+  "access": {
+    "owner": "Un propriétaire a un accès total : la matrice des rôles n'est pas consultée.",
+    "role": "Déduit du rôle « {role} ».",
+    "default": "Aucun rôle attribué : les permissions de membre par défaut s'appliquent.",
+    "joined": "arrivé {date}"
+  },
+  "providers": {
+    "credential": "Mot de passe",
+    "google": "Google",
+    "passkey": "Clé d'accès"
+  },
+  "users": {
+    "empty": "Aucun compte ne correspond à ces filtres.",
+    "searchPlaceholder": "Rechercher par nom ou e-mail",
+    "kind": "Type de compte",
+    "kinds": {
+      "human": "Humains",
+      "agent": "Bots IA",
+      "all": "Tous les comptes"
+    },
+    "columns": {
+      "account": "Compte",
+      "role": "Rôle",
+      "signIn": "Connexion",
+      "projects": "Projets",
+      "lastSeen": "Dernière activité",
+      "email": "E-mail"
+    },
+    "registered": "arrivé {date}",
+    "roleGod": "God",
+    "roleUser": "Utilisateur",
+    "agent": "Agent",
+    "noProviders": "aucun",
+    "neverSeen": "jamais",
+    "verified": "Vérifié",
+    "notVerified": "Non vérifié",
+    "open": "Ouvrir le compte",
+    "showAccess": "Afficher l'accès aux projets"
+  },
+  "userPanel": {
+    "instanceOwner": "Propriétaire de l'instance",
+    "user": "Utilisateur",
+    "aiAgent": "Agent IA",
+    "emailVerified": "Adresse e-mail vérifiée",
+    "unconfirmedTitle": "Adresse e-mail non confirmée",
+    "unconfirmedHint": "Confirmez-la ici si le lien ne lui est jamais parvenu.",
+    "verify": "Marquer comme vérifiée",
+    "verifying": "Confirmation…",
+    "verifyDone": "Adresse e-mail confirmée",
+    "signInMethods": "Méthodes de connexion",
+    "noProviders": "Aucune liée",
+    "projects": "Projets",
+    "noProjects": "Aucun",
+    "registered": "Inscription",
+    "lastSeen": "Dernière activité",
+    "neverSignedIn": "Jamais connecté",
+    "projectAccess": "Accès aux projets",
+    "noAccessTitle": "Aucun accès à un projet",
+    "noAccessHint": "Ce compte n'atteint rien tant que personne ne l'invite dans un projet.",
+    "deleteHint": "Les tickets et les commentaires sont conservés, sans auteur.",
+    "deleteTitle": "Supprimer le compte",
+    "deleteConfirm": "Supprimer le compte",
+    "deleteConfirmWithProjects": "{count, plural, one {Supprimer le compte et le projet} other {Supprimer le compte et les projets}}",
+    "deleteMessage": "<strong>{name}</strong> perd l'accès à cette instance. Les tickets et commentaires rédigés par cette personne sont conservés, sans auteur. Cette action est irréversible.",
+    "soleOwnerTitle": "{count, plural, one {Seul propriétaire d'un projet} other {Seul propriétaire de # projets}}",
+    "soleOwnerHint": "{count, plural, one {Une fois le compte supprimé, personne ne pourra le gérer.} other {Une fois le compte supprimé, personne ne pourra les gérer.}}",
+    "deleteWithProjects": "{count, plural, one {Supprimer le projet avec le compte} other {Supprimer les projets avec le compte}}",
+    "deleteWithProjectsOn": "Tout leur contenu est supprimé également.",
+    "deleteWithProjectsOff": "Ou annulez et ajoutez d'abord un second propriétaire.",
+    "deleted": "Compte supprimé",
+    "deletedWithProjects": "Compte et projets supprimés"
+  },
+  "projects": {
+    "empty": "Aucun projet ne correspond à cette recherche.",
+    "searchPlaceholder": "Rechercher par clé ou par nom",
+    "columns": {
+      "project": "Projet",
+      "members": "Membres",
+      "issues": "Tickets",
+      "agents": "Agents",
+      "lastActivity": "Dernière activité",
+      "mcp": "MCP"
+    },
+    "created": "créé {date}",
+    "archived": "{count} archivés",
+    "neverActive": "jamais",
+    "mcpEnabled": "Activé",
+    "mcpOff": "Désactivé",
+    "open": "Ouvrir le projet",
+    "showDetails": "Afficher les détails du projet"
+  },
+  "projectPanel": {
+    "mcpEnabled": "MCP activé",
+    "mcpOff": "MCP désactivé",
+    "created": "créé {date}",
+    "lastActivity": "Dernière activité : {value}",
+    "noActivity": "aucune pour l'instant",
+    "statTitle": "{label} : {value}",
+    "stats": {
+      "issues": "Tickets",
+      "archivedIssues": "Tickets archivés",
+      "initiatives": "Initiatives",
+      "members": "Membres",
+      "dashboards": "Tableaux de bord",
+      "views": "Vues",
+      "agents": "Agents IA",
+      "skills": "Compétences",
+      "tools": "Outils",
+      "integrations": "Intégrations"
+    },
+    "members": "Membres",
+    "noMembersTitle": "Aucun membre",
+    "noMembersHint": "Personne ne peut accéder à ce projet tant que personne n'y est invité."
+  },
+  "general": {
+    "saved": "Valeurs par défaut des projets enregistrées",
+    "projectDefaults": "Valeurs par défaut des projets",
+    "mcpEnabled": "Activer MCP sur les nouveaux projets",
+    "mcpEnabledHint": "Un nouveau projet est accessible via MCP dès sa création."
+  },
+  "authentication": {
+    "saved": "Paramètres d'authentification enregistrés",
+    "registration": "Inscription",
+    "registrationHint": "Qui peut créer un compte sur cette instance.",
+    "modes": {
+      "open": {
+        "label": "Ouverte",
+        "description": "Toute personne accédant à la page d'inscription peut créer un compte."
+      },
+      "invite": {
+        "label": "Sur invitation",
+        "description": "Un compte ne peut être créé qu'à partir d'un lien d'invitation."
+      },
+      "closed": {
+        "label": "Fermée",
+        "description": "Aucun nouveau compte. Les comptes existants continuent de se connecter."
+      }
+    },
+    "signIn": "Options de connexion",
+    "signInHint": "Comment les utilisateurs se connectent. Les options qui envoient des e-mails restent désactivées jusqu'à ce qu'un fournisseur soit configuré.",
+    "needsProvider": "Configurez d'abord le fournisseur d'e-mail dans Intégrations.",
+    "requireVerification": "Exiger la confirmation de l'adresse e-mail",
+    "requireVerificationHint": "Un nouveau compte doit confirmer son adresse avant de pouvoir se connecter.",
+    "magicLink": "Liens de connexion",
+    "magicLinkHint": "Proposer la connexion par lien envoyé par e-mail, en plus du mot de passe.",
+    "emailPassword": "E-mail et mot de passe",
+    "emailPasswordHint": "Proposer le formulaire de connexion et d'inscription. Désactivez-le pour n'autoriser l'accès que via un fournisseur de connexion.",
+    "needsSso": "Configurez d'abord un fournisseur de connexion dans Intégrations."
+  },
+  "hotkeys": {
+    "saved": "Raccourcis clavier enregistrés"
+  },
+  "storage": {
+    "saved": "Paramètres de stockage enregistrés",
+    "fileSize": "Taille des fichiers",
+    "fileSizeHint": "La taille maximale d'un fichier envoyé. Un fichier plus gros est refusé avant d'être stocké.",
+    "attachmentMb": "Taille des pièces jointes (Mo)",
+    "attachmentHint": "S'applique aux pièces jointes des tickets, aux fichiers collés dans une description et aux pièces jointes ajoutées par les agents.",
+    "avatarMb": "Taille des avatars (Mo)",
+    "avatarHint": "La photo de profil que les utilisateurs envoient pour leur compte.",
+    "mimeTypes": "Types de pièces jointes acceptés",
+    "mimeTypesHint": "Un type de contenu par ligne. Laissez vide pour accepter tous les fichiers.",
+    "mimeTypesNote": "Une ligne est un type complet (application/pdf) ou un joker (image/*). Les fichiers déjà stockés sont conservés, quelle que soit la liste.",
+    "quota": "Quota par projet",
+    "quotaHint": "L'espace total de pièces jointes qu'un projet peut utiliser. 0 signifie aucune limite.",
+    "quotaMb": "Stockage par projet (Mo)",
+    "quotaNote": "Dès qu'un projet atteint le quota, les nouveaux envois sont refusés jusqu'à ce que des pièces jointes soient supprimées."
+  },
+  "telegram": {
+    "saved": "Paramètres Telegram enregistrés",
+    "bot": "Bot",
+    "botConfigured": "Les utilisateurs relient leur compte Telegram en ouvrant une discussion avec ce bot depuis leur profil.",
+    "botMissing": "Créez un bot avec @BotFather dans Telegram et collez son token ici.",
+    "botToken": "Token du bot",
+    "botTokenHint": "Le token est vérifié auprès de Telegram à l'enregistrement : un token erroné est donc refusé ici, plutôt que d'échouer silencieusement plus tard.",
+    "resolvedHint": "Déduit du token. C'est le bot que les utilisateurs verront lors de la connexion."
+  },
+  "email": {
+    "saved": "Fournisseur d'e-mail enregistré",
+    "provider": "Fournisseur d'e-mail",
+    "providerHint": "Choisissez un seul fournisseur. Les identifiants sont stockés chiffrés.",
+    "from": "Adresse d'expédition",
+    "fromHint": "Obligatoire pour Resend. Avec SMTP, elle reprend le nom d'utilisateur par défaut.",
+    "host": "Hôte",
+    "port": "Port",
+    "encryption": "Chiffrement",
+    "encryptionOptions": {
+      "none": "Aucun",
+      "ssl": "SSL",
+      "tls": "TLS"
+    },
+    "username": "Nom d'utilisateur",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "Mot de passe SMTP",
+    "timeout": "Délai d'attente (s)",
+    "optional": "Facultatif",
+    "apiKey": "Clé d'API",
+    "projectNotifications": "Notifications des projets",
+    "projectNotificationsHint": "Permettre aux projets d'envoyer leurs notifications via ce fournisseur au lieu d'en configurer un. Chaque projet choisit tout de même de l'utiliser ou non.",
+    "test": "Envoyer un e-mail de test",
+    "testing": "Envoi…",
+    "testHint": "Envoyer un vrai message avec les paramètres actuels, sans les enregistrer.",
+    "testConfigureFirst": "Activez d'abord un fournisseur et renseignez ses identifiants obligatoires.",
+    "testSent": "E-mail de test envoyé à {email}"
+  },
+  "authProvider": {
+    "saved": "Fournisseur d'authentification enregistré",
+    "google": "Google",
+    "googleConfigured": "Une adresse sans compte en obtient un ; une adresse qui a déjà un compte confirmé s'y connecte.",
+    "googleMissing": "Ajoutez d'abord l'identifiant et le secret client.",
+    "clientId": "Identifiant client",
+    "clientSecret": "Secret client",
+    "redirectUri": "URI de redirection",
+    "redirectUriHint": "Enregistrez-la sur le client OAuth dans la console Google Cloud. Google refuse la connexion si elle ne correspond pas exactement.",
+    "copyRedirectUri": "Copier l'URI de redirection",
+    "oidc": "OpenID Connect",
+    "oidcConfigured": "Une adresse sans compte en obtient un ; une adresse qui a déjà un compte confirmé s'y connecte.",
+    "oidcMissing": "Ajoutez d'abord l'URL de découverte, l'identifiant et le secret client.",
+    "discoveryUrl": "URL de découverte",
+    "discoveryUrlHint": "Le .well-known/openid-configuration de votre fournisseur. Les points d'accès d'autorisation, de token et de userinfo y sont lus.",
+    "oidcLabel": "Libellé du bouton",
+    "oidcLabelPlaceholder": "Se connecter avec Acme SSO",
+    "oidcLabelHint": "Nomme votre fournisseur sur le bouton de connexion. Laissez vide pour un libellé générique.",
+    "scopes": "Scopes",
+    "scopesHint": "Séparés par des espaces. openid est obligatoire ; profile et email renseignent le nom et l'adresse.",
+    "oidcRedirectUriHint": "Enregistrez-la comme URI de redirection sur le client de votre fournisseur d'identité. Le fournisseur refuse la connexion si elle ne correspond pas exactement."
+  },
+  "scim": {
+    "saved": "Paramètres SCIM enregistrés",
+    "provisioning": "Provisionnement",
+    "provisioningConfigured": "Votre fournisseur d'identité crée, met à jour et désactive les comptes de cette instance.",
+    "provisioningMissing": "Générez d'abord un token.",
+    "token": "Token",
+    "noToken": "Aucun token généré pour l'instant",
+    "tokenHint": "Le token bearer que votre fournisseur d'identité envoie. Il n'est affiché qu'une fois ; en générer un nouveau invalide l'ancien.",
+    "generateToken": "Générer un token",
+    "replaceToken": "Remplacer le token",
+    "baseUrl": "Point d'accès SCIM",
+    "baseUrlHint": "Faites pointer votre fournisseur d'identité vers cette adresse.",
+    "copyBaseUrl": "Copier le point d'accès SCIM",
+    "groups": "Groupes",
+    "groupsHint": "Les groupes transmis par votre fournisseur d'identité. La liste vient de lui ; ce que chaque groupe accorde se définit ici.",
+    "groupsEmpty": "Aucun groupe n'a encore été transmis.",
+    "memberCount": "{count, plural, =0 {Aucun membre} one {# membre} other {# membres}}",
+    "grantsNothing": "n'accorde rien pour l'instant",
+    "editMappings": "Modifier l'accès",
+    "roleOwner": "Propriétaire",
+    "roleMember": "Membre",
+    "tokenDialog": {
+      "title": "Générer un token SCIM",
+      "description": "Le token n'est affiché qu'une fois et ne peut pas être relu. Tout token déjà en usage cesse de fonctionner.",
+      "submit": "Générer",
+      "submitPending": "Génération…",
+      "createdTitle": "Votre token SCIM",
+      "createdDescription": "Copiez-le dès maintenant dans votre fournisseur d'identité. Il ne sera plus affiché.",
+      "copy": "Copier le token"
+    },
+    "mappings": {
+      "title": "Ce que {group} accorde",
+      "description": "Les membres de ce groupe rejoignent les projets listés ici. Retirer un projet supprime les adhésions que ce groupe y avait accordées.",
+      "empty": "Ce groupe n'accorde rien pour l'instant.",
+      "addProject": "Ajouter un projet…",
+      "role": "Rôle",
+      "roleOwner": "Propriétaire",
+      "roleMember": "Membre",
+      "projectRole": "Rôle dans le projet",
+      "defaultRole": "Rôle par défaut",
+      "remove": "Retirer le projet",
+      "saved": "Accès du groupe enregistré"
+    }
+  }
+}

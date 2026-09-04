@@ -88,7 +88,9 @@
   },
   "actionsBar": {
     "shortLinkCopied": "Короткая ссылка скопирована",
+    "branchCopied": "Название ветки скопировано",
     "copyShortLink": "Скопировать короткую ссылку",
+    "copyBranch": "Скопировать название ветки",
     "copied": "Скопировано!",
     "copyPrompt": "Скопировать промпт",
     "sharedPublicly": "В общем доступе",
@@ -318,6 +320,27 @@
     "worklogAdded": "записал(а) <v>{time}</v> за <v>{date}</v>",
     "worklogChanged": "изменил(а) запись <v>{from}</v> за <v>{fromDate}</v> на <v>{to}</v> за <v>{date}</v>",
     "worklogRemoved": "удалил(а) запись <v>{time}</v> за <v>{date}</v>"
+  },
+  "development": {
+    "title": "Разработка",
+    "unlink": "Удалить связь с разработкой",
+    "branch": "Ветка",
+    "draft": "Черновик",
+    "ready": "Готово к слиянию",
+    "open": "Открыт",
+    "merged": "Смержен",
+    "closed": "Закрыт",
+    "updated": "Обновлено {date}",
+    "openPipeline": "Открыть pipeline",
+    "checks": "{count, plural, one {# проверка} few {# проверки} many {# проверок} other {# проверки}}",
+    "pipeline": {
+      "pending": "Ожидает",
+      "running": "Выполняется",
+      "success": "Пройден",
+      "failed": "Ошибка",
+      "canceled": "Отменён",
+      "skipped": "Пропущен"
+    }
   },
   "archived": "В архиве",
   "activityHeading": "Активность",

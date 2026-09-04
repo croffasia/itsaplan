@@ -687,6 +687,55 @@ export const integrationCredential = pgTable(
   (t) => [index('integration_credential_project_idx').on(t.projectId)],
 );
 
+export const gitProviderConnection = pgTable(
+  'git_provider_connection',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    baseUrl: text('base_url').notNull(),
+    accountLogin: text('account_login').notNull(),
+    ciphertext: text('ciphertext').notNull(),
+    iv: text('iv').notNull(),
+    authTag: text('auth_tag').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('git_provider_connection_project_provider_url_account_unique').on(
+      t.projectId,
+      t.provider,
+      t.baseUrl,
+      t.accountLogin,
+    ),
+    index('git_provider_connection_project_idx').on(t.projectId),
+  ],
+);
+
+export const gitManagedRepository = pgTable(
+  'git_managed_repository',
+  {
+    id: serial('id').primaryKey(),
+    connectionId: integer('connection_id')
+      .notNull()
+      .references(() => gitProviderConnection.id, { onDelete: 'cascade' }),
+    externalId: text('external_id').notNull(),
+    fullName: text('full_name').notNull(),
+    webUrl: text('web_url').notNull(),
+    webhookExternalId: text('webhook_external_id').notNull(),
+    status: text('status').notNull().default('connected'),
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('git_managed_repository_connection_external_unique').on(t.connectionId, t.externalId),
+    index('git_managed_repository_connection_idx').on(t.connectionId, t.fullName),
+  ],
+);
+
 // Per-project notification provider credentials: the outbound channels the project
 // can deliver through (SMTP or Resend for email, a Telegram bot). One row per
 // project, managed by an owner. The config carries secrets (SMTP password, Resend
@@ -1334,6 +1383,58 @@ export const issueAttachment = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('issue_attachment_issue_idx').on(t.issueId)],
+);
+
+export const issueDevelopmentLink = pgTable(
+  'issue_development_link',
+  {
+    id: serial('id').primaryKey(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    repository: text('repository').notNull(),
+    kind: text('kind').notNull().default('pull_request'),
+    externalKey: text('external_key').notNull(),
+    number: integer('number'),
+    title: text('title').notNull(),
+    url: text('url'),
+    state: text('state').notNull(),
+    draft: boolean('draft').notNull().default(false),
+    sourceBranch: text('source_branch'),
+    targetBranch: text('target_branch').notNull(),
+    headSha: text('head_sha'),
+    pipelineStatus: text('pipeline_status'),
+    pipelineUrl: text('pipeline_url'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.issueId, t.provider, t.repository, t.externalKey),
+    index('issue_development_link_issue_idx').on(t.issueId, t.updatedAt.desc()),
+    index('issue_development_link_pr_idx').on(t.provider, t.repository, t.number),
+    index('issue_development_link_sha_idx').on(t.provider, t.repository, t.headSha),
+  ],
+);
+
+export const issueDevelopmentCheck = pgTable(
+  'issue_development_check',
+  {
+    id: serial('id').primaryKey(),
+    developmentLinkId: integer('development_link_id')
+      .notNull()
+      .references(() => issueDevelopmentLink.id, { onDelete: 'cascade' }),
+    externalId: text('external_id').notNull(),
+    appId: text('app_id').notNull(),
+    name: text('name').notNull(),
+    status: text('status').notNull(),
+    url: text('url'),
+    headSha: text('head_sha').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.developmentLinkId, t.appId, t.name),
+    index('issue_development_check_link_sha_idx').on(t.developmentLinkId, t.headSha),
+  ],
 );
 
 // A file uploaded in an agent chat. Bytes live in the S3-compatible object store;

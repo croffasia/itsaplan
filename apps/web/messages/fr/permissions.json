@@ -1,0 +1,46 @@
+{
+  "viewPermissions": "Voir les permissions",
+  "none": "Aucune permission accordée",
+  "grantedCount": "{count, plural, one {# permission accordée} other {# permissions accordées}}",
+  "resources": {
+    "work_items": "Tickets",
+    "initiatives": "Initiatives",
+    "cycles": "Cycles",
+    "dashboards": "Tableaux de bord",
+    "views": "Vues de tickets",
+    "members_invite": "Invitations",
+    "members_manage": "Membres",
+    "states": "États",
+    "issue_types": "Types de tickets",
+    "labels": "Étiquettes",
+    "ai_agents": "Agents IA",
+    "integrations": "Intégrations",
+    "agent_skills": "Compétences des agents",
+    "agent_tools": "Outils des agents",
+    "custom_fields": "Champs personnalisés",
+    "workflow_config": "Configuration du flux de travail",
+    "actions": "Actions",
+    "webhooks": "Webhooks",
+    "note_boards": "Tableaux de notes",
+    "danger_zone": "Zone sensible"
+  },
+  "actions": {
+    "create": "Créer",
+    "edit": "Modifier",
+    "read": "Lire",
+    "delete": "Supprimer"
+  },
+  "groups": {
+    "workItems": "Tickets",
+    "dashboards": "Tableaux de bord",
+    "notes": "Notes",
+    "ai": "IA",
+    "configuration": "Configuration",
+    "members": "Membres",
+    "project": "Projet",
+    "other": "Autre"
+  },
+  "resourceColumn": "Ressource",
+  "allowed": "autorisé",
+  "notAllowed": "non autorisé"
+}

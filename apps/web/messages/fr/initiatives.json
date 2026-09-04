@@ -1,0 +1,144 @@
+{
+  "title": "Initiatives",
+  "newInitiative": "Nouvelle initiative",
+  "notFound": "Initiative introuvable.",
+  "options": "Options de l'initiative",
+  "showDescription": "Afficher la description",
+  "noDescription": "Aucune description.",
+  "noOwner": "Aucun responsable",
+  "targetDate": "Date cible",
+  "progress": "Avancement",
+  "activity": "Activité",
+  "noActivity": "Aucune activité pour l'instant.",
+  "noIssuesLinked": "Aucun ticket lié pour l'instant.",
+  "inProgress": "En cours",
+  "emptyTitle": "Aucune initiative pour l'instant",
+  "emptyDescription": "Une initiative regroupe des tickets liés autour d'un même objectif.",
+  "emptyTabDescription": "Les initiatives changent d'onglet à mesure que leur statut évolue.",
+  "emptyTab": {
+    "active": "Aucune initiative en cours",
+    "planned": "Aucune initiative planifiée",
+    "proposed": "Aucune initiative proposée",
+    "completed": "Aucune initiative terminée"
+  },
+  "tabs": {
+    "active": "En cours",
+    "planned": "Planifiées",
+    "proposed": "Proposées",
+    "completed": "Terminées",
+    "all": "Toutes les initiatives"
+  },
+  "detailTabs": {
+    "overview": "Vue d'ensemble",
+    "issues": "Tickets"
+  },
+  "columns": {
+    "name": "Nom",
+    "priority": "Priorité",
+    "owner": "Responsable",
+    "target": "Cible",
+    "progress": "Avancement",
+    "health": "Santé"
+  },
+  "status": {
+    "proposed": "Proposée",
+    "planned": "Planifiée",
+    "active": "En cours",
+    "completed": "Terminée",
+    "canceled": "Annulée"
+  },
+  "stateGroups": {
+    "backlog": "Backlog",
+    "unstarted": "À faire",
+    "started": "En cours",
+    "completed": "Terminé",
+    "canceled": "Annulé"
+  },
+  "health": {
+    "on_track": "Dans les temps",
+    "at_risk": "À risque",
+    "off_track": "Hors des temps",
+    "unknown": "Aucune donnée"
+  },
+  "healthInfo": {
+    "trigger": "Comment la santé est-elle calculée ?",
+    "title": "Santé",
+    "description": "Compare le travail réalisé au temps écoulé. Mise à jour automatiquement.",
+    "legend": {
+      "on_track": "Le travail suit le rythme prévu.",
+      "at_risk": "Le travail commence à prendre du retard.",
+      "off_track": "Le travail est nettement en retard, ou la date cible est dépassée.",
+      "unknown": "Pas encore assez de données : aucun ticket ou aucune date cible."
+    },
+    "howCalculated": "Comment c'est calculé",
+    "workDone": "Travail réalisé",
+    "timeElapsed": "Temps écoulé",
+    "trail": "Écart du travail sur le temps",
+    "trailOnTrack": "jusqu'à 10 % de retard",
+    "trailAtRisk": "10 à 25 % de retard",
+    "trailOffTrack": "plus de 25 % de retard"
+  },
+  "timeline": {
+    "title": "Chronologie",
+    "started": "Démarrée",
+    "target": "Cible",
+    "remaining": "Restant",
+    "overdue": "{days} j de retard",
+    "dueToday": "Échéance aujourd'hui",
+    "left": "{days} j restants",
+    "timeElapsed": "Temps écoulé",
+    "workDone": "Travail réalisé",
+    "noTargetDate": "Définissez une date cible pour suivre le rythme."
+  },
+  "form": {
+    "title": "Titre",
+    "titlePlaceholder": "Lancement T3",
+    "description": "Description",
+    "descriptionPlaceholder": "De quoi parle cette initiative ?",
+    "create": "Créer l'initiative",
+    "creating": "Création…",
+    "editTitle": "Modifier l'initiative",
+    "save": "Enregistrer les modifications"
+  },
+  "pagination": {
+    "range": "{from}–{to} sur {total}",
+    "previous": "Page précédente",
+    "next": "Page suivante"
+  },
+  "select": {
+    "label": "Initiative",
+    "search": "Lier à une initiative…",
+    "empty": "Aucune initiative.",
+    "none": "Aucune initiative"
+  },
+  "feed": {
+    "system": "Système",
+    "createdInitiative": "a créé l'initiative",
+    "createdIssue": "a créé le ticket",
+    "renamed": "a renommé en « {title} »",
+    "descriptionUpdated": "a mis à jour la description",
+    "descriptionCleared": "a effacé la description",
+    "statusSet": "a défini le statut sur {status}",
+    "statusMoved": "a fait passer de {from} à {to}",
+    "prioritySet": "a défini la priorité sur {priority}",
+    "priorityRemoved": "a retiré la priorité",
+    "ownerSet": "a désigné {name} comme responsable",
+    "ownerRemoved": "a retiré {name} des responsables",
+    "assigneeSet": "a assigné à {name}",
+    "assigneeRemoved": "a retiré {name} de l'assignation",
+    "delegateSet": "a délégué à {name}",
+    "delegateRemoved": "a retiré la délégation à {name}",
+    "targetDateSet": "a défini la date cible au {date}",
+    "targetDateRemoved": "a retiré la date cible",
+    "startDateSet": "a défini la date de début au {date}",
+    "startDateRemoved": "a retiré la date de début",
+    "dueDateSet": "a défini l'échéance au {date}",
+    "dueDateRemoved": "a retiré l'échéance",
+    "labelAdded": "a ajouté l'étiquette {label}",
+    "labelRemoved": "a retiré l'étiquette {label}",
+    "typeSet": "a défini le type sur {type}",
+    "typeRemoved": "a retiré le type",
+    "linked": "a lié à {name}",
+    "unlinked": "a délié de l'initiative"
+  }
+}

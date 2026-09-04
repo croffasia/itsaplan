@@ -166,11 +166,11 @@ export async function archiveStaleIssues(): Promise<number[]> {
       AND i.archived_at IS NULL
       AND (
         (c.state_type = 'completed'
-          AND (s.value->>'completedDays') ~ '^[0-9]+$'
+          AND (s.value->>'completedDays') ~ '^[0-9]{1,4}$'
           AND i.updated_at < now() - make_interval(days => (s.value->>'completedDays')::int))
         OR
         (c.state_type = 'canceled'
-          AND (s.value->>'canceledDays') ~ '^[0-9]+$'
+          AND (s.value->>'canceledDays') ~ '^[0-9]{1,4}$'
           AND i.updated_at < now() - make_interval(days => (s.value->>'canceledDays')::int))
       )
     RETURNING i.id

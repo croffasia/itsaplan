@@ -1,0 +1,8 @@
+{
+  "noProjectAccess": "Vous n'avez pas accès à ce projet.",
+  "projectUnavailable": "Ce projet n'est pas disponible.",
+  "noProjects": "Aucun projet pour l'instant, créez-en un pour démarrer.",
+  "noProjectsTitle": "Aucun projet pour l'instant",
+  "noProjectsHint": "Créez votre premier projet pour commencer à organiser vos tickets sur un tableau.",
+  "createProject": "Créer un projet"
+}

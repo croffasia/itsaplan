@@ -1,0 +1,207 @@
+# -- Global
+nameOverride: ""
+fullnameOverride: ""
+
+# -- Global scheduling (applied to all pods; per-component overrides below)
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# -- Image pull secrets for private registries
+imagePullSecrets: []
+
+# -- Pod security context (applied to all pods)
+podSecurityContext: {}
+  # fsGroup: 1000
+
+# -- Container security context (applied to all containers)
+securityContext: {}
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# -- Service account
+serviceAccount:
+  create: false
+  name: ""
+  annotations: {}
+
+# -- API (Elysia backend)
+api:
+  replicaCount: 1
+  port: 3000
+  image:
+    repository: ghcr.io/croffasia/itsaplan-api
+    tag: ""  # defaults to .Chart.AppVersion
+    pullPolicy: IfNotPresent
+  # Override the internal URL other services use to reach the API.
+  # Computed automatically when empty.
+  internalUrl: ""
+  env:
+    API_URL: ""
+    APP_URL: ""
+    # COOKIE_DOMAIN: ""
+    S3_BUCKET: ""
+    S3_REGION: "us-east-1"
+    S3_FORCE_PATH_STYLE: "true"
+    TELEMETRY_DISABLED: "1"
+  resources: {}
+    # requests:
+    #   cpu: 100m
+    #   memory: 256Mi
+    # limits:
+    #   cpu: 500m
+    #   memory: 512Mi
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  healthcheck:
+    path: /
+    initialDelaySeconds: 60
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+
+# -- Web (Next.js frontend)
+web:
+  replicaCount: 1
+  port: 3001
+  image:
+    repository: ghcr.io/croffasia/itsaplan-web
+    tag: ""
+    pullPolicy: IfNotPresent
+  env:
+    HOSTNAME: "0.0.0.0"
+    PRIVACY_URL: ""
+    TERMS_URL: ""
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  healthcheck:
+    path: /login
+    initialDelaySeconds: 15
+    periodSeconds: 15
+    timeoutSeconds: 5
+    failureThreshold: 5
+
+# -- Worker (background job processor)
+worker:
+  replicaCount: 1
+  image:
+    repository: ghcr.io/croffasia/itsaplan-worker
+    tag: ""
+    pullPolicy: IfNotPresent
+  env:
+    TELEMETRY_DISABLED: "1"
+    DO_NOT_TRACK: "1"
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Bot (Telegram — must be exactly 1 replica)
+bot:
+  enabled: true
+  image:
+    repository: ghcr.io/croffasia/itsaplan-bot
+    tag: ""
+    pullPolicy: IfNotPresent
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- Ingress
+# The API cannot live under a path prefix: better-auth mounts at /api/auth/*
+# and treats a path inside API_URL as a replacement for its base path. Use a
+# separate host for the API, or a Traefik entrypoint (see apiMode below).
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  host: ""
+  tls:
+    enabled: false
+    secretName: ""
+  api:
+    # "separate-host" — standard Ingress on a second hostname (set apiHost).
+    # "traefik-entrypoint" — Traefik IngressRoute CRD on a dedicated entrypoint
+    #   (same hostname, different port). Requires Traefik.
+    mode: "separate-host"
+    host: ""           # used when mode is "separate-host"
+    entryPoint: ""     # used when mode is "traefik-entrypoint"
+    publicPort: 8443   # used when mode is "traefik-entrypoint"
+    tls:
+      enabled: false
+      secretName: ""
+
+# -- Certificate (cert-manager)
+# Creates a cert-manager Certificate resource. Requires cert-manager installed
+# and a ClusterIssuer configured in the cluster.
+certificate:
+  enabled: false
+  issuerName: "letsencrypt-prod"
+  issuerKind: "ClusterIssuer"
+  dnsNames: []
+  # - app.example.com
+  # - "*.example.com"
+
+# -- Secrets
+# In production, use an external secret store (e.g. Sealed Secrets, External
+# Secrets Operator) and set these values via a values override. The chart
+# creates a Secret resource with these values as stringData.
+secrets:
+  postgresPassword: ""
+  betterAuthSecret: ""
+  appEncryptionKey: ""
+  workerInternalToken: ""
+  s3AccessKeyId: ""
+  s3SecretAccessKey: ""
+
+# -- External database (when postgresql.enabled is false)
+externalDatabase:
+  url: ""
+
+# -- External S3 (when minio.enabled is false)
+externalS3:
+  endpoint: ""
+
+# -- PostgreSQL
+postgresql:
+  enabled: true
+  database: itsaplan
+  username: itsaplan
+  image:
+    repository: postgres
+    tag: "17-alpine"
+  persistence:
+    size: 10Gi
+    storageClass: ""
+  podAnnotations: {}
+  # Velero backup example:
+  #   backup.velero.io/backup-volumes: data
+  #   pre.hook.backup.velero.io/container: postgresql
+  #   pre.hook.backup.velero.io/command: '["/bin/sh", "-c", "pg_dumpall -U itsaplan > /var/lib/postgresql/data/backup.sql"]'
+  #   pre.hook.backup.velero.io/timeout: "120"
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# -- MinIO
+minio:
+  enabled: true
+  bucket: "planner-attachments"
+  image:
+    repository: minio/minio
+    tag: "RELEASE.2025-09-07T16-13-09Z"
+  mcImage:
+    repository: minio/mc
+    tag: "RELEASE.2025-08-13T08-35-41Z"
+  persistence:
+    size: 20Gi
+    storageClass: ""
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}

@@ -1,0 +1,37 @@
+{
+  "title": "Boîte de réception",
+  "empty": "Aucune notification",
+  "selectNotification": "Sélectionnez une notification",
+  "backToList": "Boîte de réception",
+  "filter": "Filtrer",
+  "display": "Affichage",
+  "notificationType": "Type de notification",
+  "showRead": "Afficher les notifications lues",
+  "showSnoozed": "Afficher les notifications reportées",
+  "markAllRead": "Tout marquer comme lu",
+  "deleteAllRead": "Supprimer toutes les notifications lues",
+  "deleteAllReadCompleted": "Supprimer les notifications lues des tickets terminés",
+  "types": {
+    "assigned": "Assigné",
+    "mentioned": "Mentionné",
+    "commented": "Commenté",
+    "state_changed": "Changement d'état"
+  },
+  "actions": {
+    "markRead": "Marquer comme lu",
+    "markUnread": "Marquer comme non lu",
+    "snooze": "Reporter",
+    "unsnooze": "Ne plus reporter",
+    "tomorrow": "Demain",
+    "inAWeek": "Dans une semaine",
+    "pickDate": "Choisir une date…"
+  },
+  "event": {
+    "someone": "Quelqu'un",
+    "assigned": "{who} vous a assigné le ticket",
+    "mentioned": "{who} vous a mentionné",
+    "commented": "{who} a commenté",
+    "stateChanged": "{who} a fait passer l'état de {from} à {to}",
+    "stateChangedPlain": "{who} a changé l'état"
+  }
+}

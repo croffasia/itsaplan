@@ -222,9 +222,14 @@ export async function getProjectEmailConfig(): Promise<InstanceEmailConfig | nul
   return hasEmailProvider(config) ? config : null;
 }
 
-export async function setEmailSettings(patch: InstanceEmailPatch): Promise<InstanceEmailDto> {
+// Resolve a prospective configuration without persisting it. The email test route uses
+// this so an owner can validate edited values first, while omitted secrets still reuse
+// the encrypted value already on the instance.
+export async function resolveEmailConfig(
+  patch: InstanceEmailPatch = {},
+): Promise<InstanceEmailConfig> {
   const current = (await getEmailConfig()) ?? defaultEmailConfig();
-  const next: InstanceEmailConfig = {
+  return {
     smtp: patch.smtp
       ? { ...patch.smtp, password: mergeSecret(current.smtp.password, patch.smtp.password) }
       : current.smtp,
@@ -237,6 +242,10 @@ export async function setEmailSettings(patch: InstanceEmailPatch): Promise<Insta
     from: patch.from ?? current.from,
     allowProjects: patch.allowProjects ?? current.allowProjects,
   };
+}
+
+export async function setEmailSettings(patch: InstanceEmailPatch): Promise<InstanceEmailDto> {
+  const next = await resolveEmailConfig(patch);
   const redacted = toEmailDto(next);
   await writeSecret(EMAIL_SECRET_KEY, next, redacted);
   return redacted;

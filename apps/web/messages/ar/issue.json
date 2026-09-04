@@ -88,7 +88,9 @@
   },
   "actionsBar": {
     "shortLinkCopied": "تم نسخ الرابط المختصر",
+    "branchCopied": "تم نسخ اسم الفرع",
     "copyShortLink": "نسخ الرابط المختصر",
+    "copyBranch": "نسخ اسم الفرع",
     "copied": "تم النسخ!",
     "copyPrompt": "نسخ التوجيه",
     "sharedPublicly": "مُشارَكة علنًا",
@@ -318,6 +320,27 @@
     "worklogAdded": "سجّل <v>{time}</v> ليوم <v>{date}</v>",
     "worklogChanged": "غيّر التسجيل من <v>{from}</v> ليوم <v>{fromDate}</v> إلى <v>{to}</v> ليوم <v>{date}</v>",
     "worklogRemoved": "حذف تسجيل <v>{time}</v> ليوم <v>{date}</v>"
+  },
+  "development": {
+    "title": "التطوير",
+    "unlink": "إلغاء ربط عنصر التطوير",
+    "branch": "فرع",
+    "draft": "مسودة",
+    "ready": "جاهز للدمج",
+    "open": "مفتوح",
+    "merged": "مدموج",
+    "closed": "مغلق",
+    "updated": "تم التحديث {date}",
+    "openPipeline": "فتح خط الأنابيب",
+    "checks": "{count, plural, one {فحص واحد} two {فحصان} few {# فحوصات} many {# فحصًا} other {# فحص}}",
+    "pipeline": {
+      "pending": "قيد الانتظار",
+      "running": "قيد التشغيل",
+      "success": "ناجح",
+      "failed": "فشل",
+      "canceled": "ملغي",
+      "skipped": "تم تخطيه"
+    }
   },
   "archived": "مؤرشفة",
   "activityHeading": "النشاط",

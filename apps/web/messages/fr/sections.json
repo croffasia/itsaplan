@@ -1,0 +1,117 @@
+{
+  "account": {
+    "profile": "Profil",
+    "preferences": "Préférences",
+    "accounts": "Comptes",
+    "security": "Sécurité",
+    "api-keys": "Clés d'API"
+  },
+  "godGroups": {
+    "management": "Gestion",
+    "instance": "Instance"
+  },
+  "god": {
+    "users": {
+      "label": "Utilisateurs",
+      "description": "Tous les comptes de cette instance : le rôle global, si l'adresse est confirmée, et les projets auxquels chaque utilisateur a accès."
+    },
+    "projects": {
+      "label": "Projets",
+      "description": "Tous les projets de cette instance : ce que chacun contient, sa dernière activité, et qui peut y accéder."
+    },
+    "general": {
+      "label": "Général",
+      "description": "Les valeurs par défaut des nouveaux projets."
+    },
+    "authentication": {
+      "label": "Authentification",
+      "description": "Qui peut s'inscrire sur cette instance, comment les comptes sont confirmés, et les fournisseurs par lesquels les utilisateurs se connectent."
+    },
+    "hotkeys": {
+      "label": "Raccourcis clavier",
+      "description": "La touche associée à chaque commande pour tous les utilisateurs de cette instance. Chacun peut réattribuer un raccourci pour son propre compte dans ses préférences."
+    },
+    "storage": {
+      "label": "Stockage",
+      "description": "Ce que les utilisateurs peuvent envoyer : la taille maximale d'un fichier, les types de pièces jointes acceptés, et l'espace de stockage alloué à chaque projet."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "Le bot auquel les utilisateurs relient leur compte Telegram, et celui qui envoie les notifications Telegram des projets sans bot dédié."
+    },
+    "email": {
+      "label": "Fournisseur d'e-mail",
+      "description": "Le fournisseur de messagerie utilisé par l'instance : réinitialisations de mot de passe, confirmations d'adresse et liens de connexion."
+    },
+    "auth-provider": {
+      "label": "Fournisseur d'authentification",
+      "description": "Les comptes externes avec lesquels les utilisateurs peuvent se connecter."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Permettez à un fournisseur d'identité de créer, mettre à jour et désactiver des comptes sur cette instance, et d'accorder l'accès aux projets via ses groupes."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "Général",
+      "description": "Le nom et la description du projet, ainsi que les sections qu'il affiche."
+    },
+    "notifications": {
+      "label": "Fournisseurs de notifications",
+      "description": "Les identifiants e-mail (SMTP ou Resend) et le bot Telegram par lesquels ce projet envoie ses notifications."
+    },
+    "states": {
+      "label": "États",
+      "description": "Les états du flux de travail par lesquels passent les tickets, chacun affiché comme une colonne."
+    },
+    "issue-types": {
+      "label": "Types de tickets",
+      "description": "Les types de tickets que ce projet peut contenir, chacun avec ses propres champs."
+    },
+    "labels": {
+      "label": "Étiquettes",
+      "description": "Des marqueurs pour organiser et filtrer les tickets à l'échelle du projet."
+    },
+    "custom-fields": {
+      "label": "Champs personnalisés",
+      "description": "Des champs supplémentaires affichés sur les tickets, globaux ou limités à un type de ticket."
+    },
+    "configuration": {
+      "label": "Configuration",
+      "description": "Comment les sous-tâches se ferment avec leur parent, et à quel moment les tickets inactifs sont archivés."
+    },
+    "actions": {
+      "label": "Actions",
+      "description": "Des boutons sur un ticket qui renseignent des champs en un clic."
+    },
+    "schedules": {
+      "label": "Planifications",
+      "description": "Exécutez des tâches d'agent selon une planification récurrente."
+    },
+    "webhooks": {
+      "label": "Webhooks",
+      "description": "Envoyez les événements du projet vers des URL externes, signés avec un secret propre à chaque webhook."
+    },
+    "git": {
+      "label": "Dépôts",
+      "description": "Fermez les tickets quand leurs pull requests sont fusionnées sur GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
+    },
+    "ai-agents": {
+      "label": "Agents",
+      "description": "Des comptes bots auxquels vous pouvez déléguer des tickets."
+    },
+    "integrations": {
+      "label": "Intégrations",
+      "description": "Les identifiants que vos agents utilisent pour accéder aux fournisseurs d'IA et aux outils."
+    },
+    "agent-skills": {
+      "label": "Compétences",
+      "description": "Des instructions réutilisables que les agents internes chargent à la demande."
+    },
+    "agent-tools": {
+      "label": "Outils",
+      "description": "Les outils que les agents peuvent appeler, chacun relié aux identifiants d'une intégration."
+    }
+  }
+}

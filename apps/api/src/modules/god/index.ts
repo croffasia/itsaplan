@@ -5,6 +5,7 @@ import {
   getAuthSettings,
   setAuthSettings,
   getEmailSettings,
+  resolveEmailConfig,
   setEmailSettings,
   hasConfiguredEmailProvider,
   getGoogleSettings,
@@ -17,6 +18,7 @@ import {
   setScimSettings,
   rotateScimToken,
 } from '@repo/auth';
+import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';
 import { HttpError } from '#shared/lib';
@@ -38,6 +40,7 @@ import {
   AuthSettingsResponse,
   EmailSettingsBody,
   EmailSettingsResponse,
+  EmailTestResponse,
   GoogleSettingsBody,
   GoogleSettingsResponse,
   InstanceProjectDetailResponse,
@@ -61,6 +64,7 @@ import {
   scimGroupParams,
   userParams,
 } from './model';
+import { emailTestError } from './email-test';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
 import { SCIM_BASE_URL } from '#modules/scim/resource';
 import {
@@ -173,6 +177,44 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       description: 'Update the mail provider used for authentication email.',
     },
   })
+
+  .post(
+    '/god/email-settings/test',
+    async ({ user, body: patch }) => {
+      const current = requireGod(user);
+      if (!current.email) throw new HttpError(400, 'The instance owner has no email address');
+      const config = await resolveEmailConfig(patch ?? {});
+      if (!hasEmailProvider(config)) {
+        throw new HttpError(400, 'Configure an email provider first');
+      }
+
+      const body = emailBody(
+        "This test confirms that It's a Plan can send email through the configured provider.",
+      );
+      const result = await sendEmail(
+        { ...config, smtp: { ...config.smtp, timeout: config.smtp.timeout ?? 15 } },
+        {
+          to: current.email,
+          subject: "It's a Plan email test",
+          ...body,
+        },
+      );
+      if (!result.ok) {
+        console.error('[god] test email failed:', result.error);
+        throw new HttpError(502, emailTestError(result.error));
+      }
+      return { recipient: current.email };
+    },
+    {
+      body: t.Optional(EmailSettingsBody),
+      response: { 200: EmailTestResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Send a test email',
+        description:
+          'Send a test message through the supplied provider settings without saving them.',
+      },
+    },
+  )
 
   .get(
     '/god/google-settings',

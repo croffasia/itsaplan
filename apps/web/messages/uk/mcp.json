@@ -1,14 +1,13 @@
 {
   "title": "MCP-сервер",
-  "description": "Підключайте AI-агентів до цього проєкту через Model Context Protocol за допомогою OAuth або особистого API-ключа.",
+  "description": "Підключайте AI-агентів до цього проєкту через Model Context Protocol.",
   "access": "Доступ MCP",
   "enabled": "Увімкнено",
   "disabled": "Вимкнено",
   "ownerOnly": "Вмикати й вимикати доступ MCP може лише власник проєкту.",
   "toggleAria": "Перемкнути доступ MCP",
-  "connectClient": "Підключити клієнта",
-  "keyHint": "Створіть персональний ключ на сторінці <link>API-ключі</link>, потім замініть <code>{apiKey}</code> у сніпеті.",
-  "endpoint": "Endpoint",
+  "keyHint": "Створіть ключ на сторінці <link>API-ключі</link>, потім замініть <code>{apiKey}</code> у сніпеті.",
+  "endpoint": "Endpoint MCP",
   "clientTabsAria": "Клієнт",
   "addToFile": "Додайте до <code>{file}</code>",
   "copyAria": "Копіювати",
@@ -16,27 +15,26 @@
   "notes": {
     "claudeCode": "Виконайте це в терміналі.",
     "vscode": "Потрібен GitHub Copilot.",
-    "claudeDesktop": "Claude Desktop зʼєднується з віддаленими серверами через міст mcp-remote. Потрібен Node.js.",
-    "other": "Підходить будь-який клієнт з підтримкою MCP через Streamable HTTP. Вкажіть йому endpoint і надсилайте заголовок Authorization: Bearer {apiKey}."
+    "claudeDesktop": "Claude Desktop підключається до віддалених серверів через міст mcp-remote. Потрібен Node.js.",
+    "other": "Підходить будь-який клієнт із підтримкою MCP через Streamable HTTP. Вкажіть йому endpoint. Надсилайте заголовок Authorization: Bearer {apiKey}."
   },
   "clients": {
     "other": "Інший"
   },
   "oauth": {
-    "configuration": "Налаштування підключення",
-    "methodTabsAria": "Спосіб автентифікації MCP",
-    "method": "OAuth MCP",
-    "personalKey": "Особистий API-ключ",
-    "title": "Підключитися через OAuth",
-    "description": "Використовуйте цей варіант для будь-якого MCP-клієнта з підтримкою OAuth, зокрема ChatGPT і Claude. Увійдіть у свій обліковий запис Itsaplan; особистий API-ключ не передається клієнту.",
-    "endpoint": "Кінцева точка MCP",
+    "configuration": "Як підключитися",
+    "methodTabsAria": "Спосіб підключення",
+    "method": "OAuth",
+    "personalKey": "API-ключ",
+    "description": "Підходить для будь-якого MCP-клієнта з підтримкою OAuth, наприклад ChatGPT або Claude. Ви входите у свій обліковий запис Itsaplan. Клієнт не отримує API-ключ.",
     "discovery": "Виявлення OAuth",
     "steps": {
-      "add": "Додайте MCP-застосунок у клієнт і вставте кінцеву точку MCP.",
-      "choose": "Виберіть OAuth, коли клієнт попросить автентифікацію.",
-      "signIn": "Увійдіть до Itsaplan і підтвердьте запитаний доступ."
+      "add": "Додайте MCP-застосунок у клієнті.",
+      "paste": "Вставте endpoint MCP.",
+      "choose": "Виберіть OAuth, коли клієнт запитає спосіб входу.",
+      "signIn": "Увійдіть до Itsaplan і підтвердьте доступ."
     },
-    "security": "OAuth використовує PKCE (S256), динамічну реєстрацію клієнта та bearer-токени, обмежені вашим обліковим записом Itsaplan.",
+    "security": "OAuth використовує PKCE (S256), динамічну реєстрацію клієнтів і токени доступу, обмежені вашим обліковим записом Itsaplan.",
     "consent": {
       "title": "Авторизувати Itsaplan",
       "description": "Дозвольте цьому MCP-клієнту діяти з правами вашого облікового запису Itsaplan.",

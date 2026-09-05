@@ -8,27 +8,59 @@ Requirements: [Bun](https://bun.sh) 1.3+, Docker, Git.
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
 bun install
-
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env
-
-# BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY, WORKER_INTERNAL_TOKEN in .env:
-openssl rand -base64 32
-
-docker compose -f docker-compose.dev.yml up -d   # Postgres + MinIO only
-bun run db:migrate
-bun run dev                                      # api + web together, via Turborepo
+bun run setup   # answer "Develop"
+bun run dev     # api + web together, via Turborepo
 ```
+
+`bun run setup` asks what you are setting up and does the rest. Answer **Develop** and it
+writes `.env`, `apps/web/.env` and `.env.test`, generates the secrets, starts Postgres and
+MinIO, creates the separate test database, and applies both sets of migrations.
+
+Run it again later and it stops the dev stack, starts it again, and re-applies the
+migrations; the databases keep their data. If the credentials in `.env` no longer match the
+ones the database was created with, it says so and offers to recreate it — which deletes
+what is in it. The other answer, **Try it**, sets up a running
+instance instead of a workspace: the whole stack in Docker on localhost, opened in your
+browser.
 
 The apps run on: web <http://localhost:3001>, api <http://localhost:3000>, MinIO console
 <http://localhost:9001>. `bun run dev` runs the whole workspace in watch mode from the repo
-root; the dev compose brings up only the backing services and the apps run on the host.
+root. The dev compose starts only Postgres and MinIO; the apps themselves run on the host.
 
-If host port 5432 is taken, set another one and update `DATABASE_URL` in `.env`:
+The third answer, **Generate env**, writes no stack at all. It walks the Postgres user,
+password and database and the three secrets, one prefilled prompt each, over values built
+from the `.example` files rather than from the `.env` you already have, and then asks
+whether to write the two files or print them instead. It starts nothing and needs no Docker.
 
-```bash
-POSTGRES_PORT=5433 docker compose -f docker-compose.dev.yml up -d
-```
+Host port 5432 is often taken by a local Postgres. The setup asks for another port and
+writes it to both `POSTGRES_PORT` and `DATABASE_URL`; the api port works the same way.
+
+## Environment
+
+Three files, all written by `bun run setup`:
+
+| File            | Read by                                       |
+| --------------- | --------------------------------------------- |
+| `.env`          | api, worker, bot, drizzle                     |
+| `apps/web/.env` | web — Next reads env only from its own folder |
+| `.env.test`     | the api test suite                            |
+
+`.env.example` matches the dev compose: `API_URL`, `APP_URL` and the MinIO credentials work
+on localhost without a change. Three secrets have no usable default and are generated:
+
+| Variable                | Used for                                          |
+| ----------------------- | ------------------------------------------------- |
+| `BETTER_AUTH_SECRET`    | signing sessions                                  |
+| `APP_ENCRYPTION_KEY`    | encrypting AI provider keys at rest               |
+| `WORKER_INTERNAL_TOKEN` | api ↔ worker ↔ bot calls; one value for all three |
+
+A secret is only generated while the Postgres volume does not exist, and one that already
+holds a real value is kept in any case — past the first start the instance is using those
+values and a new one would lock it out of its own data. A port held by a container of this
+project counts as free. So the setup is safe to run again on a live instance.
+`bun run setup:env` is the same script without the questions: it writes `.env` and
+`apps/web/.env` with generated secrets and touches nothing else. Every other variable is
+optional, and `.env.example` documents it.
 
 ## Commands
 
@@ -47,19 +79,20 @@ pnpm: the lockfile is `bun.lock`.
 
 ## Tests
 
-Tests run against a real test Postgres, not mocks. Prepare a dedicated `*_test` database
-once, then run the suite from the repo root:
+Tests run against a real test Postgres, not mocks. `bun run setup` prepared it already —
+a separate `*_test` database on the same dev Postgres, migrated, with `.env.test` pointing
+at it. Run the suite from the repo root:
 
 ```bash
-cp .env.test.example .env.test   # DATABASE_URL must name a *_test database
-bun run db:migrate:test          # migrate the test database
-bun run test                     # run all suites via Turborepo
+bun run test
 ```
 
-The dev compose (`docker-compose.dev.yml`) provides Postgres and MinIO for these tests; the
-attachments suite needs the MinIO bucket it creates.
+The database has to be separate: the reset helper TRUNCATEs every table between tests, and
+refuses to run unless the database name contains "test". MinIO is shared with dev — the
+attachments suite only writes uuid-keyed objects into the bucket compose creates, and
+deletes them again.
 
-Alternatively, run the same gate CI uses — the suite against a throwaway Postgres in a
+You can also run the same gate CI uses: the suite against a throwaway Postgres, in a
 container built from the production image:
 
 ```bash
@@ -69,11 +102,11 @@ docker compose -f docker-compose.test.yml run --rm api-test
 
 `run` starts the dependencies, runs the suite, and exits with its code.
 
-`apps/api` has the integration suite; `apps/api/AGENTS.md` covers how to write one.
+The integration suite is in `apps/api`. `apps/api/AGENTS.md` explains how to write a test.
 
 ## Internals
 
-Descriptions of the mechanisms that span several apps live in [`docs/dev/`](dev/):
+[`docs/dev/`](dev/) describes the mechanisms that span several apps:
 
 - [The revision engine](dev/revision-engine.md) — how an open screen stays current.
-- [Languages](dev/i18n.md) — how the interface language is resolved, and how to add one.
+- [Languages](dev/i18n.md) — how the app resolves the interface language, and how to add one.

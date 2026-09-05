@@ -9,23 +9,27 @@
 #   docker compose -f docker-compose.test.yml run --rm api-test
 #
 # The test database is created automatically by the postgres-test service
-# (POSTGRES_DB=vela_test); its data is tmpfs, so nothing persists between runs.
+# (POSTGRES_DB=itsaplan_test); its data is tmpfs, so nothing persists between runs.
 # Use as a Coolify pre-deployment step now, or drop the same command into a
 # GitHub Actions job later.
 # ─────────────────────────────────────────────────────────────
+# Its own project: without a name compose derives one from the directory and the test
+# containers join the self-hosting stack, which `docker compose down` then takes with it.
+name: itsaplan-test
+
 services:
   postgres-test:
     image: postgres:17-alpine
     environment:
-      POSTGRES_USER: vela
-      POSTGRES_PASSWORD: vela
+      POSTGRES_USER: itsaplan
+      POSTGRES_PASSWORD: itsaplan
       # Name contains "test" — the resetDb() guard requires it.
-      POSTGRES_DB: vela_test
+      POSTGRES_DB: itsaplan_test
     # Ephemeral: the data directory lives in memory, wiped when the run ends.
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U vela -d vela_test']
+      test: ['CMD-SHELL', 'pg_isready -U itsaplan -d itsaplan_test']
       interval: 3s
       timeout: 3s
       retries: 20
@@ -68,7 +72,7 @@ services:
         condition: service_completed_successfully
     environment:
       NODE_ENV: test
-      DATABASE_URL: postgres://vela:vela@postgres-test:5432/vela_test
+      DATABASE_URL: postgres://itsaplan:itsaplan@postgres-test:5432/itsaplan_test
       # Any fixed secret works for a throwaway test DB.
       BETTER_AUTH_SECRET: test-secret-not-for-production-use-only
       # Fixed 32-byte base64 key for the provider-credential encryption tests.
@@ -98,4 +102,4 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: test
-      DATABASE_URL: postgres://vela:vela@postgres-test:5432/vela_test
+      DATABASE_URL: postgres://itsaplan:itsaplan@postgres-test:5432/itsaplan_test

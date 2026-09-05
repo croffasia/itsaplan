@@ -123,9 +123,24 @@ Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
 ```bash
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
-cp .env.example .env      # set API_URL, APP_URL, and the secrets
+cp .env.example .env
 docker compose up -d
 ```
+
+`.env` needs six values — the two public origins, and four secrets from
+`openssl rand -base64 32`:
+
+| Variable                | Value                     |
+| ----------------------- | ------------------------- |
+| `API_URL`               | `https://api.example.com` |
+| `APP_URL`               | `https://app.example.com` |
+| `POSTGRES_PASSWORD`     | a generated secret        |
+| `BETTER_AUTH_SECRET`    | a generated secret        |
+| `APP_ENCRYPTION_KEY`    | a generated secret        |
+| `WORKER_INTERNAL_TOKEN` | a generated secret        |
+
+The optional variables — legal document URLs, passkey and cookie settings, email, worker
+tuning — are documented in `.env.example`.
 
 This starts Postgres, MinIO, and the four services (api, worker, bot, web) from the images
 published on each release. Add `--build` to build them from the checkout instead. The first

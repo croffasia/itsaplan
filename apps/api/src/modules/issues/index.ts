@@ -1036,7 +1036,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Change a time entry',
         description:
-          "Change the time, the day or the note of an entry. Another member's entry needs work_items delete.",
+          'Change the time, the day or the note of an entry. Your own entry needs work_items ' +
+          "edit; another member's entry is a record of what they did, so only a project owner " +
+          'can change it.',
         ...mcpTool('update_worklog'),
       },
     },
@@ -1056,7 +1058,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Delete a time entry',
         description:
-          "Remove one entry, lowering the issue's logged time by it. Another member's entry needs work_items delete.",
+          "Remove one entry, lowering the issue's logged time by it. Your own entry needs " +
+          "work_items edit; another member's entry is a record of what they did, so only a " +
+          'project owner can remove it.',
         ...mcpTool('delete_worklog'),
       },
     },

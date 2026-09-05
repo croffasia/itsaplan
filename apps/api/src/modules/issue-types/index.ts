@@ -2,8 +2,8 @@ import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { guards } from '#shared/guards';
-import { HttpError } from '#shared/lib';
-import { commonErrors } from '#shared/responses';
+import { HttpError, rethrowDuplicate } from '#shared/lib';
+import { commonErrors, errors } from '#shared/responses';
 import {
   IssueTypeResponse,
   createIssueTypeBody,
@@ -20,13 +20,17 @@ export const issueTypeRoutes = new Elysia({
   .post(
     '/projects/:projectKey/issue-types',
     async ({ project, body, set }) => {
-      set.status = 201;
-      return createIssueType({ projectId: project.id, ...body });
+      try {
+        set.status = 201;
+        return await createIssueType({ projectId: project.id, ...body });
+      } catch (err) {
+        rethrowDuplicate(err, 'issue type');
+      }
     },
     {
       body: createIssueTypeBody,
       permission: ['issue_types', 'create'],
-      response: { 201: IssueTypeResponse, ...commonErrors },
+      response: { 201: IssueTypeResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an issue type',
         description:
@@ -39,7 +43,12 @@ export const issueTypeRoutes = new Elysia({
   .patch(
     '/projects/:projectKey/issue-types/:typeId',
     async ({ params, project, body }) => {
-      const type = await updateIssueType(params.typeId, project.id, body);
+      let type;
+      try {
+        type = await updateIssueType(params.typeId, project.id, body);
+      } catch (err) {
+        rethrowDuplicate(err, 'issue type');
+      }
       if (!type) throw new HttpError(404, 'Issue type not found');
       return type;
     },
@@ -47,7 +56,7 @@ export const issueTypeRoutes = new Elysia({
       body: updateIssueTypeBody,
       params: issueTypeParams,
       permission: ['issue_types', 'edit'],
-      response: { 200: IssueTypeResponse, ...commonErrors },
+      response: { 200: IssueTypeResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an issue type',
         description: "Update an issue type's name, color, or default flag.",

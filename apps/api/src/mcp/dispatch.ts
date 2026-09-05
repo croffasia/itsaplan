@@ -4,7 +4,6 @@ import { MCP_LOOPBACK_HEADER, setMcpOAuthToken } from '../shared/mcp-request';
 import type { McpCredential } from './credential';
 
 // Methods that carry a request body; the rest put their arguments in the query.
-const BODY_METHODS = new Set(['POST', 'PUT', 'PATCH']);
 
 // Elysia's router needs a multi-label host to parse the path; a single-label host
 // like "http://x" fails to route. localhost is never resolved (app.handle runs in
@@ -37,7 +36,7 @@ export async function dispatchTool(
     delete rest[name];
   }
 
-  const hasBody = BODY_METHODS.has(tool.method);
+  const hasBody = tool.hasBody;
   let url = `${BASE}${path}`;
   let body: string | undefined;
   if (hasBody) {

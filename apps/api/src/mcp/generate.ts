@@ -32,6 +32,9 @@ export interface McpRouteTool {
   path: string;
   // Path param names parsed from the template, e.g. ["projectKey"].
   pathParams: string[];
+  // Whether the route declares a body schema. The method alone does not say: a
+  // DELETE carries one where the deletion needs an argument.
+  hasBody: boolean;
   inputSchema: McpInputSchema;
   annotations: McpToolAnnotations;
 }
@@ -83,15 +86,32 @@ function extractPathParams(path: string): string[] {
 // schema for the tool's arguments. Path params are always added as required: a
 // route often omits an explicit `params` schema for a string id, which would
 // otherwise leave the path param out of the tool's arguments entirely.
+interface SchemaShape {
+  properties?: Record<string, unknown>;
+  required?: unknown;
+  anyOf?: SchemaShape[];
+  oneOf?: SchemaShape[];
+}
+
 function mergeInputSchema(hooks: Record<string, unknown>, pathParams: string[]): McpInputSchema {
   const properties: Record<string, unknown> = {};
   const required: string[] = [];
   for (const key of ['params', 'query', 'body'] as const) {
-    const schema = hooks[key] as
-      { properties?: Record<string, unknown>; required?: unknown } | undefined;
-    if (!schema?.properties) continue;
-    Object.assign(properties, schema.properties);
-    if (Array.isArray(schema.required)) required.push(...(schema.required as string[]));
+    const schema = hooks[key] as SchemaShape | undefined;
+    if (!schema) continue;
+    // A body declared as a union arrives as anyOf/oneOf with no properties of its
+    // own. Offer every branch's properties and require only what all of them do, so
+    // the caller sees the discriminator; the route still validates the combination.
+    const branches = schema.anyOf ?? schema.oneOf;
+    const parts = schema.properties ? [schema] : (branches ?? []);
+    let common: string[] | null = null;
+    for (const part of parts) {
+      if (!part.properties) continue;
+      Object.assign(properties, part.properties);
+      const names = Array.isArray(part.required) ? (part.required as string[]) : [];
+      common = common === null ? names : common.filter((n) => names.includes(n));
+    }
+    if (common) required.push(...common);
   }
   for (const name of pathParams) {
     if (!(name in properties)) {
@@ -140,6 +160,7 @@ function generateRouteTools(app: McpApp): McpRouteTool[] {
       method: route.method,
       path: route.path,
       pathParams,
+      hasBody: hooks.body != null,
       inputSchema: mergeInputSchema(hooks, pathParams),
       // Every tool acts on this tracker's own data and reaches nothing outside it,
       // so openWorldHint is false throughout; the route may still override it.

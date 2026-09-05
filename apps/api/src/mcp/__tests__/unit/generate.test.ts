@@ -101,3 +101,48 @@ describe('mcp tool table', () => {
     expect(routeTools(app)[0]!.description).toBe('The long one.');
   });
 });
+
+// Builds a route whose hooks carry the given schemas, the way a real route declares
+// them, so the merged input schema can be read back off the generated tool.
+function toolWith(hooks: Record<string, unknown>, method = 'DELETE') {
+  const app = {
+    routes: [
+      {
+        method,
+        path: '/things/:thingId',
+        hooks: { ...hooks, detail: { summary: 'A thing', ...mcpTool('a_tool') } },
+      },
+    ],
+  } as unknown as McpApp;
+  return routeTools(app)[0]!;
+}
+
+describe('mcp tool input schema', () => {
+  // A body declared as a union has no properties of its own, so offering only the
+  // top level left the caller unable to send the discriminator the route requires.
+  it('offers every branch of a union body and requires what they share', () => {
+    const tool = toolWith({
+      body: {
+        anyOf: [
+          {
+            type: 'object',
+            properties: { mode: { const: 'move' }, targetId: { type: 'integer' } },
+            required: ['mode', 'targetId'],
+          },
+          { type: 'object', properties: { mode: { const: 'delete' } }, required: ['mode'] },
+        ],
+      },
+    });
+
+    expect(Object.keys(tool.inputSchema.properties)).toEqual(
+      expect.arrayContaining(['mode', 'targetId']),
+    );
+    expect(tool.inputSchema.required).toContain('mode');
+    expect(tool.inputSchema.required).not.toContain('targetId');
+  });
+
+  it('reports whether the route declares a body, whatever the method', () => {
+    expect(toolWith({ body: { type: 'object', properties: {} } }).hasBody).toBe(true);
+    expect(toolWith({}, 'GET').hasBody).toBe(false);
+  });
+});

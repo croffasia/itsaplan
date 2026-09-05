@@ -83,7 +83,10 @@ export function TableRow({
         ref={mergedRef}
         {...attributes}
         {...listeners}
-        onClick={onClick}
+        onClick={(e) => {
+          e.preventDefault();
+          onClick();
+        }}
         className={cn(
           'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors sm:touch-none',
           isBlocked(issue) ? 'row-blocked' : 'hover:bg-accent/40',

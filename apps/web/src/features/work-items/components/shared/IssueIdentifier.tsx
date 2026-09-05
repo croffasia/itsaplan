@@ -32,6 +32,7 @@ export function IssueIdentifier({
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
+                  e.preventDefault();
                   onOpenParent?.(parent.id);
                 }}
                 className={cn(

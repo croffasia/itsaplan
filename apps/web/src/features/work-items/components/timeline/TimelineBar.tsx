@@ -42,14 +42,12 @@ export function TimelineBar({
   const bar = (
     <div
       onPointerDown={readOnly ? undefined : (e) => onBeginDrag(e, issue, 'move')}
-      onClick={
-        readOnly
-          ? (e) => {
-              e.preventDefault();
-              onOpen(issue.id);
-            }
-          : undefined
-      }
+      // A drag ends in a click too, so both modes mark it handled and the detail
+      // panel keeps it rather than reading it as a click outside.
+      onClick={(e) => {
+        e.preventDefault();
+        if (readOnly) onOpen(issue.id);
+      }}
       className={cn(
         'group absolute top-1/2 z-10 flex h-6 -translate-y-1/2 items-center rounded px-1.5 text-white select-none',
         cursor,

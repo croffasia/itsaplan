@@ -1,5 +1,4 @@
-import { randomUUID } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
@@ -43,8 +42,10 @@ describe('setEnv', () => {
 });
 
 describe('EnvFile', () => {
+  const tempPath = () => join(mkdtempSync(join(tmpdir(), 'env-file-')), '.env');
+
   const write = (body: string) => {
-    const path = join(tmpdir(), `env-file-${randomUUID()}`);
+    const path = tempPath();
     writeFileSync(path, body);
     return new EnvFile(path);
   };
@@ -63,7 +64,7 @@ describe('EnvFile', () => {
   });
 
   test('fresh reads the example, ignoring the file next to it', () => {
-    const path = join(tmpdir(), `env-file-${randomUUID()}`);
+    const path = tempPath();
     writeFileSync(path, 'POSTGRES_USER=vela\n');
     writeFileSync(`${path}.example`, 'POSTGRES_USER=itsaplan\n');
 

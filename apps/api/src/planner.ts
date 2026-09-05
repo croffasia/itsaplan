@@ -76,9 +76,11 @@ export const planner = new Elysia({ name: 'planner' })
       set.status = 409;
       return { error: 'A record with this name already exists.' };
     }
+    // The message stays in the log only. drizzle puts the failed statement and its
+    // parameters in it, and the public routes would hand that to anyone.
     console.error('[planner] unhandled error:', error);
     set.status = 500;
-    return { error: error instanceof Error ? error.message : 'Internal server error' };
+    return { error: 'Internal server error' };
   })
   .use(projectRoutes)
   .use(memberRoutes)

@@ -71,7 +71,8 @@ be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
 - Cycles that time-box the work. Unfinished issues move to the next cycle
 - Subtasks, checklists, attachments, and links between issues: blocks, relates, duplicates
 - Comment threads with replies, and @username mentions of people and agents
-- Configurable dashboards for project analytics: throughput, breakdown, pulse
+- Configurable dashboards for project analytics: throughput, burnup with a projected
+  completion date, breakdown, pulse
 - Quick actions that run on an issue, and auto-assignment when an issue moves into a state
 - Freeform notes boards: sticky notes on a canvas, with colors, checklists, and connections
 - Share a view or an issue by public link, read-only and without sign-in

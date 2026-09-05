@@ -1411,6 +1411,16 @@ function isHttpUrl(value: string): boolean {
   return url.protocol === 'http:' || url.protocol === 'https:';
 }
 
+// Checked here, not in the schema: one `value` carries every field type.
+function parseDate(value: unknown): string | null {
+  if (value == null || value === '') return null;
+  if (typeof value === 'string') {
+    const day = new Date(`${value}T00:00:00Z`);
+    if (!Number.isNaN(day.getTime()) && day.toISOString().slice(0, 10) === value) return value;
+  }
+  throw new HttpError(400, "Date must be a calendar day, 'YYYY-MM-DD'");
+}
+
 // A datetime value on the way in: an ISO datetime string, or null when unset.
 // Anything else (a number, a date-only string, unparseable text) is rejected: a
 // value without a time of day would land on midnight UTC, which is another day
@@ -1587,7 +1597,7 @@ export async function setIssueFieldValue(
         column = { valueBool: input.value == null ? null : Boolean(input.value) };
         break;
       case 'date':
-        column = { valueDate: (input.value as string) ?? null };
+        column = { valueDate: parseDate(input.value) };
         break;
       case 'member':
         column = { valueUserId: memberUserId };

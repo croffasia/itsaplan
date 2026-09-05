@@ -21,8 +21,10 @@ solutions.
 
 Write a minimum of comments. A comment explains why, the code explains what — cover a comment
 with your hand and read the code under it: if the fact is recoverable from the code alone, the
-comment does not belong there. A wrong comment is worse than no comment, so change a comment in
-the same edit as the code it describes, or delete it. Layout and styling are never commented:
+comment does not belong there. A comment longer than the code under it is too long. A wrong
+comment is worse than no comment, so change a comment in the same edit as the code it describes,
+or delete it. The comment density of the code around a change is not a pattern to follow: this
+rule wins over matching the neighbours. Layout and styling are never commented:
 no notes on positioning, sticky or overflow behaviour, spacing, or why a class is set. The full
 rules, and the pass that removes comments that no longer hold, are in the `tidy` skill.
 

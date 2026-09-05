@@ -1,14 +1,13 @@
 {
   "title": "خادم MCP",
-  "description": "اربط وكلاء الذكاء الاصطناعي بالمشروع عبر Model Context Protocol باستخدام OAuth أو مفتاح API شخصي.",
+  "description": "اربط وكلاء الذكاء الاصطناعي بهذا المشروع عبر Model Context Protocol.",
   "access": "الوصول عبر MCP",
   "enabled": "مُفعَّل",
   "disabled": "مُعطَّل",
-  "ownerOnly": "مالك المشروع بس هو اللي يقدر يشغّل الوصول عبر MCP أو يوقفه.",
+  "ownerOnly": "يمكن لمالك المشروع وحده تشغيل الوصول عبر MCP أو إيقافه.",
   "toggleAria": "تبديل الوصول عبر MCP",
-  "connectClient": "ربط عميل",
-  "keyHint": "اعمل مفتاح شخصي من صفحة <link>مفاتيح واجهة البرمجة (API keys)</link>، وبعدين بدّل <code>{apiKey}</code> في المقتطف.",
-  "endpoint": "نقطة النهاية",
+  "keyHint": "أنشئ مفتاحًا من صفحة <link>مفاتيح API</link>، ثم بدّل <code>{apiKey}</code> في المقتطف.",
+  "endpoint": "نقطة نهاية MCP",
   "clientTabsAria": "العميل",
   "addToFile": "أضِف إلى <code>{file}</code>",
   "copyAria": "نسخ",
@@ -16,27 +15,26 @@
   "notes": {
     "claudeCode": "نفّذ هذا في الطرفية.",
     "vscode": "يتطلّب GitHub Copilot.",
-    "claudeDesktop": "Claude Desktop بيوصل للخوادم البعيدة عن طريق جسر mcp-remote. محتاج Node.js.",
-    "other": "أي عميل بيدعم MCP عبر Streamable HTTP هيشتغل. وجّهه على نقطة النهاية وابعت ترويسة Authorization: Bearer {apiKey}."
+    "claudeDesktop": "يتصل Claude Desktop بالخوادم البعيدة عبر جسر mcp-remote. يتطلّب Node.js.",
+    "other": "أي عميل يدعم MCP عبر Streamable HTTP يعمل. وجّهه إلى نقطة النهاية. أرسل ترويسة Authorization: Bearer {apiKey}."
   },
   "clients": {
     "other": "أخرى"
   },
   "oauth": {
-    "configuration": "إعداد الاتصال",
-    "methodTabsAria": "طريقة مصادقة MCP",
-    "method": "OAuth MCP",
-    "personalKey": "مفتاح API شخصي",
-    "title": "الاتصال باستخدام OAuth",
-    "description": "استخدم هذا الخيار لأي عميل MCP يدعم OAuth، بما في ذلك ChatGPT وClaude. سجّل الدخول بحساب Itsaplan؛ لا تتم مشاركة أي مفتاح API شخصي مع العميل.",
-    "endpoint": "نقطة نهاية MCP",
+    "configuration": "طريقة الاتصال",
+    "methodTabsAria": "طريقة الاتصال",
+    "method": "OAuth",
+    "personalKey": "مفتاح API",
+    "description": "استخدم هذا مع أي عميل MCP يدعم OAuth، مثل ChatGPT أو Claude. تسجّل الدخول بحساب Itsaplan. لا يستلم العميل أي مفتاح API.",
     "discovery": "اكتشاف OAuth",
     "steps": {
-      "add": "أضف تطبيق MCP في عميلك والصق نقطة نهاية MCP.",
-      "choose": "اختر OAuth عندما يطلب العميل المصادقة.",
-      "signIn": "سجّل الدخول إلى Itsaplan ووافق على الوصول المطلوب."
+      "add": "أضف تطبيق MCP في عميلك.",
+      "paste": "الصق نقطة نهاية MCP.",
+      "choose": "اختر OAuth عندما يسأل العميل عن طريقة تسجيل الدخول.",
+      "signIn": "سجّل الدخول إلى Itsaplan ووافق على الوصول."
     },
-    "security": "يستخدم OAuth PKCE (S256) وتسجيل عملاء ديناميكيًا ورموز Bearer مقيّدة بحساب Itsaplan.",
+    "security": "يستخدم OAuth آلية PKCE (S256) وتسجيل العملاء الديناميكي ورموز وصول مقيّدة بحساب Itsaplan.",
     "consent": {
       "title": "تفويض Itsaplan",
       "description": "اسمح لعميل MCP هذا بالعمل بصلاحيات حساب Itsaplan الخاص بك.",

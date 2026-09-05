@@ -2,6 +2,7 @@ import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
+import SettingsCard from '@/components/common/page/SettingsCard';
 import { useUpdateProjectMcp } from '../services/mcp.service';
 
 // Owner-only control; the API enforces the same restriction.
@@ -21,7 +22,7 @@ export default function McpStatusRow({
   const busy = isLoading || update.isPending;
 
   return (
-    <div className="flex items-center justify-between gap-6 rounded-lg bg-muted/40 px-4 py-3.5">
+    <SettingsCard className="flex items-center justify-between gap-6 px-4 py-3.5">
       <div className="space-y-0.5">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium">{t('access')}</span>
@@ -46,6 +47,6 @@ export default function McpStatusRow({
         onCheckedChange={(value) => update.mutate(value)}
         aria-label={t('toggleAria')}
       />
-    </div>
+    </SettingsCard>
   );
 }

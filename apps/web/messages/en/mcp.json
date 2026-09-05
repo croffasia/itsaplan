@@ -1,14 +1,13 @@
 {
   "title": "MCP Server",
-  "description": "Connect AI agents to this project over the Model Context Protocol using OAuth or a personal API key.",
+  "description": "Connect AI agents to this project over the Model Context Protocol.",
   "access": "MCP access",
   "enabled": "Enabled",
   "disabled": "Disabled",
   "ownerOnly": "Only a project owner can turn MCP access on or off.",
   "toggleAria": "Toggle MCP access",
-  "connectClient": "Connect a client",
-  "keyHint": "Create a personal key on the <link>API keys</link> page, then replace <code>{apiKey}</code> in the snippet.",
-  "endpoint": "Endpoint",
+  "keyHint": "Create a key on the <link>API keys</link> page, then replace <code>{apiKey}</code> in the snippet.",
+  "endpoint": "MCP endpoint",
   "clientTabsAria": "Client",
   "addToFile": "Add to <code>{file}</code>",
   "copyAria": "Copy",
@@ -16,27 +15,26 @@
   "notes": {
     "claudeCode": "Run this in your terminal.",
     "vscode": "Needs GitHub Copilot.",
-    "claudeDesktop": "Claude Desktop reaches remote servers through the mcp-remote bridge. Needs Node.js.",
-    "other": "Any client that supports MCP over Streamable HTTP works. Point it at the endpoint and send an Authorization: Bearer {apiKey} header."
+    "claudeDesktop": "Claude Desktop connects to remote servers through the mcp-remote bridge. Needs Node.js.",
+    "other": "Any client that supports MCP over Streamable HTTP works. Point it at the endpoint. Send an Authorization: Bearer {apiKey} header."
   },
   "clients": {
     "other": "Other"
   },
   "oauth": {
-    "configuration": "Connection configuration",
-    "methodTabsAria": "MCP authentication method",
-    "method": "OAuth MCP",
-    "personalKey": "Personal API key",
-    "title": "Connect with OAuth",
-    "description": "Use this option for any MCP client that supports OAuth, including ChatGPT and Claude. You sign in with your Itsaplan account; no personal API key is shared with the client.",
-    "endpoint": "MCP endpoint",
+    "configuration": "How to connect",
+    "methodTabsAria": "Connection method",
+    "method": "OAuth",
+    "personalKey": "API key",
+    "description": "Use this for any MCP client that supports OAuth, such as ChatGPT or Claude. You sign in with your Itsaplan account. The client never receives an API key.",
     "discovery": "OAuth discovery",
     "steps": {
-      "add": "Add an MCP app in your client and paste the MCP endpoint.",
-      "choose": "Choose OAuth when the client asks for authentication.",
-      "signIn": "Sign in to Itsaplan and approve the requested access."
+      "add": "Add an MCP app in your client.",
+      "paste": "Paste the MCP endpoint.",
+      "choose": "Choose OAuth when the client asks how to sign in.",
+      "signIn": "Sign in to Itsaplan and approve access."
     },
-    "security": "OAuth uses PKCE (S256), dynamic client registration, and bearer tokens scoped to your Itsaplan account.",
+    "security": "OAuth uses PKCE (S256), dynamic client registration, and access tokens scoped to your Itsaplan account.",
     "consent": {
       "title": "Authorize Itsaplan",
       "description": "Allow this MCP client to act with the permissions of your Itsaplan account.",

@@ -98,7 +98,7 @@ directly** — it talks to the API over HTTP (better-auth client + fetch).
 | `bun run db:generate`     | generate SQL migrations from Drizzle schema                      |
 | `bun run db:migrate`      | apply migrations                                                 |
 | `bun run db:migrate:test` | apply migrations to the test DB (`.env.test`)                    |
-| `bun run setup`           | interactive setup: try it, or develop                            |
+| `bun run setup`           | interactive setup: try it, develop, or generate env               |
 | `bun run auth:generate`   | regenerate better-auth tables → `packages/db/src/schema/auth.ts` |
 
 ## First run
@@ -117,48 +117,33 @@ bun run dev     # api :3000 + web :3001
 | Develop | `.env`, `apps/web/.env`, `.env.test`, dev compose, the `*_test` database, both migrations |
 | Generate env | builds `.env` and `apps/web/.env` from the examples, walks every value, then writes both or prints them instead; starts nothing |
 
-Generate env asks a second time before it overwrites an existing `.env`, defaulting to no:
-the secrets in that file are what a live instance reads its own data with, and a fresh set
-replaces them.
-
 Self-hosting behind a domain is a manual `.env` and `docker compose up -d`, documented in
-`docs/self-hosting.md` — the script only covers the two local cases. `bun run setup:env` is
-the same script non-interactively: env files and secrets only.
+`docs/self-hosting.md` — the script only covers the local cases.
 
 Running it again on a live instance does not damage it, and the rules that make that true
 are the part to preserve when changing the script:
 
-- Either answer restarts what is already up rather than setting up beside it. Try it asks
-  first and keeps the data — the api migrates on startup. Develop stops the dev stack with
-  `down`, keeping the volumes, and applies both migrations after it starts again.
-- A busy port is offered for change, never forced — only the operator knows whose it is. The
-  check connects rather than binds, to `127.0.0.1` and to `::1`: on macOS a bind on one
-  loopback address succeeds beside a listener on the other, so a native Postgres on
-  `127.0.0.1` and a container published on the wildcard both read as free. Develop stops its
-  stack before it asks, so the ports it held read as free.
-- Each answer offers to stop the other stack when it is up: Try it and Develop read the same
-  `.env`, so they publish the same api and web ports. Develop also offers to stop the PR
-  stack, whose MinIO ports are fixed in its own compose file, so no port question can
-  resolve an overlap. A refusal ends the run and changes nothing.
-- Secrets are generated only while the Postgres volume does not exist. Past that point the
-  instance is using them — `BETTER_AUTH_SECRET` signs live sessions, `APP_ENCRYPTION_KEY`
-  decrypts stored provider keys — so anything still holding an example value is reported,
-  not replaced. A secret that already holds a real value is kept in every case.
-- Only Generate env walks the values. Try it and Develop ask nothing beyond the ports and
-  what to do with a stack that is already up.
-- Develop checks from the host that something answers on the Postgres port `.env` names, and
-  force-recreates the container when nothing does: a container keeps the port it started
-  with, so one that was not recreated still publishes the old one and the migrations connect
-  to nothing.
+- Try it and Develop restart what is already up rather than setting up beside it, and each
+  offers to stop the other: they read the same `.env`, so they publish the same api and web
+  ports. Develop also offers to stop the PR stack, whose MinIO ports are fixed in its own
+  compose file. A refusal ends the run and changes nothing.
+- A busy port is offered for change, never forced. The check connects rather than binds, to
+  `127.0.0.1` and `::1`: on macOS a bind on one loopback address succeeds beside a listener
+  on the other, so a native Postgres and a container published on the wildcard both read as
+  free.
+- Postgres reads `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` once, when it
+  initialises its volume, and the secrets are what the instance stored its data under. So a
+  value is only generated while that volume does not exist, and one that already holds a
+  real value is kept in every case. Generate env, which always produces a fresh set, asks a
+  second time before it overwrites an existing `.env`.
+- Both check that the running database accepts the credentials `.env` holds before starting
+  the api, which would otherwise fail its healthcheck on the mismatch; a refusal is named,
+  and `down -v` offered behind a confirmation that says the data goes with it. Develop also
+  checks from the host that something answers on the Postgres port `.env` names — a
+  container keeps the port it started with, so one that was not recreated publishes the old
+  one and the migrations reach nothing.
 - The setup migrates through `packages/db/src/migrate.ts`, not `bun run db:migrate`:
-  drizzle-kit exits 1 without printing what the database refused, which leaves a failure
-  here unreadable.
-- Postgres creates its role and database when it initialises the volume and never re-reads
-  `POSTGRES_USER`, `POSTGRES_PASSWORD` or `POSTGRES_DB`, so changed credentials reach
-  nothing. Try it and Develop start Postgres first and connect over TCP with what `.env`
-  holds; on a refusal they name it and offer `down -v`, behind a confirmation that says the
-  data goes with it and defaults to no. The api is only started once that is settled —
-  otherwise it fails its healthcheck on the same mismatch.
+  drizzle-kit exits 1 without printing what the database refused.
 
 ## Environment
 

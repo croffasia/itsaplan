@@ -116,35 +116,22 @@ The whole stack in one click, with no server to maintain. You give Railway two h
 and it generates every secret. You need a domain of your own: [the guide](docs/railway.md)
 explains why, and what to do after the deploy.
 
-### Run it on your own server
+### Try it on your machine
 
-Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
+Requirements: Docker and [Bun](https://bun.sh).
 
 ```bash
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
-cp .env.example .env
-docker compose up -d
+bun install
+bun run setup   # answer "Try it"
 ```
 
-`.env` needs six values — the two public origins, and four secrets from
-`openssl rand -base64 32`:
+It picks free ports, generates the secrets, starts the whole stack in Docker, and opens
+<http://localhost:3001>. Everything runs on localhost, so no domain and no reverse proxy are
+needed. Run it again later to restart the instance; the data stays.
 
-| Variable                | Value                     |
-| ----------------------- | ------------------------- |
-| `API_URL`               | `https://api.example.com` |
-| `APP_URL`               | `https://app.example.com` |
-| `POSTGRES_PASSWORD`     | a generated secret        |
-| `BETTER_AUTH_SECRET`    | a generated secret        |
-| `APP_ENCRYPTION_KEY`    | a generated secret        |
-| `WORKER_INTERNAL_TOKEN` | a generated secret        |
-
-The optional variables — legal document URLs, passkey and cookie settings, email, worker
-tuning — are documented in `.env.example`.
-
-This starts Postgres, MinIO, and the four services (api, worker, bot, web) from the images
-published on each release. Add `--build` to build them from the checkout instead. The first
-account you register becomes the instance admin.
+### Everything else
 
 - [Deploy on Railway](docs/railway.md) — one-click hosted deploy from the template
 - [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates

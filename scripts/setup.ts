@@ -212,15 +212,6 @@ const walk = async (env: EnvFile, fields: Record<string, string>) => {
   }
 };
 
-if (process.argv.includes('--defaults')) {
-  const env = new EnvFile(file('.env'));
-  secrets.forEach((key) => env.generate(key));
-  env.save();
-  new EnvFile(file('apps/web/.env')).save();
-  console.log('.env and apps/web/.env are ready.');
-  process.exit(0);
-}
-
 p.intro("It's a Plan setup");
 
 const mode = answer(

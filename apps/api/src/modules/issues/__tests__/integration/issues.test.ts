@@ -281,6 +281,25 @@ describe('issues', () => {
       });
       expect(res.status).toBe(400);
     });
+
+    it('rejects a due date an update sends in another notation', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const created = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Dated' });
+      const res = await asOwner
+        .issues({ issueId: created.data!.id })
+        .patch({ dueDate: '01.02.2026' });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a date whose month does not exist', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Dated', dueDate: '2026-13-45' });
+      expect(res.status).toBe(400);
+    });
   });
 
   describe('update', () => {

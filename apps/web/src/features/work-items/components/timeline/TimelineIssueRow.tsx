@@ -75,7 +75,10 @@ export function TimelineIssueRow({
             readOnly ? 'cursor-pointer' : 'cursor-grab',
           )}
           style={{ width: labelW }}
-          onClick={() => onOpen(issue.id)}
+          onClick={(e) => {
+            e.preventDefault();
+            onOpen(issue.id);
+          }}
         >
           <IssueIdentifier
             issue={issue}

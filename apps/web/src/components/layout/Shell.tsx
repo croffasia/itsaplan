@@ -124,7 +124,9 @@ export default function Shell({
         return;
       }
     }
-    overlays.setOpenIssueId(id);
+    // The issue the panel already shows closes it, so the card that opened the panel
+    // is the one that puts it away.
+    overlays.setOpenIssueId((current) => (current === id ? null : id));
   };
 
   const context: ShellContext = {

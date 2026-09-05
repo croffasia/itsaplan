@@ -30,7 +30,10 @@ export function useExitOnClickOutside(ref: RefObject<HTMLElement | null>, onExit
       // synthetic click) is judged on its own target rather than on the last press.
       const pressed = pressedInside;
       pressedInside = false;
-      if (pressed) return;
+      // A click already handled by what it landed on is left alone, the same way
+      // useExitOnEscape leaves a handled key, so opening another issue from the page
+      // behind replaces what the panel shows rather than closing it.
+      if (pressed || e.defaultPrevented) return;
       const surface = ref.current;
       if (!surface || !(e.target instanceof Element)) return;
       if (surface.contains(e.target)) return;

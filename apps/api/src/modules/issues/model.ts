@@ -446,8 +446,8 @@ export const createIssueBody = t.Object({
   ),
   estimatePoints: t.Optional(EstimatePointsSchema),
   estimateMinutes: t.Optional(EstimateMinutesSchema),
-  startDate: t.Optional(t.Nullable(t.String({ description: "Start date 'YYYY-MM-DD', or null." }))),
-  dueDate: t.Optional(t.Nullable(t.String({ description: "Due date 'YYYY-MM-DD', or null." }))),
+  startDate: t.Optional(t.Nullable(isoDate("Start date 'YYYY-MM-DD', or null."))),
+  dueDate: t.Optional(t.Nullable(isoDate("Due date 'YYYY-MM-DD', or null."))),
   labelIds: t.Optional(
     t.Array(t.Integer(), { description: 'Label ids to attach. From get_project.labels.' }),
   ),
@@ -465,8 +465,8 @@ export const bulkUpdateIssuesBody = t.Object({
     priority: t.Optional(t.Nullable(t.String())),
     estimatePoints: t.Optional(EstimatePointsSchema),
     estimateMinutes: t.Optional(EstimateMinutesSchema),
-    startDate: t.Optional(t.Nullable(t.String())),
-    dueDate: t.Optional(t.Nullable(t.String())),
+    startDate: t.Optional(t.Nullable(isoDate("Start date 'YYYY-MM-DD', or null."))),
+    dueDate: t.Optional(t.Nullable(isoDate("Due date 'YYYY-MM-DD', or null."))),
   }),
 });
 

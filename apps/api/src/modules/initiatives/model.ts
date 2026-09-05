@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { isoDate } from '#shared/schemas';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { ActivityPayloadResponse } from '#shared/activity';
 
@@ -113,10 +114,8 @@ export const createInitiativeBody = t.Object({
   priority: t.Optional(
     t.Nullable(t.String({ description: 'One of: urgent, high, medium, low. Or null.' })),
   ),
-  startDate: t.Optional(t.Nullable(t.String({ description: "Start date 'YYYY-MM-DD', or null." }))),
-  targetDate: t.Optional(
-    t.Nullable(t.String({ description: "Target date 'YYYY-MM-DD', or null." })),
-  ),
+  startDate: t.Optional(t.Nullable(isoDate("Start date 'YYYY-MM-DD', or null."))),
+  targetDate: t.Optional(t.Nullable(isoDate("Target date 'YYYY-MM-DD', or null."))),
   labelIds: t.Optional(
     t.Array(t.Integer(), { description: 'Label ids to attach. From get_project.labels.' }),
   ),

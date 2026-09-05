@@ -269,6 +269,20 @@ describe('issues', () => {
     });
   });
 
+  describe('dates', () => {
+    // The value goes into a `date` column, so an unvalidated one reaches Postgres
+    // and answers 500 with the driver's message instead of 400.
+    it('rejects a due date that is not YYYY-MM-DD', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const res = await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+        columnId,
+        title: 'Dated',
+        dueDate: '01.02.2026',
+      });
+      expect(res.status).toBe(400);
+    });
+  });
+
   describe('update', () => {
     it('updates the title', async () => {
       const { asOwner, columnId } = await setupProject();

@@ -195,7 +195,7 @@ export const noteBoardRoutes = new Elysia({
         summary: 'Update a note board',
         description:
           'Rename a board, change who sees it, or replace its `canvas`. `visibility` is "public" (every project member), "private" (the creator alone), or "restricted" (the creator plus the project members in `memberIds`, which replaces the granted list as a whole). Only the board creator can change either. Adding, editing, connecting, or deleting a card is a change to `canvas` (see `get_note_board`). It is replaced as a whole: read the board first, then send every node and edge that must stay — anything left out is deleted.',
-        ...mcpTool('update_note_board'),
+        ...mcpTool('update_note_board', { destructiveHint: true }),
       },
     },
   )

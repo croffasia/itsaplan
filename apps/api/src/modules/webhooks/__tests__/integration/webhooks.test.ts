@@ -96,6 +96,24 @@ describe('webhooks', () => {
       expect(res.status).toBe(400);
     });
 
+    it('rejects an IPv4-mapped IPv6 url pointing at a private address', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const res = await asOwner.projects({ projectKey: 'MKT' }).webhooks.post({
+        url: 'https://[::ffff:169.254.169.254]/hook',
+        events: ['issue.created'],
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a hostname that resolves to a private address', async () => {
+      const { asOwner } = await setupOwnerProject();
+      const res = await asOwner.projects({ projectKey: 'MKT' }).webhooks.post({
+        url: 'https://localtest.me/hook',
+        events: ['issue.created'],
+      });
+      expect(res.status).toBe(400);
+    });
+
     it('rejects an empty events list', async () => {
       const { asOwner } = await setupOwnerProject();
       const res = await asOwner.projects({ projectKey: 'MKT' }).webhooks.post({

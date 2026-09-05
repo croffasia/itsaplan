@@ -1,20 +1,15 @@
 {
-  "name": "worker",
-  "version": "1.0.0",
+  "name": "@repo/net",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "dev": "bun --env-file=../../.env run --watch src/index.ts",
-    "start": "bun run src/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
-  },
-  "dependencies": {
-    "@repo/db": "workspace:*",
-    "@repo/net": "workspace:*",
-    "croner": "^10.0.1",
-    "drizzle-orm": "^0.45.2"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

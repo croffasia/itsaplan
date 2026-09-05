@@ -4,7 +4,7 @@ import { authContext } from '#shared/auth-context';
 import { entityGuard } from '#shared/guards';
 import { HttpError } from '#shared/lib';
 import { getObject } from '#shared/s3';
-import { assertPublicHttpUrl } from '#shared/net';
+import { pinnedFetch } from '#shared/net';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '#modules/issues/service';
@@ -148,11 +148,11 @@ export const attachmentRoutes = new Elysia({
       let bytes: Buffer;
       let contentType: string;
       if (url != null) {
-        const target = await assertPublicHttpUrl(url);
         let res: Response;
         try {
-          res = await fetch(target, { redirect: 'manual', signal: AbortSignal.timeout(15000) });
-        } catch {
+          res = await pinnedFetch(url, { timeoutMs: 15000 });
+        } catch (err) {
+          if (err instanceof HttpError) throw err;
           throw new HttpError(400, 'Could not fetch the url');
         }
         if (res.status >= 300 && res.status < 400) {

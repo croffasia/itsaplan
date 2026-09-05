@@ -1,5 +1,5 @@
 import { HttpError } from '#shared/lib';
-import { assertPublicHttpUrl } from '#shared/net';
+import { assertPublicHttpUrl, pinnedFetch } from '#shared/net';
 import { pipelineStatus } from './providers';
 import type { PipelineEvent, PullRequestEvent, PullRequestState } from './providers';
 
@@ -184,18 +184,18 @@ async function providerRequest(
   path: string,
   init: RequestInit = {},
 ): Promise<Response> {
-  await assertPublicHttpUrl(input.baseUrl);
   const headers = providerHeaders(input.provider, input.token);
   if (init.body !== undefined) headers.set('content-type', 'application/json');
   let response: Response;
   try {
-    response = await fetch(`${apiBase(input.provider, input.baseUrl)}${path}`, {
-      ...init,
+    response = await pinnedFetch(`${apiBase(input.provider, input.baseUrl)}${path}`, {
+      method: init.method,
       headers,
-      redirect: 'manual',
-      signal: AbortSignal.timeout(15_000),
+      body: init.body as string | undefined,
+      timeoutMs: 15_000,
     });
-  } catch {
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
     throw new HttpError(
       502,
       `${PROVIDER_LABEL[input.provider]} could not be reached. Check the provider URL and network access.`,

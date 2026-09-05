@@ -89,6 +89,14 @@ describe('agent schedules', () => {
     expect(list.data?.[0].id).toBe(created.data!.id);
   });
 
+  it('rejects a name the agent already has a schedule under', async () => {
+    const { asOwner } = await setup();
+    const agentId = await createAgent(asOwner);
+    await createSchedule(asOwner, agentId);
+    const res = await createSchedule(asOwner, agentId);
+    expect(res.status).toBe(409);
+  });
+
   it('rejects an invalid cron expression', async () => {
     const { asOwner } = await setup();
     const agentId = await createAgent(asOwner);

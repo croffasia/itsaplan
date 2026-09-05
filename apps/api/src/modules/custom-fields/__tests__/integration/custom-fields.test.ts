@@ -219,6 +219,17 @@ describe('custom-fields', () => {
       });
       expect(res.status).toBe(400);
     });
+
+    it('creates no field when its options are rejected', async () => {
+      const { asOwner } = await setupProject();
+      const res = await fields(asOwner).post({
+        name: 'Priority',
+        fieldType: 'select',
+        options: ['Yes', 'Yes'],
+      });
+      expect(res.status).toBe(409);
+      expect(await listFields(asOwner)).toEqual([]);
+    });
   });
 
   describe('list', () => {

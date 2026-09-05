@@ -168,25 +168,29 @@ export async function createCustomField(input: {
         sql`${customField.issueTypeId} IS NOT DISTINCT FROM ${issueTypeId}`,
       ),
     );
-  const [row] = await db
-    .insert(customField)
-    .values({
-      projectId: input.projectId,
-      issueTypeId,
-      name: input.name,
-      fieldType: input.fieldType,
-      memberScope: input.fieldType === 'member' ? (input.memberScope ?? 'all') : null,
-      showInBody: input.showInBody ?? false,
-      position: Number(pos),
-    })
-    .returning({ id: customField.id });
   const options = input.options ?? [];
-  if (options.length > 0) {
-    await db
-      .insert(customFieldOption)
-      .values(options.map((value, index) => ({ fieldId: row.id, value, position: index })));
-  }
-  return (await getCustomFieldById(input.projectId, row.id))!;
+  // One transaction, so a rejected option list leaves no field behind.
+  const id = await db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(customField)
+      .values({
+        projectId: input.projectId,
+        issueTypeId,
+        name: input.name,
+        fieldType: input.fieldType,
+        memberScope: input.fieldType === 'member' ? (input.memberScope ?? 'all') : null,
+        showInBody: input.showInBody ?? false,
+        position: Number(pos),
+      })
+      .returning({ id: customField.id });
+    if (options.length > 0) {
+      await tx
+        .insert(customFieldOption)
+        .values(options.map((value, index) => ({ fieldId: row.id, value, position: index })));
+    }
+    return row.id;
+  });
+  return (await getCustomFieldById(input.projectId, id))!;
 }
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];

@@ -551,7 +551,7 @@ describe('projects', () => {
       expect(copied.data?.[0]).toMatchObject({ runnerScope: 'owner', ownerUserId: user.userId });
     });
 
-    it('returns 400 with an error body on a duplicate key', async () => {
+    it('rejects a duplicate key with 409 and no statement in the body', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });
       await api.projects.post({ key: 'DST', name: 'Existing' });
@@ -560,7 +560,8 @@ describe('projects', () => {
         key: 'DST',
         name: 'Destination',
       });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
+      expect(JSON.stringify(res.error?.value)).not.toContain('Failed query');
     });
 
     it('returns 404 for an unknown source project', async () => {

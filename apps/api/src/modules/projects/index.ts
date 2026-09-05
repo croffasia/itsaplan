@@ -113,20 +113,13 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       ) {
         await assertProjectOwner(project.id, current);
       }
-      try {
-        set.status = 201;
-        return await copyProject(project.id, meta, current.id, include);
-      } catch (err) {
-        // Return the real cause in the body so the UI shows the actual error.
-        console.error('copyProject failed:', err);
-        set.status = 400;
-        return { error: err instanceof Error ? err.message : 'Failed to copy project' };
-      }
+      set.status = 201;
+      return await copyProject(project.id, meta, current.id, include);
     },
     {
       body: copyProjectBody,
       permission: ['work_items', 'read'],
-      response: { 201: ProjectResponse, ...commonErrors },
+      response: { 201: ProjectResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Copy a project',
         description:

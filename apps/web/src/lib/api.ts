@@ -60,8 +60,9 @@ export function markSignedIn(): void {
 
 // A 401 means the session behind the cookie is gone. The proxy only checks that a
 // session cookie exists, so a stale one keeps the app open on a page where every
-// request fails. Signing out is what drops the cookie; with it still set the proxy
-// would bounce /login straight back into the app.
+// request fails. Sign out to drop the cookie, then leave for the expired screen
+// whatever the sign-out answered — a cookie the server declines to clear must not
+// hold the browser in the app.
 // The request is written out rather than calling `signOut()` from @/lib/auth-client:
 // that module reads API_URL from this one, so importing it back here would make a
 // cycle that evaluates auth-client before API_URL is assigned.
@@ -69,15 +70,8 @@ function endSession(): void {
   if (typeof window === 'undefined' || signingOut) return;
   signingOut = true;
   void fetch(`${API_URL}/api/auth/sign-out`, { method: 'POST', credentials: 'include' })
-    .then((res) => {
-      // Leaving with the cookie still set sends the proxy straight back into the
-      // app, where the next 401 starts this over as a fresh page load.
-      if (res.ok) window.location.replace('/login?expired=1');
-      else signingOut = false;
-    })
-    .catch(() => {
-      signingOut = false;
-    });
+    .catch(() => {})
+    .then(() => window.location.replace('/login?expired=1'));
 }
 
 // Turns a failed response into the error to throw, and catches an ended session on

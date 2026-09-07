@@ -19,7 +19,9 @@ const ToolMetaResponse = t.Object({
   always: t.Boolean(),
   // [resource, action] on the role matrix, from the route behind the action. Absent
   // when no route backs it, or when its route asks only for project membership.
-  permission: t.Optional(t.Tuple([t.String(), t.String()])),
+  // A bounded array rather than t.Tuple: TypeBox writes a tuple as draft-7's
+  // `items: [...]`, which the OpenAPI 3.0 schema object does not allow.
+  permission: t.Optional(t.Array(t.String(), { minItems: 2, maxItems: 2 })),
 });
 
 export const ToolMetaListResponse = t.Array(ToolMetaResponse);

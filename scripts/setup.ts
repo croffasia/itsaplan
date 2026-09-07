@@ -20,7 +20,9 @@ const answer = <T>(value: T | symbol): T => {
 // Output is captured rather than inherited: docker and drizzle write while a spinner
 // is running, and only a failure is worth showing.
 const exec = async (...cmd: string[]) => {
-  const proc = Bun.spawn(cmd, { cwd: root, stdout: 'pipe', stderr: 'pipe' });
+  // env explicitly: Bun.spawn otherwise hands the child the environment this process
+  // started with, and a variable set here would not reach it.
+  const proc = Bun.spawn(cmd, { cwd: root, env: process.env, stdout: 'pipe', stderr: 'pipe' });
   const [code, stdout, stderr] = await Promise.all([
     proc.exited,
     new Response(proc.stdout).text(),
@@ -396,6 +398,9 @@ if (mode === 'dev') {
   migrations.start('Applying migrations');
   // The programmatic runner, not `bun run db:migrate`: drizzle-kit exits 1 without printing
   // what the database refused, and a failure here is exactly what needs reading.
+  // Its pre-migration dump goes to BACKUP_DIR, a path only the api container has, and a
+  // local database the operator recreates at will has nothing to go back to anyway.
+  process.env.SKIP_PRE_MIGRATION_BACKUP = '1';
   await run('bun', '--env-file=.env', 'packages/db/src/migrate.ts');
   await run('bun', '--env-file=.env.test', 'packages/db/src/migrate.ts');
   migrations.stop(`Migrated ${database} and ${testDatabase}`);

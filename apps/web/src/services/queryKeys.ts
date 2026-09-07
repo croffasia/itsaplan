@@ -66,6 +66,8 @@ export const qk = {
     ['documents', projectKey, 'document', documentId, 'issues'] as const,
   issueDocumentLinks: (projectKey: string, issueId: number) =>
     ['documents', projectKey, 'issue', issueId] as const,
+  initiativeDocumentLinks: (projectKey: string, initiativeId: number) =>
+    ['documents', projectKey, 'initiative', initiativeId] as const,
   // Note boards (the notes canvases). `noteBoardsForProject` is the invalidation
   // base for every list/search variant; `noteBoardsSearch` is one paged switcher
   // query (scoped by search text); `noteBoard` is a single board with its canvas.
@@ -214,6 +216,7 @@ export const qk = {
   anyCycles: ['cycles'] as const,
   anyCycle: ['cycle'] as const,
   attachments: (id: number) => ['attachments', id] as const,
+  initiativeAttachments: (id: number) => ['initiativeAttachments', id] as const,
   // The time entries of one issue. Their sum comes with the issue, so a write
   // refreshes that read too.
   worklogs: (id: number) => ['worklogs', id] as const,

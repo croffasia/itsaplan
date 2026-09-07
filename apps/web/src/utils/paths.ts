@@ -74,7 +74,7 @@ export const initiativesTabPath = (key: string, tab: InitiativesTab) =>
 
 // The initiative detail tabs are routes of their own too. They sit under /details/
 // so the tab segment of the list above stays unambiguous.
-export type InitiativeTab = 'overview' | 'issues';
+export type InitiativeTab = 'overview' | 'progress' | 'issues';
 
 export const initiativePath = (
   key: string,

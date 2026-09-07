@@ -3540,6 +3540,15 @@ export const api = {
   deleteAttachment: (publicId: string) =>
     request<void>(`/attachments/${publicId}`, { method: 'DELETE' }),
 
+  listInitiativeAttachments: (initiativeId: number) =>
+    request<Attachment[]>(`/initiatives/${initiativeId}/attachments`).then((rows) =>
+      rows.map(withMediaUrl),
+    ),
+  uploadInitiativeAttachment: (initiativeId: number, file: File) =>
+    sendAttachmentFile(`/initiatives/${initiativeId}/attachments`, 'POST', file),
+  deleteInitiativeAttachment: (publicId: string) =>
+    request<void>(`/initiative-attachments/${publicId}`, { method: 'DELETE' }),
+
   listFeed: (issueId: number, params: { cursor?: FeedCursor | null; limit?: number } = {}) =>
     request<FeedPage>(`/issues/${issueId}/feed${feedPageQuery(params)}`),
   // The same page, split into the stretches the issue spent in one status.
@@ -3705,6 +3714,19 @@ export const api = {
     }),
   unlinkDocumentIssue: (projectKey: string, documentId: number, issueId: number) =>
     request<void>(`/projects/${projectKey}/documents/${documentId}/issues/${issueId}`, {
+      method: 'DELETE',
+    }),
+  listInitiativeDocumentLinks: (projectKey: string, initiativeId: number) =>
+    request<IssueDocumentLink[]>(
+      `/projects/${projectKey}/documents/for-initiative/${initiativeId}`,
+    ),
+  linkDocumentInitiative: (projectKey: string, documentId: number, initiativeId: number) =>
+    request<IssueDocumentLink>(`/projects/${projectKey}/documents/${documentId}/initiatives`, {
+      method: 'POST',
+      body: JSON.stringify({ initiativeId }),
+    }),
+  unlinkDocumentInitiative: (projectKey: string, documentId: number, initiativeId: number) =>
+    request<void>(`/projects/${projectKey}/documents/${documentId}/initiatives/${initiativeId}`, {
       method: 'DELETE',
     }),
   createDocument: (projectKey: string, input: NewProjectDocumentInput) =>

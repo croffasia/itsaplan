@@ -13,10 +13,12 @@ import PageSkeleton from '@/components/common/skeleton/PageSkeleton';
 import InitiativeHeader from './components/detail/InitiativeHeader';
 import InitiativeIssuesBoard from './components/detail/InitiativeIssuesBoard';
 import InitiativeOverview from './components/detail/InitiativeOverview';
+import InitiativeProgress from './components/detail/InitiativeProgress';
 
-// One initiative: a header of its properties, then an Overview tab and an Issues
-// tab (the work items board over its linked issues). Each tab is its own route, so
-// the open tab survives a reload; the route that mounts this page passes it.
+// One initiative: a header of its properties, then its description (Overview), how
+// it is going (Progress) and the work items board over its linked issues (Issues).
+// Each tab is its own route, so the open tab survives a reload; the route that
+// mounts this page passes it.
 export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: InitiativeTab }) {
   const t = useTranslations('initiatives');
   const { project } = useShell();
@@ -28,12 +30,14 @@ export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: Initi
   const query = useInitiativeQuery(initiativeId);
   const projectKey = project?.project.key ?? '';
 
-  // Refetch the initiative (progress/health), its feed, and the board issues when
-  // its linked issues or its own fields change.
+  // Refetch the initiative (progress/health), its files, its linked Docs, its feed
+  // and the board issues when its linked issues or its own fields change.
   useLiveRefresh({
     scope: initiativeId != null ? revScope.initiative(initiativeId) : null,
     targets: [
       qk.initiative(initiativeId ?? 0),
+      qk.initiativeAttachments(initiativeId ?? 0),
+      qk.initiativeDocumentLinks(projectKey, initiativeId ?? 0),
       qk.initiativeFeed(initiativeId ?? 0),
       qk.boardIssues(projectKey),
     ],
@@ -63,11 +67,15 @@ export default function InitiativeDetailPage({ tab = 'overview' }: { tab?: Initi
             <div className="px-6 pt-3">
               <TabsList variant="line">
                 <TabsTrigger value="overview">{t('detailTabs.overview')}</TabsTrigger>
+                <TabsTrigger value="progress">{t('detailTabs.progress')}</TabsTrigger>
                 <TabsTrigger value="issues">{t('detailTabs.issues')}</TabsTrigger>
               </TabsList>
             </div>
             <TabsContent value="overview" className="mt-0 flex-1 overflow-y-auto">
-              <InitiativeOverview initiative={initiative} project={project} />
+              <InitiativeOverview initiative={initiative} projectKey={projectKey} />
+            </TabsContent>
+            <TabsContent value="progress" className="mt-0 flex-1 overflow-y-auto">
+              <InitiativeProgress initiative={initiative} project={project} />
             </TabsContent>
             <TabsContent value="issues" className="mt-0 flex min-h-0 flex-1 flex-col">
               <InitiativeIssuesBoard initiativeId={initiative.id} />

@@ -3,6 +3,8 @@ import {
   chatAttachment,
   db,
   documentAsset,
+  initiative,
+  initiativeAttachment,
   issue,
   issueAttachment,
   project,
@@ -24,7 +26,7 @@ async function projectStoredBytes(
   projectId: number,
 ): Promise<number> {
   // Keep these sequential: callers commonly pass a transaction-bound executor,
-  // and all three reads must observe the same post-lock snapshot/connection.
+  // and all four reads must observe the same post-lock snapshot/connection.
   const issues = await executor
     .select({ total: sql<string>`coalesce(sum(${issueAttachment.sizeBytes}), 0)` })
     .from(issueAttachment)
@@ -39,7 +41,17 @@ async function projectStoredBytes(
     .from(documentAsset)
     .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
     .where(eq(projectDocument.projectId, projectId));
-  return num(issues[0]?.total ?? 0) + num(chats[0]?.total ?? 0) + num(documents[0]?.total ?? 0);
+  const initiatives = await executor
+    .select({ total: sql<string>`coalesce(sum(${initiativeAttachment.sizeBytes}), 0)` })
+    .from(initiativeAttachment)
+    .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
+    .where(eq(initiative.projectId, projectId));
+  return (
+    num(issues[0]?.total ?? 0) +
+    num(chats[0]?.total ?? 0) +
+    num(documents[0]?.total ?? 0) +
+    num(initiatives[0]?.total ?? 0)
+  );
 }
 
 async function teamStoredBytes(
@@ -63,7 +75,18 @@ async function teamStoredBytes(
     .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
     .innerJoin(project, eq(project.id, projectDocument.projectId))
     .where(eq(project.teamId, teamId));
-  return num(issues[0]?.total ?? 0) + num(chats[0]?.total ?? 0) + num(documents[0]?.total ?? 0);
+  const initiatives = await executor
+    .select({ total: sql<string>`coalesce(sum(${initiativeAttachment.sizeBytes}), 0)` })
+    .from(initiativeAttachment)
+    .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
+    .innerJoin(project, eq(project.id, initiative.projectId))
+    .where(eq(project.teamId, teamId));
+  return (
+    num(issues[0]?.total ?? 0) +
+    num(chats[0]?.total ?? 0) +
+    num(documents[0]?.total ?? 0) +
+    num(initiatives[0]?.total ?? 0)
+  );
 }
 
 export async function assertAttachmentStorageCapacity(
@@ -150,7 +173,7 @@ export function safeAttachmentFilename(input: string, fallback = 'file'): string
 
 export function attachmentObjectKey(
   projectId: number,
-  namespace: 'attachments' | 'chat' | 'documents',
+  namespace: 'attachments' | 'chat' | 'documents' | 'initiatives',
   ownerId: number | null,
   filename: string,
 ): string {

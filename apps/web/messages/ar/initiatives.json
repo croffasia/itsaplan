@@ -30,6 +30,7 @@
   },
   "detailTabs": {
     "overview": "نظرة عامة",
+    "progress": "التقدم",
     "issues": "المهام"
   },
   "columns": {
@@ -141,5 +142,26 @@
     "typeRemoved": "أزال النوع",
     "linked": "ربط بـ {name}",
     "unlinked": "ألغى الربط بالمبادرة"
+  },
+  "attachments": {
+    "title": "المرفقات",
+    "add": "إضافة",
+    "uploading": "جارٍ الرفع…",
+    "empty": "لا توجد مرفقات بعد.",
+    "emptyHint": "أفلت الملفات هنا أو استخدم «إضافة».",
+    "dropToUpload": "أفلت الملفات للرفع",
+    "uploadFailed": "فشل الرفع",
+    "open": "فتح {name}",
+    "download": "تنزيل",
+    "downloadFile": "تنزيل {name}",
+    "deleteFile": "حذف {name}"
+  },
+  "documents": {
+    "title": "المستندات",
+    "add": "ربط مستند",
+    "empty": "لا توجد مستندات مرتبطة بعد.",
+    "loadFailed": "تعذّر تحميل المستندات المرتبطة. أعد المحاولة.",
+    "untitled": "بدون عنوان",
+    "remove": "إلغاء ربط {title}"
   }
 }

@@ -89,6 +89,42 @@ export function useUnlinkDocumentIssue(projectKey: string | null) {
   });
 }
 
+export function useInitiativeDocumentLinksQuery(
+  projectKey: string | null,
+  initiativeId: number | null,
+  enabled = true,
+) {
+  return useQuery<IssueDocumentLink[]>({
+    queryKey: qk.initiativeDocumentLinks(projectKey ?? '', initiativeId ?? 0),
+    queryFn: () => api.listInitiativeDocumentLinks(projectKey!, initiativeId!),
+    enabled: enabled && projectKey != null && initiativeId != null,
+  });
+}
+
+export function useLinkDocumentInitiative(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, initiativeId }: { documentId: number; initiativeId: number }) =>
+      api.linkDocumentInitiative(projectKey!, documentId, initiativeId),
+    onSuccess: (_link, { initiativeId }) => {
+      if (!projectKey) return;
+      void qc.invalidateQueries({ queryKey: qk.initiativeDocumentLinks(projectKey, initiativeId) });
+    },
+  });
+}
+
+export function useUnlinkDocumentInitiative(projectKey: string | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ documentId, initiativeId }: { documentId: number; initiativeId: number }) =>
+      api.unlinkDocumentInitiative(projectKey!, documentId, initiativeId),
+    onSuccess: (_result, { initiativeId }) => {
+      if (!projectKey) return;
+      void qc.invalidateQueries({ queryKey: qk.initiativeDocumentLinks(projectKey, initiativeId) });
+    },
+  });
+}
+
 export function useCreateDocument(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({

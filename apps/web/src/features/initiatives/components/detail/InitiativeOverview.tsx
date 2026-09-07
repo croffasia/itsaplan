@@ -1,51 +1,48 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { Initiative, ProjectDetail } from '@/lib/api';
-import InitiativeActivityFeed from './InitiativeActivityFeed';
-import InitiativeActiveWork from './InitiativeActiveWork';
-import InitiativeStateBreakdown from './InitiativeStateBreakdown';
-import InitiativeTimeline from './InitiativeTimeline';
+import type { Initiative } from '@/lib/api';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
+import InitiativeAttachments from './InitiativeAttachments';
+import InitiativeDocuments from './InitiativeDocuments';
 
-// The initiative overview: a content column with the activity feed beside it,
-// stacking below it on a narrow screen.
+// The initiative's own text: its title and its description as markdown, with its
+// linked Docs and its files beside them. The numbers and the activity feed are the
+// Progress tab.
 export default function InitiativeOverview({
   initiative,
-  project,
+  projectKey,
 }: {
   initiative: Initiative;
-  project: ProjectDetail;
+  projectKey: string;
 }) {
   const t = useTranslations('initiatives');
-  const projectKey = project.project.key;
   const hasDescription = initiative.description.trim().length > 0;
 
   return (
-    <div className="flex w-full flex-col gap-10 px-8 py-8 lg:flex-row">
-      <div className="min-w-0 lg:w-2/3">
-        <h1 className="text-2xl font-semibold tracking-tight">{initiative.title}</h1>
-        {hasDescription ? (
-          <p className="mt-4 text-sm leading-relaxed whitespace-pre-wrap text-muted-foreground">
-            {initiative.description}
-          </p>
-        ) : (
-          <p className="mt-4 text-sm text-muted-foreground/60 italic">{t('noDescription')}</p>
-        )}
-
-        <div className="mt-8 grid gap-8 sm:grid-cols-2 sm:gap-10">
-          <InitiativeStateBreakdown project={project} initiativeId={initiative.id} />
-          <InitiativeTimeline initiative={initiative} />
+    // A container query, not a viewport one: the sidebar takes width off this
+    // column, so the viewport says nothing about whether the two fit side by side.
+    <div className="@container w-full px-8 py-8">
+      <div className="flex flex-col gap-8 @4xl:flex-row">
+        <div className="max-w-3xl min-w-0 flex-1">
+          <h1 className="text-2xl font-semibold tracking-tight">{initiative.title}</h1>
+          {hasDescription ? (
+            <MarkdownEditor
+              className="mt-4 text-sm"
+              // The editor reads its content once, at mount: a save has to remount it.
+              key={initiative.updatedAt}
+              defaultValue={initiative.description}
+              editable={false}
+            />
+          ) : (
+            <p className="mt-4 text-sm text-muted-foreground/60 italic">{t('noDescription')}</p>
+          )}
         </div>
-
-        <InitiativeActiveWork project={project} initiativeId={initiative.id} />
+        <aside className="flex flex-col gap-6 @4xl:ms-auto @4xl:w-88 @4xl:shrink-0">
+          <InitiativeDocuments projectKey={projectKey} initiativeId={initiative.id} />
+          <InitiativeAttachments initiativeId={initiative.id} />
+        </aside>
       </div>
-
-      <aside className="min-w-0 lg:w-1/3">
-        <h3 className="mb-4 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-          {t('activity')}
-        </h3>
-        <InitiativeActivityFeed initiativeId={initiative.id} projectKey={projectKey} />
-      </aside>
     </div>
   );
 }

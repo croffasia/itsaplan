@@ -1187,6 +1187,26 @@ export const initiativeLabel = pgTable(
   (t) => [primaryKey({ columns: [t.initiativeId, t.labelId] })],
 );
 
+// File attachments on an initiative. Mirrors issue_attachment: bytes live in the
+// S3-compatible object store, this table holds the metadata and the object key,
+// and public_id is the unguessable id used in the public download URL.
+export const initiativeAttachment = pgTable(
+  'initiative_attachment',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    initiativeId: integer('initiative_id')
+      .notNull()
+      .references(() => initiative.id, { onDelete: 'cascade' }),
+    s3Key: text('s3_key').notNull(),
+    filename: text('filename').notNull(),
+    contentType: text('content_type').notNull(),
+    sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('initiative_attachment_initiative_idx').on(t.initiativeId)],
+);
+
 // A time-boxed period of work inside a project (a sprint). Issues point at it
 // through issue.cycle_id. The state of a cycle — upcoming, active, completed — is
 // not stored: it follows from start_date/end_date against the current date, so a
@@ -1933,6 +1953,28 @@ export const projectDocumentIssue = pgTable(
   (t) => [
     primaryKey({ columns: [t.documentId, t.issueId] }),
     index('project_document_issue_issue_idx').on(t.issueId, t.documentId),
+  ],
+);
+
+// Docs pages linked to an initiative. Mirrors project_document_issue; both sides
+// must belong to the same project, which a trigger enforces.
+export const projectDocumentInitiative = pgTable(
+  'project_document_initiative',
+  {
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    initiativeId: integer('initiative_id')
+      .notNull()
+      .references(() => initiative.id, { onDelete: 'cascade' }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.documentId, t.initiativeId] }),
+    index('project_document_initiative_initiative_idx').on(t.initiativeId, t.documentId),
   ],
 );
 

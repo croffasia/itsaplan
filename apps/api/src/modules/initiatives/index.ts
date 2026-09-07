@@ -5,8 +5,24 @@ import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { commonErrors } from '#shared/responses';
+import { commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
+import { deleteObjects } from '#shared/s3';
+import {
+  AttachmentResponse,
+  AttachmentListResponse,
+  publicIdParams,
+  rawAttachmentQuery,
+  uploadAttachmentBody,
+} from '#modules/attachments/model';
+import {
+  assertAttachmentUploadAllowed,
+  attachmentObjectKey,
+  attachmentObjectResponse,
+  deleteAttachmentObject,
+  safeAttachmentFilename,
+  storeAttachmentObject,
+} from '#modules/attachments/storage';
 import {
   FeedPageResponse,
   InitiativeCountsResponse,
@@ -30,7 +46,31 @@ import {
   updateInitiative,
   deleteInitiative,
 } from './service';
+import {
+  createInitiativeAttachment,
+  deleteInitiativeAttachment,
+  getInitiativeAttachment,
+  getInitiativeAttachmentProjectId,
+  initiativeAttachmentKeys,
+  listInitiativeAttachments,
+  removeInitiativeAttachmentEmbeds,
+  type InitiativeAttachmentRow,
+} from './attachments';
 import { listFeed } from './activity';
+
+// Public shape returned to the UI, identical to an issue attachment's: never the
+// object key. `url` is the public, no-auth download route, so it can be embedded
+// in the initiative description.
+function attachmentDto(a: InitiativeAttachmentRow) {
+  return {
+    id: a.publicId,
+    filename: a.filename,
+    contentType: a.contentType,
+    sizeBytes: a.sizeBytes,
+    createdAt: a.createdAt,
+    url: `/initiative-attachments/${a.publicId}/raw`,
+  };
+}
 
 export const initiativeRoutes = new Elysia({
   name: 'initiatives',
@@ -45,6 +85,12 @@ export const initiativeRoutes = new Elysia({
       'initiatives',
       'Initiative not found',
       (p) => getInitiativeProjectId(Number(p.initiativeId)),
+      'initiatives',
+    ),
+    initiativeAttachment: entityGuard(
+      'initiatives',
+      'Attachment not found',
+      (p) => getInitiativeAttachmentProjectId(p.publicId),
       'initiatives',
     ),
   })
@@ -175,7 +221,11 @@ export const initiativeRoutes = new Elysia({
   .delete(
     '/initiatives/:initiativeId',
     async ({ params }) => {
+      // The rows cascade with the initiative; the stored bytes do not, so they are
+      // read while they still exist and dropped afterwards.
+      const keys = await initiativeAttachmentKeys(params.initiativeId);
       await deleteInitiative(params.initiativeId);
+      await deleteObjects(keys);
       return noContent();
     },
     {
@@ -214,5 +264,106 @@ export const initiativeRoutes = new Elysia({
         description: "Get an initiative's activity feed by its numeric id.",
         ...mcpTool('list_initiative_activity'),
       },
+    },
+  )
+
+  .get(
+    '/initiatives/:initiativeId/attachments',
+    async ({ params }) => (await listInitiativeAttachments(params.initiativeId)).map(attachmentDto),
+    {
+      params: initiativeParams,
+      initiative: 'read',
+      response: { 200: AttachmentListResponse, ...commonErrors },
+      detail: {
+        summary: 'List initiative attachments',
+        description: "List an initiative's attachments by its numeric id.",
+      },
+    },
+  )
+
+  // Accepts a multipart form with a single "file" field, stores the bytes in the
+  // object store, and records the metadata.
+  .post(
+    '/initiatives/:initiativeId/attachments',
+    async ({ params, body, set, projectId }) => {
+      const file = body.file;
+      if (!(file instanceof File)) throw new HttpError(400, 'No file uploaded (form field "file")');
+      if (file.size === 0) throw new HttpError(400, 'Uploaded file is empty');
+
+      const filename = safeAttachmentFilename(file.name);
+      const contentType = file.type || 'application/octet-stream';
+      await assertAttachmentUploadAllowed(projectId, file.size, contentType);
+
+      const key = attachmentObjectKey(projectId, 'initiatives', params.initiativeId, filename);
+      await storeAttachmentObject(key, Buffer.from(await file.arrayBuffer()), contentType);
+
+      let row;
+      try {
+        row = await createInitiativeAttachment({
+          projectId,
+          initiativeId: params.initiativeId,
+          s3Key: key,
+          filename,
+          contentType,
+          sizeBytes: file.size,
+        });
+      } catch (error) {
+        await deleteAttachmentObject(key);
+        throw error;
+      }
+      set.status = 201;
+      return attachmentDto(row);
+    },
+    {
+      params: initiativeParams,
+      body: uploadAttachmentBody,
+      initiative: 'edit',
+      response: { 201: AttachmentResponse, ...commonErrors, ...errors(413, 502) },
+      detail: { summary: 'Upload an initiative attachment' },
+    },
+  )
+
+  .delete(
+    '/initiative-attachments/:publicId',
+    async ({ params }) => {
+      const row = await deleteInitiativeAttachment(params.publicId);
+      if (!row) throw new HttpError(404, 'Attachment not found');
+      await removeInitiativeAttachmentEmbeds(row.initiativeId, row.publicId);
+      // Row is already gone; a failed object delete only orphans bytes, so don't
+      // fail the request over it.
+      await deleteAttachmentObject(row.s3Key);
+      return noContent();
+    },
+    {
+      params: publicIdParams,
+      initiativeAttachment: 'delete',
+      response: { 204: t.Void(), ...commonErrors },
+      detail: { summary: 'Delete an initiative attachment' },
+    },
+  )
+
+  // Public download/preview URL, like the issue attachment one: unauthenticated so
+  // it works in <img>/<video> tags, addressed by an unguessable uuid, and served
+  // with the headers that keep attacker-controlled bytes inert.
+  .get(
+    '/initiative-attachments/:publicId/raw',
+    async ({ params, query, request }) => {
+      const row = await getInitiativeAttachment(params.publicId);
+      if (!row) throw new HttpError(404, 'Attachment not found');
+
+      return attachmentObjectResponse({
+        s3Key: row.s3Key,
+        contentType: row.contentType,
+        filename: row.filename,
+        request,
+        download: query.download != null,
+      });
+    },
+    {
+      params: publicIdParams,
+      query: rawAttachmentQuery,
+      // Public route: no 401/403, and a raw Response Elysia cannot type.
+      response: { ...errors(400, 404) },
+      detail: { summary: 'Download or preview an initiative attachment (public, no auth)' },
     },
   );

@@ -30,6 +30,7 @@
   },
   "detailTabs": {
     "overview": "Vue d'ensemble",
+    "progress": "Avancement",
     "issues": "Tickets"
   },
   "columns": {
@@ -141,5 +142,26 @@
     "typeRemoved": "a retiré le type",
     "linked": "a lié à {name}",
     "unlinked": "a délié de l'initiative"
+  },
+  "attachments": {
+    "title": "Pièces jointes",
+    "add": "Ajouter",
+    "uploading": "Envoi…",
+    "empty": "Aucune pièce jointe.",
+    "emptyHint": "Déposez des fichiers ici ou utilisez Ajouter.",
+    "dropToUpload": "Déposez les fichiers pour les envoyer",
+    "uploadFailed": "Échec de l'envoi",
+    "open": "Ouvrir {name}",
+    "download": "Télécharger",
+    "downloadFile": "Télécharger {name}",
+    "deleteFile": "Supprimer {name}"
+  },
+  "documents": {
+    "title": "Docs",
+    "add": "Lier un doc",
+    "empty": "Aucun doc lié.",
+    "loadFailed": "Impossible de charger les docs liés. Réessayer.",
+    "untitled": "Sans titre",
+    "remove": "Dissocier {title}"
   }
 }

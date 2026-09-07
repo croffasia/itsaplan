@@ -1,4 +1,11 @@
-import { db, issue, projectDocument, projectDocumentIssue } from '@repo/db';
+import {
+  db,
+  initiative,
+  issue,
+  projectDocument,
+  projectDocumentInitiative,
+  projectDocumentIssue,
+} from '@repo/db';
 import { and, asc, eq, or } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 
@@ -11,6 +18,8 @@ export interface DocumentIssueLinkRow {
   createdAt: string;
 }
 
+// The same shape serves both owners: a Docs page linked to an issue and one
+// linked to an initiative are rendered by the same list.
 export interface IssueDocumentLinkRow {
   documentId: number;
   title: string;
@@ -18,6 +27,24 @@ export interface IssueDocumentLinkRow {
   isPrivate: boolean;
   archived: boolean;
   createdAt: string;
+}
+
+function documentLinkRow(row: {
+  documentId: number;
+  title: string;
+  icon: string | null;
+  isPrivate: boolean;
+  archivedAt: Date | null;
+  createdAt: Date;
+}): IssueDocumentLinkRow {
+  return {
+    documentId: row.documentId,
+    title: row.title,
+    icon: row.icon,
+    isPrivate: row.isPrivate,
+    archived: row.archivedAt !== null,
+    createdAt: row.createdAt.toISOString(),
+  };
 }
 
 const documentAccess = (userId: string) =>
@@ -30,7 +57,13 @@ async function visibleDocument(
   tx: Pick<typeof db, 'select'> = db,
 ) {
   const [document] = await tx
-    .select({ id: projectDocument.id, archivedAt: projectDocument.archivedAt })
+    .select({
+      id: projectDocument.id,
+      title: projectDocument.title,
+      icon: projectDocument.icon,
+      isPrivate: projectDocument.isPrivate,
+      archivedAt: projectDocument.archivedAt,
+    })
     .from(projectDocument)
     .where(
       and(
@@ -103,14 +136,7 @@ export async function listIssueDocumentLinks(
       ),
     )
     .orderBy(asc(projectDocument.title), asc(projectDocument.id));
-  return rows.map((row) => ({
-    documentId: row.documentId,
-    title: row.title,
-    icon: row.icon,
-    isPrivate: row.isPrivate,
-    archived: row.archivedAt !== null,
-    createdAt: row.createdAt.toISOString(),
-  }));
+  return rows.map(documentLinkRow);
 }
 
 export async function addDocumentIssueLink(input: {
@@ -185,6 +211,97 @@ export async function removeDocumentIssueLink(input: {
         ),
       )
       .returning({ issueId: projectDocumentIssue.issueId });
+    return removed.length > 0;
+  });
+}
+
+export async function listInitiativeDocumentLinks(
+  projectId: number,
+  initiativeId: number,
+  userId: string,
+): Promise<IssueDocumentLinkRow[] | null> {
+  const [target] = await db
+    .select({ id: initiative.id })
+    .from(initiative)
+    .where(and(eq(initiative.id, initiativeId), eq(initiative.projectId, projectId)))
+    .limit(1);
+  if (!target) return null;
+
+  const rows = await db
+    .select({
+      documentId: projectDocument.id,
+      title: projectDocument.title,
+      icon: projectDocument.icon,
+      isPrivate: projectDocument.isPrivate,
+      archivedAt: projectDocument.archivedAt,
+      createdAt: projectDocumentInitiative.createdAt,
+    })
+    .from(projectDocumentInitiative)
+    .innerJoin(projectDocument, eq(projectDocument.id, projectDocumentInitiative.documentId))
+    .where(
+      and(
+        eq(projectDocumentInitiative.initiativeId, initiativeId),
+        eq(projectDocument.projectId, projectId),
+        documentAccess(userId),
+      ),
+    )
+    .orderBy(asc(projectDocument.title), asc(projectDocument.id));
+  return rows.map(documentLinkRow);
+}
+
+export async function addDocumentInitiativeLink(input: {
+  projectId: number;
+  documentId: number;
+  initiativeId: number;
+  userId: string;
+}): Promise<IssueDocumentLinkRow> {
+  return db.transaction(async (tx) => {
+    const document = await visibleDocument(input.projectId, input.documentId, input.userId, tx);
+    if (!document) throw new HttpError(404, 'Document not found');
+    if (document.archivedAt !== null)
+      throw new HttpError(409, 'Archived documents cannot be linked');
+
+    const [target] = await tx
+      .select({ id: initiative.id })
+      .from(initiative)
+      .where(and(eq(initiative.id, input.initiativeId), eq(initiative.projectId, input.projectId)))
+      .limit(1);
+    if (!target) throw new HttpError(404, 'Initiative not found');
+
+    const [created] = await tx
+      .insert(projectDocumentInitiative)
+      .values({
+        documentId: input.documentId,
+        initiativeId: input.initiativeId,
+        createdByUserId: input.userId,
+      })
+      .onConflictDoNothing()
+      .returning({ createdAt: projectDocumentInitiative.createdAt });
+    if (!created) throw new HttpError(409, 'The document is already linked to this initiative');
+
+    return documentLinkRow({ ...document, documentId: document.id, createdAt: created.createdAt });
+  });
+}
+
+export async function removeDocumentInitiativeLink(input: {
+  projectId: number;
+  documentId: number;
+  initiativeId: number;
+  userId: string;
+}): Promise<boolean> {
+  return db.transaction(async (tx) => {
+    if (!(await visibleDocument(input.projectId, input.documentId, input.userId, tx))) {
+      throw new HttpError(404, 'Document not found');
+    }
+    const removed = await tx
+      .delete(projectDocumentInitiative)
+      .where(
+        and(
+          eq(projectDocumentInitiative.documentId, input.documentId),
+          eq(projectDocumentInitiative.initiativeId, input.initiativeId),
+        ),
+      )
+      .returning({ initiativeId: projectDocumentInitiative.initiativeId });
     return removed.length > 0;
   });
 }

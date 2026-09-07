@@ -552,7 +552,7 @@ UNION ALL SELECT 'agents', "id", "username" FROM "ai_agent"
 UNION ALL SELECT 'credentials', "id", COALESCE("label", '') FROM "integration_credential";--> statement-breakpoint
 
 INSERT INTO "app_setting" ("key", "value", "updated_at")
-SELECT 'migration.0115_teams', jsonb_build_object(
+SELECT 'migration.teams', jsonb_build_object(
   'version', 1,
   'teams', COALESCE((
     SELECT jsonb_agg(jsonb_build_object('name', t."name", 'projects', p."projects") ORDER BY t."name")

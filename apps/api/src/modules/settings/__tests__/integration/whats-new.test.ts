@@ -5,8 +5,8 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 
 // The screen shown once after an upgrade. The report, the backup and the record of
-// what the upgrade applied are app_setting rows — written by migration 0115 and by the
-// api on startup — and resetDb truncates that table, so a test that wants them writes
+// what the upgrade applied are app_setting rows — written by the teams migration and
+// by the api on startup — and resetDb truncates that table, so a test that wants them writes
 // them itself. The report only reaches the screen when the last run applied its
 // migration, which is what keeps it off a later release.
 
@@ -21,8 +21,8 @@ const REPORT = {
 
 // The pair an upgrade that applied the teams migration leaves behind.
 async function recordTeamsUpgrade() {
-  await setSetting('migration.last', { migrations: ['0114_something', '0115_teams'] });
-  await setSetting('migration.0115_teams', REPORT);
+  await setSetting('migration.last', { migrations: ['0114_something', '0119_teams'] });
+  await setSetting('migration.teams', REPORT);
 }
 
 async function signUpClient() {
@@ -89,7 +89,7 @@ describe('whats-new', () => {
 
   it('hides the report on a fresh install, which applied nothing over existing data', async () => {
     const { api } = await signUpClient();
-    await setSetting('migration.0115_teams', REPORT);
+    await setSetting('migration.teams', REPORT);
 
     const res = await api.settings['whats-new'].get();
     expect(res.data?.migration).toBeNull();

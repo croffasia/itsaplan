@@ -29,6 +29,7 @@ import IssueSectionHeading from './IssueSectionHeading';
 import IssuePropertyRow from './IssuePropertyRow';
 import IssuePropertyGroupHeading from './IssuePropertyGroupHeading';
 import { type Embeddable } from '../../utils/attachmentEmbed';
+import { parseDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -80,6 +81,11 @@ export default function IssueProperties({
   const t = useTranslations('issue.fields');
   const hasMembers = project.assignees.some((a) => a.kind === 'member');
   const hasAgents = project.assignees.some((a) => a.kind === 'agent');
+  // The calendars grey out days that would put one date on the wrong side of the
+  // other: the start no later than the due date, the due date no earlier than the
+  // start. Equal dates are allowed.
+  const latestStart = parseDate(issue.dueDate);
+  const earliestDue = parseDate(issue.startDate);
   const groups: {
     key: 'groupState' | 'groupPeople' | 'groupPlanning' | 'groupLabels' | 'groupCustom';
     rows: ReactNode[];
@@ -240,6 +246,7 @@ export default function IssueProperties({
             placeholder={t('startDate')}
             onChange={(v) => onPatch({ startDate: v })}
             readOnly={readOnly}
+            disabled={latestStart ? { after: latestStart } : undefined}
           />
         </IssuePropertyRow>,
 
@@ -249,6 +256,7 @@ export default function IssueProperties({
             placeholder={t('dueDate')}
             onChange={(v) => onPatch({ dueDate: v })}
             readOnly={readOnly}
+            disabled={earliestDue ? { before: earliestDue } : undefined}
           />
         </IssuePropertyRow>,
       ],

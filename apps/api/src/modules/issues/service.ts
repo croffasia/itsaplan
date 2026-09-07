@@ -826,6 +826,13 @@ async function assertIssueLabels(projectId: number, labelIds?: number[]): Promis
   if (rows.length !== ids.length) throw new HttpError(400, 'Labels must belong to this project');
 }
 
+// ISO 'YYYY-MM-DD' strings order correctly as plain strings. One date alone, or
+// the two equal, is fine.
+function assertDateOrder(startDate?: string | null, dueDate?: string | null) {
+  if (startDate && dueDate && dueDate < startDate)
+    throw new HttpError(400, 'Due date must not precede the start date');
+}
+
 // Atomic per-project sequence number (the "-42" in "MKT-42"): the UPDATE takes a
 // row lock on project, so concurrent createIssue calls for the same project never
 // hand out the same number.
@@ -841,6 +848,7 @@ export async function createIssue(
   await assertWipLimit(input.columnId);
   await assertIssueType(project.id, input.typeId);
   await assertParent(project.id, null, input.parentId);
+  assertDateOrder(input.startDate, input.dueDate);
   // Also checked by setIssueLabels below, but here it fails before the issue exists.
   await assertIssueLabels(project.id, input.labelIds);
   // An issue created in a column enters it the same way a moved one does, so the
@@ -1005,6 +1013,12 @@ export async function updateIssue(
   const before = await loadSnapshot(id);
   if (!before) return null;
 
+  // Each date is checked against the effective other one: a patch sets one date
+  // and leaves the stored value of the other in force.
+  assertDateOrder(
+    patch.startDate !== undefined ? patch.startDate : before.startDate,
+    patch.dueDate !== undefined ? patch.dueDate : before.dueDate,
+  );
   await assertAssignments(before.projectId, patch);
   await assertInitiative(before.projectId, patch.initiativeId);
   await assertCycle(before.projectId, patch.cycleId, before.cycleId);

@@ -9,6 +9,7 @@ import {
   type ProjectDetail,
 } from '@/lib/api';
 import { type NewIssueDefaults } from '@/utils/project';
+import { parseDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
@@ -205,6 +206,12 @@ export default function NewIssueModal({
     const valid = new Set(fieldDefs.filter((d) => !d.showInBody).map((d) => d.id));
     setActiveFieldIds((prev) => prev.filter((id) => valid.has(id)));
   }, [fieldDefs]);
+
+  // The calendars grey out days that would put one date on the wrong side of the
+  // other: the start no later than the due date, the due date no earlier than the
+  // start. Equal dates are allowed.
+  const latestStart = parseDate(dueDate);
+  const earliestDue = parseDate(startDate);
 
   const errorMessage = error ?? attachments.error;
   const bodyDefs = fieldDefs.filter((d) => d.showInBody);
@@ -443,12 +450,14 @@ export default function NewIssueModal({
             value={startDate || null}
             placeholder={tFields('startDate')}
             onChange={(v) => setStartDate(v ?? '')}
+            disabled={latestStart ? { after: latestStart } : undefined}
           />
 
           <DatePill
             value={dueDate || null}
             placeholder={tFields('dueDate')}
             onChange={(v) => setDueDate(v ?? '')}
+            disabled={earliestDue ? { before: earliestDue } : undefined}
           />
 
           {activeDefs.map((def) => (

@@ -301,6 +301,38 @@ describe('issues', () => {
         .issues.post({ columnId, title: 'Dated', dueDate: '2026-13-45' });
       expect(res.status).toBe(400);
     });
+
+    it('rejects a due date before the start date on create', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const res = await createIssue(asOwner, columnId, {
+        startDate: '2026-09-08',
+        dueDate: '2026-08-30',
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('allows a due date equal to the start date', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const res = await createIssue(asOwner, columnId, {
+        startDate: '2026-09-08',
+        dueDate: '2026-09-08',
+      });
+      expect(res.status).toBe(201);
+    });
+
+    it('rejects a due date patched before the stored start date', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId, { startDate: '2026-09-08' })).data!;
+      const res = await asOwner.issues({ issueId: issue.id }).patch({ dueDate: '2026-08-30' });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a start date patched after the stored due date', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId, { dueDate: '2026-08-30' })).data!;
+      const res = await asOwner.issues({ issueId: issue.id }).patch({ startDate: '2026-09-08' });
+      expect(res.status).toBe(400);
+    });
   });
 
   describe('update', () => {

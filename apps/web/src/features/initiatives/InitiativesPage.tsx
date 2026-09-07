@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList } from '@/components/ui/tabs';
 import InitiativesList from './components/list/InitiativesList';
 import InitiativesPagination from './components/list/InitiativesPagination';
-import CreateInitiativeDialog from './components/list/CreateInitiativeDialog';
+import CreateInitiativeDialog from '@/components/common/overlay/CreateInitiativeDialog';
 import InitiativeTabTrigger from './components/list/InitiativeTabTrigger';
 import { useInitiativeTabOrder } from './hooks/useInitiativeTabOrder';
 import { INITIATIVE_TABS, tabCount } from './utils/tabs';

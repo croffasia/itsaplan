@@ -3,21 +3,23 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { initiativePath } from '@/utils/paths';
 import { useCreateInitiative } from '@/services/initiatives.service';
-import Modal from '@/components/common/overlay/Modal';
+import Modal from './Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
-// Creates an initiative from a title and optional description, then opens its
-// detail page. The remaining fields (owner, priority, target date, labels) are
-// set there.
+// Creates an initiative from a title and optional description; the remaining fields
+// (owner, priority, target date, labels) are set on its detail page. Without
+// onCreated the dialog navigates there.
 export default function CreateInitiativeDialog({
   projectKey,
   onClose,
+  onCreated,
 }: {
   projectKey: string;
   onClose: () => void;
+  onCreated?: (id: number) => void;
 }) {
   const t = useTranslations('initiatives');
   const tCommon = useTranslations('common');
@@ -31,7 +33,8 @@ export default function CreateInitiativeDialog({
     if (!name) return;
     const created = await create.mutateAsync({ title: name, description: description.trim() });
     onClose();
-    router.push(initiativePath(projectKey, created.id));
+    if (onCreated) onCreated(created.id);
+    else router.push(initiativePath(projectKey, created.id));
   };
 
   return (

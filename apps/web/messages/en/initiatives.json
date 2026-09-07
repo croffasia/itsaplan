@@ -109,7 +109,8 @@
     "label": "Initiative",
     "search": "Link to initiative…",
     "empty": "No initiatives.",
-    "none": "No initiative"
+    "none": "No initiative",
+    "create": "Create initiative"
   },
   "feed": {
     "system": "System",

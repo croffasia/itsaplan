@@ -109,7 +109,8 @@
     "label": "Initiative",
     "search": "Lier à une initiative…",
     "empty": "Aucune initiative.",
-    "none": "Aucune initiative"
+    "none": "Aucune initiative",
+    "create": "Créer une initiative"
   },
   "feed": {
     "system": "Système",

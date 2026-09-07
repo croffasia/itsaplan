@@ -109,7 +109,8 @@
     "label": "计划",
     "search": "关联计划…",
     "empty": "暂无计划。",
-    "none": "无计划"
+    "none": "无计划",
+    "create": "新建计划"
   },
   "feed": {
     "system": "系统",

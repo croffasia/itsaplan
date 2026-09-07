@@ -6,6 +6,7 @@
   "showDescription": "Показать описание",
   "noDescription": "Описания нет.",
   "noOwner": "Без владельца",
+  "startDate": "Дата начала",
   "targetDate": "Целевая дата",
   "progress": "Прогресс",
   "activity": "Активность",
@@ -92,9 +93,7 @@
     "noTargetDate": "Укажите целевую дату, чтобы видеть темп."
   },
   "form": {
-    "title": "Название",
     "titlePlaceholder": "Запуск в 3 квартале",
-    "description": "Описание",
     "descriptionPlaceholder": "О чём эта инициатива?",
     "create": "Создать инициативу",
     "creating": "Создание…",

@@ -25,6 +25,7 @@ export function useKeyboardShortcuts(opts: {
   onToggleCommand: () => void;
   onChangeView: (view: WorkItemsView) => void;
   onNewIssue: () => void;
+  onNewInitiative: () => void;
   onNewProject: () => void;
   onSettings: () => void;
   onToggleChat: () => void;
@@ -36,6 +37,7 @@ export function useKeyboardShortcuts(opts: {
     onToggleCommand,
     onChangeView,
     onNewIssue,
+    onNewInitiative,
     onNewProject,
     onSettings,
     onToggleChat,
@@ -65,6 +67,11 @@ export function useKeyboardShortcuts(opts: {
         onNewIssue();
         return;
       }
+      if (hasProject && matches(e, 'initiative.new')) {
+        e.preventDefault();
+        onNewInitiative();
+        return;
+      }
       if (matches(e, 'project.new')) {
         e.preventDefault();
         onNewProject();
@@ -90,6 +97,7 @@ export function useKeyboardShortcuts(opts: {
     onToggleCommand,
     onChangeView,
     onNewIssue,
+    onNewInitiative,
     onNewProject,
     onSettings,
     onToggleChat,

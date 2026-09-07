@@ -6,6 +6,7 @@
   "showDescription": "Show description",
   "noDescription": "No description.",
   "noOwner": "No owner",
+  "startDate": "Start date",
   "targetDate": "Target date",
   "progress": "Progress",
   "activity": "Activity",
@@ -92,9 +93,7 @@
     "noTargetDate": "Set a target date to track pace."
   },
   "form": {
-    "title": "Title",
     "titlePlaceholder": "Q3 Launch",
-    "description": "Description",
     "descriptionPlaceholder": "What is this initiative about?",
     "create": "Create initiative",
     "creating": "Creating…",

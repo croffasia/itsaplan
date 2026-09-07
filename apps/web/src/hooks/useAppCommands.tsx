@@ -1,4 +1,4 @@
-import { LayoutGrid, ListChecks, MessagesSquare, Plus, SquarePlus } from 'lucide-react';
+import { LayoutGrid, ListChecks, MessagesSquare, Plus, SquarePlus, Target } from 'lucide-react';
 import type { Project } from '@/lib/api';
 import { useTranslations } from 'next-intl';
 import { VIEWS, type WorkItemsView } from '@/utils/viewTypes';
@@ -12,6 +12,7 @@ import type { Command, CommandSection } from '@/utils/commands';
 // handlers come from the Shell, which owns the overlays and the router.
 export function useAppCommands({
   hasProject,
+  initiativesEnabled,
   onBoard,
   view,
   projects,
@@ -19,11 +20,13 @@ export function useAppCommands({
   onViewChange,
   onNewIssue,
   onSelectAll,
+  onNewInitiative,
   onNewProject,
   onSelectProject,
   onToggleChat,
 }: {
   hasProject: boolean;
+  initiativesEnabled: boolean;
   // True on the work items routes, where the layout and selection commands apply.
   onBoard: boolean;
   view: WorkItemsView;
@@ -32,6 +35,7 @@ export function useAppCommands({
   onViewChange: (view: WorkItemsView) => void;
   onNewIssue: () => void;
   onSelectAll: () => void;
+  onNewInitiative: () => void;
   onNewProject: () => void;
   onSelectProject: (key: string) => void;
   onToggleChat: () => void;
@@ -80,6 +84,16 @@ export function useAppCommands({
       keywords: 'create add task',
       shortcut: hotkey('issue.new') ?? undefined,
       run: onNewIssue,
+    });
+  }
+  if (hasProject && initiativesEnabled && can('initiatives', 'create')) {
+    generalItems.push({
+      id: 'general.new-initiative',
+      label: tPalette('newInitiative'),
+      icon: <Target />,
+      keywords: 'create add goal',
+      shortcut: hotkey('initiative.new') ?? undefined,
+      run: onNewInitiative,
     });
   }
   if (hasProject && can('ai_agents', 'read')) {

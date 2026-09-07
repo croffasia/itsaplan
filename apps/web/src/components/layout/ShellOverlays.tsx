@@ -6,6 +6,7 @@ import { issuePath, projectPath } from '@/utils/paths';
 import type { useOverlays } from '@/hooks/useOverlays';
 import NewProjectModal from '@/components/layout/NewProjectModal';
 import NewTeamModal from '@/features/teams/components/NewTeamModal';
+import InitiativeDialog from '@/components/common/overlay/InitiativeDialog';
 import NewIssueModal from '@/features/issue/components/create/NewIssueModal';
 import IssueDetail from '@/features/issue/components/detail/IssueDetail';
 
@@ -35,6 +36,13 @@ export default function ShellOverlays({
       )}
 
       {overlays.showNewTeam && <NewTeamModal onClose={() => overlays.setShowNewTeam(false)} />}
+
+      {projectKey && overlays.showNewInitiative && (
+        <InitiativeDialog
+          projectKey={projectKey}
+          onClose={() => overlays.setShowNewInitiative(false)}
+        />
+      )}
 
       {project && overlays.newIssueDefaults != null && (
         <NewIssueModal

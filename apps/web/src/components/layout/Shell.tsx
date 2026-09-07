@@ -66,6 +66,7 @@ export default function Shell({
   // project it loaded rather than the context.
   const { can } = usePermissions(project);
   const chatAvailable = !!projectKey && can('ai_agents', 'read');
+  const canCreateInitiative = !!project?.project.initiativesEnabled && can('initiatives', 'create');
   const issueQuery = useIssueBySeqQuery(projectKey, routeIssueSeq);
 
   useProjectRouteSync({ projects, projectsLoaded, projectKey });
@@ -104,6 +105,7 @@ export default function Shell({
     onToggleCommand: () => overlays.setShowCommand((v) => !v),
     onChangeView: editor.changeView,
     onNewIssue: () => canCreateIssue && openNewIssue(),
+    onNewInitiative: () => canCreateInitiative && overlays.setShowNewInitiative(true),
     onNewProject: () => overlays.setShowNewProject(true),
     onSettings: () => firstSettingsHref && router.push(firstSettingsHref),
     onToggleChat: chatPanel.toggle,
@@ -217,6 +219,7 @@ export default function Shell({
           // Handled by the kanban board's selection provider (mounted only on the
           // board); the constant matches BOARD_SELECT_ALL_EVENT in useSelection.
           onSelectAll={() => window.dispatchEvent(new Event('board:select-all'))}
+          onNewInitiative={() => overlays.setShowNewInitiative(true)}
           onNewProject={() => overlays.setShowNewProject(true)}
           onSelectProject={(key) => router.push(projectPath(key))}
           onOpenIssue={(seq) => projectKey && router.push(issuePath(projectKey, seq))}

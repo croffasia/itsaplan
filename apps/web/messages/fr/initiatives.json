@@ -6,6 +6,7 @@
   "showDescription": "Afficher la description",
   "noDescription": "Aucune description.",
   "noOwner": "Aucun responsable",
+  "startDate": "Date de début",
   "targetDate": "Date cible",
   "progress": "Avancement",
   "activity": "Activité",
@@ -92,9 +93,7 @@
     "noTargetDate": "Définissez une date cible pour suivre le rythme."
   },
   "form": {
-    "title": "Titre",
     "titlePlaceholder": "Lancement T3",
-    "description": "Description",
     "descriptionPlaceholder": "De quoi parle cette initiative ?",
     "create": "Créer l'initiative",
     "creating": "Création…",

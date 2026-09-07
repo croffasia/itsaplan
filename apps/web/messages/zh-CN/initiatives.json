@@ -6,6 +6,7 @@
   "showDescription": "显示描述",
   "noDescription": "暂无描述。",
   "noOwner": "无负责人",
+  "startDate": "开始日期",
   "targetDate": "目标日期",
   "progress": "进度",
   "activity": "活动记录",
@@ -92,9 +93,7 @@
     "noTargetDate": "设置目标日期以跟踪进度。"
   },
   "form": {
-    "title": "标题",
     "titlePlaceholder": "第三季度发布",
-    "description": "描述",
     "descriptionPlaceholder": "此计划的目标是什么？",
     "create": "新建计划",
     "creating": "正在创建…",

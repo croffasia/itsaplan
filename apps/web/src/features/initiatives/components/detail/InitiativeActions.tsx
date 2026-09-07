@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import EditInitiativeDialog from './EditInitiativeDialog';
+import InitiativeDialog from '@/components/common/overlay/InitiativeDialog';
 
 // The initiative's overflow menu. Deleting returns to the initiatives list.
 export default function InitiativeActions({
@@ -71,9 +71,9 @@ export default function InitiativeActions({
       </DropdownMenu>
 
       {editing && (
-        <EditInitiativeDialog
-          initiative={initiative}
+        <InitiativeDialog
           projectKey={projectKey}
+          initiative={initiative}
           onClose={() => setEditing(false)}
         />
       )}

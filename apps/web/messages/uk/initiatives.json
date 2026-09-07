@@ -6,6 +6,7 @@
   "showDescription": "Показати опис",
   "noDescription": "Опису немає.",
   "noOwner": "Без власника",
+  "startDate": "Дата початку",
   "targetDate": "Цільова дата",
   "progress": "Прогрес",
   "activity": "Активність",
@@ -92,9 +93,7 @@
     "noTargetDate": "Вкажіть цільову дату, щоб бачити темп."
   },
   "form": {
-    "title": "Назва",
     "titlePlaceholder": "Запуск у 3 кварталі",
-    "description": "Опис",
     "descriptionPlaceholder": "Про що ця ініціатива?",
     "create": "Створити ініціативу",
     "creating": "Створення…",

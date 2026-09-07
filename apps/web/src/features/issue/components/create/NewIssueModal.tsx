@@ -32,7 +32,7 @@ import NewIssueAttachButton from './NewIssueAttachButton';
 import NewIssueAttachmentStrip from './NewIssueAttachmentStrip';
 import NewIssueDropOverlay from './NewIssueDropOverlay';
 import NewIssueTemplatePill from './NewIssueTemplatePill';
-import Modal from '@/components/common/overlay/Modal';
+import Modal, { useModalFullscreen } from '@/components/common/overlay/Modal';
 import NewIssueBody from './NewIssueBody';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
@@ -109,7 +109,7 @@ export default function NewIssueModal({
   const [labelIds, setLabelIds] = useState<number[]>(defaults.labelIds ?? []);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  const { fullscreen, onToggleFullscreen } = useModalFullscreen();
 
   // Custom fields for the selected type (project-wide + type-scoped), off the
   // scaffold every member already loads. Fields flagged "show in main info" get their
@@ -346,7 +346,7 @@ export default function NewIssueModal({
       }}
       wide
       fullscreen={fullscreen}
-      onToggleFullscreen={() => setFullscreen((v) => !v)}
+      onToggleFullscreen={onToggleFullscreen}
       // Halves the dialog's bottom padding: the footer then sits as far from the
       // separator above it as from the dialog edge below.
       className="pb-3"

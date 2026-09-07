@@ -63,6 +63,9 @@
       "issue": {
         "new": "New issue"
       },
+      "initiative": {
+        "new": "New initiative"
+      },
       "view": {
         "kanban": "Board layout",
         "table": "Table layout",

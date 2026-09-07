@@ -63,6 +63,9 @@
       "issue": {
         "new": "Nouveau ticket"
       },
+      "initiative": {
+        "new": "Nouvelle initiative"
+      },
       "view": {
         "kanban": "Affichage tableau",
         "table": "Affichage liste",

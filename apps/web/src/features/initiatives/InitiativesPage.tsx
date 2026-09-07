@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList } from '@/components/ui/tabs';
 import InitiativesList from './components/list/InitiativesList';
 import InitiativesPagination from './components/list/InitiativesPagination';
-import CreateInitiativeDialog from '@/components/common/overlay/CreateInitiativeDialog';
+import InitiativeDialog from '@/components/common/overlay/InitiativeDialog';
 import InitiativeTabTrigger from './components/list/InitiativeTabTrigger';
 import { useInitiativeTabOrder } from './hooks/useInitiativeTabOrder';
 import { INITIATIVE_TABS, tabCount } from './utils/tabs';
@@ -154,7 +154,7 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
       <InitiativesPagination page={page} pageSize={PAGE_SIZE} total={total} onPage={changePage} />
 
       {creating && projectKey && (
-        <CreateInitiativeDialog projectKey={projectKey} onClose={() => setCreating(false)} />
+        <InitiativeDialog projectKey={projectKey} onClose={() => setCreating(false)} />
       )}
     </div>
   );

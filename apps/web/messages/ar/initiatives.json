@@ -6,6 +6,7 @@
   "showDescription": "إظهار الوصف",
   "noDescription": "لا يوجد وصف.",
   "noOwner": "لا يوجد مالك",
+  "startDate": "تاريخ البدء",
   "targetDate": "التاريخ المستهدف",
   "progress": "التقدّم",
   "activity": "النشاط",
@@ -92,9 +93,7 @@
     "noTargetDate": "عيّن تاريخًا مستهدفًا لتتبّع الوتيرة."
   },
   "form": {
-    "title": "العنوان",
     "titlePlaceholder": "إطلاق الربع الثالث",
-    "description": "الوصف",
     "descriptionPlaceholder": "المبادرة دي عن إيه؟",
     "create": "إنشاء مبادرة",
     "creating": "جارٍ الإنشاء…",

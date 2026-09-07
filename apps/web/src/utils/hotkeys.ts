@@ -15,6 +15,7 @@ export type HotkeyId =
   | 'view.timeline'
   | 'view.calendar'
   | 'issue.new'
+  | 'initiative.new'
   | 'project.new'
   | 'project.settings'
   | 'chat.toggle'
@@ -60,6 +61,7 @@ export const HOTKEYS: HotkeyDef[] = [
     fixed: true,
   },
   { id: 'issue.new', group: 'general', combo: 'n', scope: 'app' },
+  { id: 'initiative.new', group: 'general', combo: 'i', scope: 'app' },
   { id: 'project.new', group: 'general', combo: 'b', scope: 'app' },
   {
     id: 'project.settings',

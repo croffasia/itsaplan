@@ -6,18 +6,41 @@
   "offForProject": "В команде {team} MCP включён, но для этого проекта выключен.",
   "openTeamSettings": "Открыть настройки MCP команды",
   "askManager": "Попросите владельца или менеджера команды включить его:",
-  "connectClient": "Подключить клиента",
-  "keyHint": "Создайте ключ на странице <link>API-ключи</link> и подставьте его вместо <code>{apiKey}</code> ниже.",
-  "endpoint": "Endpoint",
+  "keyHint": "Создайте ключ на странице <link>API-ключи</link>, затем замените <code>{apiKey}</code> в сниппете.",
+  "endpoint": "Endpoint MCP",
   "clientTabsAria": "Клиент",
   "addToFile": "Добавьте в <code>{file}</code>",
   "notes": {
     "claudeCode": "Выполните это в терминале.",
     "vscode": "Нужен GitHub Copilot.",
-    "claudeDesktop": "Claude Desktop нужен мост mcp-remote и Node.js.",
-    "other": "Подойдёт любой клиент с MCP по Streamable HTTP. Укажите эндпоинт и заголовок Authorization: Bearer {apiKey}."
+    "claudeDesktop": "Claude Desktop подключается к удалённым серверам через мост mcp-remote. Нужен Node.js.",
+    "other": "Подходит любой клиент с поддержкой MCP через Streamable HTTP. Укажите ему endpoint. Отправляйте заголовок Authorization: Bearer {apiKey}."
   },
   "clients": {
     "other": "Другой"
+  },
+  "oauth": {
+    "configuration": "Как подключиться",
+    "methodTabsAria": "Способ подключения",
+    "method": "OAuth",
+    "personalKey": "API-ключ",
+    "description": "Подходит для любого MCP-клиента с поддержкой OAuth, например ChatGPT или Claude. Вы входите в свою учётную запись Itsaplan. Клиент не получает API-ключ.",
+    "discovery": "Обнаружение OAuth",
+    "steps": {
+      "add": "Добавьте MCP-приложение в клиенте.",
+      "paste": "Вставьте endpoint MCP.",
+      "choose": "Выберите OAuth, когда клиент спросит способ входа.",
+      "signIn": "Войдите в Itsaplan и подтвердите доступ."
+    },
+    "security": "OAuth использует PKCE (S256), динамическую регистрацию клиентов и токены доступа, ограниченные вашей учётной записью Itsaplan.",
+    "consent": {
+      "title": "Авторизовать Itsaplan",
+      "description": "Разрешите этому MCP-клиенту действовать с правами вашей учётной записи Itsaplan.",
+      "missingCode": "В этом запросе авторизации отсутствует код согласия.",
+      "cancel": "Отмена",
+      "pending": "Авторизация…",
+      "authorize": "Авторизовать",
+      "failed": "Не удалось завершить авторизацию OAuth."
+    }
   }
 }

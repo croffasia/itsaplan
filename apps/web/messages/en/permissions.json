@@ -6,6 +6,7 @@
     "initiatives": "Initiatives",
     "cycles": "Cycles",
     "dashboards": "Dashboards",
+    "documents": "Docs",
     "views": "Work item views",
     "members_invite": "Invites",
     "members_manage": "Members",
@@ -17,6 +18,7 @@
     "agent_skills": "Agent skills",
     "agent_tools": "Agent tools",
     "custom_fields": "Custom fields",
+    "issue_templates": "Issue templates",
     "workflow_config": "Workflow configuration",
     "actions": "Actions",
     "webhooks": "Webhooks",
@@ -32,6 +34,7 @@
   "groups": {
     "workItems": "Work items",
     "dashboards": "Dashboards",
+    "documents": "Docs",
     "notes": "Notes",
     "ai": "AI",
     "configuration": "Configuration",

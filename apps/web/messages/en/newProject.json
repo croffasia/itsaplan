@@ -25,7 +25,8 @@
     "workflow": "Workflow",
     "automation": "Automation",
     "views": "Views",
-    "aiTeam": "AI Team"
+    "aiTeam": "AI Team",
+    "knowledge": "Knowledge"
   },
   "copyItems": {
     "states": "States",
@@ -34,6 +35,7 @@
     "customFields": "Custom fields",
     "views": "Views",
     "dashboards": "Dashboards",
+    "documents": "Docs",
     "actions": "Actions",
     "configuration": "Configuration",
     "webhooks": "Webhooks",

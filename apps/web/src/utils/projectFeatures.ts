@@ -16,6 +16,7 @@ export function projectFeatures(project: Project | null): ProjectFeatureSet {
     initiatives: project?.initiativesEnabled ?? false,
     cycles: project?.cyclesEnabled ?? false,
     dashboards: project?.dashboardsEnabled ?? false,
+    documents: project?.documentsEnabled ?? false,
     notes: project?.notesEnabled ?? false,
     subtasks: project?.subtasksEnabled ?? false,
     checklists: project?.checklistsEnabled ?? false,

@@ -201,6 +201,18 @@ describe('notifications', () => {
     expect(unreadOnly.data!.items).toHaveLength(0);
   });
 
+  it('drops the notifications of a project the user was removed from', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+    expect((await member.api.notifications.get({ query: {} })).data!.items).toHaveLength(1);
+
+    await owner.api.projects({ projectKey: 'MKT' }).members({ userId: member.userId }).delete();
+
+    expect((await member.api.notifications.get({ query: {} })).data!.items).toHaveLength(0);
+    expect((await member.api.notifications.unread.get({ query: {} })).data!.unread).toBe(0);
+  });
+
   it("a member cannot read or mutate another user's notification", async () => {
     const { owner, columnId } = await setup();
     const member = await addMember(owner);

@@ -2,6 +2,7 @@ import {
   Bot,
   Clock3,
   Columns3,
+  FileText,
   GitPullRequest,
   Info,
   ListPlus,
@@ -64,6 +65,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     slug: 'custom-fields',
     icon: ListPlus,
     resource: 'custom_fields',
+    group: 'configuration',
+  },
+  {
+    slug: 'issue-templates',
+    icon: FileText,
+    resource: 'issue_templates',
     group: 'configuration',
   },
   {

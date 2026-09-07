@@ -137,6 +137,14 @@ describe('agent schedules', () => {
     expect(last.data?.items.map((s) => s.id)).toEqual([first.data!.id]);
   });
 
+  it('rejects a name the agent already has a schedule under', async () => {
+    const { asOwner } = await setup();
+    const agentId = await makeAgent(asOwner);
+    await createSchedule(asOwner, agentId);
+    const res = await createSchedule(asOwner, agentId);
+    expect(res.status).toBe(409);
+  });
+
   it('rejects an invalid cron expression', async () => {
     const { asOwner } = await setup();
     const agentId = await makeAgent(asOwner);

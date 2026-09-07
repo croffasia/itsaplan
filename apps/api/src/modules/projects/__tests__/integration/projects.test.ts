@@ -325,6 +325,22 @@ describe('projects', () => {
       expect(view.data?.viewer.role).toBe('owner');
     });
 
+    it('refuses a project member who does not run the team', async () => {
+      const owner = await signUpClient();
+      await setupSource(owner.api);
+      const role = await createRole(owner.api, 'SRC', {
+        name: 'Work items only',
+        permissions: { work_items: { create: false, edit: false, read: true, delete: false } },
+      });
+      const member = await addProjectMember(owner.api, 'SRC', role.data!.id);
+
+      const res = await member.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'NOPE',
+        name: 'Not allowed',
+      });
+      expect(res.status).toBe(403);
+    });
+
     it("does not copy the source project's issues", async () => {
       const { api } = await signUpClient();
       await setupSource(api);
@@ -355,7 +371,7 @@ describe('projects', () => {
       await api.projects.post({ key: 'SRC', name: 'Source' });
       await api
         .projects({ projectKey: 'SRC' })
-        .settings.patch({ features: { notes: false, dashboards: false } });
+        .settings.patch({ features: { documents: false, notes: false, dashboards: false } });
 
       await api.projects({ projectKey: 'SRC' }).copy.post({ key: 'DST', name: 'Destination' });
 
@@ -364,6 +380,7 @@ describe('projects', () => {
         initiatives: true,
         cycles: true,
         dashboards: false,
+        documents: false,
         notes: false,
         subtasks: true,
         checklists: true,
@@ -577,7 +594,7 @@ describe('projects', () => {
       expect((await api.teams({ teamId: target.id })['ai-agents'].get()).data).toEqual([]);
     });
 
-    it('returns 400 with an error body on a duplicate key', async () => {
+    it('rejects a duplicate key with 409 and no statement in the body', async () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });
       await api.projects.post({ key: 'DST', name: 'Existing' });
@@ -586,7 +603,8 @@ describe('projects', () => {
         key: 'DST',
         name: 'Destination',
       });
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(409);
+      expect(JSON.stringify(res.error?.value)).not.toContain('Failed query');
     });
 
     it('returns 404 for an unknown source project', async () => {
@@ -766,6 +784,7 @@ describe('projects', () => {
       expect(res.data?.features).toMatchObject({
         initiatives: true,
         dashboards: true,
+        documents: true,
         notes: true,
         subtasks: true,
         checklists: true,
@@ -774,6 +793,7 @@ describe('projects', () => {
       expect((await viewOf(api, 'MKT')).data?.project).toMatchObject({
         initiativesEnabled: true,
         dashboardsEnabled: true,
+        documentsEnabled: true,
         notesEnabled: true,
         subtasksEnabled: true,
         checklistsEnabled: true,
@@ -792,6 +812,7 @@ describe('projects', () => {
       expect(off.data?.features).toMatchObject({
         initiatives: false,
         dashboards: true,
+        documents: true,
         notes: true,
       });
       expect((await viewOf(api, 'MKT')).data?.project.initiativesEnabled).toBe(false);

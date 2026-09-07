@@ -10,11 +10,13 @@ import {
   customFieldOption,
   projectView,
   projectDashboard,
+  projectDocument,
+  documentAsset,
   projectAction,
   webhook,
   projectSetting,
 } from '@repo/db';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, or } from 'drizzle-orm';
 import { HttpError } from '#shared/lib';
 import {
   DEFAULT_COLUMNS,
@@ -29,6 +31,14 @@ import { listAgents, updateAgent } from '#modules/agents/core/service';
 import { listAllAgentSchedules, createAgentSchedule } from '#modules/agents/schedules/service';
 import { nextCronRun } from '#modules/agents/schedules/cron';
 import { generateSecret } from '#modules/webhooks/service';
+import {
+  assertAttachmentStorageCapacity,
+  assertAttachmentFileAllowed,
+  attachmentObjectKey,
+  cloneAttachmentObject,
+  deleteAttachmentObject,
+} from '#modules/attachments/storage';
+import { assertValidDocumentContentJson, replaceAssetReferences } from '#modules/documents/service';
 
 // Which parts of a source project the copy carries over. A key set false skips that
 // entity. Some sections depend on others (a view's filters reference
@@ -44,6 +54,7 @@ export interface CopyProjectInclude {
   customFields: boolean;
   views: boolean;
   dashboards: boolean;
+  documents: boolean;
   actions: boolean;
   configuration: boolean;
   webhooks: boolean;
@@ -58,6 +69,7 @@ export const COPY_INCLUDE_KEYS: (keyof CopyProjectInclude)[] = [
   'customFields',
   'views',
   'dashboards',
+  'documents',
   'actions',
   'configuration',
   'webhooks',
@@ -79,6 +91,7 @@ const DEFAULT_INCLUDE: CopyProjectInclude = {
   customFields: true,
   views: true,
   dashboards: true,
+  documents: true,
   actions: true,
 };
 
@@ -205,10 +218,11 @@ function remapActionEffect(effect: unknown, maps: CopyIdMaps): unknown {
 // configuration, but none of its issues. The creator becomes the new project's owner.
 //
 // Pure-database entities (states, types, labels, custom fields, views, dashboards,
-// actions, settings, webhooks) are copied in one transaction, recording old id → new
-// id so the ids that views and actions reference are remapped to the copied entities.
-// The team's agents are attached to the new project after that transaction commits,
-// through the same service function the UI uses.
+// documents, actions, settings, webhooks) are copied in one transaction, recording
+// old id → new id so the ids that views and actions reference are remapped to the
+// copied entities. A document's assets are cloned in the object store inside that
+// transaction and removed again if it rolls back. The team's agents are attached to
+// the new project after it commits, through the same service function the UI uses.
 export async function copyProject(
   sourceProjectId: number,
   input: { key: string; name: string; description?: string },
@@ -227,14 +241,18 @@ export async function copyProject(
     option: new Map(),
   };
 
+  const copiedDocumentAssetKeys: string[] = [];
+
   const source = await getProjectById(sourceProjectId);
   if (!source) throw new HttpError(404, 'Project not found');
   const ownerTeam = await targetTeam(ownerId, teamId);
+  // What a new project starts with, set instance-wide in god mode. Read before the
+  // transaction opens so the settings lookup is not part of it.
   const defaults = await getProjectDefaults();
   // Agents, integration credentials and roles belong to the team, so what references
   // them survives the copy only when it stays in the same team.
   const sameTeam = ownerTeam.id === source.teamId;
-  const newProject = await db.transaction(async (tx) => {
+  const copyTransaction = db.transaction(async (tx) => {
     // The optional sections the source project shows and the estimate kinds it
     // carries are part of its configuration, so the copy starts with the same ones.
     // mcpEnabled is not carried: a new project enters its team's MCP reach on the
@@ -243,6 +261,7 @@ export async function copyProject(
       .select({
         initiativesEnabled: project.initiativesEnabled,
         dashboardsEnabled: project.dashboardsEnabled,
+        documentsEnabled: project.documentsEnabled,
         notesEnabled: project.notesEnabled,
         cyclesEnabled: project.cyclesEnabled,
         subtasksEnabled: project.subtasksEnabled,
@@ -441,6 +460,112 @@ export async function copyProject(
       }
     }
 
+    if (inc.documents) {
+      const documentRows = await tx
+        .select()
+        .from(projectDocument)
+        .where(
+          and(
+            eq(projectDocument.projectId, sourceProjectId),
+            or(eq(projectDocument.isPrivate, false), eq(projectDocument.ownerUserId, ownerId)),
+          ),
+        )
+        .orderBy(projectDocument.position, projectDocument.id);
+      const documentMap = new Map<number, number>();
+      for (const d of documentRows) {
+        assertValidDocumentContentJson(d.contentJson);
+        const [created] = await tx
+          .insert(projectDocument)
+          .values({
+            projectId: proj.id,
+            title: d.title,
+            content: d.content,
+            contentJson: d.contentJson,
+            icon: d.icon,
+            metadata: d.metadata,
+            fullWidth: d.fullWidth,
+            isPrivate: d.isPrivate,
+            isLocked: d.isLocked,
+            archivedAt: d.archivedAt,
+            position: d.position,
+            ownerUserId: ownerId,
+            createdByUserId: ownerId,
+            updatedByUserId: ownerId,
+          })
+          .returning({ id: projectDocument.id });
+        documentMap.set(d.id, created.id);
+      }
+      for (const d of documentRows) {
+        if (d.parentId == null) continue;
+        const id = documentMap.get(d.id);
+        const parentId = documentMap.get(d.parentId);
+        if (id == null || parentId == null) continue;
+        await tx.update(projectDocument).set({ parentId }).where(eq(projectDocument.id, id));
+      }
+      const sourceDocumentIds = documentRows.map((document) => document.id);
+      if (sourceDocumentIds.length > 0) {
+        const assetRows = await tx
+          .select()
+          .from(documentAsset)
+          .where(inArray(documentAsset.documentId, sourceDocumentIds));
+        await assertAttachmentStorageCapacity(
+          proj.id,
+          assetRows.reduce((total, asset) => total + asset.sizeBytes, 0),
+          0,
+          tx,
+        );
+        for (const asset of assetRows) {
+          await assertAttachmentFileAllowed(asset.sizeBytes, asset.contentType);
+        }
+        const assetIdsByDocument = new Map<number, Map<string, string>>();
+        for (const asset of assetRows) {
+          const targetDocumentId = documentMap.get(asset.documentId);
+          if (targetDocumentId == null) continue;
+          const key = attachmentObjectKey(proj.id, 'documents', targetDocumentId, asset.filename);
+          await cloneAttachmentObject(asset.s3Key, key, asset.contentType);
+          copiedDocumentAssetKeys.push(key);
+          const [copy] = await tx
+            .insert(documentAsset)
+            .values({
+              documentId: targetDocumentId,
+              uploadedByUserId: ownerId,
+              s3Key: key,
+              filename: asset.filename,
+              contentType: asset.contentType,
+              sizeBytes: asset.sizeBytes,
+            })
+            .returning({ publicId: documentAsset.publicId });
+          const publicIds = assetIdsByDocument.get(asset.documentId) ?? new Map<string, string>();
+          publicIds.set(asset.publicId.toLowerCase(), copy.publicId);
+          assetIdsByDocument.set(asset.documentId, publicIds);
+        }
+        for (const source of documentRows) {
+          const targetDocumentId = documentMap.get(source.id);
+          const publicIds = assetIdsByDocument.get(source.id);
+          if (targetDocumentId == null || !publicIds || publicIds.size === 0) continue;
+          await tx
+            .update(projectDocument)
+            .set({
+              content: replaceAssetReferences(
+                source.content,
+                source.id,
+                input.key,
+                targetDocumentId,
+                publicIds,
+              ),
+              contentJson: replaceAssetReferences(
+                source.contentJson,
+                source.id,
+                input.key,
+                targetDocumentId,
+                publicIds,
+              ),
+            })
+            .where(eq(projectDocument.id, targetDocumentId));
+        }
+      }
+    }
+
     // Actions: their condition (a FilterSet) and effect (a partial patch) hold ids
     // captured above, so they are remapped to the copied entities.
     if (inc.actions) {
@@ -502,6 +627,13 @@ export async function copyProject(
 
     return proj;
   });
+  let newProject: ProjectRow;
+  try {
+    newProject = await copyTransaction;
+  } catch (error) {
+    await Promise.all(copiedDocumentAssetKeys.map(deleteAttachmentObject));
+    throw error;
+  }
 
   // Agents: the ones working in the source project, attached to the new one as well.
   // The team owns them and one handle is unique in it, so a second copy of the same

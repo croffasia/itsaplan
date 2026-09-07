@@ -2,7 +2,9 @@ import { describe, expect, it } from 'bun:test';
 import {
   bitbucketRepository,
   giteaRepository,
+  githubPullRequest,
   githubRepository,
+  gitlabPullRequest,
   gitlabRepository,
   providerErrorMessage,
 } from '../../connections-provider';
@@ -105,6 +107,51 @@ describe('Git provider repository responses', () => {
         web_url: 'javascript:alert(1)',
       }),
     ).toBeNull();
+  });
+
+  it('normalizes GitHub pull requests for manual linking', () => {
+    expect(
+      githubPullRequest({
+        number: 42,
+        title: 'Ship the feature',
+        html_url: 'https://github.com/acme/app/pull/42',
+        state: 'closed',
+        merged_at: '2026-08-30T12:00:00Z',
+        draft: false,
+        head: { ref: 'feature/ship', sha: 'abc123' },
+        base: { ref: 'main' },
+        updated_at: '2026-08-30T12:00:00Z',
+      }),
+    ).toMatchObject({
+      number: 42,
+      state: 'merged',
+      sourceBranch: 'feature/ship',
+      targetBranch: 'main',
+      headSha: 'abc123',
+    });
+  });
+
+  it('normalizes GitLab merge requests for manual linking', () => {
+    expect(
+      gitlabPullRequest({
+        iid: 17,
+        title: 'Draft: Ship the feature',
+        web_url: 'https://gitlab.com/acme/app/-/merge_requests/17',
+        state: 'opened',
+        draft: true,
+        source_branch: 'feature/ship',
+        target_branch: 'develop',
+        sha: 'def456',
+        updated_at: '2026-08-30T12:00:00Z',
+      }),
+    ).toMatchObject({
+      number: 17,
+      state: 'open',
+      draft: true,
+      sourceBranch: 'feature/ship',
+      targetBranch: 'develop',
+      headSha: 'def456',
+    });
   });
 });
 

@@ -4,7 +4,7 @@ import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import McpAccessNotice from './components/McpAccessNotice';
-import McpConnectionGuide from './components/McpConnectionGuide';
+import McpAuthConfiguration from './components/McpAuthConfiguration';
 
 export default function McpServerPage() {
   const t = useTranslations('mcp');
@@ -13,7 +13,12 @@ export default function McpServerPage() {
   const reachable = detail != null && detail.mcpEnabled && detail.teamMcpEnabled;
 
   return (
-    <SectionPageView title={t('title')} description={t('description')}>
+    <SectionPageView
+      title={t('title')}
+      description={t('description')}
+      wide
+      widthClassName="min-w-[600px] max-w-[60%]"
+    >
       <div className="space-y-10">
         {detail && !reachable && (
           <McpAccessNotice
@@ -23,7 +28,7 @@ export default function McpServerPage() {
             teamMcpEnabled={detail.teamMcpEnabled}
           />
         )}
-        {reachable && <McpConnectionGuide />}
+        {reachable && <McpAuthConfiguration />}
       </div>
     </SectionPageView>
   );

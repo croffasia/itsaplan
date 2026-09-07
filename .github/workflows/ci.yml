@@ -45,6 +45,9 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
+      - name: Script tests
+        run: bun test scripts/
+
   build:
     name: Build apps
     runs-on: ubuntu-latest

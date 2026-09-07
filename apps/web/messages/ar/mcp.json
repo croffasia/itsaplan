@@ -6,18 +6,41 @@
   "offForProject": "فريق {team} مفعّل عنده MCP، بس المشروع ده مقفول.",
   "openTeamSettings": "افتح إعدادات MCP بتاعة الفريق",
   "askManager": "اطلب من مالك الفريق أو مديره إنه يفعّله:",
-  "connectClient": "ربط عميل",
-  "keyHint": "اعمل مفتاح من صفحة <link>مفاتيح API</link>، وبعدين حط مكان <code>{apiKey}</code> تحت.",
-  "endpoint": "نقطة النهاية",
+  "keyHint": "أنشئ مفتاحًا من صفحة <link>مفاتيح API</link>، ثم بدّل <code>{apiKey}</code> في المقتطف.",
+  "endpoint": "نقطة نهاية MCP",
   "clientTabsAria": "العميل",
   "addToFile": "أضِف إلى <code>{file}</code>",
   "notes": {
     "claudeCode": "نفّذ هذا في الطرفية.",
     "vscode": "يتطلّب GitHub Copilot.",
-    "claudeDesktop": "Claude Desktop محتاج جسر mcp-remote و Node.js.",
-    "other": "أي عميل بيدعم MCP عبر Streamable HTTP هيشتغل. استخدم الـ endpoint مع هيدر Authorization: Bearer {apiKey}."
+    "claudeDesktop": "يتصل Claude Desktop بالخوادم البعيدة عبر جسر mcp-remote. يتطلّب Node.js.",
+    "other": "أي عميل يدعم MCP عبر Streamable HTTP يعمل. وجّهه إلى نقطة النهاية. أرسل ترويسة Authorization: Bearer {apiKey}."
   },
   "clients": {
     "other": "أخرى"
+  },
+  "oauth": {
+    "configuration": "طريقة الاتصال",
+    "methodTabsAria": "طريقة الاتصال",
+    "method": "OAuth",
+    "personalKey": "مفتاح API",
+    "description": "استخدم هذا مع أي عميل MCP يدعم OAuth، مثل ChatGPT أو Claude. تسجّل الدخول بحساب Itsaplan. لا يستلم العميل أي مفتاح API.",
+    "discovery": "اكتشاف OAuth",
+    "steps": {
+      "add": "أضف تطبيق MCP في عميلك.",
+      "paste": "الصق نقطة نهاية MCP.",
+      "choose": "اختر OAuth عندما يسأل العميل عن طريقة تسجيل الدخول.",
+      "signIn": "سجّل الدخول إلى Itsaplan ووافق على الوصول."
+    },
+    "security": "يستخدم OAuth آلية PKCE (S256) وتسجيل العملاء الديناميكي ورموز وصول مقيّدة بحساب Itsaplan.",
+    "consent": {
+      "title": "تفويض Itsaplan",
+      "description": "اسمح لعميل MCP هذا بالعمل بصلاحيات حساب Itsaplan الخاص بك.",
+      "missingCode": "طلب التفويض هذا يفتقد رمز الموافقة.",
+      "cancel": "إلغاء",
+      "pending": "جارٍ التفويض…",
+      "authorize": "تفويض",
+      "failed": "تعذر إكمال تفويض OAuth."
+    }
   }
 }

@@ -44,6 +44,7 @@ export function IssueCardSubtasks({
                 onPointerDown={(e) => e.stopPropagation()}
                 onClick={(e) => {
                   e.stopPropagation();
+                  e.preventDefault();
                   onOpen?.(subtask.id);
                 }}
                 className={cn(

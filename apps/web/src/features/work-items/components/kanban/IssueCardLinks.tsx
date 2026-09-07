@@ -51,6 +51,7 @@ export function IssueCardLinks({
                   onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     onOpen?.(link.issue.id);
                   }}
                   className={cn(

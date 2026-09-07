@@ -143,7 +143,14 @@ export default function IssueProperties({
 
         watchers && (
           <IssuePropertyRow key="watching" label={t('watching')}>
-            <IssueWatchers issueId={issue.id} watchers={watchers} />
+            <IssueWatchers
+              issueId={issue.id}
+              watchers={watchers}
+              members={project.assignees.filter(
+                (assignee) => assignee.kind === 'member' && assignee.canReadWorkItems,
+              )}
+              canManage={!readOnly}
+            />
           </IssuePropertyRow>
         ),
       ],

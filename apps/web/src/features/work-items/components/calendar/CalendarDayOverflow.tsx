@@ -39,7 +39,8 @@ export function CalendarDayOverflow({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     setOpen(false);
                     onOpen(issue.id);
                   }}

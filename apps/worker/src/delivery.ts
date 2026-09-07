@@ -1,3 +1,4 @@
+import { pinnedFetch, UrlNotAllowedError } from '@repo/net';
 import { signPayload } from './signature';
 
 export interface DeliverInput {
@@ -37,9 +38,11 @@ export async function deliver(input: DeliverInput): Promise<DeliveryResult> {
   const ts = Math.floor(Date.now() / 1000);
   const signature = signPayload(input.secret, ts, input.body);
   try {
-    const res = await fetch(input.url, {
+    // Re-checked here, not only at registration: the url was validated when it was
+    // stored, but the hostname it resolves to can have changed since.
+    const res = await pinnedFetch(input.url, {
       method: 'POST',
-      signal: AbortSignal.timeout(input.timeoutMs),
+      timeoutMs: input.timeoutMs,
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'itsaplan-webhooks/1',
@@ -61,10 +64,11 @@ export async function deliver(input: DeliverInput): Promise<DeliveryResult> {
       responseBody,
     };
   } catch (err) {
-    // Network error, DNS failure, or the AbortSignal timeout — all transient.
+    // A url that no longer passes the guard is permanent; a network error, DNS
+    // failure, or the timeout is transient.
     return {
       ok: false,
-      retryable: true,
+      retryable: !(err instanceof UrlNotAllowedError),
       error: err instanceof Error ? err.message : 'request failed',
     };
   }

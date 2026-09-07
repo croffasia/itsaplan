@@ -25,7 +25,8 @@
     "workflow": "工作流",
     "automation": "自动化",
     "views": "视图",
-    "aiTeam": "AI 团队"
+    "aiTeam": "AI 团队",
+    "knowledge": "知识"
   },
   "copyItems": {
     "states": "状态",
@@ -34,6 +35,7 @@
     "customFields": "自定义字段",
     "views": "视图",
     "dashboards": "仪表盘",
+    "documents": "Docs",
     "actions": "操作",
     "configuration": "配置",
     "webhooks": "Webhook",

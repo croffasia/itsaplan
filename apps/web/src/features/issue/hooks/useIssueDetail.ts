@@ -54,7 +54,11 @@ export function useIssueDetail(
   // comments (including an agent's reply to a mention) show without a manual reload.
   useLiveRefresh({
     scope: revScope.issue(issueId),
-    targets: [qk.issue(issueId), qk.feed(issueId)],
+    targets: [
+      qk.issue(issueId),
+      qk.feed(issueId),
+      qk.issueDocumentLinks(project.project.key, issueId),
+    ],
   });
 
   // Upload a file dropped onto a markdown editor. Returns the attachment so the

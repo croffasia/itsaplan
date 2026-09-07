@@ -6,6 +6,7 @@ import type { McpApp } from './types';
 import { routeTools, withoutFields, type McpRouteTool } from './generate';
 import { dispatchTool } from './dispatch';
 import { SERVER_INSTRUCTIONS } from './instructions';
+import type { McpCredential } from './credential';
 
 // The path param of every team-scoped route.
 const TEAM_PARAM = 'teamId';
@@ -29,7 +30,11 @@ async function callerTeam(userId: string): Promise<number | null> {
 // caller's API key. The low-level Server (not McpServer) is used so the route's
 // TypeBox JSON Schema can be served as the tool inputSchema without converting to
 // Zod. Arguments are validated by the route itself, not here.
-export async function buildMcpServer(app: McpApp, apiKey: string, userId: string): Promise<Server> {
+export async function buildMcpServer(
+  app: McpApp,
+  credential: McpCredential,
+  userId: string,
+): Promise<Server> {
   const server = new Server(
     // `name` is the stable programmatic identifier; `title` is the human-readable
     // display name a client shows to the user (per the MCP Implementation spec).
@@ -83,7 +88,7 @@ export async function buildMcpServer(app: McpApp, apiKey: string, userId: string
         };
       }
     }
-    const { text, isError } = await dispatchTool(app, tool, args, apiKey, {
+    const { text, isError } = await dispatchTool(app, tool, args, credential, {
       viaMcpEndpoint: true,
     });
     return { content: [{ type: 'text', text }], isError };

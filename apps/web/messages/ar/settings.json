@@ -113,7 +113,8 @@
       "notes": "لوحات حرة من الملاحظات اللاصقة.",
       "subtasks": "مهام بتتقسّم لمهام فرعية تحت مهمة أصل.",
       "checklists": "قوايم خطوات بتتابعها جوه المهمة.",
-      "issueStats": "المدة اللي قضتها المهمة في كل حالة."
+      "issueStats": "المدة اللي قضتها المهمة في كل حالة.",
+      "documents": "وثائق المشروع المشتركة والمنظمة كويكي."
     },
     "featureOn": "تم تفعيل {feature}",
     "featureOff": "تم إيقاف {feature}"
@@ -470,5 +471,22 @@
     "onOpenNone": "لا إجراء",
     "changeState": "تغيير الحالة…",
     "noState": "لا توجد حالة."
+  },
+  "issueTemplates": {
+    "addTemplate": "قالب جديد",
+    "editTemplate": "تعديل القالب",
+    "deleteTemplate": "حذف القالب",
+    "deleteTitle": "حذف القالب \"{name}\"",
+    "deleteMessage": "سيُحذف القالب. المهام المنشأة منه لن تتغير. لا يمكن التراجع عن هذا الإجراء.",
+    "namePlaceholder": "اسم القالب",
+    "descriptionPlaceholder": "الغرض من هذا القالب",
+    "issueTitle": "عنوان المهمة",
+    "issueTitlePlaceholder": "العنوان الذي تبدأ به المهمة",
+    "issueDescription": "وصف المهمة",
+    "issueDescriptionPlaceholder": "الوصف الذي تبدأ به المهمة، بصيغة Markdown",
+    "properties": "الخصائص الافتراضية",
+    "propertiesHint": "تُطبَّق عند إنشاء المهمة، ويمكن تعديلها قبل ذلك.",
+    "emptyTitle": "لا توجد قوالب بعد",
+    "emptyDescription": "يملأ القالب المهمة الجديدة بعنوان ووصف وخصائص."
   }
 }

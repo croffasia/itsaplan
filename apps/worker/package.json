@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/net": "workspace:*",
     "croner": "^10.0.1",
     "drizzle-orm": "^0.45.2"
   },

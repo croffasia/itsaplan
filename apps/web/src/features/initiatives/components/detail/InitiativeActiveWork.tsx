@@ -43,7 +43,10 @@ export default function InitiativeActiveWork({
             <li key={issue.id} className="border-border not-last:border-b">
               <button
                 type="button"
-                onClick={() => onOpenIssue(issue.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpenIssue(issue.id);
+                }}
                 className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-muted/50"
               >
                 {column && (

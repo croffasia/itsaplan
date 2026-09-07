@@ -220,6 +220,17 @@ describe('custom-fields', () => {
       });
       expect(res.status).toBe(400);
     });
+
+    it('creates no field when its options are rejected', async () => {
+      const { asOwner } = await setupProject();
+      const res = await fields(asOwner).post({
+        name: 'Priority',
+        fieldType: 'select',
+        options: ['Yes', 'Yes'],
+      });
+      expect(res.status).toBe(409);
+      expect(await listFields(asOwner)).toEqual([]);
+    });
   });
 
   describe('list', () => {
@@ -286,6 +297,22 @@ describe('custom-fields', () => {
         name: 'Level',
         showInBody: true,
       });
+    });
+
+    it('rejects a value a date field cannot hold', async () => {
+      const { asOwner, issueId } = await setupWithIssue();
+      const field = (await fields(asOwner).post({ name: 'Ship on', fieldType: 'date' })).data!;
+
+      for (const value of ['01.02.2026', '2026-13-45', '2026-02-30']) {
+        const res = await asOwner.issues({ issueId }).fields({ fieldId: field.id }).put({ value });
+        expect(res.status).toBe(400);
+      }
+
+      const ok = await asOwner
+        .issues({ issueId })
+        .fields({ fieldId: field.id })
+        .put({ value: '2026-02-01' });
+      expect(ok.status).toBe(200);
     });
 
     it('changes the type and clears the values issues held under the old one', async () => {

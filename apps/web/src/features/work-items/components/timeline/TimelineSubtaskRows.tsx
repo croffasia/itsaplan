@@ -62,7 +62,10 @@ export function TimelineSubtaskRows({
                 indented ? 'pl-10' : 'pl-6',
               )}
               style={{ width: labelW }}
-              onClick={() => onOpen(subtask.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                onOpen(subtask.id);
+              }}
             >
               {/* Marks the row as nested under the issue row above: the sub-rows
                   are otherwise only indented, which reads as a link row. */}
@@ -84,7 +87,10 @@ export function TimelineSubtaskRows({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <div
-                    onClick={() => onOpen(subtask.id)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      onOpen(subtask.id);
+                    }}
                     className="absolute top-1/2 z-10 flex h-3.5 -translate-y-1/2 cursor-pointer items-center rounded-sm px-1.5 text-white opacity-80"
                     style={{
                       left: rect.left,

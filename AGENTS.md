@@ -21,8 +21,10 @@ solutions.
 
 Write a minimum of comments. A comment explains why, the code explains what — cover a comment
 with your hand and read the code under it: if the fact is recoverable from the code alone, the
-comment does not belong there. A wrong comment is worse than no comment, so change a comment in
-the same edit as the code it describes, or delete it. Layout and styling are never commented:
+comment does not belong there. A comment longer than the code under it is too long. A wrong
+comment is worse than no comment, so change a comment in the same edit as the code it describes,
+or delete it. The comment density of the code around a change is not a pattern to follow: this
+rule wins over matching the neighbours. Layout and styling are never commented:
 no notes on positioning, sticky or overflow behaviour, spacing, or why a class is set. The full
 rules, and the pass that removes comments that no longer hold, are in the `tidy` skill.
 
@@ -75,6 +77,7 @@ packages/db     @repo/db     — Drizzle client, schema, migrations, permission 
 packages/auth   @repo/auth   — better-auth server instance + instance auth settings
 packages/crypto @repo/crypto — AES-256-GCM encryption for secrets at rest
 packages/mailer @repo/mailer — SMTP/Resend transport for outbound email
+packages/net    @repo/net    — SSRF guard for server-side fetches of a supplied URL
 packages/agent-tools @repo/agent-tools — tool definitions for the AI agent runtime
 packages/runner @itsaplan/runner — CLI that runs an external agent's queued tasks on the operator's own machine
 packages/eslint-config @repo/eslint-config — shared ESLint config
@@ -96,18 +99,52 @@ directly** — it talks to the API over HTTP (better-auth client + fetch).
 | `bun run db:generate`     | generate SQL migrations from Drizzle schema                      |
 | `bun run db:migrate`      | apply migrations                                                 |
 | `bun run db:migrate:test` | apply migrations to the test DB (`.env.test`)                    |
+| `bun run setup`           | interactive setup: try it, develop, or generate env               |
 | `bun run auth:generate`   | regenerate better-auth tables → `packages/db/src/schema/auth.ts` |
 
 ## First run
 
 ```bash
 bun install
-cp .env.example .env && cp apps/web/.env.example apps/web/.env
-# set BETTER_AUTH_SECRET in .env:  openssl rand -base64 32
-docker compose -f docker-compose.dev.yml up -d   # dev Postgres + MinIO
-bun run db:migrate                               # apply migrations
-bun run dev                                       # api :3000 + web :3001
+bun run setup   # pick "Develop" — see the table below
+bun run dev     # api :3000 + web :3001
 ```
+
+`bun run setup` (`scripts/setup.ts`, `@clack/prompts`) asks what to set up and does the rest:
+
+| Answer | What it does |
+| ------- | ---------------------------------------------------------------------------------------- |
+| Try it | generates the secrets, `docker compose up -d`, opens the localhost URL in the browser |
+| Develop | `.env`, `apps/web/.env`, `.env.test`, dev compose, the `*_test` database, both migrations |
+| Generate env | builds `.env` and `apps/web/.env` from the examples, walks every value, then writes both or prints them instead; starts nothing |
+
+Self-hosting behind a domain is a manual `.env` and `docker compose up -d`, documented in
+`docs/self-hosting.md` — the script only covers the local cases.
+
+Running it again on a live instance does not damage it, and the rules that make that true
+are the part to preserve when changing the script:
+
+- Try it and Develop restart what is already up rather than setting up beside it, and each
+  offers to stop the other: they read the same `.env`, so they publish the same api and web
+  ports. Develop also offers to stop the PR stack, whose MinIO ports are fixed in its own
+  compose file. A refusal ends the run and changes nothing.
+- A busy port is offered for change, never forced. The check connects rather than binds, to
+  `127.0.0.1` and `::1`: on macOS a bind on one loopback address succeeds beside a listener
+  on the other, so a native Postgres and a container published on the wildcard both read as
+  free.
+- Postgres reads `POSTGRES_USER`, `POSTGRES_PASSWORD` and `POSTGRES_DB` once, when it
+  initialises its volume, and the secrets are what the instance stored its data under. So a
+  value is only generated while that volume does not exist, and one that already holds a
+  real value is kept in every case. Generate env, which always produces a fresh set, asks a
+  second time before it overwrites an existing `.env`.
+- Both check that the running database accepts the credentials `.env` holds before starting
+  the api, which would otherwise fail its healthcheck on the mismatch; a refusal is named,
+  and `down -v` offered behind a confirmation that says the data goes with it. Develop also
+  checks from the host that something answers on the Postgres port `.env` names — a
+  container keeps the port it started with, so one that was not recreated publishes the old
+  one and the migrations reach nothing.
+- The setup migrates through `packages/db/src/migrate.ts`, not `bun run db:migrate`:
+  drizzle-kit exits 1 without printing what the database refused.
 
 ## Environment
 
@@ -118,8 +155,8 @@ bun run dev                                       # api :3000 + web :3001
   its process at **startup**, never through `NEXT_PUBLIC_*`, which `next build` would inline
   into the bundle and pin the image to one instance.
 - Local dev DB: `docker compose -f docker-compose.dev.yml up -d` (the deploy composes do
-  NOT publish the DB port). **Host 5432 is often taken** → use `POSTGRES_PORT=5433` and set
-  `DATABASE_URL=...localhost:5433...` in `.env`.
+  NOT publish the DB port). Host 5432 is often taken; `bun run setup` finds a free port and
+  writes both `POSTGRES_PORT` and `DATABASE_URL`.
 - A new environment variable belongs in `.env.example` and, if a service needs it, in the
   compose files.
 
@@ -156,7 +193,7 @@ completed), runs the suite, and exits with its code. It does not use
 `--abort-on-container-exit`, which tears the stack down the moment the one-shot
 `minio-test-init` exits, before api-test starts.
 
-The test database is created by the `postgres-test` service (`POSTGRES_DB=vela_test`,
+The test database is created by the `postgres-test` service (`POSTGRES_DB=itsaplan_test`,
 tmpfs — nothing persists). The `test` job in `.github/workflows/ci.yml` runs these
 same commands.
 

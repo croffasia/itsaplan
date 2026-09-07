@@ -13,7 +13,20 @@ const PUBLIC_PATHS = ['/login', '/register'];
 // anyone with the link, signed in or not.
 // `/media` streams avatars and attachments from the api, which serves them without
 // a session — a share page opened by a logged-out visitor shows them too.
+// `/protected-media` is intentionally absent: document assets carry private project
+// content and must pass this session gate before their route forwards the cookie.
 const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', '/media'];
+
+// Expires every better-auth cookie the request carries. A `__Secure-` name is only
+// accepted back with `secure`, so the deletion carries it too.
+function clearSession(request: NextRequest): NextResponse {
+  const response = NextResponse.next();
+  for (const { name } of request.cookies.getAll()) {
+    if (!name.includes('better-auth.')) continue;
+    response.cookies.delete({ name, path: '/', secure: name.startsWith('__Secure-') });
+  }
+  return response;
+}
 
 // Gate the whole app behind a session. This is an optimistic check: it only looks
 // for the presence of the better-auth session cookie, not its validity — the API
@@ -21,7 +34,7 @@ const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', 
 // the planner UI and bounces signed-in users away from the auth pages.
 // A cookie the API no longer accepts passes this check, so the client handles that
 // case: `apiFailure` in `lib/api.ts` signs out on a 401 and lands on
-// `/login?expired=1`.
+// `/login?expired=1`, where the cookie is cleared for good.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const hasSession = getSessionCookie(request) != null;
@@ -32,6 +45,11 @@ export function proxy(request: NextRequest) {
   const isPublic = PUBLIC_PATHS.some(matches);
 
   if (isPublic) {
+    // The client lands here after the API refused the session. Its sign-out misses a
+    // cookie written under attributes the api no longer sets, and that one passes the
+    // check below and bounces the browser back into the app, where the next 401 starts
+    // the cycle over.
+    if (request.nextUrl.searchParams.get('expired') === '1') return clearSession(request);
     if (hasSession) return NextResponse.redirect(new URL('/', request.url));
     return NextResponse.next();
   }
@@ -46,5 +64,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Run on every route except Next internals and static assets.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.).*)'],
+  // Protected media is listed first so a valid project key containing a dot is
+  // still session-gated instead of falling through the static-file exclusion.
+  matcher: ['/protected-media/:path*', '/((?!_next/static|_next/image|favicon.ico|.*\\.).*)'],
 };

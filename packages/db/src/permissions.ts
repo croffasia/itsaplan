@@ -9,6 +9,7 @@ export const PERMISSION_RESOURCES = [
   'initiatives',
   'cycles',
   'dashboards',
+  'documents',
   'views',
   'members_invite',
   'members_manage',
@@ -20,6 +21,7 @@ export const PERMISSION_RESOURCES = [
   'agent_skills',
   'agent_tools',
   'custom_fields',
+  'issue_templates',
   'workflow_config',
   'actions',
   'webhooks',
@@ -76,7 +78,7 @@ export function fullPermissions(): Permissions {
 // granted neither members_manage.read nor members_invite.read.
 export function defaultMemberPermissions(): Permissions {
   const p = emptyPermissions();
-  for (const r of ['work_items', 'initiatives', 'cycles', 'note_boards'] as const) {
+  for (const r of ['work_items', 'initiatives', 'cycles', 'documents', 'note_boards'] as const) {
     p[r] = allowAll(r);
   }
   p.dashboards.read = true;
@@ -86,6 +88,7 @@ export function defaultMemberPermissions(): Permissions {
   p.labels.read = true;
   p.ai_agents.read = true;
   p.custom_fields.read = true;
+  p.issue_templates.read = true;
   p.members_manage.read = true;
   p.members_invite.read = true;
   return p;

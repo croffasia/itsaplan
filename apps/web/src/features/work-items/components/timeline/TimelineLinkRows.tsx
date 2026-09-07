@@ -61,7 +61,10 @@ export function TimelineLinkRows({
                 indented ? 'pl-13' : 'pl-9',
               )}
               style={{ width: labelW }}
-              onClick={() => onOpen(link.issue.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                onOpen(link.issue.id);
+              }}
             >
               {/* Fixed width so the identifiers stay in one column when a row
                   leaves its relation unnamed. */}
@@ -77,7 +80,10 @@ export function TimelineLinkRows({
                 />
               )}
               <div
-                onClick={() => onOpen(link.issue.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onOpen(link.issue.id);
+                }}
                 className="absolute top-1/2 z-10 flex h-4 -translate-y-1/2 cursor-pointer items-center rounded px-1.5 text-white opacity-60"
                 style={{
                   left: rect.left,

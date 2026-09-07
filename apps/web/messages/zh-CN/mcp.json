@@ -6,18 +6,41 @@
   "offForProject": "团队 {team} 已开启 MCP，但本项目未开启。",
   "openTeamSettings": "打开团队的 MCP 设置",
   "askManager": "请团队所有者或管理者开启：",
-  "connectClient": "连接客户端",
-  "keyHint": "在 <link>API 密钥</link>页面创建密钥，然后替换下面的 <code>{apiKey}</code>。",
-  "endpoint": "端点",
+  "keyHint": "在 <link>API 密钥</link>页面创建密钥，然后替换代码片段中的 <code>{apiKey}</code>。",
+  "endpoint": "MCP 端点",
   "clientTabsAria": "客户端",
   "addToFile": "添加到 <code>{file}</code>",
   "notes": {
     "claudeCode": "在终端中运行此命令。",
     "vscode": "需要 GitHub Copilot。",
-    "claudeDesktop": "Claude Desktop 需要 mcp-remote 桥接和 Node.js。",
-    "other": "任何支持 Streamable HTTP 的 MCP 客户端都可以。填入端点，并发送 Authorization: Bearer {apiKey} 请求头。"
+    "claudeDesktop": "Claude Desktop 通过 mcp-remote 桥接器连接远程服务器。需要 Node.js。",
+    "other": "任何支持基于 Streamable HTTP 的 MCP 客户端都可以使用。将客户端指向此端点。发送 Authorization: Bearer {apiKey} 请求头。"
   },
   "clients": {
     "other": "其他"
+  },
+  "oauth": {
+    "configuration": "如何连接",
+    "methodTabsAria": "连接方式",
+    "method": "OAuth",
+    "personalKey": "API 密钥",
+    "description": "适用于任何支持 OAuth 的 MCP 客户端，例如 ChatGPT 或 Claude。您使用 Itsaplan 帐户登录。客户端不会收到 API 密钥。",
+    "discovery": "OAuth 发现",
+    "steps": {
+      "add": "在客户端中添加 MCP 应用。",
+      "paste": "粘贴 MCP 端点。",
+      "choose": "当客户端询问登录方式时选择 OAuth。",
+      "signIn": "登录 Itsaplan 并批准访问。"
+    },
+    "security": "OAuth 使用 PKCE (S256)、动态客户端注册以及限定到您的 Itsaplan 帐户的访问令牌。",
+    "consent": {
+      "title": "授权 Itsaplan",
+      "description": "允许此 MCP 客户端使用您的 Itsaplan 帐户权限执行操作。",
+      "missingCode": "此授权请求缺少同意代码。",
+      "cancel": "取消",
+      "pending": "正在授权…",
+      "authorize": "授权",
+      "failed": "无法完成 OAuth 授权。"
+    }
   }
 }

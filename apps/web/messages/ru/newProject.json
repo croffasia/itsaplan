@@ -25,7 +25,8 @@
     "workflow": "Рабочий процесс",
     "automation": "Автоматизация",
     "views": "Представления",
-    "aiTeam": "AI-команда"
+    "aiTeam": "AI-команда",
+    "knowledge": "Знания"
   },
   "copyItems": {
     "states": "Статусы",
@@ -34,6 +35,7 @@
     "customFields": "Пользовательские поля",
     "views": "Представления",
     "dashboards": "Дашборды",
+    "documents": "Docs",
     "actions": "Действия",
     "configuration": "Конфигурация",
     "webhooks": "Вебхуки",

@@ -3,7 +3,7 @@ import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { requireUser } from '#shared/access';
 import { noContent } from '#shared/http';
-import { HttpError } from '#shared/lib';
+import { HttpError, rethrowDuplicate } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { paginate } from '#shared/pagination';
@@ -66,16 +66,21 @@ export const agentScheduleRoutes = new Elysia({
     async ({ project, body, set, user }) => {
       const cron = body.cron.trim();
       await assertScheduleInterval(project.teamId, cron);
-      const row = await createAgentSchedule({
-        projectId: project.id,
-        agentId: body.agentId,
-        actorUserId: requireUser(user).id,
-        name: requiredText(body.name, 'Name'),
-        prompt: requiredText(body.prompt, 'Task'),
-        cron,
-        status: body.status ?? 'active',
-        nextRunAt: nextCronRun(cron),
-      });
+      let row;
+      try {
+        row = await createAgentSchedule({
+          projectId: project.id,
+          agentId: body.agentId,
+          actorUserId: requireUser(user).id,
+          name: requiredText(body.name, 'Name'),
+          prompt: requiredText(body.prompt, 'Task'),
+          cron,
+          status: body.status ?? 'active',
+          nextRunAt: nextCronRun(cron),
+        });
+      } catch (err) {
+        rethrowDuplicate(err, 'schedule');
+      }
       if (!row) throw new HttpError(400, 'Select an agent from this project');
       set.status = 201;
       return row;
@@ -103,19 +108,24 @@ export const agentScheduleRoutes = new Elysia({
       let nextRunAt: Date | undefined;
       if (cron !== undefined) nextRunAt = nextCronRun(cron);
       else if (resuming) nextRunAt = nextCronRun(current.cron);
-      const row = await updateAgentSchedule(
-        project.id,
-        params.scheduleId,
-        {
-          ...(body.agentId !== undefined ? { agentId: body.agentId } : {}),
-          ...(body.name !== undefined ? { name: requiredText(body.name, 'Name') } : {}),
-          ...(body.prompt !== undefined ? { prompt: requiredText(body.prompt, 'Task') } : {}),
-          ...(cron !== undefined ? { cron } : {}),
-          ...(nextRunAt !== undefined ? { nextRunAt } : {}),
-          ...(body.status !== undefined ? { status: body.status } : {}),
-        },
-        requireUser(user).id,
-      );
+      let row;
+      try {
+        row = await updateAgentSchedule(
+          project.id,
+          params.scheduleId,
+          {
+            ...(body.agentId !== undefined ? { agentId: body.agentId } : {}),
+            ...(body.name !== undefined ? { name: requiredText(body.name, 'Name') } : {}),
+            ...(body.prompt !== undefined ? { prompt: requiredText(body.prompt, 'Task') } : {}),
+            ...(cron !== undefined ? { cron } : {}),
+            ...(nextRunAt !== undefined ? { nextRunAt } : {}),
+            ...(body.status !== undefined ? { status: body.status } : {}),
+          },
+          requireUser(user).id,
+        );
+      } catch (err) {
+        rethrowDuplicate(err, 'schedule');
+      }
       if (!row) throw new HttpError(404, 'Schedule not found');
       return row;
     },

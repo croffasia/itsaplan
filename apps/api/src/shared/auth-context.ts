@@ -1,6 +1,10 @@
 import { Elysia } from 'elysia';
+import { db } from '@repo/db';
+import { user as users } from '@repo/db/schema';
+import { eq } from 'drizzle-orm';
 import { auth } from '@repo/auth';
 import { HttpError } from './lib';
+import { getMcpOAuthToken } from './mcp-request';
 
 // GET routes that need no session. The raw attachment and avatar bytes routes
 // must work in <img>/<video> and external fetches. The invite lookup
@@ -36,6 +40,19 @@ export const authContext = new Elysia({ name: 'auth-context' }).resolve(
     if (session) {
       if (session.user.active === false) throw new HttpError(401, 'This account is deactivated');
       return { user: session.user };
+    }
+    const mcpToken = getMcpOAuthToken(request);
+    if (mcpToken) {
+      const oauthSession = await auth.api.getMcpSession({
+        headers: new Headers({ Authorization: `Bearer ${mcpToken}` }),
+      });
+      if (oauthSession) {
+        const user = await db.query.user.findFirst({ where: eq(users.id, oauthSession.userId) });
+        if (user) {
+          if (user.active === false) throw new HttpError(401, 'This account is deactivated');
+          return { user: user as SessionUser };
+        }
+      }
     }
     // The public raw-attachment route has no session and needs none.
     if (request.method === 'GET' && PUBLIC_GET.test(path)) return { user: null };

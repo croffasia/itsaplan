@@ -6,18 +6,41 @@
   "offForProject": "L'équipe {team} a activé MCP, mais ce projet est désactivé.",
   "openTeamSettings": "Ouvrir les paramètres MCP de l'équipe",
   "askManager": "Demandez à un propriétaire ou à un responsable de l'équipe de l'activer :",
-  "connectClient": "Connecter un client",
-  "keyHint": "Créez une clé personnelle sur la page <link>Clés d'API</link>, puis remplacez <code>{apiKey}</code> dans l'extrait.",
-  "endpoint": "Point d'accès",
+  "keyHint": "Créez une clé sur la page <link>Clés d'API</link>, puis remplacez <code>{apiKey}</code> dans l'extrait.",
+  "endpoint": "Point d'accès MCP",
   "clientTabsAria": "Client",
   "addToFile": "À ajouter dans <code>{file}</code>",
   "notes": {
     "claudeCode": "Lancez ceci dans votre terminal.",
     "vscode": "Nécessite GitHub Copilot.",
-    "claudeDesktop": "Claude Desktop atteint les serveurs distants via le pont mcp-remote. Nécessite Node.js.",
-    "other": "Tout client compatible MCP sur Streamable HTTP fonctionne. Faites-le pointer vers le point d'accès et envoyez un en-tête Authorization: Bearer {apiKey}."
+    "claudeDesktop": "Claude Desktop se connecte aux serveurs distants via le pont mcp-remote. Nécessite Node.js.",
+    "other": "Tout client compatible MCP sur Streamable HTTP fonctionne. Faites-le pointer vers le point d'accès. Envoyez un en-tête Authorization: Bearer {apiKey}."
   },
   "clients": {
     "other": "Autre"
+  },
+  "oauth": {
+    "configuration": "Comment se connecter",
+    "methodTabsAria": "Méthode de connexion",
+    "method": "OAuth",
+    "personalKey": "Clé d'API",
+    "description": "Pour tout client MCP compatible OAuth, par exemple ChatGPT ou Claude. Vous vous connectez avec votre compte Itsaplan. Le client ne reçoit aucune clé d'API.",
+    "discovery": "Découverte OAuth",
+    "steps": {
+      "add": "Ajoutez une application MCP dans votre client.",
+      "paste": "Collez le point d'accès MCP.",
+      "choose": "Choisissez OAuth lorsque le client demande la méthode de connexion.",
+      "signIn": "Connectez-vous à Itsaplan et approuvez l'accès."
+    },
+    "security": "OAuth utilise PKCE (S256), l'enregistrement dynamique des clients et des jetons d'accès limités à votre compte Itsaplan.",
+    "consent": {
+      "title": "Autoriser Itsaplan",
+      "description": "Autorisez ce client MCP à agir avec les droits de votre compte Itsaplan.",
+      "missingCode": "Cette demande d'autorisation n'a pas de code de consentement.",
+      "cancel": "Annuler",
+      "pending": "Autorisation…",
+      "authorize": "Autoriser",
+      "failed": "Impossible de terminer l'autorisation OAuth."
+    }
   }
 }

@@ -3,6 +3,7 @@ import { noContent } from '#shared/http';
 import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { HttpError } from '#shared/lib';
+import { assertPublicHttpUrl } from '#shared/net';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors } from '#shared/responses';
 import {
@@ -21,58 +22,6 @@ import {
   deleteWebhook,
   listWebhookDeliveries,
 } from './service';
-
-// A local, loopback, or private-range host — the SSRF-sensitive targets.
-function isLocalHost(host: string): boolean {
-  return (
-    host === 'localhost' ||
-    host.endsWith('.local') ||
-    host === '0.0.0.0' ||
-    host === '::1' ||
-    /^127\./.test(host) ||
-    /^10\./.test(host) ||
-    /^192\.168\./.test(host) ||
-    /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
-    /^169\.254\./.test(host) ||
-    /^f[cd][0-9a-f]{2}:/.test(host)
-  );
-}
-
-// An IPv4 or IPv6 literal (as opposed to a DNS name).
-function isIpLiteral(host: string): boolean {
-  return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(':');
-}
-
-// Rejects a url that is not https, or that targets a local or private address. This
-// stops a subscription from reaching internal services (SSRF). The check is syntactic
-// and runs at registration time. The delivery side runs the DNS-level check.
-//
-// Local development is the exception (NODE_ENV is neither production nor test): a
-// localhost, 0.0.0.0, or IP-literal target passes over http, so an operator can
-// register a local test receiver. Production and the test suite stay strict.
-function validateWebhookUrl(raw: string): string {
-  let url: URL;
-  try {
-    url = new URL(raw);
-  } catch {
-    throw new HttpError(400, 'Webhook url must be a valid URL');
-  }
-  const host = url.hostname.toLowerCase();
-
-  const devRelaxed =
-    process.env.NODE_ENV !== 'production' &&
-    process.env.NODE_ENV !== 'test' &&
-    (isLocalHost(host) || isIpLiteral(host));
-  if (devRelaxed) return raw;
-
-  if (url.protocol !== 'https:') {
-    throw new HttpError(400, 'Webhook url must use https');
-  }
-  if (isLocalHost(host)) {
-    throw new HttpError(400, 'Webhook url must not point to a private or local address');
-  }
-  return raw;
-}
 
 export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['Webhooks'] } })
   .use(authContext)
@@ -99,10 +48,11 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
   .post(
     '/projects/:projectKey/webhooks',
     async ({ project, body, set }) => {
+      await assertPublicHttpUrl(body.url);
       set.status = 201;
       return createWebhook({
         projectId: project.id,
-        url: validateWebhookUrl(body.url),
+        url: body.url,
         events: body.events,
         isActive: body.isActive,
       });
@@ -118,11 +68,8 @@ export const webhookRoutes = new Elysia({ name: 'webhooks', detail: { tags: ['We
   .patch(
     '/webhooks/:webhookId',
     async ({ params, body }) => {
-      const patch = {
-        ...body,
-        ...(body.url !== undefined ? { url: validateWebhookUrl(body.url) } : {}),
-      };
-      const updated = await updateWebhook(params.webhookId, patch);
+      if (body.url !== undefined) await assertPublicHttpUrl(body.url);
+      const updated = await updateWebhook(params.webhookId, body);
       if (!updated) throw new HttpError(404, 'Webhook not found');
       return updated;
     },

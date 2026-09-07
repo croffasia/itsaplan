@@ -13,6 +13,7 @@ import { listIssueTypes } from '#modules/issue-types/service';
 import { listLabels, listLabelGroups } from '#modules/labels/service';
 import { listCustomFields } from '#modules/custom-fields/service';
 import { getTeamMembership } from '#modules/teams/service';
+import { listIssueTemplates } from '#modules/issue-templates/service';
 import {
   AutoArchiveResponse,
   EstimatesResponse,
@@ -93,27 +94,20 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     '/projects/:projectKey/copy',
     async ({ project, body, user, set }) => {
       const { include, ...meta } = body;
-      try {
-        set.status = 201;
-        return await copyProject(project.id, meta, requireUser(user).id, include);
-      } catch (err) {
-        // Return the real cause in the body so the UI shows the actual error.
-        console.error('copyProject failed:', err);
-        set.status = 400;
-        return { error: err instanceof Error ? err.message : 'Failed to copy project' };
-      }
+      set.status = 201;
+      return await copyProject(project.id, meta, requireUser(user).id, include);
     },
     {
       body: copyProjectBody,
       teamRunsProject: true,
-      response: { 201: ProjectResponse, ...commonErrors },
+      response: { 201: ProjectResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Copy a project',
         description:
           "Copy a project's configuration into a new project you own, without its issues. " +
           'Only an owner or a manager of the team that owns the source project may copy it. ' +
           'By default the structure (states, issue types, labels, custom fields, views, ' +
-          'dashboards, actions) is copied. Pass `include` to choose sections; the API ' +
+          'dashboards, documents, actions) is copied. Pass `include` to choose sections; the API ' +
           'force-enables dependencies (e.g. a view pulls in the states it references).',
         ...mcpTool('copy_project'),
       },
@@ -133,17 +127,27 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     '/projects/:projectKey',
     async ({ project, user }) => {
       const userId = requireUser(user).id;
-      const [columns, issueTypes, labels, labelGroups, assignees, customFields, viewer, teamRole] =
-        await Promise.all([
-          listColumns(project.id),
-          listIssueTypes(project.id),
-          listLabels(project.id),
-          listLabelGroups(project.id),
-          listAssigneeCandidates(project.id),
-          listCustomFields(project.id, { allTypes: true }),
-          getMemberContext(project.id, userId),
-          getTeamMembership(project.teamId, userId),
-        ]);
+      const [
+        columns,
+        issueTypes,
+        labels,
+        labelGroups,
+        assignees,
+        customFields,
+        issueTemplates,
+        viewer,
+        teamRole,
+      ] = await Promise.all([
+        listColumns(project.id),
+        listIssueTypes(project.id),
+        listLabels(project.id),
+        listLabelGroups(project.id),
+        listAssigneeCandidates(project.id),
+        listCustomFields(project.id, { allTypes: true }),
+        listIssueTemplates(project.id),
+        getMemberContext(project.id, userId),
+        getTeamMembership(project.teamId, userId),
+      ]);
       // The permission guard already asserted membership, so a context always
       // exists here; guard against a race (membership revoked mid-request).
       if (!viewer) throw new HttpError(403, 'You do not have access to this project');
@@ -155,6 +159,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
         labelGroups,
         assignees,
         customFields,
+        issueTemplates,
         viewer: { role: viewer.role, teamRole },
         permissions: viewer.permissions,
       };
@@ -165,8 +170,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Get a project',
         description:
-          'Get a project setup by key: columns, issue types, labels, custom fields, and ' +
-          'assignable users and agents. Resolves the ids create_issue and update_issue ' +
+          'Get a project setup by key: columns, issue types, labels, custom fields, issue ' +
+          'templates, and assignable users and agents. Resolves the ids create_issue and update_issue ' +
           'take. For issues use list_issues or search_issues.',
         ...mcpTool('get_project'),
       },

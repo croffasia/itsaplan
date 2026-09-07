@@ -8,27 +8,30 @@ Requirements: [Bun](https://bun.sh) 1.3+, Docker, Git.
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
 bun install
-
-cp .env.example .env
-cp apps/web/.env.example apps/web/.env
-
-# BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY, WORKER_INTERNAL_TOKEN in .env:
-openssl rand -base64 32
-
-docker compose -f docker-compose.dev.yml up -d   # Postgres + MinIO only
-bun run db:migrate
-bun run dev                                      # api + web together, via Turborepo
+bun run setup   # "Develop", or "Generate env" for just the .env files
+bun run dev     # api + web together, via Turborepo
 ```
 
-The apps run on: web <http://localhost:3001>, api <http://localhost:3000>, MinIO console
-<http://localhost:9001>. `bun run dev` runs the whole workspace in watch mode from the repo
-root; the dev compose brings up only the backing services and the apps run on the host.
+**Develop** writes the env files, generates the secrets, starts Postgres and MinIO, creates
+the test database, and migrates both. Run it again any time: it restarts the stack and
+re-applies the migrations, keeping the data. It offers another port when one is taken, and
+offers to stop the **Try it** stack, which publishes the same ones.
 
-If host port 5432 is taken, set another one and update `DATABASE_URL` in `.env`:
+`bun run dev` runs the workspace in watch mode: web on <http://localhost:3001>, api on
+<http://localhost:3000>, MinIO console on <http://localhost:9001>. Only Postgres and MinIO
+run in Docker; the apps run on the host.
 
-```bash
-POSTGRES_PORT=5433 docker compose -f docker-compose.dev.yml up -d
-```
+## Environment
+
+| File            | Read by                                       |
+| --------------- | --------------------------------------------- |
+| `.env`          | api, worker, bot, drizzle                     |
+| `apps/web/.env` | web — Next reads env only from its own folder |
+| `.env.test`     | the api test suite                            |
+
+`.env.example` documents every variable and its default. The three secrets have none and are
+generated while the database volume does not exist — past that the instance is using them,
+and a new value would lock it out of its own data.
 
 ## Commands
 
@@ -47,33 +50,23 @@ pnpm: the lockfile is `bun.lock`.
 
 ## Tests
 
-Tests run against a real test Postgres, not mocks. Prepare a dedicated `*_test` database
-once, then run the suite from the repo root:
+Integration tests against a real Postgres, not mocks. The setup prepared a separate `*_test`
+database with `.env.test` pointing at it; the name must contain "test", since the reset
+helper TRUNCATEs every table between tests and refuses otherwise.
 
 ```bash
-cp .env.test.example .env.test   # DATABASE_URL must name a *_test database
-bun run db:migrate:test          # migrate the test database
-bun run test                     # run all suites via Turborepo
+bun run test
 ```
 
-The dev compose (`docker-compose.dev.yml`) provides Postgres and MinIO for these tests; the
-attachments suite needs the MinIO bucket it creates.
-
-Alternatively, run the same gate CI uses — the suite against a throwaway Postgres in a
-container built from the production image:
+The same gate CI runs — the suite against a throwaway Postgres, in a container built from
+the production image:
 
 ```bash
 docker compose -f docker-compose.test.yml build
 docker compose -f docker-compose.test.yml run --rm api-test
 ```
 
-`run` starts the dependencies, runs the suite, and exits with its code.
+The integration suite is in `apps/api`. `apps/api/AGENTS.md` explains how to write a test.
 
-`apps/api` has the integration suite; `apps/api/AGENTS.md` covers how to write one.
-
-## Internals
-
-Descriptions of the mechanisms that span several apps live in [`docs/dev/`](dev/):
-
-- [The revision engine](dev/revision-engine.md) — how an open screen stays current.
-- [Languages](dev/i18n.md) — how the interface language is resolved, and how to add one.
+The mechanisms that span several apps — the revision engine, the interface languages — are
+described in [`docs/dev/`](dev/).

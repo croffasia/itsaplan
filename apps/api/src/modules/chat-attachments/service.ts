@@ -3,6 +3,10 @@ import { eq, sql } from 'drizzle-orm';
 import { HttpError, iso, num } from '#shared/lib';
 import { getObject } from '#shared/s3';
 import { isTableFilename, parseImportFile } from './parse';
+import {
+  assertAttachmentStorageCapacity,
+  lockAttachmentStorage,
+} from '#modules/attachments/storage';
 
 // Data access for chat attachments. File bytes live in the S3-compatible object
 // store (#shared/s3); these rows hold the metadata and the object key. publicId is
@@ -43,8 +47,12 @@ export async function createChatAttachment(input: {
   contentType: string;
   sizeBytes: number;
 }): Promise<ChatAttachmentRow> {
-  const [row] = await db.insert(chatAttachment).values(input).returning();
-  return mapRow(row);
+  return db.transaction(async (tx) => {
+    await lockAttachmentStorage(tx, input.projectId);
+    await assertAttachmentStorageCapacity(input.projectId, input.sizeBytes, 0, tx);
+    const [row] = await tx.insert(chatAttachment).values(input).returning();
+    return mapRow(row);
+  });
 }
 
 export async function getChatAttachmentByPublicId(

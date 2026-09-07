@@ -1,8 +1,8 @@
 import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
 import { guards } from '#shared/guards';
-import { HttpError } from '#shared/lib';
-import { commonErrors } from '#shared/responses';
+import { HttpError, rethrowDuplicate } from '#shared/lib';
+import { commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import {
   CustomFieldListResponse,
@@ -46,13 +46,17 @@ export const customFieldRoutes = new Elysia({
   .post(
     '/projects/:projectKey/custom-fields',
     async ({ project, body, set }) => {
-      set.status = 201;
-      return createCustomField({ projectId: project.id, ...body });
+      try {
+        set.status = 201;
+        return await createCustomField({ projectId: project.id, ...body });
+      } catch (err) {
+        rethrowDuplicate(err, 'field option');
+      }
     },
     {
       body: createCustomFieldBody,
       permission: ['custom_fields', 'create'],
-      response: { 201: CustomFieldResponse, ...commonErrors },
+      response: { 201: CustomFieldResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create a custom field',
         description: 'Create a custom field for a project.',
@@ -64,7 +68,12 @@ export const customFieldRoutes = new Elysia({
   .patch(
     '/projects/:projectKey/custom-fields/:fieldId',
     async ({ project, params, body }) => {
-      const field = await updateCustomField(project.id, params.fieldId, body);
+      let field;
+      try {
+        field = await updateCustomField(project.id, params.fieldId, body);
+      } catch (err) {
+        rethrowDuplicate(err, 'field option');
+      }
       if (!field) throw new HttpError(404, 'Custom field not found');
       return field;
     },
@@ -72,14 +81,14 @@ export const customFieldRoutes = new Elysia({
       body: updateCustomFieldBody,
       params: fieldParams,
       permission: ['custom_fields', 'edit'],
-      response: { 200: CustomFieldResponse, ...commonErrors },
+      response: { 200: CustomFieldResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update a custom field',
         description:
           'Update a custom field. Changing its type clears the values issues hold in it, ' +
           'narrowing a member scope clears the ones it no longer allows, and an option left ' +
           'out of `options` is deleted along with the selections of it.',
-        ...mcpTool('update_custom_field'),
+        ...mcpTool('update_custom_field', { destructiveHint: true }),
       },
     },
   )

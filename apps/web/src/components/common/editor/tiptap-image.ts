@@ -1,6 +1,6 @@
 import Image from '@tiptap/extension-image';
 import { ReactNodeViewRenderer } from '@tiptap/react';
-import EditorResizableImage from '../components/editor/EditorResizableImage';
+import EditorResizableImage from './EditorResizableImage';
 
 // Safe inside a double-quoted HTML attribute: a filename may hold any of these.
 const escapeAttribute = (value: string) =>

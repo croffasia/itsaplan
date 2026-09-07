@@ -43,7 +43,7 @@ describe('normalizeToolKeys', () => {
   });
 
   it('puts every action in a known feature group (the config UI groups by it)', () => {
-    const groups = new Set(['issues', 'initiatives', 'cycles', 'notes', 'project']);
+    const groups = new Set(['issues', 'initiatives', 'cycles', 'documents', 'notes', 'project']);
     for (const tool of [...AGENT_ACTIONS, ...ALWAYS_ON_ACTIONS]) {
       expect(groups.has(tool.group)).toBe(true);
     }
@@ -75,6 +75,17 @@ describe('normalizeToolKeys', () => {
     expect(normalizeToolKeys(keys)).toEqual(keys);
     const alwaysOn = new Set(ALWAYS_ON_ACTIONS.map((tool) => tool.key));
     for (const key of keys) expect(alwaysOn.has(key)).toBe(false);
+  });
+
+  it('registers document actions as grantable, including the reads', () => {
+    const keys = [
+      'list_documents',
+      'get_document',
+      'create_document',
+      'update_document',
+      'delete_document',
+    ];
+    expect(normalizeToolKeys(keys)).toEqual(keys);
   });
 
   // Agent-management tools are exposed over MCP (for an external MCP client to manage

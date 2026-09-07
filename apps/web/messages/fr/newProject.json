@@ -25,7 +25,8 @@
     "workflow": "Flux de travail",
     "automation": "Automatisation",
     "views": "Vues",
-    "aiTeam": "Équipe IA"
+    "aiTeam": "Équipe IA",
+    "knowledge": "Connaissances"
   },
   "copyItems": {
     "states": "États",
@@ -34,6 +35,7 @@
     "customFields": "Champs personnalisés",
     "views": "Vues",
     "dashboards": "Tableaux de bord",
+    "documents": "Docs",
     "actions": "Actions",
     "configuration": "Configuration",
     "webhooks": "Webhooks",

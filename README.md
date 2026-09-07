@@ -29,17 +29,12 @@ If It's a Plan looks useful to you, star the repo ⭐ — it helps other people 
 It's a Plan is a full issue tracker on its own: projects, boards, cycles, custom fields,
 and dashboards. Use it that way and never turn on a single agent.
 
-Add agents when you need them. An agent gets a role, permissions, and an assignee slot, and
-it takes issues on the same board as your people. You run all of it on your own server, on
-your own database.
+**The difference: AI agents work here like any teammate.** An agent gets a role,
+permissions, and an assignee slot, and takes issues on the same board as your people.
 
-- **Own your stack.** Your server, your database, your API keys. No per-seat fees, no lock-in.
-- **Agents as teammates.** Give one a model, a prompt, skills, and tools, then assign it an issue.
-- **Any model.** Internal agents take a key from any of 150+ providers, or a local endpoint.
-- **Your coding CLI.** External agents run on your machine: Claude Code, Codex, Antigravity,
-  Copilot CLI, opencode.
-- **One board for both.** A run starts on an @mention, an assignment, or a schedule.
-- **Automate anything.** Everything the UI does is a REST API call, an MCP tool, or a webhook.
+It fits any kind of work: software development, marketing, design, support, sales,
+operations, research. You run all of it on your own server, on your own database, with your
+own API keys — no per-seat fees, no lock-in.
 
 It's a Plan is under active development. Expect breaking changes before the first stable
 release.
@@ -48,9 +43,15 @@ release.
 
 1. **Star the repo** if you think more people should see it. That is the whole cost, and it
    is what makes the project findable.
-2. **Contribute.** Issues, bug reports, and pull requests are all welcome — start with
+2. **Share it** — post it on social media or send it to a colleague who runs a team or
+   writes code. One link reaches people search never will.
+3. **Contribute.** Issues, bug reports, and pull requests are all welcome — start with
    [CONTRIBUTING.md](CONTRIBUTING.md).
-3. **Donate.** Any amount helps the project grow and keeps the work going.
+4. **Donate.** Any amount helps the project grow and keeps the work going. A donation can
+   also move a feature up the roadmap — ask on [Telegram](https://telegram.me/croffasia).
+
+   <details>
+   <summary>Wallet addresses</summary>
 
    | Network | Address |
    | ------- | ------- |
@@ -58,12 +59,18 @@ release.
    | USDT (TON) | `UQBTE0qA7ZPKOkjbrCyqVopXFKNbbcDd-RcKeR9wkoyAjNb4` |
    | USDT (TRC-20) | `TMSdmfoEVkC4sA1ejmhimcZC4eSremmkjV` |
 
-A commercial licence is available if AGPL-3.0 does not fit your company, and a feature can
-be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
+   </details>
 
 ## Features
 
-**Tracking**
+| Area | What you get |
+| --------- | ------------------------------------------------------------------------------------- |
+| Product management | Kanban, table, timeline, and calendar views · cycles · custom fields · dashboards · docs · notes boards |
+| AI agents | Agents as project members · internal on any model, or external on your coding CLI · runs start on an @mention, an assignment, or a schedule |
+| Platform | REST API with OpenAPI · MCP server · webhooks · pull requests from 5 forges · passkeys and Google sign-in · 6 languages |
+
+<details>
+<summary><b>Product management</b> — the full list</summary>
 
 - Configure issues per project: custom fields, labels, states, and issue types
 - Kanban, table, timeline, and calendar views. Save each one as a tab with its own filters,
@@ -73,12 +80,17 @@ be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
 - Comment threads with replies, and @username mentions of people and agents
 - Configurable dashboards for project analytics: throughput, breakdown, pulse
 - Quick actions that run on an issue, and auto-assignment when an issue moves into a state
+- Docs: shared Markdown pages in a tree, with revision history, private and locked pages,
+  favorites, embedded files, and links to the issues they describe
 - Freeform notes boards: sticky notes on a canvas, with colors, checklists, and connections
 - Share a view or an issue by public link, read-only and without sign-in
 - Initiatives that group and track related work inside a project
 - Auto-archive, a notification inbox, role-based access control, and more
 
-**AI agents**
+</details>
+
+<details>
+<summary><b>AI agents</b> — the full list</summary>
 
 - Agents as project members, with their own permissions and assigned issues
 - Internal agents run on the instance. Configure the model, system prompt, tools, and
@@ -94,7 +106,10 @@ be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
 - Chat with an external agent too. The runner answers from your machine, streams the reply
   and its tool calls, and resumes the same coding agent session on each message
 
-**Platform**
+</details>
+
+<details>
+<summary><b>Platform</b> — the full list</summary>
 
 - REST API with an OpenAPI reference and API keys
 - MCP server, so an external assistant can read and change issues through the same API
@@ -106,6 +121,8 @@ be moved up the roadmap. Ask on [Telegram](https://telegram.me/croffasia).
 - Interface in English, Ukrainian, Russian, Simplified Chinese, Arabic, and French
 - Instance administration: storage limits, mail transport, and instance-wide settings
 
+</details>
+
 ## Getting started
 
 ### Deploy on Railway — recommended
@@ -116,20 +133,22 @@ The whole stack in one click, with no server to maintain. You give Railway two h
 and it generates every secret. You need a domain of your own: [the guide](docs/railway.md)
 explains why, and what to do after the deploy.
 
-### Run it on your own server
+### Try it on your machine
 
-Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
+Requirements: Docker and [Bun](https://bun.sh).
 
 ```bash
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan
-cp .env.example .env      # set API_URL, APP_URL, and the secrets
-docker compose up -d
+bun install
+bun run setup   # answer "Try it"
 ```
 
-This starts Postgres, MinIO, and the four services (api, worker, bot, web) from the images
-published on each release. Add `--build` to build them from the checkout instead. The first
-account you register becomes the instance admin.
+It picks free ports, generates the secrets, starts the whole stack in Docker, and opens
+<http://localhost:3001>. Everything runs on localhost, so no domain and no reverse proxy are
+needed. Run it again later to restart the instance; the data stays.
+
+### Everything else
 
 - [Deploy on Railway](docs/railway.md) — one-click hosted deploy from the template
 - [Self-hosting](docs/self-hosting.md) — the full production setup, secrets, and updates
@@ -173,3 +192,6 @@ Copyright © 2026 Andrii Poluosmak.
 
 [AGPL-3.0](LICENSE), except `packages/runner`, which is
 [Apache-2.0](packages/runner/LICENSE).
+
+A commercial licence is available if AGPL-3.0 does not fit your company. Ask on
+[Telegram](https://telegram.me/croffasia).

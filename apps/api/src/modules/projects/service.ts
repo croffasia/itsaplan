@@ -1,9 +1,14 @@
 import {
   db,
+  chatAttachment,
+  documentAsset,
+  issue,
+  issueAttachment,
   issueType,
   project,
   projectColumn,
   projectMember,
+  projectDocument,
   teamRole,
   projectSetting,
   team,
@@ -23,6 +28,8 @@ import { getLimits } from '#shared/limits';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getProjectDefaults } from '#modules/settings/service';
 import { dropUnusedTeamMembership } from '#modules/scim/reconcile';
+import { deleteObjects } from '#shared/s3';
+import { lockAttachmentStorage } from '#modules/attachments/storage';
 
 // Data access for projects: the top-level container that groups its own columns,
 // issue types, labels, assignees, custom fields, issues, saved views, and
@@ -42,6 +49,7 @@ export interface ProjectRow {
   teamMcpEnabled: boolean;
   initiativesEnabled: boolean;
   dashboardsEnabled: boolean;
+  documentsEnabled: boolean;
   notesEnabled: boolean;
   cyclesEnabled: boolean;
   subtasksEnabled: boolean;
@@ -62,6 +70,7 @@ export interface ProjectRow {
 export interface ProjectFeatures {
   initiatives: boolean;
   dashboards: boolean;
+  documents: boolean;
   notes: boolean;
   cycles: boolean;
   subtasks: boolean;
@@ -105,6 +114,7 @@ export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
     teamMcpEnabled: row.teamMcpEnabled,
     initiativesEnabled: on('initiatives', row.initiativesEnabled),
     dashboardsEnabled: on('dashboards', row.dashboardsEnabled),
+    documentsEnabled: on('documents', row.documentsEnabled),
     notesEnabled: on('notes', row.notesEnabled),
     cyclesEnabled: on('cycles', row.cyclesEnabled),
     subtasksEnabled: on('subtasks', row.subtasksEnabled),
@@ -372,6 +382,7 @@ export function projectFeatures(row: ProjectRow): ProjectFeatures {
   return {
     initiatives: row.initiativesEnabled,
     dashboards: row.dashboardsEnabled,
+    documents: row.documentsEnabled,
     notes: row.notesEnabled,
     cycles: row.cyclesEnabled,
     subtasks: row.subtasksEnabled,
@@ -394,6 +405,7 @@ export async function setProjectFeatures(
   const values: Partial<typeof project.$inferInsert> = {};
   if (patch.initiatives !== undefined) values.initiativesEnabled = patch.initiatives;
   if (patch.dashboards !== undefined) values.dashboardsEnabled = patch.dashboards;
+  if (patch.documents !== undefined) values.documentsEnabled = patch.documents;
   if (patch.notes !== undefined) values.notesEnabled = patch.notes;
   if (patch.cycles !== undefined) values.cyclesEnabled = patch.cycles;
   if (patch.subtasks !== undefined) values.subtasksEnabled = patch.subtasks;
@@ -540,7 +552,28 @@ export async function deleteProject(projectId: number): Promise<void> {
     .from(projectMember)
     .innerJoin(project, eq(project.id, projectMember.projectId))
     .where(and(eq(projectMember.projectId, projectId), eq(projectMember.source, 'scim')));
-  await db.delete(project).where(eq(project.id, projectId));
+  const assetKeys = await db.transaction(async (tx) => {
+    // Serialize with the final upload quota check. A concurrent upload either
+    // commits before these reads or loses its FK race and cleans its S3 object.
+    await lockAttachmentStorage(tx, projectId);
+    const issueAssets = await tx
+      .select({ s3Key: issueAttachment.s3Key })
+      .from(issueAttachment)
+      .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
+      .where(eq(issue.projectId, projectId));
+    const chatAssets = await tx
+      .select({ s3Key: chatAttachment.s3Key })
+      .from(chatAttachment)
+      .where(eq(chatAttachment.projectId, projectId));
+    const documentAssets = await tx
+      .select({ s3Key: documentAsset.s3Key })
+      .from(documentAsset)
+      .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
+      .where(eq(projectDocument.projectId, projectId));
+    await tx.delete(project).where(eq(project.id, projectId));
+    return [...issueAssets, ...chatAssets, ...documentAssets].map((asset) => asset.s3Key);
+  });
+  await deleteObjects(assetKeys);
   for (const { teamId, userId } of provisioned) {
     await dropUnusedTeamMembership(teamId, userId);
   }

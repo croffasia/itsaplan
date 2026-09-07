@@ -16,6 +16,7 @@ import {
   defaultMemberPermissions,
   emptyPermissions,
   fullPermissions,
+  hasPermission,
   normalizePermissions,
   PERMISSION_ACTIONS,
   PERMISSION_RESOURCES,
@@ -190,6 +191,7 @@ export interface AssigneeCandidate {
   // The user an 'owner'-scoped external agent works for: only their runs reach its
   // runner, so delegating it to anyone else does nothing. Null for everyone else.
   restrictedToUserId: string | null;
+  canReadWorkItems: boolean;
 }
 
 export async function listAssigneeCandidates(projectId: number): Promise<AssigneeCandidate[]> {
@@ -202,6 +204,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         username: user.username,
         image: user.image,
         role: projectMember.role,
+        permissions: teamRole.permissions,
         description: projectMember.description,
       })
       .from(projectMember)
@@ -210,6 +213,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
       // permissions). It is listed below as kind 'agent', so it is excluded here to
       // keep the member candidates real people only. Same agent test as listMembers.
       .leftJoin(aiAgent, eq(aiAgent.userId, projectMember.userId))
+      .leftJoin(teamRole, eq(teamRole.id, projectMember.roleId))
       .where(and(eq(projectMember.projectId, projectId), isNull(aiAgent.id))),
     db
       .select({
@@ -231,18 +235,23 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         and(eq(projectMember.userId, aiAgent.userId), eq(projectMember.projectId, projectId)),
       ),
   ]);
-  const members: AssigneeCandidate[] = memberRows.map((r) => ({
-    userId: r.userId,
-    name: r.name,
-    email: r.email,
-    username: r.username,
-    image: r.image,
-    kind: 'member',
-    agentKind: null,
-    role: r.role as MemberRole,
-    description: r.description,
-    restrictedToUserId: null,
-  }));
+  const members: AssigneeCandidate[] = memberRows.map((r) => {
+    const context = toMemberContext(r.role as MemberRole, r.permissions);
+    return {
+      userId: r.userId,
+      name: r.name,
+      email: r.email,
+      username: r.username,
+      image: r.image,
+      kind: 'member',
+      agentKind: null,
+      role: r.role as MemberRole,
+      description: r.description,
+      restrictedToUserId: null,
+      canReadWorkItems:
+        context.role === 'owner' || hasPermission(context.permissions, 'work_items', 'read'),
+    };
+  });
   const agents: AssigneeCandidate[] = agentRows.map((r) => ({
     userId: r.userId,
     name: r.name,
@@ -254,6 +263,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     role: null,
     description: null,
     restrictedToUserId: r.runnerScope === 'owner' ? r.ownerUserId : null,
+    canReadWorkItems: false,
   }));
   return [...members, ...agents].sort((a, b) => a.name.localeCompare(b.name));
 }

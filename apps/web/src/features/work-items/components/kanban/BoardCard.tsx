@@ -84,6 +84,9 @@ export function BoardCard({
             e.stopPropagation();
             selection.toggle(issue.id);
           } else {
+            // Opening an issue handles the click, so the detail panel keeps it
+            // rather than reading it as a click outside and closing.
+            e.preventDefault();
             onOpen(issue.id);
           }
         }}

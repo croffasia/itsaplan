@@ -231,7 +231,8 @@ nosniff`, forced download outside a strict media allowlist, locked-down CSP.
 and real better-auth sessions — nothing is mocked. Import `app` via the helpers (from
 `src/app.ts`), never `src/index.ts` (it binds the port).
 
-**Setup.** Point tests at a dedicated `*_test` database, never dev/prod:
+**Setup.** `bun run setup` at the repo root creates the `*_test` database next to the dev
+one, writes `.env.test`, and migrates it. To do it by hand instead:
 
 ```bash
 cp .env.test.example .env.test        # repo root; DATABASE_URL must name a *_test database

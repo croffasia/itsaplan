@@ -113,7 +113,8 @@
       "notes": "用于便签的自由画布。",
       "subtasks": "将工作项拆分为父工作项下的子任务。",
       "checklists": "在工作项中跟踪简单步骤。",
-      "issueStats": "统计工作项在各状态中停留的时间。"
+      "issueStats": "统计工作项在各状态中停留的时间。",
+      "documents": "在 Docs 中组织共享项目文档。"
     },
     "featureOn": "已启用{feature}",
     "featureOff": "已停用{feature}"
@@ -470,5 +471,22 @@
     "onOpenNone": "不执行操作",
     "changeState": "更改状态…",
     "noState": "无状态。"
+  },
+  "issueTemplates": {
+    "addTemplate": "新建模板",
+    "editTemplate": "编辑模板",
+    "deleteTemplate": "删除模板",
+    "deleteTitle": "删除模板“{name}”",
+    "deleteMessage": "模板将被删除，由它创建的问题不受影响。此操作无法撤销。",
+    "namePlaceholder": "模板名称",
+    "descriptionPlaceholder": "该模板的用途",
+    "issueTitle": "问题标题",
+    "issueTitlePlaceholder": "问题的初始标题",
+    "issueDescription": "问题描述",
+    "issueDescriptionPlaceholder": "问题的初始描述，使用 Markdown",
+    "properties": "默认属性",
+    "propertiesHint": "创建问题时套用，创建前仍可修改。",
+    "emptyTitle": "还没有模板",
+    "emptyDescription": "模板会为新问题预填标题、描述和属性。"
   }
 }

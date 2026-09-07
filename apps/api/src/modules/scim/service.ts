@@ -2,7 +2,7 @@ import { db, aiAgent, projectMember, scimGroup, scimGroupMember, user } from '@r
 import { and, eq, inArray, notExists, sql } from 'drizzle-orm';
 import { generateUsername } from '@repo/auth';
 import { iso } from '#shared/lib';
-import { deleteInstanceUser } from '#modules/god/service';
+import { deleteAccount } from '#shared/account-deletion';
 import { countOwners } from '#modules/members/service';
 import { insertOwnedTeam } from '#modules/teams/service';
 import { ScimError, type ScimFilter, type ScimGroupRecord, type ScimUserRecord } from './resource';
@@ -286,7 +286,7 @@ export async function deleteScimUser(id: string): Promise<void> {
         'project over to another owner first.',
     );
   }
-  await deleteInstanceUser(id);
+  await deleteAccount(id);
 }
 
 // The projects this user owns alone. Deleting them would leave those projects with

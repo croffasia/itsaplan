@@ -31,7 +31,10 @@ export function CalendarUnscheduledCard({
         ref={setNodeRef}
         {...attributes}
         {...listeners}
-        onClick={() => onOpen(issue.id)}
+        onClick={(e) => {
+          e.preventDefault();
+          onOpen(issue.id);
+        }}
         className={cn(
           'kanban-card flex cursor-pointer items-center gap-2 rounded-md p-2 text-xs sm:touch-none',
           isDragging && 'opacity-40',

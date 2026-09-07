@@ -60,8 +60,9 @@ export function markSignedIn(): void {
 
 // A 401 means the session behind the cookie is gone. The proxy only checks that a
 // session cookie exists, so a stale one keeps the app open on a page where every
-// request fails. Signing out is what drops the cookie; with it still set the proxy
-// would bounce /login straight back into the app.
+// request fails. Sign out to drop the cookie, then leave for the expired screen
+// whatever the sign-out answered — a cookie the server declines to clear must not
+// hold the browser in the app.
 // The request is written out rather than calling `signOut()` from @/lib/auth-client:
 // that module reads API_URL from this one, so importing it back here would make a
 // cycle that evaluates auth-client before API_URL is assigned.
@@ -69,15 +70,8 @@ function endSession(): void {
   if (typeof window === 'undefined' || signingOut) return;
   signingOut = true;
   void fetch(`${API_URL}/api/auth/sign-out`, { method: 'POST', credentials: 'include' })
-    .then((res) => {
-      // Leaving with the cookie still set sends the proxy straight back into the
-      // app, where the next 401 starts this over as a fresh page load.
-      if (res.ok) window.location.replace('/login?expired=1');
-      else signingOut = false;
-    })
-    .catch(() => {
-      signingOut = false;
-    });
+    .catch(() => {})
+    .then(() => window.location.replace('/login?expired=1'));
 }
 
 // Turns a failed response into the error to throw, and catches an ended session on
@@ -272,6 +266,7 @@ export interface Project {
   // useProjectFeatures, which hides the navigation and the section itself.
   initiativesEnabled: boolean;
   dashboardsEnabled: boolean;
+  documentsEnabled: boolean;
   notesEnabled: boolean;
   cyclesEnabled: boolean;
   subtasksEnabled: boolean;
@@ -306,6 +301,7 @@ export type CopyProjectIncludeKey =
   | 'customFields'
   | 'views'
   | 'dashboards'
+  | 'documents'
   | 'actions'
   | 'configuration'
   | 'webhooks'
@@ -371,6 +367,9 @@ export interface Assignee {
   // The user an 'owner'-scoped agent works for: delegating it to anyone else queues a
   // run its runner never receives. Null for members and team-scoped agents.
   restrictedToUserId: string | null;
+  // Whether this person may read issues and can therefore receive watcher
+  // notifications without leaking work-item content.
+  canReadWorkItems: boolean;
 }
 
 // One member custom field an agent reacts to, with the seconds its run waits.
@@ -1026,6 +1025,22 @@ export interface CustomField {
   options: CustomFieldOption[];
 }
 
+// A preset a new issue can be created from: the title and description it starts
+// with plus the properties applied on top of them. A property left null presets
+// nothing — the create dialog keeps its own default for it.
+export interface IssueTemplate {
+  id: number;
+  name: string;
+  description: string;
+  titleTemplate: string;
+  descriptionTemplate: string;
+  typeId: number | null;
+  columnId: number | null;
+  priority: string | null;
+  assigneeUserId: string | null;
+  labelIds: number[];
+}
+
 // One custom field value on a project issue: the scalar value (null for
 // select/multi_select and unset fields), the end of a datetime_range, and the
 // selected option ids. Only fields with a value set appear; unset fields are
@@ -1198,6 +1213,7 @@ export interface ProjectFeatures {
   initiatives: boolean;
   cycles: boolean;
   dashboards: boolean;
+  documents: boolean;
   notes: boolean;
   subtasks: boolean;
   checklists: boolean;
@@ -1805,6 +1821,149 @@ export interface NoteBoardAccessCandidate {
   canAccess: boolean;
 }
 
+export interface NoteBoardListParams {
+  q?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface ProjectDocumentSummary {
+  id: number;
+  projectId: number;
+  parentId: number | null;
+  title: string;
+  icon: string | null;
+  metadata: Record<string, unknown>;
+  fullWidth: boolean;
+  isPrivate: boolean;
+  isLocked: boolean;
+  isFavorite: boolean;
+  archivedAt: string | null;
+  position: number;
+  version: number;
+  ownerUserId: string | null;
+  createdByUserId: string | null;
+  updatedByUserId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProjectDocument extends ProjectDocumentSummary {
+  content: string;
+  contentJson: Record<string, unknown> | null;
+}
+
+export interface DocumentIssueLink {
+  issueId: number;
+  sequenceNumber: number;
+  identifier: string;
+  title: string;
+  archived: boolean;
+  createdAt: string;
+}
+
+export interface IssueDocumentLink {
+  documentId: number;
+  title: string;
+  icon: string | null;
+  isPrivate: boolean;
+  archived: boolean;
+  createdAt: string;
+}
+
+export interface NewProjectDocumentInput {
+  title?: string;
+  content?: string;
+  contentJson?: Record<string, unknown> | null;
+  icon?: string | null;
+  metadata?: Record<string, unknown>;
+  fullWidth?: boolean;
+  isPrivate?: boolean;
+  parentId?: number | null;
+}
+
+export interface ProjectDocumentPatch {
+  version: number;
+  title?: string;
+  content?: string;
+  contentJson?: Record<string, unknown> | null;
+  icon?: string | null;
+  metadata?: Record<string, unknown>;
+  fullWidth?: boolean;
+  parentId?: number | null;
+  position?: number;
+  previousSiblingId?: number | null;
+  nextSiblingId?: number | null;
+}
+
+export interface ProjectDocumentRevisionSummary {
+  id: number;
+  documentId: number;
+  version: number;
+  title: string;
+  createdByUserId: string | null;
+  createdAt: string;
+}
+
+export interface ProjectDocumentRevision extends ProjectDocumentRevisionSummary {
+  parentId: number | null;
+  content: string;
+  contentJson: Record<string, unknown> | null;
+  icon: string | null;
+  metadata: Record<string, unknown>;
+  fullWidth: boolean;
+  isPrivate: boolean;
+  isLocked: boolean;
+  archivedAt: string | null;
+  position: number;
+}
+
+export interface ProjectDocumentExport {
+  filename: string;
+  mimeType: 'text/markdown';
+  content: string;
+  version: number;
+  exportedAt: string;
+}
+
+export interface DocumentAsset {
+  id: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  uploadedByUserId: string | null;
+  createdAt: string;
+  url: string;
+}
+
+function withDocumentAssetUrl(asset: DocumentAsset): DocumentAsset {
+  const match = asset.url.match(
+    /^\/projects\/([^/]+)\/documents\/(\d+)\/assets\/([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})\/raw$/i,
+  );
+  if (!match) throw new Error('The document asset URL returned by the API is invalid');
+  const [, encodedProjectKey, documentId, publicId] = match;
+  return {
+    ...asset,
+    url: `/protected-media/projects/${encodeURIComponent(decodeURIComponent(encodedProjectKey))}/documents/${documentId}/assets/${publicId}/raw`,
+  };
+}
+
+async function sendDocumentAssetFile(
+  projectKey: string,
+  documentId: number,
+  file: File,
+): Promise<DocumentAsset> {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`${API_URL}/projects/${projectKey}/documents/${documentId}/assets`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+  if (!res.ok) throw await apiFailure(res);
+  return withDocumentAssetUrl(await res.json());
+}
+
 // --- Analytics DTOs (project metrics behind the dashboard widgets) ---------------
 
 export interface AnalyticsStats {
@@ -2211,6 +2370,7 @@ export interface ProjectScaffold {
   // Every custom field of the project (all type scopes); consumers filter by
   // issueTypeId locally.
   customFields: CustomField[];
+  issueTemplates: IssueTemplate[];
   viewer: ProjectViewer;
   // The caller's resolved permission matrix (owners get every flag).
   permissions: Permissions;
@@ -2271,6 +2431,46 @@ export interface DevelopmentLink {
   checkStatus: PipelineStatus | null;
   checks: DevelopmentCheck[];
   updatedAt: string;
+}
+
+export interface DevelopmentRepository {
+  id: number;
+  provider: 'github' | 'gitlab';
+  fullName: string;
+  webUrl: string;
+}
+
+export interface LinkablePullRequest {
+  number: number;
+  title: string;
+  url: string | null;
+  state: PullRequestState;
+  draft: boolean;
+  sourceBranch: string | null;
+  targetBranch: string;
+  headSha: string | null;
+  updatedAt: string;
+  linked: boolean;
+}
+
+export interface LinkablePullRequestPage {
+  pullRequests: LinkablePullRequest[];
+  nextPage: number | null;
+}
+
+export interface DevelopmentBranchPage {
+  branches: string[];
+  defaultBranch: string | null;
+  nextPage: number | null;
+}
+
+export interface CreateIssuePullRequestInput {
+  repositoryId: number;
+  sourceBranch: string;
+  targetBranch: string;
+  title: string;
+  description: string;
+  draft: boolean;
 }
 
 // A relation between two issues (mirrors apps/api modules/issues/links.ts). 'blocks' and
@@ -2392,7 +2592,7 @@ export interface IssueWithWatchers extends IssueRelations {
 // The scaffold mirrors ProjectScaffold minus the caller's viewer/permissions and
 // member emails and handles (a public page shows names and avatars only).
 export type PublicScaffold = Omit<ProjectScaffold, 'viewer' | 'permissions' | 'assignees'> & {
-  assignees: Omit<Assignee, 'email' | 'username'>[];
+  assignees: Omit<Assignee, 'email' | 'username' | 'canReadWorkItems'>[];
 };
 
 export interface SharedIssueBundle {
@@ -2646,6 +2846,21 @@ export interface NewCustomFieldInput {
   options?: string[];
 }
 
+export interface NewIssueTemplateInput {
+  name: string;
+  description?: string;
+  titleTemplate?: string;
+  descriptionTemplate?: string;
+  typeId?: number | null;
+  columnId?: number | null;
+  priority?: string | null;
+  assigneeUserId?: string | null;
+  labelIds?: number[];
+}
+
+// A property left out keeps its value; `labelIds` replaces the whole label set.
+export type IssueTemplatePatch = Partial<NewIssueTemplateInput>;
+
 // The project permission matrix (mirrors apps/api shared/permissions.ts): each
 // resource grants or denies 4 actions. A custom role carries one matrix.
 export type PermissionAction = 'create' | 'edit' | 'read' | 'delete';
@@ -2655,6 +2870,7 @@ export type PermissionResource =
   | 'initiatives'
   | 'cycles'
   | 'dashboards'
+  | 'documents'
   | 'views'
   | 'members_invite'
   | 'members_manage'
@@ -2666,6 +2882,7 @@ export type PermissionResource =
   | 'agent_skills'
   | 'agent_tools'
   | 'custom_fields'
+  | 'issue_templates'
   | 'workflow_config'
   | 'actions'
   | 'webhooks'
@@ -3111,6 +3328,19 @@ export const api = {
   deleteCustomField: (projectKey: string, fieldId: number) =>
     request<void>(`/projects/${projectKey}/custom-fields/${fieldId}`, { method: 'DELETE' }),
 
+  createIssueTemplate: (projectKey: string, input: NewIssueTemplateInput) =>
+    request<IssueTemplate>(`/projects/${projectKey}/issue-templates`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateIssueTemplate: (projectKey: string, templateId: number, patch: IssueTemplatePatch) =>
+    request<IssueTemplate>(`/projects/${projectKey}/issue-templates/${templateId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteIssueTemplate: (projectKey: string, templateId: number) =>
+    request<void>(`/projects/${projectKey}/issue-templates/${templateId}`, { method: 'DELETE' }),
+
   createIssue: (projectKey: string, input: NewIssueInput) =>
     request<Issue>(`/projects/${projectKey}/issues`, {
       method: 'POST',
@@ -3146,6 +3376,32 @@ export const api = {
     request<Issue>(`/issues/${id}`, { method: 'PATCH', body: JSON.stringify(patch) }),
   removeIssueDevelopmentLink: (issueId: number, linkId: number) =>
     request<void>(`/issues/${issueId}/development/${linkId}`, { method: 'DELETE' }),
+  listIssueDevelopmentRepositories: (issueId: number) =>
+    request<DevelopmentRepository[]>(`/issues/${issueId}/development/repositories`),
+  listLinkablePullRequests: (
+    issueId: number,
+    repositoryId: number,
+    input: { state: 'open' | 'all'; page: number },
+  ) =>
+    request<LinkablePullRequestPage>(
+      `/issues/${issueId}/development/repositories/${repositoryId}/pull-requests?${new URLSearchParams(
+        { state: input.state, page: String(input.page) },
+      )}`,
+    ),
+  listDevelopmentBranches: (issueId: number, repositoryId: number, page: number) =>
+    request<DevelopmentBranchPage>(
+      `/issues/${issueId}/development/repositories/${repositoryId}/branches?page=${page}`,
+    ),
+  linkIssueDevelopment: (issueId: number, input: { repositoryId: number; number: number }) =>
+    request<DevelopmentLink>(`/issues/${issueId}/development`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  createIssuePullRequest: (issueId: number, input: CreateIssuePullRequestInput) =>
+    request<DevelopmentLink>(`/issues/${issueId}/development/pull-requests`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
   // An issue that has subtasks needs a disposition saying what happens to them;
   // without one the server rejects the delete with a 409.
   deleteIssue: (id: number, subtasks?: SubtaskDisposition) =>
@@ -3200,12 +3456,17 @@ export const api = {
   unlinkIssues: (issueId: number, linkId: number) =>
     request<void>(`/issues/${issueId}/links/${linkId}`, { method: 'DELETE' }),
 
-  // Following an issue, for the signed-in user only. Both return the resulting
-  // watcher list.
+  // Following an issue. The singular routes act on the signed-in user; the
+  // watcher routes let an editor curate other project members. Every route
+  // returns the resulting watcher list.
   watchIssue: (issueId: number) =>
     request<IssueWatcher[]>(`/issues/${issueId}/watch`, { method: 'POST' }),
   unwatchIssue: (issueId: number) =>
     request<IssueWatcher[]>(`/issues/${issueId}/watch`, { method: 'DELETE' }),
+  addIssueWatcher: (issueId: number, userId: string) =>
+    request<IssueWatcher[]>(`/issues/${issueId}/watchers/${userId}`, { method: 'PUT' }),
+  removeIssueWatcher: (issueId: number, userId: string) =>
+    request<IssueWatcher[]>(`/issues/${issueId}/watchers/${userId}`, { method: 'DELETE' }),
 
   setFieldValue: (issueId: number, fieldId: number, input: IssueFieldValueInput) =>
     request<{ ok: boolean }>(`/issues/${issueId}/fields/${fieldId}`, {
@@ -3423,6 +3684,112 @@ export const api = {
     }),
   deleteNoteBoard: (projectKey: string, boardId: number) =>
     request<void>(`/projects/${projectKey}/note-boards/${boardId}`, { method: 'DELETE' }),
+
+  listDocuments: (projectKey: string, q?: string, archived = false) => {
+    const params = new URLSearchParams();
+    if (q) params.set('q', q);
+    if (archived) params.set('archived', 'true');
+    const suffix = params.size > 0 ? `?${params}` : '';
+    return request<ProjectDocumentSummary[]>(`/projects/${projectKey}/documents${suffix}`);
+  },
+  getDocument: (projectKey: string, documentId: number) =>
+    request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}`),
+  listDocumentIssueLinks: (projectKey: string, documentId: number) =>
+    request<DocumentIssueLink[]>(`/projects/${projectKey}/documents/${documentId}/issues`),
+  listIssueDocumentLinks: (projectKey: string, issueId: number) =>
+    request<IssueDocumentLink[]>(`/projects/${projectKey}/documents/for-issue/${issueId}`),
+  linkDocumentIssue: (projectKey: string, documentId: number, issueId: number) =>
+    request<DocumentIssueLink>(`/projects/${projectKey}/documents/${documentId}/issues`, {
+      method: 'POST',
+      body: JSON.stringify({ issueId }),
+    }),
+  unlinkDocumentIssue: (projectKey: string, documentId: number, issueId: number) =>
+    request<void>(`/projects/${projectKey}/documents/${documentId}/issues/${issueId}`, {
+      method: 'DELETE',
+    }),
+  createDocument: (projectKey: string, input: NewProjectDocumentInput) =>
+    request<ProjectDocument>(`/projects/${projectKey}/documents`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateDocument: (projectKey: string, documentId: number, patch: ProjectDocumentPatch) =>
+    request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteDocument: (projectKey: string, documentId: number, version: number) =>
+    request<void>(`/projects/${projectKey}/documents/${documentId}?version=${version}`, {
+      method: 'DELETE',
+    }),
+  setDocumentAccess: (
+    projectKey: string,
+    documentId: number,
+    input: { version: number; isPrivate: boolean },
+  ) =>
+    request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/access`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  setDocumentLocked: (projectKey: string, documentId: number, version: number, locked: boolean) =>
+    request<ProjectDocument>(
+      `/projects/${projectKey}/documents/${documentId}/${locked ? 'lock' : 'unlock'}`,
+      { method: 'POST', body: JSON.stringify({ version }) },
+    ),
+  archiveDocument: (projectKey: string, documentId: number, version: number) =>
+    request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/archive`, {
+      method: 'POST',
+      body: JSON.stringify({ version }),
+    }),
+  restoreDocument: (projectKey: string, documentId: number, version: number) =>
+    request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/restore`, {
+      method: 'POST',
+      body: JSON.stringify({ version }),
+    }),
+  duplicateDocument: (
+    projectKey: string,
+    documentId: number,
+    input: { version: number; title?: string; parentId?: number | null },
+  ) =>
+    request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/duplicate`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  setDocumentFavorite: (projectKey: string, documentId: number, isFavorite: boolean) =>
+    request<{ isFavorite: boolean }>(
+      `/projects/${projectKey}/documents/${documentId}/preferences`,
+      { method: 'PATCH', body: JSON.stringify({ isFavorite }) },
+    ),
+  listDocumentRevisions: (projectKey: string, documentId: number) =>
+    request<ProjectDocumentRevisionSummary[]>(
+      `/projects/${projectKey}/documents/${documentId}/revisions`,
+    ),
+  getDocumentRevision: (projectKey: string, documentId: number, revisionId: number) =>
+    request<ProjectDocumentRevision>(
+      `/projects/${projectKey}/documents/${documentId}/revisions/${revisionId}`,
+    ),
+  restoreDocumentRevision: (
+    projectKey: string,
+    documentId: number,
+    revisionId: number,
+    version: number,
+  ) =>
+    request<ProjectDocument>(
+      `/projects/${projectKey}/documents/${documentId}/revisions/${revisionId}/restore`,
+      { method: 'POST', body: JSON.stringify({ version }) },
+    ),
+  exportDocument: (projectKey: string, documentId: number) =>
+    request<ProjectDocumentExport>(`/projects/${projectKey}/documents/${documentId}/export`),
+  listDocumentAssets: (projectKey: string, documentId: number) =>
+    request<DocumentAsset[]>(`/projects/${projectKey}/documents/${documentId}/assets`).then(
+      (assets) => assets.map(withDocumentAssetUrl),
+    ),
+  uploadDocumentAsset: (projectKey: string, documentId: number, file: File) =>
+    sendDocumentAssetFile(projectKey, documentId, file),
+  deleteDocumentAsset: (projectKey: string, documentId: number, publicId: string) =>
+    request<void>(
+      `/projects/${projectKey}/documents/${documentId}/assets/${encodeURIComponent(publicId)}`,
+      { method: 'DELETE' },
+    ),
 
   // Analytics — read-only project metrics behind the dashboard widgets.
   getStats: (projectKey: string) =>

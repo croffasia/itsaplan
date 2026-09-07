@@ -37,6 +37,7 @@ export function CalendarDayChip({
             {...listeners}
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onOpen(issue.id);
             }}
             className={cn(

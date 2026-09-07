@@ -5,6 +5,7 @@ export const PROJECT_FEATURES = [
   'dashboards',
   'initiatives',
   'cycles',
+  'documents',
   'notes',
   'subtasks',
   'checklists',

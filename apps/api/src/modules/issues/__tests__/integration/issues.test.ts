@@ -270,6 +270,39 @@ describe('issues', () => {
     });
   });
 
+  describe('dates', () => {
+    // The value goes into a `date` column, so an unvalidated one reaches Postgres
+    // and answers 500 with the driver's message instead of 400.
+    it('rejects a due date that is not YYYY-MM-DD', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const res = await asOwner.projects({ projectKey: 'MKT' }).issues.post({
+        columnId,
+        title: 'Dated',
+        dueDate: '01.02.2026',
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a due date an update sends in another notation', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const created = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Dated' });
+      const res = await asOwner
+        .issues({ issueId: created.data!.id })
+        .patch({ dueDate: '01.02.2026' });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a date whose month does not exist', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Dated', dueDate: '2026-13-45' });
+      expect(res.status).toBe(400);
+    });
+  });
+
   describe('update', () => {
     it('updates the title', async () => {
       const { asOwner, columnId } = await setupProject();

@@ -21,6 +21,7 @@ import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu'
 import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
 import { ResizableImage } from '@/components/common/editor/tiptap-image';
 import { MarkdownTable } from '@/components/common/editor/tiptap-table';
+import { pasteMarkdown } from '@/components/common/editor/pasteMarkdown';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
 
 const lowlight = createLowlight(common);
@@ -164,18 +165,21 @@ export default function DocumentMarkdownEditor({
         class: 'md-content flex-1 focus:outline-none selection:bg-primary/15',
       },
       handlePaste: (_view, event) => {
-        const file = firstImageFile(event.clipboardData?.files);
         const currentEditor = editorRef.current;
-        if (!file || !onUploadImage || !currentEditor || !editableRef.current) return false;
-        event.preventDefault();
-        void uploadAndInsertImage(
-          currentEditor,
-          file,
-          onUploadImage,
-          currentEditor.state.selection.from,
-          () => editableRef.current,
-        );
-        return true;
+        if (!currentEditor || !editableRef.current) return false;
+        const file = firstImageFile(event.clipboardData?.files);
+        if (file && onUploadImage) {
+          event.preventDefault();
+          void uploadAndInsertImage(
+            currentEditor,
+            file,
+            onUploadImage,
+            currentEditor.state.selection.from,
+            () => editableRef.current,
+          );
+          return true;
+        }
+        return pasteMarkdown(currentEditor, event.clipboardData);
       },
       handleDrop: (view, event, _slice, moved) => {
         const file = firstImageFile(event.dataTransfer?.files);

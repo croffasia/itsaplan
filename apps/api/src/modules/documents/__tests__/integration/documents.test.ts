@@ -1298,6 +1298,7 @@ describe('documents', () => {
                     target: '_blank',
                     rel: 'noopener noreferrer',
                     class: 'docs-link',
+                    title: 'Docs',
                   },
                 },
                 { type: 'textStyle', attrs: { color: '#abcdef' } },
@@ -1330,6 +1331,26 @@ describe('documents', () => {
         },
         { type: 'image', attrs: { src: 'https://example.com/diagram.png' } },
         {
+          type: 'bulletList',
+          attrs: { tight: true },
+          content: [
+            {
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Bullet' }] }],
+            },
+          ],
+        },
+        {
+          type: 'orderedList',
+          attrs: { start: 1, tight: true, type: null },
+          content: [
+            {
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Step' }] }],
+            },
+          ],
+        },
+        {
           type: 'taskList',
           content: [
             {
@@ -1352,7 +1373,7 @@ describe('documents', () => {
                 },
                 {
                   type: 'tableCell',
-                  attrs: { colspan: 2, rowspan: 1, colwidth: null },
+                  attrs: { colspan: 2, rowspan: 1, colwidth: null, align: 'center' },
                   content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Cell' }] }],
                 },
               ],
@@ -1409,6 +1430,10 @@ describe('documents', () => {
       withNode({ type: 'tableHeader', attrs: { rowspan: 101 } }),
       withNode({ type: 'tableCell', attrs: { colwidth: [] } }),
       withNode({ type: 'tableCell', attrs: { colwidth: [0] } }),
+      withNode({ type: 'tableCell', attrs: { align: 'justify' } }),
+      withNode({ type: 'bulletList', attrs: { tight: 'yes' } }),
+      withNode({ type: 'orderedList', attrs: { type: 'x' } }),
+      withMark({ type: 'link', attrs: { href: 'https://example.com', title: 'x'.repeat(1_001) } }),
       withMark({ type: 'textStyle', attrs: { color: 'rgb(255, 0, 0)' } }),
       withMark({ type: 'highlight', attrs: { color: '#12' } }),
       withMark({ type: 'highlight', attrs: { color: '#12345' } }),

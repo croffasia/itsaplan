@@ -10,6 +10,7 @@ import {
   uploadAndInsertImage,
   syncDocumentEditorEditable,
 } from './DocumentMarkdownEditor';
+import { pasteMarkdown } from '@/components/common/editor/pasteMarkdown';
 
 const richDocument: JSONContent = {
   type: 'doc',
@@ -66,17 +67,20 @@ let previousWindow: PropertyDescriptor | undefined;
 let previousDocument: PropertyDescriptor | undefined;
 let previousNavigator: PropertyDescriptor | undefined;
 let previousAnimationFrame: PropertyDescriptor | undefined;
+let previousNode: PropertyDescriptor | undefined;
 
 beforeEach(() => {
   previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
   previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
   previousNavigator = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
   previousAnimationFrame = Object.getOwnPropertyDescriptor(globalThis, 'requestAnimationFrame');
+  previousNode = Object.getOwnPropertyDescriptor(globalThis, 'Node');
   dom = new JSDOM('<!doctype html><div id="one"></div><div id="two"></div>');
   Object.defineProperties(globalThis, {
     window: { configurable: true, value: dom.window },
     document: { configurable: true, value: dom.window.document },
     navigator: { configurable: true, value: dom.window.navigator },
+    Node: { configurable: true, value: dom.window.Node },
     requestAnimationFrame: {
       configurable: true,
       value: (callback: FrameRequestCallback) => setTimeout(callback, 0),
@@ -91,6 +95,7 @@ afterEach(() => {
     ['document', previousDocument],
     ['navigator', previousNavigator],
     ['requestAnimationFrame', previousAnimationFrame],
+    ['Node', previousNode],
   ] as const) {
     if (descriptor) Object.defineProperty(globalThis, name, descriptor);
     else Reflect.deleteProperty(globalThis, name);
@@ -171,7 +176,6 @@ describe('DocumentMarkdownEditor JSON persistence', () => {
       }),
       editable: true,
     });
-
     let updates = 0;
     editor.on('update', () => {
       updates += 1;
@@ -289,6 +293,101 @@ describe('DocumentMarkdownEditor JSON persistence', () => {
 
     assert.equal(await insertion, false);
     assert.equal(editor.getJSON().content?.some((node) => node.type === 'image') ?? false, false);
+    editor.destroy();
+  });
+});
+
+describe('DocumentMarkdownEditor markdown paste', () => {
+  const editorFor = (content?: JSONContent) =>
+    new Editor({
+      element: document.querySelector('#one') as HTMLElement,
+      extensions: documentEditorExtensions({
+        placeholder: '',
+        codeBlockLabel: 'Code',
+        tableLabel: 'Table',
+      }),
+      content,
+    });
+
+  const clipboard = (text: string, html = '') =>
+    ({ getData: (type: string) => (type === 'text/plain' ? text : html) }) as DataTransfer;
+
+  it('parses pasted text as markdown', () => {
+    const editor = editorFor();
+    assert.equal(pasteMarkdown(editor, clipboard('# Title\n\n- one\n- two')), true);
+    assert.equal(editor.storage.markdown.getMarkdown(), '# Title\n\n- one\n- two');
+    editor.destroy();
+  });
+
+  it('leaves the text to ProseMirror inside a code block', () => {
+    const editor = editorFor({ type: 'doc', content: [{ type: 'codeBlock' }] });
+    editor.commands.focus();
+    assert.equal(pasteMarkdown(editor, clipboard('# Title')), false);
+    editor.destroy();
+  });
+
+  // A copy from this editor carries the whole document shape in its HTML; the
+  // plain text beside it has lost the "#" and the "-" that make it markdown.
+  it('leaves a copy from a ProseMirror editor to ProseMirror', () => {
+    const editor = editorFor();
+    const html = '<div data-pm-slice="1 1 []"><h1>Title</h1><ul><li><p>one</p></li></ul></div>';
+    assert.equal(pasteMarkdown(editor, clipboard('Title\n\none', html)), false);
+    editor.destroy();
+  });
+});
+
+describe('DocumentMarkdownEditor schema attrs', () => {
+  // The API validates the saved JSON against a per-node allowlist and rejects the
+  // whole save on any attr it does not know, null included. This pins the schema
+  // that produces that JSON: an attr added by a tiptap upgrade fails here first,
+  // and the allowlist in apps/api documents service.ts is what has to grow.
+  it('keeps every node and mark to the attrs the API accepts', () => {
+    const editor = new Editor({
+      element: document.querySelector('#one') as HTMLElement,
+      extensions: documentEditorExtensions({
+        placeholder: '',
+        codeBlockLabel: 'Code',
+        tableLabel: 'Table',
+      }),
+    });
+
+    const attrsOf = (types: Record<string, { spec: { attrs?: object } }>) =>
+      Object.fromEntries(
+        Object.entries(types).map(([name, type]) => [
+          name,
+          Object.keys(type.spec.attrs ?? {}).sort(),
+        ]),
+      );
+    assert.deepEqual(attrsOf(editor.schema.nodes), {
+      doc: [],
+      paragraph: ['textAlign'],
+      text: [],
+      blockquote: [],
+      bulletList: ['tight'],
+      orderedList: ['start', 'tight', 'type'],
+      listItem: [],
+      heading: ['level', 'textAlign'],
+      horizontalRule: [],
+      hardBreak: [],
+      codeBlock: ['language'],
+      image: ['alt', 'src', 'style', 'title', 'width'],
+      table: [],
+      tableRow: [],
+      tableHeader: ['align', 'colspan', 'colwidth', 'rowspan'],
+      tableCell: ['align', 'colspan', 'colwidth', 'rowspan'],
+      taskList: [],
+      taskItem: ['checked'],
+    });
+    assert.deepEqual(attrsOf(editor.schema.marks), {
+      bold: [],
+      italic: [],
+      strike: [],
+      code: [],
+      link: ['class', 'href', 'rel', 'target', 'title'],
+      textStyle: ['color'],
+      underline: [],
+      highlight: ['color'],
+    });
     editor.destroy();
   });
 });

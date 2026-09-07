@@ -7,6 +7,7 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight';
 import { Markdown } from 'tiptap-markdown';
+import { pasteMarkdown } from './pasteMarkdown';
 import { ResizableImage } from './tiptap-image';
 import { Mention } from '@/lib/tiptap-mention';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
@@ -150,15 +151,17 @@ export default function MarkdownEditor({
         return true;
       },
       // A pasted screenshot or copied file arrives as clipboard files: upload
-      // each and insert at the cursor, same as a drop. Plain text/html pastes
-      // carry no files and fall through to tiptap's default handling.
+      // each and insert at the cursor, same as a drop.
       handlePaste(view, event) {
-        if (!uploadFile) return false;
         const files = event.clipboardData?.files;
-        if (!files || files.length === 0) return false;
-        event.preventDefault();
-        insertFiles(files, view.state.selection.to);
-        return true;
+        if (uploadFile && files && files.length > 0) {
+          event.preventDefault();
+          insertFiles(files, view.state.selection.to);
+          return true;
+        }
+        const editor = editorRef.current;
+        if (!editor) return false;
+        return pasteMarkdown(editor, event.clipboardData);
       },
     },
     onUpdate: ({ editor }) => {

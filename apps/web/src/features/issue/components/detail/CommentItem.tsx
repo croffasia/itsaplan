@@ -3,7 +3,7 @@ import { type FeedItem } from '@/lib/api';
 import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { useRelativeTime } from '@/context/relativeTimeContext';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import { useTranslations } from 'next-intl';
 
 // One comment inside a thread card: a line of author, age and the reply button over
@@ -47,7 +47,7 @@ export default function CommentItem({
           </Button>
         )}
       </div>
-      <IssueMarkdownEditor
+      <MarkdownEditor
         className="mt-1 ps-7 text-sm text-foreground/85"
         defaultValue={item.body ?? ''}
         editable={false}

@@ -2,7 +2,7 @@ import { type SharedIssueBundle } from '@/lib/api';
 import { toPublicProjectDetail } from '@/utils/publicProject';
 import { usePersistedOpen, usePersistedOpenGroups } from '../../hooks/usePersistedOpen';
 import { fieldDefsForType } from '../../utils/fieldDefs';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
@@ -56,7 +56,7 @@ export default function ReadOnlyIssueDetail({
         <h1 className="mt-1 text-lg font-semibold">{issue.title}</h1>
 
         {issue.description.trim() && (
-          <IssueMarkdownEditor className="mt-4" defaultValue={issue.description} editable={false} />
+          <MarkdownEditor className="mt-4" defaultValue={issue.description} editable={false} />
         )}
 
         {fieldDefs

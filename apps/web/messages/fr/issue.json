@@ -239,11 +239,7 @@
     "endTime": "Heure de fin"
   },
   "editor": {
-    "insertImage": "Insérer une image",
-    "insertNamed": "Insérer {name}",
-    "descriptionPlaceholder": "Ajouter une description…",
-    "noImages": "Aucune image jointe pour l'instant. Envoyez-en une depuis le panneau Pièces jointes, ou déposez-la directement dans l'éditeur.",
-    "image": "Image"
+    "descriptionPlaceholder": "Ajouter une description…"
   },
   "cycleSelect": {
     "label": "Cycle",

@@ -4,16 +4,14 @@ import { assertPermission, requireUser } from '#shared/access';
 import { guards } from '#shared/guards';
 import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
-import { getObject } from '#shared/s3';
 import { mcpTool } from '#mcp/generate';
 import { commonErrors, errors } from '#shared/responses';
 import { getMembership } from '#modules/members/service';
 import { rawAttachmentQuery } from '#modules/attachments/model';
 import {
   assertAttachmentUploadAllowed,
-  attachmentEtag,
   attachmentObjectKey,
-  attachmentResponseHeaders,
+  attachmentObjectResponse,
   deleteAttachmentObject,
   safeAttachmentFilename,
   storeAttachmentObject,
@@ -308,24 +306,12 @@ export const documentRoutes = new Elysia({
         requireUser(user).id,
       );
       if (!asset) throw new HttpError(404, 'Asset not found');
-      const etag = attachmentEtag(asset.s3Key);
-      if (request.headers.get('if-none-match') === etag) {
-        return new Response(null, { status: 304, headers: { ETag: etag } });
-      }
-      let object;
-      try {
-        object = await getObject(asset.s3Key);
-      } catch (error) {
-        throw new HttpError(404, error instanceof Error ? error.message : 'Asset not found');
-      }
-      return new Response(object.body, {
-        headers: attachmentResponseHeaders({
-          contentType: asset.contentType || object.contentType,
-          filename: asset.filename,
-          contentLength: object.contentLength,
-          etag,
-          download: query.download != null,
-        }),
+      return attachmentObjectResponse({
+        s3Key: asset.s3Key,
+        contentType: asset.contentType,
+        filename: asset.filename,
+        request,
+        download: query.download != null,
       });
     },
     {

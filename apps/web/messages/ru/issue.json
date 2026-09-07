@@ -239,11 +239,7 @@
     "endTime": "Окончание"
   },
   "editor": {
-    "insertImage": "Вставить изображение",
-    "insertNamed": "Вставить {name}",
-    "descriptionPlaceholder": "Добавьте описание…",
-    "noImages": "Изображений пока нет. Загрузите из панели вложений или перетащите прямо в редактор.",
-    "image": "Изображение"
+    "descriptionPlaceholder": "Добавьте описание…"
   },
   "cycleSelect": {
     "label": "Цикл",

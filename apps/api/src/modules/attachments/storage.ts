@@ -228,3 +228,56 @@ export function attachmentResponseHeaders(input: {
   if (!inline) headers['Content-Security-Policy'] = "default-src 'none'; sandbox";
   return headers;
 }
+
+// An embed of a deleted attachment left in markdown would 404 once the object is
+// gone. Strip any construct whose URL carries this attachment's publicId: a
+// markdown image/link, or an inline <img>/<video>. The publicId is a uuid, so a
+// URL substring match is specific to this one attachment.
+export function stripAttachmentEmbeds(text: string, publicId: string): string {
+  const id = publicId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return text
+    .replace(new RegExp(`!?\\[[^\\]]*\\]\\([^)]*${id}[^)]*\\)`, 'g'), '')
+    .replace(new RegExp(`<img\\b[^>]*${id}[^>]*>`, 'g'), '')
+    .replace(new RegExp(`<video\\b[^>]*${id}[^>]*>(?:\\s*</video>)?`, 'g'), '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+// The body of a public raw-download route. The bytes behind a publicId can be
+// replaced, so the response is revalidated instead of cached for good: every write
+// stores the file under a key with a fresh uuid, so a digest of the key changes
+// with the bytes. It is the digest, not the key, because these routes are public
+// and the key carries the project id, the owner id and the stored filename.
+//
+// The bytes and their content type are attacker-controlled, and the routes are
+// public and same-origin as the planner UI, so serving an HTML or SVG file inline
+// would be stored XSS. attachmentResponseHeaders is what keeps them inert.
+export async function attachmentObjectResponse(input: {
+  s3Key: string;
+  contentType: string;
+  filename: string;
+  request: Request;
+  download: boolean;
+}): Promise<Response> {
+  const etag = attachmentEtag(input.s3Key);
+  if (input.request.headers.get('if-none-match') === etag) {
+    return new Response(null, { status: 304, headers: { ETag: etag } });
+  }
+
+  let obj;
+  try {
+    obj = await getObject(input.s3Key);
+  } catch (err) {
+    throw new HttpError(404, err instanceof Error ? err.message : 'Object not found');
+  }
+
+  return new Response(obj.body, {
+    headers: attachmentResponseHeaders({
+      contentType: input.contentType || obj.contentType,
+      filename: input.filename,
+      contentLength: obj.contentLength,
+      etag,
+      download: input.download,
+    }),
+  });
+}

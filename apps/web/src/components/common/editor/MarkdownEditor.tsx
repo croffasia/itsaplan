@@ -7,16 +7,17 @@ import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
 import { common, createLowlight } from 'lowlight';
 import { Markdown } from 'tiptap-markdown';
-import { ResizableImage } from '@/components/common/editor/tiptap-image';
+import { pasteMarkdown } from './pasteMarkdown';
+import { ResizableImage } from './tiptap-image';
 import { Mention } from '@/lib/tiptap-mention';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
-import { MarkdownTable } from '@/components/common/editor/tiptap-table';
-import { Video } from '../../utils/tiptap-video';
-import { attachmentHtml, type Embeddable } from '../../utils/attachmentEmbed';
-import { openLinkOnModifierClick } from '../../utils/modifierClickLink';
+import { MarkdownTable } from './tiptap-table';
+import { Video } from './tiptap-video';
+import { attachmentHtml, type Embeddable } from './attachmentEmbed';
+import { openLinkOnModifierClick } from './modifierClickLink';
 import EditorImagePicker from './EditorImagePicker';
-import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
-import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
+import EditorSelectionMenu from './EditorSelectionMenu';
+import EditorTableMenu from './EditorTableMenu';
 import { useMentionCandidates } from '@/hooks/useMentionCandidates';
 import { useTranslations } from 'next-intl';
 
@@ -24,7 +25,7 @@ import { useTranslations } from 'next-intl';
 // highlightAuto, so there is no language picker.
 const lowlight = createLowlight(common);
 
-export const issueEditorStarterKitOptions = {
+export const editorStarterKitOptions = {
   codeBlock: false,
   link: false,
 } as const;
@@ -33,7 +34,7 @@ export const issueEditorStarterKitOptions = {
 // bubble menu on selection and a "/" command list (Linear/Notion-style). Content
 // in and out is plain markdown (via tiptap-markdown), matching how descriptions
 // are stored everywhere else in the pipeline.
-export default function IssueMarkdownEditor({
+export default function MarkdownEditor({
   defaultValue,
   onChange,
   onBlur,
@@ -58,12 +59,11 @@ export default function IssueMarkdownEditor({
   // When set, files dropped onto the editor are uploaded and inserted at the
   // drop position (image/video inline, other files as a link).
   uploadFile?: (file: File) => Promise<Embeddable>;
-  // Offered in a picker, to embed an upload again. Omitted where there is no
-  // issue to read them from yet (the create modal), which drops the picker.
+  // Offered in a picker, to embed an upload again. Omitted where there is nothing
+  // stored to read them from yet (a create dialog), which drops the picker.
   imageAttachments?: Embeddable[];
 }) {
-  const t = useTranslations('issue.editor');
-  const tCommon = useTranslations('common.editor');
+  const t = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
   // Held in a ref because the extensions are built once: the "@" menu reads the
   // roster through it, so a list that arrives later is still offered.
@@ -98,7 +98,7 @@ export default function IssueMarkdownEditor({
     editable,
     extensions: [
       // Replaces StarterKit's plain code block, keeping the node name codeBlock.
-      StarterKit.configure(issueEditorStarterKitOptions),
+      StarterKit.configure(editorStarterKitOptions),
       CodeBlockLowlight.configure({ lowlight }),
       Placeholder.configure({ placeholder }),
       Link.configure({ openOnClick: false, autolink: true }),
@@ -115,8 +115,8 @@ export default function IssueMarkdownEditor({
       TableKit.configure({ table: false }),
       MarkdownTable.configure({ resizable: false }),
       SlashCommand.configure({
-        codeBlockLabel: tCommon('codeBlock'),
-        tableLabel: tCommon('table'),
+        codeBlockLabel: t('codeBlock'),
+        tableLabel: t('table'),
         image: imageAttachments
           ? { label: t('image'), onPick: () => setImagePickerOpen(true) }
           : undefined,
@@ -151,15 +151,17 @@ export default function IssueMarkdownEditor({
         return true;
       },
       // A pasted screenshot or copied file arrives as clipboard files: upload
-      // each and insert at the cursor, same as a drop. Plain text/html pastes
-      // carry no files and fall through to tiptap's default handling.
+      // each and insert at the cursor, same as a drop.
       handlePaste(view, event) {
-        if (!uploadFile) return false;
         const files = event.clipboardData?.files;
-        if (!files || files.length === 0) return false;
-        event.preventDefault();
-        insertFiles(files, view.state.selection.to);
-        return true;
+        if (uploadFile && files && files.length > 0) {
+          event.preventDefault();
+          insertFiles(files, view.state.selection.to);
+          return true;
+        }
+        const editor = editorRef.current;
+        if (!editor) return false;
+        return pasteMarkdown(editor, event.clipboardData);
       },
     },
     onUpdate: ({ editor }) => {

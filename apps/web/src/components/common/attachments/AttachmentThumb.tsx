@@ -1,10 +1,10 @@
 import Image from 'next/image';
 import { FileIcon } from 'lucide-react';
-import { isImage, isVideo, type Embeddable } from '../utils/attachmentEmbed';
+import { isImage, isVideo, type Embeddable } from '@/components/common/editor/attachmentEmbed';
 
-// An attachment card's leading thumbnail: images and videos preview themselves,
+// An attachment's leading thumbnail: images and videos preview themselves,
 // every other type falls back to a generic file glyph.
-export default function IssueAttachmentThumb({
+export default function AttachmentThumb({
   attachment,
   sizes = '40px',
 }: {

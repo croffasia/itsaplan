@@ -239,11 +239,7 @@
     "endTime": "End time"
   },
   "editor": {
-    "insertImage": "Insert image",
-    "insertNamed": "Insert {name}",
-    "descriptionPlaceholder": "Add description…",
-    "noImages": "No images attached yet. Upload one from the Attachments panel, or drop it straight onto the editor.",
-    "image": "Image"
+    "descriptionPlaceholder": "Add description…"
   },
   "cycleSelect": {
     "label": "Cycle",

@@ -5,8 +5,8 @@ import Link from '@tiptap/extension-link';
 import StarterKit from '@tiptap/starter-kit';
 import { Markdown } from 'tiptap-markdown';
 import { JSDOM } from 'jsdom';
-import { issueEditorStarterKitOptions } from './IssueMarkdownEditor';
-import { openLinkOnModifierClick } from '../../utils/modifierClickLink';
+import { editorStarterKitOptions } from './MarkdownEditor';
+import { openLinkOnModifierClick } from './modifierClickLink';
 
 let dom: JSDOM;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
@@ -37,11 +37,11 @@ afterEach(() => {
   }
 });
 
-describe('IssueMarkdownEditor extensions', () => {
+describe('MarkdownEditor extensions', () => {
   it('registers the configured link extension once', () => {
     const editor = new Editor({
       extensions: [
-        StarterKit.configure(issueEditorStarterKitOptions),
+        StarterKit.configure(editorStarterKitOptions),
         Link.configure({ openOnClick: false, autolink: true }),
       ],
       content: '',
@@ -106,7 +106,7 @@ describe('IssueMarkdownEditor extensions', () => {
   });
 });
 
-describe('IssueMarkdownEditor markdown round trip', () => {
+describe('MarkdownEditor markdown round trip', () => {
   // The editor reports a blur only when the document changed, because reading the
   // markdown back does not return the stored text. This pins the reason: drop it and
   // the guard becomes dead weight, keep it and removing the guard saves on every
@@ -114,7 +114,7 @@ describe('IssueMarkdownEditor markdown round trip', () => {
   it('serialises a bare url back as an autolink', () => {
     const editor = new Editor({
       extensions: [
-        StarterKit.configure(issueEditorStarterKitOptions),
+        StarterKit.configure(editorStarterKitOptions),
         Link.configure({ openOnClick: false, autolink: true }),
         Markdown.configure({ html: true, linkify: true, breaks: true }),
       ],

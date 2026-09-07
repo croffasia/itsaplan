@@ -3,7 +3,6 @@ import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
 import { entityGuard } from '#shared/guards';
 import { HttpError } from '#shared/lib';
-import { getObject } from '#shared/s3';
 import { pinnedFetch } from '#shared/net';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
@@ -29,9 +28,8 @@ import {
 } from './service';
 import {
   assertAttachmentUploadAllowed,
-  attachmentEtag,
   attachmentObjectKey,
-  attachmentResponseHeaders,
+  attachmentObjectResponse,
   deleteAttachmentObject,
   safeAttachmentFilename,
   storeAttachmentObject,
@@ -291,38 +289,13 @@ export const attachmentRoutes = new Elysia({
     async ({ params, query, request }) => {
       const row = await getAttachmentByPublicId(params.publicId);
       if (!row) throw new HttpError(404, 'Attachment not found');
-
-      // The bytes behind a publicId can be replaced, so the response is
-      // revalidated instead of cached for good. Every write stores the file
-      // under a key with a fresh uuid, so a digest of the key changes with the
-      // bytes. It is the digest, not the key, because this route is public and
-      // the key carries the project id, the issue id and the stored filename.
-      const etag = attachmentEtag(row.s3Key);
-      if (request.headers.get('if-none-match') === etag) {
-        return new Response(null, { status: 304, headers: { ETag: etag } });
-      }
-
-      let obj;
-      try {
-        obj = await getObject(row.s3Key);
-      } catch (err) {
-        throw new HttpError(404, err instanceof Error ? err.message : 'Object not found');
-      }
-
-      // The bytes and their content type are attacker-controlled, and this route
-      // is public and same-origin as the planner UI, so serving an HTML or SVG
-      // file inline would be stored XSS. Defenses: X-Content-Type-Options:nosniff
-      // stops MIME sniffing, and inline rendering is allowed only for a strict
-      // media allowlist (raster images, video, audio). Everything else — html,
-      // svg, xml, scripts — is forced to download and cannot execute.
-      const headers = attachmentResponseHeaders({
-        contentType: row.contentType || obj.contentType,
+      return attachmentObjectResponse({
+        s3Key: row.s3Key,
+        contentType: row.contentType,
         filename: row.filename,
-        contentLength: obj.contentLength,
-        etag,
+        request,
         download: query.download != null,
       });
-      return new Response(obj.body, { headers });
     },
     {
       params: publicIdParams,

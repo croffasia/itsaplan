@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useStorageSettingsQuery } from '@/services/storage.service';
 import { attachmentError } from '@/utils/uploadLimits';
 import { useUploadAttachment } from '../services/attachments.service';
-import { type Embeddable } from '../utils/attachmentEmbed';
+import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 
 export type PendingAttachment = Embeddable & { id: number; file: File };
 

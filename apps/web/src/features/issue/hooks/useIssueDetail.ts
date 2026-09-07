@@ -16,7 +16,7 @@ import { qk } from '@/services/queryKeys';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
 import { useFeedQuery, useGroupedFeedQuery, useTimelineQuery } from '../services/comments.service';
-import { attachmentMarkdown, isImage } from '../utils/attachmentEmbed';
+import { attachmentMarkdown, isImage } from '@/components/common/editor/attachmentEmbed';
 import { fieldDefsForType } from '../utils/fieldDefs';
 
 // Loads one issue and exposes the edit operations for the detail surfaces.

@@ -1,10 +1,10 @@
 import { type Editor } from '@tiptap/react';
 import { type Assignee, type CustomField, type IssueFieldValueInput } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { type Embeddable } from '../../utils/attachmentEmbed';
+import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSection } from '../../utils/bodySections';
 import { hasFieldValue } from '../../utils/fieldValues';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import NewIssueBodyFields from './NewIssueBodyFields';
 import NewIssueBodySwitcher from './NewIssueBodySwitcher';
 import { useTranslations } from 'next-intl';
@@ -54,7 +54,7 @@ export default function NewIssueBody({
   const editorClass = cn('overflow-y-auto', fullscreen ? 'min-h-48 flex-1' : 'min-h-24');
 
   const descriptionEditor = (
-    <IssueMarkdownEditor
+    <MarkdownEditor
       className={cn(bodyDefs.length === 0 && 'mt-3', editorClass)}
       placeholder={tEditor('descriptionPlaceholder')}
       defaultValue={description}
@@ -103,7 +103,7 @@ export default function NewIssueBody({
 
       {markdownDefs.map((def) => (
         <div key={def.id} className={sectionClass(fieldSection(def.id))}>
-          <IssueMarkdownEditor
+          <MarkdownEditor
             className={editorClass}
             defaultValue={(fieldValues[def.id]?.value as string) ?? ''}
             placeholder={tFields('empty')}

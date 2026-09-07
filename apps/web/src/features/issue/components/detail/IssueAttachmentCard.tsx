@@ -1,9 +1,9 @@
 import { type DragEvent } from 'react';
 import { Download, PenLine, Plus, Trash2 } from 'lucide-react';
 import { type Attachment } from '@/lib/api';
-import { attachmentHtml, isImage, isVideo } from '../../utils/attachmentEmbed';
-import { formatSize } from '../../utils/fileSize';
-import IssueAttachmentThumb from '../IssueAttachmentThumb';
+import { attachmentHtml, isImage, isVideo } from '@/components/common/editor/attachmentEmbed';
+import { formatSize } from '@/utils/fileSize';
+import AttachmentThumb from '@/components/common/attachments/AttachmentThumb';
 import { Button } from '@/components/ui/button';
 import { useTranslations } from 'next-intl';
 
@@ -53,7 +53,7 @@ export default function IssueAttachmentCard({
       }`}
     >
       <div className="relative flex aspect-video items-center justify-center bg-muted [&_svg]:size-7">
-        <IssueAttachmentThumb
+        <AttachmentThumb
           attachment={{ ...attachment, url: thumbnailUrl }}
           sizes="(min-width: 640px) 12rem, 50vw"
         />

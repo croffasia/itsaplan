@@ -19,7 +19,7 @@ import IssueActivityFeed from './IssueActivityFeed';
 import LastCommentBubble from './LastCommentBubble';
 import IssueDetailSkeleton from './IssueDetailSkeleton';
 import IssueStatusTimeline from './IssueStatusTimeline';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
 import IssueActionsBar from '../actions/IssueActionsBar';
@@ -137,7 +137,7 @@ export default function IssueDetailContent({
       </div>
 
       {(canEdit || issue.description.trim() !== '') && (
-        <IssueMarkdownEditor
+        <MarkdownEditor
           className="mt-4"
           placeholder={tEditor('descriptionPlaceholder')}
           defaultValue={issue.description}

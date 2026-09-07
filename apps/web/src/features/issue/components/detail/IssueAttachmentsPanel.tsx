@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { Download, Plus } from 'lucide-react';
 import { type Attachment } from '@/lib/api';
-import { useFileDragZone } from '../../hooks/useFileDragZone';
+import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import {
   useAttachmentsQuery,
@@ -12,7 +12,7 @@ import {
 import { baseName } from '../../utils/filename';
 import IssueImageAnnotator from '../IssueImageAnnotator';
 import IssueAttachmentCard from './IssueAttachmentCard';
-import IssueAttachmentViewer from './IssueAttachmentViewer';
+import AttachmentViewer from '@/components/common/attachments/AttachmentViewer';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useStorageSettingsQuery } from '@/services/storage.service';
 import { attachmentAccept, attachmentError, attachmentLimitHint } from '@/utils/uploadLimits';
@@ -138,7 +138,7 @@ export default function IssueAttachmentsPanel({
           </div>
         ))}
 
-      {viewing && <IssueAttachmentViewer attachment={viewing} onClose={() => setViewing(null)} />}
+      {viewing && <AttachmentViewer attachment={viewing} onClose={() => setViewing(null)} />}
 
       {annotating && (
         <IssueImageAnnotator

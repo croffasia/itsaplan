@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { type Embeddable } from '../../utils/attachmentEmbed';
+import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { useTranslations } from 'next-intl';
 
 // Nothing here may take focus: blurring the editor saves the description, and the
@@ -17,7 +17,7 @@ export default function EditorImagePicker({
   onClose: () => void;
   onPick: (image: Embeddable) => void;
 }) {
-  const t = useTranslations('issue.editor');
+  const t = useTranslations('common.editor');
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent

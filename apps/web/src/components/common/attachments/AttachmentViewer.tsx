@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { type Attachment } from '@/lib/api';
-import { isImage } from '../../utils/attachmentEmbed';
+import { isImage } from '@/components/common/editor/attachmentEmbed';
 import Modal from '@/components/common/overlay/Modal';
 import { cn } from '@/lib/utils';
 
 // Looks at an attachment without inserting it anywhere: the image at its own
 // size, a video with its controls.
-export default function IssueAttachmentViewer({
+export default function AttachmentViewer({
   attachment,
   onClose,
 }: {

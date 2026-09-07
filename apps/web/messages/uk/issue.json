@@ -239,11 +239,7 @@
     "endTime": "Завершення"
   },
   "editor": {
-    "insertImage": "Вставити зображення",
-    "insertNamed": "Вставити {name}",
-    "descriptionPlaceholder": "Додайте опис…",
-    "noImages": "Зображень ще немає. Завантажте з панелі вкладень або перетягніть просто в редактор.",
-    "image": "Зображення"
+    "descriptionPlaceholder": "Додайте опис…"
   },
   "cycleSelect": {
     "label": "Цикл",

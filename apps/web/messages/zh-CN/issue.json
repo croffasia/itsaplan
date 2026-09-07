@@ -239,11 +239,7 @@
     "endTime": "结束时间"
   },
   "editor": {
-    "insertImage": "插入图片",
-    "insertNamed": "插入 {name}",
-    "descriptionPlaceholder": "添加描述…",
-    "noImages": "暂无已附加图片。请从附件面板上传，或直接拖入编辑器。",
-    "image": "图片"
+    "descriptionPlaceholder": "添加描述…"
   },
   "cycleSelect": {
     "label": "周期",

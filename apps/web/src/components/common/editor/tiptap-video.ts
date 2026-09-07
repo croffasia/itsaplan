@@ -27,7 +27,7 @@ export const Video = Node.create({
   renderHTML({ HTMLAttributes }) {
     return [
       // max-width:50% keeps the (usually vertical) reel from dominating the
-      // issue — about half the on-screen size of a full-width embed.
+      // text — about half the on-screen size of a full-width embed.
       'video',
       mergeAttributes(HTMLAttributes, {
         controls: 'true',

@@ -223,7 +223,10 @@ export default function DocumentMarkdownEditor({
 }
 
 export function syncDocumentEditorEditable(editor: Editor | null, editable: boolean) {
-  if (editor && editor.isEditable !== editable) editor.setEditable(editable);
+  // Without the second argument setEditable emits an update, which the editor
+  // reports as an edit: the draft turns dirty and autosave writes a new version of
+  // a document nobody typed in.
+  if (editor && editor.isEditable !== editable) editor.setEditable(editable, false);
 }
 
 export function insertDocumentImage(

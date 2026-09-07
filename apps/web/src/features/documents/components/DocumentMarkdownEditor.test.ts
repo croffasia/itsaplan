@@ -172,11 +172,18 @@ describe('DocumentMarkdownEditor JSON persistence', () => {
       editable: true,
     });
 
+    let updates = 0;
+    editor.on('update', () => {
+      updates += 1;
+    });
+
     syncDocumentEditorEditable(editor, false);
     assert.equal(editor.isEditable, false);
 
     syncDocumentEditorEditable(editor, true);
     assert.equal(editor.isEditable, true);
+    // An update here would mark the draft dirty and autosave an unedited document.
+    assert.equal(updates, 0);
     editor.destroy();
   });
 

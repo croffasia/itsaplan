@@ -79,11 +79,29 @@
   "descriptionUpdated": "Member description updated",
   "added": "Member added",
   "provisioned": "Managed by SCIM",
-  "emptyTitle": "No members here",
-  "emptyDescription": "Nobody matches the current filter.",
   "search": {
     "all": "Search members",
     "people": "Search people",
     "agents": "Search AI teammates"
+  },
+  "empty": {
+    "all": {
+      "title": "No members yet",
+      "description": "People and AI teammates appear here once they join."
+    },
+    "human": {
+      "title": "No people yet",
+      "description": "People appear here once they join."
+    },
+    "agent": {
+      "title": "No AI teammates yet",
+      "description": "AI teammates appear here once they are added."
+    },
+    "search": {
+      "title": "Nothing found",
+      "all": "No member matches this search.",
+      "human": "No person matches this search.",
+      "agent": "No AI teammate matches this search."
+    }
   }
 }

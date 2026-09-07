@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import type { MemberKind, MemberRow as Member } from '@/lib/api';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
-import { EmptyState } from '@/components/common/page/EmptyState';
+import MembersEmptyState from '@/components/common/page/MembersEmptyState';
 import SearchInput from '@/components/common/SearchInput';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -88,7 +88,7 @@ export default function MembersList({
   }
 
   return (
-    <div className="mb-8 space-y-4">
+    <div className="mb-8 flex min-h-0 flex-1 flex-col gap-4">
       <Tabs value={kind} onValueChange={onKindChange}>
         <div className="flex items-center justify-between gap-3">
           <TabsList variant="line" className="w-auto border-b-0">
@@ -106,7 +106,7 @@ export default function MembersList({
       </Tabs>
 
       {members.length === 0 ? (
-        <EmptyState title={t('emptyTitle')} description={t('emptyDescription')} />
+        <MembersEmptyState kind={kind} searching={term !== undefined} />
       ) : (
         <Table className="min-w-[720px] table-fixed">
           <colgroup>
@@ -150,7 +150,7 @@ export default function MembersList({
         </Table>
       )}
 
-      <ListPager paging={paging} total={total} />
+      {total > 0 && <ListPager paging={paging} total={total} />}
 
       {target && (
         <ConfirmDialog

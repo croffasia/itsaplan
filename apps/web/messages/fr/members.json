@@ -79,11 +79,29 @@
   "descriptionUpdated": "Description du membre mise à jour",
   "added": "Membre ajouté",
   "provisioned": "Géré par SCIM",
-  "emptyTitle": "Aucun membre ici",
-  "emptyDescription": "Personne ne correspond au filtre actuel.",
   "search": {
     "all": "Rechercher des membres",
     "people": "Rechercher des personnes",
     "agents": "Rechercher des agents IA"
+  },
+  "empty": {
+    "all": {
+      "title": "Aucun membre pour l'instant",
+      "description": "Les personnes et les agents IA apparaissent ici une fois ajoutés."
+    },
+    "human": {
+      "title": "Aucune personne pour l'instant",
+      "description": "Les personnes apparaissent ici une fois ajoutées."
+    },
+    "agent": {
+      "title": "Aucun agent IA pour l'instant",
+      "description": "Les agents IA apparaissent ici une fois ajoutés."
+    },
+    "search": {
+      "title": "Aucun résultat",
+      "all": "Aucun membre ne correspond à cette recherche.",
+      "human": "Aucune personne ne correspond à cette recherche.",
+      "agent": "Aucun agent IA ne correspond à cette recherche."
+    }
   }
 }

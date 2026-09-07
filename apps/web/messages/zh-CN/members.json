@@ -79,11 +79,29 @@
   "descriptionUpdated": "成员描述已更新",
   "added": "已添加成员",
   "provisioned": "由 SCIM 管理",
-  "emptyTitle": "这里没有成员",
-  "emptyDescription": "没有人符合当前筛选条件。",
   "search": {
     "all": "搜索成员",
     "people": "搜索人员",
     "agents": "搜索 AI 队友"
+  },
+  "empty": {
+    "all": {
+      "title": "暂无成员",
+      "description": "人员和 AI 队友加入后会显示在这里。"
+    },
+    "human": {
+      "title": "暂无人员",
+      "description": "人员加入后会显示在这里。"
+    },
+    "agent": {
+      "title": "暂无 AI 队友",
+      "description": "AI 队友添加后会显示在这里。"
+    },
+    "search": {
+      "title": "没有找到结果",
+      "all": "没有符合此搜索的成员。",
+      "human": "没有符合此搜索的人员。",
+      "agent": "没有符合此搜索的 AI 队友。"
+    }
   }
 }

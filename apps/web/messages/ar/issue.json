@@ -220,7 +220,12 @@
     "cancel": "إلغاء",
     "toSend": "للإرسال",
     "unknownAuthor": "غير معروف",
-    "goToLastComment": "الانتقال إلى آخر تعليق"
+    "goToLastComment": "الانتقال إلى آخر تعليق",
+    "edit": "تعديل",
+    "saving": "جارٍ الحفظ.",
+    "deleteComment": "حذف التعليق",
+    "deleteCommentTitle": "حذف هذا التعليق؟",
+    "deleteCommentConfirmation": "سيتم حذف التعليق وجميع ردوده نهائيًا."
   },
   "stats": {
     "title": "الإحصاءات",

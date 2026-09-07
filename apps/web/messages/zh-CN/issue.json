@@ -220,7 +220,12 @@
     "cancel": "取消",
     "toSend": "发送",
     "unknownAuthor": "未知用户",
-    "goToLastComment": "跳转到最新评论"
+    "goToLastComment": "跳转到最新评论",
+    "edit": "编辑",
+    "saving": "保存中.",
+    "deleteComment": "删除评论",
+    "deleteCommentTitle": "删除此评论？",
+    "deleteCommentConfirmation": "该评论及其所有回复将被永久删除。"
   },
   "stats": {
     "title": "统计",

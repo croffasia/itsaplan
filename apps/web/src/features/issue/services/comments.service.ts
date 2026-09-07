@@ -78,3 +78,21 @@ export function useCreateComment() {
     onSuccess: (_data, { issueId }) => void qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
   });
 }
+
+export function useUpdateComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId, body }: { issueId: number; commentId: number; body: string }) =>
+      api.updateComment(commentId, { body }),
+    onSuccess: (_data, { issueId }) => void qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
+  });
+}
+
+export function useDeleteComment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ commentId }: { issueId: number; commentId: number }) =>
+      api.deleteComment(commentId),
+    onSuccess: (_data, { issueId }) => void qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
+  });
+}

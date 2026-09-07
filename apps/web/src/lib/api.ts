@@ -3557,6 +3557,13 @@ export const api = {
       method: 'POST',
       body: JSON.stringify(input),
     }),
+  updateComment: (commentId: number, input: { body: string }) =>
+    request<FeedItem>(`/comments/${commentId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+    }),
+  deleteComment: (commentId: number) =>
+    request<void>(`/comments/${commentId}`, { method: 'DELETE' }),
 
   // Initiatives — collection ops take projectKey; ops on one initiative take its
   // own id and hit /initiatives/:id (like issues).

@@ -613,6 +613,14 @@ export const createCommentBody = t.Object({
   replyToId: t.Optional(t.Number({ description: 'Reply to this comment of the same issue.' })),
 });
 
+export const updateCommentBody = t.Object({
+  body: t.String({ minLength: 1, description: 'Comment text.' }),
+});
+
+export const commentParams = t.Object({
+  commentId: t.Numeric({ description: 'The comment id.' }),
+});
+
 export const archiveIssueBody = t.Optional(
   t.Object({
     subtasks: t.Optional(SubtaskModeSchema),

@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { type FeedItem } from '@/lib/api';
+import { useSession } from '@/lib/auth-client';
+import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import CommentItem from './CommentItem';
 import CommentComposer, { type ComposerContext } from './CommentComposer';
@@ -36,6 +38,14 @@ export default function CommentThread({
   // The row the open box answers, null while it is closed.
   const [replyTo, setReplyTo] = useState<Row | null>(null);
 
+  // Edit and delete join the reply button where the feed is interactive. The same
+  // rule the API asserts: the author with work_items edit, or a project owner.
+  const { data: session } = useSession();
+  const { can, isOwner } = usePermissions();
+  const canEditItems = composer != null && can('work_items', 'edit');
+  const manages = (item: FeedItem) =>
+    canEditItems && (isOwner || item.actorUserId === session?.user.id);
+
   const rows: Row[] = [];
   const collect = (item: FeedItem, depth: number) => {
     rows.push({ item, depth });
@@ -58,6 +68,8 @@ export default function CommentThread({
             item={row.item}
             image={(row.item.actorUserId && imageByUserId.get(row.item.actorUserId)) ?? null}
             onReply={composer ? () => setReplyTo(row) : undefined}
+            canEdit={manages(row.item)}
+            canDelete={manages(row.item)}
           />
         </div>
       ))}

@@ -220,7 +220,12 @@
     "cancel": "Скасувати",
     "toSend": "щоб надіслати",
     "unknownAuthor": "Невідомий",
-    "goToLastComment": "Перейти до останнього коментаря"
+    "goToLastComment": "Перейти до останнього коментаря",
+    "edit": "Редагувати",
+    "saving": "Збереження.",
+    "deleteComment": "Видалити коментар",
+    "deleteCommentTitle": "Видалити цей коментар?",
+    "deleteCommentConfirmation": "Коментар і відповіді на нього буде видалено безповоротно."
   },
   "stats": {
     "title": "Статистика",

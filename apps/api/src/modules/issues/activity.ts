@@ -302,6 +302,49 @@ export async function createComment(input: {
   return comment;
 }
 
+// The comment a route guard resolves: the issue it hangs on, the project behind
+// that issue, and its author, which decides whether the caller may touch it. Only
+// comment rows count — an activity entry is a change log, not something to edit or
+// delete. Null when there is no such comment.
+export async function getCommentRef(
+  commentId: number,
+): Promise<{ issueId: number; projectId: number; actorUserId: string | null } | null> {
+  const rows = await db
+    .select({
+      issueId: issueActivity.issueId,
+      projectId: issue.projectId,
+      actorUserId: issueActivity.actorUserId,
+    })
+    .from(issueActivity)
+    .innerJoin(issue, eq(issue.id, issueActivity.issueId))
+    .where(and(eq(issueActivity.id, commentId), eq(issueActivity.kind, 'comment')));
+  const row = rows[0];
+  return row?.issueId == null
+    ? null
+    : { issueId: row.issueId, projectId: row.projectId, actorUserId: row.actorUserId };
+}
+
+// Changes a comment's body. Who may change whose is settled by the route guard.
+export async function updateComment(commentId: number, body: string): Promise<FeedItemRow> {
+  const [row] = await db
+    .update(issueActivity)
+    .set({ body })
+    .where(eq(issueActivity.id, commentId))
+    .returning();
+  if (!row) throw new HttpError(404, 'Comment not found');
+  return mapFeedItem(row);
+}
+
+// Deletes a comment; its replies cascade away with it (reply_to_id FK). Returns
+// false when there is no such comment.
+export async function deleteComment(commentId: number): Promise<boolean> {
+  const [removed] = await db
+    .delete(issueActivity)
+    .where(eq(issueActivity.id, commentId))
+    .returning({ id: issueActivity.id });
+  return removed != null;
+}
+
 // If the comment reaches agents, queue a run for each so they can reply. A mention
 // reaches the agents it names; a reply reaches the author of the comment it answers,
 // so answering an agent in its own thread does not have to tag it again. Only quick

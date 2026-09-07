@@ -220,7 +220,12 @@
     "cancel": "Cancel",
     "toSend": "to send",
     "unknownAuthor": "Unknown",
-    "goToLastComment": "Go to the last comment"
+    "goToLastComment": "Go to the last comment",
+    "edit": "Edit",
+    "saving": "Saving.",
+    "deleteComment": "Delete comment",
+    "deleteCommentTitle": "Delete this comment?",
+    "deleteCommentConfirmation": "The comment and its replies will be permanently deleted."
   },
   "stats": {
     "title": "Stats",

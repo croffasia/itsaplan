@@ -220,7 +220,12 @@
     "cancel": "Annuler",
     "toSend": "pour envoyer",
     "unknownAuthor": "Inconnu",
-    "goToLastComment": "Aller au dernier commentaire"
+    "goToLastComment": "Aller au dernier commentaire",
+    "edit": "Modifier",
+    "saving": "Enregistrement…",
+    "deleteComment": "Supprimer le commentaire",
+    "deleteCommentTitle": "Supprimer ce commentaire ?",
+    "deleteCommentConfirmation": "Le commentaire et ses réponses seront définitivement supprimés."
   },
   "stats": {
     "title": "Statistiques",

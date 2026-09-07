@@ -32,6 +32,9 @@ import {
   listFeedRange,
   listGroupedFeed,
   createComment,
+  getCommentRef,
+  updateComment,
+  deleteComment,
   recordActivity,
   textSide,
   type FeedCursor,
@@ -130,6 +133,8 @@ import {
   updateChecklistItemBody,
   feedRangeQuery,
   createCommentBody,
+  updateCommentBody,
+  commentParams,
   archiveIssueBody,
   BulkUpdatedResponse,
   BulkArchivedResponse,
@@ -178,9 +183,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .use(guards)
   // Guards for routes that address an entity by its own id (no :projectKey in the
   // path). Set `workItem` / `checklist` / `checklistItem` to the action in the
-  // route options, `worklog` to true. A checklist, its items and a time entry
-  // belong to the issue that carries them, so they all resolve to the same
-  // work_items permission.
+  // route options, `worklog` / `comment` to true. A checklist, its items, a time
+  // entry and a comment belong to the issue that carries them, so they all resolve
+  // to the same work_items permission.
   .macro({
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
@@ -232,6 +237,22 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           if (!entry) throw new HttpError(404, 'Time entry not found');
           await assertPermission(entry.projectId, user, 'work_items', 'edit');
           if (entry.userId !== requireUser(user).id)
+            await assertProjectOwner(entry.projectId, user);
+          await assertMcpAllowed(entry.projectId, request.headers);
+          return { projectId: entry.projectId };
+        },
+      };
+    },
+    // A comment belongs to the member who wrote it, the same rule the time entry
+    // above carries: the author changes or deletes their own with the work_items
+    // edit this asserts; another member's only a project owner can touch.
+    comment(_enabled: boolean) {
+      return {
+        async resolve({ params, user, request }) {
+          const entry = await getCommentRef(Number((params as { commentId: string }).commentId));
+          if (!entry) throw new HttpError(404, 'Comment not found');
+          await assertPermission(entry.projectId, user, 'work_items', 'edit');
+          if (entry.actorUserId !== requireUser(user).id)
             await assertProjectOwner(entry.projectId, user);
           await assertMcpAllowed(entry.projectId, request.headers);
           return { projectId: entry.projectId };
@@ -1294,6 +1315,48 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           '@username in the body notifies that member or AI agent; the handles are ' +
           'the usernames in get_project.assignees.',
         ...mcpTool('add_comment'),
+      },
+    },
+  )
+
+  // Edits a comment's body. The author edits their own with the work_items edit
+  // the comment guard asserts; another member's only a project owner can change.
+  .patch(
+    '/comments/:commentId',
+    async ({ params, body }) => updateComment(params.commentId, body.body),
+    {
+      body: updateCommentBody,
+      params: commentParams,
+      comment: true,
+      response: { 200: FeedItemResponse, ...commonErrors },
+      detail: {
+        summary: 'Edit a comment',
+        description:
+          'Change the text of a comment. Your own comment needs work_items edit; ' +
+          "another member's comment only a project owner can change.",
+        ...mcpTool('update_comment'),
+      },
+    },
+  )
+
+  // Deletes a comment, together with its replies (they cascade on reply_to_id).
+  .delete(
+    '/comments/:commentId',
+    async ({ params }) => {
+      const removed = await deleteComment(params.commentId);
+      if (!removed) throw new HttpError(404, 'Comment not found');
+      return noContent();
+    },
+    {
+      params: commentParams,
+      comment: true,
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Delete a comment',
+        description:
+          'Remove a comment and its replies. Your own comment needs work_items edit; ' +
+          "another member's comment only a project owner can remove.",
+        ...mcpTool('delete_comment'),
       },
     },
   );

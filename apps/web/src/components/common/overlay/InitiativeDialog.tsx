@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { Initiative, InitiativeStatus } from '@/lib/api';
 import { initiativePath } from '@/utils/paths';
+import { parseDate } from '@/utils/dates';
 import { useCreateInitiative, useUpdateInitiative } from '@/services/initiatives.service';
 import { useProjectQuery } from '@/services/projects.service';
 import Modal, { useModalFullscreen } from './Modal';
@@ -51,6 +52,11 @@ export default function InitiativeDialog({
   const busyLabel = initiative ? tCommon('saving') : t('form.creating');
   const idleLabel = initiative ? t('form.save') : t('form.create');
   const submitLabel = saving ? busyLabel : idleLabel;
+
+  // The calendars grey out days that would put one date on the wrong side of the
+  // other. Equal dates are allowed.
+  const latestStart = parseDate(targetDate);
+  const earliestTarget = parseDate(startDate);
 
   const toggleLabel = (labelId: number) =>
     setLabelIds((ids) =>
@@ -130,9 +136,19 @@ export default function InitiativeDialog({
 
           <PrioritySelect value={priority} onChange={setPriority} />
 
-          <DatePill value={startDate} placeholder={t('startDate')} onChange={setStartDate} />
+          <DatePill
+            value={startDate}
+            placeholder={t('startDate')}
+            onChange={setStartDate}
+            disabled={latestStart ? { after: latestStart } : undefined}
+          />
 
-          <DatePill value={targetDate} placeholder={t('targetDate')} onChange={setTargetDate} />
+          <DatePill
+            value={targetDate}
+            placeholder={t('targetDate')}
+            onChange={setTargetDate}
+            disabled={earliestTarget ? { before: earliestTarget } : undefined}
+          />
 
           {project && project.labels.length > 0 && (
             <LabelsSelect

@@ -315,6 +315,13 @@ async function assertInitiativeLabels(projectId: number, labelIds?: number[]): P
   }
 }
 
+// ISO 'YYYY-MM-DD' strings order correctly as plain strings. One date alone, or
+// the two equal, is fine.
+function assertDateOrder(startDate?: string | null, targetDate?: string | null) {
+  if (startDate && targetDate && targetDate < startDate)
+    throw new HttpError(400, 'Target date must not precede the start date');
+}
+
 async function assertInitiativeReferences(
   projectId: number,
   input: { ownerUserId?: string | null; labelIds?: number[] },
@@ -331,6 +338,7 @@ export async function createInitiative(
   actorUserId?: string | null,
 ): Promise<InitiativeRow> {
   await assertInitiativeReferences(projectId, input);
+  assertDateOrder(input.startDate, input.targetDate);
   const [posRow] = await db
     .select({ pos: sql<number>`COALESCE(MAX(${initiative.position}), 0) + 1000` })
     .from(initiative)
@@ -391,6 +399,12 @@ export async function updateInitiative(
   const before = beforeRows[0];
   if (!before) return null;
   await assertInitiativeReferences(before.projectId, patch);
+  // Each date is checked against the effective other one: a patch sets one date
+  // and leaves the stored value of the other in force.
+  assertDateOrder(
+    patch.startDate !== undefined ? patch.startDate : before.startDate,
+    patch.targetDate !== undefined ? patch.targetDate : before.targetDate,
+  );
 
   const set: Partial<typeof initiative.$inferInsert> = {};
   if (patch.title !== undefined) set.title = patch.title;

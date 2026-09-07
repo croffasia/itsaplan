@@ -63,9 +63,6 @@
       "issue": {
         "new": "新建工作项"
       },
-      "initiative": {
-        "new": "新建计划"
-      },
       "view": {
         "kanban": "看板布局",
         "table": "表格布局",

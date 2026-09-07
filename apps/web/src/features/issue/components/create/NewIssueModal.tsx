@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { fieldDefsForType } from '../../utils/fieldDefs';
-import { useFileDragZone } from '../../hooks/useFileDragZone';
+import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { useFilePaste } from '../../hooks/useFilePaste';
 import { useNewIssueAttachments } from '../../hooks/useNewIssueAttachments';
 import {
@@ -23,7 +23,7 @@ import {
   replaceEmbed,
   stripEmbed,
   type Embeddable,
-} from '../../utils/attachmentEmbed';
+} from '@/components/common/editor/attachmentEmbed';
 import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSectionId } from '../../utils/bodySections';
 import { hasFieldValue } from '../../utils/fieldValues';
 import EstimatePill from '../fields/EstimatePill';

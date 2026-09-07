@@ -9,7 +9,7 @@ import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
 import PrioritySelect from '@/components/common/fields/PrioritySelect';
-import InitiativeStatusSelect from '../shared/InitiativeStatusSelect';
+import InitiativeStatusSelect from '@/components/common/fields/InitiativeStatusSelect';
 import HealthBadge from '../shared/HealthBadge';
 import HealthInfoPopover from '../shared/HealthInfoPopover';
 import ProgressBar from '@/components/common/ProgressBar';

@@ -28,7 +28,7 @@ import IssueWatchers from './IssueWatchers';
 import IssueSectionHeading from './IssueSectionHeading';
 import IssuePropertyRow from './IssuePropertyRow';
 import IssuePropertyGroupHeading from './IssuePropertyGroupHeading';
-import { type Embeddable } from '../../utils/attachmentEmbed';
+import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import { parseDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';

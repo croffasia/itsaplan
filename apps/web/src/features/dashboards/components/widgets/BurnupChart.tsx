@@ -35,12 +35,13 @@ function formatValue(value: unknown): string {
   return typeof value === 'number' ? value.toLocaleString() : String(value);
 }
 
-// The change since the previous day, as "(+3)", for a count; the band is a pair.
+// The change since the previous day, as "(+3)", for a count that moved; the band is a pair.
 function formatDelta(points: BurnupPoint[], row: BurnupPoint, key: string): string | null {
   const value = row[key as keyof BurnupPoint];
   const previous = points[points.indexOf(row) - 1]?.[key as keyof BurnupPoint];
   if (typeof value !== 'number' || typeof previous !== 'number') return null;
   const delta = value - previous;
+  if (delta === 0) return null;
   return `(${delta > 0 ? '+' : ''}${delta.toLocaleString()})`;
 }
 

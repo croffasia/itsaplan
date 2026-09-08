@@ -3,13 +3,13 @@
 // sign-in/sign-up is sent with the accept call that follows.
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { getInvite, acceptInvite } from '@/lib/api/endpoints/invites';
 import { signIn, signUp } from '@/lib/auth-client';
 
 export function useInviteQuery(token: string) {
   return useQuery({
     queryKey: ['invite', token],
-    queryFn: () => api.getInvite(token),
+    queryFn: () => getInvite(token),
     // A bad token is a 404, not a transient failure — do not retry.
     retry: false,
   });
@@ -54,7 +54,7 @@ export async function registerAndAccept(input: {
   if (result.error) {
     throw new InviteAuthError(result.error.message ?? input.registerFailed, result.error.code);
   }
-  return api.acceptInvite(input.token);
+  return acceptInvite(input.token);
 }
 
 // Sign in to an existing account. Does not accept: after the session updates the

@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
-import { api, type AgentSkill, type SkillPatch } from '@/lib/api';
+import {
+  type AgentSkill,
+  type SkillPatch,
+  getSkillMarkdown,
+  getSkillReferenceContent,
+} from '@/lib/api/endpoints/agentSkills';
 import { qk } from '@/services/queryKeys';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -63,8 +68,8 @@ export function SkillEditDialog({
     queryKey: [...qk.agentSkills(teamId), skillId, 'file', selected],
     queryFn: () =>
       selected === SKILL_MD
-        ? api.getSkillMarkdown(teamId, skillId).then((r) => r.markdown)
-        : api.getSkillReferenceContent(teamId, skillId, selected).then((r) => r.content),
+        ? getSkillMarkdown(teamId, skillId).then((r) => r.markdown)
+        : getSkillReferenceContent(teamId, skillId, selected).then((r) => r.content),
   });
 
   const draft = drafts[selected];

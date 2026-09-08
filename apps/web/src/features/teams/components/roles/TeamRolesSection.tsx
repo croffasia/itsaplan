@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { Role } from '@/lib/api';
+import type { Role } from '@/lib/api/endpoints/roles';
 import {
   usePermissionCatalogQuery,
   useTeamRoleOptionsQuery,

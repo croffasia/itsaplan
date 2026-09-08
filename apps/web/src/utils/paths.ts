@@ -1,7 +1,7 @@
 // Path builders for the planner routes. The project, the open view and the open
 // settings section live in the URL, so these are the single source of truth —
 // see the app/project/[projectKey] route tree.
-import type { StartPage } from '@/lib/api';
+import type { StartPage } from '@/lib/api/endpoints/userPreferences';
 
 export const projectPath = (key: string) => `/project/${encodeURIComponent(key)}`;
 

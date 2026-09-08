@@ -1,8 +1,9 @@
 import { Fragment } from 'react';
 import { Zap } from 'lucide-react';
 import { useQueries } from '@tanstack/react-query';
-import type { CustomField, TeamProjectOption } from '@/lib/api';
-import { api } from '@/lib/api';
+import type { TeamProjectOption } from '@/lib/api/endpoints/teams';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import { getProject } from '@/lib/api/endpoints/projects';
 import { qk } from '@/services/queryKeys';
 import { Switch } from '@/components/ui/switch';
 import { isMemberField } from '@/utils/memberFields';
@@ -41,7 +42,7 @@ export default function AgentTriggersSection({
   const scaffolds = useQueries({
     queries: attached.map((project) => ({
       queryKey: qk.project(project.key),
-      queryFn: () => api.getProject(project.key),
+      queryFn: () => getProject(project.key),
     })),
   });
   const memberFields: ProjectField[] = scaffolds.flatMap((scaffold, index) =>

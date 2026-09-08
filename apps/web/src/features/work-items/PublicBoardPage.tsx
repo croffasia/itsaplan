@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { api } from '@/lib/api';
+import { getSharedView } from '@/lib/api/endpoints/share';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import ReadOnlyBoard from './components/public/ReadOnlyBoard';
@@ -17,7 +17,7 @@ export default function PublicBoardPage({ token }: { token: string }) {
   const [openIssueId, setOpenIssueId] = useState<number | null>(null);
   const query = useQuery({
     queryKey: ['share', 'view', token],
-    queryFn: () => api.getSharedView(token),
+    queryFn: () => getSharedView(token),
     retry: false,
   });
 

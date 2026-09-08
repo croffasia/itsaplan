@@ -13,7 +13,7 @@ import {
   Webhook,
   Zap,
 } from 'lucide-react';
-import type { PermissionResource } from '@/lib/api';
+import type { PermissionResource } from '@/lib/api/endpoints/roles';
 
 // The sidebar group a section is listed under: the project-level general settings,
 // workflow configuration, automation/integrations, or the AI section. 'ai-team' and

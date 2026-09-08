@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { Initiative } from '@/lib/api';
+import type { Initiative } from '@/lib/api/endpoints/initiatives';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import InitiativeAttachments from './InitiativeAttachments';
 import InitiativeDocuments from './InitiativeDocuments';

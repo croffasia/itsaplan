@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Team } from '@/lib/api';
+import type { Team } from '@/lib/api/endpoints/teams';
 import { cn } from '@/lib/utils';
 import { teamPath } from '@/utils/paths';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';

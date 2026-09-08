@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import { type Label as LabelRow, type LabelGroup } from '@/lib/api';
+import type { Label as LabelRow, LabelGroup } from '@/lib/api/endpoints/labels';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 
 export function SettingsLabelDeleteDialog({

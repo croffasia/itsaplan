@@ -2,7 +2,7 @@
 
 import { useRef, type RefObject } from 'react';
 import type { Editor } from '@tiptap/react';
-import type { ProjectDocument } from '@/lib/api';
+import type { ProjectDocument } from '@/lib/api/endpoints/documents';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import DocumentMarkdownEditor, { insertDocumentImage } from './DocumentMarkdownEditor';

@@ -1,4 +1,4 @@
-import type { MemberRow } from '@/lib/api';
+import type { MemberRow } from '@/lib/api/endpoints/members';
 
 // A member's project description (what they do), shown under their name and indented
 // past the avatar so it lines up with the two lines beside it. Renders nothing when

@@ -1,6 +1,6 @@
 import { type DragEvent } from 'react';
 import { Download, PenLine, Plus, Trash2 } from 'lucide-react';
-import { type Attachment } from '@/lib/api';
+import type { Attachment } from '@/lib/api/endpoints/attachments';
 import { attachmentHtml, isImage, isVideo } from '@/components/common/editor/attachmentEmbed';
 import { formatSize } from '@/utils/fileSize';
 import AttachmentThumb from '@/components/common/attachments/AttachmentThumb';

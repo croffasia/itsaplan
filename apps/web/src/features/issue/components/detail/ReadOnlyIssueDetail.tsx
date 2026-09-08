@@ -1,4 +1,4 @@
-import { type SharedIssueBundle } from '@/lib/api';
+import type { SharedIssueBundle } from '@/lib/api/endpoints/share';
 import { toPublicProjectDetail } from '@/utils/publicProject';
 import { usePersistedOpen, usePersistedOpenGroups } from '../../hooks/usePersistedOpen';
 import { fieldDefsForType } from '../../utils/fieldDefs';

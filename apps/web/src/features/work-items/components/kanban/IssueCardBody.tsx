@@ -8,7 +8,7 @@ import {
   Timer,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type BoardIssue } from '@/lib/api';
+import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';

@@ -1,4 +1,4 @@
-import { API_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api/core/client';
 
 // The MCP endpoint clients connect to; the transport is Streamable HTTP at /mcp.
 export const MCP_URL = `${API_URL}/mcp`;

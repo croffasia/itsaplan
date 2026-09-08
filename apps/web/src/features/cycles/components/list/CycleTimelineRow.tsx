@@ -1,5 +1,5 @@
 import { CalendarRange, CircleDashed } from 'lucide-react';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { formatShortDate } from '@/utils/dates';
 import { progressPercent } from '@/utils/progress';

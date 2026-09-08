@@ -1,4 +1,4 @@
-import { type IssueFieldValueInput } from '@/lib/api';
+import type { IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 
 // Whether a field value carries anything: an empty string and an empty option
 // list read as untouched. The create modal skips such a value on save, and the

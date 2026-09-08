@@ -5,7 +5,7 @@ import { useRef, useState, type ReactNode } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { Direction } from 'radix-ui';
 import { toast } from 'sonner';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/lib/api/core/client';
 import { localeDirection, type Locale } from '@/i18n/locales';
 import { HotkeysProvider } from '@/context/useHotkeys';
 import { SyncProvider } from '@/context/syncContext';

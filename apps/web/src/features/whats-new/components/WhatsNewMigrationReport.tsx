@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { TeamsMigrationReport } from '@/lib/api';
+import type { TeamsMigrationReport } from '@/lib/api/endpoints/updates';
 import WhatsNewRenameGroup from './WhatsNewRenameGroup';
 
 // What the move to teams did to this instance's data: which projects landed in which

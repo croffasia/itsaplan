@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { type Issue, type ProjectDetail, type SubtaskDisposition } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
 import { dispositionReady, subtaskCount } from '@/utils/subtasks';
 import { useArchiveIssue } from '@/services/issues.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';

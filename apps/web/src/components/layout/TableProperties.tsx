@@ -3,7 +3,8 @@ import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, rectSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { useTranslations } from 'next-intl';
 import { byKey } from '@/utils/messageKey';
-import type { CustomField, IssueType } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import { useStripSortSensors } from '@/lib/dnd';
 import {
   DISPLAY_PROPERTIES,

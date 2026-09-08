@@ -1,4 +1,4 @@
-import type { HotkeyOverrides } from '@/lib/api';
+import type { HotkeyOverrides } from '@/lib/api/endpoints/settings';
 import { applyOverrides, DEFAULT_COMBOS } from '@/utils/hotkeys';
 import { useHotkeySettingsQuery } from '@/services/hotkeys.service';
 import HotkeysEditor from '@/components/common/hotkeys/HotkeysEditor';

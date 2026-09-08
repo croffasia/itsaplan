@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { type Issue, type IssueLinkInputKind, type IssueLinkRef } from '@/lib/api';
+import type { Issue, IssueLinkInputKind, IssueLinkRef } from '@/lib/api/endpoints/issues';
 import { LINK_RELATIONS } from '@/utils/issueLinks';
 
 // One relation as a card or a table row shows it: how it reads from the issue it

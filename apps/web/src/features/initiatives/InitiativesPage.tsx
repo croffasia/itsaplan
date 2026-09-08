@@ -9,7 +9,7 @@ import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativeCountsQuery, useInitiativesQuery } from '@/services/initiatives.service';
-import { INITIATIVE_SORTS, type InitiativeSort } from '@/lib/api';
+import { INITIATIVE_SORTS, type InitiativeSort } from '@/lib/api/endpoints/initiatives';
 import { useStripSortSensors } from '@/lib/dnd';
 import { initiativesTabPath, type InitiativesTab } from '@/utils/paths';
 import { Button } from '@/components/ui/button';

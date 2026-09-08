@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
-import type { NoteBoard } from '@/lib/api';
+import type { NoteBoard } from '@/lib/api/endpoints/noteBoards';
 import { useShell } from '@/context/shellContext';
 import Avatar from '@/components/common/Avatar';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

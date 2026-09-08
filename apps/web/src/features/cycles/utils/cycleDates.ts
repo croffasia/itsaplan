@@ -1,4 +1,4 @@
-import type { Cycle, CycleStatus } from '@/lib/api';
+import type { Cycle, CycleStatus } from '@/lib/api/endpoints/cycles';
 import { addDays, daysBetween, parseDate } from '@/utils/dates';
 
 export interface CycleSpan {

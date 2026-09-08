@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
-import { type Assignee, type CustomField, type IssueFieldValueInput } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Assignee } from '@/lib/api/endpoints/projects';
+import type { IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import { cn } from '@/lib/utils';
 import {
   Command,

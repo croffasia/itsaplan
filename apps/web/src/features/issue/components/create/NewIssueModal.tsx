@@ -1,13 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { MoreHorizontal } from 'lucide-react';
-import {
-  type CycleRef,
-  type Issue,
-  type IssueFieldValueInput,
-  type IssueTemplate,
-  type ProjectDetail,
-} from '@/lib/api';
+import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { CycleRef, Issue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import { type NewIssueDefaults } from '@/utils/project';
 import { parseDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';

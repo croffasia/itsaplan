@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { IssueTemplate, ProjectDetail } from '@/lib/api';
+import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

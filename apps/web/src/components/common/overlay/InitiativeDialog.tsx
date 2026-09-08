@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import type { Initiative, InitiativeStatus } from '@/lib/api';
+import type { Initiative, InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 import { initiativePath } from '@/utils/paths';
 import { parseDate } from '@/utils/dates';
 import { useCreateInitiative, useUpdateInitiative } from '@/services/initiatives.service';

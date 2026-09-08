@@ -1,7 +1,11 @@
 'use client';
 
 import { Cpu, KeyRound } from 'lucide-react';
-import type { IntegrationMeta, IntegrationOption, ProviderModel } from '@/lib/api';
+import type {
+  IntegrationMeta,
+  IntegrationOption,
+  ProviderModel,
+} from '@/lib/api/endpoints/integrations';
 import { manageTeamsPath } from '@/utils/paths';
 import type { AgentFormValue } from '../../utils/agentForm';
 import { integrationLabel } from '@/utils/integrationLabels';

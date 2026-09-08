@@ -1,5 +1,5 @@
-// Issue feed (comments + activity) reads and comment writes. The low-level fetch
-// client (api.ts) is untouched; this module wraps it.
+// Issue feed (comments + activity) reads and comment writes, wrapping
+// lib/api/endpoints/activity.
 
 import {
   useInfiniteQuery,
@@ -8,7 +8,14 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { api, type FeedCursor } from '@/lib/api';
+import {
+  type FeedCursor,
+  listFeed,
+  listGroupedFeed,
+  listTimeline,
+  listTimelineItems,
+  createComment,
+} from '@/lib/api/endpoints/activity';
 import { qk } from '@/services/queryKeys';
 
 // The issue's timeline (comments + activity), paged newest first. Each page is
@@ -16,7 +23,7 @@ import { qk } from '@/services/queryKeys';
 export function useFeedQuery(id: number, enabled = true) {
   return useInfiniteQuery({
     queryKey: qk.feed(id),
-    queryFn: ({ pageParam }) => api.listFeed(id, { cursor: pageParam, limit: 25 }),
+    queryFn: ({ pageParam }) => listFeed(id, { cursor: pageParam, limit: 25 }),
     initialPageParam: null as FeedCursor | null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
@@ -29,7 +36,7 @@ export function useFeedQuery(id: number, enabled = true) {
 export function useGroupedFeedQuery(id: number, enabled = true) {
   return useInfiniteQuery({
     queryKey: qk.groupedFeed(id),
-    queryFn: ({ pageParam }) => api.listGroupedFeed(id, { cursor: pageParam, limit: 25 }),
+    queryFn: ({ pageParam }) => listGroupedFeed(id, { cursor: pageParam, limit: 25 }),
     initialPageParam: null as FeedCursor | null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
@@ -39,7 +46,7 @@ export function useGroupedFeedQuery(id: number, enabled = true) {
 // The stretches the issue spent in one status, oldest first. Carries no entries,
 // so it stays small however long the issue's history is.
 export function useTimelineQuery(id: number) {
-  return useQuery({ queryKey: qk.timeline(id), queryFn: () => api.listTimeline(id) });
+  return useQuery({ queryKey: qk.timeline(id), queryFn: () => listTimeline(id) });
 }
 
 // One time range of the issue's activity, as the timeline addresses its stretches.
@@ -55,7 +62,7 @@ export function useTimelineItemsQuery(issueId: number, ranges: TimelineRange[]) 
   return useQueries({
     queries: ranges.map((range) => ({
       queryKey: qk.timelineItems(issueId, range.from, range.to),
-      queryFn: () => api.listTimelineItems(issueId, range.from, range.to),
+      queryFn: () => listTimelineItems(issueId, range.from, range.to),
     })),
     combine: (results) => ({
       isPending: results.some((r) => r.isPending),
@@ -74,7 +81,7 @@ export function useCreateComment() {
     }: {
       issueId: number;
       input: { body: string; replyToId?: number };
-    }) => api.createComment(issueId, input),
+    }) => createComment(issueId, input),
     onSuccess: (_data, { issueId }) => void qc.invalidateQueries({ queryKey: qk.feed(issueId) }),
   });
 }

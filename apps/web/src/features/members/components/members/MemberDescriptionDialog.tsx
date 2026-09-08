@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { MemberRow } from '@/lib/api';
+import type { MemberRow } from '@/lib/api/endpoints/members';
 import Avatar from '@/components/common/Avatar';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';

@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { PermissionCatalog, Role } from '@/lib/api';
+import type { PermissionCatalog, Role } from '@/lib/api/endpoints/roles';
 import { useIsMac } from '@/context/useHotkeys';
 import RolesImportDialog from './RolesImportDialog';
 import { useClipboardHasRoles } from '../../hooks/useClipboardHasRoles';

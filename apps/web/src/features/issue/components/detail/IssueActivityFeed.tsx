@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { type Assignee, type Column, type IssueActivityView } from '@/lib/api';
+import type { IssueActivityView } from '@/lib/api/endpoints/userPreferences';
+import type { Column } from '@/lib/api/endpoints/columns';
+import type { Assignee } from '@/lib/api/endpoints/projects';
 import { useSession } from '@/lib/auth-client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';

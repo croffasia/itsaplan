@@ -2,7 +2,7 @@
 
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { InstanceScimGroup } from '@/lib/api';
+import type { InstanceScimGroup } from '@/lib/api/endpoints/scim';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import {

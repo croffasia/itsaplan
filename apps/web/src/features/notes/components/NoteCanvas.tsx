@@ -12,7 +12,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useTheme } from 'next-themes';
-import type { NoteBoard } from '@/lib/api';
+import type { NoteBoard } from '@/lib/api/endpoints/noteBoards';
 import { cn } from '@/lib/utils';
 import { useSetNoteBoardVisibility } from '../services/noteBoards.service';
 import StickerNode, { type StickerNodeType } from './StickerNode';

@@ -1,4 +1,4 @@
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { useFeedQuery, useGroupedFeedQuery } from '../services/comments.service';
 
 // The last comment written on the issue, read from whatever the activity section has

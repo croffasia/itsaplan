@@ -1,4 +1,5 @@
-import type { BoardIssue, Column, SubtaskDisposition } from '@/lib/api';
+import type { Column } from '@/lib/api/endpoints/columns';
+import type { BoardIssue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
 
 // A subtask choice the API can act on: 'reassign' also needs the issue to move to.
 // The delete and archive confirmations stay disabled until it is.

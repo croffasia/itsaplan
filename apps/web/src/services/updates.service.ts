@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { getAppVersion, getUpdateStatus, checkForUpdates } from '@/lib/api/endpoints/updates';
 import { useSession } from '@/lib/auth-client';
 import { qk } from '@/services/queryKeys';
 
@@ -13,7 +13,7 @@ export function useAppVersionQuery() {
   const { data: session } = useSession();
   return useQuery({
     queryKey: qk.appVersion,
-    queryFn: () => api.getAppVersion(),
+    queryFn: () => getAppVersion(),
     // The route needs a session; the login and invite screens have none.
     enabled: Boolean(session),
     // Fixed for the life of the process: it only changes when the instance restarts
@@ -25,7 +25,7 @@ export function useAppVersionQuery() {
 export function useUpdateStatusQuery(enabled: boolean) {
   return useQuery({
     queryKey: qk.updateStatus,
-    queryFn: () => api.getUpdateStatus(),
+    queryFn: () => getUpdateStatus(),
     enabled,
     // Every call reads the upstream feed, so this is the only thing keeping a
     // session from doing it on each navigation. "Check now" refetches regardless.
@@ -36,7 +36,7 @@ export function useUpdateStatusQuery(enabled: boolean) {
 export function useCheckForUpdates() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.checkForUpdates(),
+    mutationFn: () => checkForUpdates(),
     onSuccess: (data) => qc.setQueryData(qk.updateStatus, data),
   });
 }

@@ -2,7 +2,7 @@
 
 import { Bot, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import {
   DropdownMenuContent,
   DropdownMenuItem,

@@ -3,7 +3,16 @@
 // lives in integrations.service.
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type NewConfiguredToolInput, type PageParams } from '@/lib/api';
+import {
+  type NewConfiguredToolInput,
+  listConfiguredToolOptions,
+  listConfiguredTools,
+  createConfiguredTool,
+  deleteConfiguredTool,
+  listAgentToolLinks,
+  setAgentTools,
+} from '@/lib/api/endpoints/agentTools';
+import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 // The whole list, which the agent editor's tool picker and the tool dialog need
@@ -11,7 +20,7 @@ import { qk } from '@/services/queryKeys';
 export function useConfiguredToolOptionsQuery(teamId: number | null) {
   return useQuery({
     queryKey: qk.configuredToolOptions(teamId ?? 0),
-    queryFn: () => api.listConfiguredToolOptions(teamId!),
+    queryFn: () => listConfiguredToolOptions(teamId!),
     enabled: teamId != null,
   });
 }
@@ -20,7 +29,7 @@ export function useConfiguredToolOptionsQuery(teamId: number | null) {
 export function useConfiguredToolsPageQuery(teamId: number | null, params: PageParams) {
   return useQuery({
     queryKey: qk.configuredToolPage(teamId ?? 0, params),
-    queryFn: () => api.listConfiguredTools(teamId!, params),
+    queryFn: () => listConfiguredTools(teamId!, params),
     enabled: teamId != null,
     placeholderData: keepPreviousData,
   });
@@ -29,7 +38,7 @@ export function useConfiguredToolsPageQuery(teamId: number | null, params: PageP
 export function useCreateConfiguredTool(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: NewConfiguredToolInput) => api.createConfiguredTool(teamId, input),
+    mutationFn: (input: NewConfiguredToolInput) => createConfiguredTool(teamId, input),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.configuredTools(teamId) });
       // The team list carries how many tools the team holds.
@@ -41,7 +50,7 @@ export function useCreateConfiguredTool(teamId: number) {
 export function useDeleteConfiguredTool(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteConfiguredTool(teamId, id),
+    mutationFn: (id: number) => deleteConfiguredTool(teamId, id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.configuredTools(teamId) });
       void qc.invalidateQueries({ queryKey: qk.teams });
@@ -53,7 +62,7 @@ export function useDeleteConfiguredTool(teamId: number) {
 export function useAgentToolLinksQuery(teamId: number | null, agentId: number | null) {
   return useQuery({
     queryKey: qk.agentToolLinks(teamId ?? 0, agentId ?? 0),
-    queryFn: () => api.listAgentToolLinks(teamId!, agentId!),
+    queryFn: () => listAgentToolLinks(teamId!, agentId!),
     enabled: teamId != null && agentId != null,
   });
 }
@@ -62,7 +71,7 @@ export function useSetAgentTools(teamId: number | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ agentId, agentToolIds }: { agentId: number; agentToolIds: number[] }) =>
-      api.setAgentTools(teamId!, agentId, agentToolIds),
+      setAgentTools(teamId!, agentId, agentToolIds),
     onSuccess: (_data, { agentId }) => {
       if (teamId != null)
         void qc.invalidateQueries({ queryKey: qk.agentToolLinks(teamId, agentId) });

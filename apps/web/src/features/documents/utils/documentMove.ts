@@ -1,4 +1,4 @@
-import type { ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 
 export interface OptimisticDocumentMove {
   documentId: number;

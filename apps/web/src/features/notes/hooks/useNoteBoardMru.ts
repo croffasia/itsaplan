@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { NoteBoardVisibility } from '@/lib/api';
+import type { NoteBoardVisibility } from '@/lib/api/endpoints/noteBoards';
 
 // The recently-opened boards backing the tab strip. Kept per project in
 // localStorage (per browser, not synced): a lightweight most-recently-used list so

@@ -11,7 +11,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type Notification, type NotificationType } from '@/lib/api';
+import type { Notification, NotificationType } from '@/lib/api/endpoints/notifications';
 import { formatDurationShort } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

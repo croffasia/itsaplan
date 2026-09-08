@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { type Notification } from '@/lib/api';
+import type { Notification } from '@/lib/api/endpoints/notifications';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import InboxListItem from './InboxListItem';
 

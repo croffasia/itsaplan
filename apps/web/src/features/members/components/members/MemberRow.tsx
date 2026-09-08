@@ -2,7 +2,8 @@
 
 import { LogOut, UserMinus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { MemberRow as Member, Role } from '@/lib/api';
+import type { MemberRow as Member } from '@/lib/api/endpoints/members';
+import type { Role } from '@/lib/api/endpoints/roles';
 import { formatDateTime } from '@/utils/dates';
 import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';

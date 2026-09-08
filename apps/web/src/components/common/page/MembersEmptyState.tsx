@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { MemberKind } from '@/lib/api';
+import type { MemberKind } from '@/lib/api/endpoints/members';
 import { EmptyState } from '@/components/common/page/EmptyState';
 
 export default function MembersEmptyState({

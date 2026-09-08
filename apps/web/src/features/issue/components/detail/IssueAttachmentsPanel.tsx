@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Download, Plus } from 'lucide-react';
-import { type Attachment } from '@/lib/api';
+import type { Attachment } from '@/lib/api/endpoints/attachments';
 import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import {

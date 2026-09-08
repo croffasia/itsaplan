@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { LabelGroup } from '@/lib/api';
+import type { LabelGroup } from '@/lib/api/endpoints/labels';
 import { colorDot } from '@/components/common/fields/colorDot';
 import Modal from '@/components/common/overlay/Modal';
 import { Badge } from '@/components/ui/badge';

@@ -1,5 +1,5 @@
 import { type Active } from '@dnd-kit/core';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { preferPrefix } from './dnd';
 
 // What a board drop target does with the dropped issues. A board drag carries

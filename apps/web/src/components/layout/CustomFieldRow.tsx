@@ -1,5 +1,5 @@
 import { Check } from 'lucide-react';
-import type { CustomField } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
 import { customFieldKey, type PropertyKey } from '@/utils/viewSettings';
 
 // One selectable custom field in the picker.

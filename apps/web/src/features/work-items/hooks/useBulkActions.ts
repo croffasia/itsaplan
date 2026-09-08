@@ -1,4 +1,5 @@
-import { type BulkIssuePatch, type ProjectDetail, type SubtaskDisposition } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { BulkIssuePatch, SubtaskDisposition } from '@/lib/api/endpoints/issues';
 import {
   useBulkAddLabels,
   useBulkArchiveIssues,

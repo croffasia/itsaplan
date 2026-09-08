@@ -1,4 +1,4 @@
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import ActivityItemList from './ActivityItemList';
 import { useTranslations } from 'next-intl';
 

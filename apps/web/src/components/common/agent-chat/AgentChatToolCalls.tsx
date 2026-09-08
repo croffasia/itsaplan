@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { AiChatToolPart } from '@/lib/api';
+import type { AiChatToolPart } from '@/lib/api/endpoints/agentChat';
 import AgentChatToolCall from './AgentChatToolCall';
 import AgentChatToolDisclosure from './AgentChatToolDisclosure';
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { ProjectDocument } from '@/lib/api';
-import { ApiError } from '@/lib/api';
+import type { ProjectDocument } from '@/lib/api/endpoints/documents';
+import { ApiError } from '@/lib/api/core/client';
 import { uuid } from '@/utils/uuid';
 import { useUpdateDocument } from '../services/documents.service';
 

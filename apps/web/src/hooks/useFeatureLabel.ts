@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { ProjectFeatures } from '@/lib/api';
+import type { ProjectFeatures } from '@/lib/api/endpoints/settings';
 
 // What each optional section is called. Shared by the switches that turn a section
 // off, their confirmation, and the notice the section shows while it is off, so it

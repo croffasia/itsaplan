@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { InstanceScimGroup } from '@/lib/api';
+import type { InstanceScimGroup } from '@/lib/api/endpoints/scim';
 import { useSetInstanceScimGroupMappings } from '../services/god.service';
 
 // One row of the form: a project the group grants membership in, and the role it

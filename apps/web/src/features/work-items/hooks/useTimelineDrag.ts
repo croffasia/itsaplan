@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { type Issue, type IssuePatch, type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue, IssuePatch } from '@/lib/api/endpoints/issues';
 import { addDays, toDateStr } from '@/utils/dates';
 import { useUpdateIssue } from '@/services/issues.service';
 import { effSpan } from '../utils/timeline';

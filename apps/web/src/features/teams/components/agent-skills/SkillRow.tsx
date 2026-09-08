@@ -1,5 +1,5 @@
 import { BookText, Pencil, Trash2 } from 'lucide-react';
-import type { AgentSkill } from '@/lib/api';
+import type { AgentSkill } from '@/lib/api/endpoints/agentSkills';
 import GithubIcon from '@/components/common/GithubIcon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

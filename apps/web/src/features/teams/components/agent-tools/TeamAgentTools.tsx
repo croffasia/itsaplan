@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ConfiguredTool, IntegrationMeta, ResourcePermissions } from '@/lib/api';
+import type { ResourcePermissions } from '@/lib/api/endpoints/roles';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
+import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import {
   useConfiguredToolsPageQuery,
   useDeleteConfiguredTool,

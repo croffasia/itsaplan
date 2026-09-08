@@ -1,6 +1,6 @@
 import { ExternalLink, GitBranch, GitPullRequest, Unlink } from 'lucide-react';
 import { useFormatter, useTranslations } from 'next-intl';
-import { type DevelopmentLink } from '@/lib/api';
+import type { DevelopmentLink } from '@/lib/api/endpoints/git';
 import IssueDevelopmentChecks from './IssueDevelopmentChecks';
 import IssueDevelopmentCiBadge from './IssueDevelopmentCiBadge';
 import IssueDevelopmentStateBadge from './IssueDevelopmentStateBadge';

@@ -11,7 +11,7 @@ import {
   Trash2,
   Zap,
 } from 'lucide-react';
-import type { AgentSchedule } from '@/lib/api';
+import type { AgentSchedule } from '@/lib/api/endpoints/agentSchedules';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

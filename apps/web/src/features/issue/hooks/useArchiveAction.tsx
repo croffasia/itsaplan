@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, type ReactNode } from 'react';
-import { type Issue, type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { subtaskCount } from '@/utils/subtasks';
 import { useArchiveIssue } from '@/services/issues.service';
 import ArchiveIssueDialog from '../components/actions/ArchiveIssueDialog';

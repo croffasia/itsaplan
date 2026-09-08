@@ -1,5 +1,10 @@
 import { Ban, CircleSlash, Copy, Link2, type LucideIcon } from 'lucide-react';
-import type { BoardIssue, IssueLink, IssueLinkInputKind, IssueLinkKind } from '@/lib/api';
+import type {
+  BoardIssue,
+  IssueLink,
+  IssueLinkInputKind,
+  IssueLinkKind,
+} from '@/lib/api/endpoints/issues';
 
 // A relation reads differently from each of its two ends, and both the panel and
 // the activity feed name it from the end being looked at. That reading is the

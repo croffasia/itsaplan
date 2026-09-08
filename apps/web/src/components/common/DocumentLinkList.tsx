@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { FileText, Loader2, Lock, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { IssueDocumentLink } from '@/lib/api';
+import type { IssueDocumentLink } from '@/lib/api/endpoints/documents';
 import ArchivedBadge from '@/components/common/ArchivedBadge';
 import { Button } from '@/components/ui/button';
 import { documentPath } from '@/utils/paths';

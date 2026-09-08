@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check, CircleDashed, RefreshCw } from 'lucide-react';
-import type { CycleRef } from '@/lib/api';
+import type { CycleRef } from '@/lib/api/endpoints/issues';
 import { useCycleOptionsQuery } from '@/services/cycles.service';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';

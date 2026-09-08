@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { TeamProject } from '@/lib/api';
+import type { TeamProject } from '@/lib/api/endpoints/teams';
 import { useLeaveProject } from '@/services/projects.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 

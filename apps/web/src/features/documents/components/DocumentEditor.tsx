@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
-import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { useSession } from '@/lib/auth-client';
 import { useTranslations } from 'next-intl';

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { cyclePath } from '@/utils/paths';
 import ProgressBar from '@/components/common/ProgressBar';
 import CycleActions from '../CycleActions';

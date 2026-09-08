@@ -1,6 +1,7 @@
 import { type CSSProperties, useRef, useState } from 'react';
 import { Direction } from 'radix-ui';
-import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { IssueDetail as IssueDetailRow } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
 import { usePersistedWidth } from '@/hooks/usePersistedWidth';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';

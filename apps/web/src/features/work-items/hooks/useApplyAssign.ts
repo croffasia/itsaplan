@@ -1,4 +1,4 @@
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { GroupAssign } from '@/utils/project';
 import { memberFieldValue } from '@/utils/memberFields';
 import { useSetFieldValue, useUpdateIssue } from '@/services/issues.service';

@@ -13,7 +13,7 @@ import {
   Tag,
   Flag,
 } from 'lucide-react';
-import type { InitiativeFeedItem } from '@/lib/api';
+import type { InitiativeFeedItem } from '@/lib/api/endpoints/initiatives';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatDate } from '@/utils/dates';
 import { issuePath } from '@/utils/paths';

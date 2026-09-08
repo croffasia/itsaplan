@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { NotificationSettings } from '@/lib/api';
+import type { NotificationSettings } from '@/lib/api/endpoints/notificationSettings';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useEmailForm } from '../../hooks/useEmailForm';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { InstanceGoogleSettings } from '@/lib/api';
+import type { InstanceGoogleSettings } from '@/lib/api/endpoints/god';
 import { useUpdateInstanceGoogleSettings } from '../services/god.service';
 
 export interface GodGoogleForm {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type Column } from '@/lib/api';
+import type { Column } from '@/lib/api/endpoints/columns';
 import { Button } from '@/components/ui/button';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { useTimelineQuery } from '../../services/comments.service';

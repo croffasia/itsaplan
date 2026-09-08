@@ -13,7 +13,25 @@ import {
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { api, type AiChatThread, type AiChatThreadPage } from '@/lib/api';
+import {
+  type AiChatThread,
+  type AiChatThreadPage,
+  listAiAgentThreads,
+  listAiAgentFavoriteThreads,
+  setAiAgentThreadFavorite,
+  getAiAgentThreadMessages,
+  renameAiAgentThread,
+  deleteAiAgentThread,
+} from '@/lib/api/endpoints/agentChat';
+import {
+  listAiAgents,
+  listAgentRuns,
+  listAgentTools,
+  createAiAgent,
+  updateAiAgent,
+  regenerateAiAgentKey,
+  deleteAiAgent,
+} from '@/lib/api/endpoints/agents';
 import { qk } from '@/services/queryKeys';
 
 // Refetched on an interval because an external agent's runner presence comes from
@@ -25,7 +43,7 @@ const RUNNER_PRESENCE_REFRESH_MS = 30_000;
 export function useAiAgentsQuery(teamId: number | null, projectId?: number) {
   return useQuery({
     queryKey: qk.aiAgents(teamId ?? 0, projectId),
-    queryFn: () => api.listAiAgents(teamId!, projectId),
+    queryFn: () => listAiAgents(teamId!, projectId),
     enabled: teamId != null,
     refetchInterval: RUNNER_PRESENCE_REFRESH_MS,
   });
@@ -36,7 +54,7 @@ export function useAiAgentsQuery(teamId: number | null, projectId?: number) {
 export function useAgentRuns(teamId: number | null, agentId: number | null) {
   return useInfiniteQuery({
     queryKey: qk.agentRuns(teamId ?? 0, agentId ?? 0),
-    queryFn: ({ pageParam }) => api.listAgentRuns(teamId!, agentId!, pageParam),
+    queryFn: ({ pageParam }) => listAgentRuns(teamId!, agentId!, pageParam),
     initialPageParam: undefined as number | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     enabled: teamId != null && agentId != null,
@@ -49,7 +67,7 @@ export function useAgentRuns(teamId: number | null, agentId: number | null) {
 export function useAgentThreadsQuery(projectKey: string | null, agentId: number | null, q = '') {
   return useInfiniteQuery({
     queryKey: qk.agentThreads(projectKey ?? '', agentId ?? 0, q),
-    queryFn: ({ pageParam }) => api.listAiAgentThreads(projectKey!, agentId!, pageParam, q),
+    queryFn: ({ pageParam }) => listAiAgentThreads(projectKey!, agentId!, pageParam, q),
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextPage ?? undefined,
     enabled: projectKey != null && agentId != null,
@@ -61,7 +79,7 @@ export function useAgentThreadsQuery(projectKey: string | null, agentId: number 
 export function useAgentFavoriteThreadsQuery(projectKey: string | null, agentId: number | null) {
   return useQuery({
     queryKey: qk.agentFavoriteThreads(projectKey ?? '', agentId ?? 0),
-    queryFn: () => api.listAiAgentFavoriteThreads(projectKey!, agentId!),
+    queryFn: () => listAiAgentFavoriteThreads(projectKey!, agentId!),
     enabled: projectKey != null && agentId != null,
   });
 }
@@ -74,7 +92,7 @@ export function useToggleAgentThreadFavorite(projectKey: string | null, agentId:
   const favorites = () => qk.agentFavoriteThreads(projectKey!, agentId!);
   return useMutation({
     mutationFn: ({ threadId, favorite }: { threadId: string; favorite: boolean }) =>
-      api.setAiAgentThreadFavorite(projectKey!, agentId!, threadId, favorite),
+      setAiAgentThreadFavorite(projectKey!, agentId!, threadId, favorite),
     onMutate: async ({ threadId, favorite }) => {
       if (!projectKey || agentId == null) return;
       await Promise.all([
@@ -152,7 +170,7 @@ export function useAgentThreadMessagesQuery(
   return useInfiniteQuery({
     queryKey: qk.agentThreadMessages(projectKey ?? '', agentId ?? 0, threadId ?? ''),
     queryFn: ({ pageParam }) =>
-      api.getAiAgentThreadMessages(projectKey!, agentId!, threadId!, pageParam),
+      getAiAgentThreadMessages(projectKey!, agentId!, threadId!, pageParam),
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextPage ?? undefined,
     enabled: projectKey != null && agentId != null && threadId != null,
@@ -165,7 +183,7 @@ export function useRenameAgentThread(projectKey: string | null, agentId: number 
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ threadId, title }: { threadId: string; title: string }) =>
-      api.renameAiAgentThread(projectKey!, agentId!, threadId, title),
+      renameAiAgentThread(projectKey!, agentId!, threadId, title),
     onSuccess: (_res, { threadId, title }) => {
       if (!projectKey || agentId == null) return;
       qc.setQueriesData<InfiniteData<AiChatThreadPage>>(
@@ -191,7 +209,7 @@ export function useRenameAgentThread(projectKey: string | null, agentId: number 
 export function useDeleteAgentThread(projectKey: string | null, agentId: number | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (threadId: string) => api.deleteAiAgentThread(projectKey!, agentId!, threadId),
+    mutationFn: (threadId: string) => deleteAiAgentThread(projectKey!, agentId!, threadId),
     onSuccess: () => {
       if (projectKey && agentId != null) {
         void qc.invalidateQueries({ queryKey: qk.agentThreadLists(projectKey, agentId) });
@@ -206,7 +224,7 @@ export function useDeleteAgentThread(projectKey: string | null, agentId: number 
 export function useAgentToolsQuery(teamId: number | null) {
   return useQuery({
     queryKey: qk.agentTools(teamId ?? 0),
-    queryFn: () => api.listAgentTools(teamId!),
+    queryFn: () => listAgentTools(teamId!),
     enabled: teamId != null,
     staleTime: Infinity,
   });
@@ -226,8 +244,7 @@ export function useCreateAiAgent(teamId: number | null) {
   const t = useTranslations('teams.agents');
   const invalidate = useAgentInvalidator(teamId);
   return useMutation({
-    mutationFn: (input: Parameters<typeof api.createAiAgent>[1]) =>
-      api.createAiAgent(teamId!, input),
+    mutationFn: (input: Parameters<typeof createAiAgent>[1]) => createAiAgent(teamId!, input),
     onSuccess: (res) => {
       toast.success(t('created', { username: res.agent.username }));
       invalidate();
@@ -239,8 +256,8 @@ export function useUpdateAiAgent(teamId: number | null) {
   const t = useTranslations('teams.agents');
   const invalidate = useAgentInvalidator(teamId);
   return useMutation({
-    mutationFn: ({ id, patch }: { id: number; patch: Parameters<typeof api.updateAiAgent>[2] }) =>
-      api.updateAiAgent(teamId!, id, patch),
+    mutationFn: ({ id, patch }: { id: number; patch: Parameters<typeof updateAiAgent>[2] }) =>
+      updateAiAgent(teamId!, id, patch),
     onSuccess: (agent) => {
       toast.success(t('saved', { username: agent.username }));
       invalidate();
@@ -251,7 +268,7 @@ export function useUpdateAiAgent(teamId: number | null) {
 export function useRegenerateAiAgentKey(teamId: number | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.regenerateAiAgentKey(teamId!, id),
+    mutationFn: (id: number) => regenerateAiAgentKey(teamId!, id),
     onSuccess: () => {
       if (teamId != null) void qc.invalidateQueries({ queryKey: qk.teamAiAgents(teamId) });
     },
@@ -261,7 +278,7 @@ export function useRegenerateAiAgentKey(teamId: number | null) {
 export function useDeleteAiAgent(teamId: number | null) {
   const invalidate = useAgentInvalidator(teamId);
   return useMutation({
-    mutationFn: (id: number) => api.deleteAiAgent(teamId!, id),
+    mutationFn: (id: number) => deleteAiAgent(teamId!, id),
     onSuccess: invalidate,
   });
 }

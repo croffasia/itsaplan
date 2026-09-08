@@ -20,7 +20,7 @@ import {
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
-import { type ActivityAction } from '@/lib/api';
+import type { ActivityAction } from '@/lib/api/endpoints/activity';
 
 // The icon of each activity feed event. Its verb phrase is built by
 // useActivityText, which needs the reader's language.

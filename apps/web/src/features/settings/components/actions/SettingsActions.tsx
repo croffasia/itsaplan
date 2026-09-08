@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ActionDef, ActionEffect, ProjectDetail, CustomField } from '@/lib/api';
+import type { ActionDef, ActionEffect } from '@/lib/api/endpoints/actions';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import {
   useActionsQuery,
   useCreateAction,

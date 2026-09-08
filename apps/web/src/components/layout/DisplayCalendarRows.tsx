@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { CustomField } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
 import {
   customFieldKey,
   type BuiltinDateField,

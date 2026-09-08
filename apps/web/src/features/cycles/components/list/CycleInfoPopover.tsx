@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { ArrowRight, Info } from 'lucide-react';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { cyclePath } from '@/utils/paths';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { colorDot } from '@/components/common/fields/colorDot';

@@ -1,5 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type ActionDef } from '@/lib/api';
+import {
+  type ActionDef,
+  listQuickActions,
+  createAction,
+  updateAction,
+  deleteAction,
+  reorderActions,
+} from '@/lib/api/endpoints/actions';
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
 import { useOptimisticReorder } from '@/services/optimisticReorder';
 import { qk } from '@/services/queryKeys';
@@ -21,7 +28,7 @@ export function normalizeAction(a: ActionDef): ActionDef {
 export function useActionsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.actions(projectKey ?? ''),
-    queryFn: () => api.listQuickActions(projectKey!),
+    queryFn: () => listQuickActions(projectKey!),
     enabled: projectKey != null,
     select: (rows) => rows.map(normalizeAction),
   });
@@ -30,8 +37,8 @@ export function useActionsQuery(projectKey: string | null) {
 export function useCreateAction(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ input }: { input: Parameters<typeof api.createAction>[1] }) =>
-      api.createAction(projectKey!, input),
+    mutationFn: ({ input }: { input: Parameters<typeof createAction>[1] }) =>
+      createAction(projectKey!, input),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.actions(projectKey) });
     },
@@ -41,8 +48,8 @@ export function useCreateAction(projectKey: string | null) {
 export function useUpdateAction(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input: Parameters<typeof api.updateAction>[1] }) =>
-      api.updateAction(id, input),
+    mutationFn: ({ id, input }: { id: number; input: Parameters<typeof updateAction>[1] }) =>
+      updateAction(id, input),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.actions(projectKey) });
     },
@@ -52,7 +59,7 @@ export function useUpdateAction(projectKey: string | null) {
 export function useDeleteAction(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteAction(id),
+    mutationFn: (id: number) => deleteAction(id),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.actions(projectKey) });
     },
@@ -61,6 +68,6 @@ export function useDeleteAction(projectKey: string | null) {
 
 export function useReorderActions(projectKey: string | null) {
   return useOptimisticReorder<ActionDef>(projectKey ? qk.actions(projectKey) : null, (orderedIds) =>
-    api.reorderActions(projectKey!, orderedIds),
+    reorderActions(projectKey!, orderedIds),
   );
 }

@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ApiError, streamAiAgentChat, streamAiAgentRun } from '@/lib/api';
-import type { AiChatMessage, AiChatPart, AiChatToolPart } from '@/lib/api';
+import { streamAiAgentChat, streamAiAgentRun } from '@/lib/api/endpoints/agentChat';
+import { ApiError } from '@/lib/api/core/client';
+import type { AiChatMessage, AiChatPart, AiChatToolPart } from '@/lib/api/endpoints/agentChat';
 import { uuid } from '@/utils/uuid';
 import { useTranslations } from 'next-intl';
 

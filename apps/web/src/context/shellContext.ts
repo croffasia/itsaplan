@@ -1,5 +1,8 @@
 import { createContext, useContext } from 'react';
-import type { CustomField, IssueOpenMode, ProjectDetail, View } from '@/lib/api';
+import type { IssueOpenMode } from '@/lib/api/endpoints/userPreferences';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { View } from '@/lib/api/endpoints/views';
 import type { NewIssueDefaults } from '@/utils/project';
 import type { useViewEditor } from '@/hooks/useViewEditor';
 

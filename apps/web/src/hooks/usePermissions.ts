@@ -1,6 +1,7 @@
 import { useCallback, useContext } from 'react';
 import { ShellCtx } from '@/context/shellContext';
-import type { PermissionAction, PermissionResource, ProjectDetail } from '@/lib/api';
+import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/roles';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 
 // The current user's effective access in the active project, read from the payload
 // the Shell loads (project.viewer). Owners bypass the matrix (can everything); a

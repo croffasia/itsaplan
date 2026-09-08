@@ -1,4 +1,4 @@
-import type { NotificationEventToggles } from '@/lib/api';
+import type { NotificationEventToggles } from '@/lib/api/endpoints/notificationSettings';
 
 // The issue events a channel can send, matching the inbox notification types.
 // Shared by the email and telegram event sections; the label of an event is a

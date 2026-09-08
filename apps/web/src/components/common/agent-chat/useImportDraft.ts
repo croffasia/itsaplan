@@ -7,7 +7,7 @@ import {
   getImport,
   type ImportConfirmResult,
   type IssueImport,
-} from '@/lib/api';
+} from '@/lib/api/endpoints/imports';
 
 // One import draft, read by the review card the agent's ```issue-import fence
 // renders. The card is drawn wherever the answer sits, so it re-reads the draft

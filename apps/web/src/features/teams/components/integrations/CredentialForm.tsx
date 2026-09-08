@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
-import type { ConfigField, IntegrationCredential, IntegrationMeta } from '@/lib/api';
+import type {
+  ConfigField,
+  IntegrationCredential,
+  IntegrationMeta,
+} from '@/lib/api/endpoints/integrations';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

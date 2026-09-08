@@ -1,5 +1,15 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type Permissions, type RoleListParams } from '@/lib/api';
+import {
+  type Permissions,
+  type RoleListParams,
+  getPermissionCatalog,
+  listTeamRoles,
+  listTeamRoleOptions,
+  getRoleUsage,
+  createRole,
+  updateRole,
+  deleteRole,
+} from '@/lib/api/endpoints/roles';
 import { qk } from '@/services/queryKeys';
 
 // The resources and actions of the permission matrix. Static for the app's
@@ -7,7 +17,7 @@ import { qk } from '@/services/queryKeys';
 export function usePermissionCatalogQuery() {
   return useQuery({
     queryKey: qk.permissionCatalog,
-    queryFn: () => api.getPermissionCatalog(),
+    queryFn: () => getPermissionCatalog(),
     staleTime: Infinity,
   });
 }
@@ -17,7 +27,7 @@ export function usePermissionCatalogQuery() {
 export function useTeamRolesQuery(teamId: number | null, params: RoleListParams) {
   return useQuery({
     queryKey: qk.teamRoles(teamId ?? 0, params),
-    queryFn: () => api.listTeamRoles(teamId!, params),
+    queryFn: () => listTeamRoles(teamId!, params),
     enabled: teamId != null,
     placeholderData: keepPreviousData,
   });
@@ -28,7 +38,7 @@ export function useTeamRolesQuery(teamId: number | null, params: RoleListParams)
 export function useTeamRoleOptionsQuery(teamId: number | null) {
   return useQuery({
     queryKey: qk.teamRoleOptions(teamId ?? 0),
-    queryFn: () => api.listTeamRoleOptions(teamId!),
+    queryFn: () => listTeamRoleOptions(teamId!),
     enabled: teamId != null,
   });
 }
@@ -38,7 +48,7 @@ export function useTeamRoleOptionsQuery(teamId: number | null) {
 export function useRoleUsageQuery(teamId: number, roleId: number) {
   return useQuery({
     queryKey: qk.roleUsage(teamId, roleId),
-    queryFn: () => api.getRoleUsage(teamId, roleId),
+    queryFn: () => getRoleUsage(teamId, roleId),
   });
 }
 
@@ -66,7 +76,7 @@ function useRoleMutation<TInput, TResult>(
 
 export function useCreateRole(teamId: number) {
   return useRoleMutation(teamId, (input: { name: string; permissions: Permissions }) =>
-    api.createRole(teamId, input),
+    createRole(teamId, input),
   );
 }
 
@@ -74,7 +84,7 @@ export function useUpdateRole(teamId: number) {
   return useRoleMutation(
     teamId,
     ({ roleId, patch }: { roleId: number; patch: { name?: string; permissions?: Permissions } }) =>
-      api.updateRole(teamId, roleId, patch),
+      updateRole(teamId, roleId, patch),
   );
 }
 
@@ -84,6 +94,6 @@ export function useDeleteRole(teamId: number) {
   return useRoleMutation(
     teamId,
     ({ roleId, targetRoleId }: { roleId: number; targetRoleId?: number }) =>
-      api.deleteRole(teamId, roleId, targetRoleId),
+      deleteRole(teamId, roleId, targetRoleId),
   );
 }

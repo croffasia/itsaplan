@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { formatShortDate } from '@/utils/dates';
 
 // The days a cycle ran. One that was finished before its planned end date ended on

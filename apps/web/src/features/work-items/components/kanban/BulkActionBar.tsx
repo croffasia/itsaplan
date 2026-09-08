@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Archive, Bot, CircleDashed, RefreshCw, Tag, Target, Trash2, User, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { usePermissions } from '@/hooks/usePermissions';
 import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';

@@ -1,5 +1,5 @@
 import type { Edge } from '@xyflow/react';
-import type { NoteCanvas, NoteNode } from '@/lib/api';
+import type { NoteCanvas, NoteNode } from '@/lib/api/endpoints/noteBoards';
 import { uuid } from '@/utils/uuid';
 import type { StickerNodeType } from '../components/StickerNode';
 import { DEFAULT_STICKER_COLOR } from './stickerColors';

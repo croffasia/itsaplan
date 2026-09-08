@@ -1,5 +1,5 @@
 import { History, MessageSquare, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

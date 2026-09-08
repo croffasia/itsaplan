@@ -8,7 +8,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 import { useTranslations } from 'next-intl';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { buildMaps, issueColor, type WorkItemsViewProps } from '@/utils/project';
 import { toDateStr } from '@/utils/dates';
 import { useDndSensors } from '@/lib/dnd';

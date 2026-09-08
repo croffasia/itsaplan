@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import type { PageParams } from '@/lib/api';
+import type { PageParams } from '@/lib/api/core/paging';
 
 // What a paged list opens with, until the reader picks another size.
 export const DEFAULT_PAGE_SIZE = 10;

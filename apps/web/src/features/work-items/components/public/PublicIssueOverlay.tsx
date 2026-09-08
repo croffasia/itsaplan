@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { api } from '@/lib/api';
+import { getSharedViewIssue } from '@/lib/api/endpoints/share';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import IssueDetailSkeleton from '@/features/issue/components/detail/IssueDetailSkeleton';
 import ReadOnlyIssueDetail from '@/features/issue/components/detail/ReadOnlyIssueDetail';
@@ -31,7 +31,7 @@ export default function PublicIssueOverlay({
   const t = useTranslations('workItems.share');
   const query = useQuery({
     queryKey: ['share', 'view', token, 'issue', issueId],
-    queryFn: () => api.getSharedViewIssue(token, issueId as number),
+    queryFn: () => getSharedViewIssue(token, issueId as number),
     enabled: issueId != null,
     retry: false,
   });

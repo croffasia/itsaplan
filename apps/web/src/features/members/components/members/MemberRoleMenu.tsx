@@ -2,7 +2,8 @@
 
 import { Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { MemberRow, Role } from '@/lib/api';
+import type { MemberRow } from '@/lib/api/endpoints/members';
+import type { Role } from '@/lib/api/endpoints/roles';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

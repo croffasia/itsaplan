@@ -7,7 +7,7 @@ import {
 } from '@/services/projects.service';
 import { useViewsQuery } from '@/services/views.service';
 import { useCycleOptionsQuery } from '@/services/cycles.service';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/lib/api/core/client';
 import { applyFilters } from '@/utils/filters';
 import { withoutShownSubtasks } from '@/utils/subtasks';
 import { viewPath } from '@/utils/paths';

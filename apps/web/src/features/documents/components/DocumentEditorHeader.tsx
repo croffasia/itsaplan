@@ -1,6 +1,6 @@
 import { ArrowLeft, Check, CircleAlert, LoaderCircle, PanelRight, RefreshCw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { DocumentSaveState } from '../hooks/useDocumentDraft';

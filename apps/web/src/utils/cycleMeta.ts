@@ -1,4 +1,4 @@
-import type { CycleStatus } from '@/lib/api';
+import type { CycleStatus } from '@/lib/api/endpoints/cycles';
 
 // Display metadata for the cycle status, which the API derives from the dates.
 // Colors are raw hex so they can drive both a dot and a text color, like the

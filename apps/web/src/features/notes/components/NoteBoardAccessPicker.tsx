@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import type { NoteBoardAccessCandidate, NoteBoardVisibility } from '@/lib/api';
+import type { NoteBoardAccessCandidate, NoteBoardVisibility } from '@/lib/api/endpoints/noteBoards';
 import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import { Badge } from '@/components/ui/badge';

@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { formatShortDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import type { AiChatThread } from '@/lib/api';
+import type { AiChatThread } from '@/lib/api/endpoints/agentChat';
 
 // One conversation in the chat history list. The controls sit next to the row rather
 // than inside it, so the row stays a single button. `query` is the search the list was

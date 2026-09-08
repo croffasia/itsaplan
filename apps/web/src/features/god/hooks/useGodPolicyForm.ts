@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { InstanceAuthSettings, RegistrationMode } from '@/lib/api';
+import type { InstanceAuthSettings, RegistrationMode } from '@/lib/api/endpoints/god';
 import { useUpdateInstanceAuthSettings } from '../services/god.service';
 
 export interface GodPolicyForm {

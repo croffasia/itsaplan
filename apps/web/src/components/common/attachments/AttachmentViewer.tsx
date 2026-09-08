@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type Attachment } from '@/lib/api';
+import type { Attachment } from '@/lib/api/endpoints/attachments';
 import { isImage } from '@/components/common/editor/attachmentEmbed';
 import Modal from '@/components/common/overlay/Modal';
 import { cn } from '@/lib/utils';

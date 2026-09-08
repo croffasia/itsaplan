@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { InstanceProjectOption } from '@/lib/api';
+import type { InstanceProjectOption } from '@/lib/api/endpoints/god';
 import { Button } from '@/components/ui/button';
 import {
   Select,

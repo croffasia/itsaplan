@@ -2,7 +2,7 @@
 // so each mutation refreshes the issue detail and feed of both ends.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, type IssueLinkInputKind } from '@/lib/api';
+import { type IssueLinkInputKind, linkIssues, unlinkIssues } from '@/lib/api/endpoints/issues';
 import { qk } from '@/services/queryKeys';
 
 interface LinkVars {
@@ -29,12 +29,12 @@ function useLinkMutation<TVars extends LinkVars>(run: (vars: TVars) => Promise<u
 
 export function useLinkIssues() {
   return useLinkMutation((vars: LinkVars & { kind: IssueLinkInputKind }) =>
-    api.linkIssues(vars.issueId, vars.otherIssueId, vars.kind),
+    linkIssues(vars.issueId, vars.otherIssueId, vars.kind),
   );
 }
 
 export function useUnlinkIssues() {
   return useLinkMutation((vars: LinkVars & { linkId: number }) =>
-    api.unlinkIssues(vars.issueId, vars.linkId),
+    unlinkIssues(vars.issueId, vars.linkId),
   );
 }

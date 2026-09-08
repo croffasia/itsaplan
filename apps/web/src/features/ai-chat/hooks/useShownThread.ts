@@ -1,6 +1,6 @@
 'use client';
 
-import type { AiChatThread } from '@/lib/api';
+import type { AiChatThread } from '@/lib/api/endpoints/agentChat';
 import { useLoadedAgentThreads } from '@/services/aiAgents.service';
 
 // The saved thread the panel is showing, which is what carries the facts about the

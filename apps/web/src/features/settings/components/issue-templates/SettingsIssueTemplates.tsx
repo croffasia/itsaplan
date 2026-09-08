@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { IssueTemplate, ProjectDetail } from '@/lib/api';
+import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';
 import { SettingsEmpty } from '../crud/SettingsEmpty';
 import { SettingsRow } from '../crud/SettingsRow';

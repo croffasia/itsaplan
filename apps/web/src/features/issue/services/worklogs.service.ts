@@ -3,11 +3,17 @@
 // three. The board carries the sum too, which is why the project's issues follow.
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type WorklogInput } from '@/lib/api';
+import {
+  type WorklogInput,
+  listWorklogs,
+  createWorklog,
+  updateWorklog,
+  deleteWorklog,
+} from '@/lib/api/endpoints/worklogs';
 import { qk } from '@/services/queryKeys';
 
 export function useWorklogsQuery(issueId: number) {
-  return useQuery({ queryKey: qk.worklogs(issueId), queryFn: () => api.listWorklogs(issueId) });
+  return useQuery({ queryKey: qk.worklogs(issueId), queryFn: () => listWorklogs(issueId) });
 }
 
 function useWorklogMutation<TVars extends { issueId: number; projectKey: string }>(
@@ -27,7 +33,7 @@ function useWorklogMutation<TVars extends { issueId: number; projectKey: string 
 
 export function useCreateWorklog() {
   return useWorklogMutation((vars: { issueId: number; projectKey: string; input: WorklogInput }) =>
-    api.createWorklog(vars.issueId, vars.input),
+    createWorklog(vars.issueId, vars.input),
   );
 }
 
@@ -38,12 +44,12 @@ export function useUpdateWorklog() {
       projectKey: string;
       worklogId: number;
       patch: Partial<WorklogInput>;
-    }) => api.updateWorklog(vars.worklogId, vars.patch),
+    }) => updateWorklog(vars.worklogId, vars.patch),
   );
 }
 
 export function useDeleteWorklog() {
   return useWorklogMutation((vars: { issueId: number; projectKey: string; worklogId: number }) =>
-    api.deleteWorklog(vars.worklogId),
+    deleteWorklog(vars.worklogId),
   );
 }

@@ -1,6 +1,6 @@
 import { Check, ChevronRight, SquareKanban, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Project } from '@/lib/api';
+import type { Project } from '@/lib/api/endpoints/projects';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';

@@ -3,7 +3,7 @@
 import { Fragment } from 'react';
 import { Check, ListChecks } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { PermissionResource, Permissions } from '@/lib/api';
+import type { PermissionResource, Permissions } from '@/lib/api/endpoints/roles';
 import { ACTION_ORDER, groupResources } from '@/utils/permissions';
 import { usePermissionLabels } from '@/hooks/usePermissionLabels';
 import { Button } from '@/components/ui/button';

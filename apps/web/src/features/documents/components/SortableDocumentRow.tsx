@@ -6,7 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChevronRight, FileText, GripVertical, LockKeyhole, Plus, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import type { ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { documentPath } from '@/utils/paths';

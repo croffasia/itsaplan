@@ -3,7 +3,7 @@ import type {
   PermissionCatalog,
   PermissionResource,
   Permissions,
-} from '@/lib/api';
+} from '@/lib/api/endpoints/roles';
 
 // Column display order for the permission matrix. An action not listed (one added
 // on the API) sorts to the end, keeping its catalog order.

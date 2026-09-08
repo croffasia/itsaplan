@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { FolderKanban, Mail, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type InviteView } from '@/lib/api';
+import type { InviteView } from '@/lib/api/endpoints/invites';
 import { Badge } from '@/components/ui/badge';
 
 function InfoRow({

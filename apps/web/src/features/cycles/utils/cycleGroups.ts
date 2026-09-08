@@ -1,4 +1,4 @@
-import type { Cycle, CycleStatus } from '@/lib/api';
+import type { Cycle, CycleStatus } from '@/lib/api/endpoints/cycles';
 import { CYCLE_STATUS_META, CYCLE_STATUS_ORDER } from '@/utils/cycleMeta';
 
 export interface CycleGroup {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Release } from '@/lib/api';
+import type { Release } from '@/lib/api/endpoints/updates';
 import type { TakeoverSection } from '@/components/common/page/TakeoverScreen';
 import { renderMarkdown, sanitizeHtml } from '@/lib/markdown';
 import { isNewerVersion } from '@/utils/version';

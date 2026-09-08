@@ -1,4 +1,5 @@
-import type { Issue, ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { issuePath } from '@/utils/paths';
 
 // A git-branch-safe handle from the current user: the email local part (or name)

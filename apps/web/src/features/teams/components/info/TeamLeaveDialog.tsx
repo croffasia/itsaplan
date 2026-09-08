@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import type { Team } from '@/lib/api';
+import type { Team } from '@/lib/api/endpoints/teams';
 import { manageTeamsPath } from '@/utils/paths';
 import { useLeaveTeam } from '@/services/teams.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';

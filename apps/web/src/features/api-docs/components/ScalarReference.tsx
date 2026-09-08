@@ -3,7 +3,7 @@
 import { ApiReferenceReact } from '@scalar/api-reference-react';
 import '@scalar/api-reference-react/style.css';
 import './scalar-theme.css';
-import { API_URL } from '@/lib/api';
+import { API_URL } from '@/lib/api/core/client';
 
 // The API mounts /docs/json outside the session guard, so the browser fetches it
 // directly.

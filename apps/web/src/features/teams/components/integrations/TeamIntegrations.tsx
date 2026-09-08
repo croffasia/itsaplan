@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { IntegrationCredential, IntegrationMeta, ResourcePermissions } from '@/lib/api';
+import type { ResourcePermissions } from '@/lib/api/endpoints/roles';
+import type { IntegrationCredential, IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { useCredentialsPageQuery, useDeleteCredential } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';

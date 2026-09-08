@@ -12,7 +12,7 @@ import {
   useInstanceProjectDefaultsQuery,
   useUpdateInstanceProjectDefaults,
 } from './services/god.service';
-import type { ProjectDefaults } from '@/lib/api';
+import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
 
 export default function GodGeneralPage() {
   const query = useInstanceProjectDefaultsQuery();

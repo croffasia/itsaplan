@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { cn } from '@/lib/utils';
 import CommentItem from './CommentItem';
 import CommentComposer, { type ComposerContext } from './CommentComposer';

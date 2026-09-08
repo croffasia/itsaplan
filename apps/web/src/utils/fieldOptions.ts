@@ -3,7 +3,9 @@
 // keeping its own copy. Adding a priority/state is a single edit in this file
 // (plus its icon in the two icon renderers and its message).
 
-import type { CycleStatus, InitiativeStatus, StateType } from '@/lib/api';
+import type { StateType } from '@/lib/api/endpoints/columns';
+import type { CycleStatus } from '@/lib/api/endpoints/cycles';
+import type { InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 
 export type Priority = 'urgent' | 'high' | 'medium' | 'low';
 

@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
-import { type Column, type FeedGroup, type GroupedFeedPage } from '@/lib/api';
+import type { Column } from '@/lib/api/endpoints/columns';
+import type { FeedGroup, GroupedFeedPage } from '@/lib/api/endpoints/activity';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { useGroupedFeedQuery } from '../../services/comments.service';

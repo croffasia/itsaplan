@@ -2,7 +2,7 @@
 
 import type { ChatMessage } from '@/hooks/useAgentChat';
 import { cn } from '@/lib/utils';
-import type { AiChatPart, AiChatToolPart } from '@/lib/api';
+import type { AiChatPart, AiChatToolPart } from '@/lib/api/endpoints/agentChat';
 import { formatLongDate, formatTime } from '@/utils/dates';
 import Markdown from '@/components/common/Markdown';
 import { Bubble, BubbleContent } from '@/components/ui/bubble';

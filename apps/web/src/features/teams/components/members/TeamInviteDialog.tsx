@@ -3,7 +3,9 @@
 import { useState, type FormEvent } from 'react';
 import { Mail, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { ApiError, type InviteTeamRole, type TeamRole } from '@/lib/api';
+import type { InviteTeamRole } from '@/lib/api/endpoints/invites';
+import type { TeamRole } from '@/lib/api/endpoints/teams';
+import { ApiError } from '@/lib/api/core/client';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

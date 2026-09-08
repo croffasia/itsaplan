@@ -1,4 +1,4 @@
-import type { NoteBoard } from '@/lib/api';
+import type { NoteBoard } from '@/lib/api/endpoints/noteBoards';
 import { useSession } from '@/lib/auth-client';
 import { usePermissions } from '@/hooks/usePermissions';
 

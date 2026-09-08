@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { formatDateTime } from '@/utils/dates';
 import { issuePath } from '@/utils/paths';
-import type { AgentRunFeedItem } from '@/lib/api';
+import type { AgentRunFeedItem } from '@/lib/api/endpoints/analytics';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';

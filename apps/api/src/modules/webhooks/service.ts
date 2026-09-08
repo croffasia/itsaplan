@@ -10,7 +10,7 @@ import { iso } from '#shared/lib';
 
 // The event types a subscription can select. Keep this list in sync with the events
 // the delivery side emits (modules/issues/service.ts, activity.ts, links.ts) and
-// with the frontend list (apps/web src/lib/api.ts).
+// with the frontend list (apps/web src/lib/api/endpoints/webhooks.ts).
 //
 // issue.updated fires on any field change. The granular issue.assigned,
 // issue.state_changed, and issue.label_changed fire in addition, and only when that

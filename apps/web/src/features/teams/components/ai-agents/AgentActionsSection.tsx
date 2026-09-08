@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { ListChecks } from 'lucide-react';
-import type { AgentTool } from '@/lib/api';
+import type { AgentTool } from '@/lib/api/endpoints/agents';
 import { grantedToolCount, groupInOrder } from '../../utils/agentForm';
 import { AgentFormSection } from './AgentFormSection';
 import { AgentActionRow } from './AgentActionRow';

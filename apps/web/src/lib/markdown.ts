@@ -1,7 +1,7 @@
 import { marked } from 'marked';
 import DOMPurify from 'isomorphic-dompurify';
 import { parseChartSpec, type ChartSpec } from '@/utils/chartSpec';
-import { mediaUrl } from '@/lib/api';
+import { mediaUrl } from '@/lib/api/core/media';
 
 // Content whose links lead away from the current view (release notes, agent chat)
 // asks for newTabLinks, so following one does not replace what the reader was on.

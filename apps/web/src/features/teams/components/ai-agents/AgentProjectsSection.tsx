@@ -1,5 +1,5 @@
 import { FolderKanban } from 'lucide-react';
-import type { TeamProjectOption } from '@/lib/api';
+import type { TeamProjectOption } from '@/lib/api/endpoints/teams';
 import type { AgentFormValue } from '../../utils/agentForm';
 import { AgentCapabilityList } from './AgentCapabilityList';
 import { AgentEmptyNotice } from './AgentEmptyNotice';

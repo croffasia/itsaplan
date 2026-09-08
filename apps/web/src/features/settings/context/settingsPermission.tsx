@@ -2,7 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from 'react';
 import { usePermissions } from '@/hooks/usePermissions';
-import type { PermissionAction, PermissionResource } from '@/lib/api';
+import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/roles';
 
 // The permission resource of the active settings section. Provided once per section
 // so the shared CRUD controls can gate their create/edit/delete buttons without every

@@ -1,5 +1,5 @@
 import { Trash2, Wrench } from 'lucide-react';
-import type { ConfiguredTool } from '@/lib/api';
+import type { ConfiguredTool } from '@/lib/api/endpoints/agentTools';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';

@@ -1,4 +1,4 @@
-import type { AgentTool, AiAgent, NewAiAgentInput, AiAgentPatch } from '@/lib/api';
+import type { AgentTool, AiAgent, NewAiAgentInput, AiAgentPatch } from '@/lib/api/endpoints/agents';
 import { transliterate } from '@/utils/projectKey';
 
 // The editable shape of an agent form. temperature/maxSteps are kept as strings so

@@ -1,5 +1,5 @@
 import { CalendarClock } from 'lucide-react';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { formatDurationShort, formatShortDate, isDueOverdue } from '@/utils/dates';
 import { formatMinutes } from '@/utils/estimate';

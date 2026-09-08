@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { colorDot } from '@/components/common/fields/colorDot';
 import ProgressBar from '@/components/common/ProgressBar';

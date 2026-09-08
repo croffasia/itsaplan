@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { HotkeyOverrides } from '@/lib/api';
+import type { HotkeyOverrides } from '@/lib/api/endpoints/settings';
 import {
   HOTKEYS,
   HOTKEY_GROUPS,

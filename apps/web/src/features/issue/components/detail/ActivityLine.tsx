@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { CircleDot } from 'lucide-react';
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ACTION_ICON } from '../../utils/activityIcons';

@@ -1,5 +1,5 @@
 import { Reply } from 'lucide-react';
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { useRelativeTime } from '@/context/relativeTimeContext';

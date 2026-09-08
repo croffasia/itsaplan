@@ -1,4 +1,4 @@
-import type { InitiativeCounts, InitiativeStatus } from '@/lib/api';
+import type { InitiativeCounts, InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 import type { InitiativesTab } from '@/utils/paths';
 
 // One tab per lifecycle status, except the terminal statuses share a "Completed"

@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
-import { type ProjectDetail, type Issue } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { cn } from '@/lib/utils';
 import { CalendarDayChip } from './CalendarDayChip';
 import { CalendarDayOverflow } from './CalendarDayOverflow';

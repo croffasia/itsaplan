@@ -1,5 +1,5 @@
 import { useDndContext } from '@dnd-kit/core';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 
 // Whether a drag is over a card container (a board column or a swimlane cell).
 // Collision detection prefers a card over its container, so the container's own

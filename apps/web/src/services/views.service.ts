@@ -1,5 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type View } from '@/lib/api';
+import {
+  type View,
+  listViews,
+  createView,
+  updateView,
+  deleteView,
+  setViewFavorite,
+  reorderViews,
+} from '@/lib/api/endpoints/views';
 import { EMPTY_FILTER_SET, type FilterSet } from '@/utils/filters';
 import { normalizeSavedDisplay } from '@/utils/viewSettings';
 import { useOptimisticReorder } from '@/services/optimisticReorder';
@@ -20,7 +28,7 @@ export function normalizeView(v: View): View {
 export function useViewsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.views(projectKey ?? ''),
-    queryFn: () => api.listViews(projectKey!),
+    queryFn: () => listViews(projectKey!),
     enabled: projectKey != null,
     // The caller's favorites are pinned to the front of the tab row; the rest keep
     // their stored order.
@@ -32,8 +40,8 @@ export function useViewsQuery(projectKey: string | null) {
 export function useCreateView(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ input }: { input: Parameters<typeof api.createView>[1] }) =>
-      api.createView(projectKey!, input),
+    mutationFn: ({ input }: { input: Parameters<typeof createView>[1] }) =>
+      createView(projectKey!, input),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     },
@@ -43,8 +51,8 @@ export function useCreateView(projectKey: string | null) {
 export function useUpdateView(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input: Parameters<typeof api.updateView>[1] }) =>
-      api.updateView(id, input),
+    mutationFn: ({ id, input }: { id: number; input: Parameters<typeof updateView>[1] }) =>
+      updateView(id, input),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     },
@@ -54,7 +62,7 @@ export function useUpdateView(projectKey: string | null) {
 export function useDeleteView(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteView(id),
+    mutationFn: (id: number) => deleteView(id),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     },
@@ -65,7 +73,7 @@ export function useSetViewFavorite(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, favorite }: { id: number; favorite: boolean }) =>
-      api.setViewFavorite(id, favorite),
+      setViewFavorite(id, favorite),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     },
@@ -74,6 +82,6 @@ export function useSetViewFavorite(projectKey: string | null) {
 
 export function useReorderViews(projectKey: string | null) {
   return useOptimisticReorder<View>(projectKey ? qk.views(projectKey) : null, (orderedIds) =>
-    api.reorderViews(projectKey!, orderedIds),
+    reorderViews(projectKey!, orderedIds),
   );
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { InitiativeStatus } from '@/lib/api';
+import type { InitiativeStatus } from '@/lib/api/endpoints/initiatives';
 import { Command, CommandGroup, CommandItem, CommandList } from '@/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { colorDot } from '@/components/common/fields/colorDot';

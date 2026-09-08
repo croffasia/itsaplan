@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import Modal from '@/components/common/overlay/Modal';
 import { useCyclesQuery } from '@/services/cycles.service';
 import { cycleDefaults } from '../utils/cycleDefaults';

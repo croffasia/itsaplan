@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { IntegrationMeta } from '@/lib/api';
+import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import Modal from '@/components/common/overlay/Modal';
 import { ToolPicker } from './ToolPicker';
 import { ToolCredentialStep } from './ToolCredentialStep';

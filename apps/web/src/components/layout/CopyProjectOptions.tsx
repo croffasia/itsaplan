@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import { type CopyProjectIncludeKey } from '@/lib/api';
+import type { CopyProjectIncludeKey } from '@/lib/api/endpoints/teams';
 import { Checkbox } from '@/components/ui/checkbox';
 
 export type CopyInclude = Record<CopyProjectIncludeKey, boolean>;

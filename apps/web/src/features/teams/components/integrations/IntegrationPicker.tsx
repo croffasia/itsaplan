@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
-import type { IntegrationMeta } from '@/lib/api';
+import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { Input } from '@/components/ui/input';
 import { IntegrationIcon } from '@/components/common/IntegrationIcon';
 import { useTranslations } from 'next-intl';

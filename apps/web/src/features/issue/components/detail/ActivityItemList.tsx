@@ -1,4 +1,4 @@
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import ActivityLine from './ActivityLine';
 import CommentThread from './CommentThread';
 import { type ComposerContext } from './CommentComposer';

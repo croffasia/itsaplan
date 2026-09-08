@@ -1,13 +1,13 @@
 import { Fragment, type ReactNode } from 'react';
 import { RefreshCw, Target } from 'lucide-react';
-import {
-  type CustomField,
-  type ProjectDetail,
-  type IssueDetail as IssueDetailRow,
-  type IssueFieldValueInput,
-  type IssuePatch,
-  type IssueWatcher,
-} from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type {
+  IssueDetail as IssueDetailRow,
+  IssueFieldValueInput,
+  IssuePatch,
+  IssueWatcher,
+} from '@/lib/api/endpoints/issues';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
 import { Pill } from '@/components/common/fields/Pill';

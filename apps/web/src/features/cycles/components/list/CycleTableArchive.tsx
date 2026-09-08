@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import type { CompletedCycles } from '../../hooks/useCompletedCycles';

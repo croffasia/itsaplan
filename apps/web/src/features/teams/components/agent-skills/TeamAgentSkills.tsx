@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { AgentSkill, ResourcePermissions } from '@/lib/api';
+import type { ResourcePermissions } from '@/lib/api/endpoints/roles';
+import type { AgentSkill } from '@/lib/api/endpoints/agentSkills';
 import { useSkillsPageQuery, useDeleteSkill } from '@/services/agentSkills.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { EmptyState } from '@/components/common/page/EmptyState';

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import type { ActionDef, ProjectDetail, Issue, SubtaskDisposition } from '@/lib/api';
+import type { ActionDef } from '@/lib/api/endpoints/actions';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
 import { matchesFilterSet } from '@/utils/filters';
 import { describeEffect } from '@/utils/actions';
 import { useEffectText } from '@/hooks/useEffectText';

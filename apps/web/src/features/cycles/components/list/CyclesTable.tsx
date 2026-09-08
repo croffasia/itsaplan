@@ -2,7 +2,7 @@
 
 import { Fragment, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { groupCycles } from '../../utils/cycleGroups';
 import type { CompletedCycles } from '../../hooks/useCompletedCycles';

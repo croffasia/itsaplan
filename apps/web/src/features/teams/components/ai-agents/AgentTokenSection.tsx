@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { KeyRound, TriangleAlert, X } from 'lucide-react';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { useRegenerateAiAgentKey } from '@/services/aiAgents.service';
 import { Button } from '@/components/ui/button';
 import { useAgentCan, useAgentSection } from '../../context/agentSection';

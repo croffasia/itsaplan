@@ -1,6 +1,6 @@
 import { type useSortable } from '@dnd-kit/sortable';
 import { Trash2 } from 'lucide-react';
-import { type Checklist } from '@/lib/api';
+import type { Checklist } from '@/lib/api/endpoints/checklists';
 import { Button } from '@/components/ui/button';
 import { CHECKLIST_TITLE_MAX } from '../../utils/checklists';
 import IssueChecklistEditableText from './IssueChecklistEditableText';

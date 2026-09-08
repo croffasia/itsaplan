@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronLeft } from 'lucide-react';
-import type { IntegrationOption } from '@/lib/api';
+import type { IntegrationOption } from '@/lib/api/endpoints/integrations';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {

@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/hooks/usePermissions';
-import type { PermissionAction, PermissionResource } from '@/lib/api';
+import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/roles';
 
 // Gates a whole page or section: renders children when the current user may perform
 // `action` on `resource`, otherwise a short access message. The API enforces the

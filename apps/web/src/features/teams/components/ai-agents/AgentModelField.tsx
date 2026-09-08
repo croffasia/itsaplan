@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
-import type { ProviderModel } from '@/lib/api';
+import type { ProviderModel } from '@/lib/api/endpoints/integrations';
 import {
   Command,
   CommandEmpty,

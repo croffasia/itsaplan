@@ -3,7 +3,7 @@
 // parents it moved between, plus the board the subtask rows are read from.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { updateIssue } from '@/lib/api/endpoints/issues';
 import { qk } from '@/services/queryKeys';
 
 interface SetParentVars {
@@ -17,7 +17,7 @@ interface SetParentVars {
 export function useSetIssueParent() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: SetParentVars) => api.updateIssue(vars.issueId, { parentId: vars.parentId }),
+    mutationFn: (vars: SetParentVars) => updateIssue(vars.issueId, { parentId: vars.parentId }),
     onSuccess: (_data, { projectKey, issueId, parentId, previousParentId }) => {
       for (const id of [issueId, parentId, previousParentId]) {
         if (id == null) continue;

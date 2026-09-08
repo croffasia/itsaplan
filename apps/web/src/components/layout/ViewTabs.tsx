@@ -9,7 +9,7 @@ import {
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { Filter, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { View } from '@/lib/api';
+import type { View } from '@/lib/api/endpoints/views';
 import { useStripSortSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';

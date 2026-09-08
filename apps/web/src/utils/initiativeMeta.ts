@@ -1,4 +1,4 @@
-import type { InitiativeStatus, InitiativeHealth } from '@/lib/api';
+import type { InitiativeStatus, InitiativeHealth } from '@/lib/api/endpoints/initiatives';
 
 // Display metadata for the initiative status lifecycle and the derived health
 // signal. Colors are raw hex so they can drive both a dot and a text color. The

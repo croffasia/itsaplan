@@ -1,4 +1,4 @@
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { WidgetInstance } from '@/utils/dashboardWidgets';
 import StatWidget from './widgets/StatWidget';
 import BreakdownWidget from './widgets/BreakdownWidget';

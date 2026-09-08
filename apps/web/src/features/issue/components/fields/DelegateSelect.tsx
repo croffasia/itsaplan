@@ -1,6 +1,6 @@
 import { CircleDashed } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Assignee } from '@/lib/api';
+import type { Assignee } from '@/lib/api/endpoints/projects';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from '@/components/common/fields/Pill';
 import PopoverPick from '@/components/common/fields/PopoverPick';

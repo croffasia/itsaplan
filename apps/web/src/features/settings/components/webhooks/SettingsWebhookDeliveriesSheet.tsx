@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { Webhook, WebhookDelivery } from '@/lib/api';
+import type { Webhook, WebhookDelivery } from '@/lib/api/endpoints/webhooks';
 import { formatDateTime } from '@/utils/dates';
 import { useWebhookDeliveries } from '@/services/webhooks.service';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';

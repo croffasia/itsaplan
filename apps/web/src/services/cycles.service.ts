@@ -1,5 +1,20 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, nextPageParam, type CyclePatch, type NewCycleInput } from '@/lib/api';
+import {
+  type CyclePatch,
+  type NewCycleInput,
+  listCycles,
+  listPlannedCycles,
+  listCycleOptions,
+  listCompletedCycles,
+  getCycle,
+  createCycle,
+  updateCycle,
+  deleteCycle,
+  finishCycle,
+  startNextCycle,
+  transferCycleIssues,
+} from '@/lib/api/endpoints/cycles';
+import { nextPageParam } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 // How many finished cycles the archive loads at a time.
@@ -22,7 +37,7 @@ function invalidateCycleIssues(qc: ReturnType<typeof useQueryClient>, projectKey
 export function useCyclesQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.cycles(projectKey ?? ''),
-    queryFn: () => api.listCycles(projectKey!),
+    queryFn: () => listCycles(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -34,7 +49,7 @@ export function useCyclesQuery(projectKey: string | null) {
 export function usePlannedCyclesQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.plannedCycles(projectKey ?? ''),
-    queryFn: () => api.listPlannedCycles(projectKey!),
+    queryFn: () => listPlannedCycles(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -44,7 +59,7 @@ export function usePlannedCyclesQuery(projectKey: string | null) {
 export function useCycleOptionsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.cycleOptions(projectKey ?? ''),
-    queryFn: () => api.listCycleOptions(projectKey!),
+    queryFn: () => listCycleOptions(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -54,7 +69,7 @@ export function useCompletedCyclesQuery(projectKey: string | null) {
   return useInfiniteQuery({
     queryKey: qk.completedCycles(projectKey ?? ''),
     queryFn: ({ pageParam }) =>
-      api.listCompletedCycles(projectKey!, { page: pageParam, pageSize: COMPLETED_CYCLES_PAGE }),
+      listCompletedCycles(projectKey!, { page: pageParam, pageSize: COMPLETED_CYCLES_PAGE }),
     initialPageParam: 1,
     getNextPageParam: nextPageParam,
     enabled: projectKey != null,
@@ -64,7 +79,7 @@ export function useCompletedCyclesQuery(projectKey: string | null) {
 export function useCycleQuery(cycleId: number | null) {
   return useQuery({
     queryKey: qk.cycle(cycleId ?? -1),
-    queryFn: () => api.getCycle(cycleId!),
+    queryFn: () => getCycle(cycleId!),
     enabled: cycleId != null,
   });
 }
@@ -72,7 +87,7 @@ export function useCycleQuery(cycleId: number | null) {
 export function useCreateCycle(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: NewCycleInput) => api.createCycle(projectKey, input),
+    mutationFn: (input: NewCycleInput) => createCycle(projectKey, input),
     onSuccess: () => invalidateCycles(qc, projectKey),
   });
 }
@@ -80,7 +95,7 @@ export function useCreateCycle(projectKey: string) {
 export function useUpdateCycle(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, patch }: { id: number; patch: CyclePatch }) => api.updateCycle(id, patch),
+    mutationFn: ({ id, patch }: { id: number; patch: CyclePatch }) => updateCycle(id, patch),
     onSuccess: () => invalidateCycles(qc, projectKey),
   });
 }
@@ -88,7 +103,7 @@ export function useUpdateCycle(projectKey: string) {
 export function useDeleteCycle(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteCycle(id),
+    mutationFn: (id: number) => deleteCycle(id),
     onSuccess: () => {
       invalidateCycles(qc, projectKey);
       invalidateCycleIssues(qc, projectKey);
@@ -101,7 +116,7 @@ export function useDeleteCycle(projectKey: string) {
 export function useFinishCycle(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.finishCycle(id),
+    mutationFn: (id: number) => finishCycle(id),
     onSuccess: () => invalidateCycles(qc, projectKey),
   });
 }
@@ -109,7 +124,7 @@ export function useFinishCycle(projectKey: string) {
 export function useStartNextCycle(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.startNextCycle(id),
+    mutationFn: (id: number) => startNextCycle(id),
     onSuccess: () => {
       invalidateCycles(qc, projectKey);
       invalidateCycleIssues(qc, projectKey);
@@ -121,7 +136,7 @@ export function useTransferCycleIssues(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, targetCycleId }: { id: number; targetCycleId: number | null }) =>
-      api.transferCycleIssues(id, targetCycleId),
+      transferCycleIssues(id, targetCycleId),
     onSuccess: () => {
       invalidateCycles(qc, projectKey);
       invalidateCycleIssues(qc, projectKey);

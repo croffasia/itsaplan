@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { ReactFlowProvider } from '@xyflow/react';
 import { useShell } from '@/context/shellContext';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/lib/api/core/client';
 import { usePermissions } from '@/hooks/usePermissions';
 import { notePath, notesPath } from '@/utils/paths';
 import { qk } from '@/services/queryKeys';

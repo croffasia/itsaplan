@@ -1,4 +1,4 @@
-import type { Project } from '@/lib/api';
+import type { Project } from '@/lib/api/endpoints/projects';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import type { CommandSection } from '@/utils/commands';
 import { useShell } from '@/context/shellContext';

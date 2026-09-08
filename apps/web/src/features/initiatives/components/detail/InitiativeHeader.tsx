@@ -2,7 +2,8 @@
 
 import { Info } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Initiative, InitiativePatch, ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Initiative, InitiativePatch } from '@/lib/api/endpoints/initiatives';
 import { useUpdateInitiative } from '@/services/initiatives.service';
 import { parseDate } from '@/utils/dates';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';

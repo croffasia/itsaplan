@@ -1,5 +1,5 @@
 import { Globe, Lock, StickyNote, Users, type LucideIcon } from 'lucide-react';
-import type { NoteBoardVisibility } from '@/lib/api';
+import type { NoteBoardVisibility } from '@/lib/api/endpoints/noteBoards';
 
 // A new board is public or private; access is granted to picked members later,
 // on the board itself.

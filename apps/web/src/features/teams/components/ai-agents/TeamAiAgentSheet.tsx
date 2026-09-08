@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Bot, MessageSquare, X } from 'lucide-react';
 import { AGENT_KIND_ICON } from '../../utils/agentKindIcon';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { useAiAgentsQuery } from '@/services/aiAgents.service';
 import {
   Sheet,

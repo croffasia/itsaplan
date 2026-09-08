@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Sparkles, Wrench } from 'lucide-react';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { teamSectionPath } from '@/utils/paths';
 import {
   useCreateAiAgent,

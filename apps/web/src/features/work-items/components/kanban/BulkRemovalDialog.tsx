@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { type SubtaskDisposition } from '@/lib/api';
+import type { SubtaskDisposition } from '@/lib/api/endpoints/issues';
 import { dispositionReady } from '@/utils/subtasks';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import SubtaskDisposalChoice from '@/features/issue/components/actions/SubtaskDisposalChoice';

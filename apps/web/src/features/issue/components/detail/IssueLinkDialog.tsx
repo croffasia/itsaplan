@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Hash } from 'lucide-react';
-import { type IssueLinkInputKind, type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { IssueLinkInputKind } from '@/lib/api/endpoints/issues';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useIssueSearchQuery } from '@/services/issues.service';
 import {

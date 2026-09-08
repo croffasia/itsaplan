@@ -9,7 +9,7 @@ import type {
   IssueStatsView,
   StartPage,
   ThemePreference,
-} from '@/lib/api';
+} from '@/lib/api/endpoints/userPreferences';
 import { LOCALES, LOCALE_LABELS } from '@/i18n/locales';
 import {
   useAccountPreferencesQuery,

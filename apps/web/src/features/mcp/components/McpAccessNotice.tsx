@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import type { TeamRole } from '@/lib/api';
+import type { TeamRole } from '@/lib/api/endpoints/teams';
 import { teamSectionPath } from '@/utils/paths';
 import { useTeamQuery } from '@/services/teams.service';
 import { Skeleton } from '@/components/ui/skeleton';

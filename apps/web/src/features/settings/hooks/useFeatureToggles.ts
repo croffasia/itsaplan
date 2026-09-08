@@ -2,7 +2,8 @@
 
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail, ProjectFeatures } from '@/lib/api';
+import type { ProjectFeatures } from '@/lib/api/endpoints/settings';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { projectFeatures } from '@/utils/projectFeatures';
 import { useFeatureLabel } from '@/hooks/useFeatureLabel';
 import { usePermissions } from '@/hooks/usePermissions';

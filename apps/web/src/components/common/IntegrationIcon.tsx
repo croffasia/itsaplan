@@ -1,4 +1,4 @@
-import type { IntegrationMeta } from '@/lib/api';
+import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import { cn } from '@/lib/utils';
 
 // A small square monogram for an integration: the first one or two letters of its

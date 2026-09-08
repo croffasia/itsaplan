@@ -1,4 +1,4 @@
-import { type Column, type WipMode } from '@/lib/api';
+import type { Column, WipMode } from '@/lib/api/endpoints/columns';
 import { type IssueGroup } from '@/utils/project';
 
 // A column's work-in-progress limit as the board reads it.

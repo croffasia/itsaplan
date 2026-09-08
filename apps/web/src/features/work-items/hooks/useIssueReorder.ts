@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
 import { toast } from 'sonner';
-import { type Issue, type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { positionsAt, type GroupAssign } from '@/utils/project';
 import { useDndSensors } from '@/lib/dnd';
 import type { Sort } from '@/utils/viewTypes';

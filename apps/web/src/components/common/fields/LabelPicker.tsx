@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
-import type { Label, LabelGroup } from '@/lib/api';
+import type { Label, LabelGroup } from '@/lib/api/endpoints/labels';
 import { groupLabels } from '@/utils/labels';
 import {
   DropdownMenu,

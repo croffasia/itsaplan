@@ -2,7 +2,7 @@
 
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { InstanceGoogleSettings, InstanceOidcSettings } from '@/lib/api';
+import type { InstanceGoogleSettings, InstanceOidcSettings } from '@/lib/api/endpoints/god';
 import { Button } from '@/components/ui/button';
 import GodSectionPage from '../GodSectionPage';
 import GodGoogleSettings from './GodGoogleSettings';

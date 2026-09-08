@@ -1,4 +1,5 @@
-import { type BoardIssue, type CustomField, type Issue } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
 import {
   groupIssues,
   mergeAssign,

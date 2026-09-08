@@ -1,6 +1,6 @@
 import { Code2, Package, Terminal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import { AgentFormSection } from './AgentFormSection';
 import { AgentRunnerCodeBlock } from './AgentRunnerCodeBlock';

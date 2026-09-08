@@ -2,7 +2,7 @@
 
 import { CheckCheck, ListFilter, MoreHorizontal, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type NotificationFilters, type NotificationType } from '@/lib/api';
+import type { NotificationFilters, NotificationType } from '@/lib/api/endpoints/notifications';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

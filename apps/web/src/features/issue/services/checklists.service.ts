@@ -4,7 +4,18 @@
 // on screen, and waiting for the round trip would make them feel broken.
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, type Checklist, type IssueWithWatchers } from '@/lib/api';
+import {
+  type Checklist,
+  createChecklist,
+  renameChecklist,
+  deleteChecklist,
+  createChecklistItem,
+  deleteChecklistItem,
+  updateChecklistItem,
+  reorderChecklists,
+  reorderChecklistItems,
+} from '@/lib/api/endpoints/checklists';
+import type { IssueWithWatchers } from '@/lib/api/endpoints/issues';
 import { qk } from '@/services/queryKeys';
 
 // Puts a list in the order given by ids. Ids that are not in the list are skipped,
@@ -67,31 +78,31 @@ function useOptimisticChecklistMutation<TVars extends { issueId: number }>(
 
 export function useCreateChecklist() {
   return useChecklistMutation((vars: { issueId: number; title: string }) =>
-    api.createChecklist(vars.issueId, vars.title),
+    createChecklist(vars.issueId, vars.title),
   );
 }
 
 export function useRenameChecklist() {
   return useChecklistMutation((vars: { issueId: number; checklistId: number; title: string }) =>
-    api.renameChecklist(vars.checklistId, vars.title),
+    renameChecklist(vars.checklistId, vars.title),
   );
 }
 
 export function useDeleteChecklist() {
   return useChecklistMutation((vars: { issueId: number; checklistId: number }) =>
-    api.deleteChecklist(vars.checklistId),
+    deleteChecklist(vars.checklistId),
   );
 }
 
 export function useCreateChecklistItem() {
   return useChecklistMutation((vars: { issueId: number; checklistId: number; content: string }) =>
-    api.createChecklistItem(vars.checklistId, vars.content),
+    createChecklistItem(vars.checklistId, vars.content),
   );
 }
 
 export function useDeleteChecklistItem() {
   return useChecklistMutation((vars: { issueId: number; itemId: number }) =>
-    api.deleteChecklistItem(vars.itemId),
+    deleteChecklistItem(vars.itemId),
   );
 }
 
@@ -102,7 +113,7 @@ export function useUpdateChecklistItem() {
       checklistId: number;
       itemId: number;
       patch: { content?: string; done?: boolean };
-    }) => api.updateChecklistItem(vars.itemId, vars.patch),
+    }) => updateChecklistItem(vars.itemId, vars.patch),
     (checklists, { checklistId, itemId, patch }) =>
       checklists.map((checklist) =>
         checklist.id === checklistId
@@ -120,7 +131,7 @@ export function useUpdateChecklistItem() {
 export function useReorderChecklists() {
   return useOptimisticChecklistMutation(
     (vars: { issueId: number; orderedIds: number[] }) =>
-      api.reorderChecklists(vars.issueId, vars.orderedIds),
+      reorderChecklists(vars.issueId, vars.orderedIds),
     (checklists, { orderedIds }) => applyOrder(checklists, orderedIds),
   );
 }
@@ -128,7 +139,7 @@ export function useReorderChecklists() {
 export function useReorderChecklistItems() {
   return useOptimisticChecklistMutation(
     (vars: { issueId: number; checklistId: number; orderedIds: number[] }) =>
-      api.reorderChecklistItems(vars.checklistId, vars.orderedIds),
+      reorderChecklistItems(vars.checklistId, vars.orderedIds),
     (checklists, { checklistId, orderedIds }) =>
       checklists.map((checklist) =>
         checklist.id === checklistId

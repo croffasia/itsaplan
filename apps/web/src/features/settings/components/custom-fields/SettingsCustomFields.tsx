@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { ChevronRight, Plus } from 'lucide-react';
-import { type CustomField, type ProjectDetail } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import SettingsConfirmDeleteDialog from '../crud/SettingsConfirmDeleteDialog';

@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
-import type { PermissionCatalog, Permissions } from '@/lib/api';
+import type { PermissionCatalog, Permissions } from '@/lib/api/endpoints/roles';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import DisclosureCard from '@/components/common/DisclosureCard';
 import PermissionMatrix from './PermissionMatrix';

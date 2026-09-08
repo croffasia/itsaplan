@@ -1,4 +1,4 @@
-import { type CustomField } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
 
 // The project scaffold carries every field of the project; a detail surface takes
 // the project-wide ones plus the issue type's own.

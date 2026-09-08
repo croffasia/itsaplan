@@ -1,5 +1,5 @@
 import { BookOpen, Sparkles, Wrench, Zap } from 'lucide-react';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { AgentMetaChip } from './AgentMetaChip';
 import { useTranslations } from 'next-intl';
 

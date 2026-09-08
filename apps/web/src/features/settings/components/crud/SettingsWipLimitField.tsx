@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Gauge } from 'lucide-react';
-import { type WipMode } from '@/lib/api';
+import type { WipMode } from '@/lib/api/endpoints/columns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

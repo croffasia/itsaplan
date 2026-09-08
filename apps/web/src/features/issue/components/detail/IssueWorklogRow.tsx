@@ -2,7 +2,7 @@
 
 import { Pencil, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type Worklog } from '@/lib/api';
+import type { Worklog } from '@/lib/api/endpoints/worklogs';
 import { formatShortDate } from '@/utils/dates';
 import { formatMinutes } from '@/utils/estimate';
 import Avatar from '@/components/common/Avatar';

@@ -1,4 +1,4 @@
-import type { ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 
 export const DOCUMENT_LIST_TABS = ['favorites', 'public', 'private', 'archived'] as const;
 

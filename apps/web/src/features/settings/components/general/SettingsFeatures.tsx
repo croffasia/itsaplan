@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { ProjectFeatures } from '@/lib/api';
+import type { ProjectFeatures } from '@/lib/api/endpoints/settings';
 import { useFeatureLabel } from '@/hooks/useFeatureLabel';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';

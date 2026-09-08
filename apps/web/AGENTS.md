@@ -98,7 +98,20 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   `getNextPageParam: nextPageParam` (`useCompletedCyclesQuery` is the shape to copy); a feed
   reads a cursor route instead. A picker that needs every row calls the list's `/options`
   endpoint — never a paged one with a large `pageSize`.
-- Call the backend over HTTP at the API origin. `lib/api.ts` takes it from
+- **The API client is split by domain.** `lib/api/core/` holds the transport —
+  `client.ts` (`API_URL`, `request()`, `uploadFile()`, `ApiError`, `apiFailure`, the
+  401 sign-out), `paging.ts` (`Page<T>`, `PageParams`, `pageQuery`, `nextPageParam`)
+  and `media.ts` (`mediaUrl`). `lib/api/endpoints/` holds one flat file per domain,
+  named after the module of `apps/api/src/modules` it calls: an endpoint on the API in
+  `modules/cycles/` is reached from `lib/api/endpoints/cycles.ts`. A file keeps its
+  DTOs next to the functions that return them, and exports both by name — there is no
+  `index.ts` anywhere under `lib/api`, and no barrel re-exporting the domains. Types
+  cross domains with `import type`, which the compiler erases, so a composite like
+  `ProjectDetail` is assembled in the domain that owns the route without a runtime
+  cycle. A moved type whose name matches a DOM global (`Permissions`, `Notification`,
+  `Storage`) resolves to that global when its import is missing, so tsc stays silent
+  while the type is wrong: import it explicitly.
+- Call the backend over HTTP at the API origin. `lib/api/core/client.ts` takes it from
   `utils/runtimeEnv`, which reads `API_URL` in the server process and hands it to the
   browser through the inline script in `components/runtime-env-script.tsx`. A per-instance
   value goes through there — never `process.env.NEXT_PUBLIC_*` in a component, which

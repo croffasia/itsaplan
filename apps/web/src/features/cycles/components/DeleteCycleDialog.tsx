@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { useDeleteCycle } from '@/services/cycles.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 

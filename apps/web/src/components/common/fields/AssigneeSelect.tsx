@@ -1,5 +1,5 @@
 import { CircleDashed } from 'lucide-react';
-import type { Assignee } from '@/lib/api';
+import type { Assignee } from '@/lib/api/endpoints/projects';
 import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from './Pill';

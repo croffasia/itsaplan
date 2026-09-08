@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { GitBranch } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { GitConnectionProvider } from '@/lib/api';
+import type { GitConnectionProvider } from '@/lib/api/endpoints/git';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,6 @@
-import type { Assignee, CustomField, Issue, MemberScope } from '@/lib/api';
+import type { CustomField, MemberScope } from '@/lib/api/endpoints/customFields';
+import type { Assignee } from '@/lib/api/endpoints/projects';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { customFieldId, isCustomFieldKey, type GroupField } from '@/utils/viewSettings';
 
 // The custom fields that hold one person or agent. They are offered wherever the

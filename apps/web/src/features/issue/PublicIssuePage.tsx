@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { getSharedIssue } from '@/lib/api/endpoints/share';
 import PublicShareFrame from '@/components/common/page/PublicShareFrame';
 import PublicShareHeader from '@/components/common/page/PublicShareHeader';
 import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
@@ -15,7 +15,7 @@ export default function PublicIssuePage({ token }: { token: string }) {
   const t = useTranslations('issue');
   const query = useQuery({
     queryKey: ['share', 'issue', token],
-    queryFn: () => api.getSharedIssue(token),
+    queryFn: () => getSharedIssue(token),
     retry: false,
   });
 

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { ApiError, type Cycle, type CyclePatch } from '@/lib/api';
+import type { Cycle, CyclePatch } from '@/lib/api/endpoints/cycles';
+import { ApiError } from '@/lib/api/core/client';
 import { addDays, daysBetween, toDateStr } from '@/utils/dates';
 import { useUpdateCycle } from '@/services/cycles.service';
 import { cycleSpan, dateWindow, movableEnds } from '../utils/cycleDates';

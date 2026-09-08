@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { MemberKind } from '@/lib/api';
+import type { MemberKind } from '@/lib/api/endpoints/members';
 import { useSearchTerm } from '@/hooks/useSearchTerm';
 import { useTeamProjectMembersQuery } from '@/services/teams.service';
 import { usePermissionCatalogQuery, useTeamRoleOptionsQuery } from '@/services/roles.service';

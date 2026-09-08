@@ -1,4 +1,4 @@
-import type { StateType } from '@/lib/api';
+import type { StateType } from '@/lib/api/endpoints/columns';
 import { DEFAULT_LOCALE } from '@/i18n/locales';
 
 // Date helpers shared by the project views. Kept separate from project grouping so

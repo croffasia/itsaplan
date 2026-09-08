@@ -2,7 +2,7 @@
 
 import { ChevronLeft } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { Button } from '@/components/ui/button';
 import IssueDetailContent from '@/features/issue/components/detail/IssueDetailContent';
 

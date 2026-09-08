@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Initiative } from '@/lib/api';
+import type { Initiative } from '@/lib/api/endpoints/initiatives';
 import { initiativesPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useDeleteInitiative } from '@/services/initiatives.service';

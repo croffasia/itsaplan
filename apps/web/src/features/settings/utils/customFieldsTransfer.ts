@@ -5,7 +5,8 @@
 // project already defines), a missing one is created, and a referenced issue type that
 // does not exist yet is created first.
 
-import type { CustomField, CustomFieldType, IssueType, MemberScope } from '@/lib/api';
+import type { CustomField, CustomFieldType, MemberScope } from '@/lib/api/endpoints/customFields';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import { FIELD_TYPES, MEMBER_SCOPES } from './fieldTypes';
 
 const PAYLOAD_TYPE = 'plan.custom-fields';

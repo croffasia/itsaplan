@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { FilterCondition, FilterValue } from '@/utils/filters';
 import type { FieldSpec } from '@/utils/filterFields';
 import { useFilterFields } from '@/hooks/useFilterFields';

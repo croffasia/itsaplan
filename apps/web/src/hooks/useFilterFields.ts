@@ -1,13 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type {
-  CustomField,
-  InitiativeOption,
-  InitiativeRef,
-  MemberScope,
-  ProjectDetail,
-} from '@/lib/api';
+import type { CustomField, MemberScope } from '@/lib/api/endpoints/customFields';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { InitiativeRef } from '@/lib/api/endpoints/issues';
+import type { InitiativeOption } from '@/lib/api/endpoints/initiatives';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { formatDate } from '@/utils/dates';

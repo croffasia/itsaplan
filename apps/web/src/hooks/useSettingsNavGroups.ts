@@ -10,7 +10,7 @@ import {
 } from '@/utils/settingsSections';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 
 // The project settings sidebar (the "Project settings" mode) lists the
 // Configuration sections flat under group labels. This hook builds those groups

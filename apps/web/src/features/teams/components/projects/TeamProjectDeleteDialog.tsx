@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { TeamProject } from '@/lib/api';
+import type { TeamProject } from '@/lib/api/endpoints/teams';
 import { useDeleteTeamProject } from '@/services/projects.service';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { Input } from '@/components/ui/input';

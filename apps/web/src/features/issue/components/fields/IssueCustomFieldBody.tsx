@@ -1,9 +1,6 @@
-import {
-  type Assignee,
-  type CustomField,
-  type IssueFieldValue,
-  type IssueFieldValueInput,
-} from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Assignee } from '@/lib/api/endpoints/projects';
+import type { IssueFieldValue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import IssueCustomFieldControl from './IssueCustomFieldControl';

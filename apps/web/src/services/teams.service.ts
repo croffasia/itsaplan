@@ -6,21 +6,41 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
-  api,
-  nextPageParam,
   type InviteTeamRole,
-  type MemberKind,
-  type MemberListParams,
-  type NotificationSettingsPatch,
+  listTeamInvites,
+  createTeamInvite,
+  deleteTeamInvite,
+} from '@/lib/api/endpoints/invites';
+import type { MemberKind, MemberListParams } from '@/lib/api/endpoints/members';
+import {
   type TeamProjectListParams,
   type Team,
   type TeamRole,
-} from '@/lib/api';
+  listTeams,
+  getTeam,
+  listTeamMembers,
+  listTeamProjects,
+  listTeamProjectOptions,
+  getTeamProject,
+  listTeamProjectMembers,
+  updateTeamMcp,
+  createTeam,
+  renameTeam,
+  setTeamMemberRole,
+  removeTeamMember,
+  leaveTeam,
+} from '@/lib/api/endpoints/teams';
+import { nextPageParam } from '@/lib/api/core/paging';
+import {
+  type NotificationSettingsPatch,
+  getNotificationSettings,
+  setNotificationSettings,
+} from '@/lib/api/endpoints/notificationSettings';
 import { DEFAULT_PAGE_SIZE } from '@/hooks/usePaging';
 import { qk } from '@/services/queryKeys';
 
 export function useTeamsQuery() {
-  return useQuery({ queryKey: qk.teams, queryFn: () => api.listTeams() });
+  return useQuery({ queryKey: qk.teams, queryFn: () => listTeams() });
 }
 
 // The team a page is on, out of the list its rail already reads: its name, the
@@ -33,7 +53,7 @@ export function useTeam(teamId: number): Team | null {
 // What the caller may do with the resources the team holds. Read on its own because
 // resolving it for a plain member costs a query per team, which the list avoids.
 export function useTeamQuery(teamId: number) {
-  return useQuery({ queryKey: qk.team(teamId), queryFn: () => api.getTeam(teamId) });
+  return useQuery({ queryKey: qk.team(teamId), queryFn: () => getTeam(teamId) });
 }
 
 // One page of a team's members. The search and the window run on the server, so the
@@ -42,7 +62,7 @@ export function useTeamQuery(teamId: number) {
 export function useTeamMembersQuery(teamId: number, params: MemberListParams) {
   return useQuery({
     queryKey: qk.teamMembers(teamId, params),
-    queryFn: () => api.listTeamMembers(teamId, params),
+    queryFn: () => listTeamMembers(teamId, params),
     placeholderData: keepPreviousData,
   });
 }
@@ -53,7 +73,7 @@ export function useTeamMembersQuery(teamId: number, params: MemberListParams) {
 export function useTeamProjectsQuery(teamId: number, params: TeamProjectListParams) {
   return useQuery({
     queryKey: qk.teamProjects(teamId, params),
-    queryFn: () => api.listTeamProjects(teamId, params),
+    queryFn: () => listTeamProjects(teamId, params),
     placeholderData: keepPreviousData,
   });
 }
@@ -63,7 +83,7 @@ export function useTeamProjectsQuery(teamId: number, params: TeamProjectListPara
 export function useTeamProjectOptionsQuery(teamId: number) {
   return useQuery({
     queryKey: qk.teamProjectOptions(teamId),
-    queryFn: () => api.listTeamProjectOptions(teamId),
+    queryFn: () => listTeamProjectOptions(teamId),
   });
 }
 
@@ -72,7 +92,7 @@ export function useTeamProjectOptionsQuery(teamId: number) {
 export function useTeamProjectQuery(teamId: number, projectId: number) {
   return useQuery({
     queryKey: qk.teamProject(teamId, projectId),
-    queryFn: () => api.getTeamProject(teamId, projectId),
+    queryFn: () => getTeamProject(teamId, projectId),
   });
 }
 
@@ -88,7 +108,7 @@ export function useTeamProjectMembersQuery(
   return useInfiniteQuery({
     queryKey: qk.teamProjectMembers(teamId, projectId, { ...filters, pageSize }),
     queryFn: ({ pageParam }) =>
-      api.listTeamProjectMembers(teamId, projectId, { ...filters, page: pageParam, pageSize }),
+      listTeamProjectMembers(teamId, projectId, { ...filters, page: pageParam, pageSize }),
     initialPageParam: 1,
     getNextPageParam: nextPageParam,
   });
@@ -102,7 +122,7 @@ export function useUpdateTeamMcp(teamId: number) {
     mutationFn: (patch: {
       enabled?: boolean;
       projects?: { projectId: number; enabled: boolean }[];
-    }) => api.updateTeamMcp(teamId, patch),
+    }) => updateTeamMcp(teamId, patch),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.teams });
       void qc.invalidateQueries({ queryKey: qk.anyTeamProjects(teamId) });
@@ -117,7 +137,7 @@ export function useUpdateTeamMcp(teamId: number) {
 export function useCreateTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string }) => api.createTeam(input),
+    mutationFn: (input: { name: string }) => createTeam(input),
     onSuccess: (team) => {
       // Put the team in the cached list right away so the switcher shows it before
       // the refetch lands; it has no projects yet, so nothing else has to load.
@@ -131,7 +151,7 @@ export function useRenameTeam() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { teamId: number; name: string }) =>
-      api.renameTeam(input.teamId, { name: input.name }),
+      renameTeam(input.teamId, { name: input.name }),
     onSuccess: (team) => {
       void qc.invalidateQueries({ queryKey: qk.teams });
       void qc.invalidateQueries({ queryKey: qk.team(team.id) });
@@ -148,7 +168,7 @@ export function useSetTeamMemberRole(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { userId: string; role: TeamRole }) =>
-      api.setTeamMemberRole(teamId, input.userId, input.role),
+      setTeamMemberRole(teamId, input.userId, input.role),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.team(teamId) });
       void qc.invalidateQueries({ queryKey: qk.teams });
@@ -163,7 +183,7 @@ export function useSetTeamMemberRole(teamId: number) {
 export function useRemoveTeamMember(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (userId: string) => api.removeTeamMember(teamId, userId),
+    mutationFn: (userId: string) => removeTeamMember(teamId, userId),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.team(teamId) });
       void qc.invalidateQueries({ queryKey: qk.teams });
@@ -177,7 +197,7 @@ export function useRemoveTeamMember(teamId: number) {
 export function useLeaveTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (teamId: number) => api.leaveTeam(teamId),
+    mutationFn: (teamId: number) => leaveTeam(teamId),
     onSuccess: (_result, teamId) => {
       qc.setQueryData<Team[]>(qk.teams, (prev) => prev?.filter((t) => t.id !== teamId));
       void qc.invalidateQueries({ queryKey: qk.teams });
@@ -192,7 +212,7 @@ export function useLeaveTeam() {
 export function useTeamInvitesQuery(teamId: number, enabled = true) {
   return useQuery({
     queryKey: qk.teamInvites(teamId),
-    queryFn: () => api.listTeamInvites(teamId),
+    queryFn: () => listTeamInvites(teamId),
     enabled,
   });
 }
@@ -202,8 +222,7 @@ export function useTeamInvitesQuery(teamId: number, enabled = true) {
 export function useCreateTeamInvite(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { email: string; role: InviteTeamRole }) =>
-      api.createTeamInvite(teamId, input),
+    mutationFn: (input: { email: string; role: InviteTeamRole }) => createTeamInvite(teamId, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.teamInvites(teamId) }),
     meta: { suppressErrorToast: true },
   });
@@ -212,7 +231,7 @@ export function useCreateTeamInvite(teamId: number) {
 export function useDeleteTeamInvite(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (inviteId: number) => api.deleteTeamInvite(teamId, inviteId),
+    mutationFn: (inviteId: number) => deleteTeamInvite(teamId, inviteId),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.teamInvites(teamId) }),
   });
 }
@@ -223,7 +242,7 @@ export function useDeleteTeamInvite(teamId: number) {
 export function useNotificationSettingsQuery(teamId: number | null) {
   return useQuery({
     queryKey: qk.notificationSettings(teamId ?? 0),
-    queryFn: () => api.getNotificationSettings(teamId!),
+    queryFn: () => getNotificationSettings(teamId!),
     enabled: teamId != null,
   });
 }
@@ -231,7 +250,7 @@ export function useNotificationSettingsQuery(teamId: number | null) {
 export function useUpdateNotificationSettings(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: NotificationSettingsPatch) => api.setNotificationSettings(teamId, input),
+    mutationFn: (input: NotificationSettingsPatch) => setNotificationSettings(teamId, input),
     onSuccess: (data) => qc.setQueryData(qk.notificationSettings(teamId), data),
   });
 }

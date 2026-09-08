@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { ApiError, type Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
+import { ApiError } from '@/lib/api/core/client';
 import { addDays, daysBetween, parseDate, toDateStr } from '@/utils/dates';
 import Modal from '@/components/common/overlay/Modal';
 import DatePill from '@/components/common/fields/DatePill';

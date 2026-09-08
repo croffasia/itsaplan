@@ -49,6 +49,10 @@
       "label": "الإنتاجية",
       "description": "مقارنة بين المهام اللي اتفتحت واللي اتقفلت كل أسبوع"
     },
+    "burnup": {
+      "label": "مخطط الإنجاز",
+      "description": "النطاق والمهام المبدوءة والمكتملة يوميًا مع تاريخ إنجاز متوقع"
+    },
     "breakdown": {
       "label": "التوزيع",
       "description": "بيوزّع عدد المهام حسب الحالة أو الأولوية أو النوع أو المسؤول"
@@ -147,6 +151,29 @@
     "lastWeeks": "آخر {weeks} أسبوع",
     "created": "مُنشأة",
     "closed": "مُغلقة"
+  },
+  "burnup": {
+    "empty": "لا توجد مهام في هذه الفترة.",
+    "scope": "النطاق",
+    "started": "بدأت",
+    "completed": "اكتملت",
+    "projection": "التوقع",
+    "band": "نطاق التوقع",
+    "projected": "الإنجاز المتوقع {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "خط التوقع",
+      "range": "نطاق التوقع"
+    },
+    "noForecast": "لا تقدم خلال {weeks, plural, one {الأسبوع الماضي} two {الأسبوعين الماضيين} few {# أسابيع الماضية} many {# أسبوعًا الماضية} other {# أسبوع الماضية}}",
+    "allDone": "اكتمل كل شيء",
+    "velocity": "{rate}/يوم",
+    "growth": "+{rate}/يوم جديدة",
+    "target": "الهدف {date}",
+    "targetLabel": "الهدف",
+    "today": "اليوم",
+    "wholeProject": "المشروع بأكمله",
+    "forecastWeeks": "المعدل خلال {weeks, plural, one {أسبوع واحد} two {أسبوعين} few {# أسابيع} many {# أسبوعًا} other {# أسبوع}}"
   },
   "agentRuns": {
     "empty": "لا توجد تشغيلات وكلاء بعد.",

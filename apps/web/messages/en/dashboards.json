@@ -49,6 +49,10 @@
       "label": "Throughput",
       "description": "Created vs closed issues per week"
     },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Scope, started and completed issues per day with a projected completion date"
+    },
     "breakdown": {
       "label": "Breakdown",
       "description": "Issue counts by status, priority, type, or assignee"
@@ -147,6 +151,29 @@
     "lastWeeks": "Last {weeks} weeks",
     "created": "Created",
     "closed": "Closed"
+  },
+  "burnup": {
+    "empty": "No issues in this period.",
+    "scope": "Scope",
+    "started": "Started",
+    "completed": "Completed",
+    "projection": "Projection",
+    "band": "Forecast range",
+    "projected": "Projected {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "Forecast line",
+      "range": "Forecast range"
+    },
+    "noForecast": "No progress in the last {weeks, plural, one {# week} other {# weeks}}",
+    "allDone": "All done",
+    "velocity": "{rate}/day",
+    "growth": "+{rate}/day new",
+    "target": "Target {date}",
+    "targetLabel": "Target",
+    "today": "Today",
+    "wholeProject": "Whole project",
+    "forecastWeeks": "Rate over {weeks, plural, one {# week} other {# weeks}}"
   },
   "agentRuns": {
     "empty": "No agent runs yet.",

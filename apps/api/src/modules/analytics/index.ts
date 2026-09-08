@@ -8,6 +8,7 @@ import {
   AgentRunStatsDto,
   AgentWorkloadListResponse,
   BreakdownListResponse,
+  BurnupDto,
   PulseListResponse,
   StatsDto,
   ThroughputListResponse,
@@ -15,6 +16,7 @@ import {
   activityQuery,
   agentRunFeedQuery,
   breakdownQuery,
+  burnupQuery,
   daysQuery,
   pulseQuery,
   throughputQuery,
@@ -24,6 +26,7 @@ import {
   getBreakdown,
   getPulse,
   getThroughput,
+  getBurnup,
   listActivity,
   listAgentRunFeed,
   getAgentRunStats,
@@ -118,6 +121,31 @@ export const analyticsRoutes = new Elysia({
         summary: 'Get project throughput',
         description: 'Created versus closed issues over time.',
         ...mcpTool('get_project_throughput'),
+      },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/analytics/burnup',
+    async ({ project, query }) => {
+      const days = query.days != null ? Math.min(Math.max(query.days, 7), 730) : 90;
+      const forecastWeeks =
+        query.forecastWeeks != null ? Math.min(Math.max(query.forecastWeeks, 1), 12) : 4;
+      return getBurnup(project.id, {
+        days,
+        initiativeId: query.initiativeId ?? null,
+        forecastWeeks,
+      });
+    },
+    {
+      query: burnupQuery,
+      permission: ['dashboards', 'read'],
+      response: { 200: BurnupDto, ...commonErrors },
+      detail: {
+        summary: 'Get project burnup',
+        description:
+          'Scope, started and completed issue counts at the end of each day, with a completion date projected from the recent closing rate and scope growth. Optionally limited to one initiative.',
+        ...mcpTool('get_project_burnup'),
       },
     },
   )

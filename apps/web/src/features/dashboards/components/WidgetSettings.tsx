@@ -2,6 +2,7 @@ import type { WidgetConfig, WidgetInstance, WidgetType } from '@/utils/dashboard
 import StatWidgetSettings from './widgets/StatWidgetSettings';
 import BreakdownWidgetSettings from './widgets/BreakdownWidgetSettings';
 import ThroughputWidgetSettings from './widgets/ThroughputWidgetSettings';
+import BurnupWidgetSettings from './widgets/BurnupWidgetSettings';
 import PulseWidgetSettings from './widgets/PulseWidgetSettings';
 import RecentIssuesWidgetSettings from './widgets/RecentIssuesWidgetSettings';
 import ActivityFeedWidgetSettings from './widgets/ActivityFeedWidgetSettings';
@@ -34,6 +35,8 @@ export default function WidgetSettings({
       return <BreakdownWidgetSettings config={config} onConfigChange={onConfigChange} />;
     case 'throughput':
       return <ThroughputWidgetSettings config={config} onConfigChange={onConfigChange} />;
+    case 'burnup':
+      return <BurnupWidgetSettings config={config} onConfigChange={onConfigChange} />;
     case 'pulse':
       return <PulseWidgetSettings config={config} onConfigChange={onConfigChange} />;
     case 'recent_issues':

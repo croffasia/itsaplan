@@ -4,7 +4,7 @@
 // dashboards feature reads these.
 
 import { useQuery } from '@tanstack/react-query';
-import { api, type PulseUnit } from '@/lib/api';
+import { api, type BurnupParams, type PulseUnit } from '@/lib/api';
 import type { BreakdownBy } from '@/utils/dashboardWidgets';
 import { qk } from '@/services/queryKeys';
 
@@ -26,6 +26,13 @@ export function useThroughputQuery(projectKey: string, weeks: number) {
   return useQuery({
     queryKey: qk.analytics(projectKey, 'throughput', { weeks }),
     queryFn: () => api.getThroughput(projectKey, weeks),
+  });
+}
+
+export function useBurnupQuery(projectKey: string, params: BurnupParams) {
+  return useQuery({
+    queryKey: qk.analytics(projectKey, 'burnup', params),
+    queryFn: () => api.getBurnup(projectKey, params),
   });
 }
 

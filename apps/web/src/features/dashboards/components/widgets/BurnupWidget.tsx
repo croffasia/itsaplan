@@ -81,7 +81,7 @@ export default function BurnupWidget({
             target={data.targetDate}
           />
         </div>
-        <p className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <p className="hidden flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground [@container(min-height:220px)]:flex">
           {caption(data.forecast, data.targetDate).map((part) => (
             <span key={part}>{part}</span>
           ))}
@@ -91,7 +91,7 @@ export default function BurnupWidget({
   }
 
   return (
-    <div className="flex h-full flex-col gap-3">
+    <div className="[container-type:size] flex h-full flex-col gap-3">
       <p className="text-xs text-muted-foreground">{tDashboards('lastDays', { days })}</p>
       {body()}
     </div>

@@ -18,9 +18,13 @@ const TARGET_COLOR = '#ef4444';
 const LEGEND_ORDER = ['scope', 'started', 'completed', 'projection', 'band'];
 const legendOrder = (item: { dataKey?: unknown }) => LEGEND_ORDER.indexOf(String(item.dataKey));
 
+// The series that continue past today. They also carry a value on today's point
+// so that the lines join the history, and the tooltip hides them there.
+const FUTURE_KEYS = ['projection', 'band', 'scopeProjection'];
+
 // A tooltip value: a count, or the band's [slow, fast] pair as "168 – 256" (the
 // default would print the array as "168,256", which reads as a decimal in many
-// locales). Both edges start at today's count, so an equal pair is one number.
+// locales). An equal pair is one number.
 function formatValue(value: unknown): string {
   if (Array.isArray(value)) {
     const [slow, fast] = value as [number, number];
@@ -68,8 +72,14 @@ export default function BurnupChart({
         />
         <YAxis width={30} tickLine={false} axisLine={false} fontSize={11} allowDecimals={false} />
         <ChartTooltip
-          content={
+          content={({ active, payload, label }) => (
             <ChartTooltipContent
+              active={active}
+              label={label}
+              payload={payload?.filter(
+                (item) =>
+                  item.payload?.date !== today || !FUTURE_KEYS.includes(String(item.dataKey)),
+              )}
               labelFormatter={(value) => formatDate(String(value))}
               formatter={(value, name, item) => (
                 <>
@@ -88,7 +98,7 @@ export default function BurnupChart({
                 </>
               )}
             />
-          }
+          )}
         />
         <ChartLegend
           content={<ChartLegendContent className="flex-wrap gap-x-4 gap-y-1" />}

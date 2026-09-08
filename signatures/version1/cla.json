@@ -135,6 +135,14 @@
       "created_at": "2026-09-07T17:14:21Z",
       "repoId": 1300991151,
       "pullRequestNo": 325
+    },
+    {
+      "name": "egorvas",
+      "id": 7426788,
+      "comment_id": 5583881646,
+      "created_at": "2026-09-08T10:41:58Z",
+      "repoId": 1300991151,
+      "pullRequestNo": 332
     }
   ]
 }

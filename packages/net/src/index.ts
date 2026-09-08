@@ -132,6 +132,11 @@ export async function assertPublicHttpUrl(raw: string): Promise<URL> {
   return (await vet(raw)).url;
 }
 
+// node's http client sends no User-Agent of its own, and GitHub answers 403 with an
+// HTML body to a request that carries none. The global fetch this replaced always sent
+// one, so callers never had to.
+const DEFAULT_USER_AGENT = 'itsaplan/1';
+
 export interface PinnedRequestInit {
   method?: string;
   headers?: Record<string, string> | Headers;
@@ -149,7 +154,12 @@ export async function pinnedFetch(raw: string, init: PinnedRequestInit = {}): Pr
   const { url, pin } = await vet(raw);
   const send = url.protocol === 'https:' ? httpsRequest : httpRequest;
   const headers =
-    init.headers instanceof Headers ? Object.fromEntries(init.headers) : (init.headers ?? {});
+    init.headers instanceof Headers
+      ? Object.fromEntries(init.headers)
+      : { ...(init.headers ?? {}) };
+  if (!Object.keys(headers).some((name) => name.toLowerCase() === 'user-agent')) {
+    headers['user-agent'] = DEFAULT_USER_AGENT;
+  }
 
   return new Promise<Response>((resolve, reject) => {
     const req = send(

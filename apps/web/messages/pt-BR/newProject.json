@@ -1,0 +1,50 @@
+{
+  "name": "Nome",
+  "key": "Chave (curta, ex. MKT)",
+  "copyKey": "Chave",
+  "description": "Descrição",
+  "issueTypes": "Tipos de issue",
+  "typesCreated": "{count, plural, one {# tipo de issue} other {# tipos de issue}} serão criados",
+  "defaultType": "Novas issues recebem {type} por padrão. Tipos são editáveis nas configurações.",
+  "presets": {
+    "general": "Geral",
+    "software": "Software",
+    "product": "Produto",
+    "content": "Conteúdo",
+    "marketing": "Marketing",
+    "design": "Design",
+    "sales": "Vendas",
+    "operations": "Operações",
+    "support": "Suporte",
+    "recruiting": "Recrutamento"
+  },
+  "copyConfiguration": "Copiar configuração",
+  "selectAll": "Selecionar tudo",
+  "clearAll": "Limpar tudo",
+  "copyGroups": {
+    "workflow": "Fluxo de trabalho",
+    "automation": "Automação",
+    "views": "Visões",
+    "aiTeam": "Time de IA",
+    "knowledge": "Conhecimento"
+  },
+  "copyItems": {
+    "states": "Estados",
+    "issueTypes": "Tipos de issue",
+    "labels": "Etiquetas",
+    "customFields": "Campos personalizados",
+    "views": "Visões",
+    "dashboards": "Dashboards",
+    "documents": "Docs",
+    "actions": "Ações",
+    "configuration": "Configuração",
+    "webhooks": "Webhooks",
+    "agents": "Agentes",
+    "schedules": "Agendamentos"
+  },
+  "title": "Novo projeto",
+  "copyTitle": "Copiar projeto \"{name}\"",
+  "create": "Criar projeto",
+  "copyAction": "Copiar projeto",
+  "copyName": "{name} cópia"
+}

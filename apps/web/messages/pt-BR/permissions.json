@@ -1,0 +1,50 @@
+{
+  "none": "Nenhuma permissão concedida",
+  "grantedCount": "{count, plural, one {# permissão} other {# permissões}} concedidas",
+  "resources": {
+    "work_items": "Itens de trabalho",
+    "initiatives": "Iniciativas",
+    "cycles": "Ciclos",
+    "dashboards": "Dashboards",
+    "documents": "Docs",
+    "views": "Visões de itens de trabalho",
+    "members_invite": "Convites",
+    "members_manage": "Membros",
+    "states": "Estados",
+    "issue_types": "Tipos de issue",
+    "labels": "Etiquetas",
+    "ai_agents": "Agentes de IA",
+    "integrations": "Integrações",
+    "agent_skills": "Habilidades de agente",
+    "agent_tools": "Ferramentas de agente",
+    "custom_fields": "Campos personalizados",
+    "issue_templates": "Modelos de issue",
+    "workflow_config": "Configuração de fluxo de trabalho",
+    "actions": "Ações",
+    "webhooks": "Webhooks",
+    "note_boards": "Quadros de notas",
+    "danger_zone": "Zona de perigo"
+  },
+  "actions": {
+    "create": "Criar",
+    "edit": "Editar",
+    "read": "Ler",
+    "delete": "Excluir"
+  },
+  "groups": {
+    "workItems": "Itens de trabalho",
+    "dashboards": "Dashboards",
+    "documents": "Docs",
+    "notes": "Notas",
+    "ai": "IA",
+    "configuration": "Configuração",
+    "members": "Membros",
+    "project": "Projeto",
+    "other": "Outro"
+  },
+  "resourceColumn": "Recurso",
+  "allowed": "permitido",
+  "notAllowed": "não permitido",
+  "accessHeading": "Acesso a este projeto",
+  "joined": "entrou em {date}"
+}

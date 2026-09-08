@@ -1,0 +1,107 @@
+{
+  "title": "Membros",
+  "description": "Pessoas com acesso a este projeto.",
+  "add": {
+    "action": "Adicionar membro",
+    "title": "Adicionar membro",
+    "personLabel": "Membro do time ou e-mail",
+    "pickPlaceholder": "Selecione alguém",
+    "searchPlaceholder": "Busque no time ou digite um e-mail",
+    "searchTeamPlaceholder": "Busque no time",
+    "fromTeam": "Do time",
+    "byEmail": "Convidar por e-mail",
+    "inviteEmail": "Convidar {email}",
+    "alreadyInvited": "{email} já foi convidado",
+    "alreadyMember": "{email} já está neste projeto",
+    "alreadyInTeam": "{email} já está no time — escolha-o na lista acima",
+    "refused": "{email} não pôde ser adicionado",
+    "typeEmail": "Ninguém encontrado. Digite um endereço de e-mail completo para convidá-lo.",
+    "noCandidates": "Todos do time já estão neste projeto.",
+    "willJoinTeam": "Entra no time {teamName} e neste projeto",
+    "roleLabel": "Função no projeto",
+    "rolePlaceholder": "Função",
+    "submit": "Adicionar ao projeto",
+    "sendInvite": "Enviar convite"
+  },
+  "columns": {
+    "member": "Membro",
+    "role": "Função",
+    "timezone": "Fuso horário",
+    "joined": "Entrou",
+    "actions": "Ações"
+  },
+  "profileHeading": "Perfil",
+  "you": "(você)",
+  "aiAgent": "Agente de IA",
+  "tabs": {
+    "all": "Todos",
+    "people": "Pessoas",
+    "agents": "Companheiros de IA",
+    "label": "Mostrar"
+  },
+  "leaveProject": "Sair do projeto",
+  "revokeAccess": "Revogar acesso",
+  "lastOwner": "Um projeto deve manter pelo menos um dono",
+  "leaveTitle": "Sair deste projeto",
+  "leaveDescription": "Você perderá acesso a este projeto e suas issues. Um dono pode convidá-lo de volta depois.",
+  "revokeTitle": "Revogar acesso de {name}",
+  "revokeDescription": "{name} perderá acesso a este projeto. Ele pode ser convidado de volta depois.",
+  "selectRole": "Selecionar função",
+  "editDescription": "Editar descrição",
+  "descriptionQuestionSelf": "O que você faz neste projeto?",
+  "descriptionQuestionOther": "O que esta pessoa faz neste projeto?",
+  "descriptionPlaceholder": "ex. Engenheiro de backend, cuida da API e integrações",
+  "invites": {
+    "pendingCount": "{count, plural, one {# convite pendente} other {# convites pendentes}}",
+    "copyLink": "Copiar link",
+    "copied": "Copiado",
+    "emailQueued": "E-mail de convite na fila",
+    "emailUnavailable": "Convite criado, mas o e-mail não foi colocado na fila. Copie o link para compartilhá-lo.",
+    "resendUnavailable": "E-mail não está configurado. Copie o link do convite para compartilhá-lo.",
+    "resendEmail": "Enviar e-mail",
+    "resendingEmail": "Colocando na fila…",
+    "revokeAction": "Revogar convite",
+    "removeAction": "Remover convite",
+    "invitedBy": "Convidado por {name} · ",
+    "createdAt": "criado em {date}",
+    "respondedAt": "{status, select, accepted {aceito} rejected {recusado} other {atualizado}} em {date}",
+    "status": {
+      "pending": "Pendente",
+      "accepted": "Aceito",
+      "rejected": "Recusado"
+    },
+    "revokeTitle": "Revogar convite de {email}",
+    "revokeConfirm": "Revogar convite",
+    "revokeDescription": "O link do convite deixará de funcionar. Você pode convidar este e-mail novamente depois."
+  },
+  "promoted": "Membro promovido a dono",
+  "roleUpdated": "Função do membro atualizada",
+  "descriptionUpdated": "Descrição do membro atualizada",
+  "added": "Membro adicionado",
+  "provisioned": "Gerenciado por SCIM",
+  "search": {
+    "all": "Buscar membros",
+    "people": "Buscar pessoas",
+    "agents": "Buscar companheiros de IA"
+  },
+  "empty": {
+    "all": {
+      "title": "Nenhum membro ainda",
+      "description": "Pessoas e companheiros de IA aparecem aqui ao entrar."
+    },
+    "human": {
+      "title": "Nenhuma pessoa ainda",
+      "description": "Pessoas aparecem aqui ao entrar."
+    },
+    "agent": {
+      "title": "Nenhum companheiro de IA ainda",
+      "description": "Companheiros de IA aparecem aqui ao serem adicionados."
+    },
+    "search": {
+      "title": "Nada encontrado",
+      "all": "Nenhum membro corresponde a esta busca.",
+      "human": "Nenhuma pessoa corresponde a esta busca.",
+      "agent": "Nenhum companheiro de IA corresponde a esta busca."
+    }
+  }
+}

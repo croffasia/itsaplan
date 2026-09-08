@@ -1,0 +1,46 @@
+{
+  "title": "Servidor MCP",
+  "description": "Conecte agentes de IA a este projeto pelo Model Context Protocol. Um agent vê o que sua chave de API permite.",
+  "disabled": "Desativado",
+  "offForTeam": "O MCP está desativado para o time {team}.",
+  "offForProject": "O time {team} tem o MCP ativado, mas este projeto está desativado.",
+  "openTeamSettings": "Abrir as configurações de MCP do time",
+  "askManager": "Peça a um dono ou gerente do time para ativá-lo:",
+  "keyHint": "Crie uma chave na página <link>Chaves de API</link>, depois substitua <code>{apiKey}</code> no trecho.",
+  "endpoint": "Endpoint MCP",
+  "clientTabsAria": "Cliente",
+  "addToFile": "Adicionar a <code>{file}</code>",
+  "notes": {
+    "claudeCode": "Execute isto no seu terminal.",
+    "vscode": "Requer o GitHub Copilot.",
+    "claudeDesktop": "O Claude Desktop se conecta a servidores remotos pela ponte mcp-remote. Requer Node.js.",
+    "other": "Qualquer cliente que suporte MCP sobre Streamable HTTP funciona. Aponte para o endpoint. Envie um cabeçalho Authorization: Bearer {apiKey}."
+  },
+  "clients": {
+    "other": "Outro"
+  },
+  "oauth": {
+    "configuration": "Como conectar",
+    "methodTabsAria": "Método de conexão",
+    "method": "OAuth",
+    "personalKey": "Chave de API",
+    "description": "Use isto para qualquer cliente MCP que suporte OAuth, como ChatGPT ou Claude. Você entra com sua conta Itsaplan. O cliente nunca recebe uma chave de API.",
+    "discovery": "Descoberta OAuth",
+    "steps": {
+      "add": "Adicione um app MCP no seu cliente.",
+      "paste": "Cole o endpoint MCP.",
+      "choose": "Escolha OAuth quando o cliente perguntar como entrar.",
+      "signIn": "Entre no Itsaplan e aprove o acesso."
+    },
+    "security": "O OAuth usa PKCE (S256), registro dinâmico de cliente e tokens de acesso com escopo limitado à sua conta Itsaplan.",
+    "consent": {
+      "title": "Autorizar Itsaplan",
+      "description": "Permitir que este cliente MCP aja com as permissões da sua conta Itsaplan.",
+      "missingCode": "Esta requisição de autorização não tem seu código de consentimento.",
+      "cancel": "Cancelar",
+      "pending": "Autorizando…",
+      "authorize": "Autorizar",
+      "failed": "Não foi possível concluir a autorização OAuth."
+    }
+  }
+}

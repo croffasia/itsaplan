@@ -1,0 +1,194 @@
+{
+  "cancel": "Cancelar",
+  "done": "Concluído",
+  "loading": "Carregando…",
+  "signOut": "Sair",
+  "member": "Membro",
+  "owner": "Dono",
+  "delete": "Excluir",
+  "more": "Mais",
+  "back": "Voltar",
+  "save": "Salvar",
+  "saving": "Salvando…",
+  "close": "Fechar",
+  "name": "Nome",
+  "edit": "Editar",
+  "language": "Idioma",
+  "toggleTheme": "Alternar tema",
+  "priority": {
+    "label": "Prioridade",
+    "tooltip": "Prioridade {priority}",
+    "setTo": "Definir prioridade para…",
+    "none": "Sem prioridade",
+    "urgent": "Urgente",
+    "high": "Alta",
+    "medium": "Média",
+    "low": "Baixa"
+  },
+  "add": "Adicionar",
+  "showMore": "Mostrar mais",
+  "archived": "Arquivado",
+  "clear": "Limpar",
+  "noLabels": "Sem etiquetas.",
+  "enabled": "Ativado",
+  "fullscreen": "Tela cheia",
+  "exitFullscreen": "Sair da tela cheia",
+  "resizePropertiesPanel": "Redimensionar o painel de propriedades",
+  "resizeTitleColumn": "Redimensionar a coluna de título",
+  "openGeneralSettings": "Abrir configurações gerais",
+  "noSectionAccess": "Você não tem acesso a esta seção.",
+  "brandSubtitle": "Planeje issues em um quadro. Entre para abrir seus projetos.",
+  "hotkeys": {
+    "pressKeys": "Pressione as teclas",
+    "fixed": "Fixo",
+    "resetShortcut": "Redefinir este atalho",
+    "groups": {
+      "general": "Geral",
+      "workItems": "Itens de trabalho"
+    },
+    "commands": {
+      "palette": {
+        "toggle": "Abrir a paleta de comandos"
+      },
+      "project": {
+        "new": "Novo projeto",
+        "settings": "Abrir configurações do projeto"
+      },
+      "sidebar": {
+        "toggle": "Mostrar ou ocultar a barra lateral"
+      },
+      "chat": {
+        "toggle": "Mostrar ou ocultar o chat da IA"
+      },
+      "issue": {
+        "new": "Nova issue"
+      },
+      "initiative": {
+        "new": "Nova iniciativa"
+      },
+      "view": {
+        "kanban": "Layout de quadro",
+        "table": "Layout de tabela",
+        "timeline": "Layout de linha do tempo",
+        "calendar": "Layout de calendário"
+      },
+      "board": {
+        "select-all": "Selecionar todas as issues no quadro"
+      }
+    },
+    "conflict": "Já usado por {command}"
+  },
+  "agentChat": {
+    "emptyHint": "Envie uma mensagem para testar como este agente responde e quais ferramentas ele usa.",
+    "messagePlaceholder": "Mensagem para {agent}…",
+    "reset": "Redefinir conversa",
+    "send": "Enviar",
+    "sendHint": "Enter para enviar, ⌘/Ctrl+Enter para nova linha",
+    "stop": "Parar",
+    "stopped": "Parado",
+    "loadingEarlier": "Carregando mensagens anteriores…",
+    "messages": "Mensagens da conversa",
+    "usingTool": "Usando {tool}…",
+    "usedTool": "Usou {tool}",
+    "usedTools": "{count, plural, one {Usou # ferramenta} other {Usou # ferramentas}}",
+    "toolInput": "Entrada",
+    "toolOutput": "Saída",
+    "thinking": "Pensando…",
+    "waitingForRunner": "Aguardando o runner…",
+    "waitingToSend": "Aguardando para enviar",
+    "removePending": "Remover mensagem",
+    "title": "Conversa com {agent}",
+    "unreachable": "Não foi possível contatar o agente. Tente novamente.",
+    "runnerOffline": "Runner offline",
+    "runnerOfflineHint": "Inicie o runner na sua máquina para conversar com este agente.",
+    "attachFile": "Anexe uma planilha, documento, PDF ou arquivo de texto para o agente ler",
+    "removeAttachment": "Remover anexo",
+    "uploadFailed": "Não foi possível enviar o arquivo.",
+    "tooManyAttachments": "Você pode anexar até {max} arquivos em uma mensagem.",
+    "importRows": "{count, plural, one {# linha} other {# linhas}}",
+    "confirmImport": "Confirmar importação",
+    "cancelImport": "Cancelar",
+    "importWorking": "Criando issues…",
+    "importShowAllRows": "Mostrar todas as {count} linhas",
+    "importShowFewerRows": "Mostrar as primeiras {count} linhas",
+    "importRowState": "Importar",
+    "importRowNew": "Será criado",
+    "importSkipHint": "Linhas marcadas com ✕ são ignoradas ao confirmar.",
+    "importAdjustHint": "Peça ao agente para ajustar o mapeamento se algo parecer errado.",
+    "importCanceled": "Esta importação foi cancelada. Nada foi criado.",
+    "importFailed": "A importação falhou.",
+    "importConfirmed": "{count, plural, one {Criada # issue} other {Criadas # issues}}",
+    "importSkippedRow": "Linha {row} ignorada: {reason}",
+    "contextSize": "Contexto da conversa: {count, plural, one {# token} other {# tokens}}",
+    "contextUnavailable": "O tamanho do contexto não está disponível para este agente"
+  },
+  "share": {
+    "createFailed": "Não foi possível criar o link. Tente novamente.",
+    "changeFailed": "Não foi possível alterar o que o link mostra. Tente novamente.",
+    "stopFailed": "Não foi possível parar o compartilhamento. Tente novamente.",
+    "copyFailed": "Não foi possível copiar o link. Selecione-o e copie manualmente.",
+    "hint": "Qualquer pessoa com o link pode lê-lo. Sem necessidade de conta.",
+    "shareLink": "Link de compartilhamento",
+    "fullDetails": "Detalhes completos da issue",
+    "fullDetailsHint": "Responsáveis, etiquetas, campos personalizados e atividade.",
+    "stopSharing": "Parar compartilhamento",
+    "createLink": "Criar link",
+    "copy": "Copiar",
+    "copied": "Copiado"
+  },
+  "actions": "Ações",
+  "clearSearch": "Limpar busca",
+  "hide": "Ocultar",
+  "show": "Mostrar",
+  "copy": "Copiar",
+  "copied": "Copiado",
+  "change": "Alterar",
+  "featureOffHint": "Um dono pode reativar esta seção nas configurações gerais.",
+  "description": "Descrição",
+  "pickColor": "Escolher cor",
+  "new": "Novo",
+  "features": {
+    "initiatives": "Iniciativas",
+    "cycles": "Ciclos",
+    "dashboards": "Dashboards",
+    "documents": "Docs",
+    "notes": "Notas",
+    "subtasks": "Subtarefas",
+    "checklists": "Checklists",
+    "issueStats": "Estatísticas de issue"
+  },
+  "featureOffTitle": "{feature} estão desativados",
+  "toggleSidebar": "Alternar barra lateral",
+  "system": "Sistema",
+  "genericError": "Algo deu errado",
+  "commandPalette": "Paleta de comandos",
+  "commandPaletteHint": "Busque um comando para executar…",
+  "scrollToEnd": "Rolar até o fim",
+  "scrollToStart": "Rolar até o início",
+  "editor": {
+    "linkUrl": "URL do link",
+    "codeBlock": "Bloco de código",
+    "table": "Tabela",
+    "tableAddRow": "Adicionar linha",
+    "tableDeleteRow": "Excluir linha",
+    "tableAddColumn": "Adicionar coluna",
+    "tableDeleteColumn": "Excluir coluna",
+    "tableDelete": "Excluir tabela",
+    "insertImage": "Inserir imagem",
+    "insertNamed": "Inserir {name}",
+    "noImages": "Nenhuma imagem anexada ainda. Envie uma pelo painel de Anexos, ou solte-a direto no editor.",
+    "image": "Imagem"
+  },
+  "chart": {
+    "download": "Salvar gráfico",
+    "downloadFailed": "Não foi possível salvar o gráfico"
+  },
+  "agent": "Agente",
+  "pager": {
+    "previous": "Página anterior",
+    "next": "Próxima página",
+    "page": "Página {number}",
+    "perPage": "por página",
+    "range": "{first}-{last} de {total}"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "editAction": "Editar projeto",
+  "copyAction": "Copiar projeto",
+  "deleteAction": "Excluir projeto",
+  "leaveAction": "Sair do projeto",
+  "deleteDialog": {
+    "title": "Excluir {name}?",
+    "confirm": "Excluir permanentemente",
+    "description": "Isto exclui permanentemente <strong>{name}</strong> e tudo dentro dele: issues, comentários, anexos e configurações. Isso não pode ser desfeito.",
+    "typeToConfirm": "Digite <code>{key}</code> para confirmar."
+  },
+  "leaveDialog": {
+    "title": "Sair de {name}?",
+    "confirm": "Sair do projeto",
+    "description": "Você perderá acesso a <strong>{name}</strong> e seus itens de trabalho. Para entrar novamente, precisa de um novo convite de um dono."
+  },
+  "editDialog": {
+    "title": "Editar projeto",
+    "name": "Nome",
+    "description": "Descrição",
+    "submit": "Salvar"
+  }
+}

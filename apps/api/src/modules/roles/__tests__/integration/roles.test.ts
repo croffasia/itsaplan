@@ -87,13 +87,13 @@ describe('roles', () => {
       const res = await owner.api.teams({ teamId: owner.teamId }).roles.get();
 
       expect(res.status).toBe(200);
-      expect(res.data).toHaveLength(1);
-      expect(res.data?.[0]).toMatchObject({ name: 'Member', isDefault: true });
+      expect(res.data?.items).toHaveLength(1);
+      expect(res.data?.items[0]).toMatchObject({ name: 'Member', isDefault: true });
       // The default role carries a normalized matrix: full work_items, the member
       // list readable, no member management.
-      expect(res.data?.[0].permissions.work_items.create).toBe(true);
-      expect(res.data?.[0].permissions.members_manage.read).toBe(true);
-      expect(res.data?.[0].permissions.members_manage.create).toBe(false);
+      expect(res.data?.items[0].permissions.work_items.create).toBe(true);
+      expect(res.data?.items[0].permissions.members_manage.read).toBe(true);
+      expect(res.data?.items[0].permissions.members_manage.create).toBe(false);
     });
 
     it('lists roles ordered by id, default first', async () => {
@@ -110,7 +110,37 @@ describe('roles', () => {
       const res = await owner.api.teams({ teamId: owner.teamId }).roles.get();
 
       expect(res.status).toBe(200);
-      expect(res.data?.map((r) => r.name)).toEqual(['Member', 'Editor', 'Viewer']);
+      expect(res.data?.items.map((r) => r.name)).toEqual(['Member', 'Editor', 'Viewer']);
+    });
+
+    it('pages the list, counting every role of the team', async () => {
+      const owner = await setupOwner();
+      await owner.api
+        .teams({ teamId: owner.teamId })
+        .roles.post({ name: 'Editor', permissions: {} });
+
+      const res = await owner.api
+        .teams({ teamId: owner.teamId })
+        .roles.get({ query: { page: 2, pageSize: 1 } });
+
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ total: 2, page: 2, pageSize: 1 });
+      expect(res.data?.items.map((r) => r.name)).toEqual(['Editor']);
+    });
+
+    it('searches the roles by name', async () => {
+      const owner = await setupOwner();
+      await owner.api
+        .teams({ teamId: owner.teamId })
+        .roles.post({ name: 'Editor', permissions: {} });
+
+      const res = await owner.api
+        .teams({ teamId: owner.teamId })
+        .roles.get({ query: { search: 'edit' } });
+
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ total: 1 });
+      expect(res.data?.items.map((r) => r.name)).toEqual(['Editor']);
     });
 
     it('is readable by a plain member of the team', async () => {
@@ -120,7 +150,7 @@ describe('roles', () => {
       const res = await member.api.teams({ teamId: owner.teamId }).roles.get();
 
       expect(res.status).toBe(200);
-      expect(res.data?.map((r) => r.name)).toEqual(['Member']);
+      expect(res.data?.items.map((r) => r.name)).toEqual(['Member']);
     });
 
     it('denies someone outside the team with 404', async () => {
@@ -136,6 +166,29 @@ describe('roles', () => {
 
       const res = await api.teams({ teamId: owner.teamId }).roles.get();
       expect(res.status).toBe(401);
+    });
+  });
+
+  describe('options — GET /teams/:teamId/roles/options', () => {
+    it('answers with every role of the team, matrices included', async () => {
+      const owner = await setupOwner();
+      await owner.api
+        .teams({ teamId: owner.teamId })
+        .roles.post({ name: 'Editor', permissions: { work_items: { edit: true } } });
+
+      const res = await owner.api.teams({ teamId: owner.teamId }).roles.options.get();
+
+      expect(res.status).toBe(200);
+      expect(res.data?.map((r) => r.name)).toEqual(['Member', 'Editor']);
+      expect(res.data?.[1].permissions.work_items.edit).toBe(true);
+    });
+
+    it('denies someone outside the team with 404', async () => {
+      const owner = await setupOwner();
+      const outsider = authedApi((await signUpTestUser()).cookie);
+
+      const res = await outsider.teams({ teamId: owner.teamId }).roles.options.get();
+      expect(res.status).toBe(404);
     });
   });
 
@@ -272,7 +325,7 @@ describe('roles', () => {
     it('can rename the default role', async () => {
       const owner = await setupOwner();
       const list = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      const defaultId = list.data!.find((r) => r.isDefault)!.id;
+      const defaultId = list.data!.items.find((r) => r.isDefault)!.id;
 
       const res = await owner.api
         .teams({ teamId: owner.teamId })
@@ -423,7 +476,7 @@ describe('roles', () => {
       expect(res.status).toBe(204);
 
       const list = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      expect(list.data?.map((r) => r.id)).not.toContain(roleId);
+      expect(list.data?.items.map((r) => r.id)).not.toContain(roleId);
     });
 
     // Puts a fresh member of MKT on the role, so it counts as in use.
@@ -445,7 +498,7 @@ describe('roles', () => {
       expect(res.status).toBe(400);
 
       const after = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      expect(after.data?.map((r) => r.id)).toContain(roleId);
+      expect(after.data?.items.map((r) => r.id)).toContain(roleId);
     });
 
     it('moves the members on the role to the target role and deletes it', async () => {
@@ -496,7 +549,7 @@ describe('roles', () => {
     it('returns 400 when deleting the default role', async () => {
       const owner = await setupOwner();
       const list = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      const defaultId = list.data!.find((r) => r.isDefault)!.id;
+      const defaultId = list.data!.items.find((r) => r.isDefault)!.id;
 
       const res = await owner.api
         .teams({ teamId: owner.teamId })
@@ -506,7 +559,7 @@ describe('roles', () => {
 
       // The default role is still there.
       const after = await owner.api.teams({ teamId: owner.teamId }).roles.get();
-      expect(after.data?.map((r) => r.id)).toContain(defaultId);
+      expect(after.data?.items.map((r) => r.id)).toContain(defaultId);
     });
 
     it('returns 404 for a role that does not exist', async () => {

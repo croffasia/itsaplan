@@ -200,6 +200,20 @@ export interface TeamProject {
   createdAt: string;
 }
 
+// What a team's project list asks for: the window, and a search over the key and the
+// name. The search runs on the server, so the page and the total agree.
+export interface TeamProjectListParams extends PageParams {
+  search?: string;
+}
+
+// A project as the pickers read it, plus the MCP reach the team's switches set.
+export interface TeamProjectOption {
+  id: number;
+  key: string;
+  name: string;
+  mcpEnabled: boolean;
+}
+
 export interface TeamDetail extends Team {
   // What the caller may do with the resources the team holds for all its projects.
   // Owners and managers get the full matrix; a member gets the permissions of their
@@ -2902,6 +2916,11 @@ export interface Role {
   createdAt: string;
 }
 
+// What a role list asks for: the window, and a search over the name.
+export interface RoleListParams extends PageParams {
+  search?: string;
+}
+
 // What a role is assigned to. Everything counted here is moved to another role
 // before the role can be deleted.
 export interface RoleUsage {
@@ -3130,7 +3149,15 @@ export const api = {
   // handle.
   listTeamMembers: (teamId: number, params: MemberListParams) =>
     request<Page<TeamMember>>(`/teams/${teamId}/members${memberListQuery(params)}`),
-  listTeamProjects: (teamId: number) => request<TeamProject[]>(`/teams/${teamId}/projects`),
+  // One page of the projects the team owns. `search` matches the key or the name.
+  listTeamProjects: (teamId: number, params: TeamProjectListParams) =>
+    request<Page<TeamProject>>(
+      `/teams/${teamId}/projects${pageQuery(params, { search: params.search })}`,
+    ),
+  // Every project the reader has in the team, for the agent's project picker and the
+  // MCP switches.
+  listTeamProjectOptions: (teamId: number) =>
+    request<TeamProjectOption[]>(`/teams/${teamId}/projects/options`),
   getTeamProject: (teamId: number, projectId: number) =>
     request<TeamProjectDetail>(`/teams/${teamId}/projects/${projectId}`),
   // One page of a project's members. `search` matches the name, the address or the
@@ -4114,7 +4141,12 @@ export const api = {
   // belong to the team, so one list serves every project it owns; an owner or a
   // manager of the team writes them, and only its owner deletes one.
   getPermissionCatalog: () => request<PermissionCatalog>('/permission-catalog'),
-  listTeamRoles: (teamId: number) => request<Role[]>(`/teams/${teamId}/roles`),
+  // One page of the team's roles. `search` matches the name.
+  listTeamRoles: (teamId: number, params: RoleListParams) =>
+    request<Page<Role>>(`/teams/${teamId}/roles${pageQuery(params, { search: params.search })}`),
+  // Every role of the team, with its matrix: what the role pickers assign from and
+  // what the clipboard export carries.
+  listTeamRoleOptions: (teamId: number) => request<Role[]>(`/teams/${teamId}/roles/options`),
   createRole: (teamId: number, input: { name: string; permissions: Permissions }) =>
     request<Role>(`/teams/${teamId}/roles`, { method: 'POST', body: JSON.stringify(input) }),
   updateRole: (

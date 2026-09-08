@@ -108,6 +108,8 @@
   "roles": {
     "ownerOnly": "只有团队所有者或管理者可以管理角色。",
     "empty": "暂无角色。创建一个角色以授予有限访问权限。",
+    "search": "搜索角色",
+    "noMatches": "没有与“{query}”匹配的角色。",
     "default": "默认",
     "editAction": "编辑角色",
     "deleteAction": "删除角色",
@@ -164,6 +166,8 @@
     "created": "创建于 {date}",
     "newProject": "新建项目",
     "noProjects": "该团队还没有项目。",
+    "searchProjects": "搜索项目",
+    "noProjectsMatch": "没有与“{query}”匹配的项目。",
     "projectMembers": "项目成员",
     "owners": "所有者：{names}",
     "openProject": "打开项目",

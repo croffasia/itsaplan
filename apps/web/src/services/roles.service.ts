@@ -1,5 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type Permissions } from '@/lib/api';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api, type Permissions, type RoleListParams } from '@/lib/api';
 import { qk } from '@/services/queryKeys';
 
 // The resources and actions of the permission matrix. Static for the app's
@@ -12,13 +12,23 @@ export function usePermissionCatalogQuery() {
   });
 }
 
-// The roles a team offers, which is what every project of it assigns from. Readable
-// by any member of the team; pass null where the caller has no use for the list, to
-// skip the request.
-export function useTeamRolesQuery(teamId: number | null) {
+// One page of the team's roles, for the section that manages them. Pass null where
+// the caller has no use for the list, to skip the request.
+export function useTeamRolesQuery(teamId: number | null, params: RoleListParams) {
   return useQuery({
-    queryKey: qk.teamRoles(teamId ?? 0),
-    queryFn: () => api.listTeamRoles(teamId!),
+    queryKey: qk.teamRoles(teamId ?? 0, params),
+    queryFn: () => api.listTeamRoles(teamId!, params),
+    enabled: teamId != null,
+    placeholderData: keepPreviousData,
+  });
+}
+
+// Every role of the team, with its matrix: what the role pickers assign from, what
+// the delete dialog moves a role's members to, and what the clipboard export carries.
+export function useTeamRoleOptionsQuery(teamId: number | null) {
+  return useQuery({
+    queryKey: qk.teamRoleOptions(teamId ?? 0),
+    queryFn: () => api.listTeamRoleOptions(teamId!),
     enabled: teamId != null,
   });
 }
@@ -42,7 +52,7 @@ function useRoleMutation<TInput, TResult>(
   return useMutation({
     mutationFn,
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: qk.teamRoles(teamId) });
+      qc.invalidateQueries({ queryKey: qk.anyTeamRoles(teamId) });
       // The team list carries how many roles the team has.
       qc.invalidateQueries({ queryKey: qk.teams });
       qc.invalidateQueries({ queryKey: qk.anyRoleUsage });

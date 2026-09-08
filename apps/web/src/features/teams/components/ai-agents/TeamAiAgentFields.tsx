@@ -6,7 +6,7 @@ import type {
   IntegrationMeta,
   IntegrationOption,
   ProviderModel,
-  TeamProject,
+  TeamProjectOption,
 } from '@/lib/api';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -61,7 +61,7 @@ export default function TeamAiAgentFields({
   onChange: (patch: Partial<AgentFormValue>) => void;
   // The projects of the team, which the Projects section attaches the agent to and the
   // Triggers section reads the member fields of.
-  projects: TeamProject[];
+  projects: TeamProjectOption[];
   tools: AgentTool[];
   toolsLoading: boolean;
   kindLocked: boolean;

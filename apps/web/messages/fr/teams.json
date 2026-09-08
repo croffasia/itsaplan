@@ -108,6 +108,8 @@
   "roles": {
     "ownerOnly": "Seul un propriétaire ou un responsable de l'équipe peut gérer les rôles.",
     "empty": "Aucun rôle pour l'instant. Créez-en un pour accorder un accès restreint.",
+    "search": "Rechercher des rôles",
+    "noMatches": "Aucun rôle ne correspond à « {query} ».",
     "default": "Par défaut",
     "editAction": "Modifier le rôle",
     "deleteAction": "Supprimer le rôle",
@@ -164,6 +166,8 @@
     "created": "Créé {date}",
     "newProject": "Nouveau projet",
     "noProjects": "Cette équipe n'a encore aucun projet.",
+    "searchProjects": "Rechercher des projets",
+    "noProjectsMatch": "Aucun projet ne correspond à « {query} ».",
     "projectMembers": "Membres du projet",
     "owners": "Propriétaires : {names}",
     "openProject": "Ouvrir le projet",

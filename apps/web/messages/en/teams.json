@@ -108,6 +108,8 @@
   "roles": {
     "ownerOnly": "Only a team owner or manager can manage roles.",
     "empty": "No roles yet. Create one to grant scoped access.",
+    "search": "Search roles",
+    "noMatches": "No role matches “{query}”.",
     "default": "Default",
     "editAction": "Edit role",
     "deleteAction": "Delete role",
@@ -164,6 +166,8 @@
     "created": "Created {date}",
     "newProject": "New project",
     "noProjects": "This team has no projects yet.",
+    "searchProjects": "Search projects",
+    "noProjectsMatch": "No project matches “{query}”.",
     "projectMembers": "Project members",
     "owners": "Owners: {names}",
     "openProject": "Open project",

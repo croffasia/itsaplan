@@ -108,6 +108,8 @@
   "roles": {
     "ownerOnly": "Só um dono ou gerente do time pode gerenciar funções.",
     "empty": "Nenhuma função ainda. Crie uma para conceder acesso com escopo.",
+    "search": "Buscar funções",
+    "noMatches": "Nenhuma função corresponde a “{query}”.",
     "default": "Padrão",
     "editAction": "Editar função",
     "deleteAction": "Excluir função",
@@ -164,6 +166,8 @@
     "created": "Criado em {date}",
     "newProject": "Novo projeto",
     "noProjects": "Este time ainda não tem projetos.",
+    "searchProjects": "Buscar projetos",
+    "noProjectsMatch": "Nenhum projeto corresponde a “{query}”.",
     "projectMembers": "Membros do projeto",
     "owners": "Donos: {names}",
     "openProject": "Abrir projeto",

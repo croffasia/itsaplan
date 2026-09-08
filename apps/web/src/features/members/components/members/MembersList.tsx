@@ -11,7 +11,7 @@ import SearchInput from '@/components/common/SearchInput';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useMembersQuery, useRemoveMember } from '@/services/members.service';
-import { useTeamRolesQuery } from '@/services/roles.service';
+import { useTeamRoleOptionsQuery } from '@/services/roles.service';
 import { useSearchTerm } from '@/hooks/useSearchTerm';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useSession } from '@/lib/auth-client';
@@ -42,7 +42,7 @@ export default function MembersList({
   // Roles feed the per-member role select, so the list is only fetched for a reader
   // who gets one.
   const canEdit = can('members_manage', 'edit') || isAdmin;
-  const rolesQuery = useTeamRolesQuery(canEdit ? teamId : null);
+  const rolesQuery = useTeamRoleOptionsQuery(canEdit ? teamId : null);
   const router = useRouter();
   const [target, setTarget] = useState<Member | null>(null);
 

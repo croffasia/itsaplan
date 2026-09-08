@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
 
 export const teamParams = t.Object({ teamId: t.Numeric() });
@@ -32,6 +33,13 @@ export const RoleResponse = t.Object({
   permissions: PermissionMatrixSchema,
   createdAt: t.String(),
 });
+
+export const roleListQuery = t.Object({
+  search: t.Optional(t.String({ description: 'Matches the name.' })),
+  ...pageQueryFields,
+});
+
+export const RolePageResponse = pageResponse(RoleResponse);
 
 export const RoleUsageResponse = t.Object({
   members: t.Number(),

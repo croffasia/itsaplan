@@ -12,7 +12,7 @@ import {
   useIntegrationModelsQuery,
   useIntegrationOptionsQuery,
 } from '@/services/integrations.service';
-import { useTeamProjectsQuery, useTeamQuery } from '@/services/teams.service';
+import { useTeamProjectOptionsQuery, useTeamQuery } from '@/services/teams.service';
 import {
   useSkillOptionsQuery,
   useAgentSkillsQuery,
@@ -77,7 +77,7 @@ export function AgentSheetForm({
   const canManageSkills = team?.permissions.agent_skills.edit ?? false;
   const canManageTools = team?.permissions.agent_tools.edit ?? false;
 
-  const projects = useTeamProjectsQuery(teamId).data ?? [];
+  const projects = useTeamProjectOptionsQuery(teamId).data ?? [];
   const toolsQuery = useAgentToolsQuery(teamId);
   const catalogQuery = useIntegrationCatalogQuery(teamId);
   const catalog = catalogQuery.data ?? [];

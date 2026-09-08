@@ -19,7 +19,7 @@ import {
   useInvitesQuery,
   useMemberCandidatesQuery,
 } from '@/services/members.service';
-import { useTeamRolesQuery } from '@/services/roles.service';
+import { useTeamRoleOptionsQuery } from '@/services/roles.service';
 import MemberPicker, { type MemberOption } from './MemberPicker';
 
 // The message for each refusal the API can answer with; any other error falls back
@@ -72,7 +72,7 @@ export default function MemberAddDialog({
   const [roleValue, setRoleValue] = useState('');
   const [refusal, setRefusal] = useState<string | null>(null);
   const candidatesQuery = useMemberCandidatesQuery(projectKey, canAdd);
-  const rolesQuery = useTeamRolesQuery(teamId);
+  const rolesQuery = useTeamRoleOptionsQuery(teamId);
   const addMember = useAddMember(projectKey);
   const createInvite = useCreateInvite(projectKey);
   const invitesQuery = useInvitesQuery(projectKey, canInvite && canReadInvites);

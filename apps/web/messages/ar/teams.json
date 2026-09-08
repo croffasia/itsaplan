@@ -108,6 +108,8 @@
   "roles": {
     "ownerOnly": "يمكن لمالك الفريق أو مديره فقط إدارة الأدوار.",
     "empty": "مفيش أدوار لسه. اعمل دور عشان تدّي صلاحيات محدودة.",
+    "search": "البحث عن الأدوار",
+    "noMatches": "لا توجد أدوار تطابق “{query}”.",
     "default": "افتراضي",
     "editAction": "تعديل الدور",
     "deleteAction": "حذف الدور",
@@ -164,6 +166,8 @@
     "created": "أُنشئ في {date}",
     "newProject": "مشروع جديد",
     "noProjects": "لا توجد مشاريع في هذا الفريق بعد.",
+    "searchProjects": "البحث عن المشاريع",
+    "noProjectsMatch": "لا توجد مشاريع تطابق “{query}”.",
     "projectMembers": "أعضاء المشروع",
     "owners": "المالكون: {names}",
     "openProject": "فتح المشروع",

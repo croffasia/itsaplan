@@ -12,6 +12,7 @@ import {
   type MemberKind,
   type MemberListParams,
   type NotificationSettingsPatch,
+  type TeamProjectListParams,
   type Team,
   type TeamRole,
 } from '@/lib/api';
@@ -46,10 +47,23 @@ export function useTeamMembersQuery(teamId: number, params: MemberListParams) {
   });
 }
 
-export function useTeamProjectsQuery(teamId: number) {
+// One page of the projects the team owns. The search and the window run on the
+// server, so the section never loads every project of the team; the previous page
+// stays on screen while the next one loads.
+export function useTeamProjectsQuery(teamId: number, params: TeamProjectListParams) {
   return useQuery({
-    queryKey: qk.teamProjects(teamId),
-    queryFn: () => api.listTeamProjects(teamId),
+    queryKey: qk.teamProjects(teamId, params),
+    queryFn: () => api.listTeamProjects(teamId, params),
+    placeholderData: keepPreviousData,
+  });
+}
+
+// Every project the reader has in the team: the projects an agent is attached to,
+// and the MCP switches, both of which act on all of them rather than on a page.
+export function useTeamProjectOptionsQuery(teamId: number) {
+  return useQuery({
+    queryKey: qk.teamProjectOptions(teamId),
+    queryFn: () => api.listTeamProjectOptions(teamId),
   });
 }
 
@@ -91,7 +105,7 @@ export function useUpdateTeamMcp(teamId: number) {
     }) => api.updateTeamMcp(teamId, patch),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.teams });
-      void qc.invalidateQueries({ queryKey: qk.teamProjects(teamId) });
+      void qc.invalidateQueries({ queryKey: qk.anyTeamProjects(teamId) });
       void qc.invalidateQueries({ queryKey: qk.projects });
       // A project's own MCP page reads the state off the project scaffold, which is
       // cached per project key.

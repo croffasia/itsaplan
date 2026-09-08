@@ -98,8 +98,8 @@
       "description": "Feche issues quando seus pull requests mesclam no GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
     },
     "ai-agents": {
-      "label": "Companheiros de IA",
-      "description": "Companheiros de IA trabalhando neste projeto."
+      "label": "Agentes de IA",
+      "description": "Agentes de IA trabalhando neste projeto."
     }
   }
 }

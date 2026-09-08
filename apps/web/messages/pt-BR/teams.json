@@ -43,8 +43,8 @@
       "description": "Ferramentas que agentes podem chamar, cada uma conectada a uma credencial de integração."
     },
     "agents": {
-      "title": "Companheiros de IA",
-      "description": "Os companheiros de IA que este time possui e os projetos em que cada um trabalha."
+      "title": "Agentes de IA",
+      "description": "Os agentes de IA que este time possui e os projetos em que cada um trabalha."
     }
   },
   "info": {
@@ -315,14 +315,14 @@
     "noAccess": "Você não tem acesso às ferramentas deste time."
   },
   "agents": {
-    "newAgent": "Novo companheiro de IA",
-    "create": "Criar companheiro de IA",
-    "save": "Salvar companheiro de IA",
-    "delete": "Excluir companheiro de IA",
-    "edit": "Editar companheiro de IA",
-    "empty": "Nenhum companheiro de IA ainda",
+    "newAgent": "Novo agente de IA",
+    "create": "Criar agente de IA",
+    "save": "Salvar agente de IA",
+    "delete": "Excluir agente de IA",
+    "edit": "Editar agente de IA",
+    "empty": "Nenhum agente de IA ainda",
     "emptyHint": "Um agente roda no runtime embutido ou pela API.",
-    "agent": "Companheiro de IA",
+    "agent": "Agente de IA",
     "sheetSubtitle": "Um usuário bot para quem você pode delegar issues",
     "kind": "Tipo",
     "kindLabel": {
@@ -487,8 +487,8 @@
     "noProjectsHint": "Este time não possui nenhum projeto para o agente trabalhar.",
     "searchProjects": "Buscar projetos",
     "noProjectsShort": "Nenhum projeto",
-    "chatNeedsAgent": "Crie o companheiro de IA para testá-lo aqui.",
-    "chatNeedsProject": "Anexe o companheiro de IA a um projeto para testá-lo aqui.",
+    "chatNeedsAgent": "Crie o agente de IA para testá-lo aqui.",
+    "chatNeedsProject": "Anexe o agente de IA a um projeto para testá-lo aqui.",
     "triggerFieldsTitle": "Campos personalizados que iniciam uma execução"
   },
   "members": {

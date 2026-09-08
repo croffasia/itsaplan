@@ -8,7 +8,7 @@
   "notes": "Notas",
   "documents": "Docs",
   "aiTeam": "Time de IA",
-  "aiAgents": "Companheiros de IA",
+  "aiAgents": "Agentes de IA",
   "configuration": "Configuração",
   "members": "Membros",
   "notifications": "Notificações",
@@ -31,7 +31,7 @@
   "search": "Buscar ou executar um comando…",
   "searchHint": "Buscar ou executar um comando ({key})",
   "newIssueHint": "Nova issue ({key})",
-  "aiChatHint": "Converse com seus companheiros de IA ({key})",
+  "aiChatHint": "Converse com seus agentes de IA ({key})",
   "sections": "Seções",
   "doubleClickToRename": "Clique duas vezes para renomear",
   "groups": {

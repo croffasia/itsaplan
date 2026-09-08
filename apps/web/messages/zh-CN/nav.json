@@ -8,7 +8,7 @@
   "notes": "便签",
   "documents": "Docs",
   "aiTeam": "AI 团队",
-  "aiAgents": "AI 队友",
+  "aiAgents": "AI 代理",
   "configuration": "配置",
   "members": "成员",
   "notifications": "通知",
@@ -31,7 +31,7 @@
   "search": "搜索或运行命令…",
   "searchHint": "搜索或运行命令（{key}）",
   "newIssueHint": "新建工作项（{key}）",
-  "aiChatHint": "与 AI 队友聊天（{key}）",
+  "aiChatHint": "与 AI 代理聊天（{key}）",
   "sections": "功能区",
   "doubleClickToRename": "双击重命名",
   "groups": {

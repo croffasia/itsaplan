@@ -36,7 +36,7 @@
   "tabs": {
     "all": "Todos",
     "people": "Pessoas",
-    "agents": "Companheiros de IA",
+    "agents": "Agentes de IA",
     "label": "Mostrar"
   },
   "leaveProject": "Sair do projeto",
@@ -82,26 +82,26 @@
   "search": {
     "all": "Buscar membros",
     "people": "Buscar pessoas",
-    "agents": "Buscar companheiros de IA"
+    "agents": "Buscar agentes de IA"
   },
   "empty": {
     "all": {
       "title": "Nenhum membro ainda",
-      "description": "Pessoas e companheiros de IA aparecem aqui ao entrar."
+      "description": "Pessoas e agentes de IA aparecem aqui ao entrar."
     },
     "human": {
       "title": "Nenhuma pessoa ainda",
       "description": "Pessoas aparecem aqui ao entrar."
     },
     "agent": {
-      "title": "Nenhum companheiro de IA ainda",
-      "description": "Companheiros de IA aparecem aqui ao serem adicionados."
+      "title": "Nenhum agente de IA ainda",
+      "description": "Agentes de IA aparecem aqui ao serem adicionados."
     },
     "search": {
       "title": "Nada encontrado",
       "all": "Nenhum membro corresponde a esta busca.",
       "human": "Nenhuma pessoa corresponde a esta busca.",
-      "agent": "Nenhum companheiro de IA corresponde a esta busca."
+      "agent": "Nenhum agente de IA corresponde a esta busca."
     }
   }
 }

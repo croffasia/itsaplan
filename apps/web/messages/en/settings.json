@@ -65,7 +65,7 @@
     "deleteMessage": "The schedule <v>{name}</v> and its run history will be removed. This cannot be undone."
   },
   "agents": {
-    "empty": "No teammates yet",
+    "empty": "No agents yet",
     "emptyHint": "The team attaches them to a project in its settings."
   },
   "notifications": {

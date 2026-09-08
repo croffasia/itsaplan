@@ -8,7 +8,7 @@
   "notes": "الملاحظات",
   "documents": "Docs",
   "aiTeam": "فريق الذكاء الاصطناعي",
-  "aiAgents": "زملاء الفريق بالذكاء الاصطناعي",
+  "aiAgents": "وكلاء الذكاء الاصطناعي",
   "configuration": "التهيئة",
   "members": "الأعضاء",
   "notifications": "الإشعارات",
@@ -31,7 +31,7 @@
   "search": "ابحث أو نفّذ أمرًا…",
   "searchHint": "ابحث أو نفّذ أمرًا ({key})",
   "newIssueHint": "مهمة جديدة ({key})",
-  "aiChatHint": "الدردشة مع فريق الذكاء الاصطناعي ({key})",
+  "aiChatHint": "الدردشة مع وكلاء الذكاء الاصطناعي ({key})",
   "sections": "الأقسام",
   "doubleClickToRename": "انقر نقرًا مزدوجًا لإعادة التسمية",
   "groups": {

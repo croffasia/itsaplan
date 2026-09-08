@@ -65,7 +65,7 @@
     "deleteMessage": "O agendamento <v>{name}</v> e seu histórico de execuções serão removidos. Isso não pode ser desfeito."
   },
   "agents": {
-    "empty": "Nenhum companheiro ainda",
+    "empty": "Nenhum agente ainda",
     "emptyHint": "O time os anexa a um projeto em suas configurações."
   },
   "notifications": {

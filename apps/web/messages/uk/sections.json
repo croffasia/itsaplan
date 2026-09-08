@@ -98,8 +98,8 @@
       "description": "Закриття задач, коли їхній pull request змержено в GitHub, GitLab, Gitea, Forgejo або Bitbucket."
     },
     "ai-agents": {
-      "label": "AI-тіммейти",
-      "description": "AI-тіммейти, які працюють у цьому проєкті."
+      "label": "ШІ-агенти",
+      "description": "ШІ-агенти, які працюють у цьому проєкті."
     }
   }
 }

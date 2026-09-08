@@ -35,6 +35,15 @@ function formatValue(value: unknown): string {
   return typeof value === 'number' ? value.toLocaleString() : String(value);
 }
 
+// The change since the previous day, as "(+3)", for a count; the band is a pair.
+function formatDelta(points: BurnupPoint[], row: BurnupPoint, key: string): string | null {
+  const value = row[key as keyof BurnupPoint];
+  const previous = points[points.indexOf(row) - 1]?.[key as keyof BurnupPoint];
+  if (typeof value !== 'number' || typeof previous !== 'number') return null;
+  const delta = value - previous;
+  return `(${delta > 0 ? '+' : ''}${delta.toLocaleString()})`;
+}
+
 // The burnup chart itself: scope and completed as areas, started as a line, the
 // projection and the growing scope as dashed lines into the future and, in range
 // mode, a band between the optimistic and the pessimistic date. A "today" marker separates the
@@ -93,6 +102,11 @@ export default function BurnupChart({
                     </span>
                     <span className="font-mono font-medium text-foreground tabular-nums">
                       {formatValue(value)}
+                      {item.payload && (
+                        <span className="ms-1 font-normal text-muted-foreground">
+                          {formatDelta(points, item.payload, String(name))}
+                        </span>
+                      )}
                     </span>
                   </div>
                 </>

@@ -1,0 +1,14 @@
+{
+  "placeholder": "Escribe un comando o busca…",
+  "noResults": "No se han encontrado resultados.",
+  "issues": "Incidencias",
+  "searching": "Buscando…",
+  "selectAllIssues": "Seleccionar todas las incidencias",
+  "newIssue": "Nueva incidencia",
+  "newInitiative": "Nueva iniciativa",
+  "newProject": "Nuevo proyecto",
+  "toggleChat": "Mostrar u ocultar el chat de IA",
+  "board": "Tablero",
+  "commands": "Comandos",
+  "switchProject": "Cambiar de proyecto"
+}

@@ -1,0 +1,76 @@
+{
+  "title": "Ciclos",
+  "newCycle": "Nuevo ciclo",
+  "status": {
+    "upcoming": "Próximo",
+    "active": "Activo",
+    "completed": "Completado"
+  },
+  "views": {
+    "table": "Tabla",
+    "timeline": "Cronología"
+  },
+  "columns": {
+    "name": "Nombre",
+    "dates": "Fechas",
+    "length": "Duración",
+    "issues": "Incidencias",
+    "progress": "Progreso"
+  },
+  "emptyTitle": "Todavía no hay ciclos",
+  "emptyDescription": "Un ciclo es un periodo con una ventana de tiempo en el que el equipo planifica sus incidencias.",
+  "nothingPlannedTitle": "No hay nada planificado",
+  "nothingPlannedDescription": "La cronología muestra los ciclos activos y los próximos. Los terminados están en la tabla.",
+  "options": "Opciones del ciclo",
+  "transferIssues": "{count, plural, one {Mover # incidencia sin terminar} other {Mover # incidencias sin terminar}}",
+  "finishedEarly": "Terminado antes de lo previsto, se esperaba que terminara el {date}",
+  "form": {
+    "editTitle": "Editar ciclo",
+    "newTitle": "Nuevo ciclo",
+    "name": "Nombre",
+    "goal": "Objetivo",
+    "goalPlaceholder": "¿Qué debería entregar este ciclo?",
+    "length": "Duración",
+    "starts": "Empieza",
+    "ends": "Termina",
+    "create": "Crear ciclo",
+    "saveFailed": "No se ha podido guardar el ciclo"
+  },
+  "weeks": "{count, plural, one {# semana} other {# semanas}}",
+  "transfer": {
+    "title": "Mover las incidencias sin terminar",
+    "description": "Las incidencias sin terminar se mueven al ciclo que elijas. Las terminadas y canceladas se quedan aquí.",
+    "moveTo": "Mover a",
+    "noCycle": "Sin ciclo",
+    "submit": "Mover incidencias",
+    "moving": "Moviendo…",
+    "moved": "{count, plural, one {# incidencia movida} other {# incidencias movidas}}",
+    "failed": "No se han podido mover las incidencias"
+  },
+  "finish": {
+    "action": "Terminar el ciclo",
+    "title": "Terminar el ciclo antes de tiempo",
+    "description": "{cycle} se cierra hoy en lugar del {date}. No puedes reabrirlo. {count, plural, =0 {No queda nada sin terminar.} one {# incidencia sin terminar se queda en él.} other {# incidencias sin terminar se quedan en él.}}",
+    "submit": "Terminar el ciclo"
+  },
+  "startNext": {
+    "action": "Empezar el siguiente ciclo hoy",
+    "title": "Empezar el siguiente ciclo hoy",
+    "description": "{cycle} se cierra hoy y no puedes reabrirlo. {next} empieza hoy y todavía termina el {date}. {count, plural, =0 {Nada se arrastra.} one {# incidencia sin terminar se mueve a él.} other {# incidencias sin terminar se mueven a él.}} Las incidencias terminadas y canceladas se quedan en {cycle}.",
+    "submit": "Empezar el siguiente ciclo",
+    "started": "{cycle} ha empezado. {count, plural, =0 {Ninguna incidencia se ha arrastrado.} one {# incidencia arrastrada.} other {# incidencias arrastradas.}}"
+  },
+  "delete": {
+    "title": "Eliminar ciclo",
+    "description": "{cycle} se elimina de forma definitiva. {count, plural, =0 {No contiene incidencias.} one {# incidencia se queda en el proyecto, sin ciclo.} other {# incidencias se quedan en el proyecto, sin ciclo.}}"
+  },
+  "details": "Detalles del ciclo",
+  "goal": "Objetivo",
+  "noGoal": "No hay objetivo definido.",
+  "progress": "Progreso",
+  "openCycle": "Abrir ciclo",
+  "dragFailed": "No se ha podido mover el ciclo",
+  "notFound": "No se ha encontrado el ciclo.",
+  "defaultName": "Sprint {n}",
+  "issuesDone": "Incidencias completadas"
+}

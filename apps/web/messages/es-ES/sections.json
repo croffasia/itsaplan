@@ -1,0 +1,109 @@
+{
+  "account": {
+    "profile": "Perfil",
+    "preferences": "Preferencias",
+    "accounts": "Cuentas",
+    "security": "Seguridad",
+    "api-keys": "Claves de API"
+  },
+  "godGroups": {
+    "management": "Gestión",
+    "instance": "Instancia"
+  },
+  "god": {
+    "users": {
+      "label": "Usuaries",
+      "description": "Todas las cuentas de esta instancia: el rol global, si la dirección está confirmada, y los proyectos a los que cada usuari puede acceder."
+    },
+    "teams": {
+      "label": "Equipos",
+      "description": "Todos los equipos de esta instancia: los proyectos que posee cada uno, y quién pertene a él."
+    },
+    "projects": {
+      "label": "Proyectos",
+      "description": "Todos los proyectos de esta instancia: lo que contiene cada uno, cuando fue la última actividad, y quién puede acceder."
+    },
+    "general": {
+      "label": "General",
+      "description": "Valores por defecto para los proyectos nuevos."
+    },
+    "authentication": {
+      "label": "Autenticación",
+      "description": "Quién se puede registrar en esta instancia, cómo se confirman las cuentas, y los provedores con los que la gente inicia sesión."
+    },
+    "hotkeys": {
+      "label": "Atajos de teclado",
+      "description": "La tecla a la que está vinculado cada comando para todo el mundo de esta instancia. Cada persona puede volver a vincular un atajo a su cuenta en sus preferencias."
+    },
+    "storage": {
+      "label": "Almacenamiento",
+      "description": "Cuánto pueden subir las personas: el tamaño de un fichero solo, los tipos de adjunto aceptados, y el almacenamiento que recibe cada proyecto."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "El bot al que las personas conectan su cuenta de Telegram, y el que entrega las notificaciones de Telegram para los proyectos que no definen un bot propio."
+    },
+    "email": {
+      "label": "Provedor de correo",
+      "description": "El provedor de correo por el que la instancia envía: reinicios de contraseña, confirmación de direcciones, y enlaces de inicio de sesión."
+    },
+    "auth-provider": {
+      "label": "Provedor de autenticación",
+      "description": "Las cuentas externas con las que las personas pueden iniciar sesión."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Permite que un provedor de identidades cree, actualize y desactive cuentas en esta instancia, y conceda acceso a proyectos a través de sus grupos."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "General",
+      "description": "El nombre del proyecto, su descripción, y las secciones que muestra."
+    },
+    "states": {
+      "label": "Estados",
+      "description": "Los estados del flujo de trabajo por los que se mueven las incidencias, cada uno mostrado como una columna."
+    },
+    "issue-types": {
+      "label": "Tipos de incidencia",
+      "description": "Las clases de incidencias que este proyecto puede contener, cada uno con sus propios campos."
+    },
+    "labels": {
+      "label": "Etiquetas",
+      "description": "Etiquetas para organizar y filtrar incidencias a través del proyecto."
+    },
+    "custom-fields": {
+      "label": "Campos personalizados",
+      "description": "Campos extra mostrados en las incidencias, globales o acotados a un tipo de incidencia."
+    },
+    "issue-templates": {
+      "label": "Plantillas de incidencia",
+      "description": "Predefinidos desde los que se puede crear una incidencia nueva: su título, descripción y propiedades."
+    },
+    "configuration": {
+      "label": "Configuración",
+      "description": "Cómo se cierran las subtareas con su padre, y cuándo se archivan las incidencias obsoletas."
+    },
+    "actions": {
+      "label": "Acciones",
+      "description": "Botones en una incidencia que definen campos con un clic."
+    },
+    "schedules": {
+      "label": "Programaciones",
+      "description": "Ejecutar tareas del agente en un programado repetitivo."
+    },
+    "webhooks": {
+      "label": "Webhooks",
+      "description": "Enviar eventos del proyecto a URLs externas, firmados con un secreto para cada webhook."
+    },
+    "git": {
+      "label": "Repositorios",
+      "description": "Cerrar incidencias cuando sus peticiones de estracción se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
+    },
+    "ai-agents": {
+      "label": "Agentes de IA",
+      "description": "Agentes de IA que trabajan en este proyecto."
+    }
+  }
+}

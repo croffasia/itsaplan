@@ -19,6 +19,10 @@ describe('localeFromAcceptLanguage', () => {
     assert.equal(localeFromAcceptLanguage('id-ID,id;q=0.9,en;q=0.8'), 'id');
   });
 
+  it('matches a regional Spanish browser locale to the supported base language', () => {
+    assert.equal(localeFromAcceptLanguage('es-MX,es;q=0.9,en;q=0.8'), 'es-ES');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
     assert.equal(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8'), 'en');
   });

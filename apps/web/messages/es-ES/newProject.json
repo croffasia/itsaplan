@@ -1,0 +1,50 @@
+{
+  "name": "Nombre",
+  "key": "Clave (corta, p. ej. MKT)",
+  "copyKey": "Clave",
+  "description": "Descripción",
+  "issueTypes": "Tipos de incidencia",
+  "typesCreated": "Se crearán {count, plural, one {# tipo de incidencia} other {# tipos de incidencia}}",
+  "defaultType": "Las nuevas incidencias reciben {type} por defecto. Los tipos se pueden editar en los ajustes.",
+  "presets": {
+    "general": "General",
+    "software": "Software",
+    "product": "Producto",
+    "content": "Contenido",
+    "marketing": "Márketing",
+    "design": "Diseño",
+    "sales": "Ventas",
+    "operations": "Operaciones",
+    "support": "Soporte",
+    "recruiting": "Reclutamiento"
+  },
+  "copyConfiguration": "Copiar configuración",
+  "selectAll": "Seleccionar todo",
+  "clearAll": "Limpiar todo",
+  "copyGroups": {
+    "workflow": "Flujo de trabajo",
+    "automation": "Automatización",
+    "views": "Vistas",
+    "aiTeam": "Equipo de IA",
+    "knowledge": "Conocimiento"
+  },
+  "copyItems": {
+    "states": "Estados",
+    "issueTypes": "Tipos de incidencia",
+    "labels": "Etiquetas",
+    "customFields": "Campos personalizados",
+    "views": "Vistas",
+    "dashboards": "Paneles",
+    "documents": "Documentos",
+    "actions": "Acciones",
+    "configuration": "Configuración",
+    "webhooks": "Webhooks",
+    "agents": "Agentes",
+    "schedules": "Programaciones"
+  },
+  "title": "Nuevo proyecto",
+  "copyTitle": "Duplicar el proyecto «{name}»",
+  "create": "Crear proyecto",
+  "copyAction": "Duplicar proyecto",
+  "copyName": "Copia de {name}"
+}

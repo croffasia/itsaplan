@@ -1,0 +1,166 @@
+{
+  "title": "Iniciativas",
+  "newInitiative": "Nueva iniciativa",
+  "notFound": "No se ha encontrado la iniciativa.",
+  "options": "Opciones de la iniciativa",
+  "showDescription": "Mostrar descripción",
+  "noDescription": "Sin descripción.",
+  "noOwner": "Sin propietario",
+  "startDate": "Fecha de inicio",
+  "targetDate": "Fecha objetivo",
+  "progress": "Progreso",
+  "activity": "Actividad",
+  "noActivity": "Todavía no hay actividad.",
+  "noIssuesLinked": "Todavía no hay incidencias enlazadas.",
+  "inProgress": "En curso",
+  "emptyTitle": "Todavía no hay iniciitivas",
+  "emptyDescription": "Una iniciativa agrupa incidencias relacionadas bajo un solo objetivo.",
+  "emptyTabDescription": "Las iniciitivas cambian de pestaña según su estado.",
+  "emptyTab": {
+    "active": "No hay iniciitivas activas",
+    "planned": "No hay iniciitivas planificadas",
+    "proposed": "No hay iniciitivas propuestas",
+    "completed": "No hay iniciitivas completadas"
+  },
+  "tabs": {
+    "active": "Activa",
+    "planned": "Planificada",
+    "proposed": "Propuesta",
+    "completed": "Completada",
+    "all": "Todas las iniciitivas"
+  },
+  "detailTabs": {
+    "overview": "Resumen",
+    "progress": "Progreso",
+    "issues": "Incidencias"
+  },
+  "columns": {
+    "name": "Nombre",
+    "priority": "Prioridad",
+    "owner": "Propietario",
+    "target": "Objetivo",
+    "progress": "Progreso",
+    "health": "Salud"
+  },
+  "status": {
+    "proposed": "Propuesta",
+    "planned": "Planificada",
+    "active": "Activa",
+    "completed": "Completada",
+    "canceled": "Cancelada"
+  },
+  "stateGroups": {
+    "backlog": "Pila de trabajo",
+    "unstarted": "Por hacer",
+    "started": "En curso",
+    "completed": "Hecha",
+    "canceled": "Cancelada"
+  },
+  "health": {
+    "on_track": "En camino",
+    "at_risk": "En riesgo",
+    "off_track": "Fuera de camino",
+    "unknown": "Sin actualización"
+  },
+  "healthInfo": {
+    "trigger": "¿Cómo se calcula la salud?",
+    "title": "Salud",
+    "description": "Compara el trabajo hecho con el tiempo transcurrido. Se actualiza automáticamente.",
+    "legend": {
+      "on_track": "El trabajo mantiene el ritmo del calandario.",
+      "at_risk": "El trabajo se queda detrás del calandario.",
+      "off_track": "El trabajo está muy detrás, o la fecha objetivo ya ha pasado.",
+      "unknown": "Todavía no hay bastantes datos: sin incidencias o sin fecha objetivo."
+    },
+    "howCalculated": "Cómo se calcula",
+    "workDone": "Trabajo hecho",
+    "timeElapsed": "Tiempo transcurrido",
+    "trail": "Cuánto se queda el trabajo detrás del tiempo",
+    "trailOnTrack": "hasta un 10% detrás",
+    "trailAtRisk": "10-25% detrás",
+    "trailOffTrack": "más de un 25% detrás"
+  },
+  "timeline": {
+    "title": "Cronología",
+    "started": "Empezada",
+    "target": "Objetivo",
+    "remaining": "Restante",
+    "overdue": "{days} d de retraso",
+    "dueToday": "Vence hoy",
+    "left": "quedan {days} d",
+    "timeElapsed": "Tiempo transcurrido",
+    "workDone": "Trabajo hecho",
+    "noTargetDate": "Define una fecha objetivo para seguir el ritmo."
+  },
+  "form": {
+    "titlePlaceholder": "Lanzamiento de T3",
+    "descriptionPlaceholder": "¿De qué va esta iniciativa?",
+    "create": "Crear iniciativa",
+    "creating": "Creando…",
+    "editTitle": "Editar iniciativa",
+    "save": "Guardar cambios"
+  },
+  "pagination": {
+    "range": "{from}–{to} de {total}",
+    "previous": "Página anterior",
+    "next": "Página siguiente"
+  },
+  "select": {
+    "label": "Iniciativa",
+    "search": "Enlazar a una iniciitiva…",
+    "empty": "No hay iniciitivas.",
+    "none": "Sin iniciitiva",
+    "create": "Crear iniciativa"
+  },
+  "feed": {
+    "system": "Sistema",
+    "createdInitiative": "ha creado la iniciativa",
+    "createdIssue": "ha creado la incidencia",
+    "renamed": "la ha renombrado a «{title}»",
+    "descriptionUpdated": "ha actualizado la descripción",
+    "descriptionCleared": "ha vaciado la descripción",
+    "statusSet": "ha definido el estado a {status}",
+    "statusMoved": "la ha movido de {from} a {to}",
+    "prioritySet": "ha definido la prioridad a {priority}",
+    "priorityRemoved": "ha quitado la prioridad",
+    "ownerSet": "ha definido el propietario a {name}",
+    "ownerRemoved": "ha quitado al propietario {name}",
+    "assigneeSet": "la ha asignado a {name}",
+    "assigneeRemoved": "ha quitado al asignatario {name}",
+    "delegateSet": "la ha delegado a {name}",
+    "delegateRemoved": "ha quitado al delegado {name}",
+    "targetDateSet": "ha definido la fecha objetivo al {date}",
+    "targetDateRemoved": "ha quitado la fecha objetivo",
+    "startDateSet": "ha definido la fecha de inicio al {date}",
+    "startDateRemoved": "ha quitado la fecha de inicio",
+    "dueDateSet": "ha definido la fecha de vencimiento al {date}",
+    "dueDateRemoved": "ha quitado la fecha de vencimiento",
+    "labelAdded": "ha añadido la etiqueta {label}",
+    "labelRemoved": "ha quitado la etiqueta {label}",
+    "typeSet": "ha definido el tipo a {type}",
+    "typeRemoved": "ha quitado el tipo",
+    "linked": "la ha enlazado a {name}",
+    "unlinked": "la ha desenlazado de la iniciitiva"
+  },
+  "attachments": {
+    "title": "Adjuntos",
+    "add": "Añadir",
+    "uploading": "Subiendo…",
+    "empty": "Todavía no hay adjuntos.",
+    "emptyHint": "Suelta ficheros aquí, o usa Añadir para subirlos.",
+    "dropToUpload": "Suelta ficheros para subirlos",
+    "uploadFailed": "No se ha podido subir",
+    "open": "Abrir {name}",
+    "download": "Descargar",
+    "downloadFile": "Descargar {name}",
+    "deleteFile": "Eliminar {name}"
+  },
+  "documents": {
+    "title": "Documentos",
+    "add": "Enlazar un documento",
+    "empty": "Todavía no hay documentos enlazados.",
+    "loadFailed": "No se han podido cargar los documentos enlazados. Reintenta.",
+    "untitled": "Sin título",
+    "remove": "Desenlazar {title}"
+  }
+}

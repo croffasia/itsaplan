@@ -1,0 +1,119 @@
+{
+  "newIssue": "Nueva incidencia",
+  "pin": "Fijar",
+  "unpin": "Desfijar",
+  "collapse": "Contraír",
+  "expand": "Expandir",
+  "hide": "Ocultar",
+  "show": "Mostrar",
+  "hiddenColumns": "Columnas ocultas",
+  "hiddenGroups": "Grupos ocultos",
+  "selectAll": "Seleccionar todo",
+  "deselectAll": "Deseleccionar todo",
+  "resizeColumn": "Redimensionar la columna",
+  "viewNamePlaceholder": "Todas las incidencias",
+  "sortedOrder": "Las incidencias están ordenadas por {field}. Cambia el orden a Manual para moverlas.",
+  "statusSince": "En el estado actual desde el {date}",
+  "createdOn": "Creada el {date}",
+  "updatedOn": "Actualizada el {date}",
+  "subtasksProgress": "Subtareas {done}/{total}",
+  "subtasksDone": "{done} de {total} subtareas completadas",
+  "wip": {
+    "reached": "{column} está en su límete de {limit} incidencias.",
+    "tooltip": "Límite de trabajo en curso: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} de {total} / {max}",
+    "filteredTooltip": "{shown} mostradas por los filtros actuales. El límite de {max} cuenta todas las {total} incidencias de la columna."
+  },
+  "columns": {
+    "title": "Título",
+    "status": "Estado",
+    "statusAge": "En el estado",
+    "priority": "Prioridad",
+    "type": "Tipo",
+    "initiative": "Iniciativa",
+    "cycle": "Ciclo",
+    "labels": "Etiquetas",
+    "estimatePoints": "Puntos de historia",
+    "estimateTime": "Tiempo",
+    "startDate": "Inicio",
+    "dueDate": "Vencimiento",
+    "created": "Creada",
+    "updated": "Actualizada"
+  },
+  "calendar": {
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "today": "Hoy",
+    "moreIssues": "+{count} más",
+    "issueCount": "{count, plural, one {# incidencia} other {# incidencias}}",
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb"
+    },
+    "noDate": {
+      "dueDate": "Sin fecha de vencimiento",
+      "startDate": "Sin fecha de inicio",
+      "custom": "Sin fecha"
+    },
+    "allDated": {
+      "dueDate": "Todo el mundo tiene fecha de vencimiento.",
+      "startDate": "Todo el mundo tiene fecha de inicio.",
+      "custom": "Todo el mundo tiene fecha."
+    }
+  },
+  "timeline": {
+    "empty": "Todavía no hay incidencias para situar en la cronología.",
+    "expandGroup": "Expandir grupo",
+    "collapseGroup": "Contraír grupo",
+    "inferredStart": "Inicio inferido de la fecha de creación",
+    "inferredStartDraggable": "Inicio inferido de la fecha de creación — arrastra para definirlo"
+  },
+  "bulk": {
+    "selected": "{count} seleccionados",
+    "status": "Estado",
+    "priority": "Prioridad",
+    "assignee": "Asignatario",
+    "delegate": "Delegado",
+    "initiative": "Iniciativa",
+    "cycle": "Ciclo",
+    "labels": "Etiquetas",
+    "noAssignee": "Sin asignatario",
+    "noDelegate": "Sin delegado",
+    "noInitiative": "Sin iniciitiva",
+    "noCycle": "Sin ciclo",
+    "archive": "Archivar",
+    "clearSelection": "Limpiar la selección"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Archivar incidencia} other {Archivar incidencias}}",
+      "confirm": "{count, plural, one {Archivar # incidencia} other {Archivar # incidencias}}",
+      "description": "{count, plural, one {¿Archivar la incidencia seleccionada? Deja el tablero y se puede restaurar más tarde.} other {¿Archivar las incidencias seleccionadas? Dejan el tablero y se pueden restaurar más tarde.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Eliminar incidencia} other {Eliminar incidencias}}",
+      "confirm": "{count, plural, one {Eliminar # incidencia} other {Eliminar # incidencias}}",
+      "description": "{count, plural, one {¿Eliminar la incidencia seleccionada?} other {¿Eliminar las incidencias seleccionadas?}} Esto también quita comentarios, actividad y adjuntos. No se puede deshacer."
+    }
+  },
+  "share": {
+    "issueTitle": "Incidencia",
+    "issueUnavailable": "Esta incidencia no está disponible.",
+    "boardUnavailable": "Este tablero compartido no está disponible. Puede que el enlace haya sido revocado."
+  },
+  "groups": {
+    "noAssignee": "Sin asignatario",
+    "noDelegate": "Sin delegado",
+    "noPriority": "Sin prioridad",
+    "noType": "Sin tipo",
+    "noInitiative": "Sin iniciitiva",
+    "noCycle": "Sin ciclo",
+    "noMember": "Sin valor"
+  }
+}

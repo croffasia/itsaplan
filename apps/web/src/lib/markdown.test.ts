@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { markdownSegments } from './markdown';
+import { markdownSegments, renderMarkdown, sanitizeHtml } from './markdown';
 
 const spec =
   '{"type":"bar","x":"week","series":[{"key":"created"}],"data":[{"week":"W1","created":3}]}';
@@ -53,5 +53,29 @@ describe('markdownSegments', () => {
       'markdown',
       'chart',
     ]);
+  });
+});
+
+describe('sanitizeHtml image style', () => {
+  const overlay =
+    '<img src="/a.png" style="position:fixed;inset:0;width:100vw;height:100vh;z-index:9999">';
+
+  it('drops an image style that would lay the image over the page', () => {
+    assert.equal(sanitizeHtml(overlay), '<img src="/a.png">');
+    assert.equal(
+      sanitizeHtml(`<p>${overlay}</p>`, { newTabLinks: true }),
+      '<p><img src="/a.png"></p>',
+    );
+  });
+
+  it('keeps the sizing of an image', () => {
+    assert.equal(
+      sanitizeHtml('<img src="/a.png" style="width: 320px; max-width: 100%">'),
+      '<img src="/a.png" style="width: 320px; max-width: 100%">',
+    );
+  });
+
+  it('applies to a raw <img> in markdown text', () => {
+    assert.equal(renderMarkdown(`text\n\n${overlay}`), '<p>text</p>\n<img src="/a.png">');
   });
 });

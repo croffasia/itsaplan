@@ -12,6 +12,8 @@ import {
   project,
   projectDashboard,
   projectMember,
+  team,
+  teamMember,
   teamRole,
   projectView,
   scimGroup,
@@ -44,6 +46,7 @@ import {
 } from '#shared/permissions';
 import { listAllMembers, listMemberContexts } from '#modules/members/service';
 import { listRoles } from '#modules/roles/service';
+import type { TeamStanding } from '#modules/teams/service';
 
 // Data access for the instance directories (god mode): every account and every
 // project on this instance. It reads across the better-auth tables (user, session,
@@ -370,19 +373,22 @@ async function countByTeamOfProject(
   return new Map(rows.map((r) => [r.projectId, r.count]));
 }
 
-// How many rows each of the given projects has in a project-scoped table.
-async function countByProject(
+const countAt = (counts: Map<number, number>, id: number) => counts.get(id) ?? 0;
+
+// How many rows each of the given owners has in a table that points at them, keyed by
+// the owner id: a project-scoped table by project, a team-scoped one by team.
+async function countByOwner(
   table: PgTable,
-  projectIdColumn: AnyPgColumn,
-  projectIds: number[],
+  ownerIdColumn: AnyPgColumn,
+  ownerIds: number[],
   extra?: SQL,
 ): Promise<Map<number, number>> {
   const rows = await db
-    .select({ projectId: projectIdColumn, count: sql<number>`count(*)::int` })
+    .select({ ownerId: ownerIdColumn, count: sql<number>`count(*)::int` })
     .from(table)
-    .where(and(inArray(projectIdColumn, projectIds), extra))
-    .groupBy(projectIdColumn);
-  return new Map(rows.map((r) => [r.projectId as number, r.count]));
+    .where(and(inArray(ownerIdColumn, ownerIds), extra))
+    .groupBy(ownerIdColumn);
+  return new Map(rows.map((r) => [r.ownerId as number, r.count]));
 }
 
 type ProjectFacts = InstanceProjectCounts & { lastActivityAt: string | null };
@@ -404,7 +410,6 @@ const EMPTY_FACTS: ProjectFacts = {
 // query and joined in memory, so the project query stays a plain select.
 async function loadProjectFacts(projectIds: number[]): Promise<(id: number) => ProjectFacts> {
   if (projectIds.length === 0) return () => EMPTY_FACTS;
-  const counts = (map: Map<number, number>, id: number) => map.get(id) ?? 0;
 
   const [
     members,
@@ -418,15 +423,15 @@ async function loadProjectFacts(projectIds: number[]): Promise<(id: number) => P
     tools,
     activityRows,
   ] = await Promise.all([
-    countByProject(projectMember, projectMember.projectId, projectIds),
-    countByProject(issue, issue.projectId, projectIds, isNull(issue.archivedAt)),
-    countByProject(issue, issue.projectId, projectIds, isNotNull(issue.archivedAt)),
-    countByProject(initiative, initiative.projectId, projectIds),
-    countByProject(projectDashboard, projectDashboard.projectId, projectIds),
-    countByProject(projectView, projectView.projectId, projectIds),
+    countByOwner(projectMember, projectMember.projectId, projectIds),
+    countByOwner(issue, issue.projectId, projectIds, isNull(issue.archivedAt)),
+    countByOwner(issue, issue.projectId, projectIds, isNotNull(issue.archivedAt)),
+    countByOwner(initiative, initiative.projectId, projectIds),
+    countByOwner(projectDashboard, projectDashboard.projectId, projectIds),
+    countByOwner(projectView, projectView.projectId, projectIds),
     // An agent belongs to a team and works in the projects it is a member of, so the
     // count per project is its memberships, not its own rows.
-    countByProject(
+    countByOwner(
       projectMember,
       projectMember.projectId,
       projectIds,
@@ -453,15 +458,15 @@ async function loadProjectFacts(projectIds: number[]): Promise<(id: number) => P
   return (id: number): ProjectFacts => {
     const activeAt = lastActivity.get(id);
     return {
-      memberCount: counts(members, id),
-      issueCount: counts(issues, id),
-      archivedIssueCount: counts(archivedIssues, id),
-      initiativeCount: counts(initiatives, id),
-      dashboardCount: counts(dashboards, id),
-      viewCount: counts(views, id),
-      agentCount: counts(agents, id),
-      skillCount: counts(skills, id),
-      toolCount: counts(tools, id),
+      memberCount: countAt(members, id),
+      issueCount: countAt(issues, id),
+      archivedIssueCount: countAt(archivedIssues, id),
+      initiativeCount: countAt(initiatives, id),
+      dashboardCount: countAt(dashboards, id),
+      viewCount: countAt(views, id),
+      agentCount: countAt(agents, id),
+      skillCount: countAt(skills, id),
+      toolCount: countAt(tools, id),
       lastActivityAt: activeAt ? iso(activeAt) : null,
     };
   };
@@ -564,6 +569,253 @@ export async function getInstanceProject(projectId: number): Promise<InstancePro
     ...toProjectRow(row, facts(row.id)),
     members,
     roles: roles.map((r) => ({ id: r.id, name: r.name, isDefault: r.isDefault })),
+  };
+}
+
+// ── Team directory ───────────────────────────────────────────────────────────
+
+// What a team holds, counted across the tables it owns and the projects it owns.
+// Read for the list and the detail alike, so a row in the directory already carries
+// everything.
+export interface InstanceTeamCounts {
+  memberCount: number;
+  projectCount: number;
+  issueCount: number;
+  agentCount: number;
+  skillCount: number;
+  toolCount: number;
+  roleCount: number;
+}
+
+export interface InstanceTeamRow extends InstanceTeamCounts {
+  id: number;
+  name: string;
+  mcpEnabled: boolean;
+  createdAt: string;
+}
+
+export interface InstanceTeamProject {
+  id: number;
+  key: string;
+  name: string;
+  mcpEnabled: boolean;
+  memberCount: number;
+  issueCount: number;
+  createdAt: string;
+}
+
+// One member of the team. The role is the fixed team rank, not a project role, and
+// 'agent' is the bot user of an ai_agent.
+export interface InstanceTeamMember {
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+  isAgent: boolean;
+  role: TeamStanding;
+  joinedAt: string;
+}
+
+export interface InstanceTeamPage {
+  items: InstanceTeamRow[];
+  // How many teams match the search, ignoring the page window.
+  total: number;
+}
+
+export interface InstanceTeamProjectPage {
+  items: InstanceTeamProject[];
+  total: number;
+}
+
+export interface InstanceTeamMemberPage {
+  items: InstanceTeamMember[];
+  total: number;
+}
+
+const EMPTY_TEAM_COUNTS: InstanceTeamCounts = {
+  memberCount: 0,
+  projectCount: 0,
+  issueCount: 0,
+  agentCount: 0,
+  skillCount: 0,
+  toolCount: 0,
+  roleCount: 0,
+};
+
+// The counts for the given teams, each in one grouped query and joined in memory,
+// so the team query stays a plain select.
+async function loadTeamCounts(teamIds: number[]): Promise<(id: number) => InstanceTeamCounts> {
+  if (teamIds.length === 0) return () => EMPTY_TEAM_COUNTS;
+
+  const [members, projects, issues, agents, skills, tools, roles] = await Promise.all([
+    countByOwner(teamMember, teamMember.teamId, teamIds),
+    countByOwner(project, project.teamId, teamIds),
+    // Issues have no team column; they reach one through their project.
+    db
+      .select({ teamId: project.teamId, count: sql<number>`count(*)::int` })
+      .from(issue)
+      .innerJoin(project, eq(project.id, issue.projectId))
+      .where(and(inArray(project.teamId, teamIds), isNull(issue.archivedAt)))
+      .groupBy(project.teamId)
+      .then((rows) => new Map(rows.map((r) => [r.teamId, r.count]))),
+    countByOwner(aiAgent, aiAgent.teamId, teamIds),
+    countByOwner(agentSkill, agentSkill.teamId, teamIds),
+    countByOwner(agentTool, agentTool.teamId, teamIds),
+    countByOwner(teamRole, teamRole.teamId, teamIds),
+  ]);
+
+  return (id) => ({
+    memberCount: countAt(members, id),
+    projectCount: countAt(projects, id),
+    issueCount: countAt(issues, id),
+    agentCount: countAt(agents, id),
+    skillCount: countAt(skills, id),
+    toolCount: countAt(tools, id),
+    roleCount: countAt(roles, id),
+  });
+}
+
+type TeamRow = typeof team.$inferSelect;
+
+function toTeamRow(r: TeamRow, counts: InstanceTeamCounts): InstanceTeamRow {
+  return {
+    id: r.id,
+    name: r.name,
+    mcpEnabled: r.mcpEnabled,
+    createdAt: iso(r.createdAt),
+    ...counts,
+  };
+}
+
+// One page of teams, newest first. `search` matches the name and runs in SQL, so the
+// page window and the total count agree.
+export async function listInstanceTeams(options: {
+  search?: string;
+  limit: number;
+  offset: number;
+}): Promise<InstanceTeamPage> {
+  const term = options.search?.trim();
+  const where = term ? ilike(team.name, `%${term}%`) : undefined;
+
+  const [rows, totals] = await Promise.all([
+    db
+      .select()
+      .from(team)
+      .where(where)
+      .orderBy(desc(team.createdAt))
+      .limit(options.limit)
+      .offset(options.offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(team)
+      .where(where),
+  ]);
+
+  const counts = await loadTeamCounts(rows.map((r) => r.id));
+  return { items: rows.map((r) => toTeamRow(r, counts(r.id))), total: totals[0]?.count ?? 0 };
+}
+
+// One team with what it holds. Its projects and its members are their own paged
+// routes, so a large team is never loaded whole. Returns null for an unknown id.
+export async function getInstanceTeam(teamId: number): Promise<InstanceTeamRow | null> {
+  const rows = await db.select().from(team).where(eq(team.id, teamId));
+  const row = rows[0];
+  if (!row) return null;
+
+  const counts = await loadTeamCounts([row.id]);
+  return toTeamRow(row, counts(row.id));
+}
+
+// One page of the projects a team owns, by key. `search` matches the key or the name.
+export async function listInstanceTeamProjects(
+  teamId: number,
+  options: { search?: string; limit: number; offset: number },
+): Promise<InstanceTeamProjectPage> {
+  const term = options.search?.trim();
+  const where = and(
+    eq(project.teamId, teamId),
+    term ? or(ilike(project.key, `%${term}%`), ilike(project.name, `%${term}%`)) : undefined,
+  );
+
+  const [rows, totals] = await Promise.all([
+    db
+      .select({
+        id: project.id,
+        key: project.key,
+        name: project.name,
+        mcpEnabled: project.mcpEnabled,
+        createdAt: project.createdAt,
+        memberCount: sql<number>`count(distinct ${projectMember.userId})::int`,
+        issueCount: sql<number>`count(distinct ${issue.id})::int`,
+      })
+      .from(project)
+      .leftJoin(projectMember, eq(projectMember.projectId, project.id))
+      .leftJoin(issue, and(eq(issue.projectId, project.id), isNull(issue.archivedAt)))
+      .where(where)
+      .groupBy(project.id)
+      .orderBy(project.key)
+      .limit(options.limit)
+      .offset(options.offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(project)
+      .where(where),
+  ]);
+
+  return {
+    items: rows.map((p) => ({ ...p, createdAt: iso(p.createdAt) })),
+    total: totals[0]?.count ?? 0,
+  };
+}
+
+// One page of the team's members, people and agents alike, by name. `search` matches
+// the name or the address.
+export async function listInstanceTeamMembers(
+  teamId: number,
+  options: { search?: string; limit: number; offset: number },
+): Promise<InstanceTeamMemberPage> {
+  const term = options.search?.trim();
+  const where = and(
+    eq(teamMember.teamId, teamId),
+    term ? or(ilike(user.name, `%${term}%`), ilike(user.email, `%${term}%`)) : undefined,
+  );
+
+  const [rows, totals] = await Promise.all([
+    db
+      .select({
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        image: user.image,
+        agentId: aiAgent.id,
+        role: teamMember.role,
+        joinedAt: teamMember.createdAt,
+      })
+      .from(teamMember)
+      .innerJoin(user, eq(user.id, teamMember.userId))
+      .leftJoin(aiAgent, eq(aiAgent.userId, teamMember.userId))
+      .where(where)
+      .orderBy(user.name)
+      .limit(options.limit)
+      .offset(options.offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(teamMember)
+      .innerJoin(user, eq(user.id, teamMember.userId))
+      .where(where),
+  ]);
+
+  return {
+    items: rows.map((m) => ({
+      userId: m.userId,
+      name: m.name,
+      email: m.email,
+      image: m.image,
+      isAgent: m.agentId !== null,
+      role: m.role as TeamStanding,
+      joinedAt: iso(m.joinedAt),
+    })),
+    total: totals[0]?.count ?? 0,
   };
 }
 

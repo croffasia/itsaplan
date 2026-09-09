@@ -106,6 +106,55 @@
     "noMembersTitle": "لا يوجد أعضاء",
     "noMembersHint": "محدش هيقدر يوصل للمشروع ده لحد ما حد يتدعى ليه."
   },
+  "teams": {
+    "empty": "لا توجد فرق مطابقة لهذا البحث.",
+    "searchPlaceholder": "ابحث بالاسم",
+    "columns": {
+      "team": "الفريق",
+      "projects": "المشاريع",
+      "members": "الأعضاء",
+      "issues": "المهام",
+      "agents": "الوكلاء",
+      "mcp": "MCP"
+    },
+    "mcpEnabled": "مفعّل",
+    "mcpOff": "معطّل",
+    "open": "فتح الفريق",
+    "showDetails": "عرض تفاصيل الفريق"
+  },
+  "teamPanel": {
+    "mcpEnabled": "MCP مفعّل",
+    "mcpOff": "MCP معطّل",
+    "created": "أُنشئ في {date}",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "projects": "المشاريع",
+      "issues": "المهام",
+      "members": "الأعضاء",
+      "agents": "وكلاء الذكاء الاصطناعي",
+      "skills": "المهارات",
+      "tools": "الأدوات",
+      "roles": "أدوار المشاريع"
+    },
+    "projects": "المشاريع",
+    "searchProjects": "ابحث في المشاريع",
+    "projectCounts": "{issues} مهمة · {members} عضو",
+    "noProjectsTitle": "لا توجد مشاريع",
+    "noProjectsHint": "هذا الفريق لا يملك أي مشاريع بعد.",
+    "noProjectMatches": "لا توجد مشاريع مطابقة لهذا البحث.",
+    "members": "الأعضاء",
+    "searchMembers": "ابحث في الأعضاء",
+    "noMembersTitle": "لا يوجد أعضاء",
+    "noMembersHint": "لا ينتمي أحد إلى هذا الفريق بعد.",
+    "noMemberMatches": "لا يوجد أعضاء مطابقون لهذا البحث.",
+    "roles": {
+      "owner": "المالك",
+      "manager": "المدير",
+      "member": "عضو",
+      "agent": "وكيل"
+    },
+    "joined": "انضم في {date}"
+  },
   "general": {
     "saved": "تم حفظ الإعدادات الافتراضية",
     "projectDefaults": "الإعدادات الافتراضية",

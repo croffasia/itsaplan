@@ -15,6 +15,10 @@
       "label": "Usuários",
       "description": "Toda conta nesta instância: a função global, se o endereço está confirmado e os projetos que cada usuário alcança."
     },
+    "teams": {
+      "label": "Equipes",
+      "description": "Todas as equipes desta instância: os projetos que possui e quem faz parte dela."
+    },
     "projects": {
       "label": "Projetos",
       "description": "Todo projeto nesta instância: o que cada um contém, quando esteve ativo pela última vez e quem pode alcançá-lo."

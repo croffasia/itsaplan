@@ -278,4 +278,12 @@ export const qk = {
   instanceProjects: (filters: unknown) => ['instanceProjects', filters] as const,
   instanceProjectOptions: ['instanceProjectOptions'] as const,
   instanceProject: (projectId: number) => ['instanceProject', projectId] as const,
+  // The instance team directory: the list (scoped by the active filters) and one team
+  // with its projects and members.
+  instanceTeams: (filters: unknown) => ['instanceTeams', filters] as const,
+  instanceTeam: (teamId: number) => ['instanceTeam', teamId] as const,
+  instanceTeamProjects: (teamId: number, filters: unknown) =>
+    ['instanceTeamProjects', teamId, filters] as const,
+  instanceTeamMembers: (teamId: number, filters: unknown) =>
+    ['instanceTeamMembers', teamId, filters] as const,
 };

@@ -1,9 +1,16 @@
 'use client';
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { StorageSettingsPatch } from '@/lib/api/endpoints/settings';
 import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
-import type { PageParams } from '@/lib/api/core/paging';
+import { nextPageParam, type PageParams } from '@/lib/api/core/paging';
+import { DEFAULT_PAGE_SIZE } from '@/hooks/usePaging';
 import {
   type InstanceAuthSettingsPatch,
   type InstanceEmailSettingsPatch,
@@ -32,6 +39,10 @@ import {
   listInstanceProjects,
   listInstanceProjectOptions,
   getInstanceProject,
+  listInstanceTeams,
+  getInstanceTeam,
+  listInstanceTeamProjects,
+  listInstanceTeamMembers,
   verifyInstanceUserEmail,
 } from '@/lib/api/endpoints/god';
 import {
@@ -313,5 +324,49 @@ export function useVerifyInstanceUserEmail() {
       // The list carries emailVerified too, and its key holds the active filters.
       void qc.invalidateQueries({ queryKey: qk.anyInstanceUsers });
     },
+  });
+}
+
+export interface InstanceTeamFilters extends PageParams {
+  search: string;
+}
+
+// One page of the team directory. Like the project directory, the filters are part
+// of the key and the previous page stays on screen while the next one loads.
+export function useInstanceTeamsQuery(filters: InstanceTeamFilters) {
+  return useQuery({
+    queryKey: qk.instanceTeams(filters),
+    queryFn: () => listInstanceTeams({ ...filters, search: filters.search || undefined }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+// One team with its counts. Mounted only while a team is selected.
+export function useInstanceTeamQuery(teamId: number) {
+  return useQuery({
+    queryKey: qk.instanceTeam(teamId),
+    queryFn: () => getInstanceTeam(teamId),
+  });
+}
+
+// The projects a team owns and the people in it, each a page at a time. The search
+// runs on the server, so it reaches what the loaded pages do not hold.
+export function useInstanceTeamProjectsQuery(teamId: number, search: string | undefined) {
+  return useInfiniteQuery({
+    queryKey: qk.instanceTeamProjects(teamId, { search }),
+    queryFn: ({ pageParam }) =>
+      listInstanceTeamProjects(teamId, { search, page: pageParam, pageSize: DEFAULT_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: nextPageParam,
+  });
+}
+
+export function useInstanceTeamMembersQuery(teamId: number, search: string | undefined) {
+  return useInfiniteQuery({
+    queryKey: qk.instanceTeamMembers(teamId, { search }),
+    queryFn: ({ pageParam }) =>
+      listInstanceTeamMembers(teamId, { search, page: pageParam, pageSize: DEFAULT_PAGE_SIZE }),
+    initialPageParam: 1,
+    getNextPageParam: nextPageParam,
   });
 }

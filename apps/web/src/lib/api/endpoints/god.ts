@@ -1,5 +1,6 @@
 import { request } from '@/lib/api/core/client';
 import type { MemberRole } from '@/lib/api/endpoints/members';
+import type { TeamRole } from '@/lib/api/endpoints/teams';
 import type { NotificationEncryption } from '@/lib/api/endpoints/notificationSettings';
 import type { Permissions } from '@/lib/api/endpoints/roles';
 import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
@@ -325,3 +326,63 @@ export const listInstanceProjectOptions = () =>
 
 export const getInstanceProject = (projectId: number) =>
   request<InstanceProjectDetail>(`/god/projects/${projectId}`);
+
+// One team in the instance team directory, with what it holds counted across the
+// tables the team owns and the projects it owns.
+export interface InstanceTeam {
+  id: number;
+  name: string;
+  mcpEnabled: boolean;
+  memberCount: number;
+  projectCount: number;
+  issueCount: number;
+  agentCount: number;
+  skillCount: number;
+  toolCount: number;
+  roleCount: number;
+  createdAt: string;
+}
+
+// One project the team owns, as the team panel lists it.
+export interface InstanceTeamProject {
+  id: number;
+  key: string;
+  name: string;
+  mcpEnabled: boolean;
+  memberCount: number;
+  issueCount: number;
+  createdAt: string;
+}
+
+// One member of a team. The role is the fixed team rank ('owner', 'manager',
+// 'member', 'agent'), not a project role.
+export interface InstanceTeamMember {
+  userId: string;
+  name: string;
+  email: string;
+  image: string | null;
+  isAgent: boolean;
+  role: TeamRole | 'agent';
+  joinedAt: string;
+}
+
+// The instance team directory: one page of teams, and one team with its counts. The
+// projects and the members of a team are paged apart, so a large team is never
+// loaded whole.
+export const listInstanceTeams = (params: PageParams & { search?: string }) =>
+  request<Page<InstanceTeam>>(`/god/teams${pageQuery(params, { search: params.search })}`);
+
+export const getInstanceTeam = (teamId: number) => request<InstanceTeam>(`/god/teams/${teamId}`);
+
+export const listInstanceTeamProjects = (
+  teamId: number,
+  params: PageParams & { search?: string },
+) =>
+  request<Page<InstanceTeamProject>>(
+    `/god/teams/${teamId}/projects${pageQuery(params, { search: params.search })}`,
+  );
+
+export const listInstanceTeamMembers = (teamId: number, params: PageParams & { search?: string }) =>
+  request<Page<InstanceTeamMember>>(
+    `/god/teams/${teamId}/members${pageQuery(params, { search: params.search })}`,
+  );

@@ -106,6 +106,55 @@
     "noMembersTitle": "No members",
     "noMembersHint": "Nobody can reach this project until someone is invited to it."
   },
+  "teams": {
+    "empty": "No teams match this search.",
+    "searchPlaceholder": "Search by name",
+    "columns": {
+      "team": "Team",
+      "projects": "Projects",
+      "members": "Members",
+      "issues": "Issues",
+      "agents": "Agents",
+      "mcp": "MCP"
+    },
+    "mcpEnabled": "Enabled",
+    "mcpOff": "Off",
+    "open": "Open team",
+    "showDetails": "Show team details"
+  },
+  "teamPanel": {
+    "mcpEnabled": "MCP enabled",
+    "mcpOff": "MCP off",
+    "created": "created {date}",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "projects": "Projects",
+      "issues": "Issues",
+      "members": "Members",
+      "agents": "AI agents",
+      "skills": "Skills",
+      "tools": "Tools",
+      "roles": "Project roles"
+    },
+    "projects": "Projects",
+    "searchProjects": "Search projects",
+    "projectCounts": "{issues} issues · {members} members",
+    "noProjectsTitle": "No projects",
+    "noProjectsHint": "This team owns no projects yet.",
+    "noProjectMatches": "No projects match this search.",
+    "members": "Members",
+    "searchMembers": "Search members",
+    "noMembersTitle": "No members",
+    "noMembersHint": "Nobody belongs to this team yet.",
+    "noMemberMatches": "No members match this search.",
+    "roles": {
+      "owner": "Owner",
+      "manager": "Manager",
+      "member": "Member",
+      "agent": "Agent"
+    },
+    "joined": "joined {date}"
+  },
   "general": {
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",

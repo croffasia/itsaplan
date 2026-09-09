@@ -106,6 +106,55 @@
     "noMembersTitle": "Sem membros",
     "noMembersHint": "Ninguém pode alcançar este projeto até que alguém seja convidado."
   },
+  "teams": {
+    "empty": "Nenhuma equipe corresponde a esta busca.",
+    "searchPlaceholder": "Buscar por nome",
+    "columns": {
+      "team": "Equipe",
+      "projects": "Projetos",
+      "members": "Membros",
+      "issues": "Issues",
+      "agents": "Agentes",
+      "mcp": "MCP"
+    },
+    "mcpEnabled": "Ativado",
+    "mcpOff": "Desativado",
+    "open": "Abrir equipe",
+    "showDetails": "Mostrar detalhes da equipe"
+  },
+  "teamPanel": {
+    "mcpEnabled": "MCP ativado",
+    "mcpOff": "MCP desativado",
+    "created": "criada em {date}",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "projects": "Projetos",
+      "issues": "Issues",
+      "members": "Membros",
+      "agents": "Agentes de IA",
+      "skills": "Habilidades",
+      "tools": "Ferramentas",
+      "roles": "Papéis de projeto"
+    },
+    "projects": "Projetos",
+    "searchProjects": "Buscar projetos",
+    "projectCounts": "{issues} issues · {members} membros",
+    "noProjectsTitle": "Sem projetos",
+    "noProjectsHint": "Esta equipe ainda não possui projetos.",
+    "noProjectMatches": "Nenhum projeto corresponde a esta busca.",
+    "members": "Membros",
+    "searchMembers": "Buscar membros",
+    "noMembersTitle": "Sem membros",
+    "noMembersHint": "Ninguém pertence a esta equipe ainda.",
+    "noMemberMatches": "Nenhum membro corresponde a esta busca.",
+    "roles": {
+      "owner": "Proprietário",
+      "manager": "Gerente",
+      "member": "Membro",
+      "agent": "Agente"
+    },
+    "joined": "entrou em {date}"
+  },
   "general": {
     "saved": "Padrões de projeto salvos",
     "projectDefaults": "Padrões de projeto",

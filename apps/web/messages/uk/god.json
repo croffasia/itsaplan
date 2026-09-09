@@ -106,6 +106,55 @@
     "noMembersTitle": "Немає учасників",
     "noMembersHint": "Ніхто не бачить цей проєкт, доки когось не запросять."
   },
+  "teams": {
+    "empty": "Немає команд за цим запитом.",
+    "searchPlaceholder": "Пошук за назвою",
+    "columns": {
+      "team": "Команда",
+      "projects": "Проєкти",
+      "members": "Учасники",
+      "issues": "Задачі",
+      "agents": "Агенти",
+      "mcp": "MCP"
+    },
+    "mcpEnabled": "Увімкнено",
+    "mcpOff": "Вимкнено",
+    "open": "Відкрити команду",
+    "showDetails": "Показати деталі команди"
+  },
+  "teamPanel": {
+    "mcpEnabled": "MCP увімкнено",
+    "mcpOff": "MCP вимкнено",
+    "created": "створено {date}",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "projects": "Проєкти",
+      "issues": "Задачі",
+      "members": "Учасники",
+      "agents": "AI-агенти",
+      "skills": "Навички",
+      "tools": "Інструменти",
+      "roles": "Ролі в проєктах"
+    },
+    "projects": "Проєкти",
+    "searchProjects": "Пошук проєктів",
+    "projectCounts": "{issues} задач · {members} учасників",
+    "noProjectsTitle": "Немає проєктів",
+    "noProjectsHint": "У цієї команди поки немає проєктів.",
+    "noProjectMatches": "Немає проєктів за цим запитом.",
+    "members": "Учасники",
+    "searchMembers": "Пошук учасників",
+    "noMembersTitle": "Немає учасників",
+    "noMembersHint": "У цій команді поки нікого немає.",
+    "noMemberMatches": "Немає учасників за цим запитом.",
+    "roles": {
+      "owner": "Власник",
+      "manager": "Менеджер",
+      "member": "Учасник",
+      "agent": "Агент"
+    },
+    "joined": "приєднався {date}"
+  },
   "general": {
     "saved": "Налаштування за замовчуванням збережено",
     "projectDefaults": "Налаштування за замовчуванням",

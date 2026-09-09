@@ -15,6 +15,10 @@
       "label": "Users",
       "description": "Every account on this instance: the global role, whether the address is confirmed, and the projects each user can reach."
     },
+    "teams": {
+      "label": "Teams",
+      "description": "Every team on this instance: the projects it owns and who belongs to it."
+    },
     "projects": {
       "label": "Projects",
       "description": "Every project on this instance: what each one holds, when it was last active, and who can reach it."

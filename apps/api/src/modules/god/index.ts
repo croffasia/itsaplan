@@ -29,9 +29,13 @@ import { deleteProject } from '#modules/projects/service';
 import {
   deleteInstanceUser,
   getInstanceProject,
+  getInstanceTeam,
   getInstanceUser,
   listInstanceProjects,
   listInstanceProjectOptions,
+  listInstanceTeams,
+  listInstanceTeamProjects,
+  listInstanceTeamMembers,
   listInstanceUsers,
   listScimGroups,
   setScimGroupMappings,
@@ -48,6 +52,10 @@ import {
   InstanceProjectDetailResponse,
   InstanceProjectOptionListResponse,
   InstanceProjectPageResponse,
+  InstanceTeamMemberPageResponse,
+  InstanceTeamPageResponse,
+  InstanceTeamProjectPageResponse,
+  InstanceTeamResponse,
   InstanceUserDetailResponse,
   InstanceUserPageResponse,
   OidcSettingsBody,
@@ -61,10 +69,11 @@ import {
   TelegramSettingsBody,
   TelegramSettingsResponse,
   deleteUserQuery,
-  listProjectsQuery,
   listUsersQuery,
   projectParams,
   scimGroupParams,
+  searchPageQuery,
+  teamParams,
   userParams,
 } from './model';
 import { emailTestError } from './email-test';
@@ -585,7 +594,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     ({ query }) =>
       paginate(query, (window) => listInstanceProjects({ search: query.search, ...window })),
     {
-      query: listProjectsQuery,
+      query: searchPageQuery,
       response: { 200: InstanceProjectPageResponse, ...errors(400, 401, 403) },
       detail: {
         summary: 'List instance projects',
@@ -616,6 +625,71 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         summary: 'Get an instance project',
         description:
           'Get one project with what it holds and every member, with the permissions each membership resolves to.',
+      },
+    },
+  )
+
+  .get(
+    '/god/teams',
+    ({ query }) =>
+      paginate(query, (window) => listInstanceTeams({ search: query.search, ...window })),
+    {
+      query: searchPageQuery,
+      response: { 200: InstanceTeamPageResponse, ...errors(400, 401, 403) },
+      detail: {
+        summary: 'List instance teams',
+        description: 'One page of teams with what each holds, plus how many match the search.',
+      },
+    },
+  )
+
+  .get(
+    '/god/teams/:teamId',
+    async ({ params }) => {
+      const found = await getInstanceTeam(params.teamId);
+      if (!found) throw new HttpError(404, 'Team not found');
+      return found;
+    },
+    {
+      params: teamParams,
+      response: { 200: InstanceTeamResponse, ...commonErrors },
+      detail: {
+        summary: 'Get an instance team',
+        description: 'Get one team with what it holds. Its projects and members are paged apart.',
+      },
+    },
+  )
+
+  .get(
+    '/god/teams/:teamId/projects',
+    ({ params, query }) =>
+      paginate(query, (window) =>
+        listInstanceTeamProjects(params.teamId, { search: query.search, ...window }),
+      ),
+    {
+      params: teamParams,
+      query: searchPageQuery,
+      response: { 200: InstanceTeamProjectPageResponse, ...commonErrors },
+      detail: {
+        summary: "List a team's projects",
+        description: 'One page of the projects a team owns, with what each holds.',
+      },
+    },
+  )
+
+  .get(
+    '/god/teams/:teamId/members',
+    ({ params, query }) =>
+      paginate(query, (window) =>
+        listInstanceTeamMembers(params.teamId, { search: query.search, ...window }),
+      ),
+    {
+      params: teamParams,
+      query: searchPageQuery,
+      response: { 200: InstanceTeamMemberPageResponse, ...commonErrors },
+      detail: {
+        summary: "List a team's members",
+        description: 'One page of the team members, people and agents alike, with their rank.',
       },
     },
   );

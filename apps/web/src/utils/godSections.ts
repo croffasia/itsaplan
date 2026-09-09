@@ -1,4 +1,5 @@
 import {
+  Building2,
   FolderKanban,
   HardDrive,
   Keyboard,
@@ -34,6 +35,11 @@ export const GOD_SECTIONS: GodSection[] = [
     slug: 'users',
     group: 'management',
     icon: Users,
+  },
+  {
+    slug: 'teams',
+    group: 'management',
+    icon: Building2,
   },
   {
     slug: 'projects',

@@ -106,6 +106,55 @@
     "noMembersTitle": "Нет участников",
     "noMembersHint": "Никто не видит этот проект, пока кого-нибудь не пригласят."
   },
+  "teams": {
+    "empty": "Нет команд по этому запросу.",
+    "searchPlaceholder": "Поиск по названию",
+    "columns": {
+      "team": "Команда",
+      "projects": "Проекты",
+      "members": "Участники",
+      "issues": "Задачи",
+      "agents": "Агенты",
+      "mcp": "MCP"
+    },
+    "mcpEnabled": "Включено",
+    "mcpOff": "Выключено",
+    "open": "Открыть команду",
+    "showDetails": "Показать детали команды"
+  },
+  "teamPanel": {
+    "mcpEnabled": "MCP включён",
+    "mcpOff": "MCP выключен",
+    "created": "создана {date}",
+    "statTitle": "{label}: {value}",
+    "stats": {
+      "projects": "Проекты",
+      "issues": "Задачи",
+      "members": "Участники",
+      "agents": "AI-агенты",
+      "skills": "Навыки",
+      "tools": "Инструменты",
+      "roles": "Роли в проектах"
+    },
+    "projects": "Проекты",
+    "searchProjects": "Поиск проектов",
+    "projectCounts": "{issues} задач · {members} участников",
+    "noProjectsTitle": "Нет проектов",
+    "noProjectsHint": "У этой команды пока нет проектов.",
+    "noProjectMatches": "Нет проектов по этому запросу.",
+    "members": "Участники",
+    "searchMembers": "Поиск участников",
+    "noMembersTitle": "Нет участников",
+    "noMembersHint": "В этой команде пока никого нет.",
+    "noMemberMatches": "Нет участников по этому запросу.",
+    "roles": {
+      "owner": "Владелец",
+      "manager": "Менеджер",
+      "member": "Участник",
+      "agent": "Агент"
+    },
+    "joined": "вступил {date}"
+  },
   "general": {
     "saved": "Настройки по умолчанию сохранены",
     "projectDefaults": "Настройки по умолчанию",

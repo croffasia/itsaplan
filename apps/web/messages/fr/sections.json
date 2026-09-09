@@ -15,6 +15,10 @@
       "label": "Utilisateurs",
       "description": "Tous les comptes de cette instance : le rôle global, si l'adresse est confirmée, et les projets auxquels chaque utilisateur a accès."
     },
+    "teams": {
+      "label": "Équipes",
+      "description": "Toutes les équipes de cette instance : les projets qu'elle possède et qui en fait partie."
+    },
     "projects": {
       "label": "Projets",
       "description": "Tous les projets de cette instance : ce que chacun contient, sa dernière activité, et qui peut y accéder."

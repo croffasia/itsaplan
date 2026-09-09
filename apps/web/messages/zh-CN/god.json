@@ -106,6 +106,55 @@
     "noMembersTitle": "暂无成员",
     "noMembersHint": "需要邀请成员后才能访问此项目。"
   },
+  "teams": {
+    "empty": "没有符合搜索条件的团队。",
+    "searchPlaceholder": "按名称搜索",
+    "columns": {
+      "team": "团队",
+      "projects": "项目",
+      "members": "成员",
+      "issues": "工作项",
+      "agents": "代理",
+      "mcp": "MCP"
+    },
+    "mcpEnabled": "已启用",
+    "mcpOff": "已关闭",
+    "open": "打开团队",
+    "showDetails": "查看团队详情"
+  },
+  "teamPanel": {
+    "mcpEnabled": "MCP 已启用",
+    "mcpOff": "MCP 已关闭",
+    "created": "创建于 {date}",
+    "statTitle": "{label}：{value}",
+    "stats": {
+      "projects": "项目",
+      "issues": "工作项",
+      "members": "成员",
+      "agents": "AI 代理",
+      "skills": "技能",
+      "tools": "工具",
+      "roles": "项目角色"
+    },
+    "projects": "项目",
+    "searchProjects": "搜索项目",
+    "projectCounts": "{issues} 个工作项 · {members} 名成员",
+    "noProjectsTitle": "暂无项目",
+    "noProjectsHint": "该团队还没有项目。",
+    "noProjectMatches": "没有符合搜索条件的项目。",
+    "members": "成员",
+    "searchMembers": "搜索成员",
+    "noMembersTitle": "暂无成员",
+    "noMembersHint": "该团队还没有任何成员。",
+    "noMemberMatches": "没有符合搜索条件的成员。",
+    "roles": {
+      "owner": "所有者",
+      "manager": "管理员",
+      "member": "成员",
+      "agent": "代理"
+    },
+    "joined": "加入于 {date}"
+  },
   "general": {
     "saved": "项目默认设置已保存",
     "projectDefaults": "项目默认设置",

@@ -13,6 +13,9 @@ See root `AGENTS.md` for monorepo-wide rules.
 - `src/permissions.ts` — the permission matrix stored in `team_role.permissions`: the
   resource/action catalog, the default member role, and the normalizer. It lives here
   because the API and the sign-up hook in `@repo/auth` both write it.
+- `src/settings.ts` / `src/secrets.ts` — the two instance config stores: `app_setting`
+  in plaintext jsonb, `app_secret` encrypted with `APP_ENCRYPTION_KEY`. Both are read
+  by more than one app, which is why they are here.
 - `src/migrate.ts` — programmatic migrator run on api container startup (no drizzle-kit in prod).
 - `drizzle/` — generated SQL migrations (committed).
 

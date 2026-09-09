@@ -1,6 +1,5 @@
-import { db, appSecret, userTelegramAccount } from '@repo/db';
-import { and, eq, gt, inArray, ne, sql } from 'drizzle-orm';
-import { encryptSecret, decryptSecret } from '@repo/crypto';
+import { db, userTelegramAccount, readSecret, writeSecret } from '@repo/db';
+import { eq, inArray } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 
 // The instance Telegram bot and the account links it creates.
@@ -10,11 +9,12 @@ import { randomBytes } from 'node:crypto';
 // still set its own bot token, which wins for that project's deliveries). The token
 // is a secret, so it lives encrypted in app_secret under 'telegram.bot' with a
 // `redacted` mirror for the settings UI, the same shape as the instance mail and
-// Google credentials in @repo/auth.
+// Google credentials in @repo/auth. The bot service reads the same row itself, with
+// its own copy of the shape (apps/bot/src/db.ts).
 //
 // A link is one row in user_telegram_account per user: created with a one-time
-// link_code when the user asks to link, completed by the bot when that code arrives
-// as `/start <code>`. chat_id null means the link is still pending.
+// link_code here, redeemed by the bot when that code arrives as `/start <code>`.
+// chat_id null means the link is still pending.
 
 const BOT_SECRET_KEY = 'telegram.bot';
 
@@ -22,14 +22,30 @@ const BOT_SECRET_KEY = 'telegram.bot';
 // the button, short enough that an intercepted link is not useful later.
 const LINK_CODE_TTL_MINUTES = 15;
 
-// The stored, decrypted bot config. Read by the delivery sender and handed to the
-// bot service over the internal API; never returned to a browser.
+// The stored, decrypted bot config. Read by the delivery sender; never returned to a
+// browser.
 export interface InstanceBotConfig {
   enabled: boolean;
   botToken: string; // secret
   // Resolved from getMe when the token is saved, so the deep link can be built
   // without asking the administrator to type the name a second time.
   botUsername: string;
+}
+
+export async function getInstanceBotConfig(): Promise<InstanceBotConfig> {
+  const stored = await readSecret<InstanceBotConfig>(BOT_SECRET_KEY);
+  // Merge over the default so a config written before a field was added stays valid.
+  return { enabled: false, botToken: '', botUsername: '', ...stored };
+}
+
+// Whether the instance bot can be used right now. Account linking is offered only
+// when this is true, and Telegram delivery falls back to this bot only when it is.
+export function isInstanceBotUsable(config: InstanceBotConfig): boolean {
+  return config.enabled && config.botToken.length > 0;
+}
+
+export async function hasUsableInstanceBot(): Promise<boolean> {
+  return isInstanceBotUsable(await getInstanceBotConfig());
 }
 
 // The config as returned to the client: the token replaced by a boolean telling
@@ -47,10 +63,6 @@ export interface InstanceBotPatch {
   botToken?: string;
 }
 
-function defaultBotConfig(): InstanceBotConfig {
-  return { enabled: false, botToken: '', botUsername: '' };
-}
-
 function toBotDto(config: InstanceBotConfig): InstanceBotDto {
   return {
     enabled: config.enabled,
@@ -59,29 +71,8 @@ function toBotDto(config: InstanceBotConfig): InstanceBotDto {
   };
 }
 
-export async function getInstanceBotConfig(): Promise<InstanceBotConfig> {
-  const rows = await db
-    .select({ ciphertext: appSecret.ciphertext, iv: appSecret.iv, authTag: appSecret.authTag })
-    .from(appSecret)
-    .where(eq(appSecret.key, BOT_SECRET_KEY));
-  const row = rows[0];
-  if (!row) return defaultBotConfig();
-  // Merge over the default so a config written before a field was added stays valid.
-  return { ...defaultBotConfig(), ...(JSON.parse(decryptSecret(row)) as InstanceBotConfig) };
-}
-
 export async function getInstanceBotSettings(): Promise<InstanceBotDto> {
   return toBotDto(await getInstanceBotConfig());
-}
-
-// Whether the instance bot can be used right now. Account linking is offered only
-// when this is true, and Telegram delivery falls back to this bot only when it is.
-export function isInstanceBotUsable(config: InstanceBotConfig): boolean {
-  return config.enabled && config.botToken.length > 0;
-}
-
-export async function hasUsableInstanceBot(): Promise<boolean> {
-  return isInstanceBotUsable(await getInstanceBotConfig());
 }
 
 // Asks Telegram who the token belongs to. Doubles as validation: a bad token is
@@ -120,27 +111,8 @@ export async function setInstanceBotSettings(patch: InstanceBotPatch): Promise<I
     botToken,
     botUsername: needsLookup ? await fetchBotUsername(botToken) : current.botUsername,
   };
-  const enc = encryptSecret(JSON.stringify(next));
   const redacted = toBotDto(next);
-  await db
-    .insert(appSecret)
-    .values({
-      key: BOT_SECRET_KEY,
-      ciphertext: enc.ciphertext,
-      iv: enc.iv,
-      authTag: enc.authTag,
-      redacted,
-    })
-    .onConflictDoUpdate({
-      target: appSecret.key,
-      set: {
-        ciphertext: enc.ciphertext,
-        iv: enc.iv,
-        authTag: enc.authTag,
-        redacted,
-        updatedAt: sql`now()`,
-      },
-    });
+  await writeSecret(BOT_SECRET_KEY, next, redacted);
   return redacted;
 }
 
@@ -212,56 +184,4 @@ export async function startTelegramLink(
 
 export async function unlinkTelegram(userId: string): Promise<void> {
   await db.delete(userTelegramAccount).where(eq(userTelegramAccount.userId, userId));
-}
-
-export interface ConfirmLinkInput {
-  code: string;
-  chatId: string;
-  username: string | null;
-  firstName: string | null;
-}
-
-export type ConfirmLinkResult =
-  { ok: true; userId: string } | { ok: false; reason: 'invalid' | 'taken' };
-
-// Completes a link from the bot: matches the code, then writes the chat id onto that
-// user's row and clears the code so it cannot be replayed. 'invalid' covers an
-// unknown, already-used, or expired code — the bot tells the user to start again
-// either way. 'taken' means this Telegram account is already linked to someone else.
-export async function confirmTelegramLink(input: ConfirmLinkInput): Promise<ConfirmLinkResult> {
-  const rows = await db
-    .select({ userId: userTelegramAccount.userId })
-    .from(userTelegramAccount)
-    .where(
-      and(
-        eq(userTelegramAccount.linkCode, input.code),
-        gt(userTelegramAccount.linkCodeExpiresAt, new Date()),
-      ),
-    );
-  const pending = rows[0];
-  if (!pending) return { ok: false, reason: 'invalid' };
-
-  const conflict = await db
-    .select({ userId: userTelegramAccount.userId })
-    .from(userTelegramAccount)
-    .where(
-      and(
-        eq(userTelegramAccount.chatId, input.chatId),
-        ne(userTelegramAccount.userId, pending.userId),
-      ),
-    );
-  if (conflict.length > 0) return { ok: false, reason: 'taken' };
-
-  await db
-    .update(userTelegramAccount)
-    .set({
-      chatId: input.chatId,
-      username: input.username,
-      firstName: input.firstName,
-      linkedAt: new Date(),
-      linkCode: null,
-      linkCodeExpiresAt: null,
-    })
-    .where(eq(userTelegramAccount.userId, pending.userId));
-  return { ok: true, userId: pending.userId };
 }

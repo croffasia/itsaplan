@@ -174,16 +174,16 @@ services:
     restart: unless-stopped
     exclude_from_hc: true
     depends_on:
-      api:
-        condition: service_started
+      postgres:
+        condition: service_healthy
     environment:
       NODE_ENV: production
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
-      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
       # The bot token itself is not set here: it is stored in the database and edited
       # in god mode, so the service picks up a change without a redeploy.
       # Optional tuning — defaults live in apps/bot/src/config.ts:
-      # BOT_CONFIG_POLL_INTERVAL_MS, BOT_API_TIMEOUT_MS.
+      # BOT_CONFIG_POLL_INTERVAL_MS, BOT_CONFIG_RETRY_INTERVAL_MS.
 
   web:
     build:

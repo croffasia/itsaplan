@@ -1,7 +1,6 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { db, appSecret, teamInvite, getSetting, setSetting } from '@repo/db';
-import { and, eq, sql } from 'drizzle-orm';
-import { encryptSecret, decryptSecret } from '@repo/crypto';
+import { db, teamInvite, getSetting, setSetting, readSecret, writeSecret } from '@repo/db';
+import { and, eq } from 'drizzle-orm';
 import {
   hasEmailProvider,
   type SmtpConfig,
@@ -76,42 +75,6 @@ export async function setAuthSettings(patch: Partial<AuthSettings>): Promise<Aut
 }
 
 // ── Encrypted config storage ──────────────────────────────────────────────────
-
-// Every credential is stored the same way: one JSON blob per key in app_secret,
-// encrypted as a whole, with a `redacted` mirror the settings UI reads without
-// decrypting.
-
-async function readSecret<T>(key: string): Promise<T | null> {
-  const rows = await db
-    .select({ ciphertext: appSecret.ciphertext, iv: appSecret.iv, authTag: appSecret.authTag })
-    .from(appSecret)
-    .where(eq(appSecret.key, key));
-  const row = rows[0];
-  return row ? (JSON.parse(decryptSecret(row)) as T) : null;
-}
-
-async function writeSecret(key: string, value: unknown, redacted: object): Promise<void> {
-  const enc = encryptSecret(JSON.stringify(value));
-  await db
-    .insert(appSecret)
-    .values({
-      key,
-      ciphertext: enc.ciphertext,
-      iv: enc.iv,
-      authTag: enc.authTag,
-      redacted,
-    })
-    .onConflictDoUpdate({
-      target: appSecret.key,
-      set: {
-        ciphertext: enc.ciphertext,
-        iv: enc.iv,
-        authTag: enc.authTag,
-        redacted,
-        updatedAt: sql`now()`,
-      },
-    });
-}
 
 function mergeSecret(current: string, next: string | undefined): string {
   return next && next.length > 0 ? next : current;

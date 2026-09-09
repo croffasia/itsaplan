@@ -85,9 +85,9 @@ services:
       S3_BUCKET: planner-attachments
       S3_ACCESS_KEY_ID: minioadmin
       S3_SECRET_ACCESS_KEY: minioadmin
-    # Migrate the throwaway DB, then run the api suite. bun test discovers
+    # Migrate the throwaway DB, then run the api and bot suites. bun test discovers
     # src/**/*.test.ts; env above satisfies the resetDb() guard.
-    command: sh -c "bun run packages/db/src/migrate.ts && cd apps/api && bun test"
+    command: sh -c "bun run packages/db/src/migrate.ts && cd apps/api && bun test && cd ../bot && bun test"
 
   # Webhook delivery worker, built from the same image as production, so the test
   # gate also verifies the worker image builds and boots. It idles here (no events

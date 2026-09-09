@@ -83,8 +83,8 @@ packages/runner @itsaplan/runner — CLI that runs an external agent's queued ta
 packages/eslint-config @repo/eslint-config — shared ESLint config
 ```
 
-Dependency graph: `api → @repo/auth → @repo/db`. **The web app never imports packages
-directly** — it talks to the API over HTTP (better-auth client + fetch).
+Dependency graph: `api → @repo/auth → @repo/db → @repo/crypto`. **The web app never
+imports packages directly** — it talks to the API over HTTP (better-auth client + fetch).
 
 ## Commands (from root)
 
@@ -298,7 +298,9 @@ tidy moves the code. This is separate from the CI gate (`format:check` + `lint` 
 - Tests run on `bun test`. `apps/api` uses Eden Treaty; its setup and the rules for
   writing tests are in `apps/api/AGENTS.md`. They are integration tests against a real
   test Postgres (`.env.test`), not mocks. `packages/runner` has plain unit tests that
-  need nothing running.
+  need nothing running. `apps/api` and `apps/bot` share one test database and the api
+  suite truncates every table before each test, so `bun run test` passes
+  `--concurrency=1` to turbo: the suites run one package at a time.
 - `bun --filter` needs the `=` form: `bun --filter='@repo/db' run <script>`. The space form
   `bun --filter <name> run <script>` matches no packages in Bun 1.3.9.
 

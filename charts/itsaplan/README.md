@@ -282,7 +282,7 @@ bot:
 | `secrets.postgresPassword`    | PostgreSQL password                       | `""`    |
 | `secrets.betterAuthSecret`    | better-auth secret                        | `""`    |
 | `secrets.appEncryptionKey`    | AES encryption key for secrets at rest    | `""`    |
-| `secrets.workerInternalToken` | Shared token between api, worker, and bot | `""`    |
+| `secrets.workerInternalToken` | Shared token between api and worker       | `""`    |
 | `secrets.s3AccessKeyId`       | S3 access key (also MinIO root user)      | `""`    |
 | `secrets.s3SecretAccessKey`   | S3 secret key (also MinIO root password)  | `""`    |
 

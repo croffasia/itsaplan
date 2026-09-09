@@ -9,6 +9,9 @@ data:
   API_URL: {{ .Values.api.env.API_URL | quote }}
   APP_URL: {{ .Values.api.env.APP_URL | quote }}
   API_PORT: {{ .Values.api.port | quote }}
+  {{- with .Values.api.env.API_MAX_REQUEST_BODY_MB }}
+  API_MAX_REQUEST_BODY_MB: {{ . | quote }}
+  {{- end }}
   PORT: {{ .Values.web.port | quote }}
   HOSTNAME: {{ .Values.web.env.HOSTNAME | quote }}
   {{- with .Values.api.env.COOKIE_DOMAIN }}

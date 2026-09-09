@@ -39,6 +39,9 @@ api:
   env:
     API_URL: ""
     APP_URL: ""
+    # Largest request body the api accepts, in MB (default 256). The god-mode
+    # attachment limit must stay below it.
+    # API_MAX_REQUEST_BODY_MB: "256"
     # COOKIE_DOMAIN: ""
     S3_BUCKET: ""
     S3_REGION: "us-east-1"

@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { workerTokenValid } from '#shared/worker-token';
 import { confirmLinkBody } from './model';
 import { confirmTelegramLink, getInstanceBotConfig, isInstanceBotUsable } from './service';
 
@@ -11,11 +12,6 @@ import { confirmTelegramLink, getInstanceBotConfig, isInstanceBotUsable } from '
 // The config endpoint returns the bot token in plaintext. It is reachable only with
 // that token, on the internal network, and the bot cannot work without it.
 
-function authorized(headers: Record<string, string | undefined>): boolean {
-  const expected = process.env.WORKER_INTERNAL_TOKEN;
-  return Boolean(expected) && headers['x-worker-token'] === expected;
-}
-
 export const internalTelegramRoutes = new Elysia({
   name: 'internal-telegram',
   detail: { tags: ['Internal'] },
@@ -23,7 +19,7 @@ export const internalTelegramRoutes = new Elysia({
   .get(
     '/internal/telegram/config',
     async ({ headers, set }) => {
-      if (!authorized(headers)) {
+      if (!workerTokenValid(headers)) {
         set.status = 401;
         return { enabled: false, botToken: '', botUsername: '' };
       }
@@ -46,7 +42,7 @@ export const internalTelegramRoutes = new Elysia({
   .post(
     '/internal/telegram/link',
     async ({ body, headers, set }) => {
-      if (!authorized(headers)) {
+      if (!workerTokenValid(headers)) {
         set.status = 401;
         return { ok: false as const, reason: 'invalid' as const };
       }

@@ -1,4 +1,10 @@
+import { assertStrongSecret } from '@repo/crypto';
 import { app } from './app';
+
+// The worker and the bot authenticate against /internal/* with this token. It is
+// compared per request; checked here as well so a deploy on an example value stops
+// at startup, the way @repo/auth stops on a weak BETTER_AUTH_SECRET.
+assertStrongSecret('WORKER_INTERNAL_TOKEN', process.env.WORKER_INTERNAL_TOKEN);
 
 // Bind the port. The app itself is assembled in ./app.ts (without `.listen()`)
 // so tests can import it and drive routes in memory.

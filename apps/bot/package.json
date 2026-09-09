@@ -11,6 +11,7 @@
     "test": "if find src -name '*.test.ts' -print -quit | grep -q .; then bun test; fi"
   },
   "dependencies": {
+    "@repo/crypto": "workspace:*",
     "grammy": "^1.45.1"
   },
   "devDependencies": {

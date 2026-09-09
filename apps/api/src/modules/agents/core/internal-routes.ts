@@ -7,6 +7,7 @@ import { recordAgentRunFinished, recordAgentRunStarted } from './run-activity';
 import { agentRunConfig, countRunsAhead } from './run-queue';
 import { getProjectTeamId } from '#modules/projects/service';
 import { getLimits } from '#shared/limits';
+import { workerTokenValid } from '#shared/worker-token';
 
 const runBody = t.Object({
   id: t.Number(),
@@ -29,11 +30,6 @@ const runBody = t.Object({
   sourceActivityId: t.Optional(t.Nullable(t.Number())),
   threadContext: t.Optional(t.Nullable(t.String())),
 });
-
-function workerTokenValid(headers: Record<string, string | undefined>): boolean {
-  const expected = process.env.WORKER_INTERNAL_TOKEN;
-  return !!expected && headers['x-worker-token'] === expected;
-}
 
 export const internalAgentRunRoutes = new Elysia({
   name: 'internal-agent-runs',

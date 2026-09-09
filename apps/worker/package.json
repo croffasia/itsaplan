@@ -11,6 +11,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@repo/crypto": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/net": "workspace:*",
     "croner": "^10.0.1",

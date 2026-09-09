@@ -103,3 +103,5 @@ services:
     environment:
       NODE_ENV: test
       DATABASE_URL: postgres://itsaplan:itsaplan@postgres-test:5432/itsaplan_test
+      # Checked at startup; nothing here calls the api with it.
+      WORKER_INTERNAL_TOKEN: test-secret-not-for-production-use-only

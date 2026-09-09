@@ -28,7 +28,7 @@ apps/worker     background jobs: webhooks, notifications, agent runs
 apps/bot        Telegram bot, long polling
 packages/db     Drizzle client, schema, migrations
 packages/auth   better-auth server instance
-packages/crypto AES-256-GCM encryption for secrets at rest
+packages/crypto AES-256-GCM encryption for secrets at rest; strength check of env secrets
 packages/mailer SMTP and Resend transport
 ```
 

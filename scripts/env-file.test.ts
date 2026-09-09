@@ -63,6 +63,15 @@ describe('EnvFile', () => {
     expect(env.get('WORKER_INTERNAL_TOKEN')).toBe('kept');
   });
 
+  test('fills an empty value and keeps a chosen one', () => {
+    const env = write('POSTGRES_PASSWORD=\nS3_ACCESS_KEY_ID=chosen\n');
+    env.fill('POSTGRES_PASSWORD', 'itsaplan');
+    env.fill('S3_ACCESS_KEY_ID', 'minioadmin');
+
+    expect(env.get('POSTGRES_PASSWORD')).toBe('itsaplan');
+    expect(env.get('S3_ACCESS_KEY_ID')).toBe('chosen');
+  });
+
   test('fresh reads the example, ignoring the file next to it', () => {
     const path = tempPath();
     writeFileSync(path, 'POSTGRES_USER=vela\n');

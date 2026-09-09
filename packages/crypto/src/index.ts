@@ -53,3 +53,5 @@ export function decryptSecret(enc: EncryptedSecret): string {
   ]);
   return plaintext.toString('utf8');
 }
+
+export { assertStrongSecret, weakSecretReason } from './strength';

@@ -1,3 +1,5 @@
+import { assertStrongSecret } from '@repo/crypto';
+
 // Bot service configuration, read from the environment once behind a lazy getter so
 // env is loaded (via --env-file / the container env) before it is read.
 //
@@ -29,8 +31,10 @@ let cached: BotConfig | null = null;
 
 export function botConfig(): BotConfig {
   if (cached) return cached;
-  const internalToken = process.env.WORKER_INTERNAL_TOKEN;
-  if (!internalToken) throw new Error('WORKER_INTERNAL_TOKEN is required');
+  const internalToken = assertStrongSecret(
+    'WORKER_INTERNAL_TOKEN',
+    process.env.WORKER_INTERNAL_TOKEN,
+  );
   const apiBaseUrl = process.env.SERVICE_URL_API ?? process.env.API_URL;
   if (!apiBaseUrl) throw new Error('SERVICE_URL_API or API_URL is required');
   cached = {

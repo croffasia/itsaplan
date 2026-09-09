@@ -21,7 +21,9 @@ root `AGENTS.md`.
 
 ## Config
 
-`WORKER_INTERNAL_TOKEN` is required. The api origin is not a variable of its own —
+`WORKER_INTERNAL_TOKEN` is required, at least 32 bytes and not an example value
+(`assertStrongSecret` from `@repo/crypto`, the only package this service imports).
+The api origin is not a variable of its own —
 it resolves the same way the worker resolves it: `SERVICE_URL_API` in the compose
 stack, `API_URL` locally. Do not add a third URL variable. Optional tuning:
 `BOT_CONFIG_POLL_INTERVAL_MS`, `BOT_API_TIMEOUT_MS` (see `src/config.ts`).

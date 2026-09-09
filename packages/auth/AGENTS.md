@@ -180,11 +180,14 @@ not required for it.
 - Changing the config (plugins, fields) can change the DB tables → run `bun run auth:generate`
   (writes `packages/db/src/schema/auth.ts`), then `db:generate` + `db:migrate`.
 - Config is env-driven: `API_URL` (backend origin, used as better-auth `baseURL`),
-  `BETTER_AUTH_SECRET`, `APP_URL` (frontend origin(s), comma-separated). `API_URL` and
-  `APP_URL` are mandatory and have no default — importing this module throws
-  when either is missing. Do not add a localhost fallback: cookies, the passkey
-  relying party, the cookie domain and every link in an authentication email are
-  derived from them, so a wrong value fails silently at runtime instead of at startup.
+  `BETTER_AUTH_SECRET`, `APP_URL` (frontend origin(s), comma-separated). All three are
+  mandatory and have no default — importing this module throws when one is missing.
+  `BETTER_AUTH_SECRET` also has to be at least 32 bytes and not an example value
+  (`assertStrongSecret` from `@repo/crypto`): better-auth only warns about a weak
+  secret, and whoever knows it can sign in as anyone. Do not add a localhost fallback:
+  cookies, the passkey relying party, the cookie domain and every link in an
+  authentication email are derived from the URLs, so a wrong value fails silently at
+  runtime instead of at startup.
   The parsed `trustedOrigins` list (from `APP_URL`) is exported so the api's CORS uses
   the same value.
 - **Cross-domain prod:** default cookies are `sameSite: "lax"`. If frontend/backend run on

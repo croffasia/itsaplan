@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { isInvitePending } from '#modules/invites/service';
 import { getDeliveryConfig } from '#modules/notification-settings/service';
 import { getProjectById } from '#modules/projects/service';
+import { workerTokenValid } from '#shared/worker-token';
 import { sendDeliveryBody } from './model';
 import { sendDelivery } from './send';
 
@@ -16,8 +17,7 @@ export const internalNotificationRoutes = new Elysia({
 }).post(
   '/internal/notification-deliveries/send',
   async ({ body, headers, set }) => {
-    const expected = process.env.WORKER_INTERNAL_TOKEN;
-    if (!expected || headers['x-worker-token'] !== expected) {
+    if (!workerTokenValid(headers)) {
       set.status = 401;
       return { ok: false, retryable: false, error: 'Unauthorized' };
     }

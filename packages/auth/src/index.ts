@@ -1,4 +1,5 @@
 import { randomInt } from 'node:crypto';
+import { assertStrongSecret } from '@repo/crypto';
 import { db, defaultMemberPermissions } from '@repo/db';
 import { eq, sql, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
@@ -66,6 +67,11 @@ const baseURL = process.env.API_URL;
 if (!baseURL) {
   throw new Error('API_URL is not set: public origin of the backend.');
 }
+
+// Signs every session cookie and verification token. better-auth itself only warns
+// about a short or example value, and whoever knows the secret can mint a session
+// for any account, so a value that is not a real secret stops the process here.
+const secret = assertStrongSecret('BETTER_AUTH_SECRET', process.env.BETTER_AUTH_SECRET);
 
 // User roles. "god" is the owner of the instance: the very first registered user
 // gets it automatically; everyone after is a plain "user". The role is assigned
@@ -254,7 +260,7 @@ export async function generateUsername(email: string): Promise<string> {
 
 export const auth = betterAuth({
   baseURL,
-  secret: process.env.BETTER_AUTH_SECRET,
+  secret,
 
   database: drizzleAdapter(db, {
     provider: 'pg',

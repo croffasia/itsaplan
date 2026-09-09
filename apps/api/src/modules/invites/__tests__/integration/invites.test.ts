@@ -34,7 +34,7 @@ async function configureEmail(owner: ReturnType<typeof authedApi>) {
 }
 
 async function deliverInvite(projectId: number, projectInviteId: number) {
-  const token = 'invite-email-test-worker-token';
+  const token = 'invite-email-test-worker-token-32-bytes-long';
   const previousToken = process.env.WORKER_INTERNAL_TOKEN;
   process.env.WORKER_INTERNAL_TOKEN = token;
   let response: Response;

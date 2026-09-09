@@ -3,9 +3,9 @@
 The **server-side** better-auth instance. Consumed by `apps/api`. See root `AGENTS.md`.
 
 - `src/index.ts` — `export const auth = betterAuth({...})` with the Drizzle adapter
-  (`provider: "pg"`) over `@repo/db`. Email+password enabled (no email confirmation:
-  `requireEmailVerification: false`, `autoSignIn: true`), plus the WebAuthn passkey
-  plugin (`@better-auth/passkey`).
+  (`provider: "pg"`) over `@repo/db`. Email+password enabled (`autoSignIn: true`;
+  whether the address has to be confirmed first is an instance setting, see below),
+  plus the WebAuthn passkey plugin (`@better-auth/passkey`).
 - Exports `auth`, `USER_ROLES` / `UserRole`, `generateUsername` (the SCIM module derives a
   handle with the same rule), plus `Auth` / `Session` types.
 
@@ -34,12 +34,18 @@ table and god mode has no invite section — do not add one.
 
 `hooks.before` gates `/sign-up/email` (closed → 403, invite → no pending invite for
 that address → 403) and holds back `/sign-in/email` for an unconfirmed address while
-verification is required **and** a mail provider is configured — without one the
-address can never be confirmed, so the gate lifts instead of locking the account out.
-That is the same condition the public `/auth-config` reports, so the sign-in screen
-and the gate never disagree. Because both read the settings per request,
-`emailAndPassword.requireEmailVerification` stays `false` in the static config — do
-not flip it to `true`.
+verification is required. The requirement never outlives the mail provider: the api
+refuses to turn it on without one, and `setEmailSettings` clears it when the provider
+is removed, so the setting alone is what the gate, the sign-up endpoint and the
+public `/auth-config` read — none of them checks the provider again.
+
+`emailAndPassword.requireEmailVerification` is a getter over a module variable that
+`hooks.before` refreshes from the setting on every password endpoint. better-auth
+reads the option off the options object when `/sign-up/email` decides whether to
+open a session, so this is what makes a required confirmation answer sign-up with
+`token: null` and no cookie instead of a working session. Do not replace the getter
+with a static value: `true` would lock every account out the moment the setting is
+turned off, and `false` hands an unconfirmed sign-up a session.
 
 Authentication email (`src/mail.ts`) goes out through `@repo/mailer` and is best
 effort: with no provider configured it logs and returns false rather than failing the
@@ -48,9 +54,9 @@ link. Every link must carry a `callbackURL`/`redirectTo` on the **web** origin �
 handler runs on the API origin, so a link built without one lands the reader on the
 API, which renders nothing. The web app passes them in `features/auth/services`.
 
-`autoSignIn` opens a session even when confirmation is required (the static config
-cannot depend on the setting), so the web sign-up drops that session and shows a
-"confirm your email" screen instead.
+With confirmation required, sign-up returns the user and no session; the web sign-up
+shows a "confirm your email" screen instead of entering the app, and the link opens
+the session (`autoSignInAfterVerification`).
 
 ## Username
 
@@ -76,9 +82,9 @@ session, and a username comes from the address, so it would tell a stranger whic
 addresses are registered.
 
 The sign-in screen has one field for both identifiers and picks the endpoint by whether
-what was typed contains an "@". `/sign-in/username` checks only the static
-`emailAndPassword.requireEmailVerification`, which is `false` here, so the instance
-verification gate in `hooks.before` covers that path as well as `/sign-in/email`.
+what was typed contains an "@". The instance verification gate in `hooks.before`
+covers `/sign-in/username` as well as `/sign-in/email`, and runs before the plugin's
+own check of `emailAndPassword.requireEmailVerification`.
 
 ## Generic OIDC
 

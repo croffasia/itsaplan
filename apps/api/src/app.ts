@@ -281,9 +281,11 @@ export const app = new Elysia()
       const emailEnabled = await hasConfiguredEmailProvider();
       return {
         registration: settings.registration,
-        // Both are only usable when the instance can actually send mail.
+        // Only usable when the instance can actually send mail.
         magicLink: settings.magicLink && emailEnabled,
-        requireEmailVerification: settings.requireEmailVerification && emailEnabled,
+        // Cleared together with the mail provider, so the raw setting is what the
+        // sign-up endpoint enforces.
+        requireEmailVerification: settings.requireEmailVerification,
         emailEnabled,
         // Whether the email/password form is offered at all. The api refuses to turn
         // it off while no provider below is usable, so this is never false alone.

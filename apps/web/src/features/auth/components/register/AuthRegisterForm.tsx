@@ -15,12 +15,7 @@ import AuthFormHeader from '../AuthFormHeader';
 import AuthMessagePanel from '../AuthMessagePanel';
 import AuthRegisterPasswordFields from './AuthRegisterPasswordFields';
 import AuthRegisterProviders from './AuthRegisterProviders';
-import {
-  signInWithGoogle,
-  signInWithOidc,
-  signOutUnverified,
-  signUpWithEmail,
-} from '../../services/auth.service';
+import { signInWithGoogle, signInWithOidc, signUpWithEmail } from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';
 
@@ -45,14 +40,12 @@ export default function AuthRegisterForm() {
       setError(t('errors.passwordsDoNotMatch'));
       return;
     }
-    // With confirmation required, sign-up still opens a session (autoSignIn), so it
-    // is dropped right away: the account exists but stays unusable until the link in
-    // the email is opened.
+    // With confirmation required, sign-up opens no session: the account exists but
+    // stays unusable until the link in the email is opened.
     if (needsConfirmation) {
       run(
         async () => {
           await signUpWithEmail({ email, password });
-          await signOutUnverified();
           setAwaitingConfirmation(true);
         },
         { redirect: false },

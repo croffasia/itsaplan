@@ -16,7 +16,6 @@ import {
   isGoogleUsable,
   getOidcConfig,
   isOidcUsable,
-  hasConfiguredEmailProvider,
 } from './instance';
 import { sendAuthEmail } from './mail';
 
@@ -154,6 +153,13 @@ async function resolveTrustedProviders(request?: Request): Promise<string[]> {
   return trustProviderEmails ? ['google', OIDC_PROVIDER_ID] : [];
 }
 
+// Whether a new account has to confirm its address before it gets a session. An
+// instance setting, read in `hooks.before` on every password endpoint and served to
+// better-auth through the getter on `emailAndPassword` below: sign-up reads the
+// option off the options object at the moment it decides whether to open a session,
+// so a getter is what lets the stored setting reach a config that is built once.
+let verificationRequired = false;
+
 // The endpoints of the email/password form, including the two the magic link uses.
 // Turning password authentication off refuses all of them, so a link issued before
 // the switch was flipped cannot still be redeemed. Passkey sign-in is not here: a
@@ -273,10 +279,12 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
-    // Whether a new account must confirm its address is an instance setting, read
-    // per request in the hooks below, so it stays false here (a static true would
-    // lock out every account the moment the setting is flipped off).
-    requireEmailVerification: false,
+    // While this is true, sign-up answers without a session and a duplicate address
+    // gets the same answer as a new one; sign-in of an unconfirmed account is
+    // refused in the hook below before better-auth's own check runs.
+    get requireEmailVerification() {
+      return verificationRequired;
+    },
     autoSignIn: true,
     sendResetPassword: async ({ user, url }) => {
       await sendAuthEmail({
@@ -366,6 +374,7 @@ export const auth = betterAuth({
       // Read here so the two sign-in endpoints, which also go through the
       // verification gate below, make one query instead of two.
       const passwordSettings = PASSWORD_PATHS.has(ctx.path) ? await getAuthSettings() : null;
+      if (passwordSettings) verificationRequired = passwordSettings.requireEmailVerification;
       // The api will not let the switch be turned off while no OAuth provider is
       // configured, so this cannot leave an instance with no way in.
       if (passwordSettings && !passwordSettings.emailPassword) {
@@ -411,11 +420,6 @@ export const auth = betterAuth({
       if (ctx.path === '/sign-in/email' || ctx.path === '/sign-in/username') {
         const settings = passwordSettings ?? (await getAuthSettings());
         if (!settings.requireEmailVerification) return;
-        // Holding an account back is only fair while a confirmation link can still
-        // be sent: with the mail provider gone, an unconfirmed account has no way
-        // out and the gate would lock it forever. This is the same condition the
-        // public /auth-config reports, so the sign-in screen and the gate agree.
-        if (!(await hasConfiguredEmailProvider())) return;
         const body = ctx.body as { email?: string; username?: string } | undefined;
         const identifier =
           ctx.path === '/sign-in/email'

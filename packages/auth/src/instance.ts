@@ -36,8 +36,9 @@ export type RegistrationMode = (typeof REGISTRATION_MODES)[number];
 
 export interface AuthSettings {
   registration: RegistrationMode;
-  // Require a confirmed email address before the account can sign in. Needs a mail
-  // provider, so the api rejects turning it on while none is configured.
+  // Require a confirmed email address before the account gets a session. Needs a
+  // mail provider: the api rejects turning it on while none is configured, and
+  // setEmailSettings clears it when the provider is removed.
   requireEmailVerification: boolean;
   // Offer sign-in by emailed link alongside the password.
   magicLink: boolean;
@@ -255,6 +256,11 @@ export async function setEmailSettings(patch: InstanceEmailPatch): Promise<Insta
   const next = await resolveEmailConfig(patch);
   const redacted = toEmailDto(next);
   await writeSecret(EMAIL_SECRET_KEY, next, redacted);
+  // Without a provider no confirmation link can be sent, so the requirement goes
+  // with it rather than locking every new account out.
+  if (!hasEmailProvider(next) && (await getAuthSettings()).requireEmailVerification) {
+    await setAuthSettings({ requireEmailVerification: false });
+  }
   return redacted;
 }
 

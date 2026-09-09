@@ -410,6 +410,7 @@
       "issues": "任务",
       "initiatives": "举措",
       "cycles": "周期",
+      "documents": "Docs",
       "notes": "便签板",
       "project": "项目"
     },
@@ -477,6 +478,9 @@
     "useCustomModel": "使用“{query}”",
     "readOnlyAlwaysOn": "只读权限始终启用，无法关闭。",
     "instructionsLabel": "说明",
+    "copyInstructions": "复制 Markdown",
+    "showSource": "编辑 Markdown 源码",
+    "showEditor": "返回编辑器",
     "done": "完成",
     "columns": {
       "triggers": "触发条件",

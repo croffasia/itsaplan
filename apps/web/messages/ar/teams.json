@@ -410,6 +410,7 @@
       "issues": "المهام",
       "initiatives": "المبادرات",
       "cycles": "الدورات",
+      "documents": "Docs",
       "notes": "لوحات الملاحظات",
       "project": "المشروع"
     },
@@ -477,6 +478,9 @@
     "useCustomModel": "استخدام \"{query}\"",
     "readOnlyAlwaysOn": "الوصول للقراءة بس مفعّل على طول ومش هينفع توقفه.",
     "instructionsLabel": "التعليمات",
+    "copyInstructions": "نسخ markdown",
+    "showSource": "تحرير مصدر markdown",
+    "showEditor": "العودة إلى المحرر",
     "done": "تم",
     "columns": {
       "triggers": "المشغّلات",

@@ -410,6 +410,7 @@
       "issues": "Задачі",
       "initiatives": "Ініціативи",
       "cycles": "Цикли",
+      "documents": "Docs",
       "notes": "Дошки нотаток",
       "project": "Проєкт"
     },
@@ -477,6 +478,9 @@
     "useCustomModel": "Використати «{query}»",
     "readOnlyAlwaysOn": "Доступ лише на читання завжди увімкнений, його не можна вимкнути.",
     "instructionsLabel": "Інструкції",
+    "copyInstructions": "Скопіювати markdown",
+    "showSource": "Редагувати вихідний markdown",
+    "showEditor": "Повернутися до редактора",
     "done": "Готово",
     "columns": {
       "triggers": "Тригери",

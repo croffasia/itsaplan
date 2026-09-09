@@ -410,6 +410,7 @@
       "issues": "Issues",
       "initiatives": "Iniciativas",
       "cycles": "Ciclos",
+      "documents": "Docs",
       "notes": "Quadros de notas",
       "project": "Projeto"
     },
@@ -477,6 +478,9 @@
     "useCustomModel": "Usar \"{query}\"",
     "readOnlyAlwaysOn": "O acesso somente leitura está sempre ativo e não pode ser desligado.",
     "instructionsLabel": "Instruções",
+    "copyInstructions": "Copiar markdown",
+    "showSource": "Editar a fonte markdown",
+    "showEditor": "Voltar ao editor",
     "done": "Concluído",
     "columns": {
       "triggers": "Gatilhos",

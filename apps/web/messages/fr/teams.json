@@ -410,6 +410,7 @@
       "issues": "Tickets",
       "initiatives": "Initiatives",
       "cycles": "Cycles",
+      "documents": "Docs",
       "notes": "Tableaux de notes",
       "project": "Projet"
     },
@@ -477,6 +478,9 @@
     "useCustomModel": "Utiliser « {query} »",
     "readOnlyAlwaysOn": "L'accès en lecture seule est toujours actif et ne peut pas être désactivé.",
     "instructionsLabel": "Instructions",
+    "copyInstructions": "Copier le markdown",
+    "showSource": "Modifier la source markdown",
+    "showEditor": "Revenir à l’éditeur",
     "done": "Terminé",
     "columns": {
       "triggers": "Déclencheurs",

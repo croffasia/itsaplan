@@ -3,11 +3,11 @@ import { request as httpRequest } from 'node:http';
 import type { LookupFunction } from 'node:net';
 import { request as httpsRequest } from 'node:https';
 
-// SSRF guards for server-side fetches of a user/agent-supplied URL. A URL that
-// resolves to a loopback, link-local, or private-range address could reach internal
-// services (including the cloud metadata endpoint at 169.254.169.254), so those are
-// rejected. The check resolves DNS, so a public hostname that points at a private
-// address is caught too.
+// SSRF guards for server-side connections to a user/agent-supplied URL or host. A
+// name that resolves to a loopback, link-local, or private-range address could reach
+// internal services (including the cloud metadata endpoint at 169.254.169.254), so
+// those are rejected. The check resolves DNS, so a public hostname that points at a
+// private address is caught too.
 //
 // SSRF_ALLOWED_HOSTS names the hosts an operator has decided to trust anyway — see
 // isAllowedHost below. It is empty by default.
@@ -88,6 +88,36 @@ interface Pin {
   family: number;
 }
 
+function isDevRelaxed(): boolean {
+  return process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+}
+
+// Resolves a hostname once and rejects one that reaches a local/private address.
+// Returns the address the caller must connect to; absent when the host is already
+// an IP literal. `label` names the field in the error message.
+async function vetHost(raw: string, label: string): Promise<Pin | undefined> {
+  const host = raw.toLowerCase().replace(/^\[|\]$/g, '');
+  const devRelaxed = isDevRelaxed();
+  const allowed = isAllowedHost(host);
+  if (isLocalHostname(host) || isPrivateIp(host)) {
+    if (!devRelaxed && !allowed) {
+      throw new UrlNotAllowedError(`${label} must not point to a private or local address`);
+    }
+    return undefined;
+  }
+
+  let addrs: Pin[];
+  try {
+    addrs = await lookup(host, { all: true });
+  } catch {
+    throw new UrlNotAllowedError(`${label} could not be resolved`);
+  }
+  if (addrs.some((a) => isPrivateIp(a.address)) && !devRelaxed && !allowed) {
+    throw new UrlNotAllowedError(`${label} must not point to a private or local address`);
+  }
+  return addrs[0];
+}
+
 // Validates the URL and resolves its hostname once. `pin` is the address the caller
 // must connect to; it is absent only when the host is already an IP literal.
 async function vet(raw: string): Promise<{ url: URL; pin?: Pin }> {
@@ -98,30 +128,12 @@ async function vet(raw: string): Promise<{ url: URL; pin?: Pin }> {
     throw new UrlNotAllowedError('url must be a valid URL');
   }
 
-  const devRelaxed = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
-  if (url.protocol !== 'https:' && !(devRelaxed && url.protocol === 'http:')) {
+  if (url.protocol !== 'https:' && !(isDevRelaxed() && url.protocol === 'http:')) {
     throw new UrlNotAllowedError('url must use https');
   }
 
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  const allowed = isAllowedHost(host);
-  if (isLocalHostname(host) || isPrivateIp(host)) {
-    if (!devRelaxed && !allowed) {
-      throw new UrlNotAllowedError('url must not point to a private or local address');
-    }
-    return { url };
-  }
-
-  let addrs: Pin[];
-  try {
-    addrs = await lookup(host, { all: true });
-  } catch {
-    throw new UrlNotAllowedError('url host could not be resolved');
-  }
-  if (addrs.some((a) => isPrivateIp(a.address)) && !devRelaxed && !allowed) {
-    throw new UrlNotAllowedError('url must not point to a private or local address');
-  }
-  return { url, pin: addrs[0] };
+  const pin = await vetHost(url.hostname, 'url');
+  return pin ? { url, pin } : { url };
 }
 
 // Validates a user/agent-supplied URL for a server-side fetch: http(s) only, and it
@@ -130,6 +142,14 @@ async function vet(raw: string): Promise<{ url: URL; pin?: Pin }> {
 // UrlNotAllowedError on any failure.
 export async function assertPublicHttpUrl(raw: string): Promise<URL> {
   return (await vet(raw)).url;
+}
+
+// Validates a user-supplied hostname or IP literal for a server-side connection
+// that is not http (an SMTP relay): it must not resolve to a local/private address
+// unless named in SSRF_ALLOWED_HOSTS. The client that connects later resolves the
+// name again, so nothing is pinned. Throws UrlNotAllowedError on any failure.
+export async function assertPublicHost(host: string, label = 'host'): Promise<void> {
+  await vetHost(host, label);
 }
 
 // node's http client sends no User-Agent of its own, and GitHub answers 403 with an

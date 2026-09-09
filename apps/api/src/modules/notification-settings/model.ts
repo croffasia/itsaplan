@@ -1,5 +1,5 @@
 import { t } from 'elysia';
-import { ENCRYPTION_MODES } from './service';
+import { ENCRYPTION_MODES, SMTP_TIMEOUT_MAX_SECONDS } from './service';
 
 const encryption = t.UnionEnum([...ENCRYPTION_MODES]);
 
@@ -37,7 +37,7 @@ export const NotificationSettingsBody = t.Object({
       encryption,
       username: t.String(),
       password: t.Optional(t.String()),
-      timeout: t.Nullable(t.Integer({ minimum: 1 })),
+      timeout: t.Nullable(t.Integer({ minimum: 1, maximum: SMTP_TIMEOUT_MAX_SECONDS })),
     }),
   ),
   resend: t.Optional(t.Object({ enabled: t.Boolean(), apiKey: t.Optional(t.String()) })),

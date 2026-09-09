@@ -3,6 +3,7 @@ import { eq, sql } from 'drizzle-orm';
 import { encryptSecret, decryptSecret } from '@repo/crypto';
 import type { SmtpConfig, ResendConfig } from '@repo/mailer';
 import { HttpError } from '#shared/lib';
+import { assertPublicHost } from '#shared/net';
 
 // Data access for a team's notification provider credentials: the outbound channels
 // every project of the team delivers through (SMTP or Resend for email, a Telegram
@@ -17,6 +18,11 @@ import { HttpError } from '#shared/lib';
 // sender when offered); 'ssl' is implicit TLS; 'tls' forces STARTTLS.
 export const ENCRYPTION_MODES = ['none', 'ssl', 'tls'] as const;
 export type EncryptionMode = (typeof ENCRYPTION_MODES)[number];
+
+// Upper bound of the per-connection SMTP timeout, in seconds. The sender waits on
+// the relay inside the API process, so a large value keeps a request handler
+// busy for as long as an unreachable host takes to time out.
+export const SMTP_TIMEOUT_MAX_SECONDS = 60;
 
 interface TelegramConfig {
   enabled: boolean;
@@ -93,7 +99,7 @@ function defaultConfig(): NotificationConfig {
       enabled: false,
       host: '',
       port: 587,
-      encryption: 'none',
+      encryption: 'tls',
       username: '',
       password: '',
       timeout: null,
@@ -185,6 +191,14 @@ function assertSendable(config: NotificationConfig): void {
   }
 }
 
+// The sender connects to the SMTP host from the API process, so it is vetted like a
+// webhook target: no loopback, link-local, or private address unless the operator
+// named the host in SSRF_ALLOWED_HOSTS. A disabled SMTP section is never connected
+// to, so a leftover host does not block switching to another provider.
+async function assertSmtpHostAllowed(config: NotificationConfig): Promise<void> {
+  if (config.smtp.enabled) await assertPublicHost(config.smtp.host, 'SMTP host');
+}
+
 // Reads and decrypts the stored config, or null when the team has none yet.
 async function readConfig(teamId: number): Promise<NotificationConfig | null> {
   const rows = await db
@@ -216,6 +230,7 @@ export async function setNotificationSettings(
   const current = (await readConfig(teamId)) ?? defaultConfig();
   const next = applyPatch(current, patch);
   assertSendable(next);
+  await assertSmtpHostAllowed(next);
   const redacted = toDto(next);
   const enc = encryptSecret(JSON.stringify(next));
   await db

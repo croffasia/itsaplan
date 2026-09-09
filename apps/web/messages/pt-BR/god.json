@@ -159,7 +159,13 @@
     "saved": "Padrões de projeto salvos",
     "projectDefaults": "Padrões de projeto",
     "mcpEnabled": "Ativar MCP em novos projetos",
-    "mcpEnabledHint": "Um novo projeto está no alcance de MCP do seu time desde o momento em que é criado."
+    "mcpEnabledHint": "Um novo projeto está no alcance de MCP do seu time desde o momento em que é criado.",
+    "agentsSaved": "Configurações dos agentes salvas",
+    "traces": "Rastros dos agentes",
+    "tracesHint": "Cada execução de um agente interno registra com o que o modelo e as ferramentas foram chamados.",
+    "traceRetention": "Excluir rastros antigos",
+    "traceRetentionHint": "Excluir rastros depois desta quantidade de dias. Desligado, todos são mantidos.",
+    "days": "dias"
   },
   "authentication": {
     "saved": "Configurações de autenticação salvas",

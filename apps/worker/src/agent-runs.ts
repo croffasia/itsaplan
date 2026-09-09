@@ -138,6 +138,15 @@ export async function deleteIssueAgentThreads(issueIds: number[]): Promise<void>
   }
 }
 
+// Drops the run traces past their team's retention window. The windows and the spans
+// are the api's, like the threads above, so the worker only says when to sweep.
+export async function pruneAgentTraces(): Promise<number> {
+  const response = await postInternal('/internal/agent-traces/prune', {}, 120_000);
+  if (!response.ok) throw new Error(`Agent API returned ${response.status}`);
+  const body = (await response.json().catch(() => null)) as { deleted?: number } | null;
+  return body?.deleted ?? 0;
+}
+
 // `usage` is what the last model call of the run read and wrote. An api still running
 // the previous build reports none, and the run is stored without counts.
 async function executeRun(

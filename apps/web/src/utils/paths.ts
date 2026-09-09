@@ -135,6 +135,7 @@ export type TeamSection =
   | 'ai-agents'
   | 'agent-skills'
   | 'agent-tools'
+  | 'analytics'
   | 'notifications';
 
 export const teamPath = (teamId: number) => `${manageTeamsPath()}/${teamId}`;

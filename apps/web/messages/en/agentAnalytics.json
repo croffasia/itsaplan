@@ -1,0 +1,66 @@
+{
+  "title": "Agent dashboard",
+  "teamDescription": "What the team's agents did: how much they ran, what the models cost, which tools they called, and how long a run took.",
+  "window": "Last {days} days",
+  "window24h": "Last 24 hours",
+  "retentionNote": "Covers internal agents only. Reads the run traces, which are deleted once past the retention window the instance sets.",
+  "noComparison": "No previous value to compare",
+  "vsPrevious": "vs previous {value}",
+  "deletedAgent": "Deleted agent",
+  "stats": {
+    "runs": "Agent runs",
+    "cost": "Model cost",
+    "tokens": "Tokens",
+    "toolCalls": "Tool calls",
+    "errors": "Failed runs",
+    "threads": "Conversations"
+  },
+  "measure": {
+    "tokens": "Tokens",
+    "cost": "Cost"
+  },
+  "series": {
+    "input": "Input",
+    "output": "Output"
+  },
+  "models": {
+    "title": "Model usage and cost",
+    "description": "Tokens and cost per model.",
+    "model": "Model",
+    "input": "Input",
+    "output": "Output",
+    "cost": "Cost",
+    "totalCost": "Total cost",
+    "empty": "No model calls in this period"
+  },
+  "byAgent": {
+    "title": "Usage by agent",
+    "description": "Token consumption grouped by agent.",
+    "totalTokens": "Total tokens",
+    "empty": "No agent used tokens in this period"
+  },
+  "overTime": {
+    "title": "Usage over time",
+    "description": "Input and output tokens per day.",
+    "empty": "No usage in this period"
+  },
+  "volume": {
+    "title": "Run volume",
+    "description": "Runs and tool calls, with the failed part of each bar in red.",
+    "agents": "Agents",
+    "tools": "Tools",
+    "errors": "Failed",
+    "totalRuns": "Total runs",
+    "totalCalls": "Total calls",
+    "emptyAgents": "No runs in this period",
+    "emptyTools": "No tool calls in this period"
+  },
+  "latency": {
+    "title": "Latency",
+    "description": "How long a run took, per day.",
+    "p50": "Median",
+    "p95": "95th percentile",
+    "average": "Average median",
+    "empty": "No finished runs in this period"
+  }
+}

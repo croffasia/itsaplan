@@ -1,0 +1,66 @@
+{
+  "title": "Painel dos agentes",
+  "teamDescription": "O que os agentes da equipe fizeram: quantas execuções, quanto custaram os modelos, quais ferramentas foram chamadas e quanto durou uma execução.",
+  "window": "Últimos {days} dias",
+  "window24h": "Últimas 24 horas",
+  "retentionNote": "Cobre apenas os agentes internos. Lê os rastros das execuções, que são excluídos após o prazo de retenção definido na instância.",
+  "noComparison": "Sem valor anterior para comparar",
+  "vsPrevious": "contra {value} antes",
+  "deletedAgent": "Agente excluído",
+  "stats": {
+    "runs": "Execuções de agentes",
+    "cost": "Custo dos modelos",
+    "tokens": "Tokens",
+    "toolCalls": "Chamadas de ferramentas",
+    "errors": "Execuções com falha",
+    "threads": "Conversas"
+  },
+  "measure": {
+    "tokens": "Tokens",
+    "cost": "Custo"
+  },
+  "series": {
+    "input": "Entrada",
+    "output": "Saída"
+  },
+  "models": {
+    "title": "Uso e custo dos modelos",
+    "description": "Tokens e custo por modelo.",
+    "model": "Modelo",
+    "input": "Entrada",
+    "output": "Saída",
+    "cost": "Custo",
+    "totalCost": "Custo total",
+    "empty": "Nenhuma chamada de modelo neste período"
+  },
+  "byAgent": {
+    "title": "Uso por agente",
+    "description": "Consumo de tokens por agente.",
+    "totalTokens": "Total de tokens",
+    "empty": "Nenhum agente consumiu tokens neste período"
+  },
+  "overTime": {
+    "title": "Uso ao longo do tempo",
+    "description": "Tokens de entrada e saída por dia.",
+    "empty": "Nenhum uso neste período"
+  },
+  "volume": {
+    "title": "Volume de execuções",
+    "description": "Execuções e chamadas de ferramentas, com a parte que falhou de cada barra em vermelho.",
+    "agents": "Agentes",
+    "tools": "Ferramentas",
+    "errors": "Com falha",
+    "totalRuns": "Total de execuções",
+    "totalCalls": "Total de chamadas",
+    "emptyAgents": "Nenhuma execução neste período",
+    "emptyTools": "Nenhuma chamada de ferramenta neste período"
+  },
+  "latency": {
+    "title": "Latência",
+    "description": "Quanto durou uma execução, por dia.",
+    "p50": "Mediana",
+    "p95": "Percentil 95",
+    "average": "Mediana média",
+    "empty": "Nenhuma execução concluída neste período"
+  }
+}

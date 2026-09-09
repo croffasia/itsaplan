@@ -45,6 +45,10 @@
     "agents": {
       "title": "AI 代理",
       "description": "该团队拥有的 AI 代理，以及各自工作的项目。"
+    },
+    "analytics": {
+      "title": "看板",
+      "description": "团队智能体在其参与的所有项目中做了什么。"
     }
   },
   "info": {

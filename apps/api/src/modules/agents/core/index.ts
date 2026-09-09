@@ -8,6 +8,7 @@ import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { teamParams } from '#modules/teams/model';
 import { runsTeam } from '#modules/teams/service';
+import { paginate } from '#shared/pagination';
 import {
   listAgents,
   createAgent,
@@ -21,7 +22,10 @@ import {
   type AgentKind,
 } from './service';
 import {
+  AgentAnalyticsResponse,
   AgentRunPageResponse,
+  AgentTraceDetailResponse,
+  AgentTracePageResponse,
   AiAgentListResponse,
   AiAgentResponse,
   ChatMessagesResponse,
@@ -39,7 +43,10 @@ import {
   setAgentProjectsBody,
   threadListQuery,
   threadPageQuery,
+  analyticsQuery,
   threadParams,
+  traceParams,
+  tracesQuery,
   updateAgentBody,
 } from './model';
 import { runAgent, streamAgent, type AgentRunEvent, type RunOpts } from './runtime';
@@ -47,6 +54,8 @@ import { peoplePreamble } from './prompt/run-context';
 import { attachmentPreamble, chartPreamble } from './prompt/framing';
 import type { SessionUser } from '#shared/auth-context';
 import { listAgentRuns } from './run-queue';
+import { getAgentTrace, listAgentTraces } from './runtime/traces';
+import { getAgentAnalytics } from './runtime/analytics';
 import {
   listChatThreads,
   getChatThreadMessages,
@@ -111,6 +120,25 @@ function threadStore(kind: AgentKind) {
         remove: deleteChatThread,
         owns: ownsChatThread,
       };
+}
+
+// The window the dashboard reads when the caller names none.
+const DEFAULT_ANALYTICS_DAYS = 30;
+
+// Whether the caller may read the traces of that project: an owner or a manager of the
+// team reads every project the agent works in, anyone else only a project they belong to
+// themselves. The list names the project in the query and one trace carries it in its own
+// metadata, so a trace that names none is refused to everyone else.
+async function assertTraceScope(
+  membership: TeamMembership,
+  projectId: number | null,
+): Promise<void> {
+  if (runsTeam(membership.role)) return;
+  const mine =
+    projectId == null ? [] : await memberProjectIds(membership.teamId, membership.userId);
+  if (!mine.includes(projectId as number)) {
+    throw new HttpError(403, 'You can only read the traces of a project you are a member of');
+  }
 }
 
 // The agent a :agentId path addresses, scoped by agentScopeOf — one of another team, and
@@ -331,6 +359,102 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         description:
           "List an agent's triggered runs. An owner or a manager of the team sees them all; " +
           'anyone else only the runs that happened in a project they belong to.',
+      },
+    },
+  )
+
+  // The traces of the agent's runs: what the model and the tools were called with at
+  // every step, recorded by the runtime. A run of the queue carries its runId, so the
+  // run history and its trace name each other.
+  .get(
+    '/teams/:teamId/ai-agents/:agentId/traces',
+    async ({ params, membership, query }) => {
+      await requireVisibleAgent(params.agentId, membership);
+      await assertTraceScope(membership, query.projectId ?? null);
+      return paginate(query, (window) =>
+        listAgentTraces(params.agentId, {
+          ...window,
+          ...(query.projectId != null ? { projectId: query.projectId } : {}),
+        }),
+      );
+    },
+    {
+      params: agentParams,
+      query: tracesQuery,
+      teamPermission: ['ai_agents', 'read'],
+      response: { 200: AgentTracePageResponse, ...commonErrors },
+      detail: {
+        summary: 'List agent traces',
+        description:
+          "One page of the traces of an agent's runs, newest first. An owner or a manager of " +
+          'the team reads them all; anyone else names a project they belong to.',
+      },
+    },
+  )
+
+  .get(
+    '/teams/:teamId/ai-agents/:agentId/traces/:traceId',
+    async ({ params, membership }) => {
+      await requireVisibleAgent(params.agentId, membership);
+      const trace = await getAgentTrace(params.agentId, params.traceId);
+      if (!trace) throw new HttpError(404, 'Trace not found');
+      await assertTraceScope(membership, trace.trace.projectId);
+      return trace;
+    },
+    {
+      params: traceParams,
+      teamPermission: ['ai_agents', 'read'],
+      response: { 200: AgentTraceDetailResponse, ...commonErrors },
+      detail: {
+        summary: 'Read an agent trace',
+        description:
+          'Every step of one trace, oldest first: the run, the model calls it made, and the ' +
+          'tools it used, each with what it was given and what it returned.',
+      },
+    },
+  )
+
+  // What the team's agents did over a window: how many runs, what the models read and
+  // wrote and cost, which tools were called, and how long a run took. Read from the
+  // same traces as the run detail above.
+  .get(
+    '/teams/:teamId/agent-analytics',
+    ({ membership, query }) =>
+      getAgentAnalytics({
+        teamId: membership.teamId,
+        days: query.days ?? DEFAULT_ANALYTICS_DAYS,
+      }),
+    {
+      params: teamParams,
+      query: analyticsQuery,
+      teamManager: true,
+      response: { 200: AgentAnalyticsResponse, ...accessErrors },
+      detail: {
+        summary: 'Read the agent dashboard of a team',
+        description:
+          'Run, token, cost, tool and latency figures for every agent of the team, over the ' +
+          'last `days` days beside the same span before it. Read by an owner or a manager of ' +
+          'the team.',
+      },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/agent-analytics',
+    ({ project, query }) =>
+      getAgentAnalytics({
+        teamId: project.teamId,
+        projectId: project.id,
+        days: query.days ?? DEFAULT_ANALYTICS_DAYS,
+      }),
+    {
+      query: analyticsQuery,
+      permission: ['agent_analytics', 'read'],
+      response: { 200: AgentAnalyticsResponse, ...accessErrors },
+      detail: {
+        summary: 'Read the agent dashboard of a project',
+        description:
+          'The same figures as the team dashboard, for the runs that worked in this project.',
       },
     },
   )

@@ -159,7 +159,13 @@
     "saved": "项目默认设置已保存",
     "projectDefaults": "项目默认设置",
     "mcpEnabled": "新项目默认启用 MCP",
-    "mcpEnabledHint": "新项目创建时即纳入所属团队的 MCP 覆盖范围。"
+    "mcpEnabledHint": "新项目创建时即纳入所属团队的 MCP 覆盖范围。",
+    "agentsSaved": "智能体设置已保存",
+    "traces": "智能体轨迹",
+    "tracesHint": "内部智能体的每次运行都会记录模型和工具的调用内容。",
+    "traceRetention": "删除旧轨迹",
+    "traceRetentionHint": "超过设定天数的轨迹会被删除。关闭则全部保留。",
+    "days": "天"
   },
   "authentication": {
     "saved": "身份验证设置已保存",

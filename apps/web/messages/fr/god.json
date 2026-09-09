@@ -159,7 +159,13 @@
     "saved": "Valeurs par défaut des projets enregistrées",
     "projectDefaults": "Valeurs par défaut des projets",
     "mcpEnabled": "Activer MCP sur les nouveaux projets",
-    "mcpEnabledHint": "Un nouveau projet est accessible via MCP dès sa création."
+    "mcpEnabledHint": "Un nouveau projet est accessible via MCP dès sa création.",
+    "agentsSaved": "Paramètres des agents enregistrés",
+    "traces": "Traces des agents",
+    "tracesHint": "Chaque exécution d'un agent interne enregistre les appels au modèle et aux outils.",
+    "traceRetention": "Supprimer les anciennes traces",
+    "traceRetentionHint": "Supprimer les traces après ce nombre de jours. Désactivé, elles sont toutes conservées.",
+    "days": "jours"
   },
   "authentication": {
     "saved": "Paramètres d'authentification enregistrés",

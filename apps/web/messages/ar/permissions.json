@@ -14,6 +14,7 @@
     "issue_types": "أنواع المهام",
     "labels": "الوسوم",
     "ai_agents": "وكلاء الذكاء الاصطناعي (AI agents)",
+    "agent_analytics": "لوحة الوكلاء",
     "integrations": "التكاملات (integrations)",
     "agent_skills": "مهارات الوكلاء (agent skills)",
     "agent_tools": "أدوات الوكلاء (agent tools)",

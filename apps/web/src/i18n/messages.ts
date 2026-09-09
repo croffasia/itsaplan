@@ -1,4 +1,5 @@
 import account from '../../messages/en/account.json';
+import agentAnalytics from '../../messages/en/agentAnalytics.json';
 import aiChat from '../../messages/en/aiChat.json';
 import apiKeys from '../../messages/en/apiKeys.json';
 import auth from '../../messages/en/auth.json';
@@ -67,6 +68,7 @@ const defaultMessages = {
   god,
   newProject,
   teams,
+  agentAnalytics,
   updates,
   whatsNew,
 };

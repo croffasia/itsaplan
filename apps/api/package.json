@@ -25,6 +25,7 @@
     "@firecrawl/pdf-inspector": "^1.17.0",
     "@mastra/core": "^1.58.0",
     "@mastra/memory": "^1.26.1",
+    "@mastra/observability": "^1.17.6",
     "@mastra/pg": "^1.20.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@repo/agent-tools": "workspace:*",

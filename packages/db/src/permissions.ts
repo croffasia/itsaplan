@@ -17,6 +17,7 @@ export const PERMISSION_RESOURCES = [
   'issue_types',
   'labels',
   'ai_agents',
+  'agent_analytics',
   'integrations',
   'agent_skills',
   'agent_tools',
@@ -45,6 +46,7 @@ const RESOURCE_ACTIONS: Partial<Record<PermissionResource, readonly PermissionAc
   danger_zone: ['read', 'delete'],
   workflow_config: ['read', 'edit'],
   members_invite: ['read', 'create', 'delete'],
+  agent_analytics: ['read'],
 };
 
 export function resourceActions(resource: PermissionResource): readonly PermissionAction[] {

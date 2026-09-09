@@ -84,12 +84,15 @@ import {
   setStorageSettings,
   getHotkeySettings,
   setHotkeySettings,
+  getAgentSettings,
+  setAgentSettings,
   getProjectDefaults,
   setProjectDefaults,
 } from '#modules/settings/service';
 import { getUpdateStatus } from '#modules/settings/updates';
 import {
   HotkeyCombosSchema,
+  AgentSettingsSchema,
   ProjectDefaultsSchema,
   StorageSettingsSchema,
   UpdateStatusSchema,
@@ -414,6 +417,25 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       summary: 'Update project defaults',
       description:
         'Update what a newly created project starts with. Projects that already exist are untouched; each setting stays editable per project.',
+    },
+  })
+
+  .get('/god/agent-settings', () => getAgentSettings(), {
+    response: { 200: AgentSettingsSchema, ...errors(401, 403) },
+    detail: {
+      summary: 'Get instance agent settings',
+      description: "Get what applies to every team's agents on this instance.",
+    },
+  })
+
+  .put('/god/agent-settings', ({ body }) => setAgentSettings(body), {
+    body: AgentSettingsSchema,
+    response: { 200: AgentSettingsSchema, ...errors(400, 401, 403) },
+    detail: {
+      summary: 'Update instance agent settings',
+      description:
+        "Update what applies to every team's agents. A shorter trace retention takes effect " +
+        'on the next sweep, which deletes the traces already past it.',
     },
   })
 

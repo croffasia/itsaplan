@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia';
 import { runAgent } from './runtime';
 import { deleteThreadsWhere } from './runtime/memory';
+import { pruneAgentTraces } from './runtime/trace-retention';
 import { runThreadId } from './runtime/thread-ids';
 import { framePrompt, runModePreamble, peopleContext } from './prompt/framing';
 import { recordAgentRunFinished, recordAgentRunStarted } from './run-activity';
@@ -64,6 +65,8 @@ export const internalAgentRunRoutes = new Elysia({
           threadId: runThreadId(body),
           issueId: body.issueId,
           scheduleId: body.scheduleId,
+          runId: body.id,
+          trigger: body.trigger,
           contextPreamble: runModePreamble(body.trigger) + peopleContext(body),
           ...(maxRunSeconds > 0 ? { abortSignal: AbortSignal.timeout(maxRunSeconds * 1000) } : {}),
         });
@@ -110,6 +113,27 @@ export const internalAgentRunRoutes = new Elysia({
         description:
           'Drop the agent memory threads of the given issues and return how many were ' +
           'deleted. Called by the worker with the x-worker-token header.',
+      },
+    },
+  )
+
+  // The trace retention sweep. The windows come from the instance settings and the
+  // teams' own limits, both of which live here, so the worker only says when.
+  .post(
+    '/internal/agent-traces/prune',
+    async ({ headers, set }) => {
+      if (!workerTokenValid(headers)) {
+        set.status = 401;
+        return { error: 'Unauthorized' };
+      }
+      return { deleted: await pruneAgentTraces() };
+    },
+    {
+      detail: {
+        summary: 'Prune old agent traces',
+        description:
+          'Delete the run traces past the retention window of their team and return how many ' +
+          'spans went. Called by the worker with the x-worker-token header.',
       },
     },
   );

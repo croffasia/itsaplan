@@ -1,5 +1,5 @@
 import { Memory } from '@mastra/memory';
-import { PostgresStore } from '@mastra/pg';
+import { getStore } from './store';
 import { db } from '@repo/db';
 import { sql } from 'drizzle-orm';
 import { appendTextPart, toolArgsText, toolText } from '../../chat-parts';
@@ -42,17 +42,6 @@ const THREAD_PAGE_SIZE = 25;
 // The length a title is cut to, the same for one the agent was given and one a member
 // typed.
 const TITLE_LIMIT = 80;
-
-let store: PostgresStore | null = null;
-
-function getStore(): PostgresStore {
-  if (!store) {
-    const url = process.env.DATABASE_URL;
-    if (!url) throw new Error('DATABASE_URL is required for agent memory');
-    store = new PostgresStore({ id: 'ai-agent-memory', connectionString: url });
-  }
-  return store;
-}
 
 export function buildMemory(lastMessages: number): Memory {
   return new Memory({

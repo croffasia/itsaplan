@@ -11,6 +11,16 @@ export const ProjectDefaultsSchema = t.Object({
   mcpEnabled: t.Boolean(),
 });
 
+export const AgentSettingsSchema = t.Object({
+  traceRetentionDays: t.Integer({
+    minimum: 0,
+    maximum: 3650,
+    description:
+      'Days the traces of an agent run are kept for. 0 keeps them until they are deleted by ' +
+      'hand. A team the instance gives its own window through its limits keeps that instead.',
+  }),
+});
+
 // A command id bound to a combination written as modifier tokens plus a key
 // ('mod+k', 'n'). The set of commands lives in the web app (its lib/hotkeys), so
 // the API checks the shape and stores the map as given.

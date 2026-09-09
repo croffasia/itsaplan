@@ -1,5 +1,6 @@
 import {
   Bot,
+  ChartColumn,
   Clock3,
   Columns3,
   FileText,
@@ -92,6 +93,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     group: 'ai-team',
   },
   {
+    slug: 'analytics',
+    icon: ChartColumn,
+    resource: 'agent_analytics',
+    group: 'ai-team',
+  },
+  {
     slug: 'webhooks',
     icon: Webhook,
     resource: 'webhooks',
@@ -130,3 +137,7 @@ export function settingsSection(slug: string): SettingsSection {
   if (!section) throw new Error(`Unknown settings section: ${slug}`);
   return section;
 }
+
+// The project's agent dashboard, one of the AI Team destinations above, mounted at
+// /project/:projectKey/ai-team/analytics with them.
+export const AGENT_ANALYTICS_SECTION = settingsSection('analytics');

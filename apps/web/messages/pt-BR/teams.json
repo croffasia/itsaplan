@@ -45,6 +45,10 @@
     "agents": {
       "title": "Agentes de IA",
       "description": "Os agentes de IA que este time possui e os projetos em que cada um trabalha."
+    },
+    "analytics": {
+      "title": "Painel",
+      "description": "O que os agentes da equipe fizeram, em todos os projetos onde atuam."
     }
   },
   "info": {

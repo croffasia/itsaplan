@@ -18,6 +18,7 @@ export type PermissionResource =
   | 'issue_types'
   | 'labels'
   | 'ai_agents'
+  | 'agent_analytics'
   | 'integrations'
   | 'agent_skills'
   | 'agent_tools'

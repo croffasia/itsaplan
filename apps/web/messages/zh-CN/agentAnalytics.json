@@ -1,0 +1,66 @@
+{
+  "title": "智能体看板",
+  "teamDescription": "团队智能体做了什么：运行次数、模型花费、调用了哪些工具，以及一次运行耗时多久。",
+  "window": "最近 {days} 天",
+  "window24h": "最近 24 小时",
+  "retentionNote": "仅包含内部智能体。读取运行链路记录，超过实例设定的保留期后会被删除。",
+  "noComparison": "没有可对比的上期数据",
+  "vsPrevious": "上期为 {value}",
+  "deletedAgent": "已删除的智能体",
+  "stats": {
+    "runs": "智能体运行",
+    "cost": "模型花费",
+    "tokens": "Token",
+    "toolCalls": "工具调用",
+    "errors": "失败运行",
+    "threads": "会话"
+  },
+  "measure": {
+    "tokens": "Token",
+    "cost": "花费"
+  },
+  "series": {
+    "input": "输入",
+    "output": "输出"
+  },
+  "models": {
+    "title": "模型用量与花费",
+    "description": "按模型统计的 Token 与花费。",
+    "model": "模型",
+    "input": "输入",
+    "output": "输出",
+    "cost": "花费",
+    "totalCost": "总花费",
+    "empty": "此期间没有模型调用"
+  },
+  "byAgent": {
+    "title": "按智能体统计用量",
+    "description": "按智能体分组的 Token 消耗。",
+    "totalTokens": "Token 总数",
+    "empty": "此期间没有智能体消耗 Token"
+  },
+  "overTime": {
+    "title": "用量趋势",
+    "description": "每日输入与输出 Token。",
+    "empty": "此期间没有用量"
+  },
+  "volume": {
+    "title": "运行量",
+    "description": "运行与工具调用，每根条形中失败的部分显示为红色。",
+    "agents": "智能体",
+    "tools": "工具",
+    "errors": "失败",
+    "totalRuns": "运行总数",
+    "totalCalls": "调用总数",
+    "emptyAgents": "此期间没有运行",
+    "emptyTools": "此期间没有工具调用"
+  },
+  "latency": {
+    "title": "耗时",
+    "description": "每日的运行耗时。",
+    "p50": "中位数",
+    "p95": "95 分位",
+    "average": "平均中位数",
+    "empty": "此期间没有已完成的运行"
+  }
+}

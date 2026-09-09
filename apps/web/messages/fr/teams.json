@@ -45,6 +45,10 @@
     "agents": {
       "title": "Agents IA",
       "description": "Les agents IA que cette équipe détient, et les projets dans lesquels chacun travaille."
+    },
+    "analytics": {
+      "title": "Tableau de bord",
+      "description": "Ce que les agents de l'équipe ont fait, dans tous les projets où ils travaillent."
     }
   },
   "info": {

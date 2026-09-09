@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "Général",
-      "description": "Les valeurs par défaut des nouveaux projets."
+      "description": "Les valeurs par défaut des nouveaux projets et ce qui s'applique aux agents de toutes les équipes."
     },
     "authentication": {
       "label": "Authentification",
@@ -104,6 +104,10 @@
     "ai-agents": {
       "label": "Agents",
       "description": "Des comptes bots auxquels vous pouvez déléguer des tickets."
+    },
+    "analytics": {
+      "label": "Tableau de bord des agents",
+      "description": "Exécutions, jetons, coût et latence des agents qui travaillent dans ce projet."
     }
   }
 }

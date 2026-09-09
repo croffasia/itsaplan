@@ -1,0 +1,66 @@
+{
+  "title": "Tableau de bord des agents",
+  "teamDescription": "Ce que les agents de l'équipe ont fait : le nombre d'exécutions, le coût des modèles, les outils appelés et la durée d'une exécution.",
+  "window": "{days} derniers jours",
+  "window24h": "Dernières 24 heures",
+  "retentionNote": "Couvre uniquement les agents internes. Lit les traces d'exécution, supprimées passé le délai de conservation fixé par l'instance.",
+  "noComparison": "Aucune valeur antérieure à comparer",
+  "vsPrevious": "contre {value} auparavant",
+  "deletedAgent": "Agent supprimé",
+  "stats": {
+    "runs": "Exécutions d'agents",
+    "cost": "Coût des modèles",
+    "tokens": "Jetons",
+    "toolCalls": "Appels d'outils",
+    "errors": "Exécutions en échec",
+    "threads": "Conversations"
+  },
+  "measure": {
+    "tokens": "Jetons",
+    "cost": "Coût"
+  },
+  "series": {
+    "input": "Entrée",
+    "output": "Sortie"
+  },
+  "models": {
+    "title": "Usage et coût des modèles",
+    "description": "Jetons et coût par modèle.",
+    "model": "Modèle",
+    "input": "Entrée",
+    "output": "Sortie",
+    "cost": "Coût",
+    "totalCost": "Coût total",
+    "empty": "Aucun appel de modèle sur cette période"
+  },
+  "byAgent": {
+    "title": "Usage par agent",
+    "description": "Consommation de jetons par agent.",
+    "totalTokens": "Total de jetons",
+    "empty": "Aucun agent n'a consommé de jetons sur cette période"
+  },
+  "overTime": {
+    "title": "Usage dans le temps",
+    "description": "Jetons d'entrée et de sortie par jour.",
+    "empty": "Aucun usage sur cette période"
+  },
+  "volume": {
+    "title": "Volume d'exécutions",
+    "description": "Exécutions et appels d'outils, la part en échec de chaque barre en rouge.",
+    "agents": "Agents",
+    "tools": "Outils",
+    "errors": "En échec",
+    "totalRuns": "Total d'exécutions",
+    "totalCalls": "Total d'appels",
+    "emptyAgents": "Aucune exécution sur cette période",
+    "emptyTools": "Aucun appel d'outil sur cette période"
+  },
+  "latency": {
+    "title": "Latence",
+    "description": "Durée d'une exécution, par jour.",
+    "p50": "Médiane",
+    "p95": "95e centile",
+    "average": "Médiane moyenne",
+    "empty": "Aucune exécution terminée sur cette période"
+  }
+}

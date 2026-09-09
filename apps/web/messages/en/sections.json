@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Defaults for new projects."
+      "description": "Defaults for new projects, and what applies to every team's agents."
     },
     "authentication": {
       "label": "Authentication",
@@ -104,6 +104,10 @@
     "ai-agents": {
       "label": "AI Agents",
       "description": "AI agents working in this project."
+    },
+    "analytics": {
+      "label": "Agent dashboard",
+      "description": "Runs, tokens, cost and latency of the agents working in this project."
     }
   }
 }

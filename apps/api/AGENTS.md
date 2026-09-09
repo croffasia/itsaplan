@@ -162,6 +162,37 @@ Two decisions a reader would otherwise propose again:
   member list like a person's. Attaching an agent joins it on the team's default role;
   `members/` refuses to make it an owner, since an owner bypasses the matrix.
 
+Runs of an internal agent are traced. `runtime/observability.ts` holds the one Mastra
+container of the process: an agent built for a run writes no spans on its own, so every
+one is registered with it, and its exporter writes the spans into Mastra's own table on
+the application database. A run names what it belongs to in the trace metadata — the
+agent, the team, the project, and the queued run with its trigger — which is what
+`runtime/traces.ts` filters on, since the spans carry no foreign keys of ours.
+
+How long they are kept is the instance setting under god mode (`app_setting` key
+`agents`), and a team's own window when the instance gives it one through its limits —
+which is how the hosted build sells a longer one. `runtime/trace-retention.ts` applies
+both, called by the worker on its own interval; only the root span carries the metadata
+naming the team, so a window is applied by finding the roots past it and deleting their
+traces whole. A team that is deleted leaves its traces behind, so the same sweep drops
+the ones whose team is gone.
+
+The same traces back the agent dashboard (`runtime/analytics.ts`), read either for a
+team — `GET /teams/:teamId/agent-analytics`, the owner's and the managers' — or for one
+project, `GET /projects/:projectKey/agent-analytics`, gated by the `agent_analytics`
+resource so a role grants the figures without granting the administrative `ai_agents`
+permissions. Both answer the same shape: the window and the same span before it, so
+every headline figure carries what it moved from.
+
+Cost is applied in the api, not read from a span. Mastra computes it in a metrics
+pipeline that needs an analytics store its Postgres adapter does not implement, so the
+spans arrive with raw token counts and `runtime/model-pricing.ts` prices them from the
+table the package bundles for that pipeline (`dist/metrics/pricing-data.jsonl`). Its
+provider ids are the registry `AI_PROVIDERS` mirrors, so a credential's integration key
+matches it directly. The file is outside the package's exports map: a release that moves
+it leaves the table empty, an unpriced call reports no cost, and the dashboard shows the
+tokens without an amount.
+
 Over MCP the team is resolved from the API key rather than asked for (`mcp/server.ts`):
 an agent's key acts in its own team, a person with one team in theirs, and a person in
 several passes `teamId` after reading `list_teams`.

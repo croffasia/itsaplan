@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "Geral",
-      "description": "Padrões para novos projetos."
+      "description": "Padrões para novos projetos e o que vale para os agentes de todas as equipes."
     },
     "authentication": {
       "label": "Autenticação",
@@ -104,6 +104,10 @@
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA trabalhando neste projeto."
+    },
+    "analytics": {
+      "label": "Painel dos agentes",
+      "description": "Execuções, tokens, custo e latência dos agentes que atuam neste projeto."
     }
   }
 }

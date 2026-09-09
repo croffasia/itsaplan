@@ -1,4 +1,5 @@
 import { Agent } from '@mastra/core/agent';
+import type { TracingOptions } from '@mastra/core/observability';
 import { getAgentInProject, getInternalAgentApiKey, type AiAgentRow } from '../service';
 import { getProjectById } from '#modules/projects/service';
 import { getCredentialSecret } from '../../integrations/service';
@@ -9,12 +10,14 @@ import { buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
+import { getMastra } from './observability';
 import { toolArgsText, toolText } from '../../chat-parts';
 import { recordContextUsage, type ContextUsage } from '../../chat-usage';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { projectPreamble } from '../prompt/framing';
 import { HttpError } from '#shared/lib';
+import type { AgentRunTrigger } from '../../model';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
 // from its stored configuration (provider/model/instructions) and run against a
@@ -87,7 +90,7 @@ async function buildAgent(
     contextPreamble +
     (row.instructions ?? DEFAULT_INSTRUCTIONS) +
     skillsPreamble(skills);
-  return new Agent({
+  const agent = new Agent({
     id: `ai-agent-${row.id}`,
     name: row.name,
     instructions,
@@ -107,6 +110,9 @@ async function buildAgent(
       ? { memory: buildMemory(row.memoryLastMessages ?? DEFAULT_LAST_MESSAGES) }
       : {}),
   });
+  // An agent traces its run only through a container (see observability.ts).
+  agent.__registerMastra(getMastra());
+  return agent;
 }
 
 // Runs the internal agent identified by agentId in the given project against the
@@ -224,7 +230,21 @@ async function prepareRun(
   // Mastra's generate/stream have overloaded options; type the shape we use. In
   // Mastra v1 the temperature belongs to the call's model settings — a flat
   // `temperature` option is only read by the legacy generate.
-  const options: RunOptions = { maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS };
+  const options: RunOptions = {
+    maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS,
+    // What the run belongs to, kept on the trace so the run history can find it: the
+    // spans hold no foreign keys of ours. A trace with no runId came from the chat.
+    tracingOptions: {
+      metadata: {
+        agentId: row.id,
+        teamId: row.teamId,
+        projectId,
+        ...(opts.runId != null ? { runId: opts.runId, trigger: opts.trigger } : {}),
+        ...(opts.issueId != null ? { issueId: opts.issueId } : {}),
+        ...(opts.scheduleId != null ? { scheduleId: opts.scheduleId } : {}),
+      },
+    },
+  };
   if (row.temperature != null) options.modelSettings = { temperature: row.temperature };
   let threadId: string | null = null;
   if (row.memoryEnabled) {
@@ -264,11 +284,16 @@ export type RunOpts = {
   threadId?: string | null;
   issueId?: number | null;
   scheduleId?: number | null;
+  // The queued run this executes, and what triggered it. Absent for a chat run, which
+  // is queued nowhere.
+  runId?: number;
+  trigger?: AgentRunTrigger;
   contextPreamble?: string;
 };
 
 type RunOptions = {
   maxSteps: number;
+  tracingOptions: TracingOptions;
   modelSettings?: { temperature: number };
   memory?: { thread: string; resource: string };
   abortSignal?: AbortSignal;

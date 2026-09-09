@@ -159,7 +159,13 @@
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",
     "mcpEnabled": "Enable MCP on new projects",
-    "mcpEnabledHint": "A new project is in its team's MCP reach from the moment it is created."
+    "mcpEnabledHint": "A new project is in its team's MCP reach from the moment it is created.",
+    "agentsSaved": "Agent settings saved",
+    "traces": "Agent traces",
+    "tracesHint": "Every run of an internal agent records what the model and the tools were called with.",
+    "traceRetention": "Delete old traces",
+    "traceRetentionHint": "Delete traces after this many days. Off keeps them all.",
+    "days": "days"
   },
   "authentication": {
     "saved": "Authentication settings saved",

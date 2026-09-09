@@ -45,6 +45,10 @@
     "agents": {
       "title": "AI Agents",
       "description": "The AI agents this team owns, and the projects each of them works in."
+    },
+    "analytics": {
+      "title": "Dashboard",
+      "description": "What the team's agents did, across every project they work in."
     }
   },
   "info": {

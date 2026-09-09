@@ -6,6 +6,7 @@ import {
   Bell,
   BookText,
   Bot,
+  ChartColumn,
   ChevronRight,
   FolderKanban,
   Info,
@@ -32,10 +33,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 // The sections of the open team, as the page's second rail: the team itself, its
 // projects, the roles they assign from and its members, then the AI group — the
 // integration credentials the agents run on, the agents themselves, the skills they
-// load and the tools they can call — with what MCP clients reach and the notification
-// providers last. The counts come with the team list, so each is shown before its
-// section is opened. A section the caller may not read is left out, and the AI group with it
-// once none of its four is readable.
+// load, the tools they can call and the dashboard of what they did — with what MCP
+// clients reach and the notification providers last. The counts come with the team
+// list, so each is shown before its section is opened. A section the caller may not
+// read is left out, and the AI group with it once none of them is readable.
 export default function TeamSectionNav({ team }: { team: Team }) {
   const t = useTranslations('teams.sections');
   const tNav = useTranslations('nav');
@@ -57,13 +58,12 @@ export default function TeamSectionNav({ team }: { team: Team }) {
     };
   }
 
+  const runsTeam = team.role === 'owner' || team.role === 'manager';
   const top = [
     section('info', t('info.title'), Info),
     section('projects', t('projects.title'), FolderKanban, team.projectCount),
     // The roles are managed by the team's owner and managers, so the section is theirs.
-    ...(team.role === 'owner' || team.role === 'manager'
-      ? [section('roles', t('roles.title'), ShieldCheck, team.roleCount)]
-      : []),
+    ...(runsTeam ? [section('roles', t('roles.title'), ShieldCheck, team.roleCount)] : []),
     section('members', t('members.title'), Users, team.memberCount),
   ];
   const ai = [
@@ -79,6 +79,9 @@ export default function TeamSectionNav({ team }: { team: Team }) {
     ...(permissions?.agent_tools.read
       ? [section('agent-tools', t('agentTools.title'), Wrench, team.toolCount)]
       : []),
+    // The dashboard covers every project the team's agents work in, so it follows the
+    // rank in the team the way the roles section does, not a project role.
+    ...(runsTeam ? [section('analytics', t('analytics.title'), ChartColumn)] : []),
   ];
   // The notification providers are the owner's: nobody else reads or writes them.
   const bottom = [

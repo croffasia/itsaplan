@@ -20,6 +20,10 @@ export interface Limits {
   minScheduleIntervalSeconds: number;
   // Stored attachment bytes across the team's projects.
   maxStorageBytes: number;
+  // Days the traces of the team's agent runs are kept for. 0 means the instance
+  // setting applies, which is what a self-hosted instance answers with; a hosted
+  // build gives a team its own window through the provider.
+  maxTraceRetentionDays: number;
   // Project sections the team cannot use. A blocked one reads as off however its
   // project has it stored, and cannot be turned back on.
   blockedFeatures: ProjectFeature[];
@@ -38,6 +42,7 @@ export const NO_LIMITS: Limits = {
   maxRunSeconds: 0,
   minScheduleIntervalSeconds: 0,
   maxStorageBytes: 0,
+  maxTraceRetentionDays: 0,
   blockedFeatures: [],
 };
 

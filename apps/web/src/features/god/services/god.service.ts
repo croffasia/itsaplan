@@ -7,6 +7,7 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import type { AgentSettings } from '@/lib/api/endpoints/god';
 import type { StorageSettingsPatch } from '@/lib/api/endpoints/settings';
 import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
 import { nextPageParam, type PageParams } from '@/lib/api/core/paging';
@@ -31,6 +32,8 @@ import {
   updateInstanceTelegramSettings,
   getInstanceProjectDefaults,
   updateInstanceProjectDefaults,
+  getInstanceAgentSettings,
+  updateInstanceAgentSettings,
   getInstanceStorageSettings,
   updateInstanceStorageSettings,
   listInstanceUsers,
@@ -218,6 +221,22 @@ export function useUpdateInstanceProjectDefaults() {
   return useMutation({
     mutationFn: (body: ProjectDefaults) => updateInstanceProjectDefaults(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceProjectDefaults, data),
+  });
+}
+
+// What applies to every team's agents: how long their run traces are kept.
+export function useInstanceAgentSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceAgentSettings,
+    queryFn: () => getInstanceAgentSettings(),
+  });
+}
+
+export function useUpdateInstanceAgentSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (body: AgentSettings) => updateInstanceAgentSettings(body),
+    onSuccess: (data) => qc.setQueryData(qk.instanceAgentSettings, data),
   });
 }
 

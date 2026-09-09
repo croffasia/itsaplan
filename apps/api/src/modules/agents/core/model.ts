@@ -1,5 +1,6 @@
 import { t } from 'elysia';
 
+import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { agentRunTrigger, runContextTokens } from '../model';
 
 export { agentParams, projectAgentParams } from '../model';
@@ -302,4 +303,125 @@ export const threadListQuery = t.Object({
   favorites: t.Optional(
     t.Boolean({ description: 'Return the starred conversations instead of the page.' }),
   ),
+});
+
+// The trace of one run of an internal agent (TraceSummary from runtime/traces).
+export const AgentTraceResponse = t.Object({
+  traceId: t.String(),
+  name: t.String(),
+  status: t.String({ description: "How the run ended: 'success', 'failed' or 'running'." }),
+  startedAt: t.String(),
+  endedAt: t.Nullable(t.String()),
+  durationMs: t.Nullable(t.Number()),
+  projectId: t.Nullable(t.Number()),
+  runId: t.Nullable(
+    t.Number({
+      description:
+        'The queued run this traced, as listed by the run history. Null for a trace of the ' +
+        'test chat, which is queued nowhere.',
+    }),
+  ),
+  trigger: t.Nullable(agentRunTrigger),
+  issueId: t.Nullable(t.Number()),
+});
+
+export const AgentTracePageResponse = pageResponse(AgentTraceResponse);
+
+// One step of a trace: the run itself, a model call, or a tool call (TraceSpan).
+export const AgentTraceSpanResponse = t.Object({
+  spanId: t.String(),
+  parentSpanId: t.Nullable(t.String()),
+  name: t.String(),
+  type: t.String({
+    description: "What the step is: 'agent_run', 'model_generation', 'tool_call'.",
+  }),
+  status: t.String(),
+  startedAt: t.String(),
+  endedAt: t.Nullable(t.String()),
+  durationMs: t.Nullable(t.Number()),
+  input: t.Any(),
+  output: t.Any(),
+  error: t.Any(),
+  attributes: t.Any({
+    description:
+      'What the step itself reports: the model and its token counts for a model call, the ' +
+      'arguments for a tool call.',
+  }),
+});
+
+export const AgentTraceDetailResponse = t.Object({
+  trace: AgentTraceResponse,
+  spans: t.Array(AgentTraceSpanResponse),
+});
+
+// The trace list pages, and reads one project of the agent's when projectId is given.
+export const tracesQuery = t.Object({
+  projectId: t.Optional(t.Numeric()),
+  ...pageQueryFields,
+});
+
+export const traceParams = t.Object({
+  teamId: t.Numeric(),
+  agentId: t.Numeric(),
+  traceId: t.String(),
+});
+
+// --- Agent analytics -------------------------------------------------------------
+
+// Cost is in USD, and null where the price table names no such provider and model —
+// the panel shows the tokens without an amount rather than a wrong one.
+const analyticsCost = t.Nullable(t.Number());
+
+const AgentAnalyticsTotals = t.Object({
+  runs: t.Number(),
+  errors: t.Number(),
+  inputTokens: t.Number(),
+  outputTokens: t.Number(),
+  toolCalls: t.Number(),
+  cost: analyticsCost,
+});
+
+export const AgentAnalyticsResponse = t.Object({
+  from: t.String(),
+  to: t.String(),
+  totals: AgentAnalyticsTotals,
+  previous: AgentAnalyticsTotals,
+  threads: t.Number({ description: 'Conversation threads the agents hold now.' }),
+  models: t.Array(
+    t.Object({
+      provider: t.String(),
+      model: t.String(),
+      calls: t.Number(),
+      inputTokens: t.Number(),
+      outputTokens: t.Number(),
+      cost: analyticsCost,
+    }),
+  ),
+  agents: t.Array(
+    t.Object({
+      agentId: t.Number(),
+      name: t.String(),
+      runs: t.Number(),
+      errors: t.Number(),
+      inputTokens: t.Number(),
+      outputTokens: t.Number(),
+      cost: analyticsCost,
+    }),
+  ),
+  tokensPerDay: t.Array(
+    t.Object({
+      day: t.String(),
+      inputTokens: t.Number(),
+      outputTokens: t.Number(),
+      cost: analyticsCost,
+    }),
+  ),
+  tools: t.Array(t.Object({ name: t.String(), calls: t.Number(), errors: t.Number() })),
+  latencyPerDay: t.Array(t.Object({ day: t.String(), p50: t.Number(), p95: t.Number() })),
+});
+
+// The window, in days back from now. The same number of days before it is read as
+// well, which is what every headline figure is compared against.
+export const analyticsQuery = t.Object({
+  days: t.Optional(t.Numeric({ minimum: 1, maximum: 365 })),
 });

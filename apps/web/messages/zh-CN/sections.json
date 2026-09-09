@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "通用",
-      "description": "新建项目的默认设置。"
+      "description": "新项目的默认设置，以及适用于所有团队智能体的设置。"
     },
     "authentication": {
       "label": "身份验证",
@@ -104,6 +104,10 @@
     "ai-agents": {
       "label": "AI 代理",
       "description": "在该项目中工作的 AI 代理。"
+    },
+    "analytics": {
+      "label": "智能体看板",
+      "description": "在此项目中工作的智能体的运行、Token、花费与耗时。"
     }
   }
 }

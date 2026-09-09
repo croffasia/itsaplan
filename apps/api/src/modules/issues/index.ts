@@ -929,6 +929,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: "Reorder an issue's checklists",
         description: "Set the display order of an issue's checklists.",
+        ...mcpTool('reorder_checklists'),
       },
     },
   )
@@ -942,7 +943,11 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       params: checklistParams,
       checklist: 'edit',
       response: { 200: ChecklistResponse, ...commonErrors },
-      detail: { summary: 'Rename a checklist', description: "Change a checklist's title." },
+      detail: {
+        summary: 'Rename a checklist',
+        description: "Change a checklist's title.",
+        ...mcpTool('rename_checklist'),
+      },
     },
   )
 
@@ -961,6 +966,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Delete a checklist',
         description: 'Delete a checklist and every item on it.',
+        ...mcpTool('delete_checklist'),
       },
     },
   )
@@ -995,6 +1001,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Reorder checklist items',
         description: 'Set the display order of the items within one checklist.',
+        ...mcpTool('reorder_checklist_items'),
       },
     },
   )

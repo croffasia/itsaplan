@@ -15,7 +15,10 @@ Rules and invariants for this package below; read the code for the walkthrough.
   `model.ts` and is re-exported from each child's (`agentParams`).
 - `src/app.ts` assembles and exports the app (`export const app`, no `.listen()`);
   `src/index.ts` only binds the port. `export type App = typeof app` types the Eden
-  Treaty client (web + tests).
+  Treaty client (web + tests). The `/internal/*` routes the worker and the bot call
+  live on a second instance, `internalApp`, which `index.ts` binds to `INTERNAL_PORT`
+  (3002); the public listener never serves them. A new internal route goes on that
+  instance and checks the token with `#shared/worker-token`.
 - `index.ts`: `new Elysia({ name: "<feature>", detail: { tags: ["<Tag>"] } })` —
   routes chained directly on it, each route sets `detail.summary`. Handlers only;
   the schemas they reference come from `model.ts`.

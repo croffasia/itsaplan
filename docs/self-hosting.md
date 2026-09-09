@@ -35,6 +35,13 @@ becomes the instance admin.
 `.env.example` documents every variable, including the optional ones: legal document URLs,
 passkey and cookie settings, telemetry opt-out, and worker tuning.
 
+The api listens on two ports. `3000` is the public one your reverse proxy forwards to.
+`3002` (`INTERNAL_PORT`) serves the `/internal/*` routes the worker and the bot call with
+`WORKER_INTERNAL_TOKEN`: running an agent, sending a notification, reading the Telegram bot
+token. The compose file does not publish it; keep it that way. If you run the api outside
+compose, bind or firewall that port so only the worker and the bot reach it, and point them
+at it with `SERVICE_URL_API_INTERNAL`.
+
 ## Single sign-on
 
 Any provider with an OpenID Connect discovery document works: Keycloak, Authentik, KanIDM,

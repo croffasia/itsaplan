@@ -9,6 +9,7 @@ data:
   API_URL: {{ .Values.api.env.API_URL | quote }}
   APP_URL: {{ .Values.api.env.APP_URL | quote }}
   API_PORT: {{ .Values.api.port | quote }}
+  INTERNAL_PORT: {{ .Values.api.internalPort | quote }}
   PORT: {{ .Values.web.port | quote }}
   HOSTNAME: {{ .Values.web.env.HOSTNAME | quote }}
   {{- with .Values.api.env.COOKIE_DOMAIN }}
@@ -19,6 +20,7 @@ data:
   S3_ENDPOINT: {{ include "itsaplan.s3Endpoint" . | quote }}
   S3_FORCE_PATH_STYLE: {{ .Values.api.env.S3_FORCE_PATH_STYLE | quote }}
   SERVICE_URL_API: {{ include "itsaplan.internalApiUrl" . | quote }}
+  SERVICE_URL_API_INTERNAL: {{ include "itsaplan.internalListenerUrl" . | quote }}
   TELEMETRY_DISABLED: {{ .Values.api.env.TELEMETRY_DISABLED | quote }}
   DO_NOT_TRACK: {{ .Values.worker.env.DO_NOT_TRACK | default "1" | quote }}
   PRIVACY_URL: {{ .Values.web.env.PRIVACY_URL | quote }}

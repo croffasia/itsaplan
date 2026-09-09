@@ -41,6 +41,8 @@ RUN apk add --no-cache postgresql-client
 COPY --from=install /app ./
 COPY . .
 
-EXPOSE 3000
+# 3000 is the public api; 3002 serves /internal/* for the worker and the bot and
+# must not be published outside the stack's network.
+EXPOSE 3000 3002
 # Apply migrations before starting the server.
 CMD ["sh", "-c", "bun run packages/db/src/migrate.ts && bun run apps/api/src/index.ts"]

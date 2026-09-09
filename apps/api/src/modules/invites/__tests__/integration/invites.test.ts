@@ -1,5 +1,6 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
-import { app, authedApi } from '#tests/helpers/app';
+import { db, notificationDelivery } from '@repo/db';
+import { authedApi, internalApi } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -33,29 +34,24 @@ async function configureEmail(owner: ReturnType<typeof authedApi>) {
   expect(result.status).toBe(200);
 }
 
-async function deliverInvite(projectId: number, projectInviteId: number) {
+// Sends a queued invite email the way the worker does: by the outbox row's id over
+// the internal listener. No route lists the outbox, so the id is read from the table
+// the worker itself claims from.
+async function deliverInvite() {
   const token = 'invite-email-test-worker-token';
   const previousToken = process.env.WORKER_INTERNAL_TOKEN;
   process.env.WORKER_INTERNAL_TOKEN = token;
-  let response: Response;
   try {
-    response = await app.handle(
-      new Request('http://localhost/internal/notification-deliveries/send', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-worker-token': token },
-        body: JSON.stringify({
-          projectId,
-          channel: 'email',
-          recipient: 'invitee@example.com',
-          payload: { text: 'Invitation', projectInviteId },
-        }),
-      }),
-    );
+    const [row] = await db.select({ id: notificationDelivery.id }).from(notificationDelivery);
+    expect(row).toBeDefined();
+    const response = await internalApi(token).internal['notification-deliveries'].send.post({
+      id: row!.id,
+    });
+    return { status: response.status, body: response.data };
   } finally {
     if (previousToken == null) delete process.env.WORKER_INTERNAL_TOKEN;
     else process.env.WORKER_INTERNAL_TOKEN = previousToken;
   }
-  return { status: response.status, body: await response.json() };
 }
 
 // The id of the team the caller owns — every account is given one at registration.
@@ -268,13 +264,15 @@ describe('invites', () => {
 
     it('drops a queued delivery after the invite was accepted', async () => {
       const owner = await setupOwner();
+      await configureEmail(owner.api);
       const invitee = await signUpTestUser();
       const invite = await owner.api
         .projects({ projectKey: 'MKT' })
         .invites.post({ email: invitee.email, role: 'member' });
+      expect(invite.data?.emailQueued).toBe(true);
       await authedApi(invitee.cookie).invites({ token: invite.data!.token }).accept.post();
 
-      const result = await deliverInvite(owner.projectId, invite.data!.id);
+      const result = await deliverInvite();
 
       expect(result.status).toBe(200);
       expect(result.body).toEqual({ ok: true });

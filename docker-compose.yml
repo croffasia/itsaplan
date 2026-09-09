@@ -87,6 +87,9 @@ services:
     environment:
       NODE_ENV: production
       API_PORT: 3000
+      # The /internal/* routes the worker and the bot call. Reachable on the compose
+      # network only: this port is never published below.
+      INTERNAL_PORT: 3002
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
       # Encrypts stored provider credentials at rest (AES-256-GCM). Changing it
@@ -145,7 +148,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      SERVICE_URL_API: http://api:3000
+      # The api's internal listener, where /internal/* is served.
+      SERVICE_URL_API_INTERNAL: http://api:3002
       WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
@@ -173,7 +177,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      SERVICE_URL_API: http://api:3000
+      SERVICE_URL_API_INTERNAL: http://api:3002
       WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
 
   # The origins are read at startup and handed to the browser by the server render,

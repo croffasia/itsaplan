@@ -60,20 +60,6 @@ export const setNotificationReadBody = t.Optional(t.Object({ read: t.Optional(t.
 
 export const snoozeNotificationBody = t.Object({ until: t.Nullable(t.String()) });
 
-export const sendDeliveryBody = t.Object({
-  projectId: t.Number(),
-  channel: t.UnionEnum(['email', 'telegram']),
-  recipient: t.Nullable(t.String()),
-  payload: t.Object({
-    subject: t.Optional(t.String()),
-    text: t.String(),
-    // The Telegram body. Elysia strips fields the schema does not declare, so
-    // leaving it out here would silently drop the formatted message and send the
-    // plain-text fallback instead.
-    html: t.Optional(t.String()),
-    url: t.Optional(t.String()),
-    emailSource: t.Optional(t.UnionEnum(['project', 'instance'])),
-    idempotencyKey: t.Optional(t.String()),
-    projectInviteId: t.Optional(t.Integer({ minimum: 1 })),
-  }),
-});
+// The worker names the claimed outbox row; the api reads the recipient and the
+// message from that row rather than from the request.
+export const sendDeliveryBody = t.Object({ id: t.Integer({ minimum: 1 }) });

@@ -29,6 +29,9 @@ serviceAccount:
 api:
   replicaCount: 1
   port: 3000
+  # Serves the /internal/* routes the worker and the bot call. Exposed on the
+  # ClusterIP Service only; never route an Ingress to it.
+  internalPort: 3002
   image:
     repository: ghcr.io/croffasia/itsaplan-api
     tag: ""  # defaults to .Chart.AppVersion

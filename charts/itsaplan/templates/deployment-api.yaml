@@ -55,6 +55,9 @@ spec:
             - name: http
               containerPort: {{ .Values.api.port }}
               protocol: TCP
+            - name: internal
+              containerPort: {{ .Values.api.internalPort }}
+              protocol: TCP
           envFrom:
             - configMapRef:
                 name: {{ include "itsaplan.fullname" . }}

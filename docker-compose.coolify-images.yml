@@ -10,7 +10,8 @@
 # persisted on first deploy, stable across deploys. api and web each declare their own
 # domain by listing SERVICE_URL_API_3000 / SERVICE_URL_WEB_3001 without a value; everything
 # else reads them back. A SERVICE_URL_* key in any other service declares a domain there
-# too, which is why worker and bot address the api through API_URL instead.
+# too, which is why worker and bot address the api's internal listener through
+# SERVICE_URL_API_INTERNAL, a name Coolify does not treat as a domain declaration.
 #
 # No host port is published: Coolify's proxy reaches the containers over the internal
 # network, and a `ports:` entry here turns into a second, malformed domain.
@@ -93,6 +94,9 @@ services:
       - SERVICE_URL_API_3000
       - NODE_ENV=production
       - API_PORT=3000
+      # The /internal/* routes the worker and the bot call. Reachable on the compose
+      # network only: this port gets no domain.
+      - INTERNAL_PORT=3002
       - DATABASE_URL=postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
       - BETTER_AUTH_SECRET=${SERVICE_PASSWORD_64_BETTERAUTH}
       # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
@@ -145,7 +149,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      API_URL: http://api:3000
+      # The api's internal listener, where /internal/* is served.
+      SERVICE_URL_API_INTERNAL: http://api:3002
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
@@ -176,7 +181,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      API_URL: http://api:3000
+      SERVICE_URL_API_INTERNAL: http://api:3002
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # The bot token itself is not set here: it is stored in the database and edited
       # in god mode, so the service picks up a change without a redeploy.

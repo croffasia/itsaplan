@@ -41,9 +41,10 @@ All via env with defaults (see `src/config.ts`): `WEBHOOK_POLL_INTERVAL_MS`,
 `WEBHOOK_DISABLE_THRESHOLD`, `WEBHOOK_LEASE_SECONDS`, `WEBHOOK_CLEANUP_DAYS`,
 `WEBHOOK_CLEANUP_EVERY_TICKS`. Only `DATABASE_URL` is required for webhook
 delivery. Agent runs and notification delivery additionally need
-`WORKER_INTERNAL_TOKEN` and an api origin (`SERVICE_URL_API`, else
-`API_URL`); `internal-api.ts` throws when either is missing, no fallback
-origin.
+`WORKER_INTERNAL_TOKEN` and the api's internal listener: `SERVICE_URL_API_INTERNAL`
+where the stack sets it, else the host of the api origin (`SERVICE_URL_API`, else
+`API_URL`) on `INTERNAL_PORT` (3002). `internal-api.ts` throws when none of the
+three is set. The `/internal/*` routes are not served on the public origin.
 
 ## Run
 

@@ -1,5 +1,5 @@
 import { db, notificationDelivery, issue, issueActivity, project, user } from '@repo/db';
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { getProjectEmailConfig } from '@repo/auth';
 import { emailSource, readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
@@ -39,6 +39,38 @@ interface OutboxRow {
   channel: 'email' | 'telegram';
   recipient: string;
   payload: DeliveryPayload;
+}
+
+export interface PendingDelivery {
+  id: number;
+  projectId: number;
+  channel: 'email' | 'telegram';
+  recipient: string | null;
+  payload: DeliveryPayload;
+}
+
+// The outbox row the worker claimed, read back when it asks for the send: the row
+// is the source of the recipient and the message, never the worker's request. A
+// row that succeeded is deleted and a failed one is not claimed again, so only a
+// pending row is a valid send.
+export async function getPendingDelivery(id: number): Promise<PendingDelivery | null> {
+  const [row] = await db
+    .select({
+      id: notificationDelivery.id,
+      projectId: notificationDelivery.projectId,
+      channel: notificationDelivery.channel,
+      recipient: notificationDelivery.recipient,
+      payload: notificationDelivery.payload,
+    })
+    .from(notificationDelivery)
+    .where(and(eq(notificationDelivery.id, id), eq(notificationDelivery.status, 'pending')))
+    .limit(1);
+  if (!row) return null;
+  return {
+    ...row,
+    channel: row.channel as 'email' | 'telegram',
+    payload: row.payload as DeliveryPayload,
+  };
 }
 
 // The issue reference shown in messages, e.g. "IAP-42".

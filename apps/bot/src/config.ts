@@ -10,8 +10,10 @@ function intEnv(name: string, fallback: number): number {
 }
 
 export interface BotConfig {
-  // The api origin. Same resolution as the worker uses: SERVICE_URL_API in the
-  // compose stack (Coolify sets it), API_URL locally.
+  // The origin of the api's internal listener, which is all the bot calls. Same
+  // resolution as the worker uses: SERVICE_URL_API_INTERNAL in the compose stack,
+  // otherwise the host of the api origin (SERVICE_URL_API, else API_URL) on
+  // INTERNAL_PORT, which is what local dev runs.
   apiBaseUrl: string;
   // Shared secret for the /internal/* routes, the same value the worker uses.
   internalToken: string;
@@ -27,14 +29,20 @@ export interface BotConfig {
 
 let cached: BotConfig | null = null;
 
+function internalApiUrl(): string {
+  const configured = process.env.SERVICE_URL_API_INTERNAL;
+  if (configured) return configured.replace(/\/+$/, '');
+  const origin = process.env.SERVICE_URL_API ?? process.env.API_URL;
+  if (!origin) throw new Error('SERVICE_URL_API_INTERNAL, SERVICE_URL_API or API_URL is required');
+  return `http://${new URL(origin).hostname}:${process.env.INTERNAL_PORT ?? 3002}`;
+}
+
 export function botConfig(): BotConfig {
   if (cached) return cached;
   const internalToken = process.env.WORKER_INTERNAL_TOKEN;
   if (!internalToken) throw new Error('WORKER_INTERNAL_TOKEN is required');
-  const apiBaseUrl = process.env.SERVICE_URL_API ?? process.env.API_URL;
-  if (!apiBaseUrl) throw new Error('SERVICE_URL_API or API_URL is required');
   cached = {
-    apiBaseUrl,
+    apiBaseUrl: internalApiUrl(),
     internalToken,
     configPollIntervalMs: intEnv('BOT_CONFIG_POLL_INTERVAL_MS', 30_000),
     configRetryIntervalMs: intEnv('BOT_CONFIG_RETRY_INTERVAL_MS', 5_000),

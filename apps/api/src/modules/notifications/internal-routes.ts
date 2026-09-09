@@ -2,28 +2,35 @@ import { Elysia } from 'elysia';
 import { isInvitePending } from '#modules/invites/service';
 import { getDeliveryConfig } from '#modules/notification-settings/service';
 import { getProjectById } from '#modules/projects/service';
+import { HttpError } from '#shared/lib';
+import { workerTokenValid } from '#shared/worker-token';
 import { sendDeliveryBody } from './model';
+import { getPendingDelivery } from './outbound';
 import { sendDelivery } from './send';
 
 // Internal endpoint the worker calls to deliver one claimed notification_delivery
 // row. The channel credentials are encrypted at rest, so the send runs here (in the
-// API, which owns the encryption key and the config store) rather than in the worker, mirroring /internal/agent-runs/execute. Authenticated with the
-// shared WORKER_INTERNAL_TOKEN. Returns the SendResult so the worker records the
-// outcome and decides whether to retry.
+// API, which owns the encryption key and the config store) rather than in the worker,
+// mirroring /internal/agent-runs/execute. Authenticated with the shared
+// WORKER_INTERNAL_TOKEN and served on the internal listener only (see app.ts). The
+// request carries the row id alone: the recipient and the message come from the row,
+// so the route cannot be used to send mail of the caller's choosing. Returns the
+// SendResult so the worker records the outcome and decides whether to retry.
 export const internalNotificationRoutes = new Elysia({
   name: 'internal-notification-deliveries',
   detail: { tags: ['Internal'] },
 }).post(
   '/internal/notification-deliveries/send',
   async ({ body, headers, set }) => {
-    const expected = process.env.WORKER_INTERNAL_TOKEN;
-    if (!expected || headers['x-worker-token'] !== expected) {
+    if (!workerTokenValid(headers)) {
       set.status = 401;
       return { ok: false, retryable: false, error: 'Unauthorized' };
     }
+    const delivery = await getPendingDelivery(body.id);
+    if (!delivery) throw new HttpError(400, 'Unknown delivery');
     if (
-      body.payload.projectInviteId != null &&
-      !(await isInvitePending(body.projectId, body.payload.projectInviteId))
+      delivery.payload.projectInviteId != null &&
+      !(await isInvitePending(delivery.projectId, delivery.payload.projectInviteId))
     ) {
       // The invite was accepted, rejected, or revoked while its email waited in
       // the outbox. Treat it as delivered so the worker removes the stale row.
@@ -31,13 +38,13 @@ export const internalNotificationRoutes = new Elysia({
     }
     // The row names the project it came from; the credentials belong to the team
     // that owns it.
-    const project = await getProjectById(body.projectId);
+    const project = await getProjectById(delivery.projectId);
     if (!project) return { ok: false, retryable: false, error: 'Project not found' };
     const config = await getDeliveryConfig(project.teamId);
     return sendDelivery({
-      channel: body.channel,
-      recipient: body.recipient,
-      payload: body.payload,
+      channel: delivery.channel,
+      recipient: delivery.recipient,
+      payload: delivery.payload,
       config,
     });
   },
@@ -46,9 +53,9 @@ export const internalNotificationRoutes = new Elysia({
     detail: {
       summary: 'Send one notification delivery',
       description:
-        'Send a claimed delivery over its channel with the stored credentials of the team that ' +
-        'owns its project, and return the result the worker records. Called by the worker with ' +
-        'the x-worker-token header.',
+        'Send the claimed delivery row over its channel with the stored credentials of the ' +
+        'team that owns its project, and return the result the worker records. Called by the ' +
+        'worker with the x-worker-token header.',
     },
   },
 );

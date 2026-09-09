@@ -12,6 +12,12 @@ spec:
       targetPort: http
       protocol: TCP
       name: http
+    # The worker and the bot call /internal/* here. Cluster-internal: no Ingress or
+    # IngressRoute may point at it.
+    - port: {{ .Values.api.internalPort }}
+      targetPort: internal
+      protocol: TCP
+      name: internal
   selector:
     {{- include "itsaplan.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: api

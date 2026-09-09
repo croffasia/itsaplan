@@ -88,6 +88,9 @@ services:
     environment:
       NODE_ENV: production
       API_PORT: 3000
+      # The /internal/* routes the worker and the bot call. Reachable on the compose
+      # network only: this port is never published and gets no domain.
+      INTERNAL_PORT: 3002
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
       BETTER_AUTH_SECRET: ${SERVICE_PASSWORD_64_BETTERAUTH}
       # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
@@ -145,7 +148,8 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      # The api's internal listener, where /internal/* is served.
+      SERVICE_URL_API_INTERNAL: http://api:3002
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
@@ -178,7 +182,7 @@ services:
         condition: service_started
     environment:
       NODE_ENV: production
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
+      SERVICE_URL_API_INTERNAL: http://api:3002
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # The bot token itself is not set here: it is stored in the database and edited
       # in god mode, so the service picks up a change without a redeploy.

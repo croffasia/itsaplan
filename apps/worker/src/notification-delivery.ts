@@ -8,15 +8,12 @@ import { postInternal } from './internal-api';
 // each one. Follows the same claim/retry pattern as webhook delivery, but the send
 // itself runs in the API (POST /internal/notification-deliveries/send) because the
 // channel credentials are encrypted with the API's key — the worker never decrypts.
-// A succeeded row is deleted (no delivery history is kept); a permanently failed row
-// is left as 'failed' with its last error for debugging.
+// The API is handed the row id alone and reads the recipient and the message from
+// the row itself. A succeeded row is deleted (no delivery history is kept); a
+// permanently failed row is left as 'failed' with its last error for debugging.
 
 interface ClaimedNotification {
   id: number;
-  projectId: number;
-  channel: string;
-  recipient: string | null;
-  payload: unknown;
   attempts: number;
 }
 
@@ -49,13 +46,7 @@ async function claimDueDeliveries(): Promise<ClaimedNotification[]> {
       FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}
     )
-    RETURNING
-      d.id,
-      d.project_id AS "projectId",
-      d.channel,
-      d.recipient,
-      d.payload,
-      d.attempts
+    RETURNING d.id, d.attempts
   `);
   return rows as unknown as ClaimedNotification[];
 }
@@ -97,12 +88,7 @@ async function processDelivery(d: ClaimedNotification): Promise<void> {
 async function send(d: ClaimedNotification): Promise<SendResult> {
   const res = await postInternal(
     '/internal/notification-deliveries/send',
-    {
-      projectId: d.projectId,
-      channel: d.channel,
-      recipient: d.recipient,
-      payload: d.payload,
-    },
+    { id: d.id },
     intEnv('NOTIFICATION_TIMEOUT_MS', 20_000),
   );
   const body = (await res.json().catch(() => null)) as SendResult | null;

@@ -178,6 +178,7 @@ bot:
 |---------------------------------------|-----------------------------------------------------------|----------------------------------|
 | `api.replicaCount`                    | Number of API replicas                                    | `1`                              |
 | `api.port`                            | Container port                                            | `3000`                           |
+| `api.internalPort`                    | Port serving `/internal/*` for the worker and the bot; cluster-internal only, never expose it through an Ingress | `3002` |
 | `api.image.repository`                | Image repository                                          | `ghcr.io/croffasia/itsaplan-api` |
 | `api.image.tag`                       | Image tag (defaults to `appVersion`)                      | `""`                             |
 | `api.image.pullPolicy`                | Image pull policy                                         | `IfNotPresent`                   |

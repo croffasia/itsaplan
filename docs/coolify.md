@@ -45,6 +45,10 @@ the host:
 Coolify turns those into `SERVICE_URL_API` and `SERVICE_URL_WEB`, which the compose file
 reads as the api's `API_URL` / `APP_URL` and as the api origin web hands to the browser.
 
+Only port 3000 of the api gets a domain. Port 3002 serves the `/internal/*` routes the
+worker and the bot call; the compose file reaches it as `http://api:3002` on the internal
+network, and it must never be given a domain.
+
 Changing a domain later takes a redeploy, which is how Coolify applies an environment
 change.
 

@@ -13,6 +13,7 @@ import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 import { planner } from './planner';
+import { HttpError } from './shared/lib';
 import { mountMcp } from './mcp/mount';
 import { setMcpApp } from './mcp/app-ref';
 import { internalAgentRunRoutes } from './modules/agents/core/internal-routes';
@@ -44,7 +45,7 @@ curl "${apiUrl}/projects" \\
 
 JSON errors use \`{ "error": "message" }\` and may also include a stable \`code\`. Pagination parameters and response envelopes are documented per operation.
 
-For agent clients, use the MCP endpoint at [${apiUrl}/mcp](${apiUrl}/mcp). SCIM, worker-internal routes, and repository webhooks use the separate credentials shown on their operations.`;
+For agent clients, use the MCP endpoint at [${apiUrl}/mcp](${apiUrl}/mcp). SCIM and repository webhooks use the separate credentials shown on their operations.`;
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
@@ -166,11 +167,6 @@ export const app = new Elysia()
             name: 'System',
             description: 'Liveness, the current session user, and the instance sign-in policy',
           },
-          {
-            name: 'Internal',
-            description:
-              'Endpoints the worker and the bot call with the shared WORKER_INTERNAL_TOKEN',
-          },
         ],
         // Planner routes are session-gated. Besides the session cookie (sent by the
         // browser, not modelled here), a request may carry an `x-api-key` header:
@@ -185,12 +181,6 @@ export const app = new Elysia()
               scheme: 'bearer',
               bearerFormat: 'opaque',
               description: 'Instance SCIM token generated in God mode.',
-            },
-            workerToken: {
-              type: 'apiKey',
-              in: 'header',
-              name: 'x-worker-token',
-              description: 'Shared token used only by the worker and bot services.',
             },
             gitHubSignature: {
               type: 'apiKey',
@@ -313,9 +303,6 @@ export const app = new Elysia()
       description: 'Liveness probe: returns the api name and `status: "ok"`.',
     },
   })
-  .use(internalAgentRunRoutes)
-  .use(internalNotificationRoutes)
-  .use(internalTelegramRoutes)
   // Inbound repository webhook receiver (authenticated by its per-project secret).
   .use(gitWebhookRoutes)
   // SCIM 2.0 provisioning (authenticated by the instance SCIM bearer token). Mounted
@@ -338,3 +325,32 @@ setMcpApp(app);
 
 // App type — useful for Eden Treaty (type-safe client) on the frontend and in tests.
 export type App = typeof app;
+
+// The routes the worker and the bot call with WORKER_INTERNAL_TOKEN. A separate
+// instance, so `index.ts` binds it to its own port (INTERNAL_PORT) that the compose
+// files and the chart never publish: an agent run, a mail send and the bot token
+// are then reachable from the internal network only, and the public listener
+// answers 404 for /internal/*. The error shape matches the planner's so the worker
+// reads `error` from any status.
+export const internalApp = new Elysia({ name: 'internal' })
+  .onError(({ code, error, set }) => {
+    if (error instanceof HttpError) {
+      set.status = error.status;
+      return { error: error.message };
+    }
+    if (code === 'VALIDATION') {
+      set.status = 400;
+      const first = (error as { all?: { summary?: string }[] }).all?.[0]?.summary;
+      return { error: first ?? 'Invalid request body' };
+    }
+    if (code === 'NOT_FOUND') {
+      set.status = 404;
+      return { error: 'Not found' };
+    }
+    console.error('[internal] unhandled error:', error);
+    set.status = 500;
+    return { error: 'Internal server error' };
+  })
+  .use(internalAgentRunRoutes)
+  .use(internalNotificationRoutes)
+  .use(internalTelegramRoutes);

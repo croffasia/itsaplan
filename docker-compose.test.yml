@@ -103,3 +103,6 @@ services:
     environment:
       NODE_ENV: test
       DATABASE_URL: postgres://itsaplan:itsaplan@postgres-test:5432/itsaplan_test
+      # Where the worker would reach /internal/*; api-test binds no listener, so the
+      # ticks that need it log and retry.
+      SERVICE_URL_API_INTERNAL: http://api-test:3002

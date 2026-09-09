@@ -39,9 +39,8 @@ describe('OpenAPI document', () => {
     expect(doc.paths['/']!.get!.security).toEqual([]);
     expect(doc.paths['/me']!.get!.security).toEqual([{}, { apiKey: [] }]);
     expect(doc.paths['/share/issue/{token}']!.get!.security).toEqual([]);
-    expect(doc.paths['/internal/agent-runs/execute']!.post!.security).toEqual([
-      { workerToken: [] },
-    ]);
+    // Served by the internal listener, so the public document does not list them.
+    expect(doc.paths['/internal/agent-runs/execute']).toBeUndefined();
     expect(doc.paths['/scim/v2/Users']!.post!.security).toEqual([{ scimBearer: [] }]);
     expect(doc.paths['/webhooks/git/{webhookId}']!.post!.security).toContainEqual({
       gitLabToken: [],

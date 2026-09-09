@@ -79,3 +79,11 @@ Compute the internal API URL for inter-service communication.
 {{- printf "http://%s-api:%d" (include "itsaplan.fullname" .) (int .Values.api.port) }}
 {{- end }}
 {{- end }}
+
+{{/*
+Compute the URL of the api's internal listener, where the worker and the bot
+reach /internal/*. Cluster-internal only.
+*/}}
+{{- define "itsaplan.internalListenerUrl" -}}
+{{- printf "http://%s-api:%d" (include "itsaplan.fullname" .) (int .Values.api.internalPort) }}
+{{- end }}

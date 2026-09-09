@@ -28,6 +28,10 @@ through this module — never inline a query on `app_setting` / `app_secret` els
   provider, the two OAuth providers and the SCIM token, encrypted with `@repo/crypto`,
   each with a `redacted` mirror for the settings UI. Secrets never leave the server.
 
+The mail provider is read by the api and the worker as well, so its shape and reader
+live in `@repo/db` (`domains/instance-email.ts`); what is here is the write side god
+mode drives.
+
 "Invite only" means the address has a pending `team_invite` (`hasPendingInvite`).
 Invites are created and revoked inside a team, so there is no instance-level invite
 table and god mode has no invite section — do not add one.

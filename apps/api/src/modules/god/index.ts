@@ -7,7 +7,6 @@ import {
   getEmailSettings,
   resolveEmailConfig,
   setEmailSettings,
-  hasConfiguredEmailProvider,
   getGoogleSettings,
   setGoogleSettings,
   hasConfiguredGoogle,
@@ -18,6 +17,7 @@ import {
   setScimSettings,
   rotateScimToken,
 } from '@repo/auth';
+import { hasConfiguredEmailProvider } from '@repo/db';
 import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';

@@ -1,4 +1,12 @@
-import { db, userTelegramAccount, readSecret, writeSecret } from '@repo/db';
+import {
+  db,
+  userTelegramAccount,
+  writeSecret,
+  getInstanceBotConfig,
+  isInstanceBotUsable,
+  TELEGRAM_BOT_SECRET_KEY,
+  type InstanceBotConfig,
+} from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
 import { randomBytes } from 'node:crypto';
 
@@ -8,41 +16,16 @@ import { randomBytes } from 'node:crypto';
 // Telegram account, and the default sender for Telegram notifications (a project may
 // still set its own bot token, which wins for that project's deliveries). The token
 // is a secret, so it lives encrypted in app_secret under 'telegram.bot' with a
-// `redacted` mirror for the settings UI, the same shape as the instance mail and
-// Google credentials in @repo/auth. The bot service reads the same row itself, with
-// its own copy of the shape (apps/bot/src/db.ts).
+// `redacted` mirror for the settings UI. The stored shape and its reader are in
+// @repo/db, shared with the bot and the worker; what is here is the write side.
 //
 // A link is one row in user_telegram_account per user: created with a one-time
 // link_code here, redeemed by the bot when that code arrives as `/start <code>`.
 // chat_id null means the link is still pending.
 
-const BOT_SECRET_KEY = 'telegram.bot';
-
 // How long a `/start` code stays valid. Long enough to switch to Telegram and press
 // the button, short enough that an intercepted link is not useful later.
 const LINK_CODE_TTL_MINUTES = 15;
-
-// The stored, decrypted bot config. Read by the delivery sender; never returned to a
-// browser.
-export interface InstanceBotConfig {
-  enabled: boolean;
-  botToken: string; // secret
-  // Resolved from getMe when the token is saved, so the deep link can be built
-  // without asking the administrator to type the name a second time.
-  botUsername: string;
-}
-
-export async function getInstanceBotConfig(): Promise<InstanceBotConfig> {
-  const stored = await readSecret<InstanceBotConfig>(BOT_SECRET_KEY);
-  // Merge over the default so a config written before a field was added stays valid.
-  return { enabled: false, botToken: '', botUsername: '', ...stored };
-}
-
-// Whether the instance bot can be used right now. Account linking is offered only
-// when this is true, and Telegram delivery falls back to this bot only when it is.
-export function isInstanceBotUsable(config: InstanceBotConfig): boolean {
-  return config.enabled && config.botToken.length > 0;
-}
 
 export async function hasUsableInstanceBot(): Promise<boolean> {
   return isInstanceBotUsable(await getInstanceBotConfig());
@@ -112,7 +95,7 @@ export async function setInstanceBotSettings(patch: InstanceBotPatch): Promise<I
     botUsername: needsLookup ? await fetchBotUsername(botToken) : current.botUsername,
   };
   const redacted = toBotDto(next);
-  await writeSecret(BOT_SECRET_KEY, next, redacted);
+  await writeSecret(TELEGRAM_BOT_SECRET_KEY, next, redacted);
   return redacted;
 }
 

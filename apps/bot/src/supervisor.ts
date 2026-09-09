@@ -1,5 +1,5 @@
 import type { Bot } from 'grammy';
-import { getInstanceBotConfig, isInstanceBotUsable } from './db';
+import { getInstanceBotConfig, isInstanceBotUsable } from '@repo/db';
 import { botConfig } from './config';
 import { createBot } from './bot';
 

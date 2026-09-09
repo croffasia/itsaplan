@@ -73,7 +73,7 @@ apps/api        Elysia (Bun) — mounts better-auth at /api/auth/*        :3000
 apps/web        Next.js App Router, SSR (not SPA) + shadcn + TanStack Q :3001
 apps/worker     webhook and notification delivery, agent runs, schedules
 apps/bot        Telegram bot, long polling
-packages/db     @repo/db     — Drizzle client, schema, migrations, permission matrix
+packages/db     @repo/db     — Drizzle client, schema, migrations, permission matrix, shared config readers
 packages/auth   @repo/auth   — better-auth server instance + instance auth settings
 packages/crypto @repo/crypto — AES-256-GCM encryption for secrets at rest
 packages/mailer @repo/mailer — SMTP/Resend transport for outbound email
@@ -298,8 +298,8 @@ tidy moves the code. This is separate from the CI gate (`format:check` + `lint` 
 - Tests run on `bun test`. `apps/api` uses Eden Treaty; its setup and the rules for
   writing tests are in `apps/api/AGENTS.md`. They are integration tests against a real
   test Postgres (`.env.test`), not mocks. `packages/runner` has plain unit tests that
-  need nothing running. `apps/api` and `apps/bot` share one test database and the api
-  suite truncates every table before each test, so `bun run test` passes
+  need nothing running. `apps/api`, `apps/bot` and `apps/worker` share one test database and
+  the api suite truncates every table before each test, so `bun run test` passes
   `--concurrency=1` to turbo: the suites run one package at a time.
 - `bun --filter` needs the `=` form: `bun --filter='@repo/db' run <script>`. The space form
   `bun --filter <name> run <script>` matches no packages in Bun 1.3.9.

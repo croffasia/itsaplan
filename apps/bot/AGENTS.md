@@ -7,12 +7,12 @@ root `AGENTS.md`.
 ## Invariants
 
 - **The bot talks to Postgres and Telegram, and to nothing else.** Its queries are in
-  `src/db.ts`, over the schema and the secret store of `@repo/db`, so it needs
-  `DATABASE_URL` and `APP_ENCRYPTION_KEY`. It holds no api credential and makes no
-  call to the api — a secret that never crosses the network cannot be read off it.
+  `src/db.ts`, over the schema of `@repo/db`, so it needs `DATABASE_URL` and
+  `APP_ENCRYPTION_KEY`. It holds no api credential and makes no call to the api — a
+  secret that never crosses the network cannot be read off it.
 - **The bot settings row is the api's.** The api writes `telegram.bot` in `app_secret`;
-  `src/db.ts` reads it with its own copy of the key and of the fields this service
-  needs. Adding a field the bot reads means adding it on both sides.
+  the bot reads it through `@repo/db` (`domains/telegram-bot.ts`), which is also where
+  a new field on that config goes.
 - **One replica only.** Telegram gives each `getUpdates` call to a single caller, so
   a second instance would steal updates from the first. Do not add replicas or run it
   alongside a webhook registration for the same bot.

@@ -147,6 +147,10 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
       API_URL: http://api:3000
       WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      # Notification delivery sends email and Telegram messages itself, with the
+      # provider credentials stored in the database — encrypted with this key, the
+      # same value the api uses.
+      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
       TELEMETRY_DISABLED: ${TELEMETRY_DISABLED:-}
@@ -162,8 +166,8 @@ services:
       # AGENT_RUN_MAX_ATTEMPTS, AGENT_RUN_LEASE_SECONDS.
 
   # Telegram bot: long polling for the instance bot, completing the account links
-  # users start from their profile. No database and no public ports — it reaches the
-  # api's internal routes with the same shared token the worker uses.
+  # users start from their profile. It reads the bot token and writes the links in the
+  # database, and holds no api credential — no public ports either.
   #
   # Must stay at one replica: Telegram hands each getUpdates call to a single caller,
   # so a second instance would take updates away from the first.

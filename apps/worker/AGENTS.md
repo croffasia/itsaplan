@@ -14,11 +14,22 @@ own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
 - Retries transient failures (timeout, 429, 5xx) with equal-jitter exponential
   backoff up to `WEBHOOK_MAX_ATTEMPTS`; permanent 4xx fail immediately. After
   `WEBHOOK_DISABLE_THRESHOLD` consecutive failures the webhook is auto-disabled.
+- Drains `notification_delivery` and sends each row itself: email through
+  `@repo/mailer`, Telegram through the Bot API. The provider credentials are read
+  from the database and decrypted here (`notification-send.ts`), so the process
+  needs `APP_ENCRYPTION_KEY`.
 
 ## Invariants
 
 - **Reads/writes `@repo/db` directly, never the API over HTTP.** It is a DB
-  consumer and an HTTP producer. It does not import `apps/api`.
+  consumer and an HTTP producer. It does not import `apps/api`. The one thing it
+  still asks the api for is running an internal agent
+  (`POST /internal/agent-runs/execute`) — that needs the agent runtime, which lives
+  in the api.
+- **Notification credentials are read, never taken from the caller.** A delivery
+  row names its project; the credentials come from the team that owns it and from
+  the instance config. Nothing about the recipient or the provider is passed in
+  from outside.
 - **No migrations here.** The api applies them on startup; the worker only uses
   existing tables and tolerates their brief absence (a tick logs and retries).
 - **At-least-once delivery.** Duplicates are possible (a 2xx whose ACK is lost);
@@ -40,10 +51,18 @@ All via env with defaults (see `src/config.ts`): `WEBHOOK_POLL_INTERVAL_MS`,
 `WEBHOOK_BATCH_SIZE`, `WEBHOOK_TIMEOUT_MS`, `WEBHOOK_MAX_ATTEMPTS`,
 `WEBHOOK_DISABLE_THRESHOLD`, `WEBHOOK_LEASE_SECONDS`, `WEBHOOK_CLEANUP_DAYS`,
 `WEBHOOK_CLEANUP_EVERY_TICKS`. Only `DATABASE_URL` is required for webhook
-delivery. Agent runs and notification delivery additionally need
-`WORKER_INTERNAL_TOKEN` and an api origin (`SERVICE_URL_API`, else
-`API_URL`); `internal-api.ts` throws when either is missing, no fallback
-origin.
+delivery. Notification delivery also needs `APP_ENCRYPTION_KEY` (the same value the
+api uses) to read the stored provider credentials. Agent runs additionally need
+`WORKER_INTERNAL_TOKEN` and an api origin (`SERVICE_URL_API`, else `API_URL`);
+`internal-api.ts` throws when either is missing, no fallback origin.
+
+## Tests
+
+`src/__tests__/unit/` covers the pure logic with no database. `src/__tests__/integration/`
+covers what needs one — the notification send reads its config from the database — and
+runs against the test DB (`bun run test` loads `.env.test`; the Docker gate runs it
+after the api and bot suites). It inserts the rows the api writes in production, the
+way `apps/bot` does; there is no api to call.
 
 ## Run
 

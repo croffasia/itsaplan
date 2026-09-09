@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { writeSecret } from '@repo/db';
+import { writeSecret, getInstanceBotConfig, isInstanceBotUsable } from '@repo/db';
 import { app } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
-import { getInstanceBotConfig, isInstanceBotUsable } from '#modules/telegram/service';
 
 // The bot token is stored by the api and read back by the bot service itself: no route
 // hands it out, and the bot holds no api credential. These cover that seam — the row

@@ -1,31 +1,8 @@
 import { and, eq, gt, ne } from 'drizzle-orm';
-import { db, readSecret, userTelegramAccount } from '@repo/db';
+import { db, userTelegramAccount } from '@repo/db';
 
-// Everything the bot reads and writes in the database: the instance bot settings the
-// api stores, and the account links it redeems.
-//
-// The settings row is written by the api under 'telegram.bot' and only read here, so
-// the two sides carry the key and the fields this service needs; a field added to the
-// stored config for the bot has to be added on both.
-
-const BOT_SECRET_KEY = 'telegram.bot';
-
-export interface InstanceBotConfig {
-  enabled: boolean;
-  botToken: string; // secret
-}
-
-export async function getInstanceBotConfig(): Promise<InstanceBotConfig> {
-  const stored = await readSecret<InstanceBotConfig>(BOT_SECRET_KEY);
-  // Merge over the default so a row written before a field was added stays valid.
-  return { enabled: false, botToken: '', ...stored };
-}
-
-// Whether the instance bot can be used right now: the supervisor polls Telegram only
-// while this holds.
-export function isInstanceBotUsable(config: InstanceBotConfig): boolean {
-  return config.enabled && config.botToken.length > 0;
-}
+// The account links the bot redeems. The instance bot settings it polls are read
+// through @repo/db, which the api writes them with.
 
 export interface ConfirmLinkInput {
   code: string;

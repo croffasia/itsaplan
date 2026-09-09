@@ -4,11 +4,11 @@ import {
   oAuthProtectedResourceMetadata,
   trustedOrigins,
   getAuthSettings,
-  hasConfiguredEmailProvider,
   hasConfiguredGoogle,
   hasConfiguredOidc,
   getOidcLabel,
 } from '@repo/auth';
+import { hasConfiguredEmailProvider } from '@repo/db';
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
@@ -16,7 +16,6 @@ import { planner } from './planner';
 import { mountMcp } from './mcp/mount';
 import { setMcpApp } from './mcp/app-ref';
 import { internalAgentRunRoutes } from './modules/agents/core/internal-routes';
-import { internalNotificationRoutes } from './modules/notifications/internal-routes';
 import { gitWebhookRoutes } from './modules/git/webhook';
 import { scimRoutes } from './modules/scim';
 import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
@@ -167,8 +166,7 @@ export const app = new Elysia()
           },
           {
             name: 'Internal',
-            description:
-              'Endpoints the worker and the bot call with the shared WORKER_INTERNAL_TOKEN',
+            description: 'Endpoints the worker calls with the shared WORKER_INTERNAL_TOKEN',
           },
         ],
         // Planner routes are session-gated. Besides the session cookie (sent by the
@@ -313,7 +311,6 @@ export const app = new Elysia()
     },
   })
   .use(internalAgentRunRoutes)
-  .use(internalNotificationRoutes)
   // Inbound repository webhook receiver (authenticated by its per-project secret).
   .use(gitWebhookRoutes)
   // SCIM 2.0 provisioning (authenticated by the instance SCIM bearer token). Mounted

@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { db, defaultMemberPermissions } from '@repo/db';
+import { db, defaultMemberPermissions, hasConfiguredEmailProvider } from '@repo/db';
 import { eq, sql, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
@@ -16,7 +16,6 @@ import {
   isGoogleUsable,
   getOidcConfig,
   isOidcUsable,
-  hasConfiguredEmailProvider,
 } from './instance';
 import { sendAuthEmail } from './mail';
 
@@ -648,10 +647,7 @@ export {
   setAuthSettings,
   getEmailSettings,
   setEmailSettings,
-  getEmailConfig,
   resolveEmailConfig,
-  getProjectEmailConfig,
-  hasConfiguredEmailProvider,
   getGoogleSettings,
   setGoogleSettings,
   getGoogleConfig,
@@ -672,7 +668,6 @@ export type {
   AuthSettings,
   InstanceEmailDto,
   InstanceEmailPatch,
-  InstanceEmailConfig,
   InstanceGoogleDto,
   InstanceGooglePatch,
   InstanceGoogleConfig,

@@ -1,5 +1,5 @@
 import { sendEmail, emailBody } from '@repo/mailer';
-import { getEmailConfig } from './instance';
+import { getInstanceEmailConfig } from '@repo/db';
 
 // Authentication email: password reset, address verification, magic link. It uses
 // the instance mail provider configured in god mode, which is separate from the
@@ -15,7 +15,7 @@ export async function sendAuthEmail(input: {
   text: string;
   url?: string;
 }): Promise<boolean> {
-  const config = await getEmailConfig();
+  const config = await getInstanceEmailConfig();
   if (!config) {
     console.warn('[auth] no email provider configured, dropping mail:', input.subject);
     return false;

@@ -7,12 +7,17 @@
   "empty": "Nenhuma chave de API ainda. Crie uma para autenticar requisições à API.",
   "fallbackName": "Chave de API",
   "createdAt": "Criada em {date}",
+  "expiresAt": "Expira em {date}",
+  "noExpiry": "Não expira",
   "deleteAction": "Excluir chave de API",
   "createDialog": {
     "title": "Criar chave de API",
     "nameLabel": "Nome",
     "namePlaceholder": "ex. pipeline de CI",
     "nameHint": "Um rótulo para reconhecer esta chave depois.",
+    "expiryLabel": "Expira em",
+    "expiresInDays": "{days} dias",
+    "expiryHint": "A chave deixa de funcionar nesse dia. Crie uma nova para continuar.",
     "submit": "Criar chave",
     "submitPending": "Criando…",
     "error": "Não foi possível criar a chave de API."

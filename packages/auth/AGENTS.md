@@ -7,7 +7,10 @@ The **server-side** better-auth instance. Consumed by `apps/api`. See root `AGEN
   `requireEmailVerification: false`, `autoSignIn: true`), plus the WebAuthn passkey
   plugin (`@better-auth/passkey`).
 - Exports `auth`, `USER_ROLES` / `UserRole`, `generateUsername` (the SCIM module derives a
-  handle with the same rule), plus `Auth` / `Session` types.
+  handle with the same rule), `getSessionFromHeaders`, plus `Auth` / `Session` types.
+- `emailAndPassword.revokeSessionsOnPasswordReset` is `true`: a reset ends every session
+  of that account, since a reset is how a stolen password is dealt with. The signed-in
+  change-password form in the web app sends `revokeOtherSessions` for the same reason.
 
 ## User role
 
@@ -162,6 +165,30 @@ applies closed/invite-only to a Google sign-up. Its `APIError`s carry a `code` b
 social callback turns that into the `?error=` it redirects with; without one the callback
 fails the request instead. Agent bot users are written with a direct insert and never
 reach the hook.
+
+## API keys
+
+`apiKey({ enableSessionForAPIKeys: true })` makes an `x-api-key` header resolve to the
+owner's session, so a key is a full-account credential. It therefore expires:
+`keyExpiration.defaultExpiresIn` is 90 days and `maxExpiresIn` is a year, and the create
+dialog in the web app offers 30/90/180/365 days. The plugin's option is documented as
+milliseconds but its handler passes the value to `getDate(value, "sec")`, so
+`API_KEY_DEFAULT_EXPIRES_IN_SEC` is in seconds; `maxExpiresIn` is in days, as the plugin
+reads it. Keys issued before this stay `expires_at` NULL and keep working.
+
+`hooks.before` refuses an `/api-key/update` that carries `expiresIn`: the endpoint accepts
+the key's own session, so otherwise whoever holds a leaked key could extend or clear its
+expiry. A longer life is a new key.
+
+An agent's key is the exception and carries no expiry — an agent replays its stored secret
+with nothing that would renew it, and an external agent's operator rotates it through
+`regenerate-key`. The plugin applies the default to every key it creates, so `issueKey` in
+`apps/api/src/modules/agents/core/service.ts` clears `expires_at` on the row afterwards.
+
+A key the plugin will not accept makes it throw out of `auth.api.getSession` rather than
+return no session. `getSessionFromHeaders` turns that back into "no session", so an expired
+key is answered with a 401 instead of a 500. Use it instead of `auth.api.getSession` where
+a request may carry a key.
 
 ## OpenAPI reference
 

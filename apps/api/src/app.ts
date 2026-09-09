@@ -1,5 +1,6 @@
 import {
   auth,
+  getSessionFromHeaders,
   oAuthDiscoveryMetadata,
   oAuthProtectedResourceMetadata,
   trustedOrigins,
@@ -252,7 +253,7 @@ export const app = new Elysia()
   .get(
     '/me',
     async ({ request }) => {
-      const session = await auth.api.getSession({ headers: request.headers });
+      const session = await getSessionFromHeaders(request.headers);
       // A deactivated account is not signed in as far as the app is concerned:
       // every planner route answers 401 for it, and this is what the screens ask
       // first. Deactivation arrives over SCIM, after the session was opened.

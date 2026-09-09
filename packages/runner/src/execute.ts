@@ -68,7 +68,14 @@ function spawnArgs(
   if (!preset) return ['sh', ['-c', config.command ?? '']];
   return [
     preset.bin,
-    presetArgv(preset, task.sessionId ?? null, task.systemPrompt, config.args, task.prompt),
+    presetArgv(
+      preset,
+      task.sessionId ?? null,
+      task.systemPrompt,
+      config.args,
+      task.prompt,
+      config.skipApprovals,
+    ),
   ];
 }
 

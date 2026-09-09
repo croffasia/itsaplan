@@ -6,6 +6,13 @@ import type { OutputFormat } from './config';
 // shell command by hand can produce a combination that runs but silently never reports a
 // session, or one that waits forever for an approval nobody is there to give.
 //
+// The task an agent runs is text from the tracker: a comment anyone in the project wrote,
+// an issue body, a schedule's prompt. The CLI's approval gate is what keeps such text from
+// running arbitrary commands on the operator's machine, so no preset turns it off on its
+// own: a tool call the CLI would ask about is denied, and the run goes on or ends with
+// what it could do. The flags that open the gate are kept apart in `skipApprovals` and
+// added only when the operator asks for them.
+//
 // Anything else about the invocation — MCP servers, model, working directory — is the
 // operator's, passed through `args` and the `--` tail.
 
@@ -22,15 +29,18 @@ export interface Preset {
   systemPromptFlag?: string;
   // The arguments before the operator's own, given null for a fresh session.
   head: (sessionId: string | null) => string[];
+  // The flags that turn off the CLI's approval gate, added after `head` only when the
+  // operator opts in. Empty for a CLI whose unattended mode denies instead of asking.
+  skipApprovals: string[];
   // The arguments after the operator's own: a stdin marker, or the flag the prompt follows.
   tail: string[];
 }
 
 export const PRESETS: Record<PresetName, Preset> = {
   // stream-json carries the tool calls into the chat, and `session_id` rides on every line
-  // of it, including the first. --verbose is required for stream-json under --print, and
-  // --permission-mode auto has a classifier review each action, since nobody is there to
-  // answer a prompt.
+  // of it, including the first. --verbose is required for stream-json under --print. Under
+  // --print a tool call that needs an approval is denied; --permission-mode auto has a
+  // classifier answer for the absent person instead.
   claude: {
     bin: 'claude',
     outputFormat: 'claude-stream-json',
@@ -43,9 +53,8 @@ export const PRESETS: Record<PresetName, Preset> = {
       'stream-json',
       '--include-partial-messages',
       '--verbose',
-      '--permission-mode',
-      'auto',
     ],
+    skipApprovals: ['--permission-mode', 'auto'],
     tail: [],
   },
 
@@ -63,6 +72,7 @@ export const PRESETS: Record<PresetName, Preset> = {
       '-c',
       'sandbox_mode="workspace-write"',
     ],
+    skipApprovals: [],
     tail: ['-'],
   },
 
@@ -76,12 +86,13 @@ export const PRESETS: Record<PresetName, Preset> = {
       'json',
       ...(sessionId ? ['--session', sessionId] : []),
     ],
+    skipApprovals: [],
     tail: [],
   },
 
   // --conversation resumes the conversation the stream names. --print-timeout is raised
   // well past its five-minute default, so the runner's own timeout is what ends a long
-  // task.
+  // task. A denied tool call still exits 0.
   antigravity: {
     bin: 'agy',
     outputFormat: 'antigravity-stream-json',
@@ -90,28 +101,29 @@ export const PRESETS: Record<PresetName, Preset> = {
       ...(sessionId ? ['--conversation', sessionId] : []),
       '--output-format',
       'stream-json',
-      '--dangerously-skip-permissions',
       '--print-timeout',
       '24h',
     ],
+    skipApprovals: ['--dangerously-skip-permissions'],
     tail: ['-p'],
   },
 
-  // --allow-all-tools is required for a run nobody is watching, and --no-ask-user turns
-  // off the tool that would wait for an answer. The json output carries the tool calls,
-  // and its closing `result` line names the session, which --session-id resumes. The
-  // resume flag has to be this one: -r takes its value only as `-r=<id>`.
+  // --no-ask-user turns off the tool that would wait for an answer; it grants nothing, so
+  // it stays on. --allow-all-tools is what approves every tool call. The json output
+  // carries the tool calls, and its closing `result` line names the session, which
+  // --session-id resumes. The resume flag has to be this one: -r takes its value only as
+  // `-r=<id>`.
   copilot: {
     bin: 'copilot',
     outputFormat: 'copilot-json',
     promptVia: 'arg',
     head: (sessionId) => [
-      '--allow-all-tools',
       '--no-ask-user',
       '--output-format',
       'json',
       ...(sessionId ? ['--session-id', sessionId] : []),
     ],
+    skipApprovals: ['--allow-all-tools'],
     tail: ['-p'],
   },
 };
@@ -131,16 +143,19 @@ export function presetPrompt(preset: Preset, systemPrompt: string, prompt: strin
 
 // The operator's own arguments sit between what the preset needs in front and what it
 // needs last, so a prompt passed as an argument stays at the end, a stdin marker is not
-// separated from its command, and a repeated flag overrides the preset's.
+// separated from its command, and a repeated flag overrides the preset's, the approval
+// flags included.
 export function presetArgv(
   preset: Preset,
   sessionId: string | null,
   systemPrompt: string,
   extraArgs: string[],
   prompt: string,
+  skipApprovals = false,
 ): string[] {
   return [
     ...preset.head(sessionId),
+    ...(skipApprovals ? preset.skipApprovals : []),
     ...(preset.systemPromptFlag && systemPrompt ? [preset.systemPromptFlag, systemPrompt] : []),
     ...extraArgs,
     ...preset.tail,

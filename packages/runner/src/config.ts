@@ -21,6 +21,10 @@ export interface RunnerConfig {
   // Appended to what the preset builds. Ignored with `command`, which already spells out
   // the whole invocation.
   args: string[];
+  // Adds the preset's flags that turn off the CLI's approval gate, so every tool call the
+  // task text leads to runs without anyone approving it. Off by default; ignored with
+  // `command`.
+  skipApprovals: boolean;
   // Defaults to the process's own.
   cwd?: string;
   // On top of the runner's own environment.
@@ -94,6 +98,15 @@ function agentFrom(value: unknown): PresetName | undefined {
   return name;
 }
 
+// A boolean in the file, or the strings the environment can carry.
+function boolFrom(value: unknown, field: string): boolean {
+  if (value === undefined || value === false || value === true) return value === true;
+  const text = textOf(value);
+  if (text === 'true' || text === '1') return true;
+  if (text === 'false' || text === '0') return false;
+  throw new Error(`${field} must be true or false`);
+}
+
 function argsFrom(value: unknown): string[] {
   if (value === undefined) return [];
   if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
@@ -129,6 +142,7 @@ export interface ConfigOverrides {
   agent?: string;
   // The arguments after `--`, appended to the ones the config file already gives.
   args?: string[];
+  skipApprovals?: boolean;
 }
 
 type Fields = Record<string, unknown>;
@@ -202,6 +216,7 @@ function configFrom(fields: Fields, name: string, extraArgs: string[]): RunnerCo
     agent,
     command,
     args: [...argsFrom(fields.args), ...extraArgs],
+    skipApprovals: boolFrom(fields.skipApprovals, 'skipApprovals'),
     cwd: textOf(fields.cwd)?.replace(/^~/, process.env.HOME ?? '~'),
     env: (fields.env as Record<string, string> | undefined) ?? {},
     concurrency: intFrom(fields.concurrency, DEFAULTS.concurrency),
@@ -224,6 +239,7 @@ function sharedFields(file: Fields, overrides: ConfigOverrides): Fields {
     apiKey: env.ITSAPLAN_API_KEY,
     agent: overrides.agent ?? env.ITSAPLAN_AGENT,
     command: env.ITSAPLAN_COMMAND,
+    skipApprovals: overrides.skipApprovals ? 'true' : env.ITSAPLAN_SKIP_APPROVALS,
     cwd: env.ITSAPLAN_CWD,
     concurrency: env.ITSAPLAN_CONCURRENCY,
     pollIntervalMs: env.ITSAPLAN_POLL_INTERVAL_MS,

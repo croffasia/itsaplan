@@ -8,7 +8,8 @@ This package runs such agents on your own machine — one, or several at once.
 - Polls your instance for the agent's queued runs. Runs each one with a coding agent CLI.
   Reports the result.
 - Has presets for Claude Code, Codex, opencode, Antigravity CLI and GitHub Copilot CLI.
-  Each preset sets the unattended flags and the session resume.
+  Each preset sets the output format and the session resume, and keeps the CLI's approval
+  gate on unless you turn it off.
 - Runs your own `command` instead, if you prefer. The command takes the task on stdin.
 - Answers the agent's chat. Sends the text and the tool calls while the CLI prints them.
 
@@ -61,7 +62,7 @@ or mention it in a comment. The task then starts in your terminal.
 ## Which coding agent
 
 `agent` names a CLI that the runner knows. The runner then builds the command itself: the
-flags for an unattended run, and the session resume. Every preset keeps a chat session.
+output format and the session resume. Every preset keeps a chat session.
 
 | Agent         | Runs               |
 | ------------- | ------------------ |
@@ -99,6 +100,24 @@ Your arguments come after the preset's own. A repeated flag thus replaces its va
 
 `command` replaces the preset with your own shell command. The command receives the task
 on stdin. The runner keeps no session for it, because it does not know how to resume one.
+
+### Approvals
+
+The task is text from the tracker, written by whoever commented on the issue, and the
+coding agent runs on your machine. A preset therefore leaves the CLI's approval gate on: a
+tool call the CLI would ask you about is denied, and the run goes on with what it could
+do. Grant the tools a task needs in `args` (`--allowedTools` for Claude Code,
+`--allow-tool` for Copilot CLI).
+
+`skipApprovals: true` in the file, `ITSAPLAN_SKIP_APPROVALS=1`, or `--skip-approvals` on
+the command line adds the preset's flag that approves every tool call. Do that only on a
+machine set aside for it. Read
+[Threat model](https://github.com/croffasia/itsaplan/blob/main/docs/runner.md#threat-model)
+first.
+
+```bash
+npx -y @itsaplan/runner --agent claude --skip-approvals
+```
 
 ## Several agents on one runner
 
@@ -166,6 +185,7 @@ priority over both. An `agents` entry has priority over all three, for the field
 | `agents`         |                             | —                  | Several agents, each with its own key and settings. Not with `apiKeys` |
 | `agent`          | `ITSAPLAN_AGENT`            | —                  | The coding agent to run                                            |
 | `args`           |                             | `[]`               | Arguments added after the preset's                                 |
+| `skipApprovals`  | `ITSAPLAN_SKIP_APPROVALS`   | `false`            | Adds the preset's flag that approves every tool call               |
 | `command`        | `ITSAPLAN_COMMAND`          | —                  | Your own command, instead of `agent`                               |
 | `cwd`            | `ITSAPLAN_CWD`              | where you start it | Working directory for the command                                  |
 | `env`            |                             | `{}`               | Extra variables for the command                                    |

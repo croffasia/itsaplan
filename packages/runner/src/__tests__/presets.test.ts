@@ -53,11 +53,39 @@ describe('preset arguments', () => {
   });
 
   it("appends the operator's arguments after the preset's, so a repeated flag wins", () => {
-    const argv = presetArgv(PRESETS.claude, null, '', ['--permission-mode', 'plan'], 'do it');
+    const argv = presetArgv(PRESETS.claude, null, '', ['--permission-mode', 'plan'], 'do it', true);
     expect(argv.lastIndexOf('--permission-mode')).toBeGreaterThan(
       argv.indexOf('--permission-mode'),
     );
     expect(argv.at(-1)).toBe('plan');
+  });
+
+  // The task is text anyone in the project can write, so the gate that would ask before
+  // it runs a command stays closed unless the operator opens it.
+  it("leaves every CLI's approval gate on unless the operator opts out of it", () => {
+    const gates = [
+      '--permission-mode',
+      '--dangerously-skip-permissions',
+      '--allow-all-tools',
+      '--dangerously-bypass-approvals-and-sandbox',
+      '--full-auto',
+      '--yolo',
+    ];
+    for (const preset of Object.values(PRESETS)) {
+      const argv = presetArgv(preset, null, 'context', [], 'do it');
+      for (const gate of gates) expect(argv).not.toContain(gate);
+      expect(argv).not.toContain('auto');
+    }
+
+    const claude = presetArgv(PRESETS.claude, null, 'context', [], 'do it', true);
+    const mode = claude.indexOf('--permission-mode');
+    expect(claude.slice(mode, mode + 2)).toEqual(['--permission-mode', 'auto']);
+    expect(presetArgv(PRESETS.antigravity, null, '', [], 'do it', true)).toContain(
+      '--dangerously-skip-permissions',
+    );
+    const copilot = presetArgv(PRESETS.copilot, null, '', [], 'do it', true);
+    expect(copilot).toContain('--allow-all-tools');
+    expect(copilot).toContain('--no-ask-user');
   });
 
   it('passes the system prompt by flag where there is one and in front of the task otherwise', () => {

@@ -150,13 +150,24 @@ async function drain<T>(
   await Promise.all(active);
 }
 
-function parseArgv(argv: string[]): { configPath?: string; agent?: string; args: string[] } {
-  const parsed: { configPath?: string; agent?: string; args: string[] } = { args: [] };
+interface Argv {
+  configPath?: string;
+  agent?: string;
+  skipApprovals?: boolean;
+  args: string[];
+}
+
+function parseArgv(argv: string[]): Argv {
+  const parsed: Argv = { args: [] };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === '--') {
       parsed.args = argv.slice(i + 1);
       break;
+    }
+    if (arg === '--skip-approvals') {
+      parsed.skipApprovals = true;
+      continue;
     }
     if (arg === '--agent') {
       const value = argv[++i];
@@ -180,9 +191,10 @@ async function serve(state: { stopping: boolean }, config: RunnerConfig): Promis
   const client = new Client(config);
   const prefix = prefixOf(config.name);
   const log: Log = (message) => console.log(`${prefix} ${message}`);
+  const approvals = config.agent && config.skipApprovals ? ' with approvals skipped' : '';
   log(
-    `running ${config.agent ?? 'the configured command'}, polling ${config.url} every ` +
-      `${config.pollIntervalMs}ms, up to ${config.concurrency} at once`,
+    `running ${config.agent ?? 'the configured command'}${approvals}, polling ${config.url} ` +
+      `every ${config.pollIntervalMs}ms, up to ${config.concurrency} at once`,
   );
   let chatSupported = true;
   await Promise.all([
@@ -226,7 +238,11 @@ async function main(): Promise<void> {
   const cli = parseArgv(process.argv.slice(2));
   const configPath =
     cli.configPath ?? process.env.ITSAPLAN_RUNNER_CONFIG ?? './itsaplan-runner.json';
-  const configs = await loadConfig(configPath, { agent: cli.agent, args: cli.args });
+  const configs = await loadConfig(configPath, {
+    agent: cli.agent,
+    args: cli.args,
+    skipApprovals: cli.skipApprovals,
+  });
   const state = { stopping: false };
 
   for (const signal of ['SIGINT', 'SIGTERM'] as const) {

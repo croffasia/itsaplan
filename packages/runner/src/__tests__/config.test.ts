@@ -49,6 +49,22 @@ describe('one agent', () => {
     const [config] = await load(base);
     expect(config.apiKey).toBe('key-env');
   });
+
+  it('keeps approvals on unless the file, the environment or the command line says otherwise', async () => {
+    expect((await load({ ...base, apiKey: 'key-a' }))[0].skipApprovals).toBe(false);
+    expect((await load({ ...base, apiKey: 'key-a', skipApprovals: true }))[0].skipApprovals).toBe(
+      true,
+    );
+    expect(
+      (await load({ ...base, apiKey: 'key-a' }, { skipApprovals: true }))[0].skipApprovals,
+    ).toBe(true);
+    process.env.ITSAPLAN_SKIP_APPROVALS = '1';
+    expect((await load({ ...base, apiKey: 'key-a' }))[0].skipApprovals).toBe(true);
+    delete process.env.ITSAPLAN_SKIP_APPROVALS;
+    await expect(load({ ...base, apiKey: 'key-a', skipApprovals: 'yes' })).rejects.toThrow(
+      'skipApprovals must be true or false',
+    );
+  });
 });
 
 describe('several agents', () => {

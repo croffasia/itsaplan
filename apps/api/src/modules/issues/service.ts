@@ -63,6 +63,7 @@ import { emitWebhookEvent } from '#modules/webhooks/emit';
 import {
   getAssignTriggerAgent,
   getFieldTriggerAgent,
+  isAgentUser,
   isProjectAgent,
 } from '#modules/agents/core/service';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
@@ -1095,13 +1096,15 @@ export async function updateIssue(
 }
 
 // If an issue's new delegate is an agent that reacts to delegation, queue a run so it
-// can act on the issue. Skipped when the agent delegated to itself (an agent setting
-// itself off). The run is executed later — by the poller or by the agent's runner —
-// so the write is never blocked on it.
+// can act on the issue. A delegation made by an agent's bot user queues nothing, which
+// stops agents from setting each other (or themselves) off. The run is executed later
+// — by the poller or by the agent's runner — so the write is never blocked on it.
 async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promise<void> {
   const delegate = after.delegateUserId;
-  if (!delegate || delegate === actorId(actor)) return;
-  const agent = await getAssignTriggerAgent(after.projectId, delegate, actorId(actor));
+  const actorUserId = actorId(actor);
+  if (!delegate || delegate === actorUserId) return;
+  if (actorUserId && (await isAgentUser(actorUserId))) return;
+  const agent = await getAssignTriggerAgent(after.projectId, delegate, actorUserId);
   if (!agent) return;
   await enqueueAgentRun({
     agentId: agent.id,
@@ -1472,8 +1475,9 @@ async function assertFieldMember(
 }
 
 // If the issue's new value for a member field is an agent that reacts to that field,
-// queue a run so it can act on the issue. Skipped when the agent set itself. The run
-// is executed later, so the write is never blocked on it.
+// queue a run so it can act on the issue. A value set by an agent's bot user queues
+// nothing, which stops agents from setting each other (or themselves) off. The run is
+// executed later, so the write is never blocked on it.
 async function enqueueFieldRun(
   projectId: number,
   issueId: number,
@@ -1482,6 +1486,7 @@ async function enqueueFieldRun(
   actorUserId: string | null | undefined,
 ): Promise<void> {
   if (userId === actorUserId) return;
+  if (actorUserId && (await isAgentUser(actorUserId))) return;
   const agent = await getFieldTriggerAgent(projectId, userId, field.id, actorUserId ?? null);
   if (!agent) return;
   const row = await getIssue(issueId);

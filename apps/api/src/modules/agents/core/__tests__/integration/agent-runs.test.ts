@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createAgent, projectIdOf, teamOf } from '#tests/helpers/agents';
@@ -12,7 +12,9 @@ import { addProjectMember } from '#tests/helpers/members';
 // a mention run; delegating an issue to an agent with trigger_on_assign queues a
 // delegation run; setting it into a member custom field it carries a trigger for
 // queues a field run, held back by that trigger's own delay. The poller (a live LLM
-// call) is not exercised, so runs stay pending.
+// call) is not exercised, so runs stay pending. A delegation or field change made by
+// an agent's bot user queues nothing (the loop guard): the agent acts over HTTP with
+// its API key, which is the credential its runner and the MCP endpoint both carry.
 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
@@ -377,5 +379,54 @@ describe('agent run history', () => {
       ['ai-agents']({ agentId: agent.id })
       .runs.get({ query: {} });
     expect(res.status).toBe(404);
+  });
+
+  it("does not queue a delegation run when an agent's bot user delegates (loop guard)", async () => {
+    const { asOwner, columnId, teamId } = await setup();
+    const target = await createInternalAgent(asOwner, 'Target Bot', 'target');
+    await agents(
+      asOwner,
+      teamId,
+    )({ agentId: target.id }).patch({
+      triggerOnAssign: true,
+      delegationDelaySec: 0,
+    });
+    const actor = (
+      await createAgent(asOwner, 'MKT', { name: 'Actor Bot', username: 'actor', kind: 'external' })
+    ).data!;
+    const asActor = apiKeyApi(actor.apiKey!);
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    const patched = await asActor
+      .issues({ issueId: issue.id })
+      .patch({ delegateUserId: target.userId });
+    expect(patched.status).toBe(200);
+    const created = await asActor
+      .projects({ projectKey: 'MKT' })
+      .issues.post({ columnId, title: 'Handed over', delegateUserId: target.userId });
+    expect(created.status).toBe(201);
+
+    const res = await agents(asOwner, teamId)({ agentId: target.id }).runs.get();
+    expect(res.data!.items).toEqual([]);
+  });
+
+  it("does not queue a field run when an agent's bot user sets the field (loop guard)", async () => {
+    const { asOwner, columnId, teamId } = await setup();
+    const target = await createInternalAgent(asOwner, 'Target Bot', 'target');
+    const field = await fieldTrigger(asOwner, teamId, target.id, 'Reviewer', 0);
+    const actor = (
+      await createAgent(asOwner, 'MKT', { name: 'Actor Bot', username: 'actor', kind: 'external' })
+    ).data!;
+    const asActor = apiKeyApi(actor.apiKey!);
+    const issue = (await createIssue(asOwner, columnId)).data!;
+
+    const put = await asActor
+      .issues({ issueId: issue.id })
+      .fields({ fieldId: field.id })
+      .put({ value: target.userId });
+    expect(put.status).toBe(200);
+
+    const res = await agents(asOwner, teamId)({ agentId: target.id }).runs.get();
+    expect(res.data!.items).toEqual([]);
   });
 });

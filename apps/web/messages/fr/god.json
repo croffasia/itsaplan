@@ -137,6 +137,8 @@
     "requireVerificationHint": "Un nouveau compte doit confirmer son adresse avant de pouvoir se connecter.",
     "magicLink": "Liens de connexion",
     "magicLinkHint": "Proposer la connexion par lien envoyé par e-mail, en plus du mot de passe.",
+    "trustProviderEmails": "Faire confiance aux adresses des fournisseurs de connexion",
+    "trustProviderEmailsHint": "Google et OpenID Connect connectent la personne au compte qui porte déjà son adresse, que cette adresse soit confirmée ici ou non. À activer seulement si vous décidez qui peut s'inscrire chez le fournisseur.",
     "emailPassword": "E-mail et mot de passe",
     "emailPasswordHint": "Proposer le formulaire de connexion et d'inscription. Désactivez-le pour n'autoriser l'accès que via un fournisseur de connexion.",
     "needsSso": "Configurez d'abord un fournisseur de connexion dans Intégrations."

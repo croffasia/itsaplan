@@ -97,6 +97,18 @@ export default function GodAuthenticationForm({
                 />
               }
             />
+            <SettingsRow
+              title={t('trustProviderEmails')}
+              description={t('trustProviderEmailsHint')}
+              note={needsSso ? t('needsSso') : undefined}
+              control={
+                <Switch
+                  checked={policy.trustProviderEmails}
+                  disabled={policy.saving || needsSso}
+                  onCheckedChange={policy.setTrustProviderEmails}
+                />
+              }
+            />
           </SettingsCard>
         </SettingsSection>
       </div>

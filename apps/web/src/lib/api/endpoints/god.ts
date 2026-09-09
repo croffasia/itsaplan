@@ -20,6 +20,7 @@ export interface InstanceAuthSettings {
   requireEmailVerification: boolean;
   magicLink: boolean;
   emailPassword: boolean;
+  trustProviderEmails: boolean;
   hasEmailProvider: boolean;
   // Whether Google or the OIDC provider can run. Password sign-in may only be turned
   // off while one of them can.
@@ -31,6 +32,7 @@ export interface InstanceAuthSettingsPatch {
   requireEmailVerification?: boolean;
   magicLink?: boolean;
   emailPassword?: boolean;
+  trustProviderEmails?: boolean;
 }
 
 // The instance mail provider used for authentication email (password reset, address

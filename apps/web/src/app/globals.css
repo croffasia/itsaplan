@@ -210,6 +210,14 @@
   pointer-events: none;
 }
 
+/* An alert states its kind by colour, and every place one appears already sits
+   inside a bordered surface. The generated component carries an unconditional
+   `border`, which reads as a box drawn inside a box. A caller that wants one back
+   sets both the width and the colour. */
+[data-slot='alert'] {
+  border-width: 0;
+}
+
 /* Dialogs and sheets cover a far larger area, so they carry a wider, deeper cast
    than a menu. */
 [data-slot='dialog-content'],

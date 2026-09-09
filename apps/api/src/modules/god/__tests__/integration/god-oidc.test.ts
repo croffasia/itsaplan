@@ -113,6 +113,24 @@ describe('god OIDC and password settings', () => {
     });
   });
 
+  describe('trusting provider emails', () => {
+    it('is off by default and round-trips', async () => {
+      const { god } = await setup();
+
+      expect((await god.api.god['auth-settings'].get()).data).toMatchObject({
+        trustProviderEmails: false,
+      });
+
+      const res = await god.api.god['auth-settings'].put({ trustProviderEmails: true });
+
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ trustProviderEmails: true });
+      expect((await god.api.god['auth-settings'].get()).data).toMatchObject({
+        trustProviderEmails: true,
+      });
+    });
+  });
+
   describe('turning off password sign-in', () => {
     it('refuses while no single sign-on provider is configured', async () => {
       const { god } = await setup();

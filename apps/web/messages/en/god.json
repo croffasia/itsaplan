@@ -137,6 +137,8 @@
     "requireVerificationHint": "A new account must confirm its address before it can sign in.",
     "magicLink": "Sign-in links",
     "magicLinkHint": "Offer signing in with a link sent by email, alongside the password.",
+    "trustProviderEmails": "Trust addresses from sign-in providers",
+    "trustProviderEmailsHint": "Google and OpenID Connect sign a person in to the account that already has their address, confirmed here or not. Turn this on only where you control who can register at the provider.",
     "emailPassword": "Email and password",
     "emailPasswordHint": "Offer the sign-in and sign-up form. Turn it off to let people in through a sign-in provider only.",
     "needsSso": "Set up a sign-in provider under Integrations first."

@@ -137,6 +137,8 @@
     "requireVerificationHint": "Uma nova conta deve confirmar seu endereço antes de poder entrar.",
     "magicLink": "Links de login",
     "magicLinkHint": "Oferecer login com um link enviado por e-mail, junto com a senha.",
+    "trustProviderEmails": "Confiar nos endereços dos provedores de login",
+    "trustProviderEmailsHint": "O Google e o OpenID Connect entram na conta que já tem o endereço da pessoa, confirmado aqui ou não. Ative apenas se você decide quem pode se registrar no provedor.",
     "emailPassword": "E-mail e senha",
     "emailPasswordHint": "Oferecer o formulário de login e registro. Desative para deixar as pessoas entrarem apenas por um provedor de login.",
     "needsSso": "Configure um provedor de login em Integrações primeiro."

@@ -138,6 +138,22 @@ async function refreshOidcOptions(): Promise<boolean> {
   }
 }
 
+// The two conditions better-auth checks before linking an address to an account that
+// already has it are read from different places: `trustedProviders` per request,
+// through the resolver below, and `requireLocalEmailVerified` off the options object
+// at the moment of the decision. The resolver runs first, in the same request, and
+// leaves the setting here for the getter to read.
+let trustProviderEmails = false;
+
+// The trusted providers for one request. The settings are read on the OAuth callback
+// only — the resolver runs on every request to the auth API, and a session check has
+// no linking decision to make.
+async function resolveTrustedProviders(request?: Request): Promise<string[]> {
+  if (!request || !new URL(request.url).pathname.includes('/callback/')) return [];
+  trustProviderEmails = (await getAuthSettings()).trustProviderEmails;
+  return trustProviderEmails ? ['google', OIDC_PROVIDER_ID] : [];
+}
+
 // The endpoints of the email/password form, including the two the magic link uses.
 // Turning password authentication off refuses all of them, so a link issued before
 // the switch was flipped cannot still be redeemed. Passkey sign-in is not here: a
@@ -292,16 +308,26 @@ export const auth = betterAuth({
   // Google sign-in. The provider is always mounted; whether it may run is decided per
   // request in the hook below, the same way the magic link is handled. The factory
   // runs once, at startup, and returns the shared options object described above.
-  //
-  // Account linking is left at better-auth's defaults: a Google address that already
-  // has an account signs into it and gains a linked google account row, but only when
-  // that account's email is confirmed (accountLinking.requireLocalEmailVerified
-  // defaults to true). Google itself always reports a verified address, and after a
-  // successful link better-auth marks the local user confirmed too.
   socialProviders: {
     google: async () => {
       await refreshGoogleOptions();
       return googleOptions;
+    },
+  },
+
+  // A provider address that already has an account signs into it and gains a linked
+  // account row, rather than being refused as a duplicate. By default that happens
+  // only when the provider reported the address as verified and the local account
+  // confirmed its own — Google always reports a verified address, an OIDC provider
+  // need not, and an instance with no mail provider has no confirmed accounts at
+  // all. The instance setting drops both conditions; after a successful link
+  // better-auth marks the local user confirmed too.
+  account: {
+    accountLinking: {
+      trustedProviders: resolveTrustedProviders,
+      get requireLocalEmailVerified() {
+        return !trustProviderEmails;
+      },
     },
   },
 

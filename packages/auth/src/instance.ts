@@ -45,6 +45,12 @@ export interface AuthSettings {
   // passkeys, which are added to an account that already exists) as the way in, so
   // the api refuses to turn it off while no OAuth provider is configured.
   emailPassword: boolean;
+  // Sign a person in through an OAuth provider into the existing account with the
+  // same address, whatever the provider says about that address and whether or not
+  // it was ever confirmed here. Off by default: an account nobody confirmed may have
+  // been registered with a password by someone other than the owner of the address,
+  // and trusting the provider hands it to whoever the provider says owns it.
+  trustProviderEmails: boolean;
 }
 
 function defaultAuthSettings(): AuthSettings {
@@ -53,6 +59,7 @@ function defaultAuthSettings(): AuthSettings {
     requireEmailVerification: false,
     magicLink: false,
     emailPassword: true,
+    trustProviderEmails: false,
   };
 }
 

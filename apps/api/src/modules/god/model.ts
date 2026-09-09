@@ -34,6 +34,7 @@ export const AuthSettingsResponse = t.Object({
   requireEmailVerification: t.Boolean(),
   magicLink: t.Boolean(),
   emailPassword: t.Boolean(),
+  trustProviderEmails: t.Boolean(),
   // The settings that depend on outbound email cannot be turned on without a mail
   // provider, and the UI explains why.
   hasEmailProvider: t.Boolean(),
@@ -47,6 +48,7 @@ export const AuthSettingsBody = t.Object({
   requireEmailVerification: t.Optional(t.Boolean()),
   magicLink: t.Optional(t.Boolean()),
   emailPassword: t.Optional(t.Boolean()),
+  trustProviderEmails: t.Optional(t.Boolean()),
 });
 
 export const EmailSettingsResponse = t.Object({

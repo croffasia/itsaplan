@@ -137,6 +137,8 @@
     "requireVerificationHint": "新账户必须验证邮箱后才能登录。",
     "magicLink": "邮箱登录链接",
     "magicLinkHint": "通过邮件发送免密码登录链接。",
+    "trustProviderEmails": "信任登录提供方的邮箱地址",
+    "trustProviderEmailsHint": "通过 Google 或 OpenID Connect 登录时，直接进入已使用该邮箱地址的账户，无论该地址是否在此验证过。仅当由你决定谁能在提供方注册时才开启。",
     "emailPassword": "邮箱和密码",
     "emailPasswordHint": "提供登录和注册表单。关闭后只能通过登录提供方进入。",
     "needsSso": "请先在「集成」中配置登录提供方。"

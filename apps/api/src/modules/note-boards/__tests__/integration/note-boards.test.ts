@@ -285,6 +285,54 @@ describe('note boards', () => {
     });
   });
 
+  describe('delete', () => {
+    it('lets the creator delete their board', async () => {
+      const owner = await setupOwnerProject();
+      const boardId = (await boards(owner.api).post({ name: 'Ideas' })).data!.id;
+
+      expect((await boards(owner.api)({ boardId }).delete()).status).toBe(204);
+      expect((await boards(owner.api)({ boardId }).get()).status).toBe(404);
+    });
+
+    it('keeps a granted member from deleting a board shared with them', async () => {
+      const owner = await setupOwnerProject();
+      const granted = await addMember(owner.api);
+      const boardId = (await boards(owner.api).post({ name: 'Ideas' })).data!.id;
+      await boards(owner.api)({ boardId }).patch({
+        visibility: 'restricted',
+        memberIds: [granted.userId],
+      });
+
+      const res = await boards(granted.api)({ boardId }).delete();
+      expect(res.status).toBe(403);
+      expect(res.error?.value).toEqual({ error: 'Only the board creator can delete the board' });
+      expect((await boards(owner.api)({ boardId }).get()).status).toBe(200);
+    });
+
+    it('keeps a member from deleting a public board they did not create', async () => {
+      const owner = await setupOwnerProject();
+      const member = await addMember(owner.api);
+      const boardId = (await boards(owner.api).post({ name: 'Ideas' })).data!.id;
+
+      expect((await boards(member.api)({ boardId }).delete()).status).toBe(403);
+      expect((await boards(owner.api)({ boardId }).get()).status).toBe(200);
+    });
+
+    it('answers a delete from outside the board the way an update is answered', async () => {
+      const owner = await setupOwnerProject();
+      const other = await addMember(owner.api);
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      const boardId = (await boards(owner.api).post({ name: 'Ideas' })).data!.id;
+      await boards(owner.api)({ boardId }).patch({ visibility: 'private' });
+
+      expect((await boards(other.api)({ boardId }).patch({ name: 'Nope' })).status).toBe(404);
+      expect((await boards(other.api)({ boardId }).delete()).status).toBe(404);
+      expect((await boards(outsider)({ boardId }).patch({ name: 'Nope' })).status).toBe(403);
+      expect((await boards(outsider)({ boardId }).delete()).status).toBe(403);
+      expect((await boards(owner.api)({ boardId }).get()).status).toBe(200);
+    });
+  });
+
   describe('permissions', () => {
     it('grants the default member role every note board action', async () => {
       const owner = await setupOwnerProject();

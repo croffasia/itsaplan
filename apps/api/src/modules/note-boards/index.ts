@@ -202,7 +202,13 @@ export const noteBoardRoutes = new Elysia({
   .delete(
     '/projects/:projectKey/note-boards/:boardId',
     async ({ project, user, params }) => {
-      await loadAccessibleBoard(params.boardId, project.id, requireUser(user).id);
+      const userId = requireUser(user).id;
+      const board = await loadAccessibleBoard(params.boardId, project.id, userId);
+      // A board with no recorded creator (made before creators were recorded, or
+      // whose creator's account is gone) would otherwise be undeletable.
+      if (board.createdByUserId !== null && board.createdByUserId !== userId) {
+        throw new HttpError(403, 'Only the board creator can delete the board');
+      }
       await deleteNoteBoard(params.boardId);
       return noContent();
     },
@@ -213,7 +219,8 @@ export const noteBoardRoutes = new Elysia({
       response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete a note board',
-        description: 'Permanently delete a note board and every note on it.',
+        description:
+          'Permanently delete a note board and every note on it. Only the board creator can delete it.',
         ...mcpTool('delete_note_board'),
       },
     },

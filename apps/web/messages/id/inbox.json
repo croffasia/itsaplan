@@ -1,0 +1,37 @@
+{
+  "title": "Kotak masuk",
+  "empty": "Tidak ada notifikasi",
+  "selectNotification": "Pilih notifikasi",
+  "backToList": "Kotak masuk",
+  "filter": "Filter",
+  "display": "Tampilan",
+  "notificationType": "Tipe notifikasi",
+  "showRead": "Tampilkan yang sudah dibaca",
+  "showSnoozed": "Tampilkan yang ditunda",
+  "markAllRead": "Tandai semua sudah dibaca",
+  "deleteAllRead": "Hapus semua yang sudah dibaca",
+  "deleteAllReadCompleted": "Hapus semua yang sudah dibaca untuk issue yang telah selesai",
+  "types": {
+    "assigned": "Ditetapkan",
+    "mentioned": "Disebutkan",
+    "commented": "Diberi komentar",
+    "state_changed": "Status diubah"
+  },
+  "actions": {
+    "markRead": "Tandai sudah dibaca",
+    "markUnread": "Tandai belum dibaca",
+    "snooze": "Tunda",
+    "unsnooze": "Batalkan penundaan",
+    "tomorrow": "Besok",
+    "inAWeek": "Dalam 1 minggu",
+    "pickDate": "Pilih tanggal…"
+  },
+  "event": {
+    "someone": "Seseorang",
+    "assigned": "{who} menetapkan issue ini kepada Anda",
+    "mentioned": "{who} menyebut Anda",
+    "commented": "{who} berkomentar",
+    "stateChanged": "{who} mengubah status dari {from} ke {to}",
+    "stateChangedPlain": "{who} mengubah status"
+  }
+}

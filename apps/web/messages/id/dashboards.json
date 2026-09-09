@@ -1,0 +1,204 @@
+{
+  "noAccess": "Anda tidak memiliki akses ke dasbor.",
+  "defaultName": "Ringkasan",
+  "newDashboard": "Dasbor baru",
+  "renameDashboard": "Ubah nama dasbor",
+  "namePlaceholder": "Nama dasbor",
+  "options": "Opsi dasbor",
+  "rename": "Ubah nama",
+  "editLayout": "Ubah tata letak",
+  "discard": "Buang perubahan",
+  "saveDashboard": "Simpan dasbor",
+  "saveChanges": "Simpan perubahan",
+  "noWidgets": "Belum ada widget. Tambahkan satu untuk membangun dasbor ini.",
+  "addWidget": "Tambah widget",
+  "addWidgetTitle": "Tambah widget",
+  "addWidgetDescription": "Pilih widget untuk ditambahkan ke dasbor ini.",
+  "searchWidgets": "Cari widget",
+  "clearSearch": "Bersihkan pencarian",
+  "noWidgetMatches": "Tidak ada widget yang cocok dengan “{query}”.",
+  "dragToMove": "Seret untuk memindahkan",
+  "widgetName": "Nama widget",
+  "widgetSettings": "Pengaturan widget",
+  "widgetOptions": "Opsi widget",
+  "removeWidget": "Hapus widget",
+  "lastDays": "{days} hari terakhir",
+  "showRows": "Tampilkan {count}",
+  "widgetGroups": {
+    "issues": "Issue",
+    "agents": "Agen AI & webhook"
+  },
+  "widgets": {
+    "stat": {
+      "label": "Statistik",
+      "description": "Jumlah issue yang cocok dengan filter"
+    },
+    "recent_issues": {
+      "label": "Issue terbaru",
+      "description": "Issue terbaru berdasarkan waktu pembuatan atau pembaruan"
+    },
+    "activity_feed": {
+      "label": "Aktivitas",
+      "description": "Log perubahan seluruh proyek, dapat difilter berdasarkan pelaku dan tindakan"
+    },
+    "pulse": {
+      "label": "Pulse",
+      "description": "Heatmap aktivitas harian gaya GitHub"
+    },
+    "throughput": {
+      "label": "Throughput",
+      "description": "Issue yang dibuat dibandingkan dengan yang ditutup setiap minggu"
+    },
+    "breakdown": {
+      "label": "Rincian",
+      "description": "Jumlah issue berdasarkan status, prioritas, jenis, atau penerima tugas"
+    },
+    "agent_runs": {
+      "label": "Eksekusi agen",
+      "description": "Eksekusi agen AI terbaru beserta hasilnya"
+    },
+    "agent_health": {
+      "label": "Kesehatan agen",
+      "description": "Tingkat keberhasilan dan kegagalan eksekusi agen dalam rentang waktu"
+    },
+    "webhook_health": {
+      "label": "Kesehatan webhook",
+      "description": "Hasil pengiriman webhook dan endpoint yang dinonaktifkan"
+    },
+    "agent_workload": {
+      "label": "Beban kerja agen",
+      "description": "Issue yang didelegasikan dan hasil eksekusi per agen"
+    }
+  },
+  "breakdown": {
+    "empty": "Belum ada issue.",
+    "by": {
+      "status": "Status",
+      "priority": "Prioritas",
+      "type": "Jenis",
+      "assignee": "Penerima tugas",
+      "delegate": "Delegasi"
+    },
+    "caption": {
+      "status": "Berdasarkan status",
+      "priority": "Berdasarkan prioritas",
+      "type": "Berdasarkan jenis",
+      "assignee": "Berdasarkan penerima tugas",
+      "delegate": "Berdasarkan delegasi"
+    }
+  },
+  "recentIssues": {
+    "empty": "Tidak ada issue yang cocok dengan filter ini.",
+    "captionCreated": "Terbaru dibuat",
+    "captionUpdated": "Baru diperbarui",
+    "filterCount": "{count, plural, one {# filter} other {# filter}}",
+    "sort": {
+      "created": "Terbaru",
+      "updated": "Diperbarui"
+    }
+  },
+  "activityFeed": {
+    "empty": "Tidak ada aktivitas yang cocok dengan filter ini.",
+    "someone": "Seseorang",
+    "filterCount": "{count, plural, one {# filter} other {# filter}}",
+    "actions": {
+      "all": "Semua aktivitas",
+      "status": "Perubahan status",
+      "assignee": "Penugasan",
+      "priority": "Prioritas",
+      "created": "Dibuat"
+    },
+    "verbs": {
+      "comment": "mengomentari",
+      "created": "membuat",
+      "title": "mengubah nama",
+      "description": "memperbarui deskripsi",
+      "status": "mengubah status",
+      "assignee": "mengubah penerima tugas",
+      "priority": "mengubah prioritas",
+      "type": "mengubah jenis",
+      "start_date": "mengubah tanggal mulai",
+      "due_date": "mengubah tenggat waktu",
+      "label_add": "menambahkan label ke",
+      "label_remove": "menghapus label dari",
+      "field": "memperbarui bidang pada",
+      "other": "memperbarui"
+    }
+  },
+  "pulse": {
+    "caption": {
+      "hour": "Berdasarkan jam",
+      "day": "Berdasarkan hari",
+      "week": "Berdasarkan minggu"
+    },
+    "unit": {
+      "hour": "Jam",
+      "day": "Hari",
+      "week": "Minggu"
+    },
+    "events": "{count, plural, one {# peristiwa} other {# peristiwa}}",
+    "eventNoun": "{count, plural, one {peristiwa} other {peristiwa}}",
+    "active": "{count} aktif",
+    "less": "Lebih sedikit",
+    "more": "Lebih banyak"
+  },
+  "throughput": {
+    "empty": "Tidak ada aktivitas dalam periode ini.",
+    "lastWeeks": "{weeks} minggu terakhir",
+    "created": "Dibuat",
+    "closed": "Ditutup"
+  },
+  "agentRuns": {
+    "empty": "Belum ada eksekusi agen.",
+    "filters": {
+      "all": "Semua eksekusi",
+      "failed": "Gagal",
+      "pending": "Dalam antrean",
+      "success": "Berhasil"
+    },
+    "status": {
+      "pending": "dalam antrean",
+      "success": "berhasil",
+      "failed": "gagal",
+      "canceled": "dibatalkan"
+    },
+    "trigger": {
+      "mention": "berjalan saat disebutkan dalam",
+      "delegation": "berjalan saat pendelegasian",
+      "field": "berjalan pada bidang",
+      "manual": "dijalankan secara manual",
+      "schedule": "berjalan sesuai jadwal"
+    }
+  },
+  "agentHealth": {
+    "empty": "Tidak ada eksekusi agen.",
+    "successRate": "tingkat keberhasilan",
+    "runs": "{count, plural, one {# eksekusi} other {# eksekusi}}",
+    "failed": "{count} gagal",
+    "queued": "{count} dalam antrean"
+  },
+  "webhookHealth": {
+    "deliveries": "pengiriman",
+    "failed": "{count} gagal",
+    "pending": "{count} tertunda",
+    "allDelivered": "semua terkirim",
+    "disabled": "{count, plural, one {# endpoint dinonaktifkan} other {# endpoint dinonaktifkan}}"
+  },
+  "agentWorkload": {
+    "empty": "Tidak ada agen dalam proyek ini.",
+    "agent": "Agen",
+    "delegated": "Didelegasikan",
+    "runs": "Eksekusi",
+    "failed": "{count} gagal",
+    "kind": {
+      "external": "Eksternal",
+      "internal": "Internal"
+    }
+  },
+  "defaultWidgets": {
+    "open": "Terbuka",
+    "inProgress": "Sedang dikerjakan",
+    "backlog": "Backlog",
+    "unassigned": "Belum ditugaskan"
+  }
+}

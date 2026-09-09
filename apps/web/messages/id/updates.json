@@ -1,0 +1,12 @@
+{
+  "updateAvailable": "Pembaruan tersedia",
+  "releaseHistory": "Riwayat rilis",
+  "running": "Anda menjalankan {current}.",
+  "badgeRunning": "Berjalan",
+  "badgeNew": "Baru",
+  "check": "Periksa pembaruan",
+  "checking": "Memeriksa",
+  "lastChecked": "Terakhir diperiksa",
+  "allReleases": "Semua rilis",
+  "noNotes": "Rilis ini tidak memiliki catatan."
+}

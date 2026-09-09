@@ -1,0 +1,32 @@
+{
+  "label": "Kunci API",
+  "title": "Kunci API",
+  "description": "Kunci API pribadi mengautentikasi permintaan ke API sebagai akun Anda ({email}). Nilai kunci hanya ditampilkan sekali, saat Anda membuatnya.",
+  "sectionTitle": "Kunci API Anda",
+  "create": "Buat kunci API",
+  "empty": "Belum ada kunci API. Buat kunci untuk mengautentikasi permintaan ke API.",
+  "fallbackName": "Kunci API",
+  "createdAt": "Dibuat {date}",
+  "deleteAction": "Hapus kunci API",
+  "createDialog": {
+    "title": "Buat kunci API",
+    "nameLabel": "Nama",
+    "namePlaceholder": "mis. pipeline CI",
+    "nameHint": "Label untuk mengenali kunci ini nanti.",
+    "submit": "Buat kunci",
+    "submitPending": "Membuat…",
+    "error": "Gagal membuat kunci API."
+  },
+  "createdDialog": {
+    "title": "Kunci API dibuat",
+    "description": "Salin kunci Anda sekarang. Demi keamanan, kunci hanya ditampilkan sekali dan tidak dapat diambil kembali nanti.",
+    "copy": "Salin kunci"
+  },
+  "deleteDialog": {
+    "title": "Hapus kunci API?",
+    "confirm": "Hapus kunci",
+    "description": "Setiap permintaan yang menggunakan kunci ini akan langsung berhenti berfungsi. Tindakan ini tidak dapat dibatalkan.",
+    "error": "Gagal menghapus kunci API."
+  },
+  "loadFailed": "Gagal memuat kunci API."
+}

@@ -1253,8 +1253,10 @@ export async function bulkUpdateIssues(
   const valid = await issuesInProject(projectId, ids);
   // The whole batch is checked against the limit before any of it is written:
   // per-issue checks inside the loop would move issues until the column filled up
-  // and then fail, leaving the move half-applied.
+  // and then fail, leaving the move half-applied. The column is checked first so
+  // the WIP message never names a column outside this project.
   if (patch.columnId !== undefined) {
+    await assertColumn(projectId, patch.columnId);
     const incoming = await countEnteringColumn(valid, patch.columnId);
     if (incoming > 0) await assertWipLimit(patch.columnId, incoming);
   }

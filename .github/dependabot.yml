@@ -1,8 +1,17 @@
 version: 2
 updates:
-  # Bun lockfiles are not supported by Dependabot's npm ecosystem resolver for
-  # version bumps, so package updates are handled manually. GitHub Actions and
-  # Docker base images are updated here.
+  # Dependabot resolves bun.lock for version updates only; advisories are caught
+  # by the `bun audit` step in ci.yml. Tiptap packages pin each other's exact
+  # version through peer dependencies, so they have to be bumped as one group.
+  - package-ecosystem: bun
+    directory: /
+    schedule:
+      interval: weekly
+    labels: ['dependencies']
+    groups:
+      tiptap:
+        patterns: ['@tiptap/*']
+
   - package-ecosystem: github-actions
     directory: /
     schedule:

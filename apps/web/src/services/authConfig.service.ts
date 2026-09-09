@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { api, type PublicAuthConfig } from '@/lib/api';
+import { type PublicAuthConfig, getAuthConfig } from '@/lib/api/endpoints/settings';
 import { qk } from '@/services/queryKeys';
 
 // The instance sign-in policy: whether registration is open, invite-only or closed,
@@ -12,7 +12,7 @@ import { qk } from '@/services/queryKeys';
 export function useAuthConfigQuery() {
   return useQuery({
     queryKey: qk.authConfig,
-    queryFn: () => api.getAuthConfig(),
+    queryFn: () => getAuthConfig(),
     // Set by an administrator and read on several screens, so keep it out of the
     // refetch path.
     staleTime: 5 * 60_000,

@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { InviteRow, MemberKind, TeamMember } from '@/lib/api';
+import type { InviteRow } from '@/lib/api/endpoints/invites';
+import type { MemberKind } from '@/lib/api/endpoints/members';
+import type { TeamMember } from '@/lib/api/endpoints/teams';
 import {
   useDeleteTeamInvite,
   useRemoveTeamMember,

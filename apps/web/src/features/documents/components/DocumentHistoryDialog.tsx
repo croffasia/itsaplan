@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Check, History, Loader2, RefreshCw, RotateCcw } from 'lucide-react';
-import { api, type ProjectDocument } from '@/lib/api';
+import { type ProjectDocument, getDocumentRevision } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -59,7 +59,7 @@ export default function DocumentHistoryDialog({
   const canInteract = canInteractWithDocumentHistory(restoringRevisionId);
   const selectedRevision = useQuery({
     queryKey: ['documents', projectKey, 'document', documentId, 'revision', selectedRevisionId],
-    queryFn: () => api.getDocumentRevision(projectKey, documentId, selectedRevisionId!),
+    queryFn: () => getDocumentRevision(projectKey, documentId, selectedRevisionId!),
     enabled: open && selectedRevisionId !== null,
   });
 

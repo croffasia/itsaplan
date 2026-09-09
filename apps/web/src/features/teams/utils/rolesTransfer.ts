@@ -4,7 +4,7 @@
 // robust across catalog changes. The default role is never included — every team has
 // one of its own.
 
-import type { PermissionCatalog, Permissions, Role } from '@/lib/api';
+import type { PermissionCatalog, Permissions, Role } from '@/lib/api/endpoints/roles';
 import { matrixFromCatalog } from '@/utils/permissions';
 
 const PAYLOAD_TYPE = 'plan.roles';

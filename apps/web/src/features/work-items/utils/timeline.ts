@@ -1,5 +1,6 @@
 import { startOfDay } from 'date-fns';
-import { type BoardIssue, type Issue, type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
 import { parseDate } from '@/utils/dates';
 import type { FilterSet } from '@/utils/filters';
 import { buildDayTrack, type DayTrack } from '@/utils/timelineTrack';

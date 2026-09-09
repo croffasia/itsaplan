@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { IntegrationCredential, IntegrationMeta } from '@/lib/api';
+import type { IntegrationCredential, IntegrationMeta } from '@/lib/api/endpoints/integrations';
 import Modal from '@/components/common/overlay/Modal';
 import { IntegrationPicker } from './IntegrationPicker';
 import { CredentialForm } from './CredentialForm';

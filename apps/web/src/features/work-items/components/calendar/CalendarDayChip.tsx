@@ -1,5 +1,6 @@
 import { useDraggable } from '@dnd-kit/core';
-import { type ProjectDetail, type Issue } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { useIsPhone } from '@/hooks/useIsPhone';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';

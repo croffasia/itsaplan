@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import { type BoardIssue, type Issue } from '@/lib/api';
+import type { BoardIssue, Issue } from '@/lib/api/endpoints/issues';
 import { isBlocked } from '@/utils/issueLinks';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';

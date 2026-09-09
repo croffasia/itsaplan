@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Project } from '@/lib/api';
+import type { Project } from '@/lib/api/endpoints/projects';
 import { projectPath } from '@/utils/paths';
 import {
   useAccountPreferencesQuery,

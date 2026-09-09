@@ -1,5 +1,5 @@
 import { CirclePlus, Plus } from 'lucide-react';
-import { type IssueLinkInputKind } from '@/lib/api';
+import type { IssueLinkInputKind } from '@/lib/api/endpoints/issues';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

@@ -2,21 +2,14 @@
 // Table, Timeline, Calendar) so they bucket and order issues the same way. Date
 // and avatar helpers live in lib/dates and lib/avatar.
 
-import type {
-  Assignee,
-  ProjectDetail,
-  Column,
-  CustomField,
-  CycleOption,
-  InitiativeOption,
-  Label,
-  StateType,
-  InitiativeRef,
-  Issue,
-  IssuePatch,
-  IssueType,
-  NewIssueInput,
-} from '@/lib/api';
+import type { Column, StateType } from '@/lib/api/endpoints/columns';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
+import type { Label } from '@/lib/api/endpoints/labels';
+import type { Assignee, ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { InitiativeRef, Issue, IssuePatch, NewIssueInput } from '@/lib/api/endpoints/issues';
+import type { CycleOption } from '@/lib/api/endpoints/cycles';
+import type { InitiativeOption } from '@/lib/api/endpoints/initiatives';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
 import { PRIORITY_ORDER, PRIORITY_RANK } from '@/utils/fieldOptions';
 import {

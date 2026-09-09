@@ -1,4 +1,4 @@
-import type { AgentSchedule } from '@/lib/api';
+import type { AgentSchedule } from '@/lib/api/endpoints/agentSchedules';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingsScheduleRow } from './SettingsScheduleRow';
 import { useTranslations } from 'next-intl';

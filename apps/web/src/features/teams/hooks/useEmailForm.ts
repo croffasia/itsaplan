@@ -3,7 +3,10 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { NotificationEncryption, NotificationSettings } from '@/lib/api';
+import type {
+  NotificationEncryption,
+  NotificationSettings,
+} from '@/lib/api/endpoints/notificationSettings';
 import { useUpdateNotificationSettings } from '@/services/teams.service';
 import type { EmailProvider } from '@/components/common/inputs/ProviderToggle';
 import { toPositiveInt } from '@/lib/utils';

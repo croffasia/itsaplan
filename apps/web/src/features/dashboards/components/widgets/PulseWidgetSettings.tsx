@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import type { PulseUnit } from '@/lib/api';
+import type { PulseUnit } from '@/lib/api/endpoints/analytics';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 
 const UNIT_OPTIONS: PulseUnit[] = ['hour', 'day', 'week'];

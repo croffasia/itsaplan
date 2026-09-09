@@ -1,4 +1,4 @@
-import type { BoardIssue } from '@/lib/api';
+import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import type { WorkItemsViewProps } from '@/utils/project';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import { withoutShownSubtasks } from '@/utils/subtasks';

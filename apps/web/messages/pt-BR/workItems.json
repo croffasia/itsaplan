@@ -1,0 +1,119 @@
+{
+  "newIssue": "Nova issue",
+  "pin": "Fixar",
+  "unpin": "Desafixar",
+  "collapse": "Recolher",
+  "expand": "Expandir",
+  "hide": "Ocultar",
+  "show": "Mostrar",
+  "hiddenColumns": "Colunas ocultas",
+  "hiddenGroups": "Grupos ocultos",
+  "selectAll": "Selecionar tudo",
+  "deselectAll": "Desmarcar tudo",
+  "resizeColumn": "Redimensionar a coluna",
+  "viewNamePlaceholder": "Todas as issues",
+  "sortedOrder": "As issues estão ordenadas por {field}. Mude a ordenação para Manual para movê-las.",
+  "statusSince": "No estado atual desde {date}",
+  "createdOn": "Criado em {date}",
+  "updatedOn": "Atualizado em {date}",
+  "subtasksProgress": "Subtarefas {done}/{total}",
+  "subtasksDone": "{done} de {total} subtarefas concluídas",
+  "wip": {
+    "reached": "{column} está no limite de {limit} issues.",
+    "tooltip": "Limite de trabalho em andamento: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} de {total} / {max}",
+    "filteredTooltip": "{shown} mostrados pelos filtros atuais. O limite de {max} conta todas as {total} issues na coluna."
+  },
+  "columns": {
+    "title": "Título",
+    "status": "Estado",
+    "statusAge": "No estado",
+    "priority": "Prioridade",
+    "type": "Tipo",
+    "initiative": "Iniciativa",
+    "cycle": "Ciclo",
+    "labels": "Etiquetas",
+    "estimatePoints": "Pontos de história",
+    "estimateTime": "Tempo",
+    "startDate": "Início",
+    "dueDate": "Vencimento",
+    "created": "Criado",
+    "updated": "Atualizado"
+  },
+  "calendar": {
+    "previousMonth": "Mês anterior",
+    "nextMonth": "Próximo mês",
+    "today": "Hoje",
+    "moreIssues": "+{count} mais",
+    "issueCount": "{count, plural, one {# issue} other {# issues}}",
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Seg",
+      "tue": "Ter",
+      "wed": "Qua",
+      "thu": "Qui",
+      "fri": "Sex",
+      "sat": "Sáb"
+    },
+    "noDate": {
+      "dueDate": "Sem data de vencimento",
+      "startDate": "Sem data de início",
+      "custom": "Sem data"
+    },
+    "allDated": {
+      "dueDate": "Tudo tem data de vencimento.",
+      "startDate": "Tudo tem data de início.",
+      "custom": "Tudo tem data."
+    }
+  },
+  "timeline": {
+    "empty": "Nenhuma issue para colocar na linha do tempo ainda.",
+    "expandGroup": "Expandir grupo",
+    "collapseGroup": "Recolher grupo",
+    "inferredStart": "Início inferido da data de criação",
+    "inferredStartDraggable": "Início inferido da data de criação — arraste para defini-lo"
+  },
+  "bulk": {
+    "selected": "{count} selecionadas",
+    "status": "Status",
+    "priority": "Prioridade",
+    "assignee": "Responsável",
+    "delegate": "Delegado",
+    "initiative": "Iniciativa",
+    "cycle": "Ciclo",
+    "labels": "Etiquetas",
+    "noAssignee": "Sem responsável",
+    "noDelegate": "Sem delegado",
+    "noInitiative": "Sem iniciativa",
+    "noCycle": "Sem ciclo",
+    "archive": "Arquivar",
+    "clearSelection": "Limpar seleção"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Arquivar issue} other {Arquivar issues}}",
+      "confirm": "{count, plural, one {Arquivar # issue} other {Arquivar # issues}}",
+      "description": "{count, plural, one {Arquivar # issue selecionada? Ela sai do quadro e pode ser restaurada depois.} other {Arquivar # issues selecionadas? Elas saem do quadro e podem ser restauradas depois.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Excluir issue} other {Excluir issues}}",
+      "confirm": "{count, plural, one {Excluir # issue} other {Excluir # issues}}",
+      "description": "{count, plural, one {Excluir # issue selecionada?} other {Excluir # issues selecionadas?}} Isto também remove comentários, atividade e anexos. Isso não pode ser desfeito."
+    }
+  },
+  "share": {
+    "issueTitle": "Issue",
+    "issueUnavailable": "Esta issue não está disponível.",
+    "boardUnavailable": "Este quadro compartilhado não está disponível. O link pode ter sido revogado."
+  },
+  "groups": {
+    "noAssignee": "Sem responsável",
+    "noDelegate": "Sem delegado",
+    "noPriority": "Sem prioridade",
+    "noType": "Sem tipo",
+    "noInitiative": "Sem iniciativa",
+    "noCycle": "Sem ciclo",
+    "noMember": "Sem valor"
+  }
+}

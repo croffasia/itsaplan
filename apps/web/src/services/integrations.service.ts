@@ -1,11 +1,17 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  api,
   type CredentialPatch,
   type IntegrationKind,
   type NewCredentialInput,
-  type PageParams,
-} from '@/lib/api';
+  listCredentials,
+  listIntegrationOptions,
+  listIntegrationCatalog,
+  listIntegrationModels,
+  createCredential,
+  updateCredential,
+  deleteCredential,
+} from '@/lib/api/endpoints/integrations';
+import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 // One page of the team's stored credentials, secrets redacted. Backs the team's
@@ -13,7 +19,7 @@ import { qk } from '@/services/queryKeys';
 export function useCredentialsPageQuery(teamId: number, params: PageParams) {
   return useQuery({
     queryKey: qk.teamCredentialPage(teamId, params),
-    queryFn: () => api.listCredentials(teamId, params),
+    queryFn: () => listCredentials(teamId, params),
     placeholderData: keepPreviousData,
   });
 }
@@ -23,7 +29,7 @@ export function useCredentialsPageQuery(teamId: number, params: PageParams) {
 export function useIntegrationOptionsQuery(teamId: number | null, kind?: IntegrationKind) {
   return useQuery({
     queryKey: qk.integrationOptions(teamId ?? 0, kind),
-    queryFn: () => api.listIntegrationOptions(teamId!, kind),
+    queryFn: () => listIntegrationOptions(teamId!, kind),
     enabled: teamId != null,
   });
 }
@@ -33,7 +39,7 @@ export function useIntegrationOptionsQuery(teamId: number | null, kind?: Integra
 export function useIntegrationCatalogQuery(teamId: number | null) {
   return useQuery({
     queryKey: qk.integrationCatalog(teamId ?? 0),
-    queryFn: () => api.listIntegrationCatalog(teamId!),
+    queryFn: () => listIntegrationCatalog(teamId!),
     enabled: teamId != null,
     staleTime: Infinity,
   });
@@ -44,7 +50,7 @@ export function useIntegrationCatalogQuery(teamId: number | null) {
 export function useIntegrationModelsQuery(teamId: number | null, provider: string | null) {
   return useQuery({
     queryKey: qk.integrationModels(teamId ?? 0, provider ?? ''),
-    queryFn: () => api.listIntegrationModels(teamId!, provider!),
+    queryFn: () => listIntegrationModels(teamId!, provider!),
     enabled: teamId != null && provider != null && provider.length > 0,
     staleTime: Infinity,
   });
@@ -53,7 +59,7 @@ export function useIntegrationModelsQuery(teamId: number | null, provider: strin
 export function useCreateCredential(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: NewCredentialInput) => api.createCredential(teamId, input),
+    mutationFn: (input: NewCredentialInput) => createCredential(teamId, input),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.integrations });
       // The team list carries how many credentials the team holds.
@@ -66,7 +72,7 @@ export function useUpdateCredential(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, patch }: { id: number; patch: CredentialPatch }) =>
-      api.updateCredential(teamId, id, patch),
+      updateCredential(teamId, id, patch),
     onSuccess: () => void qc.invalidateQueries({ queryKey: qk.integrations }),
   });
 }
@@ -74,7 +80,7 @@ export function useUpdateCredential(teamId: number) {
 export function useDeleteCredential(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteCredential(teamId, id),
+    mutationFn: (id: number) => deleteCredential(teamId, id),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: qk.integrations });
       // The team list carries how many credentials the team holds.

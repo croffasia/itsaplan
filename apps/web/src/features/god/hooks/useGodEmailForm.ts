@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type {
-  NotificationEncryption,
-  InstanceEmailSettings,
-  InstanceEmailSettingsPatch,
-} from '@/lib/api';
+import type { InstanceEmailSettings, InstanceEmailSettingsPatch } from '@/lib/api/endpoints/god';
+import type { NotificationEncryption } from '@/lib/api/endpoints/notificationSettings';
 import type { EmailProvider } from '@/components/common/inputs/ProviderToggle';
 import { toPositiveInt } from '@/lib/utils';
 import {

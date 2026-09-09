@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Minus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Initiative, Assignee } from '@/lib/api';
+import type { Assignee } from '@/lib/api/endpoints/projects';
+import type { Initiative } from '@/lib/api/endpoints/initiatives';
 import { initiativePath } from '@/utils/paths';
 import { formatShortDate } from '@/utils/dates';
 import { AssigneeAvatar } from '@/features/issue/components/shared/IssueBadges';
@@ -35,20 +36,13 @@ export default function InitiativeRow({
       <TableCell className="px-3 py-2.5 align-middle whitespace-normal">
         <div className="flex min-w-0 items-center gap-2.5">
           <span className="shrink-0">{colorDot(STATUS_META[initiative.status].color)}</span>
-          <div className="min-w-0">
-            <Link
-              href={href}
-              onClick={(e) => e.stopPropagation()}
-              className="block truncate text-sm font-medium hover:underline"
-            >
-              {initiative.title}
-            </Link>
-            {initiative.description && (
-              <span className="block truncate text-xs text-muted-foreground">
-                {initiative.description}
-              </span>
-            )}
-          </div>
+          <Link
+            href={href}
+            onClick={(e) => e.stopPropagation()}
+            className="min-w-0 truncate text-sm font-medium hover:underline"
+          >
+            {initiative.title}
+          </Link>
         </div>
       </TableCell>
 

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { useAiAgentsQuery, useDeleteAiAgent } from '@/services/aiAgents.service';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';

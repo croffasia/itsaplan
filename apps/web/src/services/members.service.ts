@@ -1,7 +1,22 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { api, type MemberListParams, type MemberRole } from '@/lib/api';
+import {
+  listInvites,
+  createInvite,
+  sendInviteEmail,
+  deleteInvite,
+} from '@/lib/api/endpoints/invites';
+import {
+  type MemberListParams,
+  type MemberRole,
+  listMembers,
+  listMemberCandidates,
+  addMember,
+  removeMember,
+  setMemberRole,
+  setMemberDescription,
+} from '@/lib/api/endpoints/members';
 import { qk } from '@/services/queryKeys';
 
 // One page of the project's members. The window runs on the server, so the page
@@ -10,7 +25,7 @@ import { qk } from '@/services/queryKeys';
 export function useMembersQuery(projectKey: string | null, params: MemberListParams) {
   return useQuery({
     queryKey: qk.memberPage(projectKey ?? '', params),
-    queryFn: () => api.listMembers(projectKey!, params),
+    queryFn: () => listMembers(projectKey!, params),
     enabled: projectKey != null,
     placeholderData: keepPreviousData,
   });
@@ -21,7 +36,7 @@ export function useMembersQuery(projectKey: string | null, params: MemberListPar
 export function useMemberCandidatesQuery(projectKey: string, enabled = true) {
   return useQuery({
     queryKey: qk.memberCandidates(projectKey),
-    queryFn: () => api.listMemberCandidates(projectKey),
+    queryFn: () => listMemberCandidates(projectKey),
     enabled,
   });
 }
@@ -33,7 +48,7 @@ export function useAddMember(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { userId: string; role: MemberRole; roleId?: number | null }) =>
-      api.addMember(projectKey, input),
+      addMember(projectKey, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.members(projectKey) });
       qc.invalidateQueries({ queryKey: qk.anyTeam });
@@ -48,7 +63,7 @@ export function useAddMember(projectKey: string) {
 export function useRemoveMember(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (userId: string) => api.removeMember(projectKey, userId),
+    mutationFn: (userId: string) => removeMember(projectKey, userId),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.members(projectKey) });
       qc.invalidateQueries({ queryKey: qk.anyTeam });
@@ -70,7 +85,7 @@ export function useSetMemberRole(projectKey: string) {
       userId: string;
       role: MemberRole;
       roleId?: number | null;
-    }) => api.setMemberRole(projectKey, userId, { role, roleId }),
+    }) => setMemberRole(projectKey, userId, { role, roleId }),
     onSuccess: (_data, { role }) => {
       qc.invalidateQueries({ queryKey: qk.members(projectKey) });
       qc.invalidateQueries({ queryKey: qk.anyTeam });
@@ -85,7 +100,7 @@ export function useSetMemberDescription(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ userId, description }: { userId: string; description: string }) =>
-      api.setMemberDescription(projectKey, userId, description),
+      setMemberDescription(projectKey, userId, description),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.members(projectKey) });
       qc.invalidateQueries({ queryKey: qk.anyTeam });
@@ -99,7 +114,7 @@ export function useSetMemberDescription(projectKey: string) {
 export function useInvitesQuery(projectKey: string | null, enabled = true) {
   return useQuery({
     queryKey: qk.invites(projectKey ?? ''),
-    queryFn: () => api.listInvites(projectKey!),
+    queryFn: () => listInvites(projectKey!),
     enabled: projectKey != null && enabled,
   });
 }
@@ -109,7 +124,7 @@ export function useCreateInvite(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { email: string; role: MemberRole; roleId?: number | null }) =>
-      api.createInvite(projectKey, input),
+      createInvite(projectKey, input),
     onSuccess: (result) => {
       qc.invalidateQueries({ queryKey: qk.invites(projectKey) });
       if (result.emailQueued) toast.success(t('emailQueued'));
@@ -123,7 +138,7 @@ export function useCreateInvite(projectKey: string) {
 export function useSendInviteEmail(projectKey: string) {
   const t = useTranslations('members.invites');
   return useMutation({
-    mutationFn: (inviteId: number) => api.sendInviteEmail(projectKey, inviteId),
+    mutationFn: (inviteId: number) => sendInviteEmail(projectKey, inviteId),
     onSuccess: (result) => {
       if (result.emailQueued) toast.success(t('emailQueued'));
       else toast.info(t('resendUnavailable'));
@@ -134,7 +149,7 @@ export function useSendInviteEmail(projectKey: string) {
 export function useDeleteInvite(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (inviteId: number) => api.deleteInvite(projectKey, inviteId),
+    mutationFn: (inviteId: number) => deleteInvite(projectKey, inviteId),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.invites(projectKey) }),
   });
 }

@@ -3,7 +3,7 @@ import { Check, CircleDashed, Plus, Target } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
-import CreateInitiativeDialog from '@/components/common/overlay/CreateInitiativeDialog';
+import InitiativeDialog from '@/components/common/overlay/InitiativeDialog';
 import { colorDot } from '@/components/common/fields/colorDot';
 import { STATUS_META } from '@/utils/initiativeMeta';
 import {
@@ -105,7 +105,7 @@ export default function InitiativeSelect({
       </Popover>
 
       {creating && (
-        <CreateInitiativeDialog
+        <InitiativeDialog
           projectKey={projectKey}
           onClose={() => setCreating(false)}
           onCreated={onChange}

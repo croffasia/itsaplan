@@ -2,7 +2,7 @@
 
 import { Maximize2, Minimize2, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { NoteBoardVisibility } from '@/lib/api';
+import type { NoteBoardVisibility } from '@/lib/api/endpoints/noteBoards';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import NoteBoardAccessList from './NoteBoardAccessList';

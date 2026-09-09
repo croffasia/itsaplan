@@ -2,7 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import {
+  getTelegramAccount,
+  startTelegramLink,
+  unlinkTelegramAccount,
+} from '@/lib/api/endpoints/telegram';
 import { qk } from '@/services/queryKeys';
 
 // The session user's Telegram account link. Shared rather than feature-local: the
@@ -14,7 +18,7 @@ import { qk } from '@/services/queryKeys';
 export function useTelegramAccountQuery(pollMs?: number) {
   return useQuery({
     queryKey: qk.telegramAccount,
-    queryFn: () => api.getTelegramAccount(),
+    queryFn: () => getTelegramAccount(),
     refetchInterval: pollMs ?? false,
   });
 }
@@ -22,13 +26,13 @@ export function useTelegramAccountQuery(pollMs?: number) {
 // Starts a connection: the API mints a one-time code and returns the bot deep link
 // that completes it when opened.
 export function useStartTelegramLink() {
-  return useMutation({ mutationFn: () => api.startTelegramLink() });
+  return useMutation({ mutationFn: () => startTelegramLink() });
 }
 
 export function useDisconnectTelegram() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.unlinkTelegramAccount(),
+    mutationFn: () => unlinkTelegramAccount(),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.telegramAccount }),
   });
 }

@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import type { ProjectFeatures } from '@/lib/api';
+import type { ProjectFeatures } from '@/lib/api/endpoints/settings';
 import { settingsPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';

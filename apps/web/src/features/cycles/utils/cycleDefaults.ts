@@ -1,4 +1,4 @@
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { addDays, daysBetween, toDateStr } from '@/utils/dates';
 import { occupiedUntil } from './cycleRanges';
 

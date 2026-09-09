@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useShell } from '@/context/shellContext';
-import type { InitiativeCounts } from '@/lib/api';
+import type { InitiativeCounts } from '@/lib/api/endpoints/initiatives';
 import { useInitiativeCountsQuery } from '@/services/initiatives.service';
 import { initiativesTabPath, type InitiativesTab } from '@/utils/paths';
 import { readInitiativeTabOrder } from './hooks/useInitiativeTabOrder';

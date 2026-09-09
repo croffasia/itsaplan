@@ -1,4 +1,4 @@
-import { type SharedViewBundle } from '@/lib/api';
+import type { SharedViewBundle } from '@/lib/api/endpoints/share';
 import { defaultViewSettings } from '@/utils/viewSettings';
 import { EMPTY_FILTER_SET } from '@/utils/filters';
 import { type WorkItemsViewProps } from '@/utils/project';

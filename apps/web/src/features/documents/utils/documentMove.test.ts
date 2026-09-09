@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import type { ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { applyOptimisticDocumentMove, projectedDocumentMove } from './documentMove';
 
 const page = (id: number, parentId: number | null, position: number): ProjectDocumentSummary =>

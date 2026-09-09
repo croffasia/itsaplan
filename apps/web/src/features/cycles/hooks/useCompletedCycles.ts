@@ -1,4 +1,4 @@
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { useCompletedCyclesQuery } from '@/services/cycles.service';
 
 // The archive as the table reads it: the pages loaded so far as one list, how many

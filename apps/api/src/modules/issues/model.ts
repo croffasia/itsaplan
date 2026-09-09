@@ -339,6 +339,7 @@ export const FeedItemResponse = t.Object({
   action: t.Nullable(t.String()),
   payload: ActivityPayloadResponse,
   createdAt: t.String(),
+  editedAt: t.Nullable(t.String()),
 });
 
 export const FeedCursorResponse = t.Nullable(t.Object({ ts: t.String(), id: t.Number() }));

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { PermissionAction, PermissionResource } from '@/lib/api';
+import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/roles';
 
 // The labels of the permission matrix: one resource, one action, one display group.
 // A key the messages do not carry (a resource added on the API) falls back to its

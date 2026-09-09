@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { TeamProject } from '@/lib/api';
+import type { TeamProject } from '@/lib/api/endpoints/teams';
 import { formatDate } from '@/utils/dates';
 import { projectPath } from '@/utils/paths';
 import Avatar from '@/components/common/Avatar';

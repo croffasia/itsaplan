@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ChevronRight } from 'lucide-react';
-import type { IssueRef } from '@/lib/api';
+import type { IssueRef } from '@/lib/api/endpoints/issues';
 import { issuePath, projectPath } from '@/utils/paths';
 
 // The header title on an issue page: project name › issue identifier, with the

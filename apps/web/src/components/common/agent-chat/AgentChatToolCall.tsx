@@ -2,7 +2,7 @@
 
 import { Wrench } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { AiChatToolPart } from '@/lib/api';
+import type { AiChatToolPart } from '@/lib/api/endpoints/agentChat';
 import { Marker, MarkerContent, MarkerIcon } from '@/components/ui/marker';
 import AgentChatToolBlock from './AgentChatToolBlock';
 import AgentChatToolDisclosure from './AgentChatToolDisclosure';

@@ -1,4 +1,4 @@
-import type { StorageSettings } from '@/lib/api';
+import type { StorageSettings } from '@/lib/api/endpoints/settings';
 
 // Client-side mirror of the api's upload checks (apps/api/src/attachments/routes.ts).
 // The api enforces the real limits; these helpers state them in the UI and reject an

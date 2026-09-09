@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { CustomField, IssueType } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import type { ViewSettings } from '@/utils/viewSettings';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import { cn } from '@/lib/utils';

@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { InitiativeHealth } from '@/lib/api';
+import type { InitiativeHealth } from '@/lib/api/endpoints/initiatives';
 import { healthColor } from '@/utils/initiativeMeta';
 
 // A small health signal: a colored dot plus its label. null renders a muted

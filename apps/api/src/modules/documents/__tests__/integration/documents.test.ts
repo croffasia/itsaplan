@@ -435,6 +435,68 @@ describe('documents', () => {
     );
   });
 
+  it('links visible Docs and initiatives, and hides a private page from a reader', async () => {
+    const owner = await setupOwnerProject();
+    const strategy = (
+      await owner.api.projects({ projectKey: 'MKT' }).initiatives.post({ title: 'Q3 Launch' })
+    ).data!;
+    const page = (await documents(owner.api).post({ title: 'Release guide' })).data!;
+
+    const linked = await documents(owner.api)({ documentId: page.id }).initiatives.post({
+      initiativeId: strategy.id,
+    });
+    expect(linked.status).toBe(201);
+    expect(linked.data).toMatchObject({ documentId: page.id, title: 'Release guide' });
+    expect(
+      (await documents(owner.api)['for-initiative']({ initiativeId: strategy.id }).get()).data,
+    ).toMatchObject([{ documentId: page.id, title: 'Release guide' }]);
+
+    // Linking the same page twice is a conflict, not a second row.
+    expect(
+      (
+        await documents(owner.api)({ documentId: page.id }).initiatives.post({
+          initiativeId: strategy.id,
+        })
+      ).status,
+    ).toBe(409);
+
+    const readerRole = await createRole(owner.api, 'MKT', {
+      name: 'Initiative reader',
+      permissions: { documents: { read: true }, initiatives: { read: true } },
+    });
+    const reader = await addMember(owner.api, readerRole.data!.id);
+    expect(
+      (await documents(reader.api)['for-initiative']({ initiativeId: strategy.id }).get()).status,
+    ).toBe(200);
+    expect(
+      (
+        await documents(reader.api)({ documentId: page.id }).initiatives.post({
+          initiativeId: strategy.id,
+        })
+      ).status,
+    ).toBe(403);
+
+    const privatePage = (await documents(owner.api).post({ title: 'Owner notes', isPrivate: true }))
+      .data!;
+    await documents(owner.api)({ documentId: privatePage.id }).initiatives.post({
+      initiativeId: strategy.id,
+    });
+    expect(
+      (await documents(reader.api)['for-initiative']({ initiativeId: strategy.id }).get()).data,
+    ).toMatchObject([{ documentId: page.id }]);
+
+    expect(
+      (
+        await documents(owner.api)({ documentId: page.id })
+          .initiatives({ initiativeId: strategy.id })
+          .delete()
+      ).status,
+    ).toBe(204);
+    expect(
+      (await documents(owner.api)['for-initiative']({ initiativeId: strategy.id }).get()).data,
+    ).toMatchObject([{ documentId: privatePage.id }]);
+  });
+
   it('limits permanent deletion to the page owner or a project owner for public pages', async () => {
     const owner = await setupOwnerProject();
     const member = await addMember(owner.api);
@@ -1236,6 +1298,7 @@ describe('documents', () => {
                     target: '_blank',
                     rel: 'noopener noreferrer',
                     class: 'docs-link',
+                    title: 'Docs',
                   },
                 },
                 { type: 'textStyle', attrs: { color: '#abcdef' } },
@@ -1268,6 +1331,26 @@ describe('documents', () => {
         },
         { type: 'image', attrs: { src: 'https://example.com/diagram.png' } },
         {
+          type: 'bulletList',
+          attrs: { tight: true },
+          content: [
+            {
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Bullet' }] }],
+            },
+          ],
+        },
+        {
+          type: 'orderedList',
+          attrs: { start: 1, tight: true, type: null },
+          content: [
+            {
+              type: 'listItem',
+              content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Step' }] }],
+            },
+          ],
+        },
+        {
           type: 'taskList',
           content: [
             {
@@ -1290,7 +1373,7 @@ describe('documents', () => {
                 },
                 {
                   type: 'tableCell',
-                  attrs: { colspan: 2, rowspan: 1, colwidth: null },
+                  attrs: { colspan: 2, rowspan: 1, colwidth: null, align: 'center' },
                   content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Cell' }] }],
                 },
               ],
@@ -1347,6 +1430,10 @@ describe('documents', () => {
       withNode({ type: 'tableHeader', attrs: { rowspan: 101 } }),
       withNode({ type: 'tableCell', attrs: { colwidth: [] } }),
       withNode({ type: 'tableCell', attrs: { colwidth: [0] } }),
+      withNode({ type: 'tableCell', attrs: { align: 'justify' } }),
+      withNode({ type: 'bulletList', attrs: { tight: 'yes' } }),
+      withNode({ type: 'orderedList', attrs: { type: 'x' } }),
+      withMark({ type: 'link', attrs: { href: 'https://example.com', title: 'x'.repeat(1_001) } }),
       withMark({ type: 'textStyle', attrs: { color: 'rgb(255, 0, 0)' } }),
       withMark({ type: 'highlight', attrs: { color: '#12' } }),
       withMark({ type: 'highlight', attrs: { color: '#12345' } }),

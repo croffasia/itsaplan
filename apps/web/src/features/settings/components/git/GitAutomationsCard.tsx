@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
-import type { Column, GitSettings } from '@/lib/api';
+import type { Column } from '@/lib/api/endpoints/columns';
+import type { GitSettings } from '@/lib/api/endpoints/git';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import SettingsRow from '@/components/common/page/SettingsRow';

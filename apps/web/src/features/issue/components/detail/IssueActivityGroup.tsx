@@ -1,4 +1,4 @@
-import { type FeedGroup } from '@/lib/api';
+import type { FeedGroup } from '@/lib/api/endpoints/activity';
 import { formatDateTime } from '@/utils/dates';
 import { durationLabel } from '../../utils/timeline';
 import ActivityItemList from './ActivityItemList';

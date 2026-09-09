@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ClipboardPaste, Copy, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { Column } from '@/lib/api';
+import type { Column } from '@/lib/api/endpoints/columns';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

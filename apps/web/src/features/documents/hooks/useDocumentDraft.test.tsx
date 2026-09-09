@@ -4,11 +4,10 @@ import { act } from 'react';
 import type { Root } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { JSDOM } from 'jsdom';
-import type { ProjectDocument } from '@/lib/api';
+import type { ProjectDocument } from '@/lib/api/endpoints/documents';
 
 type UseDocumentDraft = (typeof import('./useDocumentDraft'))['useDocumentDraft'];
 type DocumentDraftController = ReturnType<UseDocumentDraft>;
-type Api = (typeof import('@/lib/api'))['api'];
 
 const replacedGlobals = [
   'window',
@@ -22,10 +21,16 @@ let dom: JSDOM;
 let root: Root;
 let queryClient: QueryClient;
 let useDocumentDraft: UseDocumentDraft;
-let api: Api;
-let originalUpdateDocument: Api['updateDocument'];
+let originalFetch: typeof fetch;
 let controller: DocumentDraftController | null;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
+
+// Holds the save in flight until the test resolves it. The update is stubbed at
+// fetch rather than at updateDocument: an ES module binding cannot be reassigned.
+function stubSave(update: Promise<ProjectDocument>): void {
+  globalThis.fetch = (() =>
+    update.then((document) => new Response(JSON.stringify(document)))) as typeof fetch;
+}
 
 function projectDocument(version: number, content: string): ProjectDocument {
   return {
@@ -112,8 +117,7 @@ beforeEach(async () => {
   });
 
   ({ useDocumentDraft } = await import('./useDocumentDraft'));
-  ({ api } = await import('@/lib/api'));
-  originalUpdateDocument = api.updateDocument;
+  originalFetch = globalThis.fetch;
   queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   controller = null;
 
@@ -124,7 +128,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  api.updateDocument = originalUpdateDocument;
+  globalThis.fetch = originalFetch;
   act(() => root.unmount());
   queryClient.clear();
   dom.window.close();
@@ -177,7 +181,7 @@ describe('useDocumentDraft', () => {
     const update = new Promise<ProjectDocument>((resolve) => {
       resolveUpdate = resolve;
     });
-    api.updateDocument = () => update;
+    stubSave(update);
 
     act(() => controller!.setContent('Snapshot A', { type: 'doc', content: [] }));
     let savePromise!: Promise<ProjectDocument | null>;
@@ -222,7 +226,7 @@ describe('useDocumentDraft', () => {
     const update = new Promise<ProjectDocument>((resolve) => {
       resolveUpdate = resolve;
     });
-    api.updateDocument = () => update;
+    stubSave(update);
 
     act(() => controller!.setContent('Saved by tab A', { type: 'doc', content: [] }));
     let savePromise!: Promise<ProjectDocument | null>;
@@ -276,7 +280,7 @@ describe('useDocumentDraft', () => {
     const update = new Promise<ProjectDocument>((resolve) => {
       resolveUpdate = resolve;
     });
-    api.updateDocument = () => update;
+    stubSave(update);
 
     act(() => tabA.setContent('Saved by tab A', { type: 'doc', content: [] }));
     let savePromise!: Promise<ProjectDocument | null>;

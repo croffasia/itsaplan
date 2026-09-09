@@ -1,5 +1,6 @@
 import { useDroppable } from '@dnd-kit/core';
-import { type ProjectDetail, type BoardIssue } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import type { PropertyKey } from '@/utils/viewSettings';

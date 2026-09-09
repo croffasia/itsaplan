@@ -2,7 +2,7 @@
 
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { InstanceAuthSettings } from '@/lib/api';
+import type { InstanceAuthSettings } from '@/lib/api/endpoints/god';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import SettingsRow from '@/components/common/page/SettingsRow';

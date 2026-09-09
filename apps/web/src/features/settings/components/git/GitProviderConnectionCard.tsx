@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ExternalLink, GitBranch, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { GitProviderConnection } from '@/lib/api';
+import type { GitProviderConnection } from '@/lib/api/endpoints/git';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import SettingsCard from '@/components/common/page/SettingsCard';

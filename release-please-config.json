@@ -8,6 +8,7 @@
       "release-type": "node",
       "package-name": "",
       "changelog-path": "CHANGELOG.md",
+      "extra-files": [{ "type": "generic", "path": "charts/itsaplan/Chart.yaml" }],
       "changelog-sections": [
         { "type": "feat", "section": "Features" },
         { "type": "improvement", "section": "Improvements" },

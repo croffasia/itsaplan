@@ -58,7 +58,7 @@ export default function AuthLoginForm() {
   const passwordEnabled = authConfig?.emailPassword !== false;
   const params = useSearchParams();
   const justReset = params.get('reset') === '1';
-  // `apiFailure` in lib/api.ts sends the browser here with ?expired=1 after the API
+  // `apiFailure` in lib/api/core/client.ts sends the browser here with ?expired=1 after the API
   // refused the session, so the screen can say why the user is back on it.
   const sessionExpired = params.get('expired') === '1';
   // A Google sign-in or a confirmation link that could not complete comes back here

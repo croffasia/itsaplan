@@ -1,6 +1,6 @@
 import { useId, useState } from 'react';
 import { Ban, ChevronDown, ChevronRight } from 'lucide-react';
-import type { AgentScheduleRun } from '@/lib/api';
+import type { AgentScheduleRun } from '@/lib/api/endpoints/agentSchedules';
 import { formatDateTime } from '@/utils/dates';
 import { AgentContextSize } from '@/components/common/agent-chat/AgentContextSize';
 import { Badge } from '@/components/ui/badge';

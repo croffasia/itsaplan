@@ -1,4 +1,4 @@
-import type { AgentSchedule } from '@/lib/api';
+import type { AgentSchedule } from '@/lib/api/endpoints/agentSchedules';
 import {
   useAgentScheduleRuns,
   useCancelAgentScheduleRuns,

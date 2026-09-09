@@ -1,4 +1,4 @@
-import type { GitConnectionProvider } from '@/lib/api';
+import type { GitConnectionProvider } from '@/lib/api/endpoints/git';
 
 export const GIT_PROVIDER_CONFIG: Record<
   GitConnectionProvider,

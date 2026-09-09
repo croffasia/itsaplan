@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { ClipboardPaste, Copy, MoreHorizontal } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { Label, LabelGroup, PermissionResource } from '@/lib/api';
+import type { PermissionResource } from '@/lib/api/endpoints/roles';
+import type { Label, LabelGroup } from '@/lib/api/endpoints/labels';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

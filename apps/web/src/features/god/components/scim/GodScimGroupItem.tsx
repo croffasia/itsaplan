@@ -2,7 +2,7 @@
 
 import { UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { InstanceScimGroup } from '@/lib/api';
+import type { InstanceScimGroup } from '@/lib/api/endpoints/scim';
 import { Button } from '@/components/ui/button';
 import {
   Item,

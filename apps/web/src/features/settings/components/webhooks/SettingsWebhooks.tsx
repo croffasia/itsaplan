@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail, Webhook } from '@/lib/api';
+import type { Webhook } from '@/lib/api/endpoints/webhooks';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import {
   useWebhooksQuery,
   useCreateWebhook,

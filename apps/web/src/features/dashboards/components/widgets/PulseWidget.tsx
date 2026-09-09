@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import type { PulseUnit } from '@/lib/api';
+import type { PulseUnit } from '@/lib/api/endpoints/analytics';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
 import { Skeleton } from '@/components/ui/skeleton';
 import { usePulseQuery } from '../../services/analytics.service';

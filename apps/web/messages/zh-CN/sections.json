@@ -98,8 +98,8 @@
       "description": "当关联的拉取请求在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合并时关闭工作项。"
     },
     "ai-agents": {
-      "label": "AI 队友",
-      "description": "在该项目中工作的 AI 队友。"
+      "label": "AI 代理",
+      "description": "在该项目中工作的 AI 代理。"
     }
   }
 }

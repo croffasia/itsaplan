@@ -5,13 +5,20 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
+import type { FeedCursor } from '@/lib/api/endpoints/activity';
 import {
-  api,
-  type FeedCursor,
   type InitiativeListParams,
   type InitiativePatch,
   type NewInitiativeInput,
-} from '@/lib/api';
+  listInitiatives,
+  listInitiativeOptions,
+  initiativeCounts,
+  getInitiative,
+  createInitiative,
+  updateInitiative,
+  deleteInitiative,
+  listInitiativeFeed,
+} from '@/lib/api/endpoints/initiatives';
 import { qk } from '@/services/queryKeys';
 
 // A page of the project's initiatives. params filter (status/search), sort and
@@ -20,7 +27,7 @@ import { qk } from '@/services/queryKeys';
 export function useInitiativesQuery(projectKey: string | null, params: InitiativeListParams) {
   return useQuery({
     queryKey: qk.initiatives(projectKey ?? '', params),
-    queryFn: () => api.listInitiatives(projectKey!, params),
+    queryFn: () => listInitiatives(projectKey!, params),
     enabled: projectKey != null,
     placeholderData: keepPreviousData,
   });
@@ -35,7 +42,7 @@ export function useInitiativeOptionsQuery(
 ) {
   return useQuery({
     queryKey: qk.initiativeOptions(projectKey ?? '', params),
-    queryFn: () => api.listInitiativeOptions(projectKey!, params),
+    queryFn: () => listInitiativeOptions(projectKey!, params),
     enabled: projectKey != null,
     placeholderData: keepPreviousData,
   });
@@ -45,7 +52,7 @@ export function useInitiativeOptionsQuery(
 export function useInitiativeCountsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.initiativeCounts(projectKey ?? ''),
-    queryFn: () => api.initiativeCounts(projectKey!),
+    queryFn: () => initiativeCounts(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -53,7 +60,7 @@ export function useInitiativeCountsQuery(projectKey: string | null) {
 export function useInitiativeQuery(id: number | null) {
   return useQuery({
     queryKey: qk.initiative(id ?? 0),
-    queryFn: () => api.getInitiative(id!),
+    queryFn: () => getInitiative(id!),
     enabled: id != null,
   });
 }
@@ -61,7 +68,7 @@ export function useInitiativeQuery(id: number | null) {
 export function useCreateInitiative(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: NewInitiativeInput) => api.createInitiative(projectKey, input),
+    mutationFn: (input: NewInitiativeInput) => createInitiative(projectKey, input),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
       qc.invalidateQueries({ queryKey: qk.initiativeCounts(projectKey) });
@@ -74,7 +81,7 @@ export function useUpdateInitiative(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, patch }: { id: number; patch: InitiativePatch }) =>
-      api.updateInitiative(id, patch),
+      updateInitiative(id, patch),
     onSuccess: (_data, { id }) => {
       qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
       qc.invalidateQueries({ queryKey: qk.initiativeCounts(projectKey) });
@@ -88,7 +95,7 @@ export function useUpdateInitiative(projectKey: string) {
 export function useDeleteInitiative(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteInitiative(id),
+    mutationFn: (id: number) => deleteInitiative(id),
     onSuccess: (_data, id) => {
       qc.invalidateQueries({ queryKey: qk.initiativesForProject(projectKey) });
       qc.invalidateQueries({ queryKey: qk.initiativeCounts(projectKey) });
@@ -107,7 +114,7 @@ export function useDeleteInitiative(projectKey: string) {
 export function useInitiativeFeedQuery(id: number | null) {
   return useInfiniteQuery({
     queryKey: qk.initiativeFeed(id ?? 0),
-    queryFn: ({ pageParam }) => api.listInitiativeFeed(id!, { cursor: pageParam, limit: 25 }),
+    queryFn: ({ pageParam }) => listInitiativeFeed(id!, { cursor: pageParam, limit: 25 }),
     initialPageParam: null as FeedCursor | null,
     getNextPageParam: (last) => last.nextCursor,
     enabled: id != null,

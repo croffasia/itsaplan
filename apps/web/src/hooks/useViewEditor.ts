@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { View } from '@/lib/api';
+import type { View } from '@/lib/api/endpoints/views';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import {
   normalizeView,

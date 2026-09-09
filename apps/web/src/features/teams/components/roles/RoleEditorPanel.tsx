@@ -9,7 +9,7 @@ import type {
   PermissionResource,
   Permissions,
   Role,
-} from '@/lib/api';
+} from '@/lib/api/endpoints/roles';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

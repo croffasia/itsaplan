@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Hash } from 'lucide-react';
-import { type IssueSearchHit } from '@/lib/api';
+import type { IssueSearchHit } from '@/lib/api/endpoints/issues';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useIssueSearchQuery } from '@/services/issues.service';
 import {

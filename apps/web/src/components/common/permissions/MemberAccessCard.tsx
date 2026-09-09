@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import { Bot } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { PermissionCatalog, Permissions } from '@/lib/api';
+import type { PermissionCatalog, Permissions } from '@/lib/api/endpoints/roles';
 import Avatar from '@/components/common/Avatar';
 import { Badge } from '@/components/ui/badge';
 import AccessCard from './AccessCard';

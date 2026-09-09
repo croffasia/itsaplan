@@ -1,5 +1,5 @@
 import { CircleDashed } from 'lucide-react';
-import type { Column } from '@/lib/api';
+import type { Column } from '@/lib/api/endpoints/columns';
 import { colorDot } from './colorDot';
 import { Pill } from './Pill';
 import PopoverPick from './PopoverPick';

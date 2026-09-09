@@ -1,0 +1,94 @@
+{
+  "title": "Exibição",
+  "layouts": {
+    "kanban": "Kanban",
+    "table": "Tabela",
+    "timeline": "Linha do tempo",
+    "calendar": "Calendário"
+  },
+  "sortFields": {
+    "manual": "Manual",
+    "title": "Título",
+    "identifier": "Número da issue",
+    "status": "Estado",
+    "priority": "Prioridade",
+    "assignee": "Responsável",
+    "type": "Tipo",
+    "startDate": "Data de início",
+    "dueDate": "Data de vencimento",
+    "created": "Criado",
+    "updated": "Atualizado"
+  },
+  "groupFields": {
+    "none": "Sem agrupamento",
+    "status": "Estado",
+    "assignee": "Responsável",
+    "delegate": "Delegado",
+    "priority": "Prioridade",
+    "type": "Tipo",
+    "initiative": "Iniciativa",
+    "cycle": "Ciclo"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "Estado",
+    "priority": "Prioridade",
+    "type": "Tipo",
+    "assignee": "Responsável",
+    "delegate": "Delegado",
+    "initiative": "Iniciativa",
+    "cycle": "Ciclo",
+    "labels": "Etiquetas",
+    "estimatePoints": "Pontos de história",
+    "estimateTime": "Estimativa de tempo",
+    "startDate": "Data de início",
+    "dueDate": "Data de vencimento",
+    "created": "Criado",
+    "updated": "Atualizado",
+    "statusAge": "Tempo no estado"
+  },
+  "stateTypes": {
+    "backlog": "Backlog",
+    "unstarted": "Não iniciado",
+    "started": "Iniciado",
+    "completed": "Concluído",
+    "canceled": "Cancelado"
+  },
+  "timelineScales": {
+    "week": "Semana",
+    "month": "Mês",
+    "quarter": "Trimestre"
+  },
+  "weekStart": {
+    "0": "Domingo",
+    "1": "Segunda-feira"
+  },
+  "dateFields": {
+    "dueDate": "Data de vencimento",
+    "startDate": "Data de início"
+  },
+  "rows": {
+    "columns": "Colunas",
+    "grouping": "Agrupamento",
+    "swimlanes": "Raias",
+    "subGrouping": "Sub-agrupamento",
+    "ordering": "Ordenação",
+    "ascending": "Crescente",
+    "descending": "Decrescente",
+    "showEmptyColumns": "Mostrar colunas vazias",
+    "showEmptyGroups": "Mostrar grupos vazios",
+    "showLinks": "Mostrar links",
+    "separateSubtaskCards": "Mostrar subtarefas como cards separados",
+    "separateSubtaskRows": "Mostrar subtarefas como linhas separadas",
+    "showNestedSubtasks": "Mostrar subtarefas aninhadas",
+    "nestedSubtasks": "Subtarefas aninhadas",
+    "displayProperties": "Exibir propriedades",
+    "placeBy": "Posicionar por",
+    "startWeekOn": "Iniciar semana em",
+    "startCollapsed": "Começar com grupos recolhidos",
+    "scale": "Escala",
+    "addCustomField": "Adicionar campo personalizado",
+    "viewIcon": "Ícone da visão"
+  },
+  "layoutCommand": "Layout {layout}"
+}

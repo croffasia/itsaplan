@@ -1,9 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type Project, type CopyProjectIncludeKey } from '@/lib/api';
+import { removeMember } from '@/lib/api/endpoints/members';
+import {
+  type CopyProjectIncludeKey,
+  createTeamProject,
+  copyTeamProject,
+  updateTeamProject,
+  deleteTeamProject,
+} from '@/lib/api/endpoints/teams';
+import {
+  type Project,
+  listProjects,
+  getProject,
+  getBoardIssues,
+  createProject,
+  updateProject,
+} from '@/lib/api/endpoints/projects';
 import { qk } from '@/services/queryKeys';
 
 export function useProjectsQuery() {
-  return useQuery({ queryKey: qk.projects, queryFn: () => api.listProjects() });
+  return useQuery({ queryKey: qk.projects, queryFn: () => listProjects() });
 }
 
 // The board scaffold (columns, types, labels, custom fields, viewer). The issues
@@ -11,7 +26,7 @@ export function useProjectsQuery() {
 export function useProjectQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.project(projectKey ?? ''),
-    queryFn: () => api.getProject(projectKey!),
+    queryFn: () => getProject(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -20,7 +35,7 @@ export function useProjectQuery(projectKey: string | null) {
 export function useBoardIssuesQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.boardIssues(projectKey ?? ''),
-    queryFn: () => api.getBoardIssues(projectKey!),
+    queryFn: () => getBoardIssues(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -65,10 +80,10 @@ export function useCreateProject() {
         preset?: string;
       };
     }) => {
-      if (teamId == null) return api.createProject(input);
+      if (teamId == null) return createProject(input);
       return copyFromId == null
-        ? api.createTeamProject(teamId, input)
-        : api.copyTeamProject(teamId, copyFromId, input);
+        ? createTeamProject(teamId, input)
+        : copyTeamProject(teamId, copyFromId, input);
     },
     onSuccess: (project) => {
       // Add the new project to the cached list immediately so navigating to it
@@ -92,7 +107,7 @@ export function useUpdateProject() {
     }: {
       projectKey: string;
       patch: { name?: string; description?: string };
-    }) => api.updateProject(projectKey, patch),
+    }) => updateProject(projectKey, patch),
     onSuccess: (updated, { projectKey }) => {
       // Reflect the new name/description in the cached list immediately, then
       // refetch the list and the project detail (its header and switcher read
@@ -124,7 +139,7 @@ export function useUpdateTeamProject() {
       projectId: number;
       projectKey: string;
       patch: { name?: string; description?: string };
-    }) => api.updateTeamProject(teamId, projectId, patch),
+    }) => updateTeamProject(teamId, projectId, patch),
     onSuccess: (updated, { teamId, projectKey }) => {
       qc.setQueryData<Project[]>(qk.projects, (prev) =>
         prev?.map((p) =>
@@ -157,7 +172,7 @@ export function useLeaveProject() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ projectKey, userId }: { projectKey: string; userId: string }) =>
-      api.removeMember(projectKey, userId),
+      removeMember(projectKey, userId),
     onSuccess: (_data, { projectKey }) => {
       forgetProject(qc, projectKey);
       // The team panel counts the members of each project it lists and names them.
@@ -178,7 +193,7 @@ export function useDeleteTeamProject() {
       teamId: number;
       projectId: number;
       projectKey: string;
-    }) => api.deleteTeamProject(teamId, projectId),
+    }) => deleteTeamProject(teamId, projectId),
     onSuccess: (_data, { teamId, projectKey }) => {
       forgetProject(qc, projectKey);
       void qc.invalidateQueries({ queryKey: qk.team(teamId) });

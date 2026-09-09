@@ -6,7 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChevronRight, FileText, GripVertical, LockKeyhole, Plus, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
-import type { ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { documentPath } from '@/utils/paths';
@@ -90,25 +90,26 @@ export default function SortableDocumentRow({
             </Button>
           </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            className={cn(
-              'size-6 shrink-0 text-muted-foreground',
-              (!nested || !hasChildren) && 'invisible',
-            )}
-            aria-label={collapsed ? t('expand') : t('collapse')}
-            aria-expanded={hasChildren ? !collapsed : undefined}
-            onClick={onToggle}
-          >
-            <ChevronRight
-              className={cn(
-                'size-3.5 transition-transform duration-150 rtl:rotate-180',
-                !collapsed && 'rotate-90 rtl:rotate-90',
-              )}
-            />
-          </Button>
+          {/* Only a tree keeps the slot of a page without children, to align it
+              with its siblings. A flat list has nothing to align to. */}
+          {nested && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className={cn('size-6 shrink-0 text-muted-foreground', !hasChildren && 'invisible')}
+              aria-label={collapsed ? t('expand') : t('collapse')}
+              aria-expanded={hasChildren ? !collapsed : undefined}
+              onClick={onToggle}
+            >
+              <ChevronRight
+                className={cn(
+                  'size-3.5 transition-transform duration-150 rtl:rotate-180',
+                  !collapsed && 'rotate-90 rtl:rotate-90',
+                )}
+              />
+            </Button>
+          )}
 
           <Link
             href={documentPath(projectKey, document.id)}

@@ -1,5 +1,6 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Maximize2, Minimize2, X } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,6 +24,18 @@ const MAX_WIDTH = {
 } as const;
 
 const CONTROL_CLASS = 'size-7 text-muted-foreground hover:text-foreground';
+
+// The fullscreen props of a dialog whose body adapts to fullscreen. On a phone
+// there is no room for anything else, so it is always fullscreen and the toggle
+// is dropped.
+export function useModalFullscreen() {
+  const isMobile = useIsMobile();
+  const [expanded, setExpanded] = useState(false);
+  return {
+    fullscreen: isMobile || expanded,
+    onToggleFullscreen: isMobile ? undefined : () => setExpanded((v) => !v),
+  };
+}
 
 export default function Modal({
   title,

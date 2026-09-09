@@ -1,4 +1,7 @@
-import type { BoardIssue, Permissions, ProjectDetail, PublicScaffold } from '@/lib/api';
+import type { Permissions } from '@/lib/api/endpoints/roles';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { BoardIssue } from '@/lib/api/endpoints/issues';
+import type { PublicScaffold } from '@/lib/api/endpoints/share';
 
 // Assembles a ProjectDetail from a public share bundle so the read-only pages can
 // reuse the same components as the authenticated app (the board layouts, the issue

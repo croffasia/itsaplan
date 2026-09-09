@@ -122,6 +122,21 @@ export const linkDocumentIssueBody = t.Object({
   issueId: t.Integer({ minimum: 1 }),
 });
 
+export const documentInitiativeParams = t.Object({
+  projectKey: t.String(),
+  documentId: t.Numeric(),
+  initiativeId: t.Numeric(),
+});
+
+export const initiativeDocumentsParams = t.Object({
+  projectKey: t.String(),
+  initiativeId: t.Numeric(),
+});
+
+export const linkDocumentInitiativeBody = t.Object({
+  initiativeId: t.Integer({ minimum: 1 }),
+});
+
 export const DocumentIssueLinkResponse = t.Object({
   issueId: t.Number(),
   sequenceNumber: t.Number(),

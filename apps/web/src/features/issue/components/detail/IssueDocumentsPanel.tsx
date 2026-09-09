@@ -1,11 +1,9 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
-import { FileText, Loader2, Lock, Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ArchivedBadge from '@/components/common/ArchivedBadge';
-import { documentPath } from '@/utils/paths';
+import DocumentLinkList from '@/components/common/DocumentLinkList';
 import DocumentPickerDialog from '@/features/documents/components/DocumentPickerDialog';
 import {
   useIssueDocumentLinksQuery,
@@ -65,66 +63,16 @@ export default function IssueDocumentsPanel({
       </div>
 
       {open && (
-        <div className="space-y-1.5">
-          {links.isLoading ? (
-            <div className="flex h-12 items-center justify-center text-muted-foreground">
-              <Loader2 className="size-4 animate-spin" />
-            </div>
-          ) : links.isError ? (
-            <button
-              type="button"
-              className="w-full rounded-md border border-dashed px-3 py-4 text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => void links.refetch()}
-            >
-              {t('loadFailed')}
-            </button>
-          ) : links.data?.length ? (
-            links.data.map((link) => {
-              const removing =
-                unlinkDocument.isPending &&
-                unlinkDocument.variables?.documentId === link.documentId;
-              return (
-                <div
-                  key={link.documentId}
-                  className="group flex items-center gap-2 rounded-lg border bg-card/40 px-2.5 py-2"
-                >
-                  <Link
-                    href={documentPath(projectKey, link.documentId)}
-                    className="flex min-w-0 flex-1 items-center gap-2 rounded focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-                  >
-                    <span className="grid size-7 shrink-0 place-items-center rounded-md border bg-muted/30 text-sm">
-                      {link.icon || <FileText className="size-3.5" />}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate text-sm" dir="auto">
-                      {link.title.trim() || t('untitled')}
-                    </span>
-                    {link.isPrivate && <Lock className="size-3.5 text-muted-foreground" />}
-                    {link.archived && <ArchivedBadge />}
-                  </Link>
-                  {canLink && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon-xs"
-                      className="shrink-0 text-muted-foreground opacity-100 hover:text-destructive sm:opacity-0 sm:group-focus-within:opacity-100 sm:group-hover:opacity-100"
-                      aria-label={t('remove', { title: link.title || t('untitled') })}
-                      disabled={unlinkDocument.isPending}
-                      onClick={() =>
-                        unlinkDocument.mutate({ documentId: link.documentId, issueId })
-                      }
-                    >
-                      {removing ? <Loader2 className="animate-spin" /> : <X />}
-                    </Button>
-                  )}
-                </div>
-              );
-            })
-          ) : (
-            <p className="rounded-md border border-dashed px-3 py-4 text-center text-xs text-muted-foreground">
-              {t('empty')}
-            </p>
-          )}
-        </div>
+        <DocumentLinkList
+          namespace="issue.documents"
+          projectKey={projectKey}
+          links={links}
+          canUnlink={canLink}
+          unlinkingId={
+            unlinkDocument.isPending ? (unlinkDocument.variables?.documentId ?? null) : null
+          }
+          onUnlink={(documentId) => unlinkDocument.mutate({ documentId, issueId })}
+        />
       )}
 
       {pickerOpen && (

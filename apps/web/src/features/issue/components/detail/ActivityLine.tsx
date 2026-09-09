@@ -1,11 +1,11 @@
 import { useTranslations } from 'next-intl';
 import { CircleDot } from 'lucide-react';
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ACTION_ICON } from '../../utils/activityIcons';
 import { useActivityText } from '../../hooks/useActivityText';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 
 // One change-log entry in an activity list: icon, actor, the sentence describing
 // the change, and how long ago it happened. A change with a long value (a new
@@ -37,7 +37,7 @@ export default function ActivityLine({ item }: { item: FeedItem }) {
               </button>
             </PopoverTrigger>
             <PopoverContent align="start" className="max-h-80 w-96 overflow-y-auto">
-              <IssueMarkdownEditor className="text-sm" defaultValue={popover} editable={false} />
+              <MarkdownEditor className="text-sm" defaultValue={popover} editable={false} />
             </PopoverContent>
           </Popover>
         )}

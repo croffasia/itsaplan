@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { API_URL, type GitSettings } from '@/lib/api';
+import type { GitSettings } from '@/lib/api/endpoints/git';
+import { API_URL } from '@/lib/api/core/client';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import { Button } from '@/components/ui/button';

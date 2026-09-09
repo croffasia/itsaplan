@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import GridLayout, { useContainerWidth, verticalCompactor, type Layout } from 'react-grid-layout';
 import { Direction } from 'radix-ui';
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { cn } from '@/lib/utils';
 import {
   COL_GAP,

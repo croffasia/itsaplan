@@ -2,11 +2,13 @@ import { Elysia, t } from 'elysia';
 import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { guards } from '#shared/guards';
+import { paginate } from '#shared/pagination';
 import { HttpError, rethrowDuplicate } from '#shared/lib';
 import { PERMISSION_RESOURCES, PERMISSION_ACTIONS, resourceActions } from '#shared/permissions';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
   listRoles,
+  listRolesPage,
   getRole,
   getRoleUsage,
   isRoleInUse,
@@ -16,10 +18,12 @@ import {
 } from './service';
 import {
   PermissionCatalogResponse,
+  RolePageResponse,
   RoleResponse,
   RoleUsageResponse,
   createRoleBody,
   deleteRoleQuery,
+  roleListQuery,
   roleParams,
   teamParams,
   updateRoleBody,
@@ -54,14 +58,42 @@ export const roleRoutes = new Elysia({ name: 'roles', detail: { tags: ['Roles'] 
     },
   )
 
-  // The roles of a team, read by any of its members: the projects assign from this
-  // one list, so it is what a member list, an add-member dialog and an agent's role
-  // picker all name their options from.
-  .get('/teams/:teamId/roles', ({ membership }) => listRoles(membership.teamId), {
+  // One page of the roles of a team, read by any of its members.
+  .get(
+    '/teams/:teamId/roles',
+    ({ membership, query }) =>
+      paginate(query, (window) =>
+        listRolesPage(membership.teamId, { search: query.search, ...window }),
+      ),
+    {
+      params: teamParams,
+      query: roleListQuery,
+      teamMember: true,
+      response: { 200: RolePageResponse, ...accessErrors },
+      detail: {
+        summary: "List a team's roles",
+        description:
+          'One page of the roles a team offers, oldest first. `search` matches the name. ' +
+          'Use list_role_options to read every one of them.',
+        ...mcpTool('list_roles'),
+      },
+    },
+  )
+
+  // The projects assign from this one list, so a member list, an add-member dialog
+  // and an agent's role picker all name their options from it. The matrices come
+  // along: the roles are exported to the clipboard from here as well.
+  .get('/teams/:teamId/roles/options', ({ membership }) => listRoles(membership.teamId), {
     params: teamParams,
     teamMember: true,
     response: { 200: t.Array(RoleResponse), ...accessErrors },
-    detail: { summary: "List a team's roles", ...mcpTool('list_roles') },
+    detail: {
+      summary: "List a team's role options",
+      description:
+        'Every role of the team, with its permission matrix, for the pickers that assign one. ' +
+        'Use list_roles to read them a page at a time.',
+      ...mcpTool('list_role_options'),
+    },
   })
 
   .post(

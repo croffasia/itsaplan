@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { type CustomField, type CustomFieldType, type MemberScope } from '@/lib/api';
+import type { CustomField, CustomFieldType, MemberScope } from '@/lib/api/endpoints/customFields';
 import { cn } from '@/lib/utils';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';

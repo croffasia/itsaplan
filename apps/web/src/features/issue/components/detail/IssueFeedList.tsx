@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { useFeedQuery } from '../../services/comments.service';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';

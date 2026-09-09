@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import type { GitConnectionProvider } from '@/lib/api';
+import type { GitConnectionProvider } from '@/lib/api/endpoints/git';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,

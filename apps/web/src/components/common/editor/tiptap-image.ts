@@ -19,8 +19,12 @@ function markdownImage(src: string, alt: string, title: string | null): string {
 // carrying either serializes as a raw <img> tag (tiptap-markdown runs html:true).
 export const ResizableImage = Image.extend({
   addAttributes() {
+    // The image keeps height:auto and nothing ever sets the inherited height, so
+    // it is dropped: it would otherwise reach the document JSON as `height: null`,
+    // which the API rejects as an unsupported image attr.
+    const { height: _height, ...parent }: Record<string, unknown> = this.parent?.() ?? {};
     return {
-      ...this.parent?.(),
+      ...parent,
       // Kept so a raw <img style="max-width:50%"> keeps its sizing.
       style: { default: null },
       width: {

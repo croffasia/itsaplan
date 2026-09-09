@@ -3,7 +3,7 @@
 // and the labels, each label naming its group. Matching is by name; a new group/label
 // is created, and a same-name one with a different color is recolored.
 
-import type { Label, LabelGroup } from '@/lib/api';
+import type { Label, LabelGroup } from '@/lib/api/endpoints/labels';
 import { DEFAULT_COLOR } from '@/utils/project';
 
 const PAYLOAD_TYPE = 'plan.labels';

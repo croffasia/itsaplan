@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Check, Copy, Mail, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type InviteRow as Invite } from '@/lib/api';
+import type { InviteRow as Invite } from '@/lib/api/endpoints/invites';
 import { inviteLink } from '@/utils/paths';
 import { formatShortDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';

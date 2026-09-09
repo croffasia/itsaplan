@@ -1,5 +1,5 @@
 import { Star } from 'lucide-react';
-import type { View } from '@/lib/api';
+import type { View } from '@/lib/api/endpoints/views';
 import { ViewIcon } from '@/utils/viewIcons';
 
 // The saved-view label (icon + name), shown in the tab and in the drag overlay. A

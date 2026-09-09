@@ -1,4 +1,5 @@
-import type { CustomField, IssueType } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import type { WorkItemsView } from '@/utils/viewTypes';
 import type { ViewSettings } from '@/utils/viewSettings';
 import DisplayCalendarRows from '@/components/layout/DisplayCalendarRows';

@@ -1,4 +1,4 @@
-import type { IssueTemplate, NewIssueTemplateInput } from '@/lib/api';
+import type { IssueTemplate, NewIssueTemplateInput } from '@/lib/api/endpoints/issueTemplates';
 
 // The template as the settings dialog edits it. `priority` is '' for none, the way
 // PrioritySelect carries it; the other properties are null when the template

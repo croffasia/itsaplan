@@ -7,9 +7,10 @@ export async function teamIdOf(api: Api, projectKey: string): Promise<number> {
   return projects.data!.find((p) => p.key === projectKey)!.teamId;
 }
 
-// The roles a project assigns from, through the team that owns it.
+// The roles a project assigns from, through the team that owns it. Read whole, the
+// way the pickers do.
 export async function listProjectRoles(api: Api, projectKey: string) {
-  return api.teams({ teamId: await teamIdOf(api, projectKey) }).roles.get();
+  return api.teams({ teamId: await teamIdOf(api, projectKey) }).roles.options.get();
 }
 
 // Creates a role for a project through the team that owns it.

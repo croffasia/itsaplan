@@ -2,7 +2,8 @@
 
 import { useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail, StateType } from '@/lib/api';
+import type { StateType } from '@/lib/api/endpoints/columns';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 
 // The initiative's linked issues counted per state group. Complements the header
 // progress pill with the full distribution (backlog through canceled).

@@ -1,6 +1,7 @@
 import { type CSSProperties, useRef, useState } from 'react';
 import { Direction } from 'radix-ui';
-import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { IssueDetail as IssueDetailRow } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
 import { usePersistedWidth } from '@/hooks/usePersistedWidth';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
@@ -19,7 +20,7 @@ import IssueActivityFeed from './IssueActivityFeed';
 import LastCommentBubble from './LastCommentBubble';
 import IssueDetailSkeleton from './IssueDetailSkeleton';
 import IssueStatusTimeline from './IssueStatusTimeline';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
 import IssueActionsBar from '../actions/IssueActionsBar';
@@ -137,7 +138,7 @@ export default function IssueDetailContent({
       </div>
 
       {(canEdit || issue.description.trim() !== '') && (
-        <IssueMarkdownEditor
+        <MarkdownEditor
           className="mt-4"
           placeholder={tEditor('descriptionPlaceholder')}
           defaultValue={issue.description}

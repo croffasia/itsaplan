@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ActionEffect, ProjectDetail, CustomField } from '@/lib/api';
+import type { ActionEffect } from '@/lib/api/endpoints/actions';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { isActiveFilterSet, type FilterSet } from '@/utils/filters';
 import { isEmptyEffect } from '@/utils/actions';
 import Modal from '@/components/common/overlay/Modal';

@@ -6,6 +6,7 @@
   "showDescription": "Показать описание",
   "noDescription": "Описания нет.",
   "noOwner": "Без владельца",
+  "startDate": "Дата начала",
   "targetDate": "Целевая дата",
   "progress": "Прогресс",
   "activity": "Активность",
@@ -30,6 +31,7 @@
   },
   "detailTabs": {
     "overview": "Обзор",
+    "progress": "Прогресс",
     "issues": "Задачи"
   },
   "columns": {
@@ -91,9 +93,7 @@
     "noTargetDate": "Укажите целевую дату, чтобы видеть темп."
   },
   "form": {
-    "title": "Название",
     "titlePlaceholder": "Запуск в 3 квартале",
-    "description": "Описание",
     "descriptionPlaceholder": "О чём эта инициатива?",
     "create": "Создать инициативу",
     "creating": "Создание…",
@@ -141,5 +141,26 @@
     "typeRemoved": "убрал(а) тип",
     "linked": "привязал(а) к {name}",
     "unlinked": "отвязал(а) от инициативы"
+  },
+  "attachments": {
+    "title": "Вложения",
+    "add": "Добавить",
+    "uploading": "Загрузка…",
+    "empty": "Вложений пока нет.",
+    "emptyHint": "Перетащите файлы сюда или нажмите «Добавить».",
+    "dropToUpload": "Отпустите файлы для загрузки",
+    "uploadFailed": "Не удалось загрузить",
+    "open": "Открыть {name}",
+    "download": "Скачать",
+    "downloadFile": "Скачать {name}",
+    "deleteFile": "Удалить {name}"
+  },
+  "documents": {
+    "title": "Документы",
+    "add": "Привязать документ",
+    "empty": "Документы пока не привязаны.",
+    "loadFailed": "Не удалось загрузить документы. Повторить.",
+    "untitled": "Без названия",
+    "remove": "Отвязать {title}"
   }
 }

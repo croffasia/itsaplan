@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { NotificationSettings } from '@/lib/api';
+import type { NotificationSettings } from '@/lib/api/endpoints/notificationSettings';
 import { useUpdateNotificationSettings } from '@/services/teams.service';
 
 export interface TelegramForm {

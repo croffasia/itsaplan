@@ -348,6 +348,34 @@ describe('webhooks', () => {
       expect(res.data?.items).toHaveLength(1);
       expect(res.data!.items[0]).toMatchObject({ eventType: 'comment.created' });
     });
+
+    it('queues a delivery on comment.updated and comment.deleted', async () => {
+      const { asOwner, columnId } = await setupOwnerProject();
+      const id = await createWebhook(asOwner, ['comment.updated', 'comment.deleted']);
+
+      const issue = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Task' });
+      const comment = (
+        await asOwner.issues({ issueId: issue.data!.id }).comments.post({ body: 'draft' })
+      ).data!;
+      await asOwner.comments({ commentId: comment.id }).patch({ body: 'final' });
+      await asOwner.comments({ commentId: comment.id }).delete();
+
+      const res = await asOwner.webhooks({ webhookId: id }).deliveries.get();
+      const byEvent = Object.fromEntries(res.data!.items.map((d) => [d.eventType, d]));
+      expect(byEvent['comment.updated']).toMatchObject({
+        payload: expect.objectContaining({ action: 'update', type: 'Comment' }),
+      });
+      expect(byEvent['comment.deleted']).toMatchObject({
+        payload: expect.objectContaining({
+          action: 'remove',
+          type: 'Comment',
+          // A delete carries the comment as it last read.
+          data: expect.objectContaining({ id: comment.id, body: 'final' }),
+        }),
+      });
+    });
   });
 
   describe('access', () => {

@@ -1,5 +1,14 @@
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type PageParams } from '@/lib/api';
+import {
+  listAgentSchedules,
+  listAgentScheduleRuns,
+  createAgentSchedule,
+  updateAgentSchedule,
+  deleteAgentSchedule,
+  cancelAgentScheduleRuns,
+  runAgentSchedule,
+} from '@/lib/api/endpoints/agentSchedules';
+import type { PageParams } from '@/lib/api/core/paging';
 import { qk } from '@/services/queryKeys';
 
 // One page of the project's schedules. A page with a run still going is polled, so the
@@ -7,7 +16,7 @@ import { qk } from '@/services/queryKeys';
 export function useAgentSchedules(projectKey: string, params: PageParams) {
   return useQuery({
     queryKey: qk.agentSchedulePage(projectKey, params),
-    queryFn: () => api.listAgentSchedules(projectKey, params),
+    queryFn: () => listAgentSchedules(projectKey, params),
     placeholderData: keepPreviousData,
     refetchInterval: (query) =>
       query.state.data?.items.some((schedule) => schedule.lastRunStatus === 'pending')
@@ -19,7 +28,7 @@ export function useAgentSchedules(projectKey: string, params: PageParams) {
 export function useAgentScheduleRuns(projectKey: string, scheduleId: number | null) {
   return useQuery({
     queryKey: qk.agentScheduleRuns(projectKey, scheduleId ?? 0),
-    queryFn: () => api.listAgentScheduleRuns(projectKey, scheduleId!),
+    queryFn: () => listAgentScheduleRuns(projectKey, scheduleId!),
     enabled: scheduleId != null,
     refetchInterval: (query) =>
       query.state.data?.some((run) => run.status === 'pending') ? 2000 : false,
@@ -29,8 +38,8 @@ export function useAgentScheduleRuns(projectKey: string, scheduleId: number | nu
 export function useCreateAgentSchedule(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: Parameters<typeof api.createAgentSchedule>[1]) =>
-      api.createAgentSchedule(projectKey, input),
+    mutationFn: (input: Parameters<typeof createAgentSchedule>[1]) =>
+      createAgentSchedule(projectKey, input),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.agentSchedules(projectKey) }),
   });
 }
@@ -38,13 +47,8 @@ export function useCreateAgentSchedule(projectKey: string) {
 export function useUpdateAgentSchedule(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({
-      id,
-      patch,
-    }: {
-      id: number;
-      patch: Parameters<typeof api.updateAgentSchedule>[2];
-    }) => api.updateAgentSchedule(projectKey, id, patch),
+    mutationFn: ({ id, patch }: { id: number; patch: Parameters<typeof updateAgentSchedule>[2] }) =>
+      updateAgentSchedule(projectKey, id, patch),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.agentSchedules(projectKey) }),
   });
 }
@@ -52,7 +56,7 @@ export function useUpdateAgentSchedule(projectKey: string) {
 export function useDeleteAgentSchedule(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteAgentSchedule(projectKey, id),
+    mutationFn: (id: number) => deleteAgentSchedule(projectKey, id),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.agentSchedules(projectKey) }),
   });
 }
@@ -61,7 +65,7 @@ export function useCancelAgentScheduleRuns(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ scheduleId, runId }: { scheduleId: number; runId?: number }) =>
-      api.cancelAgentScheduleRuns(projectKey, scheduleId, runId),
+      cancelAgentScheduleRuns(projectKey, scheduleId, runId),
     onSuccess: (_data, { scheduleId }) => {
       void qc.invalidateQueries({ queryKey: qk.agentSchedules(projectKey) });
       void qc.invalidateQueries({ queryKey: qk.agentScheduleRuns(projectKey, scheduleId) });
@@ -72,7 +76,7 @@ export function useCancelAgentScheduleRuns(projectKey: string) {
 export function useRunAgentSchedule(projectKey: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.runAgentSchedule(projectKey, id),
+    mutationFn: (id: number) => runAgentSchedule(projectKey, id),
     onSuccess: (_data, id) => {
       void qc.invalidateQueries({ queryKey: qk.agentSchedules(projectKey) });
       void qc.invalidateQueries({ queryKey: qk.agentScheduleRuns(projectKey, id) });

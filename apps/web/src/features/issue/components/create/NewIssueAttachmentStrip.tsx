@@ -1,5 +1,5 @@
 import { type PendingAttachment } from '../../hooks/useNewIssueAttachments';
-import { type Embeddable } from '../../utils/attachmentEmbed';
+import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import NewIssueAttachmentChip from './NewIssueAttachmentChip';
 
 // Files waiting to be uploaded once the issue is created. They preview from

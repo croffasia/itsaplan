@@ -2,7 +2,7 @@
 // projects. The clipboard payload is a small JSON envelope. Matching is by name;
 // a new type is created, a same-name type with a different color is recolored.
 
-import type { IssueType } from '@/lib/api';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import { DEFAULT_COLOR } from '@/utils/project';
 
 const PAYLOAD_TYPE = 'plan.issue-types';

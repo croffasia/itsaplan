@@ -1,6 +1,7 @@
 import { Check, Eye, EyeOff, LoaderCircle, UserPlus } from 'lucide-react';
 import { useIsMutating } from '@tanstack/react-query';
-import { type Assignee, type IssueWatcher } from '@/lib/api';
+import type { Assignee } from '@/lib/api/endpoints/projects';
+import type { IssueWatcher } from '@/lib/api/endpoints/issues';
 import { useSession } from '@/lib/auth-client';
 import Avatar from '@/components/common/Avatar';
 import { Pill } from '@/components/common/fields/Pill';

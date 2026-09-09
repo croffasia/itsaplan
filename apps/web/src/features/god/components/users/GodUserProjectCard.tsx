@@ -1,7 +1,8 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { InstanceUserProject, PermissionCatalog } from '@/lib/api';
+import type { PermissionCatalog } from '@/lib/api/endpoints/roles';
+import type { InstanceUserProject } from '@/lib/api/endpoints/god';
 import { formatShortDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
 import AccessCard from '@/components/common/permissions/AccessCard';

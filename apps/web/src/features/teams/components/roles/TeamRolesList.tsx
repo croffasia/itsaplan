@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Role } from '@/lib/api';
+import type { Role } from '@/lib/api/endpoints/roles';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,20 +22,25 @@ import DeleteRoleDialog from './DeleteRoleDialog';
 // The team's roles, one row each: what it grants, and the actions to edit or delete
 // it. Deleting is the owner's, so a manager gets the row without that action. The
 // default role cannot be deleted; deleting any other one moves what is on it to a
-// role the dialog asks for.
+// role the dialog asks for, which is why it is handed every role of the team and not
+// only the page on screen.
 export default function TeamRolesList({
   teamId,
   roles,
+  allRoles,
   pending,
   canEdit,
   canDelete,
+  searchTerm,
   onEdit,
 }: {
   teamId: number;
   roles: Role[];
+  allRoles: Role[];
   pending: boolean;
   canEdit: boolean;
   canDelete: boolean;
+  searchTerm: string | undefined;
   onEdit: (role: Role) => void;
 }) {
   const t = useTranslations('teams');
@@ -44,7 +49,11 @@ export default function TeamRolesList({
 
   if (pending) return <ListSkeleton rows={2} rowClassName="h-12" />;
   if (roles.length === 0)
-    return <p className="text-sm text-muted-foreground">{t('roles.empty')}</p>;
+    return (
+      <p className="text-sm text-muted-foreground">
+        {searchTerm === undefined ? t('roles.empty') : t('roles.noMatches', { query: searchTerm })}
+      </p>
+    );
 
   return (
     <div className="overflow-x-auto">
@@ -137,7 +146,7 @@ export default function TeamRolesList({
         <DeleteRoleDialog
           teamId={teamId}
           role={deleting}
-          roles={roles}
+          roles={allRoles}
           onClose={() => setDeleting(null)}
         />
       )}

@@ -1,5 +1,5 @@
 import { FolderKanban } from 'lucide-react';
-import type { TeamProject } from '@/lib/api';
+import type { TeamProjectOption } from '@/lib/api/endpoints/teams';
 import type { AgentFormValue } from '../../utils/agentForm';
 import { AgentCapabilityList } from './AgentCapabilityList';
 import { AgentEmptyNotice } from './AgentEmptyNotice';
@@ -20,7 +20,7 @@ export default function AgentProjectsSection({
   onOpenChange: (open: boolean) => void;
   value: AgentFormValue;
   onChange: (patch: Partial<AgentFormValue>) => void;
-  projects: TeamProject[];
+  projects: TeamProjectOption[];
 }) {
   const t = useTranslations('teams.agents');
 

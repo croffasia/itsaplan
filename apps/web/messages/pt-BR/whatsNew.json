@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Atualizado",
+  "title": "Novidades na versão {version}",
+  "done": "Entendi",
+  "backup": {
+    "title": "Um backup foi feito antes da atualização",
+    "body": "O banco de dados foi despejado antes das migrações desta versão rodarem: {size}, mantido até {expires}, depois excluído automaticamente. Restaure-o se você voltar para a versão anterior.",
+    "credentialsHint": "Os nomes de usuário e banco de dados são o POSTGRES_USER e POSTGRES_DB do seu .env."
+  },
+  "report": {
+    "title": "O que mudou nos seus dados",
+    "subtitle": "Projetos agora pertencem a um time, e um time compartilha uma lista de funções, habilidades, agentes e credenciais de integração.",
+    "teamsHeading": "Times e seus projetos",
+    "renamedRoles": "Funções renomeadas",
+    "renamedSkills": "Habilidades renomeadas",
+    "renamedAgents": "Identificadores de agente renomeados",
+    "renamedCredentials": "Credenciais de integração reetiquetadas",
+    "mergedHeading": "Mesclado e movido",
+    "mergedRoles": "{count, plural, one {# função padrão duplicada virou uma} other {# funções padrão duplicadas viraram uma}}",
+    "mergedTools": "{count, plural, one {# ferramenta configurada duplicada virou uma} other {# ferramentas configuradas duplicadas viraram uma}}",
+    "movedInvites": "{count, plural, one {# convite pendente movido para o time} other {# convites pendentes movidos para o time}}",
+    "notificationsHeading": "Provedores de notificação",
+    "notificationsBody": "Um time mantém uma configuração de provedor de notificação, então a salva por último foi mantida. Reinsira as configurações de: {projects}."
+  }
+}

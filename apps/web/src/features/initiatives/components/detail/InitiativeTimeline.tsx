@@ -2,7 +2,7 @@
 
 import { parseISO, differenceInCalendarDays } from 'date-fns';
 import { useTranslations } from 'next-intl';
-import type { Initiative } from '@/lib/api';
+import type { Initiative } from '@/lib/api/endpoints/initiatives';
 import { formatDate } from '@/utils/dates';
 import HealthBadge from '../shared/HealthBadge';
 import HealthInfoPopover from '../shared/HealthInfoPopover';

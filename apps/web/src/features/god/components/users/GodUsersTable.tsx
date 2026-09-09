@@ -2,7 +2,7 @@
 
 import { Bot, Pencil, Shield } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { InstanceUser } from '@/lib/api';
+import type { InstanceUser } from '@/lib/api/endpoints/god';
 import { formatShortDate } from '@/utils/dates';
 import Avatar from '@/components/common/Avatar';
 import { Badge } from '@/components/ui/badge';

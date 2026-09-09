@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search, TriangleAlert, X } from 'lucide-react';
-import type { GithubSkillCandidate, NewSkillInput } from '@/lib/api';
+import type { GithubSkillCandidate, NewSkillInput } from '@/lib/api/endpoints/agentSkills';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

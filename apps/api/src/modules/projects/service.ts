@@ -2,6 +2,8 @@ import {
   db,
   chatAttachment,
   documentAsset,
+  initiative,
+  initiativeAttachment,
   issue,
   issueAttachment,
   issueType,
@@ -570,8 +572,15 @@ export async function deleteProject(projectId: number): Promise<void> {
       .from(documentAsset)
       .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
       .where(eq(projectDocument.projectId, projectId));
+    const initiativeAssets = await tx
+      .select({ s3Key: initiativeAttachment.s3Key })
+      .from(initiativeAttachment)
+      .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
+      .where(eq(initiative.projectId, projectId));
     await tx.delete(project).where(eq(project.id, projectId));
-    return [...issueAssets, ...chatAssets, ...documentAssets].map((asset) => asset.s3Key);
+    return [...issueAssets, ...chatAssets, ...documentAssets, ...initiativeAssets].map(
+      (asset) => asset.s3Key,
+    );
   });
   await deleteObjects(assetKeys);
   for (const { teamId, userId } of provisioned) {

@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { formatShortDate } from '@/utils/dates';
 import { unfinishedCount } from '@/utils/progress';
 import { useFinishCycle } from '@/services/cycles.service';

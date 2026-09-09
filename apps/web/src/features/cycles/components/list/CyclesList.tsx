@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import type { CyclesView } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/common/page/EmptyState';

@@ -12,7 +12,7 @@ import {
   type Node,
   type NodeProps,
 } from '@xyflow/react';
-import type { NoteSticker } from '@/lib/api';
+import type { NoteSticker } from '@/lib/api/endpoints/noteBoards';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { stickerColorValue } from '../utils/stickerColors';

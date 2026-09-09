@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { FilterCondition, FilterOperator, FilterValue } from '@/utils/filters';
 import { OPERATORS_BY_KIND, type FieldSpec } from '@/utils/filterFields';
 import { useFilterFields } from '@/hooks/useFilterFields';

@@ -2,8 +2,8 @@
 
 import { useRef, useState, type ReactNode } from 'react';
 import { ArrowUp, Bot, Paperclip, RotateCw, Square, X } from 'lucide-react';
-import { uploadChatAttachment, type ChatAttachment } from '@/lib/api';
-import type { AiAgent } from '@/lib/api';
+import { uploadChatAttachment, type ChatAttachment } from '@/lib/api/endpoints/agentChat';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import type { ChatMessage, ChatStatus, PendingMessage } from '@/hooks/useAgentChat';
 import { AgentChatTranscript } from './AgentChatTranscript';
 import { AgentRunnerStatus } from './AgentRunnerStatus';

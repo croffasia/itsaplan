@@ -1,4 +1,4 @@
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { addDays, parseDate } from '@/utils/dates';
 
 // The date-picker limits that mirror the API's rule: cycles of one project may not

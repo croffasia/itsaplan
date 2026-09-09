@@ -1,11 +1,8 @@
-import {
-  type Assignee,
-  type CustomField,
-  type IssueFieldValue,
-  type IssueFieldValueInput,
-} from '@/lib/api';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
-import { type Embeddable } from '../../utils/attachmentEmbed';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Assignee } from '@/lib/api/endpoints/projects';
+import type { IssueFieldValue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
+import { type Embeddable } from '@/components/common/editor/attachmentEmbed';
 import IssueCustomFieldControl from './IssueCustomFieldControl';
 import { useTranslations } from 'next-intl';
 
@@ -39,7 +36,7 @@ export default function IssueCustomFieldBody({
         {def.name}
       </h3>
       {def.fieldType === 'markdown' ? (
-        <IssueMarkdownEditor
+        <MarkdownEditor
           defaultValue={(current?.value as string) ?? ''}
           key={saveKey}
           placeholder={t('empty')}

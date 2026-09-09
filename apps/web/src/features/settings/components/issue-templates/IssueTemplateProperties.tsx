@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import LabelsSelect from '@/components/common/fields/LabelsSelect';
 import PrioritySelect from '@/components/common/fields/PrioritySelect';

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Initiative } from '@/lib/api';
+import type { Initiative } from '@/lib/api/endpoints/initiatives';
 import { initiativesPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useDeleteInitiative } from '@/services/initiatives.service';
@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import EditInitiativeDialog from './EditInitiativeDialog';
+import InitiativeDialog from '@/components/common/overlay/InitiativeDialog';
 
 // The initiative's overflow menu. Deleting returns to the initiatives list.
 export default function InitiativeActions({
@@ -71,9 +71,9 @@ export default function InitiativeActions({
       </DropdownMenu>
 
       {editing && (
-        <EditInitiativeDialog
-          initiative={initiative}
+        <InitiativeDialog
           projectKey={projectKey}
+          initiative={initiative}
           onClose={() => setEditing(false)}
         />
       )}

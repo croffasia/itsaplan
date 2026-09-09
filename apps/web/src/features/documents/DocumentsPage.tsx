@@ -9,7 +9,7 @@ import { revScope } from '@/utils/revScopes';
 import { qk } from '@/services/queryKeys';
 import { documentsPath, documentPath } from '@/utils/paths';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ApiError } from '@/lib/api';
+import { ApiError } from '@/lib/api/core/client';
 import {
   useCreateDocument,
   useDeleteDocument,

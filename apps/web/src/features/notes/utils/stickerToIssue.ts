@@ -1,4 +1,4 @@
-import type { NoteSticker } from '@/lib/api';
+import type { NoteSticker } from '@/lib/api/endpoints/noteBoards';
 
 // Leading heading or bullet marker, stripped from a body line promoted to the
 // issue title.

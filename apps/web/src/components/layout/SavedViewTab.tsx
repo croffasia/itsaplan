@@ -4,7 +4,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Globe, MoreHorizontal, Pencil, Star, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { api, type View } from '@/lib/api';
+import type { View } from '@/lib/api/endpoints/views';
+import { enableViewShare, disableViewShare } from '@/lib/api/endpoints/share';
 import { qk } from '@/services/queryKeys';
 import { useSetViewFavorite } from '@/services/views.service';
 import { cn } from '@/lib/utils';
@@ -46,12 +47,12 @@ export default function SavedViewTab({
   // and shareExtended (which the dialog reads) stay in sync. The same call creates
   // the link and flips how much a live one exposes.
   async function share(extended: boolean) {
-    const { token } = await api.enableViewShare(view.id, extended);
+    const { token } = await enableViewShare(view.id, extended);
     await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
     return token;
   }
   async function disableShare() {
-    await api.disableViewShare(view.id);
+    await disableViewShare(view.id);
     await qc.invalidateQueries({ queryKey: qk.views(projectKey) });
   }
   // Reordering views is a views edit; disable dragging without it.

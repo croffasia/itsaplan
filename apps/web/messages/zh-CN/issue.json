@@ -222,7 +222,7 @@
     "unknownAuthor": "未知用户",
     "goToLastComment": "跳转到最新评论",
     "edit": "编辑",
-    "saving": "保存中.",
+    "edited": "已编辑",
     "deleteComment": "删除评论",
     "deleteCommentTitle": "删除此评论？",
     "deleteCommentConfirmation": "该评论及其所有回复将被永久删除。"
@@ -244,11 +244,7 @@
     "endTime": "结束时间"
   },
   "editor": {
-    "insertImage": "插入图片",
-    "insertNamed": "插入 {name}",
-    "descriptionPlaceholder": "添加描述…",
-    "noImages": "暂无已附加图片。请从附件面板上传，或直接拖入编辑器。",
-    "image": "图片"
+    "descriptionPlaceholder": "添加描述…"
   },
   "cycleSelect": {
     "label": "周期",
@@ -327,7 +323,9 @@
     "pullRequestOpened": "打开了拉取请求 <v>{pr}</v>",
     "worklogAdded": "记录了 <v>{date}</v> 的 <v>{time}</v>",
     "worklogChanged": "将 <v>{fromDate}</v> 的 <v>{from}</v> 改为 <v>{date}</v> 的 <v>{to}</v>",
-    "worklogRemoved": "删除了 <v>{date}</v> 的 <v>{time}</v>"
+    "worklogRemoved": "删除了 <v>{date}</v> 的 <v>{time}</v>",
+    "commentEdited": "编辑了一条评论",
+    "commentDeleted": "删除了一条评论"
   },
   "development": {
     "title": "开发",

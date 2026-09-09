@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { GitRepository } from '@/lib/api';
+import type { GitRepository } from '@/lib/api/endpoints/git';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 
 // Every repository that has delivered to this project, newest first. The list

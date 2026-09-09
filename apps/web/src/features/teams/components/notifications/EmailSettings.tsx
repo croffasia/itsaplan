@@ -1,4 +1,4 @@
-import type { NotificationEncryption } from '@/lib/api';
+import type { NotificationEncryption } from '@/lib/api/endpoints/notificationSettings';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {

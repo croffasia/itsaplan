@@ -3,7 +3,7 @@ import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Plus } from 'lucide-react';
-import { type Checklist } from '@/lib/api';
+import type { Checklist } from '@/lib/api/endpoints/checklists';
 import { Button } from '@/components/ui/button';
 import { useDndSensors } from '@/lib/dnd';
 import { cn } from '@/lib/utils';

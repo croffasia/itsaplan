@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Terminal } from 'lucide-react';
-import type { AgentSchedule, AgentScheduleInput, AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
+import type { AgentSchedule, AgentScheduleInput } from '@/lib/api/endpoints/agentSchedules';
 import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';

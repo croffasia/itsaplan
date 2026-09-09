@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { MemberKind } from '@/lib/api';
+import type { MemberKind } from '@/lib/api/endpoints/members';
 import { useSearchTerm } from '@/hooks/useSearchTerm';
 import { useTeamProjectMembersQuery } from '@/services/teams.service';
-import { usePermissionCatalogQuery, useTeamRolesQuery } from '@/services/roles.service';
+import { usePermissionCatalogQuery, useTeamRoleOptionsQuery } from '@/services/roles.service';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { EmptyState } from '@/components/common/page/EmptyState';
 import RowAction from '@/components/common/RowAction';
@@ -63,7 +63,7 @@ export default function TeamProjectMembers({
   const membersQuery = useTeamProjectMembersQuery(teamId, projectId, { search: term, kind });
   // The roles carry the matrix each membership resolves to, so they are fetched for
   // every reader of the panel, not only the one who may reassign them.
-  const rolesQuery = useTeamRolesQuery(teamId);
+  const rolesQuery = useTeamRoleOptionsQuery(teamId);
   const catalogQuery = usePermissionCatalogQuery();
 
   const members = membersQuery.data?.pages.flatMap((page) => page.items) ?? [];

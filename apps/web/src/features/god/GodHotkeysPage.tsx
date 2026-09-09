@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { HotkeyOverrides } from '@/lib/api';
+import type { HotkeyOverrides } from '@/lib/api/endpoints/settings';
 import { DEFAULT_COMBOS } from '@/utils/hotkeys';
 import HotkeysEditor from '@/components/common/hotkeys/HotkeysEditor';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';

@@ -1,5 +1,5 @@
 import { AtSign, ListChecks, UserRoundCheck } from 'lucide-react';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { AgentTriggerChip, TRIGGER_CHIP } from './AgentTriggerChip';

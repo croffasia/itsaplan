@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { type WorklogInput } from '@/lib/api';
+import type { WorklogInput } from '@/lib/api/endpoints/worklogs';
 import { toDateStr } from '@/utils/dates';
 import { parseMinutes, formatMinutes } from '@/utils/estimate';
 import { Button } from '@/components/ui/button';

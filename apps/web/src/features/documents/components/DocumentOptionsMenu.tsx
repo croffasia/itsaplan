@@ -17,7 +17,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { ProjectDocument } from '@/lib/api';
+import type { ProjectDocument } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,

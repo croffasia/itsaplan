@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { InstanceOidcSettings } from '@/lib/api';
+import type { InstanceOidcSettings } from '@/lib/api/endpoints/god';
 import { useUpdateInstanceOidcSettings } from '../services/god.service';
 
 export interface GodOidcForm {

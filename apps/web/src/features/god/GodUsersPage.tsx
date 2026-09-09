@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { InstanceUserKind } from '@/lib/api';
+import type { InstanceUserKind } from '@/lib/api/endpoints/god';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { usePaging } from '@/hooks/usePaging';
 import ListPager from '@/components/common/ListPager';

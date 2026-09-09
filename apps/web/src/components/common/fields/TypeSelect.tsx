@@ -1,5 +1,5 @@
 import { CircleDashed } from 'lucide-react';
-import type { IssueType } from '@/lib/api';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import { colorDot } from './colorDot';
 import { Pill } from './Pill';
 import PopoverPick from './PopoverPick';

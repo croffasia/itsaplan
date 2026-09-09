@@ -11,12 +11,10 @@ import {
   Share2,
   Trash2,
 } from 'lucide-react';
-import {
-  api,
-  type ActionDef,
-  type ProjectDetail,
-  type IssueDetail as IssueDetailRow,
-} from '@/lib/api';
+import type { ActionDef } from '@/lib/api/endpoints/actions';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { IssueDetail as IssueDetailRow } from '@/lib/api/endpoints/issues';
+import { enableIssueShare, disableIssueShare } from '@/lib/api/endpoints/share';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue } from '@/services/issues.service';
@@ -68,12 +66,12 @@ export default function IssueActionsBar({
   // shareExtended (which the dialog reads) stay in sync. The same call creates the
   // link and flips how much a live one exposes.
   async function share(extended: boolean) {
-    const { token } = await api.enableIssueShare(issue.id, extended);
+    const { token } = await enableIssueShare(issue.id, extended);
     await qc.invalidateQueries({ queryKey: qk.issue(issue.id) });
     return token;
   }
   async function disableShare() {
-    await api.disableIssueShare(issue.id);
+    await disableIssueShare(issue.id);
     await qc.invalidateQueries({ queryKey: qk.issue(issue.id) });
   }
 

@@ -1,4 +1,6 @@
-import { type Assignee, type CustomField, type IssueFieldValueInput } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Assignee } from '@/lib/api/endpoints/projects';
+import type { IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import IssueCustomFieldPill from '../fields/IssueCustomFieldPill';
 
 // The body fields that are not markdown, gathered in the "Other" section: a pill

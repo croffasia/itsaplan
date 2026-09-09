@@ -1,4 +1,4 @@
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { buildDayTrack, type DayTrack } from '@/utils/timelineTrack';
 import { cycleSpan, type CycleSpan } from './cycleDates';
 import { groupCycles, type CycleGroup } from './cycleGroups';

@@ -9,7 +9,7 @@ import {
 import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortable';
 import { LayoutDashboard, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Dashboard } from '@/lib/api';
+import type { Dashboard } from '@/lib/api/endpoints/dashboards';
 import { useStripSortSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
 import DashboardTab from './DashboardTab';

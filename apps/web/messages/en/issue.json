@@ -222,7 +222,7 @@
     "unknownAuthor": "Unknown",
     "goToLastComment": "Go to the last comment",
     "edit": "Edit",
-    "saving": "Saving.",
+    "edited": "edited",
     "deleteComment": "Delete comment",
     "deleteCommentTitle": "Delete this comment?",
     "deleteCommentConfirmation": "The comment and its replies will be permanently deleted."
@@ -244,11 +244,7 @@
     "endTime": "End time"
   },
   "editor": {
-    "insertImage": "Insert image",
-    "insertNamed": "Insert {name}",
-    "descriptionPlaceholder": "Add description…",
-    "noImages": "No images attached yet. Upload one from the Attachments panel, or drop it straight onto the editor.",
-    "image": "Image"
+    "descriptionPlaceholder": "Add description…"
   },
   "cycleSelect": {
     "label": "Cycle",
@@ -327,7 +323,9 @@
     "pullRequestOpened": "opened pull request <v>{pr}</v>",
     "worklogAdded": "logged <v>{time}</v> on <v>{date}</v>",
     "worklogChanged": "changed the logged <v>{from}</v> on <v>{fromDate}</v> to <v>{to}</v> on <v>{date}</v>",
-    "worklogRemoved": "removed the <v>{time}</v> logged on <v>{date}</v>"
+    "worklogRemoved": "removed the <v>{time}</v> logged on <v>{date}</v>",
+    "commentEdited": "edited a comment",
+    "commentDeleted": "deleted a comment"
   },
   "development": {
     "title": "Development",

@@ -1,5 +1,5 @@
 import { t } from 'elysia';
-import { pageResponse } from '#shared/pagination';
+import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { StatsDto } from '#modules/analytics/model';
 
@@ -93,7 +93,12 @@ export const TeamMemberPageResponse = pageResponse(
   }),
 );
 
-export const TeamProjectListResponse = t.Array(
+export const teamProjectListQuery = t.Object({
+  search: t.Optional(t.String({ description: 'Matches the key or the name.' })),
+  ...pageQueryFields,
+});
+
+export const TeamProjectPageResponse = pageResponse(
   t.Object({
     id: t.Number(),
     key: t.String(),
@@ -111,6 +116,17 @@ export const TeamProjectListResponse = t.Array(
     ),
     isMember: t.Boolean(),
     createdAt: t.String(),
+  }),
+);
+
+// Every project the reader has, for the pickers that need them all: the projects an
+// agent is attached to, and the MCP switch each project carries.
+export const TeamProjectOptionListResponse = t.Array(
+  t.Object({
+    id: t.Number(),
+    key: t.String(),
+    name: t.String(),
+    mcpEnabled: t.Boolean(),
   }),
 );
 

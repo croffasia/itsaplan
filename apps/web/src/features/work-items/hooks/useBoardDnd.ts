@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { type DragEndEvent, type DragStartEvent } from '@dnd-kit/core';
-import type { ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { useDndSensors } from '@/lib/dnd';
 import { draggedIds, type BoardDropData } from '../utils/kanban';
 import { useApplyAssign } from './useApplyAssign';

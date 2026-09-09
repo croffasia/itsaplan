@@ -31,7 +31,7 @@
   "search": "Rechercher ou lancer une commande…",
   "searchHint": "Rechercher ou lancer une commande ({key})",
   "newIssueHint": "Nouveau ticket ({key})",
-  "aiChatHint": "Discuter avec vos coéquipiers IA ({key})",
+  "aiChatHint": "Discuter avec vos agents IA ({key})",
   "sections": "Sections",
   "doubleClickToRename": "Double-cliquez pour renommer",
   "groups": {

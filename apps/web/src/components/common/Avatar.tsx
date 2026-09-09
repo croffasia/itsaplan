@@ -3,7 +3,7 @@
 import { forwardRef, useState, type ComponentProps } from 'react';
 import Image from 'next/image';
 import { avatarColor, initials } from '@/utils/avatar';
-import { mediaUrl } from '@/lib/api';
+import { mediaUrl } from '@/lib/api/core/media';
 import { cn } from '@/lib/utils';
 
 // A person's avatar. With an uploaded `image` it shows that picture; otherwise

@@ -1,4 +1,4 @@
-import type { IntegrationMeta } from '@/lib/api';
+import type { IntegrationMeta } from '@/lib/api/endpoints/integrations';
 
 // The display name of an integration, falling back to its key when the catalog does
 // not know it (an integration the API dropped but a stored credential still names).

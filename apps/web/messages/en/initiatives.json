@@ -6,6 +6,7 @@
   "showDescription": "Show description",
   "noDescription": "No description.",
   "noOwner": "No owner",
+  "startDate": "Start date",
   "targetDate": "Target date",
   "progress": "Progress",
   "activity": "Activity",
@@ -30,6 +31,7 @@
   },
   "detailTabs": {
     "overview": "Overview",
+    "progress": "Progress",
     "issues": "Issues"
   },
   "columns": {
@@ -91,9 +93,7 @@
     "noTargetDate": "Set a target date to track pace."
   },
   "form": {
-    "title": "Title",
     "titlePlaceholder": "Q3 Launch",
-    "description": "Description",
     "descriptionPlaceholder": "What is this initiative about?",
     "create": "Create initiative",
     "creating": "Creating…",
@@ -141,5 +141,26 @@
     "typeRemoved": "removed type",
     "linked": "linked to {name}",
     "unlinked": "unlinked from the initiative"
+  },
+  "attachments": {
+    "title": "Attachments",
+    "add": "Add",
+    "uploading": "Uploading…",
+    "empty": "No attachments yet.",
+    "emptyHint": "Drop files here, or use Add to upload.",
+    "dropToUpload": "Drop files to upload",
+    "uploadFailed": "Upload failed",
+    "open": "Open {name}",
+    "download": "Download",
+    "downloadFile": "Download {name}",
+    "deleteFile": "Delete {name}"
+  },
+  "documents": {
+    "title": "Docs",
+    "add": "Link a Doc",
+    "empty": "No linked Docs yet.",
+    "loadFailed": "Could not load the linked Docs. Retry.",
+    "untitled": "Untitled",
+    "remove": "Unlink {title}"
   }
 }

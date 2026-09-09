@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { X } from 'lucide-react';
-import { type IssueRef, type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { IssueRef } from '@/lib/api/endpoints/issues';
 import { issuePath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import ArchivedBadge from '@/components/common/ArchivedBadge';

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { getUnreadCount } from '@/lib/api/endpoints/notifications';
 import { qk } from '@/services/queryKeys';
 import { revScope } from '@/utils/revScopes';
 import { useLiveRefresh } from './useLiveRefresh';
@@ -15,7 +15,7 @@ export function useInboxUnread(projectKey: string | null, projectId: number | nu
   });
   return useQuery({
     queryKey: qk.notificationsUnread(projectKey ?? ''),
-    queryFn: () => api.getUnreadCount(projectId as number),
+    queryFn: () => getUnreadCount(projectId as number),
     enabled: projectKey != null && projectId != null,
     select: (d) => d.unread,
   });

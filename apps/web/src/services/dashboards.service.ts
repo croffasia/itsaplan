@@ -1,12 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, type Dashboard } from '@/lib/api';
+import {
+  type Dashboard,
+  listDashboards,
+  createDashboard,
+  updateDashboard,
+  deleteDashboard,
+  reorderDashboards,
+} from '@/lib/api/endpoints/dashboards';
 import { useOptimisticReorder } from '@/services/optimisticReorder';
 import { qk } from '@/services/queryKeys';
 
 export function useDashboardsQuery(projectKey: string | null) {
   return useQuery({
     queryKey: qk.dashboards(projectKey ?? ''),
-    queryFn: () => api.listDashboards(projectKey!),
+    queryFn: () => listDashboards(projectKey!),
     enabled: projectKey != null,
   });
 }
@@ -14,8 +21,8 @@ export function useDashboardsQuery(projectKey: string | null) {
 export function useCreateDashboard(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ input }: { input: Parameters<typeof api.createDashboard>[1] }) =>
-      api.createDashboard(projectKey!, input),
+    mutationFn: ({ input }: { input: Parameters<typeof createDashboard>[1] }) =>
+      createDashboard(projectKey!, input),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.dashboards(projectKey) });
     },
@@ -25,8 +32,8 @@ export function useCreateDashboard(projectKey: string | null) {
 export function useUpdateDashboard(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, input }: { id: number; input: Parameters<typeof api.updateDashboard>[1] }) =>
-      api.updateDashboard(id, input),
+    mutationFn: ({ id, input }: { id: number; input: Parameters<typeof updateDashboard>[1] }) =>
+      updateDashboard(id, input),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.dashboards(projectKey) });
     },
@@ -36,7 +43,7 @@ export function useUpdateDashboard(projectKey: string | null) {
 export function useDeleteDashboard(projectKey: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => api.deleteDashboard(id),
+    mutationFn: (id: number) => deleteDashboard(id),
     onSuccess: () => {
       if (projectKey) void qc.invalidateQueries({ queryKey: qk.dashboards(projectKey) });
     },
@@ -46,6 +53,6 @@ export function useDeleteDashboard(projectKey: string | null) {
 export function useReorderDashboards(projectKey: string | null) {
   return useOptimisticReorder<Dashboard>(
     projectKey ? qk.dashboards(projectKey) : null,
-    (orderedIds) => api.reorderDashboards(projectKey!, orderedIds),
+    (orderedIds) => reorderDashboards(projectKey!, orderedIds),
   );
 }

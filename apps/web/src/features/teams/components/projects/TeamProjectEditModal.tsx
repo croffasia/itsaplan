@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { TeamProject } from '@/lib/api';
+import type { TeamProject } from '@/lib/api/endpoints/teams';
 import { useUpdateTeamProject } from '@/services/projects.service';
 import { useTeam } from '@/services/teams.service';
 import Modal from '@/components/common/overlay/Modal';

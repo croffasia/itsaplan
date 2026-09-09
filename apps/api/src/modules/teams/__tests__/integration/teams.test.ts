@@ -156,7 +156,7 @@ describe('teams', () => {
       expect(members.data?.items).toMatchObject([{ email: user.email, role: 'owner' }]);
 
       const projects = await api.teams({ teamId }).projects.get();
-      expect(projects.data).toMatchObject([
+      expect(projects.data?.items).toMatchObject([
         { key: 'MKT', name: 'Marketing', memberCount: 1, isMember: true },
       ]);
     });
@@ -207,12 +207,59 @@ describe('teams', () => {
         .members.post({ userId: member.user.userId, role: 'member' });
 
       const mine = await member.api.teams({ teamId }).projects.get();
-      expect(mine.data?.map((p) => p.key)).toEqual(['MKT']);
+      expect(mine.data?.items.map((p) => p.key)).toEqual(['MKT']);
       expect((await member.api.teams.get()).data?.[0]).toMatchObject({ projectCount: 1 });
 
       const all = await manager.api.teams({ teamId }).projects.get();
-      expect(all.data?.map((p) => p.key)).toEqual(['MKT', 'OPS']);
+      expect(all.data?.items.map((p) => p.key)).toEqual(['MKT', 'OPS']);
       expect((await manager.api.teams.get()).data?.[0]).toMatchObject({ projectCount: 2 });
+    });
+
+    it('pages the project list, counting every project the caller reads', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+      await api.teams({ teamId }).projects.post({ key: 'MKT', name: 'Marketing' });
+      await api.teams({ teamId }).projects.post({ key: 'OPS', name: 'Operations' });
+
+      const res = await api.teams({ teamId }).projects.get({ query: { page: 2, pageSize: 1 } });
+
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ total: 2, page: 2, pageSize: 1 });
+      expect(res.data?.items.map((p) => p.key)).toEqual(['OPS']);
+    });
+
+    it('searches the projects by key and by name', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+      await api.teams({ teamId }).projects.post({ key: 'MKT', name: 'Marketing' });
+      await api.teams({ teamId }).projects.post({ key: 'OPS', name: 'Operations' });
+
+      const byName = await api.teams({ teamId }).projects.get({ query: { search: 'market' } });
+      expect(byName.data).toMatchObject({ total: 1 });
+      expect(byName.data?.items.map((p) => p.key)).toEqual(['MKT']);
+
+      const byKey = await api.teams({ teamId }).projects.get({ query: { search: 'ops' } });
+      expect(byKey.data?.items.map((p) => p.key)).toEqual(['OPS']);
+    });
+
+    it('answers the options route with every project the caller reads', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+      await api.teams({ teamId }).projects.post({ key: 'MKT', name: 'Marketing' });
+      await api.teams({ teamId }).projects.post({ key: 'OPS', name: 'Operations' });
+      const member = await addTeamMember({ api }, teamId);
+      await api
+        .projects({ projectKey: 'MKT' })
+        .members.post({ userId: member.user.userId, role: 'member' });
+
+      const all = await api.teams({ teamId }).projects.options.get();
+      expect(all.data).toMatchObject([
+        { key: 'MKT', mcpEnabled: true },
+        { key: 'OPS', mcpEnabled: true },
+      ]);
+
+      const mine = await member.api.teams({ teamId }).projects.options.get();
+      expect(mine.data?.map((p) => p.key)).toEqual(['MKT']);
     });
 
     it('hides a project detail from a member who did not join it', async () => {
@@ -447,7 +494,7 @@ describe('teams', () => {
         expect(created.data).toMatchObject({ key: 'MKT', teamId, teamName: user.username });
 
         const projects = await api.teams({ teamId }).projects.get();
-        expect(projects.data).toMatchObject([{ key: 'MKT', isMember: true }]);
+        expect(projects.data?.items).toMatchObject([{ key: 'MKT', isMember: true }]);
       });
 
       it('rejects a duplicate project key', async () => {
@@ -468,9 +515,9 @@ describe('teams', () => {
           .teams({ teamId: otherTeamId })
           .projects.post({ key: 'MKT', name: 'Marketing' });
         expect(created.status).toBe(404);
-        expect((await other.api.teams({ teamId: otherTeamId }).projects.get()).data).toHaveLength(
-          0,
-        );
+        expect(
+          (await other.api.teams({ teamId: otherTeamId }).projects.get()).data?.items,
+        ).toHaveLength(0);
       });
     });
 
@@ -522,7 +569,7 @@ describe('teams', () => {
         expect(updated.data).toMatchObject({ key: 'MKT', name: 'Growth' });
 
         const projects = await api.teams({ teamId }).projects.get();
-        expect(projects.data).toMatchObject([
+        expect(projects.data?.items).toMatchObject([
           { key: 'MKT', name: 'Growth', description: 'What we ship' },
         ]);
       });
@@ -569,7 +616,7 @@ describe('teams', () => {
           .projects({ projectId: project.data!.id })
           .delete();
         expect(deleted.status).toBe(204);
-        expect((await api.teams({ teamId }).projects.get()).data).toHaveLength(0);
+        expect((await api.teams({ teamId }).projects.get()).data?.items).toHaveLength(0);
         expect((await api.projects.get()).data).toHaveLength(0);
       });
 
@@ -600,7 +647,7 @@ describe('teams', () => {
       const project = (await api.projects.post({ key: 'MKT', name: 'Marketing' })).data!;
 
       expect((await api.teams.get()).data?.[0]).toMatchObject({ mcpEnabled: true });
-      expect((await api.teams({ teamId }).projects.get()).data).toMatchObject([
+      expect((await api.teams({ teamId }).projects.get()).data?.items).toMatchObject([
         { id: project.id, mcpEnabled: true },
       ]);
     });
@@ -644,9 +691,9 @@ describe('teams', () => {
 
       // The other team's own project keeps its reach.
       const otherTeamId = (await other.api.teams.get()).data![0].id;
-      expect((await other.api.teams({ teamId: otherTeamId }).projects.get()).data).toMatchObject([
-        { id: foreign.id, mcpEnabled: true },
-      ]);
+      expect(
+        (await other.api.teams({ teamId: otherTeamId }).projects.get()).data?.items,
+      ).toMatchObject([{ id: foreign.id, mcpEnabled: true }]);
     });
 
     it('lets a manager write the settings', async () => {
@@ -669,7 +716,7 @@ describe('teams', () => {
       await owner.api.projects.post({ key: 'MKT', name: 'Marketing' });
       const member = await addProjectMember(owner.api, 'MKT');
 
-      expect((await member.teams({ teamId }).projects.get()).data).toMatchObject([
+      expect((await member.teams({ teamId }).projects.get()).data?.items).toMatchObject([
         { key: 'MKT', mcpEnabled: true },
       ]);
       expect((await member.teams({ teamId }).mcp.patch({ enabled: false })).status).toBe(403);

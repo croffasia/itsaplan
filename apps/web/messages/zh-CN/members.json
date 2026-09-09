@@ -36,7 +36,7 @@
   "tabs": {
     "all": "全部",
     "people": "人员",
-    "agents": "AI 队友",
+    "agents": "AI 代理",
     "label": "显示"
   },
   "leaveProject": "退出项目",
@@ -82,26 +82,26 @@
   "search": {
     "all": "搜索成员",
     "people": "搜索人员",
-    "agents": "搜索 AI 队友"
+    "agents": "搜索 AI 代理"
   },
   "empty": {
     "all": {
       "title": "暂无成员",
-      "description": "人员和 AI 队友加入后会显示在这里。"
+      "description": "人员和 AI 代理加入后会显示在这里。"
     },
     "human": {
       "title": "暂无人员",
       "description": "人员加入后会显示在这里。"
     },
     "agent": {
-      "title": "暂无 AI 队友",
-      "description": "AI 队友添加后会显示在这里。"
+      "title": "暂无 AI 代理",
+      "description": "AI 代理添加后会显示在这里。"
     },
     "search": {
       "title": "没有找到结果",
       "all": "没有符合此搜索的成员。",
       "human": "没有符合此搜索的人员。",
-      "agent": "没有符合此搜索的 AI 队友。"
+      "agent": "没有符合此搜索的 AI 代理。"
     }
   }
 }

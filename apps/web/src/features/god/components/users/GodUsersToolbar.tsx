@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { InstanceUserKind } from '@/lib/api';
+import type { InstanceUserKind } from '@/lib/api/endpoints/god';
 import {
   Select,
   SelectContent,

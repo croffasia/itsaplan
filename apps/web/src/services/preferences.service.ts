@@ -1,7 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLocale } from 'next-intl';
 import type { Locale } from '@/i18n/locales';
-import { api, type AccountPreferences, type AccountPreferencesPatch } from '@/lib/api';
+import {
+  type AccountPreferences,
+  type AccountPreferencesPatch,
+  getAccountPreferences,
+  updateAccountPreferences,
+} from '@/lib/api/endpoints/userPreferences';
 import { useSession } from '@/lib/auth-client';
 import { qk } from '@/services/queryKeys';
 
@@ -30,7 +35,7 @@ export function useAccountPreferencesQuery() {
   const locale = useLocale() as Locale;
   return useQuery({
     queryKey: qk.accountPreferences,
-    queryFn: () => api.getAccountPreferences(locale),
+    queryFn: () => getAccountPreferences(locale),
     // The route needs a session; the login and invite screens have none.
     enabled: Boolean(session),
     // Rarely change and are read on every screen, so keep them out of the refetch path.
@@ -48,7 +53,7 @@ export function useUpdateAccountPreferences() {
   const qc = useQueryClient();
   const locale = useLocale() as Locale;
   return useMutation({
-    mutationFn: (input: AccountPreferencesPatch) => api.updateAccountPreferences(input, locale),
+    mutationFn: (input: AccountPreferencesPatch) => updateAccountPreferences(input, locale),
     // Merge into the cache before the request completes: a second change made while
     // the first is still in flight is then built on the new value, not the stored
     // one, and the app (theme, timezone) reacts immediately.

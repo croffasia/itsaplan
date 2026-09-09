@@ -87,6 +87,26 @@ describe('initiatives', () => {
       expect(res.status).toBe(400);
     });
 
+    it('rejects a target date before the start date on create', async () => {
+      const { asOwner } = await setup();
+      const res = await createInitiative(asOwner, {
+        title: 'Q3',
+        startDate: '2026-09-08',
+        targetDate: '2026-08-30',
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('allows a target date equal to the start date', async () => {
+      const { asOwner } = await setup();
+      const res = await createInitiative(asOwner, {
+        title: 'Q3',
+        startDate: '2026-09-08',
+        targetDate: '2026-09-08',
+      });
+      expect(res.status).toBe(201);
+    });
+
     it('rejects an owner and labels from another project before creating', async () => {
       const { asOwner } = await setup();
       const outsider = await signUpTestUser({ name: 'Outsider' });
@@ -205,6 +225,26 @@ describe('initiatives', () => {
       const got = await asOwner.initiatives({ initiativeId: created.id }).get();
       expect(got.status).toBe(200);
       expect(got.data).toMatchObject({ id: created.id, title: 'Q3' });
+    });
+
+    it('rejects a target date patched before the stored start date', async () => {
+      const { asOwner } = await setup();
+      const created = (await createInitiative(asOwner, { title: 'Q3', startDate: '2026-09-08' }))
+        .data!;
+      const res = await asOwner
+        .initiatives({ initiativeId: created.id })
+        .patch({ targetDate: '2026-08-30' });
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a start date patched after the stored target date', async () => {
+      const { asOwner } = await setup();
+      const created = (await createInitiative(asOwner, { title: 'Q3', targetDate: '2026-08-30' }))
+        .data!;
+      const res = await asOwner
+        .initiatives({ initiativeId: created.id })
+        .patch({ startDate: '2026-09-08' });
+      expect(res.status).toBe(400);
     });
 
     it('returns 404 for a missing initiative', async () => {

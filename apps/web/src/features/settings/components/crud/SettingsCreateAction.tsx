@@ -2,7 +2,7 @@
 
 import { useState, type ReactNode } from 'react';
 import { Plus } from 'lucide-react';
-import type { PermissionResource } from '@/lib/api';
+import type { PermissionResource } from '@/lib/api/endpoints/roles';
 import { Button } from '@/components/ui/button';
 import { usePermissions } from '@/hooks/usePermissions';
 

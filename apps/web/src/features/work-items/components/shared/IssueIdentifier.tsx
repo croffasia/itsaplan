@@ -1,5 +1,5 @@
 import { ChevronRight } from 'lucide-react';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useParentIssue } from '../../context/useSubtasks';

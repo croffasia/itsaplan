@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
 import { defaultsFromFilters } from '@/utils/project';

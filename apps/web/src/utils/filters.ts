@@ -3,7 +3,9 @@
 // set is applied to every layout (Project, Table, Timeline, Calendar) before the
 // issues are handed to the view. The server never inspects this shape.
 
-import type { ProjectDetail, StateType, Issue } from '@/lib/api';
+import type { StateType } from '@/lib/api/endpoints/columns';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { dayKey } from '@/utils/dates';
 
 // The built-in fields a condition can target. Custom fields are targeted with

@@ -1,5 +1,6 @@
 import { Check, ExternalLink } from 'lucide-react';
-import { type CustomField, type Issue } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { formatDateTimeRange, formatShortDate } from '@/utils/dates';
 import Avatar from '@/components/common/Avatar';

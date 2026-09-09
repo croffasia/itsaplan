@@ -1,5 +1,5 @@
 import { DragOverlay } from '@dnd-kit/core';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 
 // The card that follows the pointer while a row is dragged, in the table and on
 // the timeline. The row itself stays in place, faded, so the drag reads as

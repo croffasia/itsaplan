@@ -1,4 +1,5 @@
-import type { CustomField, Issue, IssueFieldValueInput } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Issue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import { dayKey, fromZonedParts, toZonedParts } from '@/utils/dates';
 import {
   customFieldId,

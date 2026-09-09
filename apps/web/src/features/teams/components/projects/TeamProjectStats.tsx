@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { AnalyticsStats } from '@/lib/api';
+import type { AnalyticsStats } from '@/lib/api/endpoints/analytics';
 
 // How the project's issues stand, in the order a team owner reads them: what is left
 // to do, what moves, and what needs attention.

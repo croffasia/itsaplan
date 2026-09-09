@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
-import { ApiError, api } from '@/lib/api';
+import { acceptInvite, rejectInvite } from '@/lib/api/endpoints/invites';
+import { ApiError } from '@/lib/api/core/client';
 import { projectPath } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { FieldError } from '@/components/ui/field';
@@ -35,7 +36,7 @@ export default function InviteActions({
     setError(null);
     setBusy('accept');
     try {
-      const result = await api.acceptInvite(token);
+      const result = await acceptInvite(token);
       router.push(result.projectKey ? projectPath(result.projectKey) : '/');
       router.refresh();
     } catch (err) {
@@ -49,7 +50,7 @@ export default function InviteActions({
     setError(null);
     setBusy('reject');
     try {
-      await api.rejectInvite(token);
+      await rejectInvite(token);
       await qc.invalidateQueries({ queryKey: ['invite', token] });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('declineError'));

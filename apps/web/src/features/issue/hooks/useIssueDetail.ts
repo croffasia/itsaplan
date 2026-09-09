@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import {
-  type Attachment,
-  type ProjectDetail,
-  type IssueDetail as IssueDetailRow,
-  type IssueFieldValueInput,
-  type IssuePatch,
-} from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Attachment } from '@/lib/api/endpoints/attachments';
+import type {
+  IssueDetail as IssueDetailRow,
+  IssueFieldValueInput,
+  IssuePatch,
+} from '@/lib/api/endpoints/issues';
 import { useIssueQuery, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
@@ -16,7 +16,7 @@ import { qk } from '@/services/queryKeys';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
 import { useFeedQuery, useGroupedFeedQuery, useTimelineQuery } from '../services/comments.service';
-import { attachmentMarkdown, isImage } from '../utils/attachmentEmbed';
+import { attachmentMarkdown, isImage } from '@/components/common/editor/attachmentEmbed';
 import { fieldDefsForType } from '../utils/fieldDefs';
 
 // Loads one issue and exposes the edit operations for the detail surfaces.

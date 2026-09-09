@@ -43,8 +43,8 @@
       "description": "Tools agents can call, each connected to an integration credential."
     },
     "agents": {
-      "title": "AI Teammates",
-      "description": "The AI teammates this team owns, and the projects each of them works in."
+      "title": "AI Agents",
+      "description": "The AI agents this team owns, and the projects each of them works in."
     }
   },
   "info": {
@@ -108,6 +108,8 @@
   "roles": {
     "ownerOnly": "Only a team owner or manager can manage roles.",
     "empty": "No roles yet. Create one to grant scoped access.",
+    "search": "Search roles",
+    "noMatches": "No role matches “{query}”.",
     "default": "Default",
     "editAction": "Edit role",
     "deleteAction": "Delete role",
@@ -164,6 +166,8 @@
     "created": "Created {date}",
     "newProject": "New project",
     "noProjects": "This team has no projects yet.",
+    "searchProjects": "Search projects",
+    "noProjectsMatch": "No project matches “{query}”.",
     "projectMembers": "Project members",
     "owners": "Owners: {names}",
     "openProject": "Open project",
@@ -315,14 +319,14 @@
     "noAccess": "You do not have access to the tools of this team."
   },
   "agents": {
-    "newAgent": "New AI teammate",
-    "create": "Create AI teammate",
-    "save": "Save AI teammate",
-    "delete": "Delete AI teammate",
-    "edit": "Edit AI teammate",
-    "empty": "No AI teammates yet",
+    "newAgent": "New AI agent",
+    "create": "Create AI agent",
+    "save": "Save AI agent",
+    "delete": "Delete AI agent",
+    "edit": "Edit AI agent",
+    "empty": "No AI agents yet",
     "emptyHint": "An agent runs on the built-in runtime or through the API.",
-    "agent": "AI teammate",
+    "agent": "AI agent",
     "sheetSubtitle": "A bot user you can delegate issues to",
     "kind": "Kind",
     "kindLabel": {
@@ -487,8 +491,8 @@
     "noProjectsHint": "This team owns no project for the agent to work in.",
     "searchProjects": "Search projects",
     "noProjectsShort": "No projects",
-    "chatNeedsAgent": "Create the AI teammate to test it here.",
-    "chatNeedsProject": "Attach the AI teammate to a project to test it here.",
+    "chatNeedsAgent": "Create the AI agent to test it here.",
+    "chatNeedsProject": "Attach the AI agent to a project to test it here.",
     "triggerFieldsTitle": "Custom fields that start a run"
   },
   "members": {

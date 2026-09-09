@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { type ProjectDetail, type Column } from '@/lib/api';
+import type { Column } from '@/lib/api/endpoints/columns';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';

@@ -10,7 +10,7 @@ import { iso } from '#shared/lib';
 
 // The event types a subscription can select. Keep this list in sync with the events
 // the delivery side emits (modules/issues/service.ts, activity.ts, links.ts) and
-// with the frontend list (apps/web src/lib/api.ts).
+// with the frontend list (apps/web src/lib/api/endpoints/webhooks.ts).
 //
 // issue.updated fires on any field change. The granular issue.assigned,
 // issue.state_changed, and issue.label_changed fire in addition, and only when that
@@ -27,6 +27,11 @@ export const WEBHOOK_EVENT_TYPES = [
   'issue.label_changed',
   'issue.link_changed',
   'comment.created',
+  // An edit changes a comment's body; a delete removes the comment and its replies.
+  // Both carry the comment as their payload, and neither fires comment.created
+  // again for the replies a delete takes with it.
+  'comment.updated',
+  'comment.deleted',
 ] as const;
 export type WebhookEventType = (typeof WEBHOOK_EVENT_TYPES)[number];
 

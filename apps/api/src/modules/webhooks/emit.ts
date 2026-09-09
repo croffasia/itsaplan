@@ -17,6 +17,8 @@ const EVENT_SHAPE: Record<WebhookEventType, { action: string; type: string }> = 
   'issue.label_changed': { action: 'update', type: 'Issue' },
   'issue.link_changed': { action: 'update', type: 'Issue' },
   'comment.created': { action: 'create', type: 'Comment' },
+  'comment.updated': { action: 'update', type: 'Comment' },
+  'comment.deleted': { action: 'remove', type: 'Comment' },
 };
 
 // Fan-out for outgoing webhooks. Queues one delivery per active webhook of the

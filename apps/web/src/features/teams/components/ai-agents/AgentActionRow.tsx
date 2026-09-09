@@ -1,4 +1,4 @@
-import type { AgentTool } from '@/lib/api';
+import type { AgentTool } from '@/lib/api/endpoints/agents';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { useTranslations } from 'next-intl';

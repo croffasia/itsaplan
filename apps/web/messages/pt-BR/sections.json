@@ -1,0 +1,105 @@
+{
+  "account": {
+    "profile": "Perfil",
+    "preferences": "Preferências",
+    "accounts": "Contas",
+    "security": "Segurança",
+    "api-keys": "Chaves de API"
+  },
+  "godGroups": {
+    "management": "Gerenciamento",
+    "instance": "Instância"
+  },
+  "god": {
+    "users": {
+      "label": "Usuários",
+      "description": "Toda conta nesta instância: a função global, se o endereço está confirmado e os projetos que cada usuário alcança."
+    },
+    "projects": {
+      "label": "Projetos",
+      "description": "Todo projeto nesta instância: o que cada um contém, quando esteve ativo pela última vez e quem pode alcançá-lo."
+    },
+    "general": {
+      "label": "Geral",
+      "description": "Padrões para novos projetos."
+    },
+    "authentication": {
+      "label": "Autenticação",
+      "description": "Quem pode se registrar nesta instância, como contas são confirmadas e os provedores com que as pessoas entram."
+    },
+    "hotkeys": {
+      "label": "Atalhos de teclado",
+      "description": "A tecla à qual cada comando está vinculado para todos nesta instância. Cada pessoa pode reatribuir um atalho para sua própria conta nas preferências."
+    },
+    "storage": {
+      "label": "Armazenamento",
+      "description": "Quanto as pessoas podem enviar: o tamanho de um único arquivo, os tipos de anexo aceitos e o armazenamento que cada projeto recebe."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "O bot ao qual as pessoas conectam sua conta do Telegram, e o que entrega notificações do Telegram para projetos que não definem seu próprio bot."
+    },
+    "email": {
+      "label": "Provedor de e-mail",
+      "description": "O provedor de e-mail que a instância usa: redefinições de senha, confirmação de endereço e links de login."
+    },
+    "auth-provider": {
+      "label": "Provedor de autenticação",
+      "description": "As contas externas com que as pessoas podem entrar."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Permita que um provedor de identidade crie, atualize e desative contas nesta instância e conceda acesso a projetos por seus grupos."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "Geral",
+      "description": "O nome, a descrição e as seções do projeto."
+    },
+    "states": {
+      "label": "Estados",
+      "description": "Os estados do fluxo de trabalho pelas quais as issues passam, cada um mostrado como uma coluna."
+    },
+    "issue-types": {
+      "label": "Tipos de issue",
+      "description": "Os tipos de issues que este projeto pode conter, cada um com seus próprios campos."
+    },
+    "labels": {
+      "label": "Etiquetas",
+      "description": "Tags para organizar e filtrar issues pelo projeto."
+    },
+    "custom-fields": {
+      "label": "Campos personalizados",
+      "description": "Campos extras mostrados nas issues, globais ou específicos de um tipo de issue."
+    },
+    "issue-templates": {
+      "label": "Modelos de issue",
+      "description": "Predefinições a partir das quais uma nova issue pode ser criada: seu título, descrição e propriedades."
+    },
+    "configuration": {
+      "label": "Configuração",
+      "description": "Como as subtarefas fecham com seu pai e quando issues paradas são arquivadas."
+    },
+    "actions": {
+      "label": "Ações",
+      "description": "Botões em uma issue que definem campos em um clique."
+    },
+    "schedules": {
+      "label": "Agendamentos",
+      "description": "Execute tarefas de agente em um horário recorrente."
+    },
+    "webhooks": {
+      "label": "Webhooks",
+      "description": "Envie eventos do projeto para URLs externas, assinados com um segredo por webhook."
+    },
+    "git": {
+      "label": "Repositórios",
+      "description": "Feche issues quando seus pull requests mesclam no GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
+    },
+    "ai-agents": {
+      "label": "Agentes de IA",
+      "description": "Agentes de IA trabalhando neste projeto."
+    }
+  }
+}

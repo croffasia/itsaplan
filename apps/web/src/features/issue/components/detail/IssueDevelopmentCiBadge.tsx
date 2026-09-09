@@ -1,6 +1,6 @@
 import { CircleCheck, CircleDashed, CircleX, LoaderCircle } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type PipelineStatus } from '@/lib/api';
+import type { PipelineStatus } from '@/lib/api/endpoints/git';
 import { Badge } from '@/components/ui/badge';
 import { issueDevelopmentBadgeClassName } from './issueDevelopmentBadgeStyles';
 

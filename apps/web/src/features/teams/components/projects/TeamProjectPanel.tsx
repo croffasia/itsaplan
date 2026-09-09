@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { TeamProject, TeamRole } from '@/lib/api';
+import type { TeamProject, TeamRole } from '@/lib/api/endpoints/teams';
 import { formatDate, formatDateTime } from '@/utils/dates';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
 import { useTeamProjectQuery } from '@/services/teams.service';

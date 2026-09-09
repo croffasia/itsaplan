@@ -33,7 +33,7 @@ function clearSession(request: NextRequest): NextResponse {
 // does the real validation on every request. It keeps unauthenticated users out of
 // the planner UI and bounces signed-in users away from the auth pages.
 // A cookie the API no longer accepts passes this check, so the client handles that
-// case: `apiFailure` in `lib/api.ts` signs out on a 401 and lands on
+// case: `apiFailure` in `lib/api/core/client.ts` signs out on a 401 and lands on
 // `/login?expired=1`, where the cookie is cleared for good.
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

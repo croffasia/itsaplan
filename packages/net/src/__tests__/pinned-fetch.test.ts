@@ -1,4 +1,5 @@
 import { describe, it, expect, afterEach } from 'bun:test';
+import { createServer, type IncomingHttpHeaders } from 'node:http';
 import { assertPublicHttpUrl, pinnedFetch, UrlNotAllowedError } from '../index';
 
 // The guard is strict under NODE_ENV=test, so these exercise the production rules.
@@ -74,5 +75,44 @@ describe('SSRF_ALLOWED_HOSTS', () => {
     await expect(assertPublicHttpUrl('https://localtest.me/')).rejects.toBeInstanceOf(
       UrlNotAllowedError,
     );
+  });
+});
+
+// node sends no User-Agent of its own, unlike the fetch this replaced, and GitHub
+// answers 403 to a request without one. The requests go to a loopback server, which
+// the guard admits only outside production and test, so NODE_ENV is relaxed around
+// them and restored afterwards.
+describe('pinnedFetch User-Agent', () => {
+  const saved = process.env.NODE_ENV;
+  afterEach(() => {
+    process.env.NODE_ENV = saved;
+  });
+
+  async function headersSeenBy(init?: { headers: Record<string, string> }) {
+    let seen: IncomingHttpHeaders = {};
+    const server = createServer((req, res) => {
+      seen = req.headers;
+      res.end('ok');
+    });
+    await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const address = server.address();
+    const port = typeof address === 'object' && address ? address.port : 0;
+    process.env.NODE_ENV = 'development';
+    try {
+      await pinnedFetch(`http://127.0.0.1:${port}/`, init);
+    } finally {
+      process.env.NODE_ENV = saved;
+      server.close();
+    }
+    return seen;
+  }
+
+  it('sends a default User-Agent when the caller set none', async () => {
+    expect((await headersSeenBy())['user-agent']).toBe('itsaplan/1');
+  });
+
+  it("keeps the caller's own User-Agent", async () => {
+    const headers = await headersSeenBy({ headers: { 'User-Agent': 'itsaplan-webhooks/1' } });
+    expect(headers['user-agent']).toBe('itsaplan-webhooks/1');
   });
 });

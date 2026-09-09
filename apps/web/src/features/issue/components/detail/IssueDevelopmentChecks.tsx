@@ -1,6 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type DevelopmentCheck } from '@/lib/api';
+import type { DevelopmentCheck } from '@/lib/api/endpoints/git';
 import IssueDevelopmentCiBadge from './IssueDevelopmentCiBadge';
 
 export default function IssueDevelopmentChecks({ checks }: { checks: DevelopmentCheck[] }) {

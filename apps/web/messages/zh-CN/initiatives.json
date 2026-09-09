@@ -6,6 +6,7 @@
   "showDescription": "显示描述",
   "noDescription": "暂无描述。",
   "noOwner": "无负责人",
+  "startDate": "开始日期",
   "targetDate": "目标日期",
   "progress": "进度",
   "activity": "活动记录",
@@ -30,6 +31,7 @@
   },
   "detailTabs": {
     "overview": "概览",
+    "progress": "进度",
     "issues": "工作项"
   },
   "columns": {
@@ -91,9 +93,7 @@
     "noTargetDate": "设置目标日期以跟踪进度。"
   },
   "form": {
-    "title": "标题",
     "titlePlaceholder": "第三季度发布",
-    "description": "描述",
     "descriptionPlaceholder": "此计划的目标是什么？",
     "create": "新建计划",
     "creating": "正在创建…",
@@ -141,5 +141,26 @@
     "typeRemoved": "移除了类型",
     "linked": "关联至 {name}",
     "unlinked": "取消了与此计划的关联"
+  },
+  "attachments": {
+    "title": "附件",
+    "add": "添加",
+    "uploading": "上传中…",
+    "empty": "暂无附件。",
+    "emptyHint": "将文件拖到此处，或点击“添加”上传。",
+    "dropToUpload": "松开以上传文件",
+    "uploadFailed": "上传失败",
+    "open": "打开 {name}",
+    "download": "下载",
+    "downloadFile": "下载 {name}",
+    "deleteFile": "删除 {name}"
+  },
+  "documents": {
+    "title": "文档",
+    "add": "关联文档",
+    "empty": "尚未关联文档。",
+    "loadFailed": "无法加载关联的文档，请重试。",
+    "untitled": "未命名",
+    "remove": "取消关联 {title}"
   }
 }

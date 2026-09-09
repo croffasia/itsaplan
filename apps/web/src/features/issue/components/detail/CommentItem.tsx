@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Pencil, Reply, Trash2 } from 'lucide-react';
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import Avatar from '@/components/common/Avatar';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
+import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import { Button } from '@/components/ui/button';
 import { useRelativeTime } from '@/context/relativeTimeContext';
-import IssueMarkdownEditor from '../editor/IssueMarkdownEditor';
-import CommentEditBox from './CommentEditBox';
+import CommentComposer, { type ComposerContext } from './CommentComposer';
 import { useDeleteComment } from '../../services/comments.service';
 import { useTranslations } from 'next-intl';
 
@@ -21,6 +21,7 @@ export default function CommentItem({
   onReply,
   canEdit,
   canDelete,
+  composer,
 }: {
   item: FeedItem;
   image: string | null;
@@ -31,6 +32,8 @@ export default function CommentItem({
   // author with work_items edit, or a project owner. The API asserts the same.
   canEdit?: boolean;
   canDelete?: boolean;
+  // The feed's composer state; the edit box posts with the same @-mention menu.
+  composer?: ComposerContext;
 }) {
   const t = useTranslations('issue.comments');
   const deleteComment = useDeleteComment();
@@ -47,6 +50,7 @@ export default function CommentItem({
         <span className="truncate text-sm font-medium">{author}</span>
         <span className="shrink-0 text-xs text-muted-foreground">
           · {relativeTime(item.createdAt)}
+          {item.editedAt && ` · ${t('edited')}`}
         </span>
         {(onReply || canEdit || canDelete) && (
           <div className="ms-auto flex shrink-0 items-center gap-0.5 focus-within:opacity-100 sm:opacity-0 sm:group-hover/comment:opacity-100">
@@ -86,15 +90,17 @@ export default function CommentItem({
           </div>
         )}
       </div>
-      {editing ? (
-        <CommentEditBox
-          issueId={item.issueId}
-          commentId={item.id}
-          initialBody={item.body ?? ''}
-          onClose={() => setEditing(false)}
-        />
+      {editing && composer ? (
+        <div className="mt-1 ps-7">
+          <CommentComposer
+            {...composer}
+            commentId={item.id}
+            initialBody={item.body ?? ''}
+            onClose={() => setEditing(false)}
+          />
+        </div>
       ) : (
-        <IssueMarkdownEditor
+        <MarkdownEditor
           className="mt-1 ps-7 text-sm text-foreground/85"
           defaultValue={item.body ?? ''}
           editable={false}

@@ -4,7 +4,8 @@
 // the field unchanged. Applying an effect is a single issue update with the
 // effect object as the patch (see api.updateIssue / useUpdateIssue).
 
-import type { ActionEffect, ProjectDetail } from '@/lib/api';
+import type { ActionEffect } from '@/lib/api/endpoints/actions';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { EffectText } from '@/hooks/useEffectText';
 import { formatDate } from '@/utils/dates';
 

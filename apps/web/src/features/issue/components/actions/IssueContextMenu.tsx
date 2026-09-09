@@ -18,7 +18,9 @@ import {
   User,
   X,
 } from 'lucide-react';
-import type { ActionDef, ProjectDetail, Issue, IssuePatch } from '@/lib/api';
+import type { ActionDef } from '@/lib/api/endpoints/actions';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { Issue, IssuePatch } from '@/lib/api/endpoints/issues';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue, useUpdateIssue } from '@/services/issues.service';

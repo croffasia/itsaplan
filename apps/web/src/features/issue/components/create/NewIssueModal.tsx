@@ -1,20 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type Editor } from '@tiptap/react';
 import { MoreHorizontal } from 'lucide-react';
-import {
-  type CycleRef,
-  type Issue,
-  type IssueFieldValueInput,
-  type IssueTemplate,
-  type ProjectDetail,
-} from '@/lib/api';
+import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { CycleRef, Issue, IssueFieldValueInput } from '@/lib/api/endpoints/issues';
 import { type NewIssueDefaults } from '@/utils/project';
 import { parseDate } from '@/utils/dates';
 import { cn } from '@/lib/utils';
 import { useSession } from '@/lib/auth-client';
 import { useCreateIssue, useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 import { fieldDefsForType } from '../../utils/fieldDefs';
-import { useFileDragZone } from '../../hooks/useFileDragZone';
+import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { useFilePaste } from '../../hooks/useFilePaste';
 import { useNewIssueAttachments } from '../../hooks/useNewIssueAttachments';
 import {
@@ -23,7 +19,7 @@ import {
   replaceEmbed,
   stripEmbed,
   type Embeddable,
-} from '../../utils/attachmentEmbed';
+} from '@/components/common/editor/attachmentEmbed';
 import { DESCRIPTION_SECTION, OTHER_SECTION, fieldSectionId } from '../../utils/bodySections';
 import { hasFieldValue } from '../../utils/fieldValues';
 import EstimatePill from '../fields/EstimatePill';
@@ -32,7 +28,7 @@ import NewIssueAttachButton from './NewIssueAttachButton';
 import NewIssueAttachmentStrip from './NewIssueAttachmentStrip';
 import NewIssueDropOverlay from './NewIssueDropOverlay';
 import NewIssueTemplatePill from './NewIssueTemplatePill';
-import Modal from '@/components/common/overlay/Modal';
+import Modal, { useModalFullscreen } from '@/components/common/overlay/Modal';
 import NewIssueBody from './NewIssueBody';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';
 import DatePill from '@/components/common/fields/DatePill';
@@ -109,7 +105,7 @@ export default function NewIssueModal({
   const [labelIds, setLabelIds] = useState<number[]>(defaults.labelIds ?? []);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [fullscreen, setFullscreen] = useState(false);
+  const { fullscreen, onToggleFullscreen } = useModalFullscreen();
 
   // Custom fields for the selected type (project-wide + type-scoped), off the
   // scaffold every member already loads. Fields flagged "show in main info" get their
@@ -346,7 +342,7 @@ export default function NewIssueModal({
       }}
       wide
       fullscreen={fullscreen}
-      onToggleFullscreen={() => setFullscreen((v) => !v)}
+      onToggleFullscreen={onToggleFullscreen}
       // Halves the dialog's bottom padding: the footer then sits as far from the
       // separator above it as from the dialog edge below.
       className="pb-3"

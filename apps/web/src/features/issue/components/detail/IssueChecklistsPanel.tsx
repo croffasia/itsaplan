@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DndContext, closestCenter, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
-import { type IssueWithWatchers } from '@/lib/api';
+import type { IssueWithWatchers } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { useDndSensors } from '@/lib/dnd';

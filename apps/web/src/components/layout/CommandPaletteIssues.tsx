@@ -1,6 +1,6 @@
 import { Hash } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { IssueSearchHit } from '@/lib/api';
+import type { IssueSearchHit } from '@/lib/api/endpoints/issues';
 import { ISSUE_PREFIX } from '@/utils/commandFilter';
 import { CommandGroup, CommandItem, CommandSeparator } from '@/components/ui/command';
 import ArchivedBadge from '@/components/common/ArchivedBadge';

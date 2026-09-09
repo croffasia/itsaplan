@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { InstanceTelegramSettings } from '@/lib/api';
+import type { InstanceTelegramSettings } from '@/lib/api/endpoints/god';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import EnabledSwitch from '@/components/common/inputs/EnabledSwitch';
 import SecretInput from '@/components/common/inputs/SecretInput';

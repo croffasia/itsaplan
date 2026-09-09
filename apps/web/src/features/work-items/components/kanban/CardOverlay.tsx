@@ -1,5 +1,5 @@
 import { DragOverlay } from '@dnd-kit/core';
-import { type BoardIssue } from '@/lib/api';
+import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import type { PropertyKey } from '@/utils/viewSettings';
 import { Badge } from '@/components/ui/badge';

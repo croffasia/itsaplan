@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { SETTINGS_SECTIONS } from '@/utils/settingsSections';
-import type { IssueRef } from '@/lib/api';
+import type { IssueRef } from '@/lib/api/endpoints/issues';
 import type { ShellRoute } from '@/hooks/useShellRoute';
 import { useSettingsSectionText } from '@/hooks/useSectionLabels';
 import CycleBreadcrumb from '@/components/layout/CycleBreadcrumb';

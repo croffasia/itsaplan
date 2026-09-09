@@ -1,5 +1,7 @@
 import { useTranslations } from 'next-intl';
-import type { ActionDef, CustomField, ProjectDetail } from '@/lib/api';
+import type { ActionDef } from '@/lib/api/endpoints/actions';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { Table, TableBody, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SettingsActionRow } from './SettingsActionRow';
 

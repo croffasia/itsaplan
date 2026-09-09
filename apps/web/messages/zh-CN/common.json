@@ -63,6 +63,9 @@
       "issue": {
         "new": "新建工作项"
       },
+      "initiative": {
+        "new": "新建计划"
+      },
       "view": {
         "kanban": "看板布局",
         "table": "表格布局",
@@ -170,7 +173,11 @@
     "tableDeleteRow": "删除行",
     "tableAddColumn": "添加列",
     "tableDeleteColumn": "删除列",
-    "tableDelete": "删除表格"
+    "tableDelete": "删除表格",
+    "insertImage": "插入图片",
+    "insertNamed": "插入 {name}",
+    "noImages": "暂无已附加图片。请从附件面板上传，或直接拖入编辑器。",
+    "image": "图片"
   },
   "chart": {
     "download": "保存图表",

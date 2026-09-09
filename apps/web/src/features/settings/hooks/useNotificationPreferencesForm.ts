@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { NotificationEventToggles, NotificationPreferences } from '@/lib/api';
+import type { NotificationPreferences } from '@/lib/api/endpoints/notificationPreferences';
+import type { NotificationEventToggles } from '@/lib/api/endpoints/notificationSettings';
 import { useUpdateNotificationPreferences } from '../services/settings.service';
 import { eventsEqual } from '../utils/notificationEvents';
 

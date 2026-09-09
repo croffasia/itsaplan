@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import type { NotificationPreferences as Prefs } from '@/lib/api';
+import type { NotificationPreferences as Prefs } from '@/lib/api/endpoints/notificationPreferences';
 import { useShell } from '@/context/shellContext';
 import { Button } from '@/components/ui/button';
 import SectionPageView from '@/components/common/page/SectionPageView';

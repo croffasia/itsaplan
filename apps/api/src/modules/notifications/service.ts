@@ -106,6 +106,32 @@ export async function notifyComment(
   await insertNotifications(rows);
 }
 
+// Fan out the mentions an edit newly added to a comment. The handles the comment
+// already named are filtered out by the caller, so an edit never re-pings them, and
+// the watchers hear nothing (unlike a new comment, which would send 'commented').
+// Being mentioned subscribes to the issue, the same as in a new comment.
+export async function notifyEditedCommentMentions(
+  projectId: number,
+  comment: { issueId: number; id: number; actorUserId: string | null },
+  mentionedUsers: MentionedUsers,
+): Promise<void> {
+  const mentioned = [...mentionedUsers.memberIds, ...mentionedUsers.agentUserIds].filter(
+    (userId) => userId !== comment.actorUserId,
+  );
+  if (mentioned.length === 0) return;
+  await autoWatchIssue(projectId, comment.issueId, mentioned);
+  await insertNotifications(
+    mentioned.map((userId) => ({
+      userId,
+      projectId,
+      issueId: comment.issueId,
+      sourceActivityId: comment.id,
+      type: 'mentioned' as const,
+      actorUserId: comment.actorUserId,
+    })),
+  );
+}
+
 // Fan out the mentions an issue's description or markdown custom field gained. Only
 // the handles the write added are reached, so re-saving a text keeps quiet about the
 // people it already named. Being mentioned subscribes to the issue, the same as it

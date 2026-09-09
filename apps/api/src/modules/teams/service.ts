@@ -14,7 +14,7 @@ import {
   teamRole,
   user,
 } from '@repo/db';
-import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import { getLimits } from '#shared/limits';
 import { defaultMemberPermissions, fullPermissions, type Permissions } from '#shared/permissions';
@@ -103,6 +103,20 @@ export interface TeamProjectRow {
   owners: { userId: string; name: string; image: string | null }[];
   isMember: boolean;
   createdAt: string;
+}
+
+// One page of the team's projects, with how many the caller reads in all.
+export interface TeamProjectPage {
+  items: TeamProjectRow[];
+  total: number;
+}
+
+// A project as a picker reads it, plus the MCP reach the team's switches set.
+export interface TeamProjectOption {
+  id: number;
+  key: string;
+  name: string;
+  mcpEnabled: boolean;
 }
 
 // One member of a project the team owns. The access their membership resolves to is
@@ -445,14 +459,36 @@ export async function listTeamMembers(
   };
 }
 
-// The projects the team owns, with the caller's own access to each. Owners and
-// managers see every project of the team; everyone else only the ones they joined.
+// The projects of the team a caller reads: owners and managers see every one of them,
+// everyone else only the ones they joined. The search matches the key or the name.
+function visibleTeamProjects(
+  teamId: number,
+  userId: string,
+  standing: TeamStanding,
+  search?: string,
+) {
+  const term = search?.trim();
+  return and(
+    eq(project.teamId, teamId),
+    runsTeam(standing)
+      ? undefined
+      : sql`exists (select 1 from ${projectMember} where ${projectMember.projectId} = ${project.id}
+      and ${projectMember.userId} = ${userId})`,
+    term ? or(ilike(project.key, `%${term}%`), ilike(project.name, `%${term}%`)) : undefined,
+  );
+}
+
+// One page of the projects the team owns, with the caller's own access to each. The
+// window runs in the database, so a team with many projects is never loaded whole;
+// the owners are read for the page, not for every project.
 export async function listTeamProjects(
   teamId: number,
   userId: string,
   standing: TeamStanding,
-): Promise<TeamProjectRow[]> {
-  const [projects, projectOwners] = await Promise.all([
+  options: { search?: string; limit: number; offset: number },
+): Promise<TeamProjectPage> {
+  const where = visibleTeamProjects(teamId, userId, standing, options.search);
+  const [projects, counted] = await Promise.all([
     db
       .select({
         id: project.id,
@@ -466,22 +502,38 @@ export async function listTeamProjects(
       })
       .from(project)
       .leftJoin(projectMember, eq(projectMember.projectId, project.id))
-      .where(eq(project.teamId, teamId))
+      .where(where)
       .groupBy(project.id)
-      .orderBy(project.key),
+      .orderBy(project.key)
+      .limit(options.limit)
+      .offset(options.offset),
     db
-      .select({
-        projectId: projectMember.projectId,
-        userId: user.id,
-        name: user.name,
-        image: user.image,
-      })
-      .from(projectMember)
-      .innerJoin(project, eq(project.id, projectMember.projectId))
-      .innerJoin(user, eq(user.id, projectMember.userId))
-      .where(and(eq(project.teamId, teamId), eq(projectMember.role, 'owner')))
-      .orderBy(user.name),
+      .select({ count: sql<number>`count(*)::int` })
+      .from(project)
+      .where(where),
   ]);
+
+  const projectOwners = projects.length
+    ? await db
+        .select({
+          projectId: projectMember.projectId,
+          userId: user.id,
+          name: user.name,
+          image: user.image,
+        })
+        .from(projectMember)
+        .innerJoin(user, eq(user.id, projectMember.userId))
+        .where(
+          and(
+            inArray(
+              projectMember.projectId,
+              projects.map((p) => p.id),
+            ),
+            eq(projectMember.role, 'owner'),
+          ),
+        )
+        .orderBy(user.name)
+    : [];
 
   const ownersByProject = new Map<number, TeamProjectRow['owners']>();
   for (const o of projectOwners) {
@@ -490,19 +542,39 @@ export async function listTeamProjects(
     ownersByProject.set(o.projectId, owners);
   }
 
-  const visible = runsTeam(standing) ? projects : projects.filter((p) => p.isMember);
+  return {
+    items: projects.map((p) => ({
+      id: p.id,
+      key: p.key,
+      name: p.name,
+      description: p.description,
+      mcpEnabled: p.mcpEnabled,
+      memberCount: p.memberCount,
+      owners: ownersByProject.get(p.id) ?? [],
+      isMember: p.isMember ?? false,
+      createdAt: iso(p.createdAt),
+    })),
+    total: counted[0]?.count ?? 0,
+  };
+}
 
-  return visible.map((p) => ({
-    id: p.id,
-    key: p.key,
-    name: p.name,
-    description: p.description,
-    mcpEnabled: p.mcpEnabled,
-    memberCount: p.memberCount,
-    owners: ownersByProject.get(p.id) ?? [],
-    isMember: p.isMember ?? false,
-    createdAt: iso(p.createdAt),
-  }));
+// Every project the caller reads, as id, key, name and MCP reach: the picker on an
+// agent and the team's MCP switches, which need them all rather than a page.
+export async function listTeamProjectOptions(
+  teamId: number,
+  userId: string,
+  standing: TeamStanding,
+): Promise<TeamProjectOption[]> {
+  return db
+    .select({
+      id: project.id,
+      key: project.key,
+      name: project.name,
+      mcpEnabled: project.mcpEnabled,
+    })
+    .from(project)
+    .where(visibleTeamProjects(teamId, userId, standing))
+    .orderBy(project.key);
 }
 
 // When the project's issue feed last moved. Read as the newest row rather than a

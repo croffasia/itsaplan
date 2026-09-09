@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { IssueType } from '@/lib/api';
+import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import Modal from '@/components/common/overlay/Modal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

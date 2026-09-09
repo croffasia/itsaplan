@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { ExternalLink, RefreshCw } from 'lucide-react';
-import type { UpdateStatus } from '@/lib/api';
+import type { UpdateStatus } from '@/lib/api/endpoints/updates';
 import TakeoverScreen from '@/components/common/page/TakeoverScreen';
 import { Button } from '@/components/ui/button';
 import { useCheckForUpdates } from '@/services/updates.service';

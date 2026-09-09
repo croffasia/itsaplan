@@ -1,18 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Bot, User } from 'lucide-react';
-import { type Assignee } from '@/lib/api';
+import type { Assignee } from '@/lib/api/endpoints/projects';
 import Avatar from '@/components/common/Avatar';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { useCreateComment } from '../../services/comments.service';
+import { useCreateComment, useUpdateComment } from '../../services/comments.service';
 import { useTranslations } from 'next-intl';
 
-// The new-comment box: a plain markdown textarea with an @-mention menu. Typing "@"
-// opens a menu of the project's members and agents; picking one writes their handle
-// as @username into the body. That handle is what the backend resolves to notify a
-// member or trigger an agent, and what the feed renders as a chip. Posts as the
-// current session user on the button or Cmd/Ctrl+Enter.
+// The comment box, for a new comment or for editing one: a plain markdown textarea
+// with an @-mention menu. Typing "@" opens a menu of the project's members and
+// agents; picking one writes their handle as @username into the body. That handle is
+// what the backend resolves to notify a member or trigger an agent, and what the
+// feed renders as a chip. Posts or saves as the current session user on the button
+// or Cmd/Ctrl+Enter.
 
 // What every composer needs to post, gathered once by the activity feed: the issue,
 // who can be mentioned, and the author the avatar stands for.
@@ -38,24 +39,33 @@ export default function CommentComposer({
   replyToId,
   replyToName,
   onClose,
+  commentId,
+  initialBody,
 }: ComposerContext & {
   // Set on the reply box a thread opens: the comment it answers and its author.
   replyToId?: number;
   replyToName?: string | null;
-  // Closes the reply box — on the cancel button, on Escape, and once the reply is
-  // posted. The box a thread opens is the only one that can be closed.
+  // Closes the box — on the cancel button, on Escape, and once the comment is
+  // posted or saved. The boxes a thread opens (reply, edit) are the only ones that
+  // can be closed.
   onClose?: () => void;
+  // Set when the box edits an existing comment instead of posting a new one.
+  commentId?: number;
+  initialBody?: string;
 }) {
   const t = useTranslations('issue.comments');
+  const tCommon = useTranslations('common');
   const createComment = useCreateComment();
-  const [body, setBody] = useState('');
+  const updateComment = useUpdateComment();
+  const [body, setBody] = useState(initialBody ?? '');
   const [menu, setMenu] = useState<MentionQuery | null>(null);
   const [active, setActive] = useState(0);
   const [pendingCaret, setPendingCaret] = useState<number | null>(null);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
-  const posting = createComment.isPending;
   const isReply = replyToId != null;
+  const isEdit = commentId != null;
+  const posting = (isEdit ? updateComment : createComment).isPending;
   const cmdKey = typeof navigator !== 'undefined' && /Mac/i.test(navigator.platform) ? '⌘' : 'Ctrl';
 
   // Members and both agent kinds can be mentioned, and only those that have a handle
@@ -72,10 +82,14 @@ export default function CommentComposer({
       .slice(0, 8);
   }, [assignees, menu]);
 
-  // A reply box is opened by a deliberate click on Reply, so it takes the caret.
+  // A reply box or an edit box is opened by a deliberate click, so it takes the
+  // caret — at the end of the text being edited.
   useEffect(() => {
-    if (isReply) taRef.current?.focus();
-  }, [isReply]);
+    const ta = taRef.current;
+    if (!ta || (!isReply && !isEdit)) return;
+    ta.focus();
+    if (isEdit) ta.setSelectionRange(ta.value.length, ta.value.length);
+  }, [isReply, isEdit]);
 
   // Restore the caret after a mention is inserted (the body change is async, so the
   // caret has to be set once the new value has rendered).
@@ -114,9 +128,15 @@ export default function CommentComposer({
   }
 
   async function post() {
-    if (!body.trim()) return;
-    await createComment.mutateAsync({ issueId, input: { body: body.trim(), replyToId } });
-    setBody('');
+    const next = body.trim();
+    if (!next) return;
+    if (isEdit) {
+      if (next === initialBody?.trim()) return onClose?.();
+      await updateComment.mutateAsync({ issueId, commentId: commentId!, body: next });
+    } else {
+      await createComment.mutateAsync({ issueId, input: { body: next, replyToId } });
+      setBody('');
+    }
     setMenu(null);
     onClose?.();
   }
@@ -158,15 +178,20 @@ export default function CommentComposer({
     placeholder = replyToName ? t('replyTo', { name: replyToName }) : t('replyPlaceholder');
 
   let submitLabel = isReply ? t('reply') : t('comment');
-  if (posting) submitLabel = t('posting');
+  if (isEdit) submitLabel = tCommon('save');
+  if (posting) submitLabel = isEdit ? tCommon('saving') : t('posting');
+
+  // The reply and edit boxes sit inside a thread card, so they render compact and
+  // without the bottom gap the standalone composer keeps.
+  const compact = isReply || isEdit;
 
   return (
-    <div className={cn(!isReply && 'mb-5')}>
+    <div className={cn(!compact && 'mb-5')}>
       <div className="flex gap-3">
         <Avatar
           name={authorName}
           image={authorImage}
-          className={cn('mt-0.5 shrink-0 text-[11px]', isReply ? 'size-6' : 'size-7')}
+          className={cn('mt-0.5 shrink-0 text-[11px]', compact ? 'size-6' : 'size-7')}
           title={t('commentAs', { name: authorName })}
         />
         <div className="relative min-w-0 flex-1">
@@ -185,17 +210,21 @@ export default function CommentComposer({
               placeholder={placeholder}
               className={cn(
                 'resize-none rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none focus-visible:ring-0',
-                isReply ? 'min-h-[52px]' : 'min-h-[64px]',
+                compact ? 'min-h-[52px]' : 'min-h-[64px]',
               )}
               onKeyDown={onKeyDown}
             />
             <div className="flex items-center justify-between gap-2 border-t px-2.5 py-2">
-              <span className="text-[11px] text-muted-foreground/70">
-                <kbd className="rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium">
-                  {cmdKey} ↵
-                </kbd>
-                <span className="ml-1.5">{t('toSend')}</span>
-              </span>
+              {isEdit ? (
+                <span />
+              ) : (
+                <span className="text-[11px] text-muted-foreground/70">
+                  <kbd className="rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium">
+                    {cmdKey} ↵
+                  </kbd>
+                  <span className="ml-1.5">{t('toSend')}</span>
+                </span>
+              )}
               <div className="flex items-center gap-1.5">
                 {onClose && (
                   <Button size="sm" variant="ghost" onClick={onClose}>

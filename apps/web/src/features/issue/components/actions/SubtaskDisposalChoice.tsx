@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type SubtaskDisposition, type SubtaskMode } from '@/lib/api';
+import type { SubtaskDisposition, SubtaskMode } from '@/lib/api/endpoints/issues';
 import { cn } from '@/lib/utils';
 import IssuePickerDialog from '@/components/common/overlay/IssuePickerDialog';
 import { Button } from '@/components/ui/button';

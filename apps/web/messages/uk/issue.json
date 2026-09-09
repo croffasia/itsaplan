@@ -222,7 +222,7 @@
     "unknownAuthor": "Невідомий",
     "goToLastComment": "Перейти до останнього коментаря",
     "edit": "Редагувати",
-    "saving": "Збереження.",
+    "edited": "змінено",
     "deleteComment": "Видалити коментар",
     "deleteCommentTitle": "Видалити цей коментар?",
     "deleteCommentConfirmation": "Коментар і відповіді на нього буде видалено безповоротно."
@@ -244,11 +244,7 @@
     "endTime": "Завершення"
   },
   "editor": {
-    "insertImage": "Вставити зображення",
-    "insertNamed": "Вставити {name}",
-    "descriptionPlaceholder": "Додайте опис…",
-    "noImages": "Зображень ще немає. Завантажте з панелі вкладень або перетягніть просто в редактор.",
-    "image": "Зображення"
+    "descriptionPlaceholder": "Додайте опис…"
   },
   "cycleSelect": {
     "label": "Цикл",
@@ -327,7 +323,9 @@
     "pullRequestOpened": "відкрив(-ла) пул-реквест <v>{pr}</v>",
     "worklogAdded": "записав(-ла) <v>{time}</v> за <v>{date}</v>",
     "worklogChanged": "змінив(-ла) запис <v>{from}</v> за <v>{fromDate}</v> на <v>{to}</v> за <v>{date}</v>",
-    "worklogRemoved": "видалив(-ла) запис <v>{time}</v> за <v>{date}</v>"
+    "worklogRemoved": "видалив(-ла) запис <v>{time}</v> за <v>{date}</v>",
+    "commentEdited": "змінив коментар",
+    "commentDeleted": "видалив коментар"
   },
   "development": {
     "title": "Розробка",

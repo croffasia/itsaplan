@@ -46,9 +46,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   packages (`api.ts`, `auth-client.ts`, `markdown.ts`, `dnd.ts`) plus shadcn's `utils.ts` (`cn`,
   fixed by `components.json`); `src/utils` holds own helpers and constants with no external
   package behind them. `src/context` holds shared React contexts and their `use*` readers.
-- `components/common` groups by purpose: `agent-chat/`, `editor/`, `fields/`, `inputs/`, `page/`,
-  `overlay/`, `permissions/`, `hotkeys/`, `skeleton/`. A component that fits none of them stays at the
-  `common/` root.
+- `components/common` groups by purpose: `agent-chat/`, `attachments/`, `chart/`, `editor/`,
+  `fields/`, `hotkeys/`, `inputs/`, `overlay/`, `page/`, `permissions/`, `share/`, `skeleton/`,
+  `timeline/`. A component that fits none of them stays at the `common/` root.
   Imports of a sibling in the same folder are relative; everything else uses `@/`.
 - Component files use the feature name as a PascalCase prefix, file name = exported name. Service
   files carry a `.service.ts` suffix (`passkeys.service.ts`). Other non-component files use plain
@@ -98,7 +98,20 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   `getNextPageParam: nextPageParam` (`useCompletedCyclesQuery` is the shape to copy); a feed
   reads a cursor route instead. A picker that needs every row calls the list's `/options`
   endpoint — never a paged one with a large `pageSize`.
-- Call the backend over HTTP at the API origin. `lib/api.ts` takes it from
+- **The API client is split by domain.** `lib/api/core/` holds the transport —
+  `client.ts` (`API_URL`, `request()`, `uploadFile()`, `ApiError`, `apiFailure`, the
+  401 sign-out), `paging.ts` (`Page<T>`, `PageParams`, `pageQuery`, `nextPageParam`)
+  and `media.ts` (`mediaUrl`). `lib/api/endpoints/` holds one flat file per domain,
+  named after the module of `apps/api/src/modules` it calls: an endpoint on the API in
+  `modules/cycles/` is reached from `lib/api/endpoints/cycles.ts`. A file keeps its
+  DTOs next to the functions that return them, and exports both by name — there is no
+  `index.ts` anywhere under `lib/api`, and no barrel re-exporting the domains. Types
+  cross domains with `import type`, which the compiler erases, so a composite like
+  `ProjectDetail` is assembled in the domain that owns the route without a runtime
+  cycle. A moved type whose name matches a DOM global (`Permissions`, `Notification`,
+  `Storage`) resolves to that global when its import is missing, so tsc stays silent
+  while the type is wrong: import it explicitly.
+- Call the backend over HTTP at the API origin. `lib/api/core/client.ts` takes it from
   `utils/runtimeEnv`, which reads `API_URL` in the server process and hands it to the
   browser through the inline script in `components/runtime-env-script.tsx`. A per-instance
   value goes through there — never `process.env.NEXT_PUBLIC_*` in a component, which

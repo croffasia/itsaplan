@@ -43,8 +43,8 @@
       "description": "代理可以调用的工具，每个工具连接到一个集成凭据。"
     },
     "agents": {
-      "title": "AI 队友",
-      "description": "该团队拥有的 AI 队友，以及各自工作的项目。"
+      "title": "AI 代理",
+      "description": "该团队拥有的 AI 代理，以及各自工作的项目。"
     }
   },
   "info": {
@@ -108,6 +108,8 @@
   "roles": {
     "ownerOnly": "只有团队所有者或管理者可以管理角色。",
     "empty": "暂无角色。创建一个角色以授予有限访问权限。",
+    "search": "搜索角色",
+    "noMatches": "没有与“{query}”匹配的角色。",
     "default": "默认",
     "editAction": "编辑角色",
     "deleteAction": "删除角色",
@@ -164,6 +166,8 @@
     "created": "创建于 {date}",
     "newProject": "新建项目",
     "noProjects": "该团队还没有项目。",
+    "searchProjects": "搜索项目",
+    "noProjectsMatch": "没有与“{query}”匹配的项目。",
     "projectMembers": "项目成员",
     "owners": "所有者：{names}",
     "openProject": "打开项目",
@@ -315,14 +319,14 @@
     "noAccess": "你没有权限查看该团队的工具。"
   },
   "agents": {
-    "newAgent": "新建 AI 队友",
-    "create": "创建 AI 队友",
-    "save": "保存 AI 队友",
-    "delete": "删除 AI 队友",
-    "edit": "编辑 AI 队友",
-    "empty": "暂无 AI 队友",
+    "newAgent": "新建 AI 代理",
+    "create": "创建 AI 代理",
+    "save": "保存 AI 代理",
+    "delete": "删除 AI 代理",
+    "edit": "编辑 AI 代理",
+    "empty": "暂无 AI 代理",
     "emptyHint": "代理由内置运行时运行或通过 API 驱动。",
-    "agent": "AI 队友",
+    "agent": "AI 代理",
     "sheetSubtitle": "可以接受工作项委派的 AI 代理",
     "kind": "类型",
     "kindLabel": {
@@ -487,8 +491,8 @@
     "noProjectsHint": "该团队还没有可供智能体工作的项目。",
     "searchProjects": "搜索项目",
     "noProjectsShort": "无项目",
-    "chatNeedsAgent": "创建 AI 队友后即可在此测试。",
-    "chatNeedsProject": "将 AI 队友加入项目后即可在此测试。",
+    "chatNeedsAgent": "创建 AI 代理后即可在此测试。",
+    "chatNeedsProject": "将 AI 代理加入项目后即可在此测试。",
     "triggerFieldsTitle": "触发运行的自定义字段"
   },
   "members": {

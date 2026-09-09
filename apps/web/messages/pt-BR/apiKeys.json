@@ -1,0 +1,32 @@
+{
+  "label": "Chaves de API",
+  "title": "Chaves de API",
+  "description": "Chaves de API pessoais autenticam requisições à API como sua conta ({email}). O valor de uma chave é mostrado apenas uma vez, ao criá-la.",
+  "sectionTitle": "Suas chaves de API",
+  "create": "Criar chave de API",
+  "empty": "Nenhuma chave de API ainda. Crie uma para autenticar requisições à API.",
+  "fallbackName": "Chave de API",
+  "createdAt": "Criada em {date}",
+  "deleteAction": "Excluir chave de API",
+  "createDialog": {
+    "title": "Criar chave de API",
+    "nameLabel": "Nome",
+    "namePlaceholder": "ex. pipeline de CI",
+    "nameHint": "Um rótulo para reconhecer esta chave depois.",
+    "submit": "Criar chave",
+    "submitPending": "Criando…",
+    "error": "Não foi possível criar a chave de API."
+  },
+  "createdDialog": {
+    "title": "Chave de API criada",
+    "description": "Copie sua chave agora. Por segurança, ela é mostrada apenas uma vez e não pode ser recuperada depois.",
+    "copy": "Copiar chave"
+  },
+  "deleteDialog": {
+    "title": "Excluir chave de API?",
+    "confirm": "Excluir chave",
+    "description": "Qualquer requisição que use esta chave deixará de funcionar imediatamente. Isso não pode ser desfeito.",
+    "error": "Não foi possível excluir a chave de API."
+  },
+  "loadFailed": "Não foi possível carregar as chaves de API."
+}

@@ -1,8 +1,9 @@
 import { Fragment } from 'react';
 import { Zap } from 'lucide-react';
 import { useQueries } from '@tanstack/react-query';
-import type { CustomField, TeamProject } from '@/lib/api';
-import { api } from '@/lib/api';
+import type { TeamProjectOption } from '@/lib/api/endpoints/teams';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import { getProject } from '@/lib/api/endpoints/projects';
 import { qk } from '@/services/queryKeys';
 import { Switch } from '@/components/ui/switch';
 import { isMemberField } from '@/utils/memberFields';
@@ -13,7 +14,7 @@ import { useTranslations } from 'next-intl';
 
 // A member field an agent can be set into, with the project it belongs to: an agent
 // works in several projects of its team, and each has its own fields.
-type ProjectField = { field: CustomField; project: TeamProject };
+type ProjectField = { field: CustomField; project: TeamProjectOption };
 
 // What starts a run: a mention in a comment, being made an issue's delegate, or being
 // set into a member custom field that holds agents. Every trigger but the mention
@@ -32,7 +33,7 @@ export default function AgentTriggersSection({
   onChange: (patch: Partial<AgentFormValue>) => void;
   // The projects of the team, of which the agent works in the ones it is attached to.
   // Only those carry fields it can be set into.
-  projects: TeamProject[];
+  projects: TeamProjectOption[];
 }) {
   const t = useTranslations('teams.agents');
   const attached = projects.filter((project) => value.projectIds.includes(project.id));
@@ -41,7 +42,7 @@ export default function AgentTriggersSection({
   const scaffolds = useQueries({
     queries: attached.map((project) => ({
       queryKey: qk.project(project.key),
-      queryFn: () => api.getProject(project.key),
+      queryFn: () => getProject(project.key),
     })),
   });
   const memberFields: ProjectField[] = scaffolds.flatMap((scaffold, index) =>

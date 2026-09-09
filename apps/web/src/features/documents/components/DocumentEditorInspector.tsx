@@ -1,7 +1,7 @@
 'use client';
 
 import type { Editor } from '@tiptap/react';
-import type { ProjectDocument } from '@/lib/api';
+import type { ProjectDocument } from '@/lib/api/endpoints/documents';
 import {
   Sheet,
   SheetContent,

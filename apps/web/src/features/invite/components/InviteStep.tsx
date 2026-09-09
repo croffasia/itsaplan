@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { type InviteView } from '@/lib/api';
+import type { InviteView } from '@/lib/api/endpoints/invites';
 import { signOut, useSession } from '@/lib/auth-client';
 import { Button } from '@/components/ui/button';
 import InviteActions from './InviteActions';

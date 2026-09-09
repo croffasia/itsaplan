@@ -10,7 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useQuery, useQueryClient, type QueryKey } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { getRevs } from '@/lib/api/endpoints/sync';
 
 // One poll for the whole app. Every screen that wants to stay live registers the
 // scopes it depends on (see useLiveRefresh); this provider asks the API for their
@@ -48,7 +48,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     // The scope list is part of the key: a screen that mounts starts its own read
     // right away instead of waiting for the next tick.
     queryKey: ['sync', 'rev', scopes],
-    queryFn: () => api.getRevs(scopes),
+    queryFn: () => getRevs(scopes),
     enabled: scopes.length > 0,
     refetchInterval: POLL_MS,
     // Never served as fresh, but kept for one interval: with gcTime 0 a remount in

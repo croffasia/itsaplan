@@ -1,6 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { FileText } from 'lucide-react';
-import type { IssueTemplate } from '@/lib/api';
+import type { IssueTemplate } from '@/lib/api/endpoints/issueTemplates';
 import { Pill } from '@/components/common/fields/Pill';
 import PopoverPick from '@/components/common/fields/PopoverPick';
 

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import { type IssueRelations, type ProjectDetail } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { IssueRelations } from '@/lib/api/endpoints/issues';
 import { usePermissions } from '@/hooks/usePermissions';
 import { subtaskProgress } from '@/utils/subtasks';
 import { Button } from '@/components/ui/button';

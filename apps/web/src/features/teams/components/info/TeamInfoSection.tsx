@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
 import { TeamBillingSection } from '@/cloud';
-import type { Team } from '@/lib/api';
+import type { Team } from '@/lib/api/endpoints/teams';
 import { formatDate } from '@/utils/dates';
 import { useRenameTeam, useTeam } from '@/services/teams.service';
 import SectionPageView from '@/components/common/page/SectionPageView';

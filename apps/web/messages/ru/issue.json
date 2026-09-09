@@ -222,7 +222,7 @@
     "unknownAuthor": "Неизвестный",
     "goToLastComment": "Перейти к последнему комментарию",
     "edit": "Редактировать",
-    "saving": "Сохранение.",
+    "edited": "изменено",
     "deleteComment": "Удалить комментарий",
     "deleteCommentTitle": "Удалить этот комментарий?",
     "deleteCommentConfirmation": "Комментарий и ответы на него будут удалены безвозвратно."
@@ -244,11 +244,7 @@
     "endTime": "Окончание"
   },
   "editor": {
-    "insertImage": "Вставить изображение",
-    "insertNamed": "Вставить {name}",
-    "descriptionPlaceholder": "Добавьте описание…",
-    "noImages": "Изображений пока нет. Загрузите из панели вложений или перетащите прямо в редактор.",
-    "image": "Изображение"
+    "descriptionPlaceholder": "Добавьте описание…"
   },
   "cycleSelect": {
     "label": "Цикл",
@@ -327,7 +323,9 @@
     "pullRequestOpened": "открыл(а) пул-реквест <v>{pr}</v>",
     "worklogAdded": "записал(а) <v>{time}</v> за <v>{date}</v>",
     "worklogChanged": "изменил(а) запись <v>{from}</v> за <v>{fromDate}</v> на <v>{to}</v> за <v>{date}</v>",
-    "worklogRemoved": "удалил(а) запись <v>{time}</v> за <v>{date}</v>"
+    "worklogRemoved": "удалил(а) запись <v>{time}</v> за <v>{date}</v>",
+    "commentEdited": "изменил комментарий",
+    "commentDeleted": "удалил комментарий"
   },
   "development": {
     "title": "Разработка",

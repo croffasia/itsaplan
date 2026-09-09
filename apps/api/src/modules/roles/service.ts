@@ -1,5 +1,5 @@
 import { db, teamRole, projectMember, aiAgent, teamInvite, scimGroupMapping } from '@repo/db';
-import { and, asc, count, eq, isNull } from 'drizzle-orm';
+import { and, asc, count, eq, ilike, isNull, sql } from 'drizzle-orm';
 import { iso } from '#shared/lib';
 import { normalizePermissions, type Permissions } from '#shared/permissions';
 
@@ -26,6 +26,40 @@ function mapRole(row: typeof teamRole.$inferSelect): RoleRow {
   };
 }
 
+export interface RolePage {
+  items: RoleRow[];
+  total: number;
+}
+
+// One page of the team's roles, oldest first, with how many match in all. The search
+// matches the name.
+export async function listRolesPage(
+  teamId: number,
+  options: { search?: string; limit: number; offset: number },
+): Promise<RolePage> {
+  const term = options.search?.trim();
+  const where = and(
+    eq(teamRole.teamId, teamId),
+    term ? ilike(teamRole.name, `%${term}%`) : undefined,
+  );
+  const [rows, counted] = await Promise.all([
+    db
+      .select()
+      .from(teamRole)
+      .where(where)
+      .orderBy(asc(teamRole.id))
+      .limit(options.limit)
+      .offset(options.offset),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(teamRole)
+      .where(where),
+  ]);
+  return { items: rows.map(mapRole), total: counted[0]?.count ?? 0 };
+}
+
+// Every role of the team. Read by the pickers that assign one, and by the clipboard
+// export, which carries the matrices of all of them.
 export async function listRoles(teamId: number): Promise<RoleRow[]> {
   const rows = await db
     .select()

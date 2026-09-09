@@ -8,6 +8,10 @@ import { projectPath } from '@/utils/paths';
 import { useTeam, useTeamProjectsQuery } from '@/services/teams.service';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
+import ListPager from '@/components/common/ListPager';
+import SearchInput from '@/components/common/SearchInput';
+import { usePaging } from '@/hooks/usePaging';
+import { useSearchTerm } from '@/hooks/useSearchTerm';
 import { Button } from '@/components/ui/button';
 import NewProjectModal from '@/components/layout/NewProjectModal';
 import TeamProjectPanel from './TeamProjectPanel';
@@ -19,13 +23,21 @@ export default function TeamProjectsSection({ teamId }: { teamId: number }) {
   const t = useTranslations('teams');
   const router = useRouter();
   const team = useTeam(teamId);
-  const { data } = useTeamProjectsQuery(teamId);
+  const paging = usePaging();
+  const { search, setSearch, term } = useSearchTerm();
+  const { data } = useTeamProjectsQuery(teamId, { search: term, ...paging.params });
   const [creating, setCreating] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
 
   const canCreate = team != null && team.role !== 'member';
-  const projects = data ?? [];
+  const projects = data?.items ?? [];
+  const total = data?.total ?? 0;
   const selected = projects.find((project) => project.id === selectedId) ?? null;
+
+  function onSearchChange(next: string) {
+    setSearch(next);
+    paging.reset();
+  }
 
   return (
     <SectionPageView
@@ -41,13 +53,29 @@ export default function TeamProjectsSection({ teamId }: { teamId: number }) {
         ) : undefined
       }
     >
-      {!data ? (
-        <ListSkeleton rows={4} rowClassName="h-12" />
-      ) : projects.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t('panel.noProjects')}</p>
-      ) : (
-        <TeamProjectsTable projects={projects} onSelect={setSelectedId} />
-      )}
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <SearchInput
+            value={search}
+            onChange={onSearchChange}
+            placeholder={t('panel.searchProjects')}
+            className="w-60"
+          />
+        </div>
+
+        {!data ? (
+          <ListSkeleton rows={4} rowClassName="h-12" />
+        ) : projects.length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            {term === undefined
+              ? t('panel.noProjects')
+              : t('panel.noProjectsMatch', { query: term })}
+          </p>
+        ) : (
+          <TeamProjectsTable projects={projects} onSelect={setSelectedId} />
+        )}
+        {total > 0 && <ListPager paging={paging} total={total} />}
+      </div>
 
       {creating && (
         <NewProjectModal

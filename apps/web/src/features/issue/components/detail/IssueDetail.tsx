@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Maximize2, X } from 'lucide-react';
-import { type ProjectDetail, type IssueDetail as IssueDetailRow } from '@/lib/api';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
+import type { IssueDetail as IssueDetailRow } from '@/lib/api/endpoints/issues';
 import IssueDetailContent from './IssueDetailContent';
 import IssueActionsBar from '../actions/IssueActionsBar';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';

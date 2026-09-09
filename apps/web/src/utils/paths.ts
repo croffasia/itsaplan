@@ -1,7 +1,7 @@
 // Path builders for the planner routes. The project, the open view and the open
 // settings section live in the URL, so these are the single source of truth —
 // see the app/project/[projectKey] route tree.
-import type { StartPage } from '@/lib/api';
+import type { StartPage } from '@/lib/api/endpoints/userPreferences';
 
 export const projectPath = (key: string) => `/project/${encodeURIComponent(key)}`;
 
@@ -74,7 +74,7 @@ export const initiativesTabPath = (key: string, tab: InitiativesTab) =>
 
 // The initiative detail tabs are routes of their own too. They sit under /details/
 // so the tab segment of the list above stays unambiguous.
-export type InitiativeTab = 'overview' | 'issues';
+export type InitiativeTab = 'overview' | 'progress' | 'issues';
 
 export const initiativePath = (
   key: string,

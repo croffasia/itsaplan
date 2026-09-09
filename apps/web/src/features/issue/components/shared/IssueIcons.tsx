@@ -1,4 +1,4 @@
-import type { StateType } from '@/lib/api';
+import type { StateType } from '@/lib/api/endpoints/columns';
 
 // Linear-style status icon, colored by the column color. One glyph per state
 // type: backlog is a dashed ring, unstarted an empty ring, started a ring with

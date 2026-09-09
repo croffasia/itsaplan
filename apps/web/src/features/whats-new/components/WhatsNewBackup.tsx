@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { BackupInfo } from '@/lib/api';
+import type { BackupInfo } from '@/lib/api/endpoints/updates';
 import { formatDate } from '@/utils/dates';
 import CodeBlock from '@/components/common/CodeBlock';
 

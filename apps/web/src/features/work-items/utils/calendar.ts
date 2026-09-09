@@ -1,5 +1,6 @@
 import { addDays, startOfMonth, startOfWeek } from 'date-fns';
-import { type CustomField, type Issue } from '@/lib/api';
+import type { CustomField } from '@/lib/api/endpoints/customFields';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { issueDay } from '@/utils/calendarFields';
 import type { BuiltinDateField, ViewSettings } from '@/utils/viewSettings';
 

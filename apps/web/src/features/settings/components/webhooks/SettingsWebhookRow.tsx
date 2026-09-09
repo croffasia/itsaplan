@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Check, Copy, Eye, EyeOff, History, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
-import type { Webhook } from '@/lib/api';
+import type { Webhook } from '@/lib/api/endpoints/webhooks';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {

@@ -7,7 +7,7 @@ import {
   GitPullRequestDraft,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { type DevelopmentLink } from '@/lib/api';
+import type { DevelopmentLink } from '@/lib/api/endpoints/git';
 import { Badge } from '@/components/ui/badge';
 import { issueDevelopmentBadgeClassName } from './issueDevelopmentBadgeStyles';
 

@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { Check, Minus } from 'lucide-react';
-import { useTeam, useTeamProjectsQuery, useUpdateTeamMcp } from '@/services/teams.service';
+import { useTeam, useTeamProjectOptionsQuery, useUpdateTeamMcp } from '@/services/teams.service';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Switch } from '@/components/ui/switch';
@@ -25,7 +25,7 @@ function McpStatus({ on }: { on: boolean }) {
 export default function TeamMcpSection({ teamId }: { teamId: number }) {
   const t = useTranslations('teams.mcp');
   const team = useTeam(teamId);
-  const { data: projects } = useTeamProjectsQuery(teamId);
+  const { data: projects } = useTeamProjectOptionsQuery(teamId);
   const update = useUpdateTeamMcp(teamId);
 
   const canManage = team != null && team.role !== 'member';

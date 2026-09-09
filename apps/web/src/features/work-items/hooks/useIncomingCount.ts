@@ -1,5 +1,5 @@
 import { useDndContext } from '@dnd-kit/core';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 import { type IssueGroup } from '@/utils/project';
 import { draggedIds } from '../utils/kanban';
 import { countEntering } from '../utils/wipLimit';

@@ -6,6 +6,7 @@
   "showDescription": "Показати опис",
   "noDescription": "Опису немає.",
   "noOwner": "Без власника",
+  "startDate": "Дата початку",
   "targetDate": "Цільова дата",
   "progress": "Прогрес",
   "activity": "Активність",
@@ -30,6 +31,7 @@
   },
   "detailTabs": {
     "overview": "Огляд",
+    "progress": "Прогрес",
     "issues": "Задачі"
   },
   "columns": {
@@ -91,9 +93,7 @@
     "noTargetDate": "Вкажіть цільову дату, щоб бачити темп."
   },
   "form": {
-    "title": "Назва",
     "titlePlaceholder": "Запуск у 3 кварталі",
-    "description": "Опис",
     "descriptionPlaceholder": "Про що ця ініціатива?",
     "create": "Створити ініціативу",
     "creating": "Створення…",
@@ -141,5 +141,26 @@
     "typeRemoved": "прибрав(-ла) тип",
     "linked": "прив'язав(-ла) до {name}",
     "unlinked": "відв'язав(-ла) від ініціативи"
+  },
+  "attachments": {
+    "title": "Вкладення",
+    "add": "Додати",
+    "uploading": "Завантаження…",
+    "empty": "Вкладень поки немає.",
+    "emptyHint": "Перетягніть файли сюди або натисніть «Додати».",
+    "dropToUpload": "Відпустіть файли для завантаження",
+    "uploadFailed": "Не вдалося завантажити",
+    "open": "Відкрити {name}",
+    "download": "Завантажити",
+    "downloadFile": "Завантажити {name}",
+    "deleteFile": "Видалити {name}"
+  },
+  "documents": {
+    "title": "Документи",
+    "add": "Прив'язати документ",
+    "empty": "Документи ще не прив'язані.",
+    "loadFailed": "Не вдалося завантажити документи. Повторити.",
+    "untitled": "Без назви",
+    "remove": "Відв'язати {title}"
   }
 }

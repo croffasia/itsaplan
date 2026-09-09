@@ -222,7 +222,7 @@
     "unknownAuthor": "غير معروف",
     "goToLastComment": "الانتقال إلى آخر تعليق",
     "edit": "تعديل",
-    "saving": "جارٍ الحفظ.",
+    "edited": "تم التعديل",
     "deleteComment": "حذف التعليق",
     "deleteCommentTitle": "حذف هذا التعليق؟",
     "deleteCommentConfirmation": "سيتم حذف التعليق وجميع ردوده نهائيًا."
@@ -244,11 +244,7 @@
     "endTime": "وقت الانتهاء"
   },
   "editor": {
-    "insertImage": "إدراج صورة",
-    "insertNamed": "إدراج {name}",
-    "descriptionPlaceholder": "إضافة وصف…",
-    "noImages": "مفيش صور مرفقة لسه. ارفع صورة من لوحة المرفقات، أو ارميها على المحرر على طول.",
-    "image": "صورة"
+    "descriptionPlaceholder": "إضافة وصف…"
   },
   "cycleSelect": {
     "label": "الدورة",
@@ -327,7 +323,9 @@
     "pullRequestOpened": "فتح طلب السحب <v>{pr}</v>",
     "worklogAdded": "سجّل <v>{time}</v> ليوم <v>{date}</v>",
     "worklogChanged": "غيّر التسجيل من <v>{from}</v> ليوم <v>{fromDate}</v> إلى <v>{to}</v> ليوم <v>{date}</v>",
-    "worklogRemoved": "حذف تسجيل <v>{time}</v> ليوم <v>{date}</v>"
+    "worklogRemoved": "حذف تسجيل <v>{time}</v> ليوم <v>{date}</v>",
+    "commentEdited": "عدّل تعليقًا",
+    "commentDeleted": "حذف تعليقًا"
   },
   "development": {
     "title": "التطوير",

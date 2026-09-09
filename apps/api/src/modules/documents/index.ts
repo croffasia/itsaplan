@@ -4,16 +4,14 @@ import { assertPermission, requireUser } from '#shared/access';
 import { guards } from '#shared/guards';
 import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
-import { getObject } from '#shared/s3';
 import { mcpTool } from '#mcp/generate';
 import { commonErrors, errors } from '#shared/responses';
 import { getMembership } from '#modules/members/service';
 import { rawAttachmentQuery } from '#modules/attachments/model';
 import {
   assertAttachmentUploadAllowed,
-  attachmentEtag,
   attachmentObjectKey,
-  attachmentResponseHeaders,
+  attachmentObjectResponse,
   deleteAttachmentObject,
   safeAttachmentFilename,
   storeAttachmentObject,
@@ -33,6 +31,7 @@ import {
   DocumentIssueLinkListResponse,
   DocumentIssueLinkResponse,
   IssueDocumentLinkListResponse,
+  IssueDocumentLinkResponse,
   DocumentResponse,
   DocumentRevisionListResponse,
   DocumentRevisionResponse,
@@ -42,6 +41,9 @@ import {
   duplicateDocumentBody,
   issueDocumentsParams,
   linkDocumentIssueBody,
+  documentInitiativeParams,
+  initiativeDocumentsParams,
+  linkDocumentInitiativeBody,
   listDocumentsQuery,
   updateDocumentBody,
   updateDocumentPreferenceBody,
@@ -72,11 +74,14 @@ import {
   type DocumentAssetRow,
 } from './service';
 import {
+  addDocumentInitiativeLink,
   addDocumentIssueLink,
   listDocumentIssueLinks,
+  listInitiativeDocumentLinks,
   listIssueDocumentLinks,
+  removeDocumentInitiativeLink,
   removeDocumentIssueLink,
-} from './issue-links';
+} from './links';
 
 function documentAssetDto(projectKey: string, documentId: number, asset: DocumentAssetRow) {
   return {
@@ -236,6 +241,81 @@ export const documentRoutes = new Elysia({
     },
   )
   .get(
+    '/projects/:projectKey/documents/for-initiative/:initiativeId',
+    async ({ project, params, user }) => {
+      const current = requireUser(user);
+      await assertPermission(project.id, current, 'documents', 'read');
+      const links = await listInitiativeDocumentLinks(project.id, params.initiativeId, current.id);
+      if (!links) throw new HttpError(404, 'Initiative not found');
+      return links;
+    },
+    {
+      permission: ['initiatives', 'read'],
+      feature: 'initiatives',
+      params: initiativeDocumentsParams,
+      response: { 200: IssueDocumentLinkListResponse, ...commonErrors },
+      detail: {
+        summary: 'List Docs linked to an initiative',
+        description: 'Return visible Docs pages explicitly linked to one initiative.',
+        ...mcpTool('list_initiative_documents'),
+      },
+    },
+  )
+  .post(
+    '/projects/:projectKey/documents/:documentId/initiatives',
+    async ({ project, params, body, user, set }) => {
+      const current = requireUser(user);
+      await assertPermission(project.id, current, 'initiatives', 'edit');
+      const link = await addDocumentInitiativeLink({
+        projectId: project.id,
+        documentId: params.documentId,
+        initiativeId: body.initiativeId,
+        userId: current.id,
+      });
+      set.status = 201;
+      return link;
+    },
+    {
+      permission: ['documents', 'edit'],
+      feature: 'initiatives',
+      params: documentParams,
+      body: linkDocumentInitiativeBody,
+      response: { 201: IssueDocumentLinkResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Link a document to an initiative',
+        description:
+          'Link one active Docs page to an initiative in the same project. Editing both resources is required.',
+        ...mcpTool('link_document_initiative'),
+      },
+    },
+  )
+  .delete(
+    '/projects/:projectKey/documents/:documentId/initiatives/:initiativeId',
+    async ({ project, params, user }) => {
+      const current = requireUser(user);
+      await assertPermission(project.id, current, 'initiatives', 'edit');
+      const removed = await removeDocumentInitiativeLink({
+        projectId: project.id,
+        documentId: params.documentId,
+        initiativeId: params.initiativeId,
+        userId: current.id,
+      });
+      if (!removed) throw new HttpError(404, 'Document link not found');
+      return noContent();
+    },
+    {
+      permission: ['documents', 'edit'],
+      feature: 'initiatives',
+      params: documentInitiativeParams,
+      response: { 204: t.Void(), ...commonErrors },
+      detail: {
+        summary: 'Unlink a document from an initiative',
+        description: 'Remove an explicit Docs-to-initiative link.',
+        ...mcpTool('unlink_document_initiative'),
+      },
+    },
+  )
+  .get(
     '/projects/:projectKey/documents/:documentId/assets',
     async ({ project, params, user }) => {
       const assets = await listDocumentAssets(project.id, params.documentId, requireUser(user).id);
@@ -308,24 +388,12 @@ export const documentRoutes = new Elysia({
         requireUser(user).id,
       );
       if (!asset) throw new HttpError(404, 'Asset not found');
-      const etag = attachmentEtag(asset.s3Key);
-      if (request.headers.get('if-none-match') === etag) {
-        return new Response(null, { status: 304, headers: { ETag: etag } });
-      }
-      let object;
-      try {
-        object = await getObject(asset.s3Key);
-      } catch (error) {
-        throw new HttpError(404, error instanceof Error ? error.message : 'Asset not found');
-      }
-      return new Response(object.body, {
-        headers: attachmentResponseHeaders({
-          contentType: asset.contentType || object.contentType,
-          filename: asset.filename,
-          contentLength: object.contentLength,
-          etag,
-          download: query.download != null,
-        }),
+      return attachmentObjectResponse({
+        s3Key: asset.s3Key,
+        contentType: asset.contentType,
+        filename: asset.filename,
+        request,
+        download: query.download != null,
       });
     },
     {

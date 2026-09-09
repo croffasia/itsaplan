@@ -11,7 +11,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { cyclesPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { unfinishedCount } from '@/utils/progress';

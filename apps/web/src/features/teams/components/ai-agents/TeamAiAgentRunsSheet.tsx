@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import type { AgentRun, AiAgent } from '@/lib/api';
+import type { AgentRun, AiAgent } from '@/lib/api/endpoints/agents';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { formatDateTime } from '@/utils/dates';
 import { useAgentRuns } from '@/services/aiAgents.service';

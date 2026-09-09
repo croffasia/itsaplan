@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Project } from '@/lib/api';
+import type { Project } from '@/lib/api/endpoints/projects';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useUpdateEstimates } from '../services/settings.service';
 

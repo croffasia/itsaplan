@@ -14,11 +14,12 @@ import {
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import { emitWebhookEvent } from '#modules/webhooks/emit';
-import { parseMentionHandles, resolveMentionHandles } from '#shared/mentions';
+import { addedMentionHandles, parseMentionHandles, resolveMentionHandles } from '#shared/mentions';
 import { isAgentUser, listMentionTriggerAgents } from '#modules/agents/core/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
 import {
   notifyComment,
+  notifyEditedCommentMentions,
   notifyIssueChange,
   notifyTextMentions,
 } from '#modules/notifications/service';
@@ -45,6 +46,8 @@ export interface FeedItemRow {
   action: string | null;
   payload: ActivityPayload;
   createdAt: string;
+  // Set once a comment is edited; null while it is in its author's original words.
+  editedAt: string | null;
 }
 
 // Opaque page cursor: the (created_at, id) of the last returned item. id breaks
@@ -72,6 +75,7 @@ function mapFeedItem(row: {
   action: string | null;
   payload: ActivityPayload;
   createdAt: Date;
+  editedAt: Date | null;
 }): FeedItemRow {
   return {
     id: row.id,
@@ -84,6 +88,7 @@ function mapFeedItem(row: {
     action: row.action,
     payload: row.payload,
     createdAt: iso(row.createdAt),
+    editedAt: row.editedAt ? iso(row.editedAt) : null,
   };
 }
 
@@ -110,6 +115,7 @@ export async function listFeed(
       action: issueActivity.action,
       payload: issueActivity.payload,
       createdAt: issueActivity.createdAt,
+      editedAt: issueActivity.editedAt,
       cursorTs: sql<string>`${issueActivity.createdAt}::text`,
     })
     .from(issueActivity)
@@ -324,25 +330,62 @@ export async function getCommentRef(
     : { issueId: row.issueId, projectId: row.projectId, actorUserId: row.actorUserId };
 }
 
-// Changes a comment's body. Who may change whose is settled by the route guard.
-export async function updateComment(commentId: number, body: string): Promise<FeedItemRow> {
+// Changes a comment's body and stamps it edited. The side effects mirror a new
+// comment, scoped to what the edit changed: a change-log entry, the comment.updated
+// webhook, and the mentions the edit newly adds (agents get a run, members a
+// notification); a handle the comment already named is not told again. Who may
+// change whose is settled by the route guard.
+export async function updateComment(
+  commentId: number,
+  body: string,
+  actorUserId: string | null,
+  projectId: number,
+): Promise<FeedItemRow> {
+  const [before] = await db
+    .select()
+    .from(issueActivity)
+    .where(and(eq(issueActivity.id, commentId), eq(issueActivity.kind, 'comment')));
+  if (!before) throw new HttpError(404, 'Comment not found');
   const [row] = await db
     .update(issueActivity)
-    .set({ body })
+    .set({ body, editedAt: new Date() })
     .where(eq(issueActivity.id, commentId))
     .returning();
   if (!row) throw new HttpError(404, 'Comment not found');
-  return mapFeedItem(row);
+  const comment = mapFeedItem(row);
+
+  await recordActivity(comment.issueId, [{ action: 'comment_edited' }], actorUserId);
+  await emitWebhookEvent(projectId, 'comment.updated', comment);
+
+  const added = addedMentionHandles(before.body ?? '', body);
+  if (added.length > 0) {
+    const mentioned = await resolveMentionHandles(projectId, added);
+    if (mentioned.agentUserIds.length > 0)
+      // replyToId is dropped: an edit reaches only the agents it newly names, not
+      // the author of the comment being answered, who a create would reach.
+      await enqueueMentionRuns(projectId, { ...comment, replyToId: null }, mentioned.agentUserIds);
+    await notifyEditedCommentMentions(projectId, comment, mentioned);
+  }
+  return comment;
 }
 
-// Deletes a comment; its replies cascade away with it (reply_to_id FK). Returns
-// false when there is no such comment.
-export async function deleteComment(commentId: number): Promise<boolean> {
-  const [removed] = await db
-    .delete(issueActivity)
-    .where(eq(issueActivity.id, commentId))
-    .returning({ id: issueActivity.id });
-  return removed != null;
+// Deletes a comment; its replies cascade away with it (reply_to_id FK). The change
+// log keeps a comment_deleted entry, and subscribed webhooks receive the comment as
+// it read. Returns false when there is no such comment.
+export async function deleteComment(
+  commentId: number,
+  actorUserId: string | null,
+  projectId: number,
+): Promise<boolean> {
+  const [before] = await db
+    .select()
+    .from(issueActivity)
+    .where(and(eq(issueActivity.id, commentId), eq(issueActivity.kind, 'comment')));
+  if (!before) return false;
+  await db.delete(issueActivity).where(eq(issueActivity.id, commentId));
+  await recordActivity(before.issueId as number, [{ action: 'comment_deleted' }], actorUserId);
+  await emitWebhookEvent(projectId, 'comment.deleted', mapFeedItem(before));
+  return true;
 }
 
 // If the comment reaches agents, queue a run for each so they can reply. A mention

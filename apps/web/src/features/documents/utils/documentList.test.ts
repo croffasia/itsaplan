@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
-import type { ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { documentBelongsToTab } from './documentList';
 
 const document = {

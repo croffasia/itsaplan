@@ -7,9 +7,15 @@ export const qk = {
   // One team: its counters and what the caller may do with what it holds.
   team: (teamId: number) => ['team', teamId] as const,
   // The members of a team and the projects it owns, each read by its own section. A
-  // member page is scoped by the search term and the window it was read with.
+  // page is scoped by the search term and the window it was read with.
   teamMembers: (teamId: number, params: unknown) => ['team', teamId, 'members', params] as const,
-  teamProjects: (teamId: number) => ['team', teamId, 'projects'] as const,
+  teamProjects: (teamId: number, params: unknown) => ['team', teamId, 'projects', params] as const,
+  // Every project of the team, for the pickers and the MCP switches that act on all
+  // of them.
+  teamProjectOptions: (teamId: number) => ['team', teamId, 'projects', 'options'] as const,
+  // Every page of a team's projects and its options list, for a write that changes
+  // what they show.
+  anyTeamProjects: (teamId: number) => ['team', teamId, 'projects'] as const,
   // One project the team owns, loaded when its row is opened, and one page of its
   // members (the search term and the window scope the entry).
   teamProject: (teamId: number, projectId: number) =>
@@ -66,6 +72,8 @@ export const qk = {
     ['documents', projectKey, 'document', documentId, 'issues'] as const,
   issueDocumentLinks: (projectKey: string, issueId: number) =>
     ['documents', projectKey, 'issue', issueId] as const,
+  initiativeDocumentLinks: (projectKey: string, initiativeId: number) =>
+    ['documents', projectKey, 'initiative', initiativeId] as const,
   // Note boards (the notes canvases). `noteBoardsForProject` is the invalidation
   // base for every list/search variant; `noteBoardsSearch` is one paged switcher
   // query (scoped by search text); `noteBoard` is a single board with its canvas.
@@ -97,7 +105,9 @@ export const qk = {
   anyTeamInvites: ['teamInvites'] as const,
   // The roles a team offers, which is what every project of it assigns from. The
   // permission catalog is app-static, so it is scoped to no team.
-  teamRoles: (teamId: number) => ['teamRoles', teamId] as const,
+  teamRoles: (teamId: number, params: unknown) => ['teamRoles', teamId, params] as const,
+  teamRoleOptions: (teamId: number) => ['teamRoles', teamId, 'options'] as const,
+  anyTeamRoles: (teamId: number) => ['teamRoles', teamId] as const,
   roleUsage: (teamId: number, roleId: number) => ['roleUsage', teamId, roleId] as const,
   anyRoleUsage: ['roleUsage'] as const,
   permissionCatalog: ['permissionCatalog'] as const,
@@ -214,6 +224,7 @@ export const qk = {
   anyCycles: ['cycles'] as const,
   anyCycle: ['cycle'] as const,
   attachments: (id: number) => ['attachments', id] as const,
+  initiativeAttachments: (id: number) => ['initiativeAttachments', id] as const,
   // The time entries of one issue. Their sum comes with the issue, so a write
   // refreshes that read too.
   worklogs: (id: number) => ['worklogs', id] as const,

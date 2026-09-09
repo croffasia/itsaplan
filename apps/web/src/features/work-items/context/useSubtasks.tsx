@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { type Issue } from '@/lib/api';
+import type { Issue } from '@/lib/api/endpoints/issues';
 
 // A subtask never shows as a card or a row of its own: it is rendered under its
 // parent, the way a relation is. The layouts read the project's issues before the

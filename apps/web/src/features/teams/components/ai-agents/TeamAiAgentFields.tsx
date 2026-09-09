@@ -1,13 +1,12 @@
 import { type ReactNode, useState } from 'react';
 import { SlidersHorizontal, Sparkles, Wrench } from 'lucide-react';
+import type { TeamProjectOption } from '@/lib/api/endpoints/teams';
+import type { AgentTool, AiAgent } from '@/lib/api/endpoints/agents';
 import type {
-  AgentTool,
-  AiAgent,
   IntegrationMeta,
   IntegrationOption,
   ProviderModel,
-  TeamProject,
-} from '@/lib/api';
+} from '@/lib/api/endpoints/integrations';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AGENT_KIND_ICON } from '../../utils/agentKindIcon';
@@ -61,7 +60,7 @@ export default function TeamAiAgentFields({
   onChange: (patch: Partial<AgentFormValue>) => void;
   // The projects of the team, which the Projects section attaches the agent to and the
   // Triggers section reads the member fields of.
-  projects: TeamProject[];
+  projects: TeamProjectOption[];
   tools: AgentTool[];
   toolsLoading: boolean;
   kindLocked: boolean;

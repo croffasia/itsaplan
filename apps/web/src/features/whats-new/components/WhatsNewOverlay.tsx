@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { DatabaseBackup } from 'lucide-react';
-import type { WhatsNew } from '@/lib/api';
+import type { WhatsNew } from '@/lib/api/endpoints/updates';
 import TakeoverScreen, { type TakeoverSection } from '@/components/common/page/TakeoverScreen';
 import { releaseSections } from './ReleaseSections';
 import WhatsNewBackup from './WhatsNewBackup';

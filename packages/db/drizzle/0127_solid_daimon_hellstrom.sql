@@ -1,0 +1,1 @@
+ALTER TABLE "issue_activity" ADD COLUMN "edited_at" timestamp with time zone;

@@ -1,4 +1,4 @@
-import { API_URL, apiFailure } from '@/lib/api';
+import { API_URL, apiFailure } from '@/lib/api/core/client';
 
 // Uploads an avatar image to the API (stored in MinIO). The API writes the new URL
 // to the user's image column itself and returns it, so the caller only has to read

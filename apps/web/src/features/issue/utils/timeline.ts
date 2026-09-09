@@ -1,4 +1,5 @@
-import { type Column, type StateType, type TimelineSegment } from '@/lib/api';
+import type { Column, StateType } from '@/lib/api/endpoints/columns';
+import type { TimelineSegment } from '@/lib/api/endpoints/activity';
 import { formatDuration, formatShortDate } from '@/utils/dates';
 
 // Turns the API's status segments into the geometry the timeline renders: one lane

@@ -1,6 +1,6 @@
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { RegistrationMode } from '@/lib/api';
+import type { RegistrationMode } from '@/lib/api/endpoints/god';
 import { cn } from '@/lib/utils';
 
 const MODES: RegistrationMode[] = ['open', 'invite', 'closed'];

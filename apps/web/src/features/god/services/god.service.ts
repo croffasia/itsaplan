@@ -1,18 +1,46 @@
 'use client';
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { StorageSettingsPatch } from '@/lib/api/endpoints/settings';
+import type { ProjectDefaults } from '@/lib/api/endpoints/projects';
+import type { PageParams } from '@/lib/api/core/paging';
 import {
-  api,
   type InstanceAuthSettingsPatch,
   type InstanceEmailSettingsPatch,
   type InstanceGoogleSettingsPatch,
   type InstanceOidcSettingsPatch,
   type InstanceTelegramSettingsPatch,
   type InstanceUserKind,
-  type PageParams,
-  type ProjectDefaults,
-  type StorageSettingsPatch,
-} from '@/lib/api';
+  getInstanceAuthSettings,
+  updateInstanceAuthSettings,
+  getInstanceEmailSettings,
+  updateInstanceEmailSettings,
+  testInstanceEmailSettings,
+  getInstanceGoogleSettings,
+  updateInstanceGoogleSettings,
+  getInstanceOidcSettings,
+  updateInstanceOidcSettings,
+  getInstanceTelegramSettings,
+  updateInstanceTelegramSettings,
+  getInstanceProjectDefaults,
+  updateInstanceProjectDefaults,
+  getInstanceStorageSettings,
+  updateInstanceStorageSettings,
+  listInstanceUsers,
+  getInstanceUser,
+  deleteInstanceUser,
+  listInstanceProjects,
+  listInstanceProjectOptions,
+  getInstanceProject,
+  verifyInstanceUserEmail,
+} from '@/lib/api/endpoints/god';
+import {
+  getInstanceScimSettings,
+  updateInstanceScimSettings,
+  createInstanceScimToken,
+  listInstanceScimGroups,
+  setInstanceScimGroupMappings,
+} from '@/lib/api/endpoints/scim';
 import { qk } from '@/services/queryKeys';
 
 // Data hooks for god mode. Every write returns the new state, which replaces the
@@ -29,14 +57,14 @@ function invalidateSignInMethods(qc: ReturnType<typeof useQueryClient>): void {
 export function useInstanceAuthSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceAuthSettings,
-    queryFn: () => api.getInstanceAuthSettings(),
+    queryFn: () => getInstanceAuthSettings(),
   });
 }
 
 export function useUpdateInstanceAuthSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: InstanceAuthSettingsPatch) => api.updateInstanceAuthSettings(patch),
+    mutationFn: (patch: InstanceAuthSettingsPatch) => updateInstanceAuthSettings(patch),
     onSuccess: (data) => qc.setQueryData(qk.instanceAuthSettings, data),
   });
 }
@@ -44,14 +72,14 @@ export function useUpdateInstanceAuthSettings() {
 export function useInstanceEmailSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceEmailSettings,
-    queryFn: () => api.getInstanceEmailSettings(),
+    queryFn: () => getInstanceEmailSettings(),
   });
 }
 
 export function useUpdateInstanceEmailSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: InstanceEmailSettingsPatch) => api.updateInstanceEmailSettings(patch),
+    mutationFn: (patch: InstanceEmailSettingsPatch) => updateInstanceEmailSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceEmailSettings, data);
       // Turning a provider on unlocks the auth options that need outbound mail.
@@ -62,21 +90,21 @@ export function useUpdateInstanceEmailSettings() {
 
 export function useTestInstanceEmailSettings() {
   return useMutation({
-    mutationFn: (patch: InstanceEmailSettingsPatch) => api.testInstanceEmailSettings(patch),
+    mutationFn: (patch: InstanceEmailSettingsPatch) => testInstanceEmailSettings(patch),
   });
 }
 
 export function useInstanceGoogleSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceGoogleSettings,
-    queryFn: () => api.getInstanceGoogleSettings(),
+    queryFn: () => getInstanceGoogleSettings(),
   });
 }
 
 export function useUpdateInstanceGoogleSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: InstanceGoogleSettingsPatch) => api.updateInstanceGoogleSettings(patch),
+    mutationFn: (patch: InstanceGoogleSettingsPatch) => updateInstanceGoogleSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceGoogleSettings, data);
       invalidateSignInMethods(qc);
@@ -88,14 +116,14 @@ export function useUpdateInstanceGoogleSettings() {
 export function useInstanceOidcSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceOidcSettings,
-    queryFn: () => api.getInstanceOidcSettings(),
+    queryFn: () => getInstanceOidcSettings(),
   });
 }
 
 export function useUpdateInstanceOidcSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: InstanceOidcSettingsPatch) => api.updateInstanceOidcSettings(patch),
+    mutationFn: (patch: InstanceOidcSettingsPatch) => updateInstanceOidcSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceOidcSettings, data);
       invalidateSignInMethods(qc);
@@ -108,14 +136,14 @@ export function useUpdateInstanceOidcSettings() {
 export function useInstanceScimSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceScimSettings,
-    queryFn: () => api.getInstanceScimSettings(),
+    queryFn: () => getInstanceScimSettings(),
   });
 }
 
 export function useUpdateInstanceScimSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: { enabled: boolean }) => api.updateInstanceScimSettings(patch),
+    mutationFn: (patch: { enabled: boolean }) => updateInstanceScimSettings(patch),
     onSuccess: (data) => qc.setQueryData(qk.instanceScimSettings, data),
   });
 }
@@ -123,7 +151,7 @@ export function useUpdateInstanceScimSettings() {
 export function useCreateInstanceScimToken() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.createInstanceScimToken(),
+    mutationFn: () => createInstanceScimToken(),
     // The response is the token itself, not the settings, so the redacted view has
     // to be refetched for its new prefix.
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.instanceScimSettings }),
@@ -133,7 +161,7 @@ export function useCreateInstanceScimToken() {
 export function useInstanceScimGroupsQuery() {
   return useQuery({
     queryKey: qk.instanceScimGroups,
-    queryFn: () => api.listInstanceScimGroups(),
+    queryFn: () => listInstanceScimGroups(),
   });
 }
 
@@ -143,7 +171,7 @@ export function useSetInstanceScimGroupMappings() {
     mutationFn: (input: {
       groupId: string;
       mappings: { projectId: number; role: 'owner' | 'member'; roleId: number | null }[];
-    }) => api.setInstanceScimGroupMappings(input.groupId, input.mappings),
+    }) => setInstanceScimGroupMappings(input.groupId, input.mappings),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.instanceScimGroups }),
   });
 }
@@ -153,14 +181,14 @@ export function useSetInstanceScimGroupMappings() {
 export function useInstanceTelegramSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceTelegramSettings,
-    queryFn: () => api.getInstanceTelegramSettings(),
+    queryFn: () => getInstanceTelegramSettings(),
   });
 }
 
 export function useUpdateInstanceTelegramSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: InstanceTelegramSettingsPatch) => api.updateInstanceTelegramSettings(patch),
+    mutationFn: (patch: InstanceTelegramSettingsPatch) => updateInstanceTelegramSettings(patch),
     onSuccess: (data) => qc.setQueryData(qk.instanceTelegramSettings, data),
   });
 }
@@ -170,14 +198,14 @@ export function useUpdateInstanceTelegramSettings() {
 export function useInstanceProjectDefaultsQuery() {
   return useQuery({
     queryKey: qk.instanceProjectDefaults,
-    queryFn: () => api.getInstanceProjectDefaults(),
+    queryFn: () => getInstanceProjectDefaults(),
   });
 }
 
 export function useUpdateInstanceProjectDefaults() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: ProjectDefaults) => api.updateInstanceProjectDefaults(body),
+    mutationFn: (body: ProjectDefaults) => updateInstanceProjectDefaults(body),
     onSuccess: (data) => qc.setQueryData(qk.instanceProjectDefaults, data),
   });
 }
@@ -187,14 +215,14 @@ export function useUpdateInstanceProjectDefaults() {
 export function useInstanceStorageSettingsQuery() {
   return useQuery({
     queryKey: qk.instanceStorageSettings,
-    queryFn: () => api.getInstanceStorageSettings(),
+    queryFn: () => getInstanceStorageSettings(),
   });
 }
 
 export function useUpdateInstanceStorageSettings() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (patch: StorageSettingsPatch) => api.updateInstanceStorageSettings(patch),
+    mutationFn: (patch: StorageSettingsPatch) => updateInstanceStorageSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceStorageSettings, data);
       // The upload UI reads the same limits through the open endpoint.
@@ -214,7 +242,7 @@ export interface InstanceUserFilters extends PageParams {
 export function useInstanceUsersQuery(filters: InstanceUserFilters) {
   return useQuery({
     queryKey: qk.instanceUsers(filters),
-    queryFn: () => api.listInstanceUsers({ ...filters, search: filters.search || undefined }),
+    queryFn: () => listInstanceUsers({ ...filters, search: filters.search || undefined }),
     placeholderData: keepPreviousData,
   });
 }
@@ -224,7 +252,7 @@ export function useInstanceUsersQuery(filters: InstanceUserFilters) {
 export function useInstanceUserQuery(userId: string) {
   return useQuery({
     queryKey: qk.instanceUser(userId),
-    queryFn: () => api.getInstanceUser(userId),
+    queryFn: () => getInstanceUser(userId),
   });
 }
 
@@ -232,7 +260,7 @@ export function useDeleteInstanceUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (input: { userId: string; withProjects: boolean }) =>
-      api.deleteInstanceUser(input.userId, input.withProjects),
+      deleteInstanceUser(input.userId, input.withProjects),
     onSuccess: (_data, input) => {
       qc.removeQueries({ queryKey: qk.instanceUser(input.userId) });
       void qc.invalidateQueries({ queryKey: qk.anyInstanceUsers });
@@ -252,7 +280,7 @@ export interface InstanceProjectFilters extends PageParams {
 export function useInstanceProjectsQuery(filters: InstanceProjectFilters) {
   return useQuery({
     queryKey: qk.instanceProjects(filters),
-    queryFn: () => api.listInstanceProjects({ ...filters, search: filters.search || undefined }),
+    queryFn: () => listInstanceProjects({ ...filters, search: filters.search || undefined }),
     placeholderData: keepPreviousData,
   });
 }
@@ -262,7 +290,7 @@ export function useInstanceProjectsQuery(filters: InstanceProjectFilters) {
 export function useInstanceProjectOptionsQuery() {
   return useQuery({
     queryKey: qk.instanceProjectOptions,
-    queryFn: () => api.listInstanceProjectOptions(),
+    queryFn: () => listInstanceProjectOptions(),
     staleTime: Infinity,
   });
 }
@@ -272,14 +300,14 @@ export function useInstanceProjectOptionsQuery() {
 export function useInstanceProjectQuery(projectId: number) {
   return useQuery({
     queryKey: qk.instanceProject(projectId),
-    queryFn: () => api.getInstanceProject(projectId),
+    queryFn: () => getInstanceProject(projectId),
   });
 }
 
 export function useVerifyInstanceUserEmail() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (userId: string) => api.verifyInstanceUserEmail(userId),
+    mutationFn: (userId: string) => verifyInstanceUserEmail(userId),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceUser(data.id), data);
       // The list carries emailVerified too, and its key holds the active filters.

@@ -1,7 +1,8 @@
 import { Fragment, useState } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { ActionEffect, ProjectDetail } from '@/lib/api';
+import type { ActionEffect } from '@/lib/api/endpoints/actions';
+import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { EFFECT_FIELD_KEYS, effectFieldKeys, type EffectFieldKey } from '@/utils/actions';
 import { useEffectText } from '@/hooks/useEffectText';
 import AssigneeSelect from '@/components/common/fields/AssigneeSelect';

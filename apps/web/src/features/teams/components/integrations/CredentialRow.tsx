@@ -1,5 +1,5 @@
 import { KeyRound, Pencil, Trash2 } from 'lucide-react';
-import type { IntegrationCredential } from '@/lib/api';
+import type { IntegrationCredential } from '@/lib/api/endpoints/integrations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { TableCell, TableRow } from '@/components/ui/table';

@@ -1,4 +1,4 @@
-import { type IssueLinkRef } from '@/lib/api';
+import type { IssueLinkRef } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { LINK_RELATION_ICONS } from '@/utils/issueLinks';

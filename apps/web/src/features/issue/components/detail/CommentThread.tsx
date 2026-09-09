@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type FeedItem } from '@/lib/api';
+import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { useSession } from '@/lib/auth-client';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
@@ -70,6 +70,7 @@ export default function CommentThread({
             onReply={composer ? () => setReplyTo(row) : undefined}
             canEdit={manages(row.item)}
             canDelete={manages(row.item)}
+            composer={composer}
           />
         </div>
       ))}

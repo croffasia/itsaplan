@@ -23,12 +23,14 @@ import {
   TeamMemberPageResponse,
   TeamProjectDetailResponse,
   TeamProjectMemberPageResponse,
-  TeamProjectListResponse,
+  TeamProjectOptionListResponse,
+  TeamProjectPageResponse,
   TeamResponse,
   createTeamBody,
   setTeamMemberRoleBody,
   teamMemberParams,
   teamParams,
+  teamProjectListQuery,
   teamProjectParams,
   memberListQuery,
   updateTeamBody,
@@ -41,6 +43,7 @@ import {
   leaveTeam,
   listTeamMembers,
   listTeamProjectMembers,
+  listTeamProjectOptions,
   listTeamProjects,
   listTeams,
   removeTeamMember,
@@ -128,16 +131,40 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
 
   .get(
     '/teams/:teamId/projects',
-    ({ membership }) => listTeamProjects(membership.teamId, membership.userId, membership.role),
+    ({ membership, query }) =>
+      paginate(query, (window) =>
+        listTeamProjects(membership.teamId, membership.userId, membership.role, {
+          search: query.search,
+          ...window,
+        }),
+      ),
     {
       teamMember: true,
       params: teamParams,
-      response: { 200: TeamProjectListResponse, ...errors(401, 404) },
+      query: teamProjectListQuery,
+      response: { 200: TeamProjectPageResponse, ...errors(401, 404) },
       detail: {
         summary: 'List team projects',
         description:
-          'The projects a team owns. An owner or a manager sees them all; anyone else only ' +
-          'the ones they belong to.',
+          'One page of the projects a team owns, by key. `search` matches the key or the ' +
+          'name. An owner or a manager sees them all; anyone else only the ones they belong to.',
+      },
+    },
+  )
+
+  // Fills the project picker on an agent and the MCP switches, which act on every
+  // project of the team rather than on a page of them.
+  .get(
+    '/teams/:teamId/projects/options',
+    ({ membership }) =>
+      listTeamProjectOptions(membership.teamId, membership.userId, membership.role),
+    {
+      teamMember: true,
+      params: teamParams,
+      response: { 200: TeamProjectOptionListResponse, ...errors(401, 404) },
+      detail: {
+        summary: 'List team project options',
+        description: 'Every project the reader has in the team: id, key, name and MCP reach.',
       },
     },
   )

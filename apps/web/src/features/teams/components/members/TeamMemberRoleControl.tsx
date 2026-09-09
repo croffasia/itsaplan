@@ -2,7 +2,7 @@
 
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { TeamMember, TeamRole } from '@/lib/api';
+import type { TeamMember, TeamRole } from '@/lib/api/endpoints/teams';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,

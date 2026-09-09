@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { FileText, Lock } from 'lucide-react';
-import type { ProjectDocumentSummary } from '@/lib/api';
+import type { ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import {
   CommandDialog,

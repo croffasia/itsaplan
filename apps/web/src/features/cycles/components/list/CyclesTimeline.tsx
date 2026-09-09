@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Cycle } from '@/lib/api';
+import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { cyclePath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useElementWidth } from '@/hooks/useElementWidth';

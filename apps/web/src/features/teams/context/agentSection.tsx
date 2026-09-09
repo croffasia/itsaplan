@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { PermissionAction, Permissions } from '@/lib/api';
+import type { PermissionAction, Permissions } from '@/lib/api/endpoints/roles';
 
 // The team whose agents the section edits, and what the caller may do with them.
 // Provided once by the section so the parts of the agent editor read both instead of

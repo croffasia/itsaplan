@@ -65,8 +65,8 @@
     "deleteMessage": "定时任务 <v>{name}</v> 及其运行记录将被删除。此操作无法撤销。"
   },
   "agents": {
-    "empty": "还没有队友",
-    "emptyHint": "团队在其设置中把队友接入项目。"
+    "empty": "还没有代理",
+    "emptyHint": "团队在其设置中把代理接入项目。"
   },
   "notifications": {
     "title": "通知",

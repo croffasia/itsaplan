@@ -36,7 +36,7 @@
   "tabs": {
     "all": "All",
     "people": "People",
-    "agents": "AI teammates",
+    "agents": "AI agents",
     "label": "Show"
   },
   "leaveProject": "Leave project",
@@ -82,26 +82,26 @@
   "search": {
     "all": "Search members",
     "people": "Search people",
-    "agents": "Search AI teammates"
+    "agents": "Search AI agents"
   },
   "empty": {
     "all": {
       "title": "No members yet",
-      "description": "People and AI teammates appear here once they join."
+      "description": "People and AI agents appear here once they join."
     },
     "human": {
       "title": "No people yet",
       "description": "People appear here once they join."
     },
     "agent": {
-      "title": "No AI teammates yet",
-      "description": "AI teammates appear here once they are added."
+      "title": "No AI agents yet",
+      "description": "AI agents appear here once they are added."
     },
     "search": {
       "title": "Nothing found",
       "all": "No member matches this search.",
       "human": "No person matches this search.",
-      "agent": "No AI teammate matches this search."
+      "agent": "No AI agent matches this search."
     }
   }
 }

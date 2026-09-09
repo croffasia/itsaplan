@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/lib/api';
+import { getWhatsNew, markWhatsNewSeen } from '@/lib/api/endpoints/updates';
 import { useSession } from '@/lib/auth-client';
 import { qk } from '@/services/queryKeys';
 
@@ -12,7 +12,7 @@ export function useWhatsNewQuery() {
   const { data: session } = useSession();
   return useQuery({
     queryKey: qk.whatsNew,
-    queryFn: () => api.getWhatsNew(),
+    queryFn: () => getWhatsNew(),
     // The route needs a session; the login and invite screens have none.
     enabled: Boolean(session),
     staleTime: Infinity,
@@ -22,7 +22,7 @@ export function useWhatsNewQuery() {
 export function useMarkWhatsNewSeen() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () => api.markWhatsNewSeen(),
+    mutationFn: () => markWhatsNewSeen(),
     // The screen closes on click, so the write is not what the user waits for.
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.whatsNew }),
   });

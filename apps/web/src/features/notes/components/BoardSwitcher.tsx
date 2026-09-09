@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { Check, ChevronsUpDown, Layers, Loader2 } from 'lucide-react';
-import type { NoteBoardSummary, NoteBoardVisibility } from '@/lib/api';
+import type { NoteBoardSummary, NoteBoardVisibility } from '@/lib/api/endpoints/noteBoards';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {

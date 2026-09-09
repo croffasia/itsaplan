@@ -2,7 +2,7 @@
 
 import { Fragment, useMemo } from 'react';
 import { Check, Minus } from 'lucide-react';
-import type { PermissionCatalog, Permissions } from '@/lib/api';
+import type { PermissionCatalog, Permissions } from '@/lib/api/endpoints/roles';
 import { useTranslations } from 'next-intl';
 import { catalogSupport, groupResources, orderActions } from '@/utils/permissions';
 import { usePermissionLabels } from '@/hooks/usePermissionLabels';

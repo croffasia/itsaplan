@@ -2,7 +2,7 @@
 
 import { Bot, ChevronDown } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { AiAgent } from '@/lib/api';
+import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { DropdownMenu, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { InputGroupButton } from '@/components/ui/input-group';
 import { AiChatAgentMenu } from '../shared/AiChatAgentMenu';

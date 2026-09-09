@@ -12,7 +12,7 @@ import {
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { Input } from '@/components/ui/input';
-import type { AiChatThread } from '@/lib/api';
+import type { AiChatThread } from '@/lib/api/endpoints/agentChat';
 import { AiChatThreadItem } from './AiChatThreadItem';
 import { AiChatThreadItemSkeleton } from './AiChatThreadItemSkeleton';
 

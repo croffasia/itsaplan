@@ -2,7 +2,7 @@
 
 import { Pencil } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { InstanceProject } from '@/lib/api';
+import type { InstanceProject } from '@/lib/api/endpoints/god';
 import { formatShortDate } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

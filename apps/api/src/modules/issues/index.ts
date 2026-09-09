@@ -1323,7 +1323,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // the comment guard asserts; another member's only a project owner can change.
   .patch(
     '/comments/:commentId',
-    async ({ params, body }) => updateComment(params.commentId, body.body),
+    async ({ params, body, user, projectId }) =>
+      updateComment(params.commentId, body.body, requireUser(user).id, projectId),
     {
       body: updateCommentBody,
       params: commentParams,
@@ -1332,8 +1333,9 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       detail: {
         summary: 'Edit a comment',
         description:
-          'Change the text of a comment. Your own comment needs work_items edit; ' +
-          "another member's comment only a project owner can change.",
+          'Change the text of a comment, and re-resolve its mentions: the members an ' +
+          'edit newly names are notified, the agents run. Your own comment needs ' +
+          "work_items edit; another member's comment only a project owner can change.",
         ...mcpTool('update_comment'),
       },
     },
@@ -1342,8 +1344,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // Deletes a comment, together with its replies (they cascade on reply_to_id).
   .delete(
     '/comments/:commentId',
-    async ({ params }) => {
-      const removed = await deleteComment(params.commentId);
+    async ({ params, user, projectId }) => {
+      const removed = await deleteComment(params.commentId, requireUser(user).id, projectId);
       if (!removed) throw new HttpError(404, 'Comment not found');
       return noContent();
     },

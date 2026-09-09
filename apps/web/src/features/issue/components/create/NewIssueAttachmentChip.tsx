@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 import { type PendingAttachment } from '../../hooks/useNewIssueAttachments';
-import { isImage, type Embeddable } from '../../utils/attachmentEmbed';
-import { formatSize } from '../../utils/fileSize';
+import { isImage, type Embeddable } from '@/components/common/editor/attachmentEmbed';
+import { formatSize } from '@/utils/fileSize';
 import { baseName } from '../../utils/filename';
-import IssueAttachmentThumb from '../IssueAttachmentThumb';
+import AttachmentThumb from '@/components/common/attachments/AttachmentThumb';
 import IssueImageAnnotator from '../IssueImageAnnotator';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -38,12 +38,12 @@ export default function NewIssueAttachmentChip({
             aria-label={t('preview', { name: item.filename })}
             className="relative flex size-full items-center justify-center overflow-hidden rounded-md border bg-muted hover:border-ring"
           >
-            <IssueAttachmentThumb attachment={item} />
+            <AttachmentThumb attachment={item} />
           </button>
         </PopoverTrigger>
         <PopoverContent side="top" align="start" className="w-64 space-y-2 p-2">
           <div className="relative flex h-40 items-center justify-center overflow-hidden rounded-md border bg-muted">
-            <IssueAttachmentThumb attachment={item} sizes="240px" />
+            <AttachmentThumb attachment={item} sizes="240px" />
           </div>
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">{item.filename}</p>

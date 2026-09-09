@@ -1,5 +1,40 @@
-import { describe, it, expect } from 'bun:test';
-import { isPrivateIp } from '../index';
+import { describe, it, expect, afterEach } from 'bun:test';
+import { checkHttpUrl, isPrivateIp, UrlNotAllowedError } from '../index';
+
+// The synchronous subset of the guard, for a URL stored now and fetched later. Strict
+// under NODE_ENV=test, which bun test sets.
+describe('checkHttpUrl', () => {
+  const saved = process.env.SSRF_ALLOWED_HOSTS;
+  afterEach(() => {
+    if (saved === undefined) delete process.env.SSRF_ALLOWED_HOSTS;
+    else process.env.SSRF_ALLOWED_HOSTS = saved;
+  });
+
+  it('returns the parsed URL of a public https host without resolving it', () => {
+    expect(checkHttpUrl('https://does-not-resolve.invalid/x').hostname).toBe(
+      'does-not-resolve.invalid',
+    );
+  });
+
+  it('rejects an unparsable value, a non-https scheme, and a private or local literal', () => {
+    for (const raw of [
+      'example.com',
+      'http://example.com/',
+      'https://127.0.0.1/',
+      'https://localhost/',
+      'https://[::ffff:169.254.169.254]/',
+      'https://169.254.169.254/latest/meta-data/',
+    ]) {
+      expect(() => checkHttpUrl(raw)).toThrow(UrlNotAllowedError);
+    }
+  });
+
+  it('admits a private literal that SSRF_ALLOWED_HOSTS names, https still required', () => {
+    process.env.SSRF_ALLOWED_HOSTS = '10.1.2.3';
+    expect(checkHttpUrl('https://10.1.2.3/').hostname).toBe('10.1.2.3');
+    expect(() => checkHttpUrl('http://10.1.2.3/')).toThrow(UrlNotAllowedError);
+  });
+});
 
 describe('isPrivateIp', () => {
   it('flags loopback, private, link-local, and CGNAT IPv4', () => {

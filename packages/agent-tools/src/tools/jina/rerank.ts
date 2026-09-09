@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 import { jinaAuth } from './auth';
@@ -16,7 +17,7 @@ export const jinaRerank: CustomToolEntry = {
   }),
   execute: async (credential, input) => {
     const documents = (input.documents as string[]).map(String);
-    const res = await fetch('https://api.jina.ai/v1/rerank', {
+    const res = await pinnedFetch('https://api.jina.ai/v1/rerank', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...jinaAuth(credential) },
       body: JSON.stringify({

@@ -1,9 +1,13 @@
+import { pinnedFetch } from '@repo/net';
 import type { ToolConfig } from '../../types';
 
 // Gitea REST API client, addressed at whatever instance the credential points at, so
-// self-hosted installs and gitea.com work alike. Failures come back as a JSON
-// { message }; the common statuses are turned into messages a person can act on,
-// because a tool error goes straight to the model.
+// self-hosted installs and gitea.com work alike. The instance URL is operator input,
+// so every call goes through pinnedFetch: the host is vetted and its address pinned
+// on each call, and a redirect is returned rather than followed, so the token is never
+// sent anywhere but the configured origin. Failures come back as a JSON { message };
+// the common statuses are turned into messages a person can act on, because a tool
+// error goes straight to the model.
 
 export interface GiteaIssue {
   number?: number;
@@ -23,6 +27,11 @@ interface GiteaResponse {
 function explain(status: number, message?: string): string {
   const detail = message ? `: ${message}` : '';
   switch (status) {
+    case 301:
+    case 302:
+    case 307:
+    case 308:
+      return 'Gitea redirected the request, which the client does not follow. Set the instance URL to the address Gitea answers on.';
     case 401:
       return `The Gitea token is invalid or was revoked${detail}`;
     case 403:
@@ -70,7 +79,7 @@ export async function giteaRequest<T = Record<string, unknown>>(
   body?: Record<string, unknown>,
 ): Promise<T> {
   const { baseUrl, token } = giteaCredential(credential);
-  const res = await fetch(`${baseUrl}/api/v1/${path}`, {
+  const res = await pinnedFetch(`${baseUrl}/api/v1/${path}`, {
     method,
     headers: {
       Authorization: `token ${token}`,

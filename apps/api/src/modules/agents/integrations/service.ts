@@ -153,6 +153,24 @@ export async function createCredential(
   return mapRow(row);
 }
 
+// A url field is where the secret is sent, so a patch that points it elsewhere must
+// carry the secret again rather than have the stored one forwarded to the new host.
+function assertSecretsResubmitted(
+  fields: ConfigField[],
+  current: ToolConfig,
+  merged: ToolConfig,
+  submitted: Record<string, unknown>,
+): void {
+  const moved = fields.find(
+    (f) => f.type === 'url' && f.key in merged && merged[f.key] !== current[f.key],
+  );
+  if (!moved) return;
+  const missing = fields.filter((f) => f.type === 'secret' && !(f.key in submitted));
+  if (missing.length === 0) return;
+  const names = missing.map((f) => f.label).join(', ');
+  throw new HttpError(400, `Changing ${moved.label} requires entering ${names} again`);
+}
+
 export interface CredentialPatch {
   label?: string | null;
   // Only the fields being changed. Secret fields left out keep their stored value.
@@ -177,6 +195,7 @@ export async function updateCredential(
     // out by the form) are preserved, then re-validate the whole credential.
     const current = (await decrypt(id, teamId)) ?? {};
     const merged = coerce(schema, { ...current, ...patch.credential });
+    assertSecretsResubmitted(schema, current, merged, patch.credential);
     const enc = encryptSecret(JSON.stringify(merged));
     set.ciphertext = enc.ciphertext;
     set.iv = enc.iv;

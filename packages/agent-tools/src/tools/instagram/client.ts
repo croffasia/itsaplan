@@ -1,3 +1,4 @@
+import { pinnedFetch, type PinnedRequestInit } from '@repo/net';
 import type { GraphApiResponse, ToolConfig } from '../../types';
 import { sleep } from '../time';
 
@@ -30,17 +31,18 @@ export async function igRequest(
 ): Promise<GraphApiResponse> {
   const url = new URL(`${IG_BASE}/${path}`);
   const withToken = { ...params, access_token: token };
-  const init: RequestInit = { method };
+  const init: PinnedRequestInit = { method };
   if (method === 'POST') {
     const form = new URLSearchParams();
     for (const [k, v] of Object.entries(withToken)) if (v != null) form.set(k, String(v));
-    init.body = form;
+    init.body = form.toString();
+    init.headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
   } else {
     for (const [k, v] of Object.entries(withToken))
       if (v != null) url.searchParams.set(k, String(v));
   }
 
-  const res = await fetch(url, init);
+  const res = await pinnedFetch(url.toString(), init);
   const raw = await res.text();
   let body: GraphApiResponse = {};
   try {

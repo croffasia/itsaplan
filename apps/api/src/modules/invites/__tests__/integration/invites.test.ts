@@ -4,6 +4,7 @@ import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
+import { resetInviteThrottle, setInviteThrottle } from '#modules/invites/throttle';
 
 // Integration coverage for the invites feature: the routes that create/list/revoke
 // invites into a project and into a team, and the invitee-side routes that read,
@@ -83,6 +84,7 @@ describe('invites', () => {
     await resetDb();
   });
   afterEach(clearLimits);
+  afterEach(resetInviteThrottle);
 
   describe('create — POST /projects/:projectKey/invites', () => {
     it('creates a pending invite and returns its token and inviter', async () => {
@@ -205,6 +207,59 @@ describe('invites', () => {
     });
   });
 
+  describe('create cap', () => {
+    it('refuses the invite past the hourly cap with 429', async () => {
+      setInviteThrottle({ maxCreatesPerHour: 2 });
+      const owner = await setupOwner();
+      const invites = owner.api.projects({ projectKey: 'MKT' }).invites;
+
+      expect((await invites.post({ email: 'a@example.com', role: 'member' })).status).toBe(201);
+      expect((await invites.post({ email: 'b@example.com', role: 'member' })).status).toBe(201);
+      const third = await invites.post({ email: 'c@example.com', role: 'member' });
+
+      expect(third.status).toBe(429);
+      expect(third.error?.value).toMatchObject({ code: 'INVITE_RATE_LIMITED' });
+      const list = await invites.get();
+      expect(list.data?.map((i) => i.email).sort()).toEqual(['a@example.com', 'b@example.com']);
+    });
+
+    it('counts the invites of a sender across the project and the team routes', async () => {
+      setInviteThrottle({ maxCreatesPerHour: 1 });
+      const owner = await setupOwner();
+      const teamId = await ownTeamId(owner.api);
+
+      const first = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'a@example.com', role: 'member' });
+      expect(first.status).toBe(201);
+      const second = await owner.api
+        .teams({ teamId })
+        .invites.post({ email: 'b@example.com', role: 'member' });
+
+      expect(second.status).toBe(429);
+    });
+
+    it('counts per sender, not per project', async () => {
+      setInviteThrottle({ maxCreatesPerHour: 1 });
+      const owner = await setupOwner();
+      const teamId = await ownTeamId(owner.api);
+      const manager = await addTeamMember(owner, teamId, 'manager');
+      expect(
+        (
+          await owner.api
+            .projects({ projectKey: 'MKT' })
+            .invites.post({ email: 'a@example.com', role: 'member' })
+        ).status,
+      ).toBe(429);
+
+      const res = await manager.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'b@example.com', role: 'member' });
+
+      expect(res.status).toBe(201);
+    });
+  });
+
   describe('email — POST /projects/:projectKey/invites/:inviteId/email', () => {
     it('reports that email is unavailable without blocking the invite', async () => {
       const owner = await setupOwner();
@@ -221,7 +276,7 @@ describe('invites', () => {
       expect(res.data).toEqual({ emailQueued: false });
     });
 
-    it('queues a pending invite and accepts concurrent repeat requests', async () => {
+    it('queues a pending invite once for concurrent repeat requests', async () => {
       const owner = await setupOwner();
       const invite = await owner.api
         .projects({ projectKey: 'MKT' })
@@ -231,12 +286,63 @@ describe('invites', () => {
         .projects({ projectKey: 'MKT' })
         .invites({ inviteId: invite.data!.id }).email;
 
-      const [first, second] = await Promise.all([client.post(), client.post()]);
+      const results = await Promise.all([client.post(), client.post()]);
 
-      expect(first.status).toBe(200);
-      expect(first.data).toEqual({ emailQueued: true });
-      expect(second.status).toBe(200);
-      expect(second.data).toEqual({ emailQueued: true });
+      const statuses = results.map((one) => one.status).sort();
+      expect(statuses).toEqual([200, 429]);
+      expect(results.find((one) => one.status === 200)?.data).toEqual({ emailQueued: true });
+    });
+
+    it('refuses a resend within the cooldown of the email queued on create with 429', async () => {
+      const owner = await setupOwner();
+      await configureEmail(owner.api);
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'invitee@example.com', role: 'member' });
+      expect(invite.data?.emailQueued).toBe(true);
+
+      const res = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: invite.data!.id })
+        .email.post();
+
+      expect(res.status).toBe(429);
+      expect(res.error?.value).toMatchObject({ code: 'INVITE_EMAIL_COOLDOWN' });
+    });
+
+    it('queues again once the cooldown elapsed', async () => {
+      setInviteThrottle({ emailCooldownMs: 20 });
+      const owner = await setupOwner();
+      await configureEmail(owner.api);
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'invitee@example.com', role: 'member' });
+      await Bun.sleep(30);
+
+      const res = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: invite.data!.id })
+        .email.post();
+
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual({ emailQueued: true });
+    });
+
+    it('starts no cooldown when the create queued no email', async () => {
+      const owner = await setupOwner();
+      const invite = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: 'invitee@example.com', role: 'member' });
+      expect(invite.data?.emailQueued).toBe(false);
+      await configureEmail(owner.api);
+
+      const res = await owner.api
+        .projects({ projectKey: 'MKT' })
+        .invites({ inviteId: invite.data!.id })
+        .email.post();
+
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual({ emailQueued: true });
     });
 
     it('returns 404 for an unknown invite id', async () => {

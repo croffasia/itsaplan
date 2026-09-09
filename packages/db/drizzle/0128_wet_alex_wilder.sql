@@ -1,0 +1,1 @@
+ALTER TABLE "team_invite" ADD COLUMN "email_queued_at" timestamp with time zone;

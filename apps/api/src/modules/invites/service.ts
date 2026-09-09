@@ -1,5 +1,5 @@
 import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
-import { and, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, count, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
 import { getMembership, type MemberRole } from '#modules/members/service';
 import {
@@ -8,6 +8,7 @@ import {
   runsTeam,
   type TeamRole,
 } from '#modules/teams/service';
+import { inviteThrottle } from './throttle';
 
 // Data access for invites. An invite is a token-addressed grant of membership in a
 // team, and — when it names a project — in that project too. Creating one requires
@@ -208,9 +209,28 @@ export async function mayGrantInviteRanks(
   return true;
 }
 
+// Every invite a sender creates counts, whatever it names and whatever became of it:
+// the count is what bounds the invite emails the instance sends on their behalf.
+async function assertUnderCreateCap(senderId: string): Promise<void> {
+  const { maxCreatesPerHour } = inviteThrottle();
+  const since = new Date(Date.now() - 60 * 60 * 1000);
+  const [{ value }] = await db
+    .select({ value: count() })
+    .from(teamInvite)
+    .where(and(eq(teamInvite.invitedByUserId, senderId), gt(teamInvite.createdAt, since)));
+  if (value >= maxCreatesPerHour) {
+    throw new HttpError(
+      429,
+      'Too many invites were created in the last hour. Try again later.',
+      'INVITE_RATE_LIMITED',
+    );
+  }
+}
+
 export async function createInvite(input: NewInvite): Promise<InviteRow> {
   const email = normalizeEmail(input.email);
   await assertNotAlreadyMember(input, email);
+  await assertUnderCreateCap(input.invitedByUserId);
   // Project owners bypass roles, so an owner invite never carries a role_id.
   const roleId = input.projectRole === 'member' ? input.roleId : null;
   let row;

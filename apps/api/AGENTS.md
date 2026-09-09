@@ -133,6 +133,11 @@ Enforced declaratively through macros, never imperative calls in handlers.
   there. An invite is checked against its sender twice, once when it is made and again
   when it is accepted: the sender can be demoted or deleted while the link is out, and
   a link must not outlive the standing that issued it (409 on accept).
+- **Invite email is throttled** (`invites/throttle.ts`, 429): the email leaves from the
+  instance's own mail domain, so one invite is queued again only after a cooldown
+  (`team_invite.email_queued_at`) and one sender creates a bounded number of invites per
+  hour. Its subject is fixed; the project name goes in the body, quoted and attributed
+  to the sender.
 - `project_member.source` says which path a row came from: `modules/scim/reconcile.ts`
   only ever writes, re-roles or removes its own `'scim'` rows, and `members/` refuses to
   edit or remove one (409) because the next sync would undo the change. A project

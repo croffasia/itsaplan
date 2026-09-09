@@ -327,6 +327,8 @@ export const teamInvite = pgTable(
     }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     respondedAt: timestamp('responded_at', { withTimezone: true }),
+    // When the invite email was last queued; a resend within the cooldown is refused.
+    emailQueuedAt: timestamp('email_queued_at', { withTimezone: true }),
   },
   (t) => [
     check('team_invite_team_role_check', sql`${t.teamRole} IN ('owner', 'manager', 'member')`),

@@ -127,13 +127,14 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     {
       body: createInviteBody,
       memberAdmin: ['members_invite', 'create'],
-      response: { 201: InviteCreateResponse, ...commonErrors, ...errors(409) },
+      response: { 201: InviteCreateResponse, ...commonErrors, ...errors(409, 429) },
       detail: {
         summary: 'Create an invite',
         description:
           'Create an invite link for an email and role (owner or member). For a member, roleId ' +
           "picks the custom role, or null for the default role. Accepting it joins the project's " +
-          'team as well. Queues an email when the instance email provider is configured.',
+          'team as well. Queues an email when the instance email provider is configured. ' +
+          'Refused with 429 once the caller created too many invites in the last hour.',
         ...mcpTool('create_invite'),
       },
     },
@@ -154,12 +155,13 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
     {
       params: inviteParams,
       memberAdmin: ['members_invite', 'create'],
-      response: { 200: InviteEmailResponse, ...commonErrors, ...errors(409) },
+      response: { 200: InviteEmailResponse, ...commonErrors, ...errors(409, 429) },
       detail: {
         summary: 'Send an invite email',
         description:
           'Queue an email for a pending project invite. Returns false when the instance email ' +
-          'provider is not configured.',
+          'provider is not configured. Refused with 429 while the last email of this invite ' +
+          'is within its cooldown.',
         ...mcpTool('send_invite_email'),
       },
     },
@@ -225,12 +227,13 @@ export const inviteRoutes = new Elysia({ name: 'invites', detail: { tags: ['Invi
       teamManager: true,
       params: teamParams,
       body: createTeamInviteBody,
-      response: { 201: InviteRowResponse, ...errors(400, 401, 403, 404, 409) },
+      response: { 201: InviteRowResponse, ...errors(400, 401, 403, 404, 409, 429) },
       detail: {
         summary: 'Invite someone to a team',
         description:
           'Create an invite link into the team, as a member, a manager or an owner. Only an ' +
-          'owner can invite a manager or another owner.',
+          'owner can invite a manager or another owner. Refused with 429 once the caller ' +
+          'created too many invites in the last hour.',
       },
     },
   )

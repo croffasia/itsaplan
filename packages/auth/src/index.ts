@@ -453,8 +453,18 @@ export const auth = betterAuth({
       }
 
       // A key resolves to its owner's session, so a request carrying a leaked key
-      // reaches this endpoint and could extend or clear the key's own expiry. The
-      // lifetime is fixed at creation; a longer one is a new key.
+      // reaches the key endpoints. It may not issue another one: a new key starts a
+      // fresh lifetime, which is the expiry of the leaked key renewed under a
+      // different row. Issuing a key is left to a signed-in session. The server-side
+      // call that issues an agent's key carries no request and is unaffected.
+      if (ctx.path === '/api-key/create' && ctx.request?.headers.get('x-api-key')) {
+        throw new APIError('FORBIDDEN', {
+          message: 'An API key cannot create another API key. Sign in to create one.',
+        });
+      }
+
+      // The lifetime is fixed at creation for the same reason; a longer one is a new
+      // key, created from a session.
       if (ctx.path === '/api-key/update') {
         const body = ctx.body as { expiresIn?: number | null } | undefined;
         if (body && body.expiresIn !== undefined) {

@@ -85,6 +85,16 @@ describe('api keys', () => {
     expect(me.data).toEqual({ authenticated: false });
   });
 
+  it('refuses creating a key from a key', async () => {
+    const user = await signUpTestUser();
+    const created = await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });
+
+    const res = await authRequest('create', { 'x-api-key': created.key }, { name: 'second' });
+
+    expect(res.status).toBe(403);
+    expect(await db.$count(apikey, eq(apikey.referenceId, user.userId))).toBe(1);
+  });
+
   it('refuses changing the expiry of a key, with the key itself included', async () => {
     const user = await signUpTestUser();
     const created = await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });

@@ -176,9 +176,12 @@ milliseconds but its handler passes the value to `getDate(value, "sec")`, so
 `API_KEY_DEFAULT_EXPIRES_IN_SEC` is in seconds; `maxExpiresIn` is in days, as the plugin
 reads it. Keys issued before this stay `expires_at` NULL and keep working.
 
-`hooks.before` refuses an `/api-key/update` that carries `expiresIn`: the endpoint accepts
-the key's own session, so otherwise whoever holds a leaked key could extend or clear its
-expiry. A longer life is a new key.
+The expiry only holds if a key cannot renew itself, and a request carrying one resolves to
+the owner's session on every key endpoint. So `hooks.before` refuses both ways round it: an
+`/api-key/update` that carries `expiresIn`, and an `/api-key/create` sent with an
+`x-api-key` header. Keys are issued from a signed-in session; a longer life is a new key.
+The refusal reads `ctx.request`, which a server-side `auth.api.createApiKey` does not
+carry, so `issueKey` is unaffected.
 
 An agent's key is the exception and carries no expiry — an agent replays its stored secret
 with nothing that would renew it, and an external agent's operator rotates it through

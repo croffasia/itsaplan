@@ -171,6 +171,7 @@
       "name": "@repo/agent-tools",
       "version": "0.0.0",
       "dependencies": {
+        "@repo/net": "workspace:*",
         "zod": "^4.4.3",
       },
       "devDependencies": {

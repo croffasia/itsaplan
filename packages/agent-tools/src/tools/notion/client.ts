@@ -1,3 +1,4 @@
+import { pinnedFetch } from '@repo/net';
 import type { ToolConfig } from '../../types';
 import { sleep } from '../time';
 
@@ -83,7 +84,7 @@ export async function notionRequest(
   body?: Record<string, unknown>,
 ): Promise<NotionResponse> {
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(`${NOTION_BASE}/${path}`, {
+    const res = await pinnedFetch(`${NOTION_BASE}/${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${token}`,

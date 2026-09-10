@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 import { jinaAuth } from './auth';
@@ -18,7 +19,7 @@ export const jinaDeepSearch: CustomToolEntry = {
       .describe('How much reasoning to spend (default medium; higher is slower).'),
   }),
   execute: async (credential, input) => {
-    const res = await fetch('https://deepsearch.jina.ai/v1/chat/completions', {
+    const res = await pinnedFetch('https://deepsearch.jina.ai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...jinaAuth(credential) },
       body: JSON.stringify({

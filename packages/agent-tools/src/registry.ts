@@ -5,6 +5,7 @@ import type {
   ConfigField,
   ToolConfig,
 } from './types';
+import { checkHttpUrl, UrlNotAllowedError } from '@repo/net';
 import { ToolConfigError } from './errors';
 import { jina } from './tools/jina';
 import { firecrawl } from './tools/firecrawl';
@@ -76,6 +77,28 @@ export function integrationDescriptors(): IntegrationDescriptor[] {
   }));
 }
 
+// A url field is the address the tool sends its secret to, so it is held to the
+// @repo/net rules at save time: https, no private or local host unless
+// SSRF_ALLOWED_HOSTS names it. Userinfo, a query and a fragment are refused, and the
+// value is stored as origin plus path: an OpenAI-compatible endpoint carries a path
+// prefix (`/v1`), and so does a Gitea served under a sub-path. The hostname is not
+// resolved here; the client's pinnedFetch does that on every call.
+function coerceUrl(field: ConfigField, raw: unknown): string {
+  let url: URL;
+  try {
+    url = checkHttpUrl(String(raw).trim());
+  } catch (err) {
+    if (!(err instanceof UrlNotAllowedError)) throw err;
+    throw new ToolConfigError(`Setting ${field.label} ${err.message.replace(/^url /, '')}`);
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    throw new ToolConfigError(
+      `Setting ${field.label} must not carry credentials, a query string, or a fragment`,
+    );
+  }
+  return url.origin + url.pathname.replace(/\/+$/, '');
+}
+
 // Validates and coerces a submitted credential against a schema: required fields must
 // be present, values are coerced to each field's type, and unknown keys are dropped.
 // Throws ToolConfigError on a missing required field or an uncoercible value (the API
@@ -99,6 +122,9 @@ export function coerceConfig(fields: ConfigField[], input: unknown): ToolConfig 
       }
       case 'boolean':
         out[field.key] = raw === true || raw === 'true';
+        break;
+      case 'url':
+        out[field.key] = coerceUrl(field, raw);
         break;
       default:
         out[field.key] = String(raw);

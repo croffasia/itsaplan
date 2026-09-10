@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 import { jinaAuth } from './auth';
@@ -13,7 +14,7 @@ export const jinaGrounding: CustomToolEntry = {
     statement: z.string().min(1).describe('The factual statement to verify.'),
   }),
   execute: async (credential, input) => {
-    const res = await fetch('https://g.jina.ai/', {
+    const res = await pinnedFetch('https://g.jina.ai/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

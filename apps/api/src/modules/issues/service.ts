@@ -65,7 +65,6 @@ import {
   getFieldTriggerAgent,
   isProjectAgent,
 } from '#modules/agents/core/service';
-import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '#modules/members/service';
@@ -437,10 +436,8 @@ export async function searchIssues(
 // Archives an issue: sets archived_at so it drops off the board and lists, keeping
 // the row for restore. Idempotent (archiving an archived issue is a no-op re-stamp
 // avoided by the archived_at guard). Records a feed entry. Returns the updated
-// issue, or null if it does not exist.
-//
-// The agents' conversation threads for the issue are deleted with it. Archiving is
-// reversible and this is not: a restored issue starts with empty agent memory.
+// issue, or null if it does not exist. Archiving is reversible, so nothing the issue
+// carries is dropped — the agents' conversation threads included.
 export async function archiveIssue(
   id: number,
   actorUserId?: string | null,
@@ -455,7 +452,6 @@ export async function archiveIssue(
     return getIssue(id);
   }
   await recordActivity(id, [{ action: 'archived' }], actorUserId);
-  await deleteThreadsWhere({ issueId: id });
   return getIssue(id);
 }
 

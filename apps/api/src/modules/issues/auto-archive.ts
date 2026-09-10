@@ -1,12 +1,11 @@
 import { db } from '@repo/db';
 import { sql } from 'drizzle-orm';
-import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
+import { recordActivityForIssues } from './activity';
 
 // Archives active issues that have sat inactive in a completed/canceled column past
-// their project's threshold, and drops the agent conversation threads of the ones it
-// archives. Inactivity is measured by issue.updated_at: moving to a terminal column
-// bumps it, and any later edit resets the clock, so an issue is archived only after
-// the full period with no activity.
+// their project's threshold. Inactivity is measured by issue.updated_at: moving to a
+// terminal column bumps it, and any later edit resets the clock, so an issue is
+// archived only after the full period with no activity.
 export async function sweepStaleIssues(): Promise<number> {
   // The threshold lives in project_setting under key 'auto_archive' as
   // { completedDays, canceledDays } (kept in sync with getAutoArchiveSettings in
@@ -32,7 +31,7 @@ export async function sweepStaleIssues(): Promise<number> {
       )
     RETURNING i.id
   `);
-  const archived = rows as unknown as Array<{ id: number }>;
-  for (const row of archived) await deleteThreadsWhere({ issueId: row.id });
+  const archived = (rows as unknown as Array<{ id: number }>).map((row) => row.id);
+  await recordActivityForIssues(archived, { action: 'archived' }, { system: 'Auto-archive' });
   return archived.length;
 }

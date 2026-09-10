@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'bun:test';
+import { beforeEach, describe, it, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
-import { db, project, team, teamInvite } from '@repo/db';
+import { appSecret, db, project, team, teamInvite } from '@repo/db';
 import { deliverNotification } from '../../notification-send';
 
 // The send reads the credentials itself, so these cover the two decisions it makes
@@ -19,6 +19,12 @@ async function makeProject(): Promise<{ teamId: number; projectId: number }> {
 }
 
 describe('deliverNotification', () => {
+  // A team with no provider of its own falls back to the instance one, so the suite
+  // that ran before this in the shared test database must not leave one behind.
+  beforeEach(async () => {
+    await db.delete(appSecret);
+  });
+
   it('drops an invite email whose invite is no longer pending', async () => {
     const { teamId, projectId } = await makeProject();
     const [invite] = await db

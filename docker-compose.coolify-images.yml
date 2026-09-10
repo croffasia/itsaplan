@@ -158,8 +158,8 @@ services:
       # WEBHOOK_POLL_INTERVAL_MS, WEBHOOK_BATCH_SIZE, WEBHOOK_TIMEOUT_MS,
       # WEBHOOK_MAX_ATTEMPTS, WEBHOOK_DISABLE_THRESHOLD, WEBHOOK_LEASE_SECONDS,
       # WEBHOOK_CLEANUP_DAYS, WEBHOOK_CLEANUP_EVERY_TICKS.
-      # Agent runs: AGENT_RUN_BATCH_SIZE, AGENT_RUN_TIMEOUT_MS,
-      # AGENT_RUN_MAX_ATTEMPTS, AGENT_RUN_LEASE_SECONDS.
+      # Agent schedules: AGENT_RUN_POLL_INTERVAL_MS. The api runs the queued runs
+      # and reads the other AGENT_RUN_* values.
 
   # Telegram bot: long polling for the instance bot, completing the account links
   # users start from their profile. It reads the bot token and writes the links in the

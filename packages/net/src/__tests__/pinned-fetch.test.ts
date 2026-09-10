@@ -63,8 +63,16 @@ describe('SSRF_ALLOWED_HOSTS', () => {
     );
   });
 
-  it('does not relax the https requirement for a named host', async () => {
+  it('admits http to a named host, and no other scheme', async () => {
     process.env.SSRF_ALLOWED_HOSTS = 'localtest.me';
+    expect((await assertPublicHttpUrl('http://localtest.me/')).protocol).toBe('http:');
+    await expect(assertPublicHttpUrl('ftp://localtest.me/')).rejects.toBeInstanceOf(
+      UrlNotAllowedError,
+    );
+  });
+
+  it('keeps http off a host that is not named', async () => {
+    process.env.SSRF_ALLOWED_HOSTS = 'git.example.com';
     await expect(assertPublicHttpUrl('http://localtest.me/')).rejects.toBeInstanceOf(
       UrlNotAllowedError,
     );

@@ -67,11 +67,13 @@ describe('coerceConfig url field', () => {
     }
   });
 
-  it('admits a private literal address that SSRF_ALLOWED_HOSTS names, https still required', () => {
-    process.env.SSRF_ALLOWED_HOSTS = '10.0.0.5';
+  // A self-hosted model server is the case this exists for: it listens on a private
+  // address, over http, on a port of its own.
+  it('admits a private address that SSRF_ALLOWED_HOSTS names, over http as well', () => {
+    process.env.SSRF_ALLOWED_HOSTS = '10.0.0.5,ollama';
     expect(withUrl('https://10.0.0.5/gitea').baseUrl).toBe('https://10.0.0.5/gitea');
-    expect(() => withUrl('http://10.0.0.5/gitea')).toThrow('must use https');
-    expect(() => withUrl('https://10.0.0.6/gitea')).toThrow(ToolConfigError);
+    expect(withUrl('http://ollama:11434/v1').baseUrl).toBe('http://ollama:11434/v1');
+    expect(() => withUrl('http://10.0.0.6/gitea')).toThrow(ToolConfigError);
   });
 
   it('still requires the field when it is required', () => {

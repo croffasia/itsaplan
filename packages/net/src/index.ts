@@ -30,9 +30,9 @@ function isLocalHostname(host: string): boolean {
 //
 // Empty by default, so nothing is exempt unless it is named. Matching is on the exact
 // hostname — no wildcards, no CIDR ranges, no suffix matching — so naming one host
-// trusts one host. Everything else still applies to it: https is still required, and
-// the resolved address is still pinned, so a name on this list cannot be used to
-// mount a DNS-rebinding attack either.
+// trusts one host. A named host is also reachable over http, since an internal service
+// rarely terminates TLS. The resolved address is still pinned, so a name on this list
+// cannot be used to mount a DNS-rebinding attack.
 //
 // Read per call rather than at module load so a test can set it around one case.
 function isAllowedHost(host: string): boolean {
@@ -112,13 +112,17 @@ function check(raw: string): Checked {
     throw new UrlNotAllowedError('url must be a valid URL');
   }
 
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  const allowed = isAllowedHost(host);
   const devRelaxed = isDevRelaxed();
-  if (url.protocol !== 'https:' && !(devRelaxed && url.protocol === 'http:')) {
+  // A named host is reachable over http as well: it is normally an internal service
+  // that terminates no TLS — a model server, a Gitea on the same network — and
+  // requiring a certificate from it would leave no way to name it at all. Every other
+  // scheme is refused for it too, and what travels there travels in the clear.
+  if (url.protocol !== 'https:' && !((devRelaxed || allowed) && url.protocol === 'http:')) {
     throw new UrlNotAllowedError('url must use https');
   }
 
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  const allowed = isAllowedHost(host);
   const literal = isLocalHostname(host) || isPrivateIp(host);
   if (literal && !devRelaxed && !allowed) {
     throw new UrlNotAllowedError('url must not point to a private or local address');

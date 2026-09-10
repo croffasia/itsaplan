@@ -29,10 +29,11 @@ describe('checkHttpUrl', () => {
     }
   });
 
-  it('admits a private literal that SSRF_ALLOWED_HOSTS names, https still required', () => {
+  it('admits a private literal that SSRF_ALLOWED_HOSTS names, over http as well', () => {
     process.env.SSRF_ALLOWED_HOSTS = '10.1.2.3';
     expect(checkHttpUrl('https://10.1.2.3/').hostname).toBe('10.1.2.3');
-    expect(() => checkHttpUrl('http://10.1.2.3/')).toThrow(UrlNotAllowedError);
+    expect(checkHttpUrl('http://10.1.2.3:11434/v1').port).toBe('11434');
+    expect(() => checkHttpUrl('http://10.9.9.9/')).toThrow(UrlNotAllowedError);
   });
 });
 

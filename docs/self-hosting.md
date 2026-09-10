@@ -19,7 +19,6 @@ The stack refuses to start while one of these is missing:
 | `POSTGRES_PASSWORD`     | `openssl rand -base64 32`                  |
 | `BETTER_AUTH_SECRET`    | `openssl rand -base64 32`                  |
 | `APP_ENCRYPTION_KEY`    | `openssl rand -base64 32`                  |
-| `WORKER_INTERNAL_TOKEN` | `openssl rand -base64 32`                  |
 | `S3_ACCESS_KEY_ID`      | the MinIO root user, any name over 3 chars |
 | `S3_SECRET_ACCESS_KEY`  | `openssl rand -base64 32`                  |
 

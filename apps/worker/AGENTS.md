@@ -8,6 +8,7 @@ own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
 
 - Polls `webhook_delivery` for due `pending` rows, claims a batch with
   `FOR UPDATE SKIP LOCKED`, posts each to its webhook URL, records the outcome.
+- Queues an `agent_run` row for every due `agent_schedule`.
 - Signs every request: `X-Itsaplan-Signature: t=<ts>,v1=<hmac-sha256>` over
   `${ts}.${body}` with the webhook's `secret`. Plus `X-Itsaplan-Event`,
   `X-Itsaplan-Delivery`, `X-Itsaplan-Event-Id` (stable across retries).
@@ -22,10 +23,7 @@ own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
 ## Invariants
 
 - **Reads/writes `@repo/db` directly, never the API over HTTP.** It is a DB
-  consumer and an HTTP producer. It does not import `apps/api`. The one thing it
-  still asks the api for is running an internal agent
-  (`POST /internal/agent-runs/execute`) — that needs the agent runtime, which lives
-  in the api.
+  consumer and an HTTP producer. It does not import `apps/api` and does not call it.
 - **Notification credentials are read, never taken from the caller.** A delivery
   row names its project; the credentials come from the team that owns it and from
   the instance config. Nothing about the recipient or the provider is passed in
@@ -35,9 +33,9 @@ own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
 - **At-least-once delivery.** Duplicates are possible (a 2xx whose ACK is lost);
   the `event_id` is stable across retries so receivers deduplicate. Never mint a
   new id per attempt.
-- **Agent runs: internal agents only.** An external agent's runs are claimed over
-  HTTP by the operator's runner (`POST /agent-runs/claim`), so the worker's claim
-  filters on `ai_agent.kind = 'internal'` and leaves the rest queued.
+- **Agent schedules are queued here, run in the api.** A due schedule gets an
+  `agent_run` row; the api drains that queue, where the agent runtime and the model
+  credentials live.
 - **Claim leases, not a status flag.** Claiming pushes `next_attempt_at` forward
   by `WEBHOOK_LEASE_SECONDS`; a crashed delivery is reclaimed after the lease. Keep
   the lease comfortably larger than `WEBHOOK_TIMEOUT_MS`.
@@ -52,9 +50,7 @@ All via env with defaults (see `src/config.ts`): `WEBHOOK_POLL_INTERVAL_MS`,
 `WEBHOOK_DISABLE_THRESHOLD`, `WEBHOOK_LEASE_SECONDS`, `WEBHOOK_CLEANUP_DAYS`,
 `WEBHOOK_CLEANUP_EVERY_TICKS`. Only `DATABASE_URL` is required for webhook
 delivery. Notification delivery also needs `APP_ENCRYPTION_KEY` (the same value the
-api uses) to read the stored provider credentials. Agent runs additionally need
-`WORKER_INTERNAL_TOKEN` and an api origin (`SERVICE_URL_API`, else `API_URL`);
-`internal-api.ts` throws when either is missing, no fallback origin.
+api uses) to read the stored provider credentials.
 
 ## Tests
 

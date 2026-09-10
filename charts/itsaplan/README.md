@@ -18,7 +18,6 @@ helm install itsaplan charts/itsaplan \
   --set secrets.postgresPassword=changeme \
   --set secrets.betterAuthSecret=$(openssl rand -base64 32) \
   --set secrets.appEncryptionKey=$(openssl rand -base64 32) \
-  --set secrets.workerInternalToken=$(openssl rand -base64 32) \
   --set secrets.s3AccessKeyId=minioadmin \
   --set secrets.s3SecretAccessKey=minioadmin
 ```
@@ -282,7 +281,6 @@ bot:
 | `secrets.postgresPassword`    | PostgreSQL password                       | `""`    |
 | `secrets.betterAuthSecret`    | better-auth secret                        | `""`    |
 | `secrets.appEncryptionKey`    | AES encryption key for secrets at rest    | `""`    |
-| `secrets.workerInternalToken` | Shared token between api and worker       | `""`    |
 | `secrets.s3AccessKeyId`       | S3 access key (also MinIO root user)      | `""`    |
 | `secrets.s3SecretAccessKey`   | S3 secret key (also MinIO root password)  | `""`    |
 

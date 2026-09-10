@@ -93,8 +93,6 @@ services:
       # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
       # existing stored credentials undecryptable.
       APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
-      # The worker and the bot authenticate to /internal/* with this same token.
-      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # API_URL is the api origin; APP_URL is the web origin.
       API_URL: ${SERVICE_URL_API:-http://localhost:3000}
       APP_URL: ${SERVICE_URL_WEB:-http://localhost:3001}
@@ -145,8 +143,6 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
-      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # Notification delivery sends email and Telegram messages itself, with the
       # provider credentials stored in the database — encrypted with this key, the
       # same value the api uses.

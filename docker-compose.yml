@@ -7,7 +7,7 @@
 #   docker compose up -d
 #
 # Required in .env (the stack refuses to start without them):
-#   POSTGRES_PASSWORD, BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY, WORKER_INTERNAL_TOKEN,
+#   POSTGRES_PASSWORD, BETTER_AUTH_SECRET, APP_ENCRYPTION_KEY,
 #   S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, API_URL, APP_URL
 # Generate each secret with: openssl rand -base64 32
 #
@@ -92,8 +92,6 @@ services:
       # Encrypts stored provider credentials at rest (AES-256-GCM). Changing it
       # makes existing stored credentials undecryptable.
       APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?set APP_ENCRYPTION_KEY in .env}
-      # Authenticates the worker and the bot against the /internal/* routes.
-      WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN:?set WORKER_INTERNAL_TOKEN in .env}
       # Public origins, each entered once. API_URL is the api origin (auth handler,
       # email links); APP_URL is the web origin (CORS, passkey, email links).
       API_URL: ${API_URL:?public origin of the api, e.g. https://api.example.com}
@@ -145,8 +143,6 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      SERVICE_URL_API: http://api:3000
-      WORKER_INTERNAL_TOKEN: ${WORKER_INTERNAL_TOKEN}
       # Notification delivery sends email and Telegram messages itself, with the
       # provider credentials stored in the database — encrypted with this key, the
       # same value the api uses.

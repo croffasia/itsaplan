@@ -154,7 +154,6 @@ secrets:
   postgresPassword: ""
   betterAuthSecret: ""
   appEncryptionKey: ""
-  workerInternalToken: ""
   s3AccessKeyId: ""
   s3SecretAccessKey: ""
 

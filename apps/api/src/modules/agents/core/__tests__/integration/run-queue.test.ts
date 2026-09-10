@@ -104,7 +104,7 @@ describe('agent_run queue store', () => {
     expect(await countRunsAhead(teamId, second.id)).toBe(1);
 
     // A finished run stops counting, so the next one is no longer held behind it.
-    await markRunSuccess(runId);
+    await markRunSuccess(runId, 'done', null);
     expect(await countRunsAhead(teamId, second.id)).toBe(0);
   });
 
@@ -112,8 +112,14 @@ describe('agent_run queue store', () => {
     const { asOwner, columnId } = await setup();
     const { runId } = await enqueueRun(asOwner, columnId);
     await claimDueRuns();
-    await markRunSuccess(runId);
-    expect(await readRun(runId)).toMatchObject({ status: 'success', lastError: null });
+    await markRunSuccess(runId, 'done', { inputTokens: 12, outputTokens: 3 });
+    expect(await readRun(runId)).toMatchObject({
+      status: 'success',
+      output: 'done',
+      lastError: null,
+      inputTokens: 12,
+      outputTokens: 3,
+    });
   });
 
   it('marks a run failed and records the error', async () => {

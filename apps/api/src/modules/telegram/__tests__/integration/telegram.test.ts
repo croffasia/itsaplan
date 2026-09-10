@@ -23,11 +23,7 @@ describe('telegram', () => {
 
   it('has no route that returns the bot token', async () => {
     await storeBot('123:secret');
-    const res = await app.handle(
-      new Request('http://localhost/internal/telegram/config', {
-        headers: { 'x-worker-token': process.env.WORKER_INTERNAL_TOKEN ?? '' },
-      }),
-    );
+    const res = await app.handle(new Request('http://localhost/internal/telegram/config'));
     expect(res.status).toBe(404);
     expect(await res.text()).not.toContain('123:secret');
   });

@@ -21,8 +21,7 @@ import {
 // Drives the dashboards section: which layout is on screen, its unsaved edits,
 // and the create/rename/delete/reorder writes. The active dashboard comes from
 // the route (activeDashboardId); selecting one is a navigation, not local state.
-// When no dashboard is active (or the project has none) the built-in default
-// layout is shown, and saving it creates the project's first dashboard.
+// Saving the built-in Overview creates a new dashboard.
 export function useDashboardEditor(
   projectKey: string | null,
   dashboards: Dashboard[],
@@ -37,8 +36,10 @@ export function useDashboardEditor(
   const reorderM = useReorderDashboards(projectKey);
 
   const active = dashboards.find((d) => d.id === activeDashboardId) ?? null;
-  const isVirtual = active == null;
-  const baseLayout: DashboardLayout = active ? normalizeLayout(active.layout) : defaultLayout;
+  const isVirtual = activeDashboardId == null;
+  let baseLayout: DashboardLayout = [];
+  if (isVirtual) baseLayout = defaultLayout;
+  else if (active) baseLayout = normalizeLayout(active.layout);
 
   // A draft is scoped to one dashboard (keyed by its id, or 'default' for the
   // virtual one). Navigating to another dashboard changes the key, so the draft
@@ -83,13 +84,13 @@ export function useDashboardEditor(
   const discard = () => setDraft(null);
 
   // Persists the working layout: updates the active dashboard, or creates the
-  // first one (from the default) when the virtual dashboard is on screen.
+  // a new one when the virtual dashboard is on screen.
   const save = async () => {
     if (isVirtual) {
       const created = await createM.mutateAsync({ input: { name: t('defaultName'), layout } });
       setDraft(null);
       onSelectDashboard(created.id);
-    } else {
+    } else if (active) {
       await updateM.mutateAsync({ id: active.id, input: { layout } });
       setDraft(null);
     }

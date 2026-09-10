@@ -117,6 +117,7 @@ export const breakdownQuery = t.Object({
 });
 
 export const pulseQuery = t.Object({
+  scope: t.Optional(t.Union([t.Literal('project'), t.Literal('me')])),
   unit: t.Optional(t.Union([t.Literal('hour'), t.Literal('day'), t.Literal('week')])),
   columns: t.Optional(t.Numeric()),
 });

@@ -51,6 +51,7 @@ export interface WidgetConfig {
   // activity_feed
   action?: string | null;
   // pulse — the heatmap bucket unit; the window auto-fits the widget width
+  pulseScope?: 'project' | 'me';
   granularity?: 'hour' | 'day' | 'week';
   // throughput
   weeks?: number;

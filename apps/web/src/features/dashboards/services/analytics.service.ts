@@ -25,10 +25,17 @@ export function useBreakdownQuery(projectKey: string, by: BreakdownBy) {
   });
 }
 
-export function usePulseQuery(projectKey: string, unit: PulseUnit, columns: number) {
+export function usePulseQuery(
+  projectKey: string,
+  unit: PulseUnit,
+  columns: number,
+  scope: 'project' | 'me' = 'project',
+  currentUserId?: string | null,
+) {
   return useQuery({
-    queryKey: qk.analytics(projectKey, 'pulse', { unit, columns }),
-    queryFn: () => getPulse(projectKey, unit, columns),
+    queryKey: qk.analytics(projectKey, 'pulse', { unit, columns, scope, currentUserId }),
+    queryFn: () => getPulse(projectKey, unit, columns, scope),
+    enabled: scope !== 'me' || Boolean(currentUserId),
   });
 }
 

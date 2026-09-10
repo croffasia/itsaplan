@@ -140,7 +140,11 @@
     "eventNoun": "{count, plural, zero {حدث} one {حدث} two {حدثان} few {أحداث} many {حدثًا} other {حدث}}",
     "active": "{count} نشط",
     "less": "أقل",
-    "more": "أكثر"
+    "more": "أكثر",
+    "scope": {
+      "project": "المشروع بأكمله",
+      "me": "نشاطي"
+    }
   },
   "throughput": {
     "empty": "لا يوجد نشاط في هذه الفترة.",

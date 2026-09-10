@@ -140,7 +140,11 @@
     "eventNoun": "{count, plural, one {событие} few {события} many {событий} other {события}}",
     "active": "{count} активных",
     "less": "Меньше",
-    "more": "Больше"
+    "more": "Больше",
+    "scope": {
+      "project": "Весь проект",
+      "me": "Моя активность"
+    }
   },
   "throughput": {
     "empty": "Нет активности за этот период.",

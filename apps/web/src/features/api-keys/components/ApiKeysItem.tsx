@@ -36,6 +36,10 @@ export default function ApiKeysItem({
         <ItemDescription>
           {apiKey.start ? `${apiKey.start}… · ` : ''}
           {t('createdAt', { date: formatShortDate(apiKey.createdAt) })}
+          {' · '}
+          {apiKey.expiresAt
+            ? t('expiresAt', { date: formatShortDate(apiKey.expiresAt) })
+            : t('noExpiry')}
         </ItemDescription>
       </ItemContent>
       <ItemActions>

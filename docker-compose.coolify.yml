@@ -93,8 +93,6 @@ services:
       # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes
       # existing stored credentials undecryptable.
       APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
-      # The worker and the bot authenticate to /internal/* with this same token.
-      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
       # API_URL is the api origin; APP_URL is the web origin.
       API_URL: ${SERVICE_URL_API:-http://localhost:3000}
       APP_URL: ${SERVICE_URL_WEB:-http://localhost:3001}
@@ -145,8 +143,10 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
-      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      # Notification delivery sends email and Telegram messages itself, with the
+      # provider credentials stored in the database — encrypted with this key, the
+      # same value the api uses.
+      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
       # Anonymous telemetry (TELEMETRY.md). Either variable, set to anything but 0,
       # turns it off.
       TELEMETRY_DISABLED: ${TELEMETRY_DISABLED:-}
@@ -158,12 +158,12 @@ services:
       # WEBHOOK_POLL_INTERVAL_MS, WEBHOOK_BATCH_SIZE, WEBHOOK_TIMEOUT_MS,
       # WEBHOOK_MAX_ATTEMPTS, WEBHOOK_DISABLE_THRESHOLD, WEBHOOK_LEASE_SECONDS,
       # WEBHOOK_CLEANUP_DAYS, WEBHOOK_CLEANUP_EVERY_TICKS.
-      # Agent runs: AGENT_RUN_BATCH_SIZE, AGENT_RUN_TIMEOUT_MS,
-      # AGENT_RUN_MAX_ATTEMPTS, AGENT_RUN_LEASE_SECONDS.
+      # Agent schedules: AGENT_RUN_POLL_INTERVAL_MS. The api runs the queued runs
+      # and reads the other AGENT_RUN_* values.
 
   # Telegram bot: long polling for the instance bot, completing the account links
-  # users start from their profile. No database and no public ports — it reaches the
-  # api's internal routes with the same shared token the worker uses.
+  # users start from their profile. It reads the bot token and writes the links in the
+  # database, and holds no api credential — no public ports either.
   #
   # Must stay at one replica: Telegram hands each getUpdates call to a single caller,
   # so a second instance would take updates away from the first.
@@ -174,16 +174,16 @@ services:
     restart: unless-stopped
     exclude_from_hc: true
     depends_on:
-      api:
-        condition: service_started
+      postgres:
+        condition: service_healthy
     environment:
       NODE_ENV: production
-      SERVICE_URL_API: ${SERVICE_URL_API:-http://api:3000}
-      WORKER_INTERNAL_TOKEN: ${SERVICE_PASSWORD_64_WORKER}
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      APP_ENCRYPTION_KEY: ${SERVICE_PASSWORD_64_ENCRYPTION}
       # The bot token itself is not set here: it is stored in the database and edited
       # in god mode, so the service picks up a change without a redeploy.
       # Optional tuning — defaults live in apps/bot/src/config.ts:
-      # BOT_CONFIG_POLL_INTERVAL_MS, BOT_API_TIMEOUT_MS.
+      # BOT_CONFIG_POLL_INTERVAL_MS, BOT_CONFIG_RETRY_INTERVAL_MS.
 
   web:
     build:

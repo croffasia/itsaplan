@@ -8,10 +8,11 @@
     "start": "bun run src/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test --env-file=../../.env.test"
   },
   "dependencies": {
     "@repo/db": "workspace:*",
+    "@repo/mailer": "workspace:*",
     "@repo/net": "workspace:*",
     "croner": "^10.0.1",
     "drizzle-orm": "^0.45.2"

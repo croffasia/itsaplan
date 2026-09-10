@@ -52,15 +52,15 @@ describe('EnvFile', () => {
 
   test('generates over an example value and keeps a real one', () => {
     const env = write(
-      'BETTER_AUTH_SECRET=change-me\nAPP_ENCRYPTION_KEY=\nWORKER_INTERNAL_TOKEN=kept\n',
+      'BETTER_AUTH_SECRET=change-me\nAPP_ENCRYPTION_KEY=\nS3_SECRET_ACCESS_KEY=kept\n',
     );
-    ['BETTER_AUTH_SECRET', 'APP_ENCRYPTION_KEY', 'WORKER_INTERNAL_TOKEN'].forEach((key) =>
+    ['BETTER_AUTH_SECRET', 'APP_ENCRYPTION_KEY', 'S3_SECRET_ACCESS_KEY'].forEach((key) =>
       env.generate(key),
     );
 
     expect(env.get('BETTER_AUTH_SECRET')).not.toBe('change-me');
     expect(env.get('APP_ENCRYPTION_KEY')).toHaveLength(44);
-    expect(env.get('WORKER_INTERNAL_TOKEN')).toBe('kept');
+    expect(env.get('S3_SECRET_ACCESS_KEY')).toBe('kept');
   });
 
   test('fresh reads the example, ignoring the file next to it', () => {

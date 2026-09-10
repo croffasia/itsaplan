@@ -1,13 +1,18 @@
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { db, appSecret, teamInvite, getSetting, setSetting } from '@repo/db';
-import { and, eq, sql } from 'drizzle-orm';
-import { encryptSecret, decryptSecret } from '@repo/crypto';
 import {
-  hasEmailProvider,
-  type SmtpConfig,
-  type ResendConfig,
-  type EmailConfig,
-} from '@repo/mailer';
+  db,
+  teamInvite,
+  getSetting,
+  setSetting,
+  readSecret,
+  writeSecret,
+  defaultInstanceEmailConfig,
+  getInstanceEmailConfig,
+  INSTANCE_EMAIL_SECRET_KEY,
+  type InstanceEmailConfig,
+} from '@repo/db';
+import { and, eq } from 'drizzle-orm';
+import type { SmtpConfig } from '@repo/mailer';
 
 // Instance-wide authentication settings: who may register, whether email has to be
 // confirmed, which sign-in methods are offered, the mail provider used for
@@ -19,10 +24,10 @@ import {
 // Non-secret settings are one jsonb blob in app_setting under the 'auth' key; the
 // credentials are encrypted in app_secret under 'auth.email', 'auth.google',
 // 'auth.oidc' and 'auth.scim', each with a `redacted` mirror the settings UI can read
-// without decrypting.
+// without decrypting. The mail config is also read by the api and the worker, so its
+// shape and reader live in @repo/db; what stays here is the write side.
 
 const AUTH_SETTING_KEY = 'auth';
-const EMAIL_SECRET_KEY = 'auth.email';
 const GOOGLE_SECRET_KEY = 'auth.google';
 const OIDC_SECRET_KEY = 'auth.oidc';
 const SCIM_SECRET_KEY = 'auth.scim';
@@ -77,59 +82,11 @@ export async function setAuthSettings(patch: Partial<AuthSettings>): Promise<Aut
 
 // ── Encrypted config storage ──────────────────────────────────────────────────
 
-// Every credential is stored the same way: one JSON blob per key in app_secret,
-// encrypted as a whole, with a `redacted` mirror the settings UI reads without
-// decrypting.
-
-async function readSecret<T>(key: string): Promise<T | null> {
-  const rows = await db
-    .select({ ciphertext: appSecret.ciphertext, iv: appSecret.iv, authTag: appSecret.authTag })
-    .from(appSecret)
-    .where(eq(appSecret.key, key));
-  const row = rows[0];
-  return row ? (JSON.parse(decryptSecret(row)) as T) : null;
-}
-
-async function writeSecret(key: string, value: unknown, redacted: object): Promise<void> {
-  const enc = encryptSecret(JSON.stringify(value));
-  await db
-    .insert(appSecret)
-    .values({
-      key,
-      ciphertext: enc.ciphertext,
-      iv: enc.iv,
-      authTag: enc.authTag,
-      redacted,
-    })
-    .onConflictDoUpdate({
-      target: appSecret.key,
-      set: {
-        ciphertext: enc.ciphertext,
-        iv: enc.iv,
-        authTag: enc.authTag,
-        redacted,
-        updatedAt: sql`now()`,
-      },
-    });
-}
-
 function mergeSecret(current: string, next: string | undefined): string {
   return next && next.length > 0 ? next : current;
 }
 
 // ── Mail provider ─────────────────────────────────────────────────────────────
-
-// The stored, decrypted config. Secret fields carry the plaintext value; read only
-// by the sender, never returned over HTTP.
-export interface InstanceEmailConfig extends EmailConfig {
-  smtp: SmtpConfig;
-  resend: ResendConfig;
-  from: string;
-  // Let projects send their notifications through this provider instead of
-  // configuring one of their own. Off by default: the instance owner pays for the
-  // provider, so sharing it is an explicit decision.
-  allowProjects: boolean;
-}
 
 // The config as returned to the client: every secret replaced by a boolean telling
 // whether a value is stored.
@@ -166,23 +123,6 @@ export interface InstanceEmailPatch {
   allowProjects?: boolean;
 }
 
-function defaultEmailConfig(): InstanceEmailConfig {
-  return {
-    smtp: {
-      enabled: false,
-      host: '',
-      port: null,
-      encryption: 'none',
-      username: '',
-      password: '',
-      timeout: null,
-    },
-    resend: { enabled: false, apiKey: '' },
-    from: '',
-    allowProjects: false,
-  };
-}
-
 function toEmailDto(config: InstanceEmailConfig): InstanceEmailDto {
   return {
     smtp: {
@@ -200,33 +140,8 @@ function toEmailDto(config: InstanceEmailConfig): InstanceEmailDto {
   };
 }
 
-// Reads and decrypts the stored mail config, or null when nothing has been saved.
-export async function getEmailConfig(): Promise<InstanceEmailConfig | null> {
-  const stored = await readSecret<InstanceEmailConfig>(EMAIL_SECRET_KEY);
-  if (!stored) return null;
-  // Merge over the default so a config written before a field was added stays valid.
-  return { ...defaultEmailConfig(), ...stored };
-}
-
 export async function getEmailSettings(): Promise<InstanceEmailDto> {
-  return toEmailDto((await getEmailConfig()) ?? defaultEmailConfig());
-}
-
-// Whether outbound mail can be sent right now. Everything that mails the user
-// (password reset, address confirmation, sign-in links) is unavailable without it,
-// so both the god settings and the public sign-in screens ask this first.
-export async function hasConfiguredEmailProvider(): Promise<boolean> {
-  const config = await getEmailConfig();
-  return config ? hasEmailProvider(config) : false;
-}
-
-// The instance provider a project may send its notifications through, or null when
-// projects are not allowed to use it or it is not configured. Read by the api on the
-// project notification paths (which channels are enabled, and the actual send).
-export async function getProjectEmailConfig(): Promise<InstanceEmailConfig | null> {
-  const config = await getEmailConfig();
-  if (!config || !config.allowProjects) return null;
-  return hasEmailProvider(config) ? config : null;
+  return toEmailDto((await getInstanceEmailConfig()) ?? defaultInstanceEmailConfig());
 }
 
 // Resolve a prospective configuration without persisting it. The email test route uses
@@ -235,7 +150,7 @@ export async function getProjectEmailConfig(): Promise<InstanceEmailConfig | nul
 export async function resolveEmailConfig(
   patch: InstanceEmailPatch = {},
 ): Promise<InstanceEmailConfig> {
-  const current = (await getEmailConfig()) ?? defaultEmailConfig();
+  const current = (await getInstanceEmailConfig()) ?? defaultInstanceEmailConfig();
   return {
     smtp: patch.smtp
       ? { ...patch.smtp, password: mergeSecret(current.smtp.password, patch.smtp.password) }
@@ -254,7 +169,7 @@ export async function resolveEmailConfig(
 export async function setEmailSettings(patch: InstanceEmailPatch): Promise<InstanceEmailDto> {
   const next = await resolveEmailConfig(patch);
   const redacted = toEmailDto(next);
-  await writeSecret(EMAIL_SECRET_KEY, next, redacted);
+  await writeSecret(INSTANCE_EMAIL_SECRET_KEY, next, redacted);
   return redacted;
 }
 

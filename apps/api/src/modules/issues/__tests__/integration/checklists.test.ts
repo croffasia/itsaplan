@@ -373,17 +373,10 @@ describe('checklists', () => {
     });
   });
 
-  // An agent fills a checklist in over MCP, so the writes it needs are tagged. The
-  // rest stay session-only: the list comes with the issue read, order is a drag in
-  // the UI, and removing a checklist takes its items with it, including ones a
-  // person wrote.
+  // The list comes with the issue read, so it stays session-only.
   it('exposes the checklist writes an agent needs to MCP', () => {
     expect(untaggedRoutes((route) => route.includes('checklist'))).toEqual([
       'GET /issues/:issueId/checklists',
-      'PUT /issues/:issueId/checklists/reorder',
-      'PATCH /checklists/:checklistId',
-      'DELETE /checklists/:checklistId',
-      'PUT /checklists/:checklistId/items/reorder',
     ]);
   });
 });

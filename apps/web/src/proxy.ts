@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionCookie } from 'better-auth/cookies';
+import { contentSecurityPolicy } from '@/utils/contentSecurityPolicy';
 
 // Routes reachable without a session, and that bounce a signed-in user back to
 // the app. Everything else requires one.
@@ -17,6 +18,15 @@ const PUBLIC_PATHS = ['/login', '/register'];
 // content and must pass this session gate before their route forwards the cookie.
 const OPEN_PATHS = ['/invite', '/forgot-password', '/reset-password', '/share', '/media'];
 
+// Routes that stream bytes from the api and pass its headers through, including the
+// sandbox policy it puts on a download. The document policy is for html only, and set
+// here it would replace the api's.
+const MEDIA_PATHS = ['/media', '/protected-media'];
+
+function matcher(pathname: string) {
+  return (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+}
+
 // Expires every better-auth cookie the request carries. A `__Secure-` name is only
 // accepted back with `secure`, so the deletion carries it too.
 function clearSession(request: NextRequest): NextResponse {
@@ -28,6 +38,14 @@ function clearSession(request: NextRequest): NextResponse {
   return response;
 }
 
+export function proxy(request: NextRequest) {
+  const response = gate(request);
+  if (!MEDIA_PATHS.some(matcher(request.nextUrl.pathname))) {
+    response.headers.set('Content-Security-Policy', contentSecurityPolicy());
+  }
+  return response;
+}
+
 // Gate the whole app behind a session. This is an optimistic check: it only looks
 // for the presence of the better-auth session cookie, not its validity — the API
 // does the real validation on every request. It keeps unauthenticated users out of
@@ -35,10 +53,10 @@ function clearSession(request: NextRequest): NextResponse {
 // A cookie the API no longer accepts passes this check, so the client handles that
 // case: `apiFailure` in `lib/api/core/client.ts` signs out on a 401 and lands on
 // `/login?expired=1`, where the cookie is cleared for good.
-export function proxy(request: NextRequest) {
+function gate(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
   const hasSession = getSessionCookie(request) != null;
-  const matches = (path: string) => pathname === path || pathname.startsWith(`${path}/`);
+  const matches = matcher(pathname);
 
   if (OPEN_PATHS.some(matches)) return NextResponse.next();
 

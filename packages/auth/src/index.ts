@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { db, defaultMemberPermissions } from '@repo/db';
+import { db, defaultMemberPermissions, hasConfiguredEmailProvider } from '@repo/db';
 import { eq, sql, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
@@ -16,7 +16,6 @@ import {
   isGoogleUsable,
   getOidcConfig,
   isOidcUsable,
-  hasConfiguredEmailProvider,
 } from './instance';
 import { sendAuthEmail } from './mail';
 
@@ -252,6 +251,13 @@ export async function generateUsername(email: string): Promise<string> {
   return candidate;
 }
 
+// Personal API key lifetime. The plugin's option is typed as milliseconds but the
+// handler applies it as seconds (the same unit as the `expiresIn` a client sends),
+// so it is held in seconds here. The maximum is in days, as the plugin reads it.
+const DAY_SEC = 24 * 60 * 60;
+export const API_KEY_DEFAULT_EXPIRES_IN_SEC = 90 * DAY_SEC;
+export const API_KEY_MAX_EXPIRES_IN_DAYS = 365;
+
 export const auth = betterAuth({
   baseURL,
   secret: process.env.BETTER_AUTH_SECRET,
@@ -278,6 +284,10 @@ export const auth = betterAuth({
     // lock out every account the moment the setting is flipped off).
     requireEmailVerification: false,
     autoSignIn: true,
+    // A reset is how a stolen password is dealt with, so every session opened with
+    // the old one ends with it. The signed-in change-password form sends
+    // revokeOtherSessions for the same reason.
+    revokeSessionsOnPasswordReset: true,
     sendResetPassword: async ({ user, url }) => {
       await sendAuthEmail({
         to: user.email,
@@ -438,6 +448,29 @@ export const auth = betterAuth({
             message: 'Username is already taken. Please try another.',
           });
         }
+        return;
+      }
+
+      // A key resolves to its owner's session, so a request carrying a leaked key
+      // reaches the key endpoints. It may not issue another one: a new key starts a
+      // fresh lifetime, which is the expiry of the leaked key renewed under a
+      // different row. Issuing a key is left to a signed-in session. The server-side
+      // call that issues an agent's key carries no request and is unaffected.
+      if (ctx.path === '/api-key/create' && ctx.request?.headers.get('x-api-key')) {
+        throw new APIError('FORBIDDEN', {
+          message: 'An API key cannot create another API key. Sign in to create one.',
+        });
+      }
+
+      // The lifetime is fixed at creation for the same reason; a longer one is a new
+      // key, created from a session.
+      if (ctx.path === '/api-key/update') {
+        const body = ctx.body as { expiresIn?: number | null } | undefined;
+        if (body && body.expiresIn !== undefined) {
+          throw new APIError('FORBIDDEN', {
+            message: 'The expiry of an API key cannot be changed. Create a new key instead.',
+          });
+        }
       }
     }),
   },
@@ -543,6 +576,13 @@ export const auth = betterAuth({
       // Brand prefix so a leaked key is identifiable by secret scanners and in logs.
       // The trailing underscore separates it from the random part (itp_<64 chars>).
       defaultPrefix: 'itp_',
+      // A key is a full-account credential, so one that was forgotten stops working
+      // on its own. The caller may pick a shorter or longer life up to the maximum;
+      // an agent's key is the exception, cleared where it is issued in apps/api.
+      keyExpiration: {
+        defaultExpiresIn: API_KEY_DEFAULT_EXPIRES_IN_SEC,
+        maxExpiresIn: API_KEY_MAX_EXPIRES_IN_DAYS,
+      },
       rateLimit: {
         enabled: true,
         timeWindow: 1000,
@@ -639,6 +679,25 @@ export const auth = betterAuth({
 export type Auth = typeof auth;
 export type Session = Auth['$Infer']['Session'];
 
+// A key the apiKey plugin will not accept — expired, revoked or malformed — makes
+// it throw out of getSession instead of returning no session, which a caller can
+// only report as a 500. Such a request carries no session, so it is answered as
+// one, and a key that reached its expiry is refused like any other unauthenticated
+// request. A refusal for another reason, a rate-limited key among them, still
+// propagates: it is not the same answer.
+export async function getSessionFromHeaders(
+  headers: Headers,
+): Promise<Awaited<ReturnType<typeof auth.api.getSession>>> {
+  try {
+    return await auth.api.getSession({ headers });
+  } catch (error) {
+    if (error instanceof APIError && (error.statusCode === 401 || error.statusCode === 403)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
 // Instance-wide authentication settings (registration mode, mail provider, invite
 // links). Read here by the sign-up gate and the mail senders; managed over HTTP by
 // god mode in apps/api.
@@ -648,10 +707,7 @@ export {
   setAuthSettings,
   getEmailSettings,
   setEmailSettings,
-  getEmailConfig,
   resolveEmailConfig,
-  getProjectEmailConfig,
-  hasConfiguredEmailProvider,
   getGoogleSettings,
   setGoogleSettings,
   getGoogleConfig,
@@ -672,7 +728,6 @@ export type {
   AuthSettings,
   InstanceEmailDto,
   InstanceEmailPatch,
-  InstanceEmailConfig,
   InstanceGoogleDto,
   InstanceGooglePatch,
   InstanceGoogleConfig,

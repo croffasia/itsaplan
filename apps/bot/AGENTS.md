@@ -6,32 +6,39 @@ root `AGENTS.md`.
 
 ## Invariants
 
-- **Never import `@repo/db`.** Unlike the worker, this service has no database
-  connection and no encryption key. Everything goes through the api's `/internal/telegram/*`
-  routes with `WORKER_INTERNAL_TOKEN`. Keep it that way — the bot token and the user
-  rows stay behind the api.
+- **The bot talks to Postgres and Telegram, and to nothing else.** Its queries are in
+  `src/db.ts`, over the schema of `@repo/db`, so it needs `DATABASE_URL` and
+  `APP_ENCRYPTION_KEY`. It holds no api credential and makes no call to the api — a
+  secret that never crosses the network cannot be read off it.
+- **The bot settings row is the api's.** The api writes `telegram.bot` in `app_secret`;
+  the bot reads it through `@repo/db` (`domains/telegram-bot.ts`), which is also where
+  a new field on that config goes.
 - **One replica only.** Telegram gives each `getUpdates` call to a single caller, so
   a second instance would steal updates from the first. Do not add replicas or run it
   alongside a webhook registration for the same bot.
 - **The token is not env configuration.** It is stored in the database and edited in
-  god mode, so `supervisor.ts` polls the api and starts/stops/replaces the bot when it
+  god mode, so `supervisor.ts` polls it and starts/stops/replaces the bot when it
   changes. A new bot must work without a redeploy.
 - **An error must not stop polling.** `bot.catch` swallows update failures and the
-  supervisor loop tolerates the api being unreachable.
+  supervisor loop tolerates the database being unreachable.
 
 ## Config
 
-`WORKER_INTERNAL_TOKEN` is required. The api origin is not a variable of its own —
-it resolves the same way the worker resolves it: `SERVICE_URL_API` in the compose
-stack, `API_URL` locally. Do not add a third URL variable. Optional tuning:
-`BOT_CONFIG_POLL_INTERVAL_MS`, `BOT_API_TIMEOUT_MS` (see `src/config.ts`).
+`DATABASE_URL` and `APP_ENCRYPTION_KEY` are required — the same values the api uses.
+Optional tuning: `BOT_CONFIG_POLL_INTERVAL_MS`, `BOT_CONFIG_RETRY_INTERVAL_MS` (see
+`src/config.ts`).
 
 ## Growing it
 
 grammY ships `webhookCallback(bot, 'elysia')`, so moving from polling to a webhook
 mounted on the api is a swap of the transport, not of the framework. Commands beyond
-`/start` go in `bot.ts`; anything needing project data gets a new `/internal/telegram/*`
-route rather than a database import.
+`/start` go in `bot.ts`, the queries they need in `db.ts`.
+
+## Tests
+
+`src/db.test.ts` covers redeeming a `/start` code against the test database
+(`bun run test` loads `.env.test`; the Docker gate runs it after the api suite). It
+inserts the pending rows the api mints in production — there is no api to call.
 
 ## Run
 

@@ -33,6 +33,6 @@ ENV NODE_ENV=production
 COPY --from=install /app ./
 COPY . .
 
-# No database access and no migrations: the bot reads its token and writes account
-# links through the api's internal routes, so it only needs the api to be reachable.
+# No migrations: the api owns them. The bot reads the instance bot token and writes
+# account links through @repo/db, so it needs the database to be reachable.
 CMD ["bun", "run", "apps/bot/src/index.ts"]

@@ -54,6 +54,8 @@
       "name": "bot",
       "version": "1.0.0",
       "dependencies": {
+        "@repo/db": "workspace:*",
+        "drizzle-orm": "^0.45.2",
         "grammy": "^1.45.1",
       },
       "devDependencies": {
@@ -153,6 +155,7 @@
       "version": "1.0.0",
       "dependencies": {
         "@repo/db": "workspace:*",
+        "@repo/mailer": "workspace:*",
         "@repo/net": "workspace:*",
         "croner": "^10.0.1",
         "drizzle-orm": "^0.45.2",
@@ -211,6 +214,8 @@
       "name": "@repo/db",
       "version": "0.0.0",
       "dependencies": {
+        "@repo/crypto": "workspace:*",
+        "@repo/mailer": "workspace:*",
         "drizzle-orm": "^0.45.2",
         "postgres": "^3.4.9",
       },

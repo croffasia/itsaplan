@@ -40,3 +40,24 @@ describe('proxy', () => {
     assert.equal(res.headers.get('location'), 'http://localhost/login');
   });
 });
+
+describe('proxy security headers', () => {
+  it('serves every page with a content security policy naming the api origin', () => {
+    process.env.API_URL = 'http://api.test:3000/';
+    const csp = run('/login').headers.get('content-security-policy');
+    assert.match(csp!, /(^|; )connect-src 'self' http:\/\/api\.test:3000(;|$)/);
+    assert.match(csp!, /(^|; )frame-ancestors 'none'(;|$)/);
+    assert.match(csp!, /(^|; )object-src 'none'(;|$)/);
+  });
+
+  it('keeps the policy on a redirect and on the expired screen', () => {
+    assert.ok(run('/', undefined).headers.get('content-security-policy'));
+    assert.ok(run('/login?expired=1', COOKIE).headers.get('content-security-policy'));
+  });
+
+  it('leaves the media routes to the headers the api sends', () => {
+    assert.equal(run('/media/avatars/u1', COOKIE).headers.get('content-security-policy'), null);
+    const document = '/protected-media/projects/KEY/documents/1/assets/x/raw';
+    assert.equal(run(document, COOKIE).headers.get('content-security-policy'), null);
+  });
+});

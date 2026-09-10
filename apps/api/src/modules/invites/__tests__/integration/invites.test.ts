@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
-import { app, authedApi } from '#tests/helpers/app';
+import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser, type TestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { createRole } from '#tests/helpers/roles';
@@ -31,31 +31,6 @@ async function configureEmail(owner: ReturnType<typeof authedApi>) {
     allowProjects: false,
   });
   expect(result.status).toBe(200);
-}
-
-async function deliverInvite(projectId: number, projectInviteId: number) {
-  const token = 'invite-email-test-worker-token';
-  const previousToken = process.env.WORKER_INTERNAL_TOKEN;
-  process.env.WORKER_INTERNAL_TOKEN = token;
-  let response: Response;
-  try {
-    response = await app.handle(
-      new Request('http://localhost/internal/notification-deliveries/send', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-worker-token': token },
-        body: JSON.stringify({
-          projectId,
-          channel: 'email',
-          recipient: 'invitee@example.com',
-          payload: { text: 'Invitation', projectInviteId },
-        }),
-      }),
-    );
-  } finally {
-    if (previousToken == null) delete process.env.WORKER_INTERNAL_TOKEN;
-    else process.env.WORKER_INTERNAL_TOKEN = previousToken;
-  }
-  return { status: response.status, body: await response.json() };
 }
 
 // The id of the team the caller owns — every account is given one at registration.
@@ -264,20 +239,6 @@ describe('invites', () => {
         .email.post();
 
       expect(res.status).toBe(409);
-    });
-
-    it('drops a queued delivery after the invite was accepted', async () => {
-      const owner = await setupOwner();
-      const invitee = await signUpTestUser();
-      const invite = await owner.api
-        .projects({ projectKey: 'MKT' })
-        .invites.post({ email: invitee.email, role: 'member' });
-      await authedApi(invitee.cookie).invites({ token: invite.data!.token }).accept.post();
-
-      const result = await deliverInvite(owner.projectId, invite.data!.id);
-
-      expect(result.status).toBe(200);
-      expect(result.body).toEqual({ ok: true });
     });
 
     it('denies a non-member', async () => {

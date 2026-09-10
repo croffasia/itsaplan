@@ -7,12 +7,17 @@
   "empty": "Belum ada kunci API. Buat kunci untuk mengautentikasi permintaan ke API.",
   "fallbackName": "Kunci API",
   "createdAt": "Dibuat {date}",
+  "expiresAt": "Kedaluwarsa {date}",
+  "noExpiry": "Tidak kedaluwarsa",
   "deleteAction": "Hapus kunci API",
   "createDialog": {
     "title": "Buat kunci API",
     "nameLabel": "Nama",
     "namePlaceholder": "mis. pipeline CI",
     "nameHint": "Label untuk mengenali kunci ini nanti.",
+    "expiryLabel": "Kedaluwarsa dalam",
+    "expiresInDays": "{days} hari",
+    "expiryHint": "Kunci berhenti berfungsi pada hari itu. Buat kunci baru untuk melanjutkan.",
     "submit": "Buat kunci",
     "submitPending": "Membuat…",
     "error": "Gagal membuat kunci API."

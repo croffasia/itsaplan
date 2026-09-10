@@ -93,8 +93,6 @@ services:
       - SERVICE_URL_API_3000
       - NODE_ENV=production
       - API_PORT=3000
-      # Largest request body, in MB; the god-mode attachment limit must stay below it.
-      - API_MAX_REQUEST_BODY_MB=${API_MAX_REQUEST_BODY_MB:-}
       - DATABASE_URL=postgres://${POSTGRES_USER:-itsaplan}:${SERVICE_PASSWORD_POSTGRES}@postgres:5432/${POSTGRES_DB:-itsaplan}
       - BETTER_AUTH_SECRET=${SERVICE_PASSWORD_64_BETTERAUTH}
       # Encrypts stored AI provider API keys at rest (AES-256-GCM). Changing it makes

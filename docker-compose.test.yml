@@ -62,8 +62,11 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       # Empty install flags so the image keeps devDeps the test suite needs
-      # (@elysiajs/eden); production builds default to --production.
+      # (@elysiajs/eden); production builds default to --production. The bot and
+      # worker suites run out of this image too, so their workspaces are installed
+      # as well — the production image keeps only api's closure.
       args:
+        INSTALL_FILTER: '--filter api --filter bot --filter worker'
         INSTALL_FLAGS: ''
     depends_on:
       postgres-test:

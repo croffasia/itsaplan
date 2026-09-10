@@ -5,6 +5,11 @@ export function openLinkOnModifierClick(event: MouseEvent, root: HTMLElement): b
   return openLink(event, root);
 }
 
+export function openLinkOnAuxClick(event: MouseEvent, root: HTMLElement): boolean {
+  if (event.button !== 1) return false;
+  return openLink(event, root);
+}
+
 export function openLinkOnEnter(
   event: KeyboardEvent,
   root: HTMLElement,

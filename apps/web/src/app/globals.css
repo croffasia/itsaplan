@@ -630,9 +630,20 @@
 .sticker-note .md-content ul[data-type='taskList'] input[type='checkbox'] {
   accent-color: #000;
 }
-/* --primary turns near-white in dark mode, which the pastel card does not follow. */
-.sticker-note .md-content a {
-  color: inherit;
+.sticker-note .md-content a[href]:not([href='']) {
+  color: var(--color-blue-800);
+  cursor: pointer;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.sticker-note .md-content a[href]:not([href='']):hover {
+  color: var(--color-blue-950);
+  background-color: color-mix(in oklab, var(--color-blue-800) 10%, transparent);
+}
+.sticker-note .md-content a[href]:not([href='']):focus-visible {
+  border-radius: 2px;
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
 }
 /* React Flow's default edge stroke is too dark on the canvas in both themes. */
 .react-flow__edge-path,

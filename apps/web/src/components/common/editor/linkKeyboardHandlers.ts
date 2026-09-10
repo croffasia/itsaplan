@@ -1,11 +1,14 @@
 import type { EditorProps } from '@tiptap/pm/view';
-import { openLinkOnEnter } from './modifierClickLink';
+import { openLinkOnAuxClick, openLinkOnEnter } from './modifierClickLink';
 
 export function createLinkKeyboardHandlers(): EditorProps['handleDOMEvents'] {
   let focusedLink: HTMLAnchorElement | null = null;
   let pointerFocus = false;
 
   return {
+    auxclick(view, event) {
+      return openLinkOnAuxClick(event, view.dom);
+    },
     focusin(view, event) {
       const target = event.target;
       if (target instanceof HTMLAnchorElement && !pointerFocus) focusedLink = target;

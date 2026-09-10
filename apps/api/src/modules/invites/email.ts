@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { db, notificationDelivery } from '@repo/db';
-import { getEmailConfig, trustedOrigins } from '@repo/auth';
+import { db, notificationDelivery, getInstanceEmailConfig } from '@repo/db';
+import { trustedOrigins } from '@repo/auth';
 import { hasEmailProvider } from '@repo/mailer';
 import { and, eq, sql } from 'drizzle-orm';
 import type { InviteRow } from './service';
@@ -19,7 +19,7 @@ export async function enqueueInviteEmail(
   project: InviteProject,
   invite: InviteRow,
 ): Promise<boolean> {
-  const config = await getEmailConfig();
+  const config = await getInstanceEmailConfig();
   if (!config || !hasEmailProvider(config)) return false;
 
   const dedupeKey = `project-invite:${invite.id}`;

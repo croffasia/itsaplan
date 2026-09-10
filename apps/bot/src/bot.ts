@@ -1,5 +1,5 @@
 import { Bot } from 'grammy';
-import { confirmLink } from './api';
+import { confirmTelegramLink } from './db';
 
 // The Telegram bot itself. Today it handles one thing: the `/start <code>` deep link
 // that completes an account link. The code is minted by the api when the user presses
@@ -30,7 +30,7 @@ export function createBot(token: string): Bot {
       return;
     }
 
-    const result = await confirmLink({
+    const result = await confirmTelegramLink({
       code,
       chatId: String(ctx.chat.id),
       username: from.username ?? null,

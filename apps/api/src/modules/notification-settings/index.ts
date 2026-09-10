@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { errors } from '#shared/responses';
-import { getProjectEmailConfig } from '@repo/auth';
+import { getProjectEmailConfig } from '@repo/db';
 import { teamParams } from '#modules/teams/model';
 import { NotificationSettingsBody, NotificationSettingsResponse } from './model';
 import {

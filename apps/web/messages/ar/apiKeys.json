@@ -7,12 +7,17 @@
   "empty": "مفيش مفاتيح لسه. اعمل واحد عشان توثّق طلباتك لواجهة البرمجة (API).",
   "fallbackName": "مفتاح واجهة برمجة",
   "createdAt": "أُنشئ {date}",
+  "expiresAt": "ينتهي {date}",
+  "noExpiry": "بدون انتهاء",
   "deleteAction": "حذف المفتاح",
   "createDialog": {
     "title": "إنشاء مفتاح واجهة برمجة",
     "nameLabel": "الاسم",
     "namePlaceholder": "مثال: خط CI",
     "nameHint": "اسم يعرّفك بالمفتاح ده بعدين.",
+    "expiryLabel": "ينتهي بعد",
+    "expiresInDays": "{days} يوم",
+    "expiryHint": "المفتاح هيقف عن الشغل في اليوم ده. اعمل واحد جديد عشان تكمّل.",
     "submit": "إنشاء المفتاح",
     "submitPending": "جارٍ الإنشاء…",
     "error": "تعذّر إنشاء المفتاح."

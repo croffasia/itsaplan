@@ -1332,6 +1332,27 @@ describe('issues', () => {
       expect(list.find((i) => i.id === issue.id)?.columnId).toBe(columnId);
     });
 
+    it("does not reveal another project's full column through the WIP check", async () => {
+      const { asOwner, columnId } = await setupProject();
+      const foreign = await foreignProject(asOwner);
+      await asOwner
+        .projects({ projectKey: 'OPS' })
+        .issues.post({ columnId: foreign.columnId, title: 'Occupant' });
+      await asOwner
+        .projects({ projectKey: 'OPS' })
+        .columns({ columnId: foreign.columnId })
+        .patch({ name: 'Ops Secret Lane', wipLimit: 1, wipMode: 'hard' });
+      const issue = (await createIssue(asOwner, columnId)).data!;
+
+      // The column check runs before the WIP check, so a full foreign column is
+      // refused as a foreign column, not as a full one.
+      const res = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .issues.bulk.patch({ ids: [issue.id], patch: { columnId: foreign.columnId } });
+      expect(res.status).toBe(400);
+      expect(JSON.stringify(res.error?.value)).not.toContain('Ops Secret Lane');
+    });
+
     it("rejects a bulk add of another project's label", async () => {
       const { asOwner, columnId } = await setupProject();
       const foreign = await foreignLabel(asOwner);

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { getEmailConfig, resolveEmailConfig, setEmailSettings } from '@repo/auth';
+import { resolveEmailConfig, setEmailSettings } from '@repo/auth';
+import { getInstanceEmailConfig } from '@repo/db';
 import { resetDb } from '#tests/helpers/db';
 import { addUser, setup } from '../helpers';
 
@@ -43,7 +44,7 @@ describe('god email settings', () => {
     // Port 1 is deliberately unreachable. Reaching the transport proves the draft
     // was used instead of being rejected as an unconfigured saved provider.
     expect(res.status).toBe(502);
-    expect(await getEmailConfig()).toBeNull();
+    expect(await getInstanceEmailConfig()).toBeNull();
   });
 
   it('reuses a saved secret while resolving a draft without changing storage', async () => {
@@ -79,7 +80,7 @@ describe('god email settings', () => {
       username: 'draft@example.com',
       password: 'stored-secret',
     });
-    expect(await getEmailConfig()).toMatchObject({
+    expect(await getInstanceEmailConfig()).toMatchObject({
       smtp: { host: 'smtp.saved.example', password: 'stored-secret' },
       from: 'saved@example.com',
     });

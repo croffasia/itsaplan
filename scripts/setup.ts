@@ -105,7 +105,7 @@ const requireDocker = async () => {
 
 const openBrowser = (url: string) => exec(process.platform === 'darwin' ? 'open' : 'xdg-open', url);
 
-const secrets = ['BETTER_AUTH_SECRET', 'APP_ENCRYPTION_KEY', 'WORKER_INTERNAL_TOKEN'];
+const secrets = ['BETTER_AUTH_SECRET', 'APP_ENCRYPTION_KEY'];
 
 /** Every value the setup chooses, with the default to prefill when the file carries none. */
 const generated: Record<string, string> = {

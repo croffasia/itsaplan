@@ -1,20 +1,22 @@
 import { describe, it, expect, afterEach, beforeEach } from 'bun:test';
 import { db, agentRun } from '@repo/db';
 import { eq } from 'drizzle-orm';
-import { api, authedApi } from '#tests/helpers/app';
+import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 import { createAgent } from '#tests/helpers/agents';
 import { claimDueRuns, enqueueAgentRun } from '../../run-queue';
+import { processAgentRuns } from '../../run-poller';
 
-// The ceiling on the runs a team has in flight, enforced where the worker hands a
+// The ceiling on the runs a team has in flight, enforced where the poller hands a
 // claimed run to the runtime. The agent is left without a model credential, so a run
 // that passes the ceiling fails on the model rather than calling one — which is what
 // tells "turned away" and "let through" apart.
 
-const WORKER_TOKEN = 'run-limits-test-worker-token';
-
+// Leaves one run of the team in flight and a second one due, which is the pair the
+// ceiling is read against. Claiming the first stamps it without running it, so it holds
+// a slot for as long as its lease.
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
@@ -27,90 +29,61 @@ async function setup() {
   const issue = (
     await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task' })
   ).data!;
-
   const projectId = agent.projects[0].id;
-  for (const prompt of ['first', 'second'])
-    await enqueueAgentRun({
+  const enqueue = (prompt: string) =>
+    enqueueAgentRun({
       agentId: agent.id,
       projectId,
       issueId: issue.id,
       sourceActivityId: null,
       prompt,
     });
-  // Claiming stamps both runs, which is what makes them count as in flight.
+
+  await enqueue('first');
   await claimDueRuns();
-  const [first, second] = await db
+  await enqueue('second');
+  const [, second] = await db
     .select()
     .from(agentRun)
     .where(eq(agentRun.issueId, issue.id))
     .orderBy(agentRun.id);
-
-  return { agent, issue, projectId, first, second };
+  return { second };
 }
 
-type Setup = Awaited<ReturnType<typeof setup>>;
-
-function execute({ agent, issue, projectId }: Setup, run: { id: number; attempts: number }) {
-  return api.internal['agent-runs'].execute.post(
-    {
-      id: run.id,
-      agentId: agent.id,
-      issueId: issue.id,
-      scheduleId: null,
-      trigger: 'delegation',
-      prompt: 'do it',
-      attempts: run.attempts,
-      projectId,
-      agentUserId: agent.userId,
-      issueIdentifier: null,
-      issueTitle: issue.title,
-      assigneeName: null,
-      requesterName: null,
-    },
-    { headers: { 'x-worker-token': WORKER_TOKEN } },
-  );
+// Reads the second run back after one poll. A run turned away for a full queue keeps
+// the attempts it had; one let through spends an attempt on the model it does not have.
+async function pollAndRead(second: { id: number }) {
+  await processAgentRuns();
+  const [row] = await db.select().from(agentRun).where(eq(agentRun.id, second.id));
+  return row;
 }
 
 describe('agent run limits', () => {
-  let previousToken: string | undefined;
-
-  beforeEach(async () => {
-    previousToken = process.env.WORKER_INTERNAL_TOKEN;
-    process.env.WORKER_INTERNAL_TOKEN = WORKER_TOKEN;
-    await resetDb();
-  });
-
-  afterEach(() => {
-    if (previousToken == null) delete process.env.WORKER_INTERNAL_TOKEN;
-    else process.env.WORKER_INTERNAL_TOKEN = previousToken;
-    clearLimits();
-  });
+  beforeEach(resetDb);
+  afterEach(clearLimits);
 
   it('turns away a run the team has no free slot for, leaving it queued', async () => {
-    const state = await setup();
+    const { second } = await setup();
     setLimits({ maxConcurrentRuns: 1 });
 
-    const res = await execute(state, state.second);
-    expect(res.status).toBe(503);
-
-    const [row] = await db.select().from(agentRun).where(eq(agentRun.id, state.second.id));
-    expect(row).toMatchObject({ status: 'pending', attempts: state.second.attempts });
+    const row = await pollAndRead(second);
+    expect(row).toMatchObject({ status: 'pending', attempts: second.attempts, lastError: null });
   });
 
   it('lets a run through while the team is under the ceiling', async () => {
-    const state = await setup();
+    const { second } = await setup();
     setLimits({ maxConcurrentRuns: 2 });
 
-    const res = await execute(state, state.second);
-    expect(res.status).toBe(400);
-    // Treaty types the error body as its validation shape, which the message is not.
-    expect(String(res.error!.value)).toBe('Agent has no model credential set');
+    const row = await pollAndRead(second);
+    expect(row.attempts).toBe(second.attempts + 1);
+    expect(row.lastError).toBe('Agent has no model credential set');
   });
 
   it('runs without a ceiling when the instance sets no limits', async () => {
-    const state = await setup();
+    const { second } = await setup();
 
-    const res = await execute(state, state.second);
-    expect(res.status).toBe(400);
+    const row = await pollAndRead(second);
+    expect(row.attempts).toBe(second.attempts + 1);
+    expect(row.lastError).toBe('Agent has no model credential set');
   });
 });

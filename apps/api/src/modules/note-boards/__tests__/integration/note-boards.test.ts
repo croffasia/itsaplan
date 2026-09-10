@@ -296,26 +296,51 @@ describe('note boards', () => {
 
     it('keeps a granted member from deleting a board shared with them', async () => {
       const owner = await setupOwnerProject();
+      const author = await addMember(owner.api);
       const granted = await addMember(owner.api);
-      const boardId = (await boards(owner.api).post({ name: 'Ideas' })).data!.id;
-      await boards(owner.api)({ boardId }).patch({
+      const boardId = (await boards(author.api).post({ name: 'Ideas' })).data!.id;
+      await boards(author.api)({ boardId }).patch({
         visibility: 'restricted',
         memberIds: [granted.userId],
       });
 
       const res = await boards(granted.api)({ boardId }).delete();
       expect(res.status).toBe(403);
-      expect(res.error?.value).toEqual({ error: 'Only the board creator can delete the board' });
-      expect((await boards(owner.api)({ boardId }).get()).status).toBe(200);
+      expect(res.error?.value).toEqual({
+        error: 'Only the board creator or a project owner can delete the board',
+      });
+      expect((await boards(author.api)({ boardId }).get()).status).toBe(200);
     });
 
-    it('keeps a member from deleting a public board they did not create', async () => {
+    it('lets a member delete a public board they did not create', async () => {
       const owner = await setupOwnerProject();
       const member = await addMember(owner.api);
       const boardId = (await boards(owner.api).post({ name: 'Ideas' })).data!.id;
 
-      expect((await boards(member.api)({ boardId }).delete()).status).toBe(403);
-      expect((await boards(owner.api)({ boardId }).get()).status).toBe(200);
+      expect((await boards(member.api)({ boardId }).delete()).status).toBe(204);
+      expect((await boards(owner.api)({ boardId }).get()).status).toBe(404);
+    });
+
+    it("lets a project owner delete a member's private board they cannot see", async () => {
+      const owner = await setupOwnerProject();
+      const author = await addMember(owner.api);
+      const boardId = (await boards(author.api).post({ name: 'Ideas' })).data!.id;
+      await boards(author.api)({ boardId }).patch({ visibility: 'private' });
+
+      expect((await boards(owner.api)({ boardId }).get()).status).toBe(404);
+      expect((await boards(owner.api)({ boardId }).delete()).status).toBe(204);
+      expect((await boards(author.api)({ boardId }).get()).status).toBe(404);
+    });
+
+    it("keeps a member from deleting another member's private board", async () => {
+      const owner = await setupOwnerProject();
+      const author = await addMember(owner.api);
+      const other = await addMember(owner.api);
+      const boardId = (await boards(author.api).post({ name: 'Ideas' })).data!.id;
+      await boards(author.api)({ boardId }).patch({ visibility: 'private' });
+
+      expect((await boards(other.api)({ boardId }).delete()).status).toBe(404);
+      expect((await boards(author.api)({ boardId }).get()).status).toBe(200);
     });
 
     it('answers a delete from outside the board the way an update is answered', async () => {

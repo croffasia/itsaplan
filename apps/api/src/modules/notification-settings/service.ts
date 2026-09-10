@@ -1,52 +1,27 @@
-import { db, teamNotificationSetting } from '@repo/db';
+import {
+  db,
+  teamNotificationSetting,
+  defaultNotificationConfig,
+  readNotificationConfig,
+  type NotificationConfig,
+} from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
-import { encryptSecret, decryptSecret } from '@repo/crypto';
-import type { SmtpConfig, ResendConfig } from '@repo/mailer';
+import { encryptSecret } from '@repo/crypto';
 import { HttpError } from '#shared/lib';
 
-// Data access for a team's notification provider credentials: the outbound channels
-// every project of the team delivers through (SMTP or Resend for email, a Telegram
-// bot). One row per team, managed by its owner. The full config carries secrets, so
-// it is stored encrypted as one JSON blob; the `redacted` column holds the same
-// config with secret values dropped and replaced by `hasX` flags, for the settings
-// UI. The plaintext config is only read by the delivery sender; it is never returned
-// over HTTP. Which events reach a given member, and their Telegram chat id, are a
-// per-user choice held in notification-preferences, not here.
+// The settings UI over a team's notification provider credentials: the outbound
+// channels every project of the team delivers through (SMTP or Resend for email, a
+// Telegram bot). One row per team, managed by its owner. The stored shape and the
+// decrypting reader live in @repo/db (the worker sends with them); what is here is
+// the redacted view the UI reads, the partial write, and the validation. The
+// plaintext config is never returned over HTTP. Which events reach a given member,
+// and their Telegram chat id, are a per-user choice held in
+// notification-preferences, not here.
 
 // SMTP transport encryption. 'none' is plain (STARTTLS is negotiated by the
 // sender when offered); 'ssl' is implicit TLS; 'tls' forces STARTTLS.
 export const ENCRYPTION_MODES = ['none', 'ssl', 'tls'] as const;
 export type EncryptionMode = (typeof ENCRYPTION_MODES)[number];
-
-interface TelegramConfig {
-  enabled: boolean;
-  botToken: string; // secret
-}
-
-// The stored, decrypted config. Secret fields carry the plaintext value. Read by
-// the delivery sender through getDeliveryConfig; never returned over HTTP.
-export interface NotificationConfig {
-  // Send email through the instance provider instead of the team's own. Carries
-  // no credentials: they belong to the instance and are read at send time. A team
-  // that enables SMTP or Resend of its own takes precedence over this.
-  system: { enabled: boolean };
-  smtp: SmtpConfig;
-  resend: ResendConfig;
-  telegram: TelegramConfig;
-}
-
-// Which provider sends this team's email: its own SMTP/Resend when one is
-// enabled, otherwise the instance provider when the team asked for it. 'none'
-// means email delivery is off for the team.
-export function emailSource(config: {
-  system: { enabled: boolean };
-  smtp: { enabled: boolean };
-  resend: { enabled: boolean };
-}): 'smtp' | 'resend' | 'system' | 'none' {
-  if (config.smtp.enabled) return 'smtp';
-  if (config.resend.enabled) return 'resend';
-  return config.system.enabled ? 'system' : 'none';
-}
 
 // The config as returned to the client: every secret replaced by a boolean
 // telling whether a value is stored. Non-secret fields are verbatim.
@@ -82,25 +57,6 @@ export interface NotificationSettingsPatch {
   };
   resend?: { enabled: boolean; apiKey?: string };
   telegram?: { enabled: boolean; botToken?: string };
-}
-
-function defaultConfig(): NotificationConfig {
-  return {
-    // A team sends through the instance provider until it configures its own, so
-    // notifications work out of the box wherever the instance shares one.
-    system: { enabled: true },
-    smtp: {
-      enabled: false,
-      host: '',
-      port: 587,
-      encryption: 'none',
-      username: '',
-      password: '',
-      timeout: null,
-    },
-    resend: { enabled: false, apiKey: '' },
-    telegram: { enabled: false, botToken: '' },
-  };
 }
 
 function toDto(config: NotificationConfig): NotificationSettingsDto {
@@ -185,26 +141,10 @@ function assertSendable(config: NotificationConfig): void {
   }
 }
 
-// Reads and decrypts the stored config, or null when the team has none yet.
-async function readConfig(teamId: number): Promise<NotificationConfig | null> {
-  const rows = await db
-    .select({
-      ciphertext: teamNotificationSetting.ciphertext,
-      iv: teamNotificationSetting.iv,
-      authTag: teamNotificationSetting.authTag,
-    })
-    .from(teamNotificationSetting)
-    .where(eq(teamNotificationSetting.teamId, teamId));
-  const row = rows[0];
-  if (!row) return null;
-  // Merge over the default so a config written before a field was added stays valid.
-  return { ...defaultConfig(), ...(JSON.parse(decryptSecret(row)) as NotificationConfig) };
-}
-
 // The redacted settings for a team. Defaults (no secrets, no provider of its own,
 // delivery through the instance provider) when nothing has been saved.
 export async function getNotificationSettings(teamId: number): Promise<NotificationSettingsDto> {
-  const config = (await readConfig(teamId)) ?? defaultConfig();
+  const config = (await readNotificationConfig(teamId)) ?? defaultNotificationConfig();
   return toDto(config);
 }
 
@@ -213,7 +153,7 @@ export async function setNotificationSettings(
   teamId: number,
   patch: NotificationSettingsPatch,
 ): Promise<NotificationSettingsDto> {
-  const current = (await readConfig(teamId)) ?? defaultConfig();
+  const current = (await readNotificationConfig(teamId)) ?? defaultNotificationConfig();
   const next = applyPatch(current, patch);
   assertSendable(next);
   const redacted = toDto(next);
@@ -250,13 +190,7 @@ export async function readRedactedSettings(teamId: number): Promise<Notification
     .from(teamNotificationSetting)
     .where(eq(teamNotificationSetting.teamId, teamId));
   const redacted = rows[0]?.redacted as NotificationSettingsDto | undefined;
-  // Merge over the default, as readConfig does, so a row written before a field was
-  // added stays valid.
-  return { ...toDto(defaultConfig()), ...(redacted ?? {}) };
-}
-
-// The full decrypted config, for the sender that actually delivers a notification.
-// Carries secrets, so it is only called server-side by the delivery sender.
-export async function getDeliveryConfig(teamId: number): Promise<NotificationConfig> {
-  return (await readConfig(teamId)) ?? defaultConfig();
+  // Merge over the default, as the stored reader does, so a row written before a
+  // field was added stays valid.
+  return { ...toDto(defaultNotificationConfig()), ...(redacted ?? {}) };
 }

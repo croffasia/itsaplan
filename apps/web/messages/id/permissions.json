@@ -1,0 +1,50 @@
+{
+  "none": "Tidak ada izin yang diberikan",
+  "grantedCount": "{count, plural, one {# izin} other {# izin}} diberikan",
+  "resources": {
+    "work_items": "Item pekerjaan",
+    "initiatives": "Inisiatif",
+    "cycles": "Cycle",
+    "dashboards": "Dasbor",
+    "documents": "Dokumen",
+    "views": "Tampilan item pekerjaan",
+    "members_invite": "Undangan",
+    "members_manage": "Anggota",
+    "states": "Status",
+    "issue_types": "Jenis issue",
+    "labels": "Label",
+    "ai_agents": "Agen AI",
+    "integrations": "Integrasi",
+    "agent_skills": "Keahlian agen",
+    "agent_tools": "Alat agen",
+    "custom_fields": "Bidang kustom",
+    "issue_templates": "Templat issue",
+    "workflow_config": "Konfigurasi alur kerja",
+    "actions": "Tindakan",
+    "webhooks": "Webhook",
+    "note_boards": "Papan catatan",
+    "danger_zone": "Zona bahaya"
+  },
+  "actions": {
+    "create": "Buat",
+    "edit": "Ubah",
+    "read": "Baca",
+    "delete": "Hapus"
+  },
+  "groups": {
+    "workItems": "Item pekerjaan",
+    "dashboards": "Dasbor",
+    "documents": "Dokumen",
+    "notes": "Catatan",
+    "ai": "AI",
+    "configuration": "Konfigurasi",
+    "members": "Anggota",
+    "project": "Proyek",
+    "other": "Lainnya"
+  },
+  "resourceColumn": "Sumber daya",
+  "allowed": "diizinkan",
+  "notAllowed": "tidak diizinkan",
+  "accessHeading": "Akses ke proyek ini",
+  "joined": "bergabung {date}"
+}

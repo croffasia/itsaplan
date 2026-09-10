@@ -105,7 +105,7 @@ const requireDocker = async () => {
 
 const openBrowser = (url: string) => exec(process.platform === 'darwin' ? 'open' : 'xdg-open', url);
 
-const secrets = ['BETTER_AUTH_SECRET', 'APP_ENCRYPTION_KEY', 'WORKER_INTERNAL_TOKEN'];
+const secrets = ['BETTER_AUTH_SECRET', 'APP_ENCRYPTION_KEY'];
 
 /**
  * Credentials of the backing services. The example leaves them empty so that the

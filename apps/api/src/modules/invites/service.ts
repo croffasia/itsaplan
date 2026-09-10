@@ -240,22 +240,6 @@ export async function createInvite(input: NewInvite): Promise<InviteRow> {
   return (await getInviteById(row.id))!;
 }
 
-// Whether a queued invite email still has a live invite behind it.
-export async function isInvitePending(projectId: number, id: number): Promise<boolean> {
-  const rows = await db
-    .select({ id: teamInvite.id })
-    .from(teamInvite)
-    .where(
-      and(
-        eq(teamInvite.projectId, projectId),
-        eq(teamInvite.id, id),
-        eq(teamInvite.status, 'pending'),
-      ),
-    )
-    .limit(1);
-  return rows.length > 0;
-}
-
 export async function getInviteById(id: number): Promise<InviteRow | null> {
   const rows = await selectInvites().where(eq(teamInvite.id, id));
   return rows[0] ? toRow(rows[0]) : null;

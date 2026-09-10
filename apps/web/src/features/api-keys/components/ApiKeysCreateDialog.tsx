@@ -8,6 +8,19 @@ import { apiKey } from '@/lib/auth-client';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+// Lifetimes offered at creation, in days. The server caps a key at a year, and 90
+// days is the default it applies when none is sent.
+const EXPIRY_DAYS = [30, 90, 180, 365] as const;
+const DEFAULT_EXPIRY_DAYS = 90;
+const DAY_SEC = 24 * 60 * 60;
 
 // The created key value is kept in this dialog only, never lifted into page state:
 // it is shown once, right after creation, and cannot be retrieved later.
@@ -21,6 +34,7 @@ export default function ApiKeysCreateDialog({
   const t = useTranslations('apiKeys');
   const tCommon = useTranslations('common');
   const [name, setName] = useState('');
+  const [expiryDays, setExpiryDays] = useState(String(DEFAULT_EXPIRY_DAYS));
   const [createdKey, setCreatedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -28,7 +42,10 @@ export default function ApiKeysCreateDialog({
     // Own the error UI inline, so opt out of the global error toast.
     meta: { suppressErrorToast: true },
     mutationFn: async () => {
-      const { data, error } = await apiKey.create({ name: name.trim() });
+      const { data, error } = await apiKey.create({
+        name: name.trim(),
+        expiresIn: Number(expiryDays) * DAY_SEC,
+      });
       if (error) throw new Error(error.message ?? t('createDialog.error'));
       return data;
     },
@@ -102,6 +119,25 @@ export default function ApiKeysCreateDialog({
             onChange={(e) => setName(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">{t('createDialog.nameHint')}</p>
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="api-key-expiry" className="text-sm font-medium">
+            {t('createDialog.expiryLabel')}
+          </label>
+          <Select value={expiryDays} onValueChange={setExpiryDays}>
+            <SelectTrigger id="api-key-expiry">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EXPIRY_DAYS.map((days) => (
+                <SelectItem key={days} value={String(days)}>
+                  {t('createDialog.expiresInDays', { days })}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">{t('createDialog.expiryHint')}</p>
         </div>
 
         {createMutation.error && (

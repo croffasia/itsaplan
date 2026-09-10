@@ -1,0 +1,109 @@
+{
+  "account": {
+    "profile": "Profil",
+    "preferences": "Preferensi",
+    "accounts": "Akun",
+    "security": "Keamanan",
+    "api-keys": "Kunci API"
+  },
+  "godGroups": {
+    "management": "Manajemen",
+    "instance": "Instance"
+  },
+  "god": {
+    "users": {
+      "label": "Pengguna",
+      "description": "Setiap akun di instance ini: peran global, status konfirmasi alamat, dan proyek yang dapat diakses setiap pengguna."
+    },
+    "teams": {
+      "label": "Tim",
+      "description": "Setiap tim di instance ini: proyek yang dimilikinya dan anggota di dalamnya."
+    },
+    "projects": {
+      "label": "Proyek",
+      "description": "Setiap proyek di instance ini: apa yang dimuatnya, waktu aktif terakhir, dan siapa yang dapat mengaksesnya."
+    },
+    "general": {
+      "label": "Umum",
+      "description": "Pengaturan bawaan untuk proyek baru."
+    },
+    "authentication": {
+      "label": "Autentikasi",
+      "description": "Siapa yang boleh mendaftar di instance ini, cara akun dikonfirmasi, dan penyedia yang digunakan untuk masuk."
+    },
+    "hotkeys": {
+      "label": "Pintasan keyboard",
+      "description": "Tombol yang terikat ke setiap perintah untuk semua orang di instance ini. Setiap orang dapat mengatur ulang pintasan untuk akun mereka sendiri di preferensi."
+    },
+    "storage": {
+      "label": "Penyimpanan",
+      "description": "Batas unggahan pengguna: ukuran file tunggal, jenis lampiran yang diterima, dan ruang penyimpanan untuk setiap proyek."
+    },
+    "telegram": {
+      "label": "Telegram",
+      "description": "Bot yang dihubungkan pengguna ke akun Telegram mereka, dan bot yang mengirimkan notifikasi Telegram untuk proyek yang tidak menetapkan bot sendiri."
+    },
+    "email": {
+      "label": "Penyedia email",
+      "description": "Penyedia email yang digunakan instance: pengaturan ulang kata sandi, konfirmasi alamat, dan tautan masuk."
+    },
+    "auth-provider": {
+      "label": "Penyedia autentikasi",
+      "description": "Akun eksternal yang dapat digunakan pengguna untuk masuk."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Izinkan penyedia identitas membuat, memperbarui, dan menonaktifkan akun di instance ini, serta memberikan akses proyek melalui grupnya."
+    }
+  },
+  "settings": {
+    "general": {
+      "label": "Umum",
+      "description": "Nama proyek, deskripsi, dan bagian yang ditampilkannya."
+    },
+    "states": {
+      "label": "Status",
+      "description": "Status alur kerja yang dilalui issue, masing-masing ditampilkan sebagai kolom."
+    },
+    "issue-types": {
+      "label": "Tipe issue",
+      "description": "Jenis issue yang dapat dimuat proyek ini, masing-masing dengan bidangnya sendiri."
+    },
+    "labels": {
+      "label": "Label",
+      "description": "Tag untuk mengorganisasi dan memfilter issue di seluruh proyek."
+    },
+    "custom-fields": {
+      "label": "Bidang kustom",
+      "description": "Bidang tambahan yang ditampilkan pada issue, berlaku global atau terbatas pada tipe issue tertentu."
+    },
+    "issue-templates": {
+      "label": "Templat issue",
+      "description": "Preset untuk membuat issue baru: judul, deskripsi, dan propertinya."
+    },
+    "configuration": {
+      "label": "Konfigurasi",
+      "description": "Cara subtugas ditutup bersama induknya, dan kapan issue usang diarsipkan."
+    },
+    "actions": {
+      "label": "Tindakan",
+      "description": "Tombol pada issue yang mengatur bidang dalam sekali klik."
+    },
+    "schedules": {
+      "label": "Jadwal",
+      "description": "Jalankan tugas agen dengan jadwal berulang."
+    },
+    "webhooks": {
+      "label": "Webhook",
+      "description": "Kirim peristiwa proyek ke URL eksternal, ditandatangani dengan rahasia per-webhook."
+    },
+    "git": {
+      "label": "Repositori",
+      "description": "Tutup issue saat pull request digabungkan di GitHub, GitLab, Gitea, Forgejo, atau Bitbucket."
+    },
+    "ai-agents": {
+      "label": "Agen AI",
+      "description": "Agen AI yang bekerja dalam proyek ini."
+    }
+  }
+}

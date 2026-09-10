@@ -2,7 +2,6 @@ import { workerConfig } from './config';
 import { deliver } from './delivery';
 import { processNotificationDeliveries } from './notification-delivery';
 import { equalJitterBackoffMs } from './backoff';
-import { deleteIssueAgentThreads } from './agent-runs';
 import { startPollLoop, type WorkerHandle } from './poll-loop';
 import { TELEMETRY_CHECK_EVERY_TICKS, processTelemetry } from './telemetry';
 import {
@@ -13,11 +12,9 @@ import {
   markFailed,
   markSkippedInactive,
   cleanupOldDeliveries,
-  archiveStaleIssues,
 } from './store';
 
 let ticksSinceCleanup = 0;
-let ticksSinceAutoArchive = 0;
 // Starts due, so an install is visible even if the instance is removed minutes later.
 let ticksSinceTelemetry = TELEMETRY_CHECK_EVERY_TICKS;
 
@@ -26,8 +23,8 @@ export function startWorker(): WorkerHandle {
 }
 
 // One poll: claim a batch of due deliveries, send them concurrently, record each
-// outcome, then run the delivery cleanup, the auto-archive sweep and the telemetry
-// check on their own tick intervals.
+// outcome, then run the delivery cleanup and the telemetry check on their own tick
+// intervals.
 async function tick(): Promise<void> {
   const cfg = workerConfig();
   const claimed = await claimDueDeliveries();
@@ -39,20 +36,6 @@ async function tick(): Promise<void> {
     ticksSinceCleanup = 0;
     const removed = await cleanupOldDeliveries();
     if (removed > 0) console.log(`[worker] cleaned up ${removed} old deliveries`);
-  }
-  if (++ticksSinceAutoArchive >= cfg.autoArchiveEveryTicks) {
-    ticksSinceAutoArchive = 0;
-    const archived = await archiveStaleIssues();
-    if (archived.length > 0) {
-      console.log(`[worker] auto-archived ${archived.length} stale issues`);
-      // An unreachable api must not read as a failed tick: the issues are archived
-      // either way, and their threads then stay until the agent or project goes.
-      try {
-        await deleteIssueAgentThreads(archived);
-      } catch (error) {
-        console.error('[worker] deleting agent threads of archived issues failed:', error);
-      }
-    }
   }
   if (++ticksSinceTelemetry >= TELEMETRY_CHECK_EVERY_TICKS) {
     ticksSinceTelemetry = 0;

@@ -62,8 +62,11 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       # Empty install flags so the image keeps devDeps the test suite needs
-      # (@elysiajs/eden); production builds default to --production.
+      # (@elysiajs/eden); production builds default to --production. The bot and
+      # worker suites run out of this image too, so their workspaces are installed
+      # as well — the production image keeps only api's closure.
       args:
+        INSTALL_FILTER: '--filter api --filter bot --filter worker'
         INSTALL_FLAGS: ''
     depends_on:
       postgres-test:
@@ -85,9 +88,9 @@ services:
       S3_BUCKET: planner-attachments
       S3_ACCESS_KEY_ID: minioadmin
       S3_SECRET_ACCESS_KEY: minioadmin
-    # Migrate the throwaway DB, then run the api suite. bun test discovers
-    # src/**/*.test.ts; env above satisfies the resetDb() guard.
-    command: sh -c "bun run packages/db/src/migrate.ts && cd apps/api && bun test"
+    # Migrate the throwaway DB, then run the api, bot and worker suites. bun test
+    # discovers src/**/*.test.ts; env above satisfies the resetDb() guard.
+    command: sh -c "bun run packages/db/src/migrate.ts && cd apps/api && bun test && cd ../bot && bun test && cd ../worker && bun test"
 
   # Webhook delivery worker, built from the same image as production, so the test
   # gate also verifies the worker image builds and boots. It idles here (no events

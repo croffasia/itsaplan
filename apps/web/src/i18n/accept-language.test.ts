@@ -15,6 +15,10 @@ describe('localeFromAcceptLanguage', () => {
     assert.equal(localeFromAcceptLanguage('ar-SA,ar;q=0.9,en;q=0.8'), 'ar');
   });
 
+  it('matches a regional Indonesian browser locale to the supported base language', () => {
+    assert.equal(localeFromAcceptLanguage('id-ID,id;q=0.9,en;q=0.8'), 'id');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
     assert.equal(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8'), 'en');
   });

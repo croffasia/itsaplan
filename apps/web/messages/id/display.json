@@ -1,0 +1,94 @@
+{
+  "title": "Tampilan",
+  "layouts": {
+    "kanban": "Kanban",
+    "table": "Tabel",
+    "timeline": "Linimasa",
+    "calendar": "Kalender"
+  },
+  "sortFields": {
+    "manual": "Manual",
+    "title": "Judul",
+    "identifier": "Nomor issue",
+    "status": "Status",
+    "priority": "Prioritas",
+    "assignee": "Penerima tugas",
+    "type": "Tipe",
+    "startDate": "Tanggal mulai",
+    "dueDate": "Tenggat waktu",
+    "created": "Dibuat",
+    "updated": "Diperbarui"
+  },
+  "groupFields": {
+    "none": "Tanpa pengelompokan",
+    "status": "Status",
+    "assignee": "Penerima tugas",
+    "delegate": "Delegasi",
+    "priority": "Prioritas",
+    "type": "Tipe",
+    "initiative": "Inisiatif",
+    "cycle": "Cycle"
+  },
+  "properties": {
+    "id": "ID",
+    "status": "Status",
+    "priority": "Prioritas",
+    "type": "Tipe",
+    "assignee": "Penerima tugas",
+    "delegate": "Delegasi",
+    "initiative": "Inisiatif",
+    "cycle": "Cycle",
+    "labels": "Label",
+    "estimatePoints": "Story points",
+    "estimateTime": "Estimasi waktu",
+    "startDate": "Tanggal mulai",
+    "dueDate": "Tenggat waktu",
+    "created": "Dibuat",
+    "updated": "Diperbarui",
+    "statusAge": "Waktu dalam status"
+  },
+  "stateTypes": {
+    "backlog": "Backlog",
+    "unstarted": "Belum dimulai",
+    "started": "Dimulai",
+    "completed": "Selesai",
+    "canceled": "Dibatalkan"
+  },
+  "timelineScales": {
+    "week": "Minggu",
+    "month": "Bulan",
+    "quarter": "Kuartal"
+  },
+  "weekStart": {
+    "0": "Minggu",
+    "1": "Senin"
+  },
+  "dateFields": {
+    "dueDate": "Tenggat waktu",
+    "startDate": "Tanggal mulai"
+  },
+  "rows": {
+    "columns": "Kolom",
+    "grouping": "Pengelompokan",
+    "swimlanes": "Swimlane",
+    "subGrouping": "Subkelompok",
+    "ordering": "Urutan",
+    "ascending": "Menaik",
+    "descending": "Menurun",
+    "showEmptyColumns": "Tampilkan kolom kosong",
+    "showEmptyGroups": "Tampilkan grup kosong",
+    "showLinks": "Tampilkan tautan",
+    "separateSubtaskCards": "Tampilkan subtugas sebagai kartu terpisah",
+    "separateSubtaskRows": "Tampilkan subtugas sebagai baris terpisah",
+    "showNestedSubtasks": "Tampilkan subtugas bertingkat",
+    "nestedSubtasks": "Subtugas bertingkat",
+    "displayProperties": "Properti tampilan",
+    "placeBy": "Tempatkan berdasarkan",
+    "startWeekOn": "Mulai minggu pada",
+    "startCollapsed": "Mulai dengan grup diciutkan",
+    "scale": "Skala",
+    "addCustomField": "Tambah bidang kustom",
+    "viewIcon": "Ikon tampilan"
+  },
+  "layoutCommand": "Tata letak {layout}"
+}

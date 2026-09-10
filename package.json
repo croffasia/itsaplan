@@ -24,7 +24,7 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "typecheck": "turbo run typecheck && tsc --noEmit",
-    "test": "bun test scripts/ && turbo run test",
+    "test": "bun test scripts/ && turbo run test --concurrency=1",
     "test:coverage": "cd apps/api && bun run test:coverage",
     "db:generate": "bun --filter='@repo/db' run db:generate",
     "db:migrate": "bun --filter='@repo/db' run db:migrate",
@@ -39,6 +39,8 @@
   ],
   "overrides": {
     "@scalar/types": "0.16.2",
-    "@scalar/themes": "0.16.2"
+    "@scalar/themes": "0.16.2",
+    "@tiptap/extension-bubble-menu": "3.30.5",
+    "@tiptap/extension-floating-menu": "3.30.5"
   }
 }

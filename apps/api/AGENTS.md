@@ -112,11 +112,6 @@ Enforced declaratively through macros, never imperative calls in handlers.
   from the route once it expands the macro, so there is nothing else to read it from.
 - Guards/macros wrap the `shared/access.ts` primitives. Handlers that still need
   `user` (project create, invite accept/reject, self-removal) call `requireUser(user)`.
-- **`/internal/*` routes** (agent runs, notification deliveries, the Telegram bot) take no
-  session: they check the `x-worker-token` header with `workerTokenValid` from
-  `shared/worker-token.ts`, which reads `WORKER_INTERNAL_TOKEN` per request and refuses
-  every request while the token is unset, shorter than 32 bytes or an example value.
-  `src/index.ts` checks the same at startup.
 - **A member of the team joins a project directly** (`POST /projects/:key/members`,
   from the candidate list); anyone else joins through an invite, which puts them in
   the team as well. A team invite (`/teams/:teamId/invites`) names no project. One

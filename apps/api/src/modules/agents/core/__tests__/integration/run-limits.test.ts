@@ -13,7 +13,7 @@ import { claimDueRuns, enqueueAgentRun } from '../../run-queue';
 // that passes the ceiling fails on the model rather than calling one — which is what
 // tells "turned away" and "let through" apart.
 
-const WORKER_TOKEN = 'run-limits-test-worker-token-32-bytes-long';
+const WORKER_TOKEN = 'run-limits-test-worker-token';
 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });

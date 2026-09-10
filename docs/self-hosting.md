@@ -27,13 +27,13 @@ On a machine with [Bun](https://bun.sh), the setup script generates them instead
 `bun install && bun run setup`, answer **Generate env**, and answer no when it offers to
 write the files: it prints `.env` and `apps/web/.env` for you to copy onto the server.
 
-`BETTER_AUTH_SECRET` and `WORKER_INTERNAL_TOKEN` must be at least 32 bytes and must not be
-an example value: the api, the worker and the bot refuse to start otherwise. An instance
-that still runs on the values an earlier `.env.example` shipped has to replace both — that
-signing secret is public, and anyone who knows it can sign in as any account. Set new
-values in `.env` and run `docker compose up -d`; every session is signed out once, and
-nothing else changes. Do not touch `APP_ENCRYPTION_KEY` while doing so: the stored provider
-credentials are only readable with the key they were written under.
+Earlier releases shipped `BETTER_AUTH_SECRET` and `WORKER_INTERNAL_TOKEN` with example
+values in `.env.example`, and an instance set up from that file kept them. Replace both if
+yours did: they are published in this repository, and the signing secret lets anyone who
+reads it sign in as any account. Put new values in `.env` and run `docker compose up -d`.
+Every session is signed out once and nothing else changes; the api warns on every start
+until the signing secret is replaced. Leave `APP_ENCRYPTION_KEY` as it is: the stored
+provider credentials are only readable with the key they were written under.
 
 That starts the whole stack: Postgres, MinIO, api, worker, bot, and web. The four services
 run from the images published on each release. `VERSION` in `.env` pins one release instead

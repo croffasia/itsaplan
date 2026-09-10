@@ -180,11 +180,13 @@ not required for it.
 - Changing the config (plugins, fields) can change the DB tables → run `bun run auth:generate`
   (writes `packages/db/src/schema/auth.ts`), then `db:generate` + `db:migrate`.
 - Config is env-driven: `API_URL` (backend origin, used as better-auth `baseURL`),
-  `BETTER_AUTH_SECRET`, `APP_URL` (frontend origin(s), comma-separated). All three are
-  mandatory and have no default — importing this module throws when one is missing.
-  `BETTER_AUTH_SECRET` also has to be at least 32 bytes and not an example value
-  (`assertStrongSecret` from `@repo/crypto`): better-auth only warns about a weak
-  secret, and whoever knows it can sign in as anyone. Do not add a localhost fallback:
+  `BETTER_AUTH_SECRET`, `APP_URL` (frontend origin(s), comma-separated). `API_URL` and
+  `APP_URL` are mandatory and have no default — importing this module throws when either
+  is missing. better-auth guards the secret itself: it refuses an unset one and its own
+  default, and warns below 32 characters or 120 bits of estimated entropy. The one value
+  it cannot know about is the example this repository used to ship, which clears all
+  three checks, so importing this module warns about that one string. Do not add a
+  localhost fallback:
   cookies, the passkey relying party, the cookie domain and every link in an
   authentication email are derived from the URLs, so a wrong value fails silently at
   runtime instead of at startup.

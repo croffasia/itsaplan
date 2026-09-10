@@ -54,7 +54,6 @@
       "name": "bot",
       "version": "1.0.0",
       "dependencies": {
-        "@repo/crypto": "workspace:*",
         "grammy": "^1.45.1",
       },
       "devDependencies": {
@@ -153,7 +152,6 @@
       "name": "worker",
       "version": "1.0.0",
       "dependencies": {
-        "@repo/crypto": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/net": "workspace:*",
         "croner": "^10.0.1",

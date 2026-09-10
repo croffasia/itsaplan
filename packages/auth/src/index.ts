@@ -1,5 +1,4 @@
 import { randomInt } from 'node:crypto';
-import { assertStrongSecret } from '@repo/crypto';
 import { db, defaultMemberPermissions } from '@repo/db';
 import { eq, sql, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
@@ -68,10 +67,15 @@ if (!baseURL) {
   throw new Error('API_URL is not set: public origin of the backend.');
 }
 
-// Signs every session cookie and verification token. better-auth itself only warns
-// about a short or example value, and whoever knows the secret can mint a session
-// for any account, so a value that is not a real secret stops the process here.
-const secret = assertStrongSecret('BETTER_AUTH_SECRET', process.env.BETTER_AUTH_SECRET);
+// The value .env.example shipped before it was emptied. better-auth refuses an unset
+// secret and its own default, and warns below 32 characters or 120 bits of estimated
+// entropy; this one clears all three. It warns rather than refuses: an instance already
+// running on it is no safer for going down, and replacing it signs every session out.
+if (process.env.BETTER_AUTH_SECRET === 'change-me-please-generate-a-real-secret') {
+  console.warn(
+    '[auth] BETTER_AUTH_SECRET is the example value: it is published in this repository, and anyone who reads it can sign in as any account. Replace it with `openssl rand -base64 32`.',
+  );
+}
 
 // User roles. "god" is the owner of the instance: the very first registered user
 // gets it automatically; everyone after is a plain "user". The role is assigned
@@ -260,7 +264,7 @@ export async function generateUsername(email: string): Promise<string> {
 
 export const auth = betterAuth({
   baseURL,
-  secret,
+  secret: process.env.BETTER_AUTH_SECRET,
 
   database: drizzleAdapter(db, {
     provider: 'pg',

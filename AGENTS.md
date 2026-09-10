@@ -75,7 +75,7 @@ apps/worker     webhook and notification delivery, agent runs, schedules
 apps/bot        Telegram bot, long polling
 packages/db     @repo/db     — Drizzle client, schema, migrations, permission matrix
 packages/auth   @repo/auth   — better-auth server instance + instance auth settings
-packages/crypto @repo/crypto — AES-256-GCM encryption for secrets at rest; strength check of env secrets
+packages/crypto @repo/crypto — AES-256-GCM encryption for secrets at rest
 packages/mailer @repo/mailer — SMTP/Resend transport for outbound email
 packages/net    @repo/net    — SSRF guard for server-side fetches of a supplied URL
 packages/agent-tools @repo/agent-tools — tool definitions for the AI agent runtime

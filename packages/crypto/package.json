@@ -8,8 +8,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

@@ -4,6 +4,7 @@ import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useIssueSearchQuery } from '@/services/issues.service';
 import type { Command, CommandPage, CommandSection } from '@/utils/commands';
 import { substringFilter } from '@/utils/commandFilter';
+import CommandPaletteDocuments from './CommandPaletteDocuments';
 import CommandPaletteIssues from '@/components/layout/CommandPaletteIssues';
 import CommandPaletteRow from '@/components/layout/CommandPaletteRow';
 import {
@@ -112,6 +113,12 @@ export default function CommandPalette({
             </Fragment>
           ))
         )}
+        <CommandPaletteDocuments
+          projectKey={currentProjectKey}
+          query={debounced}
+          enabled={open && !page}
+          onClose={() => onOpenChange(false)}
+        />
         {/* Issue results only appear while the user is typing, otherwise the
             palette would list the entire project on open. */}
         {!page && hasProject && searching && (hits.length > 0 || search.isFetching) && (

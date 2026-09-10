@@ -188,6 +188,66 @@
     "codeBlock": "代码块",
     "divider": "分隔线",
     "undo": "撤销",
-    "redo": "重做"
+    "redo": "重做",
+    "editorLabel": "Document content"
+  },
+  "recentAndFavorites": "Recent and favorites",
+  "searching": "Searching documents…",
+  "blocks": {
+    "actions": "Block actions",
+    "up": "Move up",
+    "down": "Move down",
+    "duplicate": "Duplicate block or section",
+    "delete": "Delete block or section",
+    "copyLink": "Copy link to block",
+    "linkCopied": "Link copied",
+    "copyFailed": "Could not copy the link"
+  },
+  "sync": {
+    "connecting": "Connecting to the document…",
+    "offline": "Offline. Changes stay in this tab and will sync when you reconnect.",
+    "error": "Changes have not synced. Your draft is kept in this tab.",
+    "conflict": "The document was restored, replaced, or access changed. Keep your draft before rejoining.",
+    "retry": "Retry",
+    "recoveryConflict": "The server document was replaced. Your unsaved text is shown here. Export it before opening the current version.",
+    "exportRecovery": "Export my text",
+    "discardRecovery": "Open current version",
+    "discardConfirm": "Discard this unsaved copy and open the current server version? Export your text first if you need it."
+  },
+  "workItem": {
+    "create": "Create work item",
+    "description": "Create a linked work item from this selection.",
+    "title": "Title",
+    "status": "Status",
+    "source": "Source document",
+    "cancel": "Cancel",
+    "creating": "Creating…",
+    "failed": "Could not create the work item. Try again.",
+    "linkFailed": "The work item was created. Retry to finish linking it; another item will not be created.",
+    "retryLink": "Retry linking"
+  },
+  "selectionActions": "Selection actions",
+  "comments": {
+    "title": "Comments",
+    "add": "Comment",
+    "edit": "Edit comment",
+    "save": "Save",
+    "cancel": "Cancel",
+    "reply": "Reply",
+    "replyPlaceholder": "Write a reply…",
+    "send": "Send",
+    "resolve": "Resolve",
+    "reopen": "Reopen",
+    "textRemoved": "The selected text was removed",
+    "unknownAuthor": "Former member",
+    "close": "Close comments",
+    "placeholder": "Discuss this selection…",
+    "resolved": "Resolved",
+    "open": "Open",
+    "failed": "Could not save. The document may have changed; select the text again or retry.",
+    "loading": "Loading comments…",
+    "retry": "Retry",
+    "noResolved": "No resolved discussions.",
+    "empty": "Select text to start a discussion."
   }
 }

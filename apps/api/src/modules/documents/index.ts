@@ -1,3 +1,4 @@
+import { documentCollaborationRoutes } from './collaboration-routes';
 import { Elysia, t } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { assertPermission, requireUser } from '#shared/access';
@@ -105,6 +106,7 @@ export const documentRoutes = new Elysia({
 })
   .use(authContext)
   .use(guards)
+  .use(documentCollaborationRoutes)
   .get(
     '/projects/:projectKey/documents',
     async ({ project, query, user }) =>

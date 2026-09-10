@@ -25,6 +25,10 @@ import { openLinkOnModifierClick } from '@/components/common/editor/modifierClic
 import { ResizableImage } from '@/components/common/editor/tiptap-image';
 import { MarkdownTable } from '@/components/common/editor/tiptap-table';
 import { pasteMarkdown } from '@/components/common/editor/pasteMarkdown';
+import { useDocumentAnchor } from '../hooks/useDocumentAnchor';
+import { DocumentBlockId } from '../extensions/documentBlockId';
+import DocumentBlockMenu from './DocumentBlockMenu';
+import DocumentSelectionActions, { type DocumentSelection } from './DocumentSelectionActions';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
 
 const lowlight = createLowlight(common);
@@ -74,6 +78,7 @@ type EditorValue = { markdown: string; json: JSONContent };
 
 export function documentEditorExtensions(labels: EditorLabels) {
   return [
+    DocumentBlockId,
     StarterKit.configure({
       codeBlock: false,
       link: false,
@@ -112,9 +117,13 @@ function editorValue(editor: Editor): EditorValue {
 }
 
 export default function DocumentMarkdownEditor({
+  projectKey,
+  documentId,
+  onComment,
   defaultValue,
   defaultJson,
   editable,
+  collaborative = false,
   placeholder,
   className,
   onReady,
@@ -123,9 +132,13 @@ export default function DocumentMarkdownEditor({
   onPickImage,
   onUploadImage,
 }: {
+  projectKey?: string;
+  documentId?: number;
+  onComment?: (selection: DocumentSelection) => void;
   defaultValue: string;
   defaultJson: Record<string, unknown> | null;
   editable: boolean;
+  collaborative?: boolean;
   placeholder: string;
   className?: string;
   onReady: (editor: Editor | null) => void;
@@ -171,6 +184,9 @@ export default function DocumentMarkdownEditor({
         return openLinkOnModifierClick(event, view.dom);
       },
       attributes: {
+        role: 'textbox',
+        'aria-multiline': 'true',
+        'aria-label': t('editorLabel'),
         class: 'md-content flex-1 focus:outline-none selection:bg-primary/15',
       },
       handlePaste: (_view, event) => {
@@ -207,12 +223,16 @@ export default function DocumentMarkdownEditor({
     onCreate: ({ editor: currentEditor }) => {
       editorRef.current = currentEditor;
     },
-    onUpdate: ({ editor: currentEditor }) => onChange(editorValue(currentEditor)),
+    onUpdate: ({ editor: currentEditor }) => {
+      if (!collaborative) onChange(editorValue(currentEditor));
+    },
     onBlur: ({ editor: currentEditor }) => onBlur(editorValue(currentEditor)),
     onDestroy: () => {
       editorRef.current = null;
     },
   });
+
+  useDocumentAnchor(editor);
 
   useEffect(() => {
     editorRef.current = editor;
@@ -227,8 +247,20 @@ export default function DocumentMarkdownEditor({
   if (!editor) return null;
 
   return (
-    <div className={className} data-document-editor="">
-      {editable && <EditorSelectionMenu editor={editor} />}
+    <div className={`relative ${className ?? ''}`} data-document-editor="">
+      {editable && <DocumentBlockMenu editor={editor} />}
+      {editable && (
+        <EditorSelectionMenu editor={editor}>
+          {projectKey && documentId && onComment && (
+            <DocumentSelectionActions
+              editor={editor}
+              projectKey={projectKey}
+              documentId={documentId}
+              onComment={onComment}
+            />
+          )}
+        </EditorSelectionMenu>
+      )}
       {editable && <EditorTableMenu editor={editor} />}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
       <EditorLinkPreview editor={editor} />

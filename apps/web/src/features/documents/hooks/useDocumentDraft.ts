@@ -14,6 +14,7 @@ interface StoredDocumentDraft {
   contentJson?: Record<string, unknown> | null;
   baseVersion: number;
   writerId?: string;
+  collaborative?: boolean;
 }
 
 function draftStorageKey(projectKey: string, documentId: number, userId: string) {
@@ -80,16 +81,19 @@ export function useDocumentDraft({
   document,
   editable,
   userId,
+  collaborative = false,
 }: {
   projectKey: string;
   document: ProjectDocument;
   editable: boolean;
   userId: string | null;
+  collaborative?: boolean;
 }) {
   const { mutateAsync } = useUpdateDocument(projectKey);
   const versionRef = useRef(document.version);
   const savingRef = useRef(false);
   const writerIdRef = useRef(uuid());
+  const [legacyDraft, setLegacyDraft] = useState(false);
   const [version, setVersion] = useState(document.version);
   const [title, setTitleState] = useState(document.title);
   const [content, setContentState] = useState(document.content);
@@ -105,8 +109,8 @@ export function useDocumentDraft({
   const [restoredStorageKey, setRestoredStorageKey] = useState<string | null>(null);
   const dirty =
     title !== saved.title ||
-    content !== saved.content ||
-    JSON.stringify(contentJson) !== saved.contentJson;
+    (!collaborative &&
+      (content !== saved.content || JSON.stringify(contentJson) !== saved.contentJson));
   const storageKey = userId ? draftStorageKey(projectKey, document.id, userId) : null;
 
   // Keep an on-device recovery copy. Unlike beforeunload, this also survives
@@ -130,10 +134,21 @@ export function useDocumentDraft({
     setTitleState(local?.title ?? document.title);
     setContentState(local?.content ?? document.content);
     setContentJsonState(local ? (local.contentJson ?? null) : document.contentJson);
-    setSaveState(local && local.baseVersion !== document.version ? 'conflict' : 'saved');
+    const legacy = Boolean(
+      collaborative &&
+      local &&
+      !local.collaborative &&
+      (local.content !== document.content ||
+        JSON.stringify(local.contentJson ?? null) !== JSON.stringify(document.contentJson)),
+    );
+    setLegacyDraft(legacy);
+    setSaveState(
+      legacy || (local && local.baseVersion !== document.version) ? 'conflict' : 'saved',
+    );
     setEditorRevision((revision) => revision + 1);
     setRestoredStorageKey(storageKey);
   }, [
+    collaborative,
     document.content,
     document.contentJson,
     document.title,
@@ -150,7 +165,11 @@ export function useDocumentDraft({
   useEffect(() => {
     if (document.version <= versionRef.current) return;
     if (dirty || savingRef.current) {
-      setSaveState('conflict');
+      if (collaborative && document.title === saved.title) {
+        versionRef.current = document.version;
+        setVersion(document.version);
+        setDraftBaseVersion(document.version);
+      } else setSaveState('conflict');
       return;
     }
     versionRef.current = document.version;
@@ -165,8 +184,16 @@ export function useDocumentDraft({
       contentJson: JSON.stringify(document.contentJson),
     });
     setSaveState('saved');
-    setEditorRevision((revision) => revision + 1);
-  }, [dirty, document.content, document.contentJson, document.title, document.version]);
+    if (!collaborative) setEditorRevision((revision) => revision + 1);
+  }, [
+    collaborative,
+    saved.title,
+    dirty,
+    document.content,
+    document.contentJson,
+    document.title,
+    document.version,
+  ]);
 
   useEffect(() => {
     if (!storageKey || restoredStorageKey !== storageKey) return;
@@ -180,6 +207,7 @@ export function useDocumentDraft({
             contentJson,
             baseVersion: draftBaseVersion,
             writerId: writerIdRef.current,
+            collaborative: collaborative && !legacyDraft,
           }),
         );
       } else {
@@ -188,7 +216,17 @@ export function useDocumentDraft({
     } catch {
       // A full or disabled storage must not prevent editing or autosave.
     }
-  }, [content, contentJson, dirty, draftBaseVersion, restoredStorageKey, storageKey, title]);
+  }, [
+    collaborative,
+    legacyDraft,
+    content,
+    contentJson,
+    dirty,
+    draftBaseVersion,
+    restoredStorageKey,
+    storageKey,
+    title,
+  ]);
 
   const save = useCallback(async (): Promise<ProjectDocument | null> => {
     if (!editable || !dirty || savingRef.current || saveState === 'conflict') return null;
@@ -203,8 +241,9 @@ export function useDocumentDraft({
         patch: {
           version: baseVersion,
           title: snapshot.title,
-          content: snapshot.content,
-          contentJson: snapshot.contentJson,
+          ...(!collaborative
+            ? { content: snapshot.content, contentJson: snapshot.contentJson }
+            : {}),
         },
       });
       versionRef.current = updated.version;
@@ -226,6 +265,7 @@ export function useDocumentDraft({
       savingRef.current = false;
     }
   }, [
+    collaborative,
     content,
     contentJson,
     dirty,
@@ -262,6 +302,7 @@ export function useDocumentDraft({
   };
 
   const replaceWith = (latest: ProjectDocument) => {
+    setLegacyDraft(false);
     try {
       removeOwnedStoredDraft(storageKey, writerIdRef.current);
     } catch {
@@ -285,6 +326,18 @@ export function useDocumentDraft({
   };
 
   const adoptServerDocument = (latest: ProjectDocument) => {
+    if (latest.version < versionRef.current) return;
+    if (
+      collaborative &&
+      title !== saved.title &&
+      latest.title !== saved.title &&
+      latest.title !== title
+    )
+      setSaveState('conflict');
+    if (collaborative && (title === saved.title || latest.title === title)) {
+      setTitleState(latest.title);
+      setSaved((previous) => ({ ...previous, title: latest.title }));
+    }
     const previousVersion = versionRef.current;
     versionRef.current = latest.version;
     setVersion(latest.version);
@@ -293,6 +346,7 @@ export function useDocumentDraft({
   };
 
   return {
+    legacyDraft,
     title,
     content,
     contentJson,

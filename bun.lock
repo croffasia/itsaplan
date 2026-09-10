@@ -35,6 +35,7 @@
         "@repo/db": "workspace:*",
         "@repo/mailer": "workspace:*",
         "@repo/net": "workspace:*",
+        "@tiptap/pm": "3.30.5",
         "croner": "^10.0.1",
         "decode-named-character-reference": "^1.3.0",
         "drizzle-orm": "^0.45.2",
@@ -126,6 +127,7 @@
         "next": "^16.3.4",
         "next-intl": "^4.13.6",
         "next-themes": "^0.4.6",
+        "prosemirror-collab": "^1.3.1",
         "radix-ui": "^1.6.7",
         "react": "^19.2.8",
         "react-day-picker": "^10.0.1",
@@ -2445,6 +2447,8 @@
     "property-information": ["property-information@7.2.0", "", {}, "sha512-IAtzIB6sUiWaJYrX9smp3V46pBGbBeLFRGdh25kg1334VcBlD8HzhPeNIWQH9zhGmo2itIe25EHt9dQP7G5hmg=="],
 
     "prosemirror-changeset": ["prosemirror-changeset@2.4.1", "", { "dependencies": { "prosemirror-transform": "^1.0.0" } }, "sha512-96WBLhOaYhJ+kPhLg3uW359Tz6I/MfcrQfL4EGv4SrcqKEMC1gmoGrXHecPE8eOwTVCJ4IwgfzM8fFad25wNfw=="],
+
+    "prosemirror-collab": ["prosemirror-collab@1.3.1", "", { "dependencies": { "prosemirror-state": "^1.0.0" } }, "sha512-4SnynYR9TTYaQVXd/ieUvsVV4PDMBzrq2xPUWutHivDuOshZXqQ5rGbZM84HEaXKbLdItse7weMGOUdDVcLKEQ=="],
 
     "prosemirror-commands": ["prosemirror-commands@1.7.1", "", { "dependencies": { "prosemirror-model": "^1.0.0", "prosemirror-state": "^1.0.0", "prosemirror-transform": "^1.10.2" } }, "sha512-rT7qZnQtx5c0/y/KlYaGvtG411S97UaL6gdp6RIZ23DLHanMYLyfGBV5DtSnZdthQql7W+lEVbpSfwtO8T+L2w=="],
 

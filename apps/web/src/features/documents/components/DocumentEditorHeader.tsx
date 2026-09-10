@@ -1,4 +1,12 @@
-import { ArrowLeft, Check, CircleAlert, LoaderCircle, PanelRight, RefreshCw } from 'lucide-react';
+import {
+  ArrowLeft,
+  Check,
+  CircleAlert,
+  LoaderCircle,
+  PanelRight,
+  MessageSquare,
+  RefreshCw,
+} from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDocument, ProjectDocumentSummary } from '@/lib/api/endpoints/documents';
 import { Button } from '@/components/ui/button';
@@ -39,6 +47,8 @@ export default function DocumentEditorHeader({
   onArchive,
   onRestore,
   onDelete,
+  commentsOpen,
+  onCommentsOpen,
   inspectorOpen,
   onInspectorOpenChange,
   onOpenHistory,
@@ -48,8 +58,8 @@ export default function DocumentEditorHeader({
   document: ProjectDocument;
   ancestors: ProjectDocumentSummary[];
   title: string;
-  content: string;
-  richHtml: string;
+  content: () => string;
+  richHtml: () => string;
   saveState: DocumentSaveState;
   dirty: boolean;
   stickyToolbar: boolean;
@@ -71,6 +81,8 @@ export default function DocumentEditorHeader({
   onArchive: () => void;
   onRestore: () => void;
   onDelete: () => void;
+  commentsOpen: boolean;
+  onCommentsOpen: () => void;
   inspectorOpen: boolean;
   onInspectorOpenChange: (open: boolean) => void;
   onOpenHistory: () => void;
@@ -151,6 +163,15 @@ export default function DocumentEditorHeader({
           </Button>
         )}
 
+        <Button
+          type="button"
+          size="icon-sm"
+          variant={commentsOpen ? 'secondary' : 'ghost'}
+          aria-label={t('comments.title')}
+          onClick={onCommentsOpen}
+        >
+          <MessageSquare className="size-4" />
+        </Button>
         <DocumentFavoriteButton
           favorite={document.isFavorite}
           disabled={busy}

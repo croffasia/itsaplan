@@ -273,3 +273,96 @@ export const deleteDocumentAsset = (projectKey: string, documentId: number, publ
     `/projects/${projectKey}/documents/${documentId}/assets/${encodeURIComponent(publicId)}`,
     { method: 'DELETE' },
   );
+
+export interface DocumentSession {
+  documentId: number;
+  epoch: string;
+  version: number;
+  contentJson: Record<string, unknown>;
+}
+export interface DocumentChanges {
+  epoch: string;
+  version: number;
+  documentVersion: number;
+  hasMore: boolean;
+  steps: { clientId: string; step: Record<string, unknown> }[];
+}
+export interface DocumentComment {
+  documentVersion: number;
+  id: string;
+  documentId: number;
+  parentId: string | null;
+  authorId: string | null;
+  authorName: string | null;
+  body: string;
+  quote: string;
+  from: number | null;
+  to: number | null;
+  orphaned: boolean;
+  resolvedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const openDocumentSession = (
+  projectKey: string,
+  documentId: number,
+  version: number,
+  contentJson: Record<string, unknown>,
+) =>
+  request<DocumentSession>(`/projects/${projectKey}/documents/${documentId}/session`, {
+    method: 'POST',
+    body: JSON.stringify({ version, contentJson }),
+  });
+export const getDocumentChanges = (
+  projectKey: string,
+  documentId: number,
+  epoch: string,
+  version: number,
+) =>
+  request<DocumentChanges>(
+    `/projects/${projectKey}/documents/${documentId}/steps?epoch=${encodeURIComponent(epoch)}&version=${version}`,
+  );
+export const saveDocumentChanges = (
+  projectKey: string,
+  documentId: number,
+  input: {
+    epoch: string;
+    version: number;
+    clientId: string;
+    steps: Record<string, unknown>[];
+    content: string;
+  },
+) =>
+  request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}/steps`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+export const listDocumentComments = (projectKey: string, documentId: number) =>
+  request<DocumentComment[]>(`/projects/${projectKey}/documents/${documentId}/comments`);
+export const addDocumentComment = (
+  projectKey: string,
+  documentId: number,
+  input: {
+    body: string;
+    parentId?: string;
+    quote?: string;
+    from?: number;
+    to?: number;
+    version: number;
+  },
+) =>
+  request<{ id: string }>(`/projects/${projectKey}/documents/${documentId}/comments`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+export const updateDocumentComment = (
+  projectKey: string,
+  documentId: number,
+  commentId: string,
+  input: { body?: string; resolved?: boolean },
+) =>
+  request<{ ok: boolean }>(
+    `/projects/${projectKey}/documents/${documentId}/comments/${commentId}`,
+    { method: 'PATCH', body: JSON.stringify(input) },
+  );

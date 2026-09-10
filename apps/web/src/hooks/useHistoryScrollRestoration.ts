@@ -82,6 +82,7 @@ function replaceHistoryPosition(position: ScrollRestorationPosition) {
   window.history.replaceState(
     { ...window.history.state, __itsaplanScrollRestoration: position },
     '',
+    window.location.href,
   );
 }
 

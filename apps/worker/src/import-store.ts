@@ -89,15 +89,17 @@ export function decryptImportCredential(job: ClaimedImportJob): PlaneCredential 
   return JSON.parse(decryptSecret(encrypted)) as PlaneCredential;
 }
 
-// A successful tick clears the claim lease (nextAttemptAt) as well as resetting
-// attempts, so the next tick can claim the job right away instead of waiting out
-// the lease claimDueImportJobs set. `attempts` counts consecutive claims with no
-// successful tick in between, not ticks claimed overall, so a transient error
-// only fails the job after MAX_ATTEMPTS in a row.
+// A successful tick clears the claim lease (nextAttemptAt) and lastError, and
+// resets attempts, so the next tick can claim the job right away instead of
+// waiting out the lease claimDueImportJobs set, and a resolved rate limit or
+// transient failure doesn't linger as if it were still happening. `attempts`
+// counts consecutive claims with no successful tick in between, not ticks
+// claimed overall, so a transient error only fails the job after MAX_ATTEMPTS
+// in a row.
 export async function saveImportJobCursor(jobId: number, cursor: object): Promise<void> {
   await db
     .update(importJob)
-    .set({ cursor, attempts: 0, nextAttemptAt: sql`now()`, updatedAt: new Date() })
+    .set({ cursor, attempts: 0, nextAttemptAt: sql`now()`, lastError: null, updatedAt: new Date() })
     .where(eq(importJob.id, jobId));
 }
 
@@ -108,7 +110,14 @@ export async function advanceImportJobPhase(
 ): Promise<void> {
   await db
     .update(importJob)
-    .set({ phase, cursor, attempts: 0, nextAttemptAt: sql`now()`, updatedAt: new Date() })
+    .set({
+      phase,
+      cursor,
+      attempts: 0,
+      nextAttemptAt: sql`now()`,
+      lastError: null,
+      updatedAt: new Date(),
+    })
     .where(eq(importJob.id, jobId));
 }
 
@@ -120,6 +129,7 @@ export async function completeImportJob(jobId: number): Promise<void> {
     .set({
       status: 'completed',
       phase: 'done',
+      lastError: null,
       updatedAt: new Date(),
       credentialCiphertext: null,
       credentialIv: null,

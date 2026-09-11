@@ -497,6 +497,9 @@
     "resume": "Lanjutkan",
     "cancel": "Batal",
     "countsLegend": "dibuat / ditemukan",
+    "countsNotDiscovered": "belum ditemukan",
+    "rateLimitedRetrying": "Batas laju permintaan Plane tercapai. Mencoba lagi dalam {seconds} dtk.",
+    "transientErrorRetrying": "{error} — mencoba lagi dalam {seconds} dtk.",
     "statuses": {
       "pending": "Tertunda",
       "running": "Berjalan",

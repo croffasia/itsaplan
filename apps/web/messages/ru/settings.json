@@ -497,6 +497,9 @@
     "resume": "Возобновить",
     "cancel": "Отменить",
     "countsLegend": "создано / найдено",
+    "countsNotDiscovered": "пока не обнаружено",
+    "rateLimitedRetrying": "Достигнут лимит запросов Plane. Повтор через {seconds} с.",
+    "transientErrorRetrying": "{error} — повтор через {seconds} с.",
     "statuses": {
       "pending": "В ожидании",
       "running": "Выполняется",

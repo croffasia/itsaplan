@@ -497,6 +497,9 @@
     "resume": "Відновити",
     "cancel": "Скасувати",
     "countsLegend": "створено / знайдено",
+    "countsNotDiscovered": "ще не знайдено",
+    "rateLimitedRetrying": "Досягнуто ліміту запитів Plane. Повтор через {seconds} с.",
+    "transientErrorRetrying": "{error} — повтор через {seconds} с.",
     "statuses": {
       "pending": "В очікуванні",
       "running": "Виконується",

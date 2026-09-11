@@ -497,6 +497,9 @@
     "resume": "Reprendre",
     "cancel": "Annuler",
     "countsLegend": "créés / trouvés",
+    "countsNotDiscovered": "pas encore découvert",
+    "rateLimitedRetrying": "La limite de requêtes de Plane a été atteinte. Nouvel essai dans {seconds} s.",
+    "transientErrorRetrying": "{error} — nouvel essai dans {seconds} s.",
     "statuses": {
       "pending": "En attente",
       "running": "En cours",

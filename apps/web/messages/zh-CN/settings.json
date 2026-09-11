@@ -497,6 +497,9 @@
     "resume": "继续",
     "cancel": "取消",
     "countsLegend": "已创建 / 已发现",
+    "countsNotDiscovered": "尚未发现",
+    "rateLimitedRetrying": "已达到 Plane 的速率限制，将在 {seconds} 秒后重试。",
+    "transientErrorRetrying": "{error} — 将在 {seconds} 秒后重试。",
     "statuses": {
       "pending": "待处理",
       "running": "运行中",

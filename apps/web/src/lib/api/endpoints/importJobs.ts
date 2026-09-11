@@ -21,6 +21,7 @@ export interface ImportJob {
   status: ImportJobStatus;
   counts: Record<ImportEntityType, ImportEntityCount>;
   lastError: string | null;
+  nextAttemptAt: string;
   createdAt: string;
   updatedAt: string;
 }

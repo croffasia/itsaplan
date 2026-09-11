@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import type { ImportEntityType, ImportJob } from '@/lib/api/endpoints/importJobs';
+import { Progress } from '@/components/ui/progress';
 
 const ENTITY_ORDER: ImportEntityType[] = [
   'issue',
@@ -17,20 +18,24 @@ export default function SettingsImportExportJobCounts({ counts }: { counts: Impo
   const t = useTranslations('settings.importExport');
   return (
     <div>
-      <div className="grid grid-cols-2 gap-x-6 gap-y-1 sm:grid-cols-3 lg:grid-cols-6">
-        {ENTITY_ORDER.map((type) => (
-          <div
-            key={type}
-            className="flex items-center justify-between gap-2 rounded bg-background/60 px-2 py-1 text-xs"
-          >
-            <span className="text-muted-foreground">{t(`entities.${type}`)}</span>
-            <span className="font-medium">
-              {counts[type].created}/{counts[type].discovered}
-            </span>
-          </div>
-        ))}
+      <div className="grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2 lg:grid-cols-3">
+        {ENTITY_ORDER.map((type) => {
+          const { created, discovered } = counts[type];
+          const pct = discovered > 0 ? Math.round((created / discovered) * 100) : 0;
+          return (
+            <div key={type} className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">{t(`entities.${type}`)}</span>
+                <span className="font-medium">
+                  {discovered > 0 ? `${created}/${discovered}` : t('countsNotDiscovered')}
+                </span>
+              </div>
+              <Progress value={pct} className="h-1.5" />
+            </div>
+          );
+        })}
       </div>
-      <p className="mt-1 text-[10px] text-muted-foreground">{t('countsLegend')}</p>
+      <p className="mt-2 text-[10px] text-muted-foreground">{t('countsLegend')}</p>
     </div>
   );
 }

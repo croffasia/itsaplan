@@ -55,6 +55,7 @@ export const ImportJobResponse = t.Object({
   status: t.UnionEnum(['pending', 'running', 'paused', 'completed', 'failed']),
   counts: CountsResponse,
   lastError: t.Nullable(t.String()),
+  nextAttemptAt: t.String(),
   createdAt: t.String(),
   updatedAt: t.String(),
 });

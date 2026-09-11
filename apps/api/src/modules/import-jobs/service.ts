@@ -39,6 +39,7 @@ export interface ImportJobDto {
   status: ImportJobStatus;
   counts: Record<ImportEntityType, EntityCount>;
   lastError: string | null;
+  nextAttemptAt: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,6 +77,7 @@ function toDto(row: ImportJobRow, counts: Record<ImportEntityType, EntityCount>)
     status: row.status as ImportJobStatus,
     counts,
     lastError: row.lastError,
+    nextAttemptAt: iso(row.nextAttemptAt),
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
   };

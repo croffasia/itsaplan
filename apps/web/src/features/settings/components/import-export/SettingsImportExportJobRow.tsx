@@ -8,6 +8,7 @@ import {
   useResumeImportJob,
   useCancelImportJob,
 } from '../../services/settings.service';
+import SettingsWarningBanner from '../SettingsWarningBanner';
 import SettingsImportExportJobCounts from './SettingsImportExportJobCounts';
 
 const STATUS_VARIANT: Record<
@@ -43,12 +44,28 @@ export default function SettingsImportExportJobRow({
   const canCancel =
     editable && (job.status === 'pending' || job.status === 'running' || job.status === 'paused');
 
+  // lastError is cleared on every successful tick, so seeing one while still
+  // 'pending' means the job is currently waiting out a retry, not stalled —
+  // 'failed' is the only terminal, non-retrying error state.
+  const isRetrying = job.status === 'pending' && job.lastError != null;
+  const isWorking = job.status === 'pending' && job.lastError == null;
+  const retrySeconds = isRetrying
+    ? Math.max(0, Math.round((new Date(job.nextAttemptAt).getTime() - Date.now()) / 1000))
+    : 0;
+
   return (
     <div className="space-y-3 p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Badge variant={STATUS_VARIANT[job.status]}>{t(`statuses.${job.status}`)}</Badge>
-          <span className="text-sm font-medium">{t(`phases.${job.phase}`)}</span>
+          {(isWorking || isRetrying) && (
+            <>
+              {isWorking && (
+                <span className="size-1.5 animate-pulse rounded-full bg-primary" aria-hidden />
+              )}
+              <span className="text-sm font-medium">{t(`phases.${job.phase}`)}</span>
+            </>
+          )}
           <span className="text-xs text-muted-foreground">{formatDateTime(job.createdAt)}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -84,7 +101,16 @@ export default function SettingsImportExportJobRow({
           )}
         </div>
       </div>
-      {job.lastError && <p className="text-xs text-destructive">{job.lastError}</p>}
+      {isRetrying && job.lastError && (
+        <SettingsWarningBanner>
+          {job.lastError === 'rate limited'
+            ? t('rateLimitedRetrying', { seconds: retrySeconds })
+            : t('transientErrorRetrying', { error: job.lastError, seconds: retrySeconds })}
+        </SettingsWarningBanner>
+      )}
+      {job.status === 'failed' && job.lastError && (
+        <p className="text-xs text-destructive">{job.lastError}</p>
+      )}
       <SettingsImportExportJobCounts counts={job.counts} />
     </div>
   );

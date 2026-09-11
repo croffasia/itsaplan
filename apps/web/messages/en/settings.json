@@ -497,6 +497,9 @@
     "resume": "Resume",
     "cancel": "Cancel",
     "countsLegend": "created / discovered",
+    "countsNotDiscovered": "not yet discovered",
+    "rateLimitedRetrying": "Plane's rate limit was reached. Retrying in {seconds}s.",
+    "transientErrorRetrying": "{error} — retrying in {seconds}s.",
     "statuses": {
       "pending": "Pending",
       "running": "Running",

@@ -497,6 +497,9 @@
     "resume": "استكمال",
     "cancel": "إلغاء",
     "countsLegend": "اتعمل / اتلاقى",
+    "countsNotDiscovered": "لم يتم اكتشافها بعد",
+    "rateLimitedRetrying": "تم الوصول إلى حد معدل الطلبات في Plane. ستتم إعادة المحاولة خلال {seconds} ثانية.",
+    "transientErrorRetrying": "{error} — ستتم إعادة المحاولة خلال {seconds} ثانية.",
     "statuses": {
       "pending": "قيد الانتظار",
       "running": "شغّال",

@@ -2140,6 +2140,86 @@ export const webhookDelivery = pgTable(
   ],
 );
 
+// Background job that imports issues from an external tracker into a project. The
+// worker claims due rows the same way as webhook_delivery, and cursor is the
+// job's own per-phase resumability checkpoint, not the source API's pagination
+// cursor. The credential columns are cleared once the job reaches a terminal
+// status; only 'plane' is supported as a source today.
+export type ImportSource = 'plane';
+
+export const importJob = pgTable(
+  'import_job',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    createdByUserId: text('created_by_user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    source: text('source').notNull(),
+    phase: text('phase').notNull().default('discover'),
+    status: text('status').notNull().default('pending'),
+    config: jsonb('config').notNull().default({}),
+    cursor: jsonb('cursor').notNull().default({}),
+    credentialCiphertext: text('credential_ciphertext'),
+    credentialIv: text('credential_iv'),
+    credentialAuthTag: text('credential_auth_tag'),
+    attempts: integer('attempts').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('import_job_source_check', sql`${t.source} IN ('plane')`),
+    check(
+      'import_job_phase_check',
+      sql`${t.phase} IN ('discover', 'create', 'link', 'attachments', 'done')`,
+    ),
+    check(
+      'import_job_status_check',
+      sql`${t.status} IN ('pending', 'running', 'paused', 'completed', 'failed')`,
+    ),
+    index('import_job_project_idx').on(t.projectId),
+    // Backs the worker's claim query: due pending rows ordered by next_attempt_at.
+    index('import_job_due_idx')
+      .on(t.nextAttemptAt)
+      .where(sql`${t.status} = 'pending'`),
+  ],
+);
+
+// Source-id-to-local-id mapping for one import job. The unique index on
+// (import_job_id, source_entity_type, source_id) makes the upsert idempotent, so
+// a re-run of a phase finds the existing row instead of creating another. No
+// foreign key on local_id: it spans every table an import can create, not one.
+export const importRecord = pgTable(
+  'import_record',
+  {
+    id: serial('id').primaryKey(),
+    importJobId: integer('import_job_id')
+      .notNull()
+      .references(() => importJob.id, { onDelete: 'cascade' }),
+    sourceEntityType: text('source_entity_type').notNull(),
+    sourceId: text('source_id').notNull(),
+    localEntityType: text('local_entity_type'),
+    localId: integer('local_id'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      'import_record_source_entity_type_check',
+      sql`${t.sourceEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment')`,
+    ),
+    check(
+      'import_record_local_entity_type_check',
+      sql`${t.localEntityType} IS NULL OR ${t.localEntityType} IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment')`,
+    ),
+    uniqueIndex('import_record_job_source_uq').on(t.importJobId, t.sourceEntityType, t.sourceId),
+    index('import_record_job_local_idx').on(t.importJobId, t.localEntityType, t.localId),
+  ],
+);
+
 // Per-user inbox notifications. One row per (recipient, event): a user is notified
 // about an issue they are involved in (assigned to them, mentioned, or watching it
 // when it is commented on or moved). The actor's own actions never notify the actor.

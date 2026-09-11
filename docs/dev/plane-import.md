@@ -143,3 +143,14 @@ cost (`getIssue` + `listIssueComments` + `listIssueAttachments`, three requests)
 reliably exhausts Plane's ~60 req/min budget within the first tick or two of Create on any
 project of real size. Safe (never exceeds the limit, always resumes), not throughput-optimal
 — worth pacing requests within a tick rather than bursting, if import speed matters later.
+
+Pausing and resuming while a job is mid-retry does not bypass the wait: pausing touches
+neither `last_error` nor `next_attempt_at`, so `resumeImportJob` (`service.ts`) sees the same
+values a live rate-limited job has and keeps the stored `next_attempt_at` rather than
+resetting it to now — the external rate limit did not clear just because the job was paused,
+so resuming into "now" regardless would have sent an immediate, still-doomed request and come
+back rate-limited again right away with a new, unrelated countdown. Only a job paused for no
+real reason (`last_error` null, or a stored deadline that already elapsed by itself) resumes
+immediately. The Settings page's countdown also now ticks every second on its own
+(`SettingsImportExportJobRow.tsx`) instead of only moving in the 2s jumps of the job list's
+own poll.

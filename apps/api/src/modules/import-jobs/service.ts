@@ -196,16 +196,24 @@ export async function pauseImportJob(id: number): Promise<ImportJobDto> {
   return toDto(updated!, await entityCounts(id));
 }
 
-// Resets attempts and next_attempt_at so the job is immediately claimable again,
-// the same starting state a freshly created job has.
+// Resets attempts so the job gets a fresh run of retries. next_attempt_at is only
+// reset to now when the job was paused with no real reason to wait (lastError null,
+// or a stored deadline that already passed by itself) - pausing does not touch
+// either column, so a job paused mid-retry (a rate limit, a transient error) still
+// carries its real cooldown. Resuming into "now" regardless would bypass that wait
+// entirely: the external rate limit it was waiting out has not actually cleared
+// just because the job was paused, so the immediate retry only gets rate-limited
+// again right away, with a fresh countdown that reads as if resume broke something.
 export async function resumeImportJob(id: number): Promise<ImportJobDto> {
   const row = await getRow(id);
   if (!row) throw new HttpError(404, 'Import job not found');
   if (row.status !== 'paused')
     throw new HttpError(409, `Cannot resume a job that is ${row.status}`);
+  const now = new Date();
+  const nextAttemptAt = row.lastError != null && row.nextAttemptAt > now ? row.nextAttemptAt : now;
   const [updated] = await db
     .update(importJob)
-    .set({ status: 'pending', attempts: 0, nextAttemptAt: new Date(), updatedAt: new Date() })
+    .set({ status: 'pending', attempts: 0, nextAttemptAt, updatedAt: now })
     .where(eq(importJob.id, id))
     .returning();
   return toDto(updated!, await entityCounts(id));

@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { db, importJob } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -189,6 +191,39 @@ describe('import jobs', () => {
       const resumed = await entity(api, created.id).resume.post();
       expect(resumed.status).toBe(200);
       expect(resumed.data?.status).toBe('pending');
+    });
+
+    it('preserves a real retry cooldown across pause and resume', async () => {
+      const { api } = await setupOwnerProject();
+      const created = (await jobs(api).post(validBody)).data!;
+      const futureRetry = new Date(Date.now() + 59_000);
+      await db
+        .update(importJob)
+        .set({ lastError: 'rate limited', nextAttemptAt: futureRetry })
+        .where(eq(importJob.id, created.id));
+
+      await entity(api, created.id).pause.post();
+      const resumed = await entity(api, created.id).resume.post();
+
+      expect(resumed.status).toBe(200);
+      expect(resumed.data?.status).toBe('pending');
+      expect(new Date(resumed.data!.nextAttemptAt).getTime()).toBe(futureRetry.getTime());
+    });
+
+    it('resumes immediately when the stored cooldown already elapsed', async () => {
+      const { api } = await setupOwnerProject();
+      const created = (await jobs(api).post(validBody)).data!;
+      await db
+        .update(importJob)
+        .set({ lastError: 'rate limited', nextAttemptAt: new Date(Date.now() - 1000) })
+        .where(eq(importJob.id, created.id));
+
+      await entity(api, created.id).pause.post();
+      const before = Date.now();
+      const resumed = await entity(api, created.id).resume.post();
+
+      expect(resumed.status).toBe(200);
+      expect(new Date(resumed.data!.nextAttemptAt).getTime()).toBeGreaterThanOrEqual(before);
     });
 
     it('rejects pausing an already-paused job', async () => {

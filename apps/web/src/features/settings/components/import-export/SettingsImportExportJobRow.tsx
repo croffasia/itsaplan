@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ImportJob } from '@/lib/api/endpoints/importJobs';
 import { formatDateTime } from '@/utils/dates';
@@ -49,6 +50,17 @@ export default function SettingsImportExportJobRow({
   // 'failed' is the only terminal, non-retrying error state.
   const isRetrying = job.status === 'pending' && job.lastError != null;
   const isWorking = job.status === 'pending' && job.lastError == null;
+
+  // The 2s poll (useImportJobsQuery) only refreshes nextAttemptAt itself; without
+  // this, the displayed countdown would only move in those 2s jumps instead of
+  // ticking down in real time between polls.
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    if (!isRetrying) return;
+    const id = setInterval(() => forceTick((n) => n + 1), 1000);
+    return () => clearInterval(id);
+  }, [isRetrying]);
+
   const retrySeconds = isRetrying
     ? Math.max(0, Math.round((new Date(job.nextAttemptAt).getTime() - Date.now()) / 1000))
     : 0;

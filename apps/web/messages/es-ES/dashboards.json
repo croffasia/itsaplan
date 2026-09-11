@@ -51,7 +51,7 @@
     },
     "breakdown": {
       "label": "Desglose",
-      "description": "Recuentos de tickets por estado, prioridad, tipo o asignatario"
+      "description": "Recuentos de tickets por estado, prioridad, tipo o asignado"
     },
     "agent_runs": {
       "label": "Ejecuciones del agente",
@@ -83,7 +83,7 @@
       "status": "Por estado",
       "priority": "Por prioridad",
       "type": "Por tipo",
-      "assignee": "Por asignatario",
+      "assignee": "Por asignado",
       "delegate": "Por delegado"
     }
   },
@@ -114,7 +114,7 @@
       "title": "ha renombrado",
       "description": "ha actualizado la descripción de",
       "status": "ha cambiado el estado de",
-      "assignee": "ha cambiado el asignatario de",
+      "assignee": "ha cambiado el asignado de",
       "priority": "ha cambiado la prioridad de",
       "type": "ha cambiado el tipo de",
       "start_date": "ha cambiado la fecha de inicio de",

@@ -99,7 +99,7 @@
     },
     "git": {
       "label": "Repositorios",
-      "description": "Cerrar tickets cuando sus peticiones de extracción se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
+      "description": "Cerrar tickets cuando sus pull requests se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
     },
     "ai-agents": {
       "label": "Agentes de IA",

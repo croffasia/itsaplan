@@ -43,7 +43,7 @@
     "updated": "Actualizada"
   },
   "unset": {
-    "assignee": "Sin asignatario",
+    "assignee": "Sin asignar",
     "delegate": "Sin delegado",
     "type": "Sin tipo",
     "initiative": "Sin iniciitiva",

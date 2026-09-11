@@ -83,7 +83,7 @@
     "initiative": "Iniciativa",
     "cycle": "Ciclo",
     "labels": "Etiquetas",
-    "noAssignee": "Sin asignatario",
+    "noAssignee": "Sin asignar",
     "noDelegate": "Sin delegado",
     "noInitiative": "Sin iniciitiva",
     "noCycle": "Sin ciclo",
@@ -108,7 +108,7 @@
     "boardUnavailable": "Este tablero compartido no está disponible. Puede que el enlace haya sido revocado."
   },
   "groups": {
-    "noAssignee": "Sin asignatario",
+    "noAssignee": "Sin asignar",
     "noDelegate": "Sin delegado",
     "noPriority": "Sin prioridad",
     "noType": "Sin tipo",

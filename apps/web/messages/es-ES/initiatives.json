@@ -126,7 +126,7 @@
     "ownerSet": "ha definido el propietario a {name}",
     "ownerRemoved": "ha quitado al propietario {name}",
     "assigneeSet": "la ha asignado a {name}",
-    "assigneeRemoved": "ha quitado al asignatario {name}",
+    "assigneeRemoved": "ha quitado al asignado {name}",
     "delegateSet": "la ha delegado a {name}",
     "delegateRemoved": "ha quitado al delegado {name}",
     "targetDateSet": "ha definido la fecha objetivo al {date}",

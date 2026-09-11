@@ -31,7 +31,9 @@ run in Docker; the apps run on the host.
 
 `.env.example` documents every variable and its default. The three secrets have none and are
 generated while the database volume does not exist — past that the instance is using them,
-and a new value would lock it out of its own data.
+and a new value would lock it out of its own data. The Postgres password and the MinIO keys
+are empty in the example as well; **Develop** and **Try it** fill them with the local
+defaults (`itsaplan`, `minioadmin`), the same values `docker-compose.dev.yml` falls back to.
 
 ## Commands
 

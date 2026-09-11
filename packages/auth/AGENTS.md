@@ -221,10 +221,15 @@ not required for it.
   (writes `packages/db/src/schema/auth.ts`), then `db:generate` + `db:migrate`.
 - Config is env-driven: `API_URL` (backend origin, used as better-auth `baseURL`),
   `BETTER_AUTH_SECRET`, `APP_URL` (frontend origin(s), comma-separated). `API_URL` and
-  `APP_URL` are mandatory and have no default — importing this module throws
-  when either is missing. Do not add a localhost fallback: cookies, the passkey
-  relying party, the cookie domain and every link in an authentication email are
-  derived from them, so a wrong value fails silently at runtime instead of at startup.
+  `APP_URL` are mandatory and have no default — importing this module throws when either
+  is missing. better-auth guards the secret itself: it refuses an unset one and its own
+  default, and warns below 32 characters or 120 bits of estimated entropy. The one value
+  it cannot know about is the example this repository used to ship, which clears all
+  three checks, so importing this module warns about that one string. Do not add a
+  localhost fallback:
+  cookies, the passkey relying party, the cookie domain and every link in an
+  authentication email are derived from the URLs, so a wrong value fails silently at
+  runtime instead of at startup.
   The parsed `trustedOrigins` list (from `APP_URL`) is exported so the api's CORS uses
   the same value.
 - **Cross-domain prod:** default cookies are `sameSite: "lax"`. If frontend/backend run on

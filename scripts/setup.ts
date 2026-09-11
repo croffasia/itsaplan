@@ -107,12 +107,29 @@ const openBrowser = (url: string) => exec(process.platform === 'darwin' ? 'open'
 
 const secrets = ['BETTER_AUTH_SECRET', 'APP_ENCRYPTION_KEY'];
 
+/**
+ * Credentials of the backing services. The example leaves them empty so that the
+ * self-hosting compose refuses to start until they are chosen; on localhost they are the
+ * values docker-compose.dev.yml and .env.test.example default to.
+ */
+const localCredentials: Record<string, string> = {
+  POSTGRES_PASSWORD: 'itsaplan',
+  S3_ACCESS_KEY_ID: 'minioadmin',
+  S3_SECRET_ACCESS_KEY: 'minioadmin',
+};
+
 /** Every value the setup chooses, with the default to prefill when the file carries none. */
 const generated: Record<string, string> = {
   POSTGRES_USER: 'itsaplan',
-  POSTGRES_PASSWORD: 'itsaplan',
+  POSTGRES_PASSWORD: localCredentials.POSTGRES_PASSWORD,
   POSTGRES_DB: 'itsaplan',
+  S3_ACCESS_KEY_ID: localCredentials.S3_ACCESS_KEY_ID,
+  S3_SECRET_ACCESS_KEY: localCredentials.S3_SECRET_ACCESS_KEY,
   ...Object.fromEntries(secrets.map((key) => [key, ''])),
+};
+
+const fillLocalCredentials = (env: EnvFile) => {
+  for (const [key, value] of Object.entries(localCredentials)) env.fill(key, value);
 };
 
 const volumeExists = async (volume: string) =>
@@ -291,6 +308,7 @@ if (mode === 'try') {
     env.set('WEB_PORT', String(webPort));
     env.set('API_URL', `http://localhost:${apiPort}`);
     env.set('APP_URL', `http://localhost:${webPort}`);
+    fillLocalCredentials(env);
     await writeSecrets(env, 'itsaplan_postgres-data');
     env.save();
   }
@@ -345,6 +363,7 @@ if (mode === 'dev') {
   env.set('POSTGRES_PORT', String(dbPort));
   env.set('API_PORT', String(apiPort));
   env.set('API_URL', `http://localhost:${apiPort}`);
+  fillLocalCredentials(env);
   await writeSecrets(env, 'itsaplan-dev_postgres-dev-data');
 
   const user = env.get('POSTGRES_USER');

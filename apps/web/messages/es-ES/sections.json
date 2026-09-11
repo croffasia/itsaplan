@@ -12,7 +12,7 @@
   },
   "god": {
     "users": {
-      "label": "Usuaries",
+      "label": "Usuarios",
       "description": "Todas las cuentas de esta instancia: el rol global, si la dirección está confirmada, y los proyectos a los que cada usuari puede acceder."
     },
     "teams": {
@@ -63,35 +63,35 @@
     },
     "states": {
       "label": "Estados",
-      "description": "Los estados del flujo de trabajo por los que se mueven las incidencias, cada uno mostrado como una columna."
+      "description": "Los estados del flujo de trabajo por los que se mueven los tickets, cada uno mostrado como una columna."
     },
     "issue-types": {
-      "label": "Tipos de incidencia",
-      "description": "Las clases de incidencias que este proyecto puede contener, cada uno con sus propios campos."
+      "label": "Tipos de ticket",
+      "description": "Las clases de tickets que este proyecto puede contener, cada uno con sus propios campos."
     },
     "labels": {
       "label": "Etiquetas",
-      "description": "Etiquetas para organizar y filtrar incidencias a través del proyecto."
+      "description": "Etiquetas para organizar y filtrar tickets a través del proyecto."
     },
     "custom-fields": {
       "label": "Campos personalizados",
-      "description": "Campos extra mostrados en las incidencias, globales o acotados a un tipo de incidencia."
+      "description": "Campos extra mostrados en los tickets, globales o acotados a un tipo de ticket."
     },
     "issue-templates": {
-      "label": "Plantillas de incidencia",
-      "description": "Predefinidos desde los que se puede crear una incidencia nueva: su título, descripción y propiedades."
+      "label": "Plantillas de ticket",
+      "description": "Predefinidos desde los que se puede crear un ticket nuevo: su título, descripción y propiedades."
     },
     "configuration": {
       "label": "Configuración",
-      "description": "Cómo se cierran las subtareas con su padre, y cuándo se archivan las incidencias obsoletas."
+      "description": "Cómo se cierran las subtareas con su padre, y cuándo se archivan los tickets obsoletos."
     },
     "actions": {
       "label": "Acciones",
-      "description": "Botones en una incidencia que definen campos con un clic."
+      "description": "Botones en un ticket que definen campos con un clic."
     },
     "schedules": {
-      "label": "Programaciones",
-      "description": "Ejecutar tareas del agente en un programado repetitivo."
+      "label": "Tareas programadas",
+      "description": "Ejecutar tareas programadas con agentes"
     },
     "webhooks": {
       "label": "Webhooks",
@@ -99,7 +99,7 @@
     },
     "git": {
       "label": "Repositorios",
-      "description": "Cerrar incidencias cuando sus peticiones de estracción se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
+      "description": "Cerrar tickets cuando sus peticiones de estracción se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
     },
     "ai-agents": {
       "label": "Agentes de IA",

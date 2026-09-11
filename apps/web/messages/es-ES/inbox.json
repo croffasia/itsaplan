@@ -10,7 +10,7 @@
   "showSnoozed": "Mostrar pospuestas",
   "markAllRead": "Marcar todas como leídas",
   "deleteAllRead": "Eliminar todas las leídas",
-  "deleteAllReadCompleted": "Eliminar las leídas de incidencias completadas",
+  "deleteAllReadCompleted": "Eliminar las leídas de tickets completados",
   "types": {
     "assigned": "Asignación",
     "mentioned": "Mención",
@@ -28,7 +28,7 @@
   },
   "event": {
     "someone": "Alguien",
-    "assigned": "{who} te ha asignado la incidencia",
+    "assigned": "{who} te ha asignado el ticket",
     "mentioned": "{who} te ha mencionado",
     "commented": "{who} ha comentado",
     "stateChanged": "{who} ha cambiado el estado de {from} a {to}",

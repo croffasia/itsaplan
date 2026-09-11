@@ -6,7 +6,7 @@
   "deleteDialog": {
     "title": "¿Eliminar {name}?",
     "confirm": "Eliminar definitivamente",
-    "description": "Esto elimina de forma definitiva <strong>{name}</strong> y todo lo que contiene: incidencias, comentarios, adjuntos y ajustes. No se puede deshacer.",
+    "description": "Esto elimina de forma definitiva <strong>{name}</strong> y todo lo que contiene: tickets, comentarios, adjuntos y ajustes. No se puede deshacer.",
     "typeToConfirm": "Escribe <code>{key}</code> para confirmar."
   },
   "leaveDialog": {

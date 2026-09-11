@@ -25,17 +25,17 @@
   "lastDays": "Últimos {days} días",
   "showRows": "Mostrar {count}",
   "widgetGroups": {
-    "issues": "Incidencias",
+    "issues": "Tickets",
     "agents": "Agentes de IA y webhooks"
   },
   "widgets": {
     "stat": {
       "label": "Número",
-      "description": "Recuento de incidencias que coinciden con un filtro"
+      "description": "Recuento de tickets que coinciden con un filtro"
     },
     "recent_issues": {
-      "label": "Incidencias recientes",
-      "description": "Últimas incidencias por momento de creación o actualización"
+      "label": "Tickets recientes",
+      "description": "Últimas tickets por momento de creación o actualización"
     },
     "activity_feed": {
       "label": "Filtro de actividad",
@@ -47,11 +47,11 @@
     },
     "throughput": {
       "label": "Rendimiento",
-      "description": "Incidencias creadas frente a cerradas por semana"
+      "description": "Tickets creados frente a cerrados por semana"
     },
     "breakdown": {
       "label": "Desglose",
-      "description": "Recuentos de incidencias por estado, prioridad, tipo o asignatario"
+      "description": "Recuentos de tickets por estado, prioridad, tipo o asignatario"
     },
     "agent_runs": {
       "label": "Ejecuciones del agente",
@@ -67,11 +67,11 @@
     },
     "agent_workload": {
       "label": "Carga del agente",
-      "description": "Incidencias delegadas y resultaos de las ejecuciones por agente"
+      "description": "Tickets delegados y resultados de las ejecuciones por agente"
     }
   },
   "breakdown": {
-    "empty": "Todavía no hay incidencias.",
+    "empty": "Todavía no hay tickets.",
     "by": {
       "status": "Estado",
       "priority": "Prioridad",
@@ -88,8 +88,8 @@
     }
   },
   "recentIssues": {
-    "empty": "Ninguna incidencia coincide con este filtro.",
-    "captionCreated": "Las más nuevas primero",
+    "empty": "Ningún ticket coincide con este filtro.",
+    "captionCreated": "Más recientes primero",
     "captionUpdated": "Actualizadas recientemente",
     "filterCount": "{count, plural, one {# filtro} other {# filtros}}",
     "sort": {
@@ -196,7 +196,7 @@
     }
   },
   "defaultWidgets": {
-    "open": "Abiertas",
+    "open": "Abiertos",
     "inProgress": "En curso",
     "backlog": "Pila de trabajo",
     "unassigned": "Sin asignar"

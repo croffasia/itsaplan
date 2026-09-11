@@ -1,10 +1,10 @@
 {
   "placeholder": "Escribe un comando o busca…",
   "noResults": "No se han encontrado resultados.",
-  "issues": "Incidencias",
+  "issues": "Tickets",
   "searching": "Buscando…",
-  "selectAllIssues": "Seleccionar todas las incidencias",
-  "newIssue": "Nueva incidencia",
+  "selectAllIssues": "Seleccionar todas los tickets",
+  "newIssue": "Nuevo ticket",
   "newInitiative": "Nueva iniciativa",
   "newProject": "Nuevo proyecto",
   "toggleChat": "Mostrar u ocultar el chat de IA",

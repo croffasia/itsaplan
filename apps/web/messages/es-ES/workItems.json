@@ -1,5 +1,5 @@
 {
-  "newIssue": "Nueva incidencia",
+  "newIssue": "Nuevo ticket",
   "pin": "Fijar",
   "unpin": "Desfijar",
   "collapse": "Contraír",
@@ -11,19 +11,19 @@
   "selectAll": "Seleccionar todo",
   "deselectAll": "Deseleccionar todo",
   "resizeColumn": "Redimensionar la columna",
-  "viewNamePlaceholder": "Todas las incidencias",
-  "sortedOrder": "Las incidencias están ordenadas por {field}. Cambia el orden a Manual para moverlas.",
+  "viewNamePlaceholder": "Todas los tickets",
+  "sortedOrder": "Los tickets están ordenadas por {field}. Cambia el orden a Manual para moverlas.",
   "statusSince": "En el estado actual desde el {date}",
   "createdOn": "Creada el {date}",
   "updatedOn": "Actualizada el {date}",
   "subtasksProgress": "Subtareas {done}/{total}",
   "subtasksDone": "{done} de {total} subtareas completadas",
   "wip": {
-    "reached": "{column} está en su límete de {limit} incidencias.",
+    "reached": "{column} está en su límete de {limit} tickets.",
     "tooltip": "Límite de trabajo en curso: {max}",
     "count": "{count} / {max}",
     "filteredCount": "{shown} de {total} / {max}",
-    "filteredTooltip": "{shown} mostradas por los filtros actuales. El límite de {max} cuenta todas las {total} incidencias de la columna."
+    "filteredTooltip": "{shown} mostradas por los filtros actuales. El límite de {max} cuenta todas las {total} tickets de la columna."
   },
   "columns": {
     "title": "Título",
@@ -46,7 +46,7 @@
     "nextMonth": "Mes siguiente",
     "today": "Hoy",
     "moreIssues": "+{count} más",
-    "issueCount": "{count, plural, one {# incidencia} other {# incidencias}}",
+    "issueCount": "{count, plural, one {# ticket} other {# tickets}}",
     "weekdays": {
       "sun": "Dom",
       "mon": "Lun",
@@ -68,7 +68,7 @@
     }
   },
   "timeline": {
-    "empty": "Todavía no hay incidencias para situar en la cronología.",
+    "empty": "Todavía no hay tickets para situar en la cronología.",
     "expandGroup": "Expandir grupo",
     "collapseGroup": "Contraír grupo",
     "inferredStart": "Inicio inferido de la fecha de creación",
@@ -92,19 +92,19 @@
   },
   "removal": {
     "archive": {
-      "title": "{count, plural, one {Archivar incidencia} other {Archivar incidencias}}",
-      "confirm": "{count, plural, one {Archivar # incidencia} other {Archivar # incidencias}}",
-      "description": "{count, plural, one {¿Archivar la incidencia seleccionada? Deja el tablero y se puede restaurar más tarde.} other {¿Archivar las incidencias seleccionadas? Dejan el tablero y se pueden restaurar más tarde.}}"
+      "title": "{count, plural, one {Archivar ticket} other {Archivar tickets}}",
+      "confirm": "{count, plural, one {Archivar # ticket} other {Archivar # tickets}}",
+      "description": "{count, plural, one {¿Archivar el ticket seleccionado? Deja el tablero y se puede restaurar más tarde.} other {¿Archivar los tickets seleccionados? Dejan el tablero y se pueden restaurar más tarde.}}"
     },
     "delete": {
-      "title": "{count, plural, one {Eliminar incidencia} other {Eliminar incidencias}}",
-      "confirm": "{count, plural, one {Eliminar # incidencia} other {Eliminar # incidencias}}",
-      "description": "{count, plural, one {¿Eliminar la incidencia seleccionada?} other {¿Eliminar las incidencias seleccionadas?}} Esto también quita comentarios, actividad y adjuntos. No se puede deshacer."
+      "title": "{count, plural, one {Eliminar ticket} other {Eliminar tickets}}",
+      "confirm": "{count, plural, one {Eliminar # ticket} other {Eliminar # tickets}}",
+      "description": "{count, plural, one {¿Eliminar el ticket seleccionado?} other {¿Eliminar los tickets seleccionados?}} Esto también quita comentarios, actividad y adjuntos. No se puede deshacer."
     }
   },
   "share": {
-    "issueTitle": "Incidencia",
-    "issueUnavailable": "Esta incidencia no está disponible.",
+    "issueTitle": "Ticket",
+    "issueUnavailable": "Este ticket no está disponible.",
     "boardUnavailable": "Este tablero compartido no está disponible. Puede que el enlace haya sido revocado."
   },
   "groups": {

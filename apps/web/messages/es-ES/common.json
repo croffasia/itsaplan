@@ -37,7 +37,7 @@
   "resizeTitleColumn": "Redimensionar la columna de títulos",
   "openGeneralSettings": "Abrir los ajustes generales",
   "noSectionAccess": "No tienes acceso a esta sección.",
-  "brandSubtitle": "Planifica incidencias en un tablero. Inicia sesión para abrir tus proyectos.",
+  "brandSubtitle": "Planifica tickets en un tablero. Inicia sesión para abrir tus proyectos.",
   "hotkeys": {
     "pressKeys": "Pulsa las teclas",
     "fixed": "Fijo",
@@ -61,7 +61,7 @@
         "toggle": "Mostrar u ocultar el chat de IA"
       },
       "issue": {
-        "new": "Nueva incidencia"
+        "new": "Nuevo ticket"
       },
       "initiative": {
         "new": "Nueva iniciativa"
@@ -73,7 +73,7 @@
         "calendar": "Disposición de calandario"
       },
       "board": {
-        "select-all": "Seleccionar todas las incidencias del tablero"
+        "select-all": "Seleccionar todas los tickets del tablero"
       }
     },
     "conflict": "Ya la usa {command}"
@@ -108,7 +108,7 @@
     "importRows": "{count, plural, one {# fila} other {# filas}}",
     "confirmImport": "Confirmar la importación",
     "cancelImport": "Cancelar",
-    "importWorking": "Creando incidencias…",
+    "importWorking": "Creando tickets…",
     "importShowAllRows": "Mostrar las {count} filas",
     "importShowFewerRows": "Mostrar las primeras {count} filas",
     "importRowState": "Importar",
@@ -117,7 +117,7 @@
     "importAdjustHint": "Pide al agente que ajuste la correspondencia si algo parece mal.",
     "importCanceled": "Esta importación se ha cancelado. No se ha creado nada.",
     "importFailed": "La importación ha fallao.",
-    "importConfirmed": "Se {count, plural, one {ha creado # incidencia} other {han creado # incidencias}}",
+    "importConfirmed": "Se {count, plural, one {ha creado # ticket} other {han creado # tickets}}",
     "importSkippedRow": "Fila saltada {row}: {reason}",
     "contextSize": "Contexto de la conversación: {count, plural, one {# token} other {# tokens}}",
     "contextUnavailable": "El tamaño del contexto no está disponible para este agente"
@@ -129,7 +129,7 @@
     "copyFailed": "No se ha podido copiar el enlace. Seléccionalo y cópialo a mano.",
     "hint": "Cualquier persona con el enlace lo puede leer. No hace falta cuenta.",
     "shareLink": "Compartir enlace",
-    "fullDetails": "Detalles completos de la incidencia",
+    "fullDetails": "Detalles completos del ticket",
     "fullDetailsHint": "Asignatarios, etiquetas, campos personalizados y actividad.",
     "stopSharing": "Dejar de compartir",
     "createLink": "Crear enlace",
@@ -155,7 +155,7 @@
     "notes": "Notas",
     "subtasks": "Subtareas",
     "checklists": "Listas de verificación",
-    "issueStats": "Estadísticas de incidencias"
+    "issueStats": "Estadísticas de tickets"
   },
   "featureOffTitle": "{feature} están desactivadas",
   "toggleSidebar": "Cambiar la barra lateral",

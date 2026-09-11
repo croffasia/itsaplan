@@ -43,7 +43,7 @@
   "revokeAccess": "Revocar el acceso",
   "lastOwner": "Un proyecto tiene que mantener al menos un propietario",
   "leaveTitle": "Abandonar este proyecto",
-  "leaveDescription": "Perderás el acceso a este proyecto y a sus incidencias. Un propietario te puede invitar de vuelta más tarde.",
+  "leaveDescription": "Perderás el acceso a este proyecto y a sus tickets. Un propietario te puede invitar de vuelta más tarde.",
   "revokeTitle": "Revocar el acceso de {name}",
   "revokeDescription": "{name} perderá el acceso a este proyecto. Le pueden invitar de vuelta más tarde.",
   "selectRole": "Seleccionar rol",

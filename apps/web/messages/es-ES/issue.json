@@ -1,9 +1,9 @@
 {
   "system": "Sistema",
   "viewValue": "vista",
-  "notFound": "No se ha encontrado la incidencia.",
+  "notFound": "No se ha encontrado el ticket.",
   "openAsPage": "Abrir como página",
-  "titlePlaceholder": "Título de la incidencia",
+  "titlePlaceholder": "Título del ticket",
   "noActivity": "Todavía no hay actividad.",
   "noActivityInStretch": "No hay actividad en este tramo.",
   "activityLoadFailed": "No se ha podido cargar la actividad.",
@@ -37,7 +37,7 @@
   },
   "menu": {
     "preview": "Previsualizar",
-    "goToIssue": "Ir a la incidencia",
+    "goToIssue": "Ir al ticket",
     "status": "Estado",
     "priority": "Prioridad",
     "assignee": "Asignatario",
@@ -57,8 +57,8 @@
     "promptCopied": "La consigna se ha copiado al portapapeles"
   },
   "commands": {
-    "preview": "Previsualizar la incidencia",
-    "goToIssue": "Ir a la incidencia",
+    "preview": "Previsualizar el ticket",
+    "goToIssue": "Ir al ticket",
     "status": "Cambiar el estado",
     "statusPlaceholder": "Definir el estado a…",
     "priority": "Definir la prioridad",
@@ -75,9 +75,9 @@
     "labelsPlaceholder": "Alternar una etiqueta…",
     "copyShortLink": "Copiar el enlace corto",
     "copyPrompt": "Copiar la consigna",
-    "restore": "Restaurar la incidencia",
-    "archive": "Archivar la incidencia",
-    "delete": "Eliminar la incidencia",
+    "restore": "Restaurar el ticket",
+    "archive": "Archivar el ticket",
+    "delete": "Eliminar el ticket",
     "promptCopied": "La consigna se ha copiado al portapapeles",
     "shortLinkCopied": "El enlace corto se ha copiado"
   },
@@ -95,28 +95,28 @@
     "copyPrompt": "Copiar la consigna",
     "sharedPublicly": "Compartida públicamente",
     "sharePublicly": "Compartir públicamente",
-    "restore": "Restaurar la incidencia",
-    "archive": "Archivar la incidencia",
-    "delete": "Eliminar la incidencia",
-    "shareIssue": "Compartir la incidencia"
+    "restore": "Restaurar el ticket",
+    "archive": "Archivar el ticket",
+    "delete": "Eliminar el ticket",
+    "shareIssue": "Compartir el ticket"
   },
   "actions": {
-    "deleteTitle": "Eliminar la incidencia",
-    "archiveTitle": "Archivar la incidencia",
+    "deleteTitle": "Eliminar el ticket",
+    "archiveTitle": "Archivar el ticket",
     "apply": "Aplicar",
     "cannotBeUndone": "No se puede deshacer.",
-    "deleteDescription": "¿Eliminar {issue}? Esto quita la incidencia, sus comentarios, actividad y adjuntos.",
+    "deleteDescription": "¿Eliminar {issue}? Esto quita el ticket, sus comentarios, actividad y adjuntos.",
     "archiveDescription": "¿Archivar {issue}? Deja el tablero y se puede restaurar más tarde.",
-    "applyDescription": "¿Aplicar <v>{action}</v> a esta incidencia?"
+    "applyDescription": "¿Aplicar <v>{action}</v> a este ticket?"
   },
   "create": {
-    "title": "Nueva incidencia",
-    "titlePlaceholder": "Título de la incidencia",
+    "title": "Nuevo ticket",
+    "titlePlaceholder": "Título del ticket",
     "addFieldPlaceholder": "Añadir campo…",
     "noFields": "Sin campos.",
     "description": "Descripción",
     "other": "Otro",
-    "submit": "Crear incidencia",
+    "submit": "Crear ticket",
     "template": "Plantilla",
     "applyTemplate": "Aplicar la plantilla…",
     "noTemplates": "Sin plantillas."
@@ -146,7 +146,7 @@
     "attachFiles": "Adjuntar ficheros",
     "drop": "Soltar ficheros",
     "dropCount": "{count, plural, one {Suelta el fichero} other {Suelta # ficheros}}",
-    "dropHint": "Añadidos a la descripción y adjuntos a la incidencia",
+    "dropHint": "Añadidos a la descripción y adjuntos al ticket",
     "insertShort": "Insertar",
     "attachedCount": "{count, plural, one {# fichero adjunto} other {# ficheros adjuntos}}"
   },
@@ -164,7 +164,7 @@
   "worklog": {
     "title": "Tiempo registrado",
     "empty": "Todavía no hay tiempo registrado.",
-    "emptyHint": "Usa Añadir para registrar el tiempo que has dedicado a esta incidencia.",
+    "emptyHint": "Usa Añadir para registrar el tiempo que has dedicado a este ticket.",
     "time": "Tiempo dedicado",
     "timePlaceholder": "1h 30m",
     "note": "Nota",
@@ -175,38 +175,38 @@
   "links": {
     "title": "Enlaces",
     "remove": "Quitar el enlace a {issue}",
-    "emptyHint": "Usa Añadir para enlazar una incidencia que bloquea, duplica o se relaciona con esta.",
-    "newIssue": "Nueva incidencia"
+    "emptyHint": "Usa Añadir para enlazar un ticket que bloquea, duplica o se relaciona con esta.",
+    "newIssue": "Nuevo ticket"
   },
   "linkDialog": {
-    "title": "Enlazar una incidencia: {relation}",
-    "searchPrompt": "Buscar incidencias con las que esta está {relation}…",
-    "failed": "No se han podido enlazar las incidencias",
-    "noMatches": "Ninguna incidencia coincide.",
-    "typeToSearch": "Escribe para buscar las incidencias de este proyecto."
+    "title": "Enlazar un ticket: {relation}",
+    "searchPrompt": "Buscar tickets con las que esta está {relation}…",
+    "failed": "No se han podido enlazar los tickets",
+    "noMatches": "Ningún ticket coincide.",
+    "typeToSearch": "Escribe para buscar los tickets de este proyecto."
   },
   "subtasks": {
     "title": "Subtareas",
     "parent": "Padre",
     "newSubtask": "Nueva subtarea",
-    "addExisting": "Añadir una incidencia existente como subtarea",
+    "addExisting": "Añadir un ticket existente como subtarea",
     "empty": "Todavía no hay subtareas.",
-    "emptyHint": "Usa Añadir para descomponer esta incidencia en subtareas.",
+    "emptyHint": "Usa Añadir para descomponer este ticket en subtareas.",
     "detach": "Desvincar {subtask}",
     "detachFromParent": "Desvincar de {parent}",
     "subtaskOf": "Subtarea de {issue}",
-    "existingIssue": "Incidencia existente",
-    "searchPrompt": "Buscar incidencias para añadir como subtarea…"
+    "existingIssue": "Ticket existente",
+    "searchPrompt": "Buscar tickets para añadir como subtarea…"
   },
   "subtaskDisposal": {
-    "intro": "{issues, plural, one {Esta incidencia tiene} other {Estas incidencias tienen}} {count, plural, one {# subtarea} other {# subtareas}}.",
+    "intro": "{issues, plural, one {Este ticket tiene} other {Estos tickets tienen}} {count, plural, one {# subtarea} other {# subtareas}}.",
     "deleteToo": "{count, plural, one {Eliminarla también} other {Eliminarlas también}}",
     "archiveToo": "{count, plural, one {Archivarla también} other {Archivarlas también}}",
     "detach": "{count, plural, one {Mantenerla sin padre} other {Mantenerlas sin padre}}",
-    "reassign": "{count, plural, one {Moverla a otra incidencia} other {Moverlas a otra incidencia}}",
-    "reassignTitle": "Mover las subtareas a otra incidencia",
+    "reassign": "{count, plural, one {Moverla a otro ticket} other {Moverlas a otro ticket}}",
+    "reassignTitle": "Mover las subtareas a otro ticket",
     "change": "Cambiar",
-    "searchParent": "Buscar la nueva incidencia madre…"
+    "searchParent": "Buscar la nuevo ticket madre…"
   },
   "comments": {
     "you": "Tú",
@@ -269,7 +269,7 @@
   },
   "activity": {
     "linkedTo": "enlazada a",
-    "created": "ha creado la incidencia",
+    "created": "ha creado el ticket",
     "titleChanged": "ha cambiado el título",
     "renamed": "la ha renombrado a <v>«{title}»</v>",
     "descriptionUpdated": "ha actualizado la descripción",
@@ -299,7 +299,7 @@
     "dueDateRemoved": "ha quitado la fecha de vencimiento",
     "labelAdded": "ha añadido la etiqueta <v>{label}</v>",
     "labelRemoved": "ha quitado la etiqueta <v>{label}</v>",
-    "linkAdded": "ha marcado esta incidencia como {relation} <v>{issue}</v>",
+    "linkAdded": "ha marcado este ticket como {relation} <v>{issue}</v>",
     "linkRemoved": "ya no es {relation} <v>{issue}</v>",
     "parentDetached": "la ha desvincado de <v>{parent}</v>",
     "parentMoved": "la ha movido de <v>{from}</v> a <v>{to}</v>",
@@ -314,11 +314,11 @@
     "fieldUpdated": "ha actualizado <v>{field}</v>",
     "fieldSet": "ha definido <v>{field}</v> a <v>{value}</v>",
     "fieldCleared": "ha vaciado <v>{field}</v>",
-    "archived": "ha archivado la incidencia",
-    "restored": "ha restaurado la incidencia",
-    "agentStarted": "ha tomado la incidencia",
-    "agentFinished": "ha terminado de trabajar en la incidencia",
-    "agentFailed": "no ha podido terminar la incidencia",
+    "archived": "ha archivado el ticket",
+    "restored": "ha restaurado el ticket",
+    "agentStarted": "ha tomado el ticket",
+    "agentFinished": "ha terminado de trabajar en el ticket",
+    "agentFailed": "no ha podido terminar el ticket",
     "pullRequestMerged": "ha integrando la peticción de estracción <v>{pr}</v>",
     "pullRequestOpened": "ha abierto la peticción de estracción <v>{pr}</v>",
     "worklogAdded": "ha registrado <v>{time}</v> el <v>{date}</v>",
@@ -336,7 +336,7 @@
     "linkExisting": "Enlazar una existente",
     "linkExistingDescription": "Elige una peticción de estracción o de integración de un repositorio conectado.",
     "createPullRequest": "Crear una peticción de estracción",
-    "createPullRequestDescription": "Abre una peticción de estracción desde una rama existente y enlázala a esta incidencia.",
+    "createPullRequestDescription": "Abre una peticción de estracción desde una rama existente y enlázala a este ticket.",
     "noConnectedRepositories": "Conecta primero un repositorio de GitHub o GitLab en los ajustes del proyecto.",
     "loadingRepositories": "Cargando repositorios…",
     "chooseRepository": "Elegir repositorio",
@@ -361,7 +361,7 @@
     "pullRequestTitle": "Título",
     "description": "Descripción",
     "descriptionPlaceholder": "Añade contexto para los revisores…",
-    "mergeBehavior": "Enlace a la incidencia",
+    "mergeBehavior": "Enlace al ticket",
     "closeOnMerge": "Cerrar al integrar",
     "referenceOnly": "Solo referencia",
     "createAsDraft": "Crear como borador",
@@ -398,7 +398,7 @@
   "activityHeading": "Actividad",
   "feedFlat": "Plana",
   "feedGrouped": "Agrupada",
-  "shareUnavailable": "Esta incidencia compartida no está disponible. Puede que el enlace haya sido revocado.",
+  "shareUnavailable": "Este ticket compartida no está disponible. Puede que el enlace haya sido revocado.",
   "fieldSelects": {
     "changeState": "Cambiar el estado…",
     "changeType": "Cambiar el tipo…",

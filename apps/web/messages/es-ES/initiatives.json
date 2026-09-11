@@ -11,10 +11,10 @@
   "progress": "Progreso",
   "activity": "Actividad",
   "noActivity": "Todavía no hay actividad.",
-  "noIssuesLinked": "Todavía no hay incidencias enlazadas.",
+  "noIssuesLinked": "Todavía no hay tickets enlazados.",
   "inProgress": "En curso",
   "emptyTitle": "Todavía no hay iniciitivas",
-  "emptyDescription": "Una iniciativa agrupa incidencias relacionadas bajo un solo objetivo.",
+  "emptyDescription": "Una iniciativa agrupa tickets relacionados bajo un solo objetivo.",
   "emptyTabDescription": "Las iniciitivas cambian de pestaña según su estado.",
   "emptyTab": {
     "active": "No hay iniciitivas activas",
@@ -32,7 +32,7 @@
   "detailTabs": {
     "overview": "Resumen",
     "progress": "Progreso",
-    "issues": "Incidencias"
+    "issues": "Tickets"
   },
   "columns": {
     "name": "Nombre",
@@ -70,7 +70,7 @@
       "on_track": "El trabajo mantiene el ritmo del calandario.",
       "at_risk": "El trabajo se queda detrás del calandario.",
       "off_track": "El trabajo está muy detrás, o la fecha objetivo ya ha pasado.",
-      "unknown": "Todavía no hay bastantes datos: sin incidencias o sin fecha objetivo."
+      "unknown": "Todavía no hay bastantes datos: sin tickets o sin fecha objetivo."
     },
     "howCalculated": "Cómo se calcula",
     "workDone": "Trabajo hecho",
@@ -115,7 +115,7 @@
   "feed": {
     "system": "Sistema",
     "createdInitiative": "ha creado la iniciativa",
-    "createdIssue": "ha creado la incidencia",
+    "createdIssue": "ha creado el ticket",
     "renamed": "la ha renombrado a «{title}»",
     "descriptionUpdated": "ha actualizado la descripción",
     "descriptionCleared": "ha vaciado la descripción",

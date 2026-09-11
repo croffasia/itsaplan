@@ -3,9 +3,9 @@
   "key": "Clave (corta, p. ej. MKT)",
   "copyKey": "Clave",
   "description": "Descripción",
-  "issueTypes": "Tipos de incidencia",
-  "typesCreated": "Se crearán {count, plural, one {# tipo de incidencia} other {# tipos de incidencia}}",
-  "defaultType": "Las nuevas incidencias reciben {type} por defecto. Los tipos se pueden editar en los ajustes.",
+  "issueTypes": "Tipos de ticket",
+  "typesCreated": "Se crearán {count, plural, one {# tipo de ticket} other {# tipos de ticket}}",
+  "defaultType": "Los nuevos tickets reciben {type} por defecto. Los tipos se pueden editar en los ajustes.",
   "presets": {
     "general": "General",
     "software": "Software",
@@ -30,7 +30,7 @@
   },
   "copyItems": {
     "states": "Estados",
-    "issueTypes": "Tipos de incidencia",
+    "issueTypes": "Tipos de ticket",
     "labels": "Etiquetas",
     "customFields": "Campos personalizados",
     "views": "Vistas",
@@ -40,7 +40,7 @@
     "configuration": "Configuración",
     "webhooks": "Webhooks",
     "agents": "Agentes",
-    "schedules": "Programaciones"
+    "schedules": "Tareas programadas"
   },
   "title": "Nuevo proyecto",
   "copyTitle": "Duplicar el proyecto «{name}»",

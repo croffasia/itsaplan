@@ -9,7 +9,7 @@
   "sortFields": {
     "manual": "Manual",
     "title": "Título",
-    "identifier": "Número de incidencia",
+    "identifier": "Número de ticket",
     "status": "Estado",
     "priority": "Prioridad",
     "assignee": "Asignatario",

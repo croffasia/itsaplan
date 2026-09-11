@@ -5,7 +5,6 @@ import type { WidgetConfig } from '@/utils/dashboardWidgets';
 
 const UNIT_OPTIONS: PulseUnit[] = ['hour', 'day', 'week'];
 
-// The bucket unit (hour/day/week) the heatmap cells count over.
 export default function PulseWidgetSettings({
   config,
   onConfigChange,
@@ -20,6 +19,7 @@ export default function PulseWidgetSettings({
       {(['project', 'me'] as const).map((scope) => (
         <button
           key={scope}
+          aria-pressed={(config.pulseScope ?? 'project') === scope}
           type="button"
           onClick={() => onConfigChange({ pulseScope: scope })}
           className={cn(
@@ -35,6 +35,7 @@ export default function PulseWidgetSettings({
       {UNIT_OPTIONS.map((option) => (
         <button
           key={option}
+          aria-pressed={unit === option}
           type="button"
           onClick={() => onConfigChange({ granularity: option })}
           className={cn(

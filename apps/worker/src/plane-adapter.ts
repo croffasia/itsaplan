@@ -303,14 +303,33 @@ export class PlaneReader implements SourceReader {
   }
 
   async listIssueAttachments(issueSourceId: string): Promise<CanonicalAttachment[]> {
-    const rows = await this.getJson<{ id: string; attributes: { name: string; type: string } }[]>(
-      `/work-items/${issueSourceId}/attachments/`,
-    );
+    const rows = await this.getJson<
+      { id: string; attributes: { name: string; type: string; size: number } }[]
+    >(`/work-items/${issueSourceId}/attachments/`);
     return rows.map((a) => ({
       sourceId: a.id,
       filename: a.attributes.name,
       contentType: a.attributes.type,
+      sizeBytes: a.attributes.size,
     }));
+  }
+
+  // Two-hop resolve, confirmed live (see "Attachments" in the notes file): this
+  // call itself 302s to an S3 URL valid for exactly an hour, needing no Plane
+  // auth — never resolved ahead of the moment it's actually downloaded.
+  async resolveAttachmentDownloadUrl(
+    issueSourceId: string,
+    attachmentSourceId: string,
+  ): Promise<string> {
+    const path = `/work-items/${issueSourceId}/attachments/${attachmentSourceId}/`;
+    const res = await this.requestRaw(path);
+    const location = res.headers.get('location');
+    if (res.status < 300 || res.status >= 400 || !location) {
+      throw new Error(
+        `Plane attachment resolve did not redirect: GET ${path} -> HTTP ${res.status}`,
+      );
+    }
+    return location;
   }
 
   // members/ is flat, unpaginated, and carries email directly — exactly what
@@ -338,6 +357,14 @@ export class PlaneReader implements SourceReader {
   }
 
   private async request(path: string): Promise<Response> {
+    const res = await this.requestRaw(path);
+    if (!res.ok) throw new Error(`Plane request failed: GET ${path} -> HTTP ${res.status}`);
+    return res;
+  }
+
+  // The rate-limit and 404 checks every Plane call needs, without requiring a
+  // 2xx status — resolveAttachmentDownloadUrl's whole point is a 3xx response.
+  private async requestRaw(path: string): Promise<Response> {
     const base = this.credential.baseUrl.replace(/\/$/, '');
     const url = `${base}/api/v1/workspaces/${this.credential.workspaceSlug}/projects/${this.projectId}${path}`;
     const res = await pinnedFetch(url, {
@@ -352,7 +379,6 @@ export class PlaneReader implements SourceReader {
     });
     if (backoff !== null) throw new PlaneRateLimitedError(backoff);
     if (res.status === 404) throw new PlaneNotFoundError(path);
-    if (!res.ok) throw new Error(`Plane request failed: GET ${path} -> HTTP ${res.status}`);
     return res;
   }
 }

@@ -35,6 +35,7 @@
         "@repo/db": "workspace:*",
         "@repo/mailer": "workspace:*",
         "@repo/net": "workspace:*",
+        "@repo/storage": "workspace:*",
         "croner": "^10.0.1",
         "decode-named-character-reference": "^1.3.0",
         "drizzle-orm": "^0.45.2",
@@ -159,6 +160,7 @@
         "@repo/db": "workspace:*",
         "@repo/mailer": "workspace:*",
         "@repo/net": "workspace:*",
+        "@repo/storage": "workspace:*",
         "croner": "^10.0.1",
         "drizzle-orm": "^0.45.2",
       },
@@ -281,6 +283,19 @@
         "@repo/eslint-config": "workspace:*",
         "@types/bun": "latest",
         "@types/node": "^26.2.0",
+        "eslint": "^9.39.0",
+        "typescript": "^6.0.3",
+      },
+    },
+    "packages/storage": {
+      "name": "@repo/storage",
+      "version": "0.0.0",
+      "dependencies": {
+        "@aws-sdk/client-s3": "^3.1109.0",
+      },
+      "devDependencies": {
+        "@repo/eslint-config": "workspace:*",
+        "@types/bun": "latest",
         "eslint": "^9.39.0",
         "typescript": "^6.0.3",
       },
@@ -938,6 +953,8 @@
     "@repo/mailer": ["@repo/mailer@workspace:packages/mailer"],
 
     "@repo/net": ["@repo/net@workspace:packages/net"],
+
+    "@repo/storage": ["@repo/storage@workspace:packages/storage"],
 
     "@scalar/agent-chat": ["@scalar/agent-chat@0.12.24", "", { "dependencies": { "@ai-sdk/vue": "3.0.33", "@scalar/api-client": "3.15.0", "@scalar/components": "0.27.11", "@scalar/helpers": "0.10.0", "@scalar/icons": "0.7.5", "@scalar/json-magic": "0.12.20", "@scalar/openapi-types": "0.9.4", "@scalar/schemas": "0.8.1", "@scalar/themes": "0.17.2", "@scalar/types": "0.17.1", "@scalar/use-toasts": "0.10.4", "@scalar/validation": "0.6.2", "@scalar/workspace-store": "0.56.1", "@vueuse/core": "13.9.0", "ai": "6.0.33", "js-base64": "^3.7.8", "neverpanic": "0.0.8", "truncate-json": "3.0.1", "vue": "^3.5.40" } }, "sha512-wIDE//zXOIto05DJlTGLOdXiuRzSCMT+DOzLhLTWmRFaR8WeTMSneiNppQ7kQGMtukD6hpz/awQRRx+PY8XIYw=="],
 

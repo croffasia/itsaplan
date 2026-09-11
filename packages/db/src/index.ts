@@ -1,4 +1,4 @@
-export { db } from './client';
+export { db, type DbExecutor } from './client';
 export * from './schema';
 export * from './permissions';
 export { getSetting, getOrCreateSetting, setSetting } from './settings';
@@ -24,3 +24,16 @@ export {
   readNotificationConfig,
   type NotificationConfig,
 } from './domains/notification-settings';
+export {
+  STORAGE_SETTING_KEY,
+  MB,
+  DEFAULT_ATTACHMENT_MIME_TYPES,
+  defaultStorageSettings,
+  getStorageSettings,
+  mimeAllowed,
+  projectStoredBytes,
+  projectTeamId,
+  teamStoredBytes,
+  lockAttachmentStorage,
+  type StorageSettings,
+} from './domains/storage';

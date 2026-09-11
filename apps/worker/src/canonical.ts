@@ -36,11 +36,14 @@ export interface CanonicalCustomFieldValue {
 // No URL field: an attachment's download URL is a presigned link that expires
 // (see docs/dev/plane-import-source-notes.md), so it must never be resolved
 // ahead of the phase that actually downloads the bytes. sourceId is what a later
-// phase resolves it from again, on demand.
+// phase resolves it from again, on demand. sizeBytes is the source's own claim,
+// used only to skip an obviously-too-large file before downloading it — the
+// size actually stored always comes from the downloaded bytes, never this.
 export interface CanonicalAttachment {
   sourceId: string;
   filename: string;
   contentType: string;
+  sizeBytes: number;
 }
 
 export interface CanonicalComment {

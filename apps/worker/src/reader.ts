@@ -40,4 +40,9 @@ export interface SourceReader {
   listIssueRelations(issueSourceId: string): Promise<CanonicalRelation[]>;
   listIssueComments(issueSourceId: string): Promise<CanonicalComment[]>;
   listIssueAttachments(issueSourceId: string): Promise<CanonicalAttachment[]>;
+  // Resolves one attachment's download URL, fresh each call: the source's own
+  // resolved URL is a presigned link that expires (Plane's lasts exactly an
+  // hour), so this is called at the moment of download, never cached or
+  // resolved ahead of time.
+  resolveAttachmentDownloadUrl(issueSourceId: string, attachmentSourceId: string): Promise<string>;
 }

@@ -1,3 +1,5 @@
+import { pinnedFetch } from '@repo/net';
+import { getStorageSettings, mimeAllowed, MB } from '@repo/db';
 import { startPollLoop, type WorkerHandle } from './poll-loop';
 import { intEnv } from './env';
 import { equalJitterBackoffMs } from './backoff';
@@ -34,11 +36,13 @@ import {
   createLocalComment,
   createIssueLink,
   findProjectMemberUserId,
+  createLocalAttachmentAndRecord,
+  AttachmentRejectedError,
   type ClaimedImportJob,
 } from './import-store';
 
 // The poll loop that drives a Plane import through its phases: discover ->
-// create -> link -> attachments -> done. Follows the same claim-a-lease,
+// create -> link -> rewrite -> attachments -> done. Follows the same claim-a-lease,
 // bounded-chunk-per-tick shape as worker.ts and agent-worker.ts. Each tick
 // claims at most one due import_job and advances it by one bounded unit of
 // work, then reschedules — a large import interleaves across many ticks
@@ -76,7 +80,7 @@ async function tick(): Promise<void> {
         await runRewrite(job);
         break;
       case 'attachments':
-        await runAttachments(job);
+        await runAttachments(job, reader);
         break;
       default:
         await completeImportJob(job.id);
@@ -439,11 +443,64 @@ async function runRewrite(job: ClaimedImportJob): Promise<void> {
   await saveImportJobCursor(job.id, next);
 }
 
-// --- Attachments: metadata (filename, content type) was already captured
-// per-issue during Create. Downloading the actual bytes needs a fresh
+// --- Attachments: metadata (filename, content type, size) was already listed
+// per-issue during Create, but never the bytes — those need a fresh
 // resolve-then-fetch of the two-hop, hour-lived S3 redirect right before each
-// download (see "Attachments" in the notes file) and is not part of this
-// milestone's SourceReader — this phase just closes the job out.
-async function runAttachments(job: ClaimedImportJob): Promise<void> {
-  await completeImportJob(job.id);
+// download (see "Attachments" in the notes file), so this phase re-lists each
+// issue's attachments rather than reusing anything captured earlier.
+
+async function runAttachments(job: ClaimedImportJob, reader: SourceReader): Promise<void> {
+  const cursor = job.cursor as Partial<RecordCursor>;
+  const afterId = cursor.lastRecordId ?? 0;
+  const pending = await listCreatedImportRecords(job.id, 'issue', afterId, ISSUES_PER_TICK);
+  if (pending.length === 0) {
+    await completeImportJob(job.id);
+    return;
+  }
+  const limits = await getStorageSettings();
+  for (const record of pending) {
+    const attachments = await reader.listIssueAttachments(record.sourceId);
+    for (const attachment of attachments) {
+      if ((await findImportRecord(job.id, 'attachment', attachment.sourceId))?.localId != null) {
+        continue;
+      }
+      try {
+        // Plane's own advertised size/type skip an obviously-too-large or
+        // disallowed file before spending a download on it; the authoritative
+        // check is still the real downloaded byte count, in
+        // createLocalAttachmentAndRecord.
+        if (attachment.sizeBytes > limits.maxAttachmentMb * MB) {
+          throw new AttachmentRejectedError(
+            `"${attachment.filename}" is ${Math.ceil(attachment.sizeBytes / MB)} MB, over the ${limits.maxAttachmentMb} MB limit`,
+          );
+        }
+        if (!mimeAllowed(attachment.contentType, limits.attachmentMimeTypes)) {
+          throw new AttachmentRejectedError(
+            `"${attachment.filename}" is type "${attachment.contentType}", not accepted on this instance`,
+          );
+        }
+        const url = await reader.resolveAttachmentDownloadUrl(record.sourceId, attachment.sourceId);
+        const res = await pinnedFetch(url, {
+          timeoutMs: 30_000,
+          maxBytes: limits.maxAttachmentMb * MB,
+        });
+        const bytes = Buffer.from(await res.arrayBuffer());
+        await createLocalAttachmentAndRecord(job.id, attachment.sourceId, {
+          projectId: job.projectId,
+          issueId: record.localId,
+          filename: attachment.filename,
+          contentType: attachment.contentType,
+          bytes,
+        });
+      } catch (error) {
+        if (!(error instanceof AttachmentRejectedError)) throw error;
+        console.error(
+          `[import ${job.id}] attachment ${attachment.sourceId} rejected:`,
+          error.message,
+        );
+      }
+    }
+  }
+  const next: RecordCursor = { lastRecordId: pending[pending.length - 1]!.id };
+  await saveImportJobCursor(job.id, next);
 }

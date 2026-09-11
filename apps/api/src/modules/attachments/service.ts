@@ -8,7 +8,7 @@ import {
 } from './storage';
 
 // Data access for issue attachments. File bytes live in the S3-compatible object
-// store (#shared/s3); these rows hold the metadata and the object key. publicId is
+// store (@repo/storage); these rows hold the metadata and the object key. publicId is
 // the unguessable id used in the public download URL.
 
 export interface AttachmentRow {

@@ -16,6 +16,9 @@ returns.
   `SourceReader` port, the only implementation (Plane), and the phase state machine
   (discover → create → link → rewrite → attachments → done) that drives a job one bounded chunk per
   tick.
+- `packages/storage` and `packages/db/src/domains/storage.ts` — object storage and upload
+  limits, shared with `apps/api` so an imported attachment is held to the same rules an
+  interactive upload is.
 - `apps/api/src/modules/import-jobs/` — create/test-connection/plane-preview/export/status/
   pause/resume/cancel routes.
 - `apps/web/src/features/settings/components/import-export/` — the Settings page.
@@ -77,15 +80,42 @@ already had via `runLink`:
   A job created before this phase existed has no `planeProjectKey`, and Rewrite is a
   no-op for it rather than a failure.
 
+## Attachments are downloaded and attached to their issue
+
+Originally missing (bytes were never fetched, only a source id recorded for the discovered
+count); now built. `runAttachments` (`import-worker.ts`) re-lists each created issue's
+attachments — the metadata captured during Create is not reused, since a download needs a
+fresh resolve of the two-hop, hour-lived URL right before it happens, not before — and
+downloads the ones it hasn't already created a local row for. Plane's own advertised size
+and mime type are checked against the instance's own upload settings (`getStorageSettings`/
+`mimeAllowed`, `@repo/db`) before the request is even made; the project's storage quota is
+checked once before the upload (so an already-over-quota file is never written to the
+object store at all) and once more inside the same advisory lock
+(`lockAttachmentStorage`) an interactive upload takes, immediately before the insert — the
+two never both pass a check the project can only actually fit one of. A rejected attachment
+(`AttachmentRejectedError`, `import-store.ts`) is logged and skipped, not treated as a
+failed tick that retries. Re-running an import reuses an existing attachment by exact
+filename on the same issue, the same reuse-by-content-match philosophy every other entity
+here already has.
+
+The bytes are stored the same way an interactive attachment upload is: `putObject`/
+`attachmentObjectKey`/`safeAttachmentFilename` now live in `@repo/storage`, and
+`getStorageSettings`/`mimeAllowed`/`projectStoredBytes`/`lockAttachmentStorage` in
+`packages/db/src/domains/storage.ts` — both extracted from `apps/api` (which used to be
+their only reader) specifically so the worker could reuse them rather than duplicate
+quota/mime enforcement and risk it drifting out of sync with an instance's own configured
+limits. The worker does **not** enforce the team-wide storage ceiling
+(`getLimits`/`maxStorageBytes`) — that is a hosted-cloud concept that resolves to
+"unlimited" on every self-hosted instance this feature targets, via a provider only the api
+process registers; replicating that plugin wiring for a limit that is always zero here
+was not worth it. Only the project quota, a real always-on instance setting, is enforced.
+
+Inline images embedded directly in description/comment HTML (not listed as a separate
+attachment) are a distinct path, not covered by this — see "Inline images" in
+`docs/dev/plane-import-source-notes.md`.
+
 ## Other real limitations, by design or by scope, not oversights
 
-- **Attachment bytes are never fetched, and neither is the filename.** `createOneIssue`
-  calls `reader.listIssueAttachments(sourceId)` only to pass `attachments.map(a =>
-  a.sourceId)` into `insertDiscoveredIds` (`import-worker.ts:261-268`) — the filename and
-  content type Plane returns are read and discarded. No `issue_attachment` row is ever
-  created. The Attachments phase (`runAttachments`) does nothing but close the job out.
-  `counts.attachment.created` will read 0 for every job, forever, by design — the UI shows
-  this honestly rather than hiding the column.
 - **Custom fields, modules, milestones, work item types**: not read from Plane at all.
   `CanonicalIssue.customFields` exists as a type but `plane-adapter.ts` hardcodes it to `[]`
   (see the source notes file's "Custom properties" section for why — no project-wide list

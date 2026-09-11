@@ -8,14 +8,21 @@ import {
   issueLabel,
   issueActivity,
   issueLink,
+  issueAttachment,
   user,
   projectMember,
   importJob,
   importRecord,
+  getStorageSettings,
+  mimeAllowed,
+  MB,
+  projectStoredBytes,
+  lockAttachmentStorage,
   type ImportSource,
 } from '@repo/db';
 import { and, eq, gt, isNull, isNotNull, sql } from 'drizzle-orm';
 import { decryptSecret, type EncryptedSecret } from '@repo/crypto';
+import { putObject, safeAttachmentFilename, attachmentObjectKey } from '@repo/storage';
 import type { CanonicalState, CanonicalLabel, CanonicalCycle } from './canonical';
 import type { PlaneCredential } from './plane-adapter';
 
@@ -685,4 +692,91 @@ export async function findProjectMemberUserId(
     .where(and(eq(projectMember.projectId, projectId), sql`lower(${user.email}) = lower(${email})`))
     .limit(1);
   return rows[0]?.userId ?? null;
+}
+
+// Thrown for an attachment that simply does not fit this instance's own
+// configured limits (file size, mime type, or project quota) — the Attachments
+// phase catches this specifically and moves on to the next attachment, rather
+// than treating it as a failed tick the way a network or database error is.
+export class AttachmentRejectedError extends Error {}
+
+export interface NewLocalAttachment {
+  projectId: number;
+  issueId: number;
+  filename: string;
+  contentType: string;
+  bytes: Buffer;
+}
+
+// Reuse-before-duplicate, the same shape as the other entities: an attachment
+// already on this issue with the same filename is reused rather than re-uploaded
+// on a second import run. Size, mime type, and project quota are all checked
+// against the instance's own settings before the upload, so a file that cannot
+// be stored never reaches the object store at all; the quota is checked once
+// more inside the lock, right before the insert, the same two-step api's own
+// upload route follows — the first check keeps a doomed-to-reject file off the
+// object store, the second is the one a concurrent write can't slip past.
+export async function createLocalAttachmentAndRecord(
+  jobId: number,
+  sourceId: string,
+  input: NewLocalAttachment,
+): Promise<number> {
+  const filename = safeAttachmentFilename(input.filename);
+  const [existing] = await db
+    .select({ id: issueAttachment.id })
+    .from(issueAttachment)
+    .where(and(eq(issueAttachment.issueId, input.issueId), eq(issueAttachment.filename, filename)));
+  if (existing) {
+    await upsertImportRecordWith(db, jobId, 'attachment', sourceId, 'attachment', existing.id);
+    return existing.id;
+  }
+
+  const limits = await getStorageSettings();
+  if (input.bytes.length > limits.maxAttachmentMb * MB) {
+    throw new AttachmentRejectedError(
+      `"${filename}" is ${Math.ceil(input.bytes.length / MB)} MB, over the ${limits.maxAttachmentMb} MB limit`,
+    );
+  }
+  if (!mimeAllowed(input.contentType, limits.attachmentMimeTypes)) {
+    throw new AttachmentRejectedError(
+      `"${filename}" is type "${input.contentType}", not accepted on this instance`,
+    );
+  }
+  if (limits.projectQuotaMb > 0) {
+    const used = await projectStoredBytes(input.projectId);
+    if (used + input.bytes.length > limits.projectQuotaMb * MB) {
+      throw new AttachmentRejectedError(
+        `the project has used its ${limits.projectQuotaMb} MB storage quota`,
+      );
+    }
+  }
+
+  const key = attachmentObjectKey(input.projectId, 'attachments', input.issueId, filename);
+  await putObject(key, input.bytes, input.contentType);
+
+  return db.transaction(async (tx) => {
+    await lockAttachmentStorage(tx, input.projectId);
+    if (limits.projectQuotaMb > 0) {
+      // Re-checked against the lock: the check above ran before the upload,
+      // outside any lock, so a concurrent write could have landed since.
+      const used = await projectStoredBytes(input.projectId, tx);
+      if (used + input.bytes.length > limits.projectQuotaMb * MB) {
+        throw new AttachmentRejectedError(
+          `the project has used its ${limits.projectQuotaMb} MB storage quota`,
+        );
+      }
+    }
+    const [row] = await tx
+      .insert(issueAttachment)
+      .values({
+        issueId: input.issueId,
+        s3Key: key,
+        filename,
+        contentType: input.contentType,
+        sizeBytes: input.bytes.length,
+      })
+      .returning({ id: issueAttachment.id });
+    await upsertImportRecordWith(tx, jobId, 'attachment', sourceId, 'attachment', row!.id);
+    return row!.id;
+  });
 }

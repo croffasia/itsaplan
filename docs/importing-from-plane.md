@@ -42,14 +42,20 @@ of them affect data you may not notice is missing until later.
   comment that says "see ROOMS-524" is rewritten to point at this project's own
   identifier for that issue, once it has been imported too. A mention of an issue
   outside the imported set is left exactly as Plane wrote it.
+- **Attachment files**, downloaded and attached to the same issue they were on in Plane.
+  A file is skipped, not imported, when it is larger than this instance's own upload
+  limit or of a file type this instance doesn't accept — the same limits an ordinary
+  attachment upload on this instance is held to. A skipped file is only noted in the
+  server log, not shown anywhere in this screen today. Re-running an import reuses a
+  file already attached with the same name on the same issue, rather than attaching it
+  a second time.
 
 ## What is not imported
 
-- **Attachment files.** Attachments are not downloaded — not the file, not even the
-  filename. The progress list shows how many attachments Plane reports for the imported
-  issues, but that count never moves past "created: 0"; that is expected, not a stuck
-  import. If a description or comment mentions an attachment, the mention comes across as
-  plain text with nothing behind it.
+- **A mention of an attachment inside a description or comment's own text** (an image
+  pasted directly into the rich text, not listed as a separate attached file) comes
+  across as plain text with nothing behind it — only attachments listed as their own
+  files are downloaded.
 - **Custom fields**, whatever they are named in the source project.
 - **Modules and milestones.**
 - **Work item types** (Epic and any custom type) — every imported item becomes a plain

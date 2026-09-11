@@ -55,10 +55,18 @@ running to completion in one.
   every created issue's description and comments for a mention of the
   source's own identifier and rewrites it to this project's, purely from
   already-local data — it makes no further requests to the source.
-- Attachment byte download is not implemented yet: the Attachments phase
-  closes the job out once the phases before it are done. `reader.ts` only
-  lists attachment metadata per issue (captured during Create); resolving the
-  two-hop, hour-lived download URL happens in a later phase, not before.
+- The Attachments phase re-lists each issue's attachments (metadata alone,
+  captured during Create, is not reused — a download needs a fresh resolve of
+  the two-hop, hour-lived URL right before it happens) and downloads the
+  bytes it hasn't already created a local row for. Size and mime type are
+  checked against the instance's own upload settings (`@repo/db`'s
+  `getStorageSettings`/`mimeAllowed`) before the request; the project's
+  storage quota (`@repo/db`'s `projectStoredBytes`, `@repo/storage`'s
+  `putObject`/`attachmentObjectKey`) is checked before the upload and once
+  more inside the same advisory lock (`lockAttachmentStorage`) an interactive
+  upload takes, so the two never both pass a check that only one of them can
+  actually fit. A rejected attachment (`AttachmentRejectedError`) is logged
+  and skipped, not treated as a failed tick.
 
 ## Invariants
 
@@ -100,7 +108,10 @@ All via env with defaults (see `src/config.ts`): `WEBHOOK_POLL_INTERVAL_MS`,
 delivery. Notification delivery also needs `APP_ENCRYPTION_KEY` (the same value the
 api uses) to read the stored provider credentials, and so does source import (it
 decrypts the stored Plane credential with it too). `IMPORT_POLL_INTERVAL_MS` tunes
-the import worker's poll interval.
+the import worker's poll interval. The Attachments phase needs the same `S3_*`
+variables (`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+`S3_REGION`, `S3_FORCE_PATH_STYLE`) the api reads for its own uploads — both
+processes write to the same bucket.
 
 ## Tests
 

@@ -86,3 +86,47 @@ export const resumeImportJob = (id: number) =>
 
 export const cancelImportJob = (id: number) =>
   request<ImportJob>(`/import-jobs/${id}/cancel`, { method: 'POST' });
+
+export interface ExportedComment {
+  authorName: string | null;
+  authorEmail: string | null;
+  body: string;
+  createdAt: string;
+  replyToIndex: number | null;
+}
+
+export interface ExportedRelation {
+  kind: string;
+  targetIdentifier: string;
+}
+
+export interface ExportedIssue {
+  identifier: string;
+  title: string;
+  description: string;
+  state: string;
+  labels: string[];
+  cycle: string | null;
+  priority: string | null;
+  startDate: string | null;
+  dueDate: string | null;
+  parentIdentifier: string | null;
+  assigneeEmail: string | null;
+  comments: ExportedComment[];
+  relations: ExportedRelation[];
+}
+
+// A self-contained snapshot of a project's data - states, labels, cycles, and issues
+// (with their comments and relations) - as portable JSON. Not a live sync to any
+// target, a download; mirrors apps/api's ProjectExportResponse.
+export interface ProjectExport {
+  exportedAt: string;
+  project: { key: string; name: string; description: string };
+  states: { name: string; category: string }[];
+  labels: { name: string; color: string }[];
+  cycles: { name: string; startDate: string; endDate: string; goal: string }[];
+  issues: ExportedIssue[];
+}
+
+export const exportProject = (projectKey: string) =>
+  request<ProjectExport>(`/projects/${projectKey}/import-jobs/export`);

@@ -343,4 +343,43 @@ describe('import jobs', () => {
       expect(res.status).toBe(201);
     });
   });
+
+  describe('export', () => {
+    it("exports the project's states, labels, cycles, and an issue with a comment", async () => {
+      const { api } = await setupOwnerProject();
+      const view = await api.projects({ projectKey: 'MKT' }).get();
+      const columnId = view.data!.columns[0]!.id;
+
+      const label = (
+        await api.projects({ projectKey: 'MKT' }).labels.post({ name: 'bug', color: '#ff0000' })
+      ).data!;
+      const issue = (
+        await api
+          .projects({ projectKey: 'MKT' })
+          .issues.post({ columnId, title: 'Fix the thing', labelIds: [label.id] })
+      ).data!;
+      await api.issues({ issueId: issue.id }).comments.post({ body: 'looking into it' });
+
+      const res = await jobs(api).export.get();
+      expect(res.status).toBe(200);
+      expect(res.data?.project.key).toBe('MKT');
+      expect(res.data?.labels).toContainEqual({ name: 'bug', color: '#ff0000' });
+
+      const exportedIssue = res.data?.issues.find(
+        (i) => i.identifier === `MKT-${issue.sequenceNumber}`,
+      );
+      expect(exportedIssue).toMatchObject({
+        title: 'Fix the thing',
+        labels: ['bug'],
+      });
+      expect(exportedIssue?.comments).toMatchObject([{ body: 'looking into it' }]);
+    });
+
+    it('denies a member whose role lacks the import_jobs permission', async () => {
+      const { api } = await setupOwnerProject();
+      const member = await addMember(api);
+      const res = await jobs(member).export.get();
+      expect(res.status).toBe(403);
+    });
+  });
 });

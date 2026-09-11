@@ -9,6 +9,7 @@ import SettingsImportExportConnectForm from './SettingsImportExportConnectForm';
 import SettingsImportExportProjectPicker from './SettingsImportExportProjectPicker';
 import SettingsImportExportMappingReview from './SettingsImportExportMappingReview';
 import SettingsImportExportJobList from './SettingsImportExportJobList';
+import SettingsImportExportDownloadButton from './SettingsImportExportDownloadButton';
 
 export interface PlaneConnection extends PlaneConnectionInput {
   projects: PlaneProjectOption[];
@@ -66,6 +67,11 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
       <SettingsSection title={t('jobs')} description={t('jobsHint')}>
         <SettingsImportExportJobList projectKey={projectKey} editable={canEdit} />
       </SettingsSection>
+      {canCreate && (
+        <SettingsSection title={t('export')} description={t('exportHint')}>
+          <SettingsImportExportDownloadButton projectKey={projectKey} />
+        </SettingsSection>
+      )}
     </div>
   );
 }

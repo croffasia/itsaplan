@@ -63,6 +63,43 @@ const CountsResponse = t.Object({
   attachment: entityCount,
 });
 
+const ExportedComment = t.Object({
+  authorName: t.Nullable(t.String()),
+  authorEmail: t.Nullable(t.String()),
+  body: t.String(),
+  createdAt: t.String(),
+  replyToIndex: t.Nullable(t.Number()),
+});
+
+const ExportedRelation = t.Object({ kind: t.String(), targetIdentifier: t.String() });
+
+const ExportedIssue = t.Object({
+  identifier: t.String(),
+  title: t.String(),
+  description: t.String(),
+  state: t.String(),
+  labels: t.Array(t.String()),
+  cycle: t.Nullable(t.String()),
+  priority: t.Nullable(t.String()),
+  startDate: t.Nullable(t.String()),
+  dueDate: t.Nullable(t.String()),
+  parentIdentifier: t.Nullable(t.String()),
+  assigneeEmail: t.Nullable(t.String()),
+  comments: t.Array(ExportedComment),
+  relations: t.Array(ExportedRelation),
+});
+
+export const ProjectExportResponse = t.Object({
+  exportedAt: t.String(),
+  project: t.Object({ key: t.String(), name: t.String(), description: t.String() }),
+  states: t.Array(t.Object({ name: t.String(), category: t.String() })),
+  labels: t.Array(t.Object({ name: t.String(), color: t.String() })),
+  cycles: t.Array(
+    t.Object({ name: t.String(), startDate: t.String(), endDate: t.String(), goal: t.String() }),
+  ),
+  issues: t.Array(ExportedIssue),
+});
+
 export const ImportJobResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),

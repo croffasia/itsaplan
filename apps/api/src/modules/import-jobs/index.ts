@@ -8,6 +8,7 @@ import {
   ImportJobResponse,
   TestConnectionResponse,
   PlanePreviewResponse,
+  ProjectExportResponse,
   createImportJobBody,
   importJobParams,
   testConnectionBody,
@@ -24,6 +25,7 @@ import {
   testPlaneConnection,
   testPlaneStatesPreview,
 } from './service';
+import { exportProject } from './export';
 
 // Import jobs bring issues from an external tracker into a project. Creating one
 // stores an encrypted credential and leaves it 'pending' for the worker
@@ -75,6 +77,18 @@ export const importJobRoutes = new Elysia({
       },
     },
   )
+
+  .get('/projects/:projectKey/import-jobs/export', ({ project }) => exportProject(project.id), {
+    permission: ['import_jobs', 'create'],
+    response: { 200: ProjectExportResponse, ...accessErrors },
+    detail: {
+      summary: "Export a project's data",
+      description:
+        "A self-contained snapshot of the project's states, labels, cycles, and issues " +
+        '(with their comments and relations), as portable JSON. Not a live sync to any ' +
+        'target — a download.',
+    },
+  })
 
   .post(
     '/projects/:projectKey/import-jobs',

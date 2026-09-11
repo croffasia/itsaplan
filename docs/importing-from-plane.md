@@ -100,8 +100,15 @@ an issue you created by hand before importing — one that happens to share an e
 with something in Plane — is treated as the same issue and gets Plane's labels, comments,
 and other fields attached to it rather than getting a second copy.
 
+## Exporting your project's data
+
+The **Export** section at the bottom of the page downloads a JSON file with the project's
+states, labels, cycles, and issues (with their comments and relations) — a self-contained
+snapshot, readable on its own, using this project's own identifiers rather than database
+ids. This is a download, not a live sync: it does not write anywhere, including back into
+Plane, and nothing is scheduled or kept running.
+
 ## Only Plane, only import
 
-Plane is the only supported source today — Linear and Jira are not available. And despite
-the page being named "Import/Export", there is currently no export — this page only brings
-data in.
+Plane is the only supported source to import from today — Linear and Jira are not
+available.

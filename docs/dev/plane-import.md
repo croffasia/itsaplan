@@ -16,23 +16,30 @@ returns.
   `SourceReader` port, the only implementation (Plane), and the phase state machine
   (discover → create → link → rewrite → attachments → done) that drives a job one bounded chunk per
   tick.
-- `apps/api/src/modules/import-jobs/` — create/test-connection/plane-preview/status/pause/
-  resume/cancel routes.
+- `apps/api/src/modules/import-jobs/` — create/test-connection/plane-preview/export/status/
+  pause/resume/cancel routes.
 - `apps/web/src/features/settings/components/import-export/` — the Settings page.
 
-## What is genuinely missing against the design posted to #253
+## Export: a JSON snapshot, not a live sync
 
-The original interface sketch described a real mapping-review step and a two-pass design
-that resolves parent links, relations, *and* cross-references in text. All three of those
-are now built (below); export is the one piece still open:
+`apps/api/src/modules/import-jobs/export.ts` (`GET /projects/:projectKey/import-jobs/export`,
+gated the same as starting an import) reads a project's states, labels, cycles, and issues
+(with their comments and relations) directly via `@repo/db` and shapes them into a
+self-contained, human-readable JSON document — issues, parents, and relation targets are
+referenced by their own identifier (`"MKT-42"`), not a database id, so the file reads
+sensibly opened on its own. `SettingsImportExportDownloadButton.tsx` fetches it and saves it
+client-side with the same blob + `createObjectURL` pattern `DocumentExportDialog` already
+uses for documents.
 
-- **Export does not exist.** Despite the page and branch being named "import-export," only
-  the import direction was built. A `CanonicalExport`-shaped output for round-tripping was
-  part of the original design and was never started.
+This is deliberately a download, not a live write-back into Plane or anywhere else: there is
+no write-capable adapter, no export job phase, and no target-specific format. Building a
+live sync into a specific target (starting with Plane, since that is the one adapter that
+exists) is a separate, much larger piece of work — a `PlaneWriter` mirroring `PlaneReader`,
+handling Plane's own id assignment and rate limits on the way out — deferred, not started.
 
 ## Mapping review, parent links, and cross-references
 
-All three were originally missing and are now built:
+Originally all missing against the design posted to #253; now built:
 
 - **Mapping review.** Picking a source project (`SettingsImportExportProjectPicker.tsx`) no
   longer starts the job directly — `SettingsImportExportMappingReview.tsx` fetches the

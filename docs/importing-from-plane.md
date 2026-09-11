@@ -36,6 +36,10 @@ of them affect data you may not notice is missing until later.
 - **Labels, workflow states, and cycles** — created if they do not already exist by that
   name.
 - **Issue relations** — "blocks", "relates to", and "duplicates" only.
+- **Cross-references inside text, when both sides were imported.** A description or
+  comment that says "see ROOMS-524" is rewritten to point at this project's own
+  identifier for that issue, once it has been imported too. A mention of an issue
+  outside the imported set is left exactly as Plane wrote it.
 
 ## What is not imported
 
@@ -51,9 +55,6 @@ of them affect data you may not notice is missing until later.
 - **Time logs, reactions, watchers, and edit/activity history.**
 - **Four of Plane's eight relation kinds** — the scheduling-dependency ones (starts
   before/after, finishes before/after) have no equivalent here and are dropped.
-- **Cross-references inside text.** A description or comment that says "see PROJ-123" keeps
-  saying that after import — it is not rewritten to point at the new issue here, since the
-  link is just text to the importer, not a resolvable reference.
 
 ## Mapping is automatic, with no review step
 
@@ -65,15 +66,6 @@ real workspace checked during development had a state named "In Progress" that P
 categorized as "backlog" internally. An import can land some issues in a state that reads
 oddly, and the fix today is to move them by hand afterward, not to adjust the mapping before
 running the import.
-
-## Sub-issue links can be missed
-
-A sub-issue's link to its parent is set at the moment the sub-issue itself is created,
-using whichever of the two happens to already exist in this project by then. Issues are not
-necessarily created in an order where every parent comes before its children, so an
-occasional sub-issue can land with no parent set. There is no follow-up pass that goes back
-and fixes this — unlike issue relations, which do get a second pass. If sub-issue structure
-matters to you, check it after the import finishes.
 
 ## Rate limits are real, and the import waits them out
 

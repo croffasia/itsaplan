@@ -5,13 +5,18 @@ export const importJobParams = t.Object({ id: t.Numeric() });
 const stateCategory = t.UnionEnum(['backlog', 'unstarted', 'started', 'completed', 'canceled']);
 
 // The fields Plane needs to reach the source project, plus the mapping choices made
-// at creation time. The worker reads planeProjectId already; unmatchedUserPolicy and
-// stateOverrides are stored for it to read as that mapping logic is built out.
+// at creation time.
 export const createImportJobBody = t.Object({
   baseUrl: t.String({ minLength: 1, description: 'Origin of the source Plane instance.' }),
   workspaceSlug: t.String({ minLength: 1 }),
   apiToken: t.String({ minLength: 1, description: 'Plane workspace or personal API key.' }),
   planeProjectId: t.String({ minLength: 1, description: 'The Plane project id to import from.' }),
+  planeProjectKey: t.String({
+    minLength: 1,
+    description:
+      'The Plane project\'s own short identifier (e.g. "ROOMS"), used to recognize and ' +
+      'rewrite cross-references like "ROOMS-524" in imported text.',
+  }),
   unmatchedUserPolicy: t.Optional(
     t.UnionEnum(['unassigned', 'skip'], {
       description:
@@ -51,7 +56,7 @@ export const ImportJobResponse = t.Object({
   id: t.Number(),
   projectId: t.Number(),
   source: t.Literal('plane'),
-  phase: t.UnionEnum(['discover', 'create', 'link', 'attachments', 'done']),
+  phase: t.UnionEnum(['discover', 'create', 'link', 'rewrite', 'attachments', 'done']),
   status: t.UnionEnum(['pending', 'running', 'paused', 'completed', 'failed']),
   counts: CountsResponse,
   lastError: t.Nullable(t.String()),

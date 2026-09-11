@@ -27,8 +27,16 @@ export default function SettingsImportExportProjectPicker({
 
   async function start() {
     const { baseUrl, workspaceSlug, apiToken } = connection;
+    const planeProjectKey = connection.projects.find((p) => p.id === planeProjectId)?.identifier;
+    if (!planeProjectKey) return;
     try {
-      await createJob.mutateAsync({ baseUrl, workspaceSlug, apiToken, planeProjectId });
+      await createJob.mutateAsync({
+        baseUrl,
+        workspaceSlug,
+        apiToken,
+        planeProjectId,
+        planeProjectKey,
+      });
       toast.success(t('importStarted'));
       setPlaneProjectId('');
     } catch {

@@ -374,6 +374,7 @@ interface PlaneWorkItem {
   id: string;
   name?: string;
   title?: string;
+  sequence_id: number;
   description_html: string;
   state?: { id: string } | string;
   assignees?: ({ email: string } | string)[];
@@ -393,6 +394,7 @@ interface PlaneWorkItem {
 function mapWorkItem(raw: PlaneWorkItem): CanonicalIssue {
   return {
     sourceId: raw.id,
+    sequenceId: raw.sequence_id,
     title: raw.name ?? raw.title ?? '',
     descriptionMarkdown: htmlToMarkdown(raw.description_html),
     stateSourceId: typeof raw.state === 'string' ? raw.state : (raw.state?.id ?? ''),

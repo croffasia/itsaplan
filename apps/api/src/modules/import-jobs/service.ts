@@ -21,7 +21,7 @@ export const IMPORT_ENTITY_TYPES = [
 ] as const;
 export type ImportEntityType = (typeof IMPORT_ENTITY_TYPES)[number];
 
-export type ImportJobPhase = 'discover' | 'create' | 'link' | 'attachments' | 'done';
+export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';
 export type ImportJobStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed';
 export type UnmatchedUserPolicy = 'unassigned' | 'skip';
 type StateCategory = 'backlog' | 'unstarted' | 'started' | 'completed' | 'canceled';
@@ -133,6 +133,7 @@ export interface CreateImportJobInput {
   workspaceSlug: string;
   apiToken: string;
   planeProjectId: string;
+  planeProjectKey: string;
   unmatchedUserPolicy?: UnmatchedUserPolicy;
   stateOverrides?: Record<string, StateCategory>;
 }
@@ -149,13 +150,16 @@ export async function createImportJob(
   const workspaceSlug = input.workspaceSlug.trim();
   const apiToken = input.apiToken.trim();
   const planeProjectId = input.planeProjectId.trim();
+  const planeProjectKey = input.planeProjectKey.trim();
   if (!workspaceSlug) throw new HttpError(400, 'workspaceSlug is required');
   if (!apiToken) throw new HttpError(400, 'apiToken is required');
   if (!planeProjectId) throw new HttpError(400, 'planeProjectId is required');
+  if (!planeProjectKey) throw new HttpError(400, 'planeProjectKey is required');
 
   const encrypted = encryptSecret(JSON.stringify({ baseUrl, workspaceSlug, apiKey: apiToken }));
   const config = {
     planeProjectId,
+    planeProjectKey,
     unmatchedUserPolicy: input.unmatchedUserPolicy ?? 'unassigned',
     ...(input.stateOverrides && Object.keys(input.stateOverrides).length > 0
       ? { stateOverrides: input.stateOverrides }

@@ -19,8 +19,8 @@ scheduling, and source imports. See root `AGENTS.md`.
   `@repo/mailer`, Telegram through the Bot API. The provider credentials are read
   from the database and decrypted here (`notification-send.ts`), so the process
   needs `APP_ENCRYPTION_KEY`.
-- Drives `import_job` rows through Discover -> Create -> Link -> Attachments ->
-  Done. See "Source imports" below.
+- Drives `import_job` rows through Discover -> Create -> Link -> Rewrite ->
+  Attachments -> Done. See "Source imports" below.
 
 ## Source imports
 
@@ -38,6 +38,9 @@ running to completion in one.
   against any operator's self-hosted instance). `docs/dev/plane-import-source-notes.md`
   is the spec it follows for pagination, rate limiting, and Plane's actual wire
   shapes.
+- `cross-reference.ts` — pure text matching for a source's own "KEY-123"-style
+  issue identifier: no `@repo/db`, no network, unit-tested directly. What
+  the Rewrite phase resolves into itsaplan's own issue ids.
 - `import-store.ts` — all `@repo/db` access for imports: claiming due jobs,
   reading/writing a job's phase/cursor/status, the `import_record`
   source-id-to-local-id upsert, and creating the local rows (states, labels,
@@ -46,11 +49,15 @@ running to completion in one.
   source id up front (`import_record` rows with no local id yet) before Create
   begins, rather than treating the source's own pagination cursor as the
   resumability anchor across the whole job — see the notes file's "Pagination"
-  section for why. Create/Link resume from `import_record`'s own id, not the
-  source's cursor.
+  section for why. Create/Link/Rewrite resume from `import_record`'s own id,
+  not the source's cursor. Link also gives every issue's parent link a second
+  chance to resolve, the same way it already does for relations. Rewrite scans
+  every created issue's description and comments for a mention of the
+  source's own identifier and rewrites it to this project's, purely from
+  already-local data — it makes no further requests to the source.
 - Attachment byte download is not implemented yet: the Attachments phase
-  closes the job out once Create/Link are done. `reader.ts` only lists
-  attachment metadata per issue (captured during Create); resolving the
+  closes the job out once the phases before it are done. `reader.ts` only
+  lists attachment metadata per issue (captured during Create); resolving the
   two-hop, hour-lived download URL happens in a later phase, not before.
 
 ## Invariants
@@ -75,9 +82,10 @@ running to completion in one.
 - **Pure logic stays dependency-free.** `backoff.ts`, `signature.ts`, and
   `isRetryableStatus` import nothing from `@repo/db`, so unit tests run without a
   database. Keep DB access in `store.ts`. Same split for imports: `canonical.ts`,
-  `reader.ts`, and `plane-adapter.ts` import nothing from `@repo/db` (its state-
-  category normalization, markdown conversion, and cursor/rate-limit logic are
-  unit-tested directly); `@repo/db` access stays in `import-store.ts`.
+  `reader.ts`, `plane-adapter.ts`, and `cross-reference.ts` import nothing from
+  `@repo/db` (its state-category normalization, markdown conversion,
+  cursor/rate-limit, and cross-reference matching logic are unit-tested
+  directly); `@repo/db` access stays in `import-store.ts`.
 - **An import job's credential is decrypted here, never routed through
   `packages/db/src/domains/`.** That directory is for config more than one
   process reads; only the worker ever decrypts a stored import credential (the

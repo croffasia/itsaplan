@@ -14,7 +14,7 @@ returns.
   local id mapping, the idempotency and resume primitive).
 - `apps/worker/src/{canonical,reader,plane-adapter,import-store,import-worker}.ts` — the
   `SourceReader` port, the only implementation (Plane), and the phase state machine
-  (discover → create → link → attachments → done) that drives a job one bounded chunk per
+  (discover → create → link → rewrite → attachments → done) that drives a job one bounded chunk per
   tick.
 - `apps/api/src/modules/import-jobs/` — create/test-connection/status/pause/resume/cancel
   routes.
@@ -23,8 +23,9 @@ returns.
 ## What is genuinely missing against the design posted to #253
 
 The original interface sketch described a real mapping-review step and a two-pass design
-that resolves parent links, relations, *and* cross-references in text. What shipped is
-narrower than that in three specific ways, plus export was dropped entirely:
+that resolves parent links, relations, *and* cross-references in text. Parent links and
+cross-references now get that second pass (below); mapping review and export are still
+open:
 
 1. **No mapping review UI.** `createImportJobBody` (`apps/api/src/modules/import-jobs/
    model.ts`) still accepts `unmatchedUserPolicy` and `stateOverrides`, but
@@ -36,26 +37,34 @@ narrower than that in three specific ways, plus export was dropped entirely:
    them from the request body — right now they are dead API surface that looks like it does
    something.
 
-2. **Parent/sub-issue links have no second pass.** `createOneIssue`
-   (`import-worker.ts:217-269`) sets `parentId` from whatever `import_record` says *at that
-   moment* (`findImportRecord(job.id, 'issue', canonical.parentSourceId)`), and nothing
-   revisits it later. `runLink` (`import-worker.ts:311-329`) only handles
-   `listIssueRelations` — parent linking is absent from it entirely. Since Create processes
-   issues in `import_record`'s own id order (which mirrors Plane's pagination order, not a
-   guaranteed parent-before-child order), a sub-issue processed before its parent exists
-   gets created with `parentId: null`, permanently. Fixing this means giving parent links the
-   same treatment relations already get: record the unresolved ones and revisit them in
-   `runLink`, or run a dedicated pass after Create.
-
-3. **Cross-references embedded in description/comment text are not touched.** `htmlToMarkdown`
-   (`plane-adapter.ts`) converts markup only — a description that reads "see PROJ-123" comes
-   through unchanged, still pointing at the source issue's identifier, not the new one here.
-   Nothing rewrites this. This was called out as required in the original design and never
-   implemented.
-
-4. **Export does not exist.** Despite the page and branch being named "import-export," only
+2. **Export does not exist.** Despite the page and branch being named "import-export," only
    the import direction was built. `CanonicalExport`-shaped output for round-tripping was
    part of the original design and was never started.
+
+## Parent links and cross-references get a second pass
+
+Both were originally missing and are now fixed, each the same shape as the relation
+handling `runLink` already had:
+
+- **Parent/sub-issue links.** `createOneIssue` still sets `parentId` from whatever
+  `import_record` says at that moment, which misses a sub-issue processed before its
+  parent exists. `runLink` (`import-worker.ts`) now re-fetches every created issue a
+  second time (it already does this for relations) and calls
+  `setIssueParentIfUnset` (`import-store.ts`) once the parent resolves. Idempotent: the
+  `parent_id IS NULL` guard makes a retry a no-op and never overwrites a parent Create
+  already set correctly.
+- **Cross-references in text.** A new `rewrite` phase runs between Link and Attachments.
+  `import_record.source_display_id` carries Plane's own `sequence_id` for every imported
+  issue (stashed at Create time, from `CanonicalIssue.sequenceId`); the job's `config.
+  planeProjectKey` (the source project's Plane identifier, e.g. `"ROOMS"`, stored at job
+  creation) is what a mention has to start with. For every created issue, its description
+  and every comment on it are scanned for `<planeProjectKey>-<number>` and rewritten to
+  this project's own identifier when the referenced number was itself imported into this
+  job; an unresolvable mention (outside the imported set) is left exactly as it was. The
+  matching and substitution logic is pure and unit-tested in `cross-reference.ts`
+  (`extractCrossReferences`/`applyCrossReferenceReplacements`) — no database, no network.
+  A job created before this phase existed has no `planeProjectKey`, and Rewrite is a
+  no-op for it rather than a failure.
 
 ## Other real limitations, by design or by scope, not oversights
 

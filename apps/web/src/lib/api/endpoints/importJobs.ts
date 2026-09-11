@@ -4,7 +4,7 @@ import { request } from '@/lib/api/core/client';
 // modules/import-jobs/service.ts). Creating one stores an encrypted credential
 // and leaves the job 'pending' for the worker to drive through its phases.
 
-export type ImportJobPhase = 'discover' | 'create' | 'link' | 'attachments' | 'done';
+export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';
 export type ImportJobStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed';
 export type ImportEntityType = 'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment';
 
@@ -40,6 +40,7 @@ export interface PlaneConnectionInput {
 
 export interface CreateImportJobInput extends PlaneConnectionInput {
   planeProjectId: string;
+  planeProjectKey: string;
 }
 
 export const testPlaneConnection = (projectKey: string, input: PlaneConnectionInput) =>

@@ -43,6 +43,7 @@ const validBody = {
   workspaceSlug: 'acme',
   apiToken: 'plane_api_token_123',
   planeProjectId: 'db95831f-b1ff-49e1-91c1-df28cd99bc41',
+  planeProjectKey: 'ROOMS',
 };
 
 const zeroCounts = { discovered: 0, created: 0 };

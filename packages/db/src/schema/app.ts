@@ -2175,7 +2175,7 @@ export const importJob = pgTable(
     check('import_job_source_check', sql`${t.source} IN ('plane')`),
     check(
       'import_job_phase_check',
-      sql`${t.phase} IN ('discover', 'create', 'link', 'attachments', 'done')`,
+      sql`${t.phase} IN ('discover', 'create', 'link', 'rewrite', 'attachments', 'done')`,
     ),
     check(
       'import_job_status_check',
@@ -2202,6 +2202,11 @@ export const importRecord = pgTable(
       .references(() => importJob.id, { onDelete: 'cascade' }),
     sourceEntityType: text('source_entity_type').notNull(),
     sourceId: text('source_id').notNull(),
+    // The source's own human-readable number for the entity (Plane's work item
+    // sequence_id, as a string) — only set for 'issue' rows, at Create time. Lets
+    // the Rewrite phase resolve a cross-reference like "ROOMS-524" back to this
+    // job's mapping without re-fetching every issue a second time to learn it.
+    sourceDisplayId: text('source_display_id'),
     localEntityType: text('local_entity_type'),
     localId: integer('local_id'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -2217,6 +2222,8 @@ export const importRecord = pgTable(
     ),
     uniqueIndex('import_record_job_source_uq').on(t.importJobId, t.sourceEntityType, t.sourceId),
     index('import_record_job_local_idx').on(t.importJobId, t.localEntityType, t.localId),
+    // Backs the Rewrite phase's cross-reference lookup (job, entity type, display id).
+    index('import_record_job_display_idx').on(t.importJobId, t.sourceEntityType, t.sourceDisplayId),
   ],
 );
 

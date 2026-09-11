@@ -4,6 +4,7 @@ import { equalJitterBackoffMs } from './backoff';
 import { PlaneReader, PlaneRateLimitedError } from './plane-adapter';
 import type { SourceReader } from './reader';
 import type { CanonicalComment } from './canonical';
+import { extractCrossReferences, applyCrossReferenceReplacements } from './cross-reference';
 import {
   claimDueImportJobs,
   decryptImportCredential,
@@ -15,9 +16,15 @@ import {
   insertDiscoveredIds,
   upsertImportRecord,
   findImportRecord,
+  findImportRecordByDisplayId,
   listUncreatedImportRecords,
   listCreatedImportRecords,
   firstProjectColumnId,
+  getProjectKey,
+  getIssueSequenceNumber,
+  getIssueTextForRewrite,
+  updateIssueDescription,
+  updateCommentBody,
   createLocalStateAndRecord,
   createLocalLabel,
   createLocalCycleAndRecord,
@@ -65,6 +72,9 @@ async function tick(): Promise<void> {
       case 'link':
         await runLink(job, reader);
         break;
+      case 'rewrite':
+        await runRewrite(job);
+        break;
       case 'attachments':
         await runAttachments(job);
         break;
@@ -91,6 +101,11 @@ async function handleTickError(job: ClaimedImportJob, error: unknown): Promise<v
 
 interface PlaneImportConfig {
   planeProjectId: string;
+  // The source project's own short identifier (Plane's "identifier", e.g. "ROOMS"),
+  // stored at job creation for the Rewrite phase to build "ROOMS-524"-style
+  // cross-reference patterns from. Optional: a job created before this existed has
+  // none, and Rewrite is a no-op for it rather than a failure.
+  planeProjectKey?: string;
 }
 
 function buildReader(job: ClaimedImportJob): SourceReader {
@@ -243,7 +258,7 @@ async function createOneIssue(
     if (record?.localId != null) labelIds.push(record.localId);
   }
 
-  const localId = await createLocalIssueAndRecord(job.id, sourceId, {
+  const localId = await createLocalIssueAndRecord(job.id, sourceId, String(canonical.sequenceId), {
     projectId: job.projectId,
     columnId,
     cycleId: cycleRecord?.localId ?? null,
@@ -317,7 +332,7 @@ async function runLink(job: ClaimedImportJob, reader: SourceReader): Promise<voi
   const afterId = cursor.lastRecordId ?? 0;
   const pending = await listCreatedImportRecords(job.id, 'issue', afterId, ISSUES_PER_TICK);
   if (pending.length === 0) {
-    await advanceImportJobPhase(job.id, 'attachments', {});
+    await advanceImportJobPhase(job.id, 'rewrite', {});
     return;
   }
   for (const record of pending) {
@@ -335,6 +350,73 @@ async function runLink(job: ClaimedImportJob, reader: SourceReader): Promise<voi
       await createIssueLink(record.localId, targetRecord.localId, relation.kind);
     }
   }
+  const next: RecordCursor = { lastRecordId: pending[pending.length - 1]!.id };
+  await saveImportJobCursor(job.id, next);
+}
+
+// --- Rewrite: a description or comment that mentions the source's own issue
+// number ("ROOMS-524") still says that after Create — this phase resolves any
+// such mention that lands inside the imported set and rewrites it to this
+// project's own identifier. Purely local: everything it needs was captured
+// during Create/Link, so it makes no further Plane requests.
+
+async function rewriteCrossReferences(
+  jobId: number,
+  sourceProjectKey: string,
+  localProjectKey: string,
+  text: string,
+): Promise<string> {
+  const references = extractCrossReferences(text, sourceProjectKey);
+  if (references.length === 0) return text;
+
+  const replacements = new Map<string, string>();
+  for (const { reference, sequenceId } of references) {
+    const record = await findImportRecordByDisplayId(jobId, 'issue', sequenceId);
+    if (record?.localId == null) continue;
+    const targetSequence = await getIssueSequenceNumber(record.localId);
+    if (targetSequence == null) continue;
+    replacements.set(reference, `${localProjectKey}-${targetSequence}`);
+  }
+  return applyCrossReferenceReplacements(text, sourceProjectKey, replacements);
+}
+
+async function runRewrite(job: ClaimedImportJob): Promise<void> {
+  const cursor = job.cursor as Partial<RecordCursor>;
+  const afterId = cursor.lastRecordId ?? 0;
+  const pending = await listCreatedImportRecords(job.id, 'issue', afterId, ISSUES_PER_TICK);
+  if (pending.length === 0) {
+    await advanceImportJobPhase(job.id, 'attachments', {});
+    return;
+  }
+
+  // A job created before this phase existed has no planeProjectKey — its
+  // description/comment text is left exactly as Create wrote it.
+  const sourceProjectKey = (job.config as Partial<PlaneImportConfig>).planeProjectKey;
+  if (sourceProjectKey) {
+    const localProjectKey = await getProjectKey(job.projectId);
+    for (const record of pending) {
+      const { description, comments } = await getIssueTextForRewrite(record.localId);
+      const nextDescription = await rewriteCrossReferences(
+        job.id,
+        sourceProjectKey,
+        localProjectKey,
+        description,
+      );
+      if (nextDescription !== description) {
+        await updateIssueDescription(record.localId, nextDescription);
+      }
+      for (const comment of comments) {
+        const nextBody = await rewriteCrossReferences(
+          job.id,
+          sourceProjectKey,
+          localProjectKey,
+          comment.body,
+        );
+        if (nextBody !== comment.body) await updateCommentBody(comment.id, nextBody);
+      }
+    }
+  }
+
   const next: RecordCursor = { lastRecordId: pending[pending.length - 1]!.id };
   await saveImportJobCursor(job.id, next);
 }

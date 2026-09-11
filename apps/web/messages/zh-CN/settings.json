@@ -511,6 +511,7 @@
       "discover": "发现中",
       "create": "创建中",
       "link": "关联中",
+      "rewrite": "改写中",
       "attachments": "附件",
       "done": "完成"
     },

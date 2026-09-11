@@ -63,6 +63,10 @@ export interface CanonicalRelation {
 // grow with however many comments or attachments it happens to carry.
 export interface CanonicalIssue {
   sourceId: string;
+  // The source's own human-readable issue number (Plane's sequence_id), used only
+  // to resolve a cross-reference like "ROOMS-524" in another issue's text back to
+  // this one during the Rewrite phase.
+  sequenceId: number;
   title: string;
   descriptionMarkdown: string;
   stateSourceId: string;

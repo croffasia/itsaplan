@@ -206,6 +206,7 @@ async function upsertImportRecordWith(
   sourceId: string,
   localEntityType: ImportEntityType | null,
   localId: number | null,
+  sourceDisplayId: string | null = null,
 ): Promise<void> {
   await executor
     .insert(importRecord)
@@ -213,12 +214,13 @@ async function upsertImportRecordWith(
       importJobId: jobId,
       sourceEntityType: entityType,
       sourceId,
+      sourceDisplayId,
       localEntityType,
       localId,
     })
     .onConflictDoUpdate({
       target: [importRecord.importJobId, importRecord.sourceEntityType, importRecord.sourceId],
-      set: { localEntityType, localId },
+      set: { localEntityType, localId, sourceDisplayId },
     });
 }
 
@@ -245,6 +247,28 @@ export async function findImportRecord(
         eq(importRecord.importJobId, jobId),
         eq(importRecord.sourceEntityType, entityType),
         eq(importRecord.sourceId, sourceId),
+      ),
+    )
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+// Resolves a cross-reference like "ROOMS-524" during the Rewrite phase: the
+// captured number is the source's own display id, not its sourceId (a UUID for
+// Plane), so this looks up by the column Create stashed it in instead.
+export async function findImportRecordByDisplayId(
+  jobId: number,
+  entityType: ImportEntityType,
+  sourceDisplayId: string,
+): Promise<{ localId: number | null } | null> {
+  const rows = await db
+    .select({ localId: importRecord.localId })
+    .from(importRecord)
+    .where(
+      and(
+        eq(importRecord.importJobId, jobId),
+        eq(importRecord.sourceEntityType, entityType),
+        eq(importRecord.sourceDisplayId, sourceDisplayId),
       ),
     )
     .limit(1);
@@ -320,6 +344,53 @@ export async function firstProjectColumnId(projectId: number): Promise<number | 
     .orderBy(projectColumn.position)
     .limit(1);
   return rows[0]?.id ?? null;
+}
+
+export async function getProjectKey(projectId: number): Promise<string> {
+  const [row] = await db
+    .select({ key: project.key })
+    .from(project)
+    .where(eq(project.id, projectId));
+  if (!row) throw new Error(`project ${projectId} not found`);
+  return row.key;
+}
+
+export async function getIssueSequenceNumber(issueId: number): Promise<number | null> {
+  const [row] = await db
+    .select({ sequenceNumber: issue.sequenceNumber })
+    .from(issue)
+    .where(eq(issue.id, issueId));
+  return row?.sequenceNumber ?? null;
+}
+
+export interface IssueTextForRewrite {
+  description: string;
+  comments: { id: number; body: string }[];
+}
+
+// What the Rewrite phase scans: the issue's own description plus every comment
+// on it, each already local (no more Plane requests needed for this phase).
+export async function getIssueTextForRewrite(issueId: number): Promise<IssueTextForRewrite> {
+  const [issueRow] = await db
+    .select({ description: issue.description })
+    .from(issue)
+    .where(eq(issue.id, issueId));
+  const comments = await db
+    .select({ id: issueActivity.id, body: issueActivity.body })
+    .from(issueActivity)
+    .where(and(eq(issueActivity.issueId, issueId), eq(issueActivity.kind, 'comment')));
+  return {
+    description: issueRow?.description ?? '',
+    comments: comments.map((c) => ({ id: c.id, body: c.body ?? '' })),
+  };
+}
+
+export async function updateIssueDescription(issueId: number, description: string): Promise<void> {
+  await db.update(issue).set({ description }).where(eq(issue.id, issueId));
+}
+
+export async function updateCommentBody(commentId: number, body: string): Promise<void> {
+  await db.update(issueActivity).set({ body }).where(eq(issueActivity.id, commentId));
 }
 
 // project_column has no unique constraint to upsert against like label does,
@@ -444,10 +515,12 @@ export interface NewLocalIssue {
 // in the same transaction as the insert: an issue has no unique constraint a
 // retry could fall back on (a fresh sequence number is issued every time),
 // so a crash between the insert and the mapping would otherwise duplicate
-// the issue on the next attempt.
+// the issue on the next attempt. sourceDisplayId (the source's own issue
+// number) is stashed on that same mapping either way, for the Rewrite phase.
 export async function createLocalIssueAndRecord(
   jobId: number,
   sourceId: string,
+  sourceDisplayId: string,
   input: NewLocalIssue,
 ): Promise<number> {
   return db.transaction(async (tx) => {
@@ -462,7 +535,15 @@ export async function createLocalIssueAndRecord(
           ),
         );
       if (existing) {
-        await upsertImportRecordWith(tx, jobId, 'issue', sourceId, 'issue', existing.id);
+        await upsertImportRecordWith(
+          tx,
+          jobId,
+          'issue',
+          sourceId,
+          'issue',
+          existing.id,
+          sourceDisplayId,
+        );
         return existing.id;
       }
     }
@@ -492,7 +573,7 @@ export async function createLocalIssueAndRecord(
         position: Number(posRow!.pos),
       })
       .returning({ id: issue.id });
-    await upsertImportRecordWith(tx, jobId, 'issue', sourceId, 'issue', row!.id);
+    await upsertImportRecordWith(tx, jobId, 'issue', sourceId, 'issue', row!.id, sourceDisplayId);
     return row!.id;
   });
 }

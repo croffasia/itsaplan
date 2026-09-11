@@ -511,6 +511,7 @@
       "discover": "Discovering",
       "create": "Creating",
       "link": "Linking",
+      "rewrite": "Rewriting",
       "attachments": "Attachments",
       "done": "Done"
     },

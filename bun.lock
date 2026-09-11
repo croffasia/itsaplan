@@ -155,6 +155,7 @@
       "name": "worker",
       "version": "1.0.0",
       "dependencies": {
+        "@repo/crypto": "workspace:*",
         "@repo/db": "workspace:*",
         "@repo/mailer": "workspace:*",
         "@repo/net": "workspace:*",

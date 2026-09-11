@@ -11,6 +11,7 @@
     "test": "bun test --env-file=../../.env.test"
   },
   "dependencies": {
+    "@repo/crypto": "workspace:*",
     "@repo/db": "workspace:*",
     "@repo/mailer": "workspace:*",
     "@repo/net": "workspace:*",

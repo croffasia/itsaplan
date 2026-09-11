@@ -156,7 +156,7 @@
     "deleteFile": "Supprimer {name}"
   },
   "documents": {
-    "title": "Docs",
+    "title": "Documents",
     "add": "Lier un doc",
     "empty": "Aucun doc lié.",
     "loadFailed": "Impossible de charger les docs liés. Réessayer.",

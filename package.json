@@ -1,6 +1,6 @@
 {
   "name": "itsaplan",
-  "version": "0.17.0",
+  "version": "1.0.0",
   "license": "AGPL-3.0-only",
   "devDependencies": {
     "@clack/prompts": "^1.7.0",

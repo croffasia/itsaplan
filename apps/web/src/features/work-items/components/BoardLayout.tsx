@@ -54,7 +54,11 @@ export default function BoardLayout({
 
   return (
     <IssueLinksProvider issues={allIssues} enabled={settings.showLinks}>
-      <SubtasksProvider issues={allIssues} enabled={subtasksEnabled && settings.showSubtasks}>
+      <SubtasksProvider
+        issues={allIssues}
+        enabled={subtasksEnabled && settings.showSubtasks}
+        collapsed={settings.collapseSubtasks}
+      >
         {renderLayout()}
       </SubtasksProvider>
     </IssueLinksProvider>

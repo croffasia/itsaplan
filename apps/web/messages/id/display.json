@@ -80,6 +80,7 @@
     "showLinks": "Tampilkan tautan",
     "separateSubtaskCards": "Tampilkan subtugas sebagai kartu terpisah",
     "separateSubtaskRows": "Tampilkan subtugas sebagai baris terpisah",
+    "startSubtasksCollapsed": "Mulai dengan subtugas diciutkan",
     "showNestedSubtasks": "Tampilkan subtugas bertingkat",
     "nestedSubtasks": "Subtugas bertingkat",
     "displayProperties": "Properti tampilan",

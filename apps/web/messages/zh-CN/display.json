@@ -80,6 +80,7 @@
     "showLinks": "显示关联",
     "separateSubtaskCards": "将子任务显示为单独卡片",
     "separateSubtaskRows": "将子任务显示为单独行",
+    "startSubtasksCollapsed": "默认折叠子任务",
     "showNestedSubtasks": "显示嵌套子任务",
     "nestedSubtasks": "嵌套子任务",
     "displayProperties": "显示属性",

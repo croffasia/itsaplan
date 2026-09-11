@@ -80,6 +80,7 @@
     "showLinks": "إظهار الروابط",
     "separateSubtaskCards": "إظهار المهام الفرعية كبطاقات منفصلة",
     "separateSubtaskRows": "إظهار المهام الفرعية كصفوف منفصلة",
+    "startSubtasksCollapsed": "البدء بمهام فرعية مطوية",
     "showNestedSubtasks": "إظهار المهام الفرعية المتداخلة",
     "nestedSubtasks": "المهام الفرعية المتداخلة",
     "displayProperties": "خصائص العرض",

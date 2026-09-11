@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Issue } from '@/lib/api/endpoints/issues';
 
 // A subtask never shows as a card or a row of its own: it is rendered under its
@@ -11,6 +11,11 @@ const SubtaskContext = createContext<Map<number, Issue[]>>(new Map());
 // Every issue by id, which is how a subtask resolves the parent it names.
 const IssueContext = createContext<Map<number, Issue>>(new Map());
 
+// Whether a card starts with its subtasks folded. Read by the cards rather than
+// passed down, which would thread one boolean through every layout between the
+// board and the card.
+const CollapsedContext = createContext(false);
+
 const NONE: Issue[] = [];
 
 // Holds the project's subtasks by parent for the cards and rows below. Empty
@@ -19,10 +24,12 @@ const NONE: Issue[] = [];
 export function SubtasksProvider({
   issues,
   enabled,
+  collapsed = false,
   children,
 }: {
   issues: Issue[];
   enabled: boolean;
+  collapsed?: boolean;
   children: ReactNode;
 }) {
   const byParent = useMemo(() => {
@@ -40,9 +47,54 @@ export function SubtasksProvider({
   const byId = useMemo(() => new Map(issues.map((issue) => [issue.id, issue])), [issues]);
   return (
     <IssueContext.Provider value={byId}>
-      <SubtaskContext.Provider value={byParent}>{children}</SubtaskContext.Provider>
+      <CollapsedContext.Provider value={collapsed}>
+        <SubtaskContext.Provider value={byParent}>{children}</SubtaskContext.Provider>
+      </CollapsedContext.Provider>
     </IssueContext.Provider>
   );
+}
+
+// Whether cards start with their subtasks folded. A card may unfold itself from
+// there, until this changes again.
+export function useSubtasksCollapsed(): boolean {
+  return useContext(CollapsedContext);
+}
+
+export interface SubtaskFold {
+  open: boolean;
+  toggle: () => void;
+}
+
+// Whether one card or row shows its subtasks. It follows the display setting until
+// this one is folded or unfolded by hand; changing the setting takes that back, so
+// the switch moves every card and row at once. Nothing is stored: a reload starts
+// from the setting again.
+export function useSubtaskFold(): SubtaskFold {
+  const collapsed = useSubtasksCollapsed();
+  const [unfolded, setUnfolded] = useState<boolean | null>(null);
+  useEffect(() => setUnfolded(null), [collapsed]);
+  const open = unfolded ?? !collapsed;
+  return { open, toggle: () => setUnfolded(!open) };
+}
+
+// One issue's fold, shared by the parts that draw it. The Timeline needs this: the
+// chevron sits on the issue row and the rows it folds are its siblings, so neither
+// can own the state. A card and a table row draw both halves themselves and call
+// useSubtaskFold directly.
+const FoldContext = createContext<SubtaskFold>({ open: true, toggle: () => {} });
+
+export function SubtaskFoldProvider({
+  value,
+  children,
+}: {
+  value: SubtaskFold;
+  children: ReactNode;
+}) {
+  return <FoldContext.Provider value={value}>{children}</FoldContext.Provider>;
+}
+
+export function useIssueSubtaskFold(): SubtaskFold {
+  return useContext(FoldContext);
 }
 
 // The issue's subtasks, by issue number. Empty for a subtask, which has none.

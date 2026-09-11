@@ -21,17 +21,19 @@ of them affect data you may not notice is missing until later.
 2. Enter the Plane URL, workspace slug, and API token, then **Test connection**. This
    checks the token live against Plane and lists that workspace's projects — nothing is
    saved yet at this point.
-3. Pick the Plane project to import from, then **Start import**.
-4. The job appears in the list below, in the background. You can leave the page and come
-   back — it keeps running, and pause, resume, or cancel it from the same list at any time.
+3. Pick the Plane project to import from. Its states appear for review (see below), with a
+   choice for how to handle an unmatched assignee or comment author.
+4. **Start import.** The job appears in the list below, in the background. You can leave the
+   page and come back — it keeps running, and pause, resume, or cancel it from the same list
+   at any time.
 
 ## What is imported
 
 - **Issues** — title, description (converted from Plane's rich text to Markdown), state,
   labels, cycle, priority, start date, due date, and the parent issue if it is a sub-issue.
-- **Assignees and comment authors** — matched to an existing project member by email. If no
-  member has that email, the issue or comment is imported with no assignee — it is never
-  assigned to the wrong person, and no placeholder account is created.
+- **Assignees and comment authors** — matched to an existing project member by email. It is
+  never assigned to the wrong person, and no placeholder account is created; what happens
+  when no member has that email is a choice you make in the mapping review step below.
 - **Comments** — body (converted to Markdown) and reply threading.
 - **Labels, workflow states, and cycles** — created if they do not already exist by that
   name.
@@ -56,16 +58,21 @@ of them affect data you may not notice is missing until later.
 - **Four of Plane's eight relation kinds** — the scheduling-dependency ones (starts
   before/after, finishes before/after) have no equivalent here and are dropped.
 
-## Mapping is automatic, with no review step
+## Reviewing the mapping before you import
 
-States and users are matched automatically — by name for states (falling back to Plane's
-own backlog/unstarted/started/completed category when no name matches), by email for
-users — and there is currently no screen to review or correct that mapping before the
-import runs. This matters because Plane's own state categories are not always accurate: a
-real workspace checked during development had a state named "In Progress" that Plane itself
-categorized as "backlog" internally. An import can land some issues in a state that reads
-oddly, and the fix today is to move them by hand afterward, not to adjust the mapping before
-running the import.
+After you pick the source project, its states are shown with the category itsaplan would
+automatically map each one to (matched by name, falling back to Plane's own backlog/
+unstarted/started/completed group when no name matches). This matters because Plane's own
+state categories are not always accurate: a real workspace checked during development had a
+state named "Cancled" (misspelled) that Plane itself grouped as "completed" internally, not
+"canceled". Change any row that reads wrong before starting the import — a state you don't
+change keeps the automatic mapping.
+
+The same screen has one more choice: what happens to an assignee or comment author whose
+email matches no member of this project. "Leave unassigned" (the default) imports the issue
+or comment anyway, with that field empty. "Skip the assignment or comment" leaves an issue's
+assignee empty the same way, but drops a comment entirely rather than importing it with no
+attributed author.
 
 ## Rate limits are real, and the import waits them out
 

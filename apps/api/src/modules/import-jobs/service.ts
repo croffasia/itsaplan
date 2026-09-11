@@ -285,3 +285,69 @@ export async function testPlaneConnection(
     })),
   };
 }
+
+export interface PlaneStateOption {
+  id: string;
+  name: string;
+  category: StateCategory;
+}
+
+interface PlaneStateListEnvelope {
+  results?: { id: string; name: string; group: string }[];
+}
+
+// Mirrors apps/worker/src/plane-adapter.ts's STATE_CATEGORY_MAP/normalizeStateCategory:
+// duplicated here rather than imported, since the api does not depend on the worker
+// (see root AGENTS.md's dependency graph) - the same reasoning as testPlaneConnection
+// above already re-implementing its own small Plane fetch.
+const STATE_CATEGORY_MAP: Record<string, StateCategory> = {
+  backlog: 'backlog',
+  unstarted: 'unstarted',
+  started: 'started',
+  completed: 'completed',
+  cancelled: 'canceled',
+  triage: 'backlog',
+};
+
+// The source project's states, each with the category itsaplan would automatically
+// map it to - what the mapping review step shows before a job is created, so a user
+// can override one before anything is imported.
+export async function testPlaneStatesPreview(
+  baseUrl: string,
+  workspaceSlug: string,
+  apiToken: string,
+  planeProjectId: string,
+): Promise<{ states: PlaneStateOption[] }> {
+  const url = normalizePlaneBaseUrl(baseUrl);
+  const slug = workspaceSlug.trim();
+  const token = apiToken.trim();
+  const projectId = planeProjectId.trim();
+  if (!slug) throw new HttpError(400, 'workspaceSlug is required');
+  if (!token) throw new HttpError(400, 'apiToken is required');
+  if (!projectId) throw new HttpError(400, 'planeProjectId is required');
+
+  let response: Response;
+  try {
+    response = await pinnedFetch(`${url}/api/v1/workspaces/${slug}/projects/${projectId}/states/`, {
+      headers: { 'X-Api-Key': token },
+      timeoutMs: 15_000,
+    });
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
+    throw new HttpError(502, 'The Plane instance could not be reached.');
+  }
+  if (response.status === 401 || response.status === 403) {
+    throw new HttpError(400, 'Plane rejected the API token.');
+  }
+  if (!response.ok) {
+    throw new HttpError(502, `Plane request failed with status ${response.status}.`);
+  }
+  const body = (await response.json()) as PlaneStateListEnvelope;
+  return {
+    states: (body.results ?? []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      category: STATE_CATEGORY_MAP[s.group] ?? 'backlog',
+    })),
+  };
+}

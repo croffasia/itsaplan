@@ -100,6 +100,13 @@ describe('import jobs', () => {
       expect(res.status).toBe(400);
     });
 
+    it('rejects a missing planeProjectKey', async () => {
+      const { api } = await setupOwnerProject();
+      const { planeProjectKey: _planeProjectKey, ...withoutKey } = validBody;
+      const res = await jobs(api).post(withoutKey as never);
+      expect(res.status).toBe(400);
+    });
+
     it('rejects an empty required field', async () => {
       const { api } = await setupOwnerProject();
       const res = await jobs(api).post({ ...validBody, workspaceSlug: '' });
@@ -245,6 +252,41 @@ describe('import jobs', () => {
         apiToken: validBody.apiToken,
       });
       expect(res.status).toBe(400);
+    });
+  });
+
+  describe('plane preview', () => {
+    it('rejects a missing required field', async () => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api)['plane-preview'].post({
+        baseUrl: validBody.baseUrl,
+        workspaceSlug: validBody.workspaceSlug,
+        apiToken: validBody.apiToken,
+      } as never);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a base URL the SSRF guard refuses', async () => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api)['plane-preview'].post({
+        baseUrl: 'http://localhost:9999',
+        workspaceSlug: validBody.workspaceSlug,
+        apiToken: validBody.apiToken,
+        planeProjectId: validBody.planeProjectId,
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('denies a member whose role lacks the import_jobs permission', async () => {
+      const { api } = await setupOwnerProject();
+      const member = await addMember(api);
+      const res = await jobs(member)['plane-preview'].post({
+        baseUrl: validBody.baseUrl,
+        workspaceSlug: validBody.workspaceSlug,
+        apiToken: validBody.apiToken,
+        planeProjectId: validBody.planeProjectId,
+      });
+      expect(res.status).toBe(403);
     });
   });
 

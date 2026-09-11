@@ -57,6 +57,9 @@ export const qk = {
   webhookDeliveries: (webhookId: number) => ['webhookDeliveries', webhookId] as const,
   // The project's Plane import jobs (the Import/Export settings section).
   importJobs: (projectKey: string) => ['importJobs', projectKey] as const,
+  // The mapping review preview for one candidate Plane project, before a job exists.
+  planePreview: (projectKey: string, planeProjectId: string) =>
+    ['planePreview', projectKey, planeProjectId] as const,
   // Saved dashboards (the analytics tabs) and the read-only metrics behind their
   // widgets. `kind` names the metric (stats/pulse/throughput/breakdown/...) and
   // `params` scopes it to the widget's query (window, filters).

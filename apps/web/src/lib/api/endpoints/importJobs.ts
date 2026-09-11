@@ -32,6 +32,15 @@ export interface PlaneProjectOption {
   identifier: string;
 }
 
+export type StateCategory = 'backlog' | 'unstarted' | 'started' | 'completed' | 'canceled';
+export type UnmatchedUserPolicy = 'unassigned' | 'skip';
+
+export interface PlaneStateOption {
+  id: string;
+  name: string;
+  category: StateCategory;
+}
+
 export interface PlaneConnectionInput {
   baseUrl: string;
   workspaceSlug: string;
@@ -41,6 +50,8 @@ export interface PlaneConnectionInput {
 export interface CreateImportJobInput extends PlaneConnectionInput {
   planeProjectId: string;
   planeProjectKey: string;
+  unmatchedUserPolicy?: UnmatchedUserPolicy;
+  stateOverrides?: Record<string, StateCategory>;
 }
 
 export const testPlaneConnection = (projectKey: string, input: PlaneConnectionInput) =>
@@ -48,6 +59,15 @@ export const testPlaneConnection = (projectKey: string, input: PlaneConnectionIn
     `/projects/${projectKey}/import-jobs/test-connection`,
     { method: 'POST', body: JSON.stringify(input) },
   );
+
+export const testPlaneStatesPreview = (
+  projectKey: string,
+  input: PlaneConnectionInput & { planeProjectId: string },
+) =>
+  request<{ states: PlaneStateOption[] }>(`/projects/${projectKey}/import-jobs/plane-preview`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
 
 export const createImportJob = (projectKey: string, input: CreateImportJobInput) =>
   request<ImportJob>(`/projects/${projectKey}/import-jobs`, {

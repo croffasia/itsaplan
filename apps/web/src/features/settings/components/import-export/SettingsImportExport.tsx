@@ -7,6 +7,7 @@ import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import SettingsImportExportConnectForm from './SettingsImportExportConnectForm';
 import SettingsImportExportProjectPicker from './SettingsImportExportProjectPicker';
+import SettingsImportExportMappingReview from './SettingsImportExportMappingReview';
 import SettingsImportExportJobList from './SettingsImportExportJobList';
 
 export interface PlaneConnection extends PlaneConnectionInput {
@@ -24,6 +25,12 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
   const canCreate = can('import_jobs', 'create');
   const canEdit = can('import_jobs', 'edit');
   const [connection, setConnection] = useState<PlaneConnection | null>(null);
+  const [selected, setSelected] = useState<PlaneProjectOption | null>(null);
+
+  function onTested(next: PlaneConnection) {
+    setConnection(next);
+    setSelected(null);
+  }
 
   return (
     <div className="space-y-10">
@@ -31,17 +38,26 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
         <>
           <SettingsSection title={t('connect')} description={t('connectHint')}>
             <SettingsCard className="p-4">
-              <SettingsImportExportConnectForm projectKey={projectKey} onTested={setConnection} />
+              <SettingsImportExportConnectForm projectKey={projectKey} onTested={onTested} />
             </SettingsCard>
           </SettingsSection>
           {connection && (
             <SettingsSection title={t('sourceProject')} description={t('sourceProjectHint')}>
-              <SettingsCard className="p-4">
+              <SettingsCard className="space-y-6 p-4">
                 <SettingsImportExportProjectPicker
                   key={connection.baseUrl + connection.workspaceSlug}
-                  projectKey={projectKey}
                   connection={connection}
+                  selected={selected}
+                  onSelect={setSelected}
                 />
+                {selected && (
+                  <SettingsImportExportMappingReview
+                    projectKey={projectKey}
+                    connection={connection}
+                    selected={selected}
+                    onImported={() => setSelected(null)}
+                  />
+                )}
               </SettingsCard>
             </SettingsSection>
           )}

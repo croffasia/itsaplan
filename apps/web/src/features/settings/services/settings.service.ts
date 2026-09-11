@@ -45,6 +45,7 @@ import {
   type CreateImportJobInput,
   type PlaneConnectionInput,
   testPlaneConnection,
+  testPlaneStatesPreview,
   createImportJob,
   listImportJobs,
   pauseImportJob,
@@ -294,6 +295,20 @@ export function useDisconnectGitRepository(projectKey: string, connectionId: num
 export function useTestPlaneConnection(projectKey: string) {
   return useMutation({
     mutationFn: (input: PlaneConnectionInput) => testPlaneConnection(projectKey, input),
+  });
+}
+
+// Fetched automatically once a source project is picked, in the mapping review step.
+export function useTestPlaneStatesPreview(
+  projectKey: string,
+  input: (PlaneConnectionInput & { planeProjectId: string }) | null,
+) {
+  return useQuery({
+    queryKey: input
+      ? qk.planePreview(projectKey, input.planeProjectId)
+      : qk.planePreview(projectKey, 'none'),
+    queryFn: () => testPlaneStatesPreview(projectKey, input!),
+    enabled: input != null,
   });
 }
 

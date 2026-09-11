@@ -16,35 +16,39 @@ returns.
   `SourceReader` port, the only implementation (Plane), and the phase state machine
   (discover → create → link → rewrite → attachments → done) that drives a job one bounded chunk per
   tick.
-- `apps/api/src/modules/import-jobs/` — create/test-connection/status/pause/resume/cancel
-  routes.
+- `apps/api/src/modules/import-jobs/` — create/test-connection/plane-preview/status/pause/
+  resume/cancel routes.
 - `apps/web/src/features/settings/components/import-export/` — the Settings page.
 
 ## What is genuinely missing against the design posted to #253
 
 The original interface sketch described a real mapping-review step and a two-pass design
-that resolves parent links, relations, *and* cross-references in text. Parent links and
-cross-references now get that second pass (below); mapping review and export are still
-open:
+that resolves parent links, relations, *and* cross-references in text. All three of those
+are now built (below); export is the one piece still open:
 
-1. **No mapping review UI.** `createImportJobBody` (`apps/api/src/modules/import-jobs/
-   model.ts`) still accepts `unmatchedUserPolicy` and `stateOverrides`, but
-   `apps/worker/src/import-worker.ts`'s `buildReader` only ever reads `config.planeProjectId`
-   — neither field is consumed anywhere in the worker, and the web UI never sends them
-   (`SettingsImportExportProjectPicker.tsx`'s `createJob.mutateAsync` call omits both on
-   purpose). State and user mapping is fully automatic, with no way to review or override it
-   before a job runs. If this gets built, either wire the two existing fields up or remove
-   them from the request body — right now they are dead API surface that looks like it does
-   something.
+- **Export does not exist.** Despite the page and branch being named "import-export," only
+  the import direction was built. A `CanonicalExport`-shaped output for round-tripping was
+  part of the original design and was never started.
 
-2. **Export does not exist.** Despite the page and branch being named "import-export," only
-   the import direction was built. `CanonicalExport`-shaped output for round-tripping was
-   part of the original design and was never started.
+## Mapping review, parent links, and cross-references
 
-## Parent links and cross-references get a second pass
+All three were originally missing and are now built:
 
-Both were originally missing and are now fixed, each the same shape as the relation
-handling `runLink` already had:
+- **Mapping review.** Picking a source project (`SettingsImportExportProjectPicker.tsx`) no
+  longer starts the job directly — `SettingsImportExportMappingReview.tsx` fetches the
+  source project's states from the new `POST /projects/:projectKey/import-jobs/plane-preview`
+  route (`testPlaneStatesPreview`, `apps/api/src/modules/import-jobs/service.ts`) and shows
+  each one with the category itsaplan would automatically map it to, editable before the job
+  is created. Only a row the user actually changes is sent as a `stateOverrides` entry;
+  `materializeStates` (`import-worker.ts`) resolves `overrides[state.sourceId] ?? state.
+  category` before calling `createLocalStateAndRecord`, so an override only ever affects a
+  newly-created column, never a dedup-matched existing one. `unmatchedUserPolicy: 'skip'`
+  drops a comment whose author matched no project member instead of creating it
+  unattributed; an issue's own assignee is unaffected either way, since an unmatched
+  assignee already left the field empty by default.
+
+Parent links and cross-references each get the same second-pass treatment relations
+already had via `runLink`:
 
 - **Parent/sub-issue links.** `createOneIssue` still sets `parentId` from whatever
   `import_record` says at that moment, which misses a sub-issue processed before its

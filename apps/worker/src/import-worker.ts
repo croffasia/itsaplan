@@ -3,7 +3,7 @@ import { intEnv } from './env';
 import { equalJitterBackoffMs } from './backoff';
 import { PlaneReader, PlaneRateLimitedError } from './plane-adapter';
 import type { SourceReader } from './reader';
-import type { CanonicalComment } from './canonical';
+import type { CanonicalComment, CanonicalStateCategory } from './canonical';
 import { extractCrossReferences, applyCrossReferenceReplacements } from './cross-reference';
 import {
   claimDueImportJobs,
@@ -106,6 +106,10 @@ interface PlaneImportConfig {
   // cross-reference patterns from. Optional: a job created before this existed has
   // none, and Rewrite is a no-op for it rather than a failure.
   planeProjectKey?: string;
+  // Set from the mapping review step at job creation. Both are optional and default
+  // to itsaplan's automatic mapping when absent.
+  unmatchedUserPolicy?: 'unassigned' | 'skip';
+  stateOverrides?: Record<string, CanonicalStateCategory>;
 }
 
 function buildReader(job: ClaimedImportJob): SourceReader {
@@ -196,14 +200,23 @@ async function runCreate(job: ClaimedImportJob, reader: SourceReader): Promise<v
   await saveImportJobCursor(job.id, next);
 }
 
+// stateOverrides (Plane state id -> itsaplan category) comes from the mapping review
+// step at job creation; only newly-created columns are affected, never a dedup-matched
+// existing one - createLocalStateAndRecord already never touches an existing match's
+// stateType.
 async function materializeStates(job: ClaimedImportJob, reader: SourceReader): Promise<void> {
   const pending = await listUncreatedImportRecords(job.id, 'state', 0, 1000);
   if (pending.length === 0) return;
+  const overrides = (job.config as Partial<PlaneImportConfig>).stateOverrides ?? {};
   const states = new Map((await reader.listStates()).map((s) => [s.sourceId, s]));
   for (const record of pending) {
     const state = states.get(record.sourceId);
     if (!state) continue;
-    await createLocalStateAndRecord(job.id, record.sourceId, job.projectId, state);
+    const category = overrides[record.sourceId] ?? state.category;
+    await createLocalStateAndRecord(job.id, record.sourceId, job.projectId, {
+      ...state,
+      category,
+    });
   }
 }
 
@@ -294,6 +307,7 @@ async function createComments(
   issueLocalId: number,
   comments: CanonicalComment[],
 ): Promise<void> {
+  const unmatchedUserPolicy = (job.config as Partial<PlaneImportConfig>).unmatchedUserPolicy;
   const localIdBySourceId = new Map<string, number>();
   for (const comment of comments) {
     const existing = await findImportRecord(job.id, 'comment', comment.sourceId);
@@ -304,6 +318,10 @@ async function createComments(
     const authorUserId = comment.authorEmail
       ? await findProjectMemberUserId(job.projectId, comment.authorEmail)
       : null;
+    // 'skip' drops a comment whose author matched no project member, rather than
+    // creating it unattributed. A comment with no authorEmail at all (Plane gave no
+    // address to match) is unaffected - there was never a member to match against.
+    if (comment.authorEmail && !authorUserId && unmatchedUserPolicy === 'skip') continue;
     const replyToId = comment.replyToSourceId
       ? (localIdBySourceId.get(comment.replyToSourceId) ?? null)
       : null;

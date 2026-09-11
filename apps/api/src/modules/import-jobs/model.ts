@@ -41,6 +41,17 @@ export const TestConnectionResponse = t.Object({
   projects: t.Array(t.Object({ id: t.String(), name: t.String(), identifier: t.String() })),
 });
 
+export const planePreviewBody = t.Object({
+  baseUrl: t.String({ minLength: 1 }),
+  workspaceSlug: t.String({ minLength: 1 }),
+  apiToken: t.String({ minLength: 1 }),
+  planeProjectId: t.String({ minLength: 1 }),
+});
+
+export const PlanePreviewResponse = t.Object({
+  states: t.Array(t.Object({ id: t.String(), name: t.String(), category: stateCategory })),
+});
+
 // Mirrors import_record_source_entity_type_check in packages/db/src/schema/app.ts.
 const entityCount = t.Object({ discovered: t.Number(), created: t.Number() });
 const CountsResponse = t.Object({

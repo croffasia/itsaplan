@@ -7,9 +7,11 @@ import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
   ImportJobResponse,
   TestConnectionResponse,
+  PlanePreviewResponse,
   createImportJobBody,
   importJobParams,
   testConnectionBody,
+  planePreviewBody,
 } from './model';
 import {
   cancelImportJob,
@@ -20,6 +22,7 @@ import {
   pauseImportJob,
   resumeImportJob,
   testPlaneConnection,
+  testPlaneStatesPreview,
 } from './service';
 
 // Import jobs bring issues from an external tracker into a project. Creating one
@@ -52,6 +55,23 @@ export const importJobRoutes = new Elysia({
         description:
           'Validate a base URL, workspace slug, and API token against the source live, without ' +
           'storing anything. Returns the projects of the workspace to pick a source project from.',
+      },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/import-jobs/plane-preview',
+    ({ body }) =>
+      testPlaneStatesPreview(body.baseUrl, body.workspaceSlug, body.apiToken, body.planeProjectId),
+    {
+      permission: ['import_jobs', 'create'],
+      body: planePreviewBody,
+      response: { 200: PlanePreviewResponse, ...commonErrors, ...errors(502) },
+      detail: {
+        summary: 'Preview a Plane project before importing it',
+        description:
+          "Fetch the source project's states, each with the category itsaplan would " +
+          'automatically map it to, for review before a job is created.',
       },
     },
   )

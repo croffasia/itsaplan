@@ -23,6 +23,7 @@ import {
   createLocalCycleAndRecord,
   createLocalIssueAndRecord,
   setIssueLabels,
+  setIssueParentIfUnset,
   createLocalComment,
   createIssueLink,
   findProjectMemberUserId,
@@ -306,7 +307,10 @@ async function createComments(
 
 // --- Link: for each created issue, fetch its relations and create the ones
 // with a destination in itsaplan's issue_link.kind (see "Relations vs.
-// dependencies" in the notes file).
+// dependencies" in the notes file). Also gives every issue's parent link a
+// second chance to resolve: Create only knew what import_record held at the
+// moment it ran, so a sub-issue processed before its parent existed was left
+// with no parent — by Link, every issue in the job has been created.
 
 async function runLink(job: ClaimedImportJob, reader: SourceReader): Promise<void> {
   const cursor = job.cursor as Partial<RecordCursor>;
@@ -317,6 +321,13 @@ async function runLink(job: ClaimedImportJob, reader: SourceReader): Promise<voi
     return;
   }
   for (const record of pending) {
+    const canonical = await reader.getIssue(record.sourceId);
+    if (canonical.parentSourceId) {
+      const parentRecord = await findImportRecord(job.id, 'issue', canonical.parentSourceId);
+      if (parentRecord?.localId != null) {
+        await setIssueParentIfUnset(record.localId, parentRecord.localId);
+      }
+    }
     const relations = await reader.listIssueRelations(record.sourceId);
     for (const relation of relations) {
       const targetRecord = await findImportRecord(job.id, 'issue', relation.targetIssueSourceId);

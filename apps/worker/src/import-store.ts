@@ -547,6 +547,19 @@ export async function createLocalComment(
   return row!.id;
 }
 
+// Sets an issue's parent the first time one resolves. Create sets parentId from
+// whatever import_record knows at that moment, which misses a sub-issue processed
+// before its parent exists; Link revisits every issue a second time (see runLink)
+// and calls this once the parent is resolvable. The parent_id IS NULL guard makes
+// a retry a no-op and never overwrites a parent Create already got right.
+export async function setIssueParentIfUnset(issueId: number, parentId: number): Promise<void> {
+  if (issueId === parentId) return;
+  await db
+    .update(issue)
+    .set({ parentId })
+    .where(and(eq(issue.id, issueId), isNull(issue.parentId)));
+}
+
 // issue_link's unique index is on the unordered pair + kind, so re-running the
 // Link phase for an issue whose relations were already created is a no-op:
 // the duplicate insert is caught and dropped rather than failing the tick.

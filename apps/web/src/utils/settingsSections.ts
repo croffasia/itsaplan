@@ -4,6 +4,7 @@ import {
   Columns3,
   FileText,
   GitPullRequest,
+  Import,
   Info,
   ListPlus,
   type LucideIcon,
@@ -101,6 +102,12 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
     slug: 'git',
     icon: GitPullRequest,
     resource: 'integrations',
+    group: 'automation',
+  },
+  {
+    slug: 'import-export',
+    icon: Import,
+    resource: 'import_jobs',
     group: 'automation',
   },
 ];

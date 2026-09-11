@@ -101,6 +101,10 @@
       "label": "Репозиторії",
       "description": "Закриття задач, коли їхній pull request змержено в GitHub, GitLab, Gitea, Forgejo або Bitbucket."
     },
+    "import-export": {
+      "label": "Імпорт",
+      "description": "Імпортуйте задачі, коментарі та мітки із самостійно розміщеного інстансу Plane."
+    },
     "ai-agents": {
       "label": "ШІ-агенти",
       "description": "ШІ-агенти, які працюють у цьому проєкті."

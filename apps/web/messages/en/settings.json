@@ -472,6 +472,54 @@
     "changeState": "Change state…",
     "noState": "No state."
   },
+  "importExport": {
+    "connect": "Connect to Plane",
+    "connectHint": "Enter a self-hosted Plane instance to check the connection and load its projects.",
+    "baseUrl": "Plane URL",
+    "workspaceSlug": "Workspace",
+    "apiToken": "API token",
+    "apiTokenHint": "A workspace or personal API key with read access to the workspace's projects, issues, and members.",
+    "testConnection": "Test connection",
+    "testing": "Testing…",
+    "sourceProject": "Source project",
+    "sourceProjectHint": "Pick the Plane project to import from.",
+    "sourceProjectLabel": "Plane project",
+    "sourceProjectPlaceholder": "Select a project",
+    "noProjects": "This workspace has no projects to import from.",
+    "startImport": "Start import",
+    "starting": "Starting…",
+    "importStarted": "Import started",
+    "jobs": "Import jobs",
+    "jobsHint": "Each job runs in the background and can be paused, resumed, or canceled while it is in progress.",
+    "emptyTitle": "No imports yet",
+    "emptyHint": "Connect to a Plane instance above and start an import to bring in its issues.",
+    "pause": "Pause",
+    "resume": "Resume",
+    "cancel": "Cancel",
+    "countsLegend": "created / discovered",
+    "statuses": {
+      "pending": "Pending",
+      "running": "Running",
+      "paused": "Paused",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+    "phases": {
+      "discover": "Discovering",
+      "create": "Creating",
+      "link": "Linking",
+      "attachments": "Attachments",
+      "done": "Done"
+    },
+    "entities": {
+      "issue": "Issues",
+      "comment": "Comments",
+      "label": "Labels",
+      "state": "States",
+      "cycle": "Cycles",
+      "attachment": "Attachments"
+    }
+  },
   "issueTemplates": {
     "addTemplate": "New template",
     "editTemplate": "Edit template",

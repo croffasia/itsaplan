@@ -472,6 +472,54 @@
     "changeState": "Изменить статус…",
     "noState": "Статусов нет."
   },
+  "importExport": {
+    "connect": "Подключение к Plane",
+    "connectHint": "Укажите self-hosted инстанс Plane, чтобы проверить соединение и загрузить его проекты.",
+    "baseUrl": "URL Plane",
+    "workspaceSlug": "Рабочее пространство",
+    "apiToken": "API-токен",
+    "apiTokenHint": "API-ключ рабочего пространства или личный ключ с доступом на чтение к проектам, задачам и участникам рабочего пространства.",
+    "testConnection": "Проверить соединение",
+    "testing": "Проверка…",
+    "sourceProject": "Исходный проект",
+    "sourceProjectHint": "Выберите проект Plane, из которого будет выполнен импорт.",
+    "sourceProjectLabel": "Проект Plane",
+    "sourceProjectPlaceholder": "Выберите проект",
+    "noProjects": "В этом рабочем пространстве нет проектов для импорта.",
+    "startImport": "Начать импорт",
+    "starting": "Запуск…",
+    "importStarted": "Импорт запущен",
+    "jobs": "Задачи импорта",
+    "jobsHint": "Каждая задача выполняется в фоне, и пока она не завершена, её можно приостановить, возобновить или отменить.",
+    "emptyTitle": "Импортов пока нет",
+    "emptyHint": "Подключитесь к инстансу Plane выше и запустите импорт, чтобы перенести его задачи.",
+    "pause": "Приостановить",
+    "resume": "Возобновить",
+    "cancel": "Отменить",
+    "countsLegend": "создано / найдено",
+    "statuses": {
+      "pending": "В ожидании",
+      "running": "Выполняется",
+      "paused": "На паузе",
+      "completed": "Завершён",
+      "failed": "Сбой"
+    },
+    "phases": {
+      "discover": "Поиск",
+      "create": "Создание",
+      "link": "Связывание",
+      "attachments": "Вложения",
+      "done": "Готово"
+    },
+    "entities": {
+      "issue": "Задачи",
+      "comment": "Комментарии",
+      "label": "Метки",
+      "state": "Статусы",
+      "cycle": "Циклы",
+      "attachment": "Вложения"
+    }
+  },
   "issueTemplates": {
     "addTemplate": "Новый шаблон",
     "editTemplate": "Изменить шаблон",

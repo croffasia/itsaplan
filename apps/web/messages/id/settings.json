@@ -472,6 +472,54 @@
     "changeState": "Ubah status…",
     "noState": "Tidak ada status."
   },
+  "importExport": {
+    "connect": "Hubungkan ke Plane",
+    "connectHint": "Masukkan instans Plane self-hosted untuk memeriksa koneksi dan memuat proyeknya.",
+    "baseUrl": "URL Plane",
+    "workspaceSlug": "Workspace",
+    "apiToken": "Token API",
+    "apiTokenHint": "Kunci API workspace atau pribadi dengan akses baca ke proyek, issue, dan anggota workspace.",
+    "testConnection": "Uji koneksi",
+    "testing": "Menguji…",
+    "sourceProject": "Proyek sumber",
+    "sourceProjectHint": "Pilih proyek Plane yang akan diimpor.",
+    "sourceProjectLabel": "Proyek Plane",
+    "sourceProjectPlaceholder": "Pilih proyek",
+    "noProjects": "Workspace ini tidak punya proyek untuk diimpor.",
+    "startImport": "Mulai impor",
+    "starting": "Memulai…",
+    "importStarted": "Impor dimulai",
+    "jobs": "Tugas impor",
+    "jobsHint": "Setiap tugas berjalan di latar belakang dan bisa dijeda, dilanjutkan, atau dibatalkan selama masih berlangsung.",
+    "emptyTitle": "Belum ada impor",
+    "emptyHint": "Hubungkan ke instans Plane di atas dan mulai impor untuk mengambil issue-nya.",
+    "pause": "Jeda",
+    "resume": "Lanjutkan",
+    "cancel": "Batal",
+    "countsLegend": "dibuat / ditemukan",
+    "statuses": {
+      "pending": "Tertunda",
+      "running": "Berjalan",
+      "paused": "Dijeda",
+      "completed": "Selesai",
+      "failed": "Gagal"
+    },
+    "phases": {
+      "discover": "Menemukan",
+      "create": "Membuat",
+      "link": "Menautkan",
+      "attachments": "Lampiran",
+      "done": "Selesai"
+    },
+    "entities": {
+      "issue": "Issue",
+      "comment": "Komentar",
+      "label": "Label",
+      "state": "Status",
+      "cycle": "Cycle",
+      "attachment": "Lampiran"
+    }
+  },
   "issueTemplates": {
     "addTemplate": "Templat baru",
     "editTemplate": "Ubah templat",

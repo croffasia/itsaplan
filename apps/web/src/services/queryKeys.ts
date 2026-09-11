@@ -55,6 +55,8 @@ export const qk = {
   actions: (projectKey: string) => ['actions', projectKey] as const,
   webhooks: (projectKey: string) => ['webhooks', projectKey] as const,
   webhookDeliveries: (webhookId: number) => ['webhookDeliveries', webhookId] as const,
+  // The project's Plane import jobs (the Import/Export settings section).
+  importJobs: (projectKey: string) => ['importJobs', projectKey] as const,
   // Saved dashboards (the analytics tabs) and the read-only metrics behind their
   // widgets. `kind` names the metric (stats/pulse/throughput/breakdown/...) and
   // `params` scopes it to the widget's query (window, filters).

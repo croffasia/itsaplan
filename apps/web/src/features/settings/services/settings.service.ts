@@ -42,6 +42,16 @@ import {
   disconnectGitRepository,
 } from '@/lib/api/endpoints/git';
 import {
+  type CreateImportJobInput,
+  type PlaneConnectionInput,
+  testPlaneConnection,
+  createImportJob,
+  listImportJobs,
+  pauseImportJob,
+  resumeImportJob,
+  cancelImportJob,
+} from '@/lib/api/endpoints/importJobs';
+import {
   createIssueTemplate,
   updateIssueTemplate,
   deleteIssueTemplate,
@@ -276,6 +286,59 @@ export function useDisconnectGitRepository(projectKey: string, connectionId: num
     mutationFn: (repositoryId: number) =>
       disconnectGitRepository(projectKey, connectionId, repositoryId),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
+  });
+}
+
+// Import/export section: testing a connection to a source Plane instance,
+// starting an import job, and tracking the ones already running.
+export function useTestPlaneConnection(projectKey: string) {
+  return useMutation({
+    mutationFn: (input: PlaneConnectionInput) => testPlaneConnection(projectKey, input),
+  });
+}
+
+export function useCreateImportJob(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (input: CreateImportJobInput) => createImportJob(projectKey, input),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.importJobs(projectKey) }),
+  });
+}
+
+// Polled while a job is still pending or running, the same shape as
+// useAgentScheduleRuns.
+export function useImportJobsQuery(projectKey: string) {
+  return useQuery({
+    queryKey: qk.importJobs(projectKey),
+    queryFn: () => listImportJobs(projectKey),
+    refetchInterval: (query) =>
+      query.state.data?.some((job) => job.status === 'running' || job.status === 'pending')
+        ? 2000
+        : false,
+  });
+}
+
+export function usePauseImportJob(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => pauseImportJob(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.importJobs(projectKey) }),
+  });
+}
+
+export function useResumeImportJob(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => resumeImportJob(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.importJobs(projectKey) }),
+  });
+}
+
+export function useCancelImportJob(projectKey: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => cancelImportJob(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.importJobs(projectKey) }),
   });
 }
 

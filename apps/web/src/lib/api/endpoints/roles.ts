@@ -27,7 +27,8 @@ export type PermissionResource =
   | 'actions'
   | 'webhooks'
   | 'note_boards'
-  | 'danger_zone';
+  | 'danger_zone'
+  | 'import_jobs';
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;
 

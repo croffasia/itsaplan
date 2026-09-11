@@ -70,10 +70,10 @@
         "kanban": "Disposición kanban",
         "table": "Disposición de tabla",
         "timeline": "Disposición de cronología",
-        "calendar": "Disposición de calandario"
+        "calendar": "Disposición de calendario"
       },
       "board": {
-        "select-all": "Seleccionar todas los tickets del tablero"
+        "select-all": "Seleccionar todos los tickets del tablero"
       }
     },
     "conflict": "Ya la usa {command}"

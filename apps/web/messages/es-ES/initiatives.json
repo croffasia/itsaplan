@@ -67,8 +67,8 @@
     "title": "Salud",
     "description": "Compara el trabajo hecho con el tiempo transcurrido. Se actualiza automáticamente.",
     "legend": {
-      "on_track": "El trabajo mantiene el ritmo del calandario.",
-      "at_risk": "El trabajo se queda detrás del calandario.",
+      "on_track": "El trabajo mantiene el ritmo del calendario.",
+      "at_risk": "El trabajo se queda detrás del calendario.",
       "off_track": "El trabajo está muy detrás, o la fecha objetivo ya ha pasado.",
       "unknown": "Todavía no hay bastantes datos: sin tickets o sin fecha objetivo."
     },

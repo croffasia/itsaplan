@@ -35,7 +35,7 @@
     },
     "recent_issues": {
       "label": "Tickets recientes",
-      "description": "Últimas tickets por momento de creación o actualización"
+      "description": "Últimos tickets por momento de creación o actualización"
     },
     "activity_feed": {
       "label": "Filtro de actividad",

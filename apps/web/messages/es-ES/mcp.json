@@ -36,7 +36,7 @@
     "consent": {
       "title": "Autorizar Itsaplan",
       "description": "Permite que este cliente MCP actúe con los permisos de tu cuenta de Itsaplan.",
-      "missingCode": "A esta peticción de autorización le falta su código de consentimiento.",
+      "missingCode": "A esta petición de autorización le falta su código de consentimiento.",
       "cancel": "Cancelar",
       "pending": "Autorizando…",
       "authorize": "Autorizar",

@@ -23,12 +23,12 @@
       "description": "Los roles de los que asigna cada proyecto del equipo."
     },
     "notifications": {
-      "title": "Provedores de notificaciones",
+      "title": "Proveedores de notificaciones",
       "description": "Cómo los proyectos del equipo entregan las notificaciones por correo y Telegram."
     },
     "integrations": {
       "title": "Integraciones",
-      "description": "Las claves del provedor de IA y las credenciales de herramientas sobre las que funcionan los proyectos del equipo."
+      "description": "Las claves del proveedor de IA y las credenciales de herramientas sobre las que funcionan los proyectos del equipo."
     },
     "mcp": {
       "title": "MCP",
@@ -192,13 +192,13 @@
     "description": "Dejas <strong>{name}</strong> y todos sus proyectos. Los proyectos se quedan con el equipo. Para volver, pide a un propietario que te invite."
   },
   "notifications": {
-    "ownerOnly": "Solo el propietario del equipo puede gestionar los provedores de notificaciones.",
+    "ownerOnly": "Solo el propietario del equipo puede gestionar los proveedores de notificaciones.",
     "email": "Correo",
     "telegram": "Telegram",
-    "emailProvider": "Provedor de correo",
-    "emailProviderHint": "Envía a través del provedor del sistema o de uno propio del equipo. Las credenciales se guardan cifradas.",
-    "systemAvailable": "Las notificaciones se envían a través del provedor configurado para esta instancia. Aquí no hacen falta credenciales.",
-    "systemUnavailable": "El provedor de la instancia no está disponible. Pide al administrador que lo configure y lo comparta con los equipos, o configura un provedor para este equipo.",
+    "emailProvider": "Proveedor de correo",
+    "emailProviderHint": "Envía a través del proveedor del sistema o de uno propio del equipo. Las credenciales se guardan cifradas.",
+    "systemAvailable": "Las notificaciones se envían a través del proveedor configurado para esta instancia. Aquí no hacen falta credenciales.",
+    "systemUnavailable": "El proveedor de la instancia no está disponible. Pide al administrador que lo configure y lo comparta con los equipos, o configura un proveedor para este equipo.",
     "host": "Host",
     "port": "Puerto",
     "encryption": "Cifrado",
@@ -207,7 +207,7 @@
       "ssl": "SSL",
       "tls": "TLS"
     },
-    "username": "Nombre de usuari",
+    "username": "Nombre de usuario",
     "password": "Contraseña",
     "passwordPlaceholder": "Contraseña de SMTP",
     "timeout": "Expiry (s)",
@@ -216,8 +216,8 @@
     "telegramBot": "Bot de Telegram",
     "telegramBotHint": "El bot que entrega las notificaciones para cada proyecto del equipo. Los miembros eligen su propio chat en sus preferencias. El token se guarda cifrado.",
     "botToken": "Token de la API del bot (opcional)",
-    "emailSaved": "El provedor de correo se ha guardado",
-    "telegramSaved": "El provedor de Telegram se ha guardado"
+    "emailSaved": "El proveedor de correo se ha guardado",
+    "telegramSaved": "El proveedor de Telegram se ha guardado"
   },
   "integrations": {
     "noAccess": "No tienes acceso a las integraciones de este equipo.",
@@ -232,11 +232,11 @@
     "search": "Buscar integraciones",
     "noMatches": "Ninguna integración coincide con «{query}».",
     "empty": "Todavía no hay credenciales",
-    "emptyHint": "Los agentes no pueden usar un provedor de IA ni una herramientra sin una.",
+    "emptyHint": "Los agentes no pueden usar un proveedor de IA ni una herramientra sin una.",
     "deleteMessage": "¿Eliminar la credencial de {integration}? Los agentes y las herramientas que la usan dejarán de funcionar hasta que añadas una nueva.",
     "groups": {
       "llm": {
-        "title": "Provedores de IA",
+        "title": "Proveedores de IA",
         "hint": "El modelo sobre el que funciona un agente interno"
       },
       "tool": {
@@ -327,7 +327,7 @@
     "empty": "Todavía no hay agentes de IA",
     "emptyHint": "Un agente funciona sobre el entorno de ejecución integro o a través de la API.",
     "agent": "Agente de IA",
-    "sheetSubtitle": "Un usuari bot al que le puedes delegar tickets",
+    "sheetSubtitle": "Un usuario bot al que le puedes delegar tickets",
     "kind": "Clase",
     "kindLabel": {
       "external": "Externo",
@@ -338,19 +338,19 @@
       "internal": "Ejecutado por el entorno de ejecución integro"
     },
     "namePlaceholder": "p. ej. Bot de triaje",
-    "username": "Nombre de usuari",
+    "username": "Nombre de usuario",
     "usernamePlaceholder": "p. ej. bot-triaje",
     "usernameHint": "Letras, dígitos, puntos, guiones y barras bajas. Hasta 64 caracteres.",
     "access": "Disponibilidad",
     "accessHint": "Quién le puede dar tareas a este agente",
     "model": "Modelo",
-    "modelHint": "Provedor y modelo",
+    "modelHint": "Proveedor y modelo",
     "credential": "Credencial",
     "chooseCredential": "Elegir una credencial",
     "searchCredential": "Buscar credenciales",
     "noCredentialsFound": "No se han encontrado credenciales.",
-    "noCredential": "Ningún provedor de IA conectado",
-    "noCredentialHint": "Conecta una clave de provedor en las integraciones del equipo para elegir un modelo para este agente.",
+    "noCredential": "Ningún proveedor de IA conectado",
+    "noCredentialHint": "Conecta una clave de proveedor en las integraciones del equipo para elegir un modelo para este agente.",
     "addKey": "Ir a los ajustes del equipo",
     "chooseModel": "Elegir un modelo",
     "searchModel": "Busca o escribe un ID de modelo",
@@ -364,20 +364,20 @@
     "triggers": "Disparadores",
     "triggersHint": "Cuándo funciona el agente por su cuenta",
     "onMention": "Reaccionar a las menciones",
-    "onMentionHint": "Funcionar cuando se le mencione con @ en un comentario.",
+    "onMentionHint": "Ejecutar cuando se le mencione con @ en un comentario.",
     "onDelegation": "Reaccionar a la delegación",
-    "onDelegationHint": "Funcionar cuando se le defina como delegado de un ticket.",
+    "onDelegationHint": "Ejecutar cuando se le defina como delegado de un ticket.",
     "onFieldSet": "Reaccionar a «{field}»",
-    "onFieldSetHint": "Funcionar cuando se le defina como el valor de este campo en un ticket.",
+    "onFieldSetHint": "Ejecutar cuando se le defina como el valor de este campo en un ticket.",
     "runDelay": "Esperar antes de empezar",
-    "runDelayHint": "Tiempo para seguir editando el ticket antes de que el agente empieze. 0 empieza de inmediato.",
+    "runDelayHint": "Tiempo para seguir editando el ticket antes de que el agente empiece. 0 empieza de inmediato.",
     "minutes": "min",
     "runner": "Ejecutor",
-    "runnerHint": "El proceso en tu máquina que ejecuuta las tareas de este agente",
+    "runnerHint": "El proceso en tu máquina que ejecuta las tareas de este agente",
     "runnerWayCli": "CLI del ejecutor",
     "runnerWayCliHint": "Nuestro paquete de npm. Apúntalo a un agente de codificación, sondea tareas y informa de vuelta. Necesita un fichero de configuración con la clave del agente.",
     "runnerWayApi": "Tu propio código",
-    "runnerWayApiHint": "Reclama tareas y publica resultaos por la API con la clave del agente, desde cualquier script.",
+    "runnerWayApiHint": "Reclama tareas y publica resultados por la API con la clave del agente, desde cualquier script.",
     "runnerScope": "Disponible para",
     "runnerScopeOwner": "Solo yo",
     "runnerScopeTeam": "Todo el mundo",
@@ -389,9 +389,9 @@
     "runnerHelpKey": "Copiar la clave de API del agente",
     "runnerHelpKeyHint": "Se muestra una sola vez, al crear o al regenerar la clave.",
     "runnerHelpMcp": "Activar MCP para el proyecto",
-    "runnerHelpMcpHint": "Ajustes, Servidor MCP. Apagado por defecto, y así es como el agente le los tickets y publica los resultaos.",
+    "runnerHelpMcpHint": "Ajustes, Servidor MCP. Apagado por defecto, y así es como el agente lee los tickets y publica los resultados.",
     "runnerHelpTool": "Instalar el agente de codificación e iniciar sesión",
-    "runnerHelpToolHint": "En la máquina que ejecuutará al ejecutor. El ejecutor no puede iniciar sesión por ti.",
+    "runnerHelpToolHint": "En la máquina que ejecutará al ejecutor. El ejecutor no puede iniciar sesión por ti.",
     "runnerHelpRun": "Guardar los ficheros donde el agente tiene que trabajar",
     "runnerHelpTabCustom": "El tuyo propio",
     "runnerHelpCheck": "Comprobar que está conectado",
@@ -468,7 +468,7 @@
     "moreActions": "Más acciones",
     "runsSubtitle": "@{username} · ejecuciones disparadas",
     "regenerateMessage": "La clave actual de <v>{name}</v> deja de funcionar de inmediato. Actualiza todo lo que la usa con la clave nueva.",
-    "deleteMessage": "<v>{name}</v> y su clave de API se quitarán, y se limpiará de los tickets a las que estaba asignado o delegado. No se puede deshacer.",
+    "deleteMessage": "<v>{name}</v> y su clave de API se quitarán, y se limpiará de los tickets a los que estaba asignado o delegado. No se puede deshacer.",
     "actionCount": "{count, plural, one {# acción} other {# acciones}}",
     "toolCount": "{count, plural, one {# herramientra} other {# herramientas}}",
     "skillCount": "{count, plural, one {# habilidad} other {# habilidades}}",

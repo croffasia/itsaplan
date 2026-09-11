@@ -13,7 +13,7 @@
   "god": {
     "users": {
       "label": "Usuarios",
-      "description": "Todas las cuentas de esta instancia: el rol global, si la dirección está confirmada, y los proyectos a los que cada usuari puede acceder."
+      "description": "Todas las cuentas de esta instancia: el rol global, si la dirección está confirmada, y los proyectos a los que cada usuario puede acceder."
     },
     "teams": {
       "label": "Equipos",
@@ -29,7 +29,7 @@
     },
     "authentication": {
       "label": "Autenticación",
-      "description": "Quién se puede registrar en esta instancia, cómo se confirman las cuentas, y los provedores con los que la gente inicia sesión."
+      "description": "Quién se puede registrar en esta instancia, cómo se confirman las cuentas, y los proveedores con los que la gente inicia sesión."
     },
     "hotkeys": {
       "label": "Atajos de teclado",
@@ -44,16 +44,16 @@
       "description": "El bot al que las personas conectan su cuenta de Telegram, y el que entrega las notificaciones de Telegram para los proyectos que no definen un bot propio."
     },
     "email": {
-      "label": "Provedor de correo",
-      "description": "El provedor de correo por el que la instancia envía: reinicios de contraseña, confirmación de direcciones, y enlaces de inicio de sesión."
+      "label": "Proveedor de correo",
+      "description": "El proveedor de correo por el que la instancia envía: reinicios de contraseña, confirmación de direcciones, y enlaces de inicio de sesión."
     },
     "auth-provider": {
-      "label": "Provedor de autenticación",
+      "label": "Proveedor de autenticación",
       "description": "Las cuentas externas con las que las personas pueden iniciar sesión."
     },
     "scim": {
       "label": "SCIM",
-      "description": "Permite que un provedor de identidades cree, actualize y desactive cuentas en esta instancia, y conceda acceso a proyectos a través de sus grupos."
+      "description": "Permite que un proveedor de identidades cree, actualize y desactive cuentas en esta instancia, y conceda acceso a proyectos a través de sus grupos."
     }
   },
   "settings": {
@@ -99,7 +99,7 @@
     },
     "git": {
       "label": "Repositorios",
-      "description": "Cerrar tickets cuando sus peticiones de estracción se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
+      "description": "Cerrar tickets cuando sus peticiones de extracción se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
     },
     "ai-agents": {
       "label": "Agentes de IA",

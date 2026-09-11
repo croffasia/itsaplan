@@ -11,19 +11,19 @@
   "selectAll": "Seleccionar todo",
   "deselectAll": "Deseleccionar todo",
   "resizeColumn": "Redimensionar la columna",
-  "viewNamePlaceholder": "Todas los tickets",
-  "sortedOrder": "Los tickets están ordenadas por {field}. Cambia el orden a Manual para moverlas.",
+  "viewNamePlaceholder": "Todos los tickets",
+  "sortedOrder": "Los tickets están ordenados por {field}. Cambia el orden a Manual para moverlos.",
   "statusSince": "En el estado actual desde el {date}",
   "createdOn": "Creada el {date}",
   "updatedOn": "Actualizada el {date}",
   "subtasksProgress": "Subtareas {done}/{total}",
   "subtasksDone": "{done} de {total} subtareas completadas",
   "wip": {
-    "reached": "{column} está en su límete de {limit} tickets.",
+    "reached": "{column} está en su límite de {limit} tickets.",
     "tooltip": "Límite de trabajo en curso: {max}",
     "count": "{count} / {max}",
     "filteredCount": "{shown} de {total} / {max}",
-    "filteredTooltip": "{shown} mostradas por los filtros actuales. El límite de {max} cuenta todas las {total} tickets de la columna."
+    "filteredTooltip": "{shown} mostrados por los filtros actuales. El límite de {max} cuenta todos los {total} tickets de la columna."
   },
   "columns": {
     "title": "Título",

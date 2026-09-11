@@ -30,7 +30,7 @@
   "deleteDialog": {
     "title": "¿Eliminar la clave de API?",
     "confirm": "Eliminar clave",
-    "description": "Cualquier peticción que use esta clave dejará de funcionar de inmediato. Esto no se puede deshacer.",
+    "description": "Cualquier petición que use esta clave dejará de funcionar de inmediato. Esto no se puede deshacer.",
     "error": "No se ha podido eliminar la clave de API."
   },
   "loadFailed": "No se han podido cargar las claves de API."

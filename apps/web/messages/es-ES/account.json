@@ -15,10 +15,10 @@
     "avatarTooLarge": "La imagen excede el límite de {mb} MB",
     "avatarFormats": "PNG, JPEG, GIF, WebP o AVIF.",
     "avatarMaxSize": "Hasta {mb} MB.",
-    "detailsTitle": "Nombre y nombre de usuari",
-    "detailsDescription": "Tu nombre aparece a través de la aplicación. Inicia sesión con tu nombre de usuari o tu correo.",
+    "detailsTitle": "Nombre y nombre de usuario",
+    "detailsDescription": "Tu nombre aparece a través de la aplicación. Inicia sesión con tu nombre de usuario o tu correo.",
     "name": "Nombre",
-    "username": "Nombre de usuari",
+    "username": "Nombre de usuario",
     "usernameHint": "Letras, números, puntos y barras bajas. De 3 a 30 caracteres.",
     "detailsUpdated": "El perfil se ha actualizado",
     "detailsUpdateFailed": "No se ha podido actualizar el perfil."
@@ -117,7 +117,7 @@
       "Other": "Otra"
     },
     "issueOpenMode": "Abrir tickets en",
-    "issueOpenModeDescription": "Qué pasa cuando pules un ticket en un tablero, tabla, calandario o cronología.",
+    "issueOpenModeDescription": "Qué pasa cuando pulsas un ticket en un tablero, tabla, calendario o cronología.",
     "issueOpenModeOptions": {
       "panel": "Panel lateral",
       "page": "Página completa"

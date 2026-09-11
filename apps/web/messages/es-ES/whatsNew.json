@@ -19,7 +19,7 @@
     "mergedRoles": "{count, plural, one {# rol predefinido duplicado se ha unificado} other {# roles predefinidos duplicados se han unificado}}",
     "mergedTools": "{count, plural, one {# herramientra configurada duplicada se ha unificado} other {# herramientas configuradas duplicadas se han unificado}}",
     "movedInvites": "{count, plural, one {# invitación pendiente se ha movido al equipo} other {# invitaciones pendientes se han movido al equipo}}",
-    "notificationsHeading": "Provedores de notificaciones",
-    "notificationsBody": "Un equipo mantiene una sola configuración de provedor de notificaciones, así que se ha guardado la última guardada. Vuelve a introducir los ajustes de: {projects}."
+    "notificationsHeading": "Proveedores de notificaciones",
+    "notificationsBody": "Un equipo mantiene una sola configuración de proveedor de notificaciones, así que se ha guardado la última guardada. Vuelve a introducir los ajustes de: {projects}."
   }
 }

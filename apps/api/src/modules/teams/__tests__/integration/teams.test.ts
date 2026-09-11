@@ -943,6 +943,58 @@ describe('teams', () => {
     });
   });
 
+  describe('concurrent ownership changes', () => {
+    async function twoOwners() {
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      const second = await addTeamMember(owner, teamId);
+      await owner.api
+        .teams({ teamId })
+        .members({ userId: second.user.userId })
+        .patch({ role: 'owner' });
+      return { owner, second, teamId };
+    }
+
+    it('keeps an owner when both owners leave concurrently', async () => {
+      const { owner, second, teamId } = await twoOwners();
+      const results = await Promise.all([
+        owner.api.teams({ teamId }).leave.post(),
+        second.api.teams({ teamId }).leave.post(),
+      ]);
+      expect(results.map((result) => result.status).sort()).toEqual([204, 409]);
+      const teams = await Promise.all([owner.api.teams.get(), second.api.teams.get()]);
+      expect(
+        teams.flatMap((result) => result.data ?? []).filter((row) => row.id === teamId),
+      ).toHaveLength(1);
+    });
+
+    it('keeps an owner when owners demote each other concurrently', async () => {
+      const { owner, second, teamId } = await twoOwners();
+      const results = await Promise.all([
+        owner.api
+          .teams({ teamId })
+          .members({ userId: second.user.userId })
+          .patch({ role: 'member' }),
+        second.api
+          .teams({ teamId })
+          .members({ userId: owner.user.userId })
+          .patch({ role: 'member' }),
+      ]);
+      expect(results.map((result) => result.status).sort()).toEqual([204, 403]);
+      expect((await owner.api.teams({ teamId }).get()).data?.ownerCount).toBe(1);
+    });
+
+    it('keeps an owner when owners remove each other concurrently', async () => {
+      const { owner, second, teamId } = await twoOwners();
+      const results = await Promise.all([
+        owner.api.teams({ teamId }).members({ userId: second.user.userId }).delete(),
+        second.api.teams({ teamId }).members({ userId: owner.user.userId }).delete(),
+      ]);
+      expect(results.filter((result) => result.status === 204)).toHaveLength(1);
+      expect(results.some((result) => result.status === 403 || result.status === 404)).toBe(true);
+    });
+  });
+
   describe('leave', () => {
     it('rejects the last owner leaving', async () => {
       const { api } = await signUpClient();

@@ -1,5 +1,6 @@
 import type { Permission } from '#shared/guards';
 import type { McpApp } from './types';
+import { outputSchema, type McpOutputSchema } from './result';
 
 // Turns the assembled app's routes into MCP tool descriptors. A route opts in by
 // carrying an `x-mcp` extension in its OpenAPI `detail` (see mcpTool). The route's
@@ -37,6 +38,7 @@ export interface McpRouteTool {
   // DELETE carries one where the deletion needs an argument.
   hasBody: boolean;
   inputSchema: McpInputSchema;
+  outputSchema: McpOutputSchema;
   annotations: McpToolAnnotations;
   // The cell of the role matrix the route's guard asserts, published by the guard as
   // `x-permission` on the route's detail. Absent on a route that asks only for
@@ -178,6 +180,7 @@ function generateRouteTools(app: McpApp): McpRouteTool[] {
       pathParams,
       hasBody: hooks.body != null,
       inputSchema: mergeInputSchema(hooks, pathParams),
+      outputSchema: outputSchema(hooks.response),
       permission: detail?.['x-permission'],
       // Every tool acts on this tracker's own data and reaches nothing outside it,
       // so openWorldHint is false throughout; the route may still override it.

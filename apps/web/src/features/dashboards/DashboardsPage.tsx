@@ -27,7 +27,7 @@ export default function DashboardsPage() {
   const router = useRouter();
   const projectKey = params.projectKey;
 
-  const { data: dashboards, isLoading } = useDashboardsQuery(projectKey);
+  const { data: dashboards, isLoading, isFetching, isSuccess } = useDashboardsQuery(projectKey);
   const [editing, setEditing] = useState(false);
 
   const list = dashboards ?? [];
@@ -38,7 +38,8 @@ export default function DashboardsPage() {
       : null;
   const activeDashboardId = routeId;
   const missingDashboard =
-    !isLoading &&
+    isSuccess &&
+    !isFetching &&
     params.dashboardId != null &&
     (routeId == null || !list.some((dashboard) => dashboard.id === routeId));
 
@@ -70,7 +71,7 @@ export default function DashboardsPage() {
     );
   }
 
-  // Layout editing (add/move/resize/remove widgets, save) is a dashboards edit.
+  // Saving Overview creates a dashboard; saved layouts require edit permission.
   const canEditLayout = editor.isVirtual ? can('dashboards', 'create') : can('dashboards', 'edit');
 
   function saveLabel() {

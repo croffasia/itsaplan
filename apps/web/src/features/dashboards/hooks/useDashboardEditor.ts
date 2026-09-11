@@ -83,8 +83,7 @@ export function useDashboardEditor(
 
   const discard = () => setDraft(null);
 
-  // Persists the working layout: updates the active dashboard, or creates the
-  // a new one when the virtual dashboard is on screen.
+  // Saving Overview creates a new dashboard.
   const save = async () => {
     if (isVirtual) {
       const created = await createM.mutateAsync({ input: { name: t('defaultName'), layout } });

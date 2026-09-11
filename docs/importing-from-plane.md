@@ -86,10 +86,20 @@ long time to finish for this reason alone.
 ## Pausing, resuming, canceling, and running it again
 
 Pausing and resuming continues from where the job left off. Canceling stops it where it
-stands — issues already created stay created, nothing is rolled back. Starting a *new*
-import against the same Plane project does not know about a previous one and will create a
-second copy of everything; there is no way today to update an existing import or skip what
-was already brought in from an earlier run against the same source.
+stands — issues already created stay created, nothing is rolled back.
+
+Starting a *new* import against the same Plane project (after a cancel, or any other time)
+reuses what a previous run already created instead of duplicating it: a state, cycle, or
+issue is matched by name (issue titles case- and whitespace-insensitively) against what is
+already in the project, and a comment is matched by its exact body and timestamp on the
+matched issue. Labels always dedupe this way too. Nothing about an existing match is
+overwritten — an existing state's category, for instance, is left as it is even if Plane
+categorizes it differently.
+
+This is a name/content match, not a record of which import created what, so it also means
+an issue you created by hand before importing — one that happens to share an exact title
+with something in Plane — is treated as the same issue and gets Plane's labels, comments,
+and other fields attached to it rather than getting a second copy.
 
 ## Only Plane, only import
 

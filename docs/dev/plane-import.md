@@ -74,10 +74,29 @@ narrower than that in three specific ways, plus export was dropped entirely:
   (`plane-adapter.ts`) has no entry for `start_before`/`start_after`/`finish_before`/
   `finish_after` — itsaplan's `issue_link.kind` has no scheduling-dependency concept, so
   these are filtered out, not a bug.
-- **Re-running an import against the same source project is not idempotent across runs.**
-  `import_record` makes one job's own retries and resumes safe, but a second job created
-  against the same Plane project starts a fresh `import_record` set and will duplicate
-  everything the first job already created. There is no cross-job dedup.
+- **Re-running an import against the same source project reuses what a previous run already
+  created, by name/content match, not by any record of which import created what.**
+  `import_record` makes one job's own retries and resumes safe; across two separate jobs
+  (a fresh job started after a cancel, or a second job against the same Plane project) it
+  offers nothing, since each job starts its own `import_record` set. Instead,
+  `createLocalStateAndRecord`/`createLocalCycleAndRecord`/`createLocalIssueAndRecord`/
+  `createLocalComment` (`import-store.ts`) each look up existing content in the destination
+  project first — a `project_column`/`cycle` by exact name, an `issue` by case- and
+  whitespace-insensitive title, a comment by exact body and `createdAt` on the resolved
+  issue — and reuse it instead of inserting a duplicate; `createLocalLabel` already did this
+  via its own `(project_id, name)` unique constraint. A match is reused, never overwritten:
+  an existing column's `stateType` is left as Plane's category disagrees with it, for
+  instance. This is a content match, not provenance tracking, so it also matches content a
+  user created by hand before importing, not only a previous import's output. `issue_link`
+  needs no equivalent logic — its `(pair, kind)` unique index rejects the duplicate insert
+  outright, caught by `isUniqueViolation` in `createIssueLink`.
+  State/cycle name matching is exact (case-sensitive); issue title matching is not. Nothing
+  currently makes the two consistent — worth revisiting if a Plane workspace turns out to
+  use different casing than itsaplan's own default column names.
+  Concurrent ticks racing this lookup-then-insert (two import jobs targeting the same
+  project, processed by two different worker replicas at once) could still both miss the
+  same not-yet-created match and insert twice — not addressed, since a self-hosted worker
+  normally runs as one replica.
 - **Whether archived Plane issues are silently excluded is unverified** — the default
   `work-items/` listing this adapter uses returned zero archived items in the one workspace
   checked during development, and the separate archived-items endpoint 404s on that same

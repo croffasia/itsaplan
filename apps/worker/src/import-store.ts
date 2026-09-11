@@ -322,11 +322,17 @@ export async function firstProjectColumnId(projectId: number): Promise<number | 
   return rows[0]?.id ?? null;
 }
 
-// Creates the local column and records its import_record mapping in one
-// transaction, so a crash between the two can never leave a create-then-
-// retry pair that duplicates the column — unlike a label, which upserts on
-// its own (project_id, name) unique constraint, a project_column has nothing
-// to fall back on for a retry.
+// project_column has no unique constraint to upsert against like label does,
+// so an exact name match within the project is looked up first and reused —
+// otherwise every project's own default columns (every new project starts
+// with a "Backlog") collide with Plane's own states of the same name and
+// duplicate them. A match reuses the existing column's stateType rather than
+// overwriting it with Plane's category: unlike a label's color, a column's
+// category can move issues between board sections, so an import should not
+// silently change how an existing, possibly hand-configured column behaves.
+// The lookup and the insert-or-reuse share one transaction for the same
+// crash-safety reason as before — a project_column still has nothing to fall
+// back on for a retry once created.
 export async function createLocalStateAndRecord(
   jobId: number,
   sourceId: string,
@@ -334,6 +340,14 @@ export async function createLocalStateAndRecord(
   state: CanonicalState,
 ): Promise<number> {
   return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: projectColumn.id })
+      .from(projectColumn)
+      .where(and(eq(projectColumn.projectId, projectId), eq(projectColumn.name, state.name)));
+    if (existing) {
+      await upsertImportRecordWith(tx, jobId, 'state', sourceId, 'state', existing.id);
+      return existing.id;
+    }
     const [posRow] = await tx
       .select({ pos: sql<number>`COALESCE(MAX(${projectColumn.position}), 0) + 1` })
       .from(projectColumn)
@@ -368,9 +382,9 @@ export async function createLocalLabel(
   return row!.id;
 }
 
-// Same atomicity reasoning as createLocalStateAndRecord: a cycle has no
-// unique constraint to protect a retry, so the create and the import_record
-// mapping commit together.
+// Same name-match-and-reuse reasoning as createLocalStateAndRecord: a cycle
+// has no unique constraint to upsert against, so an existing cycle of the
+// same name is reused rather than duplicated.
 export async function createLocalCycleAndRecord(
   jobId: number,
   sourceId: string,
@@ -378,6 +392,14 @@ export async function createLocalCycleAndRecord(
   canonicalCycle: CanonicalCycle,
 ): Promise<number> {
   return db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select({ id: cycle.id })
+      .from(cycle)
+      .where(and(eq(cycle.projectId, projectId), eq(cycle.name, canonicalCycle.name)));
+    if (existing) {
+      await upsertImportRecordWith(tx, jobId, 'cycle', sourceId, 'cycle', existing.id);
+      return existing.id;
+    }
     const [row] = await tx
       .insert(cycle)
       .values({
@@ -406,19 +428,44 @@ export interface NewLocalIssue {
   dueDate: string | null;
 }
 
-// Sequence numbers ("MKT-42") are issued under a row lock on project, the same
-// pattern apps/api's createIssue uses, so a bulk import never collides with a
-// concurrent interactive create. The import_record mapping is written in the
-// same transaction as the insert: an issue has no unique constraint a retry
-// could fall back on (a fresh sequence number is issued every time), so a
-// crash between the insert and the mapping would otherwise duplicate the
-// issue on the next attempt.
+// An issue whose title matches one already in the project (case- and
+// whitespace-insensitive, the same comparison the file-based importer uses)
+// is reused instead of duplicated — the same protection createLocalLabel and
+// createLocalStateAndRecord give their own entities. Comments and labels the
+// import attaches afterward land on that existing issue rather than being
+// orphaned. Skipped for a blank title: input.title falls back to
+// '(untitled)' below, and matching on that fallback would merge every
+// untitled Plane issue into whichever one happened to import first, which is
+// not a duplicate in any real sense.
+//
+// Sequence numbers ("MKT-42") are issued under a row lock on project, the
+// same pattern apps/api's createIssue uses, so a bulk import never collides
+// with a concurrent interactive create. The import_record mapping is written
+// in the same transaction as the insert: an issue has no unique constraint a
+// retry could fall back on (a fresh sequence number is issued every time),
+// so a crash between the insert and the mapping would otherwise duplicate
+// the issue on the next attempt.
 export async function createLocalIssueAndRecord(
   jobId: number,
   sourceId: string,
   input: NewLocalIssue,
 ): Promise<number> {
   return db.transaction(async (tx) => {
+    if (input.title.trim()) {
+      const [existing] = await tx
+        .select({ id: issue.id })
+        .from(issue)
+        .where(
+          and(
+            eq(issue.projectId, input.projectId),
+            sql`lower(btrim(${issue.title})) = lower(btrim(${input.title}))`,
+          ),
+        );
+      if (existing) {
+        await upsertImportRecordWith(tx, jobId, 'issue', sourceId, 'issue', existing.id);
+        return existing.id;
+      }
+    }
     const [seqRow] = await tx
       .update(project)
       .set({ nextSequence: sql`next_sequence + 1` })
@@ -458,6 +505,12 @@ export async function setIssueLabels(issueId: number, labelIds: number[]): Promi
     .onConflictDoNothing();
 }
 
+// A comment already on the issue with the same body and createdAt (the two
+// fields Plane's own record carries verbatim) is reused instead of
+// duplicated — the same reuse-by-content protection issues, states, and
+// cycles get, needed here because a second import job resolves the parent
+// issue to the same, already-created row and would otherwise re-post every
+// comment on it.
 export async function createLocalComment(
   issueId: number,
   authorUserId: string | null,
@@ -466,6 +519,19 @@ export async function createLocalComment(
   createdAt: Date,
   replyToId: number | null,
 ): Promise<number> {
+  const [existing] = await db
+    .select({ id: issueActivity.id })
+    .from(issueActivity)
+    .where(
+      and(
+        eq(issueActivity.issueId, issueId),
+        eq(issueActivity.kind, 'comment'),
+        eq(issueActivity.body, bodyMarkdown),
+        eq(issueActivity.createdAt, createdAt),
+      ),
+    );
+  if (existing) return existing.id;
+
   const [row] = await db
     .insert(issueActivity)
     .values({

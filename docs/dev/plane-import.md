@@ -127,10 +127,17 @@ already had via `runLink`:
 `rateLimitBackoffMs` (`plane-adapter.ts`) reads `x-ratelimit-remaining`/`x-ratelimit-reset`/
 a 429 off every response; hitting the limit throws `PlaneRateLimitedError`, and
 `handleTickError` (`import-worker.ts`) reschedules via `retryImportJobLater` rather than
-counting it as a failed attempt. `import_job.last_error` is cleared on every successful tick
-and on completion (`import-store.ts`), so a non-null `lastError` on a still-`pending` job
-reliably means "currently waiting out a retry," which is what the Settings page's warning
-banner reads. Verified live against a real workspace during development: Create's per-issue
+counting it as a failed attempt. `import_job.last_error` is cleared the moment a claim starts
+a new attempt, as well as on success and on completion (`import-store.ts`'s
+`claimDueImportJobs`/`saveImportJobCursor`/`advanceImportJobPhase`/`completeImportJob`), so a
+non-null `lastError` on a still-`pending` job reliably means "currently waiting out a retry,"
+never "an attempt is in flight" — which is what the Settings page's warning banner reads.
+Clearing it at claim time (not only on success) matters: without it, a poll landing while the
+new attempt is still running would show the *previous* error next to the claim lease's own
+deadline (up to `LEASE_SECONDS` out) as if that were the retry countdown — a real bug this
+session found live, from a workspace large enough to retry several times in a row (the
+countdown jumped from a real ~15s to a bogus ~118s). Verified live against a real workspace
+during development: Create's per-issue
 cost (`getIssue` + `listIssueComments` + `listIssueAttachments`, three requests) times
 `ISSUES_PER_TICK = 15` fires 45 requests in one tick with no pacing between them, which
 reliably exhausts Plane's ~60 req/min budget within the first tick or two of Create on any

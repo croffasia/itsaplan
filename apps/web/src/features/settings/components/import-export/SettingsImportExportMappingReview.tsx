@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import SettingsCard from '@/components/common/page/SettingsCard';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsImportExportStateOverrideRow from './SettingsImportExportStateOverrideRow';
 import type {
@@ -96,7 +97,7 @@ export default function SettingsImportExportMappingReview({
       {states.length > 0 && (
         <div className="space-y-2">
           <Label>{t('stateMapping')}</Label>
-          <div className="space-y-2">
+          <SettingsCard className="max-h-64 divide-y divide-border/60 overflow-y-auto">
             {states.map((state) => (
               <SettingsImportExportStateOverrideRow
                 key={state.id}
@@ -105,7 +106,7 @@ export default function SettingsImportExportMappingReview({
                 onChange={(category) => setOverride(state.id, state.category, category)}
               />
             ))}
-          </div>
+          </SettingsCard>
         </div>
       )}
 

@@ -49,11 +49,20 @@ export interface ClaimedImportJob {
 // bumps attempts, so a job whose worker crashes mid-tick becomes claimable
 // again once the lease expires — status stays 'pending' throughout, the same
 // as webhook_delivery, so the lease alone drives crash recovery.
+//
+// last_error is cleared here too, the moment a claim starts a new attempt —
+// not only on success. The Settings UI reads a non-null last_error as "waiting
+// out a retry" (see SettingsImportExportJobRow.tsx), computing the countdown
+// from next_attempt_at; without this, a poll landing while the new attempt is
+// still in flight would show the old error next to the lease's own deadline
+// (up to LEASE_SECONDS out) as if it were the retry countdown, even though the
+// job is actively working, not waiting.
 export async function claimDueImportJobs(limit = 1): Promise<ClaimedImportJob[]> {
   const rows = await db.execute(sql`
     UPDATE import_job j
     SET attempts = j.attempts + 1,
-        next_attempt_at = now() + make_interval(secs => ${LEASE_SECONDS})
+        next_attempt_at = now() + make_interval(secs => ${LEASE_SECONDS}),
+        last_error = NULL
     WHERE j.id IN (
       SELECT id FROM import_job
       WHERE status = 'pending' AND next_attempt_at <= now()

@@ -406,7 +406,7 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
   .post(
     '/teams/:teamId/leave',
     async ({ membership }) => {
-      await leaveTeam(membership.teamId, membership.userId, membership.role);
+      await leaveTeam(membership.teamId, membership.userId);
       return noContent();
     },
     {

@@ -1,0 +1,53 @@
+{
+  "add": "Añadir filtro",
+  "remove": "Quitar filtro",
+  "valuePlaceholder": "valor",
+  "noOptions": "No hay opciones",
+  "selected": "{count} seleccionados",
+  "operators": {
+    "is": "es",
+    "is_not": "no es",
+    "before": "antes del",
+    "after": "después del",
+    "is_set": "está definido",
+    "is_not_set": "no está definido",
+    "contains": "contiene",
+    "not_contains": "no contiene"
+  },
+  "boolean": {
+    "true": "Verdadero",
+    "false": "Falso"
+  },
+  "cycleStatus": {
+    "active": "Ciclo activo",
+    "upcoming": "Próximos ciclos"
+  },
+  "initiativeStatus": {
+    "active": "Iniciativas activas",
+    "planned": "Iniciativas planificadas",
+    "proposed": "Iniciativas propuestas"
+  },
+  "fields": {
+    "status": "Estado",
+    "statusType": "Tipo de estado",
+    "assignee": "Asignatario",
+    "delegate": "Delegado",
+    "priority": "Prioridad",
+    "type": "Tipo",
+    "initiative": "Iniciativa",
+    "cycle": "Ciclo",
+    "labels": "Etiquetas",
+    "dueDate": "Fecha de vencimiento",
+    "startDate": "Fecha de inicio",
+    "created": "Creada",
+    "updated": "Actualizada"
+  },
+  "unset": {
+    "assignee": "Sin asignar",
+    "delegate": "Sin delegado",
+    "type": "Sin tipo",
+    "initiative": "Sin iniciitiva",
+    "cycle": "Sin ciclo",
+    "member": "Sin valor"
+  }
+}

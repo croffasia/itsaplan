@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Actualizado",
+  "title": "Novedades de {version}",
+  "done": "Entendido",
+  "backup": {
+    "title": "Se ha hecho una copia de seguridad antes de la actualización",
+    "body": "La base de datos se ha volcado antes de ejecutar las migraciones de esta versión: {size}, guardada hasta {expires}, después se elimina automáticamente. Restáurala si vuelves a la versión anterior.",
+    "credentialsHint": "Los nombres de usuario y de base de datos son los POSTGRES_USER y POSTGRES_DB de tu .env."
+  },
+  "report": {
+    "title": "Qué ha cambiado en tus datos",
+    "subtitle": "Ahora los proyectos pertenecen a un equipo, y un equipo comparte una sola lista de roles, habilidades, agentes y credenciales de integración.",
+    "teamsHeading": "Equipos y sus proyectos",
+    "renamedRoles": "Roles renombrados",
+    "renamedSkills": "Habilidades renombradas",
+    "renamedAgents": "Identificadores de agentes renombrados",
+    "renamedCredentials": "Credenciales de integración reetiquetadas",
+    "mergedHeading": "Unidas y movidas",
+    "mergedRoles": "{count, plural, one {# rol predefinido duplicado se ha unificado} other {# roles predefinidos duplicados se han unificado}}",
+    "mergedTools": "{count, plural, one {# herramientra configurada duplicada se ha unificado} other {# herramientas configuradas duplicadas se han unificado}}",
+    "movedInvites": "{count, plural, one {# invitación pendiente se ha movido al equipo} other {# invitaciones pendientes se han movido al equipo}}",
+    "notificationsHeading": "Proveedores de notificaciones",
+    "notificationsBody": "Un equipo mantiene una sola configuración de proveedor de notificaciones, así que se ha guardado la última guardada. Vuelve a introducir los ajustes de: {projects}."
+  }
+}

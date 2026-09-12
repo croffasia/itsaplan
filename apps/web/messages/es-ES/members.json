@@ -1,0 +1,107 @@
+{
+  "title": "Miembros",
+  "description": "Personas con acceso a este proyecto.",
+  "add": {
+    "action": "Añadir miembro",
+    "title": "Añadir miembro",
+    "personLabel": "Miembro del equipo o correo electrónico",
+    "pickPlaceholder": "Selecciona a alguien",
+    "searchPlaceholder": "Busca en el equipo o escribe un correo",
+    "searchTeamPlaceholder": "Buscar en el equipo",
+    "fromTeam": "Del equipo",
+    "byEmail": "Invitar por correo",
+    "inviteEmail": "Invitar a {email}",
+    "alreadyInvited": "{email} ya está invitado",
+    "alreadyMember": "{email} ya está en este proyecto",
+    "alreadyInTeam": "{email} ya está en el equipo — seléccionalo de la lista de arriba",
+    "refused": "No se ha podido añadir a {email}",
+    "typeEmail": "No se ha encontrado a nadie. Escribe una dirección de correo completa para invitarlo.",
+    "noCandidates": "Todo el mundo del equipo ya está en este proyecto.",
+    "willJoinTeam": "Se une al equipo {teamName} y a este proyecto",
+    "roleLabel": "Rol en el proyecto",
+    "rolePlaceholder": "Rol",
+    "submit": "Añadir al proyecto",
+    "sendInvite": "Enviar invitación"
+  },
+  "columns": {
+    "member": "Miembro",
+    "role": "Rol",
+    "timezone": "Zona horaria",
+    "joined": "Se unió",
+    "actions": "Acciones"
+  },
+  "profileHeading": "Perfil",
+  "you": "(tú)",
+  "aiAgent": "Agente de IA",
+  "tabs": {
+    "all": "Todo",
+    "people": "Personas",
+    "agents": "Agentes de IA",
+    "label": "Mostrar"
+  },
+  "leaveProject": "Abandonar el proyecto",
+  "revokeAccess": "Revocar el acceso",
+  "lastOwner": "Un proyecto tiene que mantener al menos un propietario",
+  "leaveTitle": "Abandonar este proyecto",
+  "leaveDescription": "Perderás el acceso a este proyecto y a sus tickets. Un propietario te puede invitar de vuelta más tarde.",
+  "revokeTitle": "Revocar el acceso de {name}",
+  "revokeDescription": "{name} perderá el acceso a este proyecto. Le pueden invitar de vuelta más tarde.",
+  "selectRole": "Seleccionar rol",
+  "editDescription": "Editar descripción",
+  "descriptionQuestionSelf": "¿Qué haces en este proyecto?",
+  "descriptionQuestionOther": "¿Qué hace esta persona en este proyecto?",
+  "descriptionPlaceholder": "p. ej. Ingeniera backend, responsable de la API y las integraciones",
+  "invites": {
+    "pendingCount": "{count, plural, one {# invitación pendiente} other {# invitaciones pendientes}}",
+    "copyLink": "Copiar el enlace",
+    "copied": "Copiado",
+    "emailQueued": "Correo de invitación en cola",
+    "emailUnavailable": "Invitación creada, pero el correo no se ha puesto en cola. Copia el enlace para compartirlo.",
+    "resendUnavailable": "El correo no está configurado. Copia el enlace de invitación para compartirlo.",
+    "resendEmail": "Enviar correo",
+    "resendingEmail": "Poniendo en cola…",
+    "revokeAction": "Revocar invitación",
+    "removeAction": "Quitar invitación",
+    "invitedBy": "Invitado por {name} · ",
+    "createdAt": "creada el {date}",
+    "respondedAt": "{status, select, accepted {aceptada} rejected {rechazada} other {actualizada}} el {date}",
+    "status": {
+      "pending": "Pendiente",
+      "accepted": "Aceptada",
+      "rejected": "Rechazada"
+    },
+    "revokeTitle": "Revocar la invitación de {email}",
+    "revokeConfirm": "Revocar invitación",
+    "revokeDescription": "El enlace de invitación dejará de funcionar. Puedes volver a invitar a este correo más tarde."
+  },
+  "promoted": "Miembro ascendido a propietario",
+  "roleUpdated": "El rol del miembro se ha actualizado",
+  "descriptionUpdated": "La descripción del miembro se ha actualizado",
+  "added": "Miembro añadido",
+  "provisioned": "Gestionado por SCIM",
+  "search": {
+    "all": "Buscar miembros",
+    "people": "Buscar personas",
+    "agents": "Buscar agentes de IA"
+  },
+  "empty": {
+    "all": {
+      "title": "Todavía no hay miembros",
+      "description": "Las personas y los agentes de IA aparecen aquí cuando se unan."
+    },
+    "human": {
+      "title": "Todavía no hay personas",
+      "description": "Las personas aparecen aquí cuando se unan."
+    },
+    "agent": {
+      "title": "Todavía no hay agentes de IA",
+      "description": "Los agentes de IA aparecen aquí cuando se añadan."
+    },
+    "search": {
+      "title": "No se ha encontrado nada",
+      "all": "Ningún miembro coincide con esta búsqueda.",
+      "human": "Ninguna persona coincide con esta búsqueda.",
+      "agent": "Ningún agente de IA coincide con esta búsqueda."
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "editAction": "Editar proyecto",
+  "copyAction": "Duplicar proyecto",
+  "deleteAction": "Eliminar proyecto",
+  "leaveAction": "Abandonar proyecto",
+  "deleteDialog": {
+    "title": "¿Eliminar {name}?",
+    "confirm": "Eliminar definitivamente",
+    "description": "Esto elimina de forma definitiva <strong>{name}</strong> y todo lo que contiene: tickets, comentarios, adjuntos y ajustes. No se puede deshacer.",
+    "typeToConfirm": "Escribe <code>{key}</code> para confirmar."
+  },
+  "leaveDialog": {
+    "title": "¿Abandonar {name}?",
+    "confirm": "Abandonar proyecto",
+    "description": "Perderás el acceso a <strong>{name}</strong> y a sus elementos de trabajo. Para volver a unirte necesitas una nueva invitación de un propietario."
+  },
+  "editDialog": {
+    "title": "Editar proyecto",
+    "name": "Nombre",
+    "description": "Descripción",
+    "submit": "Guardar"
+  }
+}

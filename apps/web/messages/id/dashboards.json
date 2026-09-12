@@ -140,7 +140,11 @@
     "eventNoun": "{count, plural, one {peristiwa} other {peristiwa}}",
     "active": "{count} aktif",
     "less": "Lebih sedikit",
-    "more": "Lebih banyak"
+    "more": "Lebih banyak",
+    "scope": {
+      "project": "Seluruh proyek",
+      "me": "Aktivitas saya"
+    }
   },
   "throughput": {
     "empty": "Tidak ada aktivitas dalam periode ini.",

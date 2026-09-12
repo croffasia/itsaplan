@@ -156,10 +156,10 @@
     "deleteFile": "Excluir {name}"
   },
   "documents": {
-    "title": "Docs",
+    "title": "Documentos",
     "add": "Vincular um Doc",
     "empty": "Nenhum Doc vinculado ainda.",
-    "loadFailed": "Não foi possível carregar os Docs vinculados. Tente novamente.",
+    "loadFailed": "Não foi possível carregar os documentos vinculados. Tente novamente.",
     "untitled": "Sem título",
     "remove": "Desvincular {title}"
   }

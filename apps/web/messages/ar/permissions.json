@@ -6,7 +6,7 @@
     "initiatives": "المبادرات (initiatives)",
     "cycles": "الدورات (cycles)",
     "dashboards": "لوحات المعلومات",
-    "documents": "Docs",
+    "documents": "المستندات",
     "views": "عروض عناصر العمل",
     "members_invite": "الدعوات",
     "members_manage": "الأعضاء",
@@ -34,7 +34,7 @@
   "groups": {
     "workItems": "عناصر العمل",
     "dashboards": "لوحات المعلومات",
-    "documents": "Docs",
+    "documents": "المستندات",
     "notes": "الملاحظات",
     "ai": "الذكاء الاصطناعي",
     "configuration": "التهيئة",

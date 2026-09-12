@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 import DocumentMarkdownEditor, { insertDocumentImage } from './DocumentMarkdownEditor';
 import DocumentPageTitle from './DocumentPageTitle';
+import { type DocumentSelection } from './DocumentSelectionActions';
 import DocumentToolbar from './DocumentToolbar';
 
 export function documentToolbarPosition(stickyToolbar: boolean) {
@@ -23,6 +24,8 @@ export default function DocumentEditorCanvas({
   editor,
   titleRef,
   editable,
+  collaborative = false,
+  onComment,
   stickyToolbar,
   updateLabel,
   onEditorReady,
@@ -42,6 +45,8 @@ export default function DocumentEditorCanvas({
   editor: Editor | null;
   titleRef: RefObject<HTMLTextAreaElement | null>;
   editable: boolean;
+  collaborative?: boolean;
+  onComment?: (selection: DocumentSelection) => void;
   stickyToolbar: boolean;
   updateLabel: string;
   onEditorReady: (editor: Editor | null) => void;
@@ -125,9 +130,13 @@ export default function DocumentEditorCanvas({
 
         <DocumentMarkdownEditor
           key={`${document.id}:${editorRevision}`}
+          projectKey={projectKey}
+          documentId={document.id}
+          onComment={onComment}
           defaultValue={content}
           defaultJson={contentJson}
           editable={editable}
+          collaborative={collaborative}
           placeholder={t('contentPlaceholder')}
           className="min-h-[58vh] flex-1 text-[15px] leading-7 md:text-base md:leading-7"
           onReady={onEditorReady}

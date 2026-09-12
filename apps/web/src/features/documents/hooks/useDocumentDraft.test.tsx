@@ -60,12 +60,14 @@ function projectDocument(version: number, content: string): ProjectDocument {
 function Probe({
   document,
   editable,
+  collaborative = false,
   onController = (value) => {
     controller = value;
   },
 }: {
   document: ProjectDocument;
   editable: boolean;
+  collaborative?: boolean;
   onController?: (value: DocumentDraftController) => void;
 }) {
   const value = useDocumentDraft({
@@ -73,6 +75,7 @@ function Probe({
     document,
     editable,
     userId: 'user-1',
+    collaborative,
   });
   onController(value);
   return null;
@@ -83,18 +86,24 @@ function renderInto(
   document: ProjectDocument,
   editable: boolean,
   onController?: (value: DocumentDraftController) => void,
+  collaborative = false,
 ) {
   act(() =>
     targetRoot.render(
       <QueryClientProvider client={queryClient}>
-        <Probe document={document} editable={editable} onController={onController} />
+        <Probe
+          document={document}
+          editable={editable}
+          collaborative={collaborative}
+          onController={onController}
+        />
       </QueryClientProvider>,
     ),
   );
 }
 
-function render(document: ProjectDocument, editable = true) {
-  renderInto(root, document, editable);
+function render(document: ProjectDocument, editable = true, collaborative = false) {
+  renderInto(root, document, editable, undefined, collaborative);
   assert.ok(controller);
 }
 
@@ -310,5 +319,38 @@ describe('useDocumentDraft', () => {
 
     act(() => tabBRoot.unmount());
     tabBElement.remove();
+  });
+});
+
+describe('collaborative document titles and legacy drafts', () => {
+  it('rebases title changes over body-only updates and protects a competing title', () => {
+    render(projectDocument(1, 'Initial'), true, true);
+    act(() => controller!.setTitle('My title'));
+    act(() => controller!.adoptServerDocument(projectDocument(2, 'Remote body')));
+    assert.equal(controller!.version, 2);
+    assert.equal(controller!.saveState, 'saved');
+    act(() =>
+      controller!.adoptServerDocument({
+        ...projectDocument(3, 'Remote body'),
+        title: 'Other title',
+      }),
+    );
+    assert.equal(controller!.title, 'My title');
+    assert.equal(controller!.saveState, 'conflict');
+    act(() => controller!.adoptServerDocument(projectDocument(1, 'Stale body')));
+    assert.equal(controller!.version, 3);
+  });
+  it('preserves a body draft made before collaborative editing was enabled', () => {
+    window.localStorage.setItem(
+      'itsaplan:document-draft:user-1:SEKTA:42',
+      JSON.stringify({ title: 'Runbook', content: 'Unsaved old editor text', baseVersion: 1 }),
+    );
+    render(projectDocument(1, 'Initial'), true, true);
+    assert.equal(controller!.legacyDraft, true);
+    assert.equal(controller!.content, 'Unsaved old editor text');
+    assert.equal(controller!.saveState, 'conflict');
+    act(() => controller!.replaceWith(projectDocument(2, 'Current')));
+    assert.equal(controller!.legacyDraft, false);
+    assert.equal(controller!.content, 'Current');
   });
 });

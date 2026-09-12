@@ -55,8 +55,8 @@ export default function DocumentOptionsMenu({
   projectKey: string;
   document: ProjectDocument;
   title: string;
-  content: string;
-  richHtml: string;
+  content: () => string;
+  richHtml: () => string;
   stickyToolbar: boolean;
   canCreate: boolean;
   canUpdate: boolean;
@@ -80,10 +80,10 @@ export default function DocumentOptionsMenu({
 
   const copyMarkdown = useCallback(async () => {
     try {
-      await navigator.clipboard.writeText(content);
+      await navigator.clipboard.writeText(content());
     } catch {
       const input = window.document.createElement('textarea');
-      input.value = content;
+      input.value = content();
       input.style.position = 'fixed';
       input.style.opacity = '0';
       try {

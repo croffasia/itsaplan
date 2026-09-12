@@ -37,8 +37,8 @@ export default function DocumentExportDialog({
   projectKey: string;
   documentId: number;
   title: string;
-  content: string;
-  richHtml: string;
+  content: () => string;
+  richHtml: () => string;
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations('documents');
@@ -65,8 +65,8 @@ export default function DocumentExportDialog({
     try {
       const result = await createPortableDocumentExport({
         title,
-        content,
-        richHtml,
+        content: content(),
+        richHtml: richHtml(),
         format,
         projectKey,
         documentId,

@@ -92,6 +92,7 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
           key={selected.issueId}
           project={project}
           issueId={selected.issueId}
+          issueSeq={selected.issueSeq}
           isMobile={isMobile}
           onBack={() => setSelected(null)}
           onDeleted={() => setSelected(null)}

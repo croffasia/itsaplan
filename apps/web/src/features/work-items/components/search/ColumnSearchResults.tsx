@@ -17,6 +17,7 @@ export function ColumnSearchResults() {
       : Math.max(0, Math.min(previousFocusedIndex.current, results.length - 1));
   previousFocusedIndex.current = focusedIndex;
   const virtualizer = useVirtualizer({
+    useFlushSync: false,
     count: results.length,
     getScrollElement: () => scrollRef.current,
     estimateSize: () => 128,

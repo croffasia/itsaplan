@@ -4,6 +4,7 @@ import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { View } from '@/lib/api/endpoints/views';
 import type { NewIssueDefaults } from '@/utils/project';
+import type { WorkItemsViewProps } from '@/utils/project';
 import type { useViewEditor } from '@/hooks/useViewEditor';
 
 // What the Shell layout provides to its child pages (the work items view and the
@@ -16,6 +17,10 @@ export type ShellContext = {
   views: View[];
   editor: ReturnType<typeof useViewEditor>;
   customFields: CustomField[];
+  boardStatus: Omit<NonNullable<WorkItemsViewProps['searchSource']>, 'issues' | 'unfilteredIssues'>;
+  overlayOpen: boolean;
+  setBoardOverlayOpen: (open: boolean) => void;
+  viewerId: string | null;
   // Opens an issue. Without `mode` the account's issueOpenMode preference decides
   // between the side panel and the issue page; pass it to force one of them.
   onOpenIssue: (id: number, mode?: IssueOpenMode) => void;

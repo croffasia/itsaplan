@@ -33,6 +33,9 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   const projectQuery = useProjectQuery(projectKey);
   const boardIssuesQuery = useBoardIssuesQuery(projectKey);
   const scaffold = projectQuery.data ?? null;
+  const boardForbidden =
+    boardIssuesQuery.error instanceof ApiError &&
+    [401, 403].includes(boardIssuesQuery.error.status);
   // The cycle options join the composite so grouping by cycle can lay out a lane
   // per cycle a board plans into, not only per cycle an issue is already in. The
   // whole list is not loaded: it grows with every finished cycle, and a finished
@@ -43,11 +46,11 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
       scaffold
         ? {
             ...scaffold,
-            issues: boardIssuesQuery.data?.issues ?? [],
+            issues: boardForbidden ? [] : (boardIssuesQuery.data?.issues ?? []),
             plannedCycles: cyclesQuery.data ?? [],
           }
         : null,
-    [scaffold, boardIssuesQuery.data, cyclesQuery.data],
+    [scaffold, boardIssuesQuery.data, boardForbidden, cyclesQuery.data],
   );
 
   const viewsQuery = useViewsQuery(projectKey);
@@ -105,6 +108,14 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
     views,
     editor,
     customFields,
+    boardStatus: {
+      loading: boardIssuesQuery.isPending,
+      hasData: boardIssuesQuery.data != null,
+      error: boardIssuesQuery.error,
+      onRetry: () => {
+        void boardIssuesQuery.refetch();
+      },
+    },
     canCreateIssue,
     errorMsg: errorMessage(error),
     // A 403 on the scaffold means the session is valid but the user is not a member

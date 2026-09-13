@@ -21,6 +21,9 @@ import { useIncomingCount } from '../../hooks/useIncomingCount';
 import { COLUMN_WIDTH, PINNED_COLUMN } from '../../utils/kanban';
 import { wipAllows, wipFullColor, WIP_FULL_TINT, type WipState } from '../../utils/wipLimit';
 import { WipCount } from './WipCount';
+import { useColumnSearchContext } from '../../context/columnSearchContext';
+import { ColumnSearchEntry } from '../search/ColumnSearchEntry';
+import { ColumnSearchPanel } from '../search/ColumnSearchPanel';
 
 // The add button sits under the last card, outside the measured cards. It carries
 // its own copy of the gap that CardDropSlot puts above a card (pt-2).
@@ -79,8 +82,11 @@ export function BoardColumn({
   readOnly?: boolean;
 }) {
   const t = useTranslations('workItems');
+  const search = useColumnSearchContext();
+  const searching = search.active?.key === group.key;
+  const inlineSearch = searching && search.active?.mode === 'inline';
   const { can } = usePermissions();
-  const canCreateIssue = can('work_items', 'create') && !readOnly;
+  const canCreateIssue = can('work_items', 'create') && !readOnly && !searching;
   const scrollRef = useRef<HTMLDivElement>(null);
   // A column with a full hard limit accepts no card from another column. It is not
   // a drop target during such a drag. Cards already in the column still reorder
@@ -92,15 +98,17 @@ export function BoardColumn({
   const columnId = `col:${group.key}`;
   const { setNodeRef: dropRef, isOver } = useDroppable({
     id: columnId,
-    disabled: closed,
+    disabled: closed || searching || readOnly,
     data: { onDrop: (ids: number[]) => onMoveIssue(ids, group, issues.length) },
   });
   const mergedRef = useCallback(
     (el: HTMLDivElement | null) => {
       scrollRef.current = el;
+      if (el) search.columnRefs.current.set(group.key, el);
+      else search.columnRefs.current.delete(group.key);
       dropRef(el);
     },
-    [dropRef],
+    [dropRef, search.columnRefs, group.key],
   );
   const isOverColumn = useIsOverContainer(columnId, issues);
 
@@ -110,6 +118,7 @@ export function BoardColumn({
     estimateSize: () => 130,
     overscan: 8,
     getItemKey: (index) => issues[index].id,
+    enabled: !inlineSearch,
   });
   const cardsHeight = virtualizer.getTotalSize();
 
@@ -123,15 +132,17 @@ export function BoardColumn({
       style={{ width: COLUMN_WIDTH }}
     >
       <div className="mb-2 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+        <div className="flex min-w-0 items-center gap-2 text-sm font-medium text-foreground">
           <GroupDot group={group} />
-          {group.name}
+          <span dir="auto" className="min-w-0 truncate" title={group.name}>
+            {group.name}
+          </span>
           <WipCount filteredCount={issues.length} wip={wip} filtered={filtered} />
         </div>
         <div className="flex items-center gap-1">
           {!readOnly && (
             <>
-              <SelectAllToggle ids={issues.map((i) => i.id)} />
+              {!searching && <SelectAllToggle ids={issues.map((i) => i.id)} />}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
@@ -195,8 +206,12 @@ export function BoardColumn({
         </div>
       </div>
 
+      {!inlineSearch && <ColumnSearchEntry groupKey={group.key} />}
+      {inlineSearch && <ColumnSearchPanel />}
       <div
         ref={mergedRef}
+        hidden={inlineSearch}
+        inert={searching}
         className={cn(
           'min-h-0 flex-1 overflow-y-auto rounded-md',
           isOverColumn && 'bg-kanban-column-raised',
@@ -226,7 +241,7 @@ export function BoardColumn({
               >
                 <CardDropSlot
                   issueId={issue.id}
-                  disabled={!manualOrder || closed}
+                  disabled={!manualOrder || closed || searching || readOnly}
                   onDrop={(ids) => onMoveIssue(ids, group, vi.index)}
                 >
                   <BoardCard
@@ -236,6 +251,7 @@ export function BoardColumn({
                     properties={properties}
                     onOpen={onOpenIssue}
                     readOnly={readOnly}
+                    interactionDisabled={searching}
                   />
                 </CardDropSlot>
               </div>

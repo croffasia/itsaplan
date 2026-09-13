@@ -27,6 +27,9 @@ import { WipCount } from './WipCount';
 import { SelectAllToggle } from './SelectAllToggle';
 import { CardOverlay } from './CardOverlay';
 import { SwimlaneCell } from './SwimlaneCell';
+import { useColumnSearchContext } from '../../context/columnSearchContext';
+import { ColumnSearchEntry } from '../search/ColumnSearchEntry';
+import { ColumnSearchPanel } from '../search/ColumnSearchPanel';
 import {
   boardCollision,
   COLUMN_WIDTH,
@@ -56,6 +59,7 @@ export default function SwimlaneBoard({
   onOpenIssue,
   readOnly,
 }: WorkItemsViewProps) {
+  const search = useColumnSearchContext();
   const sortedOrderMessage = useSortedOrderMessage();
   const wipLimitMessage = useWipLimitMessage();
   const groupLabels = useGroupLabels();
@@ -66,6 +70,8 @@ export default function SwimlaneBoard({
 
   const maps = buildMaps(project);
   const columnGroups = buildGroups(project, settings.group, groupLabels, filters);
+  if (search.group && !columnGroups.some((column) => column.key === search.group?.key))
+    columnGroups.push(search.group);
   const swimlaneGroups = buildGroups(project, settings.subgroup, groupLabels, filters);
   const sorted = sortIssues(project.issues, settings.sort, project);
   const nested = nestIssues(
@@ -86,7 +92,9 @@ export default function SwimlaneBoard({
   );
   const columns = settings.showEmptyGroups
     ? columnGroups
-    : columnGroups.filter((c) => (columnTotals.get(c.key) ?? 0) > 0);
+    : columnGroups.filter(
+        (c) => (columnTotals.get(c.key) ?? 0) > 0 || c.key === search.active?.key,
+      );
 
   // Build one row per swimlane, dropping empty swimlanes when empty groups are
   // hidden.
@@ -170,97 +178,116 @@ export default function SwimlaneBoard({
     >
       {/* A click on the board background (not a card or control) clears the
           selection, like Escape. */}
-      <div
-        ref={scrollRef}
-        className="h-full overflow-auto"
-        onClick={() => selection.isSelecting && selection.clear()}
-      >
-        <div style={{ width: innerWidth }}>
-          {/* Column header row, sticky so it stays put while swimlanes scroll. */}
-          <div
-            className="sticky top-0 z-10 flex gap-3 border-b bg-background px-4 py-2"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {columns.map((column) => (
-              <div
-                key={column.key}
-                className="group/column flex items-center gap-2 text-sm font-medium text-foreground"
-                style={{ width: COLUMN_WIDTH }}
-              >
-                <GroupDot group={column} />
-                <span className="truncate">{column.name}</span>
-                {/* The limit is the whole column's, so it sits here rather than on
-                    the swimlane cells, whose counts stay plain. */}
-                <WipCount
-                  filteredCount={columnTotals.get(column.key) ?? 0}
-                  wip={wipOf(column)}
-                  filtered={filtered}
-                />
-                {!readOnly && (
-                  <SelectAllToggle ids={idsByColumn.get(column.key) ?? []} className="ml-auto" />
-                )}
-              </div>
-            ))}
-          </div>
-
-          <div style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}>
-            {virtualizer.getVirtualItems().map((vi) => {
-              const row = rows[vi.index];
-              const isCollapsed = collapsed.values.has(row.swimlane.key);
-              return (
+      <div className="[container-type:size] relative h-full">
+        <div
+          ref={(element) => {
+            scrollRef.current = element;
+            search.boardRef.current = element;
+          }}
+          className="h-full overflow-auto"
+          onClick={() => selection.isSelecting && selection.clear()}
+        >
+          <div style={{ width: innerWidth }}>
+            {/* Column header row, sticky so it stays put while swimlanes scroll. */}
+            <div
+              className="sticky top-0 z-10 flex gap-3 border-b bg-background px-4 py-2"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {columns.map((column) => (
                 <div
-                  key={vi.key}
-                  data-index={vi.index}
-                  ref={virtualizer.measureElement}
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    width: '100%',
-                    transform: `translateY(${vi.start}px)`,
-                  }}
+                  key={column.key}
+                  className="group/column relative shrink-0 text-sm font-medium text-foreground"
+                  style={{ width: COLUMN_WIDTH }}
                 >
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      collapsed.toggle(row.swimlane.key);
-                    }}
-                    className="flex w-full items-center gap-2 bg-muted/30 px-4 py-1.5 text-sm font-medium text-foreground"
-                  >
-                    {isCollapsed ? (
-                      <ChevronRight className="size-3.5 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="size-3.5 text-muted-foreground" />
+                  <div className="flex h-7 items-center gap-2">
+                    <GroupDot group={column} />
+                    <span dir="auto" className="min-w-0 truncate">
+                      {column.name}
+                    </span>
+                    {/* The limit is the whole column's, so it sits here rather than on
+                    the swimlane cells, whose counts stay plain. */}
+                    <WipCount
+                      filteredCount={columnTotals.get(column.key) ?? 0}
+                      wip={wipOf(column)}
+                      filtered={filtered}
+                    />
+                    {!readOnly && search.active?.key !== column.key && (
+                      <SelectAllToggle
+                        ids={idsByColumn.get(column.key) ?? []}
+                        className="ml-auto"
+                      />
                     )}
-                    <GroupDot group={row.swimlane} />
-                    {row.swimlane.name}
-                    <span className="text-muted-foreground">{row.count}</span>
-                  </button>
-
-                  {!isCollapsed && (
-                    <div className="flex gap-3 px-4 pt-2 pb-4">
-                      {row.cells.map(({ column, issues }) => (
-                        <SwimlaneCell
-                          key={column.key}
-                          project={project}
-                          issues={issues}
-                          maps={maps}
-                          properties={settings.properties}
-                          cellKey={`${row.swimlane.key}|${column.key}`}
-                          manualOrder={manualOrder}
-                          readOnly={readOnly}
-                          onOpenIssue={onOpenIssue}
-                          onMoveIssue={(issueIds, index) =>
-                            moveIssue(row.swimlane, column, issues, issueIds, index)
-                          }
-                        />
-                      ))}
-                    </div>
+                  </div>
+                  <ColumnSearchEntry groupKey={column.key} />
+                  {search.active?.key === column.key && search.active.mode === 'inline' && (
+                    <ColumnSearchPanel className="absolute start-0 top-8 z-20 h-[calc(100cqh-48px)] w-full rounded-md bg-kanban-column p-2" />
                   )}
                 </div>
-              );
-            })}
+              ))}
+            </div>
+
+            <div
+              style={{ height: virtualizer.getTotalSize(), position: 'relative', width: '100%' }}
+            >
+              {virtualizer.getVirtualItems().map((vi) => {
+                const row = rows[vi.index];
+                const isCollapsed = collapsed.values.has(row.swimlane.key);
+                return (
+                  <div
+                    key={vi.key}
+                    data-index={vi.index}
+                    ref={virtualizer.measureElement}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${vi.start}px)`,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        collapsed.toggle(row.swimlane.key);
+                      }}
+                      className="flex w-full items-center gap-2 bg-muted/30 px-4 py-1.5 text-sm font-medium text-foreground"
+                    >
+                      {isCollapsed ? (
+                        <ChevronRight className="size-3.5 text-muted-foreground" />
+                      ) : (
+                        <ChevronDown className="size-3.5 text-muted-foreground" />
+                      )}
+                      <GroupDot group={row.swimlane} />
+                      {row.swimlane.name}
+                      <span className="text-muted-foreground">{row.count}</span>
+                    </button>
+
+                    {!isCollapsed && (
+                      <div className="flex gap-3 px-4 pt-2 pb-4">
+                        {row.cells.map(({ column, issues }) => (
+                          <SwimlaneCell
+                            key={column.key}
+                            project={project}
+                            issues={issues}
+                            maps={maps}
+                            properties={settings.properties}
+                            cellKey={`${row.swimlane.key}|${column.key}`}
+                            manualOrder={manualOrder}
+                            readOnly={readOnly}
+                            searching={search.active?.key === column.key}
+                            onOpenIssue={onOpenIssue}
+                            onMoveIssue={(issueIds, index) =>
+                              moveIssue(row.swimlane, column, issues, issueIds, index)
+                            }
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>

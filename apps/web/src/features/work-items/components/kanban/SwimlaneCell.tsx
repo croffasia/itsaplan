@@ -20,6 +20,7 @@ export function SwimlaneCell({
   cellKey,
   manualOrder,
   readOnly,
+  searching,
   onOpenIssue,
   onMoveIssue,
 }: {
@@ -33,6 +34,7 @@ export function SwimlaneCell({
   manualOrder: boolean;
   // In a read-only share a card click always opens the issue; multi-select is off.
   readOnly?: boolean;
+  searching?: boolean;
   onOpenIssue: (id: number) => void;
   onMoveIssue: (issueIds: number[], index: number) => void;
 }) {
@@ -40,15 +42,18 @@ export function SwimlaneCell({
   const cellId = `col:${cellKey}`;
   const { setNodeRef, isOver } = useDroppable({
     id: cellId,
+    disabled: searching || readOnly,
     data: { onDrop: (ids: number[]) => onMoveIssue(ids, issues.length) },
   });
   const isOverCell = useIsOverContainer(cellId, issues);
   return (
     <div
       ref={setNodeRef}
+      inert={searching}
       className={cn(
         'min-h-16 shrink-0 rounded-md bg-kanban-column px-3 py-2',
         isOverCell && 'bg-kanban-column-raised',
+        searching && 'invisible',
       )}
       style={{ width: COLUMN_WIDTH }}
     >
@@ -59,7 +64,7 @@ export function SwimlaneCell({
           <CardDropSlot
             key={issue.id}
             issueId={issue.id}
-            disabled={!manualOrder}
+            disabled={!manualOrder || searching || readOnly}
             onDrop={(ids) => onMoveIssue(ids, index)}
           >
             <BoardCard
@@ -69,6 +74,7 @@ export function SwimlaneCell({
               properties={properties}
               onOpen={onOpenIssue}
               readOnly={readOnly}
+              interactionDisabled={searching}
             />
           </CardDropSlot>
         ))}

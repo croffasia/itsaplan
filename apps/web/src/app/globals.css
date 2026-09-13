@@ -751,3 +751,43 @@
     background-position: -200% 0;
   }
 }
+
+.column-search-result {
+  background-color: var(--kanban-card);
+}
+
+@media (hover: hover) {
+  .column-search-result:hover {
+    background-color: var(--kanban-card-hover);
+  }
+}
+
+.column-search-surface[data-slot='dialog-content'] {
+  top: 0;
+  left: auto;
+  inset-inline-end: 0;
+  width: 100%;
+  max-width: none;
+  translate: none;
+  transform: none;
+  animation-duration: 250ms;
+  --tw-enter-scale: 1;
+  --tw-exit-scale: 1;
+}
+
+.column-search-surface[data-state='closed'] {
+  animation-duration: 150ms;
+}
+
+@media (min-width: 768px) {
+  .column-search-surface[data-slot='dialog-content'] {
+    width: min(560px, 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .column-search-surface[data-slot='dialog-content'] {
+    animation: none;
+    transition: none;
+  }
+}

@@ -22,7 +22,9 @@ See root `AGENTS.md` for monorepo-wide rules.
   caller stay with that caller — the api's settings routes, or god mode in
   `@repo/auth`. A config only one process reads does not belong here at all.
   Currently: the instance Telegram bot (api, bot, worker), the instance mail provider
-  (`@repo/auth`, api, worker), and a team's notification providers (api, worker).
+  (`@repo/auth`, api, worker), a team's notification providers (api, worker), and the
+  instance's upload limits and project-storage-quota accounting (api, worker — an
+  imported attachment is checked against the same limits an interactive upload is).
 - `src/migrate.ts` — programmatic migrator run on api container startup (no drizzle-kit in prod).
 - `drizzle/` — generated SQL migrations (committed).
 

@@ -23,6 +23,7 @@
     "actions": "Дії",
     "webhooks": "Вебхуки",
     "note_boards": "Дошки нотаток",
+    "import_export": "Імпорт/Експорт",
     "danger_zone": "Небезпечна зона"
   },
   "actions": {

@@ -17,7 +17,7 @@ import {
   setScimSettings,
   rotateScimToken,
 } from '@repo/auth';
-import { hasConfiguredEmailProvider } from '@repo/db';
+import { hasConfiguredEmailProvider, getStorageSettings } from '@repo/db';
 import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
 import { authContext } from '#shared/auth-context';
 import { requireGod } from '#shared/access';
@@ -80,7 +80,6 @@ import { emailTestError } from './email-test';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
 import { SCIM_BASE_URL } from '#modules/scim/resource';
 import {
-  getStorageSettings,
   setStorageSettings,
   getHotkeySettings,
   setHotkeySettings,

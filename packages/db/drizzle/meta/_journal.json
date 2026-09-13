@@ -897,6 +897,20 @@
       "when": 1788917221155,
       "tag": "0127_solid_daimon_hellstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1789116549970,
+      "tag": "0128_steady_silver_centurion",
+      "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1789136427324,
+      "tag": "0129_open_domino",
+      "breakpoints": true
     }
   ]
 }

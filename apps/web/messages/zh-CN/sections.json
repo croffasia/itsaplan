@@ -101,6 +101,10 @@
       "label": "仓库",
       "description": "当关联的拉取请求在 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上合并时关闭工作项。"
     },
+    "import-export": {
+      "label": "导入/导出",
+      "description": "从自托管的 Plane 实例导入工作项、评论和标签，或将该项目的数据导出为 JSON。"
+    },
     "ai-agents": {
       "label": "AI 代理",
       "description": "在该项目中工作的 AI 代理。"

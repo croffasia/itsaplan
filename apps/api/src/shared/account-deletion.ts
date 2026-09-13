@@ -1,6 +1,6 @@
 import { db, documentAsset, projectDocument, user } from '@repo/db';
 import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
-import { deleteObjects } from './s3';
+import { deleteObjects } from '@repo/storage';
 
 const DOCUMENT_TREE_LOCK_NAMESPACE = 1_145_390_931;
 

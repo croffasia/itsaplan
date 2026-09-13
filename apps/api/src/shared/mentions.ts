@@ -14,12 +14,19 @@ const MENTION_RE = /(?<![\w@.-])@([a-zA-Z0-9_](?:[a-zA-Z0-9._-]*[a-zA-Z0-9_])?)/
 // Markup an @ belongs to rather than addressing anyone: a fenced block, an inline
 // span of code, a link or an image, and a bare URL. The editor skips the same
 // markup when it renders the chips, so what reads as a mention is what notifies.
+// A span that fails to close stops at the next character that could open the same
+// span ([ inside a link, < inside an autolink), so a text of unclosed openers is
+// scanned once rather than once per opener.
 const NOT_A_MENTION_RE =
-  /```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`]*`|!?\[[^\]]*\]\([^)]*\)|<[^>\s]+>|\bhttps?:\/\/\S+/g;
+  /```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`]*`|!?\[[^[\]]*\]\([^)[]*\)|<[^<>\s]+>|\bhttps?:\/\/\S+/g;
+
+// Longer than any text the API accepts; a text past it is not scanned at all.
+const MAX_MENTION_TEXT_LENGTH = 100_000;
 
 // The distinct handles mentioned in the text, lowercased, in first-seen order.
 // Usernames are issued case-insensitively, so the comparison is too.
 export function parseMentionHandles(text: string): string[] {
+  if (text.length > MAX_MENTION_TEXT_LENGTH) return [];
   const handles = new Set<string>();
   for (const match of text.replace(NOT_A_MENTION_RE, ' ').matchAll(MENTION_RE))
     handles.add(match[1].toLowerCase());

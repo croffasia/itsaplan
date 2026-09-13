@@ -22,7 +22,12 @@ import {
 } from '@repo/db';
 import { and, eq, gt, isNull, isNotNull, sql } from 'drizzle-orm';
 import { decryptSecret, type EncryptedSecret } from '@repo/crypto';
-import { putObject, safeAttachmentFilename, attachmentObjectKey } from '@repo/storage';
+import {
+  putObject,
+  deleteObject,
+  safeAttachmentFilename,
+  attachmentObjectKey,
+} from '@repo/storage';
 import type { CanonicalState, CanonicalLabel, CanonicalCycle } from './canonical';
 import type { PlaneCredential } from './plane-adapter';
 
@@ -754,29 +759,34 @@ export async function createLocalAttachmentAndRecord(
   const key = attachmentObjectKey(input.projectId, 'attachments', input.issueId, filename);
   await putObject(key, input.bytes, input.contentType);
 
-  return db.transaction(async (tx) => {
-    await lockAttachmentStorage(tx, input.projectId);
-    if (limits.projectQuotaMb > 0) {
-      // Re-checked against the lock: the check above ran before the upload,
-      // outside any lock, so a concurrent write could have landed since.
-      const used = await projectStoredBytes(input.projectId, tx);
-      if (used + input.bytes.length > limits.projectQuotaMb * MB) {
-        throw new AttachmentRejectedError(
-          `the project has used its ${limits.projectQuotaMb} MB storage quota`,
-        );
+  try {
+    return await db.transaction(async (tx) => {
+      await lockAttachmentStorage(tx, input.projectId);
+      if (limits.projectQuotaMb > 0) {
+        // Re-checked against the lock: the check above ran before the upload,
+        // outside any lock, so a concurrent write could have landed since.
+        const used = await projectStoredBytes(input.projectId, tx);
+        if (used + input.bytes.length > limits.projectQuotaMb * MB) {
+          throw new AttachmentRejectedError(
+            `the project has used its ${limits.projectQuotaMb} MB storage quota`,
+          );
+        }
       }
-    }
-    const [row] = await tx
-      .insert(issueAttachment)
-      .values({
-        issueId: input.issueId,
-        s3Key: key,
-        filename,
-        contentType: input.contentType,
-        sizeBytes: input.bytes.length,
-      })
-      .returning({ id: issueAttachment.id });
-    await upsertImportRecordWith(tx, jobId, 'attachment', sourceId, 'attachment', row!.id);
-    return row!.id;
-  });
+      const [row] = await tx
+        .insert(issueAttachment)
+        .values({
+          issueId: input.issueId,
+          s3Key: key,
+          filename,
+          contentType: input.contentType,
+          sizeBytes: input.bytes.length,
+        })
+        .returning({ id: issueAttachment.id });
+      await upsertImportRecordWith(tx, jobId, 'attachment', sourceId, 'attachment', row!.id);
+      return row!.id;
+    });
+  } catch (error) {
+    await deleteObject(key).catch(() => {});
+    throw error;
+  }
 }

@@ -19,13 +19,13 @@ returns.
 - `packages/storage` and `packages/db/src/domains/storage.ts` — object storage and upload
   limits, shared with `apps/api` so an imported attachment is held to the same rules an
   interactive upload is.
-- `apps/api/src/modules/import-jobs/` — create/test-connection/plane-preview/export/status/
+- `apps/api/src/modules/import-export/` — create/test-connection/plane-preview/export/status/
   pause/resume/cancel routes.
 - `apps/web/src/features/settings/components/import-export/` — the Settings page.
 
 ## Export: a JSON snapshot, not a live sync
 
-`apps/api/src/modules/import-jobs/export.ts` (`GET /projects/:projectKey/import-jobs/export`,
+`apps/api/src/modules/import-export/export.ts` (`GET /projects/:projectKey/import-jobs/export`,
 gated the same as starting an import) reads a project's states, labels, cycles, and issues
 (with their comments and relations) directly via `@repo/db` and shapes them into a
 self-contained, human-readable JSON document — issues, parents, and relation targets are
@@ -47,7 +47,7 @@ Originally all missing against the design posted to #253; now built:
 - **Mapping review.** Picking a source project (`SettingsImportExportProjectPicker.tsx`) no
   longer starts the job directly — `SettingsImportExportMappingReview.tsx` fetches the
   source project's states from the new `POST /projects/:projectKey/import-jobs/plane-preview`
-  route (`testPlaneStatesPreview`, `apps/api/src/modules/import-jobs/service.ts`) and shows
+  route (`testPlaneStatesPreview`, `apps/api/src/modules/import-export/service.ts`) and shows
   each one with the category itsaplan would automatically map it to, editable before the job
   is created. Only a row the user actually changes is sent as a `stateOverrides` entry;
   `materializeStates` (`import-worker.ts`) resolves `overrides[state.sourceId] ?? state.

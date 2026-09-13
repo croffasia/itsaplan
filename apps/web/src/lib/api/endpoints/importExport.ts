@@ -1,7 +1,7 @@
 import { request } from '@/lib/api/core/client';
 
 // Import jobs bring issues in from a source Plane instance (mirrors apps/api
-// modules/import-jobs/service.ts). Creating one stores an encrypted credential
+// modules/import-export/service.ts). Creating one stores an encrypted credential
 // and leaves the job 'pending' for the worker to drive through its phases.
 
 export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';

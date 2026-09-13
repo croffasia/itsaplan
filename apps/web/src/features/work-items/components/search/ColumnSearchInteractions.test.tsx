@@ -43,7 +43,7 @@ const router = {
   push: () => {
     throw new Error('Task activation must use the board opening callback');
   },
-} as NonNullable<ContextType<typeof RouterContext>>;
+} as unknown as NonNullable<ContextType<typeof RouterContext>>;
 
 function Probe() {
   const state = useColumnSearchState('test:status', '/project/TEST');

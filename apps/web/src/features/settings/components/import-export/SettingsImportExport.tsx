@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
-import type { PlaneConnectionInput, PlaneProjectOption } from '@/lib/api/endpoints/importJobs';
+import type { PlaneConnectionInput, PlaneProjectOption } from '@/lib/api/endpoints/importExport';
 import { usePermissions } from '@/hooks/usePermissions';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
@@ -17,14 +17,14 @@ export interface PlaneConnection extends PlaneConnectionInput {
 
 // The Plane import flow: connect to a source instance, pick a project to import
 // from, and watch the jobs already started. A member who cannot start an import
-// (import_jobs: create) still sees the job list, since reading it needs only
-// import_jobs: read, which the page itself already requires.
+// (import_export: create) still sees the job list, since reading it needs only
+// import_export: read, which the page itself already requires.
 export default function SettingsImportExport({ project }: { project: ProjectDetail }) {
   const t = useTranslations('settings.importExport');
   const projectKey = project.project.key;
   const { can } = usePermissions();
-  const canCreate = can('import_jobs', 'create');
-  const canEdit = can('import_jobs', 'edit');
+  const canCreate = can('import_export', 'create');
+  const canEdit = can('import_export', 'edit');
   const [connection, setConnection] = useState<PlaneConnection | null>(null);
   const [selected, setSelected] = useState<PlaneProjectOption | null>(null);
 

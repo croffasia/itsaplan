@@ -33,14 +33,14 @@ import { exportProject } from './export';
 // touches the worker's queue directly, only the import_job/import_record rows it reads
 // and writes too.
 
-export const importJobRoutes = new Elysia({
-  name: 'import-jobs',
-  detail: { tags: ['Import Jobs'] },
+export const importExportRoutes = new Elysia({
+  name: 'import-export',
+  detail: { tags: ['Import/Export'] },
 })
   .use(authContext)
   .use(guards)
   .macro({
-    importJobEntity: entityGuard('import_jobs', 'Import job not found', (p) =>
+    importJobEntity: entityGuard('import_export', 'Import job not found', (p) =>
       getImportJobProjectId(Number(p.id)),
     ),
   })
@@ -49,7 +49,7 @@ export const importJobRoutes = new Elysia({
     '/projects/:projectKey/import-jobs/test-connection',
     ({ body }) => testPlaneConnection(body.baseUrl, body.workspaceSlug, body.apiToken),
     {
-      permission: ['import_jobs', 'create'],
+      permission: ['import_export', 'create'],
       body: testConnectionBody,
       response: { 200: TestConnectionResponse, ...commonErrors, ...errors(502) },
       detail: {
@@ -66,7 +66,7 @@ export const importJobRoutes = new Elysia({
     ({ body }) =>
       testPlaneStatesPreview(body.baseUrl, body.workspaceSlug, body.apiToken, body.planeProjectId),
     {
-      permission: ['import_jobs', 'create'],
+      permission: ['import_export', 'create'],
       body: planePreviewBody,
       response: { 200: PlanePreviewResponse, ...commonErrors, ...errors(502) },
       detail: {
@@ -79,7 +79,7 @@ export const importJobRoutes = new Elysia({
   )
 
   .get('/projects/:projectKey/import-jobs/export', ({ project }) => exportProject(project.id), {
-    permission: ['import_jobs', 'create'],
+    permission: ['import_export', 'create'],
     response: { 200: ProjectExportResponse, ...accessErrors },
     detail: {
       summary: "Export a project's data",
@@ -97,7 +97,7 @@ export const importJobRoutes = new Elysia({
       return createImportJob(project.id, requireUser(user).id, body);
     },
     {
-      permission: ['import_jobs', 'create'],
+      permission: ['import_export', 'create'],
       body: createImportJobBody,
       response: { 201: ImportJobResponse, ...commonErrors },
       detail: {
@@ -109,7 +109,7 @@ export const importJobRoutes = new Elysia({
   )
 
   .get('/projects/:projectKey/import-jobs', ({ project }) => listImportJobs(project.id), {
-    permission: ['import_jobs', 'read'],
+    permission: ['import_export', 'read'],
     response: { 200: t.Array(ImportJobResponse), ...accessErrors },
     detail: { summary: "List a project's import jobs" },
   })
@@ -121,7 +121,7 @@ export const importJobRoutes = new Elysia({
     async ({ params, user, request }) => {
       const job = await getImportJobDto(params.id);
       if (!job) throw new HttpError(404, 'Import job not found');
-      await assertPermission(job.projectId, user, 'import_jobs', 'read');
+      await assertPermission(job.projectId, user, 'import_export', 'read');
       await assertMcpAllowed(job.projectId, request.headers);
       return job;
     },
@@ -131,7 +131,7 @@ export const importJobRoutes = new Elysia({
       detail: {
         summary: 'Get an import job',
         description: 'Get the status and per-entity progress counts of an import job.',
-        ...requiresPermission(['import_jobs', 'read']),
+        ...requiresPermission(['import_export', 'read']),
       },
     },
   )

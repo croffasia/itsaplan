@@ -51,7 +51,7 @@ import {
   pauseImportJob,
   resumeImportJob,
   cancelImportJob,
-} from '@/lib/api/endpoints/importJobs';
+} from '@/lib/api/endpoints/importExport';
 import {
   createIssueTemplate,
   updateIssueTemplate,

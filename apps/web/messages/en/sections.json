@@ -102,8 +102,8 @@
       "description": "Close issues when their pull requests merge on GitHub, GitLab, Gitea, Forgejo, or Bitbucket."
     },
     "import-export": {
-      "label": "Import",
-      "description": "Bring issues, comments, and labels in from a self-hosted Plane instance."
+      "label": "Import/Export",
+      "description": "Bring issues, comments, and labels in from a self-hosted Plane instance, or export this project's data as JSON."
     },
     "ai-agents": {
       "label": "AI Agents",

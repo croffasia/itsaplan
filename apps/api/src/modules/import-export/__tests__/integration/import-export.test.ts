@@ -312,7 +312,7 @@ describe('import jobs', () => {
       expect(res.status).toBe(400);
     });
 
-    it('denies a member whose role lacks the import_jobs permission', async () => {
+    it('denies a member whose role lacks the import_export permission', async () => {
       const { api } = await setupOwnerProject();
       const member = await addMember(api);
       const res = await jobs(member)['plane-preview'].post({
@@ -343,7 +343,7 @@ describe('import jobs', () => {
       expect((await entity(outsider, created.id).pause.post()).status).toBe(403);
     });
 
-    it('denies a member whose role lacks the import_jobs permission', async () => {
+    it('denies a member whose role lacks the import_export permission', async () => {
       const { api } = await setupOwnerProject();
       const created = (await jobs(api).post(validBody)).data!;
       const member = await addMember(api);
@@ -354,11 +354,11 @@ describe('import jobs', () => {
       expect((await entity(member, created.id).pause.post()).status).toBe(403);
     });
 
-    it('allows a member whose role grants the import_jobs permission', async () => {
+    it('allows a member whose role grants the import_export permission', async () => {
       const { api } = await setupOwnerProject();
       const role = await createRole(api, 'MKT', {
         name: 'Importer',
-        permissions: { import_jobs: { create: true, read: true, edit: true } },
+        permissions: { import_export: { create: true, read: true, edit: true } },
       });
       const member = await addMember(api, { roleId: role.data!.id });
 
@@ -410,7 +410,7 @@ describe('import jobs', () => {
       expect(exportedIssue?.comments).toMatchObject([{ body: 'looking into it' }]);
     });
 
-    it('denies a member whose role lacks the import_jobs permission', async () => {
+    it('denies a member whose role lacks the import_export permission', async () => {
       const { api } = await setupOwnerProject();
       const member = await addMember(api);
       const res = await jobs(member).export.get();

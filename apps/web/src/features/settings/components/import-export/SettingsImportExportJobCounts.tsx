@@ -1,5 +1,5 @@
 import { useTranslations } from 'next-intl';
-import type { ImportEntityType, ImportJob } from '@/lib/api/endpoints/importJobs';
+import type { ImportEntityType, ImportJob } from '@/lib/api/endpoints/importExport';
 import { Progress } from '@/components/ui/progress';
 
 const ENTITY_ORDER: ImportEntityType[] = [

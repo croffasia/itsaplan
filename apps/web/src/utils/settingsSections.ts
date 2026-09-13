@@ -107,7 +107,7 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     slug: 'import-export',
     icon: Import,
-    resource: 'import_jobs',
+    resource: 'import_export',
     group: 'automation',
   },
 ];

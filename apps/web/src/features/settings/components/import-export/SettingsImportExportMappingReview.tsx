@@ -20,7 +20,7 @@ import type {
   PlaneProjectOption,
   StateCategory,
   UnmatchedUserPolicy,
-} from '@/lib/api/endpoints/importJobs';
+} from '@/lib/api/endpoints/importExport';
 import type { PlaneConnection } from './SettingsImportExport';
 
 // Shown once a source project is picked, before the job is created: the states

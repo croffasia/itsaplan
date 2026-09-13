@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { PlaneConnection } from './SettingsImportExport';
-import type { PlaneProjectOption } from '@/lib/api/endpoints/importJobs';
+import type { PlaneProjectOption } from '@/lib/api/endpoints/importExport';
 
 // The projects of the tested workspace. Selecting one is reported to the parent,
 // which shows the mapping review step for it — this component only picks.

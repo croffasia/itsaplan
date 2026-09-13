@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { exportProject } from '@/lib/api/endpoints/importJobs';
+import { exportProject } from '@/lib/api/endpoints/importExport';
 
 // Downloads a self-contained JSON snapshot of the project's data. A plain read, not a
 // mutation, so it builds and triggers the file save itself rather than going through

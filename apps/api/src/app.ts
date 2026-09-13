@@ -122,8 +122,10 @@ export const app = new Elysia()
           },
           { name: 'Imports', description: 'Import drafts that turn an uploaded file into issues' },
           {
-            name: 'Import Jobs',
-            description: 'Background jobs that import issues from an external tracker (Plane)',
+            name: 'Import/Export',
+            description:
+              'Background jobs that import issues from an external tracker (Plane), and a ' +
+              "project's own data exported as a portable JSON snapshot",
           },
           { name: 'Avatars', description: "Current user's avatar image (upload and raw bytes)" },
           { name: 'Views', description: 'Saved work items views' },

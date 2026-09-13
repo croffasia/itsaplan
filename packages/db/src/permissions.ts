@@ -26,7 +26,7 @@ export const PERMISSION_RESOURCES = [
   'actions',
   'webhooks',
   'note_boards',
-  'import_jobs',
+  'import_export',
   'danger_zone',
 ] as const;
 export type PermissionResource = (typeof PERMISSION_RESOURCES)[number];

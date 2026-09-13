@@ -23,6 +23,7 @@
     "actions": "Actions",
     "webhooks": "Webhooks",
     "note_boards": "Note boards",
+    "import_export": "Import/Export",
     "danger_zone": "Danger zone"
   },
   "actions": {

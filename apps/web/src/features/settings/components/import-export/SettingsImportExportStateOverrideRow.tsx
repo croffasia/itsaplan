@@ -6,7 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { PlaneStateOption, StateCategory } from '@/lib/api/endpoints/importJobs';
+import type { PlaneStateOption, StateCategory } from '@/lib/api/endpoints/importExport';
 
 const STATE_CATEGORIES: StateCategory[] = [
   'backlog',

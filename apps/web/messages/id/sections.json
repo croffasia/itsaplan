@@ -102,8 +102,8 @@
       "description": "Tutup issue saat pull request digabungkan di GitHub, GitLab, Gitea, Forgejo, atau Bitbucket."
     },
     "import-export": {
-      "label": "Impor",
-      "description": "Impor issue, komentar, dan label dari instans Plane self-hosted."
+      "label": "Impor/Ekspor",
+      "description": "Impor issue, komentar, dan label dari instans Plane self-hosted, atau ekspor data proyek ini sebagai JSON."
     },
     "ai-agents": {
       "label": "Agen AI",

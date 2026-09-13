@@ -23,6 +23,7 @@
     "actions": "الإجراءات",
     "webhooks": "خطافات الويب (webhooks)",
     "note_boards": "لوحات الملاحظات",
+    "import_export": "استيراد/تصدير",
     "danger_zone": "منطقة الخطر"
   },
   "actions": {

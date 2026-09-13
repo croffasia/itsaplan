@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import type { ImportJob } from '@/lib/api/endpoints/importJobs';
+import type { ImportJob } from '@/lib/api/endpoints/importExport';
 import { formatDateTime } from '@/utils/dates';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

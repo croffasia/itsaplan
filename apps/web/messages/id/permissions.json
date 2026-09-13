@@ -23,6 +23,7 @@
     "actions": "Tindakan",
     "webhooks": "Webhook",
     "note_boards": "Papan catatan",
+    "import_export": "Impor/Ekspor",
     "danger_zone": "Zona bahaya"
   },
   "actions": {

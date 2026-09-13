@@ -39,7 +39,8 @@ export interface ViewPatch {
   display?: SavedViewDisplay;
 }
 
-export const listViews = (projectKey: string) => request<View[]>(`/projects/${projectKey}/views`);
+export const listViews = (projectKey: string, signal?: AbortSignal) =>
+  request<View[]>(`/projects/${encodeURIComponent(projectKey)}/views`, { signal });
 
 export const createView = (projectKey: string, input: NewViewInput) =>
   request<View>(`/projects/${projectKey}/views`, { method: 'POST', body: JSON.stringify(input) });

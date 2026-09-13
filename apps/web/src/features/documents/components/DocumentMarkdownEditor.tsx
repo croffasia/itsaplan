@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { JSONContent } from '@tiptap/core';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Color from '@tiptap/extension-color';
@@ -19,6 +19,9 @@ import { useTranslations } from 'next-intl';
 import { Markdown } from 'tiptap-markdown';
 import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
 import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
+import EditorLinkPreview from '@/components/common/editor/EditorLinkPreview';
+import { createLinkKeyboardHandlers } from '@/components/common/editor/linkKeyboardHandlers';
+import { openLinkOnModifierClick } from '@/components/common/editor/modifierClickLink';
 import { ResizableImage } from '@/components/common/editor/tiptap-image';
 import { MarkdownTable } from '@/components/common/editor/tiptap-table';
 import { pasteMarkdown } from '@/components/common/editor/pasteMarkdown';
@@ -82,6 +85,7 @@ export function documentEditorExtensions(labels: EditorLabels) {
       autolink: true,
       defaultProtocol: 'https',
       openOnClick: true,
+      HTMLAttributes: { class: 'cursor-pointer', tabindex: '0' },
       isAllowedUri: safeDocumentLinkHref,
     }),
     ResizableImage,
@@ -132,6 +136,7 @@ export default function DocumentMarkdownEditor({
 }) {
   const t = useTranslations('documents.toolbar');
   const editorRef = useRef<Editor | null>(null);
+  const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   const editableRef = useRef(editable);
   editableRef.current = editable;
 
@@ -161,6 +166,10 @@ export default function DocumentMarkdownEditor({
     }),
     content: defaultJson ?? defaultValue,
     editorProps: {
+      handleDOMEvents: linkKeyboardHandlers,
+      handleClick(view, _pos, event) {
+        return openLinkOnModifierClick(event, view.dom);
+      },
       attributes: {
         class: 'md-content flex-1 focus:outline-none selection:bg-primary/15',
       },
@@ -222,6 +231,7 @@ export default function DocumentMarkdownEditor({
       {editable && <EditorSelectionMenu editor={editor} />}
       {editable && <EditorTableMenu editor={editor} />}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
+      <EditorLinkPreview editor={editor} />
     </div>
   );
 }

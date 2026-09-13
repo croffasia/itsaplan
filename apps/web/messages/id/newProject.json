@@ -1,0 +1,50 @@
+{
+  "name": "Nama",
+  "key": "Kunci (singkat, mis. MKT)",
+  "copyKey": "Kunci",
+  "description": "Deskripsi",
+  "issueTypes": "Jenis issue",
+  "typesCreated": "{count, plural, one {# jenis issue} other {# jenis issue}} akan dibuat",
+  "defaultType": "Issue baru akan menggunakan {type} secara bawaan. Jenis dapat diedit di pengaturan.",
+  "presets": {
+    "general": "Umum",
+    "software": "Perangkat lunak",
+    "product": "Produk",
+    "content": "Konten",
+    "marketing": "Pemasaran",
+    "design": "Desain",
+    "sales": "Penjualan",
+    "operations": "Operasional",
+    "support": "Dukungan",
+    "recruiting": "Perekrutan"
+  },
+  "copyConfiguration": "Salin konfigurasi",
+  "selectAll": "Pilih semua",
+  "clearAll": "Hapus semua",
+  "copyGroups": {
+    "workflow": "Alur kerja",
+    "automation": "Otomatisasi",
+    "views": "Tampilan",
+    "aiTeam": "Tim AI",
+    "knowledge": "Pengetahuan"
+  },
+  "copyItems": {
+    "states": "Status",
+    "issueTypes": "Jenis issue",
+    "labels": "Label",
+    "customFields": "Bidang kustom",
+    "views": "Tampilan",
+    "dashboards": "Dasbor",
+    "documents": "Dokumen",
+    "actions": "Tindakan",
+    "configuration": "Konfigurasi",
+    "webhooks": "Webhook",
+    "agents": "Agen",
+    "schedules": "Jadwal"
+  },
+  "title": "Proyek baru",
+  "copyTitle": "Salin proyek \"{name}\"",
+  "create": "Buat proyek",
+  "copyAction": "Salin proyek",
+  "copyName": "Salinan {name}"
+}

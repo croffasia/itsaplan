@@ -20,11 +20,13 @@ COPY packages/mailer/package.json ./packages/mailer/
 COPY packages/net/package.json ./packages/net/
 COPY packages/runner/package.json ./packages/runner/
 COPY packages/eslint-config/package.json ./packages/eslint-config/
-# --filter api installs only the api workspace and its dependency closure, so the
-# image excludes every other app's deps. INSTALL_FLAGS defaults to --production;
-# the test gate overrides it to "" so the api suite gets its devDeps (@elysiajs/eden).
+# INSTALL_FILTER installs only the api workspace and its dependency closure, so the
+# image excludes every other app's deps. INSTALL_FLAGS defaults to --production; the
+# test gate overrides both — it runs the bot and worker suites out of this image, and
+# those need their own workspace links and the devDeps the suites import.
+ARG INSTALL_FILTER="--filter api"
 ARG INSTALL_FLAGS="--production"
-RUN bun install --frozen-lockfile --filter api $INSTALL_FLAGS
+RUN bun install --frozen-lockfile $INSTALL_FILTER $INSTALL_FLAGS
 
 # 2) Final image. bun keeps some workspace deps in per-package node_modules
 # (packages/db/node_modules, apps/api/node_modules) rather than hoisting them to

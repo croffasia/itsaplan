@@ -1,23 +1,21 @@
 import {
   auth,
+  getSessionFromHeaders,
   oAuthDiscoveryMetadata,
   oAuthProtectedResourceMetadata,
   trustedOrigins,
   getAuthSettings,
-  hasConfiguredEmailProvider,
   hasConfiguredGoogle,
   hasConfiguredOidc,
   getOidcLabel,
 } from '@repo/auth';
+import { hasConfiguredEmailProvider } from '@repo/db';
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 import { planner } from './planner';
 import { mountMcp } from './mcp/mount';
 import { setMcpApp } from './mcp/app-ref';
-import { internalAgentRunRoutes } from './modules/agents/core/internal-routes';
-import { internalNotificationRoutes } from './modules/notifications/internal-routes';
-import { internalTelegramRoutes } from './modules/telegram/internal-routes';
 import { gitWebhookRoutes } from './modules/git/webhook';
 import { scimRoutes } from './modules/scim';
 import { syncOidcGroupsAfterCallback } from './modules/scim/oidc-sync';
@@ -136,6 +134,7 @@ export const app = new Elysia()
           { name: 'Agent Schedules', description: 'Recurring tasks for internal agents' },
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
           { name: 'Documents', description: 'Shared project Docs pages' },
+          { name: 'Link previews', description: 'Public web link metadata' },
           { name: 'Note boards', description: 'Freeform canvases of sticky notes' },
           { name: 'Notifications', description: "The session user's inbox notifications" },
           { name: 'Sync', description: 'Change markers a client polls for live refresh' },
@@ -166,11 +165,6 @@ export const app = new Elysia()
             name: 'System',
             description: 'Liveness, the current session user, and the instance sign-in policy',
           },
-          {
-            name: 'Internal',
-            description:
-              'Endpoints the worker and the bot call with the shared WORKER_INTERNAL_TOKEN',
-          },
         ],
         // Planner routes are session-gated. Besides the session cookie (sent by the
         // browser, not modelled here), a request may carry an `x-api-key` header:
@@ -185,12 +179,6 @@ export const app = new Elysia()
               scheme: 'bearer',
               bearerFormat: 'opaque',
               description: 'Instance SCIM token generated in God mode.',
-            },
-            workerToken: {
-              type: 'apiKey',
-              in: 'header',
-              name: 'x-worker-token',
-              description: 'Shared token used only by the worker and bot services.',
             },
             gitHubSignature: {
               type: 'apiKey',
@@ -252,7 +240,7 @@ export const app = new Elysia()
   .get(
     '/me',
     async ({ request }) => {
-      const session = await auth.api.getSession({ headers: request.headers });
+      const session = await getSessionFromHeaders(request.headers);
       // A deactivated account is not signed in as far as the app is concerned:
       // every planner route answers 401 for it, and this is what the screens ask
       // first. Deactivation arrives over SCIM, after the session was opened.
@@ -281,9 +269,11 @@ export const app = new Elysia()
       const emailEnabled = await hasConfiguredEmailProvider();
       return {
         registration: settings.registration,
-        // Both are only usable when the instance can actually send mail.
+        // Only usable when the instance can actually send mail.
         magicLink: settings.magicLink && emailEnabled,
-        requireEmailVerification: settings.requireEmailVerification && emailEnabled,
+        // Cleared together with the mail provider, so the raw setting is what the
+        // sign-up endpoint enforces.
+        requireEmailVerification: settings.requireEmailVerification,
         emailEnabled,
         // Whether the email/password form is offered at all. The api refuses to turn
         // it off while no provider below is usable, so this is never false alone.
@@ -313,9 +303,6 @@ export const app = new Elysia()
       description: 'Liveness probe: returns the api name and `status: "ok"`.',
     },
   })
-  .use(internalAgentRunRoutes)
-  .use(internalNotificationRoutes)
-  .use(internalTelegramRoutes)
   // Inbound repository webhook receiver (authenticated by its per-project secret).
   .use(gitWebhookRoutes)
   // SCIM 2.0 provisioning (authenticated by the instance SCIM bearer token). Mounted

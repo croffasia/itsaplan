@@ -411,6 +411,45 @@ describe('labels', () => {
       const ops = await groupsOf(api, 'OPS');
       expect(ops.some((g) => g.id === group.id)).toBe(true);
     });
+
+    // label.group_id only requires the group to exist somewhere, so the service
+    // has to check the group's project itself. A foreign group is rejected with
+    // 400, the same status as an unknown one, so the response does not reveal
+    // whether the id exists.
+    it('does not create a label in a group from another project', async () => {
+      const { api, group } = await twoProjects();
+      const res = await api
+        .projects({ projectKey: 'MKT' })
+        .labels.post({ name: 'urgent', groupId: group.id });
+      expect(res.status).toBe(400);
+      expect(res.error?.value).toEqual({ error: 'Label group must belong to this project' });
+
+      const mkt = await labelsOf(api, 'MKT');
+      expect(mkt).toEqual([]);
+    });
+
+    it('does not move a label into a group from another project', async () => {
+      const { api, group } = await twoProjects();
+      const label = (await api.projects({ projectKey: 'MKT' }).labels.post({ name: 'urgent' }))
+        .data!;
+
+      const res = await api
+        .projects({ projectKey: 'MKT' })
+        .labels({ labelId: label.id })
+        .patch({ groupId: group.id });
+      expect(res.status).toBe(400);
+
+      const mkt = await labelsOf(api, 'MKT');
+      expect(mkt.find((l) => l.id === label.id)?.groupId).toBeNull();
+    });
+
+    it('rejects an unknown group id with the same status', async () => {
+      const { api } = await twoProjects();
+      const res = await api
+        .projects({ projectKey: 'MKT' })
+        .labels.post({ name: 'urgent', groupId: 999999 });
+      expect(res.status).toBe(400);
+    });
   });
 
   describe('access', () => {

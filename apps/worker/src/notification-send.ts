@@ -1,23 +1,32 @@
+import {
+  db,
+  project,
+  teamInvite,
+  emailSource,
+  getDeliveryConfig,
+  getInstanceBotConfig,
+  getInstanceEmailConfig,
+  getProjectEmailConfig,
+  isInstanceBotUsable,
+  type DeliveryPayload,
+  type NotificationConfig,
+} from '@repo/db';
+import { and, eq } from 'drizzle-orm';
 import { sendEmail, emailBody, type EmailConfig, type SendResult } from '@repo/mailer';
-import { getEmailConfig, getProjectEmailConfig } from '@repo/auth';
-import { emailSource, type NotificationConfig } from '#modules/notification-settings/service';
-import type { DeliveryPayload } from './outbound';
-import { getInstanceBotConfig, isInstanceBotUsable } from '#modules/telegram/service';
 
-// Sends one composed notification over the requested channel using the team's
-// decrypted config. Email transport lives in @repo/mailer (shared with the
-// authentication mail sent from @repo/auth); Telegram is only used here, so it stays
-// in this file. A team that set no bot token of its own sends through the instance
-// bot, the same one members link their Telegram accounts through. Adding a channel is
-// a new branch here plus a compose function in outbound.ts; nothing else changes. The
-// result tells the worker whether a failure is worth retrying (transient: network
-// error, timeout, rate limit, server error) or permanent (bad credentials, rejected
-// recipient, misconfiguration).
+// Sends one claimed notification_delivery row over its channel. Email transport lives
+// in @repo/mailer (shared with the authentication mail sent from @repo/auth); Telegram
+// is only used here, so it stays in this file. A team that set no bot token of its own
+// sends through the instance bot, the same one members link their Telegram accounts
+// through. Adding a channel is a new branch here plus a compose function in the api's
+// outbound.ts; nothing else changes. The result tells the caller whether a failure is
+// worth retrying (transient: network error, timeout, rate limit, server error) or
+// permanent (bad credentials, rejected recipient, misconfiguration).
 
 export type { SendResult };
 
 export interface SendInput {
-  channel: 'email' | 'telegram';
+  channel: string;
   recipient: string | null;
   payload: DeliveryPayload;
   config: NotificationConfig;
@@ -31,7 +40,7 @@ async function sendNotificationEmail(input: SendInput): Promise<SendResult> {
   const source = emailSource(input.config);
   const config: EmailConfig | null =
     input.payload.emailSource === 'instance'
-      ? await getEmailConfig()
+      ? await getInstanceEmailConfig()
       : source === 'system'
         ? await getProjectEmailConfig()
         : source === 'none'
@@ -99,8 +108,59 @@ async function sendTelegram(input: SendInput): Promise<SendResult> {
   }
 }
 
-export async function sendDelivery(input: SendInput): Promise<SendResult> {
+async function sendDelivery(input: SendInput): Promise<SendResult> {
   if (input.channel === 'email') return sendNotificationEmail(input);
   if (input.channel === 'telegram') return sendTelegram(input);
-  return { ok: false, retryable: false, error: `unknown channel: ${input.channel as string}` };
+  return { ok: false, retryable: false, error: `unknown channel: ${input.channel}` };
+}
+
+// Whether a queued invite email still has a live invite behind it.
+async function isInvitePending(projectId: number, inviteId: number): Promise<boolean> {
+  const rows = await db
+    .select({ id: teamInvite.id })
+    .from(teamInvite)
+    .where(
+      and(
+        eq(teamInvite.projectId, projectId),
+        eq(teamInvite.id, inviteId),
+        eq(teamInvite.status, 'pending'),
+      ),
+    )
+    .limit(1);
+  return rows.length > 0;
+}
+
+// The credentials belong to the team that owns the project the row came from.
+async function teamOf(projectId: number): Promise<number | null> {
+  const rows = await db
+    .select({ teamId: project.teamId })
+    .from(project)
+    .where(eq(project.id, projectId));
+  return rows[0]?.teamId ?? null;
+}
+
+export interface DeliveryRow {
+  projectId: number;
+  channel: string;
+  recipient: string | null;
+  payload: DeliveryPayload;
+}
+
+export async function deliverNotification(row: DeliveryRow): Promise<SendResult> {
+  if (
+    row.payload.projectInviteId != null &&
+    !(await isInvitePending(row.projectId, row.payload.projectInviteId))
+  ) {
+    // The invite was accepted, rejected, or revoked while its email waited in the
+    // outbox. Treat it as delivered so the row is removed.
+    return { ok: true };
+  }
+  const teamId = await teamOf(row.projectId);
+  if (teamId == null) return { ok: false, retryable: false, error: 'Project not found' };
+  return sendDelivery({
+    channel: row.channel,
+    recipient: row.recipient,
+    payload: row.payload,
+    config: await getDeliveryConfig(teamId),
+  });
 }

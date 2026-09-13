@@ -560,8 +560,14 @@ async function assertUsernameFree(
 // Issues a fresh API key owned by the agent's bot user and returns its plaintext
 // value (only available at creation). The server-side call sets the owner via
 // userId — better-auth allows this only for a direct (non-request) server call.
+//
+// The key carries no expiry, unlike a personal one: an internal agent replays its
+// stored secret with nothing that would renew it, and an external agent's key is
+// rotated by its operator through regenerate-key. The plugin puts its default on
+// every key it creates, so the expiry is cleared on the row afterwards.
 async function issueKey(userId: string, name: string): Promise<string> {
   const created = await auth.api.createApiKey({ body: { userId, name: `agent:${name}` } });
+  await db.update(apikey).set({ expiresAt: null }).where(eq(apikey.id, created.id));
   return created.key;
 }
 

@@ -1,12 +1,10 @@
 import { db, agentRun, issue, project } from '@repo/db';
 import { and, desc, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm';
-import { iso } from '#shared/lib';
+import { intEnv, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
-import { intEnv } from './helpers/env';
 
-// The agent_run outbox: data access for issue-triggered runs and run history. The
-// background worker claims pending rows, calls the internal runtime route, and
-// records the outcome.
+// The agent_run outbox: data access for triggered runs and run history. The api's
+// run poller claims pending rows, runs them, and records the outcome.
 
 // Tuning, env-overridable with defaults. An agent run is an LLM call that can take
 // tens of seconds, so the lease is generous — it must exceed a run's wall time so a
@@ -69,7 +67,10 @@ export async function enqueueAgentRun(input: {
 export interface ClaimedRun {
   id: number;
   agentId: number;
-  issueId: number;
+  // Null for a scheduled or manual run, which works on no single issue.
+  issueId: number | null;
+  scheduleId: number | null;
+  trigger: AgentRunTrigger;
   prompt: string;
   attempts: number;
   // The source comment id when the run was triggered by a mention, null for a
@@ -117,7 +118,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       SELECT id FROM agent_run q
       WHERE q.status = 'pending' AND q.next_attempt_at <= now()
         AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
-      ORDER BY q.next_attempt_at
+      ORDER BY q.next_attempt_at, q.id
       FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}
     )
@@ -125,6 +126,8 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       r.id,
       r.agent_id AS "agentId",
       r.issue_id AS "issueId",
+      r.schedule_id AS "scheduleId",
+      r.trigger,
       r.prompt,
       r.attempts,
       r.source_activity_id AS "sourceActivityId",
@@ -185,10 +188,24 @@ export async function loadThreadContext(sourceActivityId: number | null): Promis
 
 // A run canceled while it was in flight keeps that outcome: each of these writes only
 // where the row is still 'pending'.
-export async function markRunSuccess(id: number): Promise<void> {
+
+// `usage` is what the last model call of the run read and wrote. Null where the model
+// reports none, which the run history shows as a dash.
+export async function markRunSuccess(
+  id: number,
+  output: string,
+  usage: { inputTokens: number; outputTokens: number } | null,
+): Promise<void> {
   await db
     .update(agentRun)
-    .set({ status: 'success', lastError: null })
+    .set({
+      status: 'success',
+      output,
+      lastError: null,
+      inputTokens: usage?.inputTokens ?? null,
+      outputTokens: usage?.outputTokens ?? null,
+      finishedAt: new Date(),
+    })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 
@@ -207,7 +224,21 @@ export async function scheduleRunRetry(id: number, delayMs: number, error: strin
 export async function markRunFailed(id: number, error: string): Promise<void> {
   await db
     .update(agentRun)
-    .set({ status: 'failed', lastError: error.slice(0, 500) })
+    .set({ status: 'failed', lastError: error.slice(0, 500), finishedAt: new Date() })
+    .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
+}
+
+// Puts a claimed run back in the queue without spending the attempt, for a run the
+// team has no free slot for. Waiting for a slot is not a failed attempt, and nothing
+// has been recorded on the issue yet, so the run leaves no trace of having been picked
+// up at all.
+export async function deferRun(id: number, delaySeconds: number): Promise<void> {
+  await db
+    .update(agentRun)
+    .set({
+      attempts: sql`${agentRun.attempts} - 1`,
+      nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
+    })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));
 }
 

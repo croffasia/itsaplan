@@ -1,0 +1,16 @@
+{
+  "relations": {
+    "blocked_by": "Diblokir oleh",
+    "blocks": "Memblokir",
+    "duplicates": "Menduplikasi",
+    "duplicated_by": "Diduplikasi oleh",
+    "relates": "Terkait"
+  },
+  "phrases": {
+    "blocked_by": "diblokir oleh",
+    "blocks": "memblokir",
+    "duplicates": "duplikat dari",
+    "duplicated_by": "diduplikasi oleh",
+    "relates": "terkait dengan"
+  }
+}

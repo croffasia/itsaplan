@@ -14,12 +14,10 @@ export default function ProjectSwitcher({
   projects,
   currentProjectKey,
   onSelectProject,
-  onNewTeam,
 }: {
   projects: Project[];
   currentProjectKey: string | null;
   onSelectProject: (key: string) => void;
-  onNewTeam: () => void;
 }) {
   const teams = useTeamsQuery().data ?? [];
   const queryClient = useQueryClient();
@@ -52,10 +50,6 @@ export default function ProjectSwitcher({
             onSelectProject={(key) => {
               setOpen(false);
               onSelectProject(key);
-            }}
-            onNewTeam={() => {
-              setOpen(false);
-              onNewTeam();
             }}
             onClose={() => setOpen(false)}
           />

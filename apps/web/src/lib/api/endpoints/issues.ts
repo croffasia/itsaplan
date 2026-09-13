@@ -296,11 +296,14 @@ export const createIssue = (projectKey: string, input: NewIssueInput) =>
     body: JSON.stringify(input),
   });
 
-export const getIssue = (id: number) => request<IssueWithWatchers>(`/issues/${id}`);
+export const getIssue = (id: number, signal?: AbortSignal) =>
+  request<IssueWithWatchers>(`/issues/${id}`, { signal });
 
 // Resolve an issue by its project-scoped number (the human "42" in the URL).
-export const getIssueBySeq = (projectKey: string, seq: number) =>
-  request<IssueWithWatchers>(`/projects/${projectKey}/issues/${seq}`);
+export const getIssueBySeq = (projectKey: string, seq: number, signal?: AbortSignal) =>
+  request<IssueWithWatchers>(`/projects/${encodeURIComponent(projectKey)}/issues/${seq}`, {
+    signal,
+  });
 
 export const listIssueCycles = (id: number) => request<IssueCycleEntry[]>(`/issues/${id}/cycles`);
 

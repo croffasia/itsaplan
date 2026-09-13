@@ -1,0 +1,42 @@
+.preview {
+  box-shadow:
+    0 0 0 1px color-mix(in oklch, var(--foreground) 8%, transparent),
+    0 2px 4px rgb(0 0 0 / 5%),
+    0 12px 36px -8px rgb(0 0 0 / 20%);
+  transform-origin: var(--radix-popover-content-transform-origin);
+}
+
+.preview[data-state='open'] {
+  animation: preview-in 180ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.preview[data-state='closed'] {
+  animation: preview-out 120ms ease-in;
+}
+
+@keyframes preview-in {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+
+@keyframes preview-out {
+  to {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(0.985);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .preview[data-state] {
+    animation: none;
+  }
+}

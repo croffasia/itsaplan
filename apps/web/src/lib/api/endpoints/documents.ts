@@ -121,8 +121,10 @@ export const listDocuments = (projectKey: string, q?: string, archived = false) 
   return request<ProjectDocumentSummary[]>(`/projects/${projectKey}/documents${suffix}`);
 };
 
-export const getDocument = (projectKey: string, documentId: number) =>
-  request<ProjectDocument>(`/projects/${projectKey}/documents/${documentId}`);
+export const getDocument = (projectKey: string, documentId: number, signal?: AbortSignal) =>
+  request<ProjectDocument>(`/projects/${encodeURIComponent(projectKey)}/documents/${documentId}`, {
+    signal,
+  });
 
 export const listDocumentIssueLinks = (projectKey: string, documentId: number) =>
   request<DocumentIssueLink[]>(`/projects/${projectKey}/documents/${documentId}/issues`);

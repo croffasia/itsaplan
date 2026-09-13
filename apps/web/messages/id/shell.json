@@ -1,0 +1,8 @@
+{
+  "noProjectAccess": "Anda tidak memiliki akses ke proyek ini.",
+  "projectUnavailable": "Proyek ini tidak tersedia.",
+  "noProjects": "Belum ada proyek. Buat proyek untuk memulai.",
+  "noProjectsTitle": "Belum ada proyek",
+  "noProjectsHint": "Buat proyek pertama Anda untuk mulai merencanakan issue di papan.",
+  "createProject": "Buat proyek"
+}

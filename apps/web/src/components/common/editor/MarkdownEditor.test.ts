@@ -7,15 +7,23 @@ import { Markdown } from 'tiptap-markdown';
 import { JSDOM } from 'jsdom';
 import { editorStarterKitOptions } from './MarkdownEditor';
 import { openLinkOnModifierClick } from './modifierClickLink';
+import { createLinkKeyboardHandlers } from './linkKeyboardHandlers';
 
 let dom: JSDOM;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 
 beforeEach(() => {
   originalGlobalDescriptors = new Map(
-    ['window', 'document', 'navigator', 'DOMParser', 'Node', 'Element', 'HTMLElement'].map(
-      (name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)],
-    ),
+    [
+      'window',
+      'document',
+      'navigator',
+      'DOMParser',
+      'Node',
+      'Element',
+      'HTMLElement',
+      'HTMLAnchorElement',
+    ].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]),
   );
   dom = new JSDOM('<!doctype html><div></div>');
   Object.defineProperties(globalThis, {
@@ -26,6 +34,7 @@ beforeEach(() => {
     Node: { configurable: true, value: dom.window.Node },
     Element: { configurable: true, value: dom.window.Element },
     HTMLElement: { configurable: true, value: dom.window.HTMLElement },
+    HTMLAnchorElement: { configurable: true, value: dom.window.HTMLAnchorElement },
   });
 });
 
@@ -38,6 +47,43 @@ afterEach(() => {
 });
 
 describe('MarkdownEditor extensions', () => {
+  it('does not edit the document when Enter activates a focused link', () => {
+    const opened: unknown[] = [];
+    dom.window.open = (...args: Parameters<typeof window.open>) => {
+      opened.push(args);
+      return null;
+    };
+    const editor = new Editor({
+      element: dom.window.document.querySelector('div')!,
+      extensions: [
+        StarterKit.configure(editorStarterKitOptions),
+        Link.configure({ openOnClick: false, HTMLAttributes: { tabindex: '0' } }),
+      ],
+      content: '<p><a href="https://example.com/docs">Docs</a> content</p>',
+      editorProps: {
+        handleDOMEvents: createLinkKeyboardHandlers(),
+        handleScrollToSelection: () => true,
+      },
+    });
+    const before = editor.getHTML();
+    const link = editor.view.dom.querySelector('a')!;
+    link.focus();
+    editor.view.dom.focus();
+    editor.view.dom.dispatchEvent(
+      new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    );
+    assert.equal(editor.getHTML(), before);
+    assert.deepEqual(opened, [['https://example.com/docs', '_blank', 'noopener,noreferrer']]);
+    link.focus();
+    link.dispatchEvent(new dom.window.MouseEvent('pointerdown', { bubbles: true }));
+    editor.view.dom.focus();
+    editor.view.dom.dispatchEvent(
+      new dom.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true }),
+    );
+    assert.notEqual(editor.getHTML(), before);
+    assert.equal(opened.length, 1);
+    editor.destroy();
+  });
   it('registers the configured link extension once', () => {
     const editor = new Editor({
       extensions: [

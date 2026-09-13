@@ -97,8 +97,10 @@ export const listNoteBoards = (projectKey: string, params: { q?: string } = {}) 
     `/projects/${projectKey}/note-boards${params.q ? `?q=${encodeURIComponent(params.q)}` : ''}`,
   );
 
-export const getNoteBoard = (projectKey: string, boardId: number) =>
-  request<NoteBoard>(`/projects/${projectKey}/note-boards/${boardId}`);
+export const getNoteBoard = (projectKey: string, boardId: number, signal?: AbortSignal) =>
+  request<NoteBoard>(`/projects/${encodeURIComponent(projectKey)}/note-boards/${boardId}`, {
+    signal,
+  });
 
 export const listNoteBoardAccessCandidates = (projectKey: string) =>
   request<NoteBoardAccessCandidate[]>(`/projects/${projectKey}/note-boards/access-candidates`);

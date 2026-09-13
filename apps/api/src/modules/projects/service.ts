@@ -507,12 +507,12 @@ export async function setEstimateSettings(
 
 // Auto-archive thresholds for a project. Stored in project_setting under
 // AUTO_ARCHIVE_KEY as { completedDays, canceledDays }. Each value is the number of
-// days an issue may sit inactive in a completed/canceled column before the worker
+// days an issue may sit inactive in a completed/canceled column before the sweep
 // archives it; null disables archiving for that state group. A new project is
 // created with DEFAULT_AUTO_ARCHIVE; a project with no stored row (created before
 // this) keeps both null, so nothing is archived until an owner turns it on. The
-// worker reads the same key and jsonb fields directly (apps/worker/src/store.ts) —
-// keep them in sync.
+// sweep reads the same key and jsonb fields directly (modules/issues/auto-archive.ts)
+// — keep them in sync.
 const AUTO_ARCHIVE_KEY = 'auto_archive';
 
 const DEFAULT_AUTO_ARCHIVE = { completedDays: 28, canceledDays: 7 };

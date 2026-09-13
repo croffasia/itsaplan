@@ -101,10 +101,6 @@ function normalizeOperationSecurity(operation: Operation, path: string, method: 
     operation.security = [{ scimBearer: [] }];
     return;
   }
-  if (path.startsWith('/internal/')) {
-    operation.security = [{ workerToken: [] }];
-    return;
-  }
   if (path === '/webhooks/git/{webhookId}' || path === '/webhooks/github/{webhookId}') {
     operation.security = GIT_WEBHOOK_SECURITY;
     return;

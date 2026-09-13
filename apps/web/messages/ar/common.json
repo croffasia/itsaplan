@@ -177,7 +177,18 @@
     "insertImage": "إدراج صورة",
     "insertNamed": "إدراج {name}",
     "noImages": "مفيش صور مرفقة لسه. ارفع صورة من لوحة المرفقات، أو ارميها على المحرر على طول.",
-    "image": "صورة"
+    "image": "صورة",
+    "linkPreview": "Link preview",
+    "openPreviewLink": "Open {name} in a new tab",
+    "loadingPreview": "Loading preview…",
+    "previewUnavailable": "A preview is not available. Open the link to view this page.",
+    "internalPage": "ItsAPlan page",
+    "internalPreviewUnavailable": "This page is unavailable or you do not have access.",
+    "previewNoteCount": "{count, plural, one {# note} other {# notes}}",
+    "previewCustomField": "Custom field",
+    "previewAllWorkItems": "All work items",
+    "previewUpdated": "Updated {date}",
+    "previewOtherValues": "({count} more)"
   },
   "chart": {
     "download": "احفظ الرسم البياني",

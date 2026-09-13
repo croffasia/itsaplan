@@ -136,8 +136,8 @@ export const updateProject = (projectKey: string, patch: { name?: string; descri
   request<Project>(`/projects/${projectKey}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
 // The board scaffold (no issues). The issues come from getBoardIssues.
-export const getProject = (projectKey: string) =>
-  request<ProjectScaffold>(`/projects/${projectKey}`);
+export const getProject = (projectKey: string, signal?: AbortSignal) =>
+  request<ProjectScaffold>(`/projects/${encodeURIComponent(projectKey)}`, { signal });
 
 // The board's issues and their relations.
 export const getBoardIssues = (projectKey: string) =>

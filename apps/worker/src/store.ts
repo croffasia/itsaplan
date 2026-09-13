@@ -142,38 +142,3 @@ export async function cleanupOldDeliveries(): Promise<number> {
   `);
   return (res as unknown as { count?: number }).count ?? 0;
 }
-
-// Auto-archive sweep: archives active issues that have sat inactive in a
-// completed/canceled column past their project's configured threshold. The
-// threshold lives in project_setting under key 'auto_archive' as
-// { completedDays, canceledDays }; a positive day count enables archiving for that
-// state group, null/absent disables it (kept in sync with getAutoArchiveSettings in
-// apps/api/src/modules/projects/service.ts). Inactivity is measured by
-// issue.updated_at: moving to a terminal column bumps it, and any later edit resets
-// the clock, so an issue is archived only after the full period with no activity.
-// The ->> is guarded by a numeric-string regex so a malformed or missing value is
-// treated as disabled, never cast. Returns the ids archived, which the caller uses
-// to drop the agent conversation threads of those issues. Idempotent
-// (archived_at IS NULL filter).
-export async function archiveStaleIssues(): Promise<number[]> {
-  const rows = await db.execute(sql`
-    UPDATE issue i
-    SET archived_at = now()
-    FROM project_column c, project_setting s
-    WHERE i.column_id = c.id
-      AND i.project_id = s.project_id
-      AND s.key = 'auto_archive'
-      AND i.archived_at IS NULL
-      AND (
-        (c.state_type = 'completed'
-          AND (s.value->>'completedDays') ~ '^[0-9]{1,4}$'
-          AND i.updated_at < now() - make_interval(days => (s.value->>'completedDays')::int))
-        OR
-        (c.state_type = 'canceled'
-          AND (s.value->>'canceledDays') ~ '^[0-9]{1,4}$'
-          AND i.updated_at < now() - make_interval(days => (s.value->>'canceledDays')::int))
-      )
-    RETURNING i.id
-  `);
-  return (rows as unknown as Array<{ id: number }>).map((row) => row.id);
-}

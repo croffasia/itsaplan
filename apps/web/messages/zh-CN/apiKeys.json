@@ -7,12 +7,17 @@
   "empty": "暂无 API 密钥。创建密钥以验证 API 请求。",
   "fallbackName": "API 密钥",
   "createdAt": "创建于 {date}",
+  "expiresAt": "到期于 {date}",
+  "noExpiry": "永不过期",
   "deleteAction": "删除 API 密钥",
   "createDialog": {
     "title": "创建 API 密钥",
     "nameLabel": "名称",
     "namePlaceholder": "例如：CI 流水线",
     "nameHint": "用于以后识别此密钥的名称。",
+    "expiryLabel": "有效期",
+    "expiresInDays": "{days} 天",
+    "expiryHint": "到期当天密钥将停止工作。如需继续使用，请创建新密钥。",
     "submit": "创建密钥",
     "submitPending": "正在创建…",
     "error": "无法创建 API 密钥。"

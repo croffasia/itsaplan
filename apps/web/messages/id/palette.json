@@ -1,0 +1,14 @@
+{
+  "placeholder": "Ketik perintah atau cari…",
+  "noResults": "Tidak ada hasil yang ditemukan.",
+  "issues": "Issue",
+  "searching": "Mencari…",
+  "selectAllIssues": "Pilih semua issue",
+  "newIssue": "Issue baru",
+  "newInitiative": "Inisiatif baru",
+  "newProject": "Proyek baru",
+  "toggleChat": "Tampilkan atau sembunyikan obrolan AI",
+  "board": "Papan",
+  "commands": "Perintah",
+  "switchProject": "Ganti proyek"
+}

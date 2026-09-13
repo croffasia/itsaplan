@@ -19,7 +19,6 @@ export default function ProjectSwitcherMenu({
   openTeams,
   onOpenTeam,
   onSelectProject,
-  onNewTeam,
   onClose,
 }: {
   projects: Project[];
@@ -29,7 +28,6 @@ export default function ProjectSwitcherMenu({
   openTeams: Record<number, boolean>;
   onOpenTeam: (teamId: number, open: boolean) => void;
   onSelectProject: (key: string) => void;
-  onNewTeam: () => void;
   onClose: () => void;
 }) {
   const t = useTranslations('nav');
@@ -75,7 +73,7 @@ export default function ProjectSwitcherMenu({
         onSelectProject={onSelectProject}
         inputRef={inputRef}
       />
-      <ProjectSwitcherFooter onNewTeam={onNewTeam} onClose={onClose} />
+      <ProjectSwitcherFooter onClose={onClose} />
       {!isMobile && (
         <ResizeGrip
           label={t('projectPicker.resize')}

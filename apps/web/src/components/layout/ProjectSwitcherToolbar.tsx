@@ -1,4 +1,4 @@
-import { Maximize2, Minimize2, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -49,37 +49,15 @@ export default function ProjectSwitcherToolbar({
         </SelectContent>
       </Select>
       {!isMobile && (
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            title={t('projectPicker.narrower')}
-            aria-label={t('projectPicker.narrower')}
-            disabled={preferences.width <= PROJECT_PICKER_WIDTH.min}
-            onClick={() => preferences.setWidth(preferences.width - 80)}
-          >
-            <Minimize2 />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            title={t('projectPicker.wider')}
-            aria-label={t('projectPicker.wider')}
-            disabled={preferences.width >= PROJECT_PICKER_WIDTH.max}
-            onClick={() => preferences.setWidth(preferences.width + 80)}
-          >
-            <Maximize2 />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            title={t('projectPicker.resetWidth')}
-            aria-label={t('projectPicker.resetWidth')}
-            onClick={() => preferences.setWidth(PROJECT_PICKER_WIDTH.initial)}
-          >
-            <RotateCcw />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          title={t('projectPicker.resetWidth')}
+          aria-label={t('projectPicker.resetWidth')}
+          onClick={() => preferences.setWidth(PROJECT_PICKER_WIDTH.initial)}
+        >
+          <RotateCcw />
+        </Button>
       )}
     </div>
   );

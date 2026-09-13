@@ -1,7 +1,6 @@
 import {
   signIn,
   signUp,
-  signOut,
   requestPasswordReset,
   resetPassword,
   sendVerificationEmail,
@@ -43,9 +42,10 @@ export async function signInWithPassword(input: {
   throw new Error(message);
 }
 
-// autoSignIn (set in @repo/auth) signs the user in right after sign-up. The display
-// name is derived from the email; the planner does not use it yet. callbackURL is
-// where the confirmation link lands when the instance sends one.
+// autoSignIn (set in @repo/auth) signs the user in right after sign-up, unless the
+// instance requires a confirmed address, in which case no session is opened. The
+// display name is derived from the email; the planner does not use it yet.
+// callbackURL is where the confirmation link lands when the instance sends one.
 //
 // On an invite-only instance the API rejects the sign-up unless the address has a
 // pending project invite, and the thrown message says so.
@@ -101,13 +101,6 @@ export async function resendVerificationEmail(email: string): Promise<void> {
     callbackURL: appUrl('/login?verified=1'),
   });
   if (result.error) throw new Error(result.error.message ?? '');
-}
-
-// Drops the session created by autoSignIn right after sign-up, used when the
-// instance requires a confirmed address: the account exists but must not be usable
-// until the link in the email is opened.
-export async function signOutUnverified(): Promise<void> {
-  await signOut();
 }
 
 // Starts the Google round trip. Unlike every other call here this one navigates away

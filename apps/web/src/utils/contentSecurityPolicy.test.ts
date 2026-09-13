@@ -1,6 +1,17 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { contentSecurityPolicy } from './contentSecurityPolicy';
+
+let originalApiUrl: string | undefined;
+
+beforeEach(() => {
+  originalApiUrl = process.env.API_URL;
+});
+
+afterEach(() => {
+  if (originalApiUrl === undefined) delete process.env.API_URL;
+  else process.env.API_URL = originalApiUrl;
+});
 
 describe('contentSecurityPolicy', () => {
   it('allows requests to the api origin only, without its path', () => {

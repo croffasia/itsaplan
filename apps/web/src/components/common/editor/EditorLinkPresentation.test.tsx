@@ -144,6 +144,74 @@ afterEach(async () => {
 });
 
 describe('mounted EditorContent link presentation', () => {
+  for (const type of ['pointerdown', 'mousedown']) {
+    it(`keeps reading controls mounted when ${type} would focus the editing host`, async () => {
+      await render();
+      const json = editor.getJSON();
+      const markdown = editor.storage.markdown.getMarkdown();
+      let updates = 0;
+      editor.on('update', () => updates++);
+      const link = document.querySelector<HTMLAnchorElement>('[data-link-row]')!;
+      const trigger = document.querySelector<HTMLButtonElement>('[data-link-preview-control]')!;
+      const targets = [...link.querySelectorAll('span, svg'), trigger.querySelector('svg')!];
+      for (const button of [0, 1, 2]) {
+        for (const target of targets) {
+          await act(() => {
+            const press = new dom.window.MouseEvent(type, {
+              bubbles: true,
+              cancelable: true,
+              button,
+            });
+            if (target.dispatchEvent(press)) editor.view.dom.focus();
+          });
+          assert.equal(
+            link.isConnected,
+            true,
+            `destination removed after pressing ${target.tagName}`,
+          );
+          assert.equal(trigger.isConnected, true);
+          assert.notEqual(document.activeElement, editor.view.dom);
+        }
+      }
+      for (const action of ['auxclick', 'contextmenu']) {
+        const event = new dom.window.MouseEvent(action, { bubbles: true, cancelable: true });
+        assert.equal(link.dispatchEvent(event), true);
+      }
+      const click = new dom.window.MouseEvent('click', { bubbles: true, cancelable: true });
+      let nativeActivation = false;
+      link.addEventListener('click', (event) => {
+        nativeActivation = !event.defaultPrevented;
+        event.preventDefault();
+      });
+      await act(() => link.dispatchEvent(click));
+      assert.equal(nativeActivation, true);
+      assert.equal(link.href, 'https://example.com/guide?key=A%2FB#part');
+      await act(() => trigger.click());
+      await settle();
+      assert.equal(document.querySelectorAll('[role="dialog"]').length, 1);
+      assert.equal(updates, 0);
+      assert.deepEqual(editor.getJSON(), json);
+      assert.equal(editor.storage.markdown.getMarkdown(), markdown);
+      assert.equal(editor.can().undo(), false);
+    });
+  }
+
+  it('keeps keyboard focus and deliberate body editing available', async () => {
+    await render();
+    const link = document.querySelector<HTMLAnchorElement>('[data-link-row]')!;
+    await act(() => link.focus());
+    assert.equal(document.activeElement, link);
+    assert.equal(link.isConnected, true);
+    const text = editor.view.dom.querySelectorAll('p')[1]!;
+    await act(() => {
+      const press = new dom.window.MouseEvent('pointerdown', { bubbles: true, cancelable: true });
+      assert.equal(text.dispatchEvent(press), true);
+      editor.view.dom.focus();
+    });
+    assert.equal(document.querySelector('[data-link-row]'), null);
+    assert.equal(document.activeElement, editor.view.dom);
+  });
+
   it('mounts and changes capability presentation without lifecycle flushes or source updates', async () => {
     const json = editor.getJSON();
     const markdown = editor.storage.markdown.getMarkdown();

@@ -1,4 +1,5 @@
 import { Eye } from 'lucide-react';
+import type { MouseEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import type { LinkPreviewItem } from './LinkPreviewDialog';
 import LinkPreviewThumbnail from './LinkPreviewThumbnail';
@@ -6,6 +7,12 @@ import { useCachedLinkPreview } from './useCachedLinkPreview';
 import { linkDestination } from './linkPresentation';
 import { internalLinkTarget } from './internalLinkTarget';
 import styles from './LinkPresentation.module.css';
+
+function preventEditorFocus(event: MouseEvent<HTMLElement>) {
+  // Safari can focus the editing host and remove this widget before its click.
+  event.preventDefault();
+  event.stopPropagation();
+}
 
 export default function LinkBlockControls({
   links,
@@ -33,7 +40,8 @@ export default function LinkBlockControls({
       className={compact ? styles.row : styles.blockAction}
       contentEditable={false}
       data-link-presentation=""
-      onPointerDown={(event) => event.stopPropagation()}
+      onPointerDown={preventEditorFocus}
+      onMouseDown={preventEditorFocus}
       onClick={(event) => event.stopPropagation()}
       onAuxClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}

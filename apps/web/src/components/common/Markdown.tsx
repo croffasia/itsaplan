@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { markdownSegments } from '@/lib/markdown';
 import { Skeleton } from '@/components/ui/skeleton';
+import MarkdownLinkContent from './editor/MarkdownLinkContent';
+import { bareMarkdownUrls } from './editor/linkPresentation';
 
 // recharts is loaded only by the answers that actually carry a chart, so the views
 // that just show markdown do not pull it in.
@@ -17,8 +19,18 @@ const AgentChatImportCard = dynamic(() => import('./agent-chat/AgentChatImportCa
 // sizing the markdown table cell adds. Links open in a new tab so following one
 // does not replace the view the reader was on. A ```chart fence is drawn as a chart
 // where it sits in the text (see markdownSegments).
-export default function Markdown({ children }: { children: string }) {
+export default function Markdown({
+  children,
+  complete = true,
+}: {
+  children: string;
+  complete?: boolean;
+}) {
   const segments = useMemo(() => markdownSegments(children, { newTabLinks: true }), [children]);
+  const bareUrls = useMemo(
+    () => (complete ? bareMarkdownUrls(children) : new Set<string>()),
+    [children, complete],
+  );
   // `dir="auto"` reads the direction from the text itself, so an Arabic comment in
   // an English interface — and the reverse — is laid out the way it was written.
   return (
@@ -36,10 +48,11 @@ export default function Markdown({ children }: { children: string }) {
           return <Skeleton key={index} className="my-3 h-[220px] w-full" />;
         }
         return (
-          <div
+          <MarkdownLinkContent
             key={index}
-            className="md-content"
-            dangerouslySetInnerHTML={{ __html: segment.html }}
+            html={segment.html}
+            bareUrls={bareUrls}
+            complete={complete}
           />
         );
       })}

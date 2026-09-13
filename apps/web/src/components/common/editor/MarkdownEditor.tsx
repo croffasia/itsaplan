@@ -67,7 +67,7 @@ export default function MarkdownEditor({
 }) {
   const t = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
-  const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
+  const linkKeyboardHandlers = useMemo(() => createLinkKeyboardHandlers(true), []);
   // Held in a ref because the extensions are built once: the "@" menu reads the
   // roster through it, so a list that arrives later is still offered.
   const mentionCandidates = useMentionCandidates();

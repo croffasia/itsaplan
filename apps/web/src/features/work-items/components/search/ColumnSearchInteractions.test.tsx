@@ -4,6 +4,7 @@ import { act, type ComponentType, type ContextType } from 'react';
 import type { Root } from 'react-dom/client';
 import { JSDOM } from 'jsdom';
 import { NextIntlClientProvider } from 'next-intl';
+import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime';
 import messages from '../../../../../messages/en/workItems.json';
 import type { BoardIssue } from '@/lib/api/endpoints/issues';
 import { ColumnSearchContext } from '../../context/columnSearchContext';
@@ -36,6 +37,13 @@ const issues = Array.from({ length: 600 }, (_, index) => ({
   priority: null,
 })) as unknown as BoardIssue[];
 const entries = prepareColumnSearchEntries(issues, fields);
+const router = {
+  pathname: '/project/TEST',
+  asPath: '/project/TEST',
+  push: () => {
+    throw new Error('Task activation must use the board opening callback');
+  },
+} as NonNullable<ContextType<typeof RouterContext>>;
 
 function Probe() {
   const state = useColumnSearchState('test:status', '/project/TEST');
@@ -67,19 +75,21 @@ function Probe() {
     },
   } as unknown as Search;
   return (
-    <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ workItems: messages }}>
-      <ColumnSearchContext.Provider value={search}>
-        <button
-          ref={(element) => {
-            if (element) state.entryRefs.current.set('c1', element);
-          }}
-        >
-          Search tasks
-        </button>
-        {state.active?.mode === 'inline' && <Panel />}
-        <Surface />
-      </ColumnSearchContext.Provider>
-    </NextIntlClientProvider>
+    <RouterContext.Provider value={router}>
+      <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ workItems: messages }}>
+        <ColumnSearchContext.Provider value={search}>
+          <button
+            ref={(element) => {
+              if (element) state.entryRefs.current.set('c1', element);
+            }}
+          >
+            Search tasks
+          </button>
+          {state.active?.mode === 'inline' && <Panel />}
+          <Surface />
+        </ColumnSearchContext.Provider>
+      </NextIntlClientProvider>
+    </RouterContext.Provider>
   );
 }
 
@@ -266,8 +276,19 @@ describe('column search controls and results', () => {
     act(() => search.open('c1'));
     await frame();
     assert.equal(document.querySelectorAll('[role="dialog"]').length, 1);
+    const dialog = document.querySelector('[role="dialog"]')!;
+    assert.ok(dialog.classList.contains('translate-x-0'));
+    assert.ok(dialog.classList.contains('translate-y-0'));
+    assert.ok(!dialog.classList.contains('translate-x-[-50%]'));
+    assert.ok(!dialog.classList.contains('translate-y-[-50%]'));
     assert.equal(document.activeElement, document.querySelector('input'));
-    act(() => search.openIssue(600));
+    act(() => search.resultsRef.current?.focusIssue(600));
+    await frame();
+    const result = document.querySelector<HTMLAnchorElement>('[data-search-task="600"]')!;
+    assert.equal(result.getAttribute('href'), '/project/TEST/issue/600');
+    act(() => result.click());
+    assert.equal(search.returnToResult.current, true);
+    assert.equal(search.draft.focusedId, 600);
     overlayOpen = true;
     act(() => root.render(<Probe />));
     await frame();

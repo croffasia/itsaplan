@@ -20,7 +20,7 @@ export function ColumnSearchSurface() {
     >
       <DialogContent
         showCloseButton={false}
-        className="column-search-surface flex h-dvh max-w-none flex-col gap-3 overflow-hidden rounded-none border-0 p-3 pt-[max(12px,env(safe-area-inset-top))] pb-[max(12px,env(safe-area-inset-bottom))] sm:max-w-none"
+        className="column-search-surface flex h-dvh max-w-none translate-x-0 translate-y-0 flex-col gap-3 overflow-hidden rounded-none border-0 p-3 pt-[max(12px,env(safe-area-inset-top))] pb-[max(12px,env(safe-area-inset-bottom))] sm:max-w-none"
         style={viewport ? { top: viewport.top, height: viewport.height } : undefined}
         onOpenAutoFocus={(event) => {
           event.preventDefault();

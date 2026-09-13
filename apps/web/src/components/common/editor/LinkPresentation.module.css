@@ -61,7 +61,7 @@
   font-weight: 500;
 }
 .subtitle {
-  color: var(--muted-foreground);
+  color: color-mix(in oklab, var(--muted-foreground) 85%, var(--foreground) 15%);
   unicode-bidi: isolate;
   text-align: start;
 }

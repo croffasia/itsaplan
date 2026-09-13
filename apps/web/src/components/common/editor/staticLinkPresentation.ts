@@ -6,7 +6,7 @@ import type { LinkPreviewItem } from './LinkPreviewDialog';
 export type StaticLinkBlock = { html: string; links: LinkPreviewItem[]; bare: boolean };
 
 export function staticLinkBlocks(html: string, bareUrls: ReadonlySet<string>, origin: string) {
-  const fragment = DOMPurify.sanitize(html, { RETURN_DOM_FRAGMENT: true });
+  const fragment = DOMPurify.sanitize(html, { RETURN_DOM_FRAGMENT: true, ADD_ATTR: ['target'] });
   return Array.from(fragment.childNodes).map((node): StaticLinkBlock => {
     if (node.nodeType !== 1) {
       const wrapper = fragment.ownerDocument.createElement('span');
@@ -52,6 +52,33 @@ export function copyPresentedLinks(event: ClipboardEvent<HTMLElement>) {
   const wrapper = document.createElement('div');
   wrapper.append(fragment);
   event.preventDefault();
-  event.clipboardData.setData('text/plain', wrapper.textContent ?? '');
+  event.clipboardData.setData('text/plain', clipboardText(wrapper));
   event.clipboardData.setData('text/html', wrapper.innerHTML);
+}
+
+function clipboardText(root: Node) {
+  let text = '';
+  const boundary = () => {
+    if (text && !text.endsWith('\n')) text += '\n';
+  };
+  const visit = (node: Node) => {
+    if (node.nodeType === 3) {
+      text += node.textContent ?? '';
+      return;
+    }
+    if (node.nodeName === 'BR') {
+      text += '\n';
+      return;
+    }
+    const block =
+      /^(ADDRESS|ARTICLE|ASIDE|BLOCKQUOTE|DIV|H[1-6]|HR|LI|OL|P|PRE|SECTION|TABLE|TR|UL)$/.test(
+        node.nodeName,
+      );
+    if (block) boundary();
+    for (const child of node.childNodes) visit(child);
+    if (block) boundary();
+    if (node.nodeName === 'TD' || node.nodeName === 'TH') text += '\t';
+  };
+  visit(root);
+  return text.replace(/\n$/, '');
 }

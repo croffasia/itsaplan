@@ -15,7 +15,6 @@ import { linkPreviewDestination } from './linkPreviewDestination';
 import { isRetryableLinkPreviewError } from './isRetryableLinkPreviewError';
 import EditorLinkPreviewImage from './EditorLinkPreviewImage';
 import EditorLinkPreviewDetails from './EditorLinkPreviewDetails';
-import LinkPreviewActions from './LinkPreviewActions';
 import styles from './LinkPreviewDialog.module.css';
 
 const previewIcons = {
@@ -26,13 +25,7 @@ const previewIcons = {
   view: LayoutList,
 };
 
-export default function LinkPreviewContent({
-  link,
-  onEdit,
-}: {
-  link: LinkPreviewItem;
-  onEdit?: () => void;
-}) {
+export default function LinkPreviewContent({ link }: { link: LinkPreviewItem }) {
   const t = useTranslations('common.editor');
   const origin = typeof window === 'undefined' ? undefined : window.location.origin;
   const destination = linkPreviewDestination(link.url, origin);
@@ -41,8 +34,10 @@ export default function LinkPreviewContent({
   const internal = !!destination && destination.origin === origin;
   const loading = query.isPending || query.isFetching;
   const Icon = preview?.kind ? previewIcons[preview.kind] : Globe;
-  const title =
-    preview?.title || link.label || (internal ? t('internalPage') : destination?.hostname);
+  let fallbackTitle = internal ? t('internalPage') : destination?.hostname;
+  if (link.label && link.label !== link.url && link.label !== destination?.href)
+    fallbackTitle = link.label;
+  const title = preview?.title || fallbackTitle;
   return (
     <div className="space-y-4">
       <div className="space-y-2">
@@ -96,7 +91,6 @@ export default function LinkPreviewContent({
       <p className="rounded-md bg-muted/50 p-3 text-sm wrap-anywhere select-text" dir="ltr">
         {link.url}
       </p>
-      <LinkPreviewActions url={link.url} openable={!!destination} onEdit={onEdit} />
     </div>
   );
 }

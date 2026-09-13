@@ -1,0 +1,198 @@
+import assert from 'node:assert/strict';
+import { createRequire } from 'node:module';
+import { afterEach, beforeEach, describe, it } from 'node:test';
+import { act, StrictMode } from 'react';
+import { createRoot, type Root } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Editor, EditorContent } from '@tiptap/react';
+import Link from '@tiptap/extension-link';
+import StarterKit from '@tiptap/starter-kit';
+import { Markdown } from 'tiptap-markdown';
+import { NextIntlClientProvider } from 'next-intl';
+import { JSDOM } from 'jsdom';
+import * as auth from '@/lib/auth-client';
+import common from '../../../../messages/en/common.json';
+
+const spyOn = createRequire(import.meta.url)('bun:test').spyOn as (
+  target: object,
+  method: string,
+) => {
+  mockReturnValue(value: unknown): { mockRestore(): void };
+  mockImplementation(fn: (...args: unknown[]) => unknown): { mockRestore(): void };
+};
+
+const source =
+  'https://example.com/guide?key=A%2FB#part\n\nRead [the guide](https://example.com/other).';
+let dom: JSDOM;
+let root: Root;
+let editor: Editor;
+let client: QueryClient;
+let originals: Map<string, PropertyDescriptor | undefined>;
+let restoreSession: () => void;
+let restoreConsole: () => void;
+let originalFetch: typeof fetch;
+let EditorLinkPreview: (typeof import('./EditorLinkPreview'))['default'];
+let requests: string[];
+let warnings: string[];
+
+const settle = () => act(() => new Promise<void>((resolve) => setTimeout(resolve, 20)));
+
+async function render({ compact = true, strict = true } = {}) {
+  const content = (
+    <NextIntlClientProvider locale="en" timeZone="UTC" messages={{ common }}>
+      <QueryClientProvider client={client}>
+        <EditorContent editor={editor} />
+        <EditorLinkPreview editor={editor} source={source} compact={compact} />
+      </QueryClientProvider>
+    </NextIntlClientProvider>
+  );
+  await act(() => root.render(strict ? <StrictMode>{content}</StrictMode> : content));
+  await settle();
+}
+
+beforeEach(async () => {
+  dom = new JSDOM('<div id="root"></div><div id="editor"></div>', {
+    url: 'https://planner.test',
+    pretendToBeVisual: true,
+  });
+  dom.window.matchMedia = (media) => ({
+    media,
+    matches: true,
+    onchange: null,
+    addEventListener() {},
+    removeEventListener() {},
+    addListener() {},
+    removeListener() {},
+    dispatchEvent: () => true,
+  });
+  const globals = {
+    window: dom.window,
+    document: dom.window.document,
+    navigator: dom.window.navigator,
+    DOMParser: dom.window.DOMParser,
+    Node: dom.window.Node,
+    NodeFilter: dom.window.NodeFilter,
+    Element: dom.window.Element,
+    HTMLElement: dom.window.HTMLElement,
+    HTMLAnchorElement: dom.window.HTMLAnchorElement,
+    HTMLInputElement: dom.window.HTMLInputElement,
+    MutationObserver: dom.window.MutationObserver,
+    CustomEvent: dom.window.CustomEvent,
+    PointerEvent: dom.window.MouseEvent,
+    Image: dom.window.Image,
+    getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
+    requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
+    cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
+    IS_REACT_ACT_ENVIRONMENT: true,
+  };
+  originals = new Map(
+    Object.keys(globals).map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]),
+  );
+  for (const [key, value] of Object.entries(globals))
+    Object.defineProperty(globalThis, key, { configurable: true, value });
+  ({ default: EditorLinkPreview } = await import('./EditorLinkPreview'));
+  const session = spyOn(auth, 'useSession').mockReturnValue({
+    data: { user: { id: 'reader' } },
+    isPending: false,
+    error: null,
+  } as ReturnType<typeof auth.useSession>);
+  restoreSession = () => session.mockRestore();
+  warnings = [];
+  const logging = spyOn(console, 'error').mockImplementation((...args) =>
+    warnings.push(args.join(' ')),
+  );
+  restoreConsole = () => logging.mockRestore();
+  originalFetch = globalThis.fetch;
+  requests = [];
+  globalThis.fetch = (async (input) => {
+    requests.push(String(input));
+    return Response.json({
+      url: 'https://example.com/guide',
+      title: 'Fetched guide title',
+      description: 'Description',
+      siteName: 'Site',
+      image: null,
+    });
+  }) as typeof fetch;
+  client = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } });
+  editor = new Editor({
+    element: document.getElementById('editor')!,
+    extensions: [
+      StarterKit.configure({ link: false }),
+      Link.configure({ openOnClick: false }),
+      Markdown.configure({ html: true, linkify: true, breaks: true }),
+    ],
+    content: source,
+    editorProps: { handleScrollToSelection: () => true },
+  });
+  root = createRoot(document.getElementById('root')!);
+});
+
+afterEach(async () => {
+  await act(() => root.unmount());
+  editor.destroy();
+  await settle();
+  client.clear();
+  globalThis.fetch = originalFetch;
+  restoreSession();
+  restoreConsole();
+  dom.window.close();
+  for (const [key, descriptor] of originals) {
+    if (descriptor) Object.defineProperty(globalThis, key, descriptor);
+    else Reflect.deleteProperty(globalThis, key);
+  }
+});
+
+describe('mounted EditorContent link presentation', () => {
+  it('mounts and changes capability presentation without lifecycle flushes or source updates', async () => {
+    const json = editor.getJSON();
+    const markdown = editor.storage.markdown.getMarkdown();
+    let updates = 0;
+    editor.on('update', () => updates++);
+    await render();
+    assert.equal(document.querySelectorAll('[data-link-row]').length, 1);
+    assert.equal(document.querySelectorAll('[data-link-preview-control]').length, 2);
+    assert.equal(requests.length, 0);
+    await render({ compact: false });
+    assert.equal(document.querySelectorAll('[data-link-row]').length, 0);
+    assert.equal(document.querySelectorAll('[data-link-preview-control]').length, 2);
+    await render();
+    assert.equal(document.querySelectorAll('[data-link-row]').length, 1);
+    assert.equal(
+      warnings.some((warning) => /flushSync|lifecycle|Maximum update depth/.test(warning)),
+      false,
+      warnings.join('\n'),
+    );
+    assert.equal(updates, 0);
+    assert.deepEqual(editor.getJSON(), json);
+    assert.equal(editor.storage.markdown.getMarkdown(), markdown);
+    assert.equal(editor.can().undo(), false);
+  });
+
+  it('opens a mounted widget preview and restores focus without editing the document', async () => {
+    const json = editor.getJSON();
+    const markdown = editor.storage.markdown.getMarkdown();
+    let updates = 0;
+    editor.on('update', () => updates++);
+    await render({ strict: false });
+    const trigger = document.querySelector<HTMLButtonElement>('[data-link-preview-control]')!;
+    await act(() => trigger.click());
+    await settle();
+    assert.equal(document.querySelectorAll('[role="dialog"]').length, 1);
+    assert.equal(requests.length, 1);
+    assert.match(document.body.textContent!, /Fetched guide title/);
+    const close = document.querySelector<HTMLButtonElement>('button[aria-label="Close"]')!;
+    await act(() => close.click());
+    await settle();
+    assert.equal(document.querySelector('[role="dialog"]'), null);
+    assert.equal(document.activeElement, trigger);
+    assert.equal(updates, 0);
+    assert.deepEqual(editor.getJSON(), json);
+    assert.equal(editor.storage.markdown.getMarkdown(), markdown);
+    assert.equal(
+      warnings.some((warning) => /flushSync|lifecycle|Maximum update depth/.test(warning)),
+      false,
+      warnings.join('\n'),
+    );
+  });
+});

@@ -20,6 +20,26 @@ export function createEditorLinkPresentation(
   const originalDoc = editor.state.doc;
   let options: PresentationOptions = { enabled: false, compact: false, suspended: false };
   let decorations = DecorationSet.empty;
+  let destroyed = false;
+  let refreshQueued = false;
+
+  function refresh() {
+    if (destroyed || editor.isDestroyed) return;
+    const state = key.getState(editor.state);
+    if (!state) return;
+    decorations = build(state.blocks, state.sourceUnchanged);
+    editor.view.updateState(editor.state);
+  }
+
+  function scheduleRefresh() {
+    if (refreshQueued) return;
+    refreshQueued = true;
+    // ReactRenderer flushes synchronously when EditorContent is mounted.
+    queueMicrotask(() => {
+      refreshQueued = false;
+      refresh();
+    });
+  }
 
   function build(blocks: EditorLinkBlock[], sourceUnchanged: boolean) {
     if (!options.enabled || options.suspended) return DecorationSet.empty;
@@ -80,6 +100,7 @@ export function createEditorLinkPresentation(
       }),
       apply: (transaction, previous) => {
         if (!transaction.docChanged) return previous;
+        decorations = DecorationSet.empty;
         return {
           blocks: editorLinkBlocks(transaction.doc, bareUrls, window.location.origin),
           sourceUnchanged: transaction.doc.eq(originalDoc),
@@ -94,10 +115,10 @@ export function createEditorLinkPresentation(
           const next = key.getState(nextView.state)!;
           if (previous === next) return;
           previous = next;
-          decorations = build(next.blocks, next.sourceUnchanged);
-          nextView.updateState(nextView.state);
+          scheduleRefresh();
         },
         destroy: () => {
+          destroyed = true;
           for (const renderer of renderers.values()) renderer.destroy();
           renderers.clear();
         },
@@ -116,10 +137,8 @@ export function createEditorLinkPresentation(
       )
         return;
       options = next;
-      const state = key.getState(editor.state);
-      if (!state || editor.isDestroyed) return;
-      decorations = build(state.blocks, state.sourceUnchanged);
-      editor.view.updateState(editor.state);
+      if (!next.enabled || next.suspended) refresh();
+      else scheduleRefresh();
     },
   };
 }

@@ -12,7 +12,8 @@ import {
   previewUrl,
 } from './linkPresentation';
 import { createEditorLinkPresentation } from './editorLinkPresentation';
-import { staticLinkBlocks } from './staticLinkPresentation';
+import { copyPresentedLinks, staticLinkBlocks } from './staticLinkPresentation';
+import type { ClipboardEvent } from 'react';
 import { renderMarkdown } from '@/lib/markdown';
 
 let dom: JSDOM;
@@ -145,10 +146,63 @@ describe('link presentation classification', () => {
     );
     assert.equal(excluded.flatMap((block) => block.links).length, 0);
   });
+
+  it('preserves safe new-tab navigation through the actual static render path', () => {
+    const source = '[Outside](https://example.com/A?key=%2F#part)';
+    const html = renderMarkdown(source, { newTabLinks: true });
+    const blocks = staticLinkBlocks(html, bareMarkdownUrls(source), 'https://planner.test');
+    const parsed = new DOMParser().parseFromString(blocks[0].html, 'text/html');
+    const link = parsed.querySelector('a')!;
+    assert.equal(link.getAttribute('target'), '_blank');
+    assert.equal(link.getAttribute('rel'), 'noreferrer');
+    assert.equal(link.getAttribute('href'), 'https://example.com/A?key=%2F#part');
+  });
+
+  it('copies actual static selections with block and hard-break separators', () => {
+    const element = document.getElementById('editor')!;
+    element.innerHTML =
+      '<div><p>First <a href="https://first.test">Alpha</a></p><span data-link-presentation><button data-link-preview-control>Preview link</button></span></div><div><p>Second <a href="https://second.test">Beta</a><br>Third line</p></div>';
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    window.getSelection()!.addRange(range);
+    const copied = new Map<string, string>();
+    let prevented = false;
+    copyPresentedLinks({
+      preventDefault: () => {
+        prevented = true;
+      },
+      clipboardData: { setData: (type: string, value: string) => copied.set(type, value) },
+    } as unknown as ClipboardEvent<HTMLElement>);
+    assert.equal(prevented, true);
+    assert.equal(copied.get('text/plain'), 'First Alpha\nSecond Beta\nThird line');
+    assert.doesNotMatch(copied.get('text/html')!, /Preview link/);
+  });
+
+  it('copies compact source labels once without metadata or hidden duplicates', () => {
+    const element = document.getElementById('editor')!;
+    element.innerHTML =
+      '<div><div data-link-original>https://first.test/A?key=%2F#part</div><span data-link-presentation><a href="https://first.test/A?key=%2F#part" data-link-row="https://first.test/A?key=%2F#part">Fetched title first.test</a><button data-link-preview-control>Preview</button></span></div><div><p>Original second paragraph</p></div>';
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    window.getSelection()!.addRange(range);
+    const copied = new Map<string, string>();
+    copyPresentedLinks({
+      preventDefault() {},
+      clipboardData: { setData: (type: string, value: string) => copied.set(type, value) },
+    } as unknown as ClipboardEvent<HTMLElement>);
+    assert.equal(
+      copied.get('text/plain'),
+      'https://first.test/A?key=%2F#part\nOriginal second paragraph',
+    );
+    assert.doesNotMatch(
+      copied.get('text/html')!,
+      /Fetched title|data-link-original|data-link-preview-control/,
+    );
+  });
 });
 
 describe('ProseMirror reading decorations preserve the source', () => {
-  it('adds and removes presentation without transactions, autosave, history or serialized UI', () => {
+  it('adds and removes presentation without transactions, autosave, history or serialized UI', async () => {
     const source =
       'https://example.com/guide?key=a%2Fb#Section\n\n[Named label](https://example.com/named)';
     const current = makeEditor(source);
@@ -162,6 +216,7 @@ describe('ProseMirror reading decorations preserve the source', () => {
     current.registerPlugin(presentation.plugin);
     for (const suspended of [false, true, false, true, false]) {
       presentation.configure({ enabled: true, compact: true, suspended });
+      await Promise.resolve();
       assert.deepEqual(current.getJSON(), json);
       assert.equal(current.storage.markdown.getMarkdown(), markdown);
     }
@@ -176,13 +231,14 @@ describe('ProseMirror reading decorations preserve the source', () => {
     assert.equal(current.can().undo(), false);
   });
 
-  it('preserves selection and undo after composition-style content changes', () => {
+  it('preserves selection and undo after composition-style content changes', async () => {
     const source = 'https://example.com/guide';
     const current = makeEditor(source);
     const before = current.getJSON();
     const presentation = createEditorLinkPresentation(current, source, () => {});
     current.registerPlugin(presentation.plugin);
     presentation.configure({ enabled: true, compact: true, suspended: false });
+    await Promise.resolve();
     current.commands.setTextSelection(5);
     const selection = current.state.selection.toJSON();
     presentation.configure({ enabled: true, compact: true, suspended: true });
@@ -195,13 +251,15 @@ describe('ProseMirror reading decorations preserve the source', () => {
     assert.equal(current.storage.markdown.getMarkdown(), '<https://example.com/guide>');
   });
 
-  it('keeps actual edits intact while recomputing presentation', () => {
+  it('keeps actual edits intact while recomputing presentation', async () => {
     const source = 'https://example.com/guide';
     const current = makeEditor(source);
     const presentation = createEditorLinkPresentation(current, source, () => {});
     current.registerPlugin(presentation.plugin);
     presentation.configure({ enabled: true, compact: true, suspended: false });
+    await Promise.resolve();
     current.commands.insertContentAt(1, 'prefix ');
+    await Promise.resolve();
     assert.equal(current.view.dom.querySelectorAll('[data-link-widget]').length, 1);
     assert.equal(current.storage.markdown.getMarkdown().includes('prefix'), true);
   });

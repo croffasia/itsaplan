@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import LinkPreviewContent from './LinkPreviewContent';
 import LinkPreviewList from './LinkPreviewList';
+import LinkPreviewActions from './LinkPreviewActions';
 import { useLinkPreviewDialog } from './useLinkPreviewDialog';
 import styles from './LinkPreviewDialog.module.css';
 
@@ -38,6 +39,7 @@ export default function LinkPreviewDialog({
       <DialogPortal>
         <DialogOverlay className={styles.overlay} />
         <DialogContent
+          ref={dialog.body}
           data-slot="dialog-content"
           className={`${styles.dialog} flex flex-col gap-4 overflow-hidden bg-card text-card-foreground outline-none`}
           aria-describedby={undefined}
@@ -65,10 +67,7 @@ export default function LinkPreviewDialog({
               </Button>
             </DialogClose>
           </div>
-          <div
-            ref={dialog.body}
-            className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain"
-          >
+          <div className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain">
             {link && links.length > 1 && (
               <Button
                 type="button"
@@ -81,11 +80,7 @@ export default function LinkPreviewDialog({
               </Button>
             )}
             {link ? (
-              <LinkPreviewContent
-                key={link.url}
-                link={link}
-                onEdit={link.onEdit ? () => dialog.editLink(link.onEdit!) : undefined}
-              />
+              <LinkPreviewContent key={link.url} link={link} />
             ) : (
               <LinkPreviewList
                 links={links}
@@ -94,6 +89,13 @@ export default function LinkPreviewDialog({
               />
             )}
           </div>
+          {link && (
+            <LinkPreviewActions
+              key={link.url}
+              url={link.url}
+              onEdit={link.onEdit ? () => dialog.editLink(link.onEdit!) : undefined}
+            />
+          )}
         </DialogContent>
       </DialogPortal>
     </Dialog>

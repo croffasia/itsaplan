@@ -40,5 +40,34 @@
     "automation": "Otomatisasi"
   },
   "godModeOwnerOnly": "Mode God hanya terbuka untuk pemilik instance.",
-  "project": "Proyek"
+  "project": "Proyek",
+  "projectPicker": {
+    "sortName": "Project name",
+    "noResults": "No matching projects",
+    "sortCreated": "Newest created",
+    "hideHidden": "Hide hidden projects",
+    "resize": "Drag to resize the project picker",
+    "resetWidth": "Reset project picker width",
+    "activityHint": "Latest work-item change or comment",
+    "search": "Search projects by name, key, or team…",
+    "sortActivity": "Recent activity",
+    "sort": "Sort projects",
+    "sortKey": "Project key",
+    "showHidden": "Show hidden projects ({count})",
+    "starProject": "Star {name}",
+    "unstarProject": "Unstar {name}",
+    "hideProject": "Hide {name} from my projects",
+    "showProject": "Show {name} in my projects",
+    "allHiddenTitle": "All projects are hidden",
+    "allHiddenDescription": "Hidden projects are excluded from your project navigation. Your access, teammates, and agents are unaffected. Show a project to open it again.",
+    "hiddenProjects": "Hidden projects ({count})",
+    "noHiddenResults": "No hidden projects match your search",
+    "noVisibleProjects": "No projects in your view",
+    "projectActions": "Actions for {name}",
+    "starAction": "Star project",
+    "unstarAction": "Unstar project",
+    "hideAction": "Hide from my view",
+    "restoreAction": "Restore to my view",
+    "starred": "Starred"
+  }
 }

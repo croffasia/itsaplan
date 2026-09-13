@@ -9,16 +9,34 @@ import {
 } from '@/lib/api/endpoints/teams';
 import {
   type Project,
+  type ProjectPreferencePatch,
   listProjects,
   getProject,
   getBoardIssues,
   createProject,
   updateProject,
+  updateProjectPreferences,
 } from '@/lib/api/endpoints/projects';
 import { qk } from '@/services/queryKeys';
 
 export function useProjectsQuery() {
   return useQuery({ queryKey: qk.projects, queryFn: () => listProjects() });
+}
+
+export function useUpdateProjectPreferences() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ projectKey, patch }: { projectKey: string; patch: ProjectPreferencePatch }) =>
+      updateProjectPreferences(projectKey, patch),
+    onSuccess: (preferences, { projectKey }) => {
+      qc.setQueryData<Project[]>(qk.projects, (projects) =>
+        projects?.map((project) =>
+          project.key === projectKey ? { ...project, ...preferences } : project,
+        ),
+      );
+      void qc.invalidateQueries({ queryKey: qk.projects });
+    },
+  });
 }
 
 // The board scaffold (columns, types, labels, custom fields, viewer). The issues

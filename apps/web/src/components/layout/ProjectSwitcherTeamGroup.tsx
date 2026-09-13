@@ -1,29 +1,23 @@
-import { Check, ChevronRight, SquareKanban, Users } from 'lucide-react';
+import { ChevronRight, SquareKanban, Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { Project } from '@/lib/api/endpoints/projects';
 import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import ProjectSwitcherProjectRow from './ProjectSwitcherProjectRow';
+import type { TeamGroup } from './utils/projectSwitcher';
 
-export interface TeamGroup {
-  teamId: number;
-  teamName: string;
-  projects: Project[];
-}
-
-// One team's projects in the project switcher, foldable by its header. The open
-// state is owned by the switcher, which outlives the menu's content.
 export default function ProjectSwitcherTeamGroup({
   group,
   currentProjectKey,
   open,
+  searching,
   onOpenChange,
   onSelectProject,
 }: {
   group: TeamGroup;
   currentProjectKey: string | null;
   open: boolean;
+  searching: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectProject: (key: string) => void;
 }) {
@@ -31,39 +25,43 @@ export default function ProjectSwitcherTeamGroup({
 
   return (
     <Collapsible open={open} onOpenChange={onOpenChange}>
-      {/* A menu item rather than a plain button: only items take part in the
-          dropdown's keyboard navigation. Selecting one closes the menu, which
-          folding a team must not do. */}
       <CollapsibleTrigger asChild>
-        <DropdownMenuItem
-          onSelect={(e) => e.preventDefault()}
-          className="gap-1.5 px-2 py-1.5 text-xs text-muted-foreground"
+        <Button
+          variant="ghost"
+          disabled={searching}
+          onKeyDown={(event) => event.stopPropagation()}
+          className="h-auto min-h-8 w-full justify-start gap-1.5 px-2 py-1.5 text-xs text-muted-foreground disabled:opacity-100"
         >
-          <ChevronRight className={cn('size-3 transition-transform', open && 'rotate-90')} />
+          <ChevronRight
+            className={cn(
+              'size-3 transition-transform rtl:rotate-180',
+              open && 'rotate-90 rtl:rotate-90',
+            )}
+          />
           <Users className="size-3.5 shrink-0" />
-          <span className="truncate font-medium">{group.teamName}</span>
+          <span
+            dir="auto"
+            className="min-w-0 text-start font-medium wrap-anywhere whitespace-normal"
+          >
+            {group.teamName}
+          </span>
           <span className="ms-auto flex shrink-0 items-center gap-1">
             <SquareKanban className="size-3.5" />
             <span className="tabular-nums">{group.projects.length}</span>
           </span>
-        </DropdownMenuItem>
+        </Button>
       </CollapsibleTrigger>
       <CollapsibleContent>
         {group.projects.length === 0 && (
           <p className="py-2 ps-9 pe-2 text-xs text-muted-foreground">{t('noProjects')}</p>
         )}
         {group.projects.map((project) => (
-          <DropdownMenuItem
+          <ProjectSwitcherProjectRow
             key={project.key}
-            onClick={() => onSelectProject(project.key)}
-            className="gap-2 p-2"
-          >
-            <Badge className="w-12 shrink-0 rounded px-1 py-0 font-mono text-[10px]">
-              {project.key}
-            </Badge>
-            <span className="min-w-0 flex-1 truncate">{project.name}</span>
-            {project.key === currentProjectKey && <Check className="size-4 shrink-0" />}
-          </DropdownMenuItem>
+            project={project}
+            currentProjectKey={currentProjectKey}
+            onSelectProject={onSelectProject}
+          />
         ))}
       </CollapsibleContent>
     </Collapsible>

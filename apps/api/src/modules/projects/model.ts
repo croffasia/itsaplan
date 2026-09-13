@@ -52,7 +52,39 @@ export const updateProjectBody = t.Object({
   description: t.Optional(t.String({ maxLength: PROJECT_DESCRIPTION_LIMIT })),
 });
 
+export const ProjectPreferencesResponse = t.Object({
+  isFavorite: t.Boolean(),
+  isHidden: t.Boolean(),
+});
+
+export const updateProjectPreferencesBody = t.Object(
+  {
+    isFavorite: t.Optional(t.Boolean()),
+    isHidden: t.Optional(t.Boolean()),
+  },
+  { minProperties: 1 },
+);
+
 export const listProjectsQuery = t.Object({
+  q: t.Optional(
+    t.String({
+      description: 'Case-insensitive literal substring of the project key, name, or description.',
+    }),
+  ),
+  sort: t.Optional(
+    t.UnionEnum(['key', 'name', 'created', 'activity'], {
+      description:
+        'Sort by key (default), name, newest creation, or newest work-item activity/comment. ' +
+        'Activity puts projects without activity last. Ties are ordered by key.',
+    }),
+  ),
+  teamId: t.Optional(
+    t.Numeric({
+      minimum: 1,
+      multipleOf: 1,
+      description: 'Limit results to projects in this team that you belong to.',
+    }),
+  ),
   permissions: t.Optional(
     t.String({ description: "'true' to include the caller's permission matrix per project." }),
   ),
@@ -93,6 +125,15 @@ export const ProjectListResponse = t.Array(
     ProjectResponse,
     t.Object({
       role: t.Union([t.Literal('owner'), t.Literal('member')]),
+      lastActivityAt: t.Nullable(
+        t.String({
+          description: 'Newest readable work-item activity or comment timestamp, or null.',
+        }),
+      ),
+      isFavorite: t.Boolean({ description: 'Whether you starred this project.' }),
+      isHidden: t.Boolean({
+        description: 'Whether you hid this project in your navigation. Does not restrict access.',
+      }),
       permissions: t.Optional(PermissionMatrixSchema),
     }),
   ]),

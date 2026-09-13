@@ -279,6 +279,8 @@ export const projectMember = pgTable(
     // it only ever updates or removes its own rows, so a sync never undoes a
     // membership someone set up by hand.
     source: text('source').notNull().default('invite'),
+    isFavorite: boolean('is_favorite').notNull().default(false),
+    isHidden: boolean('is_hidden').notNull().default(false),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

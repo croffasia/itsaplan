@@ -756,6 +756,10 @@
   background-color: var(--kanban-card);
 }
 
+.column-search-result .text-muted-foreground {
+  color: color-mix(in oklab, var(--muted-foreground) 85%, var(--foreground) 15%);
+}
+
 @media (hover: hover) {
   .column-search-result:hover {
     background-color: var(--kanban-card-hover);

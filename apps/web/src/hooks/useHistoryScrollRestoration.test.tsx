@@ -187,6 +187,13 @@ afterEach(() => {
 });
 
 describe('useHistoryScrollRestoration', () => {
+  it('preserves the search and section anchor while recording scroll state', () => {
+    const path = `${parentPath}?view=doc#block-section`;
+    window.history.replaceState({}, '', path);
+    render(parentPath);
+    assert.equal(window.location.pathname + window.location.search + window.location.hash, path);
+  });
+
   it('restores the parent position from its browser history entry', () => {
     const container = render(parentPath);
     container.scrollTop = 1800;

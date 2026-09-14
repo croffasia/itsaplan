@@ -2208,3 +2208,48 @@ export const revision = pgTable(
   // Backs both the project cleanup and the membership join the read does.
   (t) => [index('revision_project_idx').on(t.projectId)],
 );
+
+export const documentCollaboration = pgTable('document_collaboration', {
+  documentId: integer('document_id')
+    .primaryKey()
+    .references(() => projectDocument.id, { onDelete: 'cascade' }),
+  epoch: uuid('epoch').notNull().defaultRandom(),
+  version: integer('version').notNull().default(0),
+  contentJson: jsonb('content_json').$type<Record<string, unknown>>().notNull(),
+});
+
+export const documentStep = pgTable(
+  'document_step',
+  {
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    version: integer('version').notNull(),
+    clientId: text('client_id').notNull(),
+    step: jsonb('step').$type<Record<string, unknown>>().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.documentId, t.version] })],
+);
+
+export const documentComment = pgTable(
+  'document_comment',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    documentId: integer('document_id')
+      .notNull()
+      .references(() => projectDocument.id, { onDelete: 'cascade' }),
+    parentId: uuid('parent_id').references((): AnyPgColumn => documentComment.id, {
+      onDelete: 'cascade',
+    }),
+    authorId: text('author_id').references(() => user.id, { onDelete: 'set null' }),
+    body: text('body').notNull(),
+    quote: text('quote').notNull().default(''),
+    from: integer('selection_from'),
+    to: integer('selection_to'),
+    orphaned: boolean('orphaned').notNull().default(false),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('document_comment_document_idx').on(t.documentId, t.createdAt)],
+);

@@ -20,6 +20,18 @@ name: itsaplan-test
 services:
   postgres-test:
     image: postgres:17-alpine
+    # Frequent TRUNCATEs retain relation files until a checkpoint; keep the
+    # disposable database below the small tmpfs limit of CI runners.
+    command:
+      [
+        'postgres',
+        '-c',
+        'checkpoint_timeout=30s',
+        '-c',
+        'max_wal_size=128MB',
+        '-c',
+        'min_wal_size=32MB',
+      ]
     environment:
       POSTGRES_USER: itsaplan
       POSTGRES_PASSWORD: itsaplan

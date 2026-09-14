@@ -387,10 +387,10 @@
     }
   },
   "documents": {
-    "title": "Docs",
-    "add": "Vincular uma página de Docs",
+    "title": "Documentos",
+    "add": "Vincular um documento",
     "empty": "Nenhum Doc vinculado ainda.",
-    "loadFailed": "Não foi possível carregar os Docs vinculados. Clique para tentar novamente.",
+    "loadFailed": "Não foi possível carregar os documentos vinculados. Clique para tentar novamente.",
     "remove": "Desvincular {title}",
     "untitled": "Sem título"
   },

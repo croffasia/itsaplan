@@ -4,6 +4,7 @@
 // applies to the static action items. cmdk trims an item's value, so the prefix
 // cannot rely on surrounding whitespace to keep it apart from a command value; the
 // colon does that instead, since a command id never contains one.
+export const DOCUMENT_PREFIX = 'document-hit:';
 export const ISSUE_PREFIX = 'issue-hit:';
 
 // Match/rank the static action items. cmdk's default scorer is a fuzzy
@@ -12,8 +13,8 @@ export const ISSUE_PREFIX = 'issue-hit:';
 // tiebreak (< 1) favouring an earlier hit. Server-provided issue items are handled
 // separately: they always show (score > 0), ordered by their list index.
 export function substringFilter(value: string, search: string): number {
-  if (value.startsWith(ISSUE_PREFIX)) {
-    const index = Number(value.slice(ISSUE_PREFIX.length));
+  if (value.startsWith(ISSUE_PREFIX) || value.startsWith(DOCUMENT_PREFIX)) {
+    const index = Number(value.slice(value.indexOf(':') + 1)) || 0;
     return 1 - index / 1e6;
   }
   // cmdk calls this at item registration with the current (on open: empty)

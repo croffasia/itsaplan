@@ -73,9 +73,16 @@ export default function DocumentSidePanel({
 
   useEffect(() => {
     if (!editor) return;
-    const refreshOutline = () => setOutlineRevision((value) => value + 1);
+    let timer: ReturnType<typeof setTimeout>;
+    const refreshOutline = ({ transaction }: { transaction: { docChanged: boolean } }) => {
+      if (transaction.docChanged) {
+        clearTimeout(timer);
+        timer = setTimeout(() => setOutlineRevision((value) => value + 1), 300);
+      }
+    };
     editor.on('transaction', refreshOutline);
     return () => {
+      clearTimeout(timer);
       editor.off('transaction', refreshOutline);
     };
   }, [editor]);

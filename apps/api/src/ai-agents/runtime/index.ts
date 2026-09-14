@@ -118,8 +118,7 @@ async function buildAgent(row: AiAgentRow, contextPreamble: string): Promise<Age
 }
 
 // Runs the internal agent identified by (agentId, projectId) against the prompt
-// and returns the generated text. Throws 404 if the agent does not exist in the
-// project and 400 if it is an external agent (which carries no model config).
+// and returns the generated text.
 //
 // When the agent has memory enabled, the run participates in a conversation
 // thread: threadId identifies the conversation (a new one is created when omitted)

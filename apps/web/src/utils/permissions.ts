@@ -24,6 +24,11 @@ const RESOURCE_LABELS: Record<string, string> = {
   files: 'Files',
   crm: 'CRM',
   finance: 'Finance & accounting',
+  leads: 'Leads',
+  social: 'Social',
+  braindump: 'Braindump',
+  mind: 'Mind',
+  competitors: 'Competitors',
   mail: 'Email',
   danger_zone: 'Danger zone',
 };
@@ -66,6 +71,8 @@ const GROUP_DEFS: PermissionGroup[] = [
   { title: 'Files', resources: ['files'] },
   { title: 'CRM', resources: ['crm'] },
   { title: 'Finance & accounting', resources: ['finance'] },
+  { title: 'Leads', resources: ['leads'] },
+  { title: 'Growth', resources: ['social'] },
   { title: 'Email', resources: ['mail'] },
   { title: 'AI', resources: ['ai_agents', 'integrations', 'agent_skills', 'agent_tools'] },
   {

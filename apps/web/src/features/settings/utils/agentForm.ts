@@ -71,9 +71,6 @@ function parseNum(s: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-// The kind-specific config, shared by the create input and edit patch. Both kinds
-// carry the authorization role they act under; an internal agent adds the
-// model/tools/trigger config on top.
 function configFields(v: AgentFormValue) {
   if (v.kind === 'external') {
     return { roleId: v.roleId };

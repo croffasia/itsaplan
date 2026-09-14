@@ -144,12 +144,8 @@ export interface Assignee {
   agentKind: 'external' | 'internal' | null;
 }
 
-// An AI agent on a project: a bot user plus its configuration. `kind` is
-// 'external' (driven by an outside caller through the API) or 'internal' (run by
-// the built-in runtime, so it carries provider/model/instructions/tools). Only an
-// external agent has an API key: `apiKeyStart` is the non-secret prefix for display
-// (null for internal), and the plaintext key is only returned once, on create and
-// on regenerate.
+// An AI agent on a project: a bot user plus its configuration. External agents keep
+// their outside API identity. Internal agents run through the built-in model runtime.
 export interface AiAgent {
   id: number;
   projectId: number;
@@ -202,6 +198,65 @@ export interface AgentRun {
 export interface AgentRunPage {
   items: AgentRun[];
   nextCursor: number | null;
+}
+
+export interface AgentFleetSummary {
+  generatedAt: string;
+  timezone: string;
+  status: {
+    live: number;
+    idle: number;
+    warning: number;
+  };
+  runs24h: number;
+  runTrendPercent: number | null;
+  schedules: {
+    active: number;
+    total: number;
+  };
+  successRate7d: number | null;
+  p95DurationMs7d: number | null;
+  peak: {
+    runs: number;
+    hour: string;
+  };
+  hourlyRuns: {
+    hour: string;
+    runs: number;
+  }[];
+}
+
+export interface ChatDashboardSummary {
+  generatedAt: string;
+  threads: number;
+  awaitingReply: number;
+  messages24h: number;
+  medianReplyMs7d: number | null;
+  peak: { messages: number; hour: string };
+  hourlyMessages: { hour: string; messages: number }[];
+}
+
+export interface HermesChatAgent {
+  id: number;
+  slug: string;
+  displayName: string;
+  description: string;
+  status: 'ready' | 'offline';
+}
+
+export interface HermesConversation {
+  id: string;
+  agentId: number;
+  agentName: string;
+  agentSlug: string;
+  title: string | null;
+  status: 'active' | 'archived';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface HermesChatMessage extends AiChatMessage {
+  status: 'completed' | 'failed';
 }
 
 export interface AgentSchedule {
@@ -413,6 +468,35 @@ export type AgentRunEvent =
   | { type: 'done'; threadId: string | null }
   | { type: 'error'; message: string };
 
+async function* readAgentRunEvents(
+  body: ReadableStream<Uint8Array>,
+): AsyncGenerator<AgentRunEvent> {
+  const reader = body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, '\n');
+      let separator = buffer.indexOf('\n\n');
+      while (separator !== -1) {
+        const frame = buffer.slice(0, separator);
+        buffer = buffer.slice(separator + 2);
+        const line = frame.split('\n').find((entry) => entry.startsWith('data:'));
+        if (line) {
+          const event = JSON.parse(line.slice(5).trim()) as AgentRunEvent;
+          yield event;
+          if (event.type === 'done' || event.type === 'error') return;
+        }
+        separator = buffer.indexOf('\n\n');
+      }
+    }
+  } finally {
+    await reader.cancel().catch(() => undefined);
+  }
+}
+
 // One of the caller's saved chat conversations with an agent. `title` is the first
 // prompt (truncated); null when it was never set.
 export interface AiChatThread {
@@ -435,7 +519,7 @@ export interface AiChatMessagePage {
   nextPage: number | null;
 }
 
-// Streams an internal agent's response over SSE, yielding each AgentRunEvent as it
+// Streams an agent's response over SSE, yielding each AgentRunEvent as it
 // arrives. Sends the session cookie like every other call. Throws ApiError when the
 // request itself fails before the stream starts (e.g. 403/404); a failure during
 // the run arrives as an `error` event, not a throw.
@@ -457,22 +541,29 @@ export async function* streamAiAgentRun(
     const err = await res.json().catch(() => null);
     throw new ApiError(res.status, err?.error ?? `${res.status} ${res.statusText}`);
   }
-  const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-  let buffer = '';
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += value;
-    // SSE frames are separated by a blank line; each frame here is a single
-    // `data:` line carrying one JSON-encoded event.
-    let sep: number;
-    while ((sep = buffer.indexOf('\n\n')) !== -1) {
-      const frame = buffer.slice(0, sep);
-      buffer = buffer.slice(sep + 2);
-      const line = frame.split('\n').find((l) => l.startsWith('data:'));
-      if (line) yield JSON.parse(line.slice(5).trim()) as AgentRunEvent;
-    }
+  yield* readAgentRunEvents(res.body);
+}
+
+export async function* streamHermesConversation(
+  projectKey: string,
+  conversationId: string,
+  message: string,
+  idempotencyKey: string,
+): AsyncGenerator<AgentRunEvent> {
+  const res = await fetch(
+    `${API_URL}/projects/${projectKey}/hermes-conversations/${conversationId}/messages/stream`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, idempotencyKey }),
+    },
+  );
+  if (!res.ok || !res.body) {
+    const err = await res.json().catch(() => null);
+    throw new ApiError(res.status, err?.error ?? `${res.status} ${res.statusText}`);
   }
+  yield* readAgentRunEvents(res.body);
 }
 
 export type CustomFieldType =
@@ -1394,6 +1485,206 @@ export interface CrmCustomer {
   updatedAt: string;
 }
 
+export interface LeadCampaign {
+  id: string;
+  name: string;
+  niche: string | null;
+  location: string | null;
+  source: string;
+  targetLeads: number | null;
+  sourcingLimit: number | null;
+  foundResults: number;
+  validLeads: number;
+  rejectedResults: number;
+  completedAnalyses: number;
+  failedAnalyses: number;
+  remainingLeads: number;
+  status: string;
+  sourcingStatus: string | null;
+  exportStatus: string;
+  outreachStatus: 'disabled';
+  startedAt: string | null;
+  completedAt: string | null;
+  updatedAt: string;
+}
+
+export interface ApprovalLead {
+  id: string;
+  companyId: string;
+  companyName: string;
+  campaignId: string;
+  campaignName: string;
+  category: string | null;
+  city: string | null;
+  postalCode: string | null;
+  phone: string | null;
+  website: string | null;
+  websiteStatus: string;
+  reviewStatus: string;
+  qualificationScore: number;
+  digitalOpportunityScore: number;
+  businessFit: string;
+  recommendation: string;
+  recommendedService: string | null;
+  evaluatedAt: string;
+  updatedAt: string;
+  outreachStatus: 'disabled';
+}
+
+export interface LeadAudit {
+  status: string;
+  finalUrl: string | null;
+  httpStatus: number | null;
+  responseMs: number | null;
+  httpsEnabled: boolean | null;
+  title: string | null;
+  metaDescription: string | null;
+  hasViewportMeta: boolean | null;
+  h1Count: number | null;
+  formCount: number | null;
+  telLinkCount: number | null;
+  bookingLinkCount: number | null;
+  imagesMissingAlt: number | null;
+  visualInspected: boolean;
+  desktopFindings: string[];
+  mobileFindings: string[];
+  technicalFindings: string[];
+  auditedAt: string | null;
+}
+
+export interface LeadDetail extends Omit<
+  ApprovalLead,
+  | 'websiteStatus'
+  | 'qualificationScore'
+  | 'digitalOpportunityScore'
+  | 'businessFit'
+  | 'recommendation'
+  | 'evaluatedAt'
+  | 'updatedAt'
+> {
+  address: string | null;
+  countryCode: string | null;
+  publicBusinessEmail: string | null;
+  googleMapsUrl: string | null;
+  googlePlaceId: string | null;
+  lifecycleStatus: string;
+  contactStatus: string;
+  timesSeen: number;
+  websiteStatus: string | null;
+  websiteQualityScore: number | null;
+  digitalOpportunityScore: number | null;
+  qualificationScore: number | null;
+  businessFit: string | null;
+  recommendation: string | null;
+  findings: string[];
+  opportunities: string[];
+  evaluationStatus: string | null;
+  modelName: string | null;
+  evaluatedAt: string | null;
+  audit: LeadAudit | null;
+  evidence: { type: string; url: string }[];
+  source: {
+    type: string | null;
+    url: string | null;
+    actorRunId: string | null;
+    datasetId: string | null;
+    collectedAt: string | null;
+  };
+  campaignHistory: {
+    leadId: string;
+    campaignId: string;
+    campaignName: string;
+    reviewStatus: string;
+    firstAddedAt: string;
+    lastSeenAt: string;
+  }[];
+  firstAddedAt: string;
+  lastSeenAt: string;
+}
+
+export interface LeadAgentRun {
+  id: string;
+  type: 'google_maps_sourcing';
+  campaignId: string | null;
+  campaignName: string;
+  provider: string;
+  status: string;
+  phase: string;
+  startedAt: string;
+  updatedAt: string;
+  completedAt: string | null;
+  requested: number;
+  processed: number;
+  succeeded: number;
+  failed: number;
+  errorCode: string | null;
+  retryStatus: string;
+  reconciliationStatus: string;
+}
+
+export interface SocialMetrics {
+  reach: number;
+  impressions: number;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  engagementRate: number;
+}
+
+export interface SocialPost {
+  id: string;
+  content: string;
+  status: string;
+  publishedAt: string | null;
+  scheduledFor: string | null;
+  mediaType: string | null;
+  platformPostUrl: string | null;
+  metrics: SocialMetrics;
+}
+
+export interface SocialDashboard {
+  rangeDays: number;
+  syncedAt: string | null;
+  account: {
+    username: string;
+    displayName: string;
+    profilePicture: string | null;
+    profileUrl: string | null;
+    followers: number;
+    connected: boolean;
+    needsReconnection: boolean;
+  } | null;
+  summary: {
+    reach: number;
+    impressions: number;
+    views: number;
+    engagements: number;
+    engagementRate: number;
+    followers: number;
+    publishedPosts: number;
+    scheduledPosts: number;
+  };
+  daily: {
+    date: string;
+    reach: number;
+    impressions: number;
+    views: number;
+    engagements: number;
+  }[];
+  posts: SocialPost[];
+  hashtags: { tag: string; count: number }[];
+  bestTimes: {
+    day: number;
+    hour: number;
+    averageEngagement: number;
+    postCount: number;
+  }[];
+  featuredPostId: string | null;
+  featuredTimeline: { date: string; views: number; reach: number }[];
+}
+
 export type CrmCustomerInput = Omit<CrmCustomer, 'id' | 'createdAt' | 'updatedAt'>;
 
 export type FinanceTransactionType = 'income' | 'expense';
@@ -1907,6 +2198,11 @@ export type PermissionResource =
   | 'files'
   | 'crm'
   | 'finance'
+  | 'leads'
+  | 'social'
+  | 'braindump'
+  | 'mind'
+  | 'competitors'
   | 'mail'
   | 'danger_zone';
 
@@ -2107,6 +2403,244 @@ function subtaskQuery(disposition?: SubtaskDisposition): string {
   const qs = new URLSearchParams({ subtasks: disposition.subtasks });
   if (disposition.newParentId != null) qs.set('newParentId', String(disposition.newParentId));
   return `?${qs.toString()}`;
+}
+
+export type BraindumpKind = 'idea' | 'task' | 'note' | 'voice';
+export type BraindumpDestination = 'obsidian' | 'issue' | 'schedule';
+
+export interface BraindumpEntry {
+  id: number;
+  kind: BraindumpKind;
+  title: string;
+  body: string;
+  tags: string[];
+  pinned: boolean;
+  authorName: string | null;
+  hasAudio: boolean;
+  audioDurationSec: number | null;
+  routedTo: BraindumpDestination | null;
+  routedAt: string | null;
+  routedRef: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BraindumpStats {
+  routedToday: number;
+  unsorted: number;
+  byDestination: { destination: string; count: number }[];
+  daily: { date: string; count: number }[];
+  total: number;
+  averagePerDay: number;
+}
+
+// Whether the instance has a transcription service and a vault directory wired up.
+// The capture UI hides what is not available rather than failing on use.
+export interface BraindumpConfig {
+  voice: boolean;
+  obsidian: boolean;
+}
+
+export interface BraindumpInput {
+  kind: BraindumpKind;
+  title?: string;
+  body: string;
+  tags?: string[];
+}
+
+export interface BraindumpRouteInput {
+  destination: BraindumpDestination;
+  columnId?: number;
+  agentId?: number;
+  cron?: string;
+}
+
+export interface BraindumpListFilters {
+  kind?: BraindumpKind;
+  tag?: string;
+  search?: string;
+  days?: number;
+}
+
+// The voice route is multipart, so it bypasses `request` (which sets a JSON
+// content type) and posts the recording as a form field.
+async function sendBraindumpVoice(
+  projectKey: string,
+  audio: Blob,
+  durationSec: number,
+): Promise<BraindumpEntry> {
+  const form = new FormData();
+  // Name the upload after the container the recorder used, so the transcriber picks
+  // the right demuxer.
+  const container = ['ogg', 'mp4', 'webm'].find((name) => audio.type.includes(name)) ?? 'webm';
+  form.append('file', audio, `dump.${container}`);
+  form.append('durationSec', String(Math.round(durationSec)));
+  const res = await fetch(`${API_URL}/projects/${encodeURIComponent(projectKey)}/braindump/voice`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export type MindCategory =
+  | 'goals'
+  | 'routines'
+  | 'people'
+  | 'clients'
+  | 'infra'
+  | 'business'
+  | 'knowledge'
+  | 'daily_notes'
+  | 'archive';
+
+export type MindStatus = 'unverified' | 'verified' | 'flagged' | 'conflicted';
+export type MindSource = 'manual' | 'braindump' | 'agent';
+
+export interface MindFact {
+  id: number;
+  category: MindCategory;
+  title: string;
+  body: string;
+  tags: string[];
+  source: MindSource;
+  pinned: boolean;
+  status: MindStatus;
+  confidence: number;
+  authorName: string | null;
+  braindumpEntryId: number | null;
+  linksOut: number;
+  linksIn: number;
+  recallsThisWeek: number;
+  verifiedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MindOverview {
+  totalFacts: number;
+  factsThisWeek: number;
+  links: number;
+  recallsToday: number;
+  byCategory: { category: string; count: number }[];
+  daily: { date: string; count: number }[];
+  mostLinked: {
+    id: number;
+    title: string;
+    category: string;
+    linksIn: number;
+    linksOut: number;
+  }[];
+  health: { verified: number; conflicted: number; stale: number; orphans: number };
+}
+
+export interface MindRecall {
+  id: number;
+  factId: number | null;
+  factTitle: string | null;
+  actor: string;
+  actorKind: string;
+  query: string;
+  createdAt: string;
+}
+
+export interface MindFactInput {
+  category: MindCategory;
+  title: string;
+  body?: string;
+  tags?: string[];
+  confidence?: number;
+  pinned?: boolean;
+}
+
+export interface MindFactPatch {
+  category?: MindCategory;
+  title?: string;
+  body?: string;
+  tags?: string[];
+  pinned?: boolean;
+  status?: MindStatus;
+  confidence?: number;
+}
+
+export type CompetitorPlatform = 'instagram' | 'tiktok' | 'facebook';
+
+export interface CompetitorSnapshot {
+  followers: number | null;
+  following: number | null;
+  posts: number | null;
+  displayName: string | null;
+  biography: string | null;
+  avatarUrl: string | null;
+  latestPostId: string | null;
+  latestPostUrl: string | null;
+  latestPostAt: string | null;
+  latestPostCaption: string | null;
+  capturedAt: string;
+}
+
+export interface Competitor {
+  id: number;
+  platform: CompetitorPlatform;
+  handle: string;
+  label: string | null;
+  tags: string[];
+  active: boolean;
+  lastCheckedAt: string | null;
+  lastError: string | null;
+  consecutiveFailures: number;
+  latest: CompetitorSnapshot | null;
+  followerChange7d: number | null;
+  createdAt: string;
+}
+
+export interface CompetitorEvent {
+  id: number;
+  competitorId: number;
+  platform: CompetitorPlatform;
+  handle: string;
+  kind: string;
+  summary: string;
+  detail: Record<string, unknown>;
+  postUrl: string | null;
+  readAt: string | null;
+  createdAt: string;
+}
+
+export interface CompetitorOverview {
+  tracked: number;
+  active: number;
+  byPlatform: { platform: string; count: number }[];
+  alertsToday: number;
+  unread: number;
+  newPosts24h: number;
+  failing: number;
+  lastSyncAt: string | null;
+  providers: { platform: string; available: boolean; via: string | null }[];
+}
+
+export interface CompetitorInput {
+  platform: CompetitorPlatform;
+  handle: string;
+  label?: string;
+  tags?: string[];
+}
+
+export interface CompetitorPatch {
+  label?: string | null;
+  tags?: string[];
+  active?: boolean;
+}
+
+export interface CompetitorCheckResult {
+  ok: boolean;
+  events: number;
+  error?: string;
+  competitor: Competitor;
 }
 
 export const api = {
@@ -2445,6 +2979,131 @@ export const api = {
 
   listCrmCustomers: (projectKey: string) =>
     request<CrmCustomer[]>(`/projects/${encodeURIComponent(projectKey)}/crm/customers`),
+  listLeadCampaigns: (projectKey: string) =>
+    request<LeadCampaign[]>(`/projects/${encodeURIComponent(projectKey)}/leads/campaigns`),
+  listApprovalLeads: (
+    projectKey: string,
+    filters: { campaignId?: string; reviewStatus?: string; sort?: string } = {},
+  ) => {
+    const query = new URLSearchParams(filters).toString();
+    return request<ApprovalLead[]>(
+      `/projects/${encodeURIComponent(projectKey)}/leads/approval-inbox${query ? `?${query}` : ''}`,
+    );
+  },
+  getLead: (projectKey: string, leadId: string) =>
+    request<LeadDetail>(
+      `/projects/${encodeURIComponent(projectKey)}/leads/${encodeURIComponent(leadId)}`,
+    ),
+  listLeadAgentRuns: (projectKey: string) =>
+    request<LeadAgentRun[]>(`/projects/${encodeURIComponent(projectKey)}/leads/agent-runs`),
+  getSocialDashboard: (projectKey: string) =>
+    request<SocialDashboard>(`/projects/${encodeURIComponent(projectKey)}/social/dashboard`),
+  getBraindumpConfig: (projectKey: string) =>
+    request<BraindumpConfig>(`/projects/${encodeURIComponent(projectKey)}/braindump/config`),
+  getBraindumpStats: (projectKey: string, days = 14) =>
+    request<BraindumpStats>(
+      `/projects/${encodeURIComponent(projectKey)}/braindump/stats?days=${days}`,
+    ),
+  listBraindumpEntries: (projectKey: string, filters: BraindumpListFilters = {}) => {
+    const params = new URLSearchParams();
+    if (filters.kind) params.set('kind', filters.kind);
+    if (filters.tag) params.set('tag', filters.tag);
+    if (filters.search) params.set('search', filters.search);
+    if (filters.days != null) params.set('days', String(filters.days));
+    const query = params.toString();
+    return request<BraindumpEntry[]>(
+      `/projects/${encodeURIComponent(projectKey)}/braindump${query ? `?${query}` : ''}`,
+    );
+  },
+  createBraindumpEntry: (projectKey: string, input: BraindumpInput) =>
+    request<BraindumpEntry>(`/projects/${encodeURIComponent(projectKey)}/braindump`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  createBraindumpVoiceEntry: sendBraindumpVoice,
+  updateBraindumpEntry: (entryId: number, patch: Partial<BraindumpInput> & { pinned?: boolean }) =>
+    request<BraindumpEntry>(`/braindump/${entryId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteBraindumpEntry: (entryId: number) =>
+    request<void>(`/braindump/${entryId}`, { method: 'DELETE' }),
+  routeBraindumpEntry: (entryId: number, input: BraindumpRouteInput) =>
+    request<BraindumpEntry>(`/braindump/${entryId}/route`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  braindumpAudioUrl: (entryId: number) => `${API_URL}/braindump/${entryId}/audio`,
+  getMindOverview: (projectKey: string, days = 14) =>
+    request<MindOverview>(`/projects/${encodeURIComponent(projectKey)}/mind/overview?days=${days}`),
+  listMindFacts: (
+    projectKey: string,
+    filters: { category?: MindCategory; status?: MindStatus; tag?: string; search?: string } = {},
+  ) => {
+    const params = new URLSearchParams();
+    if (filters.category) params.set('category', filters.category);
+    if (filters.status) params.set('status', filters.status);
+    if (filters.tag) params.set('tag', filters.tag);
+    if (filters.search) params.set('search', filters.search);
+    const query = params.toString();
+    return request<MindFact[]>(
+      `/projects/${encodeURIComponent(projectKey)}/mind/facts${query ? `?${query}` : ''}`,
+    );
+  },
+  listStaleMindFacts: (projectKey: string) =>
+    request<MindFact[]>(`/projects/${encodeURIComponent(projectKey)}/mind/stale`),
+  listMindRecalls: (projectKey: string, limit = 20) =>
+    request<MindRecall[]>(
+      `/projects/${encodeURIComponent(projectKey)}/mind/recalls?limit=${limit}`,
+    ),
+  recallMind: (projectKey: string, input: { query?: string; limit?: number }) =>
+    request<MindFact[]>(`/projects/${encodeURIComponent(projectKey)}/mind/recall`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  createMindFact: (projectKey: string, input: MindFactInput) =>
+    request<MindFact>(`/projects/${encodeURIComponent(projectKey)}/mind/facts`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateMindFact: (factId: number, patch: MindFactPatch) =>
+    request<MindFact>(`/mind/facts/${factId}`, { method: 'PATCH', body: JSON.stringify(patch) }),
+  deleteMindFact: (factId: number) => request<void>(`/mind/facts/${factId}`, { method: 'DELETE' }),
+  listMindFactLinks: (factId: number) => request<MindFact[]>(`/mind/facts/${factId}/links`),
+  getCompetitorOverview: (projectKey: string) =>
+    request<CompetitorOverview>(`/projects/${encodeURIComponent(projectKey)}/competitors/overview`),
+  listCompetitors: (projectKey: string) =>
+    request<Competitor[]>(`/projects/${encodeURIComponent(projectKey)}/competitors`),
+  listCompetitorEvents: (projectKey: string, limit = 50) =>
+    request<CompetitorEvent[]>(
+      `/projects/${encodeURIComponent(projectKey)}/competitors/events?limit=${limit}`,
+    ),
+  createCompetitor: (projectKey: string, input: CompetitorInput) =>
+    request<Competitor>(`/projects/${encodeURIComponent(projectKey)}/competitors`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateCompetitor: (competitorId: number, patch: CompetitorPatch) =>
+    request<Competitor>(`/competitors/${competitorId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteCompetitor: (competitorId: number) =>
+    request<void>(`/competitors/${competitorId}`, { method: 'DELETE' }),
+  checkCompetitor: (competitorId: number) =>
+    request<CompetitorCheckResult>(`/competitors/${competitorId}/check`, { method: 'POST' }),
+  markCompetitorEventsRead: (projectKey: string) =>
+    request<{ marked: number }>(
+      `/projects/${encodeURIComponent(projectKey)}/competitors/events/read`,
+      { method: 'POST' },
+    ),
+  linkMindFacts: (factId: number, toFactId: number) =>
+    request<MindFact>(`/mind/facts/${factId}/links`, {
+      method: 'POST',
+      body: JSON.stringify({ toFactId }),
+    }),
+  unlinkMindFacts: (factId: number, toFactId: number) =>
+    request<void>(`/mind/facts/${factId}/links/${toFactId}`, { method: 'DELETE' }),
   getCrmCustomer: (customerId: string) =>
     request<CrmCustomer>(`/crm/customers/${encodeURIComponent(customerId)}`),
   createCrmCustomer: (projectKey: string, input: CrmCustomerInput) =>
@@ -2696,6 +3355,31 @@ export const api = {
   // is returned only by create and regenerate-key, so those responses carry it
   // alongside the agent; it is never part of a list/read.
   listAiAgents: (projectKey: string) => request<AiAgent[]>(`/projects/${projectKey}/ai-agents`),
+  getAgentFleetSummary: (projectKey: string, timezone: string) =>
+    request<AgentFleetSummary>(
+      `/projects/${projectKey}/ai-agents/fleet-summary?timezone=${encodeURIComponent(timezone)}`,
+    ),
+  getChatDashboardSummary: (projectKey: string) =>
+    request<ChatDashboardSummary>(`/projects/${projectKey}/ai-agents/chat-summary`),
+  listHermesAgents: (projectKey: string) =>
+    request<HermesChatAgent[]>(`/projects/${projectKey}/hermes-agents`),
+  listHermesConversations: (projectKey: string, agentId: number) =>
+    request<HermesConversation[]>(
+      `/projects/${projectKey}/hermes-conversations?agentId=${agentId}`,
+    ),
+  createHermesConversation: (projectKey: string, agentId: number, title?: string) =>
+    request<HermesConversation>(`/projects/${projectKey}/hermes-conversations`, {
+      method: 'POST',
+      body: JSON.stringify({ agentId, ...(title ? { title } : {}) }),
+    }),
+  getHermesConversationMessages: (projectKey: string, conversationId: string) =>
+    request<HermesChatMessage[]>(
+      `/projects/${projectKey}/hermes-conversations/${conversationId}/messages`,
+    ),
+  archiveHermesConversation: (projectKey: string, conversationId: string) =>
+    request<void>(`/projects/${projectKey}/hermes-conversations/${conversationId}`, {
+      method: 'DELETE',
+    }),
   listAgentTools: (projectKey: string) =>
     request<AgentTool[]>(`/projects/${projectKey}/ai-agents/tools`),
   createAiAgent: (projectKey: string, input: NewAiAgentInput) =>

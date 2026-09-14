@@ -11,4 +11,8 @@ export function authedApi(cookie: string) {
   return treaty(app, { headers: { cookie } });
 }
 
+export function apiKeyApi(key: string) {
+  return treaty(app, { headers: { 'x-api-key': key } });
+}
+
 export type Api = typeof api;

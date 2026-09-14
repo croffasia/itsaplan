@@ -6,7 +6,11 @@ import {
   projectMember,
   agentSkillLink,
   agentToolLink,
+  agentRun,
+  agentSchedule,
+  mcpAuditLog,
   integrationCredential,
+  hermesConversation,
 } from '@repo/db';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { auth } from '@repo/auth';
@@ -22,16 +26,8 @@ import { deleteThreadsWhere } from './runtime/memory';
 // what authors comments/activity, and what owns the agent's better-auth API key
 // (apikey.reference_id).
 //
-// Both kinds of agent act through the same API under the same authorization. Each
-// owns an API key and a project_member row carrying a project role, so its requests
-// are checked by the normal permission matrix. The kinds differ in who drives them:
-// an external agent is driven over HTTP by its operator, who holds the key; an
-// internal agent is driven by the built-in runtime, carries a model configuration,
-// and replays its own key against the routes in process. That is why an internal
-// agent's key is also kept here, encrypted — better-auth only stores a hash, and the
-// runtime needs the secret on every tool call. An internal agent's effective rights
-// are the intersection of its granted actions (ai_agent.tools) and its role.
-
+// Both kinds act through the same API under a project role. External agents are
+// driven by their operator. Internal agents use the built-in model runtime.
 export type AgentKind = 'external' | 'internal';
 
 export interface AiAgentRow {
@@ -143,7 +139,13 @@ const agentColumns = {
   triggerOnAssign: aiAgent.triggerOnAssign,
   roleId: aiAgent.roleId,
   createdAt: aiAgent.createdAt,
-  apiKeyStart: apikey.start,
+  apiKeyStart: sql<string | null>`(
+    select ${apikey.start}
+    from ${apikey}
+    where ${apikey.referenceId} = ${aiAgent.userId}
+    order by ${apikey.createdAt} asc
+    limit 1
+  )`,
   modelProvider: integrationCredential.integrationKey,
   skillCount:
     sql<number>`(select count(*) from ${agentSkillLink} where ${agentSkillLink.agentId} = ${aiAgent.id})`.mapWith(
@@ -160,11 +162,184 @@ export async function listAgents(projectId: number): Promise<AiAgentRow[]> {
     .select(agentColumns)
     .from(aiAgent)
     .innerJoin(user, eq(user.id, aiAgent.userId))
-    .leftJoin(apikey, eq(apikey.referenceId, aiAgent.userId))
     .leftJoin(integrationCredential, eq(integrationCredential.id, aiAgent.modelCredentialId))
     .where(eq(aiAgent.projectId, projectId))
     .orderBy(user.name);
   return rows.map(mapAgent);
+}
+
+export interface AgentFleetSummary {
+  generatedAt: string;
+  timezone: string;
+  status: {
+    live: number;
+    idle: number;
+    warning: number;
+  };
+  runs24h: number;
+  runTrendPercent: number | null;
+  schedules: {
+    active: number;
+    total: number;
+  };
+  successRate7d: number | null;
+  p95DurationMs7d: number | null;
+  peak: {
+    runs: number;
+    hour: string;
+  };
+  hourlyRuns: {
+    hour: string;
+    runs: number;
+  }[];
+}
+
+export async function getAgentFleetSummary(
+  projectId: number,
+  timezone: string,
+): Promise<AgentFleetSummary> {
+  const [statusRows, metricRows, scheduleRows, hourlyRows] = await Promise.all([
+    db
+      .select({
+        live: sql<boolean>`exists (
+          select 1 from ${agentRun} r
+          where r.agent_id = ${aiAgent.id}
+            and r.status = 'pending'
+            and r.started_at is not null
+            and r.finished_at is null
+            and r.last_error is null
+            and r.next_attempt_at > now()
+        )`,
+        latestStatus: sql<string | null>`(
+          select r.status from ${agentRun} r
+          where r.agent_id = ${aiAgent.id}
+          order by r.id desc limit 1
+        )`,
+      })
+      .from(aiAgent)
+      .where(eq(aiAgent.projectId, projectId)),
+    db.execute(sql`
+      with activity as (
+        select
+          r.created_at,
+          r.status,
+          extract(epoch from (r.finished_at - r.started_at)) * 1000 as duration_ms
+        from ${agentRun} r
+        inner join ${aiAgent} a on a.id = r.agent_id
+        where a.project_id = ${projectId}
+        union all
+        select
+          m.created_at,
+          m.result_status as status,
+          m.duration_ms::numeric as duration_ms
+        from ${mcpAuditLog} m
+        where m.project_id = ${projectId}
+          and m.actor = 'bob-agent'
+      )
+      select
+        (count(*) filter (where created_at >= now() - interval '24 hours'))::int as "runs24h",
+        (count(*) filter (
+          where created_at >= now() - interval '48 hours'
+            and created_at < now() - interval '24 hours'
+        ))::int as "previousRuns24h",
+        (count(*) filter (
+          where created_at >= now() - interval '7 days' and status = 'success'
+        ))::int as "success7d",
+        (count(*) filter (
+          where created_at >= now() - interval '7 days'
+            and status in ('success', 'failed', 'error', 'denied')
+        ))::int as "finished7d",
+        percentile_cont(0.95) within group (order by duration_ms) filter (
+          where created_at >= now() - interval '7 days' and duration_ms is not null
+        ) as "p95DurationMs7d"
+      from activity
+    `),
+    db
+      .select({
+        active: sql<number>`(count(*) filter (where ${agentSchedule.status} = 'active'))::int`,
+        total: sql<number>`count(*)::int`,
+      })
+      .from(agentSchedule)
+      .innerJoin(aiAgent, eq(aiAgent.id, agentSchedule.agentId))
+      .where(eq(aiAgent.projectId, projectId)),
+    db.execute(sql`
+      with hours as (
+        select generate_series(
+          date_trunc('hour', now()) - interval '23 hours',
+          date_trunc('hour', now()),
+          interval '1 hour'
+        ) as bucket
+      ), project_activity as (
+        select r.id::text as id, r.created_at
+        from ${agentRun} r
+        inner join ${aiAgent} a on a.id = r.agent_id
+        where a.project_id = ${projectId}
+          and r.created_at >= date_trunc('hour', now()) - interval '23 hours'
+        union all
+        select m.id::text as id, m.created_at
+        from ${mcpAuditLog} m
+        where m.project_id = ${projectId}
+          and m.actor = 'bob-agent'
+          and m.created_at >= date_trunc('hour', now()) - interval '23 hours'
+      )
+      select h.bucket::text as hour, count(a.id)::int as runs
+      from hours h
+      left join project_activity a
+        on a.created_at >= h.bucket and a.created_at < h.bucket + interval '1 hour'
+      group by h.bucket
+      order by h.bucket
+    `),
+  ]);
+
+  const live = statusRows.filter((row) => row.live).length;
+  const warning = statusRows.filter((row) => !row.live && row.latestStatus === 'failed').length;
+  const metrics = (
+    metricRows as unknown as {
+      runs24h: number;
+      previousRuns24h: number;
+      success7d: number;
+      finished7d: number;
+      p95DurationMs7d: number | null;
+    }[]
+  )[0] ?? {
+    runs24h: 0,
+    previousRuns24h: 0,
+    success7d: 0,
+    finished7d: 0,
+    p95DurationMs7d: null,
+  };
+  const hourlyRuns = (hourlyRows as unknown as { hour: string; runs: number }[]).map((row) => ({
+    hour: new Date(row.hour).toISOString(),
+    runs: Number(row.runs),
+  }));
+  const peak = hourlyRuns.reduce(
+    (current, row) => (row.runs > current.runs ? row : current),
+    hourlyRuns[0] ?? { hour: new Date().toISOString(), runs: 0 },
+  );
+
+  return {
+    generatedAt: new Date().toISOString(),
+    timezone,
+    status: {
+      live,
+      idle: statusRows.length - live - warning,
+      warning,
+    },
+    runs24h: metrics.runs24h,
+    runTrendPercent:
+      metrics.previousRuns24h > 0
+        ? Math.round(((metrics.runs24h - metrics.previousRuns24h) / metrics.previousRuns24h) * 100)
+        : null,
+    schedules: scheduleRows[0] ?? { active: 0, total: 0 },
+    successRate7d:
+      metrics.finished7d > 0
+        ? Math.round((metrics.success7d / metrics.finished7d) * 1000) / 10
+        : null,
+    p95DurationMs7d:
+      metrics.p95DurationMs7d == null ? null : Math.round(Number(metrics.p95DurationMs7d)),
+    peak,
+    hourlyRuns,
+  };
 }
 
 // Scoped to projectId so an id from another project resolves to null.
@@ -173,7 +348,6 @@ export async function getAgentById(id: number, projectId: number): Promise<AiAge
     .select(agentColumns)
     .from(aiAgent)
     .innerJoin(user, eq(user.id, aiAgent.userId))
-    .leftJoin(apikey, eq(apikey.referenceId, aiAgent.userId))
     .leftJoin(integrationCredential, eq(integrationCredential.id, aiAgent.modelCredentialId))
     .where(and(eq(aiAgent.id, id), eq(aiAgent.projectId, projectId)));
   return rows[0] ? mapAgent(rows[0]) : null;
@@ -284,8 +458,7 @@ async function issueKey(userId: string, name: string): Promise<string> {
 }
 
 // Creates an agent: a bot user, the ai_agent config row, its project membership, and
-// its first API key. Internal-agent config fields are stored only for kind
-// "internal"; an external agent keeps them null.
+// its first API key. Internal-agent configuration is stored only for internal agents.
 //
 // Returns the agent plus the one-time key secret. That secret is returned only for
 // an external agent, whose operator must copy it — an internal agent's key is kept
@@ -345,8 +518,7 @@ export async function createAgent(
   return { agent, apiKey: isInternal ? null : apiKey };
 }
 
-// Saves an internal agent's key secret, encrypted at rest, so its runtime can replay
-// it on every tool call.
+// Saves the runtime key encrypted at rest so it can be replayed on tool calls.
 async function storeAgentKey(agentId: number, apiKey: string): Promise<void> {
   const enc = encryptSecret(apiKey);
   await db
@@ -374,8 +546,9 @@ async function readAgentKey(agentId: number): Promise<string | null> {
   return decryptSecret({ ciphertext: row.ciphertext, iv: row.iv, authTag: row.authTag });
 }
 
-// The API key an internal agent authenticates its own tool calls with, provisioning
-// one if it has none. Agents created before the key was introduced have no stored
+// The encrypted API key an agent runtime authenticates its tool calls with,
+// provisioning one if it has none. Existing external operator keys are preserved.
+// Agents created before the key was introduced have no stored
 // secret (and may predate the membership too), so both are filled in on first use
 // rather than in a data migration — better-auth issues a key through its API, which
 // a SQL migration cannot call.
@@ -406,8 +579,6 @@ export async function getInternalAgentApiKey(agent: AiAgentRow): Promise<string>
         roleId: agent.roleId,
       })
       .onConflictDoNothing();
-    // Clears any key row left without a stored secret, so the bot user ends with
-    // exactly the one issued here.
     await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
     const apiKey = await issueKey(agent.userId, agent.name);
     await storeAgentKey(agent.id, apiKey);
@@ -485,7 +656,7 @@ export async function updateAgent(
 // Replaces the agent's API key: deletes the current key row(s) for the bot user
 // and issues a new one. Returns the new plaintext secret, or null if the agent
 // does not exist. There is no atomic rotate in the plugin, so this is delete+create.
-// An internal agent's new secret is re-encrypted onto its row for its runtime.
+// An internal agent's new secret is encrypted for its runtime.
 export async function regenerateKey(id: number, projectId: number): Promise<string | null> {
   const agent = await getAgentById(id, projectId);
   if (!agent) return null;
@@ -502,6 +673,12 @@ export async function regenerateKey(id: number, projectId: number): Promise<stri
 export async function deleteAgent(id: number, projectId: number): Promise<boolean> {
   const agent = await getAgentById(id, projectId);
   if (!agent) return false;
+  const [conversation] = await db
+    .select({ id: hermesConversation.id })
+    .from(hermesConversation)
+    .where(eq(hermesConversation.agentId, id))
+    .limit(1);
+  if (conversation) throw new HttpError(409, 'Archive retention prevents deleting this agent');
   await deleteThreadsWhere({ agentId: id });
   await db.delete(apikey).where(eq(apikey.referenceId, agent.userId));
   await db.delete(user).where(eq(user.id, agent.userId));

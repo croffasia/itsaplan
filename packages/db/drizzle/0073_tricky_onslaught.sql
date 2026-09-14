@@ -1,0 +1,1 @@
+ALTER TABLE "braindump_entry" ADD COLUMN "audio_size_bytes" bigint;

@@ -3,6 +3,7 @@ import {
   ContactRound,
   BadgeEuro,
   BookOpenText,
+  Building2,
   Files,
   Inbox,
   LayoutDashboard,
@@ -18,6 +19,8 @@ import {
   financePath,
   inboxPath,
   initiativesPath,
+  isLeadsPath,
+  leadsPath,
   notesPath,
   projectPath,
 } from '@/utils/paths';
@@ -131,6 +134,15 @@ export default function SidebarWorkNav({
                 disabled={disabled}
               />
             </>
+          )}
+          {can('leads', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? leadsPath(projectKey) : '#'}
+              icon={Building2}
+              label="Leads"
+              active={isLeadsPath(pathname)}
+              disabled={disabled}
+            />
           )}
         </SidebarMenu>
       </SidebarGroupContent>

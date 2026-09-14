@@ -89,6 +89,42 @@ describe('agent chat history', () => {
     await resetDb();
   });
 
+  it('summarizes the caller chat activity across project agents', async () => {
+    const { owner, asOwner } = await setup();
+    const firstAgent = await createInternalAgent(asOwner, 'Design Bot', 'design');
+    const secondAgent = await createInternalAgent(asOwner, 'Writing Bot', 'writer');
+    await seedThread('awaiting-user', owner.userId, firstAgent, 'Design request', [
+      { role: 'user', text: 'Create a draft' },
+      { role: 'assistant', text: 'The draft is ready' },
+    ]);
+    await seedThread('awaiting-agent', owner.userId, secondAgent, 'Writing request', [
+      { role: 'user', text: 'Improve this copy' },
+    ]);
+    await seedThread('another-user', 'another-user-id', firstAgent, 'Private thread', [
+      { role: 'user', text: 'Do not include this' },
+      { role: 'assistant', text: 'Private reply' },
+    ]);
+
+    const res = await agents(asOwner)['chat-summary'].get();
+
+    expect(res.status).toBe(200);
+    expect(res.data).toMatchObject({ threads: 2, awaitingReply: 1, messages24h: 3 });
+    expect(res.data!.medianReplyMs7d).toBeGreaterThanOrEqual(0);
+    expect(res.data!.hourlyMessages).toHaveLength(24);
+    expect(res.data!.hourlyMessages.reduce((sum, bucket) => sum + bucket.messages, 0)).toBe(3);
+    expect(res.data!.peak.messages).toBe(3);
+    expect(Number.isNaN(Date.parse(res.data!.generatedAt))).toBe(false);
+  });
+
+  it('denies a non-member the chat summary', async () => {
+    await setup();
+    const outsider = await signUpTestUser({ name: 'Outsider' });
+
+    const res = await agents(authedApi(outsider.cookie))['chat-summary'].get();
+
+    expect(res.status).toBe(403);
+  });
+
   it('returns an empty list for an agent with no threads', async () => {
     const { asOwner } = await setup();
     const agent = await createInternalAgent(asOwner, 'Design Bot', 'design');

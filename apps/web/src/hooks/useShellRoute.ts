@@ -6,6 +6,7 @@ import { SETTINGS_SECTIONS } from '@/utils/settingsSections';
 function aiTeamLabel(section: string | null): string | null {
   if (!section) return null;
   if (section === 'chat') return 'Chat with AI Team';
+  if (section === 'agents') return 'Agents';
   return SETTINGS_SECTIONS.find((s) => s.slug === section)?.label ?? 'AI Team';
 }
 

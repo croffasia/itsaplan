@@ -67,6 +67,22 @@ services:
       echo 'bucket ready: '\"$$S3_BUCKET\";
       "
 
+  # Self-hosted speech-to-text for the Braindump page. The apps run on the host in
+  # dev, so the port is published; MinIO already holds 9000, hence 9010.
+  # Set WHISPER_URL=http://localhost:9010 in .env to switch voice capture on.
+  # The first request downloads the model into the cache volume and is slow.
+  whisper:
+    image: onerahmet/openai-whisper-asr-webservice:latest
+    restart: unless-stopped
+    environment:
+      ASR_ENGINE: ${WHISPER_ENGINE:-faster_whisper}
+      ASR_MODEL: ${WHISPER_MODEL:-base}
+    ports:
+      - '${WHISPER_PORT:-9010}:9000'
+    volumes:
+      - whisper-cache:/root/.cache
+
 volumes:
   postgres-dev-data:
   minio-dev-data:
+  whisper-cache:

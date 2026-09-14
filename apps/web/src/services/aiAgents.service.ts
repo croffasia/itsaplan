@@ -15,6 +15,74 @@ export function useAiAgentsQuery(projectKey: string | null) {
   });
 }
 
+export function useAgentFleetSummaryQuery(projectKey: string | null, timezone: string) {
+  return useQuery({
+    queryKey: qk.agentFleetSummary(projectKey ?? '', timezone),
+    queryFn: () => api.getAgentFleetSummary(projectKey!, timezone),
+    enabled: projectKey != null,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useChatDashboardSummaryQuery(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.chatDashboardSummary(projectKey ?? ''),
+    queryFn: () => api.getChatDashboardSummary(projectKey!),
+    enabled: projectKey != null,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useHermesAgentsQuery(projectKey: string | null) {
+  return useQuery({
+    queryKey: qk.hermesAgents(projectKey ?? ''),
+    queryFn: () => api.listHermesAgents(projectKey!),
+    enabled: projectKey != null,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useHermesConversationsQuery(projectKey: string | null, agentId: number | null) {
+  return useQuery({
+    queryKey: qk.hermesConversations(projectKey ?? '', agentId ?? 0),
+    queryFn: () => api.listHermesConversations(projectKey!, agentId!),
+    enabled: projectKey != null && agentId != null,
+  });
+}
+
+export function useHermesMessagesQuery(projectKey: string | null, conversationId: string | null) {
+  return useQuery({
+    queryKey: qk.hermesMessages(projectKey ?? '', conversationId ?? ''),
+    queryFn: () => api.getHermesConversationMessages(projectKey!, conversationId!),
+    enabled: projectKey != null && conversationId != null,
+  });
+}
+
+export function useCreateHermesConversation(projectKey: string | null, agentId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.createHermesConversation(projectKey!, agentId!),
+    onSuccess: () => {
+      if (projectKey && agentId != null) {
+        void qc.invalidateQueries({ queryKey: qk.hermesConversations(projectKey, agentId) });
+      }
+    },
+  });
+}
+
+export function useArchiveHermesConversation(projectKey: string | null, agentId: number | null) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (conversationId: string) =>
+      api.archiveHermesConversation(projectKey!, conversationId),
+    onSuccess: () => {
+      if (projectKey && agentId != null) {
+        void qc.invalidateQueries({ queryKey: qk.hermesConversations(projectKey, agentId) });
+      }
+    },
+  });
+}
+
 // An agent's triggered run history for the runs sidebar, paginated 25 at a time. Only
 // fetched when agentId is set, so the query runs when the sidebar opens.
 export function useAgentRuns(projectKey: string | null, agentId: number | null) {

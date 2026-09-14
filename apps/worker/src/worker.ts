@@ -1,6 +1,7 @@
 import { workerConfig } from './config';
 import { deliver } from './delivery';
 import { processNotificationDeliveries } from './notification-delivery';
+import { processCompetitorSweep } from './competitors';
 import { equalJitterBackoffMs } from './backoff';
 import { deleteIssueAgentThreads } from './agent-runs';
 import { startPollLoop, type WorkerHandle } from './poll-loop';
@@ -18,6 +19,7 @@ import {
 
 let ticksSinceCleanup = 0;
 let ticksSinceAutoArchive = 0;
+let ticksSinceCompetitors = 0;
 // Starts due, so an install is visible even if the instance is removed minutes later.
 let ticksSinceTelemetry = TELEMETRY_CHECK_EVERY_TICKS;
 
@@ -39,6 +41,10 @@ async function tick(): Promise<void> {
     ticksSinceCleanup = 0;
     const removed = await cleanupOldDeliveries();
     if (removed > 0) console.log(`[worker] cleaned up ${removed} old deliveries`);
+  }
+  if (++ticksSinceCompetitors >= cfg.competitorEveryTicks) {
+    ticksSinceCompetitors = 0;
+    await processCompetitorSweep();
   }
   if (++ticksSinceAutoArchive >= cfg.autoArchiveEveryTicks) {
     ticksSinceAutoArchive = 0;

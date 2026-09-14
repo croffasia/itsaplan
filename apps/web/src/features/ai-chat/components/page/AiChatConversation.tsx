@@ -30,7 +30,7 @@ export function AiChatConversation({
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate text-sm font-medium">{agent.name}</span>
-            {!agent.memoryEnabled && (
+            {agent.kind === 'internal' && !agent.memoryEnabled && (
               <Badge variant="secondary" className="shrink-0">
                 Memory off
               </Badge>

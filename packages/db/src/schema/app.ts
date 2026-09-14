@@ -566,6 +566,82 @@ export const agentRun = pgTable(
   ],
 );
 
+export const hermesConversation = pgTable(
+  'hermes_conversation',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    createdBy: text('created_by')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    agentId: integer('agent_id')
+      .notNull()
+      .references(() => aiAgent.id),
+    hermesAgentSlug: text('hermes_agent_slug').notNull(),
+    hermesSessionId: text('hermes_session_id').notNull(),
+    title: text('title'),
+    status: text('status').notNull().default('active'),
+    lastMessageAt: timestamp('last_message_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.agentId, t.hermesSessionId),
+    check('hermes_conversation_status_check', sql`${t.status} IN ('active', 'archived')`),
+    index('hermes_conversation_project_user_idx').on(t.projectId, t.createdBy, t.updatedAt.desc()),
+    index('hermes_conversation_agent_idx').on(t.agentId, t.updatedAt.desc()),
+  ],
+);
+
+export const hermesMessage = pgTable(
+  'hermes_message',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    sequence: serial('sequence').notNull(),
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => hermesConversation.id, { onDelete: 'cascade' }),
+    role: text('role').notNull(),
+    content: text('content').notNull().default(''),
+    hermesEventId: text('hermes_event_id'),
+    status: text('status').notNull().default('completed'),
+    errorCode: text('error_code'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check('hermes_message_role_check', sql`${t.role} IN ('user', 'assistant')`),
+    check('hermes_message_status_check', sql`${t.status} IN ('pending', 'completed', 'failed')`),
+    index('hermes_message_conversation_idx').on(t.conversationId, t.sequence),
+  ],
+);
+
+export const hermesChatRun = pgTable(
+  'hermes_chat_run',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    conversationId: uuid('conversation_id')
+      .notNull()
+      .references(() => hermesConversation.id, { onDelete: 'cascade' }),
+    requestId: uuid('request_id').notNull(),
+    idempotencyKey: uuid('idempotency_key').notNull(),
+    status: text('status').notNull().default('streaming'),
+    errorCode: text('error_code'),
+    inputTokens: integer('input_tokens'),
+    outputTokens: integer('output_tokens'),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique().on(t.conversationId, t.idempotencyKey),
+    unique().on(t.requestId),
+    check('hermes_chat_run_status_check', sql`${t.status} IN ('streaming', 'completed', 'failed')`),
+    index('hermes_chat_run_conversation_idx').on(t.conversationId, t.createdAt.desc()),
+  ],
+);
+
 // Stored credentials for a project's integrations. One store for every secret: the
 // API keys of LLM providers (kind 'llm', addressed by an internal agent's model) and
 // the credentials of tool integrations (kind 'tool', bound to configured tools).
@@ -1414,5 +1490,243 @@ export const notification = pgTable(
     index('notification_user_unread_idx')
       .on(t.userId, t.id.desc())
       .where(sql`${t.readAt} IS NULL`),
+  ],
+);
+
+export const mcpAuditLog = pgTable(
+  'mcp_audit_log',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    actor: text('actor').notNull(),
+    requestId: uuid('request_id').notNull(),
+    toolName: text('tool_name').notNull(),
+    projectId: integer('project_id').references(() => project.id, { onDelete: 'set null' }),
+    resourceId: text('resource_id'),
+    resultStatus: text('result_status').notNull(),
+    durationMs: integer('duration_ms').notNull(),
+    recordCount: integer('record_count').notNull().default(0),
+    errorCode: text('error_code'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('mcp_audit_log_project_created_idx').on(t.projectId, t.createdAt.desc()),
+    index('mcp_audit_log_actor_created_idx').on(t.actor, t.createdAt.desc()),
+    check('mcp_audit_log_status_check', sql`${t.resultStatus} IN ('success', 'error', 'denied')`),
+  ],
+);
+
+// A captured thought, before it is sorted. `kind` is what the author picked at
+// capture time; a voice dump keeps its audio in the object store and its
+// transcript in `body`. `routedTo` records the destination it was filed to —
+// an Obsidian note, an issue on the board, or an agent schedule — and stays null
+// while the dump is unsorted.
+export const braindumpEntry = pgTable(
+  'braindump_entry',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    authorUserId: text('author_user_id').references(() => user.id, { onDelete: 'set null' }),
+    kind: text('kind').notNull(),
+    title: text('title').notNull(),
+    body: text('body').notNull().default(''),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    pinned: boolean('pinned').notNull().default(false),
+    audioS3Key: text('audio_s3_key'),
+    audioDurationSec: integer('audio_duration_sec'),
+    audioSizeBytes: bigint('audio_size_bytes', { mode: 'number' }),
+    routedTo: text('routed_to'),
+    routedAt: timestamp('routed_at', { withTimezone: true }),
+    // What the destination gave back: the note path, the issue identifier, or the
+    // schedule id. Shown in the stream so a filed dump links to where it landed.
+    routedRef: text('routed_ref'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('braindump_entry_project_created_idx').on(t.projectId, t.createdAt.desc()),
+    check('braindump_entry_kind_check', sql`${t.kind} IN ('idea', 'task', 'note', 'voice')`),
+    check(
+      'braindump_entry_routed_to_check',
+      sql`${t.routedTo} IS NULL OR ${t.routedTo} IN ('obsidian', 'issue', 'schedule')`,
+    ),
+  ],
+);
+
+// The operation's shared memory: durable facts an agent reads before it acts.
+// Named "mind" throughout, so nothing here is confused with ai_agent.memory_*,
+// which is a single agent's conversation history.
+//
+// A fact is one statement worth remembering, filed under a category. `source`
+// records where it came from — a braindump capture, a person, or an agent that
+// wrote it back — and braindump_entry_id keeps the link to the capture it grew
+// from (set null when that capture is deleted; the fact outlives it).
+export const mindFact = pgTable(
+  'mind_fact',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    authorUserId: text('author_user_id').references(() => user.id, { onDelete: 'set null' }),
+    braindumpEntryId: integer('braindump_entry_id').references(() => braindumpEntry.id, {
+      onDelete: 'set null',
+    }),
+    category: text('category').notNull(),
+    title: text('title').notNull(),
+    body: text('body').notNull().default(''),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    source: text('source').notNull().default('manual'),
+    // Pinned facts are the "read first" set: they lead every recall answer.
+    pinned: boolean('pinned').notNull().default(false),
+    status: text('status').notNull().default('unverified'),
+    // How much the operator trusts the statement, 0-100. Shown as a bar, and used
+    // to order what a recall returns first.
+    confidence: integer('confidence').notNull().default(50),
+    verifiedAt: timestamp('verified_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('mind_fact_project_category_idx').on(t.projectId, t.category),
+    index('mind_fact_project_updated_idx').on(t.projectId, t.updatedAt.desc()),
+    check(
+      'mind_fact_category_check',
+      sql`${t.category} IN ('goals', 'routines', 'people', 'clients', 'infra', 'business', 'knowledge', 'daily_notes', 'archive')`,
+    ),
+    check('mind_fact_source_check', sql`${t.source} IN ('manual', 'braindump', 'agent')`),
+    check(
+      'mind_fact_status_check',
+      sql`${t.status} IN ('unverified', 'verified', 'flagged', 'conflicted')`,
+    ),
+    check('mind_fact_confidence_check', sql`${t.confidence} BETWEEN 0 AND 100`),
+  ],
+);
+
+// A directed link between two facts. Both ends are enforced to be in the same
+// project by the store, which the database cannot express across two rows.
+export const mindLink = pgTable(
+  'mind_link',
+  {
+    id: serial('id').primaryKey(),
+    fromFactId: integer('from_fact_id')
+      .notNull()
+      .references(() => mindFact.id, { onDelete: 'cascade' }),
+    toFactId: integer('to_fact_id')
+      .notNull()
+      .references(() => mindFact.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('mind_link_pair_unique').on(t.fromFactId, t.toFactId),
+    index('mind_link_to_idx').on(t.toFactId),
+    check('mind_link_not_self_check', sql`${t.fromFactId} <> ${t.toFactId}`),
+  ],
+);
+
+// One row per read of a fact. This is what makes the memory auditable: which
+// agent or person recalled what, and why they were asking.
+export const mindRecall = pgTable(
+  'mind_recall',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    factId: integer('fact_id').references(() => mindFact.id, { onDelete: 'cascade' }),
+    // Who asked. An agent run carries its agent name; a person carries their user
+    // id. Stored as free text so a recall survives the actor being deleted.
+    actor: text('actor').notNull(),
+    actorKind: text('actor_kind').notNull(),
+    query: text('query').notNull().default(''),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('mind_recall_project_created_idx').on(t.projectId, t.createdAt.desc()),
+    check('mind_recall_actor_kind_check', sql`${t.actorKind} IN ('agent', 'user')`),
+  ],
+);
+
+// A rival social account being watched. `handle` is stored without the leading @
+// and lowercased, so the same account cannot be tracked twice under two spellings
+// (the unique index enforces it per project and platform).
+export const competitor = pgTable(
+  'competitor',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    addedByUserId: text('added_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+    platform: text('platform').notNull(),
+    handle: text('handle').notNull(),
+    label: text('label'),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    active: boolean('active').notNull().default(true),
+    lastCheckedAt: timestamp('last_checked_at', { withTimezone: true }),
+    // The last failure message, kept so the UI can say why an account stopped
+    // updating instead of silently showing stale numbers.
+    lastError: text('last_error'),
+    consecutiveFailures: integer('consecutive_failures').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('competitor_project_account_unique').on(t.projectId, t.platform, t.handle),
+    index('competitor_project_idx').on(t.projectId, t.active),
+    check('competitor_platform_check', sql`${t.platform} IN ('instagram', 'tiktok', 'facebook')`),
+  ],
+);
+
+// One reading of an account. Every check writes a row, and the difference between
+// the two most recent rows is what produces the alerts.
+export const competitorSnapshot = pgTable(
+  'competitor_snapshot',
+  {
+    id: serial('id').primaryKey(),
+    competitorId: integer('competitor_id')
+      .notNull()
+      .references(() => competitor.id, { onDelete: 'cascade' }),
+    followers: integer('followers'),
+    following: integer('following'),
+    posts: integer('posts'),
+    displayName: text('display_name'),
+    biography: text('biography'),
+    avatarUrl: text('avatar_url'),
+    latestPostId: text('latest_post_id'),
+    latestPostUrl: text('latest_post_url'),
+    latestPostAt: timestamp('latest_post_at', { withTimezone: true }),
+    latestPostCaption: text('latest_post_caption'),
+    capturedAt: timestamp('captured_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('competitor_snapshot_competitor_idx').on(t.competitorId, t.capturedAt.desc())],
+);
+
+// The alert feed: what changed on a watched account, newest first. `readAt` is per
+// project rather than per user — the feed is a shared operations log, not an inbox.
+export const competitorEvent = pgTable(
+  'competitor_event',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    competitorId: integer('competitor_id')
+      .notNull()
+      .references(() => competitor.id, { onDelete: 'cascade' }),
+    kind: text('kind').notNull(),
+    summary: text('summary').notNull(),
+    detail: jsonb('detail').$type<Record<string, unknown>>().notNull().default({}),
+    postUrl: text('post_url'),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('competitor_event_project_created_idx').on(t.projectId, t.createdAt.desc()),
+    check(
+      'competitor_event_kind_check',
+      sql`${t.kind} IN ('new_post', 'followers_jump', 'followers_drop', 'profile_changed', 'went_quiet', 'check_failed')`,
+    ),
   ],
 );

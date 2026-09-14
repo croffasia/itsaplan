@@ -30,6 +30,7 @@
     "elysia": "^1.3.5",
     "imapflow": "^1.0.195",
     "mailparser": "^3.7.4",
+    "postgres": "^3.4.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -43,6 +43,30 @@ describe('parseMentionHandles', () => {
     expect(parseMentionHandles('see [the thread](https://x.com/@ada)')).toEqual([]);
     expect(parseMentionHandles('https://x.com/@ada is theirs')).toEqual([]);
   });
+
+  it('reads a mention next to markup that never closes', () => {
+    expect(parseMentionHandles('[[[ @ada <<< @bob ![ @carol `')).toEqual(['ada', 'bob', 'carol']);
+    expect(parseMentionHandles('[a]( [b]( @ada')).toEqual(['ada']);
+    expect(parseMentionHandles('[@ada](https://x.com/a_(b)) and [@bob')).toEqual(['bob']);
+  });
+
+  // The markup scan must stay linear: an unclosed opener repeated for the whole text
+  // is the case where a scan that restarts at every opener goes quadratic.
+  it('scans a text of unclosed markup openers in linear time', () => {
+    const openers = ['['.repeat(100_000), '<'.repeat(100_000), '[a]('.repeat(25_000)];
+    for (const text of openers) {
+      const started = performance.now();
+      expect(parseMentionHandles(`${text.slice(0, 99_990)} cc @ada`)).toEqual(['ada']);
+      expect(performance.now() - started).toBeLessThan(50);
+    }
+  });
+
+  it('reads nothing from a text longer than any the api accepts', () => {
+    const started = performance.now();
+    expect(parseMentionHandles('['.repeat(200_000))).toEqual([]);
+    expect(parseMentionHandles(`${'x'.repeat(100_000)} @ada`)).toEqual([]);
+    expect(performance.now() - started).toBeLessThan(50);
+  });
 });
 
 describe('addedMentionHandles', () => {

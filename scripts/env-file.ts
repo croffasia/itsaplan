@@ -40,9 +40,14 @@ export class EnvFile {
     return current === '' || current.startsWith('change-me');
   }
 
+  /** Sets a value where the key still holds an example one; a value somebody chose is kept. */
+  fill(key: string, value: string) {
+    if (this.isPlaceholder(key)) this.set(key, value);
+  }
+
   /** Replaces a secret that still holds an example value; a real one is kept. */
   generate(key: string) {
-    if (this.isPlaceholder(key)) this.set(key, randomBytes(32).toString('base64'));
+    this.fill(key, randomBytes(32).toString('base64'));
   }
 
   save() {

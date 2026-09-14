@@ -36,15 +36,50 @@ passkey and cookie settings, telemetry opt-out, and worker tuning.
 
 ## Single sign-on
 
-Any provider with an OpenID Connect discovery document works: Keycloak, Authentik, KanIDM,
-GitLab, Forgejo, Okta, Entra. The credentials go into the database, not into `.env`, so
-nothing here needs a restart.
+The instance can use one generic OpenID Connect provider and one dedicated Authentik provider
+at the same time. The generic provider supports Keycloak, KanIDM, GitLab, Forgejo, Okta, Entra,
+and any other provider with an OpenID Connect discovery document. The credentials are encrypted
+in the database, not stored in `.env`, so changing them needs no service restart or Compose
+change.
 
 1. In god mode, open **Integrations → Auth provider** and copy the redirect URI it shows
    (`<API_URL>/api/auth/oauth2/callback/oidc`).
 2. Create a confidential client at your provider with that redirect URI.
 3. Paste the discovery URL (`.../.well-known/openid-configuration`), the client ID and the
    client secret back into the page. Name the sign-in button and turn the provider on.
+
+### Authentik
+
+1. In Authentik, create an **OAuth2/OpenID Provider** with a confidential client, then create an
+   Application that uses it.
+2. In the app's god mode, open **Integrations → Auth provider → Authentik** and copy the redirect
+   URI (`<API_URL>/api/auth/oauth2/callback/authentik`). Add it as an exact redirect URI on the
+   Authentik provider.
+3. Copy the client ID and client secret from Authentik into the app.
+4. Enter the discovery URL for the Authentik application slug:
+   `<AUTHENTIK_URL>/application/o/<slug>/.well-known/openid-configuration`.
+5. Keep the `openid profile email` scopes. To grant project access from Authentik groups, add a
+   scope or property mapping that includes a `groups` array in the ID token.
+6. Save the settings and enable Authentik. Test the sign-in from a private browser window before
+   turning off email and password authentication.
+
+Authentik and the generic OpenID Connect provider have separate credentials, redirect URIs, and
+sign-in buttons. Disabling or rotating one does not change the other. If Authentik also provisions
+users, configure its SCIM provider with `<API_URL>/scim/v2` and the token from
+**Integrations → SCIM**, then map the synchronized groups to projects on that page.
+
+Validate the configuration before relying on Authentik as the only sign-in method:
+
+- Sign in with Authentik alone, then with generic OIDC and Google enabled beside it.
+- Check open, invite-only, and closed registration with a new address and an existing address.
+- Test an existing matching address with **Trust addresses from sign-in providers** both off and on.
+- Disable and re-enable Authentik, then rotate its client secret without restarting the services.
+- If group access is enabled, test a token with no groups, mapped groups, and malformed groups. Also
+  test an account linked to both the generic OIDC and Authentik providers.
+- Deactivate a provisioned user through SCIM and confirm that both new and existing sessions are
+  refused.
+- Turn off password sign-in only after the separate browser session succeeds. Re-enable it, or
+  another working provider, before disabling Authentik.
 
 The first sign-in creates the account, and the registration mode under **Authentication**
 decides whether it may: `open` creates it, `invite only` needs a pending project invite,

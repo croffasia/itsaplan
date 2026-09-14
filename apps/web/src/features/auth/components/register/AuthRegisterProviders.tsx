@@ -12,10 +12,12 @@ import { useAuthConfig } from '@/services/authConfig.service';
 export default function AuthRegisterProviders({
   pending,
   onOidc,
+  onAuthentik,
   onGoogle,
 }: {
   pending: boolean;
   onOidc: () => void;
+  onAuthentik: () => void;
   onGoogle: () => void;
 }) {
   const t = useTranslations('auth.register');
@@ -29,6 +31,12 @@ export default function AuthRegisterProviders({
           {/* The operator named their own identity provider, so the label is shown
               as given rather than translated. */}
           {authConfig.oidcLabel || t('withSso')}
+        </Button>
+      )}
+      {authConfig?.authentik && (
+        <Button type="button" variant="outline" onClick={onAuthentik} disabled={pending}>
+          <ShieldCheck />
+          {t('withAuthentik')}
         </Button>
       )}
       {authConfig?.google && (

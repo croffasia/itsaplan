@@ -27,8 +27,9 @@ through this module — never inline a query on `app_setting` / `app_secret` els
 
 - `app_setting` key `auth` → `{ registration, requireEmailVerification, magicLink,
   emailPassword }`.
-- `app_secret` keys `auth.email`, `auth.google`, `auth.oidc` and `auth.scim` → the mail
-  provider, the two OAuth providers and the SCIM token, encrypted with `@repo/crypto`,
+- `app_secret` keys `auth.email`, `auth.google`, `auth.oidc`, `auth.authentik` and
+  `auth.scim` → the mail provider, the sign-in providers and the SCIM token, encrypted with
+  `@repo/crypto`,
   each with a `redacted` mirror for the settings UI. Secrets never leave the server.
 
 The mail provider is read by the api and the worker as well, so its shape and reader
@@ -95,17 +96,16 @@ own check of `emailAndPassword.requireEmailVerification`.
 
 ## Generic OIDC
 
-`genericOAuth({ config: [oidcOptions] })` adds one OIDC/OAuth2 provider, discovered from
-the well-known document the operator points it at (`app_secret` key `auth.oidc`). It adds
+`genericOAuth({ config: [oidcOptions, authentikOptions] })` adds the generic OIDC/OAuth2
+provider and a dedicated Authentik provider. Each is discovered from its own well-known
+document and encrypted under `auth.oidc` or `auth.authentik`. The plugin adds
 `/sign-in/oauth2` and `/oauth2/callback/:providerId`, and reuses the `account` table, so it
 adds none of its own.
 
-`providerId` is the constant `OIDC_PROVIDER_ID` (`"oidc"`): it is what the `account` rows
-store, and better-auth materialises the provider list once at startup, so the config array
-can neither grow nor be re-keyed afterwards. That is also why there is exactly one
-provider. `oidcOptions` is refreshed per request by `refreshOidcOptions()` in
-`hooks.before` — the same by-reference rule as `googleOptions`: assign its fields, never
-replace the object.
+The provider ids are the constants `OIDC_PROVIDER_ID` (`"oidc"`) and
+`AUTHENTIK_PROVIDER_ID` (`"authentik"`). They are what the `account` rows store. Better Auth
+materialises the provider list once at startup, so the option objects are fixed and refreshed
+by reference for the provider named by each request. Assign their fields, never replace them.
 
 `/oauth2/link` is in `disabledPaths`. No screen offers linking an OIDC identity to the
 signed-in account, and better-auth already attaches a sign-in to a matching confirmed
@@ -121,7 +121,7 @@ an account that already exists.
 
 Like every other instance setting this is read per request, so it cannot be
 `emailAndPassword.enabled: false` (evaluated at startup) and cannot live in `disabledPaths`
-(a static array). The api refuses to turn it off while neither Google nor OIDC is usable,
+(a static array). The api refuses to turn it off while Google, OIDC and Authentik are all unusable,
 which is what stops an instance being left with no way in.
 
 ## Deactivation and SCIM

@@ -268,7 +268,12 @@
     "oidcLabelHint": "Называет вашего поставщика на кнопке входа. Оставьте пустым для общей надписи.",
     "scopes": "Scopes",
     "scopesHint": "Через пробел. openid обязателен; profile и email заполняют имя и адрес.",
-    "oidcRedirectUriHint": "Укажите этот адрес как redirect URI у клиента вашего поставщика удостоверений. При несовпадении поставщик отклонит вход."
+    "oidcRedirectUriHint": "Укажите этот адрес как redirect URI у клиента вашего поставщика удостоверений. При несовпадении поставщик отклонит вход.",
+    "authentik": "Authentik",
+    "authentikConfigured": "Authentik настроен и может использоваться вместе с универсальным OpenID Connect.",
+    "authentikMissing": "Сначала укажите URL обнаружения Authentik, идентификатор клиента и секрет.",
+    "authentikDiscoveryUrlHint": "Используйте URL конфигурации OpenID для поставщика приложения Authentik.",
+    "authentikRedirectUriHint": "Зарегистрируйте этот точный URI перенаправления в поставщике OAuth2/OpenID Authentik."
   },
   "scim": {
     "saved": "Настройки SCIM сохранены",

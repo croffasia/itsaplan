@@ -2,6 +2,7 @@ import { Elysia, t } from 'elysia';
 import {
   GOOGLE_REDIRECT_URI,
   OIDC_REDIRECT_URI,
+  AUTHENTIK_REDIRECT_URI,
   getAuthSettings,
   setAuthSettings,
   getEmailSettings,
@@ -13,6 +14,9 @@ import {
   getOidcSettings,
   setOidcSettings,
   hasConfiguredOidc,
+  getAuthentikSettings,
+  setAuthentikSettings,
+  hasConfiguredAuthentik,
   getScimSettings,
   setScimSettings,
   rotateScimToken,
@@ -44,6 +48,8 @@ import {
 import {
   AuthSettingsBody,
   AuthSettingsResponse,
+  AuthentikSettingsBody,
+  AuthentikSettingsResponse,
   EmailSettingsBody,
   EmailSettingsResponse,
   EmailTestResponse,
@@ -108,15 +114,17 @@ import {
 // Whether any single sign-on provider can run right now. Password sign-in may only
 // be turned off while one can.
 async function hasSsoProvider(): Promise<boolean> {
-  return (await hasConfiguredOidc()) || (await hasConfiguredGoogle());
+  return (
+    (await hasConfiguredOidc()) || (await hasConfiguredAuthentik()) || (await hasConfiguredGoogle())
+  );
 }
 
 async function assertUsableSignInMethod(
   nextProviderUsable: boolean,
-  otherProviderUsable: boolean,
+  otherProvidersUsable: boolean[],
 ): Promise<void> {
   const auth = await getAuthSettings();
-  if (!auth.emailPassword && !nextProviderUsable && !otherProviderUsable) {
+  if (!auth.emailPassword && !nextProviderUsable && !otherProvidersUsable.some(Boolean)) {
     throw new HttpError(400, 'Enable password sign-in or another single sign-on provider first');
   }
 }
@@ -252,10 +260,10 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       if (enabled && (clientId.length === 0 || !hasClientSecret)) {
         throw new HttpError(400, 'Add the Google client ID and secret first');
       }
-      await assertUsableSignInMethod(
-        enabled && clientId.length > 0 && hasClientSecret,
+      await assertUsableSignInMethod(enabled && clientId.length > 0 && hasClientSecret, [
         await hasConfiguredOidc(),
-      );
+        await hasConfiguredAuthentik(),
+      ]);
       const next = await setGoogleSettings(body);
       return { ...next, redirectUri: GOOGLE_REDIRECT_URI };
     },
@@ -288,15 +296,19 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       const enabled = body.enabled ?? current.enabled;
       const discoveryUrl = body.discoveryUrl ?? current.discoveryUrl;
       const clientId = body.clientId ?? current.clientId;
+      const scopes = body.scopes ?? current.scopes;
       const hasClientSecret = (body.clientSecret?.length ?? 0) > 0 || current.hasClientSecret;
       // Turning it on without credentials would only offer a button that fails at
       // the provider, the same rule the Google settings apply.
       if (enabled && (discoveryUrl.length === 0 || clientId.length === 0 || !hasClientSecret)) {
         throw new HttpError(400, 'Add the discovery URL, client ID and secret first');
       }
+      if (enabled && !scopes.includes('openid')) {
+        throw new HttpError(400, 'The openid scope is required');
+      }
       await assertUsableSignInMethod(
         enabled && discoveryUrl.length > 0 && clientId.length > 0 && hasClientSecret,
-        await hasConfiguredGoogle(),
+        [await hasConfiguredGoogle(), await hasConfiguredAuthentik()],
       );
       const next = await setOidcSettings(body);
       return { ...next, redirectUri: OIDC_REDIRECT_URI };
@@ -308,6 +320,50 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         summary: 'Update OIDC sign-in settings',
         description:
           'Update the generic OIDC/OAuth2 credentials and whether the provider is offered.',
+      },
+    },
+  )
+
+  .get(
+    '/god/authentik-settings',
+    async () => ({ ...(await getAuthentikSettings()), redirectUri: AUTHENTIK_REDIRECT_URI }),
+    {
+      response: { 200: AuthentikSettingsResponse, ...errors(401, 403) },
+      detail: {
+        summary: 'Get Authentik sign-in settings',
+        description: 'Get the Authentik OIDC provider settings (the client secret redacted).',
+      },
+    },
+  )
+
+  .put(
+    '/god/authentik-settings',
+    async ({ body }) => {
+      const current = await getAuthentikSettings();
+      const enabled = body.enabled ?? current.enabled;
+      const discoveryUrl = body.discoveryUrl ?? current.discoveryUrl;
+      const clientId = body.clientId ?? current.clientId;
+      const scopes = body.scopes ?? current.scopes;
+      const hasClientSecret = (body.clientSecret?.length ?? 0) > 0 || current.hasClientSecret;
+      if (enabled && (discoveryUrl.length === 0 || clientId.length === 0 || !hasClientSecret)) {
+        throw new HttpError(400, 'Add the discovery URL, client ID and secret first');
+      }
+      if (enabled && !scopes.includes('openid')) {
+        throw new HttpError(400, 'The openid scope is required');
+      }
+      await assertUsableSignInMethod(
+        enabled && discoveryUrl.length > 0 && clientId.length > 0 && hasClientSecret,
+        [await hasConfiguredGoogle(), await hasConfiguredOidc()],
+      );
+      const next = await setAuthentikSettings(body);
+      return { ...next, redirectUri: AUTHENTIK_REDIRECT_URI };
+    },
+    {
+      body: AuthentikSettingsBody,
+      response: { 200: AuthentikSettingsResponse, ...errors(400, 401, 403) },
+      detail: {
+        summary: 'Update Authentik sign-in settings',
+        description: 'Update the Authentik OIDC credentials and whether sign-in is offered.',
       },
     },
   )

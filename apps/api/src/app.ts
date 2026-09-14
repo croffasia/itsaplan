@@ -8,6 +8,7 @@ import {
   hasConfiguredGoogle,
   hasConfiguredOidc,
   getOidcLabel,
+  hasConfiguredAuthentik,
 } from '@repo/auth';
 import { hasConfiguredEmailProvider } from '@repo/db';
 import { cors } from '@elysiajs/cors';
@@ -231,8 +232,10 @@ export const app = new Elysia()
   // access on an OIDC-only instance too, not just one that also runs a SCIM sync.
   .all('/api/auth/*', async ({ request }) => {
     const response = await auth.handler(request);
-    if (new URL(request.url).pathname.startsWith('/api/auth/oauth2/callback/')) {
-      await syncOidcGroupsAfterCallback(response);
+    const path = new URL(request.url).pathname;
+    const callbackPrefix = '/api/auth/oauth2/callback/';
+    if (path.startsWith(callbackPrefix)) {
+      await syncOidcGroupsAfterCallback(response, path.slice(callbackPrefix.length));
     }
     return response;
   })
@@ -280,6 +283,7 @@ export const app = new Elysia()
         emailPassword: settings.emailPassword,
         google: await hasConfiguredGoogle(),
         oidc: await hasConfiguredOidc(),
+        authentik: await hasConfiguredAuthentik(),
         // Names the operator's own identity provider, so the button shows it as
         // given. Empty falls back to a translated default.
         oidcLabel: await getOidcLabel(),

@@ -252,6 +252,7 @@ export const qk = {
   instanceEmailSettings: ['instanceEmailSettings'] as const,
   instanceGoogleSettings: ['instanceGoogleSettings'] as const,
   instanceOidcSettings: ['instanceOidcSettings'] as const,
+  instanceAuthentikSettings: ['instanceAuthentikSettings'] as const,
   instanceScimSettings: ['instanceScimSettings'] as const,
   instanceScimGroups: ['instanceScimGroups'] as const,
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,

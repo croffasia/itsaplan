@@ -18,18 +18,19 @@ import { hasEmailProvider, type SmtpConfig } from '@repo/mailer';
 // confirmed, which sign-in methods are offered, the mail provider used for
 // authentication email, and the credentials of the OAuth providers. Read by the
 // better-auth instance in ./index.ts (the registration gate, the mail senders, the
-// Google and OIDC providers) and written by god mode in the api, so it lives here
+// Google, OIDC and Authentik providers) and written by god mode in the api, so it lives here
 // rather than in the api.
 //
 // Non-secret settings are one jsonb blob in app_setting under the 'auth' key; the
 // credentials are encrypted in app_secret under 'auth.email', 'auth.google',
-// 'auth.oidc' and 'auth.scim', each with a `redacted` mirror the settings UI can read
+// 'auth.oidc', 'auth.authentik' and 'auth.scim', each with a `redacted` mirror the settings UI can read
 // without decrypting. The mail config is also read by the api and the worker, so its
 // shape and reader live in @repo/db; what stays here is the write side.
 
 const AUTH_SETTING_KEY = 'auth';
 const GOOGLE_SECRET_KEY = 'auth.google';
 const OIDC_SECRET_KEY = 'auth.oidc';
+const AUTHENTIK_SECRET_KEY = 'auth.authentik';
 const SCIM_SECRET_KEY = 'auth.scim';
 
 // Who may create an account.
@@ -362,6 +363,96 @@ export async function setOidcSettings(patch: InstanceOidcPatch): Promise<Instanc
   };
   const redacted = toOidcDto(next);
   await writeSecret(OIDC_SECRET_KEY, next, redacted);
+  return redacted;
+}
+
+// ── Authentik OIDC ───────────────────────────────────────────────────────────
+
+export interface InstanceAuthentikConfig {
+  enabled: boolean;
+  discoveryUrl: string;
+  clientId: string;
+  clientSecret: string;
+  scopes: string[];
+  pkce: boolean;
+}
+
+export interface InstanceAuthentikDto {
+  enabled: boolean;
+  discoveryUrl: string;
+  clientId: string;
+  hasClientSecret: boolean;
+  scopes: string[];
+  pkce: boolean;
+}
+
+export interface InstanceAuthentikPatch {
+  enabled?: boolean;
+  discoveryUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  scopes?: string[];
+  pkce?: boolean;
+}
+
+function defaultAuthentikConfig(): InstanceAuthentikConfig {
+  return {
+    enabled: false,
+    discoveryUrl: '',
+    clientId: '',
+    clientSecret: '',
+    scopes: ['openid', 'profile', 'email'],
+    pkce: true,
+  };
+}
+
+function toAuthentikDto(config: InstanceAuthentikConfig): InstanceAuthentikDto {
+  return {
+    enabled: config.enabled,
+    discoveryUrl: config.discoveryUrl,
+    clientId: config.clientId,
+    hasClientSecret: config.clientSecret.length > 0,
+    scopes: config.scopes,
+    pkce: config.pkce,
+  };
+}
+
+export async function getAuthentikConfig(): Promise<InstanceAuthentikConfig> {
+  const stored = await readSecret<InstanceAuthentikConfig>(AUTHENTIK_SECRET_KEY);
+  return { ...defaultAuthentikConfig(), ...(stored ?? {}) };
+}
+
+export async function getAuthentikSettings(): Promise<InstanceAuthentikDto> {
+  return toAuthentikDto(await getAuthentikConfig());
+}
+
+export function isAuthentikUsable(config: InstanceAuthentikConfig): boolean {
+  return (
+    config.enabled &&
+    config.discoveryUrl.length > 0 &&
+    config.clientId.length > 0 &&
+    config.clientSecret.length > 0
+  );
+}
+
+export async function hasConfiguredAuthentik(): Promise<boolean> {
+  return isAuthentikUsable(await getAuthentikConfig());
+}
+
+export async function setAuthentikSettings(
+  patch: InstanceAuthentikPatch,
+): Promise<InstanceAuthentikDto> {
+  const current = await getAuthentikConfig();
+  const next: InstanceAuthentikConfig = {
+    enabled: patch.enabled ?? current.enabled,
+    discoveryUrl: patch.discoveryUrl ?? current.discoveryUrl,
+    clientId: patch.clientId ?? current.clientId,
+    clientSecret: mergeSecret(current.clientSecret, patch.clientSecret),
+    scopes: patch.scopes ?? current.scopes,
+    pkce: patch.pkce ?? current.pkce,
+  };
+  const redacted = toAuthentikDto(next);
+  await writeSecret(AUTHENTIK_SECRET_KEY, next, redacted);
   return redacted;
 }
 

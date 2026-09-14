@@ -78,6 +78,7 @@ export interface PublicAuthConfig {
   emailPassword: boolean;
   google: boolean;
   oidc: boolean;
+  authentik: boolean;
   // The sign-in button text the operator gave their identity provider. Empty when
   // OIDC is not offered, or when they left it blank.
   oidcLabel: string;

@@ -7,14 +7,12 @@ import { Field } from '@/components/ui/field';
 import GoogleIcon from '@/components/common/GoogleIcon';
 import { useAuthConfig } from '@/services/authConfig.service';
 
-// The sign-in methods that are not the email + password form: the magic link toggle,
-// the instance's own OIDC provider, Google, and passkeys. Which of the first three
-// show depends on the instance config.
 export default function AuthLoginAlternatives({
   signingInWithLink,
   pending,
   onToggleMethod,
   onOidc,
+  onAuthentik,
   onGoogle,
   onPasskey,
 }: {
@@ -22,6 +20,7 @@ export default function AuthLoginAlternatives({
   pending: boolean;
   onToggleMethod: () => void;
   onOidc: () => void;
+  onAuthentik: () => void;
   onGoogle: () => void;
   onPasskey: () => void;
 }) {
@@ -48,6 +47,12 @@ export default function AuthLoginAlternatives({
           {/* The operator named their own identity provider, so the label is shown
               as given rather than translated. */}
           {authConfig.oidcLabel || t('withSso')}
+        </Button>
+      )}
+      {authConfig?.authentik && (
+        <Button type="button" variant="outline" onClick={onAuthentik} disabled={pending}>
+          <ShieldCheck />
+          {t('withAuthentik')}
         </Button>
       )}
       {authConfig?.google && (

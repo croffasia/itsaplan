@@ -26,6 +26,19 @@ export interface WorkerConfig {
   // Run the auto-archive sweep once every this many ticks. Archiving is not time-
   // sensitive (an issue past its threshold can wait a tick), so this is coarse.
   autoArchiveEveryTicks: number;
+  // How often to look for tracked social accounts that need a check. The tick
+  // cadence only decides how often we look; competitorIntervalMs decides which
+  // accounts are actually due, so looking often is cheap.
+  competitorEveryTicks: number;
+  // How old an account's last check must be before it is checked again.
+  competitorIntervalMs: number;
+  // Max accounts checked per sweep. Each one is an outbound API call, so this
+  // caps how long a sweep holds the api busy.
+  competitorBatchSize: number;
+  // Alerts older than this are deleted by the sweep.
+  competitorRetainDays: number;
+  // Timeout for the sweep call itself; it checks a whole batch, so it is generous.
+  competitorTimeoutMs: number;
 }
 
 let cached: WorkerConfig | null = null;
@@ -43,6 +56,12 @@ export function workerConfig(): WorkerConfig {
     cleanupEveryTicks: intEnv('WEBHOOK_CLEANUP_EVERY_TICKS', 300),
     // Default ~1h at the 2s poll interval (1800 ticks).
     autoArchiveEveryTicks: intEnv('AUTO_ARCHIVE_EVERY_TICKS', 1800),
+    // Default ~5m at the 2s poll interval (150 ticks).
+    competitorEveryTicks: intEnv('COMPETITOR_EVERY_TICKS', 150),
+    competitorIntervalMs: intEnv('COMPETITOR_INTERVAL_MS', 2 * 60 * 60 * 1000),
+    competitorBatchSize: intEnv('COMPETITOR_BATCH_SIZE', 20),
+    competitorRetainDays: intEnv('COMPETITOR_RETAIN_DAYS', 60),
+    competitorTimeoutMs: intEnv('COMPETITOR_TIMEOUT_MS', 120_000),
   };
   return cached;
 }

@@ -19,6 +19,11 @@ import { attachmentRoutes } from './attachments/routes';
 import { fileRoutes } from './files/routes';
 import { crmRoutes } from './crm/routes';
 import { financeRoutes } from './finance/routes';
+import { leadRoutes } from './leads/routes';
+import { socialRoutes } from './social/routes';
+import { braindumpRoutes } from './braindump/routes';
+import { mindRoutes } from './mind/routes';
+import { competitorRoutes } from './competitors/routes';
 import { avatarRoutes } from './avatars/routes';
 import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
@@ -37,6 +42,7 @@ import { notificationSettingsRoutes } from './notification-settings/routes';
 import { notificationPreferenceRoutes } from './notification-preferences/routes';
 import { userPreferenceRoutes } from './user-preferences/routes';
 import { telegramRoutes } from './telegram/routes';
+import { hermesChatRoutes } from './hermes-chat/routes';
 
 // The planner API: projects and their columns, issue types, labels, AI agents,
 // custom fields, issues, attachments, saved views, and actions. Mounted on the
@@ -83,6 +89,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(issueTypeRoutes)
   .use(labelRoutes)
   .use(aiAgentRoutes)
+  .use(hermesChatRoutes)
   .use(integrationRoutes)
   .use(agentSkillRoutes)
   .use(agentToolRoutes)
@@ -93,6 +100,11 @@ export const planner = new Elysia({ name: 'planner' })
   .use(fileRoutes)
   .use(crmRoutes)
   .use(financeRoutes)
+  .use(leadRoutes)
+  .use(socialRoutes)
+  .use(braindumpRoutes)
+  .use(mindRoutes)
+  .use(competitorRoutes)
   .use(avatarRoutes)
   .use(viewRoutes)
   .use(shareRoutes)

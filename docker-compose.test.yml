@@ -69,6 +69,10 @@ services:
     environment:
       NODE_ENV: test
       DATABASE_URL: postgres://vela:vela@postgres-test:5432/vela_test
+      VEXOL_LEADS_DATABASE_URL: postgres://vela:vela@postgres-test:5432/vela_test
+      VEXOL_LEADS_PROJECT_KEY: VEX
+      VEXOL_BOB_MCP_TOKEN: bob-test-token-with-enough-entropy
+      VEXOL_BOB_MCP_PROJECT_KEY: VEX
       # Any fixed secret works for a throwaway test DB.
       BETTER_AUTH_SECRET: test-secret-not-for-production-use-only
       # Fixed 32-byte base64 key for the provider-credential encryption tests.

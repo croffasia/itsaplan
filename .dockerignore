@@ -5,7 +5,7 @@
 .git
 .gitignore
 **/.env
-**/.env.local
+**/.env.*
 **/*.log
 **/.DS_Store
 README.md

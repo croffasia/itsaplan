@@ -86,6 +86,15 @@ services:
       NODE_ENV: production
       API_PORT: 3000
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      VEXOL_LEADS_DATABASE_URL: ${VEXOL_LEADS_DATABASE_URL:?set a server-side Leads database URL in .env}
+      VEXOL_LEADS_PROJECT_KEY: ${VEXOL_LEADS_PROJECT_KEY:?set the project key allowed to access Leads}
+      VEXOL_BOB_MCP_TOKEN: ${VEXOL_BOB_MCP_TOKEN:?set a strong Bob MCP bearer token in .env}
+      VEXOL_BOB_MCP_PROJECT_KEY: ${VEXOL_BOB_MCP_PROJECT_KEY:?set the project key allowed for Bob MCP}
+      HERMES_API_BASE_URL: ${HERMES_API_BASE_URL:?set the private Hermes API Server URL in .env}
+      HERMES_BOB_PROJECT_KEY: ${HERMES_BOB_PROJECT_KEY:?set the project key allowed for Hermes Bob chat}
+      HERMES_BOB_API_KEY: ${HERMES_BOB_API_KEY:?set the default-profile Hermes API_SERVER_KEY in .env}
+      ZERNIO_API: ${ZERNIO_API:?set the server-side Zernio API key in .env}
+      ZERNIO_PROJECT_KEY: ${ZERNIO_PROJECT_KEY:?set the project key allowed to access Social}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
       # Encrypts stored provider credentials at rest (AES-256-GCM). Changing it
       # makes existing stored credentials undecryptable.
@@ -104,6 +113,16 @@ services:
       S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID}
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_REGION: ${S3_REGION:-us-east-1}
+      # Braindump: the directory notes are written to (mounted from
+      # OBSIDIAN_VAULT_HOST_DIR). Voice capture is off unless WHISPER_URL points at
+      # a transcription service; see docker-compose.dev.yml for one to run.
+      WHISPER_URL: ${WHISPER_URL:-}
+      WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}
+      OBSIDIAN_VAULT_DIR: /vault
+    volumes:
+      - ${OBSIDIAN_VAULT_HOST_DIR:-./data/obsidian-vault}:/vault
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
     # start_period covers the migrations the container applies before it listens.
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']

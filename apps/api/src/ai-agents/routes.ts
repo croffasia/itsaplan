@@ -13,12 +13,18 @@ import {
   deleteAgent,
   regenerateKey,
   getAgentById,
+  getAgentFleetSummary,
 } from './store';
 import { runAgent, streamAgent, type RunOpts } from './runtime';
 import { peoplePreamble } from './prompt/run-context';
 import type { SessionUser } from '../shared/auth-context';
 import { listAgentRuns } from './run-queue';
-import { listChatThreads, getChatThreadMessages, deleteChatThread } from './runtime/memory';
+import {
+  listChatThreads,
+  getChatThreadMessages,
+  deleteChatThread,
+  getChatDashboardSummary,
+} from './runtime/memory';
 import { isOwnChatThread } from './runtime/thread-ids';
 
 const agentParams = t.Object({
@@ -67,8 +73,7 @@ const username = t.String({
   description: 'Mention handle (letters, digits, . _ -).',
 });
 
-// Internal-agent model configuration, all optional so a config can be filled in
-// over time. Ignored (stored as null/empty) for an external agent.
+// Optional dashboard runtime configuration for internal agents.
 const configFields = {
   modelCredentialId: t.Optional(
     t.Nullable(
@@ -185,6 +190,39 @@ const AgentRunPageResponse = t.Object({
   nextCursor: t.Nullable(t.Number()),
 });
 
+const AgentFleetSummaryResponse = t.Object({
+  generatedAt: t.String(),
+  timezone: t.String(),
+  status: t.Object({
+    live: t.Number(),
+    idle: t.Number(),
+    warning: t.Number(),
+  }),
+  runs24h: t.Number(),
+  runTrendPercent: t.Nullable(t.Number()),
+  schedules: t.Object({
+    active: t.Number(),
+    total: t.Number(),
+  }),
+  successRate7d: t.Nullable(t.Number()),
+  p95DurationMs7d: t.Nullable(t.Number()),
+  peak: t.Object({
+    runs: t.Number(),
+    hour: t.String(),
+  }),
+  hourlyRuns: t.Array(t.Object({ hour: t.String(), runs: t.Number() })),
+});
+
+const ChatDashboardSummaryResponse = t.Object({
+  generatedAt: t.String(),
+  threads: t.Number(),
+  awaitingReply: t.Number(),
+  messages24h: t.Number(),
+  medianReplyMs7d: t.Nullable(t.Number()),
+  peak: t.Object({ messages: t.Number(), hour: t.String() }),
+  hourlyMessages: t.Array(t.Object({ hour: t.String(), messages: t.Number() })),
+});
+
 // One chat thread in the caller's history with an agent (ChatThreadSummary).
 const ChatThreadResponse = t.Object({
   id: t.String(),
@@ -223,6 +261,51 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       ...mcpTool('list_ai_agents'),
     },
   })
+
+  .get(
+    '/projects/:projectKey/ai-agents/fleet-summary',
+    ({ project, query }) => {
+      try {
+        new Intl.DateTimeFormat('en', { timeZone: query.timezone }).format();
+      } catch {
+        throw new HttpError(400, 'Invalid timezone');
+      }
+      return getAgentFleetSummary(project.id, query.timezone);
+    },
+    {
+      query: t.Object({ timezone: t.String({ minLength: 1, maxLength: 100 }) }),
+      permission: ['ai_agents', 'read'],
+      response: {
+        200: AgentFleetSummaryResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Get AI agent fleet summary',
+        description: 'Get current agent status and run activity for the Agents overview.',
+      },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/ai-agents/chat-summary',
+    ({ project, user }) => getChatDashboardSummary(requireUser(user).id, project.id),
+    {
+      permission: ['ai_agents', 'read'],
+      response: {
+        200: ChatDashboardSummaryResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+      },
+      detail: {
+        summary: 'Get AI chat summary',
+        description: "Get the caller's project chat activity for the Chats dashboard.",
+      },
+    },
+  )
 
   .get(
     '/projects/:projectKey/ai-agents/:agentId',
@@ -395,6 +478,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
+        409: ErrorResponse,
       },
       detail: {
         summary: 'Delete an AI agent',
@@ -404,7 +488,6 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
     },
   )
 
-  // The agent is built from its stored model configuration (Mastra).
   .post(
     '/projects/:projectKey/ai-agents/:agentId/run',
     async ({ params, project, body, user }) =>
@@ -427,9 +510,7 @@ export const aiAgentRoutes = new Elysia({ name: 'ai-agents', detail: { tags: ['A
       },
       detail: {
         summary: 'Run an AI agent',
-        description:
-          'Send a prompt to an internal AI agent and return its answer. Only an internal agent ' +
-          'runs here; an external one has no model config and returns 400.',
+        description: 'Send a prompt to an internal agent and return its answer.',
         ...mcpTool('run_ai_agent'),
       },
     },

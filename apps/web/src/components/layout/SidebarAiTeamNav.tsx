@@ -1,6 +1,6 @@
 import { usePathname } from 'next/navigation';
-import { MessagesSquare, SlidersHorizontal } from 'lucide-react';
-import { aiChatPath, aiSectionPath, aiTeamPath } from '@/utils/paths';
+import { Bot, MessagesSquare, SlidersHorizontal } from 'lucide-react';
+import { agentsPath, aiChatPath, aiSectionPath, aiTeamPath } from '@/utils/paths';
 import { AI_SECTIONS, AI_TEAM_SECTIONS } from '@/utils/settingsSections';
 import { usePermissions } from '@/hooks/usePermissions';
 import {
@@ -37,13 +37,22 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
       <SidebarGroupContent>
         <SidebarMenu>
           {canChat && (
-            <SidebarNavItem
-              href={projectKey ? aiChatPath(projectKey) : '#'}
-              icon={MessagesSquare}
-              label="Chat"
-              active={pathname.endsWith('/ai-team/chat')}
-              disabled={disabled}
-            />
+            <>
+              <SidebarNavItem
+                href={projectKey ? aiChatPath(projectKey) : '#'}
+                icon={MessagesSquare}
+                label="Chats"
+                active={pathname.endsWith('/ai-team/chat')}
+                disabled={disabled}
+              />
+              <SidebarNavItem
+                href={projectKey ? agentsPath(projectKey) : '#'}
+                icon={Bot}
+                label="Agents"
+                active={pathname.endsWith('/ai-team/agents')}
+                disabled={disabled}
+              />
+            </>
           )}
           {sections.map((s) => (
             <SidebarNavItem

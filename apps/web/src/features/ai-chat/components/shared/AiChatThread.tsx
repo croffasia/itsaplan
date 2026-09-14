@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { AiAgent } from '@/lib/api';
 import { useAgentChat } from '@/hooks/useAgentChat';
 import { useAgentThreadMessagesQuery } from '@/services/aiAgents.service';
+import { qk } from '@/services/queryKeys';
 import { AgentChatPanel } from '@/components/common/agent-chat/AgentChatPanel';
 import { AiChatThreadSkeleton } from './AiChatThreadSkeleton';
 
@@ -26,6 +28,7 @@ export function AiChatThread({
   threadId: string | null;
   onThreadCreated: (threadId: string) => void;
 }) {
+  const queryClient = useQueryClient();
   const {
     messages,
     status,
@@ -76,6 +79,14 @@ export function AiChatThread({
     if (activeThreadId && threadId === null) onThreadCreated(activeThreadId);
   }, [activeThreadId, threadId, onThreadCreated]);
 
+  const handleSend = useCallback(
+    async (prompt: string) => {
+      await send(prompt);
+      await queryClient.invalidateQueries({ queryKey: qk.chatDashboardSummary(projectKey) });
+    },
+    [projectKey, queryClient, send],
+  );
+
   const restoring = threadId != null && threadId !== activeThreadId && messagesQuery.isLoading;
   if (restoring) return <AiChatThreadSkeleton />;
 
@@ -85,7 +96,7 @@ export function AiChatThread({
       messages={messages}
       status={status}
       activeTool={activeTool}
-      onSend={send}
+      onSend={handleSend}
       hasEarlierMessages={messagesQuery.hasNextPage}
       isLoadingEarlier={messagesQuery.isFetchingNextPage}
       onLoadEarlier={() => void messagesQuery.fetchNextPage()}

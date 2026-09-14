@@ -15,6 +15,8 @@ import { setMcpApp } from './mcp/app-ref';
 import { internalAgentRunRoutes } from './ai-agents/internal-routes';
 import { internalNotificationRoutes } from './notifications/internal-routes';
 import { internalTelegramRoutes } from './telegram/internal-routes';
+import { internalCompetitorRoutes } from './competitors/internal-routes';
+import { mountBobMcp } from './bob-mcp/mount';
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
@@ -107,6 +109,26 @@ export const app = new Elysia()
             description: 'Project finance and accounting transactions',
           },
           {
+            name: 'Leads',
+            description: 'Read-only Vexol lead campaigns, evaluations, and sourcing runs',
+          },
+          {
+            name: 'Social',
+            description: 'Read-only Instagram account, post, and analytics data',
+          },
+          {
+            name: 'Braindump',
+            description: 'Captured thoughts, their recordings, and where they were filed',
+          },
+          {
+            name: 'Mind',
+            description: "The operation's shared memory: facts, their links, and the recall log",
+          },
+          {
+            name: 'Competitors',
+            description: 'Watched rival social accounts and the alerts they raise',
+          },
+          {
             name: 'Avatars',
             description: "Current user's avatar image (upload and raw bytes)",
           },
@@ -195,6 +217,7 @@ export const app = new Elysia()
   .use(internalAgentRunRoutes)
   .use(internalNotificationRoutes)
   .use(internalTelegramRoutes)
+  .use(internalCompetitorRoutes)
   // Test receiver for inspecting webhook deliveries (unauthenticated, dev aid).
   .use(webhookTestRoutes)
   // Planner API: projects, issues, and their dependent entities.
@@ -204,6 +227,7 @@ export const app = new Elysia()
 // type) stays the REST surface; the MCP endpoint is JSON-RPC, not called via Eden.
 // Its tools are generated from the planner routes tagged with mcpTool().
 mountMcp(app);
+mountBobMcp(app);
 
 // Hands the assembled app to the internal agent runtime, which builds an agent's
 // tools from the same mcpTool() routes and dispatches them in process. It cannot

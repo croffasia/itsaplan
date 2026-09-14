@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "next dev -p 3001 --turbopack",
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "eslint .",
@@ -73,6 +73,7 @@
     "@types/node": "^22.10.7",
     "@types/react": "^19.0.7",
     "@types/react-dom": "^19.0.3",
+    "@types/bun": "latest",
     "@types/react-grid-layout": "^2.1.0",
     "@repo/eslint-config": "workspace:*",
     "eslint": "^9.39.0",

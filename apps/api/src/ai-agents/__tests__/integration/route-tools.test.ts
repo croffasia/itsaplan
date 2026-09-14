@@ -56,7 +56,7 @@ async function run(tools: ToolMap, key: string, input: unknown = {}): Promise<un
   return execute(input as never, {} as never);
 }
 
-describe('internal agent route tools', () => {
+describe('agent route tools', () => {
   beforeEach(async () => {
     await resetDb();
   });

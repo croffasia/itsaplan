@@ -60,6 +60,14 @@ export const qk = {
   // An agent's triggered run history (the runs sidebar).
   agentRuns: (projectKey: string, agentId: number) =>
     ['aiAgents', projectKey, agentId, 'runs'] as const,
+  agentFleetSummary: (projectKey: string, timezone: string) =>
+    ['aiAgents', projectKey, 'fleet-summary', timezone] as const,
+  chatDashboardSummary: (projectKey: string) => ['aiAgents', projectKey, 'chat-summary'] as const,
+  hermesAgents: (projectKey: string) => ['hermesAgents', projectKey] as const,
+  hermesConversations: (projectKey: string, agentId: number) =>
+    ['hermesConversations', projectKey, agentId] as const,
+  hermesMessages: (projectKey: string, conversationId: string) =>
+    ['hermesConversations', projectKey, conversationId, 'messages'] as const,
   agentSchedules: (projectKey: string) => ['agentSchedules', projectKey] as const,
   agentScheduleRuns: (projectKey: string, scheduleId: number) =>
     ['agentSchedules', projectKey, scheduleId, 'runs'] as const,
@@ -113,6 +121,22 @@ export const qk = {
   crmCustomers: (projectKey: string) => ['crmCustomers', projectKey] as const,
   crmCustomer: (customerId: string) => ['crmCustomer', customerId] as const,
   financeTransactions: (projectKey: string) => ['financeTransactions', projectKey] as const,
+  leadCampaigns: (projectKey: string) => ['leadCampaigns', projectKey] as const,
+  approvalLeads: (projectKey: string, filters: unknown) =>
+    ['approvalLeads', projectKey, filters] as const,
+  lead: (projectKey: string, leadId: string) => ['lead', projectKey, leadId] as const,
+  leadAgentRuns: (projectKey: string) => ['leadAgentRuns', projectKey] as const,
+  socialDashboard: (projectKey: string) => ['socialDashboard', projectKey] as const,
+  braindumpConfig: (projectKey: string) => ['braindumpConfig', projectKey] as const,
+  braindumpStats: (projectKey: string) => ['braindumpStats', projectKey] as const,
+  braindumpEntries: (projectKey: string) => ['braindumpEntries', projectKey] as const,
+  mindOverview: (projectKey: string) => ['mindOverview', projectKey] as const,
+  mindFacts: (projectKey: string) => ['mindFacts', projectKey] as const,
+  mindRecalls: (projectKey: string) => ['mindRecalls', projectKey] as const,
+  mindStale: (projectKey: string) => ['mindStale', projectKey] as const,
+  competitors: (projectKey: string) => ['competitors', projectKey] as const,
+  competitorOverview: (projectKey: string) => ['competitorOverview', projectKey] as const,
+  competitorEvents: (projectKey: string) => ['competitorEvents', projectKey] as const,
   // A project's inbox notifications (the list, scoped by the active filters) and the
   // project's unread count (the sidebar badge + live-refresh target).
   notifications: (projectKey: string, filters?: unknown) =>

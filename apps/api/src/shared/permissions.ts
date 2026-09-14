@@ -25,6 +25,11 @@ export const PERMISSION_RESOURCES = [
   'files',
   'crm',
   'finance',
+  'leads',
+  'social',
+  'braindump',
+  'mind',
+  'competitors',
   'mail',
   'danger_zone',
 ] as const;

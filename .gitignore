@@ -44,3 +44,6 @@ coverage
 
 # agent scratch space (test docs, drafts)
 .workspace/
+
+# Braindump: notes the api writes for Obsidian, and the vault the compose files mount.
+/data/

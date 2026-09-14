@@ -1,12 +1,20 @@
 import { randomUUID } from 'node:crypto';
-import { db, issue, issueAttachment, noteBoard, noteBoardImage, projectFile } from '@repo/db';
+import {
+  braindumpEntry,
+  db,
+  issue,
+  issueAttachment,
+  noteBoard,
+  noteBoardImage,
+  projectFile,
+} from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
 import { deleteObject, putObject } from './s3';
 import { HttpError, num } from './lib';
 import { getStorageSettings, mimeAllowed, MB } from '../settings/storage';
 
 async function projectStorageBytes(projectId: number): Promise<number> {
-  const [attachmentRows, fileRows, noteImageRows] = await Promise.all([
+  const [attachmentRows, fileRows, noteImageRows, braindumpRows] = await Promise.all([
     db
       .select({ total: sql<string>`coalesce(sum(${issueAttachment.sizeBytes}), 0)` })
       .from(issueAttachment)
@@ -21,11 +29,16 @@ async function projectStorageBytes(projectId: number): Promise<number> {
       .from(noteBoardImage)
       .innerJoin(noteBoard, eq(noteBoard.id, noteBoardImage.boardId))
       .where(eq(noteBoard.projectId, projectId)),
+    db
+      .select({ total: sql<string>`coalesce(sum(${braindumpEntry.audioSizeBytes}), 0)` })
+      .from(braindumpEntry)
+      .where(eq(braindumpEntry.projectId, projectId)),
   ]);
   return (
     num(attachmentRows[0]?.total ?? 0) +
     num(fileRows[0]?.total ?? 0) +
-    num(noteImageRows[0]?.total ?? 0)
+    num(noteImageRows[0]?.total ?? 0) +
+    num(braindumpRows[0]?.total ?? 0)
   );
 }
 
@@ -42,14 +55,25 @@ export async function assertUploadAllowed(
   if (!mimeAllowed(contentType, limits.attachmentMimeTypes)) {
     throw new HttpError(400, `Files of type "${contentType}" are not accepted on this instance`);
   }
-  if (limits.projectQuotaMb > 0) {
-    const used = (await projectStorageBytes(projectId)) - replacedBytes;
-    if (used + size > limits.projectQuotaMb * MB) {
-      throw new HttpError(
-        413,
-        `The project has used its ${limits.projectQuotaMb} MB storage quota. Delete files or attachments to free space.`,
-      );
-    }
+  await assertProjectQuota(projectId, size, replacedBytes);
+}
+
+// The project storage quota on its own, for an upload whose accepted types are
+// governed by its own allowlist rather than the attachment one (braindump voice
+// recordings, which the attachment list deliberately excludes).
+export async function assertProjectQuota(
+  projectId: number,
+  size: number,
+  replacedBytes = 0,
+): Promise<void> {
+  const limits = await getStorageSettings();
+  if (limits.projectQuotaMb <= 0) return;
+  const used = (await projectStorageBytes(projectId)) - replacedBytes;
+  if (used + size > limits.projectQuotaMb * MB) {
+    throw new HttpError(
+      413,
+      `The project has used its ${limits.projectQuotaMb} MB storage quota. Delete files or attachments to free space.`,
+    );
   }
 }
 

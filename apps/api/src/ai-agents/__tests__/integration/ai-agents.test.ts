@@ -3,6 +3,7 @@ import { authedApi, type Api } from '../../../__tests__/helpers/app';
 import { signUpTestUser } from '../../../__tests__/helpers/auth';
 import { resetDb } from '../../../__tests__/helpers/db';
 import { untaggedRoutes } from '../../../__tests__/helpers/mcp';
+import { db, mcpAuditLog } from '@repo/db';
 
 // AI agents attached to a project. Each agent is backed by a hidden bot user, owns a
 // better-auth API key, and is a project member acting under a project role. An
@@ -15,8 +16,8 @@ import { untaggedRoutes } from '../../../__tests__/helpers/mcp';
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
-  return { owner, asOwner };
+  const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
+  return { owner, asOwner, projectId: project.data!.id };
 }
 
 const agents = (api: Api) => api.projects({ projectKey: 'MKT' })['ai-agents'];
@@ -81,12 +82,66 @@ describe('ai agents', () => {
     );
   });
 
-  it('stores no model config on an external agent even when config fields are sent', async () => {
+  it('returns the fleet status, schedule totals, and hourly run activity', async () => {
+    const { asOwner, projectId } = await setup();
+    const created = await agents(asOwner).post({
+      name: 'Bob',
+      username: 'bob-agent',
+      kind: 'internal',
+    });
+    const schedules = asOwner.projects({ projectKey: 'MKT' })['agent-schedules'];
+    const schedule = await schedules.post({
+      agentId: created.data!.agent.id,
+      name: 'Daily brief',
+      prompt: 'Create the daily brief.',
+      cron: '0 8 * * *',
+      status: 'active',
+    });
+    await schedules({ scheduleId: schedule.data!.id }).run.post();
+    await db.insert(mcpAuditLog).values({
+      actor: 'bob-agent',
+      requestId: crypto.randomUUID(),
+      toolName: 'get_dashboard_summary',
+      projectId,
+      resultStatus: 'success',
+      durationMs: 120,
+      recordCount: 1,
+    });
+
+    const res = await agents(asOwner)['fleet-summary'].get({
+      query: { timezone: 'Europe/Amsterdam' },
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.data).toMatchObject({
+      timezone: 'Europe/Amsterdam',
+      status: { live: 0, idle: 1, warning: 0 },
+      runs24h: 2,
+      schedules: { active: 1, total: 1 },
+      successRate7d: 100,
+      p95DurationMs7d: 120,
+      peak: { runs: 2 },
+    });
+    expect(res.data?.hourlyRuns).toHaveLength(24);
+    expect(res.data?.hourlyRuns.reduce((total, hour) => total + hour.runs, 0)).toBe(2);
+  });
+
+  it('rejects an invalid fleet-summary timezone', async () => {
     const { asOwner } = await setup();
+    const res = await agents(asOwner)['fleet-summary'].get({
+      query: { timezone: 'Not/A_Timezone' },
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('does not embed model runtime configuration in an external agent', async () => {
+    const { asOwner } = await setup();
+    const modelCredentialId = await createCredential(asOwner);
     const res = await agents(asOwner).post({
       name: 'Ext',
       username: 'ext',
       kind: 'external',
+      modelCredentialId,
       model: 'gpt-5.4',
       tools: ['create_issue'],
       memoryEnabled: true,
@@ -431,6 +486,9 @@ describe('ai agents', () => {
     const asOutsider = agents(authedApi((await signUpTestUser()).cookie));
 
     expect((await asOutsider.get()).status).toBe(403);
+    expect(
+      (await asOutsider['fleet-summary'].get({ query: { timezone: 'Europe/Amsterdam' } })).status,
+    ).toBe(403);
     expect((await asOutsider.tools.get()).status).toBe(403);
     expect((await asOutsider.post({ name: 'X', username: 'x', kind: 'external' })).status).toBe(
       403,
@@ -449,7 +507,7 @@ describe('ai agents', () => {
     expect(res.status).toBe(404);
   });
 
-  it('rejects running an external agent with 400', async () => {
+  it('rejects running an external agent through the internal runtime with 400', async () => {
     const { asOwner } = await setup();
     const created = await agents(asOwner).post({ name: 'Ext', username: 'ext', kind: 'external' });
     const res = await agents(asOwner)({ agentId: created.data!.agent.id }).run.post({
@@ -471,6 +529,8 @@ describe('ai agents', () => {
   it('exposes agent management and the run to MCP', () => {
     const untagged = untaggedRoutes((route) => route.includes('/ai-agents'));
     expect(untagged).toEqual([
+      'GET /projects/:projectKey/ai-agents/fleet-summary',
+      'GET /projects/:projectKey/ai-agents/chat-summary',
       'GET /projects/:projectKey/ai-agents/:agentId/runs',
       'POST /projects/:projectKey/ai-agents/:agentId/run/stream',
       'GET /projects/:projectKey/ai-agents/:agentId/threads',

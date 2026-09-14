@@ -37,6 +37,14 @@ describe('hasPermission', () => {
     expect(hasPermission(p, 'dashboards', 'edit')).toBe(false);
     expect(hasPermission(p, 'members_manage', 'read')).toBe(false);
   });
+
+  it('keeps Leads default-deny for project members', () => {
+    expect(hasPermission(defaultMemberPermissions(), 'leads', 'read')).toBe(false);
+  });
+
+  it('keeps Social default-deny for project members', () => {
+    expect(hasPermission(defaultMemberPermissions(), 'social', 'read')).toBe(false);
+  });
 });
 
 describe('normalizePermissions', () => {

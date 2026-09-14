@@ -1,5 +1,7 @@
 import { Memory } from '@mastra/memory';
 import { PostgresStore } from '@mastra/pg';
+import { db } from '@repo/db';
+import { sql } from 'drizzle-orm';
 import { toIso } from '../helpers/dates';
 
 // Conversation memory for internal agents. Threads and their messages are
@@ -142,6 +144,150 @@ export type ChatMessagePage = {
   items: ChatMessageDTO[];
   nextPage: number | null;
 };
+
+export type ChatDashboardSummary = {
+  generatedAt: string;
+  threads: number;
+  awaitingReply: number;
+  messages24h: number;
+  medianReplyMs7d: number | null;
+  peak: { messages: number; hour: string };
+  hourlyMessages: { hour: string; messages: number }[];
+};
+
+export async function getChatDashboardSummary(
+  resourceId: string,
+  projectId: number,
+): Promise<ChatDashboardSummary> {
+  await getReadMemory().listThreads({
+    filter: { resourceId, metadata: { projectId, kind: 'chat' } },
+    perPage: 1,
+  });
+
+  const [metricRows, hourlyRows] = await Promise.all([
+    db.execute(sql`
+      with chat_threads as (
+        select id
+        from mastra_threads
+        where "resourceId" = ${resourceId}
+          and metadata->>'projectId' = ${String(projectId)}
+          and metadata->>'kind' = 'chat'
+      ), all_threads as (
+        select 'mastra:' || id as id from chat_threads
+        union all
+        select 'hermes:' || id::text
+        from hermes_conversation
+        where project_id = ${projectId}
+          and created_by = ${resourceId}
+          and status = 'active'
+      ), all_messages as (
+        select 'mastra:' || m.thread_id as thread_id, m.id::text as id, m.role, m."createdAt" as created_at
+        from mastra_messages m
+        inner join chat_threads t on t.id = m.thread_id
+        where m.role in ('user', 'assistant')
+        union all
+        select 'hermes:' || c.id::text, m.id::text, m.role, m.created_at
+        from hermes_message m
+        inner join hermes_conversation c on c.id = m.conversation_id
+        where c.project_id = ${projectId}
+          and c.created_by = ${resourceId}
+          and c.status = 'active'
+          and m.role in ('user', 'assistant')
+          and m.status <> 'pending'
+      ), ordered_messages as (
+        select
+          m.thread_id, m.role, m.created_at,
+          lag(m.role) over (partition by m.thread_id order by m.created_at, m.id) as previous_role,
+          lag(m.created_at) over (
+            partition by m.thread_id order by m.created_at, m.id
+          ) as previous_created_at
+        from all_messages m
+      ), latest_messages as (
+        select distinct on (thread_id) thread_id, role
+        from ordered_messages
+        order by thread_id, created_at desc
+      )
+      select
+        (select count(*)::int from all_threads) as threads,
+        (select count(*)::int from latest_messages where role = 'assistant') as "awaitingReply",
+        (select count(*)::int from ordered_messages
+          where created_at >= now() - interval '24 hours') as "messages24h",
+        (select percentile_cont(0.5) within group (
+          order by extract(epoch from (created_at - previous_created_at)) * 1000
+        ) from ordered_messages
+          where role = 'assistant'
+            and previous_role = 'user'
+            and created_at >= now() - interval '7 days') as "medianReplyMs7d"
+    `),
+    db.execute(sql`
+      with hours as (
+        select generate_series(
+          date_trunc('hour', now()) - interval '23 hours',
+          date_trunc('hour', now()),
+          interval '1 hour'
+        ) as bucket
+      ), chat_threads as (
+        select id
+        from mastra_threads
+        where "resourceId" = ${resourceId}
+          and metadata->>'projectId' = ${String(projectId)}
+          and metadata->>'kind' = 'chat'
+      ), project_messages as (
+        select m.id::text as id, m."createdAt" as created_at
+        from mastra_messages m
+        inner join chat_threads t on t.id = m.thread_id
+        where m.role in ('user', 'assistant')
+          and m."createdAt" >= date_trunc('hour', now()) - interval '23 hours'
+        union all
+        select m.id::text, m.created_at
+        from hermes_message m
+        inner join hermes_conversation c on c.id = m.conversation_id
+        where c.project_id = ${projectId}
+          and c.created_by = ${resourceId}
+          and c.status = 'active'
+          and m.role in ('user', 'assistant')
+          and m.status <> 'pending'
+          and m.created_at >= date_trunc('hour', now()) - interval '23 hours'
+      )
+      select h.bucket::text as hour, count(m.id)::int as messages
+      from hours h
+      left join project_messages m
+        on m.created_at >= h.bucket and m.created_at < h.bucket + interval '1 hour'
+      group by h.bucket
+      order by h.bucket
+    `),
+  ]);
+
+  const metric = (
+    metricRows as unknown as {
+      threads: number;
+      awaitingReply: number;
+      messages24h: number;
+      medianReplyMs7d: number | null;
+    }[]
+  )[0] ?? { threads: 0, awaitingReply: 0, messages24h: 0, medianReplyMs7d: null };
+  const hourlyMessages = (hourlyRows as unknown as { hour: string; messages: number }[]).map(
+    (row) => ({
+      hour: new Date(row.hour).toISOString(),
+      messages: Number(row.messages),
+    }),
+  );
+  const peak = hourlyMessages.reduce(
+    (current, row) => (row.messages > current.messages ? row : current),
+    hourlyMessages[0] ?? { hour: new Date().toISOString(), messages: 0 },
+  );
+
+  return {
+    generatedAt: new Date().toISOString(),
+    threads: Number(metric.threads),
+    awaitingReply: Number(metric.awaitingReply),
+    messages24h: Number(metric.messages24h),
+    medianReplyMs7d:
+      metric.medianReplyMs7d == null ? null : Math.round(Number(metric.medianReplyMs7d)),
+    peak: { hour: peak.hour, messages: peak.messages },
+    hourlyMessages,
+  };
+}
 
 // Loads the transcript of one chat thread for the given owner. Returns null when
 // the thread does not exist or is not owned by resourceId (so the caller maps it to

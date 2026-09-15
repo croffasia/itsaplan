@@ -1,0 +1,100 @@
+.dialog {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 50;
+  width: 100%;
+  max-height: min(80dvh, 640px);
+  padding: 24px;
+  padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  border-start-start-radius: calc(var(--radius) * 1.8);
+  border-start-end-radius: calc(var(--radius) * 1.8);
+}
+
+.dialog[data-state='open'] {
+  animation: preview-in 250ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.dialog[data-state='closed'] {
+  animation: preview-out 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.overlay[data-state='open'] {
+  animation: overlay-in 250ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.overlay[data-state='closed'] {
+  animation: overlay-out 120ms cubic-bezier(0.2, 0, 0, 1);
+}
+
+.control {
+  min-width: 44px;
+  min-height: 44px;
+  height: auto;
+  white-space: normal;
+  transition-property: background-color, color, opacity;
+  transition-duration: 120ms;
+}
+
+.control:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  box-shadow: none;
+}
+
+@media (min-width: 768px) {
+  .dialog {
+    inset-inline: auto;
+    top: 50%;
+    left: 50%;
+    bottom: auto;
+    width: 440px;
+    translate: -50% -50%;
+    border-radius: var(--radius);
+    padding-bottom: 24px;
+  }
+}
+
+@keyframes preview-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes preview-out {
+  to {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog[data-state],
+  .overlay[data-state] {
+    animation: none;
+  }
+
+  .control {
+    transition: none;
+  }
+}

@@ -45,7 +45,7 @@ export default function StickerEditor({
   return (
     <>
       <EditorContent editor={editor} />
-      <EditorLinkPreview editor={editor} />
+      <EditorLinkPreview editor={editor} compact={false} />
     </>
   );
 }

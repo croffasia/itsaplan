@@ -26,7 +26,7 @@ export function useLinkPreviewQuery(url: string | undefined) {
   const { data: session, isPending: sessionPending } = useSession();
   const internal =
     !!url && typeof window !== 'undefined' && new URL(url).origin === window.location.origin;
-  const enabled = !!url && !!session?.user.id;
+  const enabled = !!url && !!session?.user.id && !sessionPending;
   const query = useQuery({
     queryKey: ['link-preview', session?.user.id, url],
     enabled,
@@ -41,12 +41,17 @@ export function useLinkPreviewQuery(url: string | undefined) {
     staleTime: internal ? 0 : 5 * 60_000,
     gcTime: internal ? 0 : 2 * 60_000,
     retry: false,
-    refetchOnMount: false,
+    refetchOnMount: internal ? 'always' : false,
     refetchOnWindowFocus: false,
   });
   return {
     ...query,
-    data: query.isError ? undefined : query.data,
-    isPending: sessionPending || (enabled && query.isPending),
+    data:
+      !enabled || query.isError || (internal && query.fetchStatus !== 'idle')
+        ? undefined
+        : query.data,
+    isPending:
+      sessionPending ||
+      (enabled && (query.isPending || (internal && query.fetchStatus !== 'idle'))),
   };
 }

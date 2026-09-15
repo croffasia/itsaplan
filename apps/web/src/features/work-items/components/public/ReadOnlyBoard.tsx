@@ -15,9 +15,17 @@ const noop = () => {};
 export default function ReadOnlyBoard({
   bundle,
   onOpenIssue,
+  token,
+  overlayOpen,
+  error,
+  onRetry,
 }: {
   bundle: SharedViewBundle;
   onOpenIssue: (id: number) => void;
+  token: string;
+  overlayOpen: boolean;
+  error: unknown;
+  onRetry: () => void;
 }) {
   const project = toPublicProjectDetail(bundle.project, bundle.issues);
   const layout = bundle.view.display.layout ?? 'kanban';
@@ -26,6 +34,16 @@ export default function ReadOnlyBoard({
 
   const viewProps: WorkItemsViewProps = {
     project,
+    searchSource: {
+      issues: project.issues,
+      unfilteredIssues: project.issues,
+      loading: false,
+      hasData: true,
+      error,
+      onRetry,
+    },
+    externalOverlayOpen: overlayOpen,
+    issueHref: (issue) => `/share/view/${encodeURIComponent(token)}?issue=${issue.id}`,
     // The view's filters stay on the server, which sends only the issues they
     // match: a link that hides labels and custom field values does not carry
     // enough to re-run them here.

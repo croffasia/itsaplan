@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
 import type { Cycle } from '@/lib/api/endpoints/cycles';
 import { useShell } from '@/context/shellContext';
 import { applyFilters } from '@/utils/filters';
@@ -21,21 +21,27 @@ const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
 // issues and the live board refresh keeps it current. On a finished cycle a new
 // issue is created without one: nothing is planned into a cycle that has ended.
 export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
-  const { project, customFields, onOpenIssue, onAddIssue } = useShell();
+  const { project, customFields, onOpenIssue, onAddIssue, boardStatus } = useShell();
+  const filterRef = useRef<HTMLDivElement>(null);
   const cycleId = cycle.id;
   const board = useLocalBoardSettings(CYCLE_BOARD_STORE_KEY, cycleId);
   const initiativeOptions = useInitiativeOptionsQuery(project?.project.key ?? null).data ?? [];
+  const scopedIssues = useMemo(
+    () => project?.issues.filter((issue) => issue.cycle?.id === cycleId) ?? [],
+    [project?.issues, cycleId],
+  );
 
   const viewProject = useMemo(() => {
     if (!project) return null;
-    const issues = project.issues.filter((i) => i.cycle?.id === cycleId);
-    return { ...project, issues: applyFilters(issues, board.filters, project) };
-  }, [project, cycleId, board.filters]);
+    return { ...project, issues: applyFilters(scopedIssues, board.filters, project) };
+  }, [project, scopedIssues, board.filters]);
 
   if (!project || !viewProject) return null;
 
   const viewProps = {
     project: viewProject,
+    searchSource: { ...boardStatus, issues: viewProject.issues, unfilteredIssues: scopedIssues },
+    onViewFilters: () => filterRef.current?.focus(),
     filters: board.filters,
     // Counted across the whole project, not just this cycle: the limit belongs to
     // the column, and its other issues occupy it just the same.
@@ -56,7 +62,11 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b px-3 py-2">
+      <div
+        ref={filterRef}
+        tabIndex={-1}
+        className="flex items-center justify-between gap-2 border-b px-3 py-2 focus-visible:outline-2 focus-visible:outline-ring"
+      >
         <FilterBar
           filters={board.filters}
           onChange={board.setFilters}

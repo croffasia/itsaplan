@@ -31,6 +31,7 @@ interface SelectionApi {
   remove: (ids: number[]) => void;
   selectAll: () => void;
   clear: () => void;
+  exclude: (ids: Set<number>) => void;
 }
 
 const SelectionContext = createContext<SelectionApi | null>(null);
@@ -47,6 +48,10 @@ export function SelectionProvider({
 }) {
   const [selected, setSelected] = useState<Set<number>>(() => new Set());
   const matches = useHotkeyMatch();
+  const excludedIds = useRef(new Set<number>());
+  const exclude = useCallback((ids: Set<number>) => {
+    excludedIds.current = ids;
+  }, []);
 
   // Latest board ids, read by the keyboard/event handlers without re-binding them.
   const validIdsRef = useRef(validIds);
@@ -65,7 +70,11 @@ export function SelectionProvider({
   }, [validIds]);
 
   const clear = useCallback(() => setSelected((prev) => (prev.size ? new Set() : prev)), []);
-  const selectAll = useCallback(() => setSelected(new Set(validIdsRef.current)), []);
+  const selectAll = useCallback(
+    () =>
+      setSelected(new Set([...validIdsRef.current].filter((id) => !excludedIds.current.has(id)))),
+    [],
+  );
 
   // Escape clears; the select-all shortcut takes the whole board (unless a text
   // field is focused); the command palette's "Select all" dispatches
@@ -99,6 +108,7 @@ export function SelectionProvider({
       isSelected: (id) => selected.has(id),
       toggle: (id) =>
         setSelected((prev) => {
+          if (excludedIds.current.has(id)) return prev;
           const next = new Set(prev);
           if (next.has(id)) next.delete(id);
           else next.add(id);
@@ -107,7 +117,9 @@ export function SelectionProvider({
       add: (ids) =>
         setSelected((prev) => {
           const next = new Set(prev);
-          ids.forEach((id) => next.add(id));
+          ids.forEach((id) => {
+            if (!excludedIds.current.has(id)) next.add(id);
+          });
           return next;
         }),
       remove: (ids) =>
@@ -118,8 +130,9 @@ export function SelectionProvider({
         }),
       selectAll,
       clear,
+      exclude,
     }),
-    [selected, selectAll, clear],
+    [selected, selectAll, clear, exclude],
   );
 
   return <SelectionContext.Provider value={api}>{children}</SelectionContext.Provider>;

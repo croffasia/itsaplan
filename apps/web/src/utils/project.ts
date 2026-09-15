@@ -7,7 +7,13 @@ import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { IssueType } from '@/lib/api/endpoints/issueTypes';
 import type { Label } from '@/lib/api/endpoints/labels';
 import type { Assignee, ProjectDetail } from '@/lib/api/endpoints/projects';
-import type { InitiativeRef, Issue, IssuePatch, NewIssueInput } from '@/lib/api/endpoints/issues';
+import type {
+  BoardIssue,
+  InitiativeRef,
+  Issue,
+  IssuePatch,
+  NewIssueInput,
+} from '@/lib/api/endpoints/issues';
 import type { CycleOption } from '@/lib/api/endpoints/cycles';
 import type { InitiativeOption } from '@/lib/api/endpoints/initiatives';
 import { CYCLE_STATUS_META } from '@/utils/cycleMeta';
@@ -129,6 +135,17 @@ export const DEFAULT_COLOR = '#6b7280';
 // are the active project+view's display settings (see lib/viewSettings).
 export interface WorkItemsViewProps {
   project: ProjectDetail;
+  searchSource?: {
+    issues: BoardIssue[];
+    unfilteredIssues: BoardIssue[];
+    loading: boolean;
+    hasData: boolean;
+    error: unknown;
+    onRetry: () => void;
+  };
+  onViewFilters?: () => void;
+  externalOverlayOpen?: boolean;
+  issueHref?: (issue: BoardIssue) => string;
   // The conditions the project's issues were filtered by. The layouts re-read them
   // to leave out the groups those conditions exclude (see buildGroups).
   filters: FilterSet;

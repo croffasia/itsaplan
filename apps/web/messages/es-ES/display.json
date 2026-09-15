@@ -80,6 +80,7 @@
     "showLinks": "Mostrar enlaces",
     "separateSubtaskCards": "Mostrar subtareas como tarjetas separadas",
     "separateSubtaskRows": "Mostrar subtareas como filas separadas",
+    "startSubtasksCollapsed": "Empezar con las subtareas contraídas",
     "showNestedSubtasks": "Mostrar subtareas anidadas",
     "nestedSubtasks": "Subtareas anidadas",
     "displayProperties": "Propiedades visuales",

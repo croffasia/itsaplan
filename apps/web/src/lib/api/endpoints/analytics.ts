@@ -80,8 +80,15 @@ export interface AgentWorkloadItem {
 export const getBreakdown = (projectKey: string, by: BreakdownBy) =>
   request<BreakdownItem[]>(`/projects/${projectKey}/analytics/breakdown?by=${by}`);
 
-export const getPulse = (projectKey: string, unit: PulseUnit, columns: number) =>
-  request<PulseBucket[]>(`/projects/${projectKey}/analytics/pulse?unit=${unit}&columns=${columns}`);
+export const getPulse = (
+  projectKey: string,
+  unit: PulseUnit,
+  columns: number,
+  scope: 'project' | 'me' = 'project',
+) =>
+  request<PulseBucket[]>(
+    `/projects/${projectKey}/analytics/pulse?unit=${unit}&columns=${columns}&scope=${scope}`,
+  );
 
 export const getThroughput = (projectKey: string, weeks = 12) =>
   request<ThroughputWeek[]>(`/projects/${projectKey}/analytics/throughput?weeks=${weeks}`);

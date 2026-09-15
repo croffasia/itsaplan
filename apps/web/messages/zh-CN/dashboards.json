@@ -140,7 +140,11 @@
     "eventNoun": "{count, plural, one {个事件} other {个事件}}",
     "active": "{count} 个活跃项",
     "less": "较少",
-    "more": "较多"
+    "more": "较多",
+    "scope": {
+      "project": "整个项目",
+      "me": "我的活动"
+    }
   },
   "throughput": {
     "empty": "此时间段内暂无活动。",

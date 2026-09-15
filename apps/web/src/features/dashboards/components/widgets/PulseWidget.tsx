@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
+import { useSession } from '@/lib/auth-client';
 import { cn } from '@/lib/utils';
 import type { PulseUnit } from '@/lib/api/endpoints/analytics';
 import type { WidgetConfig } from '@/utils/dashboardWidgets';
@@ -46,6 +47,8 @@ export default function PulseWidget({
   config: WidgetConfig;
 }) {
   const t = useTranslations('dashboards.pulse');
+  const { data: session } = useSession();
+  const scope = config.pulseScope ?? 'project';
   const unit = config.granularity ?? 'day';
   const geo = GRID[unit];
   const step = geo.cell + geo.gap;
@@ -78,7 +81,13 @@ export default function PulseWidget({
   const fitColumns = width > 0 ? Math.max(1, Math.floor((width + geo.gap) / step)) : 0;
   const fetchColumns = fitColumns > 0 ? Math.min(fitColumns + COLUMN_BUFFER, geo.maxColumns) : 26;
 
-  const { data, isLoading } = usePulseQuery(projectKey, unit, fetchColumns);
+  const { data, isLoading } = usePulseQuery(
+    projectKey,
+    unit,
+    fetchColumns,
+    scope,
+    session?.user.id,
+  );
 
   const [tip, setTip] = useState<{ label: string; count: number; x: number; y: number } | null>(
     null,
@@ -105,7 +114,9 @@ export default function PulseWidget({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-muted-foreground">{t(`caption.${unit}`)}</p>
+      <p className="text-xs text-muted-foreground">
+        {t(`scope.${scope}`)} · {t(`caption.${unit}`)}
+      </p>
 
       {/* Full-width measuring wrapper; the grid draws only what fits (no scroll). Its
           height is the one the cells add up to, whatever is inside it: a widget that

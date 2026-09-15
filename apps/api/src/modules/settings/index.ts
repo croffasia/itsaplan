@@ -2,7 +2,8 @@ import { Elysia } from 'elysia';
 import { requireUser } from '#shared/access';
 import { authContext } from '#shared/auth-context';
 import { errors } from '#shared/responses';
-import { getStorageSettings, getHotkeySettings } from './service';
+import { getStorageSettings } from '@repo/db';
+import { getHotkeySettings } from './service';
 import { getAppVersion } from './updates';
 import { getWhatsNew, markWhatsNewSeen } from './whats-new';
 import {

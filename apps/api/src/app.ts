@@ -121,6 +121,12 @@ export const app = new Elysia()
             description: 'Files uploaded in an agent chat and their raw bytes',
           },
           { name: 'Imports', description: 'Import drafts that turn an uploaded file into issues' },
+          {
+            name: 'Import/Export',
+            description:
+              'Background jobs that import issues from an external tracker (Plane), and a ' +
+              "project's own data exported as a portable JSON snapshot",
+          },
           { name: 'Avatars', description: "Current user's avatar image (upload and raw bytes)" },
           { name: 'Views', description: 'Saved work items views' },
           { name: 'Share', description: 'Public read-only sharing of issues and views' },

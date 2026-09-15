@@ -2,7 +2,7 @@ import { Elysia } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { guards, entityGuard } from '#shared/guards';
 import { HttpError } from '#shared/lib';
-import { getObject } from '#shared/s3';
+import { getObject } from '@repo/storage';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { requireUser } from '#shared/access';

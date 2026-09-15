@@ -101,6 +101,10 @@
       "label": "Репозитории",
       "description": "Закрытие задач, когда их pull request смержен в GitHub, GitLab, Gitea, Forgejo или Bitbucket."
     },
+    "import-export": {
+      "label": "Импорт/Экспорт",
+      "description": "Импортируйте задачи, комментарии и метки из self-hosted инстанса Plane, или экспортируйте данные проекта в формате JSON."
+    },
     "ai-agents": {
       "label": "ИИ-агенты",
       "description": "ИИ-агенты, которые работают в этом проекте."

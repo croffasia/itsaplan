@@ -7,7 +7,7 @@ import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { commonErrors, errors } from '#shared/responses';
 import { paginate } from '#shared/pagination';
-import { deleteObjects } from '#shared/s3';
+import { deleteObjects } from '@repo/storage';
 import {
   AttachmentResponse,
   AttachmentListResponse,

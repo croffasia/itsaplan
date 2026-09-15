@@ -6,7 +6,7 @@ import { authContext } from '#shared/auth-context';
 import { assertPermission, assertProjectOwner, requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
-import { deleteObject } from '#shared/s3';
+import { deleteObject } from '@repo/storage';
 import {
   createIssue,
   searchIssues,

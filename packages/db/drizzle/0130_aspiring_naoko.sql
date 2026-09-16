@@ -16,7 +16,7 @@ CREATE TABLE "import_job" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "import_job_source_check" CHECK ("import_job"."source" IN ('plane')),
-	CONSTRAINT "import_job_phase_check" CHECK ("import_job"."phase" IN ('discover', 'create', 'link', 'attachments', 'done')),
+	CONSTRAINT "import_job_phase_check" CHECK ("import_job"."phase" IN ('discover', 'create', 'link', 'rewrite', 'attachments', 'done')),
 	CONSTRAINT "import_job_status_check" CHECK ("import_job"."status" IN ('pending', 'running', 'paused', 'completed', 'failed'))
 );
 --> statement-breakpoint
@@ -25,6 +25,7 @@ CREATE TABLE "import_record" (
 	"import_job_id" integer NOT NULL,
 	"source_entity_type" text NOT NULL,
 	"source_id" text NOT NULL,
+	"source_display_id" text,
 	"local_entity_type" text,
 	"local_id" integer,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
@@ -38,4 +39,5 @@ ALTER TABLE "import_record" ADD CONSTRAINT "import_record_import_job_id_import_j
 CREATE INDEX "import_job_project_idx" ON "import_job" USING btree ("project_id");--> statement-breakpoint
 CREATE INDEX "import_job_due_idx" ON "import_job" USING btree ("next_attempt_at") WHERE "import_job"."status" = 'pending';--> statement-breakpoint
 CREATE UNIQUE INDEX "import_record_job_source_uq" ON "import_record" USING btree ("import_job_id","source_entity_type","source_id");--> statement-breakpoint
-CREATE INDEX "import_record_job_local_idx" ON "import_record" USING btree ("import_job_id","local_entity_type","local_id");
+CREATE INDEX "import_record_job_local_idx" ON "import_record" USING btree ("import_job_id","local_entity_type","local_id");--> statement-breakpoint
+CREATE INDEX "import_record_job_display_idx" ON "import_record" USING btree ("import_job_id","source_entity_type","source_display_id");

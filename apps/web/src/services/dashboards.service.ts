@@ -23,8 +23,14 @@ export function useCreateDashboard(projectKey: string | null) {
   return useMutation({
     mutationFn: ({ input }: { input: Parameters<typeof createDashboard>[1] }) =>
       createDashboard(projectKey!, input),
-    onSuccess: () => {
-      if (projectKey) void qc.invalidateQueries({ queryKey: qk.dashboards(projectKey) });
+    onSuccess: (created) => {
+      if (!projectKey) return;
+      qc.setQueryData<Dashboard[]>(qk.dashboards(projectKey), (current) =>
+        current
+          ? [...current.filter((dashboard) => dashboard.id !== created.id), created]
+          : [created],
+      );
+      void qc.invalidateQueries({ queryKey: qk.dashboards(projectKey) });
     },
   });
 }

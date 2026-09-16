@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
+import { useDocumentNavigation } from '@/hooks/useDocumentNavigation';
 import {
   closestCenter,
   DndContext,
@@ -23,6 +24,8 @@ import { projectedDocumentMove } from '../utils/documentMove';
 import SortableDocumentRow from './SortableDocumentRow';
 
 export type DocumentSort = 'position' | 'title' | 'created' | 'updated';
+
+const treeDefaults: { collapsed: number[] } = { collapsed: [] };
 
 export default function DocumentTree({
   projectKey,
@@ -59,7 +62,10 @@ export default function DocumentTree({
   onFavoriteChange: (documentId: number, isFavorite: boolean) => void;
 }) {
   const t = useTranslations('documents');
-  const [collapsed, setCollapsed] = useState<Set<number>>(new Set());
+  const [treeState, setTreeState] = useDocumentNavigation(projectKey, 'tree', treeDefaults);
+  const collapsed = useMemo(() => new Set(treeState.collapsed), [treeState.collapsed]);
+  const setCollapsed = (update: (previous: Set<number>) => Set<number>) =>
+    setTreeState((previous) => ({ collapsed: [...update(new Set(previous.collapsed))] }));
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),

@@ -1,3 +1,4 @@
+import type { Node } from '@tiptap/pm/model';
 import type { MarkdownStorage } from 'tiptap-markdown';
 
 // tiptap-markdown ships its storage type but never augments tiptap's Storage
@@ -6,6 +7,6 @@ import type { MarkdownStorage } from 'tiptap-markdown';
 // holder of the editor instance can read the markdown back.
 declare module '@tiptap/core' {
   interface Storage {
-    markdown: MarkdownStorage;
+    markdown: MarkdownStorage & { serializer: { serialize(node: Node): string } };
   }
 }

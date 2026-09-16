@@ -5,7 +5,6 @@ import type { WidgetConfig } from '@/utils/dashboardWidgets';
 
 const UNIT_OPTIONS: PulseUnit[] = ['hour', 'day', 'week'];
 
-// The bucket unit (hour/day/week) the heatmap cells count over.
 export default function PulseWidgetSettings({
   config,
   onConfigChange,
@@ -16,10 +15,27 @@ export default function PulseWidgetSettings({
   const t = useTranslations('dashboards.pulse');
   const unit = config.granularity ?? 'day';
   return (
-    <div className="flex gap-1">
+    <div className="flex flex-wrap gap-1">
+      {(['project', 'me'] as const).map((scope) => (
+        <button
+          key={scope}
+          aria-pressed={(config.pulseScope ?? 'project') === scope}
+          type="button"
+          onClick={() => onConfigChange({ pulseScope: scope })}
+          className={cn(
+            'rounded-md px-2 py-0.5 text-xs',
+            (config.pulseScope ?? 'project') === scope
+              ? 'bg-secondary font-medium'
+              : 'text-muted-foreground hover:bg-accent',
+          )}
+        >
+          {t(`scope.${scope}`)}
+        </button>
+      ))}
       {UNIT_OPTIONS.map((option) => (
         <button
           key={option}
+          aria-pressed={unit === option}
           type="button"
           onClick={() => onConfigChange({ granularity: option })}
           className={cn(

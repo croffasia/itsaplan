@@ -3,7 +3,7 @@ import { useTranslations } from 'next-intl';
 import { issueColor, type Maps } from '@/utils/project';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { useSubtasks } from '../../context/useSubtasks';
+import { useIssueSubtaskFold, useSubtasks } from '../../context/useSubtasks';
 import { effSpan, LINK_ROW_H } from '../../utils/timeline';
 
 // The issue's subtasks as sub-rows under its timeline row: each subtask named on
@@ -37,6 +37,8 @@ export function TimelineSubtaskRows({
 }) {
   const t = useTranslations('workItems.timeline');
   const subtasks = useSubtasks(issueId);
+  const { open } = useIssueSubtaskFold();
+  if (!open) return null;
 
   return (
     <>

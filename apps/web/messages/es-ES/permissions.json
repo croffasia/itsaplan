@@ -1,0 +1,50 @@
+{
+  "none": "Sin permisos concedidos",
+  "grantedCount": "{count, plural, one {# permiso} other {# permisos}} concedidos",
+  "resources": {
+    "work_items": "Elementos de trabajo",
+    "initiatives": "Iniciativas",
+    "cycles": "Ciclos",
+    "dashboards": "Paneles",
+    "documents": "Documentos",
+    "views": "Vistas de elementos de trabajo",
+    "members_invite": "Invitaciones",
+    "members_manage": "Miembros",
+    "states": "Estados",
+    "issue_types": "Tipos de ticket",
+    "labels": "Etiquetas",
+    "ai_agents": "Agentes de IA",
+    "integrations": "Integraciones",
+    "agent_skills": "Habilidades del agente",
+    "agent_tools": "Herramientas del agente",
+    "custom_fields": "Campos personalizados",
+    "issue_templates": "Plantillas de ticket",
+    "workflow_config": "Configuración del flujo de trabajo",
+    "actions": "Acciones",
+    "webhooks": "Webhooks",
+    "note_boards": "Tableros de notas",
+    "danger_zone": "Zona de riesgo"
+  },
+  "actions": {
+    "create": "Crear",
+    "edit": "Editar",
+    "read": "Leer",
+    "delete": "Eliminar"
+  },
+  "groups": {
+    "workItems": "Elementos de trabajo",
+    "dashboards": "Paneles",
+    "documents": "Documentos",
+    "notes": "Notas",
+    "ai": "IA",
+    "configuration": "Configuración",
+    "members": "Miembros",
+    "project": "Proyecto",
+    "other": "Otros"
+  },
+  "resourceColumn": "Recurso",
+  "allowed": "permitido",
+  "notAllowed": "no permitido",
+  "accessHeading": "Acceso a este proyecto",
+  "joined": "se unió el {date}"
+}

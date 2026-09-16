@@ -1,6 +1,6 @@
 {
-  "id": "7f90b09e-d070-44ef-b3ee-8d7fcd3e1f6e",
-  "prevId": "9b7ce63c-1ac5-4564-a463-b3ae5a1317d8",
+  "id": "b73ebb20-d26f-45bd-87b6-5e47f13a8c7c",
+  "prevId": "3a88d463-8dce-44f8-bc2e-5ba09b5e7cc0",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3408,6 +3408,270 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.document_collaboration": {
+      "name": "document_collaboration",
+      "schema": "",
+      "columns": {
+        "document_id": {
+          "name": "document_id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "epoch": {
+          "name": "epoch",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "content_json": {
+          "name": "content_json",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "document_collaboration_document_id_project_document_id_fk": {
+          "name": "document_collaboration_document_id_project_document_id_fk",
+          "tableFrom": "document_collaboration",
+          "tableTo": "project_document",
+          "columnsFrom": [
+            "document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.document_comment": {
+      "name": "document_comment",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "document_id": {
+          "name": "document_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parent_id": {
+          "name": "parent_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "author_id": {
+          "name": "author_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "body": {
+          "name": "body",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quote": {
+          "name": "quote",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "''"
+        },
+        "selection_from": {
+          "name": "selection_from",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "selection_to": {
+          "name": "selection_to",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "orphaned": {
+          "name": "orphaned",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "resolved_at": {
+          "name": "resolved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "document_comment_document_idx": {
+          "name": "document_comment_document_idx",
+          "columns": [
+            {
+              "expression": "document_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "document_comment_document_id_project_document_id_fk": {
+          "name": "document_comment_document_id_project_document_id_fk",
+          "tableFrom": "document_comment",
+          "tableTo": "project_document",
+          "columnsFrom": [
+            "document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "document_comment_parent_id_document_comment_id_fk": {
+          "name": "document_comment_parent_id_document_comment_id_fk",
+          "tableFrom": "document_comment",
+          "tableTo": "document_comment",
+          "columnsFrom": [
+            "parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "document_comment_author_id_user_id_fk": {
+          "name": "document_comment_author_id_user_id_fk",
+          "tableFrom": "document_comment",
+          "tableTo": "user",
+          "columnsFrom": [
+            "author_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.document_step": {
+      "name": "document_step",
+      "schema": "",
+      "columns": {
+        "document_id": {
+          "name": "document_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "client_id": {
+          "name": "client_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "step": {
+          "name": "step",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "document_step_document_id_project_document_id_fk": {
+          "name": "document_step_document_id_project_document_id_fk",
+          "tableFrom": "document_step",
+          "tableTo": "project_document",
+          "columnsFrom": [
+            "document_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "document_step_document_id_version_pk": {
+          "name": "document_step_document_id_version_pk",
+          "columns": [
+            "document_id",
+            "version"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.git_managed_repository": {
       "name": "git_managed_repository",
       "schema": "",
@@ -3643,362 +3907,6 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.import_job": {
-      "name": "import_job",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "project_id": {
-          "name": "project_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_by_user_id": {
-          "name": "created_by_user_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source": {
-          "name": "source",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "phase": {
-          "name": "phase",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'discover'"
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'pending'"
-        },
-        "config": {
-          "name": "config",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "cursor": {
-          "name": "cursor",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'{}'::jsonb"
-        },
-        "credential_ciphertext": {
-          "name": "credential_ciphertext",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "credential_iv": {
-          "name": "credential_iv",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "credential_auth_tag": {
-          "name": "credential_auth_tag",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "attempts": {
-          "name": "attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "next_attempt_at": {
-          "name": "next_attempt_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "last_error": {
-          "name": "last_error",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "import_job_project_idx": {
-          "name": "import_job_project_idx",
-          "columns": [
-            {
-              "expression": "project_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "import_job_due_idx": {
-          "name": "import_job_due_idx",
-          "columns": [
-            {
-              "expression": "next_attempt_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"import_job\".\"status\" = 'pending'",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "import_job_project_id_project_id_fk": {
-          "name": "import_job_project_id_project_id_fk",
-          "tableFrom": "import_job",
-          "tableTo": "project",
-          "columnsFrom": [
-            "project_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "import_job_created_by_user_id_user_id_fk": {
-          "name": "import_job_created_by_user_id_user_id_fk",
-          "tableFrom": "import_job",
-          "tableTo": "user",
-          "columnsFrom": [
-            "created_by_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "import_job_source_check": {
-          "name": "import_job_source_check",
-          "value": "\"import_job\".\"source\" IN ('plane')"
-        },
-        "import_job_phase_check": {
-          "name": "import_job_phase_check",
-          "value": "\"import_job\".\"phase\" IN ('discover', 'create', 'link', 'rewrite', 'attachments', 'done')"
-        },
-        "import_job_status_check": {
-          "name": "import_job_status_check",
-          "value": "\"import_job\".\"status\" IN ('pending', 'running', 'paused', 'completed', 'failed')"
-        }
-      },
-      "isRLSEnabled": false
-    },
-    "public.import_record": {
-      "name": "import_record",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "import_job_id": {
-          "name": "import_job_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_entity_type": {
-          "name": "source_entity_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_id": {
-          "name": "source_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_display_id": {
-          "name": "source_display_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "local_entity_type": {
-          "name": "local_entity_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "local_id": {
-          "name": "local_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "import_record_job_source_uq": {
-          "name": "import_record_job_source_uq",
-          "columns": [
-            {
-              "expression": "import_job_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "source_entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "source_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "import_record_job_local_idx": {
-          "name": "import_record_job_local_idx",
-          "columns": [
-            {
-              "expression": "import_job_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "local_entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "local_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "import_record_job_display_idx": {
-          "name": "import_record_job_display_idx",
-          "columns": [
-            {
-              "expression": "import_job_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "source_entity_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "source_display_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "import_record_import_job_id_import_job_id_fk": {
-          "name": "import_record_import_job_id_import_job_id_fk",
-          "tableFrom": "import_record",
-          "tableTo": "import_job",
-          "columnsFrom": [
-            "import_job_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "import_record_source_entity_type_check": {
-          "name": "import_record_source_entity_type_check",
-          "value": "\"import_record\".\"source_entity_type\" IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment')"
-        },
-        "import_record_local_entity_type_check": {
-          "name": "import_record_local_entity_type_check",
-          "value": "\"import_record\".\"local_entity_type\" IS NULL OR \"import_record\".\"local_entity_type\" IN ('issue', 'comment', 'label', 'state', 'cycle', 'attachment')"
-        }
-      },
       "isRLSEnabled": false
     },
     "public.initiative": {
@@ -8849,6 +8757,20 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'invite'"
+        },
+        "is_favorite": {
+          "name": "is_favorite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "is_hidden": {
+          "name": "is_hidden",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",

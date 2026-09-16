@@ -211,3 +211,65 @@ export const DocumentAssetListResponse = t.Array(DocumentAssetResponse);
 export const deleteDocumentQuery = t.Object({
   version: t.Integer({ minimum: 1 }),
 });
+
+export const collaborationOpenBody = t.Object({
+  version: t.Integer({ minimum: 1 }),
+  contentJson: t.Record(t.String(), t.Any()),
+});
+export const collaborationQuery = t.Object({
+  epoch: t.String({ format: 'uuid' }),
+  version: t.Numeric({ minimum: 0 }),
+});
+export const collaborationSaveBody = t.Object({
+  epoch: t.String({ format: 'uuid' }),
+  version: t.Integer({ minimum: 0 }),
+  clientId: t.String({ minLength: 1, maxLength: 64 }),
+  steps: t.Array(t.Record(t.String(), t.Any()), { minItems: 1, maxItems: 1000 }),
+  content: t.String({ maxLength: 250_000 }),
+});
+export const collaborationSessionResponse = t.Object({
+  documentId: t.Number(),
+  epoch: t.String(),
+  version: t.Number(),
+  contentJson: t.Record(t.String(), t.Any()),
+});
+export const collaborationStepsResponse = t.Object({
+  epoch: t.String(),
+  version: t.Number(),
+  documentVersion: t.Number(),
+  hasMore: t.Boolean(),
+  steps: t.Array(t.Object({ clientId: t.String(), step: t.Record(t.String(), t.Any()) })),
+});
+export const documentCommentParams = t.Object({
+  projectKey: t.String(),
+  documentId: t.Numeric(),
+  commentId: t.String({ format: 'uuid' }),
+});
+export const documentCommentBody = t.Object({
+  body: t.String({ minLength: 1, maxLength: 10_000 }),
+  parentId: t.Optional(t.String({ format: 'uuid' })),
+  quote: t.Optional(t.String({ maxLength: 2000 })),
+  from: t.Optional(t.Integer({ minimum: 0 })),
+  to: t.Optional(t.Integer({ minimum: 1 })),
+  version: t.Integer({ minimum: 1 }),
+});
+export const documentCommentUpdateBody = t.Object({
+  body: t.Optional(t.String({ minLength: 1, maxLength: 10_000 })),
+  resolved: t.Optional(t.Boolean()),
+});
+export const documentCommentResponse = t.Object({
+  documentVersion: t.Number(),
+  id: t.String(),
+  documentId: t.Number(),
+  parentId: t.Nullable(t.String()),
+  authorId: t.Nullable(t.String()),
+  authorName: t.Nullable(t.String()),
+  body: t.String(),
+  quote: t.String(),
+  from: t.Nullable(t.Number()),
+  to: t.Nullable(t.Number()),
+  orphaned: t.Boolean(),
+  resolvedAt: t.Nullable(t.String()),
+  createdAt: t.String(),
+  updatedAt: t.String(),
+});

@@ -3,6 +3,7 @@ import { noContent } from '#shared/http';
 import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { requireUser } from '#shared/access';
+import { getMembership } from '#modules/members/service';
 import { HttpError } from '#shared/lib';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors } from '#shared/responses';
@@ -25,17 +26,10 @@ import {
   type NoteBoardRow,
 } from './service';
 
-// Load a board that belongs to this project and that the user may access: a
-// public board is open to any member; a private one to its owner and the members
+// A public board is open to any member; a private one to its owner and the members
 // granted access. Anything else is a 404 so a private board's existence does not
 // leak.
-async function loadAccessibleBoard(
-  boardId: number,
-  projectId: number,
-  userId: string,
-): Promise<NoteBoardRow> {
-  const board = await getNoteBoard(boardId);
-  if (!board || board.projectId !== projectId) throw new HttpError(404, 'Board not found');
+function assertBoardVisible(board: NoteBoardRow, userId: string): void {
   if (
     board.ownerUserId !== null &&
     board.ownerUserId !== userId &&
@@ -43,6 +37,17 @@ async function loadAccessibleBoard(
   ) {
     throw new HttpError(404, 'Board not found');
   }
+}
+
+// Load a board that belongs to this project and that the user may access.
+async function loadAccessibleBoard(
+  boardId: number,
+  projectId: number,
+  userId: string,
+): Promise<NoteBoardRow> {
+  const board = await getNoteBoard(boardId);
+  if (!board || board.projectId !== projectId) throw new HttpError(404, 'Board not found');
+  assertBoardVisible(board, userId);
   return board;
 }
 
@@ -202,7 +207,23 @@ export const noteBoardRoutes = new Elysia({
   .delete(
     '/projects/:projectKey/note-boards/:boardId',
     async ({ project, user, params }) => {
-      await loadAccessibleBoard(params.boardId, project.id, requireUser(user).id);
+      const userId = requireUser(user).id;
+      const board = await getNoteBoard(params.boardId);
+      if (!board || board.projectId !== project.id) throw new HttpError(404, 'Board not found');
+      // A project owner deletes any board, a private one included: the board of a
+      // member who left the project would otherwise stay for good.
+      if ((await getMembership(project.id, userId)) !== 'owner') {
+        assertBoardVisible(board, userId);
+        // A private or restricted board belongs to the member who made it, and
+        // being granted a view of one does not carry deleting it. A public board
+        // stays open to every member the role matrix allows.
+        if (board.ownerUserId !== null && board.ownerUserId !== userId) {
+          throw new HttpError(
+            403,
+            'Only the board creator or a project owner can delete the board',
+          );
+        }
+      }
       await deleteNoteBoard(params.boardId);
       return noContent();
     },
@@ -213,7 +234,8 @@ export const noteBoardRoutes = new Elysia({
       response: { 204: t.Void(), ...accessErrors },
       detail: {
         summary: 'Delete a note board',
-        description: 'Permanently delete a note board and every note on it.',
+        description:
+          'Permanently delete a note board and every note on it. A public board is open to every member the role matrix allows; a private or restricted one only to the member who made it. A project owner deletes any board, including one they cannot see.',
         ...mcpTool('delete_note_board'),
       },
     },

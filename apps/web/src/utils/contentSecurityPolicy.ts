@@ -16,8 +16,9 @@ function apiOrigin(): string {
 // and RuntimeEnvScript are inline and carry no nonce. A nonce policy is the step
 // after this one. Inline styles are what tiptap, Radix, recharts and Scalar emit.
 // Images and media come from anywhere: markdown embeds by URL, OAuth profile
-// pictures, and the /media proxy on this origin. React evals in development only,
-// to rebuild server error stacks in the browser.
+// pictures, and the /media proxy on this origin. blob: is fetched too: the image
+// annotator reads a file picked in the new issue modal through its blob: URL. React
+// evals in development only, to rebuild server error stacks in the browser.
 export function contentSecurityPolicy(): string {
   const scriptSources =
     process.env.NODE_ENV === 'development'
@@ -30,7 +31,7 @@ export function contentSecurityPolicy(): string {
     "img-src 'self' data: blob: https: http:",
     "media-src 'self' data: blob: https: http:",
     "font-src 'self' data:",
-    `connect-src 'self' ${apiOrigin()}`.trimEnd(),
+    `connect-src 'self' blob: ${apiOrigin()}`.trimEnd(),
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -39,7 +39,7 @@ services:
   # streams attachment bytes over the internal network, so no port is published.
   # Administer through mc from inside the network or an SSH tunnel.
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -59,7 +59,7 @@ services:
   # restart: unless-stopped (e.g. Coolify) would otherwise loop it forever and
   # trip their restart-count limit, tearing the whole stack down.
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     restart: 'no'
     depends_on:
       - minio

@@ -80,6 +80,7 @@
     "showLinks": "Показывать связи",
     "separateSubtaskCards": "Показывать подзадачи отдельно",
     "separateSubtaskRows": "Показывать подзадачи отдельно",
+    "startSubtasksCollapsed": "Начинать со свёрнутыми подзадачами",
     "showNestedSubtasks": "Показывать вложенные подзадачи",
     "nestedSubtasks": "Вложенные подзадачи",
     "displayProperties": "Свойства",

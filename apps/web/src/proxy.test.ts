@@ -56,7 +56,7 @@ describe('proxy security headers', () => {
   it('serves every page with a content security policy naming the api origin', () => {
     process.env.API_URL = 'http://api.test:3000/';
     const csp = run('/login').headers.get('content-security-policy');
-    assert.match(csp!, /(^|; )connect-src 'self' http:\/\/api\.test:3000(;|$)/);
+    assert.match(csp!, /(^|; )connect-src 'self' blob: http:\/\/api\.test:3000(;|$)/);
     assert.match(csp!, /(^|; )frame-ancestors 'none'(;|$)/);
     assert.match(csp!, /(^|; )object-src 'none'(;|$)/);
   });

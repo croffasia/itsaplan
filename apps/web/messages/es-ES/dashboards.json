@@ -136,6 +136,10 @@
       "day": "Días",
       "week": "Semanas"
     },
+    "scope": {
+      "project": "Todo el proyecto",
+      "me": "Mi actividad"
+    },
     "events": "{count, plural, one {# evento} other {# eventos}}",
     "eventNoun": "{count, plural, one {evento} other {eventos}}",
     "active": "{count} activos",

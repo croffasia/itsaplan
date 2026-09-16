@@ -40,5 +40,34 @@
     "automation": "Automatización"
   },
   "godModeOwnerOnly": "El modo dios está abierto solo al propietario de la instancia.",
-  "project": "Proyecto"
+  "project": "Proyecto",
+  "projectPicker": {
+    "sortName": "Nombre del proyecto",
+    "noResults": "No hay proyectos que coincidan",
+    "sortCreated": "Creados recientemente",
+    "hideHidden": "Ocultar proyectos ocultos",
+    "resize": "Arrastra para cambiar el ancho del selector de proyectos",
+    "resetWidth": "Restablecer el ancho del selector de proyectos",
+    "activityHint": "Último cambio o comentario en un elemento de trabajo",
+    "search": "Buscar proyectos por nombre, clave o equipo…",
+    "sortActivity": "Actividad reciente",
+    "sort": "Ordenar proyectos",
+    "sortKey": "Clave del proyecto",
+    "showHidden": "Mostrar proyectos ocultos ({count})",
+    "starProject": "Destacar {name}",
+    "unstarProject": "Quitar {name} de destacados",
+    "hideProject": "Ocultar {name} de mis proyectos",
+    "showProject": "Mostrar {name} en mis proyectos",
+    "allHiddenTitle": "Todos los proyectos están ocultos",
+    "allHiddenDescription": "Los proyectos ocultos no aparecen en tu navegación de proyectos. Tu acceso, tus compañeros y los agentes no se ven afectados. Muestra un proyecto para volver a abrirlo.",
+    "hiddenProjects": "Proyectos ocultos ({count})",
+    "noHiddenResults": "Ningún proyecto oculto coincide con tu búsqueda",
+    "noVisibleProjects": "No hay proyectos en tu vista",
+    "projectActions": "Acciones para {name}",
+    "starAction": "Destacar proyecto",
+    "unstarAction": "Quitar de destacados",
+    "hideAction": "Ocultar de mi vista",
+    "restoreAction": "Restaurar a mi vista",
+    "starred": "Destacados"
+  }
 }

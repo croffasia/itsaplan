@@ -7,6 +7,7 @@ import { routeTools, withoutFields, type McpRouteTool } from './generate';
 import { dispatchTool } from './dispatch';
 import { SERVER_INSTRUCTIONS } from './instructions';
 import type { McpCredential } from './credential';
+import { toolError } from './result';
 
 // The path param of every team-scoped route.
 const TEAM_PARAM = 'teamId';
@@ -60,38 +61,38 @@ export async function buildMcpServer(
           ? withoutFields(t.inputSchema, [TEAM_PARAM])
           : t.inputSchema,
       annotations: t.annotations,
+      outputSchema: t.outputSchema,
     })),
   }));
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
     const tool = byName.get(req.params.name);
     if (!tool) {
+      const text = `Unknown tool: ${req.params.name}`;
       return {
-        content: [{ type: 'text', text: `Unknown tool: ${req.params.name}` }],
+        content: [{ type: 'text', text }],
         isError: true,
+        structuredContent: toolError(404, text),
       };
     }
     const args = { ...(req.params.arguments ?? {}) };
     if (needsTeam(tool)) {
       if (teamId !== null) args[TEAM_PARAM] = teamId;
       else if (args[TEAM_PARAM] == null) {
+        const text =
+          'teamId is required: no single team follows from your key. Call list_teams and ' +
+          'pass the id of the team to act in.';
         return {
-          content: [
-            {
-              type: 'text',
-              text:
-                'teamId is required: no single team follows from your key. Call list_teams and ' +
-                'pass the id of the team to act in.',
-            },
-          ],
+          content: [{ type: 'text', text }],
           isError: true,
+          structuredContent: toolError(400, text),
         };
       }
     }
-    const { text, isError } = await dispatchTool(app, tool, args, credential, {
+    const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {
       viaMcpEndpoint: true,
     });
-    return { content: [{ type: 'text', text }], isError };
+    return { content: [{ type: 'text', text }], isError, structuredContent };
   });
 
   return server;

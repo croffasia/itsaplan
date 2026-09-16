@@ -46,25 +46,31 @@ import {
   setEstimateSettings,
 } from './service';
 import { copyProject } from './copy';
+import { projectPreferences } from './preferences';
 
 export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Projects'] } })
   .use(authContext)
   .use(guards)
+  .use(projectPreferences)
   .get(
     '/projects',
     ({ user, request, query }) =>
       listProjects(requireUser(user).id, {
         mcpOnly: isMcpRequest(request.headers),
         withPermissions: query.permissions === 'true',
+        q: query.q,
+        sort: query.sort,
+        teamId: query.teamId,
       }),
     {
       query: listProjectsQuery,
-      response: { 200: ProjectListResponse, ...errors(401) },
+      response: { 200: ProjectListResponse, ...errors(400, 401) },
       detail: {
         summary: 'List projects',
         description:
-          'List the projects you are a member of. Pass permissions=true to include your ' +
-          'permission matrix on each.',
+          'List the projects you are a member of, with their latest work-item activity timestamp. ' +
+          'Search key, name, and description with q; filter by teamId; sort by key, name, created, ' +
+          'or activity. Pass permissions=true to include your permission matrix on each.',
         ...mcpTool('list_projects'),
       },
     },

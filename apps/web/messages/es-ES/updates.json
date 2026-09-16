@@ -1,0 +1,12 @@
+{
+  "updateAvailable": "Actualización disponible",
+  "releaseHistory": "Historial de versiones",
+  "running": "Estás usando {current}.",
+  "badgeRunning": "En uso",
+  "badgeNew": "Nueva",
+  "check": "Comprobar actualizaciones",
+  "checking": "Comprobando",
+  "lastChecked": "Última comprobación",
+  "allReleases": "Todas las versiones",
+  "noNotes": "Esta versión no tiene notas."
+}

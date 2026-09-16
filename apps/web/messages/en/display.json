@@ -80,6 +80,7 @@
     "showLinks": "Show links",
     "separateSubtaskCards": "Show subtasks as separate cards",
     "separateSubtaskRows": "Show subtasks as separate rows",
+    "startSubtasksCollapsed": "Start with subtasks collapsed",
     "showNestedSubtasks": "Show nested subtasks",
     "nestedSubtasks": "Nested subtasks",
     "displayProperties": "Display properties",

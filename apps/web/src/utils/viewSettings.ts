@@ -133,6 +133,10 @@ export interface ViewSettings {
   // Independent of showSubtasks: with both on it shows in both places, with both
   // off it is only visible inside its parent issue.
   separateSubtasks: boolean;
+  // Whether a Kanban card starts with its subtasks folded away, leaving the count
+  // and a progress bar. A card unfolds on its own from there; changing this folds
+  // or unfolds every card again.
+  collapseSubtasks: boolean;
   properties: PropertyKey[];
   timelineScale: TimelineScale;
   // Initial Timeline group state. Individual group toggles are transient and do
@@ -165,6 +169,7 @@ const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> =
   showLinks: false,
   showSubtasks: true,
   separateSubtasks: false,
+  collapseSubtasks: false,
   timelineScale: 'week',
   timelineCollapseAll: false,
   calendarDateField: 'dueDate',
@@ -284,6 +289,8 @@ export function normalizeViewSettings(
     showSubtasks: typeof s.showSubtasks === 'boolean' ? s.showSubtasks : d.showSubtasks,
     separateSubtasks:
       typeof s.separateSubtasks === 'boolean' ? s.separateSubtasks : d.separateSubtasks,
+    collapseSubtasks:
+      typeof s.collapseSubtasks === 'boolean' ? s.collapseSubtasks : d.collapseSubtasks,
     // Stored order is preserved as-is (it is the Table column order, reorderable
     // by drag); only unknown entries are dropped. A since-deleted custom field's
     // key stays until the next reorder, and is ignored when rendering.

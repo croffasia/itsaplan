@@ -1,0 +1,46 @@
+{
+  "title": "Servidor MCP",
+  "description": "Conecta agentes de IA a este proyecto a través del Protocolo de Contexto de Modelo. Un agente ve lo que su clave de API permite.",
+  "disabled": "Desactivado",
+  "offForTeam": "MCP está apagado para el equipo {team}.",
+  "offForProject": "El equipo {team} tiene MCP activado, pero este proyecto está apagado.",
+  "openTeamSettings": "Abrir los ajustes de MCP del equipo",
+  "askManager": "Pide a un propietario o administrador del equipo que lo active:",
+  "keyHint": "Crea una clave en la página de <link>claves de API</link>, después sustituye <code>{apiKey}</code> en el fragmento.",
+  "endpoint": "Endpoint de MCP",
+  "clientTabsAria": "Cliente",
+  "addToFile": "Añadir a <code>{file}</code>",
+  "notes": {
+    "claudeCode": "Ejecuta esto en tu terminal.",
+    "vscode": "Necesita GitHub Copilot.",
+    "claudeDesktop": "Claude Desktop se conecta a servidores remotos a través del puente mcp-remote. Necesita Node.js.",
+    "other": "Cualquier cliente que soporte MCP sobre Streamable HTTP funciona. Apúntalo al endpoint. Envía una cabecera Authorization: Bearer {apiKey}."
+  },
+  "clients": {
+    "other": "Otro"
+  },
+  "oauth": {
+    "configuration": "Cómo conectar",
+    "methodTabsAria": "Método de conexión",
+    "method": "OAuth",
+    "personalKey": "Clave de API",
+    "description": "Úsalo para cualquier cliente MCP que soporte OAuth, como ChatGPT o Claude. Inicias sesión con tu cuenta de Itsaplan. El cliente nunca recibe una clave de API.",
+    "discovery": "Descubrimiento de OAuth",
+    "steps": {
+      "add": "Añade una aplicación MCP en tu cliente.",
+      "paste": "Pega el endpoint de MCP.",
+      "choose": "Elige OAuth cuando el cliente pregunte cómo iniciar sesión.",
+      "signIn": "Inicia sesión en Itsaplan y aprueba el acceso."
+    },
+    "security": "OAuth usa PKCE (S256), registración dinámica de clientes y tokens de acceso acotados a tu cuenta de Itsaplan.",
+    "consent": {
+      "title": "Autorizar Itsaplan",
+      "description": "Permite que este cliente MCP actúe con los permisos de tu cuenta de Itsaplan.",
+      "missingCode": "A esta petición de autorización le falta su código de consentimiento.",
+      "cancel": "Cancelar",
+      "pending": "Autorizando…",
+      "authorize": "Autorizar",
+      "failed": "No se ha podido completar la autorización de OAuth."
+    }
+  }
+}

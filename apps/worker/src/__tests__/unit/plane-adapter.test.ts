@@ -125,6 +125,14 @@ describe('htmlToMarkdown', () => {
     );
   });
 
+  it('strips nested tag fragments', () => {
+    expect(htmlToMarkdown('<p><scr<script>ipt>x</p>')).not.toMatch(/<script/i);
+  });
+
+  it('decodes entities once', () => {
+    expect(htmlToMarkdown('<p>&amp;lt;b&amp;gt;</p>')).toBe('&lt;b&gt;');
+  });
+
   it('returns an empty string for empty input', () => {
     expect(htmlToMarkdown('')).toBe('');
   });

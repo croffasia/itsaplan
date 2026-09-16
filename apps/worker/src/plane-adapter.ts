@@ -175,17 +175,26 @@ export function htmlToMarkdown(html: string): string {
 }
 
 function stripTags(html: string): string {
-  return html.replace(/<[^>]*>/g, '');
+  let out = html;
+  let prev: string;
+  do {
+    prev = out;
+    out = out.replace(/<[^>]*>/g, '');
+  } while (out !== prev);
+  return out;
 }
 
+const ENTITIES: Record<string, string> = {
+  nbsp: ' ',
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  '#39': "'",
+};
+
 function decodeEntities(text: string): string {
-  return text
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
+  return text.replace(/&(nbsp|amp|lt|gt|quot|#39);/g, (_m, name: string) => ENTITIES[name]!);
 }
 
 interface PlaneMember {

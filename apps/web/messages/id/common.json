@@ -177,7 +177,18 @@
     "insertImage": "Sisipkan gambar",
     "insertNamed": "Sisipkan {name}",
     "noImages": "Belum ada gambar yang dilampirkan. Unggah gambar dari panel Lampiran, atau seret langsung ke editor.",
-    "image": "Gambar"
+    "image": "Gambar",
+    "linkPreview": "Pratinjau tautan",
+    "openPreviewLink": "Buka {name} di tab baru",
+    "loadingPreview": "Memuat pratinjau…",
+    "previewUnavailable": "Pratinjau tidak tersedia. Buka tautan untuk melihat halaman ini.",
+    "internalPage": "Halaman ItsAPlan",
+    "internalPreviewUnavailable": "Halaman ini tidak tersedia atau Anda tidak memiliki akses.",
+    "previewNoteCount": "{count, plural, one {# catatan} other {# catatan}}",
+    "previewCustomField": "Bidang kustom",
+    "previewAllWorkItems": "Semua item pekerjaan",
+    "previewUpdated": "Diperbarui {date}",
+    "previewOtherValues": "({count} lainnya)"
   },
   "chart": {
     "download": "Simpan grafik",

@@ -43,6 +43,10 @@ const nextConfig: NextConfig = {
   // next dev otherwise appends a block of its own to apps/web/AGENTS.md on every
   // start, which leaves the working tree dirty for anyone running the dev server.
   agentRules: false,
+  // Every local image is served by app/media. Next 16 refuses a query string on
+  // a local image unless its path is listed here; the attachments panel stamps a
+  // replaced attachment's URL with one so the optimizer refetches it.
+  images: { localPatterns: [{ pathname: '/media/**' }] },
   ...(cloudUiEntry ? { turbopack: { resolveAlias: { '@/cloud': cloudUiEntry } } } : {}),
 };
 

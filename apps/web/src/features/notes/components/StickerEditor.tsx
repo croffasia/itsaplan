@@ -1,16 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
-import TaskList from '@tiptap/extension-task-list';
-import TaskItem from '@tiptap/extension-task-item';
-import { Markdown } from 'tiptap-markdown';
 import { useTranslations } from 'next-intl';
+import EditorLinkPreview from '@/components/common/editor/EditorLinkPreview';
+import { openLinkOnModifierClick } from '@/components/common/editor/modifierClickLink';
+import { createLinkKeyboardHandlers } from '@/components/common/editor/linkKeyboardHandlers';
+import { stickerEditorExtensions } from '../utils/stickerEditorExtensions';
 
-// The markdown body of a sticky note. Unlike the issue editor there is no bubble
-// menu — a persistent toolbar (StickerToolbar) drives the commands — and task
-// lists are enabled so a note can mix text with checkable items. Content in and
-// out is markdown, matching how it is stored on the board canvas.
 export default function StickerEditor({
   value,
   onChange,
@@ -23,17 +18,18 @@ export default function StickerEditor({
   editable: boolean;
 }) {
   const t = useTranslations('notes');
+  const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   const editor = useEditor({
     editable,
-    extensions: [
-      StarterKit,
-      Placeholder.configure({ placeholder: t('notePlaceholder') }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Markdown.configure({ html: false, breaks: true }),
-    ],
+    extensions: stickerEditorExtensions(t('notePlaceholder')),
     content: value,
-    editorProps: { attributes: { class: 'md-content focus:outline-none' } },
+    editorProps: {
+      attributes: { class: 'md-content nopan focus:outline-none' },
+      handleClick(view, _pos, event) {
+        return openLinkOnModifierClick(event, view.dom);
+      },
+      handleDOMEvents: linkKeyboardHandlers,
+    },
     onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
   });
 
@@ -41,6 +37,15 @@ export default function StickerEditor({
     onReady?.(editor);
   }, [editor, onReady]);
 
+  useEffect(() => {
+    if (editor && editor.isEditable !== editable) editor.setEditable(editable, false);
+  }, [editor, editable]);
+
   if (!editor) return null;
-  return <EditorContent editor={editor} />;
+  return (
+    <>
+      <EditorContent editor={editor} />
+      <EditorLinkPreview editor={editor} />
+    </>
+  );
 }

@@ -9,7 +9,7 @@ import {
   hasConfiguredOidc,
   getOidcLabel,
 } from '@repo/auth';
-import { hasConfiguredEmailProvider } from '@repo/db';
+import { db, hasConfiguredEmailProvider, user } from '@repo/db';
 import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
@@ -134,6 +134,7 @@ export const app = new Elysia()
           { name: 'Agent Schedules', description: 'Recurring tasks for internal agents' },
           { name: 'Dashboards', description: 'Saved analytics dashboards' },
           { name: 'Documents', description: 'Shared project Docs pages' },
+          { name: 'Link previews', description: 'Public web link metadata' },
           { name: 'Note boards', description: 'Freeform canvases of sticky notes' },
           { name: 'Notifications', description: "The session user's inbox notifications" },
           { name: 'Sync', description: 'Change markers a client polls for live refresh' },
@@ -282,6 +283,7 @@ export const app = new Elysia()
         // Names the operator's own identity provider, so the button shows it as
         // given. Empty falls back to a translated default.
         oidcLabel: await getOidcLabel(),
+        hasUsers: (await db.$count(user)) > 0,
       };
     },
     {

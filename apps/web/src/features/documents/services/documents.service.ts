@@ -44,11 +44,17 @@ function invalidateLists(qc: ReturnType<typeof useQueryClient>, projectKey: stri
   void qc.invalidateQueries({ queryKey: qk.documentListsForProject(projectKey) });
 }
 
-export function useDocumentsQuery(projectKey: string | null, q = '', archived = false) {
+export function useDocumentsQuery(
+  projectKey: string | null,
+  q = '',
+  archived = false,
+  enabled = true,
+) {
   return useQuery({
     queryKey: qk.documents(projectKey ?? '', q, archived),
     queryFn: () => listDocuments(projectKey!, q || undefined, archived),
-    enabled: projectKey != null,
+    enabled: enabled && projectKey != null,
+    staleTime: 30_000,
   });
 }
 
@@ -361,10 +367,10 @@ export function useUpdateDocument(projectKey: string | null) {
         (previous) =>
           previous?.map((item) => (item.id === document.id ? summaryOf(document) : item)),
       );
-      // Search membership can change when either title or content changes. The
-      // immediate replacement keeps visible summaries fresh; the refetch adds or
-      // removes the page from every cached search result as needed.
-      invalidateLists(qc, projectKey);
+      void qc.invalidateQueries({
+        queryKey: qk.documentListsForProject(projectKey),
+        predicate: (query) => Boolean(query.queryKey[4]),
+      });
     },
   });
 }

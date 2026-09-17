@@ -270,6 +270,7 @@ export async function getPulse(
   projectId: number,
   unit: PulseUnit,
   columns: number,
+  actorUserId?: string,
 ): Promise<PulseBucket[]> {
   const u = PULSE_UNIT[unit];
   // Both branches yield exactly columns*rows buckets. Aligned: start at the super
@@ -284,17 +285,19 @@ export async function getPulse(
         start: `date_trunc('${u.trunc}', now()) - make_interval(${u.baseField} => ${columns * u.rows - 1})`,
         end: `date_trunc('${u.trunc}', now())`,
       };
-  const q = `
+  const q = sql`${sql.raw(`
     SELECT to_char(s.bucket, '${u.fmt}') AS label,
            COALESCE(count(a.id), 0)::int AS count
     FROM generate_series(${range.start}, ${range.end}, interval '1 ${u.trunc}') AS s(bucket)
     LEFT JOIN issue_activity a
       ON date_trunc('${u.trunc}', a.created_at) = s.bucket
       AND a.issue_id IN (SELECT id FROM issue WHERE project_id = ${projectId})
+  `)}
+    ${actorUserId == null ? sql`` : sql`AND a.actor_user_id = ${actorUserId}`}
     GROUP BY s.bucket
     ORDER BY s.bucket
   `;
-  const rows = (await db.execute(sql.raw(q))) as unknown as { label: string; count: number }[];
+  const rows = (await db.execute(q)) as unknown as { label: string; count: number }[];
   return rows.map((r) => ({ label: r.label, count: Number(r.count) }));
 }
 

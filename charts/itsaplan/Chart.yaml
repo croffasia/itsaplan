@@ -2,5 +2,5 @@ apiVersion: v2
 name: itsaplan
 description: Self-hosted project management and issue tracking platform
 version: 0.1.0
-appVersion: "0.17.0" # x-release-please-version
+appVersion: "1.0.0" # x-release-please-version
 type: application

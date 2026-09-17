@@ -66,6 +66,8 @@ export const qk = {
     ['documents', projectKey, 'document', documentId] as const,
   documentRevisions: (projectKey: string, documentId: number) =>
     ['documents', projectKey, 'document', documentId, 'revisions'] as const,
+  documentComments: (projectKey: string, documentId: number) =>
+    ['documents', projectKey, 'document', documentId, 'comments'] as const,
   documentAssets: (projectKey: string, documentId: number) =>
     ['documents', projectKey, 'document', documentId, 'assets'] as const,
   documentIssueLinks: (projectKey: string, documentId: number) =>

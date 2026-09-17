@@ -1,9 +1,20 @@
 import assert from 'node:assert/strict';
-import { describe, it } from 'node:test';
+import { afterEach, beforeEach, describe, it } from 'node:test';
 import { NextRequest } from 'next/server';
 import { proxy } from './proxy';
 
 const COOKIE = 'better-auth.session_token=stale.signature';
+
+let originalApiUrl: string | undefined;
+
+beforeEach(() => {
+  originalApiUrl = process.env.API_URL;
+});
+
+afterEach(() => {
+  if (originalApiUrl === undefined) delete process.env.API_URL;
+  else process.env.API_URL = originalApiUrl;
+});
 
 function run(path: string, cookie?: string) {
   return proxy(
@@ -45,7 +56,7 @@ describe('proxy security headers', () => {
   it('serves every page with a content security policy naming the api origin', () => {
     process.env.API_URL = 'http://api.test:3000/';
     const csp = run('/login').headers.get('content-security-policy');
-    assert.match(csp!, /(^|; )connect-src 'self' http:\/\/api\.test:3000(;|$)/);
+    assert.match(csp!, /(^|; )connect-src 'self' blob: http:\/\/api\.test:3000(;|$)/);
     assert.match(csp!, /(^|; )frame-ancestors 'none'(;|$)/);
     assert.match(csp!, /(^|; )object-src 'none'(;|$)/);
   });

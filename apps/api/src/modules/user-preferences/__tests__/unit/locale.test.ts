@@ -18,6 +18,10 @@ describe('localeFromAcceptLanguage', () => {
     expect(localeFromAcceptLanguage('id-ID,id;q=0.9,en;q=0.8')).toBe('id');
   });
 
+  it('matches a Spanish browser header to the supported locale', () => {
+    expect(localeFromAcceptLanguage('es-ES,es;q=0.9,en;q=0.8')).toBe('es-ES');
+  });
+
   it('uses the fallback for a preferred wildcard', () => {
     expect(localeFromAcceptLanguage('de-DE,*;q=0.9,zh;q=0.8')).toBe('en');
   });

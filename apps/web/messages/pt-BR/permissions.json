@@ -6,7 +6,7 @@
     "initiatives": "Iniciativas",
     "cycles": "Ciclos",
     "dashboards": "Dashboards",
-    "documents": "Docs",
+    "documents": "Documentos",
     "views": "Visões de itens de trabalho",
     "members_invite": "Convites",
     "members_manage": "Membros",
@@ -34,7 +34,7 @@
   "groups": {
     "workItems": "Itens de trabalho",
     "dashboards": "Dashboards",
-    "documents": "Docs",
+    "documents": "Documentos",
     "notes": "Notas",
     "ai": "IA",
     "configuration": "Configuração",

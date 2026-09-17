@@ -4,15 +4,18 @@ import {
   BadgeEuro,
   BookOpenText,
   Building2,
+  CalendarDays,
   Files,
   Inbox,
   LayoutDashboard,
+  Server,
   SquareKanban,
   StickyNote,
   Target,
 } from 'lucide-react';
 import {
   accountingPath,
+  calendarPath,
   crmPath,
   dashboardsPath,
   filesPath,
@@ -23,6 +26,7 @@ import {
   leadsPath,
   notesPath,
   projectPath,
+  serversPath,
 } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
@@ -65,6 +69,15 @@ export default function SidebarWorkNav({
             disabled={disabled}
             badge={inboxUnread}
           />
+          {can('calendar', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? calendarPath(projectKey) : '#'}
+              icon={CalendarDays}
+              label="Calendar"
+              active={pathname.includes('/calendar')}
+              disabled={disabled}
+            />
+          )}
           {features.dashboards && can('dashboards', 'read') && (
             <SidebarNavItem
               href={projectKey ? dashboardsPath(projectKey) : '#'}
@@ -144,6 +157,13 @@ export default function SidebarWorkNav({
               disabled={disabled}
             />
           )}
+          <SidebarNavItem
+            href={projectKey ? serversPath(projectKey) : '#'}
+            icon={Server}
+            label="Servers"
+            active={pathname.includes('/servers')}
+            disabled={disabled}
+          />
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

@@ -39,7 +39,7 @@ services:
   # network: the api streams file bytes through itself, so no port is
   # published. Administer through mc from inside the network or an SSH tunnel.
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -56,7 +56,7 @@ services:
 
   # One-shot: waits for MinIO, creates the upload bucket, then exits.
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     restart: 'no'
     depends_on:
       - minio

@@ -24,6 +24,9 @@ import { socialRoutes } from './social/routes';
 import { braindumpRoutes } from './braindump/routes';
 import { mindRoutes } from './mind/routes';
 import { competitorRoutes } from './competitors/routes';
+import { serverRoutes } from './servers/routes';
+import { calendarRoutes } from './calendar/routes';
+import { serverTerminalRoutes } from './servers/terminal';
 import { avatarRoutes } from './avatars/routes';
 import { viewRoutes } from './views/routes';
 import { shareRoutes } from './share/routes';
@@ -105,6 +108,9 @@ export const planner = new Elysia({ name: 'planner' })
   .use(braindumpRoutes)
   .use(mindRoutes)
   .use(competitorRoutes)
+  .use(serverRoutes)
+  .use(calendarRoutes)
+  .use(serverTerminalRoutes)
   .use(avatarRoutes)
   .use(viewRoutes)
   .use(shareRoutes)

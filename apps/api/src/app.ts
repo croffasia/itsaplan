@@ -129,6 +129,14 @@ export const app = new Elysia()
             description: 'Watched rival social accounts and the alerts they raise',
           },
           {
+            name: 'Calendar',
+            description: 'The connected Google Calendar: its calendars and their events',
+          },
+          {
+            name: 'Servers',
+            description: 'Customer machines reachable from the dashboard over SSH',
+          },
+          {
             name: 'Avatars',
             description: "Current user's avatar image (upload and raw bytes)",
           },

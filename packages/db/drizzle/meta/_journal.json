@@ -533,6 +533,20 @@
       "when": 1788968843063,
       "tag": "0075_past_machine_man",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1789660875248,
+      "tag": "0076_clumsy_exiles",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1789666296990,
+      "tag": "0077_ancient_redwing",
+      "breakpoints": true
     }
   ]
 }

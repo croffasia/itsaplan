@@ -1730,3 +1730,110 @@ export const competitorEvent = pgTable(
     ),
   ],
 );
+
+// A machine an operator reaches from the dashboard over SSH. The credential is
+// stored encrypted (AES-256-GCM via @repo/crypto) and never leaves the API: the
+// browser gets a terminal stream, never the key or the password.
+//
+// `hostKeyFingerprint` is pinned on the first successful connection. A later
+// connection whose host key differs is refused rather than trusted, so a swapped
+// or spoofed host cannot silently receive the credential.
+export const server = pgTable(
+  'server',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    // The customer this machine belongs to. Null for the operation's own boxes.
+    customerId: integer('customer_id').references(() => crmCustomer.id, {
+      onDelete: 'set null',
+    }),
+    addedByUserId: text('added_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+    label: text('label').notNull(),
+    host: text('host').notNull(),
+    port: integer('port').notNull().default(22),
+    username: text('username').notNull(),
+    authType: text('auth_type').notNull(),
+    // The encrypted password or private key, as the EncryptedSecret blob.
+    credential: jsonb('credential').$type<Record<string, unknown>>().notNull(),
+    // The passphrase of an encrypted private key, encrypted the same way.
+    passphrase: jsonb('passphrase').$type<Record<string, unknown>>(),
+    hostKeyFingerprint: text('host_key_fingerprint'),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    notes: text('notes').notNull().default(''),
+    active: boolean('active').notNull().default(true),
+    lastConnectedAt: timestamp('last_connected_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('server_project_target_unique').on(t.projectId, t.host, t.port, t.username),
+    index('server_project_idx').on(t.projectId, t.active),
+    index('server_customer_idx').on(t.customerId),
+    check('server_auth_type_check', sql`${t.authType} IN ('password', 'key')`),
+    check('server_port_check', sql`${t.port} BETWEEN 1 AND 65535`),
+  ],
+);
+
+// One row per terminal session. A shell on a customer's machine is the most
+// far-reaching thing this dashboard can do, so every attempt is recorded —
+// including the ones that never connected.
+export const serverSession = pgTable(
+  'server_session',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    serverId: integer('server_id')
+      .notNull()
+      .references(() => server.id, { onDelete: 'cascade' }),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+    status: text('status').notNull().default('open'),
+    errorCode: text('error_code'),
+    bytesIn: bigint('bytes_in', { mode: 'number' }).notNull().default(0),
+    bytesOut: bigint('bytes_out', { mode: 'number' }).notNull().default(0),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp('ended_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('server_session_project_started_idx').on(t.projectId, t.startedAt.desc()),
+    index('server_session_server_idx').on(t.serverId, t.startedAt.desc()),
+    check('server_session_status_check', sql`${t.status} IN ('open', 'closed', 'failed')`),
+  ],
+);
+
+// One Google account linked to the calendar, per member per project. Each member
+// connects their own account, so the OAuth tokens are never shared between users.
+// `tokens` holds the refresh token and the current access token as one encrypted
+// blob; nothing in it is ever returned over HTTP.
+export const calendarConnection = pgTable(
+  'calendar_connection',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull().default('google'),
+    accountEmail: text('account_email').notNull(),
+    tokens: jsonb('tokens').$type<Record<string, unknown>>().notNull(),
+    scopes: jsonb('scopes').$type<string[]>().notNull().default([]),
+    // The calendars the member has switched off in the view. Kept here rather than
+    // mirroring Google's own `selected` flag, so hiding one in this dashboard does
+    // not change what the member sees in Google Calendar.
+    hiddenCalendarIds: jsonb('hidden_calendar_ids').$type<string[]>().notNull().default([]),
+    // The last refusal from Google, kept so the page can say the connection needs
+    // renewing instead of showing an empty calendar.
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('calendar_connection_member_unique').on(t.projectId, t.userId, t.provider),
+    check('calendar_connection_provider_check', sql`${t.provider} IN ('google')`),
+  ],
+);

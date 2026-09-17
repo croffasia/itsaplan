@@ -2203,7 +2203,9 @@ export type PermissionResource =
   | 'braindump'
   | 'mind'
   | 'competitors'
+  | 'servers'
   | 'mail'
+  | 'calendar'
   | 'danger_zone';
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;
@@ -2641,6 +2643,175 @@ export interface CompetitorCheckResult {
   events: number;
   error?: string;
   competitor: Competitor;
+}
+
+// ── Calendar ──────────────────────────────────────────────────────────────────
+
+export interface CalendarConnection {
+  connected: boolean;
+  accountEmail: string | null;
+  hiddenCalendarIds: string[];
+  // False while the instance has no Google OAuth client: the owner sets one in
+  // god mode before a calendar can be connected.
+  instanceReady: boolean;
+  redirectUri: string;
+  lastError: string | null;
+  connectedAt: string | null;
+}
+
+export interface GoogleCalendarInfo {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string;
+  primary: boolean;
+  writable: boolean;
+  timeZone: string | null;
+}
+
+export interface CalendarEvent {
+  id: string;
+  calendarId: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  // An ISO timestamp, or YYYY-MM-DD when allDay is true.
+  start: string;
+  end: string;
+  allDay: boolean;
+  url: string | null;
+  organizer: string | null;
+  attendees: number;
+}
+
+export interface CalendarEventInput {
+  calendarId: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  start: string;
+  end: string;
+  allDay: boolean;
+}
+
+export type ServerAuthType = 'password' | 'key';
+
+export interface ManagedServer {
+  id: number;
+  label: string;
+  host: string;
+  port: number;
+  username: string;
+  authType: ServerAuthType;
+  customerId: number | null;
+  customerName: string | null;
+  tags: string[];
+  notes: string;
+  active: boolean;
+  // Null until the first successful connection pins the host key.
+  hostKeyFingerprint: string | null;
+  lastConnectedAt: string | null;
+  addedByName: string | null;
+  createdAt: string;
+}
+
+export interface ServerSession {
+  id: number;
+  serverId: number;
+  serverLabel: string;
+  userName: string | null;
+  status: string;
+  errorCode: string | null;
+  bytesIn: number;
+  bytesOut: number;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export interface ServerOverview {
+  total: number;
+  active: number;
+  customers: number;
+  sessionsToday: number;
+  unpinned: number;
+}
+
+// The numeric customer id a server links to, with a name to show. Separate from
+// CrmCustomer, whose id is the public uuid.
+export interface LinkableCustomer {
+  id: number;
+  name: string;
+}
+
+export interface ServerInput {
+  label: string;
+  host: string;
+  port?: number;
+  username: string;
+  authType: ServerAuthType;
+  secret: string;
+  passphrase?: string;
+  customerId?: number;
+  tags?: string[];
+  notes?: string;
+}
+
+export interface ServerPatchInput {
+  label?: string;
+  host?: string;
+  port?: number;
+  username?: string;
+  authType?: ServerAuthType;
+  secret?: string;
+  passphrase?: string | null;
+  customerId?: number | null;
+  tags?: string[];
+  notes?: string;
+  active?: boolean;
+}
+
+export interface RemoteFile {
+  name: string;
+  kind: 'dir' | 'file' | 'link';
+  size: number;
+  modifiedAt: string | null;
+}
+
+export interface RemoteListing {
+  path: string;
+  entries: RemoteFile[];
+}
+
+export interface FoundFile extends RemoteFile {
+  directory: string;
+}
+
+export interface RemoteSearch {
+  path: string;
+  entries: FoundFile[];
+  // True when a bound was hit, so the list is a sample rather than everything.
+  truncated: boolean;
+}
+
+export interface RemoteMetrics {
+  hostname: string;
+  os: string;
+  kernel: string;
+  uptimeSeconds: number;
+  cpuCount: number;
+  cpuPercent: number;
+  loadAverage: number[];
+  memoryTotalKb: number;
+  memoryUsedKb: number;
+  diskTotalKb: number;
+  diskUsedKb: number;
+}
+
+// The terminal rides a WebSocket on the API origin, so the scheme follows it:
+// wss on a https deployment, ws locally.
+export function serverTerminalUrl(serverId: number, cols: number, rows: number): string {
+  const base = API_URL.replace(/^http/, 'ws');
+  return `${base}/servers/${serverId}/terminal?cols=${cols}&rows=${rows}`;
 }
 
 export const api = {
@@ -3096,6 +3267,72 @@ export const api = {
     request<{ marked: number }>(
       `/projects/${encodeURIComponent(projectKey)}/competitors/events/read`,
       { method: 'POST' },
+    ),
+  getServerOverview: (projectKey: string) =>
+    request<ServerOverview>(`/projects/${encodeURIComponent(projectKey)}/servers/overview`),
+  listServers: (projectKey: string) =>
+    request<ManagedServer[]>(`/projects/${encodeURIComponent(projectKey)}/servers`),
+  listLinkableCustomers: (projectKey: string) =>
+    request<LinkableCustomer[]>(`/projects/${encodeURIComponent(projectKey)}/servers/customers`),
+  listServerSessions: (projectKey: string, limit = 50) =>
+    request<ServerSession[]>(
+      `/projects/${encodeURIComponent(projectKey)}/servers/sessions?limit=${limit}`,
+    ),
+  createServer: (projectKey: string, input: ServerInput) =>
+    request<ManagedServer>(`/projects/${encodeURIComponent(projectKey)}/servers`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateServer: (serverId: number, patch: ServerPatchInput) =>
+    request<ManagedServer>(`/servers/${serverId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  repinServerHostKey: (serverId: number) =>
+    request<ManagedServer>(`/servers/${serverId}/repin`, { method: 'POST' }),
+  deleteServer: (serverId: number) => request<void>(`/servers/${serverId}`, { method: 'DELETE' }),
+  listServerFiles: (serverId: number, remotePath: string) =>
+    request<RemoteListing>(`/servers/${serverId}/files?path=${encodeURIComponent(remotePath)}`),
+  getServerMetrics: (serverId: number) => request<RemoteMetrics>(`/servers/${serverId}/metrics`),
+  getCalendarConnection: (projectKey: string) =>
+    request<CalendarConnection>(`/projects/${encodeURIComponent(projectKey)}/calendar/connection`),
+  startCalendarConnect: (projectKey: string) =>
+    request<{ url: string }>(`/projects/${encodeURIComponent(projectKey)}/calendar/connect`, {
+      method: 'POST',
+    }),
+  disconnectCalendar: (projectKey: string) =>
+    request<void>(`/projects/${encodeURIComponent(projectKey)}/calendar/connection`, {
+      method: 'DELETE',
+    }),
+  listCalendars: (projectKey: string) =>
+    request<GoogleCalendarInfo[]>(`/projects/${encodeURIComponent(projectKey)}/calendar/calendars`),
+  setHiddenCalendars: (projectKey: string, hiddenCalendarIds: string[]) =>
+    request<void>(`/projects/${encodeURIComponent(projectKey)}/calendar/hidden`, {
+      method: 'PUT',
+      body: JSON.stringify({ hiddenCalendarIds }),
+    }),
+  listCalendarEvents: (projectKey: string, from: string, to: string) =>
+    request<CalendarEvent[]>(
+      `/projects/${encodeURIComponent(projectKey)}/calendar/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+    ),
+  createCalendarEvent: (projectKey: string, input: CalendarEventInput) =>
+    request<CalendarEvent>(`/projects/${encodeURIComponent(projectKey)}/calendar/events`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateCalendarEvent: (projectKey: string, eventId: string, input: CalendarEventInput) =>
+    request<CalendarEvent>(
+      `/projects/${encodeURIComponent(projectKey)}/calendar/events/${encodeURIComponent(eventId)}`,
+      { method: 'PATCH', body: JSON.stringify(input) },
+    ),
+  deleteCalendarEvent: (projectKey: string, eventId: string, calendarId: string) =>
+    request<void>(
+      `/projects/${encodeURIComponent(projectKey)}/calendar/events/${encodeURIComponent(eventId)}?calendarId=${encodeURIComponent(calendarId)}`,
+      { method: 'DELETE' },
+    ),
+  searchServerFiles: (serverId: number, remotePath: string, query: string) =>
+    request<RemoteSearch>(
+      `/servers/${serverId}/files/search?path=${encodeURIComponent(remotePath)}&q=${encodeURIComponent(query)}`,
     ),
   linkMindFacts: (factId: number, toFactId: number) =>
     request<MindFact>(`/mind/facts/${factId}/links`, {

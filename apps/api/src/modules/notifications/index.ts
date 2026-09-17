@@ -81,7 +81,15 @@ export const notificationRoutes = new Elysia({
     async ({ user, query }) => {
       const userId = requireUser(user).id;
       const projectId = query.projectId ? Number(query.projectId) : undefined;
-      return { unread: await unreadCount(userId, projectId) };
+      let types: NotificationType[] | undefined;
+      if (query.types) {
+        types = query.types
+          .split(',')
+          .filter((x): x is NotificationType =>
+            (NOTIFICATION_TYPES as readonly string[]).includes(x),
+          );
+      }
+      return { unread: await unreadCount(userId, projectId, types) };
     },
     {
       query: unreadCountQuery,

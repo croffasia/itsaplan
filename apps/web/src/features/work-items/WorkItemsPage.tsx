@@ -10,6 +10,7 @@ import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
 import { qk } from '@/services/queryKeys';
 import { buildGroups, groupIssues } from '@/utils/project';
+import { resolveFilterSet } from '@/utils/filters';
 import { countIssuesByColumn } from './utils/wipLimit';
 import {
   restoreHiddenSections,
@@ -41,8 +42,16 @@ interface TimelineCollapseState {
 export default function WorkItemsPage() {
   const t = useTranslations('workItems');
   const tCommon = useTranslations('common');
-  const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
-    useShell();
+  const {
+    project,
+    filteredProject,
+    views,
+    editor,
+    customFields,
+    filterContext,
+    onOpenIssue,
+    onAddIssue,
+  } = useShell();
   const { can } = usePermissions();
   const groupLabels = useGroupLabels();
   const features = useProjectFeatures();
@@ -60,6 +69,7 @@ export default function WorkItemsPage() {
   });
 
   if (!project || !filteredProject) return null;
+  const resolvedFilters = resolveFilterSet(editor.effectiveFilters, filterContext);
 
   // Saving persists the view: editing an existing one is a views edit, a brand-new
   // one is a views create. Filtering/display stay available to everyone (transient,
@@ -81,7 +91,7 @@ export default function WorkItemsPage() {
     filteredProject,
     settings.group,
     groupLabels,
-    editor.effectiveFilters,
+    resolvedFilters,
   );
   const timelineIssuesByGroup = groupIssues(timelineGroups, filteredProject.issues, settings.group);
   const visibleTimelineGroupKeys = timelineGroups
@@ -119,7 +129,7 @@ export default function WorkItemsPage() {
 
   const viewProps = {
     project: filteredProject,
-    filters: editor.effectiveFilters,
+    filters: resolvedFilters,
     columnCounts,
     customFields,
     settings,

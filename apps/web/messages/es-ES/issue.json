@@ -329,7 +329,9 @@
   },
   "development": {
     "title": "Desarrollo",
-    "unlink": "Desenlazar un elemento de desarollo",
+    "builds": "Builds",
+    "buildsCount": "{count, plural, one {# build} other {# builds}}",
+    "unlink": "Desvincular",
     "branch": "Rama",
     "add": "Añadir",
     "empty": "Enlaza un pull request existente o crea una desde una rama",

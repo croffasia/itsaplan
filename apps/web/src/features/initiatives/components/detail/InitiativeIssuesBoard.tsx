@@ -19,15 +19,15 @@ const INITIATIVE_BOARD_STORE_KEY = 'planner_initiative_board_settings';
 // fed a project whose issues are just this initiative's, so drag/edit still hit the
 // real issues and the live board refresh keeps it current.
 export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: number }) {
-  const { project, customFields, onOpenIssue, onAddIssue } = useShell();
+  const { project, customFields, filterContext, onOpenIssue, onAddIssue } = useShell();
   const board = useLocalBoardSettings(INITIATIVE_BOARD_STORE_KEY, initiativeId);
   const initiativeOptions = useInitiativeOptionsQuery(project?.project.key ?? null).data ?? [];
 
   const viewProject = useMemo(() => {
     if (!project) return null;
     const issues = project.issues.filter((i) => i.initiative?.id === initiativeId);
-    return { ...project, issues: applyFilters(issues, board.filters, project) };
-  }, [project, initiativeId, board.filters]);
+    return { ...project, issues: applyFilters(issues, board.filters, project, filterContext) };
+  }, [project, initiativeId, board.filters, filterContext]);
 
   if (!project || !viewProject) return null;
 

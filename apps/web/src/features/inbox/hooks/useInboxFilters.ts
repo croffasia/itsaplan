@@ -1,8 +1,13 @@
 import { useCallback, useState } from 'react';
-import type { NotificationFilters } from '@/lib/api/endpoints/notifications';
+import {
+  PRIORITY_INBOX_TYPES,
+  type NotificationFilters,
+} from '@/lib/api/endpoints/notifications';
 
 // The inbox toolbar's type filter and display toggles, kept per project in
-// localStorage so reopening the inbox restores the last choices.
+// localStorage so reopening the inbox restores the last choices. A missing type
+// list is the priority inbox: assignment, mention, comment — not every state
+// change.
 
 const STORE_KEY = 'planner_inbox_filters';
 
@@ -18,8 +23,14 @@ function readStore(): Store {
   }
 }
 
+function withDefaultTypes(filters: NotificationFilters): NotificationFilters {
+  return filters.types ? filters : { ...filters, types: [...PRIORITY_INBOX_TYPES] };
+}
+
 export function useInboxFilters(projectKey: string) {
-  const [filters, setFilters] = useState<NotificationFilters>(() => readStore()[projectKey] ?? {});
+  const [filters, setFilters] = useState<NotificationFilters>(() =>
+    withDefaultTypes(readStore()[projectKey] ?? {}),
+  );
 
   const changeFilters = useCallback(
     (next: NotificationFilters) => {

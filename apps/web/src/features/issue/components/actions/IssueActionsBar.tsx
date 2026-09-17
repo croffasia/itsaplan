@@ -20,6 +20,7 @@ import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue } from '@/services/issues.service';
 import { qk } from '@/services/queryKeys';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useShell } from '@/context/shellContext';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
 import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
@@ -49,6 +50,7 @@ export default function IssueActionsBar({
 }) {
   const t = useTranslations('issue.actionsBar');
   const { can } = usePermissions();
+  const { filterContext } = useShell();
   const { data: session } = useSession();
   const qc = useQueryClient();
   const canEdit = can('work_items', 'edit');
@@ -78,7 +80,9 @@ export default function IssueActionsBar({
   // Manual actions whose condition matches this issue, applied as one patch.
   // Applying one is a issue edit; Copy Prompt only reads the issue and is always
   // available, so the block always renders.
-  const issueActions = canEdit ? matchedActions(actionsQuery.data ?? [], project, issue) : [];
+  const issueActions = canEdit
+    ? matchedActions(actionsQuery.data ?? [], project, issue, filterContext)
+    : [];
 
   async function copyPrompt() {
     await navigator.clipboard.writeText(buildIssuePrompt(issue, project, session?.user));

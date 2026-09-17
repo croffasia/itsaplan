@@ -329,7 +329,9 @@
   },
   "development": {
     "title": "التطوير",
-    "unlink": "إلغاء ربط عنصر التطوير",
+    "builds": "البناءات",
+    "buildsCount": "{count, plural, one {بناء #} other {# بناء}}",
+    "unlink": "إلغاء الربط",
     "branch": "فرع",
     "add": "إضافة",
     "empty": "اربط طلب سحب موجودًا أو أنشئ طلبًا من فرع",

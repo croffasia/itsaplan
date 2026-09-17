@@ -10,7 +10,7 @@ import { deleteObject } from '#shared/s3';
 import {
   createIssue,
   searchIssues,
-  listIssues,
+  listBoardIssues,
   listArchivedIssues,
   getIssue,
   getIssueBySequence,
@@ -439,7 +439,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   )
 
   // The board's issue payload: every active issue with its labels, field values
-  // and relations. The work-items UI loads this alongside the project scaffold
+  // and relations, without the markdown description (that body is read with the
+  // issue itself). The work-items UI loads this alongside the project scaffold
   // (GET /projects/:projectKey) and refetches it when the board scope of
   // GET /sync/rev moves. Web-only (not an MCP tool): agents use list_issues /
   // search_issues, and read an issue's relations with the issue itself.
@@ -447,7 +448,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     '/projects/:projectKey/issues/board',
     async ({ project }) => ({
       issues: await attachSubtaskCounts(
-        await attachBoardLinks(await listIssues(project), project.id),
+        await attachBoardLinks(await listBoardIssues(project), project.id),
         project.id,
       ),
     }),

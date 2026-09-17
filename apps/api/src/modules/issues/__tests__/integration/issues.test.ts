@@ -1057,6 +1057,22 @@ describe('issues', () => {
       expect(res.data?.issues[0]).toMatchObject({ title: 'Task' });
     });
 
+    it('omits the issue description so the board payload stays small', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const body = 'data:image/png;base64,' + 'A'.repeat(4000);
+      const created = (await createIssue(asOwner, columnId, { title: 'Heavy', description: body }))
+        .data!;
+
+      const board = (await asOwner.projects({ projectKey: 'MKT' }).issues.board.get()).data!;
+      expect(board.issues).toHaveLength(1);
+      expect(board.issues[0]?.id).toBe(created.id);
+      expect(board.issues[0]?.description).toBe('');
+
+      const detail = await asOwner.issues({ issueId: created.id }).get();
+      expect(detail.status).toBe(200);
+      expect(detail.data?.description).toBe(body);
+    });
+
     it('denies a non-member with 403', async () => {
       await setupProject();
       const outsider = authedApi((await signUpTestUser()).cookie);

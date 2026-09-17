@@ -274,6 +274,13 @@
   background-color: var(--kanban-card-selected);
 }
 
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
+
 /* Uniform thin scrollbar across the app. Native scrollbars are styled directly
    rather than through a scroll-area component, so every scroll region — board
    views, panels, menus — looks the same, and the virtualized views keep the

@@ -329,7 +329,9 @@
   },
   "development": {
     "title": "开发",
-    "unlink": "取消关联开发项",
+    "builds": "构建",
+    "buildsCount": "{count, plural, other {# 个构建}}",
+    "unlink": "取消关联",
     "branch": "分支",
     "add": "添加",
     "empty": "关联现有拉取请求，或从分支创建一个",

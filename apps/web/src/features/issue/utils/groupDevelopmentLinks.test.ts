@@ -7,7 +7,9 @@ import {
   worstPipelineStatus,
 } from './groupDevelopmentLinks';
 
-function link(partial: Partial<DevelopmentLink> & Pick<DevelopmentLink, 'id' | 'kind'>): DevelopmentLink {
+function link(
+  partial: Partial<DevelopmentLink> & Pick<DevelopmentLink, 'id' | 'kind'>,
+): DevelopmentLink {
   return {
     provider: 'gitlab',
     repository: 'org/app',
@@ -87,7 +89,11 @@ describe('groupDevelopmentLinks', () => {
       [2, 3],
     );
     assert.deepEqual(
-      grouped.buildsByRepo.map((group) => [group.repository, group.links.map((item) => item.id), group.status]),
+      grouped.buildsByRepo.map((group) => [
+        group.repository,
+        group.links.map((item) => item.id),
+        group.status,
+      ]),
       [
         ['org/app', [2], 'success'],
         ['org/demo', [3], 'skipped'],
@@ -120,9 +126,7 @@ describe('groupDevelopmentLinks', () => {
 
   it('treats pipeline-titled branch links as builds', () => {
     assert.equal(
-      isBuildDevelopmentLink(
-        link({ id: 1, kind: 'branch', title: 'Pipeline #2853744737' }),
-      ),
+      isBuildDevelopmentLink(link({ id: 1, kind: 'branch', title: 'Pipeline #2853744737' })),
       true,
     );
   });

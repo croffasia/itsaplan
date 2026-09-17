@@ -34,7 +34,7 @@ export default function IssueDevelopmentBuilds({
       <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-xs font-medium select-none [&::-webkit-details-marker]:hidden">
         <GitBranch className="size-3.5 text-muted-foreground" />
         <span>{t('builds')}</span>
-        <span className="tabular-nums text-muted-foreground">
+        <span className="text-muted-foreground tabular-nums">
           {t('buildsCount', { count: builds.length })}
         </span>
         {status && (

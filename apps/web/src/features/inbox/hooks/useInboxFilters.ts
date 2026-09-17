@@ -1,8 +1,5 @@
 import { useCallback, useState } from 'react';
-import {
-  PRIORITY_INBOX_TYPES,
-  type NotificationFilters,
-} from '@/lib/api/endpoints/notifications';
+import { PRIORITY_INBOX_TYPES, type NotificationFilters } from '@/lib/api/endpoints/notifications';
 
 // The inbox toolbar's type filter and display toggles, kept per project in
 // localStorage so reopening the inbox restores the last choices. A missing type

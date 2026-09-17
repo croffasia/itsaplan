@@ -44,12 +44,7 @@ export default function IssueDevelopmentPanel({
   return (
     <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading
-          label={t('title')}
-          tally={tally}
-          open={open}
-          onToggle={toggle}
-        />
+        <IssueSectionHeading label={t('title')} tally={tally} open={open} onToggle={toggle} />
         {canManage && (
           <IssueDevelopmentAddMenu
             onLink={() => setLinkOpen(true)}

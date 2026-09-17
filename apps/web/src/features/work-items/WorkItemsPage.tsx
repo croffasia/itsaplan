@@ -87,12 +87,7 @@ export default function WorkItemsPage() {
   // issue in it rather than the ones the active filters leave on screen.
   const columnCounts = countIssuesByColumn(project.issues);
 
-  const timelineGroups = buildGroups(
-    filteredProject,
-    settings.group,
-    groupLabels,
-    resolvedFilters,
-  );
+  const timelineGroups = buildGroups(filteredProject, settings.group, groupLabels, resolvedFilters);
   const timelineIssuesByGroup = groupIssues(timelineGroups, filteredProject.issues, settings.group);
   const visibleTimelineGroupKeys = timelineGroups
     .filter(

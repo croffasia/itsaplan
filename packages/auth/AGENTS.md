@@ -3,11 +3,14 @@
 The **server-side** better-auth instance. Consumed by `apps/api`. See root `AGENTS.md`.
 
 - `src/index.ts` — `export const auth = betterAuth({...})` with the Drizzle adapter
-  (`provider: "pg"`) over `@repo/db`. Email+password enabled (no email confirmation:
-  `requireEmailVerification: false`, `autoSignIn: true`), plus the WebAuthn passkey
-  plugin (`@better-auth/passkey`).
+  (`provider: "pg"`) over `@repo/db`. Email+password enabled (`autoSignIn: true`;
+  whether the address has to be confirmed first is an instance setting, see below),
+  plus the WebAuthn passkey plugin (`@better-auth/passkey`).
 - Exports `auth`, `USER_ROLES` / `UserRole`, `generateUsername` (the SCIM module derives a
-  handle with the same rule), plus `Auth` / `Session` types.
+  handle with the same rule), `getSessionFromHeaders`, plus `Auth` / `Session` types.
+- `emailAndPassword.revokeSessionsOnPasswordReset` is `true`: a reset ends every session
+  of that account, since a reset is how a stolen password is dealt with. The signed-in
+  change-password form in the web app sends `revokeOtherSessions` for the same reason.
 
 ## User role
 
@@ -28,18 +31,28 @@ through this module — never inline a query on `app_setting` / `app_secret` els
   provider, the two OAuth providers and the SCIM token, encrypted with `@repo/crypto`,
   each with a `redacted` mirror for the settings UI. Secrets never leave the server.
 
+The mail provider is read by the api and the worker as well, so its shape and reader
+live in `@repo/db` (`domains/instance-email.ts`); what is here is the write side god
+mode drives.
+
 "Invite only" means the address has a pending `team_invite` (`hasPendingInvite`).
 Invites are created and revoked inside a team, so there is no instance-level invite
 table and god mode has no invite section — do not add one.
 
 `hooks.before` gates `/sign-up/email` (closed → 403, invite → no pending invite for
 that address → 403) and holds back `/sign-in/email` for an unconfirmed address while
-verification is required **and** a mail provider is configured — without one the
-address can never be confirmed, so the gate lifts instead of locking the account out.
-That is the same condition the public `/auth-config` reports, so the sign-in screen
-and the gate never disagree. Because both read the settings per request,
-`emailAndPassword.requireEmailVerification` stays `false` in the static config — do
-not flip it to `true`.
+verification is required. The requirement never outlives the mail provider: the api
+refuses to turn it on without one, and `setEmailSettings` clears it when the provider
+is removed, so the setting alone is what the gate, the sign-up endpoint and the
+public `/auth-config` read — none of them checks the provider again.
+
+`emailAndPassword.requireEmailVerification` is a getter over a module variable that
+`hooks.before` refreshes from the setting on every password endpoint. better-auth
+reads the option off the options object when `/sign-up/email` decides whether to
+open a session, so this is what makes a required confirmation answer sign-up with
+`token: null` and no cookie instead of a working session. Do not replace the getter
+with a static value: `true` would lock every account out the moment the setting is
+turned off, and `false` hands an unconfirmed sign-up a session.
 
 Authentication email (`src/mail.ts`) goes out through `@repo/mailer` and is best
 effort: with no provider configured it logs and returns false rather than failing the
@@ -48,9 +61,9 @@ link. Every link must carry a `callbackURL`/`redirectTo` on the **web** origin �
 handler runs on the API origin, so a link built without one lands the reader on the
 API, which renders nothing. The web app passes them in `features/auth/services`.
 
-`autoSignIn` opens a session even when confirmation is required (the static config
-cannot depend on the setting), so the web sign-up drops that session and shows a
-"confirm your email" screen instead.
+With confirmation required, sign-up returns the user and no session; the web sign-up
+shows a "confirm your email" screen instead of entering the app, and the link opens
+the session (`autoSignInAfterVerification`).
 
 ## Username
 
@@ -76,9 +89,9 @@ session, and a username comes from the address, so it would tell a stranger whic
 addresses are registered.
 
 The sign-in screen has one field for both identifiers and picks the endpoint by whether
-what was typed contains an "@". `/sign-in/username` checks only the static
-`emailAndPassword.requireEmailVerification`, which is `false` here, so the instance
-verification gate in `hooks.before` covers that path as well as `/sign-in/email`.
+what was typed contains an "@". The instance verification gate in `hooks.before`
+covers `/sign-in/username` as well as `/sign-in/email`, and runs before the plugin's
+own check of `emailAndPassword.requireEmailVerification`.
 
 ## Generic OIDC
 
@@ -162,6 +175,33 @@ applies closed/invite-only to a Google sign-up. Its `APIError`s carry a `code` b
 social callback turns that into the `?error=` it redirects with; without one the callback
 fails the request instead. Agent bot users are written with a direct insert and never
 reach the hook.
+
+## API keys
+
+`apiKey({ enableSessionForAPIKeys: true })` makes an `x-api-key` header resolve to the
+owner's session, so a key is a full-account credential. It therefore expires:
+`keyExpiration.defaultExpiresIn` is 90 days and `maxExpiresIn` is a year, and the create
+dialog in the web app offers 30/90/180/365 days. The plugin's option is documented as
+milliseconds but its handler passes the value to `getDate(value, "sec")`, so
+`API_KEY_DEFAULT_EXPIRES_IN_SEC` is in seconds; `maxExpiresIn` is in days, as the plugin
+reads it. Keys issued before this stay `expires_at` NULL and keep working.
+
+The expiry only holds if a key cannot renew itself, and a request carrying one resolves to
+the owner's session on every key endpoint. So `hooks.before` refuses both ways round it: an
+`/api-key/update` that carries `expiresIn`, and an `/api-key/create` sent with an
+`x-api-key` header. Keys are issued from a signed-in session; a longer life is a new key.
+The refusal reads `ctx.request`, which a server-side `auth.api.createApiKey` does not
+carry, so `issueKey` is unaffected.
+
+An agent's key is the exception and carries no expiry — an agent replays its stored secret
+with nothing that would renew it, and an external agent's operator rotates it through
+`regenerate-key`. The plugin applies the default to every key it creates, so `issueKey` in
+`apps/api/src/modules/agents/core/service.ts` clears `expires_at` on the row afterwards.
+
+A key the plugin will not accept makes it throw out of `auth.api.getSession` rather than
+return no session. `getSessionFromHeaders` turns that back into "no session", so an expired
+key is answered with a 401 instead of a 500. Use it instead of `auth.api.getSession` where
+a request may carry a key.
 
 ## OpenAPI reference
 

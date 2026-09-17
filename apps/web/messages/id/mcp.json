@@ -1,0 +1,46 @@
+{
+  "title": "Server MCP",
+  "description": "Hubungkan agen AI ke proyek ini melalui Model Context Protocol. Agen memiliki izin sesuai kunci API yang digunakannya.",
+  "disabled": "Dinonaktifkan",
+  "offForTeam": "MCP nonaktif untuk tim {team}.",
+  "offForProject": "Tim {team} mengaktifkan MCP, tetapi proyek ini dinonaktifkan.",
+  "openTeamSettings": "Buka pengaturan MCP tim",
+  "askManager": "Minta pemilik atau manajer tim untuk mengaktifkannya:",
+  "keyHint": "Buat kunci di halaman <link>Kunci API</link>, lalu ganti <code>{apiKey}</code> pada cuplikan kode.",
+  "endpoint": "Endpoint MCP",
+  "clientTabsAria": "Klien",
+  "addToFile": "Tambahkan ke <code>{file}</code>",
+  "notes": {
+    "claudeCode": "Jalankan ini di terminal Anda.",
+    "vscode": "Memerlukan GitHub Copilot.",
+    "claudeDesktop": "Claude Desktop terhubung ke server jarak jauh melalui bridge mcp-remote. Memerlukan Node.js.",
+    "other": "Klien apa pun yang mendukung MCP melalui Streamable HTTP dapat digunakan. Arahkan ke endpoint. Kirim header Authorization: Bearer {apiKey}."
+  },
+  "clients": {
+    "other": "Lainnya"
+  },
+  "oauth": {
+    "configuration": "Cara menghubungkan",
+    "methodTabsAria": "Metode koneksi",
+    "method": "OAuth",
+    "personalKey": "Kunci API",
+    "description": "Gunakan ini untuk klien MCP apa pun yang mendukung OAuth, seperti ChatGPT atau Claude. Anda masuk dengan akun Itsaplan Anda. Klien tidak pernah menerima kunci API.",
+    "discovery": "Penemuan OAuth",
+    "steps": {
+      "add": "Tambahkan aplikasi MCP di klien Anda.",
+      "paste": "Tempel endpoint MCP.",
+      "choose": "Pilih OAuth saat klien menanyakan cara masuk.",
+      "signIn": "Masuk ke Itsaplan dan setujui akses."
+    },
+    "security": "OAuth menggunakan PKCE (S256), pendaftaran klien dinamis, dan token akses yang dicakupkan ke akun Itsaplan Anda.",
+    "consent": {
+      "title": "Otorisasi Itsaplan",
+      "description": "Izinkan klien MCP ini bertindak dengan izin dari akun Itsaplan Anda.",
+      "missingCode": "Permintaan otorisasi ini kehilangan kode persetujuannya.",
+      "cancel": "Batal",
+      "pending": "Mengotorisasi…",
+      "authorize": "Otorisasi",
+      "failed": "Tidak dapat menyelesaikan otorisasi OAuth."
+    }
+  }
+}

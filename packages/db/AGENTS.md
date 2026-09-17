@@ -13,6 +13,16 @@ See root `AGENTS.md` for monorepo-wide rules.
 - `src/permissions.ts` — the permission matrix stored in `team_role.permissions`: the
   resource/action catalog, the default member role, and the normalizer. It lives here
   because the API and the sign-up hook in `@repo/auth` both write it.
+- `src/settings.ts` / `src/secrets.ts` — the two instance config stores: `app_setting`
+  in plaintext jsonb, `app_secret` encrypted with `APP_ENCRYPTION_KEY`. Both are read
+  by more than one app, which is why they are here.
+- `src/domains/` — one module per stored config that more than one process reads: its
+  shape, its defaults and the reader that decrypts it. Only that. The write side, the
+  redacted view an HTTP client gets, the validation and anything else specific to one
+  caller stay with that caller — the api's settings routes, or god mode in
+  `@repo/auth`. A config only one process reads does not belong here at all.
+  Currently: the instance Telegram bot (api, bot, worker), the instance mail provider
+  (`@repo/auth`, api, worker), and a team's notification providers (api, worker).
 - `src/migrate.ts` — programmatic migrator run on api container startup (no drizzle-kit in prod).
 - `drizzle/` — generated SQL migrations (committed).
 

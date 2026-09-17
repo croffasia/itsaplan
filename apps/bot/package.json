@@ -8,9 +8,11 @@
     "start": "bun run src/index.ts",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "if find src -name '*.test.ts' -print -quit | grep -q .; then bun test; fi"
+    "test": "bun test --env-file=../../.env.test"
   },
   "dependencies": {
+    "@repo/db": "workspace:*",
+    "drizzle-orm": "^0.45.2",
     "grammy": "^1.45.1"
   },
   "devDependencies": {

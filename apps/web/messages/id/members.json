@@ -1,0 +1,107 @@
+{
+  "title": "Anggota",
+  "description": "Orang yang memiliki akses ke proyek ini.",
+  "add": {
+    "action": "Tambah anggota",
+    "title": "Tambah anggota",
+    "personLabel": "Anggota tim atau email",
+    "pickPlaceholder": "Pilih seseorang",
+    "searchPlaceholder": "Cari di tim atau ketik email",
+    "searchTeamPlaceholder": "Cari di tim",
+    "fromTeam": "Dari tim",
+    "byEmail": "Undang lewat email",
+    "inviteEmail": "Undang {email}",
+    "alreadyInvited": "{email} sudah diundang",
+    "alreadyMember": "{email} sudah ada di proyek ini",
+    "alreadyInTeam": "{email} sudah ada di tim — pilih mereka dari daftar di atas",
+    "refused": "{email} tidak dapat ditambahkan",
+    "typeEmail": "Tidak ada yang ditemukan. Ketik alamat email lengkap untuk mengundang mereka.",
+    "noCandidates": "Semua orang di tim sudah ada di proyek ini.",
+    "willJoinTeam": "Bergabung dengan tim {teamName} dan proyek ini",
+    "roleLabel": "Peran dalam proyek",
+    "rolePlaceholder": "Peran",
+    "submit": "Tambahkan ke proyek",
+    "sendInvite": "Kirim undangan"
+  },
+  "columns": {
+    "member": "Anggota",
+    "role": "Peran",
+    "timezone": "Zona waktu",
+    "joined": "Bergabung",
+    "actions": "Tindakan"
+  },
+  "profileHeading": "Profil",
+  "you": "(Anda)",
+  "aiAgent": "Agen AI",
+  "tabs": {
+    "all": "Semua",
+    "people": "Orang",
+    "agents": "Agen AI",
+    "label": "Tampilkan"
+  },
+  "leaveProject": "Tinggalkan proyek",
+  "revokeAccess": "Cabut akses",
+  "lastOwner": "Proyek harus mempertahankan setidaknya satu pemilik",
+  "leaveTitle": "Tinggalkan proyek ini",
+  "leaveDescription": "Anda akan kehilangan akses ke proyek ini dan semua issue di dalamnya. Pemilik dapat mengundang Anda kembali nanti.",
+  "revokeTitle": "Cabut akses untuk {name}",
+  "revokeDescription": "{name} akan kehilangan akses ke proyek ini. Mereka dapat diundang kembali nanti.",
+  "selectRole": "Pilih peran",
+  "editDescription": "Ubah deskripsi",
+  "descriptionQuestionSelf": "Apa yang Anda lakukan dalam proyek ini?",
+  "descriptionQuestionOther": "Apa yang orang ini lakukan dalam proyek ini?",
+  "descriptionPlaceholder": "mis. Insinyur backend, menangani API dan integrasi",
+  "invites": {
+    "pendingCount": "{count, plural, one {# undangan tertunda} other {# undangan tertunda}}",
+    "copyLink": "Salin tautan",
+    "copied": "Disalin",
+    "emailQueued": "Email undangan dimasukkan ke antrean",
+    "emailUnavailable": "Undangan dibuat, tetapi email tidak dimasukkan ke antrean. Salin tautan untuk membagikannya.",
+    "resendUnavailable": "Email tidak dikonfigurasi. Salin tautan undangan untuk membagikannya.",
+    "resendEmail": "Kirim email",
+    "resendingEmail": "Mengantrekan…",
+    "revokeAction": "Cabut undangan",
+    "removeAction": "Hapus undangan",
+    "invitedBy": "Diundang oleh {name} · ",
+    "createdAt": "dibuat {date}",
+    "respondedAt": "{status, select, accepted {diterima} rejected {ditolak} other {diperbarui}} {date}",
+    "status": {
+      "pending": "Tertunda",
+      "accepted": "Diterima",
+      "rejected": "Ditolak"
+    },
+    "revokeTitle": "Cabut undangan untuk {email}",
+    "revokeConfirm": "Cabut undangan",
+    "revokeDescription": "Tautan undangan tidak akan berfungsi lagi. Anda dapat mengundang email ini lagi nanti."
+  },
+  "promoted": "Anggota dipromosikan menjadi pemilik",
+  "roleUpdated": "Peran anggota diperbarui",
+  "descriptionUpdated": "Deskripsi anggota diperbarui",
+  "added": "Anggota ditambahkan",
+  "provisioned": "Dikelola oleh SCIM",
+  "search": {
+    "all": "Cari anggota",
+    "people": "Cari orang",
+    "agents": "Cari agen AI"
+  },
+  "empty": {
+    "all": {
+      "title": "Belum ada anggota",
+      "description": "Orang dan agen AI akan muncul di sini setelah bergabung."
+    },
+    "human": {
+      "title": "Belum ada orang",
+      "description": "Orang akan muncul di sini setelah bergabung."
+    },
+    "agent": {
+      "title": "Belum ada agen AI",
+      "description": "Agen AI akan muncul di sini setelah ditambahkan."
+    },
+    "search": {
+      "title": "Tidak ada yang ditemukan",
+      "all": "Tidak ada anggota yang cocok dengan pencarian ini.",
+      "human": "Tidak ada orang yang cocok dengan pencarian ini.",
+      "agent": "Tidak ada agen AI yang cocok dengan pencarian ini."
+    }
+  }
+}

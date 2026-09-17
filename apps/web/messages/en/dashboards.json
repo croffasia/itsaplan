@@ -140,7 +140,11 @@
     "eventNoun": "{count, plural, one {event} other {events}}",
     "active": "{count} active",
     "less": "Less",
-    "more": "More"
+    "more": "More",
+    "scope": {
+      "project": "Whole project",
+      "me": "My activity"
+    }
   },
   "throughput": {
     "empty": "No activity in this period.",

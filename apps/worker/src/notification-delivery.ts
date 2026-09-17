@@ -1,29 +1,21 @@
-import { db, notificationDelivery } from '@repo/db';
+import { db, notificationDelivery, type DeliveryPayload } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
 import { equalJitterBackoffMs } from './backoff';
 import { intEnv } from './env';
-import { postInternal } from './internal-api';
+import { deliverNotification, type SendResult } from './notification-send';
 
-// Drains the notification_delivery outbox: claims due rows and asks the API to send
-// each one. Follows the same claim/retry pattern as webhook delivery, but the send
-// itself runs in the API (POST /internal/notification-deliveries/send) because the
-// channel credentials are encrypted with the API's key — the worker never decrypts.
-// A succeeded row is deleted (no delivery history is kept); a permanently failed row
-// is left as 'failed' with its last error for debugging.
+// Drains the notification_delivery outbox: claims due rows and sends each one.
+// Follows the same claim/retry pattern as webhook delivery. A succeeded row is
+// deleted (no delivery history is kept); a permanently failed row is left as
+// 'failed' with its last error for debugging.
 
 interface ClaimedNotification {
   id: number;
   projectId: number;
   channel: string;
   recipient: string | null;
-  payload: unknown;
+  payload: DeliveryPayload;
   attempts: number;
-}
-
-interface SendResult {
-  ok: boolean;
-  retryable?: boolean;
-  error?: string;
 }
 
 export async function processNotificationDeliveries(): Promise<void> {
@@ -63,7 +55,7 @@ async function claimDueDeliveries(): Promise<ClaimedNotification[]> {
 async function processDelivery(d: ClaimedNotification): Promise<void> {
   let result: SendResult;
   try {
-    result = await send(d);
+    result = await deliverNotification(d);
   } catch (err) {
     result = {
       ok: false,
@@ -91,23 +83,4 @@ async function processDelivery(d: ClaimedNotification): Promise<void> {
     .update(notificationDelivery)
     .set({ status: 'failed', lastError: error })
     .where(eq(notificationDelivery.id, d.id));
-}
-
-// Calls the API to actually deliver the message.
-async function send(d: ClaimedNotification): Promise<SendResult> {
-  const res = await postInternal(
-    '/internal/notification-deliveries/send',
-    {
-      projectId: d.projectId,
-      channel: d.channel,
-      recipient: d.recipient,
-      payload: d.payload,
-    },
-    intEnv('NOTIFICATION_TIMEOUT_MS', 20_000),
-  );
-  const body = (await res.json().catch(() => null)) as SendResult | null;
-  if (!res.ok) {
-    return { ok: false, retryable: res.status >= 500, error: `send API returned ${res.status}` };
-  }
-  return body ?? { ok: false, retryable: true, error: 'empty send response' };
 }

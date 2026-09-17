@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useDocumentNavigation } from '@/hooks/useDocumentNavigation';
 import {
   ArrowDown,
   ArrowUp,
@@ -41,6 +42,14 @@ const SORTS = [
 ] as const satisfies readonly DocumentSort[];
 export type { DocumentListTab } from '../utils/documentList';
 
+const defaults: {
+  sort: DocumentSort;
+  direction: 'asc' | 'desc';
+  creator: string | null;
+  range: 'all' | 'today' | 'week' | 'month';
+  scroll: number;
+} = { sort: 'position', direction: 'asc', creator: null, range: 'all', scroll: 0 };
+
 export default function DocumentsIndex({
   projectKey,
   documents,
@@ -79,10 +88,33 @@ export default function DocumentsIndex({
   const t = useTranslations('documents');
   const move = useMoveDocument(projectKey);
   const favorite = useSetDocumentFavorite(projectKey);
-  const [sort, setSort] = useState<DocumentSort>('position');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [creatorId, setCreatorId] = useState<string | null>(null);
-  const [createdRange, setCreatedRange] = useState<'all' | 'today' | 'week' | 'month'>('all');
+  const [preferences, setPreferences] = useDocumentNavigation(projectKey, 'index', defaults);
+  const sort = SORTS.includes(preferences.sort) ? preferences.sort : 'position';
+  const sortDirection = preferences.direction === 'desc' ? 'desc' : 'asc';
+  const creatorId = preferences.creator;
+  const createdRange = ['all', 'today', 'week', 'month'].includes(preferences.range)
+    ? preferences.range
+    : 'all';
+  const setSort = (sort: DocumentSort) => setPreferences((p) => ({ ...p, sort }));
+  const setSortDirection = (update: (value: 'asc' | 'desc') => 'asc' | 'desc') =>
+    setPreferences((p) => ({ ...p, direction: update(p.direction) }));
+  const setCreatorId = (creator: string | null) => setPreferences((p) => ({ ...p, creator }));
+  const setCreatedRange = (range: typeof defaults.range) =>
+    setPreferences((p) => ({ ...p, range }));
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const restored = useRef(false);
+  const lastScroll = useRef(preferences.scroll);
+  useEffect(() => {
+    if (!loading && !restored.current && scrollRef.current) {
+      scrollRef.current.scrollTop = preferences.scroll;
+      lastScroll.current = preferences.scroll;
+      restored.current = true;
+    }
+  }, [loading, preferences.scroll]);
+  useEffect(
+    () => () => setPreferences((p) => ({ ...p, scroll: lastScroll.current })),
+    [setPreferences],
+  );
 
   const creatorIds = Array.from(
     new Set(
@@ -299,7 +331,13 @@ export default function DocumentsIndex({
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-10 md:px-6">
+      <div
+        ref={scrollRef}
+        onScroll={(event) => {
+          lastScroll.current = event.currentTarget.scrollTop;
+        }}
+        className="min-h-0 flex-1 overflow-y-auto px-4 pb-10 md:px-6"
+      >
         <div className="mx-auto w-full max-w-6xl">
           {loading ? (
             <div className="space-y-1 py-1" aria-hidden>

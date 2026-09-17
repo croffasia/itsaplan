@@ -9,7 +9,8 @@ import { createAgent } from '#tests/helpers/agents';
 
 // Agent conversation threads live in Mastra's tables, which carry no foreign key of
 // ours, so they are deleted explicitly when what they are bound to goes away: the
-// agent, its project, or (for an issue run's thread) the issue being archived.
+// agent, its project, or the schedule. Archiving an issue is reversible and drops
+// none of them.
 //
 // The runtime is not exercised — a live model call would be needed to produce a thread
 // — so threads are seeded through the memory module the same way a run creates them.
@@ -166,24 +167,20 @@ describe('agent thread cleanup', () => {
     expect(await messageCount(thread)).toBe(0);
   });
 
-  it("deletes an issue's run threads when it is archived", async () => {
+  it("keeps an issue's run threads when it is archived", async () => {
     const { asOwner, columnId } = await setup();
     const a = await createInternalAgent(asOwner, 'Bot A', 'bota');
     const b = await createInternalAgent(asOwner, 'Bot B', 'botb');
     const issue = await createIssue(asOwner, columnId, 'Ship it');
-    const other = await createIssue(asOwner, columnId, 'Keep it');
     const threadA = await seedIssueThread(a, issue.id);
     const threadB = await seedIssueThread(b, issue.id);
     await seedMessage(threadA, 'agent-bot');
-    expect(await messageCount(threadA)).toBe(1);
-    const untouched = await seedIssueThread(a, other.id);
 
     const res = await asOwner.issues({ issueId: issue.id }).archive.post();
     expect(res.status).toBe(200);
 
-    expect(await threadExists(threadA)).toBe(false);
-    expect(await threadExists(threadB)).toBe(false);
-    expect(await messageCount(threadA)).toBe(0);
-    expect(await threadExists(untouched)).toBe(true);
+    expect(await threadExists(threadA)).toBe(true);
+    expect(await threadExists(threadB)).toBe(true);
+    expect(await messageCount(threadA)).toBe(1);
   });
 });

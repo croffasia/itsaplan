@@ -1,6 +1,7 @@
 import Image from '@tiptap/extension-image';
 import { ReactNodeViewRenderer } from '@tiptap/react';
 import EditorResizableImage from './EditorResizableImage';
+import { allowedImageStyle } from '@/utils/imageStyle';
 
 // Safe inside a double-quoted HTML attribute: a filename may hold any of these.
 const escapeAttribute = (value: string) =>
@@ -26,7 +27,10 @@ export const ResizableImage = Image.extend({
     return {
       ...parent,
       // Kept so a raw <img style="max-width:50%"> keeps its sizing.
-      style: { default: null },
+      style: {
+        default: null,
+        parseHTML: (element) => allowedImageStyle(element.getAttribute('style')),
+      },
       width: {
         default: null,
         parseHTML: (element) => {

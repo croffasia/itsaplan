@@ -80,6 +80,7 @@
     "showLinks": "Afficher les liens",
     "separateSubtaskCards": "Afficher les sous-tâches comme des cartes distinctes",
     "separateSubtaskRows": "Afficher les sous-tâches comme des lignes distinctes",
+    "startSubtasksCollapsed": "Démarrer avec les sous-tâches réduites",
     "showNestedSubtasks": "Afficher les sous-tâches imbriquées",
     "nestedSubtasks": "Sous-tâches imbriquées",
     "displayProperties": "Propriétés affichées",

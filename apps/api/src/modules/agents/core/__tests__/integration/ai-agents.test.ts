@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
+import { apikey, db } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
 import { createRole, listProjectRoles } from '#tests/helpers/roles';
 import { addProjectMember } from '#tests/helpers/members';
@@ -424,6 +426,28 @@ describe('ai agents', () => {
     expect(res.status).toBe(200);
     expect(res.data?.apiKey).toBeTruthy();
     expect(res.data?.apiKey).not.toBe(created.data?.apiKey);
+  });
+
+  // A personal key expires; an agent replays its key with nothing that would renew
+  // it, so the one issued at creation and the one regenerate-key issues carry none.
+  it('issues the agent key without an expiry', async () => {
+    const { asOwner, teamId } = await setup();
+    const created = await createAgent(asOwner, 'MKT', {
+      name: 'Bot',
+      username: 'bot',
+      kind: 'external',
+    });
+    const agent = created.data!.agent;
+    const expiries = () =>
+      db
+        .select({ expiresAt: apikey.expiresAt })
+        .from(apikey)
+        .where(eq(apikey.referenceId, agent.userId));
+
+    expect(await expiries()).toEqual([{ expiresAt: null }]);
+
+    await agents(asOwner, teamId)({ agentId: agent.id })['regenerate-key'].post();
+    expect(await expiries()).toEqual([{ expiresAt: null }]);
   });
 
   it('rejects regenerating the key on an internal agent with 400', async () => {

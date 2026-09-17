@@ -8,8 +8,8 @@ import type { AgentRunTrigger } from '../../model';
 // (runModePreamble) and the people involved (peopleContext). The interactive test
 // chat does not use this path — it frames its own prompt in the controller.
 
-// The fields of a claimed run this module reads. The HTTP body in internal-routes.ts
-// is structurally compatible.
+// The fields of a claimed run this module reads, as both the queue poller and the
+// external runner build them.
 export interface RunForPrompt {
   id: number;
   trigger: AgentRunTrigger;
@@ -18,19 +18,18 @@ export interface RunForPrompt {
   issueIdentifier: string | null;
   issueTitle: string | null;
   // The issue's assignee and, on a mention run, the author of the comment behind it:
-  // the name they are called by and the handle they are tagged by. The handles are
-  // optional so a worker still running the previous build can hand a run over.
+  // the name they are called by and the handle they are tagged by.
   assigneeName: string | null;
-  assigneeUsername?: string | null;
+  assigneeUsername: string | null;
   requesterName: string | null;
-  requesterUsername?: string | null;
+  requesterUsername: string | null;
   agentUserId: string;
-  agentUsername?: string | null;
-  // The comment the mention replies to and the ones above it, oldest first. Absent
-  // for a top-level mention.
-  threadContext?: string | null;
+  agentUsername: string | null;
+  // The comment the mention replies to and the ones above it, oldest first. Null for
+  // a top-level mention.
+  threadContext: string | null;
   // The comment that mentioned the agent, so it can answer in the same thread.
-  sourceActivityId?: number | null;
+  sourceActivityId: number | null;
 }
 
 // System-instruction block describing how this run was started, so the agent knows

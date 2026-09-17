@@ -1,0 +1,25 @@
+{
+  "eyebrow": "Diperbarui",
+  "title": "Yang baru di {version}",
+  "done": "Mengerti",
+  "backup": {
+    "title": "Cadangan dibuat sebelum pembaruan",
+    "body": "Basis data dicadangkan sebelum migrasi rilis ini dijalankan: {size}, disimpan hingga {expires}, lalu dihapus secara otomatis. Pulihkan jika Anda kembali ke rilis sebelumnya.",
+    "credentialsHint": "Nama pengguna dan basis data adalah POSTGRES_USER dan POSTGRES_DB dari .env Anda."
+  },
+  "report": {
+    "title": "Perubahan pada data Anda",
+    "subtitle": "Proyek kini menjadi milik tim, dan sebuah tim berbagi satu daftar peran, keahlian, agen, dan kredensial integrasi.",
+    "teamsHeading": "Tim dan proyeknya",
+    "renamedRoles": "Peran yang diganti nama",
+    "renamedSkills": "Keahlian yang diganti nama",
+    "renamedAgents": "Handle agen yang diganti nama",
+    "renamedCredentials": "Kredensial integrasi yang diberi label baru",
+    "mergedHeading": "Digabung dan dipindahkan",
+    "mergedRoles": "{count, plural, one {# peran bawaan duplikat digabung menjadi satu} other {# peran bawaan duplikat digabung menjadi satu}}",
+    "mergedTools": "{count, plural, one {# alat terkonfigurasi duplikat digabung menjadi satu} other {# alat terkonfigurasi duplikat digabung menjadi satu}}",
+    "movedInvites": "{count, plural, one {# undangan tertunda dipindahkan ke tim} other {# undangan tertunda dipindahkan ke tim}}",
+    "notificationsHeading": "Penyedia notifikasi",
+    "notificationsBody": "Sebuah tim menyimpan satu konfigurasi penyedia notifikasi, sehingga konfigurasi yang terakhir disimpan tetap dipertahankan. Masukkan kembali pengaturan untuk: {projects}."
+  }
+}

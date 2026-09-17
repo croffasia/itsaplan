@@ -67,14 +67,19 @@ export default function TeamProjectsTable({
               onClick={() => onSelect(project.id)}
             >
               <TableCell className="px-3 py-3">
-                <div className="flex min-w-0 items-center gap-2.5">
+                <div className="flex min-w-0 items-start gap-2.5">
                   <Badge
                     variant="outline"
-                    className="w-12 shrink-0 justify-center rounded px-1 py-0 font-mono text-[10px] text-muted-foreground"
+                    className="min-w-12 shrink-0 justify-center rounded px-1 py-0 font-mono text-[10px] text-muted-foreground"
                   >
                     {project.key}
                   </Badge>
-                  <span className="truncate text-sm font-medium">{project.name}</span>
+                  <span
+                    className="min-w-0 text-sm font-medium wrap-anywhere whitespace-normal"
+                    dir="auto"
+                  >
+                    {project.name}
+                  </span>
                 </div>
               </TableCell>
 

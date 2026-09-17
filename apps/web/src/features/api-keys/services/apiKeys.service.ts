@@ -11,6 +11,8 @@ export type ApiKeyRow = {
   name?: string | null;
   start?: string | null;
   createdAt: string;
+  // Null on a key issued before keys carried an expiry.
+  expiresAt: string | null;
 };
 
 // Goes through the auth client, not plain fetch, so better-auth's baseURL and the
@@ -24,6 +26,7 @@ async function fetchApiKeys(loadFailed: string): Promise<ApiKeyRow[]> {
     name: key.name,
     start: key.start,
     createdAt: new Date(key.createdAt).toISOString(),
+    expiresAt: key.expiresAt ? new Date(key.expiresAt).toISOString() : null,
   }));
 }
 

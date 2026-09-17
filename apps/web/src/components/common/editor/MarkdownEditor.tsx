@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
@@ -15,9 +15,11 @@ import { MarkdownTable } from './tiptap-table';
 import { Video } from './tiptap-video';
 import { attachmentHtml, type Embeddable } from './attachmentEmbed';
 import { openLinkOnModifierClick } from './modifierClickLink';
+import { createLinkKeyboardHandlers } from './linkKeyboardHandlers';
 import EditorImagePicker from './EditorImagePicker';
 import EditorSelectionMenu from './EditorSelectionMenu';
 import EditorTableMenu from './EditorTableMenu';
+import EditorLinkPreview from './EditorLinkPreview';
 import { useMentionCandidates } from '@/hooks/useMentionCandidates';
 import { useTranslations } from 'next-intl';
 
@@ -65,6 +67,7 @@ export default function MarkdownEditor({
 }) {
   const t = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
+  const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   // Held in a ref because the extensions are built once: the "@" menu reads the
   // roster through it, so a list that arrives later is still offered.
   const mentionCandidates = useMentionCandidates();
@@ -101,7 +104,11 @@ export default function MarkdownEditor({
       StarterKit.configure(editorStarterKitOptions),
       CodeBlockLowlight.configure({ lowlight }),
       Placeholder.configure({ placeholder }),
-      Link.configure({ openOnClick: false, autolink: true }),
+      Link.configure({
+        openOnClick: false,
+        autolink: true,
+        HTMLAttributes: { class: 'cursor-pointer', tabindex: '0' },
+      }),
       // Renders ![](url) markdown inline.
       ResizableImage,
       // Renders an @username in the text as a mention chip, and offers the project's
@@ -138,6 +145,7 @@ export default function MarkdownEditor({
       handleClick(view, _pos, event) {
         return openLinkOnModifierClick(event, view.dom);
       },
+      handleDOMEvents: linkKeyboardHandlers,
       // Files dropped from the OS are uploaded, then inserted at the drop
       // position. Internal moves and attachment-card drags (which carry
       // text/html, not files) fall through to tiptap's default handling.
@@ -188,6 +196,7 @@ export default function MarkdownEditor({
       {/* Grows with the text rather than being pinned to the container's height,
           so a container that scrolls measures the overflow and shows a bar. */}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
+      <EditorLinkPreview editor={editor} />
       {imageAttachments && (
         <EditorImagePicker
           open={imagePickerOpen}

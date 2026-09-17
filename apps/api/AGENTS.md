@@ -14,8 +14,15 @@ Rules and invariants for this package below; read the code for the walkthrough.
   stays flat. A schema several of the nested features share sits in the parent's
   `model.ts` and is re-exported from each child's (`agentParams`).
 - `src/app.ts` assembles and exports the app (`export const app`, no `.listen()`);
-  `src/index.ts` only binds the port. `export type App = typeof app` types the Eden
-  Treaty client (web + tests).
+  `src/index.ts` binds the port and starts `src/background.ts`.
+  `export type App = typeof app` types the Eden Treaty client (web + tests).
+- **Background jobs are started from `index.ts`, never assembled into the app**, so
+  importing the app in a test starts nothing. `background.ts` drains the `agent_run`
+  queue in one loop and runs the auto-archive sweep in a loop of its own, so neither
+  waits on the other. Several api replicas run them without overlapping: the queue is
+  claimed with `FOR UPDATE SKIP LOCKED`, and the sweep only touches rows it has not
+  archived yet. An agent run is built from the queue row alone — the project it works
+  in and the bot user it acts as are read there, never handed in.
 - `index.ts`: `new Elysia({ name: "<feature>", detail: { tags: ["<Tag>"] } })` —
   routes chained directly on it, each route sets `detail.summary`. Handlers only;
   the schemas they reference come from `model.ts`.
@@ -23,7 +30,7 @@ Rules and invariants for this package below; read the code for the walkthrough.
   is `t.Partial(<create body>)` where it accepts the same fields.
 - `service.ts`: plain async functions, no Elysia/HTTP types, returns DTOs never rows.
 - Every feature lives under `src/modules/`. A feature that needs more than the three
-  files adds one per concern next to them (`emit.ts`, `internal-routes.ts`), it does
+  files adds one per concern next to them (`emit.ts`, `run-queue.ts`), it does
   not grow a `routes.ts` + `store.ts` pair.
 - Imports inside a module are relative (`./model`); everything it reaches outside
   itself goes through the subpath aliases in `apps/api/package.json` — `#shared/*`,

@@ -1,10 +1,10 @@
 import type { Bot } from 'grammy';
+import { getInstanceBotConfig, isInstanceBotUsable } from '@repo/db';
 import { botConfig } from './config';
-import { fetchBotConfig } from './api';
 import { createBot } from './bot';
 
 // Keeps the running bot in step with the instance settings. The token is not env
-// configuration: an administrator sets it in god mode, so this polls the api and
+// configuration: an administrator sets it in god mode, so this polls the database and
 // starts, stops, or replaces the bot when it changes. Without that, adding the token
 // would need a redeploy.
 //
@@ -49,22 +49,22 @@ async function loop(): Promise<void> {
   try {
     await reconcile();
   } catch (err) {
-    // The api being briefly unreachable must not kill the service, and a bot already
-    // running keeps running meanwhile. This is the normal case at startup, where the
-    // api is still binding its port — so retry sooner than the steady-state interval
-    // instead of leaving the bot idle for a full poll cycle.
+    // The database being briefly unreachable must not kill the service, and a bot
+    // already running keeps running meanwhile. This is the normal case at startup, so
+    // retry sooner than the steady-state interval instead of leaving the bot idle for
+    // a full poll cycle.
     delay = cfg.configRetryIntervalMs;
     const reason = err instanceof Error ? err.message : String(err);
-    console.error(`[bot] could not read bot settings from ${cfg.apiBaseUrl}: ${reason}`);
+    console.error(`[bot] could not read bot settings: ${reason}`);
   }
   if (stopped) return;
   timer = setTimeout(loop, delay);
 }
 
 async function reconcile(): Promise<void> {
-  const settings = await fetchBotConfig();
+  const settings = await getInstanceBotConfig();
 
-  if (!settings.enabled || !settings.botToken) {
+  if (!isInstanceBotUsable(settings)) {
     if (current) console.log('[bot] bot turned off, stopping');
     await stopCurrent();
     return;

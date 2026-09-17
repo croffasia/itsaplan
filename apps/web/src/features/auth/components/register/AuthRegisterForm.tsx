@@ -15,12 +15,7 @@ import AuthFormHeader from '../AuthFormHeader';
 import AuthMessagePanel from '../AuthMessagePanel';
 import AuthRegisterPasswordFields from './AuthRegisterPasswordFields';
 import AuthRegisterProviders from './AuthRegisterProviders';
-import {
-  signInWithGoogle,
-  signInWithOidc,
-  signOutUnverified,
-  signUpWithEmail,
-} from '../../services/auth.service';
+import { signInWithGoogle, signInWithOidc, signUpWithEmail } from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';
 
@@ -33,6 +28,7 @@ export default function AuthRegisterForm() {
   const { error, pending, setError, run } = useAuthAction();
   const authConfig = useAuthConfig();
   const inviteOnly = authConfig?.registration === 'invite';
+  const firstRun = authConfig?.hasUsers === false;
   const needsConfirmation = authConfig?.requireEmailVerification === true;
   // With the password form off, the identity provider is what creates the account,
   // so this screen keeps only the buttons that start that round trip.
@@ -45,14 +41,12 @@ export default function AuthRegisterForm() {
       setError(t('errors.passwordsDoNotMatch'));
       return;
     }
-    // With confirmation required, sign-up still opens a session (autoSignIn), so it
-    // is dropped right away: the account exists but stays unusable until the link in
-    // the email is opened.
+    // With confirmation required, sign-up opens no session: the account exists but
+    // stays unusable until the link in the email is opened.
     if (needsConfirmation) {
       run(
         async () => {
           await signUpWithEmail({ email, password });
-          await signOutUnverified();
           setAwaitingConfirmation(true);
         },
         { redirect: false },
@@ -96,6 +90,7 @@ export default function AuthRegisterForm() {
   }
 
   function subtitle() {
+    if (firstRun) return t('register.subtitleFirstRun');
     if (!passwordEnabled) return t('register.subtitleSso');
     if (inviteOnly) return t('register.subtitleInviteOnly');
     return t('register.subtitle');
@@ -139,12 +134,14 @@ export default function AuthRegisterForm() {
           </>
         )}
 
-        <FieldDescription className="text-center">
-          {t('register.haveAccount')}{' '}
-          <Link href="/login" className="underline underline-offset-4">
-            {t('register.signIn')}
-          </Link>
-        </FieldDescription>
+        {!firstRun && (
+          <FieldDescription className="text-center">
+            {t('register.haveAccount')}{' '}
+            <Link href="/login" className="underline underline-offset-4">
+              {t('register.signIn')}
+            </Link>
+          </FieldDescription>
+        )}
       </FieldGroup>
     </form>
   );

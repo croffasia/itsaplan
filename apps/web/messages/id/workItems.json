@@ -1,0 +1,119 @@
+{
+  "newIssue": "Issue baru",
+  "pin": "Sematkan",
+  "unpin": "Lepas sematan",
+  "collapse": "Ciutkan",
+  "expand": "Bentangkan",
+  "hide": "Sembunyikan",
+  "show": "Tampilkan",
+  "hiddenColumns": "Kolom tersembunyi",
+  "hiddenGroups": "Grup tersembunyi",
+  "selectAll": "Pilih semua",
+  "deselectAll": "Batalkan pilihan semua",
+  "resizeColumn": "Ubah ukuran kolom",
+  "viewNamePlaceholder": "Semua issue",
+  "sortedOrder": "Issue diurutkan berdasarkan {field}. Ubah urutan ke Manual untuk memindahkannya.",
+  "statusSince": "Dalam status saat ini sejak {date}",
+  "createdOn": "Dibuat {date}",
+  "updatedOn": "Diperbarui {date}",
+  "subtasksProgress": "Subtugas {done}/{total}",
+  "subtasksDone": "{done} dari {total} subtugas selesai",
+  "wip": {
+    "reached": "{column} telah mencapai batas {limit} issue.",
+    "tooltip": "Batas pekerjaan yang sedang berlangsung: {max}",
+    "count": "{count} / {max}",
+    "filteredCount": "{shown} dari {total} / {max}",
+    "filteredTooltip": "{shown} ditampilkan oleh filter saat ini. Batas {max} menghitung semua {total} issue di kolom ini."
+  },
+  "columns": {
+    "title": "Judul",
+    "status": "Status",
+    "statusAge": "Dalam status",
+    "priority": "Prioritas",
+    "type": "Tipe",
+    "initiative": "Inisiatif",
+    "cycle": "Cycle",
+    "labels": "Label",
+    "estimatePoints": "Story points",
+    "estimateTime": "Waktu",
+    "startDate": "Mulai",
+    "dueDate": "Tenggat",
+    "created": "Dibuat",
+    "updated": "Diperbarui"
+  },
+  "calendar": {
+    "previousMonth": "Bulan sebelumnya",
+    "nextMonth": "Bulan berikutnya",
+    "today": "Hari ini",
+    "moreIssues": "+{count} lagi",
+    "issueCount": "{count, plural, one {# issue} other {# issue}}",
+    "weekdays": {
+      "sun": "Min",
+      "mon": "Sen",
+      "tue": "Sel",
+      "wed": "Rab",
+      "thu": "Kam",
+      "fri": "Jum",
+      "sat": "Sab"
+    },
+    "noDate": {
+      "dueDate": "Tanpa tenggat waktu",
+      "startDate": "Tanpa tanggal mulai",
+      "custom": "Tanpa tanggal"
+    },
+    "allDated": {
+      "dueDate": "Semua memiliki tenggat waktu.",
+      "startDate": "Semua memiliki tanggal mulai.",
+      "custom": "Semua memiliki tanggal."
+    }
+  },
+  "timeline": {
+    "empty": "Belum ada issue untuk ditempatkan di linimasa.",
+    "expandGroup": "Bentangkan grup",
+    "collapseGroup": "Ciutkan grup",
+    "inferredStart": "Tanggal mulai ditentukan dari tanggal dibuat",
+    "inferredStartDraggable": "Tanggal mulai ditentukan dari tanggal dibuat — seret untuk mengaturnya"
+  },
+  "bulk": {
+    "selected": "{count} dipilih",
+    "status": "Status",
+    "priority": "Prioritas",
+    "assignee": "Penerima tugas",
+    "delegate": "Delegasi",
+    "initiative": "Inisiatif",
+    "cycle": "Cycle",
+    "labels": "Label",
+    "noAssignee": "Tanpa penerima tugas",
+    "noDelegate": "Tanpa delegasi",
+    "noInitiative": "Tanpa inisiatif",
+    "noCycle": "Tanpa cycle",
+    "archive": "Arsipkan",
+    "clearSelection": "Hapus pilihan"
+  },
+  "removal": {
+    "archive": {
+      "title": "{count, plural, one {Arsipkan issue} other {Arsipkan issue}}",
+      "confirm": "{count, plural, one {Arsipkan # issue} other {Arsipkan # issue}}",
+      "description": "{count, plural, one {Arsipkan # issue yang dipilih? Issue ini akan meninggalkan papan dan dapat dipulihkan nanti.} other {Arsipkan # issue yang dipilih? Semua issue ini akan meninggalkan papan dan dapat dipulihkan nanti.}}"
+    },
+    "delete": {
+      "title": "{count, plural, one {Hapus issue} other {Hapus issue}}",
+      "confirm": "{count, plural, one {Hapus # issue} other {Hapus # issue}}",
+      "description": "{count, plural, one {Hapus # issue yang dipilih?} other {Hapus # issue yang dipilih?}} Tindakan ini juga akan menghapus komentar, aktivitas, dan lampiran. Tindakan ini tidak dapat dibatalkan."
+    }
+  },
+  "share": {
+    "issueTitle": "Issue",
+    "issueUnavailable": "Issue ini tidak tersedia.",
+    "boardUnavailable": "Papan bersama ini tidak tersedia. Tautan mungkin telah dicabut."
+  },
+  "groups": {
+    "noAssignee": "Tanpa penerima tugas",
+    "noDelegate": "Tanpa delegasi",
+    "noPriority": "Tanpa prioritas",
+    "noType": "Tanpa tipe",
+    "noInitiative": "Tanpa inisiatif",
+    "noCycle": "Tanpa cycle",
+    "noMember": "Tanpa nilai"
+  }
+}

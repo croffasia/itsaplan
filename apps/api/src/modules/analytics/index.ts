@@ -1,4 +1,6 @@
 import { Elysia } from 'elysia';
+import { authContext } from '#shared/auth-context';
+import { requireUser } from '#shared/access';
 import { guards } from '#shared/guards';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors } from '#shared/responses';
@@ -50,6 +52,7 @@ export const analyticsRoutes = new Elysia({
   name: 'analytics',
   detail: { tags: ['Analytics'] },
 })
+  .use(authContext)
   .use(guards)
   .get(
     '/projects/:projectKey/analytics/stats',
@@ -86,11 +89,16 @@ export const analyticsRoutes = new Elysia({
 
   .get(
     '/projects/:projectKey/analytics/pulse',
-    async ({ project, query }) => {
+    async ({ project, query, user }) => {
       const unit = query.unit ?? 'day';
       const columns =
         query.columns != null ? Math.min(Math.max(query.columns, 1), MAX_PULSE_COLUMNS[unit]) : 26;
-      return getPulse(project.id, unit, columns);
+      return getPulse(
+        project.id,
+        unit,
+        columns,
+        query.scope === 'me' ? requireUser(user).id : undefined,
+      );
     },
     {
       query: pulseQuery,
@@ -98,7 +106,8 @@ export const analyticsRoutes = new Elysia({
       response: { 200: PulseListResponse, ...commonErrors },
       detail: {
         summary: 'Get project pulse',
-        description: 'Activity counts over time for a heatmap.',
+        description:
+          'Activity counts over time. Scope me counts only events performed by the authenticated user; project includes all project activity.',
         ...mcpTool('get_project_pulse'),
       },
     },

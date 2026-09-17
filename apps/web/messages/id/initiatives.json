@@ -1,0 +1,166 @@
+{
+  "title": "Inisiatif",
+  "newInitiative": "Inisiatif baru",
+  "notFound": "Inisiatif tidak ditemukan.",
+  "options": "Opsi inisiatif",
+  "showDescription": "Tampilkan deskripsi",
+  "noDescription": "Tidak ada deskripsi.",
+  "noOwner": "Tanpa pemilik",
+  "startDate": "Tanggal mulai",
+  "targetDate": "Tanggal target",
+  "progress": "Kemajuan",
+  "activity": "Aktivitas",
+  "noActivity": "Belum ada aktivitas.",
+  "noIssuesLinked": "Belum ada issue yang ditautkan.",
+  "inProgress": "Sedang berjalan",
+  "emptyTitle": "Belum ada inisiatif",
+  "emptyDescription": "Inisiatif mengelompokkan issue terkait di bawah satu tujuan.",
+  "emptyTabDescription": "Inisiatif berpindah antar-tab saat statusnya berubah.",
+  "emptyTab": {
+    "active": "Tidak ada inisiatif aktif",
+    "planned": "Tidak ada inisiatif terencana",
+    "proposed": "Tidak ada inisiatif yang diusulkan",
+    "completed": "Tidak ada inisiatif yang selesai"
+  },
+  "tabs": {
+    "active": "Aktif",
+    "planned": "Terencana",
+    "proposed": "Diusulkan",
+    "completed": "Selesai",
+    "all": "Semua inisiatif"
+  },
+  "detailTabs": {
+    "overview": "Ringkasan",
+    "progress": "Kemajuan",
+    "issues": "Issue"
+  },
+  "columns": {
+    "name": "Nama",
+    "priority": "Prioritas",
+    "owner": "Pemilik",
+    "target": "Target",
+    "progress": "Kemajuan",
+    "health": "Kesehatan"
+  },
+  "status": {
+    "proposed": "Diusulkan",
+    "planned": "Terencana",
+    "active": "Aktif",
+    "completed": "Selesai",
+    "canceled": "Dibatalkan"
+  },
+  "stateGroups": {
+    "backlog": "Backlog",
+    "unstarted": "Todo",
+    "started": "Sedang Dikerjakan",
+    "completed": "Selesai",
+    "canceled": "Dibatalkan"
+  },
+  "health": {
+    "on_track": "Sesuai rencana",
+    "at_risk": "Berisiko",
+    "off_track": "Keluar jalur",
+    "unknown": "Tidak ada pembaruan"
+  },
+  "healthInfo": {
+    "trigger": "Bagaimana kesehatan dihitung?",
+    "title": "Kesehatan",
+    "description": "Membandingkan pekerjaan yang selesai dengan waktu yang telah berlalu. Diperbarui secara otomatis.",
+    "legend": {
+      "on_track": "Pekerjaan berjalan sesuai dengan jadwal.",
+      "at_risk": "Pekerjaan mulai tertinggal dari jadwal.",
+      "off_track": "Pekerjaan jauh tertinggal, atau tanggal target telah terlewati.",
+      "unknown": "Data belum cukup: tidak ada issue atau belum ada tanggal target."
+    },
+    "howCalculated": "Cara penghitungan",
+    "workDone": "Pekerjaan selesai",
+    "timeElapsed": "Waktu berlalu",
+    "trail": "Seberapa jauh pekerjaan tertinggal dari waktu",
+    "trailOnTrack": "hingga 10% tertinggal",
+    "trailAtRisk": "10-25% tertinggal",
+    "trailOffTrack": "lebih dari 25% tertinggal"
+  },
+  "timeline": {
+    "title": "Linimasa",
+    "started": "Dimulai",
+    "target": "Target",
+    "remaining": "Tersisa",
+    "overdue": "Terlambat {days} hari",
+    "dueToday": "Jatuh tempo hari ini",
+    "left": "Tersisa {days} hari",
+    "timeElapsed": "Waktu berlalu",
+    "workDone": "Pekerjaan selesai",
+    "noTargetDate": "Tetapkan tanggal target untuk memantau kecepatan."
+  },
+  "form": {
+    "titlePlaceholder": "Peluncuran Q3",
+    "descriptionPlaceholder": "Tentang apakah inisiatif ini?",
+    "create": "Buat inisiatif",
+    "creating": "Membuat…",
+    "editTitle": "Ubah inisiatif",
+    "save": "Simpan perubahan"
+  },
+  "pagination": {
+    "range": "{from}–{to} dari {total}",
+    "previous": "Halaman sebelumnya",
+    "next": "Halaman berikutnya"
+  },
+  "select": {
+    "label": "Inisiatif",
+    "search": "Tautkan ke inisiatif…",
+    "empty": "Tidak ada inisiatif.",
+    "none": "Tanpa inisiatif",
+    "create": "Buat inisiatif"
+  },
+  "feed": {
+    "system": "Sistem",
+    "createdInitiative": "membuat inisiatif",
+    "createdIssue": "membuat issue",
+    "renamed": "mengubah nama menjadi “{title}”",
+    "descriptionUpdated": "memperbarui deskripsi",
+    "descriptionCleared": "menghapus deskripsi",
+    "statusSet": "mengatur status ke {status}",
+    "statusMoved": "memindahkan dari {from} ke {to}",
+    "prioritySet": "mengatur prioritas ke {priority}",
+    "priorityRemoved": "menghapus prioritas",
+    "ownerSet": "mengatur pemilik ke {name}",
+    "ownerRemoved": "menghapus pemilik {name}",
+    "assigneeSet": "menetapkan ke {name}",
+    "assigneeRemoved": "menghapus penerima tugas {name}",
+    "delegateSet": "mendelegasikan ke {name}",
+    "delegateRemoved": "menghapus delegasi {name}",
+    "targetDateSet": "mengatur tanggal target ke {date}",
+    "targetDateRemoved": "menghapus tanggal target",
+    "startDateSet": "mengatur tanggal mulai ke {date}",
+    "startDateRemoved": "menghapus tanggal mulai",
+    "dueDateSet": "mengatur tenggat waktu ke {date}",
+    "dueDateRemoved": "menghapus tenggat waktu",
+    "labelAdded": "menambahkan label {label}",
+    "labelRemoved": "menghapus label {label}",
+    "typeSet": "mengatur tipe ke {type}",
+    "typeRemoved": "menghapus tipe",
+    "linked": "ditautkan ke {name}",
+    "unlinked": "dilepas tautannya dari inisiatif"
+  },
+  "attachments": {
+    "title": "Lampiran",
+    "add": "Tambah",
+    "uploading": "Mengunggah…",
+    "empty": "Belum ada lampiran.",
+    "emptyHint": "Tarik dan lepas file ke sini, atau gunakan Tambah untuk mengunggah.",
+    "dropToUpload": "Lepaskan file untuk mengunggah",
+    "uploadFailed": "Unggahan gagal",
+    "open": "Buka {name}",
+    "download": "Unduh",
+    "downloadFile": "Unduh {name}",
+    "deleteFile": "Hapus {name}"
+  },
+  "documents": {
+    "title": "Dokumen",
+    "add": "Tautkan Dokumen",
+    "empty": "Belum ada Dokumen yang ditautkan.",
+    "loadFailed": "Gagal memuat Dokumen yang ditautkan. Coba lagi.",
+    "untitled": "Tanpa judul",
+    "remove": "Putuskan tautan {title}"
+  }
+}

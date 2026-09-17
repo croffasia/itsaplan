@@ -1,0 +1,76 @@
+{
+  "title": "Cycle",
+  "newCycle": "Cycle baru",
+  "status": {
+    "upcoming": "Mendatang",
+    "active": "Aktif",
+    "completed": "Selesai"
+  },
+  "views": {
+    "table": "Tabel",
+    "timeline": "Linimasa"
+  },
+  "columns": {
+    "name": "Nama",
+    "dates": "Tanggal",
+    "length": "Durasi",
+    "issues": "Issue",
+    "progress": "Kemajuan"
+  },
+  "emptyTitle": "Belum ada cycle",
+  "emptyDescription": "Cycle adalah periode berbatas waktu tempat tim merencanakan issue yang akan dikerjakan.",
+  "nothingPlannedTitle": "Tidak ada yang direncanakan",
+  "nothingPlannedDescription": "Linimasa menampilkan cycle aktif dan mendatang. Cycle yang telah selesai ada di dalam tabel.",
+  "options": "Opsi cycle",
+  "transferIssues": "{count, plural, one {Pindahkan # issue belum selesai} other {Pindahkan # issue belum selesai}}",
+  "finishedEarly": "Selesai lebih awal, direncanakan berakhir pada {date}",
+  "form": {
+    "editTitle": "Ubah cycle",
+    "newTitle": "Cycle baru",
+    "name": "Nama",
+    "goal": "Sasaran",
+    "goalPlaceholder": "Apa yang harus dicapai dalam cycle ini?",
+    "length": "Durasi",
+    "starts": "Mulai",
+    "ends": "Berakhir",
+    "create": "Buat cycle",
+    "saveFailed": "Gagal menyimpan cycle"
+  },
+  "weeks": "{count, plural, one {# minggu} other {# minggu}}",
+  "transfer": {
+    "title": "Pindahkan issue belum selesai",
+    "description": "Issue yang belum selesai berpindah ke cycle yang Anda pilih. Issue yang sudah selesai dan dibatalkan tetap di sini.",
+    "moveTo": "Pindahkan ke",
+    "noCycle": "Tanpa cycle",
+    "submit": "Pindahkan issue",
+    "moving": "Memindahkan…",
+    "moved": "{count, plural, one {# issue dipindahkan} other {# issue dipindahkan}}",
+    "failed": "Gagal memindahkan issue"
+  },
+  "finish": {
+    "action": "Selesaikan cycle",
+    "title": "Selesaikan cycle lebih awal",
+    "description": "{cycle} ditutup hari ini bukan {date}. Anda tidak dapat membukanya kembali. {count, plural, =0 {Tidak ada yang belum selesai.} one {# issue belum selesai tetap ada di dalamnya.} other {# issue belum selesai tetap ada di dalamnya.}}",
+    "submit": "Selesaikan cycle"
+  },
+  "startNext": {
+    "action": "Mulai cycle berikutnya hari ini",
+    "title": "Mulai cycle berikutnya hari ini",
+    "description": "{cycle} ditutup hari ini dan Anda tidak dapat membukanya kembali. {next} dimulai hari ini dan tetap berakhir pada {date}. {count, plural, =0 {Tidak ada yang dialihkan.} one {# issue belum selesai dipindahkan ke sana.} other {# issue belum selesai dipindahkan ke sana.}} Issue yang selesai dan dibatalkan tetap berada di {cycle}.",
+    "submit": "Mulai cycle berikutnya",
+    "started": "{cycle} dimulai. {count, plural, =0 {Tidak ada issue yang dialihkan.} one {# issue dialihkan.} other {# issue dialihkan.}}"
+  },
+  "delete": {
+    "title": "Hapus cycle",
+    "description": "{cycle} dihapus secara permanen. {count, plural, =0 {Tidak ada issue di dalamnya.} one {# issue tetap berada di proyek tanpa cycle.} other {# issue tetap berada di proyek tanpa cycle.}}"
+  },
+  "details": "Detail cycle",
+  "goal": "Sasaran",
+  "noGoal": "Sasaran belum diatur.",
+  "progress": "Kemajuan",
+  "openCycle": "Buka cycle",
+  "dragFailed": "Gagal memindahkan cycle",
+  "notFound": "Cycle tidak ditemukan.",
+  "defaultName": "Sprint {n}",
+  "issuesDone": "Issue selesai"
+}

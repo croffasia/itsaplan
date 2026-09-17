@@ -1,7 +1,16 @@
-import { db, notificationDelivery, issue, issueActivity, project, user } from '@repo/db';
+import {
+  db,
+  notificationDelivery,
+  issue,
+  issueActivity,
+  project,
+  user,
+  emailSource,
+  getProjectEmailConfig,
+  type DeliveryPayload,
+} from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
-import { getProjectEmailConfig } from '@repo/auth';
-import { emailSource, readRedactedSettings } from '#modules/notification-settings/service';
+import { readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
 import { escapeHtml } from '#shared/lib';
@@ -19,20 +28,6 @@ import type { NotificationType, NewNotificationRow } from './service';
 //
 // This is best-effort: enqueue never throws into the caller (a failure here must not
 // break creating a comment or updating an issue), so callers wrap it in try/catch.
-
-// The stored message. `subject`/`html` are channel-specific: email uses `subject`
-// and builds its own HTML from `text`; Telegram sends `html` (parse_mode HTML) and
-// falls back to `text`. The sender appends `url` to plain-text bodies.
-export interface DeliveryPayload {
-  subject?: string;
-  text: string;
-  html?: string;
-  url?: string;
-  emailSource?: 'project' | 'instance';
-  idempotencyKey?: string;
-  dedupeKey?: string;
-  projectInviteId?: number;
-}
 
 interface OutboxRow {
   projectId: number;

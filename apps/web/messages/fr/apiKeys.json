@@ -7,12 +7,17 @@
   "empty": "Aucune clé d'API pour l'instant. Créez-en une pour authentifier vos requêtes à l'API.",
   "fallbackName": "Clé d'API",
   "createdAt": "Créée {date}",
+  "expiresAt": "Expire {date}",
+  "noExpiry": "N'expire pas",
   "deleteAction": "Supprimer la clé d'API",
   "createDialog": {
     "title": "Créer une clé d'API",
     "nameLabel": "Nom",
     "namePlaceholder": "ex. pipeline CI",
     "nameHint": "Un libellé pour reconnaître cette clé plus tard.",
+    "expiryLabel": "Expire dans",
+    "expiresInDays": "{days} jours",
+    "expiryHint": "La clé cesse de fonctionner ce jour-là. Créez-en une nouvelle pour continuer.",
     "submit": "Créer la clé",
     "submitPending": "Création…",
     "error": "Impossible de créer la clé d'API."

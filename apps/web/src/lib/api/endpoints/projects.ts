@@ -46,6 +46,10 @@ export interface Project {
   // Independent of the time estimate.
   timeLoggingEnabled: boolean;
   createdAt: string;
+  // Latest work-item activity or comment, present on the project list response.
+  lastActivityAt?: string | null;
+  isFavorite?: boolean;
+  isHidden?: boolean;
   // The caller's role in this project. Only present on the /projects list
   // response; absent on the create/copy responses.
   role?: MemberRole;
@@ -112,6 +116,14 @@ export interface ProjectDefaults {
 
 export const listProjects = () => request<Project[]>('/projects');
 
+export type ProjectPreferencePatch = { isFavorite?: boolean; isHidden?: boolean };
+
+export const updateProjectPreferences = (projectKey: string, patch: ProjectPreferencePatch) =>
+  request<{ isFavorite: boolean; isHidden: boolean }>(`/projects/${projectKey}/preferences`, {
+    method: 'PATCH',
+    body: JSON.stringify(patch),
+  });
+
 export const createProject = (input: {
   key: string;
   name: string;
@@ -124,8 +136,8 @@ export const updateProject = (projectKey: string, patch: { name?: string; descri
   request<Project>(`/projects/${projectKey}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
 // The board scaffold (no issues). The issues come from getBoardIssues.
-export const getProject = (projectKey: string) =>
-  request<ProjectScaffold>(`/projects/${projectKey}`);
+export const getProject = (projectKey: string, signal?: AbortSignal) =>
+  request<ProjectScaffold>(`/projects/${encodeURIComponent(projectKey)}`, { signal });
 
 // The board's issues and their relations.
 export const getBoardIssues = (projectKey: string) =>

@@ -1,5 +1,6 @@
 import { db, label, labelGroup } from '@repo/db';
 import { and, eq } from 'drizzle-orm';
+import { HttpError } from '#shared/lib';
 
 // Data access for labels and label groups. Both belong to one project. A label
 // has at most one group; deleting a group ungroups its labels (group_id → SET
@@ -35,12 +36,24 @@ export async function listLabels(projectId: number): Promise<LabelRow[]> {
   return rows.map(mapLabel);
 }
 
+// Enforces that the group belongs to the label's project — the label.group_id
+// foreign key only requires the group to exist somewhere. Throws 400 otherwise.
+async function assertLabelGroup(projectId: number, groupId?: number | null): Promise<void> {
+  if (groupId == null) return;
+  const rows = await db
+    .select({ id: labelGroup.id })
+    .from(labelGroup)
+    .where(and(eq(labelGroup.id, groupId), eq(labelGroup.projectId, projectId)));
+  if (rows.length === 0) throw new HttpError(400, 'Label group must belong to this project');
+}
+
 export async function createLabel(input: {
   projectId: number;
   name: string;
   color?: string;
   groupId?: number | null;
 }): Promise<LabelRow> {
+  await assertLabelGroup(input.projectId, input.groupId);
   const [row] = await db
     .insert(label)
     .values({
@@ -60,6 +73,7 @@ export async function updateLabel(
   projectId: number,
   patch: { name?: string; color?: string; groupId?: number | null },
 ): Promise<LabelRow | null> {
+  await assertLabelGroup(projectId, patch.groupId);
   const scope = and(eq(label.id, id), eq(label.projectId, projectId));
   const set: Partial<typeof label.$inferInsert> = {};
   if (patch.name !== undefined) set.name = patch.name;

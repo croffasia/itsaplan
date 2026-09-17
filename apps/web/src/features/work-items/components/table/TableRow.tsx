@@ -11,6 +11,7 @@ import IssueContextMenu from '@/features/issue/components/actions/IssueContextMe
 import { DropLine } from '../shared/DropLine';
 import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
+import { useSubtaskFold } from '../../context/useSubtasks';
 import { columnKey, type OrderedColumn } from '../../utils/table';
 import { TableBuiltinCell } from './TableBuiltinCell';
 import { TableCustomCell } from './TableCustomCell';
@@ -56,6 +57,7 @@ export function TableRow({
   // a row (see the `sm:touch-none` below), and without work_items edit (reordering
   // is an issue edit).
   const { can } = usePermissions();
+  const subtasks = useSubtaskFold();
   const {
     setNodeRef: dragRef,
     attributes,
@@ -109,7 +111,12 @@ export function TableRow({
           <span dir="auto" className="truncate text-foreground">
             {issue.title}
           </span>
-          <SubtaskProgress issueId={issue.id} maps={maps} />
+          <SubtaskProgress
+            issueId={issue.id}
+            maps={maps}
+            open={subtasks.open}
+            onToggle={subtasks.toggle}
+          />
         </div>
 
         {orderedColumns.map((c) =>
@@ -120,7 +127,9 @@ export function TableRow({
           ),
         )}
 
-        <TableRowSubtasks issueId={issue.id} maps={maps} onOpenIssue={onOpenIssue} />
+        {subtasks.open && (
+          <TableRowSubtasks issueId={issue.id} maps={maps} onOpenIssue={onOpenIssue} />
+        )}
         <TableRowLinks links={issue.links} maps={maps} onOpenIssue={onOpenIssue} />
       </div>
     </IssueContextMenu>

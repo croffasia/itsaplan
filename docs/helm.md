@@ -23,7 +23,6 @@ secrets:
   postgresPassword: ""    # openssl rand -base64 32
   betterAuthSecret: ""    # openssl rand -base64 32
   appEncryptionKey: ""    # openssl rand -base64 32
-  workerInternalToken: "" # openssl rand -base64 32
   s3AccessKeyId: "minioadmin"
   s3SecretAccessKey: "minioadmin"
 ```

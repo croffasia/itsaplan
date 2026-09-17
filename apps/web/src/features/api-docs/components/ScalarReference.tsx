@@ -19,6 +19,10 @@ export default function ScalarReference({ dark }: { dark: boolean }) {
           url: SPEC_URL,
           forceDarkModeState: dark ? 'dark' : 'light',
           hideDarkModeToggle: true,
+          // Scalar's default fonts are loaded from fonts.scalar.com, which the
+          // Content-Security-Policy blocks. The theme maps --scalar-font to the app
+          // font anyway, so its own faces are not needed.
+          withDefaultFonts: false,
           agent: { disabled: true },
           // The app already exposes its own MCP server; hide Scalar's built-in
           // "Generate MCP" button.

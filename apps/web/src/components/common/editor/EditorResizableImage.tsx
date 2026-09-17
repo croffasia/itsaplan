@@ -6,12 +6,14 @@ import {
 } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { cn } from '@/lib/utils';
+import { allowedImageStyle } from '@/utils/imageStyle';
 
 // Below this an image is too small to grab again.
 const MIN_WIDTH = 60;
 
 // The node's `style` attribute holds raw CSS text; React takes the parsed form.
-function styleObject(css: string | null): CSSProperties {
+function styleObject(style: string | null): CSSProperties {
+  const css = allowedImageStyle(style);
   if (!css) return {};
   return Object.fromEntries(
     css.split(';').flatMap((declaration) => {

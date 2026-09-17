@@ -7,12 +7,17 @@
   "empty": "API-ключів ще немає. Створіть ключ, щоб автентифікувати запити до API.",
   "fallbackName": "API-ключ",
   "createdAt": "Створено {date}",
+  "expiresAt": "Діє до {date}",
+  "noExpiry": "Безстроковий",
   "deleteAction": "Видалити API-ключ",
   "createDialog": {
     "title": "Створити API-ключ",
     "nameLabel": "Назва",
     "namePlaceholder": "напр. CI pipeline",
     "nameHint": "Підпис, за яким ви впізнаєте цей ключ згодом.",
+    "expiryLabel": "Термін дії",
+    "expiresInDays": "{days} днів",
+    "expiryHint": "Того дня ключ перестане працювати. Щоб продовжити, створіть новий.",
     "submit": "Створити ключ",
     "submitPending": "Створення…",
     "error": "Не вдалося створити API-ключ."

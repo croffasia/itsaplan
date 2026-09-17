@@ -1,0 +1,53 @@
+{
+  "add": "Tambah filter",
+  "remove": "Hapus filter",
+  "valuePlaceholder": "nilai",
+  "noOptions": "Tidak ada opsi",
+  "selected": "{count} dipilih",
+  "operators": {
+    "is": "adalah",
+    "is_not": "bukan",
+    "before": "sebelum",
+    "after": "setelah",
+    "is_set": "diatur",
+    "is_not_set": "tidak diatur",
+    "contains": "berisi",
+    "not_contains": "tidak berisi"
+  },
+  "boolean": {
+    "true": "Benar",
+    "false": "Salah"
+  },
+  "cycleStatus": {
+    "active": "Cycle aktif",
+    "upcoming": "Cycle mendatang"
+  },
+  "initiativeStatus": {
+    "active": "Inisiatif aktif",
+    "planned": "Inisiatif terencana",
+    "proposed": "Inisiatif yang diusulkan"
+  },
+  "fields": {
+    "status": "Status",
+    "statusType": "Tipe status",
+    "assignee": "Penerima tugas",
+    "delegate": "Delegasi",
+    "priority": "Prioritas",
+    "type": "Tipe",
+    "initiative": "Inisiatif",
+    "cycle": "Cycle",
+    "labels": "Label",
+    "dueDate": "Tenggat waktu",
+    "startDate": "Tanggal mulai",
+    "created": "Dibuat",
+    "updated": "Diperbarui"
+  },
+  "unset": {
+    "assignee": "Tanpa penerima tugas",
+    "delegate": "Tanpa delegasi",
+    "type": "Tanpa tipe",
+    "initiative": "Tanpa inisiatif",
+    "cycle": "Tanpa cycle",
+    "member": "Tanpa nilai"
+  }
+}

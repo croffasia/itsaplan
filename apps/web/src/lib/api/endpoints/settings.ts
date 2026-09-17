@@ -64,9 +64,10 @@ export type StorageSettingsPatch = Partial<StorageSettings>;
 // command left out keeps the binding from the layer below.
 export type HotkeyOverrides = Record<string, string>;
 
-// What the sign-in and sign-up screens read before there is a session. magicLink,
-// requireEmailVerification and google are already resolved against their provider by
-// the API, so a screen can trust them without checking the credentials itself.
+// What the sign-in and sign-up screens read before there is a session. magicLink and
+// google are already resolved against their provider by the API, and
+// requireEmailVerification is cleared when the mail provider is removed, so a screen
+// can trust them without checking the credentials itself.
 export interface PublicAuthConfig {
   registration: RegistrationMode;
   magicLink: boolean;
@@ -80,6 +81,7 @@ export interface PublicAuthConfig {
   // The sign-in button text the operator gave their identity provider. Empty when
   // OIDC is not offered, or when they left it blank.
   oidcLabel: string;
+  hasUsers: boolean;
 }
 
 // Project settings: MCP reachability and the enabled sections. Owner-only; the

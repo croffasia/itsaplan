@@ -8,6 +8,7 @@ import { useProjectsQuery } from '@/services/projects.service';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { startPagePath, projectPath } from '@/utils/paths';
 import NewProjectModal from '@/components/layout/NewProjectModal';
+import ProjectSwitcherHiddenState from '@/components/layout/ProjectSwitcherHiddenState';
 import { Button } from '@/components/ui/button';
 import {
   Empty,
@@ -19,7 +20,7 @@ import {
 } from '@/components/ui/empty';
 
 // The index route: reopen the last-used project if it still exists, otherwise the
-// first project, on the section the user picked as their start page. Waits for both
+// first visible favorite or project, on the user's preferred start page. Waits for both
 // the project list and the preferences before deciding so it does not flash the
 // wrong destination. With no projects at all, offers to create the first one.
 export default function Home() {
@@ -32,12 +33,16 @@ export default function Home() {
 
   useEffect(() => {
     if (projects == null || projects.length === 0 || prefsPending) return;
-    // The remembered project only counts while the user still has access to it: the
-    // list holds their projects only, so a deleted or revoked one falls to the first.
-    const last = projects.find((p) => p.id === prefs?.lastProjectId);
-    const target = last?.key ?? projects[0]?.key;
+    const visible = projects.filter((project) => !project.isHidden);
+    if (visible.length === 0) return;
+    const last = visible.find((p) => p.id === prefs?.lastProjectId);
+    const target = last?.key ?? visible.find((p) => p.isFavorite)?.key ?? visible[0]?.key;
     if (target) router.replace(startPagePath(target, prefs?.startPage ?? 'work-items'));
   }, [projects, prefs, prefsPending, router]);
+
+  if (projects && projects.length > 0 && projects.every((project) => project.isHidden)) {
+    return <ProjectSwitcherHiddenState projects={projects} />;
+  }
 
   // No projects yet: the Shell (which owns the New project modal) never mounts
   // without a project, so the empty state offers project creation directly.

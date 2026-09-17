@@ -45,6 +45,10 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
+      # High and critical advisories fail the job; moderate and lower only print.
+      - name: Audit dependencies
+        run: bun audit --audit-level=high
+
       - name: Script tests
         run: bun test scripts/
 

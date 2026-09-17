@@ -7,12 +7,17 @@
   "empty": "No API keys yet. Create one to authenticate requests to the API.",
   "fallbackName": "API key",
   "createdAt": "Created {date}",
+  "expiresAt": "Expires {date}",
+  "noExpiry": "Does not expire",
   "deleteAction": "Delete API key",
   "createDialog": {
     "title": "Create API key",
     "nameLabel": "Name",
     "namePlaceholder": "e.g. CI pipeline",
     "nameHint": "A label to recognize this key later.",
+    "expiryLabel": "Expires in",
+    "expiresInDays": "{days} days",
+    "expiryHint": "The key stops working on that day. Create a new one to keep going.",
     "submit": "Create key",
     "submitPending": "Creating…",
     "error": "Could not create API key."

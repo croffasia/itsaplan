@@ -1,0 +1,23 @@
+{
+  "editAction": "Ubah proyek",
+  "copyAction": "Salin proyek",
+  "deleteAction": "Hapus proyek",
+  "leaveAction": "Tinggalkan proyek",
+  "deleteDialog": {
+    "title": "Hapus {name}?",
+    "confirm": "Hapus secara permanen",
+    "description": "Tindakan ini menghapus <strong>{name}</strong> dan semua yang ada di dalamnya secara permanen: issue, komentar, lampiran, dan pengaturan. Tindakan ini tidak dapat dibatalkan.",
+    "typeToConfirm": "Ketik <code>{key}</code> untuk mengonfirmasi."
+  },
+  "leaveDialog": {
+    "title": "Tinggalkan {name}?",
+    "confirm": "Tinggalkan proyek",
+    "description": "Anda akan kehilangan akses ke <strong>{name}</strong> dan item pekerjaannya. Untuk bergabung kembali, Anda memerlukan undangan baru dari pemilik."
+  },
+  "editDialog": {
+    "title": "Ubah proyek",
+    "name": "Nama",
+    "description": "Deskripsi",
+    "submit": "Simpan"
+  }
+}

@@ -1,6 +1,6 @@
 import { lookup } from 'node:dns/promises';
 import { request as httpRequest } from 'node:http';
-import type { LookupFunction } from 'node:net';
+import { isIP, type LookupFunction } from 'node:net';
 import { request as httpsRequest } from 'node:https';
 
 // SSRF guards for server-side fetches of a user/agent-supplied URL. A URL that
@@ -30,9 +30,9 @@ function isLocalHostname(host: string): boolean {
 //
 // Empty by default, so nothing is exempt unless it is named. Matching is on the exact
 // hostname — no wildcards, no CIDR ranges, no suffix matching — so naming one host
-// trusts one host. A named host is also reachable over http, since an internal service
-// rarely terminates TLS. The resolved address is still pinned, so a name on this list
-// cannot be used to mount a DNS-rebinding attack.
+// trusts one host. Everything else still applies to it: https is still required, and
+// the resolved address is still pinned, so a name on this list cannot be used to
+// mount a DNS-rebinding attack either.
 //
 // Read per call rather than at module load so a test can set it around one case.
 function isAllowedHost(host: string): boolean {
@@ -88,23 +88,49 @@ interface Pin {
   family: number;
 }
 
-// http is allowed only in local development; production and tests require https.
-function isDevRelaxed(): boolean {
-  return process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+interface UrlPolicy {
+  // Public content never uses development or configured private-host exceptions.
+  publicOnly?: boolean;
+  signal?: AbortSignal;
+}
+
+function isNonPublicIp(ip: string): boolean {
+  const normalized = toIpv4(ip.toLowerCase());
+  if (isPrivateIp(normalized)) return true;
+  if (isIP(normalized) === 4) {
+    const [a, b, c] = normalized.split('.').map(Number);
+    return (
+      a! >= 224 ||
+      (a === 192 && b === 0) ||
+      (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) ||
+      (a === 203 && b === 0 && c === 113)
+    );
+  }
+  return (
+    !/^[23][0-9a-f]{3}:/.test(normalized) ||
+    (normalized.startsWith('2001:') && parseInt(normalized.split(':')[1] || '0', 16) < 0x200) ||
+    normalized.startsWith('2001:db8:') ||
+    normalized.startsWith('3fff:') ||
+    normalized.startsWith('2002:')
+  );
 }
 
 interface Checked {
   url: URL;
   host: string;
   allowed: boolean;
+  devRelaxed: boolean;
+  blockedIp: (ip: string) => boolean;
   // The host is an IP literal or an inherently local name, so there is nothing to
   // resolve.
   literal: boolean;
 }
 
-// The checks that need no DNS lookup: the URL parses, uses https, and a literal or
-// inherently local host is not private unless SSRF_ALLOWED_HOSTS names it.
-function check(raw: string): Checked {
+// The checks that need no DNS lookup: the URL parses, uses a scheme the policy
+// permits, and a literal or inherently local host is not private unless it is
+// excused. Split out of vet so a URL that is stored now and fetched later can be
+// refused at the point it is entered.
+function check(raw: string, policy: UrlPolicy = {}): Checked {
   let url: URL;
   try {
     url = new URL(raw);
@@ -113,54 +139,82 @@ function check(raw: string): Checked {
   }
 
   const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  const allowed = isAllowedHost(host);
-  const devRelaxed = isDevRelaxed();
-  // A named host is reachable over http as well: it is normally an internal service
-  // that terminates no TLS — a model server, a Gitea on the same network — and
-  // requiring a certificate from it would leave no way to name it at all. Every other
-  // scheme is refused for it too, and what travels there travels in the clear.
-  if (url.protocol !== 'https:' && !((devRelaxed || allowed) && url.protocol === 'http:')) {
+  const allowed = !policy.publicOnly && isAllowedHost(host);
+  const devRelaxed =
+    !policy.publicOnly && process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  // A host named in SSRF_ALLOWED_HOSTS is reachable over http as well: it is normally
+  // an internal service that terminates no TLS — a model server, a Gitea on the same
+  // network — and requiring a certificate from it would leave no way to name it at
+  // all. Every other scheme is refused for it too, and what travels there travels in
+  // the clear. publicOnly never consults that list, so this cannot widen it.
+  if (
+    url.protocol !== 'https:' &&
+    !((devRelaxed || policy.publicOnly || allowed) && url.protocol === 'http:')
+  ) {
     throw new UrlNotAllowedError('url must use https');
   }
+  if (policy.publicOnly && (url.username || url.password)) {
+    throw new UrlNotAllowedError('url must not include credentials');
+  }
 
-  const literal = isLocalHostname(host) || isPrivateIp(host);
+  const blockedIp = policy.publicOnly ? isNonPublicIp : isPrivateIp;
+  const literal = isLocalHostname(host) || (isIP(host) !== 0 && blockedIp(host));
   if (literal && !devRelaxed && !allowed) {
     throw new UrlNotAllowedError('url must not point to a private or local address');
   }
-  return { url, host, allowed, literal };
+  return { url, host, allowed, devRelaxed, blockedIp, literal };
+}
+
+// The synchronous subset of assertPublicHttpUrl, for a URL that is stored now and
+// fetched later: a permitted scheme, and a literal or local host must not be private.
+// It does not resolve the hostname, so the fetch itself still has to go through
+// pinnedFetch or assertPublicHttpUrl. Throws UrlNotAllowedError on any failure.
+export function checkHttpUrl(raw: string, policy?: UrlPolicy): URL {
+  return check(raw, policy).url;
 }
 
 // Validates the URL and resolves its hostname once. `pin` is the address the caller
 // must connect to; it is absent only when the host is already an IP literal.
-async function vet(raw: string): Promise<{ url: URL; pin?: Pin }> {
-  const { url, host, allowed, literal } = check(raw);
+async function vet(raw: string, policy: UrlPolicy = {}): Promise<{ url: URL; pin?: Pin }> {
+  policy.signal?.throwIfAborted();
+  const { url, host, allowed, devRelaxed, blockedIp, literal } = check(raw, policy);
   if (literal) return { url };
 
   let addrs: Pin[];
+  let abort: (() => void) | undefined;
   try {
-    addrs = await lookup(host, { all: true });
+    const resolution = lookup(host, { all: true });
+    if (policy.signal) {
+      const signal = policy.signal;
+      addrs = await Promise.race([
+        resolution,
+        new Promise<never>((_resolve, reject) => {
+          abort = () => reject(signal.reason);
+          signal.addEventListener('abort', abort, { once: true });
+          if (signal.aborted) abort();
+        }),
+      ]);
+    } else {
+      addrs = await resolution;
+    }
   } catch {
+    policy.signal?.throwIfAborted();
     throw new UrlNotAllowedError('url host could not be resolved');
+  } finally {
+    if (abort) policy.signal?.removeEventListener('abort', abort);
   }
-  if (addrs.some((a) => isPrivateIp(a.address)) && !isDevRelaxed() && !allowed) {
+  if ((!addrs.length || addrs.some((a) => blockedIp(a.address))) && !devRelaxed && !allowed) {
     throw new UrlNotAllowedError('url must not point to a private or local address');
   }
   return { url, pin: addrs[0] };
 }
 
-// The synchronous subset of assertPublicHttpUrl, for a URL that is stored now and
-// fetched later: http(s) only, and a literal or local host must not be private. It
-// does not resolve the hostname, so the fetch itself still has to go through
-// pinnedFetch or assertPublicHttpUrl. Throws UrlNotAllowedError on any failure.
-export function checkHttpUrl(raw: string): URL {
-  return check(raw).url;
-}
-
 // Validates a user/agent-supplied URL for a server-side fetch: http(s) only, and it
-// must not resolve to a local/private address. Returns the parsed URL. Throws
-// UrlNotAllowedError on any failure.
-export async function assertPublicHttpUrl(raw: string): Promise<URL> {
-  return (await vet(raw)).url;
+// must not resolve to a local/private address. Returns the parsed URL. http is
+// allowed in local development or under the public-only policy. Throws
+// UrlNotAllowedError when the URL or its resolved addresses are refused.
+export async function assertPublicHttpUrl(raw: string, policy?: UrlPolicy): Promise<URL> {
+  return (await vet(raw, policy)).url;
 }
 
 // node's http client sends no User-Agent of its own, and GitHub answers 403 with an
@@ -168,11 +222,14 @@ export async function assertPublicHttpUrl(raw: string): Promise<URL> {
 // one, so callers never had to.
 const DEFAULT_USER_AGENT = 'itsaplan/1';
 
-export interface PinnedRequestInit {
+export interface PinnedRequestInit extends UrlPolicy {
   method?: string;
   headers?: Record<string, string> | Headers;
   body?: string | Buffer;
   timeoutMs?: number;
+  maxBytes?: number;
+  // Keep a document prefix for metadata; binary downloads must reject oversized bodies.
+  truncateBody?: boolean;
 }
 
 // Validates the URL, then connects to the address that validation resolved instead of
@@ -182,7 +239,8 @@ export interface PinnedRequestInit {
 // certificate check. Redirects are never followed: the 3xx is returned as-is, so a
 // caller cannot be steered to an address that was never validated.
 export async function pinnedFetch(raw: string, init: PinnedRequestInit = {}): Promise<Response> {
-  const { url, pin } = await vet(raw);
+  const { url, pin } = await vet(raw, init);
+  init.signal?.throwIfAborted();
   const send = url.protocol === 'https:' ? httpsRequest : httpRequest;
   const headers =
     init.headers instanceof Headers
@@ -209,12 +267,14 @@ export async function pinnedFetch(raw: string, init: PinnedRequestInit = {}): Pr
       },
       (res) => {
         const chunks: Buffer[] = [];
-        res.on('data', (chunk: Buffer) => chunks.push(chunk));
-        res.on('error', reject);
-        res.on('end', () => {
+        let bytes = 0;
+        const complete = () => {
           const status = res.statusCode ?? 502;
-          // Response rejects a body on these statuses; the receiver sent none anyway.
-          const empty = status < 200 || status === 204 || status === 205 || status === 304;
+          if (status < 200 || status > 599) {
+            reject(new Error('response has an invalid HTTP status'));
+            return;
+          }
+          const empty = status === 204 || status === 205 || status === 304;
           resolve(
             new Response(empty ? null : Buffer.concat(chunks), {
               status,
@@ -223,10 +283,33 @@ export async function pinnedFetch(raw: string, init: PinnedRequestInit = {}): Pr
               ),
             }),
           );
+        };
+        res.on('data', (chunk: Buffer) => {
+          if (init.maxBytes !== undefined && bytes + chunk.length > init.maxBytes) {
+            if (init.truncateBody) {
+              chunks.push(chunk.subarray(0, init.maxBytes - bytes));
+              complete();
+              res.destroy();
+              req.destroy();
+              return;
+            }
+            const error = new Error('response exceeds the byte limit');
+            res.destroy(error);
+            req.destroy(error);
+            return;
+          }
+          bytes += chunk.length;
+          chunks.push(chunk);
         });
+        res.on('error', reject);
+        res.on('end', complete);
       },
     );
     req.on('error', reject);
+    const abort = () => req.destroy(new Error('request aborted'));
+    init.signal?.addEventListener('abort', abort, { once: true });
+    req.on('close', () => init.signal?.removeEventListener('abort', abort));
+    if (init.signal?.aborted) abort();
     if (init.timeoutMs) {
       req.setTimeout(init.timeoutMs, () => req.destroy(new Error('request timed out')));
     }

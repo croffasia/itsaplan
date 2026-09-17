@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { type Editor } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import {
@@ -77,8 +78,10 @@ const ITEMS: {
 export default function EditorSelectionMenu({
   editor,
   placement = 'top',
+  children,
 }: {
   editor: Editor;
+  children?: ReactNode;
   // Above the selection by default. A field with a label right over it passes
   // "bottom" so the menu does not cover the label.
   placement?: 'top' | 'bottom';
@@ -88,7 +91,7 @@ export default function EditorSelectionMenu({
     <BubbleMenu
       editor={editor}
       options={{ placement }}
-      className="flex items-center gap-0.5 rounded-md border bg-popover p-1 shadow-md"
+      className="flex max-w-[calc(100vw-2rem)] flex-wrap items-center gap-0.5 rounded-md border bg-popover p-1 shadow-md"
     >
       {ITEMS.map((item) => (
         <EditorToolbarButton
@@ -99,6 +102,7 @@ export default function EditorSelectionMenu({
           <item.icon />
         </EditorToolbarButton>
       ))}
+      {children}
     </BubbleMenu>
   );
 }

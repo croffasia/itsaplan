@@ -20,6 +20,18 @@ name: itsaplan-test
 services:
   postgres-test:
     image: postgres:17-alpine
+    # Frequent TRUNCATEs retain relation files until a checkpoint; keep the
+    # disposable database below the small tmpfs limit of CI runners.
+    command:
+      [
+        'postgres',
+        '-c',
+        'checkpoint_timeout=30s',
+        '-c',
+        'max_wal_size=128MB',
+        '-c',
+        'min_wal_size=32MB',
+      ]
     environment:
       POSTGRES_USER: itsaplan
       POSTGRES_PASSWORD: itsaplan
@@ -37,7 +49,7 @@ services:
   # Throwaway MinIO for the attachments feature test (object bytes). Ephemeral:
   # /data is tmpfs, wiped when the run ends.
   minio-test:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     command: server /data
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -47,7 +59,7 @@ services:
 
   # One-shot: waits for MinIO, creates the attachments bucket, then exits.
   minio-test-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     depends_on:
       - minio-test
     entrypoint: >
@@ -62,8 +74,11 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
       # Empty install flags so the image keeps devDeps the test suite needs
-      # (@elysiajs/eden); production builds default to --production.
+      # (@elysiajs/eden); production builds default to --production. The bot and
+      # worker suites run out of this image too, so their workspaces are installed
+      # as well — the production image keeps only api's closure.
       args:
+        INSTALL_FILTER: '--filter api --filter bot --filter worker'
         INSTALL_FLAGS: ''
     depends_on:
       postgres-test:
@@ -85,9 +100,9 @@ services:
       S3_BUCKET: planner-attachments
       S3_ACCESS_KEY_ID: minioadmin
       S3_SECRET_ACCESS_KEY: minioadmin
-    # Migrate the throwaway DB, then run the api suite. bun test discovers
-    # src/**/*.test.ts; env above satisfies the resetDb() guard.
-    command: sh -c "bun run packages/db/src/migrate.ts && cd apps/api && bun test"
+    # Migrate the throwaway DB, then run the api, bot and worker suites. bun test
+    # discovers src/**/*.test.ts; env above satisfies the resetDb() guard.
+    command: sh -c "bun run packages/db/src/migrate.ts && cd apps/api && bun test && cd ../bot && bun test && cd ../worker && bun test"
 
   # Webhook delivery worker, built from the same image as production, so the test
   # gate also verifies the worker image builds and boots. It idles here (no events

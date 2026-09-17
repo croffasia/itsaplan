@@ -39,8 +39,8 @@ service through raw request volume.
 
 An instance is only as safe as its configuration:
 
-- Generate `BETTER_AUTH_SECRET`, `APP_ENCRYPTION_KEY`, and `WORKER_INTERNAL_TOKEN` with
-  `openssl rand -base64 32`. Never reuse the example values.
+- Generate `BETTER_AUTH_SECRET` and `APP_ENCRYPTION_KEY` with `openssl rand -base64 32`.
+  Never reuse the example values.
 - `APP_ENCRYPTION_KEY` encrypts stored provider credentials at rest. Losing it makes
   those credentials undecryptable, changing it has the same effect.
 - Serve the app over HTTPS. Cookies are marked `secure` in production.

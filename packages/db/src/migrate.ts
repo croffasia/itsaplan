@@ -1,6 +1,7 @@
 // Programmatic migration runner — used on api container startup
 // (drizzle-kit is not needed in production, only the generated SQL in ./drizzle).
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
@@ -20,7 +21,7 @@ if (!connectionString) {
 const migrationClient = postgres(connectionString, { max: 1 });
 const db = drizzle(migrationClient);
 
-const migrationsFolder = new URL('../drizzle', import.meta.url).pathname;
+const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url));
 
 // Compose orders the api behind a healthy postgres, but a platform without that
 // guarantee (Railway, plain `docker run`) starts both at once and the first

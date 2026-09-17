@@ -5,13 +5,8 @@ import { HttpError } from '#shared/lib';
 import { errors } from '#shared/responses';
 import { noContent } from '#shared/http';
 import { TelegramAccountResponse, TelegramLinkStartResponse } from './model';
-import {
-  getInstanceBotConfig,
-  getTelegramLink,
-  isInstanceBotUsable,
-  startTelegramLink,
-  unlinkTelegram,
-} from './service';
+import { getInstanceBotConfig, isInstanceBotUsable } from '@repo/db';
+import { getTelegramLink, startTelegramLink, unlinkTelegram } from './service';
 
 // The session user's own Telegram account link. Linking runs through the instance
 // bot: this mints a one-time code and returns the deep link that opens the bot with

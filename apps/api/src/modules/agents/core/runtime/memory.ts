@@ -128,11 +128,10 @@ export async function deleteChatThread(threadId: string, resourceId: string): Pr
   return true;
 }
 
-// Deletes every thread bound to the given agent, project, issue or schedule, with its
+// Deletes every thread bound to the given agent, project or schedule, with its
 // messages, and returns how many were deleted. Called when that binding goes away.
 export async function deleteThreadsWhere(
-  binding:
-    { agentId: number } | { projectId: number } | { issueId: number } | { scheduleId: number },
+  binding: { agentId: number } | { projectId: number } | { scheduleId: number },
 ): Promise<number> {
   const memory = getReadMemory();
   const { threads } = await memory.listThreads({ filter: { metadata: binding }, perPage: false });

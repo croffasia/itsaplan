@@ -1,0 +1,37 @@
+{
+  "title": "Bandeja de entrada",
+  "empty": "No hay notificaciones",
+  "selectNotification": "Selecciona una notificación",
+  "backToList": "Bandeja de entrada",
+  "filter": "Filtrar",
+  "display": "Visualización",
+  "notificationType": "Tipo de notificación",
+  "showRead": "Mostrar leídas",
+  "showSnoozed": "Mostrar pospuestas",
+  "markAllRead": "Marcar todas como leídas",
+  "deleteAllRead": "Eliminar todas las leídas",
+  "deleteAllReadCompleted": "Eliminar las leídas de tickets completados",
+  "types": {
+    "assigned": "Asignación",
+    "mentioned": "Mención",
+    "commented": "Comentario",
+    "state_changed": "Estado cambiado"
+  },
+  "actions": {
+    "markRead": "Marcar como leída",
+    "markUnread": "Marcar como no leída",
+    "snooze": "Posponer",
+    "unsnooze": "Quitar posposición",
+    "tomorrow": "Mañana",
+    "inAWeek": "En una semana",
+    "pickDate": "Elegir una fecha…"
+  },
+  "event": {
+    "someone": "Alguien",
+    "assigned": "{who} te ha asignado el ticket",
+    "mentioned": "{who} te ha mencionado",
+    "commented": "{who} ha comentado",
+    "stateChanged": "{who} ha cambiado el estado de {from} a {to}",
+    "stateChangedPlain": "{who} ha cambiado el estado"
+  }
+}

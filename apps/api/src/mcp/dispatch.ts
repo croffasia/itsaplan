@@ -2,6 +2,7 @@ import type { McpApp } from './types';
 import type { McpRouteTool } from './generate';
 import { MCP_LOOPBACK_HEADER, setMcpOAuthToken } from '../shared/mcp-request';
 import type { McpCredential } from './credential';
+import { structuredResult, type StructuredResult } from './result';
 
 // Methods that carry a request body; the rest put their arguments in the query.
 
@@ -27,7 +28,7 @@ export async function dispatchTool(
   args: Record<string, unknown>,
   credential: McpCredential,
   opts: { viaMcpEndpoint: boolean },
-): Promise<{ text: string; isError: boolean }> {
+): Promise<{ text: string; isError: boolean; structuredContent: StructuredResult }> {
   const rest: Record<string, unknown> = { ...args };
 
   let path = tool.path;
@@ -63,5 +64,9 @@ export async function dispatchTool(
   if (credential.kind === 'oauth') setMcpOAuthToken(request, credential.accessToken);
   const response = await app.handle(request);
   const text = await response.text();
-  return { text, isError: response.status >= 400 };
+  return {
+    text,
+    isError: response.status >= 400,
+    structuredContent: structuredResult(response, text, tool.method, tool.outputSchema),
+  };
 }

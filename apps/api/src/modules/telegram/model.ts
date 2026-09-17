@@ -15,10 +15,3 @@ export const TelegramLinkStartResponse = t.Object({
   url: t.String(),
   expiresAt: t.String(),
 });
-
-export const confirmLinkBody = t.Object({
-  code: t.String({ minLength: 1, maxLength: 64 }),
-  chatId: t.String({ minLength: 1, maxLength: 128 }),
-  username: t.Nullable(t.String()),
-  firstName: t.Nullable(t.String()),
-});

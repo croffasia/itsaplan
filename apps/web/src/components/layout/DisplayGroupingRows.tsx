@@ -156,6 +156,13 @@ export default function DisplayGroupingRows({
                 />
               </DisplaySettingsRow>
 
+              <DisplaySettingsRow label={t('startSubtasksCollapsed')}>
+                <Checkbox
+                  checked={settings.collapseSubtasks}
+                  onCheckedChange={(c) => onChange({ collapseSubtasks: c === true })}
+                />
+              </DisplaySettingsRow>
+
               {view === 'timeline' && (
                 <DisplaySettingsRow label={t('showNestedSubtasks')}>
                   <Checkbox

@@ -489,7 +489,6 @@ function isFatalWatchError(err: unknown): boolean {
 
 export async function watch(ctx: WatchContext): Promise<void> {
   const state = await loadState(ctx.root);
-  const warned = new Set<string>();
   let last: Record<string, string> = {};
   let projectIds: number[] = [];
   let tick = 0;
@@ -527,14 +526,6 @@ export async function watch(ctx: WatchContext): Promise<void> {
     tick++;
     try {
       const revs = await readDocumentRevs(ctx.get, projectIds);
-      for (const [scope, value] of Object.entries(revs)) {
-        if (value === '0' && !warned.has(scope)) {
-          warned.add(scope);
-          ctx.log(
-            `mirror: ${scope} reads as unchanged forever — the key may not see that project's Docs`,
-          );
-        }
-      }
       const moved = Object.keys(revs).some((scope) => revs[scope] !== last[scope]);
       if (moved || tick % SLOW_PASS_EVERY_TICKS === 0) await pass();
       else last = revs;

@@ -17,6 +17,7 @@ import {
   readDocumentRevs,
   commitIfChanged,
   watch,
+  resolveEndpoint,
   type DocSummary,
   type Get,
 } from '../mirror';
@@ -468,5 +469,43 @@ describe('watch plumbing', () => {
     // /projects is read twice per pass (sync + id refresh): the initial pass and the one the
     // real marker move triggers.
     expect(passes).toBe(4);
+  });
+});
+
+describe('resolveEndpoint', () => {
+  it('prefers the flag, then the environment, then the config file, and strips trailing slashes', async () => {
+    const file = join(root, 'itsaplan-runner.json');
+    await writeFile(
+      file,
+      JSON.stringify({ url: 'http://file/', apiKey: 'k-file', agent: 'claude' }),
+    );
+    const args = parseMirrorArgs(['--config', file]);
+    expect(await resolveEndpoint(args, {})).toEqual({ url: 'http://file', apiKey: 'k-file' });
+    expect(await resolveEndpoint(args, { ITSAPLAN_URL: 'http://env' })).toEqual({
+      url: 'http://env',
+      apiKey: 'k-file',
+    });
+    expect(
+      await resolveEndpoint(
+        { ...args, url: 'http://flag/', key: 'k-flag' },
+        { ITSAPLAN_URL: 'http://env' },
+      ),
+    ).toEqual({
+      url: 'http://flag',
+      apiKey: 'k-flag',
+    });
+  });
+  it('takes the first key of a multi-agent config and refuses a config without one', async () => {
+    const multi = join(root, 'multi.json');
+    await writeFile(
+      multi,
+      JSON.stringify({ url: 'http://h', agents: [{ apiKey: 'k-a' }, { apiKey: 'k-b' }] }),
+    );
+    expect((await resolveEndpoint(parseMirrorArgs(['--config', multi]), {})).apiKey).toBe('k-a');
+    const none = join(root, 'none.json');
+    await writeFile(none, JSON.stringify({ url: 'http://h' }));
+    await expect(resolveEndpoint(parseMirrorArgs(['--config', none]), {})).rejects.toThrow(
+      'apiKey',
+    );
   });
 });

@@ -11,6 +11,7 @@ This package runs such agents on your own machine — one, or several at once.
   Each preset sets the unattended flags and the session resume.
 - Runs your own `command` instead, if you prefer. The command takes the task on stdin.
 - Answers the agent's chat. Sends the text and the tool calls while the CLI prints them.
+- Mirrors Docs, project descriptions and skills to a folder your agent can grep.
 
 ## Quick start
 
@@ -145,6 +146,34 @@ each one a coding agent CLI of its own. The environment variables and the comman
 options describe every agent at once; an entry has priority over them.
 
 An agent whose key the instance refuses stops on its own, and the others keep working.
+
+## Mirror
+
+Keep a local, read-only copy of every project's Docs, its description and the team's skills,
+so an agent can grep them instead of fetching one page at a time.
+
+```bash
+itsaplan-runner mirror --out ./itsaplan-mirror            # one pass
+itsaplan-runner mirror --watch --git                       # keep it current, commit each change
+```
+
+Layout: `<PROJECT>/README.md` (description), `<PROJECT>/docs/<title>.md` with child pages in a
+folder named after the parent, `teams/<team>/skills/<name>.md`. Each file starts with
+frontmatter (`id`, `version`, ...). The url and key come from the same places as the runner
+(`--url`/`--key`, `ITSAPLAN_URL`/`ITSAPLAN_API_KEY`, or the config file).
+
+| Flag            | Default             | What it does                                                                     |
+| --------------- | ------------------- | -------------------------------------------------------------------------------- |
+| `--out DIR`     | `./itsaplan-mirror` | Where the files go                                                               |
+| `--watch`       | off                 | Re-sync when a project's Docs change; descriptions and skills every ~5 minutes   |
+| `--interval MS` | `5000`              | How often `--watch` checks (min 1000)                                            |
+| `--git`         | off                 | Commit each pass in DIR (`git init` if needed)                                   |
+| `--archived`    | off                 | Include archived pages                                                           |
+
+Files are a copy, not a source: edit in Itsaplan (or through the MCP), never here; the next
+pass overwrites local edits. Private pages of other members are not visible to your key and
+are not mirrored. Skills need the `agent_skills: read` team permission; a key without it
+skips them with a warning. Assets and skill reference files are not mirrored.
 
 ## Settings
 

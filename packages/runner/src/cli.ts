@@ -5,6 +5,7 @@ import { answer } from './chat';
 import { Client, RequestError, type ChatMessage, type Run } from './client';
 import { loadConfig, type RunnerConfig } from './config';
 import { execute } from './execute';
+import { runMirror } from './mirror';
 
 // The runner holds no state — the queue is the server's — so stopping it mid-task only
 // means that task's lease expires and another runner picks it up.
@@ -223,7 +224,9 @@ async function serve(state: { stopping: boolean }, config: RunnerConfig): Promis
 }
 
 async function main(): Promise<void> {
-  const cli = parseArgv(process.argv.slice(2));
+  const argv = process.argv.slice(2);
+  if (argv[0] === 'mirror') return runMirror(argv.slice(1));
+  const cli = parseArgv(argv);
   const configPath =
     cli.configPath ?? process.env.ITSAPLAN_RUNNER_CONFIG ?? './itsaplan-runner.json';
   const configs = await loadConfig(configPath, { agent: cli.agent, args: cli.args });

@@ -2,7 +2,10 @@ import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { access, mkdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { promisify } from 'node:util';
+import { Client } from './client';
+import { readConfigFile } from './config';
 
 const run = promisify(execFile);
 
@@ -541,4 +544,81 @@ export async function watch(ctx: WatchContext): Promise<void> {
       await ctx.sleep(ERROR_BACKOFF_MS);
     }
   }
+}
+
+export async function resolveEndpoint(
+  args: MirrorArgs,
+  env: NodeJS.ProcessEnv,
+): Promise<{ url: string; apiKey: string }> {
+  const file = (await readConfigFile(
+    args.config ?? env.ITSAPLAN_RUNNER_CONFIG ?? './itsaplan-runner.json',
+  )) as Record<string, unknown>;
+  const text = (value: unknown) =>
+    typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  const firstKey = () => {
+    const keys = file.apiKeys as unknown[] | undefined;
+    const agents = file.agents as { apiKey?: unknown }[] | undefined;
+    return text(file.apiKey) ?? text(keys?.[0]) ?? text(agents?.[0]?.apiKey);
+  };
+  const url = text(args.url) ?? text(env.ITSAPLAN_URL) ?? text(file.url);
+  const apiKey = text(args.key) ?? text(env.ITSAPLAN_API_KEY) ?? firstKey();
+  if (!url) throw new Error('url is required: --url, ITSAPLAN_URL, or url in the config file');
+  if (!apiKey)
+    throw new Error('apiKey is required: --key, ITSAPLAN_API_KEY, or apiKey in the config file');
+  return { url: url.replace(/\/+$/, ''), apiKey };
+}
+
+export const MIRROR_HELP = `Usage: itsaplan-runner mirror [options]
+
+Writes every project's Docs, description and the team skill libraries to a folder.
+Files are a read-only copy; edit in Itsaplan, never here.
+
+  --out DIR        where to write (default ./itsaplan-mirror)
+  --url URL        instance (default ITSAPLAN_URL or the config file)
+  --key KEY        API key (default ITSAPLAN_API_KEY or the config file)
+  --config PATH    config file (default ITSAPLAN_RUNNER_CONFIG or ./itsaplan-runner.json)
+  --watch          keep running; re-sync when Docs change (descriptions and skills every ~5 min)
+  --interval MS    poll interval for --watch (default 5000, min 1000)
+  --git            commit each pass in DIR (git init when needed)
+  --archived       include archived pages
+`;
+
+export async function runMirror(argv: string[]): Promise<void> {
+  const args = parseMirrorArgs(argv);
+  if (args.help) {
+    process.stdout.write(MIRROR_HELP);
+    return;
+  }
+  const client = new Client(await resolveEndpoint(args, process.env));
+  const root = resolve(args.out.replace(/^~/, process.env.HOME ?? '~'));
+  await mkdir(root, { recursive: true });
+  const log = (message: string) => console.log(`[itsaplan-runner] ${message}`);
+  const get: Get = (path) => client.get(path);
+  if (!args.watch) {
+    const state = await loadState(root);
+    const report = await syncOnce({ get, root, archived: args.archived, log }, state);
+    await saveState(root, state);
+    if (args.git) await commitIfChanged(root, report, new Date());
+    log(
+      `mirror: ${report.written.length} written, ${report.deleted.length} deleted, ${report.unchanged} unchanged → ${root}`,
+    );
+    return;
+  }
+  const state = { stopping: false };
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.on(signal, () => {
+      state.stopping = true;
+      log('stopping after this tick');
+    });
+  }
+  await watch({
+    get,
+    root,
+    archived: args.archived,
+    log,
+    intervalMs: args.intervalMs,
+    git: args.git,
+    stopping: () => state.stopping,
+    sleep: (ms) => sleep(ms),
+  });
 }

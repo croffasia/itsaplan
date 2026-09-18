@@ -1,7 +1,7 @@
 {
   "name": "@itsaplan/runner",
-  "version": "0.5.0",
-  "description": "Runs an Itsaplan external agent's queued tasks and answers its chat on your own machine",
+  "version": "0.6.0",
+  "description": "Runs an Itsaplan external agent's queued tasks, answers its chat, and mirrors Docs to your machine",
   "keywords": [
     "itsaplan",
     "ai-agents",

@@ -1,3 +1,7 @@
+import { createHash } from 'node:crypto';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+
 const DEFAULT_OUT = './itsaplan-mirror';
 const DEFAULT_INTERVAL_MS = 5000;
 const MIN_INTERVAL_MS = 1000;
@@ -132,4 +136,189 @@ export function renderFrontmatter(
     return `${key}: ${rendered}`;
   });
   return `---\n${lines.join('\n')}\n---\n`;
+}
+
+export type Get = <T>(path: string) => Promise<T>;
+export type Log = (message: string) => void;
+
+export interface ProjectRow {
+  id: number;
+  teamId: number;
+  teamName: string;
+  key: string;
+  name: string;
+  description: string;
+  documentsEnabled: boolean;
+}
+export interface DocFull extends DocSummary {
+  content: string;
+}
+export interface MirrorState {
+  version: 1;
+  documents: Record<string, { version: number; path: string }>;
+  projects: Record<string, { hash: string }>;
+  skills: Record<string, { path: string; hash: string }>;
+}
+export interface MirrorReport {
+  written: string[];
+  deleted: string[];
+  unchanged: number;
+  warnings: string[];
+}
+export interface SyncContext {
+  get: Get;
+  root: string;
+  archived: boolean;
+  log: Log;
+}
+
+const STATE_PATH = '.itsaplan/state.json';
+
+export async function loadState(root: string): Promise<MirrorState> {
+  try {
+    const parsed = JSON.parse(
+      await readFile(join(root, STATE_PATH), 'utf8'),
+    ) as Partial<MirrorState>;
+    if (parsed.version === 1) {
+      return {
+        version: 1,
+        documents: parsed.documents ?? {},
+        projects: parsed.projects ?? {},
+        skills: parsed.skills ?? {},
+      };
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+  }
+  return { version: 1, documents: {}, projects: {}, skills: {} };
+}
+
+export async function saveState(root: string, state: MirrorState): Promise<void> {
+  await writeText(join(root, STATE_PATH), `${JSON.stringify(state, null, 2)}\n`);
+}
+
+async function writeText(path: string, text: string): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, text);
+}
+
+async function exists(path: string): Promise<boolean> {
+  try {
+    await readFile(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const hashOf = (text: string) => createHash('sha256').update(text).digest('hex');
+const withFinalNewline = (text: string) => text.replace(/\n?$/, '\n');
+
+function renderDocument(project: ProjectRow, doc: DocFull): string {
+  const head = renderFrontmatter({
+    id: doc.id,
+    project: project.key,
+    title: doc.title,
+    version: doc.version,
+    updatedAt: doc.updatedAt,
+    archived: doc.archivedAt !== null,
+  });
+  return `${head}\n${withFinalNewline(doc.content)}`;
+}
+
+function renderProject(project: ProjectRow): string {
+  const head = renderFrontmatter({
+    id: project.id,
+    key: project.key,
+    name: project.name,
+    team: project.teamName,
+    teamId: project.teamId,
+  });
+  return `${head}\n# ${project.name}\n\n${withFinalNewline(project.description)}`;
+}
+
+// Task 4 fills this in; the mirror already calls it so the sweep order stays fixed.
+async function syncSkills(
+  _ctx: SyncContext,
+  _state: MirrorState,
+  _report: MirrorReport,
+  _projects: ProjectRow[],
+): Promise<void> {}
+
+// Writes `text` at `rel` unless the state already records the same version/hash and the file
+// is still there; removes the previous file when the path moved. Shared by docs and skills.
+async function place(
+  ctx: SyncContext,
+  report: MirrorReport,
+  rel: string,
+  text: string,
+  known: { path: string } | undefined,
+  unchanged: boolean,
+): Promise<void> {
+  if (known && unchanged && known.path === rel && (await exists(join(ctx.root, rel)))) {
+    report.unchanged++;
+    return;
+  }
+  if (known && known.path !== rel) {
+    await rm(join(ctx.root, known.path), { force: true });
+    report.deleted.push(known.path);
+  }
+  await writeText(join(ctx.root, rel), text);
+  report.written.push(rel);
+}
+
+export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<MirrorReport> {
+  const report: MirrorReport = { written: [], deleted: [], unchanged: 0, warnings: [] };
+  const projects = await ctx.get<ProjectRow[]>('/projects');
+  const seenDocs = new Set<string>();
+
+  for (const project of projects) {
+    const readme = `${project.key}/README.md`;
+    const text = renderProject(project);
+    const hash = hashOf(text);
+    const knownProject = state.projects[project.id];
+    await place(
+      ctx,
+      report,
+      readme,
+      text,
+      knownProject ? { path: readme } : undefined,
+      knownProject?.hash === hash,
+    );
+    state.projects[project.id] = { hash };
+
+    const key = encodeURIComponent(project.key);
+    const docs = await ctx.get<DocSummary[]>(`/projects/${key}/documents`);
+    if (ctx.archived)
+      docs.push(...(await ctx.get<DocSummary[]>(`/projects/${key}/documents?archived=true`)));
+    const paths = planDocumentPaths(docs);
+    for (const doc of docs) {
+      const rel = `${project.key}/docs/${paths.get(doc.id)}`;
+      seenDocs.add(String(doc.id));
+      const known = state.documents[doc.id];
+      if (
+        known &&
+        known.version === doc.version &&
+        known.path === rel &&
+        (await exists(join(ctx.root, rel)))
+      ) {
+        report.unchanged++;
+        continue;
+      }
+      const full = await ctx.get<DocFull>(`/projects/${key}/documents/${doc.id}`);
+      await place(ctx, report, rel, renderDocument(project, full), known, false);
+      state.documents[doc.id] = { version: full.version, path: rel };
+    }
+  }
+
+  await syncSkills(ctx, state, report, projects);
+
+  for (const [id, known] of Object.entries(state.documents)) {
+    if (seenDocs.has(id)) continue;
+    await rm(join(ctx.root, known.path), { force: true });
+    report.deleted.push(known.path);
+    delete state.documents[id];
+  }
+  for (const warning of report.warnings) ctx.log(warning);
+  return report;
 }

@@ -1,11 +1,18 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect, beforeEach } from 'bun:test';
+import { mkdtemp, readFile, stat } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { Client, RequestError } from '../client';
 import {
   parseMirrorArgs,
   stemOf,
   planDocumentPaths,
   renderFrontmatter,
+  loadState,
+  saveState,
+  syncOnce,
   type DocSummary,
+  type Get,
 } from '../mirror';
 
 // The mirror reads everything over GET with the runner's key. If the client's GET stopped
@@ -131,5 +138,153 @@ describe('renderFrontmatter', () => {
     expect(
       renderFrontmatter({ id: 7, title: 'A: b "c"', archived: false, files: ['x/y.md'] }),
     ).toBe('---\nid: 7\ntitle: "A: b \\"c\\""\narchived: false\nfiles: ["x/y.md"]\n---\n');
+  });
+});
+
+// A mirror that rewrites nothing on a change, or leaves a deleted page behind, is worse than
+// no mirror: the agent reads stale text with full confidence.
+
+interface FakeData {
+  projects: unknown[];
+  docs: Record<string, unknown[]>;
+  bodies: Record<string, unknown>;
+  revs?: Record<string, string>;
+  skills?: Record<string, unknown[]>;
+  markdown?: Record<string, string>;
+}
+
+function fakeApi(data: FakeData) {
+  const calls: string[] = [];
+  const fail = (status: number) =>
+    Object.assign(new Error(`GET failed with ${status}`), { status });
+  const get: Get = async <T>(path: string) => {
+    calls.push(path);
+    if (path === '/projects') return data.projects as T;
+    const list = path.match(/^\/projects\/([^/]+)\/documents(\?archived=true)?$/);
+    if (list) return ((list[2] ? data.docs[`${list[1]}:archived`] : data.docs[list[1]]) ?? []) as T;
+    const one = path.match(/^\/projects\/([^/]+)\/documents\/(\d+)$/);
+    if (one) return data.bodies[`${one[1]}:${one[2]}`] as T;
+    if (path.startsWith('/sync/rev?')) return { revs: data.revs ?? {} } as T;
+    const options = path.match(/^\/teams\/(\d+)\/agent-skills\/options$/);
+    if (options) {
+      if (!data.skills?.[options[1]]) throw fail(403);
+      return data.skills[options[1]] as T;
+    }
+    const md = path.match(/^\/teams\/(\d+)\/agent-skills\/(\d+)\/markdown$/);
+    if (md) return { markdown: data.markdown?.[`${md[1]}:${md[2]}`] ?? '' } as T;
+    throw new Error(`unexpected ${path}`);
+  };
+  return { get, calls };
+}
+
+const project = {
+  id: 1,
+  teamId: 1,
+  teamName: 'hody',
+  key: 'HODY',
+  name: 'Hody',
+  description: 'Tracker',
+  documentsEnabled: true,
+};
+const summary = (id: number, title: string, version = 1, parentId: number | null = null) => ({
+  id,
+  parentId,
+  title,
+  position: id,
+  version,
+  updatedAt: '2026-01-01T00:00:00.000Z',
+  archivedAt: null,
+});
+const quiet = () => {};
+
+let root: string;
+beforeEach(async () => {
+  root = await mkdtemp(join(tmpdir(), 'itsaplan-mirror-'));
+});
+
+describe('syncOnce', () => {
+  it('writes the description, every document in its folder, and the state', async () => {
+    const api = fakeApi({
+      projects: [project],
+      docs: { HODY: [summary(1, 'Spec'), summary(2, 'Auth', 1, 1)] },
+      bodies: {
+        'HODY:1': { ...summary(1, 'Spec'), content: '# Spec' },
+        'HODY:2': { ...summary(2, 'Auth', 1, 1), content: 'auth body' },
+      },
+    });
+    const state = await loadState(root);
+    const report = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
+    expect(report.written.sort()).toEqual([
+      'HODY/README.md',
+      'HODY/docs/Spec.md',
+      'HODY/docs/Spec/Auth.md',
+    ]);
+    expect(await readFile(join(root, 'HODY/docs/Spec/Auth.md'), 'utf8')).toBe(
+      '---\nid: 2\nproject: "HODY"\ntitle: "Auth"\nversion: 1\nupdatedAt: "2026-01-01T00:00:00.000Z"\narchived: false\n---\n\nauth body\n',
+    );
+    expect(await readFile(join(root, 'HODY/README.md'), 'utf8')).toContain('Tracker');
+    await saveState(root, state);
+    expect((await loadState(root)).documents['2']).toEqual({
+      version: 1,
+      path: 'HODY/docs/Spec/Auth.md',
+    });
+  });
+
+  it('refetches only the document whose version moved, and removes the one that vanished', async () => {
+    const first = fakeApi({
+      projects: [project],
+      docs: { HODY: [summary(1, 'Spec'), summary(2, 'Auth', 1, 1)] },
+      bodies: {
+        'HODY:1': { ...summary(1, 'Spec'), content: 'v1' },
+        'HODY:2': { ...summary(2, 'Auth', 1, 1), content: 'a' },
+      },
+    });
+    const state = await loadState(root);
+    await syncOnce({ get: first.get, root, archived: false, log: quiet }, state);
+    const second = fakeApi({
+      projects: [project],
+      docs: { HODY: [summary(1, 'Spec', 2)] },
+      bodies: { 'HODY:1': { ...summary(1, 'Spec', 2), content: 'v2' } },
+    });
+    const report = await syncOnce({ get: second.get, root, archived: false, log: quiet }, state);
+    expect(report.written).toEqual(['HODY/docs/Spec.md']);
+    expect(report.deleted).toEqual(['HODY/docs/Spec/Auth.md']);
+    expect(second.calls).not.toContain('/projects/HODY/documents/2');
+    await expect(stat(join(root, 'HODY/docs/Spec/Auth.md'))).rejects.toThrow();
+    expect(await readFile(join(root, 'HODY/docs/Spec.md'), 'utf8')).toContain('v2');
+    expect(report.unchanged).toBe(1); // the README
+  });
+
+  it('rewrites a renamed document under its new name and drops the old file', async () => {
+    const first = fakeApi({
+      projects: [project],
+      docs: { HODY: [summary(1, 'Old')] },
+      bodies: { 'HODY:1': { ...summary(1, 'Old'), content: 'x' } },
+    });
+    const state = await loadState(root);
+    await syncOnce({ get: first.get, root, archived: false, log: quiet }, state);
+    const second = fakeApi({
+      projects: [project],
+      docs: { HODY: [summary(1, 'New', 2)] },
+      bodies: { 'HODY:1': { ...summary(1, 'New', 2), content: 'x' } },
+    });
+    const report = await syncOnce({ get: second.get, root, archived: false, log: quiet }, state);
+    expect(report.written).toEqual(['HODY/docs/New.md']);
+    expect(report.deleted).toEqual(['HODY/docs/Old.md']);
+  });
+
+  it('includes the archive only when asked, marking those pages archived', async () => {
+    const archived = { ...summary(9, 'Gone'), archivedAt: '2026-02-02T00:00:00.000Z' };
+    const api = fakeApi({
+      projects: [project],
+      docs: { HODY: [], 'HODY:archived': [archived] },
+      bodies: { 'HODY:9': { ...archived, content: 'old' } },
+    });
+    const state = await loadState(root);
+    const none = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
+    expect(none.written).toEqual(['HODY/README.md']);
+    const withArchive = await syncOnce({ get: api.get, root, archived: true, log: quiet }, state);
+    expect(withArchive.written).toEqual(['HODY/docs/Gone.md']);
+    expect(await readFile(join(root, 'HODY/docs/Gone.md'), 'utf8')).toContain('archived: true');
   });
 });

@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from 'bun:test';
 import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { Client, RequestError } from '../client';
 import {
   parseMirrorArgs,
@@ -11,6 +13,10 @@ import {
   loadState,
   saveState,
   syncOnce,
+  chunk,
+  readDocumentRevs,
+  commitIfChanged,
+  watch,
   type DocSummary,
   type Get,
 } from '../mirror';
@@ -355,5 +361,69 @@ describe('skills', () => {
     expect(report.warnings).toHaveLength(1);
     expect(report.warnings[0]).toMatch(/skills of team hody .*403/);
     expect(logged).toEqual(report.warnings);
+  });
+});
+
+const run = promisify(execFile);
+
+// The rev endpoint refuses more than 20 scopes in one request, and a mirror that never
+// commits (or commits an empty pass) would give git history nobody can trust.
+
+describe('watch plumbing', () => {
+  it('splits scopes into requests of at most 20 and merges the answers', async () => {
+    expect(chunk([1, 2, 3], 2)).toEqual([[1, 2], [3]]);
+    const paths: string[] = [];
+    const get: Get = async <T>(path: string) => {
+      paths.push(path);
+      const scopes = decodeURIComponent(path.slice('/sync/rev?scopes='.length)).split(',');
+      return { revs: Object.fromEntries(scopes.map((s) => [s, '1'])) } as T;
+    };
+    const revs = await readDocumentRevs(
+      get,
+      Array.from({ length: 25 }, (_, i) => i + 1),
+    );
+    expect(paths).toHaveLength(2);
+    expect(Object.keys(revs)).toHaveLength(25);
+    expect(revs['documents:25']).toBe('1');
+  });
+
+  it('commits a pass that wrote something and skips one that did not', async () => {
+    await writeFile(join(root, 'a.md'), 'x');
+    const wrote = { written: ['a.md'], deleted: [], unchanged: 0, warnings: [] };
+    expect(await commitIfChanged(root, wrote, new Date('2026-01-02T03:04:05Z'))).toBe(true);
+    const { stdout } = await run('git', ['-C', root, 'log', '--format=%s']);
+    expect(stdout.trim()).toBe('mirror: 2026-01-02T03:04:05.000Z');
+    const idle = { written: [], deleted: [], unchanged: 3, warnings: [] };
+    expect(await commitIfChanged(root, idle, new Date())).toBe(false);
+  });
+
+  it('runs a pass when a document marker moves and otherwise only polls', async () => {
+    let rev = 'a';
+    let passes = 0;
+    const get: Get = async <T>(path: string) => {
+      if (path === '/projects') {
+        passes++;
+        return [project] as T;
+      }
+      if (path.startsWith('/projects/')) return [] as T;
+      if (path.startsWith('/sync/rev')) return { revs: { 'documents:1': rev } } as T;
+      throw Object.assign(new Error('403'), { status: 403 });
+    };
+    let ticks = 0;
+    await watch({
+      get,
+      root,
+      archived: false,
+      log: quiet,
+      intervalMs: 1000,
+      git: false,
+      stopping: () => ticks >= 3,
+      sleep: async () => {
+        ticks++;
+        if (ticks === 2) rev = 'b';
+      },
+    });
+    // /projects is read twice per pass (sync + id refresh): initial pass and the moved-marker pass
+    expect(passes).toBe(4);
   });
 });

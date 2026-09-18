@@ -1,10 +1,17 @@
+import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
+import { promisify } from 'node:util';
+
+const run = promisify(execFile);
 
 const DEFAULT_OUT = './itsaplan-mirror';
 const DEFAULT_INTERVAL_MS = 5000;
 const MIN_INTERVAL_MS = 1000;
+const MAX_SCOPES = 20;
+const SLOW_PASS_EVERY_TICKS = 60;
+const ERROR_BACKOFF_MS = 5_000;
 
 export interface MirrorArgs {
   out: string;
@@ -396,4 +403,102 @@ export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<Mi
   }
   for (const warning of report.warnings) ctx.log(warning);
   return report;
+}
+
+export function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+export async function readDocumentRevs(
+  get: Get,
+  projectIds: number[],
+): Promise<Record<string, string>> {
+  const revs: Record<string, string> = {};
+  for (const ids of chunk(projectIds, MAX_SCOPES)) {
+    const scopes = ids.map((id) => `documents:${id}`).join(',');
+    const answer = await get<{ revs: Record<string, string> }>(
+      `/sync/rev?scopes=${encodeURIComponent(scopes)}`,
+    );
+    Object.assign(revs, answer.revs);
+  }
+  return revs;
+}
+
+export async function commitIfChanged(
+  root: string,
+  report: MirrorReport,
+  now: Date,
+): Promise<boolean> {
+  if (report.written.length === 0 && report.deleted.length === 0) return false;
+  try {
+    await run('git', ['-C', root, 'rev-parse', '--is-inside-work-tree']);
+  } catch {
+    await run('git', ['-C', root, 'init', '-q']);
+  }
+  await run('git', ['-C', root, 'add', '-A']);
+  await run('git', [
+    '-C',
+    root,
+    '-c',
+    'user.name=itsaplan-runner',
+    '-c',
+    'user.email=runner@itsaplan.local',
+    'commit',
+    '-q',
+    '-m',
+    `mirror: ${now.toISOString()}`,
+  ]);
+  return true;
+}
+
+export interface WatchContext extends SyncContext {
+  intervalMs: number;
+  git: boolean;
+  stopping: () => boolean;
+  sleep: (ms: number) => Promise<void>;
+}
+
+export async function watch(ctx: WatchContext): Promise<void> {
+  const state = await loadState(ctx.root);
+  const warned = new Set<string>();
+  let last: Record<string, string> = {};
+  let projectIds: number[] = [];
+  let tick = 0;
+  const pass = async () => {
+    const report = await syncOnce(ctx, state);
+    await saveState(ctx.root, state);
+    if (ctx.git) await commitIfChanged(ctx.root, report, new Date());
+    ctx.log(
+      `mirror: ${report.written.length} written, ${report.deleted.length} deleted, ${report.unchanged} unchanged`,
+    );
+    projectIds = (await ctx.get<ProjectRow[]>('/projects')).map((p) => p.id);
+    last = await readDocumentRevs(ctx.get, projectIds);
+  };
+  await pass();
+  while (!ctx.stopping()) {
+    await ctx.sleep(ctx.intervalMs);
+    if (ctx.stopping()) break;
+    tick++;
+    try {
+      const revs = await readDocumentRevs(ctx.get, projectIds);
+      for (const [scope, value] of Object.entries(revs)) {
+        if (value === '0' && !warned.has(scope)) {
+          warned.add(scope);
+          ctx.log(
+            `mirror: ${scope} reads as unchanged forever — the key may not see that project's Docs`,
+          );
+        }
+      }
+      const moved = Object.keys(revs).some((scope) => revs[scope] !== last[scope]);
+      if (moved || tick % SLOW_PASS_EVERY_TICKS === 0) await pass();
+      else last = revs;
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      if (status === 401 || status === 403) throw err;
+      ctx.log(`mirror: ${(err as Error).message} — retrying in ${ERROR_BACKOFF_MS / 1000}s`);
+      await ctx.sleep(ERROR_BACKOFF_MS);
+    }
+  }
 }

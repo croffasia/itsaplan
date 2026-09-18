@@ -1,0 +1,641 @@
+import { execFile } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { access, mkdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
+import { dirname, join, resolve, sep } from 'node:path';
+import { setTimeout as sleep } from 'node:timers/promises';
+import { promisify } from 'node:util';
+import { Client } from './client';
+import { readConfigFile } from './config';
+
+const run = promisify(execFile);
+
+const DEFAULT_OUT = './itsaplan-mirror';
+const DEFAULT_INTERVAL_MS = 5000;
+const MIN_INTERVAL_MS = 1000;
+const MAX_SCOPES = 20;
+const SLOW_PASS_EVERY_TICKS = 60;
+const ERROR_BACKOFF_MS = 5_000;
+
+export interface MirrorArgs {
+  out: string;
+  url?: string;
+  config?: string;
+  watch: boolean;
+  intervalMs: number;
+  git: boolean;
+  archived: boolean;
+  help: boolean;
+}
+
+export function parseMirrorArgs(argv: string[]): MirrorArgs {
+  const args: MirrorArgs = {
+    out: DEFAULT_OUT,
+    watch: false,
+    intervalMs: DEFAULT_INTERVAL_MS,
+    git: false,
+    archived: false,
+    help: false,
+  };
+  const valued: Record<string, (value: string) => void> = {
+    '--out': (v) => {
+      args.out = v;
+    },
+    '--url': (v) => {
+      args.url = v;
+    },
+    '--config': (v) => {
+      args.config = v;
+    },
+    '--interval': (v) => {
+      const ms = Number.parseInt(v, 10);
+      if (Number.isNaN(ms)) throw new Error('--interval needs a number');
+      args.intervalMs = Math.max(ms, MIN_INTERVAL_MS);
+    },
+  };
+  const flags: Record<string, () => void> = {
+    '--watch': () => {
+      args.watch = true;
+    },
+    '--git': () => {
+      args.git = true;
+    },
+    '--archived': () => {
+      args.archived = true;
+    },
+    '--help': () => {
+      args.help = true;
+    },
+    '-h': () => {
+      args.help = true;
+    },
+  };
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    const eq = arg.indexOf('=');
+    const name = eq === -1 ? arg : arg.slice(0, eq);
+    if (Object.hasOwn(valued, name)) {
+      const value = eq === -1 ? argv[++i] : arg.slice(eq + 1);
+      if (value === undefined) throw new Error(`${name} needs a value`);
+      valued[name](value);
+    } else if (Object.hasOwn(flags, arg)) {
+      flags[arg]();
+    } else {
+      throw new Error(`unknown option ${arg}`);
+    }
+  }
+  return args;
+}
+
+// Same rule as the API's export route, so a mirrored file is named like a downloaded one.
+export function stemOf(title: string): string {
+  const printable = [...title.trim()]
+    .map((character) => {
+      const code = character.charCodeAt(0);
+      return code < 32 || code === 127 ? '-' : character;
+    })
+    .join('');
+  return printable.replace(/[<>:"/\\|?*]/g, '-').slice(0, 120) || 'untitled';
+}
+
+// A title of "." or ".." survives stemOf (it has no reserved characters) but would name a
+// traversal segment once it becomes a folder, so it is neutered here.
+function safeStem(t: string): string {
+  return stemOf(t).replace(/^\.+$/, '-');
+}
+
+export interface DocSummary {
+  id: number;
+  parentId: number | null;
+  title: string;
+  position: number;
+  version: number;
+  updatedAt: string;
+  archivedAt: string | null;
+}
+
+export function planDocumentPaths(docs: DocSummary[]): Map<number, string> {
+  const ids = new Set(docs.map((d) => d.id));
+  const parentOf = (d: DocSummary) =>
+    d.parentId !== null && ids.has(d.parentId) ? d.parentId : null;
+  const byParent = new Map<number | null, DocSummary[]>();
+  for (const d of docs) byParent.set(parentOf(d), [...(byParent.get(parentOf(d)) ?? []), d]);
+  const stems = new Map<number, string>();
+  for (const siblings of byParent.values()) {
+    const count = new Map<string, number>();
+    for (const d of siblings) count.set(safeStem(d.title), (count.get(safeStem(d.title)) ?? 0) + 1);
+    for (const d of siblings) {
+      const stem = safeStem(d.title);
+      stems.set(d.id, (count.get(stem) ?? 0) > 1 ? `${stem}-${d.id}` : stem);
+    }
+  }
+  const byId = new Map(docs.map((d) => [d.id, d]));
+  // `seen` stops a parent cycle the API should never send from recursing until the stack ends.
+  const folderOf = (id: number | null, seen: Set<number> = new Set()): string => {
+    if (id === null || seen.has(id)) return '';
+    seen.add(id);
+    const d = byId.get(id)!;
+    return `${folderOf(parentOf(d), seen)}${stems.get(id)}/`;
+  };
+  return new Map(docs.map((d) => [d.id, `${folderOf(parentOf(d))}${stems.get(d.id)}.md`]));
+}
+
+export function renderFrontmatter(
+  fields: Record<string, string | number | boolean | null | string[]>,
+): string {
+  const lines = Object.entries(fields).map(([key, value]) => {
+    const rendered =
+      typeof value === 'string'
+        ? JSON.stringify(value)
+        : Array.isArray(value)
+          ? `[${value.map((v) => JSON.stringify(v)).join(', ')}]`
+          : String(value);
+    return `${key}: ${rendered}`;
+  });
+  return `---\n${lines.join('\n')}\n---\n`;
+}
+
+export type Get = <T>(path: string) => Promise<T>;
+export type Log = (message: string) => void;
+
+export interface ProjectRow {
+  id: number;
+  teamId: number;
+  teamName: string;
+  key: string;
+  name: string;
+  description: string;
+  documentsEnabled: boolean;
+}
+export interface DocFull extends DocSummary {
+  content: string;
+}
+export interface MirrorState {
+  version: 1;
+  documents: Record<string, { version: number; path: string }>;
+  projects: Record<string, { hash: string }>;
+  skills: Record<string, { path: string; hash: string }>;
+}
+export interface MirrorReport {
+  written: string[];
+  deleted: string[];
+  unchanged: number;
+  warnings: string[];
+}
+export interface SyncContext {
+  get: Get;
+  root: string;
+  archived: boolean;
+  log: Log;
+}
+
+const STATE_PATH = '.itsaplan/state.json';
+
+export async function loadState(root: string): Promise<MirrorState> {
+  try {
+    const parsed = JSON.parse(
+      await readFile(join(root, STATE_PATH), 'utf8'),
+    ) as Partial<MirrorState>;
+    if (parsed.version === 1) {
+      return {
+        version: 1,
+        documents: parsed.documents ?? {},
+        projects: parsed.projects ?? {},
+        skills: parsed.skills ?? {},
+      };
+    }
+  } catch (err) {
+    if (!(err instanceof SyntaxError) && (err as NodeJS.ErrnoException).code !== 'ENOENT')
+      throw err;
+  }
+  return { version: 1, documents: {}, projects: {}, skills: {} };
+}
+
+export async function saveState(root: string, state: MirrorState): Promise<void> {
+  // Written aside and renamed so a crash mid-write leaves the previous state readable
+  // rather than a truncated file the next run has to discard.
+  const path = join(root, STATE_PATH);
+  await writeText(`${path}.tmp`, `${JSON.stringify(state, null, 2)}\n`);
+  await rename(`${path}.tmp`, path);
+}
+
+async function writeText(path: string, text: string): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, text);
+}
+
+async function exists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Titles, project keys and state.json paths all reach the filesystem here; a document titled
+// ".." plans "../" segments, so every write and delete is clamped to the mirror root.
+function under(root: string, rel: string): string {
+  const base = resolve(root);
+  const full = resolve(base, rel);
+  if (full !== base && !full.startsWith(base + sep)) {
+    throw Object.assign(new Error(`refusing to touch a path outside the mirror: ${rel}`), {
+      fatal: true,
+    });
+  }
+  return full;
+}
+
+const hashOf = (text: string) => createHash('sha256').update(text).digest('hex');
+const withFinalNewline = (text: string) => text.replace(/\n*$/, '\n');
+
+function renderDocument(project: ProjectRow, doc: DocFull): string {
+  const head = renderFrontmatter({
+    id: doc.id,
+    project: project.key,
+    title: doc.title,
+    version: doc.version,
+    updatedAt: doc.updatedAt,
+    archived: doc.archivedAt !== null,
+  });
+  return `${head}\n${withFinalNewline(doc.content)}`;
+}
+
+function renderProject(project: ProjectRow): string {
+  const head = renderFrontmatter({
+    id: project.id,
+    key: project.key,
+    name: project.name,
+    team: project.teamName,
+    teamId: project.teamId,
+  });
+  return `${head}\n# ${project.name}\n\n${withFinalNewline(project.description)}`;
+}
+
+export interface SkillRow {
+  id: number;
+  teamId: number;
+  name: string;
+  description: string;
+  source: string;
+  sourceUrl: string | null;
+  files: { path: string }[];
+}
+
+async function syncSkills(
+  ctx: SyncContext,
+  state: MirrorState,
+  report: MirrorReport,
+  projects: ProjectRow[],
+): Promise<void> {
+  const teams = new Map(projects.map((p) => [p.teamId, p.teamName]));
+  const seen = new Set<string>();
+  const readTeams = new Set<number>();
+  for (const [teamId, teamName] of teams) {
+    let skills: SkillRow[];
+    try {
+      skills = await ctx.get<SkillRow[]>(`/teams/${teamId}/agent-skills/options`);
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      report.warnings.push(
+        `skills of team ${teamName} skipped — ${status ?? 'error'}: ${(err as Error).message}`,
+      );
+      continue;
+    }
+    readTeams.add(teamId);
+    for (const skill of skills) {
+      const stateKey = `${teamId}:${skill.id}`;
+      seen.add(stateKey);
+      const rel = `teams/${safeStem(teamName)}/skills/${stemOf(skill.name)}.md`;
+      const { markdown } = await ctx.get<{ markdown: string }>(
+        `/teams/${teamId}/agent-skills/${skill.id}/markdown`,
+      );
+      const head = renderFrontmatter({
+        id: skill.id,
+        team: teamName,
+        teamId,
+        name: skill.name,
+        description: skill.description,
+        source: skill.source,
+        sourceUrl: skill.sourceUrl,
+        files: skill.files.map((f) => f.path),
+      });
+      const text = `${head}\n${withFinalNewline(markdown)}`;
+      const hash = hashOf(text);
+      const known = state.skills[stateKey];
+      await place(ctx, report, rel, text, known, known?.hash === hash);
+      state.skills[stateKey] = { path: rel, hash };
+    }
+  }
+  for (const [key, known] of Object.entries(state.skills)) {
+    const teamId = Number(key.split(':')[0]);
+    if (seen.has(key) || !readTeams.has(teamId)) continue;
+    await rm(under(ctx.root, known.path), { force: true });
+    report.deleted.push(known.path);
+    delete state.skills[key];
+  }
+}
+
+// Shared by docs and skills.
+async function place(
+  ctx: SyncContext,
+  report: MirrorReport,
+  rel: string,
+  text: string,
+  known: { path: string } | undefined,
+  unchanged: boolean,
+): Promise<void> {
+  if (known && unchanged && known.path === rel && (await exists(under(ctx.root, rel)))) {
+    report.unchanged++;
+    return;
+  }
+  if (known && known.path !== rel) {
+    await rm(under(ctx.root, known.path), { force: true });
+    report.deleted.push(known.path);
+  }
+  await writeText(under(ctx.root, rel), text);
+  report.written.push(rel);
+}
+
+// The sweep at the end of a pass deletes every state entry the pass did not see, so a project
+// whose documents were not read has to claim its existing files or they would be removed.
+function keepExistingDocs(state: MirrorState, seenDocs: Set<string>, dir: string): void {
+  for (const [id, known] of Object.entries(state.documents))
+    if (known.path.startsWith(`${dir}/docs/`)) seenDocs.add(id);
+}
+
+export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<MirrorReport> {
+  const report: MirrorReport = { written: [], deleted: [], unchanged: 0, warnings: [] };
+  const projects = await ctx.get<ProjectRow[]>('/projects');
+  const seenDocs = new Set<string>();
+
+  for (const project of projects) {
+    const dir = safeStem(project.key);
+    const readme = `${dir}/README.md`;
+    const text = renderProject(project);
+    const hash = hashOf(text);
+    const knownProject = state.projects[project.id];
+    await place(
+      ctx,
+      report,
+      readme,
+      text,
+      knownProject ? { path: readme } : undefined,
+      knownProject?.hash === hash,
+    );
+    state.projects[project.id] = { hash };
+
+    if (project.documentsEnabled === false) {
+      keepExistingDocs(state, seenDocs, dir);
+      continue;
+    }
+    const key = encodeURIComponent(project.key);
+    let docs: DocSummary[];
+    try {
+      docs = [...(await ctx.get<DocSummary[]>(`/projects/${key}/documents`))];
+      if (ctx.archived)
+        docs.push(...(await ctx.get<DocSummary[]>(`/projects/${key}/documents?archived=true`)));
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      report.warnings.push(
+        `documents of project ${project.key} skipped — ${status ?? 'error'}: ${(err as Error).message}`,
+      );
+      keepExistingDocs(state, seenDocs, dir);
+      continue;
+    }
+    const paths = planDocumentPaths(docs);
+    for (const doc of docs) {
+      const rel = `${dir}/docs/${paths.get(doc.id)}`;
+      seenDocs.add(String(doc.id));
+      const known = state.documents[doc.id];
+      if (
+        known &&
+        known.version === doc.version &&
+        known.path === rel &&
+        (await exists(under(ctx.root, rel)))
+      ) {
+        report.unchanged++;
+        continue;
+      }
+      const full = await ctx.get<DocFull>(`/projects/${key}/documents/${doc.id}`);
+      await place(ctx, report, rel, renderDocument(project, full), known, false);
+      state.documents[doc.id] = { version: full.version, path: rel };
+    }
+  }
+
+  await syncSkills(ctx, state, report, projects);
+
+  for (const [id, known] of Object.entries(state.documents)) {
+    if (seenDocs.has(id)) continue;
+    await rm(under(ctx.root, known.path), { force: true });
+    report.deleted.push(known.path);
+    delete state.documents[id];
+  }
+  for (const warning of report.warnings) ctx.log(warning);
+  return report;
+}
+
+export function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+export async function readDocumentRevs(
+  get: Get,
+  projectIds: number[],
+): Promise<Record<string, string>> {
+  const revs: Record<string, string> = {};
+  for (const ids of chunk(projectIds, MAX_SCOPES)) {
+    const scopes = ids.map((id) => `documents:${id}`).join(',');
+    const answer = await get<{ revs: Record<string, string> }>(
+      `/sync/rev?scopes=${encodeURIComponent(scopes)}`,
+    );
+    Object.assign(revs, answer.revs);
+  }
+  return revs;
+}
+
+export async function commitIfChanged(
+  root: string,
+  report: MirrorReport,
+  now: Date,
+): Promise<boolean> {
+  if (report.written.length === 0 && report.deleted.length === 0) return false;
+  // `git add -A` acts on the whole repo, so a mirror root nested inside someone else's repo
+  // must never reach it — refuse rather than stage or commit files outside the mirror.
+  let toplevel: string | undefined;
+  try {
+    toplevel = (await run('git', ['-C', root, 'rev-parse', '--show-toplevel'])).stdout.trim();
+  } catch {
+    await run('git', ['-C', root, 'init', '-q']);
+  }
+  if (toplevel && resolve(await realpath(toplevel)) !== resolve(await realpath(root))) {
+    throw Object.assign(
+      new Error(
+        `--git refuses to commit: ${root} is inside the git repo at ${toplevel}; point --out at a directory of its own`,
+      ),
+      { fatal: true },
+    );
+  }
+  await run('git', ['-C', root, 'add', '-A']);
+  try {
+    await run('git', [
+      '-C',
+      root,
+      '-c',
+      'user.name=itsaplan-runner',
+      '-c',
+      'user.email=runner@itsaplan.local',
+      'commit',
+      '-q',
+      '-m',
+      `mirror: ${now.toISOString()}`,
+    ]);
+  } catch (err) {
+    const { stdout = '', stderr = '' } = err as { stdout?: string; stderr?: string };
+    if (`${stdout}${stderr}`.includes('nothing to commit')) return false;
+    throw err;
+  }
+  return true;
+}
+
+export interface WatchContext extends SyncContext {
+  intervalMs: number;
+  git: boolean;
+  stopping: () => boolean;
+  sleep: (ms: number) => Promise<void>;
+}
+
+function isFatalWatchError(err: unknown): boolean {
+  const status = (err as { status?: number }).status;
+  return status === 401 || status === 403 || (err as { fatal?: boolean }).fatal === true;
+}
+
+export async function watch(ctx: WatchContext): Promise<void> {
+  const state = await loadState(ctx.root);
+  let last: Record<string, string> = {};
+  let projectIds: number[] = [];
+  let tick = 0;
+  // The rev read is taken before syncOnce, against the project set the previous pass saw, so
+  // a document edited while the sync is running is caught on the next tick instead of being
+  // folded into `last` as if it were already mirrored. The initial pass has no previous
+  // project set to read against — it just synced everything, so its baseline is taken once,
+  // after the sync, from the refreshed project list instead.
+  const pass = async () => {
+    const before = projectIds.length ? await readDocumentRevs(ctx.get, projectIds) : undefined;
+    const report = await syncOnce(ctx, state);
+    await saveState(ctx.root, state);
+    if (ctx.git) await commitIfChanged(ctx.root, report, new Date());
+    ctx.log(
+      `mirror: ${report.written.length} written, ${report.deleted.length} deleted, ${report.unchanged} unchanged`,
+    );
+    projectIds = (await ctx.get<ProjectRow[]>('/projects')).map((p) => p.id);
+    last = before ?? (await readDocumentRevs(ctx.get, projectIds));
+  };
+  // A booting server refusing the first request must not kill --watch, so the initial pass
+  // gets the same retry-with-backoff treatment as the loop below.
+  let synced = false;
+  while (!ctx.stopping()) {
+    try {
+      await pass();
+      synced = true;
+      break;
+    } catch (err) {
+      if (isFatalWatchError(err)) throw err;
+      ctx.log(`mirror: ${(err as Error).message} — retrying in ${ERROR_BACKOFF_MS / 1000}s`);
+      await ctx.sleep(ERROR_BACKOFF_MS);
+    }
+  }
+  if (!synced) return;
+  while (!ctx.stopping()) {
+    await ctx.sleep(ctx.intervalMs);
+    if (ctx.stopping()) break;
+    tick++;
+    try {
+      const revs = await readDocumentRevs(ctx.get, projectIds);
+      const moved = Object.keys(revs).some((scope) => revs[scope] !== last[scope]);
+      if (moved || tick % SLOW_PASS_EVERY_TICKS === 0) await pass();
+      else last = revs;
+    } catch (err) {
+      if (isFatalWatchError(err)) throw err;
+      ctx.log(`mirror: ${(err as Error).message} — retrying in ${ERROR_BACKOFF_MS / 1000}s`);
+      await ctx.sleep(ERROR_BACKOFF_MS);
+    }
+  }
+}
+
+export async function resolveEndpoint(
+  args: MirrorArgs,
+  env: NodeJS.ProcessEnv,
+): Promise<{ url: string; apiKey: string }> {
+  const file = (await readConfigFile(
+    args.config ?? env.ITSAPLAN_RUNNER_CONFIG ?? './itsaplan-runner.json',
+  )) as Record<string, unknown>;
+  const text = (value: unknown) =>
+    typeof value === 'string' && value.trim() ? value.trim() : undefined;
+  const firstKey = () => {
+    const keys = file.apiKeys as unknown[] | undefined;
+    const agents = file.agents as { apiKey?: unknown }[] | undefined;
+    return text(file.apiKey) ?? text(keys?.[0]) ?? text(agents?.[0]?.apiKey);
+  };
+  const url = text(args.url) ?? text(env.ITSAPLAN_URL) ?? text(file.url);
+  const apiKey = text(env.ITSAPLAN_API_KEY) ?? firstKey();
+  if (!url) throw new Error('url is required: --url, ITSAPLAN_URL, or url in the config file');
+  if (!apiKey)
+    throw new Error('apiKey is required: ITSAPLAN_API_KEY, or apiKey in the config file');
+  return { url: url.replace(/\/+$/, ''), apiKey };
+}
+
+export const MIRROR_HELP = `Usage: itsaplan-runner mirror [options]
+
+Writes every project's Docs, description and the team skill libraries to a folder.
+Files are a read-only copy; edit in Itsaplan, never here.
+
+  --out DIR        where to write (default ./itsaplan-mirror)
+  --url URL        instance (default ITSAPLAN_URL or the config file)
+  --config PATH    config file (default ITSAPLAN_RUNNER_CONFIG or ./itsaplan-runner.json)
+  --watch          keep running; re-sync when Docs change (descriptions and skills every ~5 min)
+  --interval MS    poll interval for --watch (default 5000, min 1000)
+  --git            commit each pass in DIR (git init when needed)
+  --archived       include archived pages
+`;
+
+export async function runMirror(argv: string[]): Promise<void> {
+  const args = parseMirrorArgs(argv);
+  if (args.help) {
+    process.stdout.write(MIRROR_HELP);
+    return;
+  }
+  const client = new Client(await resolveEndpoint(args, process.env));
+  const root = resolve(args.out.replace(/^~(?=$|\/)/, process.env.HOME ?? '~'));
+  await mkdir(root, { recursive: true });
+  const log = (message: string) => console.log(`[itsaplan-runner] ${message}`);
+  const get: Get = (path) => client.get(path);
+  if (!args.watch) {
+    const state = await loadState(root);
+    const report = await syncOnce({ get, root, archived: args.archived, log }, state);
+    await saveState(root, state);
+    if (args.git) await commitIfChanged(root, report, new Date());
+    log(
+      `mirror: ${report.written.length} written, ${report.deleted.length} deleted, ${report.unchanged} unchanged → ${root}`,
+    );
+    return;
+  }
+  const state = { stopping: false };
+  for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+    process.on(signal, () => {
+      state.stopping = true;
+      log('stopping after this tick');
+    });
+  }
+  await watch({
+    get,
+    root,
+    archived: args.archived,
+    log,
+    intervalMs: args.intervalMs,
+    git: args.git,
+    stopping: () => state.stopping,
+    sleep: (ms) => sleep(ms),
+  });
+}

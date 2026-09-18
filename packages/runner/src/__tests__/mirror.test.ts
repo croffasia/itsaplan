@@ -465,9 +465,8 @@ describe('watch plumbing', () => {
         if (ticks === 2) rev = 'b';
       },
     });
-    // /projects is read twice per pass (sync + id refresh). The pre-sync rev read starts
-    // empty, so the first tick after the initial pass always finds a "moved" marker and runs
-    // an extra pass on top of the one the real marker move triggers: 3 passes x 2 reads = 6.
-    expect(passes).toBe(6);
+    // /projects is read twice per pass (sync + id refresh): the initial pass and the one the
+    // real marker move triggers.
+    expect(passes).toBe(4);
   });
 });

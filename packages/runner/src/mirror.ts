@@ -492,9 +492,11 @@ export async function watch(ctx: WatchContext): Promise<void> {
   let tick = 0;
   // The rev read is taken before syncOnce, against the project set the previous pass saw, so
   // a document edited while the sync is running is caught on the next tick instead of being
-  // folded into `last` as if it were already mirrored.
+  // folded into `last` as if it were already mirrored. The initial pass has no previous
+  // project set to read against — it just synced everything, so its baseline is taken once,
+  // after the sync, from the refreshed project list instead.
   const pass = async () => {
-    const preRevs = await readDocumentRevs(ctx.get, projectIds);
+    const before = projectIds.length ? await readDocumentRevs(ctx.get, projectIds) : undefined;
     const report = await syncOnce(ctx, state);
     await saveState(ctx.root, state);
     if (ctx.git) await commitIfChanged(ctx.root, report, new Date());
@@ -502,7 +504,7 @@ export async function watch(ctx: WatchContext): Promise<void> {
       `mirror: ${report.written.length} written, ${report.deleted.length} deleted, ${report.unchanged} unchanged`,
     );
     projectIds = (await ctx.get<ProjectRow[]>('/projects')).map((p) => p.id);
-    last = preRevs;
+    last = before ?? (await readDocumentRevs(ctx.get, projectIds));
   };
   // A booting server refusing the first request must not kill --watch, so the initial pass
   // gets the same retry-with-backoff treatment as the loop below.

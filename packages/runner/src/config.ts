@@ -109,7 +109,7 @@ function required(value: unknown, field: string): string {
 }
 
 // A runner configured entirely by environment variables needs no file.
-async function readConfigFile(path: string): Promise<Record<string, unknown>> {
+export async function readConfigFile(path: string): Promise<Record<string, unknown>> {
   let text: string;
   try {
     text = await readFile(path, 'utf8');

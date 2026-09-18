@@ -44,7 +44,21 @@ export class RequestError extends Error {
 }
 
 export class Client {
-  constructor(private readonly config: RunnerConfig) {}
+  constructor(private readonly config: Pick<RunnerConfig, 'url' | 'apiKey'>) {}
+
+  async get<T>(path: string, timeoutMs = REQUEST_TIMEOUT_MS): Promise<T> {
+    const res = await fetch(`${this.config.url}${path}`, {
+      headers: { 'x-api-key': this.config.apiKey },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (!res.ok) {
+      throw new RequestError(
+        res.status,
+        `GET ${path} failed with ${res.status}: ${(await res.text()).slice(0, 200)}`,
+      );
+    }
+    return (await res.json()) as T;
+  }
 
   private async post(
     path: string,

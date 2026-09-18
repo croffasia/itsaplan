@@ -256,13 +256,69 @@ function renderProject(project: ProjectRow): string {
   return `${head}\n# ${project.name}\n\n${withFinalNewline(project.description)}`;
 }
 
-// Task 4 fills this in; the mirror already calls it so the sweep order stays fixed.
+export interface SkillRow {
+  id: number;
+  teamId: number;
+  name: string;
+  description: string;
+  source: string;
+  sourceUrl: string | null;
+  files: { path: string }[];
+}
+
 async function syncSkills(
-  _ctx: SyncContext,
-  _state: MirrorState,
-  _report: MirrorReport,
-  _projects: ProjectRow[],
-): Promise<void> {}
+  ctx: SyncContext,
+  state: MirrorState,
+  report: MirrorReport,
+  projects: ProjectRow[],
+): Promise<void> {
+  const teams = new Map(projects.map((p) => [p.teamId, p.teamName]));
+  const seen = new Set<string>();
+  const readTeams = new Set<number>();
+  for (const [teamId, teamName] of teams) {
+    let skills: SkillRow[];
+    try {
+      skills = await ctx.get<SkillRow[]>(`/teams/${teamId}/agent-skills/options`);
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      report.warnings.push(
+        `skills of team ${teamName} skipped — ${status ?? 'error'}: ${(err as Error).message}`,
+      );
+      continue;
+    }
+    readTeams.add(teamId);
+    for (const skill of skills) {
+      const stateKey = `${teamId}:${skill.id}`;
+      seen.add(stateKey);
+      const rel = `teams/${stemOf(teamName)}/skills/${stemOf(skill.name)}.md`;
+      const { markdown } = await ctx.get<{ markdown: string }>(
+        `/teams/${teamId}/agent-skills/${skill.id}/markdown`,
+      );
+      const head = renderFrontmatter({
+        id: skill.id,
+        team: teamName,
+        teamId,
+        name: skill.name,
+        description: skill.description,
+        source: skill.source,
+        sourceUrl: skill.sourceUrl,
+        files: skill.files.map((f) => f.path),
+      });
+      const text = `${head}\n${withFinalNewline(markdown)}`;
+      const hash = hashOf(text);
+      const known = state.skills[stateKey];
+      await place(ctx, report, rel, text, known, known?.hash === hash);
+      state.skills[stateKey] = { path: rel, hash };
+    }
+  }
+  for (const [key, known] of Object.entries(state.skills)) {
+    const teamId = Number(key.split(':')[0]);
+    if (seen.has(key) || !readTeams.has(teamId)) continue;
+    await rm(under(ctx.root, known.path), { force: true });
+    report.deleted.push(known.path);
+    delete state.skills[key];
+  }
+}
 
 // Writes `text` at `rel` unless the state already records the same version/hash and the file
 // is still there; removes the previous file when the path moved. Shared by docs and skills.

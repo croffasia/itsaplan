@@ -308,3 +308,52 @@ describe('syncOnce', () => {
     expect(await loadState(root)).toEqual({ version: 1, documents: {}, projects: {}, skills: {} });
   });
 });
+
+describe('skills', () => {
+  it('mirrors each skill of every team the projects belong to, once', async () => {
+    const api = fakeApi({
+      projects: [project],
+      docs: { HODY: [] },
+      bodies: {},
+      skills: {
+        '1': [
+          {
+            id: 4,
+            teamId: 1,
+            name: 'Review PR',
+            description: 'd',
+            source: 'inline',
+            sourceUrl: null,
+            files: [{ path: 'refs/a.md' }],
+          },
+        ],
+      },
+      markdown: { '1:4': '# Review\n' },
+    });
+    const state = await loadState(root);
+    const report = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
+    expect(report.written).toContain('teams/hody/skills/Review PR.md');
+    expect(await readFile(join(root, 'teams/hody/skills/Review PR.md'), 'utf8')).toBe(
+      '---\nid: 4\nteam: "hody"\nteamId: 1\nname: "Review PR"\ndescription: "d"\nsource: "inline"\nsourceUrl: null\nfiles: ["refs/a.md"]\n---\n\n# Review\n',
+    );
+    const again = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
+    expect(again.written).toEqual([]);
+  });
+
+  it("warns once and keeps mirroring documents when the key may not read a team's skills", async () => {
+    const api = fakeApi({
+      projects: [project],
+      docs: { HODY: [summary(1, 'Spec')] },
+      bodies: { 'HODY:1': { ...summary(1, 'Spec'), content: 'x' } },
+    });
+    const logged: string[] = [];
+    const report = await syncOnce(
+      { get: api.get, root, archived: false, log: (m) => logged.push(m) },
+      await loadState(root),
+    );
+    expect(report.written).toContain('HODY/docs/Spec.md');
+    expect(report.warnings).toHaveLength(1);
+    expect(report.warnings[0]).toMatch(/skills of team hody .*403/);
+    expect(logged).toEqual(report.warnings);
+  });
+});

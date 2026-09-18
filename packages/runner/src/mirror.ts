@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { dirname, join, resolve, sep } from 'node:path';
 
 const DEFAULT_OUT = './itsaplan-mirror';
 const DEFAULT_INTERVAL_MS = 5000;
@@ -106,11 +106,14 @@ export function planDocumentPaths(docs: DocSummary[]): Map<number, string> {
   const byParent = new Map<number | null, DocSummary[]>();
   for (const d of docs) byParent.set(parentOf(d), [...(byParent.get(parentOf(d)) ?? []), d]);
   const stems = new Map<number, string>();
+  // A title of "." or ".." survives stemOf (it has no reserved characters) but would name a
+  // traversal segment once it becomes a folder, so it is neutered here.
+  const safeStem = (t: string) => stemOf(t).replace(/^\.+$/, '-');
   for (const siblings of byParent.values()) {
     const count = new Map<string, number>();
-    for (const d of siblings) count.set(stemOf(d.title), (count.get(stemOf(d.title)) ?? 0) + 1);
+    for (const d of siblings) count.set(safeStem(d.title), (count.get(safeStem(d.title)) ?? 0) + 1);
     for (const d of siblings) {
-      const stem = stemOf(d.title);
+      const stem = safeStem(d.title);
       stems.set(d.id, (count.get(stem) ?? 0) > 1 ? `${stem}-${d.id}` : stem);
     }
   }
@@ -188,13 +191,18 @@ export async function loadState(root: string): Promise<MirrorState> {
       };
     }
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+    if (!(err instanceof SyntaxError) && (err as NodeJS.ErrnoException).code !== 'ENOENT')
+      throw err;
   }
   return { version: 1, documents: {}, projects: {}, skills: {} };
 }
 
 export async function saveState(root: string, state: MirrorState): Promise<void> {
-  await writeText(join(root, STATE_PATH), `${JSON.stringify(state, null, 2)}\n`);
+  // Written aside and renamed so a crash mid-write leaves the previous state readable
+  // rather than a truncated file the next run has to discard.
+  const path = join(root, STATE_PATH);
+  await writeText(`${path}.tmp`, `${JSON.stringify(state, null, 2)}\n`);
+  await rename(`${path}.tmp`, path);
 }
 
 async function writeText(path: string, text: string): Promise<void> {
@@ -204,15 +212,26 @@ async function writeText(path: string, text: string): Promise<void> {
 
 async function exists(path: string): Promise<boolean> {
   try {
-    await readFile(path);
+    await access(path);
     return true;
   } catch {
     return false;
   }
 }
 
+// Titles, project keys and state.json paths all reach the filesystem here; a document titled
+// ".." plans "../" segments, so every write and delete is clamped to the mirror root.
+function under(root: string, rel: string): string {
+  const base = resolve(root);
+  const full = resolve(base, rel);
+  if (full !== base && !full.startsWith(base + sep)) {
+    throw new Error(`refusing to touch a path outside the mirror: ${rel}`);
+  }
+  return full;
+}
+
 const hashOf = (text: string) => createHash('sha256').update(text).digest('hex');
-const withFinalNewline = (text: string) => text.replace(/\n?$/, '\n');
+const withFinalNewline = (text: string) => text.replace(/\n*$/, '\n');
 
 function renderDocument(project: ProjectRow, doc: DocFull): string {
   const head = renderFrontmatter({
@@ -255,15 +274,15 @@ async function place(
   known: { path: string } | undefined,
   unchanged: boolean,
 ): Promise<void> {
-  if (known && unchanged && known.path === rel && (await exists(join(ctx.root, rel)))) {
+  if (known && unchanged && known.path === rel && (await exists(under(ctx.root, rel)))) {
     report.unchanged++;
     return;
   }
   if (known && known.path !== rel) {
-    await rm(join(ctx.root, known.path), { force: true });
+    await rm(under(ctx.root, known.path), { force: true });
     report.deleted.push(known.path);
   }
-  await writeText(join(ctx.root, rel), text);
+  await writeText(under(ctx.root, rel), text);
   report.written.push(rel);
 }
 
@@ -288,7 +307,7 @@ export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<Mi
     state.projects[project.id] = { hash };
 
     const key = encodeURIComponent(project.key);
-    const docs = await ctx.get<DocSummary[]>(`/projects/${key}/documents`);
+    const docs = [...(await ctx.get<DocSummary[]>(`/projects/${key}/documents`))];
     if (ctx.archived)
       docs.push(...(await ctx.get<DocSummary[]>(`/projects/${key}/documents?archived=true`)));
     const paths = planDocumentPaths(docs);
@@ -300,7 +319,7 @@ export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<Mi
         known &&
         known.version === doc.version &&
         known.path === rel &&
-        (await exists(join(ctx.root, rel)))
+        (await exists(under(ctx.root, rel)))
       ) {
         report.unchanged++;
         continue;
@@ -315,7 +334,7 @@ export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<Mi
 
   for (const [id, known] of Object.entries(state.documents)) {
     if (seenDocs.has(id)) continue;
-    await rm(join(ctx.root, known.path), { force: true });
+    await rm(under(ctx.root, known.path), { force: true });
     report.deleted.push(known.path);
     delete state.documents[id];
   }

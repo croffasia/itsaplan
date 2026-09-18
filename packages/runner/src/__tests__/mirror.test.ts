@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { mkdtemp, readFile, stat } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Client, RequestError } from '../client';
@@ -131,6 +131,11 @@ describe('planDocumentPaths', () => {
     expect(paths.get(2)).toBe('Notes-2.md');
     expect(paths.get(3)).toBe('Other.md');
   });
+  it('neuters a dot-only title so it can never become a traversal segment', () => {
+    const paths = planDocumentPaths([doc(1, '..'), doc(2, 'Child', 1)]);
+    expect(paths.get(1)).toBe('-.md');
+    expect(paths.get(2)).toBe('-/Child.md');
+  });
 });
 
 describe('renderFrontmatter', () => {
@@ -209,7 +214,7 @@ describe('syncOnce', () => {
       docs: { HODY: [summary(1, 'Spec'), summary(2, 'Auth', 1, 1)] },
       bodies: {
         'HODY:1': { ...summary(1, 'Spec'), content: '# Spec' },
-        'HODY:2': { ...summary(2, 'Auth', 1, 1), content: 'auth body' },
+        'HODY:2': { ...summary(2, 'Auth', 1, 1), content: 'auth body\n\n' },
       },
     });
     const state = await loadState(root);
@@ -286,5 +291,20 @@ describe('syncOnce', () => {
     const withArchive = await syncOnce({ get: api.get, root, archived: true, log: quiet }, state);
     expect(withArchive.written).toEqual(['HODY/docs/Gone.md']);
     expect(await readFile(join(root, 'HODY/docs/Gone.md'), 'utf8')).toContain('archived: true');
+  });
+
+  it('refuses to delete a state path that points outside the mirror', async () => {
+    const api = fakeApi({ projects: [project], docs: { HODY: [] }, bodies: {} });
+    const state = await loadState(root);
+    state.documents['9'] = { version: 1, path: '../../evil.md' };
+    await expect(
+      syncOnce({ get: api.get, root, archived: false, log: quiet }, state),
+    ).rejects.toThrow(/outside the mirror/);
+  });
+
+  it('starts from an empty state when state.json is corrupt', async () => {
+    await mkdir(join(root, '.itsaplan'), { recursive: true });
+    await writeFile(join(root, '.itsaplan/state.json'), 'not json {');
+    expect(await loadState(root)).toEqual({ version: 1, documents: {}, projects: {}, skills: {} });
   });
 });

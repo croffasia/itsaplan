@@ -19,7 +19,6 @@ const ERROR_BACKOFF_MS = 5_000;
 export interface MirrorArgs {
   out: string;
   url?: string;
-  key?: string;
   config?: string;
   watch: boolean;
   intervalMs: number;
@@ -44,14 +43,13 @@ export function parseMirrorArgs(argv: string[]): MirrorArgs {
     '--url': (v) => {
       args.url = v;
     },
-    '--key': (v) => {
-      args.key = v;
-    },
     '--config': (v) => {
       args.config = v;
     },
     '--interval': (v) => {
-      args.intervalMs = Math.max(Number.parseInt(v, 10) || DEFAULT_INTERVAL_MS, MIN_INTERVAL_MS);
+      const ms = Number.parseInt(v, 10);
+      if (Number.isNaN(ms)) throw new Error('--interval needs a number');
+      args.intervalMs = Math.max(ms, MIN_INTERVAL_MS);
     },
   };
   const flags: Record<string, () => void> = {
@@ -75,11 +73,11 @@ export function parseMirrorArgs(argv: string[]): MirrorArgs {
     const arg = argv[i];
     const eq = arg.indexOf('=');
     const name = eq === -1 ? arg : arg.slice(0, eq);
-    if (name in valued) {
+    if (Object.hasOwn(valued, name)) {
       const value = eq === -1 ? argv[++i] : arg.slice(eq + 1);
       if (value === undefined) throw new Error(`${name} needs a value`);
       valued[name](value);
-    } else if (arg in flags) {
+    } else if (Object.hasOwn(flags, arg)) {
       flags[arg]();
     } else {
       throw new Error(`unknown option ${arg}`);
@@ -131,10 +129,12 @@ export function planDocumentPaths(docs: DocSummary[]): Map<number, string> {
     }
   }
   const byId = new Map(docs.map((d) => [d.id, d]));
-  const folderOf = (id: number | null): string => {
-    if (id === null) return '';
+  // `seen` stops a parent cycle the API should never send from recursing until the stack ends.
+  const folderOf = (id: number | null, seen: Set<number> = new Set()): string => {
+    if (id === null || seen.has(id)) return '';
+    seen.add(id);
     const d = byId.get(id)!;
-    return `${folderOf(parentOf(d))}${stems.get(id)}/`;
+    return `${folderOf(parentOf(d), seen)}${stems.get(id)}/`;
   };
   return new Map(docs.map((d) => [d.id, `${folderOf(parentOf(d))}${stems.get(d.id)}.md`]));
 }
@@ -335,8 +335,7 @@ async function syncSkills(
   }
 }
 
-// Writes `text` at `rel` unless the state already records the same version/hash and the file
-// is still there; removes the previous file when the path moved. Shared by docs and skills.
+// Shared by docs and skills.
 async function place(
   ctx: SyncContext,
   report: MirrorReport,
@@ -357,13 +356,21 @@ async function place(
   report.written.push(rel);
 }
 
+// The sweep at the end of a pass deletes every state entry the pass did not see, so a project
+// whose documents were not read has to claim its existing files or they would be removed.
+function keepExistingDocs(state: MirrorState, seenDocs: Set<string>, dir: string): void {
+  for (const [id, known] of Object.entries(state.documents))
+    if (known.path.startsWith(`${dir}/docs/`)) seenDocs.add(id);
+}
+
 export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<MirrorReport> {
   const report: MirrorReport = { written: [], deleted: [], unchanged: 0, warnings: [] };
   const projects = await ctx.get<ProjectRow[]>('/projects');
   const seenDocs = new Set<string>();
 
   for (const project of projects) {
-    const readme = `${project.key}/README.md`;
+    const dir = safeStem(project.key);
+    const readme = `${dir}/README.md`;
     const text = renderProject(project);
     const hash = hashOf(text);
     const knownProject = state.projects[project.id];
@@ -377,13 +384,27 @@ export async function syncOnce(ctx: SyncContext, state: MirrorState): Promise<Mi
     );
     state.projects[project.id] = { hash };
 
+    if (project.documentsEnabled === false) {
+      keepExistingDocs(state, seenDocs, dir);
+      continue;
+    }
     const key = encodeURIComponent(project.key);
-    const docs = [...(await ctx.get<DocSummary[]>(`/projects/${key}/documents`))];
-    if (ctx.archived)
-      docs.push(...(await ctx.get<DocSummary[]>(`/projects/${key}/documents?archived=true`)));
+    let docs: DocSummary[];
+    try {
+      docs = [...(await ctx.get<DocSummary[]>(`/projects/${key}/documents`))];
+      if (ctx.archived)
+        docs.push(...(await ctx.get<DocSummary[]>(`/projects/${key}/documents?archived=true`)));
+    } catch (err) {
+      const status = (err as { status?: number }).status;
+      report.warnings.push(
+        `documents of project ${project.key} skipped — ${status ?? 'error'}: ${(err as Error).message}`,
+      );
+      keepExistingDocs(state, seenDocs, dir);
+      continue;
+    }
     const paths = planDocumentPaths(docs);
     for (const doc of docs) {
-      const rel = `${project.key}/docs/${paths.get(doc.id)}`;
+      const rel = `${dir}/docs/${paths.get(doc.id)}`;
       seenDocs.add(String(doc.id));
       const known = state.documents[doc.id];
       if (
@@ -448,9 +469,12 @@ export async function commitIfChanged(
   } catch {
     await run('git', ['-C', root, 'init', '-q']);
   }
-  if (toplevel && (await realpath(toplevel)) !== (await realpath(root))) {
-    throw new Error(
-      `--git refuses to commit: ${root} is inside the git repo at ${toplevel}; point --out at a directory of its own`,
+  if (toplevel && resolve(await realpath(toplevel)) !== resolve(await realpath(root))) {
+    throw Object.assign(
+      new Error(
+        `--git refuses to commit: ${root} is inside the git repo at ${toplevel}; point --out at a directory of its own`,
+      ),
+      { fatal: true },
     );
   }
   await run('git', ['-C', root, 'add', '-A']);
@@ -510,9 +534,11 @@ export async function watch(ctx: WatchContext): Promise<void> {
   };
   // A booting server refusing the first request must not kill --watch, so the initial pass
   // gets the same retry-with-backoff treatment as the loop below.
-  while (true) {
+  let synced = false;
+  while (!ctx.stopping()) {
     try {
       await pass();
+      synced = true;
       break;
     } catch (err) {
       if (isFatalWatchError(err)) throw err;
@@ -520,6 +546,7 @@ export async function watch(ctx: WatchContext): Promise<void> {
       await ctx.sleep(ERROR_BACKOFF_MS);
     }
   }
+  if (!synced) return;
   while (!ctx.stopping()) {
     await ctx.sleep(ctx.intervalMs);
     if (ctx.stopping()) break;
@@ -552,10 +579,10 @@ export async function resolveEndpoint(
     return text(file.apiKey) ?? text(keys?.[0]) ?? text(agents?.[0]?.apiKey);
   };
   const url = text(args.url) ?? text(env.ITSAPLAN_URL) ?? text(file.url);
-  const apiKey = text(args.key) ?? text(env.ITSAPLAN_API_KEY) ?? firstKey();
+  const apiKey = text(env.ITSAPLAN_API_KEY) ?? firstKey();
   if (!url) throw new Error('url is required: --url, ITSAPLAN_URL, or url in the config file');
   if (!apiKey)
-    throw new Error('apiKey is required: --key, ITSAPLAN_API_KEY, or apiKey in the config file');
+    throw new Error('apiKey is required: ITSAPLAN_API_KEY, or apiKey in the config file');
   return { url: url.replace(/\/+$/, ''), apiKey };
 }
 
@@ -566,7 +593,6 @@ Files are a read-only copy; edit in Itsaplan, never here.
 
   --out DIR        where to write (default ./itsaplan-mirror)
   --url URL        instance (default ITSAPLAN_URL or the config file)
-  --key KEY        API key (default ITSAPLAN_API_KEY or the config file)
   --config PATH    config file (default ITSAPLAN_RUNNER_CONFIG or ./itsaplan-runner.json)
   --watch          keep running; re-sync when Docs change (descriptions and skills every ~5 min)
   --interval MS    poll interval for --watch (default 5000, min 1000)
@@ -581,7 +607,7 @@ export async function runMirror(argv: string[]): Promise<void> {
     return;
   }
   const client = new Client(await resolveEndpoint(args, process.env));
-  const root = resolve(args.out.replace(/^~/, process.env.HOME ?? '~'));
+  const root = resolve(args.out.replace(/^~(?=$|\/)/, process.env.HOME ?? '~'));
   await mkdir(root, { recursive: true });
   const log = (message: string) => console.log(`[itsaplan-runner] ${message}`);
   const get: Get = (path) => client.get(path);

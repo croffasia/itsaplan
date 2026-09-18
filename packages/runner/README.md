@@ -159,8 +159,8 @@ itsaplan-runner mirror --watch --git                       # keep it current, co
 
 Layout: `<PROJECT>/README.md` (description), `<PROJECT>/docs/<title>.md` with child pages in a
 folder named after the parent, `teams/<team>/skills/<name>.md`. Each file starts with
-frontmatter (`id`, `version`, ...). The url and key come from the same places as the runner
-(`--url`/`--key`, `ITSAPLAN_URL`/`ITSAPLAN_API_KEY`, or the config file).
+frontmatter (`id`, `version`, ...). The url comes from `--url`, `ITSAPLAN_URL` or the config
+file; the key from `ITSAPLAN_API_KEY` or the config file.
 
 | Flag            | Default             | What it does                                                                     |
 | --------------- | ------------------- | -------------------------------------------------------------------------------- |
@@ -172,8 +172,9 @@ frontmatter (`id`, `version`, ...). The url and key come from the same places as
 
 Files are a copy, not a source: edit in Itsaplan (or through the MCP), never here; the next
 pass overwrites local edits. Private pages of other members are not visible to your key and
-are not mirrored. Skills need the `agent_skills: read` team permission; a key without it
-skips them with a warning. Assets and skill reference files are not mirrored.
+are not mirrored. A project that is deleted, or whose key changes, keeps its old `<KEY>/`
+folder; remove it by hand. Skills need the `agent_skills: read` team permission; a key without
+it skips them with a warning. Assets and skill reference files are not mirrored.
 
 ## Settings
 

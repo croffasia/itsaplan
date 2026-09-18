@@ -18,6 +18,8 @@ import {
   commitIfChanged,
   watch,
   resolveEndpoint,
+  runMirror,
+  MIRROR_HELP,
   type DocSummary,
   type Get,
 } from '../mirror';
@@ -74,8 +76,6 @@ describe('parseMirrorArgs', () => {
         '--out',
         '/tmp/m',
         '--url=http://h',
-        '--key',
-        'k',
         '--watch',
         '--interval=1500',
         '--git',
@@ -84,7 +84,6 @@ describe('parseMirrorArgs', () => {
     ).toMatchObject({
       out: '/tmp/m',
       url: 'http://h',
-      key: 'k',
       watch: true,
       intervalMs: 1500,
       git: true,
@@ -95,6 +94,25 @@ describe('parseMirrorArgs', () => {
     expect(() => parseMirrorArgs(['--bogus'])).toThrow('unknown option --bogus');
     expect(() => parseMirrorArgs(['--out'])).toThrow('--out needs a value');
     expect(parseMirrorArgs(['--interval', '10']).intervalMs).toBe(1000);
+    expect(() => parseMirrorArgs(['--interval', 'soon'])).toThrow('--interval needs a number');
+  });
+  it('treats an inherited Object property name as an unknown option', () => {
+    expect(() => parseMirrorArgs(['constructor', '/etc'])).toThrow('unknown option constructor');
+  });
+  it('prints the help and reads nothing else', async () => {
+    const real = process.stdout.write;
+    const out: string[] = [];
+    process.stdout.write = ((chunk: unknown) => {
+      out.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+    try {
+      await runMirror(['--help']);
+    } finally {
+      process.stdout.write = real;
+    }
+    expect(out.join('')).toBe(MIRROR_HELP);
+    expect(MIRROR_HELP).not.toContain('--key');
   });
 });
 
@@ -142,6 +160,11 @@ describe('planDocumentPaths', () => {
     const paths = planDocumentPaths([doc(1, '..'), doc(2, 'Child', 1)]);
     expect(paths.get(1)).toBe('-.md');
     expect(paths.get(2)).toBe('-/Child.md');
+  });
+  it('gives every document a path when two of them parent each other', () => {
+    const paths = planDocumentPaths([doc(1, 'A', 2), doc(2, 'B', 1)]);
+    expect(paths.get(1)).toMatch(/A\.md$/);
+    expect(paths.get(2)).toMatch(/B\.md$/);
   });
 });
 
@@ -309,6 +332,75 @@ describe('syncOnce', () => {
     ).rejects.toThrow(/outside the mirror/);
   });
 
+  it('keeps the files of a project whose documents the key may not read', async () => {
+    const first = fakeApi({
+      projects: [project],
+      docs: { HODY: [summary(1, 'Old')] },
+      bodies: { 'HODY:1': { ...summary(1, 'Old'), content: 'x' } },
+      skills: { '1': [] },
+    });
+    const state = await loadState(root);
+    await syncOnce({ get: first.get, root, archived: false, log: quiet }, state);
+
+    const second = fakeApi({
+      projects: [{ ...project, description: 'Tracker v2' }],
+      docs: {},
+      bodies: {},
+      skills: { '1': [] },
+    });
+    const get: Get = async <T>(path: string) => {
+      if (path.startsWith('/projects/HODY/documents'))
+        throw Object.assign(new Error('GET failed with 403'), { status: 403 });
+      return second.get<T>(path);
+    };
+    const report = await syncOnce({ get, root, archived: false, log: quiet }, state);
+    expect(report.written).toEqual(['HODY/README.md']);
+    expect(report.warnings).toHaveLength(1);
+    expect(report.warnings[0]).toMatch(/documents of project HODY .*403/);
+    expect(report.deleted).toEqual([]);
+    expect(await readFile(join(root, 'HODY/docs/Old.md'), 'utf8')).toContain('x');
+    expect(state.documents['1']).toBeDefined();
+  });
+
+  it('keeps the files of a project that has Docs turned off', async () => {
+    const api = fakeApi({
+      projects: [{ ...project, documentsEnabled: false }],
+      docs: {},
+      bodies: {},
+      skills: { '1': [] },
+    });
+    const state = await loadState(root);
+    state.documents['1'] = { version: 1, path: 'HODY/docs/Old.md' };
+    const report = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
+    expect(report.written).toEqual(['HODY/README.md']);
+    expect(report.warnings).toEqual([]);
+    expect(report.deleted).toEqual([]);
+    expect(api.calls).not.toContain('/projects/HODY/documents');
+    expect(state.documents['1']).toBeDefined();
+  });
+
+  it('mirrors a project whose key is a traversal segment under a safe folder', async () => {
+    const key = '../x';
+    const encoded = encodeURIComponent(key);
+    const api = fakeApi({
+      projects: [{ ...project, key }],
+      docs: { [encoded]: [summary(1, 'Spec')] },
+      bodies: { [`${encoded}:1`]: { ...summary(1, 'Spec'), content: 'x' } },
+      skills: { '1': [] },
+    });
+    const report = await syncOnce(
+      { get: api.get, root, archived: false, log: quiet },
+      await loadState(root),
+    );
+    const dir = stemOf(key);
+    expect(report.written).toHaveLength(2);
+    for (const path of report.written) {
+      expect(path.startsWith(`${dir}/`)).toBe(true);
+      expect(path.split('/')).not.toContain('..');
+    }
+    expect(await readFile(join(root, dir, 'README.md'), 'utf8')).toContain(`key: "${key}"`);
+  });
+
   it('starts from an empty state when state.json is corrupt', async () => {
     await mkdir(join(root, '.itsaplan'), { recursive: true });
     await writeFile(join(root, '.itsaplan/state.json'), 'not json {');
@@ -316,27 +408,26 @@ describe('syncOnce', () => {
   });
 });
 
+const skill = {
+  id: 4,
+  teamId: 1,
+  name: 'Review PR',
+  description: 'd',
+  source: 'inline',
+  sourceUrl: null,
+  files: [{ path: 'refs/a.md' }],
+};
+const withSkills = (over: Partial<typeof project> = {}) => ({
+  projects: [{ ...project, ...over }],
+  docs: { HODY: [] },
+  bodies: {},
+  skills: { '1': [skill] },
+  markdown: { '1:4': '# Review\n' },
+});
+
 describe('skills', () => {
   it('mirrors each skill of every team the projects belong to, once', async () => {
-    const api = fakeApi({
-      projects: [project],
-      docs: { HODY: [] },
-      bodies: {},
-      skills: {
-        '1': [
-          {
-            id: 4,
-            teamId: 1,
-            name: 'Review PR',
-            description: 'd',
-            source: 'inline',
-            sourceUrl: null,
-            files: [{ path: 'refs/a.md' }],
-          },
-        ],
-      },
-      markdown: { '1:4': '# Review\n' },
-    });
+    const api = fakeApi(withSkills());
     const state = await loadState(root);
     const report = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
     expect(report.written).toContain('teams/hody/skills/Review PR.md');
@@ -345,28 +436,25 @@ describe('skills', () => {
     );
     const again = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
     expect(again.written).toEqual([]);
+  });
 
-    const dotTeam = fakeApi({
-      projects: [{ ...project, teamName: '..' }],
-      docs: { HODY: [] },
-      bodies: {},
-      skills: {
-        '1': [
-          {
-            id: 4,
-            teamId: 1,
-            name: 'Review PR',
-            description: 'd',
-            source: 'inline',
-            sourceUrl: null,
-            files: [{ path: 'refs/a.md' }],
-          },
-        ],
-      },
-      markdown: { '1:4': '# Review\n' },
-    });
+  it('places a team named .. under a safe folder', async () => {
+    const state = await loadState(root);
+    await syncOnce({ get: fakeApi(withSkills()).get, root, archived: false, log: quiet }, state);
+    const dotTeam = fakeApi(withSkills({ teamName: '..' }));
     const renamed = await syncOnce({ get: dotTeam.get, root, archived: false, log: quiet }, state);
     expect(renamed.written).toContain('teams/-/skills/Review PR.md');
+  });
+
+  it("keeps a team's mirrored skills when a later pass may not read them", async () => {
+    const state = await loadState(root);
+    await syncOnce({ get: fakeApi(withSkills()).get, root, archived: false, log: quiet }, state);
+    const blind = fakeApi({ projects: [project], docs: { HODY: [] }, bodies: {} });
+    const report = await syncOnce({ get: blind.get, root, archived: false, log: quiet }, state);
+    expect(report.deleted).toEqual([]);
+    expect(await readFile(join(root, 'teams/hody/skills/Review PR.md'), 'utf8')).toContain(
+      '# Review',
+    );
   });
 
   it("warns once and keeps mirroring documents when the key may not read a team's skills", async () => {
@@ -436,8 +524,28 @@ describe('watch plumbing', () => {
     const before = (await run('git', ['-C', repoRoot, 'status', '--short'])).stdout;
     const wrote = { written: ['a.md'], deleted: [], unchanged: 0, warnings: [] };
     await expect(commitIfChanged(subdir, wrote, new Date())).rejects.toThrow(/inside the git repo/);
+    await expect(commitIfChanged(subdir, wrote, new Date())).rejects.toMatchObject({ fatal: true });
     const after = (await run('git', ['-C', repoRoot, 'status', '--short'])).stdout;
     expect(after).toBe(before);
+  });
+
+  it('returns instead of retrying forever when it is stopped before the first pass lands', async () => {
+    let attempts = 0;
+    const get: Get = async () => {
+      attempts++;
+      throw new Error('connection refused');
+    };
+    await watch({
+      get,
+      root,
+      archived: false,
+      log: quiet,
+      intervalMs: 1000,
+      git: false,
+      stopping: () => true,
+      sleep: async () => {},
+    });
+    expect(attempts).toBeLessThanOrEqual(1);
   });
 
   it('runs a pass when a document marker moves and otherwise only polls', async () => {
@@ -473,7 +581,7 @@ describe('watch plumbing', () => {
 });
 
 describe('resolveEndpoint', () => {
-  it('prefers the flag, then the environment, then the config file, and strips trailing slashes', async () => {
+  it('prefers --url over the environment over the file, and strips trailing slashes', async () => {
     const file = join(root, 'itsaplan-runner.json');
     await writeFile(
       file,
@@ -486,14 +594,15 @@ describe('resolveEndpoint', () => {
       apiKey: 'k-file',
     });
     expect(
-      await resolveEndpoint(
-        { ...args, url: 'http://flag/', key: 'k-flag' },
-        { ITSAPLAN_URL: 'http://env' },
-      ),
-    ).toEqual({
-      url: 'http://flag',
-      apiKey: 'k-flag',
-    });
+      await resolveEndpoint({ ...args, url: 'http://flag/' }, { ITSAPLAN_URL: 'http://env' }),
+    ).toEqual({ url: 'http://flag', apiKey: 'k-file' });
+  });
+  it('takes the key from the environment over the file, since there is no flag for it', async () => {
+    const file = join(root, 'itsaplan-runner.json');
+    await writeFile(file, JSON.stringify({ url: 'http://file', apiKey: 'k-file' }));
+    const args = parseMirrorArgs(['--config', file]);
+    expect((await resolveEndpoint(args, { ITSAPLAN_API_KEY: 'k-env' })).apiKey).toBe('k-env');
+    expect((await resolveEndpoint(args, {})).apiKey).toBe('k-file');
   });
   it('takes the first key of a multi-agent config and refuses a config without one', async () => {
     const multi = join(root, 'multi.json');

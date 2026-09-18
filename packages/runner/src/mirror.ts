@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { access, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, realpath, rename, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
@@ -96,6 +96,12 @@ export function stemOf(title: string): string {
   return printable.replace(/[<>:"/\\|?*]/g, '-').slice(0, 120) || 'untitled';
 }
 
+// A title of "." or ".." survives stemOf (it has no reserved characters) but would name a
+// traversal segment once it becomes a folder, so it is neutered here.
+function safeStem(t: string): string {
+  return stemOf(t).replace(/^\.+$/, '-');
+}
+
 export interface DocSummary {
   id: number;
   parentId: number | null;
@@ -113,9 +119,6 @@ export function planDocumentPaths(docs: DocSummary[]): Map<number, string> {
   const byParent = new Map<number | null, DocSummary[]>();
   for (const d of docs) byParent.set(parentOf(d), [...(byParent.get(parentOf(d)) ?? []), d]);
   const stems = new Map<number, string>();
-  // A title of "." or ".." survives stemOf (it has no reserved characters) but would name a
-  // traversal segment once it becomes a folder, so it is neutered here.
-  const safeStem = (t: string) => stemOf(t).replace(/^\.+$/, '-');
   for (const siblings of byParent.values()) {
     const count = new Map<string, number>();
     for (const d of siblings) count.set(safeStem(d.title), (count.get(safeStem(d.title)) ?? 0) + 1);
@@ -232,7 +235,9 @@ function under(root: string, rel: string): string {
   const base = resolve(root);
   const full = resolve(base, rel);
   if (full !== base && !full.startsWith(base + sep)) {
-    throw new Error(`refusing to touch a path outside the mirror: ${rel}`);
+    throw Object.assign(new Error(`refusing to touch a path outside the mirror: ${rel}`), {
+      fatal: true,
+    });
   }
   return full;
 }
@@ -297,7 +302,7 @@ async function syncSkills(
     for (const skill of skills) {
       const stateKey = `${teamId}:${skill.id}`;
       seen.add(stateKey);
-      const rel = `teams/${stemOf(teamName)}/skills/${stemOf(skill.name)}.md`;
+      const rel = `teams/${safeStem(teamName)}/skills/${stemOf(skill.name)}.md`;
       const { markdown } = await ctx.get<{ markdown: string }>(
         `/teams/${teamId}/agent-skills/${skill.id}/markdown`,
       );
@@ -432,24 +437,38 @@ export async function commitIfChanged(
   now: Date,
 ): Promise<boolean> {
   if (report.written.length === 0 && report.deleted.length === 0) return false;
+  // `git add -A` acts on the whole repo, so a mirror root nested inside someone else's repo
+  // must never reach it — refuse rather than stage or commit files outside the mirror.
+  let toplevel: string | undefined;
   try {
-    await run('git', ['-C', root, 'rev-parse', '--is-inside-work-tree']);
+    toplevel = (await run('git', ['-C', root, 'rev-parse', '--show-toplevel'])).stdout.trim();
   } catch {
     await run('git', ['-C', root, 'init', '-q']);
   }
+  if (toplevel && (await realpath(toplevel)) !== (await realpath(root))) {
+    throw new Error(
+      `--git refuses to commit: ${root} is inside the git repo at ${toplevel}; point --out at a directory of its own`,
+    );
+  }
   await run('git', ['-C', root, 'add', '-A']);
-  await run('git', [
-    '-C',
-    root,
-    '-c',
-    'user.name=itsaplan-runner',
-    '-c',
-    'user.email=runner@itsaplan.local',
-    'commit',
-    '-q',
-    '-m',
-    `mirror: ${now.toISOString()}`,
-  ]);
+  try {
+    await run('git', [
+      '-C',
+      root,
+      '-c',
+      'user.name=itsaplan-runner',
+      '-c',
+      'user.email=runner@itsaplan.local',
+      'commit',
+      '-q',
+      '-m',
+      `mirror: ${now.toISOString()}`,
+    ]);
+  } catch (err) {
+    const { stdout = '', stderr = '' } = err as { stdout?: string; stderr?: string };
+    if (`${stdout}${stderr}`.includes('nothing to commit')) return false;
+    throw err;
+  }
   return true;
 }
 
@@ -460,13 +479,22 @@ export interface WatchContext extends SyncContext {
   sleep: (ms: number) => Promise<void>;
 }
 
+function isFatalWatchError(err: unknown): boolean {
+  const status = (err as { status?: number }).status;
+  return status === 401 || status === 403 || (err as { fatal?: boolean }).fatal === true;
+}
+
 export async function watch(ctx: WatchContext): Promise<void> {
   const state = await loadState(ctx.root);
   const warned = new Set<string>();
   let last: Record<string, string> = {};
   let projectIds: number[] = [];
   let tick = 0;
+  // The rev read is taken before syncOnce, against the project set the previous pass saw, so
+  // a document edited while the sync is running is caught on the next tick instead of being
+  // folded into `last` as if it were already mirrored.
   const pass = async () => {
+    const preRevs = await readDocumentRevs(ctx.get, projectIds);
     const report = await syncOnce(ctx, state);
     await saveState(ctx.root, state);
     if (ctx.git) await commitIfChanged(ctx.root, report, new Date());
@@ -474,9 +502,20 @@ export async function watch(ctx: WatchContext): Promise<void> {
       `mirror: ${report.written.length} written, ${report.deleted.length} deleted, ${report.unchanged} unchanged`,
     );
     projectIds = (await ctx.get<ProjectRow[]>('/projects')).map((p) => p.id);
-    last = await readDocumentRevs(ctx.get, projectIds);
+    last = preRevs;
   };
-  await pass();
+  // A booting server refusing the first request must not kill --watch, so the initial pass
+  // gets the same retry-with-backoff treatment as the loop below.
+  while (true) {
+    try {
+      await pass();
+      break;
+    } catch (err) {
+      if (isFatalWatchError(err)) throw err;
+      ctx.log(`mirror: ${(err as Error).message} — retrying in ${ERROR_BACKOFF_MS / 1000}s`);
+      await ctx.sleep(ERROR_BACKOFF_MS);
+    }
+  }
   while (!ctx.stopping()) {
     await ctx.sleep(ctx.intervalMs);
     if (ctx.stopping()) break;
@@ -495,8 +534,7 @@ export async function watch(ctx: WatchContext): Promise<void> {
       if (moved || tick % SLOW_PASS_EVERY_TICKS === 0) await pass();
       else last = revs;
     } catch (err) {
-      const status = (err as { status?: number }).status;
-      if (status === 401 || status === 403) throw err;
+      if (isFatalWatchError(err)) throw err;
       ctx.log(`mirror: ${(err as Error).message} — retrying in ${ERROR_BACKOFF_MS / 1000}s`);
       await ctx.sleep(ERROR_BACKOFF_MS);
     }

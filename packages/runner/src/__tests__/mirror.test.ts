@@ -344,6 +344,28 @@ describe('skills', () => {
     );
     const again = await syncOnce({ get: api.get, root, archived: false, log: quiet }, state);
     expect(again.written).toEqual([]);
+
+    const dotTeam = fakeApi({
+      projects: [{ ...project, teamName: '..' }],
+      docs: { HODY: [] },
+      bodies: {},
+      skills: {
+        '1': [
+          {
+            id: 4,
+            teamId: 1,
+            name: 'Review PR',
+            description: 'd',
+            source: 'inline',
+            sourceUrl: null,
+            files: [{ path: 'refs/a.md' }],
+          },
+        ],
+      },
+      markdown: { '1:4': '# Review\n' },
+    });
+    const renamed = await syncOnce({ get: dotTeam.get, root, archived: false, log: quiet }, state);
+    expect(renamed.written).toContain('teams/-/skills/Review PR.md');
   });
 
   it("warns once and keeps mirroring documents when the key may not read a team's skills", async () => {
@@ -397,6 +419,26 @@ describe('watch plumbing', () => {
     expect(await commitIfChanged(root, idle, new Date())).toBe(false);
   });
 
+  it('returns false instead of throwing when git has nothing left to commit', async () => {
+    await writeFile(join(root, 'a.md'), 'x');
+    const wrote = { written: ['a.md'], deleted: [], unchanged: 0, warnings: [] };
+    expect(await commitIfChanged(root, wrote, new Date('2026-01-02T03:04:05Z'))).toBe(true);
+    expect(await commitIfChanged(root, wrote, new Date())).toBe(false);
+  });
+
+  it('refuses to commit when the mirror root sits inside a foreign git repo', async () => {
+    const repoRoot = await mkdtemp(join(tmpdir(), 'itsaplan-foreign-repo-'));
+    await run('git', ['-C', repoRoot, 'init', '-q']);
+    const subdir = join(repoRoot, 'mirror');
+    await mkdir(subdir, { recursive: true });
+    await writeFile(join(subdir, 'a.md'), 'x');
+    const before = (await run('git', ['-C', repoRoot, 'status', '--short'])).stdout;
+    const wrote = { written: ['a.md'], deleted: [], unchanged: 0, warnings: [] };
+    await expect(commitIfChanged(subdir, wrote, new Date())).rejects.toThrow(/inside the git repo/);
+    const after = (await run('git', ['-C', repoRoot, 'status', '--short'])).stdout;
+    expect(after).toBe(before);
+  });
+
   it('runs a pass when a document marker moves and otherwise only polls', async () => {
     let rev = 'a';
     let passes = 0;
@@ -423,7 +465,9 @@ describe('watch plumbing', () => {
         if (ticks === 2) rev = 'b';
       },
     });
-    // /projects is read twice per pass (sync + id refresh): initial pass and the moved-marker pass
-    expect(passes).toBe(4);
+    // /projects is read twice per pass (sync + id refresh). The pre-sync rev read starts
+    // empty, so the first tick after the initial pass always finds a "moved" marker and runs
+    // an extra pass on top of the one the real marker move triggers: 3 passes x 2 reads = 6.
+    expect(passes).toBe(6);
   });
 });

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { AlertTriangle, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ClipboardPaste, Loader2, RotateCw, ShieldCheck } from 'lucide-react';
 import '@xterm/xterm/css/xterm.css';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ManagedServer } from '@/lib/api';
 import { useServerTerminal } from '../hooks/useServerTerminal';
@@ -16,7 +17,8 @@ const STATUS_LABEL = {
 
 export default function ServerTerminal({ server }: { server: ManagedServer }) {
   const [container, setContainer] = useState<HTMLDivElement | null>(null);
-  const { status, error, pinned } = useServerTerminal(server.id, container);
+  const { status, error, pinned, paste, reconnect } = useServerTerminal(server.id, container);
+  const ended = status === 'closed' || status === 'error';
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -34,10 +36,30 @@ export default function ServerTerminal({ server }: { server: ManagedServer }) {
             {server.username}@{server.host}:{server.port}
           </span>
         </div>
-        <span className="shrink-0 text-xs text-muted-foreground">
-          {status === 'connecting' && <Loader2 className="mr-1 inline size-3 animate-spin" />}
-          {STATUS_LABEL[status]}
-        </span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">
+            {status === 'connecting' && <Loader2 className="mr-1 inline size-3 animate-spin" />}
+            {STATUS_LABEL[status]}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-6"
+            title="Paste the clipboard into the shell (Ctrl+Shift+V, or right-click)"
+            aria-label="Paste into the terminal"
+            disabled={status !== 'connected'}
+            onClick={() => void paste()}
+          >
+            <ClipboardPaste className="size-3.5" />
+          </Button>
+          {ended && (
+            <Button type="button" variant="outline" size="sm" className="h-6" onClick={reconnect}>
+              <RotateCw className="size-3.5" />
+              Reconnect
+            </Button>
+          )}
+        </div>
       </div>
 
       {error && (

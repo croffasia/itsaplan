@@ -140,6 +140,8 @@
     "download": "Download",
     "downloadFile": "Download {name}",
     "deleteFile": "Delete {name}",
+    "deleteTitle": "Delete attachment",
+    "deleteConfirmation": "Delete {name}? It is also removed from the description wherever it is embedded. This cannot be undone.",
     "preview": "Preview {name}",
     "remove": "Remove {name}",
     "removeShort": "Remove",

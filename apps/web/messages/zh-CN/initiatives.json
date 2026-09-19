@@ -153,7 +153,9 @@
     "open": "打开 {name}",
     "download": "下载",
     "downloadFile": "下载 {name}",
-    "deleteFile": "删除 {name}"
+    "deleteFile": "删除 {name}",
+    "deleteTitle": "删除附件",
+    "deleteConfirmation": "删除 {name}？它也会从描述中所有嵌入的位置移除。此操作无法撤销。"
   },
   "documents": {
     "title": "文档",

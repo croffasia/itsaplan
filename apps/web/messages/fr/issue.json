@@ -140,6 +140,8 @@
     "download": "Télécharger",
     "downloadFile": "Télécharger {name}",
     "deleteFile": "Supprimer {name}",
+    "deleteTitle": "Supprimer la pièce jointe",
+    "deleteConfirmation": "Supprimer {name} ? Le fichier est aussi retiré de la description partout où il est intégré. Cette action est irréversible.",
     "preview": "Aperçu de {name}",
     "remove": "Retirer {name}",
     "removeShort": "Retirer",

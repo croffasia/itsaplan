@@ -140,6 +140,8 @@
     "download": "Baixar",
     "downloadFile": "Baixar {name}",
     "deleteFile": "Excluir {name}",
+    "deleteTitle": "Excluir anexo",
+    "deleteConfirmation": "Excluir {name}? Ele também será removido da descrição onde estiver incorporado. Isso não pode ser desfeito.",
     "preview": "Visualizar {name}",
     "remove": "Remover {name}",
     "removeShort": "Remover",

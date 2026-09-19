@@ -140,6 +140,8 @@
     "download": "Завантажити",
     "downloadFile": "Завантажити {name}",
     "deleteFile": "Видалити {name}",
+    "deleteTitle": "Видалити вкладення",
+    "deleteConfirmation": "Видалити {name}? Файл також буде прибрано з опису всюди, де він вбудований. Дію неможливо скасувати.",
     "preview": "Переглянути {name}",
     "remove": "Прибрати {name}",
     "removeShort": "Прибрати",

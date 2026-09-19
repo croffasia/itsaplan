@@ -140,6 +140,8 @@
     "download": "Скачать",
     "downloadFile": "Скачать {name}",
     "deleteFile": "Удалить {name}",
+    "deleteTitle": "Удалить вложение",
+    "deleteConfirmation": "Удалить {name}? Файл также будет убран из описания везде, где он встроен. Действие нельзя отменить.",
     "preview": "Посмотреть {name}",
     "remove": "Убрать {name}",
     "removeShort": "Убрать",

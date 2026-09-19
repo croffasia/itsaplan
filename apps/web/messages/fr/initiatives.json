@@ -153,7 +153,9 @@
     "open": "Ouvrir {name}",
     "download": "Télécharger",
     "downloadFile": "Télécharger {name}",
-    "deleteFile": "Supprimer {name}"
+    "deleteFile": "Supprimer {name}",
+    "deleteTitle": "Supprimer la pièce jointe",
+    "deleteConfirmation": "Supprimer {name} ? Le fichier est aussi retiré de la description partout où il est intégré. Cette action est irréversible."
   },
   "documents": {
     "title": "Documents",

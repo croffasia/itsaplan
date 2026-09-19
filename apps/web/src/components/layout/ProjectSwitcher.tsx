@@ -5,7 +5,7 @@ import { useSession } from '@/lib/auth-client';
 import { useTeamsQuery } from '@/services/teams.service';
 import { qk } from '@/services/queryKeys';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
-import { SidebarMenu, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import ProjectSwitcherTrigger from './ProjectSwitcherTrigger';
 import ProjectSwitcherMenu from './ProjectSwitcherMenu';
 import { useProjectSwitcherPreferences } from './hooks/useProjectSwitcherPreferences';
@@ -19,6 +19,7 @@ export default function ProjectSwitcher({
   currentProjectKey: string | null;
   onSelectProject: (key: string) => void;
 }) {
+  const { isMobile } = useSidebar();
   const teams = useTeamsQuery().data ?? [];
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -31,6 +32,7 @@ export default function ProjectSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <Popover
+          modal={isMobile}
           open={open}
           onOpenChange={(value) => {
             setOpen(value);

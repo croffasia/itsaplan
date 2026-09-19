@@ -140,6 +140,8 @@
     "download": "Télécharger",
     "downloadFile": "Télécharger {name}",
     "deleteFile": "Supprimer {name}",
+    "deleteTitle": "Supprimer la pièce jointe",
+    "deleteConfirmation": "Supprimer {name} ? Le fichier est aussi retiré de la description partout où il est intégré. Cette action est irréversible.",
     "preview": "Aperçu de {name}",
     "remove": "Retirer {name}",
     "removeShort": "Retirer",
@@ -387,9 +389,9 @@
     }
   },
   "documents": {
-    "title": "Docs",
-    "add": "Lier une page Docs",
-    "empty": "Aucune page Docs liée.",
+    "title": "Documents",
+    "add": "Lier un document",
+    "empty": "Aucun document lié.",
     "loadFailed": "Impossible de charger les pages liées. Cliquez pour réessayer.",
     "remove": "Dissocier {title}",
     "untitled": "Sans titre"

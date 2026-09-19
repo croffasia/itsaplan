@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import {
@@ -69,6 +69,12 @@ export default function AuthLoginForm() {
   // The confirmation link carries ?verified=1 and adds ?error=… when it failed, so
   // the success line only stands while there is no error next to it.
   const justVerified = params.get('verified') === '1' && !redirectError;
+
+  const router = useRouter();
+  // A fresh instance has nobody to sign in: the first account is created on sign-up.
+  useEffect(() => {
+    if (authConfig?.hasUsers === false) router.replace('/register');
+  }, [authConfig?.hasUsers, router]);
 
   function switchTo(next: Method) {
     setMethod(next);

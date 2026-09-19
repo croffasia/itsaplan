@@ -751,3 +751,27 @@
     background-position: -200% 0;
   }
 }
+
+.md-content [id^='block-']:target {
+  outline: 2px solid color-mix(in srgb, var(--primary) 35%, transparent);
+  outline-offset: 6px;
+  border-radius: 4px;
+  scroll-margin-top: 5rem;
+}
+.document-issue-link {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  padding: 1px 5px;
+  text-decoration: none;
+  font-size: 0.9em;
+  font-weight: 500;
+}
+
+.document-comment-mark {
+  background-color: color-mix(in oklch, var(--primary) 12%, transparent);
+  border-bottom: 2px solid color-mix(in oklch, var(--primary) 45%, transparent);
+  cursor: pointer;
+}
+.document-comment-mark:hover {
+  background-color: color-mix(in oklch, var(--primary) 22%, transparent);
+}

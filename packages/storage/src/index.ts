@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import {
   S3Client,
   PutObjectCommand,
@@ -5,9 +6,10 @@ import {
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 
-// S3-compatible object store (MinIO) for issue attachments. Only the file
-// bytes live here; the metadata and object key are rows in issue_attachment
-// (see modules/attachments/service.ts).
+// S3-compatible object store (MinIO) for attachments — api's issue/chat/document/
+// initiative attachments and the worker's imported issue attachments alike. Only
+// the file bytes live here; the metadata and object key are rows in whichever
+// table owns them (issue_attachment, chat_attachment, ...).
 //
 // Config comes from env. forcePathStyle is required for MinIO (and most
 // self-hosted S3 gateways) because they do not serve virtual-host-style buckets;
@@ -80,8 +82,40 @@ export async function deleteObjects(keys: string[]): Promise<void> {
   await Promise.all(
     keys.map((key) =>
       deleteObject(key).catch((err) => {
-        console.error(`[planner] failed to delete object ${key}:`, err);
+        console.error(`[storage] failed to delete object ${key}:`, err);
       }),
     ),
   );
+}
+
+// Keeps a filename usable as a path segment and free of control characters,
+// falling back to a plain default when nothing usable is left.
+export function safeAttachmentFilename(input: string, fallback = 'file'): string {
+  const basename = input.split(/[\\/]/).pop() ?? '';
+  const printable = [...basename]
+    .map((character) => {
+      const code = character.charCodeAt(0);
+      return code < 32 || code === 127 ? '_' : character;
+    })
+    .join('')
+    .trim();
+  const filename = printable.slice(-255);
+  return filename && filename !== '.' && filename !== '..' ? filename : fallback;
+}
+
+// The object key an attachment is stored under: scoped by project and namespace,
+// optionally by an owner within it (an issue id, say), and made unique with a
+// uuid so re-uploading the same filename never collides with or overwrites
+// an earlier version.
+export function attachmentObjectKey(
+  projectId: number,
+  namespace: 'attachments' | 'chat' | 'documents' | 'initiatives',
+  ownerId: number | null,
+  filename: string,
+): string {
+  const safeName = safeAttachmentFilename(filename)
+    .replace(/[^\w.-]+/g, '_')
+    .slice(-100);
+  const ownerPath = ownerId === null ? '' : `${ownerId}/`;
+  return `projects/${projectId}/${namespace}/${ownerPath}${randomUUID()}-${safeName}`;
 }

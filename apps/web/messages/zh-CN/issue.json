@@ -140,6 +140,8 @@
     "download": "下载",
     "downloadFile": "下载 {name}",
     "deleteFile": "删除 {name}",
+    "deleteTitle": "删除附件",
+    "deleteConfirmation": "删除 {name}？它也会从描述中所有嵌入的位置移除。此操作无法撤销。",
     "preview": "预览 {name}",
     "remove": "移除 {name}",
     "removeShort": "移除",
@@ -387,9 +389,9 @@
     }
   },
   "documents": {
-    "title": "Docs",
-    "add": "关联 Docs 页面",
-    "empty": "暂无关联的 Docs 页面。",
+    "title": "文档",
+    "add": "关联文档",
+    "empty": "暂无关联文档。",
     "loadFailed": "无法加载关联页面。点击重试。",
     "remove": "取消关联 {title}",
     "untitled": "无标题"

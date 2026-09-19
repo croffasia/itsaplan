@@ -270,7 +270,31 @@ if (mode === 'env') {
 
 if (mode === 'try') {
   const compose = ['docker', 'compose'];
+  const TRY_VOLUME = 'itsaplan_postgres-data';
   await stopOther(['docker', 'compose', '-f', 'docker-compose.dev.yml'], 'Develop');
+
+  // Before writeSecrets, which generates new secrets only while the volume is absent.
+  if (await volumeExists(TRY_VOLUME)) {
+    const wipe = answer(
+      await p.select({
+        message: 'This instance already has data.',
+        options: [
+          { value: false, label: 'Keep it', hint: 'the existing accounts and projects stay' },
+          {
+            value: true,
+            label: 'Start fresh',
+            hint: 'the database and every uploaded file are deleted',
+          },
+        ],
+      }),
+    );
+    if (wipe) {
+      const wiping = p.spinner();
+      wiping.start('Deleting the data');
+      await run(...compose, 'down', '-v');
+      wiping.stop('Data deleted');
+    }
+  }
 
   const running = await isUp(compose);
 
@@ -291,7 +315,7 @@ if (mode === 'try') {
     env.set('WEB_PORT', String(webPort));
     env.set('API_URL', `http://localhost:${apiPort}`);
     env.set('APP_URL', `http://localhost:${webPort}`);
-    await writeSecrets(env, 'itsaplan_postgres-data');
+    await writeSecrets(env, TRY_VOLUME);
     env.save();
   }
 

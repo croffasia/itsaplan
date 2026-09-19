@@ -6,7 +6,7 @@
     "initiatives": "المبادرات (initiatives)",
     "cycles": "الدورات (cycles)",
     "dashboards": "لوحات المعلومات",
-    "documents": "Docs",
+    "documents": "المستندات",
     "views": "عروض عناصر العمل",
     "members_invite": "الدعوات",
     "members_manage": "الأعضاء",
@@ -23,6 +23,7 @@
     "actions": "الإجراءات",
     "webhooks": "خطافات الويب (webhooks)",
     "note_boards": "لوحات الملاحظات",
+    "import_export": "استيراد/تصدير",
     "danger_zone": "منطقة الخطر"
   },
   "actions": {
@@ -34,7 +35,7 @@
   "groups": {
     "workItems": "عناصر العمل",
     "dashboards": "لوحات المعلومات",
-    "documents": "Docs",
+    "documents": "المستندات",
     "notes": "الملاحظات",
     "ai": "الذكاء الاصطناعي",
     "configuration": "التهيئة",

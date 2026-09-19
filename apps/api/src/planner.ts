@@ -21,6 +21,7 @@ import { cycleRoutes } from './modules/cycles';
 import { attachmentRoutes } from './modules/attachments';
 import { chatAttachmentRoutes } from './modules/chat-attachments';
 import { importRoutes } from './modules/imports';
+import { importExportRoutes } from './modules/import-export';
 import { avatarRoutes } from './modules/avatars';
 import { viewRoutes } from './modules/views';
 import { shareRoutes } from './modules/share';
@@ -104,6 +105,7 @@ export const planner = new Elysia({ name: 'planner' })
   .use(attachmentRoutes)
   .use(chatAttachmentRoutes)
   .use(importRoutes)
+  .use(importExportRoutes)
   .use(avatarRoutes)
   .use(viewRoutes)
   .use(shareRoutes)

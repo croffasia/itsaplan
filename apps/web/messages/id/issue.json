@@ -140,6 +140,8 @@
     "download": "Unduh",
     "downloadFile": "Unduh {name}",
     "deleteFile": "Hapus {name}",
+    "deleteTitle": "Hapus lampiran",
+    "deleteConfirmation": "Hapus {name}? Berkas ini juga akan dihapus dari deskripsi di mana pun disematkan. Tindakan ini tidak dapat dibatalkan.",
     "preview": "Pratinjau {name}",
     "remove": "Hapus {name}",
     "removeShort": "Hapus",

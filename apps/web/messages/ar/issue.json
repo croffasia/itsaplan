@@ -140,6 +140,8 @@
     "download": "تنزيل",
     "downloadFile": "تنزيل {name}",
     "deleteFile": "حذف {name}",
+    "deleteTitle": "حذف المرفق",
+    "deleteConfirmation": "حذف {name}؟ سيُزال أيضًا من الوصف في كل موضع مضمَّن فيه. لا يمكن التراجع عن ذلك.",
     "preview": "معاينة {name}",
     "remove": "إزالة {name}",
     "removeShort": "إزالة",
@@ -387,9 +389,9 @@
     }
   },
   "documents": {
-    "title": "Docs",
-    "add": "ربط صفحة Docs",
-    "empty": "لا توجد صفحات Docs مرتبطة بعد.",
+    "title": "المستندات",
+    "add": "ربط مستند",
+    "empty": "لا توجد مستندات مرتبطة بعد.",
     "loadFailed": "تعذر تحميل الصفحات المرتبطة. انقر لإعادة المحاولة.",
     "remove": "إلغاء ربط {title}",
     "untitled": "بلا عنوان"

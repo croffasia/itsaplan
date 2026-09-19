@@ -7,7 +7,7 @@ import { pinnedFetch } from '#shared/net';
 import { mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '#modules/issues/service';
-import { getStorageSettings, MB } from '#modules/settings/service';
+import { getStorageSettings, MB } from '@repo/db';
 import {
   AttachmentResponse,
   AttachmentListResponse,

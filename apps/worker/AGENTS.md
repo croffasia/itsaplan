@@ -1,8 +1,8 @@
 # worker — rules
 
-Webhook delivery worker: a standalone Bun process that drains the
-`webhook_delivery` queue and posts signed payloads to subscriber URLs. Runs as its
-own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
+Standalone Bun process (own Dockerfile, separate from `apps/api`) that drains a
+few background queues: webhook delivery, notification delivery, agent
+scheduling, and source imports. See root `AGENTS.md`.
 
 ## What it does
 
@@ -19,6 +19,54 @@ own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
   `@repo/mailer`, Telegram through the Bot API. The provider credentials are read
   from the database and decrypted here (`notification-send.ts`), so the process
   needs `APP_ENCRYPTION_KEY`.
+- Drives `import_job` rows through Discover -> Create -> Link -> Rewrite ->
+  Attachments -> Done. See "Source imports" below.
+
+## Source imports
+
+`import-worker.ts` polls `import_job` for a due `pending` row (`import-store.ts`,
+same claim-with-lease shape as `webhook_delivery`) and advances it by one bounded
+chunk of work per tick — a large import interleaves across many ticks rather than
+running to completion in one.
+
+- `canonical.ts` — the source-independent shape an adapter produces
+  (`CanonicalIssue`, `CanonicalState`, ...). Plain types, no logic.
+- `reader.ts` — the `SourceReader` port a source adapter implements.
+- `plane-adapter.ts` — the only implementation today. HTTP against a Plane
+  instance via `pinnedFetch`, using the credential decrypted from the job row
+  (base URL, workspace slug, API key — never from env, since this has to work
+  against any operator's self-hosted instance). `docs/dev/plane-import-source-notes.md`
+  is the spec it follows for pagination, rate limiting, and Plane's actual wire
+  shapes.
+- `cross-reference.ts` — pure text matching for a source's own "KEY-123"-style
+  issue identifier: no `@repo/db`, no network, unit-tested directly. What
+  the Rewrite phase resolves into itsaplan's own issue ids.
+- `import-store.ts` — all `@repo/db` access for imports: claiming due jobs,
+  reading/writing a job's phase/cursor/status, the `import_record`
+  source-id-to-local-id upsert, and creating the local rows (states, labels,
+  cycles, issues, comments, issue links) an import produces.
+- `import-worker.ts` — the phase state machine. Discover snapshots every
+  source id up front (`import_record` rows with no local id yet) before Create
+  begins, rather than treating the source's own pagination cursor as the
+  resumability anchor across the whole job — see the notes file's "Pagination"
+  section for why. Create/Link/Rewrite resume from `import_record`'s own id,
+  not the source's cursor. Link also gives every issue's parent link a second
+  chance to resolve, the same way it already does for relations. Rewrite scans
+  every created issue's description and comments for a mention of the
+  source's own identifier and rewrites it to this project's, purely from
+  already-local data — it makes no further requests to the source.
+- The Attachments phase re-lists each issue's attachments (metadata alone,
+  captured during Create, is not reused — a download needs a fresh resolve of
+  the two-hop, hour-lived URL right before it happens) and downloads the
+  bytes it hasn't already created a local row for. Size and mime type are
+  checked against the instance's own upload settings (`@repo/db`'s
+  `getStorageSettings`/`mimeAllowed`) before the request; the project's
+  storage quota (`@repo/db`'s `projectStoredBytes`, `@repo/storage`'s
+  `putObject`/`attachmentObjectKey`) is checked before the upload and once
+  more inside the same advisory lock (`lockAttachmentStorage`) an interactive
+  upload takes, so the two never both pass a check that only one of them can
+  actually fit. A rejected attachment (`AttachmentRejectedError`) is logged
+  and skipped, not treated as a failed tick.
 
 ## Invariants
 
@@ -41,7 +89,15 @@ own service (own Dockerfile), separate from `apps/api`. See root `AGENTS.md`.
   the lease comfortably larger than `WEBHOOK_TIMEOUT_MS`.
 - **Pure logic stays dependency-free.** `backoff.ts`, `signature.ts`, and
   `isRetryableStatus` import nothing from `@repo/db`, so unit tests run without a
-  database. Keep DB access in `store.ts`.
+  database. Keep DB access in `store.ts`. Same split for imports: `canonical.ts`,
+  `reader.ts`, `plane-adapter.ts`, and `cross-reference.ts` import nothing from
+  `@repo/db` (its state-category normalization, markdown conversion,
+  cursor/rate-limit, and cross-reference matching logic are unit-tested
+  directly); `@repo/db` access stays in `import-store.ts`.
+- **An import job's credential is decrypted here, never routed through
+  `packages/db/src/domains/`.** That directory is for config more than one
+  process reads; only the worker ever decrypts a stored import credential (the
+  api sees the raw token once, at creation, before it is encrypted).
 
 ## Config
 
@@ -50,7 +106,12 @@ All via env with defaults (see `src/config.ts`): `WEBHOOK_POLL_INTERVAL_MS`,
 `WEBHOOK_DISABLE_THRESHOLD`, `WEBHOOK_LEASE_SECONDS`, `WEBHOOK_CLEANUP_DAYS`,
 `WEBHOOK_CLEANUP_EVERY_TICKS`. Only `DATABASE_URL` is required for webhook
 delivery. Notification delivery also needs `APP_ENCRYPTION_KEY` (the same value the
-api uses) to read the stored provider credentials.
+api uses) to read the stored provider credentials, and so does source import (it
+decrypts the stored Plane credential with it too). `IMPORT_POLL_INTERVAL_MS` tunes
+the import worker's poll interval. The Attachments phase needs the same `S3_*`
+variables (`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
+`S3_REGION`, `S3_FORCE_PATH_STYLE`) the api reads for its own uploads — both
+processes write to the same bucket.
 
 ## Tests
 

@@ -81,6 +81,7 @@ export interface PublicAuthConfig {
   // The sign-in button text the operator gave their identity provider. Empty when
   // OIDC is not offered, or when they left it blank.
   oidcLabel: string;
+  hasUsers: boolean;
 }
 
 // Project settings: MCP reachability and the enabled sections. Owner-only; the

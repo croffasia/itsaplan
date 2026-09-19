@@ -188,7 +188,17 @@
     "previewCustomField": "Custom field",
     "previewAllWorkItems": "All work items",
     "previewUpdated": "Updated {date}",
-    "previewOtherValues": "({count} more)"
+    "previewOtherValues": "({count} more)",
+    "previewLink": "预览链接",
+    "previewLinks": "预览链接（{count}）",
+    "previewNamedLink": "预览 {name}",
+    "backToLinks": "返回链接列表",
+    "openLink": "打开链接",
+    "copyLink": "复制链接",
+    "copiedLink": "已复制",
+    "editLink": "编辑链接",
+    "retryPreview": "重试",
+    "copyLinkFailed": "无法复制链接。请选择并复制上方的 URL。"
   },
   "chart": {
     "download": "保存图表",

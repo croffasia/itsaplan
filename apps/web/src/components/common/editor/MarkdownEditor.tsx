@@ -46,6 +46,7 @@ export default function MarkdownEditor({
   editable = true,
   uploadFile,
   imageAttachments,
+  readingLinks = true,
 }: {
   defaultValue: string;
   onChange?: (markdown: string) => void;
@@ -64,6 +65,7 @@ export default function MarkdownEditor({
   // Offered in a picker, to embed an upload again. Omitted where there is nothing
   // stored to read them from yet (a create dialog), which drops the picker.
   imageAttachments?: Embeddable[];
+  readingLinks?: boolean;
 }) {
   const t = useTranslations('common.editor');
   const editorRef = useRef<Editor | null>(null);
@@ -196,7 +198,7 @@ export default function MarkdownEditor({
       {/* Grows with the text rather than being pinned to the container's height,
           so a container that scrolls measures the overflow and shows a bar. */}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
-      <EditorLinkPreview editor={editor} />
+      <EditorLinkPreview editor={editor} source={defaultValue} compact={readingLinks} />
       {imageAttachments && (
         <EditorImagePicker
           open={imagePickerOpen}

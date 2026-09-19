@@ -34,9 +34,11 @@ function blocksOf(parts: AiChatPart[]): Block[] {
 export default function AgentChatMessage({
   message,
   showDate,
+  complete = true,
 }: {
   message: ChatMessage;
   showDate: boolean;
+  complete?: boolean;
 }) {
   const t = useTranslations('common.agentChat');
   const isUser = message.role === 'user';
@@ -63,7 +65,7 @@ export default function AgentChatMessage({
                   {isUser ? (
                     <AgentChatUserText text={block.text} />
                   ) : (
-                    <Markdown>{block.text}</Markdown>
+                    <Markdown complete={complete}>{block.text}</Markdown>
                   )}
                 </BubbleContent>
               ),

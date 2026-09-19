@@ -263,7 +263,7 @@ export default function DocumentMarkdownEditor({
       )}
       {editable && <EditorTableMenu editor={editor} />}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
-      <EditorLinkPreview editor={editor} />
+      <EditorLinkPreview editor={editor} source={defaultJson ? '' : defaultValue} />
     </div>
   );
 }

@@ -188,7 +188,17 @@
     "previewCustomField": "Custom field",
     "previewAllWorkItems": "All work items",
     "previewUpdated": "Updated {date}",
-    "previewOtherValues": "({count} more)"
+    "previewOtherValues": "({count} more)",
+    "previewLink": "Предпросмотр ссылки",
+    "previewLinks": "Предпросмотр ссылок ({count})",
+    "previewNamedLink": "Предпросмотр: {name}",
+    "backToLinks": "Назад к ссылкам",
+    "openLink": "Открыть ссылку",
+    "copyLink": "Копировать ссылку",
+    "copiedLink": "Скопировано",
+    "editLink": "Изменить ссылку",
+    "retryPreview": "Повторить",
+    "copyLinkFailed": "Не удалось скопировать ссылку. Выделите и скопируйте URL выше."
   },
   "chart": {
     "download": "Сохранить график",

@@ -115,10 +115,22 @@ function isNonPublicIp(ip: string): boolean {
   );
 }
 
-// Validates the URL and resolves its hostname once. `pin` is the address the caller
-// must connect to; it is absent only when the host is already an IP literal.
-async function vet(raw: string, policy: UrlPolicy = {}): Promise<{ url: URL; pin?: Pin }> {
-  policy.signal?.throwIfAborted();
+interface Checked {
+  url: URL;
+  host: string;
+  allowed: boolean;
+  devRelaxed: boolean;
+  blockedIp: (ip: string) => boolean;
+  // The host is an IP literal or an inherently local name, so there is nothing to
+  // resolve.
+  literal: boolean;
+}
+
+// The checks that need no DNS lookup: the URL parses, uses a scheme the policy
+// permits, and a literal or inherently local host is not private unless it is
+// excused. Split out of vet so a URL that is stored now and fetched later can be
+// refused at the point it is entered.
+function check(raw: string, policy: UrlPolicy = {}): Checked {
   let url: URL;
   try {
     url = new URL(raw);
@@ -126,11 +138,18 @@ async function vet(raw: string, policy: UrlPolicy = {}): Promise<{ url: URL; pin
     throw new UrlNotAllowedError('url must be a valid URL');
   }
 
+  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  const allowed = !policy.publicOnly && isAllowedHost(host);
   const devRelaxed =
     !policy.publicOnly && process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
+  // A host named in SSRF_ALLOWED_HOSTS is reachable over http as well: it is normally
+  // an internal service that terminates no TLS — a model server, a Gitea on the same
+  // network — and requiring a certificate from it would leave no way to name it at
+  // all. Every other scheme is refused for it too, and what travels there travels in
+  // the clear. publicOnly never consults that list, so this cannot widen it.
   if (
     url.protocol !== 'https:' &&
-    !((devRelaxed || policy.publicOnly) && url.protocol === 'http:')
+    !((devRelaxed || policy.publicOnly || allowed) && url.protocol === 'http:')
   ) {
     throw new UrlNotAllowedError('url must use https');
   }
@@ -138,15 +157,28 @@ async function vet(raw: string, policy: UrlPolicy = {}): Promise<{ url: URL; pin
     throw new UrlNotAllowedError('url must not include credentials');
   }
 
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '');
-  const allowed = !policy.publicOnly && isAllowedHost(host);
   const blockedIp = policy.publicOnly ? isNonPublicIp : isPrivateIp;
-  if (isLocalHostname(host) || (isIP(host) && blockedIp(host))) {
-    if (!devRelaxed && !allowed) {
-      throw new UrlNotAllowedError('url must not point to a private or local address');
-    }
-    return { url };
+  const literal = isLocalHostname(host) || (isIP(host) !== 0 && blockedIp(host));
+  if (literal && !devRelaxed && !allowed) {
+    throw new UrlNotAllowedError('url must not point to a private or local address');
   }
+  return { url, host, allowed, devRelaxed, blockedIp, literal };
+}
+
+// The synchronous subset of assertPublicHttpUrl, for a URL that is stored now and
+// fetched later: a permitted scheme, and a literal or local host must not be private.
+// It does not resolve the hostname, so the fetch itself still has to go through
+// pinnedFetch or assertPublicHttpUrl. Throws UrlNotAllowedError on any failure.
+export function checkHttpUrl(raw: string, policy?: UrlPolicy): URL {
+  return check(raw, policy).url;
+}
+
+// Validates the URL and resolves its hostname once. `pin` is the address the caller
+// must connect to; it is absent only when the host is already an IP literal.
+async function vet(raw: string, policy: UrlPolicy = {}): Promise<{ url: URL; pin?: Pin }> {
+  policy.signal?.throwIfAborted();
+  const { url, host, allowed, devRelaxed, blockedIp, literal } = check(raw, policy);
+  if (literal) return { url };
 
   let addrs: Pin[];
   let abort: (() => void) | undefined;

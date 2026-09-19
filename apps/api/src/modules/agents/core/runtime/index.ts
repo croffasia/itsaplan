@@ -15,6 +15,7 @@ import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { projectPreamble } from '../prompt/framing';
 import { HttpError } from '#shared/lib';
+import { assertPublicHttpUrl } from '#shared/net';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
 // from its stored configuration (provider/model/instructions) and run against a
@@ -51,7 +52,11 @@ async function resolveModel(row: AiAgentRow): Promise<ModelConfig> {
   if (!modelId) {
     throw new HttpError(400, `Agent has no model set for provider "${provider}"`);
   }
+  // The provider SDK fetches the base URL with the key attached, so it is vetted
+  // against the SSRF rules at run time as well as when it was stored: the host it
+  // resolves to can change in between.
   const baseUrl = secret.config.baseUrl ? String(secret.config.baseUrl) : null;
+  if (baseUrl) await assertPublicHttpUrl(baseUrl);
   return {
     providerId: provider,
     modelId,

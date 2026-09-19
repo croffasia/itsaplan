@@ -1,3 +1,4 @@
+import { pinnedFetch } from '@repo/net';
 import type { GraphApiResponse, ToolConfig } from '../../types';
 import { sleep } from '../time';
 
@@ -26,7 +27,7 @@ export async function threadsRequest(
   for (const [k, v] of Object.entries(params)) {
     if (v != null) url.searchParams.set(k, String(v));
   }
-  const res = await fetch(url, { method });
+  const res = await pinnedFetch(url.toString(), { method });
   const raw = await res.text();
   let body: GraphApiResponse = {};
   try {

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 import { jinaAuth } from './auth';
@@ -14,7 +15,7 @@ export const jinaClassify: CustomToolEntry = {
     labels: z.array(z.string()).min(2).describe('The candidate labels to choose from.'),
   }),
   execute: async (credential, input) => {
-    const res = await fetch('https://api.jina.ai/v1/classify', {
+    const res = await pinnedFetch('https://api.jina.ai/v1/classify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...jinaAuth(credential) },
       body: JSON.stringify({

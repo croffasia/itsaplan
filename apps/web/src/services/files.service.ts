@@ -14,8 +14,15 @@ export function useFilesQuery(projectKey: string) {
 export function useUploadFile(projectKey: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ file, customerId }: { file: File; customerId?: string }) =>
-      api.uploadProjectFile(projectKey, file, customerId),
+    mutationFn: ({
+      file,
+      customerId,
+      folder,
+    }: {
+      file: File;
+      customerId?: string;
+      folder?: string;
+    }) => api.uploadProjectFile(projectKey, file, customerId, folder),
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: qk.projectFiles(projectKey) }),
   });
 }

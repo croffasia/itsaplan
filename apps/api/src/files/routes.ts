@@ -19,6 +19,7 @@ import {
   getProjectFileByPublicId,
   getProjectFileProjectId,
   listProjectFiles,
+  normaliseFolder,
   type ProjectFileRow,
 } from './store';
 
@@ -29,6 +30,7 @@ const ProjectFileResponse = t.Object({
   sizeBytes: t.Number(),
   uploadedByName: t.Nullable(t.String()),
   customerId: t.Nullable(t.String()),
+  folder: t.String(),
   createdAt: t.String(),
 });
 
@@ -40,6 +42,7 @@ function projectFileDto(row: ProjectFileRow) {
     sizeBytes: row.sizeBytes,
     uploadedByName: row.uploadedByName,
     customerId: row.customerId,
+    folder: row.folder,
     createdAt: row.createdAt,
   };
 }
@@ -49,6 +52,7 @@ async function storeProjectFile(
   userId: string,
   file: File,
   crmCustomerId?: number,
+  folder?: string,
 ): Promise<ProjectFileRow> {
   if (file.size === 0) throw new HttpError(400, 'Uploaded file is empty');
 
@@ -67,6 +71,7 @@ async function storeProjectFile(
       filename,
       contentType,
       sizeBytes: file.size,
+      folder: normaliseFolder(folder),
     });
   } catch (error) {
     await discardUploadedObject(key);
@@ -104,13 +109,19 @@ export const fileRoutes = new Elysia({ name: 'files', detail: { tags: ['Files'] 
     async ({ project, user, body, set }) => {
       const file = body.file;
       if (!(file instanceof File)) throw new HttpError(400, 'No file uploaded (form field "file")');
-      const row = await storeProjectFile(project.id, requireUser(user).id, file);
+      const row = await storeProjectFile(
+        project.id,
+        requireUser(user).id,
+        file,
+        undefined,
+        body.folder,
+      );
       set.status = 201;
       return projectFileDto(row);
     },
     {
       permission: ['files', 'create'],
-      body: t.Object({ file: t.File() }),
+      body: t.Object({ file: t.File(), folder: t.Optional(t.String({ maxLength: 80 })) }),
       response: {
         201: ProjectFileResponse,
         400: ErrorResponse,

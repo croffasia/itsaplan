@@ -114,6 +114,9 @@ services:
       # the vault is a named volume rather than a host path — sync it out of the
       # server to reach it from Obsidian. Voice capture is off unless WHISPER_URL
       # points at a transcription service.
+      # Phone: the Rinkel API key the call history is read with.
+      RINKEL_KEY: ${RINKEL_KEY:-}
+      PHONE_WEBHOOK_TOKEN: ${PHONE_WEBHOOK_TOKEN:-}
       WHISPER_URL: ${WHISPER_URL:-}
       WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}
       OBSIDIAN_VAULT_DIR: /vault

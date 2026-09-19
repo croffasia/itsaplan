@@ -757,6 +757,37 @@ export interface MailAddress {
   address: string;
 }
 
+export type SignalSeverity = 'critical' | 'attention' | 'info';
+
+export interface CommandSignal {
+  id: string;
+  severity: SignalSeverity;
+  title: string;
+  detail: string;
+  count: number;
+  // A path under the project, where the work itself is.
+  href: string;
+  resource: string;
+  snoozedUntil: string | null;
+}
+
+export interface CommandCenter {
+  generatedAt: string;
+  signals: CommandSignal[];
+  // The signal to start with. Null when everything is handled or snoozed.
+  focusId: string | null;
+}
+
+export type MailFolderKind = 'inbox' | 'sent' | 'drafts' | 'spam' | 'trash' | 'archive' | 'other';
+
+export interface MailFolder {
+  path: string;
+  name: string;
+  kind: MailFolderKind;
+  total: number;
+  unread: number;
+}
+
 export interface MailMessageSummary {
   uid: number;
   messageId: string | null;
@@ -1461,6 +1492,7 @@ export interface ProjectFile {
   contentType: string;
   sizeBytes: number;
   uploadedByName: string | null;
+  folder: string;
   createdAt: string;
 }
 
@@ -2203,6 +2235,8 @@ export type PermissionResource =
   | 'braindump'
   | 'mind'
   | 'competitors'
+  | 'studio'
+  | 'phone'
   | 'servers'
   | 'mail'
   | 'calendar'
@@ -2319,9 +2353,11 @@ async function sendProjectFile(
   projectKey: string,
   file: File,
   customerId?: string,
+  folder?: string,
 ): Promise<ProjectFile> {
   const form = new FormData();
   form.append('file', file);
+  if (folder) form.append('folder', folder);
   const path = customerId
     ? `/projects/${encodeURIComponent(projectKey)}/crm/customers/${encodeURIComponent(customerId)}/files`
     : `/projects/${encodeURIComponent(projectKey)}/files`;
@@ -2814,6 +2850,174 @@ export function serverTerminalUrl(serverId: number, cols: number, rows: number):
   return `${base}/servers/${serverId}/terminal?cols=${cols}&rows=${rows}`;
 }
 
+export type StudioLayout = 'statement' | 'feature' | 'announcement' | 'overlay';
+export type StudioAspect = 'square' | 'portrait' | 'story';
+
+export interface StudioTemplate {
+  id: string;
+  name: string;
+  layout: StudioLayout;
+  aspect: StudioAspect;
+  backgroundColor: string;
+  textColor: string;
+  accentColor: string;
+  fontFamily: string;
+  stylePrompt: string;
+  credentialId: number | null;
+  imageModel: string;
+  textModel: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type StudioTemplateInput = Omit<StudioTemplate, 'id' | 'createdAt' | 'updatedAt'>;
+export type StudioTemplatePatch = Partial<StudioTemplateInput>;
+
+export interface StudioPost {
+  id: string;
+  templateId: string;
+  templateName: string;
+  createdByName: string | null;
+  title: string;
+  topic: string;
+  lead: string;
+  headline: string;
+  subtext: string;
+  chips: string[];
+  ctaLabel: string;
+  caption: string;
+  imagePrompt: string;
+  folder: string;
+  sourceImageId: string | null;
+  renderedImageId: string | null;
+  status: 'draft' | 'ready';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface StudioPostInput {
+  templateId: string;
+  title: string;
+  topic?: string;
+}
+
+export type StudioPostPatch = Partial<
+  Pick<
+    StudioPost,
+    | 'title'
+    | 'topic'
+    | 'lead'
+    | 'headline'
+    | 'subtext'
+    | 'chips'
+    | 'ctaLabel'
+    | 'caption'
+    | 'imagePrompt'
+    | 'status'
+  >
+>;
+
+export interface StudioModels {
+  image: { id: string; name: string }[];
+  text: { id: string; name: string }[];
+}
+
+// The rendered post image is drawn in the browser and posted back as a file, the
+// same way an upload is sent.
+async function sendRenderedPost(postId: string, blob: Blob): Promise<StudioPost> {
+  const form = new FormData();
+  form.append('file', new File([blob], 'post.png', { type: 'image/png' }));
+  const res = await fetch(`${API_URL}/studio/posts/${encodeURIComponent(postId)}/rendered`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+  }
+  return res.json();
+}
+
+export interface PhoneNumber {
+  id: string;
+  label: string | null;
+  number: string;
+  status: string;
+}
+
+export interface PhoneOverview {
+  configured: boolean;
+  numbers: PhoneNumber[];
+  newVoicemails: number;
+}
+
+export interface PhoneCall {
+  id: string;
+  callId: string;
+  date: string;
+  direction: 'inbound' | 'outbound';
+  status: string;
+  missedReason: string | null;
+  duration: number;
+  externalNumber: string | null;
+  anonymous: boolean;
+  blocked: boolean;
+  internalNumber: string | null;
+  internalLabel: string | null;
+  contactName: string | null;
+  userName: string | null;
+  recordingId: string | null;
+  voicemailId: string | null;
+  voicemailNew: boolean;
+  hasNotes: boolean;
+  sentiment: string | null;
+  summary: string | null;
+  crmCustomerId: string | null;
+  crmCustomerName: string | null;
+}
+
+export interface PhoneCallEvent {
+  id: number;
+  event: string;
+  callId: string | null;
+  direction: string | null;
+  externalNumber: string | null;
+  internalNumber: string | null;
+  receivedAt: string;
+}
+
+export interface PhoneDevice {
+  deviceId: string;
+  name: string;
+}
+
+export interface PhoneRecordingSettings {
+  enabled: boolean;
+  insightsEnabled: boolean;
+}
+
+export interface PhoneCallFilters {
+  page?: number;
+  direction?: 'inbound' | 'outbound';
+  status?: string;
+  search?: string;
+  numberId?: string;
+}
+
+export interface PhoneCalls {
+  calls: PhoneCall[];
+  pagination: { totalItems: number; totalPages: number; currentPage: number; perPage: number };
+  stats: {
+    total: number;
+    inbound: number;
+    answered: number;
+    missed: number;
+    voicemail: number;
+    averageDuration: number;
+  };
+}
+
 export const api = {
   listProjects: (opts?: { permissions?: boolean }) =>
     request<Project[]>(`/projects${opts?.permissions ? '?permissions=true' : ''}`),
@@ -3130,8 +3334,8 @@ export const api = {
 
   listProjectFiles: (projectKey: string) =>
     request<ProjectFile[]>(`/projects/${encodeURIComponent(projectKey)}/files`),
-  uploadProjectFile: (projectKey: string, file: File, customerId?: string) =>
-    sendProjectFile(projectKey, file, customerId),
+  uploadProjectFile: (projectKey: string, file: File, customerId?: string, folder?: string) =>
+    sendProjectFile(projectKey, file, customerId, folder),
   downloadProjectFile: async (publicId: string) => {
     const res = await fetch(`${API_URL}/files/${encodeURIComponent(publicId)}/raw`, {
       credentials: 'include',
@@ -3268,6 +3472,101 @@ export const api = {
       `/projects/${encodeURIComponent(projectKey)}/competitors/events/read`,
       { method: 'POST' },
     ),
+  getPhoneRecordingSettings: (projectKey: string, numberId: string) =>
+    request<PhoneRecordingSettings>(
+      `/projects/${encodeURIComponent(projectKey)}/phone/numbers/${encodeURIComponent(numberId)}/recording`,
+    ),
+  setPhoneRecording: (projectKey: string, numberId: string, enabled: boolean) =>
+    request<void>(
+      `/projects/${encodeURIComponent(projectKey)}/phone/numbers/${encodeURIComponent(numberId)}/recording`,
+      { method: 'PUT', body: JSON.stringify({ enabled }) },
+    ),
+  addPhoneCallNote: (projectKey: string, callId: string, content: string) =>
+    request<void>(
+      `/projects/${encodeURIComponent(projectKey)}/phone/calls/${encodeURIComponent(callId)}/note`,
+      { method: 'PUT', body: JSON.stringify({ content }) },
+    ),
+  getPhoneTranscription: (projectKey: string, callId: string) =>
+    request<{ transcription: string }>(
+      `/projects/${encodeURIComponent(projectKey)}/phone/calls/${encodeURIComponent(callId)}/transcription`,
+    ).then((res) => res.transcription),
+  blockPhoneNumber: (projectKey: string, number: string, reason?: string) =>
+    request<void>(`/projects/${encodeURIComponent(projectKey)}/phone/block`, {
+      method: 'POST',
+      body: JSON.stringify({ number, reason }),
+    }),
+  unblockPhoneNumber: (projectKey: string, number: string) =>
+    request<void>(`/projects/${encodeURIComponent(projectKey)}/phone/block`, {
+      method: 'DELETE',
+      body: JSON.stringify({ number }),
+    }),
+  listPhoneDevices: (projectKey: string) =>
+    request<PhoneDevice[]>(`/projects/${encodeURIComponent(projectKey)}/phone/devices`),
+  startPhoneCall: (
+    projectKey: string,
+    input: { deviceId: string; to: string; numberId: string; anonymous?: boolean },
+  ) =>
+    request<void>(`/projects/${encodeURIComponent(projectKey)}/phone/dial`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  listPhoneEvents: (projectKey: string, since: number) =>
+    request<PhoneCallEvent[]>(
+      `/projects/${encodeURIComponent(projectKey)}/phone/events?since=${since}`,
+    ),
+  getPhoneOverview: (projectKey: string) =>
+    request<PhoneOverview>(`/projects/${encodeURIComponent(projectKey)}/phone/overview`),
+  listPhoneCalls: (projectKey: string, filters: PhoneCallFilters = {}) => {
+    const query = new URLSearchParams();
+    for (const [key, value] of Object.entries(filters)) {
+      if (value !== undefined && value !== '') query.set(key, String(value));
+    }
+    const suffix = query.size > 0 ? `?${query}` : '';
+    return request<PhoneCalls>(`/projects/${encodeURIComponent(projectKey)}/phone/calls${suffix}`);
+  },
+  getPhoneRecordingUrl: (projectKey: string, recordingId: string) =>
+    request<{ data: { url: string } }>(
+      `/projects/${encodeURIComponent(projectKey)}/phone/recordings/${encodeURIComponent(recordingId)}/stream`,
+    ).then((res) => res.data.url),
+  getPhoneVoicemailUrl: (projectKey: string, voicemailId: string) =>
+    request<{ data: { url: string } }>(
+      `/projects/${encodeURIComponent(projectKey)}/phone/voicemails/${encodeURIComponent(voicemailId)}/stream`,
+    ).then((res) => res.data.url),
+  listStudioTemplates: (projectKey: string) =>
+    request<StudioTemplate[]>(`/projects/${encodeURIComponent(projectKey)}/studio/templates`),
+  createStudioTemplate: (projectKey: string, input: StudioTemplateInput) =>
+    request<StudioTemplate>(`/projects/${encodeURIComponent(projectKey)}/studio/templates`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateStudioTemplate: (templateId: string, patch: StudioTemplatePatch) =>
+    request<StudioTemplate>(`/studio/templates/${encodeURIComponent(templateId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteStudioTemplate: (templateId: string) =>
+    request<void>(`/studio/templates/${encodeURIComponent(templateId)}`, { method: 'DELETE' }),
+  listStudioPosts: (projectKey: string) =>
+    request<StudioPost[]>(`/projects/${encodeURIComponent(projectKey)}/studio/posts`),
+  createStudioPost: (projectKey: string, input: StudioPostInput) =>
+    request<StudioPost>(`/projects/${encodeURIComponent(projectKey)}/studio/posts`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
+  updateStudioPost: (postId: string, patch: StudioPostPatch) =>
+    request<StudioPost>(`/studio/posts/${encodeURIComponent(postId)}`, {
+      method: 'PATCH',
+      body: JSON.stringify(patch),
+    }),
+  deleteStudioPost: (postId: string) =>
+    request<void>(`/studio/posts/${encodeURIComponent(postId)}`, { method: 'DELETE' }),
+  generateStudioCopy: (postId: string) =>
+    request<StudioPost>(`/studio/posts/${encodeURIComponent(postId)}/copy`, { method: 'POST' }),
+  generateStudioImage: (postId: string) =>
+    request<StudioPost>(`/studio/posts/${encodeURIComponent(postId)}/image`, { method: 'POST' }),
+  storeRenderedStudioPost: (postId: string, blob: Blob) => sendRenderedPost(postId, blob),
+  listStudioModels: (projectKey: string) =>
+    request<StudioModels>(`/projects/${encodeURIComponent(projectKey)}/studio/models`),
   getServerOverview: (projectKey: string) =>
     request<ServerOverview>(`/projects/${encodeURIComponent(projectKey)}/servers/overview`),
   listServers: (projectKey: string) =>
@@ -4003,14 +4302,33 @@ export const api = {
     request<void>(`/projects/${projectKey}/mailbox/settings`, {
       method: 'DELETE',
     }),
-  listMailboxMessages: (projectKey: string) =>
-    request<MailMessageSummary[]>(`/projects/${projectKey}/mailbox/messages`),
-  getMailboxMessage: (projectKey: string, uid: number) =>
-    request<MailMessage>(`/projects/${projectKey}/mailbox/messages/${uid}`),
-  markMailboxMessageRead: (projectKey: string, uid: number) =>
-    request<void>(`/projects/${projectKey}/mailbox/messages/${uid}/read`, {
-      method: 'POST',
-    }),
+  getCommandCenter: (projectKey: string) =>
+    request<CommandCenter>(`/projects/${encodeURIComponent(projectKey)}/command-center`),
+  snoozeSignal: (projectKey: string, signalId: string, hours: number) =>
+    request<void>(
+      `/projects/${encodeURIComponent(projectKey)}/command-center/${encodeURIComponent(signalId)}/snooze`,
+      { method: 'POST', body: JSON.stringify({ hours }) },
+    ),
+  unsnoozeSignal: (projectKey: string, signalId: string) =>
+    request<void>(
+      `/projects/${encodeURIComponent(projectKey)}/command-center/${encodeURIComponent(signalId)}/snooze`,
+      { method: 'DELETE' },
+    ),
+  listMailboxFolders: (projectKey: string) =>
+    request<MailFolder[]>(`/projects/${projectKey}/mailbox/folders`),
+  listMailboxMessages: (projectKey: string, folder: string) =>
+    request<MailMessageSummary[]>(
+      `/projects/${projectKey}/mailbox/messages?folder=${encodeURIComponent(folder)}`,
+    ),
+  getMailboxMessage: (projectKey: string, uid: number, folder: string) =>
+    request<MailMessage>(
+      `/projects/${projectKey}/mailbox/messages/${uid}?folder=${encodeURIComponent(folder)}`,
+    ),
+  markMailboxMessageRead: (projectKey: string, uid: number, folder: string) =>
+    request<void>(
+      `/projects/${projectKey}/mailbox/messages/${uid}/read?folder=${encodeURIComponent(folder)}`,
+      { method: 'POST' },
+    ),
   sendMailboxMessage: (projectKey: string, input: SendMailboxMessageInput) =>
     request<{ sent: boolean }>(`/projects/${projectKey}/mailbox/messages`, {
       method: 'POST',

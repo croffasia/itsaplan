@@ -29,6 +29,8 @@ const RESOURCE_LABELS: Record<string, string> = {
   braindump: 'Braindump',
   mind: 'Mind',
   competitors: 'Competitors',
+  studio: 'Studio',
+  phone: 'Business number',
   servers: 'Servers',
   mail: 'Email',
   calendar: 'Calendar',

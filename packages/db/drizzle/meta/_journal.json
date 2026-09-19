@@ -547,6 +547,34 @@
       "when": 1789666296990,
       "tag": "0077_ancient_redwing",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1789677756164,
+      "tag": "0078_breezy_warbound",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1789773776434,
+      "tag": "0079_good_thing",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1789776667072,
+      "tag": "0080_closed_robbie_robertson",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1789781541636,
+      "tag": "0081_lethal_ikaris",
+      "breakpoints": true
     }
   ]
 }

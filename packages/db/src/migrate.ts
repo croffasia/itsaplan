@@ -1,5 +1,6 @@
 // Programmatic migration runner — used on api container startup
 // (drizzle-kit is not needed in production, only the generated SQL in ./drizzle).
+import { fileURLToPath } from 'node:url';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
@@ -12,7 +13,9 @@ if (!connectionString) {
 const migrationClient = postgres(connectionString, { max: 1 });
 const db = drizzle(migrationClient);
 
-const migrationsFolder = new URL('../drizzle', import.meta.url).pathname;
+// fileURLToPath, not URL.pathname: on Windows the latter yields a leading slash
+// before the drive letter, which fs cannot open.
+const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url));
 
 console.log('⏳ Running migrations...');
 await migrate(db, { migrationsFolder });

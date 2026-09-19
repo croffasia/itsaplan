@@ -156,11 +156,15 @@ export const projectFile = pgTable(
     filename: text('filename').notNull(),
     contentType: text('content_type').notNull(),
     sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    // The vault folder the file sits in. A single flat name, '' for the root —
+    // the file list groups on it and Studio writes each post's assets into its own.
+    folder: text('folder').notNull().default(''),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index('project_file_project_idx').on(t.projectId, t.createdAt),
     index('project_file_crm_customer_idx').on(t.crmCustomerId, t.createdAt),
+    index('project_file_folder_idx').on(t.projectId, t.folder),
   ],
 );
 
@@ -1836,4 +1840,145 @@ export const calendarConnection = pgTable(
     unique('calendar_connection_member_unique').on(t.projectId, t.userId, t.provider),
     check('calendar_connection_provider_check', sql`${t.provider} IN ('google')`),
   ],
+);
+
+// A signal a member has pushed away until later. The command centre derives its
+// signals from the rest of the dashboard on every read, so there is nothing to
+// mark as handled; what is kept is only the choice to stop showing one for a while.
+export const commandCenterSnooze = pgTable(
+  'command_center_snooze',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    // The signal's stable id, for example 'finance.invoices_overdue'.
+    signalId: text('signal_id').notNull(),
+    until: timestamp('until', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('command_center_snooze_unique').on(t.projectId, t.userId, t.signalId),
+    index('command_center_snooze_member_idx').on(t.projectId, t.userId, t.until),
+  ],
+);
+
+// A post template: the design every post built on it is rendered with. The layout
+// itself is code (the browser draws the post on a canvas from these values), which
+// is what keeps two posts on one template identical in composition. The template
+// only carries what that drawing code reads, plus the models and the style prompt
+// used to fill it.
+export const studioTemplate = pgTable(
+  'studio_template',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    layout: text('layout').notNull().default('statement'),
+    aspect: text('aspect').notNull().default('square'),
+    backgroundColor: text('background_color').notNull().default('#000000'),
+    textColor: text('text_color').notNull().default('#ffffff'),
+    accentColor: text('accent_color').notNull().default('#9ca3af'),
+    fontFamily: text('font_family').notNull().default('Inter'),
+    // Prepended to every image prompt of a post on this template, so the generated
+    // photos share one look across posts.
+    stylePrompt: text('style_prompt').notNull().default(''),
+    // The OpenRouter credential the generation calls are billed to, and the model
+    // ids they address. An empty text model means captions are not generated.
+    credentialId: integer('credential_id').references(() => integrationCredential.id, {
+      onDelete: 'set null',
+    }),
+    imageModel: text('image_model').notNull().default('google/gemini-3.1-flash-image'),
+    textModel: text('text_model').notNull().default(''),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('studio_template_project_name_unique').on(t.projectId, t.name),
+    index('studio_template_project_idx').on(t.projectId, t.name),
+    check(
+      'studio_template_layout_check',
+      sql`${t.layout} IN ('statement', 'feature', 'announcement', 'overlay')`,
+    ),
+    check('studio_template_aspect_check', sql`${t.aspect} IN ('square', 'portrait', 'story')`),
+  ],
+);
+
+// One post. The text fields are what the template's layout draws; the two file
+// references are the generated photo and the finished post image, both ordinary
+// vault files inside the post's own folder.
+export const studioPost = pgTable(
+  'studio_post',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    // A template in use cannot be deleted, so an existing post can always be
+    // re-rendered with the design it was built on.
+    templateId: integer('template_id')
+      .notNull()
+      .references(() => studioTemplate.id, { onDelete: 'restrict' }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    title: text('title').notNull(),
+    // What the user asked for, kept as the input the text generation re-runs from.
+    topic: text('topic').notNull().default(''),
+    // The quieter line drawn above the headline in the accent colour. Every layout
+    // reads the same three text fields; what each one does with them differs.
+    leadLine: text('lead_line').notNull().default(''),
+    headline: text('headline').notNull().default(''),
+    subtext: text('subtext').notNull().default(''),
+    // The pill labels the feature layout draws under the headline.
+    chips: jsonb('chips').$type<string[]>().notNull().default([]),
+    // The text in the pill button the announcement layout draws at the bottom.
+    ctaLabel: text('cta_label').notNull().default(''),
+    caption: text('caption').notNull().default(''),
+    imagePrompt: text('image_prompt').notNull().default(''),
+    // The vault folder holding this post's files.
+    folder: text('folder').notNull(),
+    sourceImageFileId: integer('source_image_file_id').references(() => projectFile.id, {
+      onDelete: 'set null',
+    }),
+    renderedFileId: integer('rendered_file_id').references(() => projectFile.id, {
+      onDelete: 'set null',
+    }),
+    status: text('status').notNull().default('draft'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('studio_post_project_idx').on(t.projectId, t.createdAt),
+    check('studio_post_status_check', sql`${t.status} IN ('draft', 'ready')`),
+  ],
+);
+
+// A call event Rinkel pushed to the webhook endpoint. The Rinkel account is
+// instance-wide rather than per project, so these rows are not project-scoped
+// either; access is governed by the `phone` permission of whichever project the
+// member is looking at.
+//
+// Rinkel documents the body only as { event, payload } with an untyped payload,
+// so the whole body is kept and the fields below are what could be read out of it.
+export const phoneCallEvent = pgTable(
+  'phone_call_event',
+  {
+    id: serial('id').primaryKey(),
+    event: text('event').notNull(),
+    callId: text('call_id'),
+    direction: text('direction'),
+    externalNumber: text('external_number'),
+    internalNumber: text('internal_number'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('phone_call_event_received_idx').on(t.receivedAt)],
 );

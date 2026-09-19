@@ -135,6 +135,16 @@ export const qk = {
   mindRecalls: (projectKey: string) => ['mindRecalls', projectKey] as const,
   mindStale: (projectKey: string) => ['mindStale', projectKey] as const,
   competitors: (projectKey: string) => ['competitors', projectKey] as const,
+  studioTemplates: (projectKey: string) => ['studioTemplates', projectKey] as const,
+  studioPosts: (projectKey: string) => ['studioPosts', projectKey] as const,
+  studioModels: (projectKey: string) => ['studioModels', projectKey] as const,
+  phoneOverview: (projectKey: string) => ['phoneOverview', projectKey] as const,
+  phoneCalls: (projectKey: string, filters: unknown) =>
+    ['phoneCalls', projectKey, filters] as const,
+  phoneRecording: (projectKey: string, numberId: string) =>
+    ['phoneRecording', projectKey, numberId] as const,
+  phoneDevices: (projectKey: string) => ['phoneDevices', projectKey] as const,
+  phoneEvents: (projectKey: string, since: number) => ['phoneEvents', projectKey, since] as const,
   competitorOverview: (projectKey: string) => ['competitorOverview', projectKey] as const,
   competitorEvents: (projectKey: string) => ['competitorEvents', projectKey] as const,
   servers: (projectKey: string) => ['servers', projectKey] as const,
@@ -155,9 +165,12 @@ export const qk = {
     ['notifications', projectKey, filters ?? {}] as const,
   notificationsUnread: (projectKey: string) => ['notificationsUnread', projectKey] as const,
   mailboxSettings: (projectKey: string) => ['mailboxSettings', projectKey] as const,
-  mailboxMessages: (projectKey: string) => ['mailboxMessages', projectKey] as const,
-  mailboxMessage: (projectKey: string, uid: number) =>
-    ['mailboxMessages', projectKey, uid] as const,
+  commandCenter: (projectKey: string) => ['commandCenter', projectKey] as const,
+  mailboxFolders: (projectKey: string) => ['mailboxFolders', projectKey] as const,
+  mailboxMessages: (projectKey: string, folder: string) =>
+    ['mailboxMessages', projectKey, folder] as const,
+  mailboxMessage: (projectKey: string, folder: string, uid: number) =>
+    ['mailboxMessages', projectKey, folder, uid] as const,
   // The signed-in user's WebAuthn passkeys (account security page).
   passkeys: ['passkeys'] as const,
   // The signed-in user's connected external accounts (accounts page): the linked

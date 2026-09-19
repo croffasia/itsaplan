@@ -7,6 +7,7 @@ import {
   CalendarDays,
   Files,
   Inbox,
+  PhoneCall,
   LayoutDashboard,
   Server,
   SquareKanban,
@@ -21,6 +22,7 @@ import {
   filesPath,
   financePath,
   inboxPath,
+  phonePath,
   initiativesPath,
   isLeadsPath,
   leadsPath,
@@ -33,6 +35,7 @@ import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import SidebarNavItem from '@/components/layout/SidebarNavItem';
+import SidebarCommandCenterItem from '@/components/layout/SidebarCommandCenterItem';
 
 // The top sidebar group. An entry appears only when its project feature is on and
 // the user may read the section.
@@ -61,6 +64,11 @@ export default function SidebarWorkNav({
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
+          <SidebarCommandCenterItem
+            projectKey={projectKey}
+            active={pathname.includes('/command-center')}
+            disabled={disabled}
+          />
           <SidebarNavItem
             href={projectKey ? inboxPath(projectKey) : '#'}
             icon={Inbox}
@@ -69,6 +77,15 @@ export default function SidebarWorkNav({
             disabled={disabled}
             badge={inboxUnread}
           />
+          {can('phone', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? phonePath(projectKey) : '#'}
+              icon={PhoneCall}
+              label="Business number"
+              active={pathname.includes('/phone')}
+              disabled={disabled}
+            />
+          )}
           {can('calendar', 'read') && (
             <SidebarNavItem
               href={projectKey ? calendarPath(projectKey) : '#'}

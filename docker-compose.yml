@@ -116,6 +116,9 @@ services:
       # Braindump: the directory notes are written to (mounted from
       # OBSIDIAN_VAULT_HOST_DIR). Voice capture is off unless WHISPER_URL points at
       # a transcription service; see docker-compose.dev.yml for one to run.
+      # Phone: the Rinkel API key the call history is read with.
+      RINKEL_KEY: ${RINKEL_KEY:-}
+      PHONE_WEBHOOK_TOKEN: ${PHONE_WEBHOOK_TOKEN:-}
       WHISPER_URL: ${WHISPER_URL:-}
       WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}
       OBSIDIAN_VAULT_DIR: /vault

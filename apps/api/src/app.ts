@@ -10,6 +10,7 @@ import { swagger } from '@elysiajs/swagger';
 import { Elysia } from 'elysia';
 import { planner } from './planner';
 import { webhookTestRoutes } from './webhook-test/routes';
+import { phoneWebhookRoutes } from './phone/webhook';
 import { mountMcp } from './mcp/mount';
 import { setMcpApp } from './mcp/app-ref';
 import { internalAgentRunRoutes } from './ai-agents/internal-routes';
@@ -129,6 +130,18 @@ export const app = new Elysia()
             description: 'Watched rival social accounts and the alerts they raise',
           },
           {
+            name: 'Studio',
+            description: 'Post templates and the posts rendered from them',
+          },
+          {
+            name: 'Phone',
+            description: "The business number's calls, voicemails and recordings",
+          },
+          {
+            name: 'Command Center',
+            description: 'What needs attention across the project today',
+          },
+          {
             name: 'Calendar',
             description: 'The connected Google Calendar: its calendars and their events',
           },
@@ -228,6 +241,9 @@ export const app = new Elysia()
   .use(internalCompetitorRoutes)
   // Test receiver for inspecting webhook deliveries (unauthenticated, dev aid).
   .use(webhookTestRoutes)
+  // Rinkel posts call events here. Unauthenticated by necessity: the secret is
+  // the token in the path.
+  .use(phoneWebhookRoutes)
   // Planner API: projects, issues, and their dependent entities.
   .use(planner);
 

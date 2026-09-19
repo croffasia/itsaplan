@@ -33,6 +33,8 @@ export const serverConsolePath = (key: string, serverId: number) =>
   `${serversPath(key)}/${serverId}`;
 export const socialPath = (key: string) => `${projectPath(key)}/social`;
 export const competitorsPath = (key: string) => `${projectPath(key)}/competitors`;
+export const studioPath = (key: string) => `${projectPath(key)}/studio`;
+export const phonePath = (key: string) => `${projectPath(key)}/phone`;
 export const braindumpPath = (key: string) => `${projectPath(key)}/braindump`;
 export const mindPath = (key: string) => `${projectPath(key)}/mind`;
 export const leadsApprovalInboxPath = (key: string) => `${leadsPath(key)}/approval-inbox`;
@@ -57,6 +59,8 @@ export const aiChatPath = (key: string) => aiTeamPath(key, 'chat');
 export const agentsPath = (key: string) => aiTeamPath(key, 'agents');
 
 export const inboxPath = (key: string) => `${projectPath(key)}/inbox`;
+
+export const commandCenterPath = (key: string) => `${projectPath(key)}/command-center`;
 
 export const calendarPath = (key: string) => `${projectPath(key)}/calendar`;
 

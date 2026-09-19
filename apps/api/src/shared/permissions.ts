@@ -30,6 +30,8 @@ export const PERMISSION_RESOURCES = [
   'braindump',
   'mind',
   'competitors',
+  'studio',
+  'phone',
   'servers',
   'mail',
   'calendar',

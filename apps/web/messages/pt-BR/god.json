@@ -268,7 +268,12 @@
     "oidcLabelHint": "Nomeia seu provedor no botão de login. Deixe vazio para um rótulo genérico.",
     "scopes": "Escopos",
     "scopesHint": "Separados por espaços. openid é obrigatório; profile e email preenchem o nome e o endereço.",
-    "oidcRedirectUriHint": "Registre isto como um URI de redirecionamento no cliente no seu provedor de identidade. O provedor recusa o login se não corresponder exatamente."
+    "oidcRedirectUriHint": "Registre isto como um URI de redirecionamento no cliente no seu provedor de identidade. O provedor recusa o login se não corresponder exatamente.",
+    "authentik": "Authentik",
+    "authentikConfigured": "O Authentik está configurado e pode ser usado junto com o OpenID Connect genérico.",
+    "authentikMissing": "Adicione primeiro a URL de descoberta do Authentik, o ID do cliente e o segredo.",
+    "authentikDiscoveryUrlHint": "Use a URL de configuração OpenID do provedor de aplicação do Authentik.",
+    "authentikRedirectUriHint": "Registre este URI de redirecionamento exato no provedor OAuth2/OpenID do Authentik."
   },
   "scim": {
     "saved": "Configurações SCIM salvas",

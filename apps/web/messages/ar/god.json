@@ -268,7 +268,12 @@
     "oidcLabelHint": "يسمّي مزوّدك على زر تسجيل الدخول. اتركه فارغاً لنص عام.",
     "scopes": "النطاقات",
     "scopesHint": "مفصولة بمسافات. openid مطلوب، وprofile وemail يملآن الاسم والعنوان.",
-    "oidcRedirectUriHint": "سجّل هذا العنوان كعنوان إعادة توجيه في العميل لدى مزوّد الهوية. يرفض المزوّد تسجيل الدخول إن لم يطابقه تماماً."
+    "oidcRedirectUriHint": "سجّل هذا العنوان كعنوان إعادة توجيه في العميل لدى مزوّد الهوية. يرفض المزوّد تسجيل الدخول إن لم يطابقه تماماً.",
+    "authentik": "Authentik",
+    "authentikConfigured": "تم إعداد Authentik ويمكن استخدامه إلى جانب OpenID Connect العام.",
+    "authentikMissing": "أضف عنوان URL لاكتشاف Authentik ومعرّف العميل والسر أولاً.",
+    "authentikDiscoveryUrlHint": "استخدم عنوان URL لإعداد OpenID لمزوّد تطبيق Authentik.",
+    "authentikRedirectUriHint": "سجّل عنوان URI لإعادة التوجيه هذا كما هو في مزوّد OAuth2/OpenID في Authentik."
   },
   "scim": {
     "saved": "تم حفظ إعدادات SCIM",

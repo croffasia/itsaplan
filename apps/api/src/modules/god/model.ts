@@ -127,6 +127,25 @@ export const OidcSettingsBody = t.Object({
   pkce: t.Optional(t.Boolean()),
 });
 
+export const AuthentikSettingsResponse = t.Object({
+  enabled: t.Boolean(),
+  discoveryUrl: t.String(),
+  clientId: t.String(),
+  hasClientSecret: t.Boolean(),
+  scopes: t.Array(t.String()),
+  pkce: t.Boolean(),
+  redirectUri: t.String(),
+});
+
+export const AuthentikSettingsBody = t.Object({
+  enabled: t.Optional(t.Boolean()),
+  discoveryUrl: t.Optional(t.String({ maxLength: 2048 })),
+  clientId: t.Optional(t.String({ maxLength: 512 })),
+  clientSecret: t.Optional(t.String({ maxLength: 512 })),
+  scopes: t.Optional(t.Array(t.String({ minLength: 1, maxLength: 64 }), { maxItems: 32 })),
+  pkce: t.Optional(t.Boolean()),
+});
+
 export const ScimSettingsResponse = t.Object({
   enabled: t.Boolean(),
   hasToken: t.Boolean(),

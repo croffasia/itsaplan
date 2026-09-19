@@ -15,7 +15,12 @@ import AuthFormHeader from '../AuthFormHeader';
 import AuthMessagePanel from '../AuthMessagePanel';
 import AuthRegisterPasswordFields from './AuthRegisterPasswordFields';
 import AuthRegisterProviders from './AuthRegisterProviders';
-import { signInWithGoogle, signInWithOidc, signUpWithEmail } from '../../services/auth.service';
+import {
+  signInWithAuthentik,
+  signInWithGoogle,
+  signInWithOidc,
+  signUpWithEmail,
+} from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
 import { useAuthConfig } from '@/services/authConfig.service';
 
@@ -33,7 +38,8 @@ export default function AuthRegisterForm() {
   // With the password form off, the identity provider is what creates the account,
   // so this screen keeps only the buttons that start that round trip.
   const passwordEnabled = authConfig?.emailPassword !== false;
-  const hasProvider = authConfig?.oidc === true || authConfig?.google === true;
+  const hasProvider =
+    authConfig?.oidc === true || authConfig?.authentik === true || authConfig?.google === true;
 
   function onSubmit(event: FormEvent) {
     event.preventDefault();
@@ -77,6 +83,19 @@ export default function AuthRegisterForm() {
       <AuthMessagePanel
         title={t('register.closedTitle')}
         description={t('register.closedDescription')}
+        actions={
+          hasProvider ? (
+            <>
+              <AuthRegisterProviders
+                pending={pending}
+                onOidc={() => run(signInWithOidc, { redirect: false })}
+                onAuthentik={() => run(signInWithAuthentik, { redirect: false })}
+                onGoogle={() => run(signInWithGoogle, { redirect: false })}
+              />
+              {error && <FieldError>{error}</FieldError>}
+            </>
+          ) : undefined
+        }
         footer={
           <>
             {t('register.haveAccount')}{' '}
@@ -129,6 +148,7 @@ export default function AuthRegisterForm() {
             <AuthRegisterProviders
               pending={pending}
               onOidc={() => run(signInWithOidc, { redirect: false })}
+              onAuthentik={() => run(signInWithAuthentik, { redirect: false })}
               onGoogle={() => run(signInWithGoogle, { redirect: false })}
             />
           </>

@@ -114,6 +114,25 @@ export interface InstanceOidcSettingsPatch {
   pkce?: boolean;
 }
 
+export interface InstanceAuthentikSettings {
+  enabled: boolean;
+  discoveryUrl: string;
+  clientId: string;
+  hasClientSecret: boolean;
+  scopes: string[];
+  pkce: boolean;
+  redirectUri: string;
+}
+
+export interface InstanceAuthentikSettingsPatch {
+  enabled?: boolean;
+  discoveryUrl?: string;
+  clientId?: string;
+  clientSecret?: string;
+  scopes?: string[];
+  pkce?: boolean;
+}
+
 // The instance Telegram bot: the one bot users link their accounts through, and the
 // default sender for Telegram notifications. `botUsername` is resolved from Telegram
 // when the token is saved.
@@ -291,6 +310,15 @@ export const getInstanceOidcSettings = () => request<InstanceOidcSettings>('/god
 
 export const updateInstanceOidcSettings = (patch: InstanceOidcSettingsPatch) =>
   request<InstanceOidcSettings>('/god/oidc-settings', {
+    method: 'PUT',
+    body: JSON.stringify(patch),
+  });
+
+export const getInstanceAuthentikSettings = () =>
+  request<InstanceAuthentikSettings>('/god/authentik-settings');
+
+export const updateInstanceAuthentikSettings = (patch: InstanceAuthentikSettingsPatch) =>
+  request<InstanceAuthentikSettings>('/god/authentik-settings', {
     method: 'PUT',
     body: JSON.stringify(patch),
   });

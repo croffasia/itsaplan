@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { normalizeMailboxInput, validateMessageHeaders } from '../../validation';
+import { assertFolderName, normalizeMailboxInput, validateMessageHeaders } from '../../validation';
 
 const valid = {
   email: 'Owner@Example.com ',
@@ -32,5 +32,18 @@ describe('mailbox validation', () => {
   it('rejects line breaks in message headers', () => {
     expect(() => validateMessageHeaders('Safe subject', '<safe@example.com>')).not.toThrow();
     expect(() => validateMessageHeaders('Hello\r\nBcc: victim@example.com')).toThrow();
+  });
+
+  it('accepts the folder names a server reports', () => {
+    expect(assertFolderName('INBOX')).toBe('INBOX');
+    expect(assertFolderName('Spam')).toBe('Spam');
+    expect(assertFolderName('Projects/Vexol')).toBe('Projects/Vexol');
+  });
+
+  it('refuses a folder name that could carry a second IMAP command', () => {
+    expect(() => assertFolderName('INBOX\r\n A1 DELETE INBOX')).toThrow();
+    expect(() => assertFolderName('INBOX\u0000')).toThrow();
+    expect(() => assertFolderName('')).toThrow();
+    expect(() => assertFolderName('x'.repeat(256))).toThrow();
   });
 });

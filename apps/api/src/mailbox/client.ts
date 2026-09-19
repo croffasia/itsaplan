@@ -33,6 +33,19 @@ export interface MailMessage extends MailMessageSummary {
   references: string[];
 }
 
+// The folders offered in the dashboard, in the order they are shown. Zoho names
+// them itself, so which path holds the sent copy is read from the server's
+// special-use flags rather than guessed from the name.
+export interface MailFolder {
+  path: string;
+  name: string;
+  kind: 'inbox' | 'sent' | 'drafts' | 'spam' | 'trash' | 'archive' | 'other';
+  total: number;
+  unread: number;
+}
+
+export const INBOX = 'INBOX';
+
 export interface SendMailboxMessage {
   to: string[];
   subject: string;
@@ -114,11 +127,26 @@ function summary(message: {
   };
 }
 
+// Zoho refusing the credentials and Zoho being unreachable need different things
+// from the reader, so the two are named apart. Neither carries Zoho's own response:
+// only which of the two happened.
+function isAuthFailure(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const detail = error as { authenticationFailed?: boolean; responseStatus?: string };
+  return detail.authenticationFailed === true || detail.responseStatus === 'NO';
+}
+
 function connectionError(action: string, error: unknown, config: MailboxConfig): never {
   console.error(
     `[mailbox] ${action} failed:`,
     mailboxErrorDetails(error, config.password, config.username),
   );
+  if (isAuthFailure(error)) {
+    throw new HttpError(
+      502,
+      `Zoho refused the username and password on ${action.split(' ')[0]}. Use the full email address as the username, and an application-specific password. An alias cannot sign in: only a real mailbox can.`,
+    );
+  }
   throw new HttpError(502, `Zoho ${action} failed. Check the mailbox connection settings.`);
 }
 
@@ -144,14 +172,67 @@ export async function verifyMailboxConnection(config: MailboxConfig): Promise<vo
   if (!result.ok) connectionError('SMTP connection', result.error, config);
 }
 
+const SPECIAL_USE: Record<string, MailFolder['kind']> = {
+  '\\Sent': 'sent',
+  '\\Drafts': 'drafts',
+  '\\Junk': 'spam',
+  '\\Trash': 'trash',
+  '\\Archive': 'archive',
+};
+
+const FOLDER_ORDER: MailFolder['kind'][] = [
+  'inbox',
+  'sent',
+  'drafts',
+  'spam',
+  'trash',
+  'archive',
+  'other',
+];
+
+export async function listMailboxFolders(config: MailboxConfig): Promise<MailFolder[]> {
+  const client = imapClient(config);
+  try {
+    await client.connect();
+    const folders: MailFolder[] = [];
+    for (const entry of await client.list()) {
+      // A container that holds only other folders cannot be opened.
+      if (entry.flags?.has('\\Noselect')) continue;
+      const kind =
+        entry.path.toUpperCase() === INBOX
+          ? 'inbox'
+          : (SPECIAL_USE[entry.specialUse ?? ''] ?? 'other');
+      const status = await client
+        .status(entry.path, { messages: true, unseen: true })
+        .catch(() => null);
+      folders.push({
+        path: entry.path,
+        name: kind === 'inbox' ? 'Inbox' : (entry.name ?? entry.path),
+        kind,
+        total: status?.messages ?? 0,
+        unread: status?.unseen ?? 0,
+      });
+    }
+    return folders.sort(
+      (a, b) =>
+        FOLDER_ORDER.indexOf(a.kind) - FOLDER_ORDER.indexOf(b.kind) || a.name.localeCompare(b.name),
+    );
+  } catch (error) {
+    return connectionError('folder list', error, config);
+  } finally {
+    await closeClient(client);
+  }
+}
+
 export async function listMailboxMessages(
   config: MailboxConfig,
   limit: number,
+  folder: string,
 ): Promise<MailMessageSummary[]> {
   const client = imapClient(config);
   try {
     await client.connect();
-    const lock = await client.getMailboxLock('INBOX', { readOnly: true });
+    const lock = await client.getMailboxLock(folder, { readOnly: true });
     try {
       const exists = client.mailbox && client.mailbox.exists ? client.mailbox.exists : 0;
       if (exists === 0) return [];
@@ -174,11 +255,15 @@ export async function listMailboxMessages(
   }
 }
 
-export async function getMailboxMessage(config: MailboxConfig, uid: number): Promise<MailMessage> {
+export async function getMailboxMessage(
+  config: MailboxConfig,
+  uid: number,
+  folder: string,
+): Promise<MailMessage> {
   const client = imapClient(config);
   try {
     await client.connect();
-    const lock = await client.getMailboxLock('INBOX', { readOnly: true });
+    const lock = await client.getMailboxLock(folder, { readOnly: true });
     try {
       const message = await client.fetchOne(
         String(uid),
@@ -223,11 +308,15 @@ export async function getMailboxMessage(config: MailboxConfig, uid: number): Pro
   }
 }
 
-export async function markMailboxMessageRead(config: MailboxConfig, uid: number): Promise<void> {
+export async function markMailboxMessageRead(
+  config: MailboxConfig,
+  uid: number,
+  folder: string,
+): Promise<void> {
   const client = imapClient(config);
   try {
     await client.connect();
-    const lock = await client.getMailboxLock('INBOX');
+    const lock = await client.getMailboxLock(folder);
     try {
       await client.messageFlagsAdd(String(uid), ['\\Seen'], { uid: true });
     } finally {

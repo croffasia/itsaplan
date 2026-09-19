@@ -2,6 +2,7 @@ import { agentRun, aiAgent, db, issue, projectColumn } from '@repo/db';
 import { and, desc, eq, gte, sql } from 'drizzle-orm';
 import { getAgentRunStats, getStats, listAgentRunFeed } from '../analytics/store';
 import { listBraindumpEntries, type BraindumpKind } from '../braindump/store';
+import { getCommandCenter } from '../command-center/store';
 import { listCompetitorEvents, listCompetitors } from '../competitors/store';
 import { listMindFacts, type MindCategory, type MindStatus } from '../mind/store';
 import { iso } from '../shared/lib';
@@ -320,5 +321,23 @@ export async function listScopedAgentRuns(
     page: filters.page,
     pageSize: filters.pageSize,
     hasMore,
+  };
+}
+
+// The command centre as Bob sees it. The store filters by what the service identity
+// may read, so a signal from a section Bob has no access to never reaches him.
+export async function getScopedCommandCenter(context: BobContext) {
+  const center = await getCommandCenter(context.project.id, context.project.key, context.userId);
+  return {
+    generatedAt: center.generatedAt,
+    focusId: center.focusId,
+    signals: center.signals.map((signal) => ({
+      id: signal.id,
+      severity: signal.severity,
+      title: signal.title,
+      detail: signal.detail,
+      count: signal.count,
+      snoozed: signal.snoozedUntil !== null,
+    })),
   };
 }

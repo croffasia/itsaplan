@@ -77,6 +77,14 @@ describe('issue activity', () => {
       expect(res.status).toBe(400);
     });
 
+    it('accepts a comment body of 50000 characters and rejects a longer one', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const comments = asOwner.issues({ issueId: issue.id }).comments;
+      expect((await comments.post({ body: 'x'.repeat(50_000) })).status).toBe(201);
+      expect((await comments.post({ body: 'x'.repeat(50_001) })).status).toBe(400);
+    });
+
     it('returns 404 when commenting on a missing issue', async () => {
       const { asOwner } = await setupProject();
       const res = await asOwner.issues({ issueId: 999999 }).comments.post({ body: 'x' });
@@ -599,6 +607,16 @@ describe('issue activity', () => {
 
       const page = await feed(asOwner, issue.id);
       expect(page.data?.items.find((i) => i.id === comment.id)?.body).toBe('final');
+    });
+
+    it('bounds an edited comment the way a new one is bounded', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const comment = (await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'draft' }))
+        .data!;
+      const edit = asOwner.comments({ commentId: comment.id });
+      expect((await edit.patch({ body: 'x'.repeat(50_000) })).status).toBe(200);
+      expect((await edit.patch({ body: 'x'.repeat(50_001) })).status).toBe(400);
     });
 
     it('logs the edit and the delete in the feed', async () => {

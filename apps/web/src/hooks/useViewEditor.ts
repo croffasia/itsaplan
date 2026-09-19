@@ -161,6 +161,32 @@ export function useViewEditor(
     beginEdit(null);
   }
 
+  // Dashboard counts include subtasks. Open the exact selection as flat rows,
+  // without persisting this drill-down over the user's preferred All-tab layout.
+  function openFilteredIssues(next: FilterSet) {
+    if (!projectKey) return;
+    setEditing(false);
+    setDraftName('');
+    setDraftIcon(null);
+    setFilters({
+      conditions: next.conditions.map((condition) => ({
+        ...condition,
+        values: Array.isArray(condition.values) ? [...condition.values] : [],
+      })),
+    });
+    setFiltersOpen(true);
+    setView('table');
+    setSettings({
+      ...defaultViewSettings('table'),
+      group: 'none',
+      separateSubtasks: true,
+      showSubtasks: false,
+    });
+    openEditNext.current = false;
+    keepLiveNext.current = activeViewId != null;
+    onSelectView(null);
+  }
+
   function changeView(next: WorkItemsView) {
     setView(next);
     if (activeViewId == null && !editing) {
@@ -267,6 +293,7 @@ export function useViewEditor(
     draftIcon,
     setDraftIcon,
     beginNewView,
+    openFilteredIssues,
     changeView,
     changeSettings,
     changeFilters: setFilters,

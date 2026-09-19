@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useTranslations } from 'next-intl';
 import PageSkeleton from '@/components/common/skeleton/PageSkeleton';
+import RouteTransition from '@/components/common/RouteTransition';
 
 // The Shell's content area. It renders the routed page once the project is
 // loaded, and stands in for it while loading, when the account has no projects
@@ -47,5 +48,5 @@ export default function ShellBody({
       );
     return <PageSkeleton />;
   }
-  return <>{children}</>;
+  return <RouteTransition>{children}</RouteTransition>;
 }

@@ -4,6 +4,7 @@
   "valuePlaceholder": "valor",
   "noOptions": "Sem opções",
   "selected": "{count} selecionados",
+  "currentUser": "Usuário atual",
   "operators": {
     "is": "é",
     "is_not": "não é",
@@ -12,7 +13,11 @@
     "is_set": "está definido",
     "is_not_set": "não está definido",
     "contains": "contém",
-    "not_contains": "não contém"
+    "not_contains": "não contém",
+    "overdue": "está atrasado",
+    "today": "é hoje",
+    "next_3_days": "nos próximos 3 dias",
+    "next_7_days": "nos próximos 7 dias"
   },
   "boolean": {
     "true": "Verdadeiro",

@@ -114,7 +114,12 @@ export default function WidgetGrid({
                 onRename={(title) => editor.updateWidget(widget.id, { title })}
                 onRemove={() => editor.removeWidget(widget.id)}
               >
-                <WidgetBody widget={widget} projectKey={projectKey} project={project} />
+                <WidgetBody
+                  widget={widget}
+                  projectKey={projectKey}
+                  project={project}
+                  editing={editing}
+                />
               </WidgetFrame>
             </div>
           ))}

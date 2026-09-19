@@ -17,15 +17,17 @@ export default function WidgetBody({
   widget,
   projectKey,
   project,
+  editing,
 }: {
   widget: WidgetInstance;
   projectKey: string;
   project: ProjectDetail;
+  editing: boolean;
 }) {
   const config = widget.config ?? {};
   switch (widget.type) {
     case 'stat':
-      return <StatWidget config={config} />;
+      return <StatWidget config={config} title={widget.title} editing={editing} />;
     case 'breakdown':
       return <BreakdownWidget projectKey={projectKey} config={config} />;
     case 'throughput':

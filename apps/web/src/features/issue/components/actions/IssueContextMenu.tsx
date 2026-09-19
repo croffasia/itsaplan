@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
-import type { Issue, IssuePatch } from '@/lib/api/endpoints/issues';
+import { getIssue, type Issue, type IssuePatch } from '@/lib/api/endpoints/issues';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
@@ -104,7 +104,7 @@ export default function IssueContextMenu({
   if (!shell) return <>{children}</>;
   const onOpenIssue = shell.onOpenIssue;
 
-  const actions = matchedActions(actionsQuery.data ?? [], project, issue);
+  const actions = matchedActions(actionsQuery.data ?? [], project, issue, shell.filterContext);
 
   function patch(fields: IssuePatch) {
     updateIssue.mutate({ id: issue.id, patch: fields });
@@ -118,8 +118,15 @@ export default function IssueContextMenu({
   }
 
   async function copyPrompt() {
-    await navigator.clipboard.writeText(buildIssuePrompt(issue, project, session?.user));
-    toast.success(t('promptCopied'));
+    // The board payload no longer carries the markdown body; read the issue
+    // itself so the copied prompt matches what the detail view shows.
+    try {
+      const full = await getIssue(issue.id);
+      await navigator.clipboard.writeText(buildIssuePrompt(full, project, session?.user));
+      toast.success(t('promptCopied'));
+    } catch {
+      toast.error(tCommon('genericError'));
+    }
   }
 
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);

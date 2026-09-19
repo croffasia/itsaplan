@@ -4,6 +4,7 @@
   "valuePlaceholder": "قيمة",
   "noOptions": "لا توجد خيارات",
   "selected": "{count} محدَّد",
+  "currentUser": "المستخدم الحالي",
   "operators": {
     "is": "يساوي",
     "is_not": "لا يساوي",
@@ -12,7 +13,11 @@
     "is_set": "مُحدَّد",
     "is_not_set": "غير مُحدَّد",
     "contains": "يحتوي على",
-    "not_contains": "لا يحتوي على"
+    "not_contains": "لا يحتوي على",
+    "overdue": "متأخر",
+    "today": "اليوم",
+    "next_3_days": "خلال الأيام الثلاثة القادمة",
+    "next_7_days": "خلال الأيام السبعة القادمة"
   },
   "boolean": {
     "true": "صحيح",

@@ -29,6 +29,7 @@ import {
   notInArray,
   or,
   sql,
+  getTableColumns,
   type SQL,
 } from 'drizzle-orm';
 import type { IssueQuery } from '#modules/agents/core/issue-query';
@@ -221,12 +222,29 @@ function snapshot(row: IssueRow): IssueSnapshot {
 }
 
 export async function listIssues(project: ProjectRow): Promise<IssueRow[]> {
+  return listActiveIssues(project, true);
+}
+
+// The work-items board: the same active issues as listIssues, without the markdown
+// description. Cards, rows and filters never render it; the body can embed data URIs
+// and would dominate the payload. GET /issues/:id still returns the full text.
+export async function listBoardIssues(project: ProjectRow): Promise<IssueRow[]> {
+  return listActiveIssues(project, false);
+}
+
+async function listActiveIssues(
+  project: ProjectRow,
+  includeDescription: boolean,
+): Promise<IssueRow[]> {
+  const { description, ...withoutDescription } = getTableColumns(issue);
   const rows = await db
-    .select()
+    .select(includeDescription ? { description, ...withoutDescription } : withoutDescription)
     .from(issue)
     .where(and(eq(issue.projectId, project.id), isNull(issue.archivedAt)))
     .orderBy(issue.columnId, issue.position);
-  const issues = rows.map((row) => mapIssue(row, project.key));
+  const issues = rows.map((row) =>
+    mapIssue({ ...row, description: 'description' in row ? row.description : '' }, project.key),
+  );
   await attachLabels(issues);
   await attachFieldValues(issues);
   await attachStatusSince(issues);

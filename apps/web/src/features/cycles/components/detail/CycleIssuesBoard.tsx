@@ -21,7 +21,7 @@ const CYCLE_BOARD_STORE_KEY = 'planner_cycle_board_settings';
 // issues and the live board refresh keeps it current. On a finished cycle a new
 // issue is created without one: nothing is planned into a cycle that has ended.
 export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
-  const { project, customFields, onOpenIssue, onAddIssue } = useShell();
+  const { project, customFields, filterContext, onOpenIssue, onAddIssue } = useShell();
   const cycleId = cycle.id;
   const board = useLocalBoardSettings(CYCLE_BOARD_STORE_KEY, cycleId);
   const initiativeOptions = useInitiativeOptionsQuery(project?.project.key ?? null).data ?? [];
@@ -29,8 +29,8 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
   const viewProject = useMemo(() => {
     if (!project) return null;
     const issues = project.issues.filter((i) => i.cycle?.id === cycleId);
-    return { ...project, issues: applyFilters(issues, board.filters, project) };
-  }, [project, cycleId, board.filters]);
+    return { ...project, issues: applyFilters(issues, board.filters, project, filterContext) };
+  }, [project, cycleId, board.filters, filterContext]);
 
   if (!project || !viewProject) return null;
 

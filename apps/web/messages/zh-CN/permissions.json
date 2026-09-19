@@ -23,6 +23,7 @@
     "actions": "操作",
     "webhooks": "Webhook",
     "note_boards": "便签板",
+    "import_export": "导入/导出",
     "danger_zone": "危险操作"
   },
   "actions": {

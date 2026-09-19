@@ -30,7 +30,11 @@ export const PERMISSION_RESOURCES = [
   'braindump',
   'mind',
   'competitors',
+  'studio',
+  'phone',
+  'servers',
   'mail',
+  'calendar',
   'danger_zone',
 ] as const;
 export type PermissionResource = (typeof PERMISSION_RESOURCES)[number];

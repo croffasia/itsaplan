@@ -18,6 +18,7 @@ export interface ProjectFileRow {
   filename: string;
   contentType: string;
   sizeBytes: number;
+  folder: string;
   createdAt: string;
 }
 
@@ -68,11 +69,12 @@ export async function getProjectFileProjectId(publicId: string): Promise<number 
 export async function createProjectFile(input: {
   projectId: number;
   crmCustomerId?: number;
-  uploadedByUserId: string;
+  uploadedByUserId: string | null;
   s3Key: string;
   filename: string;
   contentType: string;
   sizeBytes: number;
+  folder?: string;
 }): Promise<ProjectFileRow> {
   const [created] = await db.insert(projectFile).values(input).returning({
     publicId: projectFile.publicId,
@@ -87,4 +89,24 @@ export async function deleteProjectFile(publicId: string): Promise<ProjectFileRo
   if (!current) return null;
   await db.delete(projectFile).where(eq(projectFile.publicId, publicId));
   return current;
+}
+
+// Removes a file row and hands back its object key, so the caller can purge the
+// object too. Used when a generated asset is replaced by a newer one.
+export async function deleteProjectFileById(id: number): Promise<string | null> {
+  const [row] = await db
+    .delete(projectFile)
+    .where(eq(projectFile.id, id))
+    .returning({ s3Key: projectFile.s3Key });
+  return row?.s3Key ?? null;
+}
+
+// A vault folder name: one flat segment, no separators, trimmed. Anything that
+// normalises to nothing means the vault root.
+export function normaliseFolder(input: string | undefined | null): string {
+  return (input ?? '')
+    .replace(/[/\\]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80);
 }

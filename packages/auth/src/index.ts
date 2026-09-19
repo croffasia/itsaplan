@@ -365,6 +365,7 @@ export {
   getGoogleSettings,
   setGoogleSettings,
   getGoogleConfig,
+  isGoogleUsable,
   hasConfiguredGoogle,
 } from './instance';
 export type {

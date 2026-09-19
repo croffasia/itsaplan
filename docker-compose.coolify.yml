@@ -35,7 +35,7 @@ services:
   # streams file bytes over the internal network, so no port is published.
   # Administer through mc from inside the network or an SSH tunnel.
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
@@ -55,7 +55,7 @@ services:
   # restart: unless-stopped (e.g. Coolify) would otherwise loop it forever and
   # trip their restart-count limit, tearing the whole stack down.
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     restart: 'no'
     depends_on:
       - minio
@@ -114,6 +114,9 @@ services:
       # the vault is a named volume rather than a host path — sync it out of the
       # server to reach it from Obsidian. Voice capture is off unless WHISPER_URL
       # points at a transcription service.
+      # Phone: the Rinkel API key the call history is read with.
+      RINKEL_KEY: ${RINKEL_KEY:-}
+      PHONE_WEBHOOK_TOKEN: ${PHONE_WEBHOOK_TOKEN:-}
       WHISPER_URL: ${WHISPER_URL:-}
       WHISPER_LANGUAGE: ${WHISPER_LANGUAGE:-}
       OBSIDIAN_VAULT_DIR: /vault

@@ -10,16 +10,28 @@ export function useFilesPage(projectKey: string, limits: StorageSettings | undef
   const uploadFile = useUploadFile(projectKey);
   const deleteFile = useDeleteFile(projectKey);
   const [search, setSearch] = useState('');
+  // '' is the vault root. A folder is only a grouping of the flat file list.
+  const [folder, setFolder] = useState('');
   const [target, setTarget] = useState<ProjectFile | null>(null);
   const [previewTarget, setPreviewTarget] = useState<ProjectFile | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
+  const folders = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const file of filesQuery.data ?? []) {
+      if (file.folder) counts.set(file.folder, (counts.get(file.folder) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [filesQuery.data]);
+
   const files = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return query
-      ? (filesQuery.data ?? []).filter((file) => file.filename.toLowerCase().includes(query))
-      : (filesQuery.data ?? []);
-  }, [filesQuery.data, search]);
+    return (filesQuery.data ?? []).filter(
+      (file) => file.folder === folder && (!query || file.filename.toLowerCase().includes(query)),
+    );
+  }, [filesQuery.data, folder, search]);
 
   async function upload(filesToUpload: FileList) {
     let uploaded = 0;
@@ -30,7 +42,7 @@ export function useFilesPage(projectKey: string, limits: StorageSettings | undef
         continue;
       }
       try {
-        await uploadFile.mutateAsync({ file });
+        await uploadFile.mutateAsync({ file, folder: folder || undefined });
         uploaded += 1;
       } catch {
         // Mutation errors are shown by the global React Query handler.
@@ -72,6 +84,9 @@ export function useFilesPage(projectKey: string, limits: StorageSettings | undef
     dragZone,
     files,
     filesQuery,
+    folder,
+    folders,
+    setFolder,
     previewTarget,
     search,
     setSearch,

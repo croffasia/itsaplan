@@ -4,31 +4,38 @@ import {
   BadgeEuro,
   BookOpenText,
   Building2,
+  CalendarDays,
   Files,
   Inbox,
+  PhoneCall,
   LayoutDashboard,
+  Server,
   SquareKanban,
   StickyNote,
   Target,
 } from 'lucide-react';
 import {
   accountingPath,
+  calendarPath,
   crmPath,
   dashboardsPath,
   filesPath,
   financePath,
   inboxPath,
+  phonePath,
   initiativesPath,
   isLeadsPath,
   leadsPath,
   notesPath,
   projectPath,
+  serversPath,
 } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
 import SidebarNavItem from '@/components/layout/SidebarNavItem';
+import SidebarCommandCenterItem from '@/components/layout/SidebarCommandCenterItem';
 
 // The top sidebar group. An entry appears only when its project feature is on and
 // the user may read the section.
@@ -57,6 +64,11 @@ export default function SidebarWorkNav({
     <SidebarGroup>
       <SidebarGroupContent>
         <SidebarMenu>
+          <SidebarCommandCenterItem
+            projectKey={projectKey}
+            active={pathname.includes('/command-center')}
+            disabled={disabled}
+          />
           <SidebarNavItem
             href={projectKey ? inboxPath(projectKey) : '#'}
             icon={Inbox}
@@ -65,6 +77,24 @@ export default function SidebarWorkNav({
             disabled={disabled}
             badge={inboxUnread}
           />
+          {can('phone', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? phonePath(projectKey) : '#'}
+              icon={PhoneCall}
+              label="Business number"
+              active={pathname.includes('/phone')}
+              disabled={disabled}
+            />
+          )}
+          {can('calendar', 'read') && (
+            <SidebarNavItem
+              href={projectKey ? calendarPath(projectKey) : '#'}
+              icon={CalendarDays}
+              label="Calendar"
+              active={pathname.includes('/calendar')}
+              disabled={disabled}
+            />
+          )}
           {features.dashboards && can('dashboards', 'read') && (
             <SidebarNavItem
               href={projectKey ? dashboardsPath(projectKey) : '#'}
@@ -144,6 +174,13 @@ export default function SidebarWorkNav({
               disabled={disabled}
             />
           )}
+          <SidebarNavItem
+            href={projectKey ? serversPath(projectKey) : '#'}
+            icon={Server}
+            label="Servers"
+            active={pathname.includes('/servers')}
+            disabled={disabled}
+          />
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

@@ -5,7 +5,9 @@ import { noContent } from '../shared/http';
 import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
 import {
+  INBOX,
   getMailboxMessage,
+  listMailboxFolders,
   listMailboxMessages,
   markMailboxMessageRead,
   sendMailboxMessage,
@@ -18,7 +20,7 @@ import {
   resolveMailboxConfig,
   saveMailboxConfig,
 } from './store';
-import { normalizeMailboxInput, validateMessageHeaders } from './validation';
+import { assertFolderName, normalizeMailboxInput, validateMessageHeaders } from './validation';
 
 const SmtpSecurity = t.Union([t.Literal('ssl'), t.Literal('starttls')]);
 const SmtpPort = t.Union([t.Literal(465), t.Literal(587)]);
@@ -33,6 +35,26 @@ const MailboxSettingsResponse = t.Object({
   smtpPort: SmtpPort,
   smtpSecurity: SmtpSecurity,
 });
+
+const FolderResponse = t.Object({
+  path: t.String(),
+  name: t.String(),
+  kind: t.Union([
+    t.Literal('inbox'),
+    t.Literal('sent'),
+    t.Literal('drafts'),
+    t.Literal('spam'),
+    t.Literal('trash'),
+    t.Literal('archive'),
+    t.Literal('other'),
+  ]),
+  total: t.Number(),
+  unread: t.Number(),
+});
+
+// Which folder a request is about. Left out, it is the inbox, so an older client
+// keeps working unchanged.
+const FolderQuery = t.Optional(t.String({ minLength: 1, maxLength: 255 }));
 
 const MailboxSettingsBody = t.Object({
   email: t.String({ format: 'email', maxLength: 320 }),
@@ -152,14 +174,35 @@ export const mailboxRoutes = new Elysia({
   )
 
   .get(
+    '/projects/:projectKey/mailbox/folders',
+    async ({ project }) => listMailboxFolders(await requireMailbox(project.id)),
+    {
+      permission: ['mail', 'read'],
+      response: {
+        200: t.Array(FolderResponse),
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+        409: ErrorResponse,
+        502: ErrorResponse,
+      },
+      detail: { summary: 'List the folders of the connected mailbox' },
+    },
+  )
+
+  .get(
     '/projects/:projectKey/mailbox/messages',
     async ({ project, query }) => {
       const config = await requireMailbox(project.id);
-      return listMailboxMessages(config, mailboxLimit(query.limit));
+      return listMailboxMessages(
+        config,
+        mailboxLimit(query.limit),
+        assertFolderName(query.folder ?? INBOX),
+      );
     },
     {
       permission: ['mail', 'read'],
-      query: t.Object({ limit: t.Optional(t.Numeric()) }),
+      query: t.Object({ limit: t.Optional(t.Numeric()), folder: FolderQuery }),
       response: {
         200: t.Array(MessageSummaryResponse),
         400: ErrorResponse,
@@ -169,19 +212,24 @@ export const mailboxRoutes = new Elysia({
         409: ErrorResponse,
         502: ErrorResponse,
       },
-      detail: { summary: 'List recent Zoho inbox messages' },
+      detail: { summary: 'List recent messages in a folder' },
     },
   )
 
   .get(
     '/projects/:projectKey/mailbox/messages/:uid',
-    async ({ project, params }) => {
+    async ({ project, params, query }) => {
       const config = await requireMailbox(project.id);
-      return getMailboxMessage(config, requireUid(params.uid));
+      return getMailboxMessage(
+        config,
+        requireUid(params.uid),
+        assertFolderName(query.folder ?? INBOX),
+      );
     },
     {
       permission: ['mail', 'read'],
       params: t.Object({ projectKey: t.String(), uid: t.Numeric() }),
+      query: t.Object({ folder: FolderQuery }),
       response: {
         200: MessageResponse,
         400: ErrorResponse,
@@ -197,14 +245,19 @@ export const mailboxRoutes = new Elysia({
 
   .post(
     '/projects/:projectKey/mailbox/messages/:uid/read',
-    async ({ project, params }) => {
+    async ({ project, params, query }) => {
       const config = await requireMailbox(project.id);
-      await markMailboxMessageRead(config, requireUid(params.uid));
+      await markMailboxMessageRead(
+        config,
+        requireUid(params.uid),
+        assertFolderName(query.folder ?? INBOX),
+      );
       return noContent();
     },
     {
       permission: ['mail', 'edit'],
       params: t.Object({ projectKey: t.String(), uid: t.Numeric() }),
+      query: t.Object({ folder: FolderQuery }),
       response: {
         204: t.Void(),
         400: ErrorResponse,

@@ -9,25 +9,31 @@ import { Button } from '@/components/ui/button';
 import MailboxComposeDialog from './MailboxComposeDialog';
 import MailboxDetail from './MailboxDetail';
 import MailboxEmpty from './MailboxEmpty';
+import MailboxFolderBar from './MailboxFolderBar';
 import MailboxList from './MailboxList';
 import MailboxSettingsDialog from './MailboxSettingsDialog';
 import MailboxToolbar from './MailboxToolbar';
 import {
+  useMailboxFolders,
   useMailboxMessage,
   useMailboxMessages,
   useMailboxSettings,
   useMarkMailboxRead,
 } from '../services/mailbox.service';
 
+const INBOX = 'INBOX';
+
 export default function MailboxView({ projectKey }: { projectKey: string }) {
   const { can, isOwner } = usePermissions();
   const mobile = useIsMobile();
   const settingsQuery = useMailboxSettings(projectKey);
   const connected = settingsQuery.data?.connected === true;
-  const messagesQuery = useMailboxMessages(projectKey, connected);
+  const [folder, setFolder] = useState(INBOX);
+  const foldersQuery = useMailboxFolders(projectKey, connected);
+  const messagesQuery = useMailboxMessages(projectKey, folder, connected);
   const [selectedUid, setSelectedUid] = useState<number | null>(null);
-  const messageQuery = useMailboxMessage(projectKey, selectedUid);
-  const markRead = useMarkMailboxRead(projectKey);
+  const messageQuery = useMailboxMessage(projectKey, folder, selectedUid);
+  const markRead = useMarkMailboxRead(projectKey, folder);
   const [composeOpen, setComposeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [reply, setReply] = useState<MailMessage | null>(null);
@@ -84,8 +90,21 @@ export default function MailboxView({ projectKey }: { projectKey: string }) {
           isOwner={isOwner}
           refreshing={messagesQuery.isFetching}
           onCompose={openCompose}
-          onRefresh={() => messagesQuery.refetch()}
+          onRefresh={() => {
+            void messagesQuery.refetch();
+            void foldersQuery.refetch();
+          }}
           onSettings={() => setSettingsOpen(true)}
+        />
+        <MailboxFolderBar
+          folders={foldersQuery.data ?? []}
+          current={folder}
+          loading={foldersQuery.isLoading}
+          onSelect={(next) => {
+            // A uid belongs to one folder, so the open message is dropped with it.
+            setFolder(next.path);
+            setSelectedUid(null);
+          }}
         />
         <MailboxList
           messages={messagesQuery.data ?? []}

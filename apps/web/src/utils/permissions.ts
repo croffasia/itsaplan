@@ -29,7 +29,11 @@ const RESOURCE_LABELS: Record<string, string> = {
   braindump: 'Braindump',
   mind: 'Mind',
   competitors: 'Competitors',
+  studio: 'Studio',
+  phone: 'Business number',
+  servers: 'Servers',
   mail: 'Email',
+  calendar: 'Calendar',
   danger_zone: 'Danger zone',
 };
 
@@ -74,6 +78,7 @@ const GROUP_DEFS: PermissionGroup[] = [
   { title: 'Leads', resources: ['leads'] },
   { title: 'Growth', resources: ['social'] },
   { title: 'Email', resources: ['mail'] },
+  { title: 'Calendar', resources: ['calendar'] },
   { title: 'AI', resources: ['ai_agents', 'integrations', 'agent_skills', 'agent_tools'] },
   {
     title: 'Configuration',

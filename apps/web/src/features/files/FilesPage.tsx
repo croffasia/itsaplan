@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import FilesDropOverlay from './components/FilesDropOverlay';
 import FilesEmptyState from './components/FilesEmptyState';
+import FilesFolderBar from './components/FilesFolderBar';
 import FilesPreviewDialog from './components/FilesPreviewDialog';
 import FilesTable from './components/FilesTable';
 import FilesUploadButton from './components/FilesUploadButton';
@@ -72,6 +73,11 @@ export default function FilesPage() {
                 onChange={(event) => model.setSearch(event.target.value)}
               />
             </div>
+            <FilesFolderBar
+              folder={model.folder}
+              folders={model.folders}
+              onOpen={model.setFolder}
+            />
             {model.files.length > 0 ? (
               <FilesTable
                 files={model.files}
@@ -83,7 +89,7 @@ export default function FilesPage() {
               />
             ) : (
               <p className="py-10 text-center text-sm text-muted-foreground">
-                No files match your search.
+                {model.search ? 'No files match your search.' : 'This folder is empty.'}
               </p>
             )}
           </div>

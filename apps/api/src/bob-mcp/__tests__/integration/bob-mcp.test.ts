@@ -12,6 +12,7 @@ import { resetBobMcpRateLimiter } from '../../rate-limit';
 const TOKEN = 'bob-test-token-with-enough-entropy';
 const TOOL_NAMES = [
   'get_dashboard_summary',
+  'get_command_center',
   'list_projects',
   'get_project',
   'list_tasks',

@@ -156,11 +156,15 @@ export const projectFile = pgTable(
     filename: text('filename').notNull(),
     contentType: text('content_type').notNull(),
     sizeBytes: bigint('size_bytes', { mode: 'number' }).notNull(),
+    // The vault folder the file sits in. A single flat name, '' for the root —
+    // the file list groups on it and Studio writes each post's assets into its own.
+    folder: text('folder').notNull().default(''),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     index('project_file_project_idx').on(t.projectId, t.createdAt),
     index('project_file_crm_customer_idx').on(t.crmCustomerId, t.createdAt),
+    index('project_file_folder_idx').on(t.projectId, t.folder),
   ],
 );
 
@@ -1729,4 +1733,252 @@ export const competitorEvent = pgTable(
       sql`${t.kind} IN ('new_post', 'followers_jump', 'followers_drop', 'profile_changed', 'went_quiet', 'check_failed')`,
     ),
   ],
+);
+
+// A machine an operator reaches from the dashboard over SSH. The credential is
+// stored encrypted (AES-256-GCM via @repo/crypto) and never leaves the API: the
+// browser gets a terminal stream, never the key or the password.
+//
+// `hostKeyFingerprint` is pinned on the first successful connection. A later
+// connection whose host key differs is refused rather than trusted, so a swapped
+// or spoofed host cannot silently receive the credential.
+export const server = pgTable(
+  'server',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    // The customer this machine belongs to. Null for the operation's own boxes.
+    customerId: integer('customer_id').references(() => crmCustomer.id, {
+      onDelete: 'set null',
+    }),
+    addedByUserId: text('added_by_user_id').references(() => user.id, { onDelete: 'set null' }),
+    label: text('label').notNull(),
+    host: text('host').notNull(),
+    port: integer('port').notNull().default(22),
+    username: text('username').notNull(),
+    authType: text('auth_type').notNull(),
+    // The encrypted password or private key, as the EncryptedSecret blob.
+    credential: jsonb('credential').$type<Record<string, unknown>>().notNull(),
+    // The passphrase of an encrypted private key, encrypted the same way.
+    passphrase: jsonb('passphrase').$type<Record<string, unknown>>(),
+    hostKeyFingerprint: text('host_key_fingerprint'),
+    tags: jsonb('tags').$type<string[]>().notNull().default([]),
+    notes: text('notes').notNull().default(''),
+    active: boolean('active').notNull().default(true),
+    lastConnectedAt: timestamp('last_connected_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('server_project_target_unique').on(t.projectId, t.host, t.port, t.username),
+    index('server_project_idx').on(t.projectId, t.active),
+    index('server_customer_idx').on(t.customerId),
+    check('server_auth_type_check', sql`${t.authType} IN ('password', 'key')`),
+    check('server_port_check', sql`${t.port} BETWEEN 1 AND 65535`),
+  ],
+);
+
+// One row per terminal session. A shell on a customer's machine is the most
+// far-reaching thing this dashboard can do, so every attempt is recorded —
+// including the ones that never connected.
+export const serverSession = pgTable(
+  'server_session',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    serverId: integer('server_id')
+      .notNull()
+      .references(() => server.id, { onDelete: 'cascade' }),
+    userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+    status: text('status').notNull().default('open'),
+    errorCode: text('error_code'),
+    bytesIn: bigint('bytes_in', { mode: 'number' }).notNull().default(0),
+    bytesOut: bigint('bytes_out', { mode: 'number' }).notNull().default(0),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
+    endedAt: timestamp('ended_at', { withTimezone: true }),
+  },
+  (t) => [
+    index('server_session_project_started_idx').on(t.projectId, t.startedAt.desc()),
+    index('server_session_server_idx').on(t.serverId, t.startedAt.desc()),
+    check('server_session_status_check', sql`${t.status} IN ('open', 'closed', 'failed')`),
+  ],
+);
+
+// One Google account linked to the calendar, per member per project. Each member
+// connects their own account, so the OAuth tokens are never shared between users.
+// `tokens` holds the refresh token and the current access token as one encrypted
+// blob; nothing in it is ever returned over HTTP.
+export const calendarConnection = pgTable(
+  'calendar_connection',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull().default('google'),
+    accountEmail: text('account_email').notNull(),
+    tokens: jsonb('tokens').$type<Record<string, unknown>>().notNull(),
+    scopes: jsonb('scopes').$type<string[]>().notNull().default([]),
+    // The calendars the member has switched off in the view. Kept here rather than
+    // mirroring Google's own `selected` flag, so hiding one in this dashboard does
+    // not change what the member sees in Google Calendar.
+    hiddenCalendarIds: jsonb('hidden_calendar_ids').$type<string[]>().notNull().default([]),
+    // The last refusal from Google, kept so the page can say the connection needs
+    // renewing instead of showing an empty calendar.
+    lastError: text('last_error'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('calendar_connection_member_unique').on(t.projectId, t.userId, t.provider),
+    check('calendar_connection_provider_check', sql`${t.provider} IN ('google')`),
+  ],
+);
+
+// A signal a member has pushed away until later. The command centre derives its
+// signals from the rest of the dashboard on every read, so there is nothing to
+// mark as handled; what is kept is only the choice to stop showing one for a while.
+export const commandCenterSnooze = pgTable(
+  'command_center_snooze',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    // The signal's stable id, for example 'finance.invoices_overdue'.
+    signalId: text('signal_id').notNull(),
+    until: timestamp('until', { withTimezone: true }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('command_center_snooze_unique').on(t.projectId, t.userId, t.signalId),
+    index('command_center_snooze_member_idx').on(t.projectId, t.userId, t.until),
+  ],
+);
+
+// A post template: the design every post built on it is rendered with. The layout
+// itself is code (the browser draws the post on a canvas from these values), which
+// is what keeps two posts on one template identical in composition. The template
+// only carries what that drawing code reads, plus the models and the style prompt
+// used to fill it.
+export const studioTemplate = pgTable(
+  'studio_template',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    layout: text('layout').notNull().default('statement'),
+    aspect: text('aspect').notNull().default('square'),
+    backgroundColor: text('background_color').notNull().default('#000000'),
+    textColor: text('text_color').notNull().default('#ffffff'),
+    accentColor: text('accent_color').notNull().default('#9ca3af'),
+    fontFamily: text('font_family').notNull().default('Inter'),
+    // Prepended to every image prompt of a post on this template, so the generated
+    // photos share one look across posts.
+    stylePrompt: text('style_prompt').notNull().default(''),
+    // The OpenRouter credential the generation calls are billed to, and the model
+    // ids they address. An empty text model means captions are not generated.
+    credentialId: integer('credential_id').references(() => integrationCredential.id, {
+      onDelete: 'set null',
+    }),
+    imageModel: text('image_model').notNull().default('google/gemini-3.1-flash-image'),
+    textModel: text('text_model').notNull().default(''),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique('studio_template_project_name_unique').on(t.projectId, t.name),
+    index('studio_template_project_idx').on(t.projectId, t.name),
+    check(
+      'studio_template_layout_check',
+      sql`${t.layout} IN ('statement', 'feature', 'announcement', 'overlay')`,
+    ),
+    check('studio_template_aspect_check', sql`${t.aspect} IN ('square', 'portrait', 'story')`),
+  ],
+);
+
+// One post. The text fields are what the template's layout draws; the two file
+// references are the generated photo and the finished post image, both ordinary
+// vault files inside the post's own folder.
+export const studioPost = pgTable(
+  'studio_post',
+  {
+    id: serial('id').primaryKey(),
+    publicId: uuid('public_id').notNull().defaultRandom().unique(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    // A template in use cannot be deleted, so an existing post can always be
+    // re-rendered with the design it was built on.
+    templateId: integer('template_id')
+      .notNull()
+      .references(() => studioTemplate.id, { onDelete: 'restrict' }),
+    createdByUserId: text('created_by_user_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    title: text('title').notNull(),
+    // What the user asked for, kept as the input the text generation re-runs from.
+    topic: text('topic').notNull().default(''),
+    // The quieter line drawn above the headline in the accent colour. Every layout
+    // reads the same three text fields; what each one does with them differs.
+    leadLine: text('lead_line').notNull().default(''),
+    headline: text('headline').notNull().default(''),
+    subtext: text('subtext').notNull().default(''),
+    // The pill labels the feature layout draws under the headline.
+    chips: jsonb('chips').$type<string[]>().notNull().default([]),
+    // The text in the pill button the announcement layout draws at the bottom.
+    ctaLabel: text('cta_label').notNull().default(''),
+    caption: text('caption').notNull().default(''),
+    imagePrompt: text('image_prompt').notNull().default(''),
+    // The vault folder holding this post's files.
+    folder: text('folder').notNull(),
+    sourceImageFileId: integer('source_image_file_id').references(() => projectFile.id, {
+      onDelete: 'set null',
+    }),
+    renderedFileId: integer('rendered_file_id').references(() => projectFile.id, {
+      onDelete: 'set null',
+    }),
+    status: text('status').notNull().default('draft'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('studio_post_project_idx').on(t.projectId, t.createdAt),
+    check('studio_post_status_check', sql`${t.status} IN ('draft', 'ready')`),
+  ],
+);
+
+// A call event Rinkel pushed to the webhook endpoint. The Rinkel account is
+// instance-wide rather than per project, so these rows are not project-scoped
+// either; access is governed by the `phone` permission of whichever project the
+// member is looking at.
+//
+// Rinkel documents the body only as { event, payload } with an untyped payload,
+// so the whole body is kept and the fields below are what could be read out of it.
+export const phoneCallEvent = pgTable(
+  'phone_call_event',
+  {
+    id: serial('id').primaryKey(),
+    event: text('event').notNull(),
+    callId: text('call_id'),
+    direction: text('direction'),
+    externalNumber: text('external_number'),
+    internalNumber: text('internal_number'),
+    payload: jsonb('payload').$type<Record<string, unknown>>().notNull().default({}),
+    receivedAt: timestamp('received_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('phone_call_event_received_idx').on(t.receivedAt)],
 );

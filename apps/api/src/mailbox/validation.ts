@@ -28,6 +28,20 @@ export function normalizeMailboxInput(input: MailboxSettingsInput): MailboxSetti
   return normalized;
 }
 
+// A folder name reaches IMAP as a command argument. imapflow quotes it, but a name
+// carrying a line break would still be a way to write a second command, so one is
+// refused outright rather than passed on.
+export function assertFolderName(folder: string): string {
+  const printable = [...folder].every((char) => {
+    const code = char.codePointAt(0) ?? 0;
+    return code > 31 && code !== 127;
+  });
+  if (folder.length === 0 || folder.length > 255 || !printable) {
+    throw new HttpError(400, 'Invalid mail folder');
+  }
+  return folder;
+}
+
 export function validateMessageHeaders(
   subject: string,
   inReplyTo?: string,

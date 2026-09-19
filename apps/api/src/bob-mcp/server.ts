@@ -7,6 +7,7 @@ import { logBobFailure } from './log';
 import { sanitizeErrorCode } from './security';
 import {
   getDashboardSummary,
+  getScopedCommandCenter,
   getScopedProject,
   getScopedTask,
   listScopedAgentRuns,
@@ -121,6 +122,23 @@ export function buildBobMcpServer(context: BobContext, audit: BobRequestAudit): 
         requireBobRead(context, 'work_items');
         return getDashboardSummary(context);
       }),
+  );
+
+  server.registerTool(
+    'get_command_center',
+    {
+      description:
+        'What needs attention in the project today: overdue work, blocked items, overdue ' +
+        'invoices, failed agent runs and refused server connections, each with a count. ' +
+        'Read this first when asked what to do today.',
+      outputSchema: {
+        generatedAt: z.string(),
+        focusId: z.string().nullable(),
+        signals: z.array(genericItem).max(20),
+      },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    },
+    () => run('dashboards', null, () => getScopedCommandCenter(context)),
   );
 
   server.registerTool(

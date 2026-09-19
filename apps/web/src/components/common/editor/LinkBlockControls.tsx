@@ -3,7 +3,7 @@ import type { MouseEvent } from 'react';
 import { useTranslations } from 'next-intl';
 import type { LinkPreviewItem } from './LinkPreviewDialog';
 import LinkPreviewThumbnail from './LinkPreviewThumbnail';
-import { useCachedLinkPreview } from './useCachedLinkPreview';
+import { useVisibleLinkPreview } from './useVisibleLinkPreview';
 import { linkDestination } from './linkPresentation';
 import { internalLinkTarget } from './internalLinkTarget';
 import styles from './LinkPresentation.module.css';
@@ -27,7 +27,7 @@ export default function LinkBlockControls({
 }) {
   const t = useTranslations('common.editor');
   const link = links[0];
-  const preview = useCachedLinkPreview(link.url);
+  const { ref, preview } = useVisibleLinkPreview(compact ? link.url : undefined);
   const destination = linkDestination(link.url, window.location.origin);
   const name = preview?.title || destination.hostname;
   const url = new URL(link.url, window.location.origin);
@@ -37,6 +37,7 @@ export default function LinkBlockControls({
   if (preview?.title) detail = destination.hostname;
   return (
     <span
+      ref={ref}
       className={compact ? styles.row : styles.blockAction}
       contentEditable={false}
       data-link-presentation=""

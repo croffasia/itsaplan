@@ -1,8 +1,10 @@
 import { assertPublicHttpUrl, pinnedFetch, UrlNotAllowedError } from '@repo/net';
 import { HttpError } from '#shared/lib';
+import { LinkPreviewCache } from './cache';
 import { parseLinkMetadata, type LinkPreview } from './metadata';
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+const previewCache = new LinkPreviewCache();
 
 async function fetchPublic(
   url: URL,
@@ -62,7 +64,10 @@ export async function getLinkPreview(raw: string): Promise<LinkPreview> {
     if (error instanceof UrlNotAllowedError) throw new HttpError(400, error.message);
     throw new HttpError(400, 'The link could not be resolved');
   }
-  url.hash = '';
+  return previewCache.get(url, (normalized) => fetchLinkPreview(normalized, signal));
+}
+
+async function fetchLinkPreview(url: URL, signal: AbortSignal): Promise<LinkPreview> {
   const fallback: LinkPreview = {
     url: url.href,
     title: null,

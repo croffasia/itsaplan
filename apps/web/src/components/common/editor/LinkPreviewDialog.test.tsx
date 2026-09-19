@@ -328,7 +328,7 @@ describe('explicit link preview dialog', () => {
   it('revalidates cached internal metadata and hides permission failures', async () => {
     const url = 'https://planner.test/project/PRIVATE';
     queryClient.setQueryData(
-      ['link-preview', 'reader-1', url],
+      ['link-preview', 'reader-1', url, 'session-reader-1'],
       preview('Previously permitted title'),
     );
     let resolve!: (response: Response) => void;

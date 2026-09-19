@@ -188,7 +188,17 @@
     "previewCustomField": "Campo personalizado",
     "previewAllWorkItems": "Todos los elementos de trabajo",
     "previewUpdated": "Actualizado {date}",
-    "previewOtherValues": "({count} más)"
+    "previewOtherValues": "({count} más)",
+    "previewLink": "Ver vista previa del enlace",
+    "previewLinks": "Ver vistas previas de los enlaces ({count})",
+    "previewNamedLink": "Ver vista previa de {name}",
+    "backToLinks": "Volver a los enlaces",
+    "openLink": "Abrir enlace",
+    "copyLink": "Copiar enlace",
+    "copiedLink": "Copiado",
+    "editLink": "Editar enlace",
+    "retryPreview": "Intentar de nuevo",
+    "copyLinkFailed": "No se ha podido copiar el enlace. Selecciona y copia la URL de arriba."
   },
   "chart": {
     "download": "Guardar gráfico",

@@ -80,6 +80,7 @@ beforeEach(async () => {
     CustomEvent: dom.window.CustomEvent,
     PointerEvent: dom.window.MouseEvent,
     Image: dom.window.Image,
+    IntersectionObserver: undefined,
     getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
     requestAnimationFrame: dom.window.requestAnimationFrame.bind(dom.window),
     cancelAnimationFrame: dom.window.cancelAnimationFrame.bind(dom.window),
@@ -144,6 +145,93 @@ afterEach(async () => {
 });
 
 describe('mounted EditorContent link presentation', () => {
+  it('loads only visible compact cards without changing the document or undo history', async () => {
+    const observers: { show(): void; disconnected: boolean }[] = [];
+    class Observer {
+      disconnected = false;
+      constructor(readonly callback: IntersectionObserverCallback) {
+        observers.push(this);
+      }
+      observe() {}
+      disconnect() {
+        this.disconnected = true;
+      }
+      show() {
+        this.callback(
+          [
+            {
+              isIntersecting: true,
+              intersectionRect: { width: 100, height: 64 },
+            } as IntersectionObserverEntry,
+          ],
+          this as unknown as IntersectionObserver,
+        );
+      }
+    }
+    Object.defineProperty(globalThis, 'IntersectionObserver', { value: Observer });
+    const json = editor.getJSON();
+    const markdown = editor.storage.markdown.getMarkdown();
+    let updates = 0;
+    editor.on('update', () => updates++);
+    await render();
+    assert.equal(requests.length, 0);
+    const observer = observers.findLast((entry) => !entry.disconnected)!;
+    await act(() => observer.show());
+    await settle();
+    assert.equal(requests.length, 1);
+    assert.match(document.querySelector('[data-link-row]')!.textContent!, /Fetched guide title/);
+    const trigger = document.querySelector<HTMLButtonElement>('[data-link-preview-control]')!;
+    await act(() => trigger.click());
+    await settle();
+    assert.equal(requests.length, 1);
+    assert.ok(document.querySelector('[role="dialog"]'));
+    assert.equal(updates, 0);
+    assert.deepEqual(editor.getJSON(), json);
+    assert.equal(editor.storage.markdown.getMarkdown(), markdown);
+    assert.equal(editor.can().undo(), false);
+  });
+
+  it('disconnects visibility observation and cancels a pending preview when editing starts', async () => {
+    let show!: () => void;
+    let disconnected = false;
+    let requestSignal: AbortSignal | null | undefined;
+    Object.defineProperty(globalThis, 'IntersectionObserver', {
+      value: class {
+        constructor(callback: IntersectionObserverCallback) {
+          show = () =>
+            callback(
+              [
+                {
+                  isIntersecting: true,
+                  intersectionRect: { width: 100, height: 64 },
+                } as IntersectionObserverEntry,
+              ],
+              this as unknown as IntersectionObserver,
+            );
+        }
+        observe() {}
+        disconnect() {
+          disconnected = true;
+        }
+      },
+    });
+    globalThis.fetch = (async (_input, init) => {
+      requestSignal = init?.signal;
+      return new Promise((_resolve, reject) => {
+        requestSignal?.addEventListener('abort', () => reject(requestSignal?.reason));
+      });
+    }) as typeof fetch;
+    await render({ strict: false });
+    await act(() => show());
+    await settle();
+    assert.equal(requestSignal?.aborted, false);
+    await act(() => editor.view.dom.focus());
+    await settle();
+    assert.equal(disconnected, true);
+    assert.equal(requestSignal?.aborted, true);
+    assert.equal(document.querySelector('[data-link-row]'), null);
+  });
+
   for (const type of ['pointerdown', 'mousedown']) {
     it(`keeps reading controls mounted when ${type} would focus the editing host`, async () => {
       await render();

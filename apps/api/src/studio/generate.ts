@@ -1,8 +1,8 @@
+import { callOpenRouter, chatCompletionText } from '../integrations/openrouter';
 import { getCredentialSecret } from '../integrations/store';
 import { HttpError } from '../shared/lib';
 import type { StudioTemplateRow } from './store';
 
-const OPENROUTER_BASE = 'https://openrouter.ai/api/v1';
 const REQUEST_TIMEOUT_MS = 120_000;
 
 // The aspect ratios the layouts are drawn at, in the form OpenRouter's image API
@@ -43,32 +43,6 @@ async function apiKeyFor(template: StudioTemplateRow): Promise<string> {
   return key;
 }
 
-async function callOpenRouter(path: string, apiKey: string, body: unknown): Promise<unknown> {
-  let res: Response;
-  try {
-    res = await fetch(`${OPENROUTER_BASE}${path}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-  } catch (err) {
-    console.error('[planner] OpenRouter request failed:', err);
-    throw new HttpError(502, 'Could not reach OpenRouter');
-  }
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new HttpError(
-      502,
-      `OpenRouter responded ${res.status}${detail ? `: ${detail.slice(0, 300)}` : ''}`,
-    );
-  }
-  return res.json();
-}
-
 // The full image prompt: the template's style prompt first, so every post on one
 // template asks for the same look, then what this post is about.
 export function composeImagePrompt(template: StudioTemplateRow, prompt: string): string {
@@ -80,12 +54,17 @@ export async function generateImage(
   prompt: string,
 ): Promise<GeneratedImage> {
   const apiKey = await apiKeyFor(template);
-  const payload = (await callOpenRouter('/images', apiKey, {
-    model: template.imageModel,
-    prompt: composeImagePrompt(template, prompt),
-    aspect_ratio: ASPECT_RATIOS[template.aspect] ?? '1:1',
-    n: 1,
-  })) as { data?: { b64_json?: string; media_type?: string }[] };
+  const payload = (await callOpenRouter(
+    '/images',
+    apiKey,
+    {
+      model: template.imageModel,
+      prompt: composeImagePrompt(template, prompt),
+      aspect_ratio: ASPECT_RATIOS[template.aspect] ?? '1:1',
+      n: 1,
+    },
+    REQUEST_TIMEOUT_MS,
+  )) as { data?: { b64_json?: string; media_type?: string }[] };
 
   const first = payload.data?.[0];
   if (!first?.b64_json) throw new HttpError(502, 'OpenRouter returned no image');
@@ -116,22 +95,23 @@ export async function generateCopy(
   }
   const apiKey = await apiKeyFor(template);
   const style = template.stylePrompt.trim();
-  const payload = (await callOpenRouter('/chat/completions', apiKey, {
-    model: template.textModel,
-    response_format: { type: 'json_object' },
-    messages: [
-      { role: 'system', content: COPY_INSTRUCTIONS },
-      {
-        role: 'user',
-        content: [style ? `Brand style: ${style}` : '', `Post topic: ${topic}`]
-          .filter(Boolean)
-          .join('\n'),
-      },
-    ],
-  })) as { choices?: { message?: { content?: string } }[] };
-
-  const content = payload.choices?.[0]?.message?.content;
-  if (!content) throw new HttpError(502, 'OpenRouter returned no text');
+  const content = await chatCompletionText(
+    apiKey,
+    {
+      model: template.textModel,
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: COPY_INSTRUCTIONS },
+        {
+          role: 'user',
+          content: [style ? `Brand style: ${style}` : '', `Post topic: ${topic}`]
+            .filter(Boolean)
+            .join('\n'),
+        },
+      ],
+    },
+    REQUEST_TIMEOUT_MS,
+  );
 
   let parsed: Partial<GeneratedCopy>;
   try {

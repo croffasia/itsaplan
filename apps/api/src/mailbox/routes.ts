@@ -6,6 +6,7 @@ import { HttpError } from '../shared/lib';
 import { ErrorResponse } from '../shared/responses';
 import {
   INBOX,
+  getMailboxAttachment,
   getMailboxMessage,
   listMailboxFolders,
   listMailboxMessages,
@@ -21,6 +22,7 @@ import {
   saveMailboxConfig,
 } from './store';
 import { assertFolderName, normalizeMailboxInput, validateMessageHeaders } from './validation';
+import { generateMailAssistance, mailSummary } from './ai';
 
 const SmtpSecurity = t.Union([t.Literal('ssl'), t.Literal('starttls')]);
 const SmtpPort = t.Union([t.Literal(465), t.Literal(587)]);
@@ -71,6 +73,7 @@ const MessageSummaryResponse = t.Object({
   uid: t.Number(),
   messageId: t.Nullable(t.String()),
   from: t.Array(MailAddressResponse),
+  senderAvatarUrl: t.Nullable(t.String()),
   to: t.Array(MailAddressResponse),
   subject: t.String(),
   receivedAt: t.String(),
@@ -99,6 +102,11 @@ async function requireMailbox(projectId: number) {
 function requireUid(uid: number): number {
   if (!Number.isInteger(uid) || uid < 1) throw new HttpError(400, 'Invalid email UID');
   return uid;
+}
+
+function requireAttachmentIndex(index: number): number {
+  if (!Number.isInteger(index) || index < 0) throw new HttpError(400, 'Invalid attachment index');
+  return index;
 }
 
 function mailboxLimit(limit?: number): number {
@@ -240,6 +248,64 @@ export const mailboxRoutes = new Elysia({
         502: ErrorResponse,
       },
       detail: { summary: 'Read a Zoho inbox message' },
+    },
+  )
+
+  .get(
+    '/projects/:projectKey/mailbox/messages/:uid/attachments/:index',
+    async ({ project, params, query }) => {
+      const config = await requireMailbox(project.id);
+      const attachment = await getMailboxAttachment(
+        config,
+        requireUid(params.uid),
+        requireAttachmentIndex(params.index),
+        assertFolderName(query.folder ?? INBOX),
+      );
+      return new Response(attachment.content, {
+        headers: {
+          'Content-Type': attachment.contentType,
+          'Content-Disposition': `inline; filename*=UTF-8''${encodeURIComponent(attachment.filename)}`,
+          'Cache-Control': 'private, no-store',
+          'X-Content-Type-Options': 'nosniff',
+        },
+      });
+    },
+    {
+      permission: ['mail', 'read'],
+      params: t.Object({ projectKey: t.String(), uid: t.Numeric(), index: t.Numeric() }),
+      query: t.Object({ folder: FolderQuery }),
+      detail: { summary: 'Open a PDF attachment from an email' },
+    },
+  )
+
+  .post(
+    '/projects/:projectKey/mailbox/messages/:uid/ai',
+    async ({ project, params, query, body }) => {
+      const config = await requireMailbox(project.id);
+      const folder = assertFolderName(query.folder ?? INBOX);
+      const uid = requireUid(params.uid);
+      if (body.action === 'summary') {
+        return { text: await mailSummary(project.id, config, uid, folder) };
+      }
+
+      const message = await getMailboxMessage(config, uid, folder);
+      return { text: await generateMailAssistance(project.id, message, 'reply') };
+    },
+    {
+      permission: ['mail', 'read'],
+      params: t.Object({ projectKey: t.String(), uid: t.Numeric() }),
+      query: t.Object({ folder: FolderQuery }),
+      body: t.Object({ action: t.Union([t.Literal('summary'), t.Literal('reply')]) }),
+      response: {
+        200: t.Object({ text: t.String() }),
+        400: ErrorResponse,
+        401: ErrorResponse,
+        403: ErrorResponse,
+        404: ErrorResponse,
+        409: ErrorResponse,
+        502: ErrorResponse,
+      },
+      detail: { summary: 'Generate an email summary or reply with OpenRouter' },
     },
   )
 

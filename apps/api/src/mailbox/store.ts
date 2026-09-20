@@ -1,6 +1,6 @@
-import { db, projectMailboxSetting } from '@repo/db';
+import { and, eq, sql } from 'drizzle-orm';
+import { db, projectMailSummary, projectMailboxSetting } from '@repo/db';
 import { decryptSecret, encryptSecret } from '@repo/crypto';
-import { eq, sql } from 'drizzle-orm';
 
 export type SmtpSecurity = 'ssl' | 'starttls';
 
@@ -101,4 +101,33 @@ export async function saveMailboxConfig(
 
 export async function deleteMailboxConfig(projectId: number): Promise<void> {
   await db.delete(projectMailboxSetting).where(eq(projectMailboxSetting.projectId, projectId));
+}
+
+export async function getStoredMailSummary(
+  projectId: number,
+  messageKey: string,
+): Promise<string | null> {
+  const [row] = await db
+    .select({ summary: projectMailSummary.summary })
+    .from(projectMailSummary)
+    .where(
+      and(
+        eq(projectMailSummary.projectId, projectId),
+        eq(projectMailSummary.messageKey, messageKey),
+      ),
+    );
+  return row?.summary ?? null;
+}
+
+export async function saveMailSummary(
+  projectId: number,
+  messageKey: string,
+  summary: string,
+): Promise<void> {
+  await db
+    .insert(projectMailSummary)
+    .values({ projectId, messageKey, summary })
+    .onConflictDoNothing({
+      target: [projectMailSummary.projectId, projectMailSummary.messageKey],
+    });
 }

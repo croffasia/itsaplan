@@ -31,6 +31,11 @@ const nextConfig: NextConfig = {
         port: apiUrl.port,
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.gravatar.com',
+        pathname: '/avatar/**',
+      },
     ],
   },
 };

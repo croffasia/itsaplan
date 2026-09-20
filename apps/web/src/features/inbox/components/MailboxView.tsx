@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { MailMessage, MailMessageSummary } from '@/lib/api';
+import type { MailMessageSummary } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import MailboxComposeDialog from './MailboxComposeDialog';
@@ -36,11 +37,20 @@ export default function MailboxView({ projectKey }: { projectKey: string }) {
   const markRead = useMarkMailboxRead(projectKey, folder);
   const [composeOpen, setComposeOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [reply, setReply] = useState<MailMessage | null>(null);
+  const [aiAssistance, setAiAssistance] = useState(true);
+
+  const { values: pinnedUids, toggle: togglePin } = usePersistedSet(
+    `mailbox-pins:${projectKey}:${folder}`,
+  );
+  const aiStorageKey = `mailbox-ai-assistance:${projectKey}`;
 
   useEffect(() => {
     if (!connected) setSelectedUid(null);
   }, [connected]);
+
+  useEffect(() => {
+    setAiAssistance(window.localStorage.getItem(aiStorageKey) !== 'false');
+  }, [aiStorageKey]);
 
   if (settingsQuery.isError) {
     return (
@@ -67,13 +77,9 @@ export default function MailboxView({ projectKey }: { projectKey: string }) {
     setSelectedUid(message.uid);
     if (message.unread && can('mail', 'edit')) markRead.mutate(message.uid);
   };
-  const openCompose = () => {
-    setReply(null);
-    setComposeOpen(true);
-  };
-  const openReply = (message: MailMessage) => {
-    setReply(message);
-    setComposeOpen(true);
+  const changeAiAssistance = (enabled: boolean) => {
+    setAiAssistance(enabled);
+    window.localStorage.setItem(aiStorageKey, String(enabled));
   };
 
   return (
@@ -89,7 +95,7 @@ export default function MailboxView({ projectKey }: { projectKey: string }) {
           canSend={can('mail', 'create')}
           isOwner={isOwner}
           refreshing={messagesQuery.isFetching}
-          onCompose={openCompose}
+          onCompose={() => setComposeOpen(true)}
           onRefresh={() => {
             void messagesQuery.refetch();
             void foldersQuery.refetch();
@@ -109,22 +115,28 @@ export default function MailboxView({ projectKey }: { projectKey: string }) {
         <MailboxList
           messages={messagesQuery.data ?? []}
           selectedUid={selectedUid}
+          pinnedUids={pinnedUids}
+          aiAssistance={aiAssistance}
           loading={messagesQuery.isLoading}
           error={messagesQuery.isError}
           onSelect={selectMessage}
+          onTogglePin={(uid) => togglePin(String(uid))}
+          onAiAssistanceChange={changeAiAssistance}
           onRetry={() => messagesQuery.refetch()}
         />
       </div>
 
       {selectedUid != null ? (
         <MailboxDetail
+          projectKey={projectKey}
+          folder={folder}
           message={messageQuery.data}
           loading={messageQuery.isLoading}
           error={messageQuery.isError}
           mobile={mobile}
           canReply={can('mail', 'create')}
+          aiAssistance={aiAssistance}
           onBack={() => setSelectedUid(null)}
-          onReply={openReply}
           onRetry={() => messageQuery.refetch()}
         />
       ) : (
@@ -136,7 +148,6 @@ export default function MailboxView({ projectKey }: { projectKey: string }) {
       <MailboxComposeDialog
         projectKey={projectKey}
         open={composeOpen}
-        reply={reply}
         onOpenChange={setComposeOpen}
       />
       <MailboxSettingsDialog

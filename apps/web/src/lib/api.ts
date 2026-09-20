@@ -53,6 +53,17 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json();
 }
 
+// Raw bytes rather than JSON: the same session cookie and error shape as
+// `request`, but the response is handed back as a Blob.
+async function requestBlob(path: string): Promise<Blob> {
+  const res = await fetch(`${API_URL}${path}`, { credentials: 'include', cache: 'no-store' });
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
+  }
+  return res.blob();
+}
+
 export interface Project {
   id: number;
   key: string;
@@ -792,6 +803,7 @@ export interface MailMessageSummary {
   uid: number;
   messageId: string | null;
   from: MailAddress[];
+  senderAvatarUrl: string | null;
   to: MailAddress[];
   subject: string;
   receivedAt: string;
@@ -814,6 +826,8 @@ export interface SendMailboxMessageInput {
   inReplyTo?: string;
   references?: string[];
 }
+
+export type MailAiAction = 'summary' | 'reply';
 
 // ── Storage limits ────────────────────────────────────────────────────────────
 
@@ -3336,17 +3350,8 @@ export const api = {
     request<ProjectFile[]>(`/projects/${encodeURIComponent(projectKey)}/files`),
   uploadProjectFile: (projectKey: string, file: File, customerId?: string, folder?: string) =>
     sendProjectFile(projectKey, file, customerId, folder),
-  downloadProjectFile: async (publicId: string) => {
-    const res = await fetch(`${API_URL}/files/${encodeURIComponent(publicId)}/raw`, {
-      credentials: 'include',
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
-    }
-    return res.blob();
-  },
+  downloadProjectFile: (publicId: string) =>
+    requestBlob(`/files/${encodeURIComponent(publicId)}/raw`),
   deleteProjectFile: (publicId: string) =>
     request<void>(`/files/${encodeURIComponent(publicId)}`, {
       method: 'DELETE',
@@ -3803,17 +3808,10 @@ export const api = {
     }),
   uploadNoteBoardImage: (projectKey: string, boardId: number, file: File) =>
     sendNoteBoardImage(projectKey, boardId, file),
-  downloadNoteBoardImage: async (projectKey: string, boardId: number, imageId: string) => {
-    const res = await fetch(
-      `${API_URL}/projects/${encodeURIComponent(projectKey)}/note-boards/${boardId}/images/${encodeURIComponent(imageId)}/raw`,
-      { credentials: 'include', cache: 'no-store' },
-    );
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      throw new ApiError(res.status, body?.error ?? `${res.status} ${res.statusText}`);
-    }
-    return res.blob();
-  },
+  downloadNoteBoardImage: (projectKey: string, boardId: number, imageId: string) =>
+    requestBlob(
+      `/projects/${encodeURIComponent(projectKey)}/note-boards/${boardId}/images/${encodeURIComponent(imageId)}/raw`,
+    ),
 
   // Analytics — read-only project metrics behind the dashboard widgets.
   getStats: (projectKey: string) =>
@@ -4324,10 +4322,24 @@ export const api = {
     request<MailMessage>(
       `/projects/${projectKey}/mailbox/messages/${uid}?folder=${encodeURIComponent(folder)}`,
     ),
+  openMailboxPdf: (projectKey: string, uid: number, index: number, folder: string) =>
+    requestBlob(
+      `/projects/${encodeURIComponent(projectKey)}/mailbox/messages/${uid}/attachments/${index}?folder=${encodeURIComponent(folder)}`,
+    ),
   markMailboxMessageRead: (projectKey: string, uid: number, folder: string) =>
     request<void>(
       `/projects/${projectKey}/mailbox/messages/${uid}/read?folder=${encodeURIComponent(folder)}`,
       { method: 'POST' },
+    ),
+  generateMailboxAssistance: (
+    projectKey: string,
+    uid: number,
+    folder: string,
+    action: MailAiAction,
+  ) =>
+    request<{ text: string }>(
+      `/projects/${projectKey}/mailbox/messages/${uid}/ai?folder=${encodeURIComponent(folder)}`,
+      { method: 'POST', body: JSON.stringify({ action }) },
     ),
   sendMailboxMessage: (projectKey: string, input: SendMailboxMessageInput) =>
     request<{ sent: boolean }>(`/projects/${projectKey}/mailbox/messages`, {

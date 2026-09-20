@@ -86,3 +86,26 @@ export function useSendMailboxMessage(projectKey: string) {
     },
   });
 }
+
+export function useMailboxAi(projectKey: string, uid: number, folder: string) {
+  return useMutation({
+    mutationFn: (action: 'summary' | 'reply') =>
+      api.generateMailboxAssistance(projectKey, uid, folder, action),
+    onError: (error) => toast.error(error instanceof Error ? error.message : 'AI request failed'),
+  });
+}
+
+export function useMailboxSummary(
+  projectKey: string,
+  uid: number | undefined,
+  folder: string,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: qk.mailboxSummary(projectKey, folder, uid ?? 0),
+    queryFn: () => api.generateMailboxAssistance(projectKey, uid!, folder, 'summary'),
+    enabled: enabled && uid != null,
+    staleTime: Infinity,
+    retry: false,
+  });
+}

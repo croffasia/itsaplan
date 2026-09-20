@@ -1982,3 +1982,19 @@ export const phoneCallEvent = pgTable(
   },
   (t) => [index('phone_call_event_received_idx').on(t.receivedAt)],
 );
+
+// A generated email summary, kept so opening the same message again shows the
+// text that was generated the first time instead of calling the model again.
+export const projectMailSummary = pgTable(
+  'project_mail_summary',
+  {
+    id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    messageKey: text('message_key').notNull(),
+    summary: text('summary').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('project_mail_summary_key_unique').on(t.projectId, t.messageKey)],
+);

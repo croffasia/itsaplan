@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { ImapFlow } from 'imapflow';
 import { simpleParser } from 'mailparser';
 import { emailBody, sendEmail, verifySmtp, type SmtpConfig } from '@repo/mailer';
@@ -7,6 +8,7 @@ import { mailboxErrorDetails } from './error-details';
 
 const CONNECTION_TIMEOUT_MS = 15_000;
 const MAX_SOURCE_BYTES = 2 * 1024 * 1024;
+const MAX_ATTACHMENT_SOURCE_BYTES = 25 * 1024 * 1024;
 const MAX_BODY_CHARS = 200_000;
 
 export interface MailAddress {
@@ -18,11 +20,19 @@ export interface MailMessageSummary {
   uid: number;
   messageId: string | null;
   from: MailAddress[];
+  senderAvatarUrl: string | null;
   to: MailAddress[];
   subject: string;
   receivedAt: string;
   unread: boolean;
   size: number;
+}
+
+function senderAvatarUrl(from: MailAddress[]): string | null {
+  const address = from[0]?.address.trim().toLowerCase();
+  if (!address) return null;
+  const hash = createHash('sha256').update(address).digest('hex');
+  return `https://www.gravatar.com/avatar/${hash}?d=404&s=96`;
 }
 
 export interface MailMessage extends MailMessageSummary {
@@ -31,6 +41,12 @@ export interface MailMessage extends MailMessageSummary {
   truncated: boolean;
   attachments: { filename: string; contentType: string; size: number }[];
   references: string[];
+}
+
+export interface MailAttachmentContent {
+  filename: string;
+  contentType: string;
+  content: Buffer;
 }
 
 // The folders offered in the dashboard, in the order they are shown. Zoho names
@@ -115,10 +131,12 @@ function summary(message: {
   internalDate?: Date | string;
   size?: number;
 }): MailMessageSummary {
+  const from = addresses(message.envelope?.from);
   return {
     uid: message.uid,
     messageId: message.envelope?.messageId ?? null,
-    from: addresses(message.envelope?.from),
+    from,
+    senderAvatarUrl: senderAvatarUrl(from),
     to: addresses(message.envelope?.to),
     subject: message.envelope?.subject || '(No subject)',
     receivedAt: isoDate(message.internalDate ?? message.envelope?.date),
@@ -303,6 +321,51 @@ export async function getMailboxMessage(
   } catch (error) {
     if (error instanceof HttpError) throw error;
     return connectionError('message load', error, config);
+  } finally {
+    await closeClient(client);
+  }
+}
+
+export async function getMailboxAttachment(
+  config: MailboxConfig,
+  uid: number,
+  attachmentIndex: number,
+  folder: string,
+): Promise<MailAttachmentContent> {
+  const client = imapClient(config);
+  try {
+    await client.connect();
+    const lock = await client.getMailboxLock(folder, { readOnly: true });
+    try {
+      const message = await client.fetchOne(
+        String(uid),
+        { uid: true, size: true, source: { start: 0, maxLength: MAX_ATTACHMENT_SOURCE_BYTES } },
+        { uid: true },
+      );
+      if (!message || !message.source) throw new HttpError(404, 'Email not found');
+      if ((message.size ?? 0) > MAX_ATTACHMENT_SOURCE_BYTES) {
+        throw new HttpError(413, 'Email is too large to open its attachment');
+      }
+      const parsed = await simpleParser(message.source, {
+        skipImageLinks: true,
+        maxHtmlLengthToParse: MAX_ATTACHMENT_SOURCE_BYTES,
+      });
+      const attachment = parsed.attachments[attachmentIndex];
+      if (!attachment) throw new HttpError(404, 'Attachment not found');
+      const filename = attachment.filename || 'attachment';
+      if (
+        attachment.contentType !== 'application/pdf' &&
+        !filename.toLowerCase().endsWith('.pdf')
+      ) {
+        throw new HttpError(400, 'Only PDF attachments can be opened');
+      }
+      return { filename, contentType: 'application/pdf', content: attachment.content };
+    } finally {
+      lock.release();
+    }
+  } catch (error) {
+    if (error instanceof HttpError) throw error;
+    return connectionError('attachment load', error, config);
   } finally {
     await closeClient(client);
   }

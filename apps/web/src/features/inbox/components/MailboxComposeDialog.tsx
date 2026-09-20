@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { MailMessage } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,23 +15,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useSendMailboxMessage } from '../services/mailbox.service';
 
-function replyRecipient(message: MailMessage): string {
-  return message.replyTo[0]?.address || message.from[0]?.address || '';
-}
-
-function replySubject(subject: string): string {
-  return /^re:/i.test(subject) ? subject : `Re: ${subject}`;
-}
-
 export default function MailboxComposeDialog({
   projectKey,
   open,
-  reply,
   onOpenChange,
 }: {
   projectKey: string;
   open: boolean;
-  reply: MailMessage | null;
   onOpenChange: (open: boolean) => void;
 }) {
   const send = useSendMailboxMessage(projectKey);
@@ -42,10 +31,10 @@ export default function MailboxComposeDialog({
 
   useEffect(() => {
     if (!open) return;
-    setTo(reply ? replyRecipient(reply) : '');
-    setSubject(reply ? replySubject(reply.subject) : '');
+    setTo('');
+    setSubject('');
     setBody('');
-  }, [open, reply]);
+  }, [open]);
 
   const recipients = to
     .split(',')
@@ -54,15 +43,7 @@ export default function MailboxComposeDialog({
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
-    await send.mutateAsync({
-      to: recipients,
-      subject: subject.trim(),
-      body,
-      inReplyTo: reply?.messageId ?? undefined,
-      references: reply
-        ? [...reply.references, ...(reply.messageId ? [reply.messageId] : [])]
-        : undefined,
-    });
+    await send.mutateAsync({ to: recipients, subject: subject.trim(), body });
     onOpenChange(false);
   };
 
@@ -71,7 +52,7 @@ export default function MailboxComposeDialog({
       <DialogContent className="sm:max-w-2xl">
         <form onSubmit={submit}>
           <DialogHeader>
-            <DialogTitle>{reply ? 'Reply' : 'New email'}</DialogTitle>
+            <DialogTitle>New email</DialogTitle>
             <DialogDescription>
               Sent securely through the connected Zoho SMTP account.
             </DialogDescription>

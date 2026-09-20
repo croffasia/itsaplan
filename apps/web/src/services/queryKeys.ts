@@ -171,6 +171,8 @@ export const qk = {
     ['mailboxMessages', projectKey, folder] as const,
   mailboxMessage: (projectKey: string, folder: string, uid: number) =>
     ['mailboxMessages', projectKey, folder, uid] as const,
+  mailboxSummary: (projectKey: string, folder: string, uid: number) =>
+    ['mailboxSummary', projectKey, folder, uid] as const,
   // The signed-in user's WebAuthn passkeys (account security page).
   passkeys: ['passkeys'] as const,
   // The signed-in user's connected external accounts (accounts page): the linked

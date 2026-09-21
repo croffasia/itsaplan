@@ -473,6 +473,10 @@
     "noState": "Aucun état."
   },
   "importExport": {
+    "import": "Importer",
+    "source": "Source",
+    "sourceHint": "Choisissez la source de l’import.",
+    "comingSoon": "Bientôt",
     "connect": "Se connecter à Plane",
     "connectHint": "Indiquez une instance Plane auto-hébergée pour vérifier la connexion et charger ses projets.",
     "baseUrl": "URL de Plane",

@@ -473,6 +473,10 @@
     "noState": "无状态。"
   },
   "importExport": {
+    "import": "导入",
+    "source": "来源",
+    "sourceHint": "选择导入来源。",
+    "comingSoon": "即将推出",
     "connect": "连接 Plane",
     "connectHint": "输入自托管的 Plane 实例地址以检查连接并加载其项目。",
     "baseUrl": "Plane 地址",

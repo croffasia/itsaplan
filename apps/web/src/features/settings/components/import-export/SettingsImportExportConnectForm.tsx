@@ -39,7 +39,11 @@ export default function SettingsImportExportConnectForm({
   const valid = baseUrl.trim() !== '' && workspaceSlug.trim() !== '' && apiToken.trim() !== '';
 
   return (
-    <form onSubmit={(event) => void submit(event)} className="max-w-md space-y-4">
+    <form
+      onSubmit={(event) => void submit(event)}
+      autoComplete="off"
+      className="max-w-md space-y-4"
+    >
       <div className="space-y-1.5">
         <Label htmlFor="plane-base-url">{t('baseUrl')}</Label>
         <Input

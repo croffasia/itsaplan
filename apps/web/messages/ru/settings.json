@@ -473,6 +473,10 @@
     "noState": "Статусов нет."
   },
   "importExport": {
+    "import": "Импорт",
+    "source": "Источник",
+    "sourceHint": "Выберите, откуда импортировать.",
+    "comingSoon": "Скоро",
     "connect": "Подключение к Plane",
     "connectHint": "Укажите self-hosted инстанс Plane, чтобы проверить соединение и загрузить его проекты.",
     "baseUrl": "URL Plane",

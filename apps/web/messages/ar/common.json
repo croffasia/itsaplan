@@ -188,7 +188,17 @@
     "previewCustomField": "Custom field",
     "previewAllWorkItems": "All work items",
     "previewUpdated": "Updated {date}",
-    "previewOtherValues": "({count} more)"
+    "previewOtherValues": "({count} more)",
+    "previewLink": "معاينة الرابط",
+    "previewLinks": "معاينة الروابط ({count})",
+    "previewNamedLink": "معاينة {name}",
+    "backToLinks": "العودة إلى الروابط",
+    "openLink": "فتح الرابط",
+    "copyLink": "نسخ الرابط",
+    "copiedLink": "تم النسخ",
+    "editLink": "تعديل الرابط",
+    "retryPreview": "إعادة المحاولة",
+    "copyLinkFailed": "تعذّر نسخ الرابط. حدّد عنوان URL أعلاه وانسخه."
   },
   "chart": {
     "download": "احفظ الرسم البياني",

@@ -57,6 +57,7 @@ export default function NewIssueBody({
 
   const descriptionEditor = (
     <MarkdownEditor
+      readingLinks={false}
       className={cn(bodyDefs.length === 0 && 'mt-3', editorClass)}
       placeholder={tEditor('descriptionPlaceholder')}
       defaultValue={description}
@@ -106,6 +107,7 @@ export default function NewIssueBody({
       {markdownDefs.map((def) => (
         <div key={def.id} className={sectionClass(fieldSection(def.id))}>
           <MarkdownEditor
+            readingLinks={false}
             className={editorClass}
             defaultValue={(fieldValues[def.id]?.value as string) ?? ''}
             placeholder={tFields('empty')}

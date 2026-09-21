@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
 import { resolveLinkPreview } from './resolveLinkPreview';
+import { linkPreviewDestination } from './linkPreviewDestination';
 
 async function preloadImage(src: string, signal: AbortSignal) {
   await new Promise<void>((resolve) => {
@@ -24,29 +25,44 @@ async function preloadImage(src: string, signal: AbortSignal) {
 
 export function useLinkPreviewQuery(url: string | undefined) {
   const { data: session, isPending: sessionPending } = useSession();
-  const internal =
-    !!url && typeof window !== 'undefined' && new URL(url).origin === window.location.origin;
-  const enabled = !!url && !!session?.user.id;
+  const origin = typeof window === 'undefined' ? undefined : window.location.origin;
+  const destination = url ? linkPreviewDestination(url, origin) : null;
+  const href = destination?.href;
+  const internal = !!destination && destination.origin === origin;
+  const enabled = !!href && !!session?.user.id && !sessionPending;
+  const queryKey = ['link-preview', session?.user.id, href];
+  if (internal) queryKey.push(session?.session?.id);
   const query = useQuery({
-    queryKey: ['link-preview', session?.user.id, url],
+    queryKey,
     enabled,
     queryFn: async ({ signal }) => {
-      const preview = await resolveLinkPreview(url!, window.location.origin, signal);
+      const preview = await resolveLinkPreview(href!, window.location.origin, signal);
       if (preview.image && !signal.aborted) {
         await preloadImage(preview.image, signal);
       }
       signal.throwIfAborted();
       return preview;
     },
-    staleTime: internal ? 0 : 5 * 60_000,
+    staleTime: (query) => {
+      if (internal) return 0;
+      const preview = query.state.data;
+      return preview?.title || preview?.description || preview?.image || preview?.siteName
+        ? 5 * 60_000
+        : 15_000;
+    },
     gcTime: internal ? 0 : 2 * 60_000,
     retry: false,
-    refetchOnMount: false,
+    refetchOnMount: internal ? 'always' : true,
     refetchOnWindowFocus: false,
   });
   return {
     ...query,
-    data: query.isError ? undefined : query.data,
-    isPending: sessionPending || (enabled && query.isPending),
+    data:
+      !enabled || query.isError || (internal && query.fetchStatus !== 'idle')
+        ? undefined
+        : query.data,
+    isPending:
+      sessionPending ||
+      (enabled && (query.isPending || (internal && query.fetchStatus !== 'idle'))),
   };
 }

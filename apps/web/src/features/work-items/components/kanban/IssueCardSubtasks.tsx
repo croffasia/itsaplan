@@ -51,17 +51,15 @@ export function IssueCardSubtasks({
         <Chevron className="size-3 shrink-0 text-muted-foreground" />
         <ListTree className="size-3 shrink-0 text-muted-foreground" />
         {t('subtasksProgress', { done: progress.done, total: progress.total })}
-      </button>
-      {!open && (
-        <div className="mx-0.5 h-1 overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full bg-muted-foreground/50"
+        <span className="ml-auto h-0.5 w-12 shrink-0 overflow-hidden rounded-full bg-muted">
+          <span
+            className="block h-full rounded-full bg-muted-foreground/50"
             style={{
               width: `${progress.total === 0 ? 0 : (progress.done / progress.total) * 100}%`,
             }}
           />
-        </div>
-      )}
+        </span>
+      </button>
       {open &&
         subtasks.map((subtask) => {
           const column = maps.columnById.get(subtask.columnId);

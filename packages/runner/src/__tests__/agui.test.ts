@@ -394,6 +394,79 @@ describe('answer stream', () => {
     expect(stream.startedSession()).toBe('c66bf000');
   });
 
+  it("reads pi's json as text, tool calls and the session header", async () => {
+    const sink = collect();
+    const stream = new AnswerStream('pi-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      [
+        JSON.stringify({ type: 'session', version: 3, id: 'sess-9' }),
+        JSON.stringify({
+          type: 'message_update',
+          usage: { input: 12, cacheRead: 80, output: 3 },
+          assistantMessageEvent: { type: 'text_delta', delta: 'Looking' },
+        }),
+        JSON.stringify({
+          type: 'tool_execution_start',
+          toolCallId: 'call_1',
+          toolName: 'read',
+          args: { path: 'alpha.txt' },
+        }),
+        JSON.stringify({
+          type: 'tool_execution_end',
+          toolCallId: 'call_1',
+          toolName: 'read',
+          result: { content: [{ type: 'text', text: 'hello from alpha' }] },
+          isError: false,
+        }),
+        JSON.stringify({
+          type: 'message_update',
+          usage: { input: 40, cacheRead: 80, output: 9 },
+          assistantMessageEvent: { type: 'text_delta', delta: ' it over.' },
+        }),
+        JSON.stringify({
+          type: 'message_end',
+          message: { role: 'assistant', content: [{ type: 'text', text: 'Looking it over.' }] },
+        }),
+        '',
+      ].join('\n'),
+    );
+    await stream.finish('');
+
+    expect(types(sink.events)).toEqual([
+      'RUN_STARTED',
+      'TEXT_MESSAGE_START',
+      'TEXT_MESSAGE_CONTENT',
+      'TOOL_CALL_START',
+      'TOOL_CALL_ARGS',
+      'TOOL_CALL_END',
+      'TOOL_CALL_RESULT',
+      'TEXT_MESSAGE_CONTENT',
+      'TEXT_MESSAGE_END',
+      'RUN_FINISHED',
+    ]);
+    expect(text(sink.events)).toBe('Looking it over.');
+    expect(stream.startedSession()).toBe('sess-9');
+    expect(stream.contextUsage()).toEqual({ inputTokens: 120, outputTokens: 9 });
+    const result = sink.events.find((e) => e.type === 'TOOL_CALL_RESULT');
+    expect((result as { content: string }).content).toBe('hello from alpha');
+  });
+
+  it('takes the pi message_end text when no delta arrived', async () => {
+    const sink = collect();
+    const stream = new AnswerStream('pi-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      `${JSON.stringify({
+        type: 'message_end',
+        message: { content: [{ type: 'text', text: 'All done.' }] },
+      })}\n`,
+    );
+    await stream.finish('');
+
+    expect(text(sink.events)).toBe('All done.');
+  });
+
   it('reports what a denied Copilot tool call said', async () => {
     const sink = collect();
     const stream = new AnswerStream('copilot-json', 'chat:1:u:x', '7', sink.send);
@@ -417,6 +490,7 @@ describe('answer stream', () => {
       'opencode-json',
       'antigravity-stream-json',
       'copilot-json',
+      'pi-json',
     ] as const) {
       const sink = collect();
       const stream = new AnswerStream(format, 'chat:1:u:x', '7', sink.send);
@@ -445,6 +519,11 @@ describe('answer stream', () => {
     const opencodeStream = new AnswerStream('opencode-json', 'chat:1:u:x', '7', opencode.send);
     opencodeStream.write(`${JSON.stringify({ type: 'step.started', sessionID: 'ses_9' })}\n`);
     expect(opencodeStream.startedSession()).toBe('ses_9');
+
+    const pi = collect();
+    const piStream = new AnswerStream('pi-json', 'chat:1:u:x', '7', pi.send);
+    piStream.write(`${JSON.stringify({ type: 'session', id: 'sess-9' })}\n`);
+    expect(piStream.startedSession()).toBe('sess-9');
   });
 
   it('keeps the first session it saw when later lines name another', async () => {

@@ -7,8 +7,8 @@ This package runs such agents on your own machine — one, or several at once.
 
 - Polls your instance for the agent's queued runs. Runs each one with a coding agent CLI.
   Reports the result.
-- Has presets for Claude Code, Codex, opencode, Antigravity CLI and GitHub Copilot CLI.
-  Each preset sets the unattended flags and the session resume.
+- Has presets for Claude Code, Codex, opencode, Antigravity CLI, GitHub Copilot CLI,
+  Pi, and Oh My Pi (`omp`). Each preset sets the unattended flags and the session resume.
 - Runs your own `command` instead, if you prefer. The command takes the task on stdin.
 - Answers the agent's chat. Sends the text and the tool calls while the CLI prints them.
 
@@ -20,8 +20,9 @@ of kind External. The key appears one time only, at creation.
 **2. Enable MCP** for the project, in Settings, MCP Server. MCP is off by default. The
 agent reads the issue and writes its result through it.
 
-**3. Give the coding agent the address of that server.** Claude Code reads `.mcp.json`
-from the folder it runs in. For the other four CLIs, see
+**3. Give the coding agent the address of that server.** Claude Code, Oh My Pi, and Pi
+(through `pi-mcp-adapter`) read `.mcp.json` from the folder they run in. For the other
+CLIs, see
 [Coding agent setup](https://github.com/croffasia/itsaplan/blob/main/docs/runner.md).
 
 ```json
@@ -70,6 +71,8 @@ flags for an unattended run, and the session resume. Every preset keeps a chat s
 | `opencode`    | opencode           |
 | `antigravity` | Antigravity CLI    |
 | `copilot`     | GitHub Copilot CLI |
+| `pi`          | Pi                 |
+| `omp`         | Oh My Pi           |
 
 Each preset needs the CLI's own MCP config.
 [Coding agent setup](https://github.com/croffasia/itsaplan/blob/main/docs/runner.md) holds
@@ -188,7 +191,7 @@ npx -y @itsaplan/runner --agent claude
 The server writes the task text. The text states what occurred, what to do, and to post
 the result as a comment on the issue. Your own `command` receives the text on **stdin**. A
 preset gives it to its CLI in the way that CLI accepts it: on stdin for `claude` and
-`codex`, as an argument for `antigravity`, `copilot` and `opencode`.
+`codex`, as an argument for `antigravity`, `copilot`, `opencode`, `pi` and `omp`.
 
 The agent reads all other data through the MCP server at `$ITSAPLAN_URL/mcp`. The agent
 sends `$ITSAPLAN_API_KEY` as a bearer token, and acts as its own user with its role.
@@ -235,7 +238,8 @@ calls with the answer. `outputFormat` tells the runner how to read the output:
 
 - `text` — all the output is the answer.
 - `claude-stream-json`, `codex-jsonl`, `opencode-json`, `antigravity-stream-json`,
-  `copilot-json` — the event stream of that CLI.
+  `copilot-json`, `pi-json` — the event stream of that CLI. `pi` and `omp` both use
+  `pi-json`.
 
 A preset sets `outputFormat` for you. Set it yourself only with your own `command`. If the
 output does not agree with the format, the runner sends the output as plain text.

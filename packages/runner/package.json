@@ -18,7 +18,9 @@
     "claude-code",
     "codex",
     "antigravity",
-    "opencode"
+    "opencode",
+    "pi",
+    "omp"
   ],
   "homepage": "https://github.com/croffasia/itsaplan/tree/main/packages/runner#readme",
   "repository": {

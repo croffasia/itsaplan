@@ -394,6 +394,7 @@
     "runnerHelpToolHint": "على الجهاز اللي هيشغّل المنفّذ. المنفّذ مش هيقدر يسجّل دخولك بدالك.",
     "runnerHelpRun": "احفظ الملفات في المكان اللي الوكيل هيشتغل فيه",
     "runnerHelpTabCustom": "بتاعك إنت",
+    "runnerHelpPiAdapter": "بي يقرأ .mcp.json عن طريق إضافة. ثبّتها مرة واحدة: pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "اتأكد إنه متوصّل",
     "runnerHelpCheckHint": "قسم المنفّذ هيبان فيه «شغّال».",
     "runnerOnline": "المنفّذ شغّال",

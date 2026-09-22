@@ -394,6 +394,7 @@
     "runnerHelpToolHint": "On the machine that will run the runner. The runner cannot sign in for you.",
     "runnerHelpRun": "Save the files where the agent should work",
     "runnerHelpTabCustom": "Your own",
+    "runnerHelpPiAdapter": "Pi reads .mcp.json through an extension. Install it once: pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "Check it is connected",
     "runnerHelpCheckHint": "The Runner section shows Online.",
     "runnerOnline": "Runner online",

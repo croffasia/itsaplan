@@ -394,6 +394,7 @@
     "runnerHelpToolHint": "En la máquina que ejecutará al ejecutor. El ejecutor no puede iniciar sesión por ti.",
     "runnerHelpRun": "Guardar los ficheros donde el agente tiene que trabajar",
     "runnerHelpTabCustom": "El tuyo propio",
+    "runnerHelpPiAdapter": "Pi lee .mcp.json mediante una extensión. Instálala una vez: pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "Comprobar que está conectado",
     "runnerHelpCheckHint": "La sección Ejecutor muestra En línea.",
     "runnerOnline": "Ejecutor en línea",

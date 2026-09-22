@@ -394,6 +394,7 @@
     "runnerHelpToolHint": "Di mesin yang akan menjalankan runner. Runner tidak dapat masuk untuk Anda.",
     "runnerHelpRun": "Simpan file di tempat agen harus bekerja",
     "runnerHelpTabCustom": "Milik Anda sendiri",
+    "runnerHelpPiAdapter": "Pi membaca .mcp.json melalui ekstensi. Pasang sekali: pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "Periksa apakah terhubung",
     "runnerHelpCheckHint": "Bagian Runner menampilkan Online.",
     "runnerOnline": "Runner online",

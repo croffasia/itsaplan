@@ -473,6 +473,10 @@
     "noState": "لا توجد حالة."
   },
   "importExport": {
+    "import": "استيراد",
+    "source": "المصدر",
+    "sourceHint": "اختر مصدر الاستيراد.",
+    "comingSoon": "قريبًا",
     "connect": "الاتصال بـ Plane",
     "connectHint": "حط بيانات نسخة Plane المستضافة ذاتيًا عشان نتأكد من الاتصال ونجيب مشاريعها.",
     "baseUrl": "رابط Plane",

@@ -473,6 +473,10 @@
     "noState": "Tidak ada status."
   },
   "importExport": {
+    "import": "Impor",
+    "source": "Sumber",
+    "sourceHint": "Pilih sumber impor.",
+    "comingSoon": "Segera",
     "connect": "Hubungkan ke Plane",
     "connectHint": "Masukkan instans Plane self-hosted untuk memeriksa koneksi dan memuat proyeknya.",
     "baseUrl": "URL Plane",

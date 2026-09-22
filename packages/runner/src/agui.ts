@@ -207,8 +207,9 @@ export class AnswerStream {
   }
 
   // Pi and Oh My Pi share this stream. The first line is the session header. Text arrives
-  // as text_delta; a tool is the pair of execution_start / execution_end. message_end
-  // repeats the answer and is only used when no delta arrived.
+  // as text_delta; a tool is the pair of execution_start / execution_end. The stream emits
+  // a message_end for the user turn before any text, so only the assistant's counts, and
+  // only when no delta arrived.
   private readPiLine(message: PiJsonLine): void {
     if (message.type === 'session' && message.id) this.sessionId ??= message.id;
     switch (message.type) {
@@ -237,7 +238,7 @@ export class AnswerStream {
         return;
       }
       case 'message_end':
-        if (!this.sawAnyText && message.message?.content) {
+        if (message.message?.role === 'assistant' && !this.sawAnyText && message.message.content) {
           const body = textOfResult(message.message.content);
           if (body) this.appendText(body);
         }
@@ -716,7 +717,7 @@ interface PiJsonLine {
   toolName?: string;
   args?: unknown;
   result?: unknown;
-  message?: { content?: unknown };
+  message?: { role?: string; content?: unknown };
 }
 
 interface StreamEvent {

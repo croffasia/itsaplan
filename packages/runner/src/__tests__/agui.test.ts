@@ -452,6 +452,32 @@ describe('answer stream', () => {
     expect((result as { content: string }).content).toBe('hello from alpha');
   });
 
+  it('ignores the user message_end pi emits before the assistant text', async () => {
+    const sink = collect();
+    const stream = new AnswerStream('pi-json', 'chat:1:u:x', '7', sink.send);
+
+    stream.write(
+      [
+        JSON.stringify({
+          type: 'message_end',
+          message: { role: 'user', content: [{ type: 'text', text: 'Reply with exactly: pong' }] },
+        }),
+        JSON.stringify({
+          type: 'message_update',
+          assistantMessageEvent: { type: 'text_delta', delta: 'pong' },
+        }),
+        JSON.stringify({
+          type: 'message_end',
+          message: { role: 'assistant', content: [{ type: 'text', text: 'pong' }] },
+        }),
+        '',
+      ].join('\n'),
+    );
+    await stream.finish('');
+
+    expect(text(sink.events)).toBe('pong');
+  });
+
   it('takes the pi message_end text when no delta arrived', async () => {
     const sink = collect();
     const stream = new AnswerStream('pi-json', 'chat:1:u:x', '7', sink.send);
@@ -459,7 +485,7 @@ describe('answer stream', () => {
     stream.write(
       `${JSON.stringify({
         type: 'message_end',
-        message: { content: [{ type: 'text', text: 'All done.' }] },
+        message: { role: 'assistant', content: [{ type: 'text', text: 'All done.' }] },
       })}\n`,
     );
     await stream.finish('');

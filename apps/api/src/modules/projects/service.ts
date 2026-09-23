@@ -18,7 +18,18 @@ import {
   team,
   teamMember,
 } from '@repo/db';
-import { and, desc, eq, getTableColumns, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import {
+  and,
+  desc,
+  eq,
+  getTableColumns,
+  ilike,
+  inArray,
+  isNull,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
 import {
   defaultMemberPermissions,

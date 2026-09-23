@@ -773,9 +773,9 @@ export const gitProviderConnection = pgTable(
   'git_provider_connection',
   {
     id: serial('id').primaryKey(),
-    projectId: integer('project_id')
+    teamId: integer('team_id')
       .notNull()
-      .references(() => project.id, { onDelete: 'cascade' }),
+      .references(() => team.id, { onDelete: 'cascade' }),
     provider: text('provider').notNull(),
     baseUrl: text('base_url').notNull(),
     accountLogin: text('account_login').notNull(),
@@ -786,13 +786,13 @@ export const gitProviderConnection = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique('git_provider_connection_project_provider_url_account_unique').on(
-      t.projectId,
+    unique('git_provider_connection_team_provider_url_account_unique').on(
+      t.teamId,
       t.provider,
       t.baseUrl,
       t.accountLogin,
     ),
-    index('git_provider_connection_project_idx').on(t.projectId),
+    index('git_provider_connection_team_idx').on(t.teamId),
   ],
 );
 
@@ -800,6 +800,9 @@ export const gitManagedRepository = pgTable(
   'git_managed_repository',
   {
     id: serial('id').primaryKey(),
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
     connectionId: integer('connection_id')
       .notNull()
       .references(() => gitProviderConnection.id, { onDelete: 'cascade' }),
@@ -813,8 +816,12 @@ export const gitManagedRepository = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    unique('git_managed_repository_connection_external_unique').on(t.connectionId, t.externalId),
-    index('git_managed_repository_connection_idx').on(t.connectionId, t.fullName),
+    unique('git_managed_repository_project_connection_external_unique').on(
+      t.projectId,
+      t.connectionId,
+      t.externalId,
+    ),
+    index('git_managed_repository_project_connection_idx').on(t.projectId, t.connectionId),
   ],
 );
 

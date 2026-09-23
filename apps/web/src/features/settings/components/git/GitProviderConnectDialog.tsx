@@ -17,18 +17,18 @@ import { useConnectGitProvider } from '../../services/settings.service';
 import { GIT_PROVIDER_CONFIG } from './providerConfig';
 
 export default function GitProviderConnectDialog({
-  projectKey,
+  teamId,
   provider,
   open,
   onOpenChange,
 }: {
-  projectKey: string;
+  teamId: number;
   provider: GitConnectionProvider;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations('settings.git');
-  const connect = useConnectGitProvider(projectKey);
+  const connect = useConnectGitProvider(teamId);
   const [baseUrl, setBaseUrl] = useState(GIT_PROVIDER_CONFIG[provider].defaultBaseUrl);
   const [token, setToken] = useState('');
 

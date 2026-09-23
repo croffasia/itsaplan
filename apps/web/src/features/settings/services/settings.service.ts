@@ -35,6 +35,7 @@ import {
   updateGitSettings,
   regenerateGitSecret,
   listGitProviderConnections,
+  listTeamGitProviderConnections,
   connectGitProvider,
   disconnectGitProvider,
   listAvailableGitRepositories,
@@ -239,20 +240,33 @@ export function useGitProviderConnectionsQuery(projectKey: string) {
   });
 }
 
-export function useConnectGitProvider(projectKey: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: Parameters<typeof connectGitProvider>[1]) =>
-      connectGitProvider(projectKey, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
+export function useTeamGitProviderConnectionsQuery(teamId: number) {
+  return useQuery({
+    queryKey: ['teamGitConnections', teamId],
+    queryFn: () => listTeamGitProviderConnections(teamId),
   });
 }
 
-export function useDisconnectGitProvider(projectKey: string) {
+export function useConnectGitProvider(teamId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (connectionId: number) => disconnectGitProvider(projectKey, connectionId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
+    mutationFn: (input: Parameters<typeof connectGitProvider>[1]) =>
+      connectGitProvider(teamId, input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['teamGitConnections', teamId] });
+      qc.invalidateQueries({ queryKey: ['gitConnections'] });
+    },
+  });
+}
+
+export function useDisconnectGitProvider(teamId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (connectionId: number) => disconnectGitProvider(teamId, connectionId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['teamGitConnections', teamId] });
+      qc.invalidateQueries({ queryKey: ['gitConnections'] });
+    },
   });
 }
 

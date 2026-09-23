@@ -158,17 +158,20 @@ export const regenerateGitSecret = (projectKey: string) =>
 export const listGitProviderConnections = (projectKey: string) =>
   request<GitProviderConnection[]>(`/projects/${projectKey}/settings/git/connections`);
 
+export const listTeamGitProviderConnections = (teamId: number) =>
+  request<GitProviderConnection[]>(`/teams/${teamId}/settings/git/connections`);
+
 export const connectGitProvider = (
-  projectKey: string,
+  teamId: number,
   input: { provider: GitConnectionProvider; baseUrl?: string; token: string },
 ) =>
-  request<GitProviderConnection>(`/projects/${projectKey}/settings/git/connections`, {
+  request<GitProviderConnection>(`/teams/${teamId}/settings/git/connections`, {
     method: 'POST',
     body: JSON.stringify(input),
   });
 
-export const disconnectGitProvider = (projectKey: string, connectionId: number) =>
-  request<void>(`/projects/${projectKey}/settings/git/connections/${connectionId}`, {
+export const disconnectGitProvider = (teamId: number, connectionId: number) =>
+  request<void>(`/teams/${teamId}/settings/git/connections/${connectionId}`, {
     method: 'DELETE',
   });
 

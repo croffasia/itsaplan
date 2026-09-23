@@ -1,54 +1,35 @@
-import { useState } from 'react';
-import { GitBranch } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { GitConnectionProvider } from '@/lib/api/endpoints/git';
+import Link from 'next/link';
+import { teamSectionPath } from '@/utils/paths';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsSection from '@/components/common/page/SettingsSection';
-import { Button } from '@/components/ui/button';
 import { useGitProviderConnectionsQuery } from '../../services/settings.service';
-import GitProviderConnectDialog from './GitProviderConnectDialog';
 import GitProviderConnectionCard from './GitProviderConnectionCard';
-import { GIT_CONNECTION_PROVIDERS, GIT_PROVIDER_CONFIG } from './providerConfig';
 
 export default function GitProviderConnections({
   projectKey,
+  teamId,
+  canManageTeam,
   editable,
 }: {
   projectKey: string;
+  teamId: number;
+  canManageTeam: boolean;
   editable: boolean;
 }) {
   const t = useTranslations('settings.git');
   const connections = useGitProviderConnectionsQuery(projectKey);
-  const [provider, setProvider] = useState<GitConnectionProvider>('gitlab');
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  function open(providerToConnect: GitConnectionProvider) {
-    setProvider(providerToConnect);
-    setDialogOpen(true);
-  }
 
   return (
-    <SettingsSection
-      title={t('nativeConnectionsRecommended')}
-      description={t('nativeConnectionsHint')}
-    >
+    <SettingsSection title={t('nativeConnectionsRecommended')}>
       <div className="space-y-3">
-        {editable && (
-          <div className="flex flex-wrap gap-2">
-            {GIT_CONNECTION_PROVIDERS.map((providerKey) => (
-              <Button
-                key={providerKey}
-                type="button"
-                variant="outline"
-                onClick={() => open(providerKey)}
-              >
-                <GitBranch className="size-4" />
-                {t('nativeConnectProvider', {
-                  provider: GIT_PROVIDER_CONFIG[providerKey].label,
-                })}
-              </Button>
-            ))}
-          </div>
+        {canManageTeam && (
+          <Link
+            className="text-sm text-primary hover:underline"
+            href={teamSectionPath(teamId, 'git')}
+          >
+            Git
+          </Link>
         )}
         {connections.isPending ? (
           <ListSkeleton rows={2} rowClassName="h-24" />
@@ -68,12 +49,6 @@ export default function GitProviderConnections({
           </p>
         )}
       </div>
-      <GitProviderConnectDialog
-        projectKey={projectKey}
-        provider={provider}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
     </SettingsSection>
   );
 }

@@ -45,7 +45,14 @@ export default function SettingsGit({ project }: { project: ProjectDetail }) {
       {settings.enabled && (
         <>
           <GitConnectionCard projectKey={projectKey} settings={settings} editable={editable} />
-          <GitProviderConnections projectKey={projectKey} editable={editable} />
+          <GitProviderConnections
+            projectKey={projectKey}
+            teamId={project.project.teamId}
+            canManageTeam={
+              project.viewer.teamRole === 'owner' || project.viewer.teamRole === 'manager'
+            }
+            editable={editable}
+          />
           <GitAutomationsCard
             columns={project.columns}
             settings={settings}

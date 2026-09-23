@@ -394,6 +394,7 @@
     "runnerHelpToolHint": "Sur la machine qui fera tourner le runner. Le runner ne peut pas se connecter à votre place.",
     "runnerHelpRun": "Enregistrez les fichiers là où l'agent doit travailler",
     "runnerHelpTabCustom": "Le vôtre",
+    "runnerHelpPiAdapter": "Pi lit .mcp.json via une extension. Installez-la une fois : pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "Vérifiez qu'il est connecté",
     "runnerHelpCheckHint": "La section Runner affiche En ligne.",
     "runnerOnline": "Runner en ligne",

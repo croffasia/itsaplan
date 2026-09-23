@@ -394,6 +394,7 @@
     "runnerHelpToolHint": "На машині, де працюватиме раннер. Сам він увійти за вас не може.",
     "runnerHelpRun": "Збережіть файли там, де агент має працювати",
     "runnerHelpTabCustom": "Своя команда",
+    "runnerHelpPiAdapter": "Pi читає .mcp.json через розширення. Встановіть його один раз: pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "Перевірте зв'язок",
     "runnerHelpCheckHint": "У секції «Раннер» з'явиться «На зв'язку».",
     "runnerOnline": "Раннер на зв'язку",

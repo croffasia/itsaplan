@@ -394,6 +394,7 @@
     "runnerHelpToolHint": "在将要运行运行器的机器上。运行器无法替你登录。",
     "runnerHelpRun": "把这些文件保存到智能体要工作的目录",
     "runnerHelpTabCustom": "自定义",
+    "runnerHelpPiAdapter": "Pi 通过扩展读取 .mcp.json。安装一次即可：pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "确认已连接",
     "runnerHelpCheckHint": "“运行器”一节会显示“在线”。",
     "runnerOnline": "运行器在线",

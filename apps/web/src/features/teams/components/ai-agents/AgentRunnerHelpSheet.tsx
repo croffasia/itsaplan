@@ -1,7 +1,14 @@
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, MoreHorizontal } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 import { API_URL } from '@/lib/api/core/client';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AgentRunnerCodeBlock } from './AgentRunnerCodeBlock';
@@ -101,14 +108,6 @@ const AGENTS = [
     files: [{ name: '~/.codex/config.toml', code: CODEX_TOML }],
   },
   {
-    id: 'antigravity',
-    label: 'Antigravity CLI',
-    // The binary is `agy`. It has to be signed in once interactively: a headless run
-    // uses the credentials that session cached.
-    agent: 'antigravity',
-    files: [{ name: '~/.gemini/config/mcp_config.json', code: ANTIGRAVITY_MCP }],
-  },
-  {
     id: 'copilot',
     label: 'Copilot CLI',
     agent: 'copilot',
@@ -121,6 +120,31 @@ const AGENTS = [
     agent: 'opencode',
     files: [{ name: 'opencode.json', code: OPENCODE_JSON }],
   },
+  {
+    id: 'antigravity',
+    label: 'Antigravity CLI',
+    // The binary is `agy`. It has to be signed in once interactively: a headless run
+    // uses the credentials that session cached.
+    agent: 'antigravity',
+    files: [{ name: '~/.gemini/config/mcp_config.json', code: ANTIGRAVITY_MCP }],
+  },
+  {
+    id: 'pi',
+    label: 'Pi',
+    // Pi reaches an MCP server through an extension rather than on its own, and the
+    // extension is what reads .mcp.json from the directory the run starts in.
+    agent: 'pi',
+    note: 'runnerHelpPiAdapter',
+    files: [{ name: '.mcp.json', code: MCP_JSON }],
+  },
+  {
+    id: 'omp',
+    label: 'Oh My Pi',
+    // The binary is `omp`. It reads .mcp.json from the directory it runs in and
+    // interpolates the variable in the header, so the key stays out of the file.
+    agent: 'omp',
+    files: [{ name: '.mcp.json', code: MCP_JSON }],
+  },
   // A command of its own turns the preset off: the runner then knows nothing about
   // what it runs, keeps no session for it, and hands it the task on stdin.
   {
@@ -130,6 +154,12 @@ const AGENTS = [
     files: [],
   },
 ] as const;
+
+// The CLIs most operators reach for keep a tab of their own; the rest sit behind the
+// menu at the end of the row, which is what keeps the row from outgrowing the sheet as
+// presets are added. The count is fixed rather than measured: the labels are short and
+// known, and a row that re-counted itself on resize would move under the pointer.
+const TABBED = 4;
 
 // Only what the runner cannot work out on its own. `cwd` is where the agent's files
 // and the MCP config above are read from; concurrency, poll interval and timeout keep
@@ -156,6 +186,11 @@ export const RUN_COMMAND = 'npx -y @itsaplan/runner';
 
 export function AgentRunnerHelpSheet() {
   const t = useTranslations('teams.agents');
+  const tCommon = useTranslations('common');
+  const [agent, setAgent] = useState<string>('claude');
+  const hidden = AGENTS.slice(TABBED).find((a) => a.id === agent);
+  const labelOf = (a: (typeof AGENTS)[number]) =>
+    a.id === 'custom' ? t('runnerHelpTabCustom') : a.label;
 
   return (
     <Sheet>
@@ -186,16 +221,38 @@ export function AgentRunnerHelpSheet() {
           </AgentRunnerHelpStep>
 
           <AgentRunnerHelpStep n={4} title={t('runnerHelpRun')}>
-            <Tabs defaultValue="claude">
+            <Tabs value={agent} onValueChange={setAgent}>
               <TabsList variant="line">
-                {AGENTS.map((a) => (
+                {AGENTS.slice(0, TABBED).map((a) => (
                   <TabsTrigger key={a.id} value={a.id}>
-                    {a.id === 'custom' ? t('runnerHelpTabCustom') : a.label}
+                    {labelOf(a)}
                   </TabsTrigger>
                 ))}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      // Matches TabsTrigger's line variant, and reads as the active tab
+                      // while the agent chosen from it is the one shown.
+                      data-state={hidden ? 'active' : 'inactive'}
+                      className="relative -mb-px inline-flex h-full items-center gap-1 border-b-2 border-transparent px-1 py-1 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors data-[state=active]:border-foreground data-[state=active]:text-foreground"
+                    >
+                      {hidden ? labelOf(hidden) : tCommon('more')}
+                      <MoreHorizontal className="size-4" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    {AGENTS.slice(TABBED).map((a) => (
+                      <DropdownMenuItem key={a.id} onSelect={() => setAgent(a.id)}>
+                        {labelOf(a)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </TabsList>
               {AGENTS.map((a) => (
                 <TabsContent key={a.id} value={a.id} className="space-y-3 pt-3">
+                  {'note' in a && <p className="text-xs text-muted-foreground">{t(a.note)}</p>}
                   {a.files.map((f) => (
                     <div key={f.name} className="space-y-1.5">
                       <p className="font-mono text-xs text-muted-foreground">{f.name}</p>

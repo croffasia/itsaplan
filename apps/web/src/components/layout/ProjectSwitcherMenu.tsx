@@ -57,7 +57,8 @@ export default function ProjectSwitcherMenu({
       }}
       onOpenAutoFocus={(event) => {
         event.preventDefault();
-        inputRef.current?.focus();
+        if (isMobile) contentRef.current?.focus();
+        else inputRef.current?.focus();
       }}
     >
       <ProjectSwitcherToolbar preferences={preferences} isMobile={isMobile} />

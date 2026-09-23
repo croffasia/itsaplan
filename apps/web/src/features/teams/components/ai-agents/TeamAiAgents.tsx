@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { Check, Minus } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { useAiAgentsQuery, useDeleteAiAgent } from '@/services/aiAgents.service';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
@@ -13,9 +16,6 @@ import { TeamAiAgentRow } from './TeamAiAgentRow';
 import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
 import { integrationLabel } from '@/utils/integrationLabels';
-import { useTranslations } from 'next-intl';
-import { toast } from 'sonner';
-import { Check, Minus } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import {
   useTeam,

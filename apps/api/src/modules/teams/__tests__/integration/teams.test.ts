@@ -69,6 +69,37 @@ describe('teams', () => {
       );
     });
 
+    it('keeps the source agents when copying a project', async () => {
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
+      await owner.api.projects.post({ key: 'OTHER', name: 'Other' });
+      const sourceAgent = await createAgent(owner.api, 'SRC', {
+        name: 'Source agent',
+        username: 'source-agent',
+        kind: 'external',
+      });
+      const defaultAgent = await createAgent(owner.api, 'OTHER', {
+        name: 'Default agent',
+        username: 'default-agent',
+        kind: 'external',
+      });
+      await owner.api.teams({ teamId })['project-defaults'].patch({
+        defaultAgentIds: [defaultAgent.data!.agent.id],
+      });
+
+      const copy = await owner.api.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'DST',
+        name: 'Destination',
+        include: { agents: true },
+      });
+      expect(copy.status).toBe(201);
+      const members = await owner.api.projects({ projectKey: 'DST' }).members.get();
+      const memberIds = members.data?.items.map((member) => member.userId);
+      expect(memberIds).toContain(sourceAgent.data!.agent.userId);
+      expect(memberIds).not.toContain(defaultAgent.data!.agent.userId);
+    });
+
     it('rejects agents from another team and member edits', async () => {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;

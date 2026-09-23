@@ -316,7 +316,9 @@ export async function teamMcpEnabled(teamId: number): Promise<boolean> {
   return row?.mcpEnabled ?? false;
 }
 
-export async function getTeamProjectDefaults(teamId: number): Promise<{ defaultAgentIds: number[] }> {
+export async function getTeamProjectDefaults(
+  teamId: number,
+): Promise<{ defaultAgentIds: number[] }> {
   const [row] = await db
     .select({ defaultAgentIds: team.defaultAgentIds })
     .from(team)
@@ -327,7 +329,8 @@ export async function getTeamProjectDefaults(teamId: number): Promise<{ defaultA
     .select({ id: aiAgent.id })
     .from(aiAgent)
     .where(and(eq(aiAgent.teamId, teamId), inArray(aiAgent.id, ids)));
-  return { defaultAgentIds: agents.map((agent) => agent.id) };
+  const available = new Set(agents.map((agent) => agent.id));
+  return { defaultAgentIds: ids.filter((id) => available.has(id)) };
 }
 
 export async function setTeamProjectDefaults(

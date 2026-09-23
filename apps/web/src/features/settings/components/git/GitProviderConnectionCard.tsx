@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import { useDisconnectGitRepository } from '../../services/settings.service';
 import GitRepositoryPickerDialog from './GitRepositoryPickerDialog';
-import { GIT_PROVIDER_CONFIG } from './providerConfig';
+import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
 
 export default function GitProviderConnectionCard({
   projectKey,

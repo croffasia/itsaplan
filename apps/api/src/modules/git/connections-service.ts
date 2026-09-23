@@ -197,7 +197,7 @@ export async function createManagedPullRequest(
 }
 
 async function repositoriesByConnection(
-  projectId: number,
+  projectId: number | undefined,
   connectionIds: number[],
 ): Promise<Map<number, GitManagedRepositoryDto[]>> {
   if (connectionIds.length === 0) return new Map();
@@ -205,10 +205,12 @@ async function repositoriesByConnection(
     .select({ connectionId: gitManagedRepository.connectionId, ...repositoryColumns })
     .from(gitManagedRepository)
     .where(
-      and(
-        eq(gitManagedRepository.projectId, projectId),
-        inArray(gitManagedRepository.connectionId, connectionIds),
-      ),
+      projectId === undefined
+        ? inArray(gitManagedRepository.connectionId, connectionIds)
+        : and(
+            eq(gitManagedRepository.projectId, projectId),
+            inArray(gitManagedRepository.connectionId, connectionIds),
+          ),
     )
     .orderBy(asc(gitManagedRepository.fullName));
   const grouped = new Map<number, GitManagedRepositoryDto[]>();
@@ -253,10 +255,7 @@ export async function listTeamGitProviderConnections(
     .from(gitProviderConnection)
     .where(eq(gitProviderConnection.teamId, teamId))
     .orderBy(asc(gitProviderConnection.provider), asc(gitProviderConnection.baseUrl));
-  const repositories =
-    projectId === undefined
-      ? new Map<number, GitManagedRepositoryDto[]>()
-      : await repositoriesByConnection(projectId, rows.map((row) => row.id));
+  const repositories = await repositoriesByConnection(projectId, rows.map((row) => row.id));
   return rows.map((row) => ({
     id: row.id,
     provider: row.provider as GitProvider,
@@ -320,10 +319,57 @@ export async function connectGitProvider(
       set: { accountLogin, ...encrypted, updatedAt: new Date() },
     })
     .returning({ id: gitProviderConnection.id });
+  const connectionId = rows[0]?.id;
+  if (!connectionId) throw new HttpError(500, 'Provider connection was not stored');
+  await reconcileConnectionWebhooks(connectionId, { provider: input.provider, baseUrl, token });
   const connections = await listTeamGitProviderConnections(teamId);
-  const connection = connections.find((item) => item.id === rows[0]?.id);
+  const connection = connections.find((item) => item.id === connectionId);
   if (!connection) throw new HttpError(500, 'Provider connection was not stored');
   return connection;
+}
+
+async function reconcileConnectionWebhooks(
+  connectionId: number,
+  input: ProviderConnectionInput,
+): Promise<void> {
+  const repositories = await db
+    .select()
+    .from(gitManagedRepository)
+    .where(eq(gitManagedRepository.connectionId, connectionId));
+  const settingsByProject = new Map<number, GitSettings>();
+  for (const repository of repositories) {
+    try {
+      let settings = settingsByProject.get(repository.projectId);
+      if (!settings) {
+        settings = await getOrCreateGitSettings(repository.projectId);
+        settingsByProject.set(repository.projectId, settings);
+      }
+      const webhookExternalId = await installProviderWebhook(
+        input,
+        {
+          externalId: repository.externalId,
+          fullName: repository.fullName,
+          webUrl: repository.webUrl,
+          private: false,
+        },
+        webhookPayloadUrl(settings),
+        settings.secret,
+      );
+      await db
+        .update(gitManagedRepository)
+        .set({ webhookExternalId, status: 'connected', lastError: null, updatedAt: new Date() })
+        .where(eq(gitManagedRepository.id, repository.id));
+    } catch (error) {
+      await db
+        .update(gitManagedRepository)
+        .set({
+          status: 'error',
+          lastError: error instanceof Error ? error.message : 'Webhook update failed',
+          updatedAt: new Date(),
+        })
+        .where(eq(gitManagedRepository.id, repository.id));
+    }
+  }
 }
 
 export async function listAvailableRepositories(

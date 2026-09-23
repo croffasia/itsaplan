@@ -28,7 +28,8 @@ WITH ranked AS (
   FROM "git_provider_connection"
 )
 UPDATE "git_managed_repository" AS repository
-SET "connection_id" = ranked.canonical_id
+SET "connection_id" = ranked.canonical_id,
+    "last_error" = COALESCE(repository."last_error", 'Team Git token must be verified for this repository. Save the team connection to reconcile its webhook.')
 FROM ranked
 WHERE repository."connection_id" = ranked."id"
   AND ranked."id" <> ranked.canonical_id;

@@ -13,10 +13,10 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useConnectGitProvider } from '../../services/settings.service';
-import { GIT_PROVIDER_CONFIG } from './providerConfig';
+import { useConnectGitProvider } from '@/services/gitConnections.service';
+import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
 
-export default function GitProviderConnectDialog({
+export default function TeamGitProviderConnectDialog({
   teamId,
   provider,
   open,

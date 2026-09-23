@@ -319,6 +319,9 @@
     "noAccess": "Vous n'avez pas accès aux outils de cette équipe."
   },
   "agents": {
+    "projectDefaultsTitle": "Agents for new projects",
+    "projectDefaultsHint": "Selected agents join each new project in this team. Existing projects and project copies keep their own agents.",
+    "projectDefaultAria": "Add {agent} to new projects",
     "newAgent": "Nouvel agent IA",
     "create": "Créer l'agent IA",
     "save": "Enregistrer l'agent IA",

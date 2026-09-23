@@ -24,6 +24,8 @@ import {
   getTeamProject,
   listTeamProjectMembers,
   updateTeamMcp,
+  getTeamProjectDefaults,
+  updateTeamProjectDefaults,
   createTeam,
   renameTeam,
   setTeamMemberRole,
@@ -131,6 +133,21 @@ export function useUpdateTeamMcp(teamId: number) {
       // cached per project key.
       void qc.invalidateQueries({ queryKey: qk.anyProject });
     },
+  });
+}
+
+export function useTeamProjectDefaultsQuery(teamId: number) {
+  return useQuery({
+    queryKey: qk.teamProjectDefaults(teamId),
+    queryFn: () => getTeamProjectDefaults(teamId),
+  });
+}
+
+export function useUpdateTeamProjectDefaults(teamId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (defaultAgentIds: number[]) => updateTeamProjectDefaults(teamId, defaultAgentIds),
+    onSuccess: (defaults) => qc.setQueryData(qk.teamProjectDefaults(teamId), defaults),
   });
 }
 

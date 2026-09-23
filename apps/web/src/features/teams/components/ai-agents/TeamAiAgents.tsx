@@ -14,6 +14,12 @@ import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
 import { integrationLabel } from '@/utils/integrationLabels';
 import { useTranslations } from 'next-intl';
+import { Switch } from '@/components/ui/switch';
+import {
+  useTeam,
+  useTeamProjectDefaultsQuery,
+  useUpdateTeamProjectDefaults,
+} from '@/services/teams.service';
 
 // The agents of a team: bot users that issues can be delegated to in any project the
 // team attaches them to. An external agent is driven through the API; an internal
@@ -27,6 +33,9 @@ export default function TeamAiAgents() {
   const { teamId } = useAgentSection();
   const agentsQuery = useAiAgentsQuery(teamId);
   const agents = agentsQuery.data ?? [];
+  const team = useTeam(teamId);
+  const { data: defaults } = useTeamProjectDefaultsQuery(teamId);
+  const updateDefaults = useUpdateTeamProjectDefaults(teamId);
   const deleteAgent = useDeleteAiAgent(teamId);
   // The integration catalog maps a provider key to a readable label for the meta row.
   const catalog = useIntegrationCatalogQuery(teamId).data ?? [];
@@ -52,6 +61,28 @@ export default function TeamAiAgents() {
         <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
+          <section className="space-y-2 rounded-lg border p-4">
+            <h3 className="text-sm font-medium">{t('projectDefaultsTitle')}</h3>
+            <p className="text-sm text-muted-foreground">{t('projectDefaultsHint')}</p>
+            {defaults &&
+              agents.map((agent) => (
+                <div key={agent.id} className="flex items-center justify-between gap-4 py-1">
+                  <span className="text-sm">{agent.name}</span>
+                  <Switch
+                    checked={defaults.defaultAgentIds.includes(agent.id)}
+                    disabled={updateDefaults.isPending || team?.role === 'member' || team == null}
+                    onCheckedChange={(checked) =>
+                      updateDefaults.mutate(
+                        checked
+                          ? [...defaults.defaultAgentIds, agent.id]
+                          : defaults.defaultAgentIds.filter((id) => id !== agent.id),
+                      )
+                    }
+                    aria-label={t('projectDefaultAria', { agent: agent.name })}
+                  />
+                </div>
+              ))}
+          </section>
           <Table className="min-w-[1000px] table-fixed">
             <colgroup>
               <col className="w-[32%]" />

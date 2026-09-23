@@ -39,6 +39,66 @@ describe('teams', () => {
   });
   afterEach(clearLimits);
 
+  describe('project defaults', () => {
+    it('attaches selected team agents only to new projects', async () => {
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
+      const created = await createAgent(owner.api, 'SRC', {
+        name: 'Triage',
+        username: 'triage',
+        kind: 'external',
+      });
+      const agent = created.data!.agent;
+
+      const saved = await owner.api.teams({ teamId })['project-defaults'].patch({
+        defaultAgentIds: [agent.id],
+      });
+      expect(saved.status).toBe(200);
+      await owner.api.teams({ teamId }).projects.post({ key: 'NEW', name: 'New' });
+      const members = await owner.api.projects({ projectKey: 'NEW' }).members.get();
+      expect(members.data?.items.some((member) => member.userId === agent.userId)).toBe(true);
+
+      await owner.api.teams({ teamId })['project-defaults'].patch({ defaultAgentIds: [] });
+      await owner.api.teams({ teamId }).projects.post({ key: 'NEXT', name: 'Next' });
+      const nextMembers = await owner.api.projects({ projectKey: 'NEXT' }).members.get();
+      expect(nextMembers.data?.items.some((member) => member.userId === agent.userId)).toBe(false);
+      const existingMembers = await owner.api.projects({ projectKey: 'NEW' }).members.get();
+      expect(existingMembers.data?.items.some((member) => member.userId === agent.userId)).toBe(
+        true,
+      );
+    });
+
+    it('rejects agents from another team and member edits', async () => {
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      const member = await addTeamMember(owner, teamId);
+      const other = await signUpClient();
+      const otherTeamId = (await other.api.teams.get()).data![0].id;
+      await other.api.teams({ teamId: otherTeamId }).projects.post({ key: 'OTH', name: 'Other' });
+      const agent = await createAgent(other.api, 'OTH', {
+        name: 'Other',
+        username: 'other',
+        kind: 'external',
+      });
+
+      expect(
+        (
+          await owner.api.teams({ teamId })['project-defaults'].patch({
+            defaultAgentIds: [agent.data!.agent.id],
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await member.api.teams({ teamId })['project-defaults'].patch({
+            defaultAgentIds: [],
+          })
+        ).status,
+      ).toBe(403);
+    });
+  });
+
   describe('list', () => {
     it('lists the team the account was registered with', async () => {
       const { user, api } = await signUpClient();

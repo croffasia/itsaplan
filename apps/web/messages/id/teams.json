@@ -319,6 +319,9 @@
     "noAccess": "Anda tidak memiliki akses ke alat tim ini."
   },
   "agents": {
+    "projectDefaultsTitle": "Agents for new projects",
+    "projectDefaultsHint": "Selected agents join each new project in this team. Existing projects and project copies keep their own agents.",
+    "projectDefaultAria": "Add {agent} to new projects",
     "newAgent": "Agen AI baru",
     "create": "Buat agen AI",
     "save": "Simpan agen AI",

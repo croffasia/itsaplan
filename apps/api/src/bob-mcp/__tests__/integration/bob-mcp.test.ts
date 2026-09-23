@@ -104,6 +104,15 @@ describe('Bob MCP', () => {
     expect(await response.json()).toEqual({ error: 'Unauthorized' });
   });
 
+  it('answers with JSON and never redirects to the browser login', async () => {
+    await provisionBob();
+    for (const response of [await rpc('initialize', {}, 'wrong-token'), await rpc('tools/list')]) {
+      expect(response.headers.get('content-type')).toContain('application/json');
+      expect(response.headers.get('location')).toBeNull();
+      expect(await response.text()).not.toContain('<html');
+    }
+  });
+
   it('initializes with the real SDK client and exposes only read-only tools', async () => {
     await provisionBob();
     const transport = new StreamableHTTPClientTransport(new URL('http://localhost/mcp/v1/bob'), {

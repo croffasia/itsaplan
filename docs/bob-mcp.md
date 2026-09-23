@@ -22,9 +22,10 @@ VEXOL_LEADS_PROJECT_KEY=VEX
 ```
 
 Create an external project agent with username `bob-agent`. Assign it a project role with only
-the required read permissions: `work_items.read`, `dashboards.read`, and `leads.read`. Enable MCP
-for that project. The endpoint resolves this agent's `project_member` row on every request. It
-does not use a browser session or a personal dashboard login.
+the required read permissions: `work_items.read`, `dashboards.read`, `braindump.read`,
+`mind.read`, and `competitors.read`. Enable MCP for that project. The endpoint resolves this
+agent's `project_member` row on every request. It does not use a browser session or a personal
+dashboard login.
 
 The bearer token must contain at least 32 characters and is read only by the API process. It has no public environment prefix and is
 not included in the web image. Rotate it by replacing `VEXOL_BOB_MCP_TOKEN` and restarting the
@@ -33,11 +34,15 @@ API service. Do not store the token in a command history or a checked-in file.
 ## Tools
 
 - `get_dashboard_summary`
+- `get_command_center`
 - `list_projects`
 - `get_project`
-- `list_lead_campaigns`
-- `list_leads`
-- `get_lead_detail`
+- `list_tasks`
+- `get_task`
+- `list_braindump_entries`
+- `list_mind_facts`
+- `list_competitors`
+- `list_competitor_alerts`
 - `list_agent_runs`
 
 All tools are read-only. Page size is limited to 50. Tool responses are limited to 256 KiB and
@@ -79,6 +84,30 @@ lead campaign, review, and recent agent-run counts. Do not change anything.`
 - `504 Request timed out`: check database health and proxy timeouts.
 - Leads failures: verify the dedicated leads connection uses a read-only database role and that
   `VEXOL_LEADS_PROJECT_KEY` matches the configured project.
+
+## Proxy routing
+
+The endpoint is served by the **api** service, not by the web app. A request for
+`/mcp/v1/bob` that reaches the web app is answered by the dashboard's own middleware,
+which redirects an unauthenticated browser to `/login` and returns HTML — the symptom of
+pointing an MCP client at the web origin.
+
+Either point the client at the API origin, or, to serve it from the web hostname, route
+that one path to the api service ahead of the catch-all. In Caddy:
+
+```caddyfile
+app.example.com {
+	handle /mcp/* {
+		reverse_proxy 127.0.0.1:3000
+	}
+	handle {
+		reverse_proxy 127.0.0.1:3001
+	}
+}
+```
+
+`handle` blocks are mutually exclusive and matched most specific first, so every other
+path keeps reaching the web app with its session handling unchanged.
 
 The reverse proxy must preserve `Authorization`, `Content-Type`, `Accept`, `X-Request-Id`, and
 `X-Forwarded-Proto`; terminate TLS; permit POST requests with JSON responses; cap request bodies;

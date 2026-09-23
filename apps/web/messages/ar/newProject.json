@@ -46,5 +46,6 @@
   "copyTitle": "نسخ المشروع \"{name}\"",
   "create": "إنشاء مشروع",
   "copyAction": "نسخ المشروع",
+  "defaultAgents": "Agents joining this project: {names}",
   "copyName": "نسخة {name}"
 }

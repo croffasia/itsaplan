@@ -14,6 +14,8 @@ import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
 import { integrationLabel } from '@/utils/integrationLabels';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { Check, Minus } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import {
   useTeam,
@@ -63,23 +65,41 @@ export default function TeamAiAgents() {
         <div className="space-y-4">
           <section className="space-y-2 rounded-lg border p-4">
             <h3 className="text-sm font-medium">{t('projectDefaultsTitle')}</h3>
-            <p className="text-sm text-muted-foreground">{t('projectDefaultsHint')}</p>
+            <p className="text-sm text-muted-foreground">
+              {t(team?.role === 'member' ? 'projectDefaultsReadOnly' : 'projectDefaultsHint')}
+            </p>
             {defaults &&
               agents.map((agent) => (
                 <div key={agent.id} className="flex items-center justify-between gap-4 py-1">
                   <span className="text-sm">{agent.name}</span>
-                  <Switch
-                    checked={defaults.defaultAgentIds.includes(agent.id)}
-                    disabled={updateDefaults.isPending || team?.role === 'member' || team == null}
-                    onCheckedChange={(checked) =>
-                      updateDefaults.mutate(
-                        checked
-                          ? [...defaults.defaultAgentIds, agent.id]
-                          : defaults.defaultAgentIds.filter((id) => id !== agent.id),
-                      )
-                    }
-                    aria-label={t('projectDefaultAria', { agent: agent.name })}
-                  />
+                  {team != null && team.role !== 'member' ? (
+                    <Switch
+                      checked={defaults.defaultAgentIds.includes(agent.id)}
+                      disabled={updateDefaults.isPending}
+                      onCheckedChange={(checked) =>
+                        updateDefaults.mutate(
+                          checked
+                            ? [...defaults.defaultAgentIds, agent.id]
+                            : defaults.defaultAgentIds.filter((id) => id !== agent.id),
+                          { onSuccess: () => toast.success(t('projectDefaultsSaved')) },
+                        )
+                      }
+                      aria-label={t('projectDefaultAria', { agent: agent.name })}
+                    />
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                      {defaults.defaultAgentIds.includes(agent.id) ? (
+                        <Check className="size-4 text-green-500" />
+                      ) : (
+                        <Minus className="size-4" />
+                      )}
+                      {t(
+                        defaults.defaultAgentIds.includes(agent.id)
+                          ? 'projectDefaultOn'
+                          : 'projectDefaultOff',
+                      )}
+                    </span>
+                  )}
                 </div>
               ))}
           </section>

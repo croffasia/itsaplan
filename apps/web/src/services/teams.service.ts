@@ -136,10 +136,11 @@ export function useUpdateTeamMcp(teamId: number) {
   });
 }
 
-export function useTeamProjectDefaultsQuery(teamId: number) {
+export function useTeamProjectDefaultsQuery(teamId: number | null) {
   return useQuery({
-    queryKey: qk.teamProjectDefaults(teamId),
-    queryFn: () => getTeamProjectDefaults(teamId),
+    queryKey: qk.teamProjectDefaults(teamId ?? 0),
+    queryFn: () => getTeamProjectDefaults(teamId!),
+    enabled: teamId != null,
   });
 }
 

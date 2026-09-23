@@ -46,5 +46,6 @@
   "copyTitle": "Копировать проект «{name}»",
   "create": "Создать проект",
   "copyAction": "Копировать проект",
+  "defaultAgents": "Agents joining this project: {names}",
   "copyName": "{name} — копия"
 }

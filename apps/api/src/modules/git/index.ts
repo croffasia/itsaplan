@@ -14,6 +14,7 @@ import {
   createGitProviderConnectionBody,
   gitManagedRepositoryParams,
   gitProviderConnectionParams,
+  teamGitProviderConnectionParams,
   updateGitSettingsBody,
 } from './model';
 import { getOrCreateGitSettings, regenerateGitSecret, updateGitSettings } from './service';
@@ -24,6 +25,7 @@ import {
   disconnectRepository,
   listAvailableRepositories,
   listGitProviderConnections,
+  listTeamGitProviderConnections,
   reconcileManagedWebhooks,
 } from './connections-service';
 
@@ -33,6 +35,42 @@ export const gitSettingsRoutes = new Elysia({
 })
   .use(authContext)
   .use(guards)
+  .get(
+    '/teams/:teamId/settings/git/connections',
+    ({ membership }) => listTeamGitProviderConnections(membership.teamId),
+    {
+      teamManager: true,
+      response: { 200: GitProviderConnectionListResponse, ...accessErrors },
+      detail: { summary: 'List team Git provider accounts' },
+    },
+  )
+  .post(
+    '/teams/:teamId/settings/git/connections',
+    async ({ membership, body, set }) => {
+      const connection = await connectGitProvider(membership.teamId, body);
+      set.status = 201;
+      return connection;
+    },
+    {
+      teamManager: true,
+      body: createGitProviderConnectionBody,
+      response: { 201: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
+      detail: { summary: 'Connect or rotate a team Git provider account' },
+    },
+  )
+  .delete(
+    '/teams/:teamId/settings/git/connections/:connectionId',
+    async ({ membership, params }) => {
+      await disconnectGitProvider(membership.teamId, params.connectionId);
+      return noContent();
+    },
+    {
+      teamManager: true,
+      params: teamGitProviderConnectionParams,
+      response: { 204: t.Void(), ...commonErrors, ...errors(502) },
+      detail: { summary: 'Disconnect a team Git provider account and its managed webhooks' },
+    },
+  )
   .get(
     '/projects/:projectKey/settings/git',
     async ({ project, user }) => {
@@ -88,44 +126,9 @@ export const gitSettingsRoutes = new Elysia({
       permission: ['integrations', 'read'],
       response: { 200: GitProviderConnectionListResponse, ...accessErrors },
       detail: {
-        summary: "List a project's Git provider connections",
+        summary: "List team Git provider accounts available to a project",
         description:
-          'List the GitHub and GitLab accounts authorized for this project and their connected repositories.',
-      },
-    },
-  )
-  .post(
-    '/projects/:projectKey/settings/git/connections',
-    async ({ project, body, set }) => {
-      const connection = await connectGitProvider(project.id, body);
-      set.status = 201;
-      return connection;
-    },
-    {
-      permission: ['integrations', 'edit'],
-      body: createGitProviderConnectionBody,
-      response: { 201: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
-      detail: {
-        summary: 'Connect a Git provider account',
-        description:
-          'Validate a GitHub or GitLab access token, encrypt it, and save the provider account for repository selection.',
-      },
-    },
-  )
-  .delete(
-    '/projects/:projectKey/settings/git/connections/:connectionId',
-    async ({ project, params }) => {
-      await disconnectGitProvider(project.id, params.connectionId);
-      return noContent();
-    },
-    {
-      permission: ['integrations', 'edit'],
-      params: gitProviderConnectionParams,
-      response: { 204: t.Void(), ...commonErrors, ...errors(502) },
-      detail: {
-        summary: 'Disconnect a Git provider account',
-        description:
-          'Remove every managed repository webhook for the connection, then delete the encrypted provider credential.',
+          'List accounts shared by this project’s team and repositories assigned to this project.',
       },
     },
   )

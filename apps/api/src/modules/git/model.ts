@@ -112,6 +112,11 @@ export const gitProviderConnectionParams = t.Object({
   connectionId: t.Numeric(),
 });
 
+export const teamGitProviderConnectionParams = t.Object({
+  teamId: t.Numeric(),
+  connectionId: t.Numeric(),
+});
+
 export const gitManagedRepositoryParams = t.Object({
   projectKey: t.String(),
   connectionId: t.Numeric(),

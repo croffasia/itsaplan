@@ -126,7 +126,7 @@ export const gitSettingsRoutes = new Elysia({
       permission: ['integrations', 'read'],
       response: { 200: GitProviderConnectionListResponse, ...accessErrors },
       detail: {
-        summary: "List team Git provider accounts available to a project",
+        summary: 'List team Git provider accounts available to a project',
         description:
           'List accounts shared by this project’s team and repositories assigned to this project.',
       },

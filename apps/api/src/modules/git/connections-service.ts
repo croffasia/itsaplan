@@ -255,7 +255,10 @@ export async function listTeamGitProviderConnections(
     .from(gitProviderConnection)
     .where(eq(gitProviderConnection.teamId, teamId))
     .orderBy(asc(gitProviderConnection.provider), asc(gitProviderConnection.baseUrl));
-  const repositories = await repositoriesByConnection(projectId, rows.map((row) => row.id));
+  const repositories = await repositoriesByConnection(
+    projectId,
+    rows.map((row) => row.id),
+  );
   return rows.map((row) => ({
     id: row.id,
     provider: row.provider as GitProvider,
@@ -482,10 +485,7 @@ export async function disconnectRepository(
   await db.delete(gitManagedRepository).where(eq(gitManagedRepository.id, repositoryId));
 }
 
-export async function disconnectGitProvider(
-  teamId: number,
-  connectionId: number,
-): Promise<void> {
+export async function disconnectGitProvider(teamId: number, connectionId: number): Promise<void> {
   const connection = await teamConnectionSecret(connectionId, teamId);
   const repositories = await db
     .select()
@@ -506,10 +506,7 @@ export async function disconnectGitProvider(
   await db
     .delete(gitProviderConnection)
     .where(
-      and(
-        eq(gitProviderConnection.id, connectionId),
-        eq(gitProviderConnection.teamId, teamId),
-      ),
+      and(eq(gitProviderConnection.id, connectionId), eq(gitProviderConnection.teamId, teamId)),
     );
 }
 

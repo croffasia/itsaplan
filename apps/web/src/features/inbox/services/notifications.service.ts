@@ -32,6 +32,11 @@ export function useNotificationsQuery(
 function useInvalidateInbox(projectKey: string) {
   const qc = useQueryClient();
   return () => {
+    if (projectKey === 'all') {
+      void qc.invalidateQueries({ queryKey: ['notifications'] });
+      void qc.invalidateQueries({ queryKey: ['notificationsUnread'] });
+      return;
+    }
     void qc.invalidateQueries({ queryKey: ['notifications', projectKey] });
     void qc.invalidateQueries({ queryKey: qk.notificationsUnread(projectKey) });
     void qc.invalidateQueries({ queryKey: ['notifications', 'all'] });

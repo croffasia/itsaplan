@@ -268,7 +268,12 @@
     "oidcLabelHint": "在登录按钮上标明你的提供方。留空则使用通用文字。",
     "scopes": "权限范围",
     "scopesHint": "以空格分隔。openid 为必需；profile 和 email 用于填充姓名和邮箱。",
-    "oidcRedirectUriHint": "将此地址注册为身份提供方客户端的重定向 URI。不完全一致时提供方会拒绝登录。"
+    "oidcRedirectUriHint": "将此地址注册为身份提供方客户端的重定向 URI。不完全一致时提供方会拒绝登录。",
+    "authentik": "Authentik",
+    "authentikConfigured": "Authentik 已配置，可与通用 OpenID Connect 一起使用。",
+    "authentikMissing": "请先添加 Authentik 发现 URL、客户端 ID 和密钥。",
+    "authentikDiscoveryUrlHint": "使用 Authentik 应用提供方的 OpenID 配置 URL。",
+    "authentikRedirectUriHint": "在 Authentik OAuth2/OpenID 提供方中注册这个精确的重定向 URI。"
   },
   "scim": {
     "saved": "SCIM 设置已保存",

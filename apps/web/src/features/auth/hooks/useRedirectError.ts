@@ -17,6 +17,7 @@ const MESSAGE_KEYS = {
   account_not_linked: 'linkRefused',
   signup_disabled: 'signupDisabled',
   OIDC_DISABLED: 'ssoDisabled',
+  AUTHENTIK_DISABLED: 'ssoDisabled',
   PASSWORD_AUTH_DISABLED: 'passwordDisabled',
   ACCOUNT_DEACTIVATED: 'accountDeactivated',
   email_not_found: 'emailNotFound',

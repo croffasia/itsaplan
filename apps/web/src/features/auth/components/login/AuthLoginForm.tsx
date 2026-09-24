@@ -25,6 +25,7 @@ import {
   signInWithPassword,
   signInWithGoogle,
   signInWithOidc,
+  signInWithAuthentik,
   signInWithPasskey,
 } from '../../services/auth.service';
 import { useAuthAction } from '../../hooks/useAuthAction';
@@ -195,6 +196,7 @@ export default function AuthLoginForm() {
           pending={pending}
           onToggleMethod={() => switchTo(signingInWithLink ? 'password' : 'link')}
           onOidc={() => run(signInWithOidc, { redirect: false })}
+          onAuthentik={() => run(signInWithAuthentik, { redirect: false })}
           onGoogle={() => run(signInWithGoogle, { redirect: false })}
           onPasskey={() => run(signInWithPasskey, { fallback: t('errors.passkey') })}
         />

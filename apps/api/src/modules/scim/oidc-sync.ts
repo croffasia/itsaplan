@@ -1,6 +1,6 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { db, account } from '@repo/db';
-import { auth, OIDC_PROVIDER_ID } from '@repo/auth';
+import { auth, AUTHENTIK_PROVIDER_ID, OIDC_PROVIDER_ID } from '@repo/auth';
 import { groupDisplayNames } from './resource';
 import { syncEmbeddedGroups } from './service';
 
@@ -34,7 +34,11 @@ export function decodeJwtPayload(token: string): Record<string, unknown> | null 
 // effort throughout: a decode failure, a missing claim, or a DB error is logged and
 // swallowed rather than surfaced, since none of it should turn a successful sign-in
 // into a failed one.
-export async function syncOidcGroupsAfterCallback(response: Response): Promise<void> {
+export async function syncOidcGroupsAfterCallback(
+  response: Response,
+  providerId: string,
+): Promise<void> {
+  if (providerId !== OIDC_PROVIDER_ID && providerId !== AUTHENTIK_PROVIDER_ID) return;
   try {
     const cookie = response.headers
       .getSetCookie()
@@ -48,7 +52,7 @@ export async function syncOidcGroupsAfterCallback(response: Response): Promise<v
     const rows = await db
       .select({ idToken: account.idToken })
       .from(account)
-      .where(and(eq(account.userId, session.user.id), eq(account.providerId, OIDC_PROVIDER_ID)))
+      .where(and(eq(account.userId, session.user.id), eq(account.providerId, providerId)))
       .orderBy(desc(account.updatedAt))
       .limit(1);
     const idToken = rows[0]?.idToken;

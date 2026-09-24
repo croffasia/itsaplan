@@ -268,7 +268,12 @@
     "oidcLabelHint": "Names your provider on the sign-in button. Leave it empty for a generic label.",
     "scopes": "Scopes",
     "scopesHint": "Separated by spaces. openid is required; profile and email fill in the name and address.",
-    "oidcRedirectUriHint": "Register this as a redirect URI on the client at your identity provider. The provider refuses the sign-in if it does not match exactly."
+    "oidcRedirectUriHint": "Register this as a redirect URI on the client at your identity provider. The provider refuses the sign-in if it does not match exactly.",
+    "authentik": "Authentik",
+    "authentikConfigured": "Authentik is configured and can be offered beside generic OpenID Connect.",
+    "authentikMissing": "Add the Authentik discovery URL, client ID and secret first.",
+    "authentikDiscoveryUrlHint": "Use the OpenID configuration URL for the Authentik application provider.",
+    "authentikRedirectUriHint": "Register this exact redirect URI on the Authentik OAuth2/OpenID provider."
   },
   "scim": {
     "saved": "SCIM settings saved",

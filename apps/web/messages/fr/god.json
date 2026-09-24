@@ -268,7 +268,12 @@
     "oidcLabelHint": "Nomme votre fournisseur sur le bouton de connexion. Laissez vide pour un libellé générique.",
     "scopes": "Scopes",
     "scopesHint": "Séparés par des espaces. openid est obligatoire ; profile et email renseignent le nom et l'adresse.",
-    "oidcRedirectUriHint": "Enregistrez-la comme URI de redirection sur le client de votre fournisseur d'identité. Le fournisseur refuse la connexion si elle ne correspond pas exactement."
+    "oidcRedirectUriHint": "Enregistrez-la comme URI de redirection sur le client de votre fournisseur d'identité. Le fournisseur refuse la connexion si elle ne correspond pas exactement.",
+    "authentik": "Authentik",
+    "authentikConfigured": "Authentik est configuré et peut être proposé avec le fournisseur OpenID Connect générique.",
+    "authentikMissing": "Ajoutez d’abord l’URL de découverte Authentik, l’identifiant client et le secret.",
+    "authentikDiscoveryUrlHint": "Utilisez l’URL de configuration OpenID du fournisseur d’application Authentik.",
+    "authentikRedirectUriHint": "Enregistrez cette URI de redirection exacte sur le fournisseur OAuth2/OpenID Authentik."
   },
   "scim": {
     "saved": "Paramètres SCIM enregistrés",

@@ -16,6 +16,7 @@ import {
   type InstanceEmailSettingsPatch,
   type InstanceGoogleSettingsPatch,
   type InstanceOidcSettingsPatch,
+  type InstanceAuthentikSettingsPatch,
   type InstanceTelegramSettingsPatch,
   type InstanceUserKind,
   getInstanceAuthSettings,
@@ -27,6 +28,8 @@ import {
   updateInstanceGoogleSettings,
   getInstanceOidcSettings,
   updateInstanceOidcSettings,
+  getInstanceAuthentikSettings,
+  updateInstanceAuthentikSettings,
   getInstanceTelegramSettings,
   updateInstanceTelegramSettings,
   getInstanceProjectDefaults,
@@ -137,6 +140,24 @@ export function useUpdateInstanceOidcSettings() {
     mutationFn: (patch: InstanceOidcSettingsPatch) => updateInstanceOidcSettings(patch),
     onSuccess: (data) => {
       qc.setQueryData(qk.instanceOidcSettings, data);
+      invalidateSignInMethods(qc);
+    },
+  });
+}
+
+export function useInstanceAuthentikSettingsQuery() {
+  return useQuery({
+    queryKey: qk.instanceAuthentikSettings,
+    queryFn: () => getInstanceAuthentikSettings(),
+  });
+}
+
+export function useUpdateInstanceAuthentikSettings() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: InstanceAuthentikSettingsPatch) => updateInstanceAuthentikSettings(patch),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceAuthentikSettings, data);
       invalidateSignInMethods(qc);
     },
   });

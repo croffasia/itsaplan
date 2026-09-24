@@ -268,7 +268,12 @@
     "oidcLabelHint": "Menamai penyedia Anda pada tombol masuk. Biarkan kosong untuk label umum.",
     "scopes": "Cakupan (Scopes)",
     "scopesHint": "Dipisahkan oleh spasi. openid wajib diisi; profile dan email mengisi nama dan alamat.",
-    "oidcRedirectUriHint": "Daftarkan ini sebagai URI pengalihan pada klien di penyedia identitas Anda. Penyedia akan menolak proses masuk jika tidak cocok persis."
+    "oidcRedirectUriHint": "Daftarkan ini sebagai URI pengalihan pada klien di penyedia identitas Anda. Penyedia akan menolak proses masuk jika tidak cocok persis.",
+    "authentik": "Authentik",
+    "authentikConfigured": "Authentik telah dikonfigurasi dan dapat digunakan bersama OpenID Connect generik.",
+    "authentikMissing": "Tambahkan URL penemuan Authentik, ID klien, dan rahasia terlebih dahulu.",
+    "authentikDiscoveryUrlHint": "Gunakan URL konfigurasi OpenID untuk penyedia aplikasi Authentik.",
+    "authentikRedirectUriHint": "Daftarkan URI pengalihan ini secara persis pada penyedia OAuth2/OpenID Authentik."
   },
   "scim": {
     "saved": "Pengaturan SCIM disimpan",

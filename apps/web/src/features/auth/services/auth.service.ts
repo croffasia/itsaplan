@@ -131,6 +131,15 @@ export async function signInWithOidc(): Promise<void> {
   if (result.error) throw new Error(result.error.message ?? '');
 }
 
+export async function signInWithAuthentik(): Promise<void> {
+  const result = await signIn.oauth2({
+    providerId: 'authentik',
+    callbackURL: appUrl('/'),
+    errorCallbackURL: appUrl('/login'),
+  });
+  if (result.error) throw new Error(result.error.message ?? '');
+}
+
 export async function signInWithPasskey(): Promise<void> {
   const result = await signIn.passkey();
   if (result?.error) throw new Error(result.error.message ?? '');

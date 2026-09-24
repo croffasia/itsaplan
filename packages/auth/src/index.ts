@@ -16,6 +16,8 @@ import {
   isGoogleUsable,
   getOidcConfig,
   isOidcUsable,
+  getAuthentikConfig,
+  isAuthentikUsable,
 } from './instance';
 import { sendAuthEmail } from './mail';
 
@@ -98,12 +100,9 @@ async function refreshGoogleOptions(): Promise<boolean> {
   }
 }
 
-// The generic OIDC provider. One per instance, so its id is a constant: it is what
-// the `account` rows store, and better-auth materialises the provider list once at
-// startup — the config array can neither grow nor be re-keyed afterwards. As with
-// Google, the plugin keeps this object by reference and reads its fields on every
-// call, so refreshing it per request is what lets the owner change the credentials
-// without a restart. Assign the fields, never replace the object.
+// The generic OIDC provider has a fixed id, which is what its account rows store.
+// Better Auth materialises the provider list once at startup, so the options object
+// is mutated by reference when the provider is requested.
 export const OIDC_PROVIDER_ID = 'oidc';
 
 const oidcOptions: GenericOAuthConfig = {
@@ -137,6 +136,45 @@ async function refreshOidcOptions(): Promise<boolean> {
   }
 }
 
+export const AUTHENTIK_PROVIDER_ID = 'authentik';
+
+const authentikOptions: GenericOAuthConfig = {
+  providerId: AUTHENTIK_PROVIDER_ID,
+  clientId: '',
+  clientSecret: '',
+  discoveryUrl: '',
+  scopes: [],
+  pkce: true,
+};
+
+export const AUTHENTIK_REDIRECT_URI = `${baseURL}/api/auth/oauth2/callback/${AUTHENTIK_PROVIDER_ID}`;
+
+async function refreshAuthentikOptions(): Promise<boolean> {
+  try {
+    const config = await getAuthentikConfig();
+    authentikOptions.clientId = config.clientId;
+    authentikOptions.clientSecret = config.clientSecret;
+    authentikOptions.discoveryUrl = config.discoveryUrl;
+    authentikOptions.scopes = config.scopes;
+    authentikOptions.pkce = config.pkce;
+    return isAuthentikUsable(config);
+  } catch (error) {
+    console.error('[auth] could not read the Authentik credentials:', error);
+    return false;
+  }
+}
+
+function requestedOidcProvider(path: string, body: unknown): string | null {
+  if (path === '/sign-in/oauth2') {
+    const providerId = (body as { providerId?: unknown } | undefined)?.providerId;
+    return typeof providerId === 'string' ? providerId : null;
+  }
+  const callbackPrefix = '/oauth2/callback/';
+  return path.startsWith(callbackPrefix)
+    ? path.slice(callbackPrefix.length).split('/')[0] || null
+    : null;
+}
+
 // The two conditions better-auth checks before linking an address to an account that
 // already has it are read from different places: `trustedProviders` per request,
 // through the resolver below, and `requireLocalEmailVerified` off the options object
@@ -150,7 +188,7 @@ let trustProviderEmails = false;
 async function resolveTrustedProviders(request?: Request): Promise<string[]> {
   if (!request || !new URL(request.url).pathname.includes('/callback/')) return [];
   trustProviderEmails = (await getAuthSettings()).trustProviderEmails;
-  return trustProviderEmails ? ['google', OIDC_PROVIDER_ID] : [];
+  return trustProviderEmails ? ['google', OIDC_PROVIDER_ID, AUTHENTIK_PROVIDER_ID] : [];
 }
 
 // Whether a new account has to confirm its address before it gets a session. An
@@ -400,16 +438,20 @@ export const auth = betterAuth({
         return;
       }
 
-      // Both halves of the OIDC round trip. The refusal carries a code because the
-      // callback turns it into the ?error= it redirects with; without one the
-      // callback fails the request instead.
-      if (ctx.path === '/sign-in/oauth2' || ctx.path.startsWith('/oauth2/callback/')) {
-        if (!(await refreshOidcOptions())) {
-          throw new APIError('FORBIDDEN', {
-            code: 'OIDC_DISABLED',
-            message: 'Single sign-on is disabled on this instance',
-          });
-        }
+      const oidcProvider = requestedOidcProvider(ctx.path, ctx.body);
+      if (oidcProvider === OIDC_PROVIDER_ID && !(await refreshOidcOptions())) {
+        throw new APIError('FORBIDDEN', {
+          code: 'OIDC_DISABLED',
+          message: 'Single sign-on is disabled on this instance',
+        });
+      }
+      if (oidcProvider === AUTHENTIK_PROVIDER_ID && !(await refreshAuthentikOptions())) {
+        throw new APIError('FORBIDDEN', {
+          code: 'AUTHENTIK_DISABLED',
+          message: 'Authentik sign-in is disabled on this instance',
+        });
+      }
+      if (oidcProvider) {
         return;
       }
 
@@ -539,7 +581,7 @@ export const auth = betterAuth({
     session: {
       create: {
         // Every sign-in method ends here, so one check covers password, magic link,
-        // passkey, Google and OIDC. Deactivation arrives over SCIM; apps/api refuses
+        // passkey, Google, OIDC and Authentik. Deactivation arrives over SCIM; apps/api refuses
         // the sessions that are already open.
         before: async (session) => {
           const rows = await db
@@ -612,12 +654,12 @@ export const auth = betterAuth({
         });
       },
     }),
-    // A single generic OIDC/OAuth2 provider, configured by the instance owner and
-    // discovered from its well-known document. Adds /sign-in/oauth2 and
+    // The generic OIDC and Authentik providers are configured by the instance owner
+    // and discovered from their well-known documents. Adds /sign-in/oauth2 and
     // /oauth2/callback/:providerId; it reuses the `account` table, so it adds none.
     // The config array is materialised at startup — see oidcOptions above for why
-    // there is exactly one entry and why its fields are mutated rather than replaced.
-    genericOAuth({ config: [oidcOptions] }),
+    // the entries are fixed and their fields are mutated rather than replaced.
+    genericOAuth({ config: [oidcOptions, authentikOptions] }),
     // Usernames: a second identifier next to the address, unique across the
     // instance. Adds `username` / `display_username` to the user table and the
     // /sign-in/username endpoint the sign-in screen uses when the visitor typed a
@@ -722,6 +764,10 @@ export {
   getOidcConfig,
   getOidcLabel,
   hasConfiguredOidc,
+  getAuthentikSettings,
+  setAuthentikSettings,
+  getAuthentikConfig,
+  hasConfiguredAuthentik,
   getScimSettings,
   setScimSettings,
   rotateScimToken,
@@ -739,6 +785,9 @@ export type {
   InstanceOidcDto,
   InstanceOidcPatch,
   InstanceOidcConfig,
+  InstanceAuthentikDto,
+  InstanceAuthentikPatch,
+  InstanceAuthentikConfig,
   InstanceScimDto,
 } from './instance';
 

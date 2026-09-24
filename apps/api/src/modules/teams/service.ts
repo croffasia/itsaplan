@@ -316,6 +316,40 @@ export async function teamMcpEnabled(teamId: number): Promise<boolean> {
   return row?.mcpEnabled ?? false;
 }
 
+export async function getTeamProjectDefaults(
+  teamId: number,
+): Promise<{ defaultAgentIds: number[] }> {
+  const [row] = await db
+    .select({ defaultAgentIds: team.defaultAgentIds })
+    .from(team)
+    .where(eq(team.id, teamId));
+  const ids = row?.defaultAgentIds ?? [];
+  if (!ids.length) return { defaultAgentIds: [] };
+  const agents = await db
+    .select({ id: aiAgent.id })
+    .from(aiAgent)
+    .where(and(eq(aiAgent.teamId, teamId), inArray(aiAgent.id, ids)));
+  const available = new Set(agents.map((agent) => agent.id));
+  return { defaultAgentIds: ids.filter((id) => available.has(id)) };
+}
+
+export async function setTeamProjectDefaults(
+  teamId: number,
+  defaultAgentIds: number[],
+): Promise<{ defaultAgentIds: number[] }> {
+  const ids = [...new Set(defaultAgentIds)];
+  if (ids.length) {
+    const agents = await db
+      .select({ id: aiAgent.id })
+      .from(aiAgent)
+      .where(and(eq(aiAgent.teamId, teamId), inArray(aiAgent.id, ids)));
+    if (agents.length !== ids.length)
+      throw new HttpError(400, 'Every default agent must belong to the team');
+  }
+  await db.update(team).set({ defaultAgentIds: ids }).where(eq(team.id, teamId));
+  return { defaultAgentIds: ids };
+}
+
 // The team's MCP settings: the switch, and which of its projects it covers. Both are
 // written from the team's MCP section — a project does not open itself.
 export interface TeamMcpSettings {

@@ -59,6 +59,7 @@ export const team = pgTable('team', {
   // team's own resources (agents, skills, tools, roles, integrations) and every
   // project it owns, whatever each project's own flag says.
   mcpEnabled: boolean('mcp_enabled').notNull().default(true),
+  defaultAgentIds: jsonb('default_agent_ids').$type<number[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

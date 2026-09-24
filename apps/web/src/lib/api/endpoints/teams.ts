@@ -143,6 +143,10 @@ export interface TeamMcpSettings {
   projects: { projectId: number; enabled: boolean }[];
 }
 
+export interface TeamProjectDefaults {
+  defaultAgentIds: number[];
+}
+
 // Parts of a source project the copy can carry over, one key per project settings
 // section. Passed to copyTeamProject as an include map; omitted keys are not
 // copied. The API force-enables dependencies (a view needs its
@@ -220,6 +224,15 @@ export const updateTeamMcp = (
   request<TeamMcpSettings>(`/teams/${teamId}/mcp`, {
     method: 'PATCH',
     body: JSON.stringify(patch),
+  });
+
+export const getTeamProjectDefaults = (teamId: number) =>
+  request<TeamProjectDefaults>(`/teams/${teamId}/project-defaults`);
+
+export const updateTeamProjectDefaults = (teamId: number, defaultAgentIds: number[]) =>
+  request<TeamProjectDefaults>(`/teams/${teamId}/project-defaults`, {
+    method: 'PATCH',
+    body: JSON.stringify({ defaultAgentIds }),
   });
 
 // The projects a team owns: created, copied, and deleted by the team's own ranks

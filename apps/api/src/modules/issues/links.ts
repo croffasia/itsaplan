@@ -123,20 +123,22 @@ export async function listIssueLinks(
       }),
     );
   }
-  return rows.filter((row) => visibleProjects.has(row.projectId)).map((row) => ({
-    id: row.id,
-    kind: row.kind as IssueLinkKind,
-    direction: row.sourceIssueId === issueId ? 'outward' : 'inward',
-    issue: {
-      id: row.otherId,
-      sequenceNumber: row.sequenceNumber,
-      identifier: `${row.projectKey}-${row.sequenceNumber}`,
-      title: row.title,
-      columnId: row.columnId,
-      typeId: row.typeId,
-      archived: row.archivedAt !== null,
-    },
-  }));
+  return rows
+    .filter((row) => visibleProjects.has(row.projectId))
+    .map((row) => ({
+      id: row.id,
+      kind: row.kind as IssueLinkKind,
+      direction: row.sourceIssueId === issueId ? 'outward' : 'inward',
+      issue: {
+        id: row.otherId,
+        sequenceNumber: row.sequenceNumber,
+        identifier: `${row.projectKey}-${row.sequenceNumber}`,
+        title: row.title,
+        columnId: row.columnId,
+        typeId: row.typeId,
+        archived: row.archivedAt !== null,
+      },
+    }));
 }
 
 export async function getOtherLinkedIssueId(

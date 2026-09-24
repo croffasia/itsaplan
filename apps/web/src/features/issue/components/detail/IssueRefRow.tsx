@@ -71,7 +71,9 @@ export default function IssueRefRow({
       {sameProject && column && <StateIcon stateType={column.stateType} color={column.color} />}
       {renderName()}
       {issue.archived && <ArchivedBadge />}
-      {sameProject && column && <span className="shrink-0 text-xs text-muted-foreground">{column.name}</span>}
+      {sameProject && column && (
+        <span className="shrink-0 text-xs text-muted-foreground">{column.name}</span>
+      )}
       {onRemove && (
         <Button
           variant="ghost"

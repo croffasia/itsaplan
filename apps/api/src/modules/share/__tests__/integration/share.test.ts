@@ -153,7 +153,9 @@ describe('share', () => {
       const token = (await asOwner.issues({ issueId }).share.post({ extended: true })).data!.token;
       const shared = await api.share.issue({ token }).get();
       expect(shared.data.issue.links).toEqual([]);
-      expect(shared.data.feed.some((item: { action: string | null }) => item.action === 'link_add')).toBe(false);
+      expect(
+        shared.data.feed.some((item: { action: string | null }) => item.action === 'link_add'),
+      ).toBe(false);
     });
 
     it('rejects a malformed token', async () => {

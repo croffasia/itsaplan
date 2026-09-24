@@ -91,7 +91,9 @@ export default function IssueLinkDialog({
       description={prompt}
     >
       <div className="border-b px-3 py-2">
-        <label className="sr-only" htmlFor="link-target-project">{t('project')}</label>
+        <label className="sr-only" htmlFor="link-target-project">
+          {t('project')}
+        </label>
         <select
           id="link-target-project"
           value={targetProjectKey}

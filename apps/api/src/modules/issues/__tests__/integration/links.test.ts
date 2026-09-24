@@ -334,7 +334,7 @@ describe('issue links', () => {
         .invites.post({ email: member.email, role: 'member' });
       await asMember.invites({ token: invite.data!.token }).accept.post();
 
-      expect((await linksOf(asMember, source.id))).toHaveLength(0);
+      expect(await linksOf(asMember, source.id)).toHaveLength(0);
       expect((await unlink(asMember, source.id, created.id)).status).toBe(403);
       expect(await linksOf(asOwner, source.id)).toHaveLength(1);
     });

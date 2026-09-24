@@ -126,7 +126,7 @@ are the part to preserve when changing the script:
 
 - Try it and Develop restart what is already up rather than setting up beside it, and each
   offers to stop the other: they read the same `.env`, so they publish the same api and web
-  ports. Develop also offers to stop the PR stack, whose MinIO ports are fixed in its own
+  ports. Develop also offers to stop the PR stack, whose RustFS ports are fixed in its own
   compose file. A refusal ends the run and changes nothing.
 - A busy port is offered for change, never forced. The check connects rather than binds, to
   `127.0.0.1` and `::1`: on macOS a bind on one loopback address succeeds beside a listener
@@ -164,7 +164,7 @@ are the part to preserve when changing the script:
 
 | File                         | Purpose                                                                                                                                           |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `docker-compose.dev.yml`     | local backing services only: Postgres + MinIO. The apps run on the host.                                                                          |
+| `docker-compose.dev.yml`     | local backing services only: Postgres + RustFS. The apps run on the host.                                                                         |
 | `docker-compose.yml`         | self-hosting stack. Runs the published images (`docker compose pull && up -d`) or builds them from source (`up -d --build`); reads a plain `.env`, requires the secrets via `${VAR:?}`. |
 | `docker-compose.coolify.yml` | the same stack for Coolify: reads its generated `SERVICE_*` variables and builds from source. No `image:` here — with both fields Coolify still builds, and stops creating rollback images. |
 | `docker-compose.coolify-images.yml` | the same stack as a Coolify service (New Resource → Docker Compose Empty): the published images, no `build:`, no `ports:`, and the two domains declared with `SERVICE_URL_API_3000` / `SERVICE_URL_WEB_3001`. |
@@ -188,10 +188,10 @@ docker compose -f docker-compose.test.yml build
 docker compose -f docker-compose.test.yml run --rm api-test
 ```
 
-`run` starts api-test's dependencies (Postgres healthy, the MinIO bucket init
+`run` starts api-test's dependencies (Postgres healthy, the RustFS bucket init
 completed), runs the suite, and exits with its code. It does not use
 `--abort-on-container-exit`, which tears the stack down the moment the one-shot
-`minio-test-init` exits, before api-test starts.
+`rustfs-test-init` exits, before api-test starts.
 
 The test database is created by the `postgres-test` service (`POSTGRES_DB=itsaplan_test`,
 tmpfs — nothing persists). The `test` job in `.github/workflows/ci.yml` runs these

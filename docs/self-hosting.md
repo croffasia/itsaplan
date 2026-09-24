@@ -19,14 +19,14 @@ The stack refuses to start while one of these is missing:
 | `POSTGRES_PASSWORD`     | `openssl rand -base64 32`                  |
 | `BETTER_AUTH_SECRET`    | `openssl rand -base64 32`                  |
 | `APP_ENCRYPTION_KEY`    | `openssl rand -base64 32`                  |
-| `S3_ACCESS_KEY_ID`      | the MinIO root user, any name over 3 chars |
+| `S3_ACCESS_KEY_ID`      | the RustFS root user, any name over 3 chars |
 | `S3_SECRET_ACCESS_KEY`  | `openssl rand -base64 32`                  |
 
 On a machine with [Bun](https://bun.sh), the setup script generates them instead. Run
 `bun install && bun run setup`, answer **Generate env**, and answer no when it offers to
 write the files: it prints `.env` and `apps/web/.env` for you to copy onto the server.
 
-That starts the whole stack: Postgres, MinIO, api, worker, bot, and web. The four services
+That starts the whole stack: Postgres, RustFS, api, worker, bot, and web. The four services
 run from the images published on each release. `VERSION` in `.env` pins one release instead
 of the newest. The api applies migrations when it starts, and the first account you register
 becomes the instance admin.
@@ -116,6 +116,16 @@ days, on the first startup past that; `BACKUP_RETENTION_DAYS` changes the window
 `SKIP_PRE_MIGRATION_BACKUP=1` upgrades without one, for an operator who backs up by
 other means. After the upgrade the app shows the instance owner where the dump is and
 what the migrations changed.
+
+Attachments are stored in RustFS. An instance set up with MinIO switches to it on the next
+`docker compose up -d`: the `minio` service keeps its name and its `minio-data` volume, and
+RustFS reads the files MinIO wrote in place, with the same credentials. Nothing is copied,
+and the files stay readable by MinIO. The upgrade touches no attachment data, but a copy of
+the volume before it costs one command:
+
+```bash
+docker run --rm -v itsaplan_minio-data:/data -v "$PWD":/out alpine tar czf /out/minio-data.tgz -C /data .
+```
 
 If you call the API from your own scripts or from an MCP client, read
 [breaking changes](breaking-changes.md) for the paths a release removed.

@@ -9,7 +9,7 @@ import { createMappedImport } from '../../service';
 // The import flow: the file is uploaded through the chat-attachments route, an
 // agent turns it into a draft by saving a column mapping (the
 // prepare_issue_import tool calls createMappedImport in process), and the confirm
-// route creates the issues. Needs MinIO like the attachments suite.
+// route creates the issues. Needs RustFS like the attachments suite.
 
 async function setup() {
   const owner = await signUpTestUser();

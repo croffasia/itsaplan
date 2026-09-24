@@ -5,7 +5,7 @@ import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 
 // Attachments feature: metadata in Postgres, bytes in the object store (shared/
-// s3.ts against a real MinIO — see the Tests setup for S3_* env). This is the
+// s3.ts against a real RustFS — see the Tests setup for S3_* env). This is the
 // only test that exercises s3.ts (putObject/getObject/deleteObject) and the one
 // public, unauthenticated route (GET /attachments/:publicId/raw), which is the
 // auth-context session-gate exception.

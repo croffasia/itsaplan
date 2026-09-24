@@ -56,7 +56,7 @@ Otherwise, use the override in .Values.externalDatabase.url.
 
 {{/*
 Compute the S3 endpoint.
-When the built-in MinIO is enabled, use the internal MinIO service URL.
+When the built-in store is enabled, use its internal service URL.
 Otherwise, use the override in .Values.externalS3.endpoint.
 */}}
 {{- define "itsaplan.s3Endpoint" -}}

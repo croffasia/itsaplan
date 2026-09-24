@@ -15,8 +15,9 @@ export function useInboxUnread(projectKey: string | null, projectId: number | nu
   });
   return useQuery({
     queryKey: qk.notificationsUnread(projectKey ?? ''),
-    queryFn: () => getUnreadCount(projectId as number),
-    enabled: projectKey != null && projectId != null,
+    queryFn: () => getUnreadCount(projectId),
+    enabled: projectKey != null,
+    refetchInterval: projectId == null && projectKey === 'all' ? 30_000 : false,
     select: (d) => d.unread,
   });
 }

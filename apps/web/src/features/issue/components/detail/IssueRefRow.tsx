@@ -36,6 +36,8 @@ export default function IssueRefRow({
   readOnly?: boolean;
 }) {
   const column = project.columns.find((c) => c.id === issue.columnId);
+  const targetProjectKey = issue.identifier.slice(0, -String(issue.sequenceNumber).length - 1);
+  const sameProject = targetProjectKey === project.project.key;
   const label = (
     <>
       <span className="shrink-0 font-mono text-xs text-muted-foreground">{issue.identifier}</span>
@@ -56,7 +58,7 @@ export default function IssueRefRow({
       <Link
         {...historyScrollRestorationLinkProps}
         {...historyScrollRestorationAnchorProps(scrollAnchorKey)}
-        href={issuePath(project.project.key, issue.sequenceNumber)}
+        href={issuePath(targetProjectKey, issue.sequenceNumber)}
         className={labelClass}
       >
         {label}
@@ -66,10 +68,10 @@ export default function IssueRefRow({
 
   return (
     <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent/50">
-      {column && <StateIcon stateType={column.stateType} color={column.color} />}
+      {sameProject && column && <StateIcon stateType={column.stateType} color={column.color} />}
       {renderName()}
       {issue.archived && <ArchivedBadge />}
-      {column && <span className="shrink-0 text-xs text-muted-foreground">{column.name}</span>}
+      {sameProject && column && <span className="shrink-0 text-xs text-muted-foreground">{column.name}</span>}
       {onRemove && (
         <Button
           variant="ghost"

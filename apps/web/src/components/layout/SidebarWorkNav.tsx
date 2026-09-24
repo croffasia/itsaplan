@@ -22,6 +22,7 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
+import { useInboxScope } from '@/hooks/useInboxScope';
 import { useViewsQuery } from '@/services/views.service';
 import { viewIcon } from '@/utils/viewIcons';
 import { SidebarGroup, SidebarGroupContent, SidebarMenu } from '@/components/ui/sidebar';
@@ -42,7 +43,11 @@ export default function SidebarWorkNav({
   const { can } = usePermissions();
   const features = useProjectFeatures();
   const disabled = !projectKey;
-  const { data: inboxUnread } = useInboxUnread(projectKey, projectId);
+  const { allProjects } = useInboxScope();
+  const { data: inboxUnread } = useInboxUnread(
+    allProjects ? 'all' : projectKey,
+    allProjects ? null : projectId,
+  );
   const { data: views } = useViewsQuery(projectKey);
   const favorites = views?.filter((v) => v.favorite) ?? [];
 

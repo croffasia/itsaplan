@@ -185,7 +185,8 @@
     "searchPrompt": "Search issues this one is {relation}…",
     "failed": "Could not link the issues",
     "noMatches": "No issues match.",
-    "typeToSearch": "Type to search this project’s issues."
+    "typeToSearch": "Type to search this project’s issues.",
+    "project": "Project"
   },
   "subtasks": {
     "title": "Subtasks",

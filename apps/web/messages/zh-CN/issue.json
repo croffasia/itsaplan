@@ -185,7 +185,8 @@
     "searchPrompt": "搜索与此工作项{relation}的工作项…",
     "failed": "无法关联工作项",
     "noMatches": "没有匹配的工作项。",
-    "typeToSearch": "输入内容以搜索此项目的工作项。"
+    "typeToSearch": "输入内容以搜索此项目的工作项。",
+    "project": "项目"
   },
   "subtasks": {
     "title": "子任务",

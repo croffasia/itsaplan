@@ -185,7 +185,8 @@
     "searchPrompt": "Buscar issues das quais esta é {relation}…",
     "failed": "Não foi possível vincular as issues",
     "noMatches": "Nenhuma issue corresponde.",
-    "typeToSearch": "Digite para buscar as issues deste projeto."
+    "typeToSearch": "Digite para buscar as issues deste projeto.",
+    "project": "Projeto"
   },
   "subtasks": {
     "title": "Subtarefas",

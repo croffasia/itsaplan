@@ -56,7 +56,7 @@ export default function ProjectSwitcherProjectActions({ project }: { project: Pr
         {!project.isHidden && (
           <DropdownMenuItem
             onSelect={() =>
-              update.mutate({ projectKey: project.key, patch: { isFavorite: !project.isFavorite } })
+              update.mutate({ projectKey: project.ref, patch: { isFavorite: !project.isFavorite } })
             }
           >
             <Star className={project.isFavorite ? 'fill-current' : undefined} />
@@ -65,7 +65,7 @@ export default function ProjectSwitcherProjectActions({ project }: { project: Pr
         )}
         <DropdownMenuItem
           onSelect={() =>
-            update.mutate({ projectKey: project.key, patch: { isHidden: !project.isHidden } })
+            update.mutate({ projectKey: project.ref, patch: { isHidden: !project.isHidden } })
           }
         >
           {project.isHidden ? <ArchiveRestore /> : <Archive />}

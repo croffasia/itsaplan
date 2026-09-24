@@ -29,7 +29,7 @@ export function SettingsActionRow({
 }) {
   const t = useTranslations('settings.actions');
   const can = useSettingsCan();
-  const { describeConditions } = useFilterFields(project.project.key);
+  const { describeConditions } = useFilterFields(project.project.ref);
   const effectText = useEffectText();
   const conditions = describeConditions(action.condition, project, customFields);
   const effects = describeEffect(action.effect, project, effectText);

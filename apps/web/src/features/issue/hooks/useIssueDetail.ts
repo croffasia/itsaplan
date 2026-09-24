@@ -45,8 +45,8 @@ export function useIssueDetail(
   // What the markdown editors' image picker offers.
   const imageAttachments = (attachmentsQuery.data ?? []).filter(isImage);
 
-  const updateIssue = useUpdateIssue(project.project.key);
-  const setFieldValue = useSetFieldValue(project.project.key);
+  const updateIssue = useUpdateIssue(project.project.ref);
+  const setFieldValue = useSetFieldValue(project.project.ref);
   const uploadAttachment = useUploadAttachment();
   const [descEditor, setDescEditor] = useState<Editor | null>(null);
 
@@ -57,7 +57,7 @@ export function useIssueDetail(
     targets: [
       qk.issue(issueId),
       qk.feed(issueId),
-      qk.issueDocumentLinks(project.project.key, issueId),
+      qk.issueDocumentLinks(project.project.ref, issueId),
     ],
   });
 

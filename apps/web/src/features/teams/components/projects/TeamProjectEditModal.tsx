@@ -37,7 +37,7 @@ export default function TeamProjectEditModal({
       {
         teamId,
         projectId: project.id,
-        projectKey: project.key,
+        projectKey: project.ref,
         patch: { name: name.trim(), description: description.trim() },
       },
       { onSuccess: onClose },

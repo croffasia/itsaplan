@@ -14,7 +14,7 @@ import { useTranslations } from 'next-intl';
 
 const section = settingsSection('schedules');
 
-// The Schedules page (/project/:projectKey/ai-team/schedules), listed in the main
+// The Schedules page (/:team/:projectKey/agents/schedules), listed in the main
 // sidebar's AI Team group.
 export default function SettingsSchedulesPage() {
   const t = useTranslations('settings.schedules');

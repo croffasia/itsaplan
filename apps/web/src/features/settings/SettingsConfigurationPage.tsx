@@ -21,7 +21,7 @@ import { useSubtaskAutomationForm } from './hooks/useSubtaskAutomationForm';
 
 const section = settingsSection('configuration');
 
-// The Configuration settings page (/project/:projectKey/settings/configuration).
+// The Configuration settings page (/:team/:projectKey/settings/configuration).
 // Holds the subtask automations, the estimate kinds and the auto-archive
 // thresholds; the Save in the page header writes all of them.
 export default function SettingsConfigurationPage() {
@@ -36,9 +36,9 @@ function ConfigurationPage({ project }: { project: ProjectDetail }) {
   const sectionText = useSettingsSectionText()(section.slug);
   const { can } = usePermissions();
   const features = useProjectFeatures();
-  const subtasks = useSubtaskAutomationForm(project.project.key);
+  const subtasks = useSubtaskAutomationForm(project.project.ref);
   const estimates = useEstimatesForm(project.project);
-  const archive = useAutoArchiveForm(project.project.key);
+  const archive = useAutoArchiveForm(project.project.ref);
   const saving = subtasks.saving || estimates.saving || archive.saving;
   const loaded = subtasks.loaded && archive.loaded;
 

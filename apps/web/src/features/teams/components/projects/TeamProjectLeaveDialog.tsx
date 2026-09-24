@@ -23,7 +23,7 @@ export default function TeamProjectLeaveDialog({
       confirmLabel={t('confirm')}
       onClose={onClose}
       onConfirm={async () => {
-        await leaveProject.mutateAsync({ projectKey: project.key, userId });
+        await leaveProject.mutateAsync({ projectKey: project.ref, userId });
         onClose();
       }}
     >

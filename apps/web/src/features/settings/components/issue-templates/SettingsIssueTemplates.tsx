@@ -24,7 +24,7 @@ export default function SettingsIssueTemplates({
   onNewHandled: () => void;
 }) {
   const t = useTranslations('settings.issueTemplates');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const createTemplate = useCreateIssueTemplate(projectKey);
   const updateTemplate = useUpdateIssueTemplate(projectKey);
   const deleteTemplate = useDeleteIssueTemplate(projectKey);

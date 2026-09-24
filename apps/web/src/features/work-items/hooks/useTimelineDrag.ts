@@ -31,7 +31,7 @@ export function useTimelineDrag({
   dayW: number;
   onOpenIssue: (id: number) => void;
 }) {
-  const updateIssue = useUpdateIssue(project.project.key);
+  const updateIssue = useUpdateIssue(project.project.ref);
   const [preview, setPreview] = useState<{ issueId: number; start: Date; end: Date } | null>(null);
 
   function beginDrag(e: React.PointerEvent, issue: Issue, mode: TimelineDragMode) {

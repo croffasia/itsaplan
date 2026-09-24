@@ -17,6 +17,10 @@ get_issue_by_number directly with those two values — do not call list_projects
 get_project first, the key needs no resolving. Most issue tools take the issue's
 internal numeric id, which comes back in that result.
 
+A project key is unique within its team, not across teams. If a bare key is
+refused because several of your teams use it, pass the project's ref instead,
+"<team>.KEY" — the ref field that list_projects returns.
+
 When you have no identifier, start with list_projects to find the project, then
 get_project to resolve its ids. Every id another tool takes — columnId, typeId,
 labelIds, assigneeUserId, custom field ids, member user ids — comes from

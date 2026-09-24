@@ -28,7 +28,7 @@ export default function ProjectSwitcherHiddenState({ projects }: { projects: Pro
                   className="h-auto min-h-9 w-full justify-start py-2 text-start whitespace-normal"
                   disabled={update.isPending}
                   onClick={() =>
-                    update.mutate({ projectKey: project.key, patch: { isHidden: false } })
+                    update.mutate({ projectKey: project.ref, patch: { isHidden: false } })
                   }
                 >
                   <Eye />

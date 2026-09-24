@@ -53,9 +53,9 @@ export default function IssueActionsBar({
   const qc = useQueryClient();
   const canEdit = can('work_items', 'edit');
   const canDelete = can('work_items', 'delete');
-  const actionsQuery = useActionsQuery(project.project.key);
+  const actionsQuery = useActionsQuery(project.project.ref);
   const { archive, dialog: archiveDialog } = useArchiveAction(project);
-  const restoreIssue = useRestoreIssue(project.project.key);
+  const restoreIssue = useRestoreIssue(project.project.ref);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
   const [sharing, setSharing] = useState(false);

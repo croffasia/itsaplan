@@ -118,12 +118,12 @@ export function useAppCommands({
   const projectItems: Command[] = projects
     .filter((p) => !p.isHidden)
     .map((p) => ({
-      id: `project.switch.${p.key}`,
+      id: `project.switch.${p.ref}`,
       label: p.name,
       icon: <LayoutGrid />,
       keywords: `switch project ${p.key}`,
-      checked: p.key === currentProjectKey,
-      run: () => onSelectProject(p.key),
+      checked: p.ref === currentProjectKey,
+      run: () => onSelectProject(p.ref),
     }));
 
   return {

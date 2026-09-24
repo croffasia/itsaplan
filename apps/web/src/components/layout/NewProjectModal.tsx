@@ -64,7 +64,7 @@ export default function NewProjectModal({
     };
     createProject.mutate(
       { teamId, copyFromId: copyFrom?.id, input },
-      { onSuccess: (project) => onCreated(project.key) },
+      { onSuccess: (project) => onCreated(project.ref) },
     );
   }
 

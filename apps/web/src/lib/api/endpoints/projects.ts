@@ -15,7 +15,12 @@ export interface Project {
   id: number;
   teamId: number;
   teamName: string;
+  // The team's slug, or its id while it has none.
+  teamRef: string;
   key: string;
+  // "<teamRef>.<key>": how the API and the app's paths name the project. The key
+  // alone is unique only within the team.
+  ref: string;
   name: string;
   description: string;
   // Whether the team's MCP reach covers this project, and whether the team is

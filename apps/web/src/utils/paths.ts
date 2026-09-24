@@ -1,14 +1,28 @@
 // Path builders for the planner routes. The project, the open view and the open
 // settings section live in the URL, so these are the single source of truth —
-// see the app/project/[projectKey] route tree.
+// see the app/[teamRef] route tree.
+//
+// A project is addressed by its ref, "<teamRef>.<key>" (Project.ref), which is also
+// what the API takes wherever a route names {projectKey}. The team's slug starts with
+// a letter and carries no dot, so the first dot splits the two.
 import type { StartPage } from '@/lib/api/endpoints/userPreferences';
 
-export const projectPath = (key: string) => `/project/${encodeURIComponent(key)}`;
+export function splitProjectRef(ref: string): { teamRef: string; key: string } {
+  const dot = ref.indexOf('.');
+  return { teamRef: ref.slice(0, dot), key: ref.slice(dot + 1) };
+}
 
-export const viewPath = (key: string, viewId: number | null) =>
-  viewId != null ? `${projectPath(key)}/view/${viewId}` : projectPath(key);
+export const projectRefOf = (teamRef: string, key: string) => `${teamRef}.${key}`;
 
-export const dashboardsPath = (key: string) => `${projectPath(key)}/dashboard`;
+export const projectPath = (ref: string) => {
+  const { teamRef, key } = splitProjectRef(ref);
+  return `/${encodeURIComponent(teamRef)}/${encodeURIComponent(key)}`;
+};
+
+export const viewPath = (ref: string, viewId: number | null) =>
+  viewId != null ? `${projectPath(ref)}/view/${viewId}` : projectPath(ref);
+
+export const dashboardsPath = (ref: string) => `${projectPath(ref)}/dashboards`;
 
 // Public read-only share pages (no auth). The token is the unguessable share key.
 export const shareIssuePath = (token: string) => `/share/issue/${token}`;
@@ -18,45 +32,54 @@ export const shareViewPath = (token: string) => `/share/view/${token}`;
 export const shareUrl = (path: string) =>
   typeof window === 'undefined' ? path : `${window.location.origin}${path}`;
 
-export const dashboardPath = (key: string, dashboardId: number) =>
-  `${dashboardsPath(key)}/${dashboardId}`;
+export const dashboardPath = (ref: string, dashboardId: number) =>
+  `${dashboardsPath(ref)}/${dashboardId}`;
 
-export const notesPath = (key: string) => `${projectPath(key)}/notes`;
+export const notesPath = (ref: string) => `${projectPath(ref)}/notes`;
 
-export const notePath = (key: string, boardId: number) => `${notesPath(key)}/${boardId}`;
+export const notePath = (ref: string, boardId: number) => `${notesPath(ref)}/${boardId}`;
 
-export const documentsPath = (key: string) => `${projectPath(key)}/docs`;
+export const documentsPath = (ref: string) => `${projectPath(ref)}/docs`;
 
-export const documentPath = (key: string, documentId: number) =>
-  `${documentsPath(key)}/${documentId}`;
+export const documentPath = (ref: string, documentId: number) =>
+  `${documentsPath(ref)}/${documentId}`;
 
-export const settingsPath = (key: string, section: string) =>
-  `${projectPath(key)}/settings/${section}`;
+export const settingsPath = (ref: string, section: string) =>
+  `${projectPath(ref)}/settings/${section}`;
 
 // The AI Team destinations listed in the main sidebar (see AI_TEAM_SECTIONS).
-export const aiTeamPath = (key: string, section: string) =>
-  `${projectPath(key)}/ai-team/${section}`;
+export const aiTeamPath = (ref: string, section: string) => `${projectPath(ref)}/agents/${section}`;
 
-export const inboxPath = (key: string) => `${projectPath(key)}/inbox`;
+export const inboxPath = (ref: string) => `${projectPath(ref)}/inbox`;
 
 // The member's own notification preferences (which events, by which channel, their
 // Telegram chat id). A main-nav Configuration destination, open to any member.
-export const notificationsPath = (key: string) => `${projectPath(key)}/notifications`;
+export const notificationsPath = (ref: string) => `${projectPath(ref)}/notifications`;
 
-export const aiAgentsPath = (key: string) => `${projectPath(key)}/ai-agents`;
+export const aiAgentsPath = (ref: string) => `${projectPath(ref)}/agents`;
 
-export const mcpServerPath = (key: string) => `${projectPath(key)}/mcp`;
+export const mcpServerPath = (ref: string) => `${projectPath(ref)}/mcp`;
 
-export const apiDocsPath = (key: string) => `${projectPath(key)}/api`;
+export const apiDocsPath = (ref: string) => `${projectPath(ref)}/api`;
 
-export const membersPath = (key: string) => `${projectPath(key)}/members`;
+export const membersPath = (ref: string) => `${projectPath(ref)}/members`;
 
-// Issues are addressed in the URL by their project-scoped number (the "42" in
-// "MKT-42"), not the internal database id: /project/MKT/issue/42.
-export const issuePath = (key: string, sequenceNumber: number) =>
-  `${projectPath(key)}/issue/${sequenceNumber}`;
+// An issue is addressed by its identifier under its team, not under its project:
+// /acme/issue/MKT-42.
+export const issuePath = (ref: string, sequenceNumber: number) => {
+  const { teamRef, key } = splitProjectRef(ref);
+  return `/${encodeURIComponent(teamRef)}/issue/${encodeURIComponent(key)}-${sequenceNumber}`;
+};
 
-export const initiativesPath = (key: string) => `${projectPath(key)}/initiatives`;
+// "MKT-42" -> { key: 'MKT', sequenceNumber: 42 }, or null for anything else.
+export function parseIssueIdentifier(
+  identifier: string,
+): { key: string; sequenceNumber: number } | null {
+  const match = /^([A-Za-z][A-Za-z0-9]*)-(\d+)$/.exec(identifier);
+  return match ? { key: match[1], sequenceNumber: Number(match[2]) } : null;
+}
+
+export const initiativesPath = (ref: string) => `${projectPath(ref)}/initiatives`;
 
 // Every status tab of the initiatives list is a route of its own, "All" included,
 // so a reload or a shared link reopens the tab the user was on. The list path
@@ -69,23 +92,23 @@ export type InitiativesTab = (typeof INITIATIVES_TABS)[number];
 export const isInitiativesTab = (value: string): value is InitiativesTab =>
   (INITIATIVES_TABS as readonly string[]).includes(value);
 
-export const initiativesTabPath = (key: string, tab: InitiativesTab) =>
-  `${initiativesPath(key)}/${tab}`;
+export const initiativesTabPath = (ref: string, tab: InitiativesTab) =>
+  `${initiativesPath(ref)}/${tab}`;
 
-// The initiative detail tabs are routes of their own too. They sit under /details/
-// so the tab segment of the list above stays unambiguous.
+// The initiative detail tabs are routes of their own too. A list tab is a word and an
+// initiative is a number, so both sit directly under /initiatives.
 export type InitiativeTab = 'overview' | 'progress' | 'issues';
 
 export const initiativePath = (
-  key: string,
+  ref: string,
   initiativeId: number,
   tab: InitiativeTab = 'overview',
 ) => {
-  const base = `${initiativesPath(key)}/details/${initiativeId}`;
+  const base = `${initiativesPath(ref)}/${initiativeId}`;
   return tab === 'overview' ? base : `${base}/${tab}`;
 };
 
-export const cyclesPath = (key: string) => `${projectPath(key)}/cycles`;
+export const cyclesPath = (ref: string) => `${projectPath(ref)}/cycles`;
 
 // Each layout of the cycles list is a route of its own, so a reload or a shared
 // link reopens the one the user was on. The list path itself holds no layout: it
@@ -97,30 +120,28 @@ export type CyclesView = (typeof CYCLES_VIEWS)[number];
 export const isCyclesView = (value: string): value is CyclesView =>
   (CYCLES_VIEWS as readonly string[]).includes(value);
 
-export const cyclesViewPath = (key: string, view: CyclesView) => `${cyclesPath(key)}/${view}`;
+export const cyclesViewPath = (ref: string, view: CyclesView) => `${cyclesPath(ref)}/${view}`;
 
-// The cycle detail sits under /details/ so the layout segment of the list above
-// stays unambiguous.
-export const cyclePath = (key: string, cycleId: number) => `${cyclesPath(key)}/details/${cycleId}`;
+// A layout is a word and a cycle is a number, so both sit directly under /cycles.
+export const cyclePath = (ref: string, cycleId: number) => `${cyclesPath(ref)}/${cycleId}`;
 
 // Where the app root sends the user, from their start page preference. The section
 // opens in the project they were last in (see app/page.tsx).
-export const startPagePath = (key: string, startPage: StartPage) => {
+export const startPagePath = (ref: string, startPage: StartPage) => {
   switch (startPage) {
     case 'inbox':
-      return inboxPath(key);
+      return inboxPath(ref);
     case 'dashboard':
-      return dashboardsPath(key);
+      return dashboardsPath(ref);
     case 'initiatives':
-      return initiativesPath(key);
+      return initiativesPath(ref);
     default:
-      return projectPath(key);
+      return projectPath(ref);
   }
 };
 
-// The standalone Manage teams page, reached from the project switcher. Lists the
-// teams the user belongs to and opens one beside the list; with no team in the URL
-// it redirects to the first of them.
+// The standalone Manage teams page, reached from the project switcher. With no team
+// in the URL it opens the first team's settings.
 export const manageTeamsPath = () => '/account/teams';
 
 // Every section of a team is a route of its own, so each loads only what it shows.
@@ -137,10 +158,11 @@ export type TeamSection =
   | 'agent-tools'
   | 'notifications';
 
-export const teamPath = (teamId: number) => `${manageTeamsPath()}/${teamId}`;
+// A team's settings, under the team's ref (Team.ref): /acme/settings.
+export const teamPath = (teamRef: string) => `/${encodeURIComponent(teamRef)}/settings`;
 
-export const teamSectionPath = (teamId: number, section: TeamSection) =>
-  section === 'info' ? teamPath(teamId) : `${teamPath(teamId)}/${section}`;
+export const teamSectionPath = (teamRef: string, section: TeamSection) =>
+  section === 'info' ? teamPath(teamRef) : `${teamPath(teamRef)}/${section}`;
 
 // The invitee-facing link an owner shares. Points at this web app's public
 // /invite/:token page, which reads the token and shows the accept screen.

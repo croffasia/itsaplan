@@ -50,11 +50,14 @@
   "info": {
     "team": "Equipo",
     "teamHint": "El nombre bajo el que se agrupan los proyectos del equipo.",
+    "slug": "URL",
+    "slugHint": "Letras minúsculas, números y guiones. Hasta que lo definas, los enlaces usan el número del equipo.",
+    "slugInvalid": "Usa de 2 a 40 letras minúsculas, números o guiones, empezando por una letra.",
     "role": "Tu rol",
     "created": "Creada",
     "leads": "Propietarios y administradores",
     "leadsHint": "Personas que pueden gestionar este equipo y sus proyectos.",
-    "saved": "El nombre del equipo se ha guardado",
+    "saved": "Equipo guardado",
     "leaveHint": "Conservas los proyectos de los que eres miembro. Para volver a unirte, un propietario tiene que añadirte de vuelta."
   },
   "columns": {

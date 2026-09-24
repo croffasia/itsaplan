@@ -38,7 +38,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
   // (open) ones only while selection is active, and only while the project shows the
   // Initiatives section (with none loaded the picker is left out).
   const initiativesKey =
-    selection.isSelecting && project.project.initiativesEnabled ? project.project.key : null;
+    selection.isSelecting && project.project.initiativesEnabled ? project.project.ref : null;
   const { data } = useInitiativeOptionsQuery(initiativesKey);
   const initiatives = data ?? [];
 
@@ -254,7 +254,7 @@ export function BulkActionBar({ project }: { project: ProjectDetail }) {
 
       {confirming && (
         <BulkRemovalDialog
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           action={confirming}
           ids={ids}
           subtaskCount={subtasks}

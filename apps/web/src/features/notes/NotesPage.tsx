@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useShellRoute } from '@/hooks/useShellRoute';
 import { useTranslations } from 'next-intl';
 import { useQueryClient } from '@tanstack/react-query';
 import { ReactFlowProvider } from '@xyflow/react';
@@ -34,10 +35,10 @@ const MAX_TABS = 5;
 // full canvas) and moves it to the front.
 export default function NotesPage() {
   const { project } = useShell();
-  const params = useParams<{ projectKey: string; boardId?: string }>();
+  const params = useParams<{ boardId?: string }>();
   const router = useRouter();
   const qc = useQueryClient();
-  const projectKey = params.projectKey;
+  const projectKey = useShellRoute().projectKey ?? '';
   const t = useTranslations('notes');
   const { can } = usePermissions();
 

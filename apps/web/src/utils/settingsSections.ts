@@ -23,8 +23,8 @@ import type { PermissionResource } from '@/lib/api/endpoints/roles';
 export type SettingsGroup = 'general' | 'configuration' | 'automation' | 'ai' | 'ai-team';
 
 // The project settings sections, each mounted as its own page at
-// /project/:projectKey/settings/:section, except the 'ai-team' group, which is
-// mounted at /project/:projectKey/ai-team/:section. The slug is the route param; the tab
+// /:team/:projectKey/settings/:section, except the 'ai-team' group, which is
+// mounted at /:team/:projectKey/agents/:section. The slug is the route param; the tab
 // components live in features/settings/components and take { project }. `resource`
 // is the permission resource that gates the section: read to view it, and the
 // create/edit/delete actions gate the controls inside. `group` places it in the

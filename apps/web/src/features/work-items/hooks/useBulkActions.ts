@@ -11,7 +11,7 @@ import {
 // endpoints. The bar calls these with the current id set; cache updates and
 // invalidation live in the mutations.
 export function useBulkActions(project: ProjectDetail) {
-  const key = project.project.key;
+  const key = project.project.ref;
   const update = useBulkUpdateIssues(key);
   const addLabels = useBulkAddLabels(key);
   const archive = useBulkArchiveIssues(key);

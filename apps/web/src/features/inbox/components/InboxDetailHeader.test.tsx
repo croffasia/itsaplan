@@ -20,7 +20,7 @@ let root: Root;
 let backCalls: number;
 let originalGlobalDescriptors: Map<string, PropertyDescriptor | undefined>;
 
-function render({ projectKey = 'TEST', issueSeq = 42, isMobile = false } = {}) {
+function render({ projectKey = 'acme.TEST', issueSeq = 42, isMobile = false } = {}) {
   act(() =>
     root.render(
       <NextIntlClientProvider locale="en" messages={{ inbox, issue }} timeZone="UTC">
@@ -42,7 +42,7 @@ beforeEach(async () => {
     replacedGlobals.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]),
   );
   dom = new JSDOM('<!doctype html><div id="root"></div>', {
-    url: 'https://example.test/project/TEST/inbox',
+    url: 'https://example.test/acme/TEST/inbox',
   });
   Object.defineProperties(globalThis, {
     window: { configurable: true, value: dom.window },
@@ -72,7 +72,7 @@ describe('InboxDetailHeader', () => {
     render();
     const link = document.querySelector('a');
     assert.ok(link);
-    assert.equal(link.getAttribute('href'), '/project/TEST/issue/42');
+    assert.equal(link.getAttribute('href'), '/acme/issue/TEST-42');
     assert.equal(link.getAttribute('aria-label'), issue.openAsPage);
     assert.equal(link.getAttribute('title'), issue.openAsPage);
     assert.equal(link.tabIndex, 0);
@@ -88,19 +88,19 @@ describe('InboxDetailHeader', () => {
     assert.equal(back.textContent, inbox.backToList);
     act(() => back.click());
     assert.equal(backCalls, 1);
-    assert.equal(document.querySelector('a')?.getAttribute('href'), '/project/TEST/issue/42');
+    assert.equal(document.querySelector('a')?.getAttribute('href'), '/acme/issue/TEST-42');
   });
 
   it('updates the destination when another notification is selected', () => {
     render();
     render({ issueSeq: 73 });
-    assert.equal(document.querySelector('a')?.getAttribute('href'), '/project/TEST/issue/73');
+    assert.equal(document.querySelector('a')?.getAttribute('href'), '/acme/issue/TEST-73');
     assert.ok(document.querySelector('#root')?.textContent?.includes('TEST-73'));
     assert.equal(backCalls, 0);
   });
 
   it('uses the canonical route builder for project keys', () => {
-    render({ projectKey: 'R&D', issueSeq: 9 });
-    assert.equal(document.querySelector('a')?.getAttribute('href'), '/project/R%26D/issue/9');
+    render({ projectKey: '12.R&D', issueSeq: 9 });
+    assert.equal(document.querySelector('a')?.getAttribute('href'), '/12/issue/R%26D-9');
   });
 });

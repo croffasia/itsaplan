@@ -30,7 +30,6 @@ import { useTranslations } from 'next-intl';
 import DocumentExportDialog from './DocumentExportDialog';
 
 export default function DocumentOptionsMenu({
-  projectKey,
   document,
   title,
   content,
@@ -52,7 +51,6 @@ export default function DocumentOptionsMenu({
   onDelete,
   onOpenHistory,
 }: {
-  projectKey: string;
   document: ProjectDocument;
   title: string;
   content: () => string;
@@ -208,7 +206,6 @@ export default function DocumentOptionsMenu({
 
       <DocumentExportDialog
         open={exportOpen}
-        projectKey={projectKey}
         documentId={document.id}
         title={title}
         content={content}

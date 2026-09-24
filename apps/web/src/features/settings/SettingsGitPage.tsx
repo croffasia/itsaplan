@@ -10,7 +10,7 @@ import SettingsGit from './components/git/SettingsGit';
 
 const section = settingsSection('git');
 
-// The repository integration page (/project/:projectKey/settings/git).
+// The repository integration page (/:team/:projectKey/settings/git).
 export default function SettingsGitPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();

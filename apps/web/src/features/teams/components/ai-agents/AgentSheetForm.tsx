@@ -203,7 +203,7 @@ export function AgentSheetForm({
         icon={Sparkles}
         title={t('noSkills')}
         hint={t('noSkillsHint')}
-        href={teamSectionPath(teamId, 'agent-skills')}
+        href={teamSectionPath(team?.ref ?? String(teamId), 'agent-skills')}
         linkLabel={t('goToSkills')}
       />
     ) : (
@@ -231,7 +231,7 @@ export function AgentSheetForm({
         icon={Wrench}
         title={t('noTools')}
         hint={t('noToolsHint')}
-        href={teamSectionPath(teamId, 'agent-tools')}
+        href={teamSectionPath(team?.ref ?? String(teamId), 'agent-tools')}
         linkLabel={t('goToTools')}
       />
     ) : (

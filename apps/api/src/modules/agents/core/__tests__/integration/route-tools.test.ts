@@ -4,7 +4,7 @@ import { eq } from 'drizzle-orm';
 import { authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
-import { getProjectByKey } from '#modules/projects/service';
+import { getProjectByRef } from '#modules/projects/service';
 import { getAgentById, getInternalAgentApiKey } from '../../service';
 import { actionCatalog, buildRouteTools } from '../../runtime/tools/route-tools';
 import { AGENT_ACTIONS, ALWAYS_ON_ACTIONS } from '../../runtime/tools/catalog';
@@ -46,7 +46,7 @@ async function toolsFor(asOwner: Api, tools: string[], roleId?: number) {
   if (roleId !== undefined) {
     await setAgentProjectRole(asOwner, 'MKT', created.data!.agent.userId, roleId);
   }
-  const project = await getProjectByKey('MKT');
+  const project = await getProjectByRef('MKT', '');
   if (!project) throw new Error('Test project was not created');
   const agent = await getAgentById(agentId, project.id);
   if (!agent) throw new Error('Test agent was not found');
@@ -190,7 +190,7 @@ describe('internal agent route tools', () => {
       kind: 'internal',
     });
     const agentId = created.data?.agent.id;
-    const project = await getProjectByKey('MKT');
+    const project = await getProjectByRef('MKT', '');
     if (agentId === undefined || !project) throw new Error('Test agent was not created');
 
     // An agent from before the key existed: no stored secret, and no place in the

@@ -88,7 +88,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Create a project',
         description:
-          'Create a project you own. `key` is the unique, immutable prefix for issue ids ' +
+          'Create a project you own. `key` is the immutable prefix for issue ids, unique within the team ' +
           "(e.g. 'MKT' -> 'MKT-1'). Seeds the default columns and the issue types of the " +
           'chosen `preset`.',
         ...mcpTool('create_project'),

@@ -53,7 +53,7 @@ export function buildIssuePrompt(
   const labels = issue.labelIds
     .map((id) => project.labels.find((l) => l.id === id)?.name)
     .filter((name): name is string => Boolean(name));
-  const url = `${window.location.origin}${issuePath(project.project.key, issue.sequenceNumber)}`;
+  const url = `${window.location.origin}${issuePath(project.project.ref, issue.sequenceNumber)}`;
 
   const branch = buildIssueBranchName(issue, user);
 

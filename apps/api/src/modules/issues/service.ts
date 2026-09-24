@@ -90,7 +90,7 @@ export interface IssueRow {
   id: number;
   projectId: number;
   // Project-scoped sequence number (the "42" in "MKT-42"). Used to address the
-  // issue by its human number in URLs (/project/MKT/issue/42).
+  // issue by its human number in URLs (/acme/issue/MKT-42).
   sequenceNumber: number;
   identifier: string;
   typeId: number | null;
@@ -655,7 +655,7 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
 }
 
 // Loads an issue by its project-scoped sequence number (the human number in a URL
-// like /project/MKT/issue/42). Returns null if the project has no issue with that
+// like /acme/issue/MKT-42). Returns null if the project has no issue with that
 // number. Archived issues resolve too, so a link to one still opens.
 export async function getIssueBySequence(
   projectId: number,

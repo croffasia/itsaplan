@@ -26,7 +26,7 @@ function firstTabWithInitiatives(counts: InitiativeCounts | undefined): Initiati
 export default function InitiativesRedirect() {
   const { project } = useShell();
   const router = useRouter();
-  const projectKey = project?.project.key ?? null;
+  const projectKey = project?.project.ref ?? null;
   const { data: counts, isError } = useInitiativeCountsQuery(projectKey);
 
   useEffect(() => {

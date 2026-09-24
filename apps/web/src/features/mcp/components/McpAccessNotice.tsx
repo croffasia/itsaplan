@@ -32,7 +32,7 @@ export default function McpAccessNotice({
   if (canManage) {
     action = (
       <Link
-        href={teamSectionPath(teamId, 'mcp')}
+        href={teamSectionPath(team?.ref ?? String(teamId), 'mcp')}
         className="inline-block text-sm font-medium underline underline-offset-4"
       >
         {t('openTeamSettings')}

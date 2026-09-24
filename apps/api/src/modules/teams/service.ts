@@ -15,7 +15,8 @@ import {
   user,
 } from '@repo/db';
 import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
-import { HttpError, iso } from '#shared/lib';
+import { HttpError, iso, pgErrorCode } from '#shared/lib';
+import { isReservedSlug, projectRefSql, teamRef } from './ref';
 import { getLimits } from '#shared/limits';
 import { defaultMemberPermissions, fullPermissions, type Permissions } from '#shared/permissions';
 import {
@@ -48,6 +49,9 @@ export function runsTeam(standing: TeamStanding | null): boolean {
 export interface TeamRow {
   id: number;
   name: string;
+  slug: string | null;
+  // How web URLs name the team: the slug, or the id while it has none.
+  ref: string;
   // Whether the team is reachable over MCP at all. Off closes its own resources and
   // every project it owns, whichever projects it covers.
   mcpEnabled: boolean;
@@ -94,6 +98,7 @@ export interface TeamMemberRow {
 export interface TeamProjectRow {
   id: number;
   key: string;
+  ref: string;
   name: string;
   description: string;
   // Whether the team's MCP reach covers this project. Only counts while the team's
@@ -115,6 +120,7 @@ export interface TeamProjectPage {
 export interface TeamProjectOption {
   id: number;
   key: string;
+  ref: string;
   name: string;
   mcpEnabled: boolean;
 }
@@ -192,6 +198,7 @@ async function loadTeamRows(userId: string, teamId?: number): Promise<TeamRow[]>
     .select({
       id: team.id,
       name: team.name,
+      slug: team.slug,
       mcpEnabled: team.mcpEnabled,
       role: teamMember.role,
       source: teamMember.source,
@@ -280,6 +287,8 @@ async function loadTeamRows(userId: string, teamId?: number): Promise<TeamRow[]>
     return {
       id: row.id,
       name: row.name,
+      slug: row.slug,
+      ref: teamRef(row),
       mcpEnabled: row.mcpEnabled,
       role: standing,
       source: row.source as MemberSource,
@@ -493,6 +502,7 @@ export async function listTeamProjects(
       .select({
         id: project.id,
         key: project.key,
+        ref: projectRefSql,
         name: project.name,
         description: project.description,
         mcpEnabled: project.mcpEnabled,
@@ -501,9 +511,10 @@ export async function listTeamProjects(
         isMember: sql<boolean>`bool_or(${projectMember.userId} = ${userId})`,
       })
       .from(project)
+      .innerJoin(team, eq(team.id, project.teamId))
       .leftJoin(projectMember, eq(projectMember.projectId, project.id))
       .where(where)
-      .groupBy(project.id)
+      .groupBy(project.id, team.id)
       .orderBy(project.key)
       .limit(options.limit)
       .offset(options.offset),
@@ -546,6 +557,7 @@ export async function listTeamProjects(
     items: projects.map((p) => ({
       id: p.id,
       key: p.key,
+      ref: p.ref,
       name: p.name,
       description: p.description,
       mcpEnabled: p.mcpEnabled,
@@ -569,10 +581,12 @@ export async function listTeamProjectOptions(
     .select({
       id: project.id,
       key: project.key,
+      ref: projectRefSql,
       name: project.name,
       mcpEnabled: project.mcpEnabled,
     })
     .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
     .where(visibleTeamProjects(teamId, userId, standing))
     .orderBy(project.key);
 }
@@ -726,6 +740,8 @@ export async function createTeam(name: string, ownerId: string): Promise<TeamRow
     return {
       id: row.id,
       name: row.name,
+      slug: row.slug,
+      ref: teamRef(row),
       mcpEnabled: row.mcpEnabled,
       role: 'owner',
       source: 'invite',
@@ -743,8 +759,24 @@ export async function createTeam(name: string, ownerId: string): Promise<TeamRow
   });
 }
 
-export async function renameTeam(teamId: number, name: string, userId: string): Promise<TeamRow> {
-  await db.update(team).set({ name }).where(eq(team.id, teamId));
+export async function updateTeam(
+  teamId: number,
+  changes: { name?: string; slug?: string | null },
+  userId: string,
+): Promise<TeamRow> {
+  if (changes.slug && isReservedSlug(changes.slug)) {
+    throw new HttpError(400, `'${changes.slug}' is reserved and cannot be a team slug`);
+  }
+  try {
+    // Drizzle skips undefined values, and throws when none are left to set.
+    if (changes.name !== undefined || changes.slug !== undefined) {
+      await db.update(team).set(changes).where(eq(team.id, teamId));
+    }
+  } catch (err) {
+    if (pgErrorCode(err) === '23505')
+      throw new HttpError(409, 'Another team already uses this slug');
+    throw err;
+  }
   const [row] = await loadTeamRows(userId, teamId);
   return row;
 }

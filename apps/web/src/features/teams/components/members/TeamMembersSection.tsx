@@ -157,7 +157,8 @@ export default function TeamMembersSection({ teamId }: { teamId: number }) {
                     onRemove={member.agentId == null ? setRemoving : undefined}
                     onOpen={
                       member.agentId != null
-                        ? () => router.push(teamSectionPath(teamId, 'ai-agents'))
+                        ? () =>
+                            router.push(teamSectionPath(team?.ref ?? String(teamId), 'ai-agents'))
                         : undefined
                     }
                   />

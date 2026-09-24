@@ -108,7 +108,7 @@ export default function TeamProjectPanel({
               <TeamProjectMembers
                 teamId={teamId}
                 projectId={project.id}
-                projectKey={project.key}
+                projectKey={project.ref}
                 ownerCount={project.owners.length}
                 viewerId={session?.user.id}
                 projectName={project.name}

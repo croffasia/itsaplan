@@ -60,7 +60,7 @@ export function useIssueCommands(
   const presetLabel = useDueDatePresetLabel();
   const { onOpenIssue } = useShell();
   const { data: session } = useSession();
-  const projectKey = project?.project.key ?? null;
+  const projectKey = project?.project.ref ?? null;
   const issueQuery = useIssueQuery(issueId);
   const issue = issueQuery.data ?? null;
   const updateIssue = useUpdateIssue(projectKey);

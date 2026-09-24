@@ -67,7 +67,7 @@ export default function ProjectSwitcherList({
           <ProjectSwitcherTeamGroup
             key={group.teamId}
             group={group}
-            currentProjectKey={current?.key ?? null}
+            currentProjectKey={current?.ref ?? null}
             open={
               searching ||
               (openTeams[group.teamId] ??
@@ -85,7 +85,7 @@ export default function ProjectSwitcherList({
             hiddenCount={hiddenCount}
             expanded={showHidden}
             onExpandedChange={onShowHiddenChange}
-            currentProjectKey={current?.key ?? null}
+            currentProjectKey={current?.ref ?? null}
             onSelectProject={onSelectProject}
           />
         )}

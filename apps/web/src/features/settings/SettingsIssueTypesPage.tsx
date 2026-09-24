@@ -12,7 +12,7 @@ import SettingsIssueTypes from './components/issue-types/SettingsIssueTypes';
 
 const section = settingsSection('issue-types');
 
-// The Issue types settings page (/project/:projectKey/settings/issue-types).
+// The Issue types settings page (/:team/:projectKey/settings/issue-types).
 export default function SettingsIssueTypesPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
@@ -25,7 +25,7 @@ export default function SettingsIssueTypesPage() {
       description={sectionText.description}
       actions={
         <IssueTypesToolbar
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           resource={section.resource}
           types={project.issueTypes}
           onAdd={() => setAdding(true)}

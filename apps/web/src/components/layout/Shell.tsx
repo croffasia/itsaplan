@@ -27,7 +27,7 @@ import { ChatPanel } from '@/features/ai-chat/components/panel/ChatPanel';
 import { useChatPanel } from '@/features/ai-chat/hooks/useChatPanel';
 import { useTranslations } from 'next-intl';
 
-// The layout for /project/:projectKey and its children (the work items view and the
+// The layout for /:team/:projectKey and its children (the work items view and the
 // settings pages). It owns the project data, the view editor and the
 // project-level overlays, renders the sidebar + header chrome, and passes the
 // project state to the active child through React context (see lib/shellContext).

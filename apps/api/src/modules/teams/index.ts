@@ -47,7 +47,7 @@ import {
   listTeamProjects,
   listTeams,
   removeTeamMember,
-  renameTeam,
+  updateTeam,
   setTeamMcp,
   setTeamMemberRole,
   teamOwnsProject,
@@ -262,17 +262,17 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
     '/teams/:teamId',
     async ({ body, membership }) => {
       const name = body.name?.trim();
-      if (!name) throw new HttpError(400, 'Team name is required');
-      return renameTeam(membership.teamId, name, membership.userId);
+      if (name === '') throw new HttpError(400, 'Team name is required');
+      return updateTeam(membership.teamId, { name, slug: body.slug }, membership.userId);
     },
     {
       teamOwner: true,
       params: teamParams,
       body: updateTeamBody,
-      response: { 200: TeamResponse, ...errors(400, 401, 403, 404) },
+      response: { 200: TeamResponse, ...errors(400, 401, 403, 404, 409) },
       detail: {
-        summary: 'Rename a team',
-        description: 'Rename a team you own.',
+        summary: 'Update a team',
+        description: 'Rename a team you own, or set the slug its web URLs use.',
       },
     },
   )

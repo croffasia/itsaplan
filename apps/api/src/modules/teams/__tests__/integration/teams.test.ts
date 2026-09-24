@@ -781,6 +781,56 @@ describe('teams', () => {
     });
   });
 
+  describe('slug', () => {
+    it('answers with the team id as its ref until a slug is set', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+      expect((await api.teams.get()).data?.[0]).toMatchObject({ slug: null, ref: String(teamId) });
+
+      const set = await api.teams({ teamId }).patch({ slug: 'acme' });
+      expect(set.status).toBe(200);
+      expect(set.data).toMatchObject({ slug: 'acme', ref: 'acme' });
+
+      const cleared = await api.teams({ teamId }).patch({ slug: null });
+      expect(cleared.data).toMatchObject({ slug: null, ref: String(teamId) });
+    });
+
+    it('keeps the name when only the slug changes', async () => {
+      const { user, api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+
+      const res = await api.teams({ teamId }).patch({ slug: 'acme' });
+      expect(res.data).toMatchObject({ name: user.username, slug: 'acme' });
+    });
+
+    it('rejects a slug outside the allowed form', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+
+      for (const slug of ['a', '42', '1acme', 'Acme', 'ac.me', 'acme-', 'a'.repeat(41)]) {
+        expect((await api.teams({ teamId }).patch({ slug })).status).toBe(400);
+      }
+      expect((await api.teams({ teamId }).patch({ slug: 'a'.repeat(40) })).status).toBe(200);
+    });
+
+    it('rejects a slug the web app uses as a path', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+
+      expect((await api.teams({ teamId }).patch({ slug: 'account' })).status).toBe(400);
+    });
+
+    it('rejects a slug another team uses with 409', async () => {
+      const { api } = await signUpClient();
+      const other = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+      const otherTeamId = (await other.api.teams.get()).data![0].id;
+      await other.api.teams({ teamId: otherTeamId }).patch({ slug: 'acme' });
+
+      expect((await api.teams({ teamId }).patch({ slug: 'acme' })).status).toBe(409);
+    });
+  });
+
   describe('member rank', () => {
     it('promotes a member to manager', async () => {
       const owner = await signUpClient();

@@ -473,7 +473,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   )
 
   // Reads an issue by its project-scoped sequence number (the human number in a
-  // URL like /project/MKT/issue/42), with its custom field values. Backs the
+  // URL like /acme/issue/MKT-42), with its custom field values. Backs the
   // identifier-based issue page. Same read permission as the by-id read.
   .get(
     '/projects/:projectKey/issues/:sequenceNumber',

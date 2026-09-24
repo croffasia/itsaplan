@@ -17,7 +17,7 @@ import SettingsSection from '@/components/common/page/SettingsSection';
 // immediately; there is no form-level save.
 export default function SettingsGit({ project }: { project: ProjectDetail }) {
   const t = useTranslations('settings.git');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const { can } = usePermissions();
   const settingsQuery = useGitSettingsQuery(projectKey);
   const updateSettings = useUpdateGitSettings(projectKey);

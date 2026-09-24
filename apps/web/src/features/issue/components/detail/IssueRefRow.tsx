@@ -56,7 +56,7 @@ export default function IssueRefRow({
       <Link
         {...historyScrollRestorationLinkProps}
         {...historyScrollRestorationAnchorProps(scrollAnchorKey)}
-        href={issuePath(project.project.key, issue.sequenceNumber)}
+        href={issuePath(project.project.ref, issue.sequenceNumber)}
         className={labelClass}
       >
         {label}

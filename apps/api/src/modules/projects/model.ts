@@ -14,7 +14,10 @@ import { COPY_INCLUDE_KEYS } from './copy';
 export const PROJECT_DESCRIPTION_LIMIT = 2000;
 
 const projectBody = t.Object({
-  key: t.String({ minLength: 1 }),
+  key: t.String({
+    pattern: '^[A-Z][A-Z0-9]{0,9}$',
+    description: 'Upper-case letters and digits, starting with a letter, up to 10 characters.',
+  }),
   name: t.String({ minLength: 1 }),
   description: t.Optional(t.String({ maxLength: PROJECT_DESCRIPTION_LIMIT })),
 });
@@ -95,7 +98,11 @@ export const ProjectResponse = t.Object({
   id: t.Number(),
   teamId: t.Number(),
   teamName: t.String(),
+  teamRef: t.String({ description: "The team's slug, or its id while it has none." }),
   key: t.String(),
+  ref: t.String({
+    description: "'<teamRef>.<key>': how routes containing {projectKey} name this project.",
+  }),
   name: t.String(),
   description: t.String(),
   mcpEnabled: t.Boolean(),

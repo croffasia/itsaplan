@@ -11,7 +11,7 @@ import SettingsCustomFields from './components/custom-fields/SettingsCustomField
 
 const section = settingsSection('custom-fields');
 
-// The Custom fields settings page (/project/:projectKey/settings/custom-fields).
+// The Custom fields settings page (/:team/:projectKey/settings/custom-fields).
 export default function SettingsCustomFieldsPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
@@ -22,7 +22,7 @@ export default function SettingsCustomFieldsPage() {
       description={sectionText.description}
       actions={
         <CustomFieldsToolbar
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           resource={section.resource}
           fields={project.customFields}
           types={project.issueTypes}

@@ -56,7 +56,7 @@ export default function IssueSubtasksPanel({
 
   const detach = (subtaskId: number, parentId: number) =>
     setParent.mutate({
-      projectKey: project.project.key,
+      projectKey: project.project.ref,
       issueId: subtaskId,
       parentId: null,
       previousParentId: parentId,
@@ -134,7 +134,7 @@ export default function IssueSubtasksPanel({
 
       {attaching && (
         <IssuePickerDialog
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           title={t('addExisting')}
           prompt={t('searchPrompt')}
           // The hierarchy is one level deep, so an issue that already hangs under
@@ -142,7 +142,7 @@ export default function IssueSubtasksPanel({
           exclude={(hit) => hit.id === issue.id || hit.parentId !== null}
           onPick={(hit) => {
             setParent.mutate({
-              projectKey: project.project.key,
+              projectKey: project.project.ref,
               issueId: hit.id,
               parentId: issue.id,
             });

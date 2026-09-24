@@ -57,7 +57,7 @@ export default function ProjectSwitcherTeamGroup({
         )}
         {group.projects.map((project) => (
           <ProjectSwitcherProjectRow
-            key={project.key}
+            key={project.ref}
             project={project}
             currentProjectKey={currentProjectKey}
             onSelectProject={onSelectProject}

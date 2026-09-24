@@ -50,11 +50,14 @@
   "info": {
     "team": "Time",
     "teamHint": "O nome sob o qual os projetos do time são agrupados.",
+    "slug": "URL",
+    "slugHint": "Letras minúsculas, números e hifens. Até você definir, os links usam o número da equipe.",
+    "slugInvalid": "Use de 2 a 40 letras minúsculas, números ou hifens, começando com uma letra.",
     "role": "Sua função",
     "created": "Criado",
     "leads": "Donos e gerentes",
     "leadsHint": "Pessoas que podem gerenciar este time e seus projetos.",
-    "saved": "Nome do time salvo",
+    "saved": "Equipe salva",
     "leaveHint": "Você mantém os projetos de que é membro. Para entrar de novo, um dono precisa readicioná-lo."
   },
   "columns": {

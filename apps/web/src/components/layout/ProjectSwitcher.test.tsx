@@ -40,7 +40,9 @@ const projects: Project[] = Array.from({ length: 20 }, (_, index) => ({
   id: index + 1,
   teamId: 1,
   teamName: 'Engineering',
+  teamRef: 'eng',
   key: `P${String(index + 1).padStart(2, '0')}`,
+  ref: `eng.P${String(index + 1).padStart(2, '0')}`,
   name: `Project ${index + 1}`,
   description: '',
   mcpEnabled: true,
@@ -96,7 +98,7 @@ async function render(mobile = true) {
             <Sidebar>
               <ProjectSwitcher
                 projects={projects}
-                currentProjectKey="P01"
+                currentProjectKey="eng.P01"
                 onSelectProject={(key) => selections.push(key)}
               />
             </Sidebar>
@@ -144,7 +146,7 @@ beforeEach(async () => {
     replacedGlobals.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]),
   );
   dom = new JSDOM('<!doctype html><div id="root"></div>', {
-    url: 'https://example.test/project/P01',
+    url: 'https://example.test/eng/P01',
     pretendToBeVisual: true,
   });
   for (const name of replacedGlobals) {
@@ -239,7 +241,7 @@ describe('ProjectSwitcher', () => {
     await render();
     assert.equal(document.activeElement, element('[data-slot="popover-content"]'));
     await click('[data-value="project-2"]');
-    assert.deepEqual(selections, ['P02']);
+    assert.deepEqual(selections, ['eng.P02']);
     assert.equal(document.querySelector('[data-slot="popover-content"]'), null);
   });
 
@@ -253,7 +255,7 @@ describe('ProjectSwitcher', () => {
     assert.equal(touch(input, 'touchmove', 140).defaultPrevented, false);
     await key(input, 'ArrowDown');
     await key(input, 'Enter');
-    assert.deepEqual(selections, ['P02']);
+    assert.deepEqual(selections, ['eng.P02']);
   });
 
   it('restores picker focus and scrolling after closing nested project actions', async () => {

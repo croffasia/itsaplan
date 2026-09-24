@@ -21,7 +21,7 @@ export default function IssueDetail({
   issueId: number;
   onClose: () => void;
   // Passed the issue's project-scoped number so the host can open the page URL
-  // (/project/KEY/issue/42); null while the issue is still loading.
+  // (/acme/issue/MKT-42); null while the issue is still loading.
   onExpand: (sequenceNumber: number | null) => void;
 }) {
   const t = useTranslations('issue');

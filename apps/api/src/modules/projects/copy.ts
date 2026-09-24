@@ -288,6 +288,7 @@ export async function copyProject(
     const proj = await mapProject({
       ...row,
       teamName: ownerTeam.name,
+      teamSlug: ownerTeam.slug,
       teamMcpEnabled: ownerTeam.mcpEnabled,
     });
     await tx.insert(projectMember).values({ projectId: proj.id, userId: ownerId, role: 'owner' });
@@ -549,14 +550,14 @@ export async function copyProject(
               content: replaceAssetReferences(
                 source.content,
                 source.id,
-                input.key,
+                proj,
                 targetDocumentId,
                 publicIds,
               ),
               contentJson: replaceAssetReferences(
                 source.contentJson,
                 source.id,
-                input.key,
+                proj,
                 targetDocumentId,
                 publicIds,
               ),

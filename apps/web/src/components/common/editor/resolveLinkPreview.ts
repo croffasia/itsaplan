@@ -37,7 +37,8 @@ async function resolveInternalLinkPreview(
       target.kind === 'issue'
         ? await getIssueBySeq(target.projectKey, target.id, signal)
         : await getIssue(target.id, signal);
-    const projectKey = issue.identifier.replace(/-\d+$/, '');
+    const projectKey =
+      target.kind === 'issue' ? target.projectKey : issue.identifier.replace(/-\d+$/, '');
     const project = await getProject(projectKey, signal);
     return {
       ...empty,

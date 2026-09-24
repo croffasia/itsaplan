@@ -36,7 +36,7 @@ export default function Home() {
     const visible = projects.filter((project) => !project.isHidden);
     if (visible.length === 0) return;
     const last = visible.find((p) => p.id === prefs?.lastProjectId);
-    const target = last?.key ?? visible.find((p) => p.isFavorite)?.key ?? visible[0]?.key;
+    const target = last?.ref ?? visible.find((p) => p.isFavorite)?.ref ?? visible[0]?.ref;
     if (target) router.replace(startPagePath(target, prefs?.startPage ?? 'work-items'));
   }, [projects, prefs, prefsPending, router]);
 

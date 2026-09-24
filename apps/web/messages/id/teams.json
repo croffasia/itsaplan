@@ -50,11 +50,14 @@
   "info": {
     "team": "Tim",
     "teamHint": "Nama tim tempat proyek dikelompokkan.",
+    "slug": "URL",
+    "slugHint": "Huruf kecil, angka, dan tanda hubung. Sebelum diatur, tautan memakai nomor tim.",
+    "slugInvalid": "Gunakan 2–40 huruf kecil, angka, atau tanda hubung, diawali huruf.",
     "role": "Peran Anda",
     "created": "Dibuat",
     "leads": "Pemilik dan manajer",
     "leadsHint": "Orang yang dapat mengelola tim ini beserta proyeknya.",
-    "saved": "Nama tim disimpan",
+    "saved": "Tim disimpan",
     "leaveHint": "Anda tetap menjadi anggota proyek yang Anda ikuti. Untuk bergabung kembali, pemilik harus menambahkan Anda lagi."
   },
   "columns": {

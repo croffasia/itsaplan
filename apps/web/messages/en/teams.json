@@ -50,11 +50,14 @@
   "info": {
     "team": "Team",
     "teamHint": "The name the team's projects are grouped under.",
+    "slug": "URL",
+    "slugHint": "Lowercase letters, numbers and hyphens. Links use the team number until you set one.",
+    "slugInvalid": "Use 2–40 lowercase letters, numbers or hyphens, starting with a letter.",
     "role": "Your role",
     "created": "Created",
     "leads": "Owners and managers",
     "leadsHint": "People who can manage this team and its projects.",
-    "saved": "Team name saved",
+    "saved": "Team saved",
     "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back."
   },
   "columns": {

@@ -15,7 +15,7 @@ import { readCyclesView } from './utils/cyclesView';
 export default function CyclesRedirect() {
   const { project } = useShell();
   const router = useRouter();
-  const projectKey = project?.project.key ?? null;
+  const projectKey = project?.project.ref ?? null;
 
   useEffect(() => {
     if (!projectKey) return;

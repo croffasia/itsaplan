@@ -21,7 +21,7 @@ export default function ProjectSwitcherProjectRow({
     <div className="flex items-center gap-0.5">
       <CommandItem
         value={`project-${project.id}`}
-        onSelect={() => onSelectProject(project.key)}
+        onSelect={() => onSelectProject(project.ref)}
         className="min-w-0 flex-1 gap-2 p-2"
       >
         <div className="min-w-0 flex-1 space-y-1">
@@ -48,7 +48,7 @@ export default function ProjectSwitcherProjectRow({
             )}
           </span>
         </div>
-        {project.key === currentProjectKey && <Check className="size-4 shrink-0" />}
+        {project.ref === currentProjectKey && <Check className="size-4 shrink-0" />}
       </CommandItem>
       <ProjectSwitcherProjectActions project={project} />
     </div>

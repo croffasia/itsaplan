@@ -120,6 +120,51 @@ export async function deleteAttachmentObject(key: string): Promise<void> {
   });
 }
 
+const VIEWABLE_IMAGE = /^image\/(png|jpeg|gif|webp)$/i;
+const MAX_IMAGE_MB = 5;
+const MAX_IMAGES = 8;
+const MAX_VIEW_MB = 10;
+
+export const VIEWABLE_IMAGES = `PNG, JPEG, GIF and WebP images of up to ${MAX_IMAGE_MB} MB, at most ${MAX_IMAGES} images and ${MAX_VIEW_MB} MB per call`;
+
+// The images go into the assistant's context whole, so a call is bounded; an attachment
+// left out comes back as its DTO, whose url fetches it.
+export async function viewAttachments<
+  Row extends {
+    publicId: string;
+    s3Key: string;
+    filename: string;
+    contentType: string;
+    sizeBytes: number;
+  },
+  Dto,
+>(rows: Row[], dto: (row: Row) => Dto) {
+  const images: { id: string; filename: string; contentType: string; data: string }[] = [];
+  const others: Dto[] = [];
+  let bytes = 0;
+  for (const row of rows) {
+    const fits =
+      VIEWABLE_IMAGE.test(row.contentType) &&
+      row.sizeBytes <= MAX_IMAGE_MB * MB &&
+      images.length < MAX_IMAGES &&
+      bytes + row.sizeBytes <= MAX_VIEW_MB * MB;
+    if (!fits) {
+      others.push(dto(row));
+      continue;
+    }
+    const object = await getObject(row.s3Key).catch((error) => {
+      throw new HttpError(
+        502,
+        `Could not read ${row.filename}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    });
+    const data = Buffer.from(await new Response(object.body).arrayBuffer()).toString('base64');
+    images.push({ id: row.publicId, filename: row.filename, contentType: row.contentType, data });
+    bytes += row.sizeBytes;
+  }
+  return { images, others };
+}
+
 export function attachmentEtag(s3Key: string): string {
   return `"${createHash('sha256').update(s3Key).digest('base64url').slice(0, 22)}"`;
 }

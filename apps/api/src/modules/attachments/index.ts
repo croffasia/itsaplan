@@ -1,12 +1,17 @@
 import { Elysia, t } from 'elysia';
 import { noContent } from '#shared/http';
 import { authContext } from '#shared/auth-context';
-import { entityGuard } from '#shared/guards';
+import { assertMcpAllowed, entityGuard } from '#shared/guards';
+import { assertPermission, assertProjectFeature } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { pinnedFetch } from '#shared/net';
-import { mcpTool } from '#mcp/generate';
+import { mcpImageTool, mcpTool } from '#mcp/generate';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { getIssueProjectId } from '#modules/issues/service';
+import {
+  getInitiativeAttachment,
+  getInitiativeAttachmentProjectId,
+} from '#modules/initiatives/attachments';
 import { getStorageSettings, MB } from '@repo/db';
 import {
   AttachmentResponse,
@@ -16,6 +21,8 @@ import {
   publicIdParams,
   rawAttachmentQuery,
   uploadAttachmentBody,
+  viewAttachmentQuery,
+  ViewAttachmentsResponse,
 } from './model';
 import {
   createAttachment,
@@ -33,12 +40,16 @@ import {
   deleteAttachmentObject,
   safeAttachmentFilename,
   storeAttachmentObject,
+  viewAttachments,
+  VIEWABLE_IMAGES,
 } from './storage';
+
+const UUID = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
 
 // Public shape returned to the UI: never exposes the internal serial id or the
 // object key. `url` is the public, no-auth download route — it can be embedded in
 // an issue description and fetched by external services.
-function attachmentDto(a: AttachmentRow) {
+function attachmentDto(a: Omit<AttachmentRow, 'id' | 'issueId'>) {
   return {
     id: a.publicId,
     filename: a.filename,
@@ -66,6 +77,30 @@ export const attachmentRoutes = new Elysia({
       if (!existing) return null;
       return getIssueProjectId(existing.issueId);
     }),
+    // For /attachments/view, which takes the attachment of an issue or an initiative:
+    // the checks entityGuard makes, for whichever of the two it is.
+    viewableAttachment: {
+      async resolve({ query, user, request }) {
+        const id = String(query.attachment ?? '').match(UUID)?.[0];
+        if (!id) throw new HttpError(404, 'Attachment not found');
+        const issueRow = await getAttachmentByPublicId(id);
+        if (issueRow) {
+          const projectId = await getIssueProjectId(issueRow.issueId);
+          if (projectId == null) throw new HttpError(404, 'Attachment not found');
+          await assertPermission(projectId, user, 'work_items', 'read');
+          await assertMcpAllowed(projectId, request.headers);
+          return { viewed: { row: issueRow, dto: attachmentDto(issueRow) } };
+        }
+        const row = await getInitiativeAttachment(id);
+        const projectId = await getInitiativeAttachmentProjectId(id);
+        if (!row || projectId == null) throw new HttpError(404, 'Attachment not found');
+        await assertPermission(projectId, user, 'initiatives', 'read');
+        await assertProjectFeature(projectId, 'initiatives');
+        await assertMcpAllowed(projectId, request.headers);
+        const dto = { ...attachmentDto(row), url: `/initiative-attachments/${id}/raw` };
+        return { viewed: { row, dto } };
+      },
+    },
   })
   .get(
     '/issues/:issueId/attachments',
@@ -277,6 +312,37 @@ export const attachmentRoutes = new Elysia({
         summary: 'Delete an attachment',
         description: 'Delete an attachment. Irreversible.',
         ...mcpTool('delete_attachment'),
+      },
+    },
+  )
+
+  .get('/attachments/view', ({ viewed }) => viewAttachments([viewed.row], () => viewed.dto), {
+    query: viewAttachmentQuery,
+    viewableAttachment: true,
+    response: { 200: ViewAttachmentsResponse, ...commonErrors },
+    detail: {
+      summary: 'View an attachment',
+      description:
+        'Look at one image of an issue or an initiative, given the url a result carries ' +
+        `for it or its id. Returns ${VIEWABLE_IMAGES}; any other file comes back in ` +
+        '`others` with its url.',
+      ...mcpImageTool('view_attachment'),
+    },
+  })
+
+  .get(
+    '/issues/:issueId/images',
+    async ({ params }) => viewAttachments(await listAttachments(params.issueId), attachmentDto),
+    {
+      params: issueParams,
+      issueAttachment: 'read',
+      response: { 200: ViewAttachmentsResponse, ...commonErrors },
+      detail: {
+        summary: 'View the images of an issue',
+        description:
+          `Look at the images attached to an issue, by its numeric id: ${VIEWABLE_IMAGES}. ` +
+          'Every other attachment comes back in `others` with its url.',
+        ...mcpImageTool('view_issue_images'),
       },
     },
   )

@@ -319,13 +319,17 @@
     "noAccess": "你没有权限查看该团队的工具。"
   },
   "agents": {
-    "projectDefaultsTitle": "新项目的代理",
+    "projectDefaultsColumn": "新项目",
     "projectDefaultsHint": "所选代理会加入此团队创建的每个新项目。现有项目及项目副本保留各自的代理。",
     "projectDefaultAria": "将 {agent} 添加到新项目",
     "projectDefaultsReadOnly": "团队所有者和管理员选择加入新项目的代理。",
     "projectDefaultsSaved": "已保存默认代理",
     "projectDefaultOn": "开启",
     "projectDefaultOff": "关闭",
+    "joinNewProjects": "添加到新项目",
+    "joinNewProjectsHint": "该代理会加入此团队的每个新项目。",
+    "selectAllProjects": "全选",
+    "clearProjects": "全部取消",
     "newAgent": "新建 AI 代理",
     "create": "创建 AI 代理",
     "save": "保存 AI 代理",

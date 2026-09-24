@@ -319,13 +319,17 @@
     "noAccess": "Você não tem acesso às ferramentas deste time."
   },
   "agents": {
-    "projectDefaultsTitle": "Agentes para novos projetos",
+    "projectDefaultsColumn": "Novos projetos",
     "projectDefaultsHint": "Os agentes selecionados entram em cada novo projeto desta equipe. Projetos existentes e cópias mantêm seus agentes.",
     "projectDefaultAria": "Adicionar {agent} aos novos projetos",
     "projectDefaultsReadOnly": "Proprietários e gerentes da equipe escolhem quais agentes entram em novos projetos.",
     "projectDefaultsSaved": "Agentes padrão salvos",
     "projectDefaultOn": "Ativado",
     "projectDefaultOff": "Desativado",
+    "joinNewProjects": "Adicionar a novos projetos",
+    "joinNewProjectsHint": "O agente entra em cada novo projeto desta equipe.",
+    "selectAllProjects": "Selecionar todos",
+    "clearProjects": "Desmarcar todos",
     "newAgent": "Novo agente de IA",
     "create": "Criar agente de IA",
     "save": "Salvar agente de IA",

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Check, Minus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
@@ -16,7 +15,7 @@ import { TeamAiAgentRow } from './TeamAiAgentRow';
 import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
 import { integrationLabel } from '@/utils/integrationLabels';
-import { Switch } from '@/components/ui/switch';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import {
   useTeam,
   useTeamProjectDefaultsQuery,
@@ -38,6 +37,8 @@ export default function TeamAiAgents() {
   const team = useTeam(teamId);
   const { data: defaults } = useTeamProjectDefaultsQuery(teamId);
   const updateDefaults = useUpdateTeamProjectDefaults(teamId);
+  const defaultIds = defaults?.defaultAgentIds ?? [];
+  const canEditDefaults = team != null && team.role !== 'member';
   const deleteAgent = useDeleteAiAgent(teamId);
   // The integration catalog maps a provider key to a readable label for the meta row.
   const catalog = useIntegrationCatalogQuery(teamId).data ?? [];
@@ -63,52 +64,13 @@ export default function TeamAiAgents() {
         <EmptyState title={t('empty')} description={t('emptyHint')} />
       ) : (
         <div className="space-y-4">
-          <section className="space-y-2 rounded-lg border p-4">
-            <h3 className="text-sm font-medium">{t('projectDefaultsTitle')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t(team?.role === 'member' ? 'projectDefaultsReadOnly' : 'projectDefaultsHint')}
-            </p>
-            {defaults &&
-              agents.map((agent) => (
-                <div key={agent.id} className="flex items-center justify-between gap-4 py-1">
-                  <span className="text-sm">{agent.name}</span>
-                  {team != null && team.role !== 'member' ? (
-                    <Switch
-                      checked={defaults.defaultAgentIds.includes(agent.id)}
-                      disabled={updateDefaults.isPending}
-                      onCheckedChange={(checked) =>
-                        updateDefaults.mutate(
-                          checked
-                            ? [...defaults.defaultAgentIds, agent.id]
-                            : defaults.defaultAgentIds.filter((id) => id !== agent.id),
-                          { onSuccess: () => toast.success(t('projectDefaultsSaved')) },
-                        )
-                      }
-                      aria-label={t('projectDefaultAria', { agent: agent.name })}
-                    />
-                  ) : (
-                    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      {defaults.defaultAgentIds.includes(agent.id) ? (
-                        <Check className="size-4 text-green-500" />
-                      ) : (
-                        <Minus className="size-4" />
-                      )}
-                      {t(
-                        defaults.defaultAgentIds.includes(agent.id)
-                          ? 'projectDefaultOn'
-                          : 'projectDefaultOff',
-                      )}
-                    </span>
-                  )}
-                </div>
-              ))}
-          </section>
           <Table className="min-w-[1000px] table-fixed">
             <colgroup>
               <col className="w-[32%]" />
-              <col className="w-[20%]" />
-              <col className="w-[36%]" />
-              <col className="w-[12%]" />
+              <col className="w-[18%]" />
+              <col className="w-[32%]" />
+              <col className="w-[10%]" />
+              <col className="w-[8%]" />
             </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -120,6 +82,16 @@ export default function TeamAiAgents() {
                 </TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">
                   {t('columns.configuration')}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  <Tooltip>
+                    <TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-4">
+                      {t('projectDefaultsColumn')}
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {t(canEditDefaults ? 'projectDefaultsHint' : 'projectDefaultsReadOnly')}
+                    </TooltipContent>
+                  </Tooltip>
                 </TableHead>
                 <TableHead className="text-end text-xs font-medium text-muted-foreground">
                   {tCommon('actions')}
@@ -136,6 +108,17 @@ export default function TeamAiAgents() {
                   onRuns={() => setRunsAgent(a)}
                   onEdit={() => setEditingId(a.id)}
                   onDelete={() => setDeleting(a)}
+                  joinsNewProjects={defaultIds.includes(a.id)}
+                  joinsNewProjectsPending={updateDefaults.isPending}
+                  onJoinsNewProjectsChange={
+                    canEditDefaults && defaults
+                      ? (on) =>
+                          updateDefaults.mutate(
+                            on ? [...defaultIds, a.id] : defaultIds.filter((id) => id !== a.id),
+                            { onSuccess: () => toast.success(t('projectDefaultsSaved')) },
+                          )
+                      : undefined
+                  }
                 />
               ))}
             </TableBody>

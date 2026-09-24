@@ -319,13 +319,17 @@
     "noAccess": "У вас немає доступу до інструментів цієї команди."
   },
   "agents": {
-    "projectDefaultsTitle": "Агенти для нових проєктів",
+    "projectDefaultsColumn": "Нові проєкти",
     "projectDefaultsHint": "Вибрані агенти додаються до кожного нового проєкту команди. Наявні проєкти та копії зберігають своїх агентів.",
     "projectDefaultAria": "Додавати {agent} до нових проєктів",
     "projectDefaultsReadOnly": "Власники й менеджери команди вибирають агентів для нових проєктів.",
     "projectDefaultsSaved": "Агентів за замовчуванням збережено",
     "projectDefaultOn": "Увімкнено",
     "projectDefaultOff": "Вимкнено",
+    "joinNewProjects": "Додавати до нових проєктів",
+    "joinNewProjectsHint": "Агент додається до кожного нового проєкту команди.",
+    "selectAllProjects": "Вибрати всі",
+    "clearProjects": "Зняти всі",
     "newAgent": "Новий ШІ-агент",
     "create": "Створити ШІ-агента",
     "save": "Зберегти ШІ-агента",

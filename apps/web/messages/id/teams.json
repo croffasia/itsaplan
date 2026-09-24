@@ -319,13 +319,17 @@
     "noAccess": "Anda tidak memiliki akses ke alat tim ini."
   },
   "agents": {
-    "projectDefaultsTitle": "Agen untuk proyek baru",
+    "projectDefaultsColumn": "Proyek baru",
     "projectDefaultsHint": "Agen yang dipilih akan bergabung dengan setiap proyek baru dalam tim ini. Proyek yang sudah ada dan salinannya tetap memakai agen masing-masing.",
     "projectDefaultAria": "Tambahkan {agent} ke proyek baru",
     "projectDefaultsReadOnly": "Pemilik dan pengelola tim memilih agen yang bergabung dengan proyek baru.",
     "projectDefaultsSaved": "Agen default disimpan",
     "projectDefaultOn": "Aktif",
     "projectDefaultOff": "Nonaktif",
+    "joinNewProjects": "Tambahkan ke proyek baru",
+    "joinNewProjectsHint": "Agen bergabung dengan setiap proyek baru dalam tim ini.",
+    "selectAllProjects": "Pilih semua",
+    "clearProjects": "Hapus semua",
     "newAgent": "Agen AI baru",
     "create": "Buat agen AI",
     "save": "Simpan agen AI",

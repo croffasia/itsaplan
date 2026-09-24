@@ -299,7 +299,9 @@ export const IssueWithFieldsResponse = t.Composite([
   }),
 ]);
 
-// The board carries each issue's relations on the issue itself.
+// The board carries each issue's relations on the issue itself. The markdown
+// description is returned empty: cards never render it, and GET /issues/:id holds
+// the body.
 export const BoardIssueResponse = t.Composite([
   IssueResponse,
   t.Object({

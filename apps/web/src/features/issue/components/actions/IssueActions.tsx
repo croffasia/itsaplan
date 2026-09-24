@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Issue, SubtaskDisposition } from '@/lib/api/endpoints/issues';
-import { matchesFilterSet } from '@/utils/filters';
+import { matchesFilterSet, type FilterEvaluationContext } from '@/utils/filters';
 import { describeEffect } from '@/utils/actions';
 import { useEffectText } from '@/hooks/useEffectText';
 import { dispositionReady } from '@/utils/subtasks';
@@ -18,8 +18,9 @@ export function matchedActions(
   actions: ActionDef[],
   project: ProjectDetail,
   issue: Issue,
+  filterContext: FilterEvaluationContext = {},
 ): ActionDef[] {
-  return actions.filter((a) => matchesFilterSet(issue, a.condition, project));
+  return actions.filter((a) => matchesFilterSet(issue, a.condition, project, filterContext));
 }
 
 // The confirm-dialog body for running an action: the changes it will apply, one

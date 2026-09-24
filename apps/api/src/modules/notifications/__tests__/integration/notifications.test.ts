@@ -201,6 +201,20 @@ describe('notifications', () => {
     expect(unreadOnly.data!.items).toHaveLength(0);
   });
 
+  it('unread count can ignore state_changed', async () => {
+    const { owner, columnId, doneColumnId } = await setup();
+    const member = await addMember(owner);
+    const issue = await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+    await owner.api.issues({ issueId: issue.data!.id }).patch({ columnId: doneColumnId });
+
+    const all = await member.api.notifications.unread.get({ query: {} });
+    expect(all.data!.unread).toBe(2);
+    const priority = await member.api.notifications.unread.get({
+      query: { types: 'assigned,mentioned,commented' },
+    });
+    expect(priority.data!.unread).toBe(1);
+  });
+
   it('drops the notifications of a project the user was removed from', async () => {
     const { owner, columnId } = await setup();
     const member = await addMember(owner);

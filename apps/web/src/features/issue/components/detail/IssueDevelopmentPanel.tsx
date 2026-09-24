@@ -1,12 +1,14 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import type { DevelopmentLink } from '@/lib/api/endpoints/git';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { groupDevelopmentLinks } from '../../utils/groupDevelopmentLinks';
 import IssueDevelopmentAddMenu from './IssueDevelopmentAddMenu';
+import IssueDevelopmentBuilds from './IssueDevelopmentBuilds';
 import IssueDevelopmentCreateDialog from './IssueDevelopmentCreateDialog';
 import IssueDevelopmentLinkCard from './IssueDevelopmentLinkCard';
 import IssueDevelopmentLinkDialog from './IssueDevelopmentLinkDialog';
 import IssueSectionHeading from './IssueSectionHeading';
-import { useTranslations } from 'next-intl';
 
 export default function IssueDevelopmentPanel({
   issueId,
@@ -27,17 +29,22 @@ export default function IssueDevelopmentPanel({
   const { open, toggle } = usePersistedOpen('issue-development-open');
   const [linkOpen, setLinkOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const grouped = groupDevelopmentLinks(links);
+  const work = [...grouped.pullRequests, ...grouped.workBranches];
+  const tally =
+    work.length === 0 && grouped.builds.length === 0
+      ? undefined
+      : grouped.builds.length === 0
+        ? String(work.length)
+        : work.length === 0
+          ? t('buildsCount', { count: grouped.builds.length })
+          : `${work.length} · ${t('buildsCount', { count: grouped.builds.length })}`;
   if (links.length === 0 && !canManage) return null;
 
   return (
     <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading
-          label={t('title')}
-          tally={String(links.length)}
-          open={open}
-          onToggle={toggle}
-        />
+        <IssueSectionHeading label={t('title')} tally={tally} open={open} onToggle={toggle} />
         {canManage && (
           <IssueDevelopmentAddMenu
             onLink={() => setLinkOpen(true)}
@@ -56,14 +63,20 @@ export default function IssueDevelopmentPanel({
               {t('empty')}
             </button>
           )}
-          {links.map((link) => (
+          {work.map((item) => (
             <IssueDevelopmentLinkCard
-              key={link.id}
+              key={item.id}
               issueId={issueId}
-              link={link}
+              link={item}
               canEdit={canEdit}
             />
           ))}
+          <IssueDevelopmentBuilds
+            issueId={issueId}
+            buildsByRepo={grouped.buildsByRepo}
+            canEdit={canEdit}
+            defaultOpen={work.length === 0 && grouped.builds.length <= 3}
+          />
         </div>
       )}
       <IssueDevelopmentLinkDialog issueId={issueId} open={linkOpen} onOpenChange={setLinkOpen} />

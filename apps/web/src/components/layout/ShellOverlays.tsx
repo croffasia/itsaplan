@@ -1,5 +1,6 @@
 'use client';
 
+import { Activity, ViewTransition, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import { issuePath, projectPath } from '@/utils/paths';
@@ -21,6 +22,17 @@ export default function ShellOverlays({
   overlays: ReturnType<typeof useOverlays>;
 }) {
   const router = useRouter();
+  const openIssueId = overlays.openIssueId;
+  // Keep the last panel mounted while it is closed so a reopen is instant
+  // (Activity hidden) and a typed description is not thrown away. Expanding to
+  // the issue page drops it so the same issue is not open twice.
+  const [mountedIssueId, setMountedIssueId] = useState<number | null>(null);
+  useEffect(() => {
+    setMountedIssueId(null);
+  }, [projectKey]);
+  useEffect(() => {
+    if (openIssueId != null) setMountedIssueId(openIssueId);
+  }, [openIssueId]);
 
   return (
     <>
@@ -50,21 +62,26 @@ export default function ShellOverlays({
         />
       )}
 
-      {project && overlays.openIssueId != null && (
-        <IssueDetail
-          project={project}
-          issueId={overlays.openIssueId}
-          onClose={() => overlays.setOpenIssueId(null)}
-          onExpand={(seq) => {
-            // Prefer the number the panel loaded; fall back to the board issue.
-            const n =
-              seq ??
-              project.issues.find((i) => i.id === overlays.openIssueId)?.sequenceNumber ??
-              null;
-            if (projectKey && n != null) router.push(issuePath(projectKey, n));
-            overlays.setOpenIssueId(null);
-          }}
-        />
+      {project && mountedIssueId != null && (
+        <Activity mode={openIssueId != null ? 'visible' : 'hidden'}>
+          <ViewTransition>
+            <IssueDetail
+              project={project}
+              issueId={mountedIssueId}
+              onClose={() => overlays.setOpenIssueId(null)}
+              onExpand={(seq) => {
+                // Prefer the number the panel loaded; fall back to the board issue.
+                const n =
+                  seq ??
+                  project.issues.find((i) => i.id === mountedIssueId)?.sequenceNumber ??
+                  null;
+                if (projectKey && n != null) router.push(issuePath(projectKey, n));
+                overlays.setOpenIssueId(null);
+                setMountedIssueId(null);
+              }}
+            />
+          </ViewTransition>
+        </Activity>
       )}
     </>
   );

@@ -331,7 +331,9 @@
   },
   "development": {
     "title": "Développement",
-    "unlink": "Délier l'élément de développement",
+    "builds": "Builds",
+    "buildsCount": "{count, plural, one {# build} other {# builds}}",
+    "unlink": "Dissocier",
     "branch": "Branche",
     "add": "Ajouter",
     "empty": "Lier une pull request existante ou en créer une depuis une branche",

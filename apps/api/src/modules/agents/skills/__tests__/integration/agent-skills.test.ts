@@ -10,7 +10,7 @@ import { createAgent } from '#tests/helpers/agents';
 // The team skill library: SKILL.md documents (plus optional reference files) given to
 // the internal agents of every project the team owns. Content lives in the object
 // store; the row holds metadata. Access is the agent_skills permission resource,
-// resolved on the team. These tests need the object store (MinIO), like the
+// resolved on the team. These tests need the object store (RustFS), like the
 // attachments test.
 
 async function setup() {

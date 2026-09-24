@@ -63,7 +63,7 @@ Configure Auto Updates**, or narrow the window there.
 
 Secrets — auth secret, encryption key, worker token, database password — are generated per
 deploy and never stored in the template. Attachments go to the Railway bucket, which is why
-`S3_FORCE_PATH_STYLE` is `false` here; MinIO in the Compose stack needs the default.
+`S3_FORCE_PATH_STYLE` is `false` here; RustFS in the Compose stack needs the default.
 
 To run the same stack elsewhere, see [self-hosting.md](self-hosting.md) or
 [coolify.md](coolify.md).

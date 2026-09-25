@@ -89,20 +89,23 @@ async function render(mobile = true) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: mobile ? 390 : 1280 });
   const { Sidebar, SidebarProvider, SidebarTrigger } = await import('@/components/ui/sidebar');
   const { default: ProjectSwitcher } = await import('./ProjectSwitcher');
+  const { RelativeTimeProvider } = await import('@/context/relativeTimeContext');
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="en" messages={{ nav, common }} timeZone="UTC">
-          <SidebarProvider>
-            <SidebarTrigger />
-            <Sidebar>
-              <ProjectSwitcher
-                projects={projects}
-                currentProjectKey="eng.P01"
-                onSelectProject={(key) => selections.push(key)}
-              />
-            </Sidebar>
-          </SidebarProvider>
+          <RelativeTimeProvider>
+            <SidebarProvider>
+              <SidebarTrigger />
+              <Sidebar>
+                <ProjectSwitcher
+                  projects={projects}
+                  currentProjectKey="eng.P01"
+                  onSelectProject={(key) => selections.push(key)}
+                />
+              </Sidebar>
+            </SidebarProvider>
+          </RelativeTimeProvider>
         </NextIntlClientProvider>
       </QueryClientProvider>,
     ),

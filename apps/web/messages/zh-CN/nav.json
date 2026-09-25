@@ -48,6 +48,7 @@
     "hideHidden": "Hide hidden projects",
     "resize": "拖动以调整宽度，双击恢复默认",
     "activityHint": "Latest work-item change or comment",
+    "activeAgo": "{time}活跃",
     "search": "Search projects by name, key, or team…",
     "sortActivity": "Recent activity",
     "sort": "Sort projects",

@@ -48,6 +48,7 @@
     "hideHidden": "Hide hidden projects",
     "resize": "اسحب لتغيير العرض، وانقر نقرًا مزدوجًا للاستعادة",
     "activityHint": "Latest work-item change or comment",
+    "activeAgo": "نشط {time}",
     "search": "Search projects by name, key, or team…",
     "sortActivity": "Recent activity",
     "sort": "Sort projects",

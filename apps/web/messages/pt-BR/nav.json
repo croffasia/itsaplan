@@ -48,6 +48,7 @@
     "hideHidden": "Hide hidden projects",
     "resize": "Arraste para redimensionar, clique duas vezes para redefinir",
     "activityHint": "Latest work-item change or comment",
+    "activeAgo": "Ativo {time}",
     "search": "Search projects by name, key, or team…",
     "sortActivity": "Recent activity",
     "sort": "Sort projects",

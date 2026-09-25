@@ -48,6 +48,7 @@
     "hideHidden": "Hide hidden projects",
     "resize": "Faites glisser pour redimensionner, double-cliquez pour réinitialiser",
     "activityHint": "Latest work-item change or comment",
+    "activeAgo": "Actif {time}",
     "search": "Search projects by name, key, or team…",
     "sortActivity": "Recent activity",
     "sort": "Sort projects",

@@ -718,8 +718,13 @@ type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 // Writes a team owned by one account, with the default role its projects assign. Every
 // account owns one; the sign-up hook in @repo/auth writes the same rows inline, since
 // it runs inside better-auth rather than through this module.
-export async function insertOwnedTeam(tx: Transaction, name: string, ownerId: string) {
-  const [row] = await tx.insert(team).values({ name }).returning();
+export async function insertOwnedTeam(
+  tx: Transaction,
+  name: string,
+  ownerId: string,
+  slug: string | null = null,
+) {
+  const [row] = await tx.insert(team).values({ name, slug }).returning();
   const [membership] = await tx
     .insert(teamMember)
     .values({ teamId: row.id, userId: ownerId, role: 'owner' })
@@ -764,52 +769,70 @@ export async function assertTeamSeatFree(teamId: number): Promise<void> {
 
 // The team an account gets at sign-up is written by the hook in @repo/auth, which does
 // not come through here — the ceiling applies to the teams created on top of that one.
-export async function createTeam(name: string, ownerId: string): Promise<TeamRow> {
+export async function createTeam(name: string, slug: string, ownerId: string): Promise<TeamRow> {
   const { maxTeams } = await getLimits({ ownerUserId: ownerId });
   if (maxTeams > 0 && (await countOwnedTeams(ownerId)) >= maxTeams) {
     throw new HttpError(409, `You already own ${maxTeams} teams`);
   }
-  return db.transaction(async (tx) => {
-    const { team: row, membership } = await insertOwnedTeam(tx, name, ownerId);
-    return {
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      ref: teamRef(row),
-      mcpEnabled: row.mcpEnabled,
-      role: 'owner',
-      source: 'invite',
-      joinedAt: iso(membership.createdAt),
-      projectCount: 0,
-      memberCount: 1,
-      ownerCount: 1,
-      roleCount: 1,
-      integrationCount: 0,
-      agentCount: 0,
-      skillCount: 0,
-      toolCount: 0,
-      createdAt: iso(row.createdAt),
-    };
-  });
+  assertSlugAllowed(slug);
+  return withSlugConflict(() =>
+    db.transaction(async (tx) => {
+      const { team: row, membership } = await insertOwnedTeam(tx, name, ownerId, slug);
+      return {
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        ref: teamRef(row),
+        mcpEnabled: row.mcpEnabled,
+        role: 'owner',
+        source: 'invite',
+        joinedAt: iso(membership.createdAt),
+        projectCount: 0,
+        memberCount: 1,
+        ownerCount: 1,
+        roleCount: 1,
+        integrationCount: 0,
+        agentCount: 0,
+        skillCount: 0,
+        toolCount: 0,
+        createdAt: iso(row.createdAt),
+      };
+    }),
+  );
 }
 
-export async function updateTeam(
-  teamId: number,
-  changes: { name?: string; slug?: string | null },
-  userId: string,
-): Promise<TeamRow> {
-  if (changes.slug && isReservedSlug(changes.slug)) {
-    throw new HttpError(400, `'${changes.slug}' is reserved and cannot be a team slug`);
+function assertSlugAllowed(slug: string | undefined): void {
+  if (slug && isReservedSlug(slug)) {
+    throw new HttpError(400, `'${slug}' is reserved and cannot be a team slug`);
   }
+}
+
+// slug is the only unique column of team, so a unique violation names it.
+async function withSlugConflict<T>(write: () => Promise<T>): Promise<T> {
   try {
-    // Drizzle skips undefined values, and throws when none are left to set.
-    if (changes.name !== undefined || changes.slug !== undefined) {
-      await db.update(team).set(changes).where(eq(team.id, teamId));
-    }
+    return await write();
   } catch (err) {
     if (pgErrorCode(err) === '23505')
       throw new HttpError(409, 'Another team already uses this slug');
     throw err;
+  }
+}
+
+export async function updateTeam(
+  teamId: number,
+  changes: { name?: string; slug?: string },
+  userId: string,
+): Promise<TeamRow> {
+  assertSlugAllowed(changes.slug);
+  if (changes.slug === undefined) {
+    const [current] = await db.select({ slug: team.slug }).from(team).where(eq(team.id, teamId));
+    if (current?.slug === null) {
+      throw new HttpError(400, "Set the team's slug before changing it");
+    }
+  }
+  // Drizzle skips undefined values, and throws when none are left to set.
+  if (changes.name !== undefined || changes.slug !== undefined) {
+    await withSlugConflict(() => db.update(team).set(changes).where(eq(team.id, teamId)));
   }
   const [row] = await loadTeamRows(userId, teamId);
   return row;

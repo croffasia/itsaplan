@@ -155,7 +155,7 @@ export function useUpdateTeamProjectDefaults(teamId: number) {
 export function useCreateTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string }) => createTeam(input),
+    mutationFn: (input: { name: string; slug: string }) => createTeam(input),
     onSuccess: (team) => {
       // Put the team in the cached list right away so the switcher shows it before
       // the refetch lands; it has no projects yet, so nothing else has to load.
@@ -168,7 +168,7 @@ export function useCreateTeam() {
 export function useUpdateTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { teamId: number; name?: string; slug?: string | null }) =>
+    mutationFn: (input: { teamId: number; name?: string; slug?: string }) =>
       updateTeam(input.teamId, { name: input.name, slug: input.slug }),
     onSuccess: (team) => {
       // The caller moves to the new slug right away; a list still holding the old one

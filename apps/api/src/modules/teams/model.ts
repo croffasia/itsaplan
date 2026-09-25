@@ -18,26 +18,19 @@ export const setTeamMemberRoleBody = t.Object({
   role: t.Union([t.Literal('owner'), t.Literal('manager'), t.Literal('member')]),
 });
 
-export const createTeamBody = t.Object({
-  name: t.String({ minLength: 1, maxLength: 60 }),
+const teamName = t.String({ minLength: 1, maxLength: 60 });
+
+const teamSlug = t.String({
+  pattern: TEAM_SLUG_PATTERN,
+  description:
+    "The team's segment in web URLs: lower-case letters, digits and hyphens, " +
+    'starting with a letter, 2 to 40 characters.',
 });
 
-export const updateTeamBody = t.Partial(
-  t.Composite([
-    createTeamBody,
-    t.Object({
-      slug: t.Nullable(
-        t.String({
-          pattern: TEAM_SLUG_PATTERN,
-          description:
-            "The team's segment in web URLs: lower-case letters, digits and hyphens, " +
-            'starting with a letter, 2 to 40 characters. null removes it, and the URLs ' +
-            'go back to the team id.',
-        }),
-      ),
-    }),
-  ]),
-);
+export const createTeamBody = t.Object({ name: teamName, slug: teamSlug });
+
+// A team made before slugs were required has none, and takes no change until one is set.
+export const updateTeamBody = t.Partial(t.Object({ name: teamName, slug: teamSlug }));
 
 // A team DTO (TeamRow from the service).
 export const TeamResponse = t.Object({

@@ -103,7 +103,7 @@ describe('MCP team resolution', () => {
 
   it('asks a person in more than one team to name the team', async () => {
     const { owner, asOwner, agentKey } = await setup();
-    await asOwner.teams.post({ name: 'Second Team' });
+    await asOwner.teams.post({ name: 'Second Team', slug: 'second-team' });
     const personKey = (await auth.api.createApiKey({ body: { userId: owner.userId, name: 'mcp' } }))
       .key;
 
@@ -121,7 +121,7 @@ describe('MCP team resolution', () => {
 
   it('lists the teams of the caller', async () => {
     const { owner, asOwner } = await setup();
-    await asOwner.teams.post({ name: 'Second Team' });
+    await asOwner.teams.post({ name: 'Second Team', slug: 'second-team' });
     const personKey = (await auth.api.createApiKey({ body: { userId: owner.userId, name: 'mcp' } }))
       .key;
 

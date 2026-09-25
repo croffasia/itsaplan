@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import TeamLeadsSection from './TeamLeadsSection';
 import TeamLeaveDialog from './TeamLeaveDialog';
+import { TEAM_SLUG_PATTERN } from '../../utils/teamSlug';
 
 // Leaving is offered only where the API allows it: the last owner has nobody to hand
 // the team over to, and a membership a provisioned group granted ends at the identity
@@ -28,9 +29,6 @@ function canLeave(team: Team): boolean {
   if (team.role === 'owner' && team.ownerCount === 1) return false;
   return !(team.source === 'scim' && team.role === 'member');
 }
-
-// Mirrors the API's rule for a slug.
-const SLUG_PATTERN = /^[a-z][a-z0-9-]{0,38}[a-z0-9]$/;
 
 // The team itself: the name and the URL slug its owner edits here, the caller's rank
 // in it, and the way out of it. Everything it shows comes with the team list.
@@ -52,8 +50,9 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
   const slug = slugDraft ?? team.slug ?? '';
   const isOwner = team.role === 'owner';
   const trimmed = name.trim();
-  const slugValue = slug.trim() || null;
-  const slugValid = slugValue === null || SLUG_PATTERN.test(slugValue);
+  const slugValue = slug.trim();
+  const slugValid = TEAM_SLUG_PATTERN.test(slugValue);
+  const slugError = slugValue !== '' && !slugValid;
   const changed = trimmed !== team.name || slugValue !== team.slug;
   const canSave = trimmed !== '' && slugValid && changed && !updateTeam.isPending;
 
@@ -94,7 +93,7 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
                     value={slug}
                     placeholder="acme"
                     dir="ltr"
-                    aria-invalid={!slugValid}
+                    aria-invalid={slugError}
                     aria-describedby="team-slug-hint"
                     onChange={(e) => setSlugDraft(e.target.value.toLowerCase())}
                   />
@@ -102,10 +101,10 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
                     id="team-slug-hint"
                     className={cn(
                       'text-xs',
-                      slugValid ? 'text-muted-foreground' : 'text-destructive',
+                      slugError ? 'text-destructive' : 'text-muted-foreground',
                     )}
                   >
-                    {slugValid ? t('slugHint') : t('slugInvalid')}
+                    {slugError ? t('slugInvalid') : t('slugHint')}
                   </p>
                 </div>
               </>

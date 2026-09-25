@@ -2,6 +2,9 @@
   "create": {
     "title": "Nouvelle équipe",
     "namePlaceholder": "Nom de l'équipe",
+    "slug": "URL",
+    "slugHint": "Les liens vers les projets de l'équipe commencent par lui, par ex. /acme.",
+    "slugInvalid": "Utilisez 2 à 40 lettres minuscules, chiffres ou tirets, en commençant par une lettre.",
     "hint": "Vous serez le propriétaire de cette équipe.",
     "submit": "Créer l'équipe"
   },
@@ -51,7 +54,7 @@
     "team": "Équipe",
     "teamHint": "Le nom sous lequel les projets de l'équipe sont regroupés.",
     "slug": "URL",
-    "slugHint": "Lettres minuscules, chiffres et tirets. Tant qu'elle n'est pas définie, les liens utilisent le numéro de l'équipe.",
+    "slugHint": "Obligatoire pour enregistrer les modifications. Lettres minuscules, chiffres et tirets.",
     "slugInvalid": "Utilisez 2 à 40 lettres minuscules, chiffres ou tirets, en commençant par une lettre.",
     "role": "Votre rôle",
     "created": "Créé le",

@@ -35,7 +35,7 @@ describe('god teams', () => {
     it('lists every team on the instance, including ones the owner is not in', async () => {
       const { god } = await setup();
       const alice = await addUser({ email: 'alice@example.com' });
-      await alice.api.teams.post({ name: 'Alice Only' });
+      await alice.api.teams.post({ name: 'Alice Only', slug: 'alice-only' });
 
       const res = await god.api.god.teams.get({ query: PAGE });
 
@@ -87,8 +87,8 @@ describe('god teams', () => {
 
     it('matches the search term against the name', async () => {
       const { god } = await setup();
-      await god.api.teams.post({ name: 'Marketing' });
-      await god.api.teams.post({ name: 'Engineering' });
+      await god.api.teams.post({ name: 'Marketing', slug: 'marketing' });
+      await god.api.teams.post({ name: 'Engineering', slug: 'engineering' });
 
       const match = await god.api.god.teams.get({ query: { ...PAGE, search: 'market' } });
       const noMatch = await god.api.god.teams.get({ query: { ...PAGE, search: 'nothing' } });
@@ -101,8 +101,8 @@ describe('god teams', () => {
 
     it('pages with limit and offset while the total stays the full match count', async () => {
       const { god } = await setup();
-      await god.api.teams.post({ name: 'One' });
-      await god.api.teams.post({ name: 'Two' });
+      await god.api.teams.post({ name: 'One', slug: 'one' });
+      await god.api.teams.post({ name: 'Two', slug: 'two' });
 
       const first = await god.api.god.teams.get({ query: { page: 1, pageSize: 2 } });
       const second = await god.api.god.teams.get({ query: { page: 2, pageSize: 2 } });

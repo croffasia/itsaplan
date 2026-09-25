@@ -16,7 +16,7 @@ async function signUpClient() {
 async function twoTeamsWithMkt() {
   const owner = await signUpClient();
   const first = (await owner.api.teams.get()).data![0];
-  const second = (await owner.api.teams.post({ name: 'Second' })).data!;
+  const second = (await owner.api.teams.post({ name: 'Second', slug: 'second' })).data!;
   const a = (await owner.api.projects.post({ key: 'MKT', name: 'First marketing' })).data!;
   const b = (
     await owner.api.teams({ teamId: second.id }).projects.post({

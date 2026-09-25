@@ -2,6 +2,9 @@
   "create": {
     "title": "Tim baru",
     "namePlaceholder": "Nama tim",
+    "slug": "URL",
+    "slugHint": "Tautan ke proyek tim diawali dengannya, misalnya /acme.",
+    "slugInvalid": "Gunakan 2–40 huruf kecil, angka, atau tanda hubung, diawali huruf.",
     "hint": "Anda akan menjadi pemilik tim ini.",
     "submit": "Buat tim"
   },
@@ -51,7 +54,7 @@
     "team": "Tim",
     "teamHint": "Nama tim tempat proyek dikelompokkan.",
     "slug": "URL",
-    "slugHint": "Huruf kecil, angka, dan tanda hubung. Sebelum diatur, tautan memakai nomor tim.",
+    "slugHint": "Wajib untuk menyimpan perubahan. Huruf kecil, angka, dan tanda hubung.",
     "slugInvalid": "Gunakan 2–40 huruf kecil, angka, atau tanda hubung, diawali huruf.",
     "role": "Peran Anda",
     "created": "Dibuat",

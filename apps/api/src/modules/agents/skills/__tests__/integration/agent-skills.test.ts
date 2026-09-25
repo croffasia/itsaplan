@@ -229,7 +229,7 @@ describe('agent skills', () => {
   it('ignores a skill of another team when enabling skills on an agent', async () => {
     const { asOwner, teamId } = await setup();
     const mine = await skills(asOwner, teamId).post({ source: 'inline', markdown: SKILL_MD });
-    const otherTeam = await asOwner.teams.post({ name: 'Design' });
+    const otherTeam = await asOwner.teams.post({ name: 'Design', slug: 'design' });
     const theirs = await skills(asOwner, otherTeam.data!.id).post({
       source: 'inline',
       markdown: SKILL_MD,

@@ -206,10 +206,10 @@ export const listTeamProjectMembers = (
     `/teams/${teamId}/projects/${projectId}/members${memberListQuery(params)}`,
   );
 
-export const createTeam = (input: { name: string }) =>
+export const createTeam = (input: { name: string; slug: string }) =>
   request<Team>('/teams', { method: 'POST', body: JSON.stringify(input) });
 
-export const updateTeam = (teamId: number, input: { name?: string; slug?: string | null }) =>
+export const updateTeam = (teamId: number, input: { name?: string; slug?: string }) =>
   request<Team>(`/teams/${teamId}`, { method: 'PATCH', body: JSON.stringify(input) });
 
 export const leaveTeam = (teamId: number) =>

@@ -273,11 +273,11 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       const name = body.name.trim();
       if (!name) throw new HttpError(400, 'Team name is required');
       set.status = 201;
-      return createTeam(name, requireUser(user).id);
+      return createTeam(name, body.slug, requireUser(user).id);
     },
     {
       body: createTeamBody,
-      response: { 201: TeamResponse, ...errors(400, 401) },
+      response: { 201: TeamResponse, ...errors(400, 401, 409) },
       detail: {
         summary: 'Create a team',
         description: 'Create a team and become its owner.',

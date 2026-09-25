@@ -48,6 +48,7 @@
     "hideHidden": "Hide hidden projects",
     "resize": "Seret untuk mengubah lebar, klik dua kali untuk mengatur ulang",
     "activityHint": "Latest work-item change or comment",
+    "activeAgo": "Aktif {time}",
     "search": "Search projects by name, key, or team…",
     "sortActivity": "Recent activity",
     "sort": "Sort projects",

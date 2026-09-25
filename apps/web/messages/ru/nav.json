@@ -48,6 +48,7 @@
     "hideHidden": "Hide hidden projects",
     "resize": "Потяните, чтобы изменить ширину, двойной щелчок сбрасывает",
     "activityHint": "Latest work-item change or comment",
+    "activeAgo": "Активность {time}",
     "search": "Search projects by name, key, or team…",
     "sortActivity": "Recent activity",
     "sort": "Sort projects",

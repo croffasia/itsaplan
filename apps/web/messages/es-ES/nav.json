@@ -48,6 +48,7 @@
     "hideHidden": "Ocultar proyectos ocultos",
     "resize": "Arrastra para cambiar el ancho del selector de proyectos; doble clic para restablecerlo",
     "activityHint": "Último cambio o comentario en un elemento de trabajo",
+    "activeAgo": "Activo {time}",
     "search": "Buscar proyectos por nombre, clave o equipo…",
     "sortActivity": "Actividad reciente",
     "sort": "Ordenar proyectos",

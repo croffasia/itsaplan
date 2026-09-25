@@ -1,8 +1,7 @@
 import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api/endpoints/projects';
 import { cn } from '@/lib/utils';
-import { avatarColor } from '@/utils/avatar';
-import { formatDateTime } from '@/utils/dates';
+import { useRelativeTime } from '@/context/relativeTimeContext';
 import { CommandItem } from '@/components/ui/command';
 import ProjectSwitcherHideButton from './ProjectSwitcherHideButton';
 import ProjectSwitcherStarButton from './ProjectSwitcherStarButton';
@@ -18,6 +17,7 @@ export default function ProjectSwitcherProjectRow({
 }) {
   const t = useTranslations('nav.projectPicker');
   const current = project.ref === currentProjectKey;
+  const relativeTime = useRelativeTime();
 
   return (
     <div className="group/row relative flex items-center gap-0.5 rounded-sm has-[[data-selected=true]]:bg-accent">
@@ -30,16 +30,6 @@ export default function ProjectSwitcherProjectRow({
         aria-current={current || undefined}
         className="min-w-0 flex-1 gap-2.5 p-2 data-[selected=true]:bg-transparent"
       >
-        <span
-          dir="ltr"
-          className={cn(
-            'w-14 shrink-0 rounded-sm px-1 py-1 text-center font-mono font-semibold text-white',
-            project.key.length > 7 ? 'text-[8px]' : 'text-[10px]',
-          )}
-          style={{ backgroundColor: avatarColor(project.key) }}
-        >
-          {project.key}
-        </span>
         <div className="min-w-0 flex-1">
           <span
             className={cn(
@@ -50,15 +40,19 @@ export default function ProjectSwitcherProjectRow({
           >
             {project.name}
           </span>
-          {project.lastActivityAt && (
-            <time
-              dateTime={project.lastActivityAt}
-              title={t('activityHint')}
-              className="block text-xs text-muted-foreground"
-            >
-              {formatDateTime(project.lastActivityAt)}
-            </time>
-          )}
+          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground/70">
+            <span dir="ltr" className="shrink-0 font-mono text-[10px] tracking-wider uppercase">
+              {project.key}
+            </span>
+            {project.lastActivityAt && (
+              <>
+                <span aria-hidden>·</span>
+                <time dateTime={project.lastActivityAt}>
+                  {t('activeAgo', { time: relativeTime(project.lastActivityAt) })}
+                </time>
+              </>
+            )}
+          </span>
         </div>
       </CommandItem>
       <ProjectSwitcherHideButton project={project} />

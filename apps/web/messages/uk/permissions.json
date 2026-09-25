@@ -22,6 +22,7 @@
     "workflow_config": "Налаштування робочого процесу",
     "actions": "Дії",
     "webhooks": "Вебхуки",
+    "repositories": "Репозиторії",
     "note_boards": "Дошки нотаток",
     "import_export": "Імпорт/Експорт",
     "danger_zone": "Небезпечна зона"

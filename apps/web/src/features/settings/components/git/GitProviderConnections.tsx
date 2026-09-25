@@ -1,55 +1,38 @@
-import { useState } from 'react';
-import { GitBranch } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { GitConnectionProvider } from '@/lib/api/endpoints/git';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import { teamSectionPath } from '@/utils/paths';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import { Button } from '@/components/ui/button';
 import { useGitProviderConnectionsQuery } from '../../services/settings.service';
-import GitProviderConnectDialog from './GitProviderConnectDialog';
 import GitProviderConnectionCard from './GitProviderConnectionCard';
-import { GIT_CONNECTION_PROVIDERS, GIT_PROVIDER_CONFIG } from './providerConfig';
 
 export default function GitProviderConnections({
   projectKey,
-  editable,
+  teamId,
+  canManageTeam,
 }: {
   projectKey: string;
-  editable: boolean;
+  teamId: number;
+  canManageTeam: boolean;
 }) {
   const t = useTranslations('settings.git');
+  const tc = useTranslations('common');
   const connections = useGitProviderConnectionsQuery(projectKey);
-  const [provider, setProvider] = useState<GitConnectionProvider>('gitlab');
-  const [dialogOpen, setDialogOpen] = useState(false);
-
-  function open(providerToConnect: GitConnectionProvider) {
-    setProvider(providerToConnect);
-    setDialogOpen(true);
-  }
+  const empty = !connections.isPending && connections.data?.length === 0;
+  const addButton = canManageTeam && (
+    <Button asChild variant="ghost" size="sm">
+      <Link href={teamSectionPath(teamId, 'git')}>
+        <Plus className="size-3.5" />
+        {tc('add')}
+      </Link>
+    </Button>
+  );
 
   return (
-    <SettingsSection
-      title={t('nativeConnectionsRecommended')}
-      description={t('nativeConnectionsHint')}
-    >
+    <SettingsSection title={t('nativeConnectionsRecommended')} action={!empty && addButton}>
       <div className="space-y-3">
-        {editable && (
-          <div className="flex flex-wrap gap-2">
-            {GIT_CONNECTION_PROVIDERS.map((providerKey) => (
-              <Button
-                key={providerKey}
-                type="button"
-                variant="outline"
-                onClick={() => open(providerKey)}
-              >
-                <GitBranch className="size-4" />
-                {t('nativeConnectProvider', {
-                  provider: GIT_PROVIDER_CONFIG[providerKey].label,
-                })}
-              </Button>
-            ))}
-          </div>
-        )}
         {connections.isPending ? (
           <ListSkeleton rows={2} rowClassName="h-24" />
         ) : (
@@ -58,22 +41,16 @@ export default function GitProviderConnections({
               key={connection.id}
               projectKey={projectKey}
               connection={connection}
-              editable={editable}
             />
           ))
         )}
-        {!connections.isPending && connections.data?.length === 0 && (
-          <p className="rounded-md border border-dashed p-5 text-sm text-muted-foreground">
-            {t('nativeNoConnections')}
-          </p>
+        {empty && (
+          <div className="flex flex-col items-start gap-3 rounded-md border border-dashed p-5 text-sm text-muted-foreground">
+            <p>{t('nativeNoConnections')}</p>
+            {addButton || <p>{t('nativeAskTeamManager')}</p>}
+          </div>
         )}
       </div>
-      <GitProviderConnectDialog
-        projectKey={projectKey}
-        provider={provider}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-      />
     </SettingsSection>
   );
 }

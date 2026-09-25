@@ -395,7 +395,6 @@
     "connectionHint": "Підключіть репозиторій на GitHub, GitLab, Gitea, Forgejo або Bitbucket.",
     "webhookEndpoint": "Адреса webhook",
     "webhookEndpointHint": "Одна адреса приймає події гілок, pull request і CI з усіх підключених репозиторіїв.",
-    "connectionRestricted": "Дані підключення бачать лише учасники, які можуть редагувати інтеграції.",
     "payloadUrl": "URL для запитів",
     "webhookSecret": "Секрет вебхука",
     "howToConnect": "Як підключити",
@@ -414,6 +413,7 @@
     "nativeConnectionsHint": "Авторизуйте Git-провайдера, виберіть репозиторії, а Plan налаштує їхні webhooks.",
     "nativeConnectProvider": "Підключити {provider}",
     "nativeNoConnections": "Облікові записи провайдерів ще не підключено. Нижче залишається ручне налаштування webhook.",
+    "nativeAskTeamManager": "Попросіть власника або менеджера команди підключити обліковий запис провайдера.",
     "nativeConnectTitle": "Підключити {provider}",
     "nativeTokenHint": {
       "github": "Використовуйте fine-grained token із правами Metadata read, Webhooks write і Pull requests write для репозиторіїв, які хочете підключити.",

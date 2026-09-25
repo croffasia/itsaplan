@@ -22,6 +22,7 @@
     "workflow_config": "Configuração de fluxo de trabalho",
     "actions": "Ações",
     "webhooks": "Webhooks",
+    "repositories": "Repositórios",
     "note_boards": "Quadros de notas",
     "import_export": "Importar/Exportar",
     "danger_zone": "Zona de perigo"

@@ -25,6 +25,7 @@ export const PERMISSION_RESOURCES = [
   'workflow_config',
   'actions',
   'webhooks',
+  'repositories',
   'note_boards',
   'import_export',
   'danger_zone',
@@ -39,12 +40,14 @@ export type Permissions = Record<PermissionResource, ResourcePermissions>;
 
 // Resources that do not carry the whole CRUD set: the danger zone is the project's
 // settings page and its deletion, the workflow config is read and written, an invite
-// is created and revoked but never edited. A resource left out here supports every
+// is created and revoked but never edited, and the repository settings are shown only
+// to whoever may change them. A resource left out here supports every
 // action. Unsupported cells stay present and false, so a caller reads any cell
 // without a lookup.
 const RESOURCE_ACTIONS: Partial<Record<PermissionResource, readonly PermissionAction[]>> = {
   danger_zone: ['read', 'delete'],
   workflow_config: ['read', 'edit'],
+  repositories: ['edit'],
   members_invite: ['read', 'create', 'delete'],
 };
 

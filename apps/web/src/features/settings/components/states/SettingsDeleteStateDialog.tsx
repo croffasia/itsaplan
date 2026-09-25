@@ -30,7 +30,7 @@ export default function SettingsDeleteStateDialog({
   const otherColumns = project.columns.filter((c) => c.id !== column.id);
   const [action, setAction] = useState<'move' | 'delete'>(otherColumns.length ? 'move' : 'delete');
   const [targetColumnId, setTargetColumnId] = useState<number | undefined>(otherColumns[0]?.id);
-  const deleteColumn = useDeleteColumn(project.project.key);
+  const deleteColumn = useDeleteColumn(project.project.ref);
 
   async function confirm() {
     const body =

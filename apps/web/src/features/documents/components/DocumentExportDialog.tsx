@@ -26,7 +26,6 @@ const formats = [
 
 export default function DocumentExportDialog({
   open,
-  projectKey,
   documentId,
   title,
   content,
@@ -34,7 +33,6 @@ export default function DocumentExportDialog({
   onOpenChange,
 }: {
   open: boolean;
-  projectKey: string;
   documentId: number;
   title: string;
   content: () => string;
@@ -68,7 +66,6 @@ export default function DocumentExportDialog({
         content: content(),
         richHtml: richHtml(),
         format,
-        projectKey,
         documentId,
         baseUrl: window.location.origin,
       });

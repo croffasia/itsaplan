@@ -10,11 +10,11 @@ import GitProviderConnectionCard from './GitProviderConnectionCard';
 
 export default function GitProviderConnections({
   projectKey,
-  teamId,
+  teamRef,
   canManageTeam,
 }: {
   projectKey: string;
-  teamId: number;
+  teamRef: string;
   canManageTeam: boolean;
 }) {
   const t = useTranslations('settings.git');
@@ -23,7 +23,7 @@ export default function GitProviderConnections({
   const empty = !connections.isPending && connections.data?.length === 0;
   const addButton = canManageTeam && (
     <Button asChild variant="ghost" size="sm">
-      <Link href={teamSectionPath(teamId, 'git')}>
+      <Link href={teamSectionPath(teamRef, 'git')}>
         <Plus className="size-3.5" />
         {tc('add')}
       </Link>

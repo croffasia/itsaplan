@@ -939,6 +939,13 @@
       "when": 1790324657744,
       "tag": "0133_repositories_permission",
       "breakpoints": true
+    },
+    {
+      "idx": 134,
+      "version": "7",
+      "when": 1790334902773,
+      "tag": "0134_team_scoped_project_key",
+      "breakpoints": true
     }
   ]
 }

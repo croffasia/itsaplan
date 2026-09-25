@@ -36,7 +36,7 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
               href={projectKey ? aiTeamPath(projectKey, s.slug) : '#'}
               icon={s.icon}
               label={sectionText(s.slug).label}
-              active={pathname.endsWith(`/ai-team/${s.slug}`)}
+              active={pathname.endsWith(`/agents/${s.slug}`)}
               disabled={disabled}
             />
           ))}
@@ -45,7 +45,7 @@ export default function SidebarAiTeamNav({ projectKey }: { projectKey: string | 
               href={projectKey ? aiAgentsPath(projectKey) : '#'}
               icon={AI_AGENTS_SECTION.icon}
               label={sectionText(AI_AGENTS_SECTION.slug).label}
-              active={pathname.endsWith(`/${AI_AGENTS_SECTION.slug}`)}
+              active={pathname.endsWith('/agents')}
               disabled={disabled}
             />
           )}

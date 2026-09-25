@@ -44,7 +44,7 @@ export default function CommandLayer({
   onNewIssue: () => void;
   onSelectAll: () => void;
   onNewInitiative: () => void;
-  onNewProject: () => void;
+  onNewProject: (() => void) | null;
   onSelectProject: (key: string) => void;
   onOpenIssue: (sequenceNumber: number) => void;
   onIssueDeleted: () => void;

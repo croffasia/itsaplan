@@ -96,7 +96,7 @@ export default function IssueLinksPanel({
                       canEdit
                         ? () =>
                             unlinkIssues.mutate({
-                              projectKey: project.project.key,
+                              projectKey: project.project.ref,
                               issueId: issue.id,
                               otherIssueId: link.issue.id,
                               linkId: link.id,
@@ -140,7 +140,7 @@ export default function IssueLinksPanel({
           onClose={() => setCreating(null)}
           onCreated={(created) => {
             linkIssues.mutate({
-              projectKey: project.project.key,
+              projectKey: project.project.ref,
               issueId: issue.id,
               otherIssueId: created.id,
               kind: creating,

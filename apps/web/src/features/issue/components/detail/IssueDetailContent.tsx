@@ -200,7 +200,7 @@ export default function IssueDetailContent({
 
       {features.documents && (
         <IssueDocumentsPanel
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           issueId={issue.id}
           canRead={canReadDocuments}
           canLink={canLinkDocuments}

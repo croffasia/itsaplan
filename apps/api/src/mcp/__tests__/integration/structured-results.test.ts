@@ -119,7 +119,7 @@ describe('MCP structured results through the SDK client', () => {
 
   it('returns the same error envelope for missing team arguments and unknown tools', async () => {
     const user = await signUpTestUser();
-    await authedApi(user.cookie).teams.post({ name: 'Another team' });
+    await authedApi(user.cookie).teams.post({ name: 'Another team', slug: 'another-team' });
     const client = await connect(user.userId);
     await client.listTools();
     const missing = await callTool(client, { name: 'list_ai_agents' });

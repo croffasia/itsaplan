@@ -9,7 +9,6 @@ export interface PortableDocumentExportInput {
   content: string;
   richHtml?: string;
   format: DocumentExportFormat;
-  projectKey: string;
   documentId: number;
   baseUrl: string;
   fetchImpl?: typeof fetch;
@@ -98,7 +97,6 @@ export async function createPortableDocumentExport({
   content,
   richHtml,
   format,
-  projectKey,
   documentId,
   baseUrl,
   fetchImpl = fetch,
@@ -106,7 +104,6 @@ export async function createPortableDocumentExport({
   const body = documentExportBody(title, content, format, richHtml);
   const assets = await fetchDocumentExportAssets({
     body,
-    projectKey,
     documentId,
     baseUrl,
     fetchImpl,
@@ -156,13 +153,11 @@ export function documentExportArchiveFilename(title: string): string {
 
 async function fetchDocumentExportAssets({
   body,
-  projectKey,
   documentId,
   baseUrl,
   fetchImpl,
 }: {
   body: string;
-  projectKey: string;
   documentId: number;
   baseUrl: string;
   fetchImpl: typeof fetch;
@@ -170,7 +165,7 @@ async function fetchDocumentExportAssets({
   const base = new URL(baseUrl);
   const referencesByUrl = new Map<string, { url: URL; references: Set<string> }>();
   for (const reference of extractExportReferences(body)) {
-    const url = protectedDocumentAssetUrl(reference, { projectKey, documentId, base });
+    const url = protectedDocumentAssetUrl(reference, { documentId, base });
     if (!url) continue;
     const existing = referencesByUrl.get(url.href);
     if (existing) existing.references.add(reference);
@@ -319,9 +314,12 @@ function extractExportReferences(body: string): Set<string> {
   return references;
 }
 
+// An asset of this document. The project segment is not compared: the stored URL can
+// name the project by its ref or, from before keys were per team, by the bare key,
+// and the document id alone already pins the asset.
 function protectedDocumentAssetUrl(
   reference: string,
-  { projectKey, documentId, base }: { projectKey: string; documentId: number; base: URL },
+  { documentId, base }: { documentId: number; base: URL },
 ): URL | null {
   let url: URL;
   try {
@@ -331,7 +329,7 @@ function protectedDocumentAssetUrl(
   }
   if (url.origin !== base.origin || url.search || url.hash) return null;
   const expected = new RegExp(
-    `^/protected-media/projects/${escapeRegExp(encodeURIComponent(projectKey))}/documents/${documentId}/assets/${PUBLIC_ID}/raw$`,
+    `^/protected-media/projects/[^/]+/documents/${documentId}/assets/${PUBLIC_ID}/raw$`,
     'i',
   );
   return expected.test(url.pathname) ? url : null;
@@ -423,8 +421,4 @@ function safeDecodeURIComponent(value: string): string {
   } catch {
     return value;
   }
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

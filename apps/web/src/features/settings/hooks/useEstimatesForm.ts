@@ -21,7 +21,7 @@ export interface EstimatesForm {
 
 export function useEstimatesForm(project: Project): EstimatesForm {
   const { can } = usePermissions();
-  const update = useUpdateEstimates(project.key);
+  const update = useUpdateEstimates(project.ref);
 
   const [points, setPoints] = useState(project.pointsEstimateEnabled);
   const [time, setTime] = useState(project.timeEstimateEnabled);

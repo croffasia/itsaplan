@@ -2,6 +2,10 @@
   "noProjectAccess": "Anda tidak memiliki akses ke proyek ini.",
   "projectUnavailable": "Proyek ini tidak tersedia.",
   "noProjects": "Belum ada proyek. Buat proyek untuk memulai.",
+  "noTeamsTitle": "Belum ada tim",
+  "noTeamsHint": "Buat tim Anda. Proyek, anggota, dan agennya disimpan di dalamnya.",
+  "noProjectAccessHint": "Minta pemilik atau manajer tim untuk menambahkan Anda ke proyek, atau buat tim Anda sendiri.",
+  "createTeam": "Buat tim",
   "noProjectsTitle": "Belum ada proyek",
   "noProjectsHint": "Buat proyek pertama Anda untuk mulai merencanakan issue di papan.",
   "createProject": "Buat proyek"

@@ -45,9 +45,9 @@ export default function SettingsStates({ project }: { project: ProjectDetail }) 
   const tStateType = useTranslations('display.stateTypes');
   const sensors = useDndSensors();
   const can = useSettingsCan();
-  const createColumn = useCreateColumn(project.project.key);
-  const updateColumn = useUpdateColumn(project.project.key);
-  const reorderColumns = useReorderColumns(project.project.key);
+  const createColumn = useCreateColumn(project.project.ref);
+  const updateColumn = useUpdateColumn(project.project.ref);
+  const reorderColumns = useReorderColumns(project.project.ref);
 
   const issueCount = (columnId: number) =>
     project.issues.filter((t) => t.columnId === columnId).length;

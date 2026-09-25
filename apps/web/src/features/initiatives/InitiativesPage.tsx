@@ -39,7 +39,7 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
   const { order, reorder } = useInitiativeTabOrder();
   const sensors = useStripSortSensors();
 
-  const projectKey = project?.project.key ?? null;
+  const projectKey = project?.project.ref ?? null;
   const activeTab = INITIATIVE_TABS.find((item) => item.value === tab)!;
   const orderedTabs = order.map((value) => INITIATIVE_TABS.find((item) => item.value === value)!);
 
@@ -65,7 +65,7 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
   const items = query.data?.items ?? [];
   const total = query.data?.total ?? 0;
 
-  const tabPath = initiativesTabPath(project.project.key, tab);
+  const tabPath = initiativesTabPath(project.project.ref, tab);
 
   const pushQuery = (params: URLSearchParams) => {
     const search = params.toString();
@@ -75,7 +75,7 @@ export default function InitiativesPage({ tab }: { tab: InitiativesTab }) {
   // A tab is its own route and carries no query, so switching one drops the page and
   // the sorting of the tab left behind.
   const changeTab = (next: InitiativesTab) => {
-    router.push(initiativesTabPath(project.project.key, next));
+    router.push(initiativesTabPath(project.project.ref, next));
   };
 
   const changePage = (next: number) => {

@@ -15,7 +15,7 @@ export default function ManageTeamsIndex() {
   const first = data?.[0];
 
   useEffect(() => {
-    if (first) router.replace(teamPath(first.id));
+    if (first) router.replace(teamPath(first.ref));
   }, [first, router]);
 
   return (

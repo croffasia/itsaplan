@@ -168,6 +168,7 @@ export default function DocumentMarkdownEditor({
   openIssueRefRef.current = (href: string) => router.push(href);
 
   const editor = useEditor({
+    immediatelyRender: false,
     editable,
     extensions: documentEditorExtensions({
       placeholder,
@@ -192,7 +193,7 @@ export default function DocumentMarkdownEditor({
       image: onPickImage ? { label: t('uploadImage'), onPick: onPickImage } : undefined,
     }).concat(
       IssueRef.configure({
-        keys: () => issueRefsRef.current.keys,
+        refs: () => issueRefsRef.current.refs,
         open: (href) => openIssueRefRef.current(href),
         rich: () => issueRefsRef.current.resolve && (!editableRef.current || !focusedRef.current),
       }),
@@ -268,11 +269,11 @@ export default function DocumentMarkdownEditor({
     return () => onReady(null);
   }, [editor, onReady]);
 
-  const issueRefKeyList = issueRefs.keys.join(',');
+  const issueRefList = issueRefs.refs.join(',');
   useEffect(() => {
     const frame = requestAnimationFrame(() => refreshDecorations(editor));
     return () => cancelAnimationFrame(frame);
-  }, [editor, issueRefKeyList, issueRefs.resolve, editable, focused]);
+  }, [editor, issueRefList, issueRefs.resolve, editable, focused]);
 
   useLayoutEffect(() => {
     syncDocumentEditorEditable(editor, editable);

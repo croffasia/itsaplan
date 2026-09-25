@@ -1,7 +1,7 @@
 import { HttpError } from './lib';
 import {
   getProjectById,
-  getProjectByKey,
+  getProjectByRef,
   projectFeatures,
   type ProjectRow,
 } from '#modules/projects/service';
@@ -39,9 +39,10 @@ export function requireGod(user: AuthUser | undefined | null): AuthUser {
   return current;
 }
 
-// Resolves the :projectKey path param, throwing 404 for an unknown project.
-async function requireProject(projectKey: string): Promise<ProjectRow> {
-  const project = await getProjectByKey(projectKey);
+// Resolves the :projectKey path param (see getProjectByRef), throwing 404 for an
+// unknown project.
+async function requireProject(projectKey: string, userId: string): Promise<ProjectRow> {
+  const project = await getProjectByRef(projectKey, userId);
   if (!project) throw new HttpError(404, `Project '${projectKey}' not found`);
   return project;
 }
@@ -54,7 +55,7 @@ export async function requireProjectAccess(
   user: AuthUser | undefined | null,
 ): Promise<ProjectRow> {
   const current = requireUser(user);
-  const project = await requireProject(projectKey);
+  const project = await requireProject(projectKey, current.id);
   const role = await getMembership(project.id, current.id);
   if (!role) throw new HttpError(403, 'You do not have access to this project');
   return project;
@@ -69,7 +70,7 @@ export async function requireProjectOwner(
   user: AuthUser | undefined | null,
 ): Promise<ProjectRow> {
   const current = requireUser(user);
-  const project = await requireProject(projectKey);
+  const project = await requireProject(projectKey, current.id);
   const role = await getMembership(project.id, current.id);
   if (!role) throw new HttpError(403, 'You do not have access to this project');
   if (role !== 'owner') throw new HttpError(403, 'Only a project owner can do this');
@@ -85,8 +86,9 @@ export async function requireProjectAdmin(
   projectKey: string,
   user: AuthUser | undefined | null,
 ): Promise<ProjectRow> {
-  const project = await requireProject(projectKey);
-  await assertProjectAdmin(project, user);
+  const current = requireUser(user);
+  const project = await requireProject(projectKey, current.id);
+  await assertProjectAdmin(project, current);
   return project;
 }
 
@@ -115,7 +117,7 @@ export async function requireTeamRunsProject(
   user: AuthUser | undefined | null,
 ): Promise<ProjectRow> {
   const current = requireUser(user);
-  const project = await requireProject(projectKey);
+  const project = await requireProject(projectKey, current.id);
   if (!runsTeam(await getTeamMembership(project.teamId, current.id)))
     throw new HttpError(403, 'Only a team owner or manager can do this');
   return project;
@@ -132,7 +134,7 @@ export async function requireMemberAdmin(
   action: PermissionAction,
 ): Promise<ProjectRow> {
   const current = requireUser(user);
-  const project = await requireProject(projectKey);
+  const project = await requireProject(projectKey, current.id);
   const standing = await getTeamMembership(project.teamId, current.id);
   if (runsTeam(standing)) return project;
   await assertPermission(project.id, current, resource, action);
@@ -246,7 +248,7 @@ export async function requireProjectPermission(
   action: PermissionAction,
 ): Promise<ProjectRow> {
   const current = requireUser(user);
-  const project = await requireProject(projectKey);
+  const project = await requireProject(projectKey, current.id);
   await assertPermission(project.id, current, resource, action);
   return project;
 }

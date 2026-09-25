@@ -28,7 +28,7 @@ export default function SettingsWebhooks({
   onNewHandled: () => void;
 }) {
   const t = useTranslations('settings.webhooks');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const webhooksQuery = useWebhooksQuery(projectKey);
   const webhooks = webhooksQuery.data ?? [];
   const createWebhook = useCreateWebhook(projectKey);

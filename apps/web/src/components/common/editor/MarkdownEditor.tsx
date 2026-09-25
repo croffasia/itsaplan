@@ -121,6 +121,7 @@ export default function MarkdownEditor({
   };
 
   const editor = useEditor({
+    immediatelyRender: false,
     editable,
     extensions: [
       // Replaces StarterKit's plain code block, keeping the node name codeBlock.
@@ -142,7 +143,7 @@ export default function MarkdownEditor({
       }),
       // Paints KEY-123 as a link without writing the link into the markdown.
       IssueRef.configure({
-        keys: () => issueRefsRef.current.keys,
+        refs: () => issueRefsRef.current.refs,
         open: (href) => openIssueRefRef.current(href),
         rich: () => issueRefsRef.current.resolve && (!editableRef.current || !focusedRef.current),
       }),
@@ -225,12 +226,12 @@ export default function MarkdownEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
 
-  const issueRefKeyList = issueRefs.keys.join(',');
+  const issueRefList = issueRefs.refs.join(',');
   useEffect(() => {
     // After the commit. The refresh mounts the chip, and doing it here calls flushSync.
     const frame = requestAnimationFrame(() => refreshDecorations(editor));
     return () => cancelAnimationFrame(frame);
-  }, [editor, issueRefKeyList, issueRefs.resolve, selfHandle, editable, focused]);
+  }, [editor, issueRefList, issueRefs.resolve, selfHandle, editable, focused]);
 
   if (!editor) return null;
 

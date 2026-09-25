@@ -2,6 +2,7 @@ import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
 import { StatsDto } from '#modules/analytics/model';
+import { TEAM_SLUG_PATTERN } from './ref';
 
 // Both member lists here take the filters and the window the project member list
 // defines, so a reader learns one query and it holds everywhere.
@@ -17,16 +18,26 @@ export const setTeamMemberRoleBody = t.Object({
   role: t.Union([t.Literal('owner'), t.Literal('manager'), t.Literal('member')]),
 });
 
-export const createTeamBody = t.Object({
-  name: t.String({ minLength: 1, maxLength: 60 }),
+const teamName = t.String({ minLength: 1, maxLength: 60 });
+
+const teamSlug = t.String({
+  pattern: TEAM_SLUG_PATTERN,
+  description:
+    "The team's segment in web URLs: lower-case letters, digits and hyphens, " +
+    'starting with a letter, 2 to 40 characters.',
 });
 
-export const updateTeamBody = t.Partial(createTeamBody);
+export const createTeamBody = t.Object({ name: teamName, slug: teamSlug });
+
+// A team made before slugs were required has none, and takes no change until one is set.
+export const updateTeamBody = t.Partial(t.Object({ name: teamName, slug: teamSlug }));
 
 // A team DTO (TeamRow from the service).
 export const TeamResponse = t.Object({
   id: t.Number(),
   name: t.String(),
+  slug: t.Nullable(t.String()),
+  ref: t.String({ description: 'How web URLs name the team: its slug, or its id without one.' }),
   mcpEnabled: t.Boolean({
     description:
       'Whether the team is reachable over MCP. Off closes its own resources and every ' +
@@ -102,6 +113,7 @@ export const TeamProjectPageResponse = pageResponse(
   t.Object({
     id: t.Number(),
     key: t.String(),
+    ref: t.String({ description: "'<teamRef>.<key>': how routes name the project." }),
     name: t.String(),
     description: t.String(),
     mcpEnabled: t.Boolean({ description: "Whether the team's MCP reach covers this project." }),
@@ -125,6 +137,7 @@ export const TeamProjectOptionListResponse = t.Array(
   t.Object({
     id: t.Number(),
     key: t.String(),
+    ref: t.String({ description: "'<teamRef>.<key>': how routes name the project." }),
     name: t.String(),
     mcpEnabled: t.Boolean(),
   }),

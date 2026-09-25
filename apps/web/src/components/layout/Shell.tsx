@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { useIssueBySeqQuery } from '@/services/issues.service';
+import { useTeamsQuery } from '@/services/teams.service';
 import { useAccountPreferences } from '@/services/preferences.service';
 import type { IssueOpenMode } from '@/lib/api/endpoints/userPreferences';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -28,7 +29,7 @@ import { ChatPanel } from '@/features/ai-chat/components/panel/ChatPanel';
 import { useChatPanel } from '@/features/ai-chat/hooks/useChatPanel';
 import { useTranslations } from 'next-intl';
 
-// The layout for /project/:projectKey and its children (the work items view and the
+// The layout for /:team/:projectKey and its children (the work items view and the
 // settings pages). It owns the project data, the view editor and the
 // project-level overlays, renders the sidebar + header chrome, and passes the
 // project state to the active child through React context (see lib/shellContext).
@@ -56,7 +57,11 @@ export default function Shell({
     errorMsg,
     forbidden,
   } = useShellProject(projectKey, route.activeViewId);
-  const issueRefKeys = useMemo(() => projects.map((item) => item.key), [projects]);
+  const teamId = project?.project.teamId;
+  const issueRefs = useMemo(
+    () => projects.filter((item) => item.teamId === teamId).map((item) => item.ref),
+    [projects, teamId],
+  );
 
   const initiativeOptions = useInitiativeOptionsQuery(projectKey).data ?? [];
   const { issueOpenMode, showChatByDefault } = useAccountPreferences();
@@ -70,6 +75,11 @@ export default function Shell({
   const chatAvailable = !!projectKey && can('ai_agents', 'read');
   const canCreateInitiative = !!project?.project.initiativesEnabled && can('initiatives', 'create');
   const issueQuery = useIssueBySeqQuery(projectKey, routeIssueSeq);
+  // A project is created in a team by its owner or manager: the current project's team
+  // when the user ranks so there, otherwise the first team they do.
+  const managedTeams = (useTeamsQuery().data ?? []).filter((one) => one.role !== 'member');
+  const newProjectTeamId = (managedTeams.find((one) => one.id === teamId) ?? managedTeams[0])?.id;
+  const openNewProject = newProjectTeamId != null ? () => overlays.setShowNewProject(true) : null;
 
   useProjectRouteSync({ projects, projectsLoaded, projectKey });
 
@@ -108,7 +118,7 @@ export default function Shell({
     onChangeView: editor.changeView,
     onNewIssue: () => canCreateIssue && openNewIssue(),
     onNewInitiative: () => canCreateInitiative && overlays.setShowNewInitiative(true),
-    onNewProject: () => overlays.setShowNewProject(true),
+    onNewProject: () => openNewProject?.(),
     onSettings: () => firstSettingsHref && router.push(firstSettingsHref),
     onToggleChat: chatPanel.toggle,
   });
@@ -187,7 +197,7 @@ export default function Shell({
                 projectsLoaded={projectsLoaded}
                 projectCount={projects.length}
               >
-                <IssueRefsProvider keys={issueRefKeys}>{children}</IssueRefsProvider>
+                <IssueRefsProvider refs={issueRefs}>{children}</IssueRefsProvider>
               </ShellBody>
             </div>
 
@@ -221,15 +231,20 @@ export default function Shell({
           // board); the constant matches BOARD_SELECT_ALL_EVENT in useSelection.
           onSelectAll={() => window.dispatchEvent(new Event('board:select-all'))}
           onNewInitiative={() => overlays.setShowNewInitiative(true)}
-          onNewProject={() => overlays.setShowNewProject(true)}
+          onNewProject={openNewProject}
           onSelectProject={(key) => router.push(projectPath(key))}
           onOpenIssue={(seq) => projectKey && router.push(issuePath(projectKey, seq))}
           onIssueDeleted={onIssueDeleted}
           onToggleChat={chatPanel.toggle}
         />
 
-        <IssueRefsProvider keys={issueRefKeys}>
-          <ShellOverlays project={project} projectKey={projectKey} overlays={overlays} />
+        <IssueRefsProvider refs={issueRefs}>
+          <ShellOverlays
+            project={project}
+            projectKey={projectKey}
+            newProjectTeamId={newProjectTeamId}
+            overlays={overlays}
+          />
         </IssueRefsProvider>
       </SidebarProvider>
     </ShellCtx.Provider>

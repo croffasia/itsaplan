@@ -350,7 +350,7 @@ describe('SCIM group reconciliation', () => {
     it('refuses a role that belongs to another team', async () => {
       const setup = await setupScim();
       const marketing = await createProject(setup.god, 'Marketing', 'MKT');
-      const otherTeam = await setup.god.api.teams.post({ name: 'Design' });
+      const otherTeam = await setup.god.api.teams.post({ name: 'Design', slug: 'design' });
       await setup.god.api.teams({ teamId: otherTeam.data!.id }).projects.post({
         key: 'DSN',
         name: 'Design',

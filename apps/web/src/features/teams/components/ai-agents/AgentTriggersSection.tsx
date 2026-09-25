@@ -41,8 +41,8 @@ export default function AgentTriggersSection({
   // in the cache, so opening the editor usually fetches only the rest.
   const scaffolds = useQueries({
     queries: attached.map((project) => ({
-      queryKey: qk.project(project.key),
-      queryFn: () => getProject(project.key),
+      queryKey: qk.project(project.ref),
+      queryFn: () => getProject(project.ref),
     })),
   });
   const memberFields: ProjectField[] = scaffolds.flatMap((scaffold, index) =>

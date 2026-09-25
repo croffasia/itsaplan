@@ -182,7 +182,7 @@ describe('agent tools', () => {
       toolKey: 'jina_reader',
       credentialId: await jinaCredential(asOwner),
     });
-    const otherTeam = await asOwner.teams.post({ name: 'Design' });
+    const otherTeam = await asOwner.teams.post({ name: 'Design', slug: 'design' });
     await asOwner
       .teams({ teamId: otherTeam.data!.id })
       .projects.post({ key: 'DSG', name: 'Design' });

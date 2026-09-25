@@ -27,7 +27,7 @@ export default function CyclesPage({ view }: { view: CyclesView }) {
   const router = useRouter();
   const [creating, setCreating] = useState(false);
 
-  const projectKey = project?.project.key ?? null;
+  const projectKey = project?.project.ref ?? null;
   const query = usePlannedCyclesQuery(projectKey);
   const completed = useCompletedCycles(projectKey);
 

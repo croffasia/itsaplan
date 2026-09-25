@@ -36,7 +36,8 @@ export function useAppCommands({
   onNewIssue: () => void;
   onSelectAll: () => void;
   onNewInitiative: () => void;
-  onNewProject: () => void;
+  // null when the user manages no team, so has nowhere to create a project.
+  onNewProject: (() => void) | null;
   onSelectProject: (key: string) => void;
   onToggleChat: () => void;
 }): {
@@ -106,24 +107,26 @@ export function useAppCommands({
       run: onToggleChat,
     });
   }
-  generalItems.push({
-    id: 'general.new-project',
-    label: tPalette('newProject'),
-    icon: <SquarePlus />,
-    keywords: 'create add',
-    shortcut: hotkey('project.new') ?? undefined,
-    run: onNewProject,
-  });
+  if (onNewProject) {
+    generalItems.push({
+      id: 'general.new-project',
+      label: tPalette('newProject'),
+      icon: <SquarePlus />,
+      keywords: 'create add',
+      shortcut: hotkey('project.new') ?? undefined,
+      run: onNewProject,
+    });
+  }
 
   const projectItems: Command[] = projects
     .filter((p) => !p.isHidden)
     .map((p) => ({
-      id: `project.switch.${p.key}`,
+      id: `project.switch.${p.ref}`,
       label: p.name,
       icon: <LayoutGrid />,
       keywords: `switch project ${p.key}`,
-      checked: p.key === currentProjectKey,
-      run: () => onSelectProject(p.key),
+      checked: p.ref === currentProjectKey,
+      run: () => onSelectProject(p.ref),
     }));
 
   return {

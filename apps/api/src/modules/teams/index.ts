@@ -49,7 +49,7 @@ import {
   listTeamProjects,
   listTeams,
   removeTeamMember,
-  renameTeam,
+  updateTeam,
   setTeamMcp,
   getTeamProjectDefaults,
   setTeamProjectDefaults,
@@ -64,7 +64,7 @@ async function requireTeamProject(teamId: number, projectId: number): Promise<vo
 }
 
 // The teams the session user belongs to. A team owns projects and its own member
-// list; every account is given one at registration and may create more, becoming
+// list; an account creates its own after registration, and may create more, becoming
 // their owner.
 export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] } })
   .use(authContext)
@@ -273,11 +273,11 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       const name = body.name.trim();
       if (!name) throw new HttpError(400, 'Team name is required');
       set.status = 201;
-      return createTeam(name, requireUser(user).id);
+      return createTeam(name, body.slug, requireUser(user).id);
     },
     {
       body: createTeamBody,
-      response: { 201: TeamResponse, ...errors(400, 401) },
+      response: { 201: TeamResponse, ...errors(400, 401, 409) },
       detail: {
         summary: 'Create a team',
         description: 'Create a team and become its owner.',
@@ -289,17 +289,17 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
     '/teams/:teamId',
     async ({ body, membership }) => {
       const name = body.name?.trim();
-      if (!name) throw new HttpError(400, 'Team name is required');
-      return renameTeam(membership.teamId, name, membership.userId);
+      if (name === '') throw new HttpError(400, 'Team name is required');
+      return updateTeam(membership.teamId, { name, slug: body.slug }, membership.userId);
     },
     {
       teamOwner: true,
       params: teamParams,
       body: updateTeamBody,
-      response: { 200: TeamResponse, ...errors(400, 401, 403, 404) },
+      response: { 200: TeamResponse, ...errors(400, 401, 403, 404, 409) },
       detail: {
-        summary: 'Rename a team',
-        description: 'Rename a team you own.',
+        summary: 'Update a team',
+        description: 'Rename a team you own, or set the slug its web URLs use.',
       },
     },
   )

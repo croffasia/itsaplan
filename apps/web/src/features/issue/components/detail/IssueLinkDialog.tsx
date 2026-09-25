@@ -51,7 +51,7 @@ export default function IssueLinkDialog({
 
   // One request per burst of keystrokes, as in the command palette.
   const debounced = useDebouncedValue(query, 250);
-  const search = useIssueSearchQuery(project.project.key, debounced, { enabled: true });
+  const search = useIssueSearchQuery(project.project.ref, debounced, { enabled: true });
   const hits = (search.data ?? []).filter((h) => h.id !== issueId && !linkedIssueIds.has(h.id));
   const prompt = t('searchPrompt', { relation: phrase(relation) });
 
@@ -59,7 +59,7 @@ export default function IssueLinkDialog({
     setError(null);
     try {
       await linkIssues.mutateAsync({
-        projectKey: project.project.key,
+        projectKey: project.project.ref,
         issueId,
         otherIssueId: targetIssueId,
         kind: relation,

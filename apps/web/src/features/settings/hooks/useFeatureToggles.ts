@@ -26,7 +26,7 @@ export function useFeatureToggles(project: ProjectDetail): FeatureTogglesForm {
   const t = useTranslations('settings.general');
   const featureLabel = useFeatureLabel();
   const { isOwner } = usePermissions();
-  const update = useUpdateProjectFeatures(project.project.key);
+  const update = useUpdateProjectFeatures(project.project.ref);
 
   async function toggle(feature: keyof ProjectFeatures, enabled: boolean) {
     await update.mutateAsync({ [feature]: enabled });

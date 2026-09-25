@@ -18,7 +18,7 @@ export default function InitiativeProgress({
   project: ProjectDetail;
 }) {
   const t = useTranslations('initiatives');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
 
   return (
     <div className="flex w-full flex-col gap-10 px-8 py-8 lg:flex-row">

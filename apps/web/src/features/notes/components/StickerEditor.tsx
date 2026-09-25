@@ -20,6 +20,7 @@ export default function StickerEditor({
   const t = useTranslations('notes');
   const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   const editor = useEditor({
+    immediatelyRender: false,
     editable,
     extensions: stickerEditorExtensions(t('notePlaceholder')),
     content: value,

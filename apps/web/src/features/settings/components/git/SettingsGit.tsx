@@ -16,7 +16,7 @@ import SettingsSection from '@/components/common/page/SettingsSection';
 // immediately; there is no form-level save.
 export default function SettingsGit({ project }: { project: ProjectDetail }) {
   const t = useTranslations('settings.git');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const settingsQuery = useGitSettingsQuery(projectKey);
   const updateSettings = useUpdateGitSettings(projectKey);
 
@@ -43,7 +43,7 @@ export default function SettingsGit({ project }: { project: ProjectDetail }) {
           <GitConnectionCard projectKey={projectKey} settings={settings} />
           <GitProviderConnections
             projectKey={projectKey}
-            teamId={project.project.teamId}
+            teamRef={project.project.teamRef}
             canManageTeam={
               project.viewer.teamRole === 'owner' || project.viewer.teamRole === 'manager'
             }

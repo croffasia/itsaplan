@@ -9,7 +9,9 @@ function project(overrides: Partial<Project> = {}): Project {
     id: 1,
     teamId: 1,
     teamName: 'Engineering',
+    teamRef: 'eng',
     key: 'API',
+    ref: 'eng.API',
     name: 'API platform',
     description: '',
     mcpEnabled: true,
@@ -35,6 +37,8 @@ function team(overrides: Partial<Team> = {}): Team {
   return {
     id: 1,
     name: 'Engineering',
+    slug: 'eng',
+    ref: 'eng',
     mcpEnabled: true,
     role: 'owner',
     source: 'invite',

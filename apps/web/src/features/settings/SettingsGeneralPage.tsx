@@ -16,7 +16,7 @@ import { useFeatureToggles } from './hooks/useFeatureToggles';
 
 const section = settingsSection('general');
 
-// The General settings page (/project/:projectKey/settings/general). Edits the
+// The General settings page (/:team/:projectKey/settings/general). Edits the
 // project name and description; the key is shown read-only. Save lives in the page
 // header.
 export default function SettingsGeneralPage() {

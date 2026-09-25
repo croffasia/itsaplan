@@ -13,7 +13,7 @@ import SettingsWebhooks from './components/webhooks/SettingsWebhooks';
 
 const section = settingsSection('webhooks');
 
-// The Webhooks settings page (/project/:projectKey/settings/webhooks).
+// The Webhooks settings page (/:team/:projectKey/settings/webhooks).
 export default function SettingsWebhooksPage() {
   const t = useTranslations('settings.webhooks');
   const sectionText = useSettingsSectionText()(section.slug);

@@ -2,6 +2,9 @@
   "create": {
     "title": "New team",
     "namePlaceholder": "Team name",
+    "slug": "URL",
+    "slugHint": "Links to the team's projects start with it, e.g. /acme.",
+    "slugInvalid": "Use 2–40 lowercase letters, numbers or hyphens, starting with a letter.",
     "hint": "You'll be the owner of this team.",
     "submit": "Create team"
   },
@@ -50,11 +53,14 @@
   "info": {
     "team": "Team",
     "teamHint": "The name the team's projects are grouped under.",
+    "slug": "URL",
+    "slugHint": "Required to save changes. Lowercase letters, numbers and hyphens.",
+    "slugInvalid": "Use 2–40 lowercase letters, numbers or hyphens, starting with a letter.",
     "role": "Your role",
     "created": "Created",
     "leads": "Owners and managers",
     "leadsHint": "People who can manage this team and its projects.",
-    "saved": "Team name saved",
+    "saved": "Team saved",
     "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back."
   },
   "columns": {

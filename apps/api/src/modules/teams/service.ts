@@ -15,7 +15,8 @@ import {
   user,
 } from '@repo/db';
 import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
-import { HttpError, iso } from '#shared/lib';
+import { HttpError, iso, pgErrorCode } from '#shared/lib';
+import { isReservedSlug, projectRefSql, teamRef } from './ref';
 import { getLimits } from '#shared/limits';
 import { defaultMemberPermissions, fullPermissions, type Permissions } from '#shared/permissions';
 import {
@@ -48,6 +49,9 @@ export function runsTeam(standing: TeamStanding | null): boolean {
 export interface TeamRow {
   id: number;
   name: string;
+  slug: string | null;
+  // How web URLs name the team: the slug, or the id while it has none.
+  ref: string;
   // Whether the team is reachable over MCP at all. Off closes its own resources and
   // every project it owns, whichever projects it covers.
   mcpEnabled: boolean;
@@ -94,6 +98,7 @@ export interface TeamMemberRow {
 export interface TeamProjectRow {
   id: number;
   key: string;
+  ref: string;
   name: string;
   description: string;
   // Whether the team's MCP reach covers this project. Only counts while the team's
@@ -115,6 +120,7 @@ export interface TeamProjectPage {
 export interface TeamProjectOption {
   id: number;
   key: string;
+  ref: string;
   name: string;
   mcpEnabled: boolean;
 }
@@ -192,6 +198,7 @@ async function loadTeamRows(userId: string, teamId?: number): Promise<TeamRow[]>
     .select({
       id: team.id,
       name: team.name,
+      slug: team.slug,
       mcpEnabled: team.mcpEnabled,
       role: teamMember.role,
       source: teamMember.source,
@@ -280,6 +287,8 @@ async function loadTeamRows(userId: string, teamId?: number): Promise<TeamRow[]>
     return {
       id: row.id,
       name: row.name,
+      slug: row.slug,
+      ref: teamRef(row),
       mcpEnabled: row.mcpEnabled,
       role: standing,
       source: row.source as MemberSource,
@@ -527,6 +536,7 @@ export async function listTeamProjects(
       .select({
         id: project.id,
         key: project.key,
+        ref: projectRefSql,
         name: project.name,
         description: project.description,
         mcpEnabled: project.mcpEnabled,
@@ -535,9 +545,10 @@ export async function listTeamProjects(
         isMember: sql<boolean>`bool_or(${projectMember.userId} = ${userId})`,
       })
       .from(project)
+      .innerJoin(team, eq(team.id, project.teamId))
       .leftJoin(projectMember, eq(projectMember.projectId, project.id))
       .where(where)
-      .groupBy(project.id)
+      .groupBy(project.id, team.id)
       .orderBy(project.key)
       .limit(options.limit)
       .offset(options.offset),
@@ -580,6 +591,7 @@ export async function listTeamProjects(
     items: projects.map((p) => ({
       id: p.id,
       key: p.key,
+      ref: p.ref,
       name: p.name,
       description: p.description,
       mcpEnabled: p.mcpEnabled,
@@ -603,10 +615,12 @@ export async function listTeamProjectOptions(
     .select({
       id: project.id,
       key: project.key,
+      ref: projectRefSql,
       name: project.name,
       mcpEnabled: project.mcpEnabled,
     })
     .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
     .where(visibleTeamProjects(teamId, userId, standing))
     .orderBy(project.key);
 }
@@ -701,11 +715,14 @@ export async function listTeamProjectMembers(
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Writes a team owned by one account, with the default role its projects assign. Every
-// account owns one; the sign-up hook in @repo/auth writes the same rows inline, since
-// it runs inside better-auth rather than through this module.
-export async function insertOwnedTeam(tx: Transaction, name: string, ownerId: string) {
-  const [row] = await tx.insert(team).values({ name }).returning();
+// Writes a team owned by one account, with the default role its projects assign.
+export async function insertOwnedTeam(
+  tx: Transaction,
+  name: string,
+  ownerId: string,
+  slug: string | null = null,
+) {
+  const [row] = await tx.insert(team).values({ name, slug }).returning();
   const [membership] = await tx
     .insert(teamMember)
     .values({ teamId: row.id, userId: ownerId, role: 'owner' })
@@ -748,37 +765,71 @@ export async function assertTeamSeatFree(teamId: number): Promise<void> {
   }
 }
 
-// The team an account gets at sign-up is written by the hook in @repo/auth, which does
-// not come through here — the ceiling applies to the teams created on top of that one.
-export async function createTeam(name: string, ownerId: string): Promise<TeamRow> {
+export async function createTeam(name: string, slug: string, ownerId: string): Promise<TeamRow> {
   const { maxTeams } = await getLimits({ ownerUserId: ownerId });
   if (maxTeams > 0 && (await countOwnedTeams(ownerId)) >= maxTeams) {
     throw new HttpError(409, `You already own ${maxTeams} teams`);
   }
-  return db.transaction(async (tx) => {
-    const { team: row, membership } = await insertOwnedTeam(tx, name, ownerId);
-    return {
-      id: row.id,
-      name: row.name,
-      mcpEnabled: row.mcpEnabled,
-      role: 'owner',
-      source: 'invite',
-      joinedAt: iso(membership.createdAt),
-      projectCount: 0,
-      memberCount: 1,
-      ownerCount: 1,
-      roleCount: 1,
-      integrationCount: 0,
-      agentCount: 0,
-      skillCount: 0,
-      toolCount: 0,
-      createdAt: iso(row.createdAt),
-    };
-  });
+  assertSlugAllowed(slug);
+  return withSlugConflict(() =>
+    db.transaction(async (tx) => {
+      const { team: row, membership } = await insertOwnedTeam(tx, name, ownerId, slug);
+      return {
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        ref: teamRef(row),
+        mcpEnabled: row.mcpEnabled,
+        role: 'owner',
+        source: 'invite',
+        joinedAt: iso(membership.createdAt),
+        projectCount: 0,
+        memberCount: 1,
+        ownerCount: 1,
+        roleCount: 1,
+        integrationCount: 0,
+        agentCount: 0,
+        skillCount: 0,
+        toolCount: 0,
+        createdAt: iso(row.createdAt),
+      };
+    }),
+  );
 }
 
-export async function renameTeam(teamId: number, name: string, userId: string): Promise<TeamRow> {
-  await db.update(team).set({ name }).where(eq(team.id, teamId));
+function assertSlugAllowed(slug: string | undefined): void {
+  if (slug && isReservedSlug(slug)) {
+    throw new HttpError(400, `'${slug}' is reserved and cannot be a team slug`);
+  }
+}
+
+// slug is the only unique column of team, so a unique violation names it.
+async function withSlugConflict<T>(write: () => Promise<T>): Promise<T> {
+  try {
+    return await write();
+  } catch (err) {
+    if (pgErrorCode(err) === '23505')
+      throw new HttpError(409, 'Another team already uses this slug');
+    throw err;
+  }
+}
+
+export async function updateTeam(
+  teamId: number,
+  changes: { name?: string; slug?: string },
+  userId: string,
+): Promise<TeamRow> {
+  assertSlugAllowed(changes.slug);
+  if (changes.slug === undefined) {
+    const [current] = await db.select({ slug: team.slug }).from(team).where(eq(team.id, teamId));
+    if (current?.slug === null) {
+      throw new HttpError(400, "Set the team's slug before changing it");
+    }
+  }
+  // Drizzle skips undefined values, and throws when none are left to set.
+  if (changes.name !== undefined || changes.slug !== undefined) {
+    await withSlugConflict(() => db.update(team).set(changes).where(eq(team.id, teamId)));
+  }
   const [row] = await loadTeamRows(userId, teamId);
   return row;
 }

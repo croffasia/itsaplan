@@ -2,6 +2,9 @@
   "create": {
     "title": "Novo time",
     "namePlaceholder": "Nome do time",
+    "slug": "URL",
+    "slugHint": "Os links para os projetos da equipe começam com ele, por exemplo /acme.",
+    "slugInvalid": "Use de 2 a 40 letras minúsculas, números ou hifens, começando com uma letra.",
     "hint": "Você será o dono deste time.",
     "submit": "Criar time"
   },
@@ -50,11 +53,14 @@
   "info": {
     "team": "Time",
     "teamHint": "O nome sob o qual os projetos do time são agrupados.",
+    "slug": "URL",
+    "slugHint": "Obrigatória para salvar as alterações. Letras minúsculas, números e hifens.",
+    "slugInvalid": "Use de 2 a 40 letras minúsculas, números ou hifens, começando com uma letra.",
     "role": "Sua função",
     "created": "Criado",
     "leads": "Donos e gerentes",
     "leadsHint": "Pessoas que podem gerenciar este time e seus projetos.",
-    "saved": "Nome do time salvo",
+    "saved": "Equipe salva",
     "leaveHint": "Você mantém os projetos de que é membro. Para entrar de novo, um dono precisa readicioná-lo."
   },
   "columns": {

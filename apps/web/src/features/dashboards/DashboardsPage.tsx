@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useShellRoute } from '@/hooks/useShellRoute';
 import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -23,9 +24,9 @@ export default function DashboardsPage() {
   const tCommon = useTranslations('common');
   const { project } = useShell();
   const { can } = usePermissions();
-  const params = useParams<{ projectKey: string; dashboardId?: string }>();
+  const params = useParams<{ dashboardId?: string }>();
   const router = useRouter();
-  const projectKey = params.projectKey;
+  const projectKey = useShellRoute().projectKey ?? '';
 
   const { data: dashboards, isLoading, isFetching, isSuccess } = useDashboardsQuery(projectKey);
   const [editing, setEditing] = useState(false);

@@ -33,7 +33,7 @@ async function configureEmail(owner: ReturnType<typeof authedApi>) {
   expect(result.status).toBe(200);
 }
 
-// The id of the team the caller owns — every account is given one at registration.
+// The id of the team the caller owns — signUpTestUser gives every account one.
 async function ownTeamId(api: ReturnType<typeof authedApi>): Promise<number> {
   const teams = await api.teams.get();
   return teams.data!.find((one) => one.role === 'owner')!.id;

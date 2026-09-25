@@ -130,8 +130,8 @@ export default function NewIssueModal({
   const [applyCount, setApplyCount] = useState(0);
 
   const createIssue = useCreateIssue();
-  const updateIssue = useUpdateIssue(project.project.key);
-  const setFieldValueMutation = useSetFieldValue(project.project.key);
+  const updateIssue = useUpdateIssue(project.project.ref);
+  const setFieldValueMutation = useSetFieldValue(project.project.ref);
   const attachments = useNewIssueAttachments();
 
   // The description editor instance, so a file dropped or pasted anywhere on the
@@ -242,7 +242,7 @@ export default function NewIssueModal({
     setError(null);
     try {
       const created = await createIssue.mutateAsync({
-        projectKey: project.project.key,
+        projectKey: project.project.ref,
         input: {
           title: title.trim(),
           description: description.trim() || undefined,
@@ -332,7 +332,7 @@ export default function NewIssueModal({
           />
         )
       }
-      scope={project.project.key}
+      scope={project.project.ref}
       onClose={onClose}
       // The template pill comes before the title in the DOM, so the title has to
       // claim the focus itself.
@@ -415,14 +415,14 @@ export default function NewIssueModal({
 
           {project.project.initiativesEnabled && (
             <InitiativeSelect
-              projectKey={project.project.key}
+              projectKey={project.project.ref}
               value={initiativeId}
               onChange={setInitiativeId}
             />
           )}
 
           {project.project.cyclesEnabled && (
-            <CycleSelect projectKey={project.project.key} value={cycle} onChange={setCycle} />
+            <CycleSelect projectKey={project.project.ref} value={cycle} onChange={setCycle} />
           )}
 
           {project.labels.length > 0 && (

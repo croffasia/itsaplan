@@ -18,6 +18,19 @@ describe('internal link targets', () => {
       assert.deepEqual(internalLinkTarget(new URL(path, 'https://planner.test')), expected);
   });
 
+  it('recognizes the team-first routes and names the project by its ref', () => {
+    const examples = [
+      ['/acme/SYR', { kind: 'project', projectKey: 'acme.SYR' }],
+      ['/acme/issue/SYR-13', { kind: 'issue', projectKey: 'acme.SYR', id: 13 }],
+      ['/12/issue/SYR-13#details', { kind: 'issue', projectKey: '12.SYR', id: 13 }],
+      ['/acme/SYR/notes/18', { kind: 'notes', projectKey: 'acme.SYR', id: 18 }],
+      ['/acme/SYR/docs/9', { kind: 'document', projectKey: 'acme.SYR', id: 9 }],
+      ['/acme/SYR/view/41', { kind: 'view', projectKey: 'acme.SYR', id: 41 }],
+    ] as const;
+    for (const [path, expected] of examples)
+      assert.deepEqual(internalLinkTarget(new URL(path, 'https://planner.test')), expected);
+  });
+
   it('rejects unsupported, malformed and unsafe numeric routes', () => {
     for (const path of [
       '/account/profile',
@@ -29,6 +42,11 @@ describe('internal link targets', () => {
       '/project/SYR%2Fother/notes/1',
       '/project/%E0%A4%A',
       '/project/SYR/issue/1/extra',
+      '/account/teams',
+      '/acme/settings/members',
+      '/acme/issue/SYR-0',
+      '/acme/issue/42',
+      '/acme/SYR/settings/general',
     ]) {
       assert.equal(internalLinkTarget(new URL(path, 'https://planner.test')), null, path);
     }

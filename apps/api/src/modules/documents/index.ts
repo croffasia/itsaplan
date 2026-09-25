@@ -73,6 +73,7 @@ import {
   transferDocumentOwnership,
   updateDocument,
   type DocumentAssetRow,
+  documentAssetPath,
 } from './service';
 import {
   addDocumentInitiativeLink,
@@ -84,7 +85,11 @@ import {
   removeDocumentIssueLink,
 } from './links';
 
-function documentAssetDto(projectKey: string, documentId: number, asset: DocumentAssetRow) {
+function documentAssetDto(
+  project: { teamId: number; key: string },
+  documentId: number,
+  asset: DocumentAssetRow,
+) {
   return {
     id: asset.publicId,
     filename: asset.filename,
@@ -92,7 +97,7 @@ function documentAssetDto(projectKey: string, documentId: number, asset: Documen
     sizeBytes: asset.sizeBytes,
     uploadedByUserId: asset.uploadedByUserId,
     createdAt: asset.createdAt,
-    url: `/projects/${encodeURIComponent(projectKey)}/documents/${documentId}/assets/${asset.publicId}/raw`,
+    url: documentAssetPath(project, documentId, asset.publicId),
   };
 }
 
@@ -322,7 +327,7 @@ export const documentRoutes = new Elysia({
     async ({ project, params, user }) => {
       const assets = await listDocumentAssets(project.id, params.documentId, requireUser(user).id);
       if (!assets) throw new HttpError(404, 'Document not found');
-      return assets.map((asset) => documentAssetDto(project.key, params.documentId, asset));
+      return assets.map((asset) => documentAssetDto(project, params.documentId, asset));
     },
     {
       permission: ['documents', 'read'],
@@ -362,7 +367,7 @@ export const documentRoutes = new Elysia({
         });
         if (!asset) throw new HttpError(404, 'Document not found');
         set.status = 201;
-        return documentAssetDto(project.key, params.documentId, asset);
+        return documentAssetDto(project, params.documentId, asset);
       } catch (error) {
         await deleteAttachmentObject(key);
         throw error;

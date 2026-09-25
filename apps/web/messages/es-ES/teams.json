@@ -2,6 +2,9 @@
   "create": {
     "title": "Nuevo equipo",
     "namePlaceholder": "Nombre del equipo",
+    "slug": "URL",
+    "slugHint": "Los enlaces a los proyectos del equipo empiezan por él, p. ej. /acme.",
+    "slugInvalid": "Usa de 2 a 40 letras minúsculas, números o guiones, empezando por una letra.",
     "hint": "Serás el propietario de este equipo.",
     "submit": "Crear equipo"
   },
@@ -50,11 +53,14 @@
   "info": {
     "team": "Equipo",
     "teamHint": "El nombre bajo el que se agrupan los proyectos del equipo.",
+    "slug": "URL",
+    "slugHint": "Obligatoria para guardar los cambios. Letras minúsculas, números y guiones.",
+    "slugInvalid": "Usa de 2 a 40 letras minúsculas, números o guiones, empezando por una letra.",
     "role": "Tu rol",
     "created": "Creada",
     "leads": "Propietarios y administradores",
     "leadsHint": "Personas que pueden gestionar este equipo y sus proyectos.",
-    "saved": "El nombre del equipo se ha guardado",
+    "saved": "Equipo guardado",
     "leaveHint": "Conservas los proyectos de los que eres miembro. Para volver a unirte, un propietario tiene que añadirte de vuelta."
   },
   "columns": {

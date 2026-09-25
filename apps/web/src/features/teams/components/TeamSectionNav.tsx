@@ -54,7 +54,7 @@ export default function TeamSectionNav({ team }: { team: Team }) {
       label,
       icon,
       badge: count === undefined ? undefined : String(count),
-      href: teamSectionPath(team.id, id),
+      href: teamSectionPath(team.ref, id),
     };
   }
 

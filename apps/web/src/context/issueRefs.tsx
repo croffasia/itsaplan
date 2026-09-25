@@ -2,23 +2,23 @@
 
 import { createContext, useContext, type ReactNode } from 'react';
 
-// The project keys an issue identifier is linked for, and whether the link may read
+// The projects (by ref) an issue identifier is linked for, and whether the link may read
 // the issue it names to show its state and title.
-type IssueRefs = { keys: readonly string[]; resolve: boolean };
+type IssueRefs = { refs: readonly string[]; resolve: boolean };
 
-const IssueRefsContext = createContext<IssueRefs>({ keys: [], resolve: false });
+const IssueRefsContext = createContext<IssueRefs>({ refs: [], resolve: false });
 
 export function IssueRefsProvider({
-  keys,
+  refs,
   resolve = true,
   children,
 }: {
-  keys: readonly string[];
+  refs: readonly string[];
   resolve?: boolean;
   children: ReactNode;
 }) {
   return (
-    <IssueRefsContext.Provider value={{ keys, resolve }}>{children}</IssueRefsContext.Provider>
+    <IssueRefsContext.Provider value={{ refs, resolve }}>{children}</IssueRefsContext.Provider>
   );
 }
 

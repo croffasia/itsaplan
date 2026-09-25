@@ -60,7 +60,7 @@ export default function ReadOnlyIssueDetail({
             issue it names: the api answers that read with 401, and lib/api treats every
             401 as an ended session and sends the reader to the sign-in screen. */}
         {issue.description.trim() && (
-          <IssueRefsProvider keys={[scaffold.project.key]} resolve={false}>
+          <IssueRefsProvider refs={[scaffold.project.ref]} resolve={false}>
             <MarkdownEditor className="mt-4" defaultValue={issue.description} editable={false} />
           </IssueRefsProvider>
         )}

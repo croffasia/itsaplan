@@ -27,7 +27,7 @@ import {
   getTeamProjectDefaults,
   updateTeamProjectDefaults,
   createTeam,
-  renameTeam,
+  updateTeam,
   setTeamMemberRole,
   removeTeamMember,
   leaveTeam,
@@ -155,7 +155,7 @@ export function useUpdateTeamProjectDefaults(teamId: number) {
 export function useCreateTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string }) => createTeam(input),
+    mutationFn: (input: { name: string; slug: string }) => createTeam(input),
     onSuccess: (team) => {
       // Put the team in the cached list right away so the switcher shows it before
       // the refetch lands; it has no projects yet, so nothing else has to load.
@@ -165,15 +165,21 @@ export function useCreateTeam() {
   });
 }
 
-export function useRenameTeam() {
+export function useUpdateTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { teamId: number; name: string }) =>
-      renameTeam(input.teamId, { name: input.name }),
+    mutationFn: (input: { teamId: number; name?: string; slug?: string }) =>
+      updateTeam(input.teamId, { name: input.name, slug: input.slug }),
     onSuccess: (team) => {
+      // The caller moves to the new slug right away; a list still holding the old one
+      // would not find the team on that path.
+      qc.setQueryData<Team[]>(qk.teams, (prev) =>
+        prev?.map((entry) => (entry.id === team.id ? team : entry)),
+      );
       void qc.invalidateQueries({ queryKey: qk.teams });
       void qc.invalidateQueries({ queryKey: qk.team(team.id) });
-      // The switcher groups projects by team name, so the project list carries it too.
+      // The project list carries the team's name, which the switcher groups by, and
+      // its ref, which every project path starts with.
       void qc.invalidateQueries({ queryKey: qk.projects });
     },
   });

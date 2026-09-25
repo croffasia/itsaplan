@@ -49,12 +49,14 @@ export const appSecret = pgTable('app_secret', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-// A team owns projects and holds its own member list. Every account is given one at
-// registration, named after its username, and every project belongs to exactly one
-// team.
+// A team owns projects and holds its own member list. Every project belongs to exactly
+// one team.
 export const team = pgTable('team', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
+  // The team's segment in web URLs (/acme/MKT). Null until an owner sets one; the
+  // team id stands in for it until then.
+  slug: text('slug').unique(),
   // Whether the team is reachable through the MCP server at all. Off closes both the
   // team's own resources (agents, skills, tools, roles, integrations) and every
   // project it owns, whatever each project's own flag says.
@@ -98,41 +100,45 @@ export const teamMember = pgTable(
 // issues. next_sequence is the atomic counter behind each issue's human
 // identifier (e.g. "MKT-42"): incrementing it under a row lock keeps concurrent
 // creates from colliding.
-export const project = pgTable('project', {
-  id: serial('id').primaryKey(),
-  teamId: integer('team_id')
-    .notNull()
-    .references(() => team.id, { onDelete: 'cascade' }),
-  key: text('key').notNull().unique(),
-  name: text('name').notNull(),
-  description: text('description').notNull().default(''),
-  nextSequence: integer('next_sequence').notNull().default(1),
-  // Whether this project is in the team's MCP reach. Managed from the team's MCP
-  // settings, not from the project, and only counts while team.mcp_enabled is on.
-  // The starting value is the instance-wide project default set in god mode.
-  mcpEnabled: boolean('mcp_enabled').notNull().default(false),
-  // Optional sections of the app, toggled per project in Settings -> Features. All
-  // on by default. Turning one off only hides its UI; the rows it owns stay and
-  // come back with it.
-  initiativesEnabled: boolean('initiatives_enabled').notNull().default(true),
-  dashboardsEnabled: boolean('dashboards_enabled').notNull().default(true),
-  documentsEnabled: boolean('documents_enabled').notNull().default(true),
-  notesEnabled: boolean('notes_enabled').notNull().default(true),
-  cyclesEnabled: boolean('cycles_enabled').notNull().default(true),
-  subtasksEnabled: boolean('subtasks_enabled').notNull().default(true),
-  checklistsEnabled: boolean('checklists_enabled').notNull().default(true),
-  issueStatsEnabled: boolean('issue_stats_enabled').notNull().default(true),
-  // Which kinds of estimate the issues of this project carry, set in Settings ->
-  // Configuration. Both off by default; turning one off hides its UI and keeps the
-  // values, which show again when it is turned back on.
-  pointsEstimateEnabled: boolean('points_estimate_enabled').notNull().default(false),
-  timeEstimateEnabled: boolean('time_estimate_enabled').notNull().default(false),
-  // Whether members log the time they spend on the issues of this project, set in
-  // the same place. Independent of the time estimate: a team can log time without
-  // estimating first. Turning it off hides the entries and keeps them.
-  timeLoggingEnabled: boolean('time_logging_enabled').notNull().default(false),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const project = pgTable(
+  'project',
+  {
+    id: serial('id').primaryKey(),
+    teamId: integer('team_id')
+      .notNull()
+      .references(() => team.id, { onDelete: 'cascade' }),
+    key: text('key').notNull(),
+    name: text('name').notNull(),
+    description: text('description').notNull().default(''),
+    nextSequence: integer('next_sequence').notNull().default(1),
+    // Whether this project is in the team's MCP reach. Managed from the team's MCP
+    // settings, not from the project, and only counts while team.mcp_enabled is on.
+    // The starting value is the instance-wide project default set in god mode.
+    mcpEnabled: boolean('mcp_enabled').notNull().default(false),
+    // Optional sections of the app, toggled per project in Settings -> Features. All
+    // on by default. Turning one off only hides its UI; the rows it owns stay and
+    // come back with it.
+    initiativesEnabled: boolean('initiatives_enabled').notNull().default(true),
+    dashboardsEnabled: boolean('dashboards_enabled').notNull().default(true),
+    documentsEnabled: boolean('documents_enabled').notNull().default(true),
+    notesEnabled: boolean('notes_enabled').notNull().default(true),
+    cyclesEnabled: boolean('cycles_enabled').notNull().default(true),
+    subtasksEnabled: boolean('subtasks_enabled').notNull().default(true),
+    checklistsEnabled: boolean('checklists_enabled').notNull().default(true),
+    issueStatsEnabled: boolean('issue_stats_enabled').notNull().default(true),
+    // Which kinds of estimate the issues of this project carry, set in Settings ->
+    // Configuration. Both off by default; turning one off hides its UI and keeps the
+    // values, which show again when it is turned back on.
+    pointsEstimateEnabled: boolean('points_estimate_enabled').notNull().default(false),
+    timeEstimateEnabled: boolean('time_estimate_enabled').notNull().default(false),
+    // Whether members log the time they spend on the issues of this project, set in
+    // the same place. Independent of the time estimate: a team can log time without
+    // estimating first. Turning it off hides the entries and keeps them.
+    timeLoggingEnabled: boolean('time_logging_enabled').notNull().default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique('project_team_key_uq').on(t.teamId, t.key)],
+);
 
 // Per-project key-value settings, mirroring app_setting but scoped to a project.
 // The value is a jsonb blob owned by whatever feature reads the key, so one table

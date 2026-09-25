@@ -579,7 +579,7 @@ describe('projects', () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });
       await createAgent(api, 'SRC', { name: 'Ext', username: 'ext', kind: 'external' });
-      const target = (await api.teams.post({ name: 'Other Team' })).data!;
+      const target = (await api.teams.post({ name: 'Other Team', slug: 'other-team' })).data!;
       const sourceId = await projectIdOf(api, 'SRC');
 
       await api

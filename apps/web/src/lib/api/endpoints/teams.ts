@@ -13,6 +13,10 @@ import {
 export interface Team {
   id: number;
   name: string;
+  // The team's segment in the app's paths (/acme/MKT). Null until an owner sets one.
+  slug: string | null;
+  // The slug, or the id while there is none: what the paths carry.
+  ref: string;
   // Whether the team is reachable over MCP at all, set in its MCP section. Off closes
   // its own resources and every project it owns.
   mcpEnabled: boolean;
@@ -62,6 +66,8 @@ export interface TeamMember {
 export interface TeamProject {
   id: number;
   key: string;
+  // "<teamRef>.<key>", see Project.ref.
+  ref: string;
   name: string;
   description: string;
   // Whether the team's MCP reach covers this project. Only counts while the team's
@@ -83,6 +89,7 @@ export interface TeamProjectListParams extends PageParams {
 export interface TeamProjectOption {
   id: number;
   key: string;
+  ref: string;
   name: string;
   mcpEnabled: boolean;
 }
@@ -199,10 +206,10 @@ export const listTeamProjectMembers = (
     `/teams/${teamId}/projects/${projectId}/members${memberListQuery(params)}`,
   );
 
-export const createTeam = (input: { name: string }) =>
+export const createTeam = (input: { name: string; slug: string }) =>
   request<Team>('/teams', { method: 'POST', body: JSON.stringify(input) });
 
-export const renameTeam = (teamId: number, input: { name: string }) =>
+export const updateTeam = (teamId: number, input: { name?: string; slug?: string }) =>
   request<Team>(`/teams/${teamId}`, { method: 'PATCH', body: JSON.stringify(input) });
 
 export const leaveTeam = (teamId: number) =>

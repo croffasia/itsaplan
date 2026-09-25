@@ -10,8 +10,11 @@ import { internalLinkTarget } from './internalLinkTarget';
 import { previewExcerpt } from './previewExcerpt';
 import { viewPreviewFilters, type PreviewFilter } from './viewPreviewFilters';
 
+type ProjectLoader = (projectKey: string, signal: AbortSignal) => ReturnType<typeof getProject>;
+
 export type ResolvedLinkPreview = LinkPreview & {
   kind?: 'project' | 'issue' | 'notes' | 'document' | 'view';
+  issueTitle?: string;
   status?: { name: string; color: string };
   updatedAt?: string;
   noteCount?: number;
@@ -22,6 +25,7 @@ export type ResolvedLinkPreview = LinkPreview & {
 async function resolveInternalLinkPreview(
   url: URL,
   signal: AbortSignal,
+  loadProject: ProjectLoader,
 ): Promise<ResolvedLinkPreview> {
   const empty: LinkPreview = {
     url: url.href,
@@ -38,18 +42,19 @@ async function resolveInternalLinkPreview(
         ? await getIssueBySeq(target.projectKey, target.id, signal)
         : await getIssue(target.id, signal);
     const projectKey = issue.identifier.replace(/-\d+$/, '');
-    const project = await getProject(projectKey, signal);
+    const project = await loadProject(projectKey, signal);
     return {
       ...empty,
       kind: 'issue',
       title: `${issue.identifier} · ${issue.title}`,
+      issueTitle: issue.title,
       description: previewExcerpt(issue.description),
       siteName: project.project.name,
       status: project.columns.find((column) => column.id === issue.columnId),
       updatedAt: issue.updatedAt,
     };
   }
-  const project = await getProject(target.projectKey, signal);
+  const project = await loadProject(target.projectKey, signal);
   const base = { ...empty, siteName: project.project.name };
   switch (target.kind) {
     case 'project':
@@ -108,10 +113,11 @@ export function resolveLinkPreview(
   url: string,
   origin: string,
   signal: AbortSignal,
+  loadProject: ProjectLoader = getProject,
 ): Promise<ResolvedLinkPreview> {
   const target = new URL(url, origin);
   if (!['http:', 'https:'].includes(target.protocol) || target.username || target.password)
     throw new ApiError(400, 'Invalid preview URL');
-  if (target.origin === origin) return resolveInternalLinkPreview(target, signal);
+  if (target.origin === origin) return resolveInternalLinkPreview(target, signal, loadProject);
   return getLinkPreview(target.href, signal);
 }

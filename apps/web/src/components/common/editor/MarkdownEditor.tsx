@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
@@ -10,6 +11,10 @@ import { Markdown } from 'tiptap-markdown';
 import { pasteMarkdown } from './pasteMarkdown';
 import { ResizableImage } from './tiptap-image';
 import { Mention } from '@/lib/tiptap-mention';
+import { useSession } from '@/lib/auth-client';
+import { useIssueRefs } from '@/context/issueRefs';
+import { IssueRef } from './issueRefDecorations';
+import { refreshDecorations } from './refreshDecorations';
 import { SlashCommand } from '@/lib/tiptap-slash-command';
 import { MarkdownTable } from './tiptap-table';
 import { Video } from './tiptap-video';
@@ -72,9 +77,25 @@ export default function MarkdownEditor({
   const linkKeyboardHandlers = useMemo(() => createLinkKeyboardHandlers(true), []);
   // Held in a ref because the extensions are built once: the "@" menu reads the
   // roster through it, so a list that arrives later is still offered.
+  const router = useRouter();
+  const { data: session } = useSession();
+  const issueRefs = useIssueRefs();
   const mentionCandidates = useMentionCandidates();
   const mentionCandidatesRef = useRef(mentionCandidates);
   mentionCandidatesRef.current = mentionCandidates;
+  const issueRefsRef = useRef(issueRefs);
+  issueRefsRef.current = issueRefs;
+  const openIssueRefRef = useRef(router.push);
+  openIssueRefRef.current = (href: string) => router.push(href);
+  const selfHandle = session?.user.username ?? '';
+  const selfHandleRef = useRef(selfHandle);
+  selfHandleRef.current = selfHandle;
+  const editableRef = useRef(editable);
+  editableRef.current = editable;
+  // False while the field can be typed into but has no focus: the chip shows, and
+  // swaps for the plain identifier only once editing actually starts.
+  const focusedRef = useRef(false);
+  const [focused, setFocused] = useState(false);
   // Whether the document has changed since this editor was mounted. The markdown
   // round trip is not an identity: the link extension's autolink parses a bare URL
   // into a link node, which serialises back in angle brackets. A blur reporting every
@@ -115,7 +136,16 @@ export default function MarkdownEditor({
       ResizableImage,
       // Renders an @username in the text as a mention chip, and offers the project's
       // members and agents while one is typed.
-      Mention.configure({ items: () => mentionCandidatesRef.current }),
+      Mention.configure({
+        items: () => mentionCandidatesRef.current,
+        self: () => selfHandleRef.current,
+      }),
+      // Paints KEY-123 as a link without writing the link into the markdown.
+      IssueRef.configure({
+        keys: () => issueRefsRef.current.keys,
+        open: (href) => openIssueRefRef.current(href),
+        rich: () => issueRefsRef.current.resolve && (!editableRef.current || !focusedRef.current),
+      }),
       // Renders video attachments as an inline <video> player.
       Video,
       // TableKit carries the row and cell nodes around MarkdownTable's table node.
@@ -178,7 +208,13 @@ export default function MarkdownEditor({
       changedRef.current = true;
       onChange?.(editor.storage.markdown.getMarkdown());
     },
+    onFocus: () => {
+      focusedRef.current = true;
+      setFocused(true);
+    },
     onBlur: ({ editor }) => {
+      focusedRef.current = false;
+      setFocused(false);
       if (changedRef.current) onBlur?.(editor.storage.markdown.getMarkdown());
     },
   });
@@ -188,6 +224,13 @@ export default function MarkdownEditor({
     onReady?.(editor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editor]);
+
+  const issueRefKeyList = issueRefs.keys.join(',');
+  useEffect(() => {
+    // After the commit. The refresh mounts the chip, and doing it here calls flushSync.
+    const frame = requestAnimationFrame(() => refreshDecorations(editor));
+    return () => cancelAnimationFrame(frame);
+  }, [editor, issueRefKeyList, issueRefs.resolve, selfHandle, editable, focused]);
 
   if (!editor) return null;
 

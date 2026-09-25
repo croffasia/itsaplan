@@ -101,7 +101,7 @@ export default function CommentItem({
         </div>
       ) : (
         <MarkdownEditor
-          className="mt-1 ps-7 text-sm text-foreground/85"
+          className="mt-1 ps-7 text-sm text-foreground/85 [&_a.issue-ref]:mx-1 [&_a.issue-ref]:text-[0.9em]"
           defaultValue={item.body ?? ''}
           editable={false}
         />

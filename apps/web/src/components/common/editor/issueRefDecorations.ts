@@ -96,12 +96,6 @@ export const IssueRef = Extension.create<IssueRefOptions>({
               ? build(tr.doc)
               : previous.map(tr.mapping, tr.doc),
         },
-        view: () => ({
-          destroy: () => {
-            for (const renderer of renderers.values()) renderer.destroy();
-            renderers.clear();
-          },
-        }),
         props: {
           decorations: (state) => key.getState(state),
           handleDOMEvents: {

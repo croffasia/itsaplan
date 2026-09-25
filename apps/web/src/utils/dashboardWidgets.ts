@@ -100,7 +100,7 @@ export const WIDGET_DEFAULTS: Record<
     w: 6,
     h: 6,
     minH: 5,
-    config: { days: 90, initiativeId: null, forecastWeeks: 4, forecast: 'line' },
+    config: { days: 90, initiativeId: null, forecastWeeks: 4, forecast: 'range' },
   },
   breakdown: { w: 6, h: 6, minH: 5, config: { by: 'status' } },
   agent_runs: { w: 6, h: 7, minH: 3, config: { limit: 20 } },

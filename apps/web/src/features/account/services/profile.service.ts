@@ -1,6 +1,6 @@
 import { API_URL, apiFailure } from '@/lib/api/core/client';
 
-// Uploads an avatar image to the API (stored in MinIO). The API writes the new URL
+// Uploads an avatar image to the API (stored in the S3 object store). The API writes the new URL
 // to the user's image column itself and returns it, so the caller only has to read
 // the session again. Multipart, so the browser sets the boundary itself — no
 // Content-Type header.

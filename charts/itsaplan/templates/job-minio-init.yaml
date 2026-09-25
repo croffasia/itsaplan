@@ -24,23 +24,24 @@ spec:
       {{- end }}
       containers:
         - name: minio-init
-          image: "{{ .Values.minio.mcImage.repository }}:{{ .Values.minio.mcImage.tag }}"
+          image: "{{ .Values.minio.image.repository }}:{{ .Values.minio.image.tag }}"
           command:
             - /bin/sh
             - -c
             - |
-              until mc alias set minio http://{{ include "itsaplan.fullname" . }}-minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD"; do
-                echo "Waiting for MinIO..."
+              until curl -fsS -o /dev/null http://{{ include "itsaplan.fullname" . }}-minio:9000/health; do
+                echo "Waiting for the object store..."
                 sleep 2
               done
-              mc mb --ignore-existing minio/{{ .Values.minio.bucket }}
+              curl -fsS -X PUT --aws-sigv4 aws:amz:us-east-1:s3 --user "$S3_ACCESS_KEY_ID:$S3_SECRET_ACCESS_KEY" \
+                http://{{ include "itsaplan.fullname" . }}-minio:9000/{{ .Values.minio.bucket }}
           env:
-            - name: MINIO_ROOT_USER
+            - name: S3_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
                   name: {{ include "itsaplan.fullname" . }}
                   key: S3_ACCESS_KEY_ID
-            - name: MINIO_ROOT_PASSWORD
+            - name: S3_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "itsaplan.fullname" . }}

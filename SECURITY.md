@@ -44,5 +44,5 @@ An instance is only as safe as its configuration:
 - `APP_ENCRYPTION_KEY` encrypts stored provider credentials at rest. Losing it makes
   those credentials undecryptable, changing it has the same effect.
 - Serve the app over HTTPS. Cookies are marked `secure` in production.
-- Keep the MinIO console and the Postgres port off the public network.
+- Keep the RustFS console and the Postgres port off the public network.
 - `APP_URL` must be the real frontend origin, and nothing else (it is the auth trusted origin).

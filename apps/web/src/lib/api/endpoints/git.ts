@@ -2,14 +2,13 @@ import { request } from '@/lib/api/core/client';
 
 // Per-project repository integration settings, shared by every provider.
 // webhookId is the path segment of the payload URL registered on the repository;
-// secret authenticates its deliveries and is null for members who may read but not
-// edit integrations. onMergeColumnId is where an issue closed by a merged pull
+// secret authenticates its deliveries. onMergeColumnId is where an issue closed by a merged pull
 // request moves (null = the first completed state); onOpenColumnId is where an
 // issue moves when a linked pull request is opened (null = no action).
 export interface GitSettings {
   enabled: boolean;
   webhookId: string;
-  secret: string | null;
+  secret: string;
   onMergeColumnId: number | null;
   onOpenColumnId: number | null;
   linkbackComments: boolean;
@@ -158,17 +157,20 @@ export const regenerateGitSecret = (projectKey: string) =>
 export const listGitProviderConnections = (projectKey: string) =>
   request<GitProviderConnection[]>(`/projects/${projectKey}/settings/git/connections`);
 
+export const listTeamGitProviderConnections = (teamId: number) =>
+  request<GitProviderConnection[]>(`/teams/${teamId}/settings/git/connections`);
+
 export const connectGitProvider = (
-  projectKey: string,
+  teamId: number,
   input: { provider: GitConnectionProvider; baseUrl?: string; token: string },
 ) =>
-  request<GitProviderConnection>(`/projects/${projectKey}/settings/git/connections`, {
+  request<GitProviderConnection>(`/teams/${teamId}/settings/git/connections`, {
     method: 'POST',
     body: JSON.stringify(input),
   });
 
-export const disconnectGitProvider = (projectKey: string, connectionId: number) =>
-  request<void>(`/projects/${projectKey}/settings/git/connections/${connectionId}`, {
+export const disconnectGitProvider = (teamId: number, connectionId: number) =>
+  request<void>(`/teams/${teamId}/settings/git/connections/${connectionId}`, {
     method: 'DELETE',
   });
 

@@ -22,6 +22,7 @@
     "workflow_config": "Workflow configuration",
     "actions": "Actions",
     "webhooks": "Webhooks",
+    "repositories": "Repositories",
     "note_boards": "Note boards",
     "import_export": "Import/Export",
     "danger_zone": "Danger zone"

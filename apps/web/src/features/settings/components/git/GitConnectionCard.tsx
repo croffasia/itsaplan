@@ -37,25 +37,21 @@ function initialTab(provider: string | undefined): ProviderKey {
 export default function GitConnectionCard({
   projectKey,
   settings,
-  editable,
 }: {
   projectKey: string;
   settings: GitSettings;
-  editable: boolean;
 }) {
   const t = useTranslations('settings.git');
   const regenerate = useRegenerateGitSecret(projectKey);
   const [tab, setTab] = useState<ProviderKey>(() => initialTab(settings.repositories[0]?.provider));
   const payloadUrl = `${API_URL}/webhooks/git/${settings.webhookId}`;
-  // Null for a member who may read but not edit integrations.
-  const secret = settings.secret;
 
   async function regenerateSecret() {
     await regenerate.mutateAsync();
     toast.success(t('secretRegenerated'));
   }
 
-  const regenerateAction = editable ? (
+  const regenerateAction = (
     <Button
       variant="ghost"
       size="sm"
@@ -64,7 +60,7 @@ export default function GitConnectionCard({
     >
       {t('regenerate')}
     </Button>
-  ) : undefined;
+  );
 
   const hint = (key: (typeof PROVIDERS)[number]['hint']) => (
     <p className="text-xs text-muted-foreground">
@@ -78,53 +74,47 @@ export default function GitConnectionCard({
   return (
     <SettingsSection title={t('webhookEndpoint')} description={t('webhookEndpointHint')}>
       <SettingsCard className="divide-y divide-border/60">
-        {secret == null ? (
-          <p className="p-4 text-xs text-muted-foreground">{t('connectionRestricted')}</p>
-        ) : (
-          <>
-            {/* One URL and one secret serve every host — they sit above the tabs,
-                which carry nothing but each host's instructions. */}
-            <div className="space-y-4 p-4">
-              <GitCopyField label={t('payloadUrl')} value={payloadUrl} />
-              <GitCopyField
-                label={t('webhookSecret')}
-                value={secret}
-                masked
-                action={regenerateAction}
-              />
-            </div>
-            <details className="group p-4">
-              <summary className="cursor-pointer list-none text-sm font-medium select-none marker:content-none">
-                <span className="inline-flex items-center gap-2">
-                  <span className="transition-transform group-open:rotate-90">›</span>
-                  {t('manualSetup')}
-                </span>
-              </summary>
-              <div className="mt-4">
-                <Tabs value={tab} onValueChange={(v) => setTab(v as ProviderKey)}>
-                  <TabsList variant="line">
-                    {PROVIDERS.map((p) => (
-                      <TabsTrigger key={p.key} value={p.key}>
-                        {p.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  {PROVIDERS.map((p) => (
-                    <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
-                      {hint(p.hint)}
-                      {p.key === 'github' && (
-                        <GithubCliCommand payloadUrl={payloadUrl} secret={secret} />
-                      )}
-                      {p.key === 'gitlab' && (
-                        <GitlabCliCommand payloadUrl={payloadUrl} secret={secret} />
-                      )}
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </div>
-            </details>
-          </>
-        )}
+        {/* One URL and one secret serve every host — they sit above the tabs,
+            which carry nothing but each host's instructions. */}
+        <div className="space-y-4 p-4">
+          <GitCopyField label={t('payloadUrl')} value={payloadUrl} />
+          <GitCopyField
+            label={t('webhookSecret')}
+            value={settings.secret}
+            masked
+            action={regenerateAction}
+          />
+        </div>
+        <details className="group p-4">
+          <summary className="cursor-pointer list-none text-sm font-medium select-none marker:content-none">
+            <span className="inline-flex items-center gap-2">
+              <span className="transition-transform group-open:rotate-90">›</span>
+              {t('manualSetup')}
+            </span>
+          </summary>
+          <div className="mt-4">
+            <Tabs value={tab} onValueChange={(v) => setTab(v as ProviderKey)}>
+              <TabsList variant="line">
+                {PROVIDERS.map((p) => (
+                  <TabsTrigger key={p.key} value={p.key}>
+                    {p.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {PROVIDERS.map((p) => (
+                <TabsContent key={p.key} value={p.key} className="mt-4 space-y-4">
+                  {hint(p.hint)}
+                  {p.key === 'github' && (
+                    <GithubCliCommand payloadUrl={payloadUrl} secret={settings.secret} />
+                  )}
+                  {p.key === 'gitlab' && (
+                    <GitlabCliCommand payloadUrl={payloadUrl} secret={settings.secret} />
+                  )}
+                </TabsContent>
+              ))}
+            </Tabs>
+          </div>
+        </details>
       </SettingsCard>
     </SettingsSection>
   );

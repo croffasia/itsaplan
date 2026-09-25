@@ -14,7 +14,7 @@ import {
   Webhook,
   Zap,
 } from 'lucide-react';
-import type { PermissionResource } from '@/lib/api/endpoints/roles';
+import type { PermissionAction, PermissionResource } from '@/lib/api/endpoints/roles';
 
 // The sidebar group a section is listed under: the project-level general settings,
 // workflow configuration, automation/integrations, or the AI section. 'ai-team' and
@@ -26,14 +26,15 @@ export type SettingsGroup = 'general' | 'configuration' | 'automation' | 'ai' | 
 // /project/:projectKey/settings/:section, except the 'ai-team' group, which is
 // mounted at /project/:projectKey/ai-team/:section. The slug is the route param; the tab
 // components live in features/settings/components and take { project }. `resource`
-// is the permission resource that gates the section: read to view it, and the
-// create/edit/delete actions gate the controls inside. `group` places it in the
+// is the permission resource that gates the section: `viewAction` (read unless set)
+// to view it, and the create/edit/delete actions gate the controls inside. `group` places it in the
 // sidebar (see CONFIGURATION_SECTIONS / AUTOMATION_SECTIONS). The name and the
 // blurb of a section are messages under `sections.settings`.
 export type SettingsSection = {
   slug: string;
   icon: LucideIcon;
   resource: PermissionResource;
+  viewAction?: PermissionAction;
   group: SettingsGroup;
 };
 
@@ -101,7 +102,8 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     slug: 'git',
     icon: GitPullRequest,
-    resource: 'integrations',
+    resource: 'repositories',
+    viewAction: 'edit',
     group: 'automation',
   },
   {

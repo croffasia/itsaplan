@@ -13,22 +13,22 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useConnectGitProvider } from '../../services/settings.service';
-import { GIT_PROVIDER_CONFIG } from './providerConfig';
+import { useConnectGitProvider } from '@/services/gitConnections.service';
+import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
 
-export default function GitProviderConnectDialog({
-  projectKey,
+export default function TeamGitProviderConnectDialog({
+  teamId,
   provider,
   open,
   onOpenChange,
 }: {
-  projectKey: string;
+  teamId: number;
   provider: GitConnectionProvider;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const t = useTranslations('settings.git');
-  const connect = useConnectGitProvider(projectKey);
+  const connect = useConnectGitProvider(teamId);
   const [baseUrl, setBaseUrl] = useState(GIT_PROVIDER_CONFIG[provider].defaultBaseUrl);
   const [token, setToken] = useState('');
 

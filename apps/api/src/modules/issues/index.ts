@@ -204,7 +204,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       (p) => getIssueProjectId(Number(p.issueId)),
       'issueStats',
     ),
-    developmentIntegration: entityGuard('integrations', 'Issue not found', (p) =>
+    developmentRepositories: entityGuard('repositories', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
     checklist: entityGuard(
@@ -571,7 +571,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     async ({ projectId }) => listDevelopmentRepositories(projectId),
     {
       params: issueParams,
-      developmentIntegration: 'edit',
+      developmentRepositories: 'edit',
       response: { 200: t.Array(DevelopmentRepositoryResponse), ...accessErrors },
       detail: {
         summary: 'List repositories available to an issue',
@@ -594,7 +594,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueDevelopmentRepositoryParams,
       query: issueDevelopmentListQuery,
-      developmentIntegration: 'edit',
+      developmentRepositories: 'edit',
       response: { 200: LinkablePullRequestPageResponse, ...commonErrors },
       detail: {
         summary: 'List pull requests available to an issue',
@@ -610,7 +610,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueDevelopmentRepositoryParams,
       query: issueDevelopmentListQuery,
-      developmentIntegration: 'edit',
+      developmentRepositories: 'edit',
       response: { 200: DevelopmentBranchPageResponse, ...commonErrors },
       detail: {
         summary: 'List repository branches available to an issue',
@@ -654,7 +654,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueParams,
       body: linkIssueDevelopmentBody,
-      developmentIntegration: 'edit',
+      developmentRepositories: 'edit',
       response: {
         200: DevelopmentLinkResponse,
         201: DevelopmentLinkResponse,
@@ -690,7 +690,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueParams,
       body: createIssuePullRequestBody,
-      developmentIntegration: 'edit',
+      developmentRepositories: 'edit',
       response: { 201: DevelopmentLinkResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create a pull request for an issue',

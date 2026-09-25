@@ -168,7 +168,7 @@ needed. Run it again later to restart the instance; the data stays.
 | UI        | [shadcn/ui](https://ui.shadcn.com/) + Tailwind v4        |
 | Auth      | [better-auth](https://better-auth.com/)                  |
 | Database  | [Drizzle](https://orm.drizzle.team/) + PostgreSQL        |
-| Storage   | S3-compatible object store (MinIO)                       |
+| Storage   | S3-compatible object store (RustFS)                      |
 | AI agents | [Mastra](https://github.com/mastra-ai/mastra)            |
 
 ## Contributing

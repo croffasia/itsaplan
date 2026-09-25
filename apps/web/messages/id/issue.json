@@ -185,7 +185,8 @@
     "searchPrompt": "Cari issue yang {relation} issue ini…",
     "failed": "Tidak dapat menautkan issue",
     "noMatches": "Tidak ada issue yang cocok.",
-    "typeToSearch": "Ketik untuk mencari issue proyek ini."
+    "typeToSearch": "Ketik untuk mencari issue proyek ini.",
+    "project": "Proyek"
   },
   "subtasks": {
     "title": "Subtugas",

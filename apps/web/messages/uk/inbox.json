@@ -33,5 +33,8 @@
     "commented": "{who} залишив(ла) коментар",
     "stateChanged": "{who} змінив(ла) статус з {from} на {to}",
     "stateChangedPlain": "{who} змінив(ла) статус"
-  }
+  },
+  "thisProject": "Цей проєкт",
+  "allProjects": "Усі проєкти",
+  "scopeHint": "Показувати сповіщення з цього або всіх проєктів"
 }

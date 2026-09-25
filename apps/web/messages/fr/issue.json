@@ -185,7 +185,8 @@
     "searchPrompt": "Rechercher les tickets dont celui-ci est {relation}…",
     "failed": "Impossible de lier les tickets",
     "noMatches": "Aucun ticket ne correspond.",
-    "typeToSearch": "Saisissez du texte pour rechercher parmi les tickets de ce projet."
+    "typeToSearch": "Saisissez du texte pour rechercher parmi les tickets de ce projet.",
+    "project": "Projet"
   },
   "subtasks": {
     "title": "Sous-tâches",

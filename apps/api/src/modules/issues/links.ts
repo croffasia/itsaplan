@@ -5,8 +5,10 @@ import { HttpError } from '#shared/lib';
 import { recordActivityEntries, rowSide, textSide, type ActivityInput } from './activity';
 import { emitWebhookEvents } from '#modules/webhooks/emit';
 import { getIssues } from './service';
+import { assertPermission, type AuthUser } from '#shared/access';
+import { assertMcpAllowed } from '#shared/guards';
 
-// Relations between issues of one project. A relation is one row (issue_link);
+// Relations between issues of one team. A relation is one row (issue_link);
 // which side of it an issue sits on decides how the relation reads for that
 // issue: the source of a 'blocks' row blocks, its target is blocked by.
 
@@ -69,13 +71,19 @@ function storedLink(
 
 // Every relation the issue takes part in, on either side, ordered by kind and
 // then by the other issue's number.
-export async function listIssueLinks(issueId: number): Promise<IssueLinkRow[]> {
+export async function listIssueLinks(
+  issueId: number,
+  sourceProjectId: number,
+  viewer?: AuthUser | null,
+  headers?: Headers,
+): Promise<IssueLinkRow[]> {
   const rows = await db
     .select({
       id: issueLink.id,
       kind: issueLink.kind,
       sourceIssueId: issueLink.sourceIssueId,
       projectKey: projectTable.key,
+      projectId: projectTable.id,
       otherId: issue.id,
       sequenceNumber: issue.sequenceNumber,
       title: issue.title,
@@ -96,20 +104,56 @@ export async function listIssueLinks(issueId: number): Promise<IssueLinkRow[]> {
     .where(or(eq(issueLink.sourceIssueId, issueId), eq(issueLink.targetIssueId, issueId)))
     .orderBy(issueLink.kind, issue.sequenceNumber);
 
-  return rows.map((row) => ({
-    id: row.id,
-    kind: row.kind as IssueLinkKind,
-    direction: row.sourceIssueId === issueId ? 'outward' : 'inward',
-    issue: {
-      id: row.otherId,
-      sequenceNumber: row.sequenceNumber,
-      identifier: `${row.projectKey}-${row.sequenceNumber}`,
-      title: row.title,
-      columnId: row.columnId,
-      typeId: row.typeId,
-      archived: row.archivedAt !== null,
-    },
-  }));
+  // A public share only exposes links within its project. A signed-in viewer
+  // sees another project's issue only while they can read work items there.
+  const visibleProjects = new Set([sourceProjectId]);
+  if (viewer) {
+    const externalProjects = [...new Set(rows.map((row) => row.projectId))].filter(
+      (projectId) => projectId !== sourceProjectId,
+    );
+    await Promise.all(
+      externalProjects.map(async (projectId) => {
+        try {
+          await assertPermission(projectId, viewer, 'work_items', 'read');
+          if (headers) await assertMcpAllowed(projectId, headers);
+          visibleProjects.add(projectId);
+        } catch (error) {
+          if (!(error instanceof HttpError && error.status === 403)) throw error;
+        }
+      }),
+    );
+  }
+  return rows
+    .filter((row) => visibleProjects.has(row.projectId))
+    .map((row) => ({
+      id: row.id,
+      kind: row.kind as IssueLinkKind,
+      direction: row.sourceIssueId === issueId ? 'outward' : 'inward',
+      issue: {
+        id: row.otherId,
+        sequenceNumber: row.sequenceNumber,
+        identifier: `${row.projectKey}-${row.sequenceNumber}`,
+        title: row.title,
+        columnId: row.columnId,
+        typeId: row.typeId,
+        archived: row.archivedAt !== null,
+      },
+    }));
+}
+
+export async function getOtherLinkedIssueId(
+  issueId: number,
+  linkId: number,
+): Promise<number | null> {
+  const [row] = await db
+    .select({ sourceIssueId: issueLink.sourceIssueId, targetIssueId: issueLink.targetIssueId })
+    .from(issueLink)
+    .where(eq(issueLink.id, linkId))
+    .limit(1);
+  if (!row) return null;
+  if (row.sourceIssueId === issueId) return row.targetIssueId;
+  if (row.targetIssueId === issueId) return row.sourceIssueId;
+  return null;
 }
 
 // One relation as a board issue carries it: how it reads from that issue, and the
@@ -139,12 +183,17 @@ export async function attachBoardLinks<T extends { id: number }>(
       targetIssueId: issueLink.targetIssueId,
     })
     .from(issueLink)
-    // Both ends always belong to the same project (addIssueLink enforces it), so
-    // the source side decides membership; both decide whether it is still active.
+    // Board markers only name issues on the same board. Cross-project links stay
+    // visible in issue detail, not as dangling board issue IDs.
     .innerJoin(source, eq(source.id, issueLink.sourceIssueId))
     .innerJoin(target, eq(target.id, issueLink.targetIssueId))
     .where(
-      and(eq(source.projectId, projectId), isNull(source.archivedAt), isNull(target.archivedAt)),
+      and(
+        eq(source.projectId, projectId),
+        eq(target.projectId, projectId),
+        isNull(source.archivedAt),
+        isNull(target.archivedAt),
+      ),
     );
 
   const byIssue = new Map<number, BoardIssueLink[]>();
@@ -177,6 +226,7 @@ interface Side {
 function historyEntries(
   action: 'link_add' | 'link_remove',
   [first, second]: [Side, Side],
+  crossProject = false,
 ): { issueId: number; event: ActivityInput }[] {
   return [
     {
@@ -184,7 +234,9 @@ function historyEntries(
       event: {
         action,
         subject: textSide(first.subject),
-        to: rowSide(second.identifier, second.issueId),
+        to: crossProject
+          ? textSide('Issue in another project')
+          : rowSide(second.identifier, second.issueId),
       },
     },
     {
@@ -192,7 +244,9 @@ function historyEntries(
       event: {
         action,
         subject: textSide(second.subject),
-        to: rowSide(first.identifier, first.issueId),
+        to: crossProject
+          ? textSide('Issue in another project')
+          : rowSide(first.identifier, first.issueId),
       },
     },
   ];
@@ -202,6 +256,7 @@ function historyEntries(
 interface EndRow {
   id: number;
   projectId: number;
+  teamId: number;
   projectKey: string;
   sequenceNumber: number;
   title: string;
@@ -211,7 +266,7 @@ interface EndRow {
   linkId: number | null;
 }
 
-// Links two issues of the same project. The relation is stated as read from
+// Links two issues in the same team. The relation is stated as read from
 // issueId: it blocks, is blocked by, relates to, duplicates or is duplicated by
 // targetIssueId. A pair already linked with this kind, in either direction, is
 // rejected with a 409 — the inverse of a directional kind ("A blocks B" plus "B
@@ -233,12 +288,13 @@ export async function addIssueLink(
   if (issueId === targetIssueId) throw new HttpError(400, 'An issue cannot be linked to itself');
   const stored = storedLink(issueId, targetIssueId, kind);
 
-  const { target, linkId } = await db.transaction(async (tx) => {
+  const { target, linkId, sourceProjectId } = await db.transaction(async (tx) => {
     const rows = (await tx.execute(sql`
       with ends as (
         select i.id,
                i.project_id as "projectId",
                p.key as "projectKey",
+               p.team_id as "teamId",
                i.sequence_number as "sequenceNumber",
                i.title,
                i.column_id as "columnId",
@@ -252,7 +308,7 @@ export async function addIssueLink(
         insert into ${issueLink} (source_issue_id, target_issue_id, kind)
         select ${stored.sourceIssueId}, ${stored.targetIssueId}, ${stored.kind}
          where (select count(*) from ends) = 2
-           and (select count(distinct "projectId") from ends) = 1
+           and (select count(distinct "teamId") from ends) = 1
         on conflict do nothing
         returning id
       )
@@ -263,24 +319,32 @@ export async function addIssueLink(
     const target = rows.find((row) => row.id === targetIssueId);
     if (!source) throw new HttpError(404, 'Issue not found');
     if (!target) throw new HttpError(404, 'Linked issue not found');
-    if (source.projectId !== target.projectId)
-      throw new HttpError(400, 'Both issues must belong to the same project');
+    if (source.teamId !== target.teamId)
+      throw new HttpError(400, 'Both issues must belong to the same team');
     if (target.linkId == null) throw new HttpError(409, 'These issues are already linked');
 
     await recordActivityEntries(
-      historyEntries('link_add', [
-        { issueId, subject: kind, identifier: identifierOf(source) },
-        { issueId: targetIssueId, subject: INVERSE_KIND[kind], identifier: identifierOf(target) },
-      ]),
+      historyEntries(
+        'link_add',
+        [
+          { issueId, subject: kind, identifier: identifierOf(source) },
+          { issueId: targetIssueId, subject: INVERSE_KIND[kind], identifier: identifierOf(target) },
+        ],
+        source.projectId !== target.projectId,
+      ),
       actorUserId,
       tx,
     );
-    return { target, linkId: target.linkId };
+    return { target, linkId: target.linkId, sourceProjectId: source.projectId };
   });
 
-  await emitWebhookEvents(target.projectId, 'issue.link_changed', () =>
-    getIssues([issueId, targetIssueId]),
+  await emitWebhookEvents(sourceProjectId, 'issue.link_changed', () =>
+    getIssues(sourceProjectId === target.projectId ? [issueId, targetIssueId] : [issueId]),
   );
+  if (sourceProjectId !== target.projectId)
+    await emitWebhookEvents(target.projectId, 'issue.link_changed', () =>
+      getIssues([targetIssueId]),
+    );
 
   return {
     id: linkId,
@@ -349,23 +413,35 @@ export async function removeIssueLink(
     const other = rows.find((row) => row.id === otherIssueId)!;
 
     await recordActivityEntries(
-      historyEntries('link_remove', [
-        { issueId, subject: isSource ? kind : INVERSE_KIND[kind], identifier: self.identifier },
-        {
-          issueId: otherIssueId,
-          subject: isSource ? INVERSE_KIND[kind] : kind,
-          identifier: other.identifier,
-        },
-      ]),
+      historyEntries(
+        'link_remove',
+        [
+          { issueId, subject: isSource ? kind : INVERSE_KIND[kind], identifier: self.identifier },
+          {
+            issueId: otherIssueId,
+            subject: isSource ? INVERSE_KIND[kind] : kind,
+            identifier: other.identifier,
+          },
+        ],
+        self.projectId !== other.projectId,
+      ),
       actorUserId,
       tx,
     );
-    return { projectId: self.projectId, issueIds: [issueId, otherIssueId] };
+    return {
+      projectId: self.projectId,
+      otherProjectId: other.projectId,
+      issueIds: [issueId, otherIssueId],
+    };
   });
 
   if (!removed) return false;
   await emitWebhookEvents(removed.projectId, 'issue.link_changed', () =>
-    getIssues(removed.issueIds),
+    getIssues(removed.projectId === removed.otherProjectId ? removed.issueIds : [issueId]),
   );
+  if (removed.otherProjectId !== removed.projectId)
+    await emitWebhookEvents(removed.otherProjectId, 'issue.link_changed', () =>
+      getIssues([removed.issueIds[1]]),
+    );
   return true;
 }

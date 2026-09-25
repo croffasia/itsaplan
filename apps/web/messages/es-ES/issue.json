@@ -185,7 +185,8 @@
     "searchPrompt": "Buscar tickets con los que este está {relation}…",
     "failed": "No se han podido enlazar los tickets",
     "noMatches": "Ningún ticket coincide.",
-    "typeToSearch": "Escribe para buscar los tickets de este proyecto."
+    "typeToSearch": "Escribe para buscar los tickets de este proyecto.",
+    "project": "Proyecto"
   },
   "subtasks": {
     "title": "Subtareas",

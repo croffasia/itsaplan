@@ -9,6 +9,9 @@ import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useInboxScope } from '@/hooks/useInboxScope';
+import { useRouter } from 'next/navigation';
+import { issuePath } from '@/utils/paths';
 import InboxToolbar from './InboxToolbar';
 import InboxList from './InboxList';
 import InboxDetail from './InboxDetail';
@@ -28,16 +31,20 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
   const projectId = project.project.id;
 
   const { filters, changeFilters } = useInboxFilters(projectKey);
+  const { allProjects, setAllProjects } = useInboxScope();
+  const router = useRouter();
+  const inboxKey = allProjects ? 'all' : projectKey;
+  const inboxProjectId = allProjects ? null : projectId;
   const [selected, setSelected] = useState<Notification | null>(null);
   const isMobile = useIsMobile();
 
-  const query = useNotificationsQuery(projectKey, projectId, filters);
-  const unreadQuery = useInboxUnread(projectKey, projectId);
-  const setRead = useSetNotificationRead(projectKey);
-  const snooze = useSnoozeNotification(projectKey);
-  const deleteOne = useDeleteNotification(projectKey);
-  const markAllRead = useMarkAllRead(projectKey, projectId);
-  const deleteNotifications = useDeleteNotifications(projectKey, projectId);
+  const query = useNotificationsQuery(inboxKey, inboxProjectId, filters);
+  const unreadQuery = useInboxUnread(inboxKey, inboxProjectId);
+  const setRead = useSetNotificationRead(inboxKey);
+  const snooze = useSnoozeNotification(inboxKey);
+  const deleteOne = useDeleteNotification(inboxKey);
+  const markAllRead = useMarkAllRead(inboxKey, inboxProjectId);
+  const deleteNotifications = useDeleteNotifications(inboxKey, inboxProjectId);
 
   const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
 
@@ -48,8 +55,12 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
   });
 
   const onSelect = (n: Notification) => {
-    setSelected(n);
     if (n.readAt == null) setRead.mutate({ id: n.id, read: true });
+    if (n.projectKey !== projectKey) {
+      router.push(issuePath(n.projectKey, n.issueSeq));
+      return;
+    }
+    setSelected(n);
   };
 
   const onDelete = (n: Notification) => {
@@ -69,6 +80,11 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
           unread={unreadQuery.data ?? 0}
           filters={filters}
           onFiltersChange={changeFilters}
+          allProjects={allProjects}
+          onAllProjectsChange={(enabled) => {
+            setSelected(null);
+            setAllProjects(enabled);
+          }}
           onMarkAllRead={() => markAllRead.mutate()}
           onDeleteRead={() => deleteNotifications.mutate('read')}
           onDeleteReadCompleted={() => deleteNotifications.mutate('read-completed')}

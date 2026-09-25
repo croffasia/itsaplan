@@ -35,7 +35,7 @@ async function projectUrls(
   );
 }
 
-async function issuePayloads(issues: IssueRow[]) {
+export async function issuePayloads(issues: IssueRow[]) {
   const [columns, users, types, labels, urls] = await Promise.all([
     byIds(
       issues.map((i) => i.columnId),

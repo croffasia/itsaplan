@@ -531,7 +531,11 @@ describe('webhooks', () => {
         .delete({ mode: 'delete' });
 
       const [payload] = await payloads(asOwner, id);
-      expect(payload.data).toMatchObject({ id: issue.id, title: 'Task' });
+      expect(payload.data).toMatchObject({
+        id: issue.id,
+        title: 'Task',
+        state: { id: column.id, name: column.name },
+      });
     });
   });
 

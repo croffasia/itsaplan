@@ -78,7 +78,8 @@ release.
 - Cycles that time-box the work. Unfinished issues move to the next cycle
 - Subtasks, checklists, attachments, and links between issues: blocks, relates, duplicates
 - Comment threads with replies, and @username mentions of people and agents
-- Configurable dashboards for project analytics: throughput, breakdown, pulse
+- Configurable dashboards for project analytics: throughput, burnup with a projected
+  completion date, breakdown, pulse
 - Quick actions that run on an issue, and auto-assignment when an issue moves into a state
 - Docs: shared Markdown pages in a tree, with revision history, private and locked pages,
   favorites, embedded files, and links to the issues they describe

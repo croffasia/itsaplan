@@ -49,6 +49,10 @@
       "label": "Rendimiento",
       "description": "Tickets creados frente a cerrados por semana"
     },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Alcance, tickets iniciados y completados por día con una fecha de finalización prevista"
+    },
     "breakdown": {
       "label": "Desglose",
       "description": "Recuentos de tickets por estado, prioridad, tipo o asignado"
@@ -151,6 +155,29 @@
     "lastWeeks": "Últimas {weeks} semanas",
     "created": "Creadas",
     "closed": "Cerradas"
+  },
+  "burnup": {
+    "empty": "No hay tickets en este periodo.",
+    "scope": "Alcance",
+    "started": "Iniciados",
+    "completed": "Completados",
+    "projection": "Proyección",
+    "band": "Rango de previsión",
+    "projected": "Previsto para el {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "Línea de previsión",
+      "range": "Rango de previsión"
+    },
+    "noForecast": "Sin avances en {weeks, plural, one {la última semana} other {las últimas # semanas}}",
+    "allDone": "Todo completado",
+    "velocity": "{rate}/día",
+    "growth": "+{rate}/día nuevos",
+    "target": "Objetivo: {date}",
+    "targetLabel": "Objetivo",
+    "today": "Hoy",
+    "wholeProject": "Todo el proyecto",
+    "forecastWeeks": "Ritmo de {weeks, plural, one {la última semana} other {las últimas # semanas}}"
   },
   "agentRuns": {
     "empty": "Todavía no hay ejecuciones del agente.",

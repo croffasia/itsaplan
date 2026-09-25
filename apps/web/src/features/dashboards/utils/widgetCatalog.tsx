@@ -6,6 +6,7 @@ import {
   Hash,
   ListChecks,
   PieChart,
+  TrendingUp,
   Users,
   Webhook,
   type LucideIcon,
@@ -22,6 +23,7 @@ export const WIDGET_ICON: Record<WidgetType, LucideIcon> = {
   activity_feed: Activity,
   pulse: CalendarDays,
   throughput: BarChart3,
+  burnup: TrendingUp,
   breakdown: PieChart,
   agent_runs: Bot,
   agent_health: Activity,
@@ -34,7 +36,7 @@ export const WIDGET_ICON: Record<WidgetType, LucideIcon> = {
 export const WIDGET_GROUPS: { key: 'issues' | 'agents'; types: WidgetType[] }[] = [
   {
     key: 'issues',
-    types: ['stat', 'breakdown', 'throughput', 'pulse', 'recent_issues', 'activity_feed'],
+    types: ['stat', 'breakdown', 'throughput', 'burnup', 'pulse', 'recent_issues', 'activity_feed'],
   },
   {
     key: 'agents',

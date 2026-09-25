@@ -49,6 +49,10 @@
       "label": "Throughput",
       "description": "Issue yang dibuat dibandingkan dengan yang ditutup setiap minggu"
     },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Cakupan, issue yang dimulai dan diselesaikan per hari dengan perkiraan tanggal selesai"
+    },
     "breakdown": {
       "label": "Rincian",
       "description": "Jumlah issue berdasarkan status, prioritas, jenis, atau penerima tugas"
@@ -151,6 +155,29 @@
     "lastWeeks": "{weeks} minggu terakhir",
     "created": "Dibuat",
     "closed": "Ditutup"
+  },
+  "burnup": {
+    "empty": "Tidak ada issue dalam periode ini.",
+    "scope": "Cakupan",
+    "started": "Dimulai",
+    "completed": "Selesai",
+    "projection": "Proyeksi",
+    "band": "Rentang perkiraan",
+    "projected": "Perkiraan {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "Garis perkiraan",
+      "range": "Rentang perkiraan"
+    },
+    "noForecast": "Tidak ada kemajuan dalam {weeks, plural, other {# minggu terakhir}}",
+    "allDone": "Semua selesai",
+    "velocity": "{rate}/hari",
+    "growth": "+{rate}/hari baru",
+    "target": "Target {date}",
+    "targetLabel": "Target",
+    "today": "Hari ini",
+    "wholeProject": "Seluruh proyek",
+    "forecastWeeks": "Laju selama {weeks, plural, other {# minggu}}"
   },
   "agentRuns": {
     "empty": "Belum ada eksekusi agen.",

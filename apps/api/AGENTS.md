@@ -287,4 +287,4 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
   `APP_URL` here.
 - swagger `/docs` (planner) is separate from better-auth's `/api/auth/reference`; both
   stay reachable without a session.
-- Dev: `bun run dev`. Prod: the Dockerfile migrates, then starts the server.
+- Dev: `bun run dev`. Prod: the Dockerfile migrates, then starts the server; the compose files and the Helm chart run the migrations as a separate step and start only the server.

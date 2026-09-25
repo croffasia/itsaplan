@@ -33,7 +33,7 @@ Install the chart:
 helm install itsaplan charts/itsaplan -f values.yaml
 ```
 
-The API applies database migrations on startup. The first account registered becomes the instance admin.
+Each API pod applies the database migrations in its `migrate` init container before the server starts. With several replicas, one applies them and the others wait on a Postgres advisory lock. Worker and bot pods wait in their own init container until the migrations are applied. The first account registered becomes the instance admin.
 
 ## What gets deployed
 

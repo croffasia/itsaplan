@@ -50,8 +50,9 @@ change.
 
 ## 4. Deploy
 
-Press **Deploy**. Postgres, RustFS, api, worker, bot, and web come up together; the api
-applies the migrations on startup. The first account registered becomes the instance admin.
+Press **Deploy**. Postgres, RustFS, api, worker, bot, and web come up together; the
+one-shot `migrate` service applies the migrations first, and api, worker and bot start once
+it exits. The first account registered becomes the instance admin.
 
 Secrets (database password, auth secret, encryption key, worker token, object store credentials)
 are generated on the first deploy and stay stable across later ones — nothing to fill in by

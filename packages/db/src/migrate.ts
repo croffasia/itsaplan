@@ -41,6 +41,18 @@ for (let attempt = 1; ; attempt++) {
   }
 }
 
+// Several api replicas start together on every rollout. The lock lets one of them dump
+// and migrate while the rest wait, and the rest then find nothing pending. It belongs
+// to this session, so Postgres releases it when the connection closes, a crash included.
+const MIGRATION_LOCK_KEY = 804_216_551;
+const [{ locked }] = await migrationClient<{ locked: boolean }[]>`
+  select pg_try_advisory_lock(${MIGRATION_LOCK_KEY}) as locked
+`;
+if (!locked) {
+  console.log('⏳ Another instance is migrating the database, waiting for it to finish...');
+  await migrationClient`select pg_advisory_lock(${MIGRATION_LOCK_KEY})`;
+}
+
 // A dump of the database as this release found it, so an operator who has to go back
 // to the previous release has something to restore. Taken before anything is applied,
 // and a failure stops the startup: a migration that runs without one cannot be undone.

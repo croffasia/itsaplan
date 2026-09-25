@@ -197,6 +197,10 @@ bot:
 | `api.healthcheck.periodSeconds`       | Probe period                                              | `15`                             |
 | `api.healthcheck.timeoutSeconds`      | Probe timeout                                             | `5`                              |
 | `api.healthcheck.failureThreshold`    | Probe failure threshold                                   | `5`                              |
+| `api.backups.persistence.enabled`     | Keep the pre-migration dump on a volume                   | `false`                          |
+| `api.backups.persistence.size`        | Backup volume size                                        | `10Gi`                           |
+| `api.backups.persistence.storageClass` | Backup volume storage class                              | `""`                             |
+| `api.backups.persistence.accessMode`  | Backup volume access mode                                 | `ReadWriteOnce`                  |
 
 ### Web
 

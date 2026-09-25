@@ -28,7 +28,7 @@ write the files: it prints `.env` and `apps/web/.env` for you to copy onto the s
 
 That starts the whole stack: Postgres, RustFS, api, worker, bot, and web. The four services
 run from the images published on each release. `VERSION` in `.env` pins one release instead
-of the newest. The api applies migrations when it starts, and the first account you register
+of the newest. The `migrate` service applies migrations before the api starts, and the first account you register
 becomes the instance admin.
 
 `.env.example` documents every variable, including the optional ones: legal document URLs,
@@ -108,9 +108,10 @@ docker compose up -d
 `git pull` updates the compose file. The services come from the registry. Changing `API_URL`
 or `APP_URL` afterwards only needs `docker compose up -d`.
 
-The api applies its migrations on startup, so an upgrade needs no database step. Before
-it applies anything it dumps the database into the `db-backups` volume (`/backups` in the
-api container) and refuses to start if that dump fails — a release whose migrations
+The one-shot `migrate` service applies the migrations on every `docker compose up -d`, and
+api, worker and bot start only after it succeeds, so an upgrade needs no database step.
+Before it applies anything it dumps the database into the `db-backups` volume (`/backups`
+in the `migrate` container) and fails if that dump fails — a release whose migrations
 rewrite data is not applied without something to go back to. Dumps are deleted after 30
 days, on the first startup past that; `BACKUP_RETENTION_DAYS` changes the window and
 `SKIP_PRE_MIGRATION_BACKUP=1` upgrades without one, for an operator who backs up by

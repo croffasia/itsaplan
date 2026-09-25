@@ -168,6 +168,7 @@ export default function DocumentMarkdownEditor({
   openIssueRefRef.current = (href: string) => router.push(href);
 
   const editor = useEditor({
+    immediatelyRender: false,
     editable,
     extensions: documentEditorExtensions({
       placeholder,

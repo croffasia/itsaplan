@@ -121,6 +121,7 @@ export default function MarkdownEditor({
   };
 
   const editor = useEditor({
+    immediatelyRender: false,
     editable,
     extensions: [
       // Replaces StarterKit's plain code block, keeping the node name codeBlock.

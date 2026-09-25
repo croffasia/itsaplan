@@ -57,6 +57,12 @@ describe('withStoredAttachmentUrls', () => {
     });
   });
 
+  it('writes the web path back into text that starts with a word and a colon', () => {
+    expect(
+      withStoredAttachmentUrls({ description: `Steps:\n![a](${API}/attachments/${ID}/raw)` }),
+    ).toEqual({ description: `Steps:\n![a](/media/attachments/${ID}/raw)` });
+  });
+
   it('keeps a value that is only a url, and non-string values', () => {
     const args = { url: `${API}/attachments/${ID}/raw`, issueId: 7, done: false, note: null };
     expect(withStoredAttachmentUrls(args)).toEqual(args);

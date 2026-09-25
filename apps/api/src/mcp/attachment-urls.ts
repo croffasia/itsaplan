@@ -25,7 +25,7 @@ export function withStoredAttachmentUrls(args: Record<string, unknown>): Record<
   // A value that is only a url is an address the route fetches, not text it stores.
   const restore = (value: unknown): unknown => {
     if (typeof value === 'string') {
-      return URL.canParse(value) ? value : value.replace(absolute, '/media$1');
+      return /^https?:\/\/\S+$/.test(value) ? value : value.replace(absolute, '/media$1');
     }
     if (Array.isArray(value)) return value.map(restore);
     if (value !== null && typeof value === 'object') {

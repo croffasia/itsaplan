@@ -198,7 +198,11 @@
     "detachFromParent": "从 {parent} 分离",
     "subtaskOf": "{issue} 的子任务",
     "existingIssue": "现有工作项",
-    "searchPrompt": "搜索要添加为子任务的工作项…"
+    "searchPrompt": "搜索要添加为子任务的工作项…",
+    "filter": "按状态筛选",
+    "hiding": "已隐藏：{states}",
+    "clearFilter": "清除筛选",
+    "allHidden": "所有子任务都被筛选隐藏了。"
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, other {这些工作项包含}} {count, plural, other {# 个子任务}}。",

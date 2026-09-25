@@ -198,7 +198,11 @@
     "detachFromParent": "Desvincar de {parent}",
     "subtaskOf": "Subtarea de {issue}",
     "existingIssue": "Ticket existente",
-    "searchPrompt": "Buscar tickets para añadir como subtarea…"
+    "searchPrompt": "Buscar tickets para añadir como subtarea…",
+    "filter": "Filtrar por estado",
+    "hiding": "Ocultando {states}",
+    "clearFilter": "Quitar filtro",
+    "allHidden": "El filtro oculta todas las subtareas."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, one {Este ticket tiene} other {Estos tickets tienen}} {count, plural, one {# subtarea} other {# subtareas}}.",

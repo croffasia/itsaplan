@@ -198,7 +198,11 @@
     "detachFromParent": "Detach from {parent}",
     "subtaskOf": "Subtask of {issue}",
     "existingIssue": "Existing issue",
-    "searchPrompt": "Search issues to add as a subtask…"
+    "searchPrompt": "Search issues to add as a subtask…",
+    "filter": "Filter by state",
+    "hiding": "Hiding {states}",
+    "clearFilter": "Clear filter",
+    "allHidden": "All subtasks are hidden by the filter."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, one {This issue has} other {These issues have}} {count, plural, one {# subtask} other {# subtasks}}.",

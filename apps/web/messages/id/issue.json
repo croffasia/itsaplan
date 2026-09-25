@@ -198,7 +198,11 @@
     "detachFromParent": "Lepaskan dari {parent}",
     "subtaskOf": "Subtugas dari {issue}",
     "existingIssue": "Issue yang ada",
-    "searchPrompt": "Cari issue untuk ditambahkan sebagai subtugas…"
+    "searchPrompt": "Cari issue untuk ditambahkan sebagai subtugas…",
+    "filter": "Filter menurut status",
+    "hiding": "Menyembunyikan {states}",
+    "clearFilter": "Hapus filter",
+    "allHidden": "Semua subtugas disembunyikan oleh filter."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, one {Issue ini memiliki} other {Issue tersebut memiliki}} {count, plural, one {# subtugas} other {# subtugas}}.",

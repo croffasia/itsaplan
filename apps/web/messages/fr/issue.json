@@ -198,7 +198,11 @@
     "detachFromParent": "Détacher de {parent}",
     "subtaskOf": "Sous-tâche de {issue}",
     "existingIssue": "Ticket existant",
-    "searchPrompt": "Rechercher un ticket à ajouter comme sous-tâche…"
+    "searchPrompt": "Rechercher un ticket à ajouter comme sous-tâche…",
+    "filter": "Filtrer par état",
+    "hiding": "Masqués : {states}",
+    "clearFilter": "Effacer le filtre",
+    "allHidden": "Le filtre masque toutes les sous-tâches."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, one {Ce ticket a} other {Ces tickets ont}} {count, plural, one {# sous-tâche} other {# sous-tâches}}.",

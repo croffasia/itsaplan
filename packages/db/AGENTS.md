@@ -24,7 +24,8 @@ See root `AGENTS.md` for monorepo-wide rules.
   (`@repo/auth`, api, worker), a team's notification providers (api, worker), and the
   instance's upload limits and project-storage-quota accounting (api, worker — an
   imported attachment is checked against the same limits an interactive upload is).
-- `src/migrate.ts` — programmatic migrator run on api container startup (no drizzle-kit in prod).
+- `src/migrate.ts` — programmatic migrator (no drizzle-kit in prod), run by the `migrate` compose service, the api pods' init container, and the api image's CMD.
+- `src/wait-for-migrations.ts` — exits once the database holds this release's migrations; the Helm init container of the worker and bot pods.
 - `drizzle/` — generated SQL migrations (committed).
 
 ## Workflow

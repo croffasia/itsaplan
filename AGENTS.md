@@ -171,9 +171,15 @@ are the part to preserve when changing the script:
 | `docker-compose.test.yml`    | test gate against a throwaway Postgres.                                                                                                           |
 
 A change to the deploy stack usually has to land in **all three** of `docker-compose.yml`,
-`docker-compose.coolify.yml`, and `docker-compose.coolify-images.yml`. The **api applies migrations on startup** (`migrate.ts` in
-its Dockerfile CMD), and dumps the database into the `db-backups` volume first — a failed
-dump stops the startup, so nothing is migrated without a way back. `bot` runs Telegram long polling and must stay at one replica.
+`docker-compose.coolify.yml`, and `docker-compose.coolify-images.yml`. Migrations run as a
+separate step before the apps start: the one-shot `migrate` service in the compose files,
+which api, worker and bot wait for, and the `migrate` init container of the api pods in
+the Helm chart, where worker and bot pods wait in a `wait-for-migrations` init container. Both run `migrate.ts` from the api image and override the api command to
+start only the server. The api image's own CMD still migrates first, for deploy targets
+with no separate step (Railway, a plain `docker run`). `migrate.ts` dumps the database
+into the `db-backups` volume first — a failed dump stops the run, so nothing is migrated
+without a way back. Every run takes a Postgres advisory lock: runs that start together
+apply the migrations once, and the rest wait and then find nothing pending. `bot` runs Telegram long polling and must stay at one replica.
 
 ## Test gate (Docker)
 

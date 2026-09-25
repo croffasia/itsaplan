@@ -331,9 +331,9 @@ if (mode === 'try') {
   const spinner = p.spinner();
   spinner.start('Starting the rest of the stack');
   await run(...compose, 'up', '-d');
-  // --wait names api and web only: minio-init is a one-shot and its exit counts as a
-  // failure. api is worth waiting for on its own — it migrates before it listens, and
-  // web renders /login without it.
+  // --wait names api and web only: minio-init and migrate are one-shots and their exit
+  // counts as a failure. api is worth waiting for on its own — it starts only after the
+  // migrations, and web renders /login without it.
   await run(...compose, 'up', '-d', '--wait', '--no-recreate', 'api', 'web');
   spinner.stop('Stack is up');
 
@@ -422,7 +422,7 @@ if (mode === 'dev') {
   migrations.start('Applying migrations');
   // The programmatic runner, not `bun run db:migrate`: drizzle-kit exits 1 without printing
   // what the database refused, and a failure here is exactly what needs reading.
-  // Its pre-migration dump goes to BACKUP_DIR, a path only the api container has, and a
+  // Its pre-migration dump goes to BACKUP_DIR, a path only the migrate container has, and a
   // local database the operator recreates at will has nothing to go back to anyway.
   process.env.SKIP_PRE_MIGRATION_BACKUP = '1';
   await run('bun', '--env-file=.env', 'packages/db/src/migrate.ts');

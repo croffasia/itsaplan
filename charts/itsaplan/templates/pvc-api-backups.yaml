@@ -1,0 +1,18 @@
+{{- if .Values.api.backups.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "itsaplan.fullname" . }}-api-backups
+  labels:
+    {{- include "itsaplan.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  accessModes:
+    - {{ .Values.api.backups.persistence.accessMode }}
+  {{- if .Values.api.backups.persistence.storageClass }}
+  storageClassName: {{ .Values.api.backups.persistence.storageClass | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.api.backups.persistence.size }}
+{{- end }}

@@ -60,6 +60,16 @@ api:
     periodSeconds: 15
     timeoutSeconds: 5
     failureThreshold: 5
+  # The dump the migrate init container takes before it applies a migration. Without
+  # a volume it is kept in an emptyDir and lost with the pod. ReadWriteOnce only works while
+  # every api replica runs on one node; spread across nodes, use ReadWriteMany, or set
+  # SKIP_PRE_MIGRATION_BACKUP=1 in api.env when the database is backed up another way.
+  backups:
+    persistence:
+      enabled: false
+      size: 10Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
 
 # -- Web (Next.js frontend)
 web:

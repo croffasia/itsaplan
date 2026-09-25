@@ -47,6 +47,7 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- include "itsaplan.waitForMigrations" . | nindent 6 }}
       containers:
         - name: bot
           image: "{{ .Values.bot.image.repository }}:{{ .Values.bot.image.tag | default .Chart.AppVersion }}"

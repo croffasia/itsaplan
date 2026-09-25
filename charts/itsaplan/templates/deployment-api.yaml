@@ -43,10 +43,33 @@ spec:
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      # Replicas run it together; the advisory lock in migrate.ts lets one dump and
+      # migrate while the others wait and then find nothing pending.
+      initContainers:
+        - name: migrate
+          image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          command: ["bun", "run", "packages/db/src/migrate.ts"]
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "itsaplan.fullname" . }}
+            - secretRef:
+                name: {{ include "itsaplan.fullname" . }}
+          volumeMounts:
+            - name: backups
+              mountPath: /backups
       containers:
         - name: api
           image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+          command: ["bun", "run", "apps/api/src/index.ts"]
+          volumeMounts:
+            - name: backups
+              mountPath: /backups
           {{- with .Values.securityContext }}
           securityContext:
             {{- toYaml . | nindent 12 }}
@@ -79,4 +102,14 @@ spec:
           {{- with .Values.api.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
+          {{- end }}
+      # Without a volume the dump is kept in an emptyDir the api container also mounts,
+      # so it lives as long as the pod.
+      volumes:
+        - name: backups
+          {{- if .Values.api.backups.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "itsaplan.fullname" . }}-api-backups
+          {{- else }}
+          emptyDir: {}
           {{- end }}

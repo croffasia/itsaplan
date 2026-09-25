@@ -78,16 +78,43 @@ services:
       echo 'bucket ready: '\"$$S3_BUCKET\"
       "
 
-  # Applies database migrations on startup, then serves the API.
+  # One-shot: dumps the database and applies the migrations, then exits. api, worker
+  # and bot start only after it succeeds, so none of them runs against an old schema.
+  # restart 'no' keeps a finished run from being started again.
+  migrate:
+    image: ghcr.io/croffasia/itsaplan-api:${VERSION:-latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: 'no'
+    command: ['bun', 'run', 'packages/db/src/migrate.ts']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
+      # How long the dumps are kept, and the switch that upgrades without one.
+      # BACKUP_DIR is not among them: the volume below pins it.
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-}
+      SKIP_PRE_MIGRATION_BACKUP: ${SKIP_PRE_MIGRATION_BACKUP:-}
+    # Holds the dump taken before a release's migrations, kept for
+    # BACKUP_RETENTION_DAYS (30) so a downgrade has something to restore.
+    volumes:
+      - db-backups:/backups
+
   api:
     image: ghcr.io/croffasia/itsaplan-api:${VERSION:-latest}
     build:
       context: .
       dockerfile: apps/api/Dockerfile
     restart: unless-stopped
+    # The image's own CMD migrates first; here the migrate service has done that.
+    command: ['bun', 'run', 'apps/api/src/index.ts']
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       minio-init:
         condition: service_completed_successfully
     environment:
@@ -114,22 +141,12 @@ services:
       # Hosts trusted even though they resolve privately. Also governs webhook URL
       # validation and attachment import.
       SSRF_ALLOWED_HOSTS: ${SSRF_ALLOWED_HOSTS:-}
-      # How long the pre-migration dumps are kept, and the switch that upgrades
-      # without one. BACKUP_DIR is not among them: the volume below pins it.
-      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-}
-      SKIP_PRE_MIGRATION_BACKUP: ${SKIP_PRE_MIGRATION_BACKUP:-}
-    # Holds the dump migrate.ts takes before it applies a release's migrations, and
-    # keeps it for BACKUP_RETENTION_DAYS (30) so a downgrade has something to restore.
-    volumes:
-      - db-backups:/backups
-    # start_period covers the backup and the migrations the container applies before
-    # it listens.
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
       interval: 15s
       timeout: 5s
       retries: 5
-      start_period: 180s
+      start_period: 30s
     ports:
       - '${API_PORT:-3000}:3000'
 
@@ -144,8 +161,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-      api:
-        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}
@@ -185,6 +202,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       DATABASE_URL: postgres://${POSTGRES_USER:-itsaplan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-itsaplan}

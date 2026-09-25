@@ -18,7 +18,9 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not set — cannot run migrations.');
 }
 
-const migrationClient = postgres(connectionString, { max: 1 });
+// max_lifetime off: postgres.js otherwise closes the connection after 30–60 minutes,
+// which would release the migration lock below while a long pg_dump is still running.
+const migrationClient = postgres(connectionString, { max: 1, max_lifetime: null });
 const db = drizzle(migrationClient);
 
 const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url));
@@ -39,6 +41,18 @@ for (let attempt = 1; ; attempt++) {
     console.log(`⏳ Waiting for the database (${attempt}/${ATTEMPTS})...`);
     await Bun.sleep(RETRY_DELAY_MS);
   }
+}
+
+// Several api replicas start together on every rollout. The lock lets one of them dump
+// and migrate while the rest wait, and the rest then find nothing pending. It belongs
+// to this session, so Postgres releases it when the connection closes, a crash included.
+const MIGRATION_LOCK_KEY = 804_216_551;
+const [{ locked }] = await migrationClient<{ locked: boolean }[]>`
+  select pg_try_advisory_lock(${MIGRATION_LOCK_KEY}) as locked
+`;
+if (!locked) {
+  console.log('⏳ Another instance is migrating the database, waiting for it to finish...');
+  await migrationClient`select pg_advisory_lock(${MIGRATION_LOCK_KEY})`;
 }
 
 // A dump of the database as this release found it, so an operator who has to go back

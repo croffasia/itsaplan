@@ -322,6 +322,17 @@
     "noAccess": "У вас нет доступа к инструментам этой команды."
   },
   "agents": {
+    "projectDefaultsColumn": "Новые проекты",
+    "projectDefaultsHint": "Выбранные агенты добавляются во все новые проекты команды. Существующие проекты и копии сохраняют своих агентов.",
+    "projectDefaultAria": "Добавлять {agent} в новые проекты",
+    "projectDefaultsReadOnly": "Владельцы и менеджеры команды выбирают агентов для новых проектов.",
+    "projectDefaultsSaved": "Агенты по умолчанию сохранены",
+    "projectDefaultOn": "Включено",
+    "projectDefaultOff": "Выключено",
+    "joinNewProjects": "Добавлять в новые проекты",
+    "joinNewProjectsHint": "Агент добавляется в каждый новый проект команды.",
+    "selectAllProjects": "Выбрать все",
+    "clearProjects": "Снять все",
     "newAgent": "Новый ИИ-агент",
     "create": "Создать ИИ-агента",
     "save": "Сохранить ИИ-агента",

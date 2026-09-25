@@ -198,3 +198,11 @@ export const updateTeamMcpBody = t.Object({
   enabled: t.Optional(t.Boolean()),
   projects: t.Optional(t.Array(t.Object({ projectId: t.Number(), enabled: t.Boolean() }))),
 });
+
+export const TeamProjectDefaultsResponse = t.Object({
+  defaultAgentIds: t.Array(t.Number()),
+});
+
+export const updateTeamProjectDefaultsBody = t.Object({
+  defaultAgentIds: t.Array(t.Integer({ minimum: 1 }), { uniqueItems: true }),
+});

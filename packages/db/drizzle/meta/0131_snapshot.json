@@ -1,5 +1,5 @@
 {
-  "id": "477fd6ee-185f-48e7-9d93-c510ed98e9b4",
+  "id": "f2784228-7125-41b3-a08a-0d06e0ac734a",
   "prevId": "119aa919-9472-49b6-9b15-d9964a32f00d",
   "version": "7",
   "dialect": "postgresql",
@@ -7943,11 +7943,10 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "project_team_key_uq": {
-          "name": "project_team_key_uq",
+        "project_key_unique": {
+          "name": "project_key_unique",
           "nullsNotDistinct": false,
           "columns": [
-            "team_id",
             "key"
           ]
         }
@@ -9524,12 +9523,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "mcp_enabled": {
           "name": "mcp_enabled",
           "type": "boolean",
@@ -9543,20 +9536,19 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "default_agent_ids": {
+          "name": "default_agent_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
         }
       },
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "team_slug_unique": {
-          "name": "team_slug_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false

@@ -76,7 +76,7 @@ export default function IssueDetailContent({
   } = useIssueDetail(project, issueId, onIssueLoaded);
   const permissions = usePermissions(project);
   const canEdit = permissions.can('work_items', 'edit');
-  const canManageDevelopment = permissions.can('integrations', 'edit');
+  const canManageDevelopment = permissions.can('repositories', 'edit');
   const canReadDocuments = permissions.can('documents', 'read');
   const canLinkDocuments = canEdit && permissions.can('documents', 'edit');
   const features = useProjectFeatures();

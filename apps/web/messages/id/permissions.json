@@ -22,6 +22,7 @@
     "workflow_config": "Konfigurasi alur kerja",
     "actions": "Tindakan",
     "webhooks": "Webhook",
+    "repositories": "Repositori",
     "note_boards": "Papan catatan",
     "import_export": "Impor/Ekspor",
     "danger_zone": "Zona bahaya"

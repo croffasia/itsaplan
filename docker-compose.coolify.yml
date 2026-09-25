@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# Coolify stack: postgres + minio + api + worker + bot + web.
+# Coolify stack: postgres + rustfs + api + worker + bot + web.
 # In Coolify: New Resource → Docker Compose → point to this file, then set the
 # environment variables (see .env.example) in the UI.
 #
@@ -34,44 +34,51 @@ services:
       timeout: 5s
       retries: 10
 
-  # S3-compatible object store for issue attachments (MinIO).
+  # S3-compatible object store for issue attachments (RustFS).
   # Both the S3 API (:9000) and the console (:9001) are internal only — the api
   # streams attachment bytes over the internal network, so no port is published.
-  # Administer through mc from inside the network or an SSH tunnel.
+  # Administer through an S3 client from inside the network or an SSH tunnel.
+  #
+  # The service, its volume and the SERVICE_*_MINIO credentials keep the names of the
+  # MinIO stack this replaced: a renamed service would leave the old MinIO container
+  # running on the same volume, a renamed volume would start empty, and renamed
+  # credentials would be generated anew. RustFS reads the files MinIO wrote in place;
+  # MinIO wrote them as root, so the container runs as root to keep them writable.
   minio:
-    image: quay.io/minio/minio:latest
+    image: rustfs/rustfs:1.0.0
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    user: '0:0'
     environment:
-      MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
-      MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_MINIO}
+      RUSTFS_ACCESS_KEY: ${SERVICE_USER_MINIO}
+      RUSTFS_SECRET_KEY: ${SERVICE_PASSWORD_MINIO}
     volumes:
       - minio-data:/data
     healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://127.0.0.1:9000/health']
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 20s
 
-  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  # One-shot: creates the attachments bucket, then exits. A PUT on a bucket that
+  # already exists succeeds, so it runs on every start.
   # restart "no" is explicit: it exits 0 by design, and platforms that inject
   # restart: unless-stopped (e.g. Coolify) would otherwise loop it forever and
   # trip their restart-count limit, tearing the whole stack down.
   minio-init:
-    image: quay.io/minio/mc:latest
+    image: rustfs/rustfs:1.0.0
     restart: 'no'
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     environment:
-      MINIO_ROOT_USER: ${SERVICE_USER_MINIO}
-      MINIO_ROOT_PASSWORD: ${SERVICE_PASSWORD_MINIO}
+      S3_ACCESS_KEY_ID: ${SERVICE_USER_MINIO}
+      S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
       S3_BUCKET: ${S3_BUCKET:-planner-attachments}
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do echo 'waiting for minio...'; sleep 2; done;
-      mc mb --ignore-existing local/\"$$S3_BUCKET\";
-      echo 'bucket ready: '\"$$S3_BUCKET\";
+      curl -fsS -X PUT --aws-sigv4 aws:amz:us-east-1:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" http://minio:9000/\"$$S3_BUCKET\" &&
+      echo 'bucket ready: '\"$$S3_BUCKET\"
       "
 
   api:

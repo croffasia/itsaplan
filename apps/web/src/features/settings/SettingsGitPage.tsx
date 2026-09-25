@@ -18,7 +18,7 @@ export default function SettingsGitPage() {
   return (
     <SectionPageView title={sectionText.label} description={sectionText.description}>
       <SettingsResourceProvider resource={section.resource}>
-        <RequirePermission resource={section.resource} action="read">
+        <RequirePermission resource={section.resource} action="edit">
           <SettingsGit project={project} />
         </RequirePermission>
       </SettingsResourceProvider>

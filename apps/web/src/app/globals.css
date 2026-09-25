@@ -389,6 +389,48 @@
   font-weight: 500;
   white-space: nowrap;
 }
+.md-content .mention.mention-self {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--warning) 45%, transparent);
+}
+a.issue-ref {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.35em;
+  max-width: 100%;
+  vertical-align: baseline;
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 12%, transparent);
+  border-radius: 0.375em;
+  padding: 0.05em 0.35em;
+  font-weight: 500;
+  line-height: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.md-content a.issue-ref {
+  text-decoration: none;
+}
+.issue-ref-dot {
+  display: inline-block;
+  width: 0.55em;
+  height: 0.55em;
+  border-radius: 9999px;
+  flex: none;
+  align-self: center;
+}
+.issue-ref-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 16em;
+  font-weight: 400;
+  color: var(--foreground);
+}
+.md-content .issue-ref-source {
+  font-size: 0;
+  line-height: 0;
+}
 .md-content code {
   background: var(--muted);
   border-radius: 0.25em;

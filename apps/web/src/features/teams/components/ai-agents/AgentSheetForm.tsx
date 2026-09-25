@@ -12,7 +12,13 @@ import {
   useIntegrationModelsQuery,
   useIntegrationOptionsQuery,
 } from '@/services/integrations.service';
-import { useTeamProjectOptionsQuery, useTeamQuery } from '@/services/teams.service';
+import {
+  useTeam,
+  useTeamProjectDefaultsQuery,
+  useTeamProjectOptionsQuery,
+  useTeamQuery,
+  useUpdateTeamProjectDefaults,
+} from '@/services/teams.service';
 import {
   useSkillOptionsQuery,
   useAgentSkillsQuery,
@@ -78,6 +84,11 @@ export function AgentSheetForm({
   const canManageTools = team?.permissions.agent_tools.edit ?? false;
 
   const projects = useTeamProjectOptionsQuery(teamId).data ?? [];
+  const teamRole = useTeam(teamId)?.role;
+  const canEditDefaults = teamRole != null && teamRole !== 'member';
+  const defaultIds = useTeamProjectDefaultsQuery(canEditDefaults ? teamId : null).data
+    ?.defaultAgentIds;
+  const updateDefaults = useUpdateTeamProjectDefaults(teamId);
   const toolsQuery = useAgentToolsQuery(teamId);
   const catalogQuery = useIntegrationCatalogQuery(teamId);
   const catalog = catalogQuery.data ?? [];
@@ -111,7 +122,8 @@ export function AgentSheetForm({
     createAgent.isPending ||
     updateAgent.isPending ||
     setAgentSkills.isPending ||
-    setAgentTools.isPending;
+    setAgentTools.isPending ||
+    updateDefaults.isPending;
 
   // A new agent starts with every action granted. Seed the tool set once the action
   // catalog loads, only while creating and only if the user has not changed it yet.
@@ -141,6 +153,22 @@ export function AgentSheetForm({
     }
   }, [agentToolsQuery.data, toolIds]);
   const selectedTools = toolIds ?? [];
+
+  // Whether the agent joins new projects, seeded from the team's defaults once they load.
+  const [joinsNewProjects, setJoinsNewProjects] = useState<boolean | null>(isCreate ? false : null);
+  useEffect(() => {
+    if (agent && defaultIds && joinsNewProjects === null) {
+      setJoinsNewProjects(defaultIds.includes(agent.id));
+    }
+  }, [agent, defaultIds, joinsNewProjects]);
+
+  async function saveJoinsNewProjects(agentId: number) {
+    if (!defaultIds || joinsNewProjects === null) return;
+    if (joinsNewProjects === defaultIds.includes(agentId)) return;
+    await updateDefaults.mutateAsync(
+      joinsNewProjects ? [...defaultIds, agentId] : defaultIds.filter((id) => id !== agentId),
+    );
+  }
 
   function merge(patch: Partial<AgentFormValue>) {
     setValue((prev) => {
@@ -179,6 +207,7 @@ export function AgentSheetForm({
       if (res.agent.kind === 'internal' && canManageTools && toolIds && toolIds.length > 0) {
         await setAgentTools.mutateAsync({ agentId: res.agent.id, agentToolIds: toolIds });
       }
+      await saveJoinsNewProjects(res.agent.id);
       setRevealedKey(res.apiKey);
       onCreated(res.agent);
     } else {
@@ -189,6 +218,7 @@ export function AgentSheetForm({
       if (agent.kind === 'internal' && canManageTools && toolIds !== null) {
         await setAgentTools.mutateAsync({ agentId: agent.id, agentToolIds: toolIds });
       }
+      await saveJoinsNewProjects(agent.id);
     }
   }
 
@@ -285,6 +315,8 @@ export function AgentSheetForm({
       toolsBadge={countBadge(selectedTools.length, toolsLibrary.length)}
       revealedKey={revealedKey}
       onRevealedKey={setRevealedKey}
+      joinsNewProjects={joinsNewProjects ?? false}
+      onJoinsNewProjectsChange={canEditDefaults ? setJoinsNewProjects : undefined}
     />
   );
 

@@ -1,5 +1,6 @@
 import {
   db,
+  aiAgent,
   chatAttachment,
   documentAsset,
   initiative,
@@ -41,6 +42,7 @@ import { PROJECT_FEATURES, featureLabel, type ProjectFeature } from '#shared/fea
 import { getLimits } from '#shared/limits';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getProjectDefaults } from '#modules/settings/service';
+import { getDefaultRoleId } from '#modules/roles/service';
 import { dropUnusedTeamMembership } from '#modules/scim/reconcile';
 import { projectRef, teamRef } from '#modules/teams/ref';
 import { deleteObjects } from '@repo/storage';
@@ -321,7 +323,13 @@ export async function getProjectTeamId(projectId: number): Promise<number> {
 export async function targetTeam(userId: string, teamId?: number): Promise<TargetTeam> {
   if (teamId == null) return ownedTeam(userId);
   const [row] = await db
-    .select({ id: team.id, name: team.name, slug: team.slug, mcpEnabled: team.mcpEnabled })
+    .select({
+      id: team.id,
+      name: team.name,
+      slug: team.slug,
+      mcpEnabled: team.mcpEnabled,
+      defaultAgentIds: team.defaultAgentIds,
+    })
     .from(team)
     .where(eq(team.id, teamId));
   if (!row) throw new HttpError(404, 'Team not found');
@@ -334,13 +342,20 @@ export interface TargetTeam {
   name: string;
   slug: string | null;
   mcpEnabled: boolean;
+  defaultAgentIds: number[];
 }
 
 // The team the caller owns. Every account is given one when it is created, so a
 // caller without one is a broken account rather than a state the UI can reach.
 async function ownedTeam(userId: string): Promise<TargetTeam> {
   const [row] = await db
-    .select({ id: team.id, name: team.name, slug: team.slug, mcpEnabled: team.mcpEnabled })
+    .select({
+      id: team.id,
+      name: team.name,
+      slug: team.slug,
+      mcpEnabled: team.mcpEnabled,
+      defaultAgentIds: team.defaultAgentIds,
+    })
     .from(teamMember)
     .innerJoin(team, eq(team.id, teamMember.teamId))
     .where(and(eq(teamMember.userId, userId), eq(teamMember.role, 'owner')))
@@ -443,6 +458,15 @@ export async function createProject(
   // What a new project starts with, set instance-wide in god mode. Read before the
   // transaction opens so the settings lookup is not part of it.
   const defaults = await getProjectDefaults();
+  const defaultAgents = ownerTeam.defaultAgentIds.length
+    ? await db
+        .select({ userId: aiAgent.userId })
+        .from(aiAgent)
+        .where(
+          and(eq(aiAgent.teamId, ownerTeam.id), inArray(aiAgent.id, ownerTeam.defaultAgentIds)),
+        )
+    : [];
+  const defaultRoleId = defaultAgents.length ? await getDefaultRoleId(ownerTeam.id) : null;
   return db.transaction(async (tx) => {
     const [row] = await tx
       .insert(project)
@@ -455,6 +479,16 @@ export async function createProject(
       })
       .returning();
     await tx.insert(projectMember).values({ projectId: row.id, userId: ownerId, role: 'owner' });
+    if (defaultAgents.length) {
+      await tx.insert(projectMember).values(
+        defaultAgents.map((agent) => ({
+          projectId: row.id,
+          userId: agent.userId,
+          role: 'member',
+          roleId: defaultRoleId,
+        })),
+      );
+    }
     for (const [position, column] of DEFAULT_COLUMNS.entries()) {
       await tx.insert(projectColumn).values({
         projectId: row.id,

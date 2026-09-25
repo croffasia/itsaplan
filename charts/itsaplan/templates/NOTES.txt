@@ -29,5 +29,5 @@ PostgreSQL is deployed in-cluster. Data is persisted via a {{ .Values.postgresql
 
 {{- if .Values.minio.enabled }}
 
-MinIO is deployed in-cluster for S3-compatible attachment storage ({{ .Values.minio.persistence.size }} PVC).
+RustFS is deployed in-cluster for S3-compatible attachment storage ({{ .Values.minio.persistence.size }} PVC).
 {{- end }}

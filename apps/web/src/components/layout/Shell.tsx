@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { useIssueBySeqQuery } from '@/services/issues.service';
@@ -15,6 +15,7 @@ import { useShellRoute } from '@/hooks/useShellRoute';
 import { useProjectRouteSync } from '@/hooks/useProjectRouteSync';
 import { projectPath, issuePath } from '@/utils/paths';
 import { defaultsFromFilters, type NewIssueDefaults } from '@/utils/project';
+import { IssueRefsProvider } from '@/context/issueRefs';
 import { ShellCtx, type ShellContext } from '@/context/shellContext';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import AppSidebar from '@/components/layout/AppSidebar';
@@ -55,6 +56,7 @@ export default function Shell({
     errorMsg,
     forbidden,
   } = useShellProject(projectKey, route.activeViewId);
+  const issueRefKeys = useMemo(() => projects.map((item) => item.key), [projects]);
 
   const initiativeOptions = useInitiativeOptionsQuery(projectKey).data ?? [];
   const { issueOpenMode, showChatByDefault } = useAccountPreferences();
@@ -185,7 +187,7 @@ export default function Shell({
                 projectsLoaded={projectsLoaded}
                 projectCount={projects.length}
               >
-                {children}
+                <IssueRefsProvider keys={issueRefKeys}>{children}</IssueRefsProvider>
               </ShellBody>
             </div>
 
@@ -226,7 +228,9 @@ export default function Shell({
           onToggleChat={chatPanel.toggle}
         />
 
-        <ShellOverlays project={project} projectKey={projectKey} overlays={overlays} />
+        <IssueRefsProvider keys={issueRefKeys}>
+          <ShellOverlays project={project} projectKey={projectKey} overlays={overlays} />
+        </IssueRefsProvider>
       </SidebarProvider>
     </ShellCtx.Provider>
   );

@@ -4,6 +4,7 @@ import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
 import { createAgent, teamOf } from '#tests/helpers/agents';
+import { agentChatConfig } from '#modules/agents/chat/service';
 
 // Chatting with an external agent: a member sends a message, the agent's runner claims
 // it, reports what its command produces as AG-UI events, and closes it. The claim waits
@@ -11,6 +12,16 @@ import { createAgent, teamOf } from '#tests/helpers/agents';
 // assertion would sit out the full production wait.
 process.env.AGENT_CHAT_CLAIM_WAIT_MS = '50';
 process.env.AGENT_CHAT_CLAIM_POLL_MS = '10';
+
+it('caps configured claim wait below the runner request timeout', () => {
+  const previous = process.env.AGENT_CHAT_CLAIM_WAIT_MS;
+  process.env.AGENT_CHAT_CLAIM_WAIT_MS = '60000';
+  try {
+    expect(agentChatConfig.claimWaitMs()).toBe(30_000);
+  } finally {
+    process.env.AGENT_CHAT_CLAIM_WAIT_MS = previous;
+  }
+});
 
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });

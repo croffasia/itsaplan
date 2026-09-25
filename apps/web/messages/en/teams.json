@@ -322,6 +322,17 @@
     "noAccess": "You do not have access to the tools of this team."
   },
   "agents": {
+    "projectDefaultsColumn": "New projects",
+    "projectDefaultsHint": "Selected agents join each new project in this team. Existing projects and project copies keep their own agents.",
+    "projectDefaultAria": "Add {agent} to new projects",
+    "projectDefaultsReadOnly": "Team owners and managers choose which agents join new projects.",
+    "projectDefaultsSaved": "Default agents saved",
+    "projectDefaultOn": "On",
+    "projectDefaultOff": "Off",
+    "joinNewProjects": "Add to new projects",
+    "joinNewProjectsHint": "The agent joins each new project in this team.",
+    "selectAllProjects": "Select all",
+    "clearProjects": "Clear all",
     "newAgent": "New AI agent",
     "create": "Create AI agent",
     "save": "Save AI agent",

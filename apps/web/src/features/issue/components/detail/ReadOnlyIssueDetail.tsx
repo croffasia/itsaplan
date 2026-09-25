@@ -3,6 +3,7 @@ import { toPublicProjectDetail } from '@/utils/publicProject';
 import { usePersistedOpen, usePersistedOpenGroups } from '../../hooks/usePersistedOpen';
 import { fieldDefsForType } from '../../utils/fieldDefs';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
+import { IssueRefsProvider } from '@/context/issueRefs';
 import IssueCustomFieldBody from '../fields/IssueCustomFieldBody';
 import IssueProperties from './IssueProperties';
 import IssueSubtasksPanel from './IssueSubtasksPanel';
@@ -55,8 +56,13 @@ export default function ReadOnlyIssueDetail({
         </div>
         <h1 className="mt-1 text-lg font-semibold">{issue.title}</h1>
 
+        {/* A share is read without a session, so an identifier links without reading the
+            issue it names: the api answers that read with 401, and lib/api treats every
+            401 as an ended session and sends the reader to the sign-in screen. */}
         {issue.description.trim() && (
-          <MarkdownEditor className="mt-4" defaultValue={issue.description} editable={false} />
+          <IssueRefsProvider keys={[scaffold.project.key]} resolve={false}>
+            <MarkdownEditor className="mt-4" defaultValue={issue.description} editable={false} />
+          </IssueRefsProvider>
         )}
 
         {fieldDefs

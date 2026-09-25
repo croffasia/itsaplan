@@ -119,14 +119,6 @@ function touch(target: HTMLElement, type: 'touchstart' | 'touchmove', y: number)
   return event;
 }
 
-async function pointer(target: HTMLElement, type: string, pointerType: string) {
-  await act(async () => {
-    const event = new window.MouseEvent(type, { bubbles: true, cancelable: true, button: 0 });
-    Object.defineProperty(event, 'pointerType', { value: pointerType });
-    target.dispatchEvent(event);
-  });
-}
-
 function scrollableList() {
   const list = element('[data-slot="command-list"]');
   // jsdom has no layout engine, so supply the dimensions of an overflowing list.
@@ -258,34 +250,6 @@ describe('ProjectSwitcher', () => {
     assert.deepEqual(selections, ['eng.P02']);
   });
 
-  it('restores picker focus and scrolling after closing nested project actions', async () => {
-    await render();
-    const trigger = element('[aria-label="Actions for Project 2"]');
-    await key(trigger, 'Enter');
-    const menu = element('[role="menu"]');
-    await key(menu, 'Escape');
-    assert.equal(document.querySelector('[role="menu"]'), null);
-    assert.equal(document.activeElement, trigger);
-    scrollableList();
-    const row = element('[data-value="project-2"]');
-    touch(row, 'touchstart', 200);
-    assert.equal(touch(row, 'touchmove', 140).defaultPrevented, false);
-    assert.deepEqual(selections, []);
-  });
-
-  it('allows a swipe starting on project actions without opening the menu', async () => {
-    await render();
-    scrollableList();
-    const trigger = element('[aria-label="Actions for Project 2"]');
-    await pointer(trigger, 'pointerdown', 'touch');
-    assert.equal(document.querySelector('[role="menu"]'), null);
-    touch(trigger, 'touchstart', 200);
-    assert.equal(touch(trigger, 'touchmove', 140).defaultPrevented, false);
-    await pointer(trigger, 'pointercancel', 'touch');
-    assert.equal(document.querySelector('[role="menu"]'), null);
-    assert.deepEqual(selections, []);
-  });
-
   it('keeps the picker scrollable after closing the sort selector', async () => {
     await render();
     const trigger = element('[data-slot="select-trigger"]');
@@ -297,18 +261,6 @@ describe('ProjectSwitcher', () => {
     const row = element('[data-value="project-2"]');
     touch(row, 'touchstart', 200);
     assert.equal(touch(row, 'touchmove', 140).defaultPrevented, false);
-    assert.deepEqual(selections, []);
-  });
-
-  it('opens project actions on a completed tap and preserves mouse activation', async () => {
-    await render();
-    const trigger = element('[aria-label="Actions for Project 2"]');
-    await pointer(trigger, 'pointerdown', 'touch');
-    await pointer(trigger, 'pointerup', 'touch');
-    await act(async () => trigger.click());
-    await key(element('[role="menu"]'), 'Escape');
-    await pointer(trigger, 'pointerdown', 'mouse');
-    assert.ok(element('[role="menu"]'));
     assert.deepEqual(selections, []);
   });
 

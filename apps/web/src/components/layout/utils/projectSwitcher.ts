@@ -20,6 +20,30 @@ function projectTimestamp(project: Project, sort: ProjectSort): number {
   return Number.isFinite(timestamp) ? timestamp : -Infinity;
 }
 
+function searchMatcher(query: string) {
+  const tokens = normalizeSearch(query).split(/\s+/).filter(Boolean);
+  return (value: string) => {
+    const normalized = normalizeSearch(value);
+    return tokens.every((token) => normalized.includes(token));
+  };
+}
+
+function projectComparator(sort: ProjectSort, locale: string) {
+  const collator = new Intl.Collator(locale, { sensitivity: 'base' });
+  return (a: Project, b: Project) => {
+    let order = 0;
+    if (sort === 'name') order = collator.compare(a.name, b.name);
+    if (sort === 'created' || sort === 'activity') {
+      order = projectTimestamp(b, sort) - projectTimestamp(a, sort);
+    }
+    if (order) return order;
+    order = collator.compare(a.key, b.key);
+    if (order) return order;
+    if (a.key !== b.key) return a.key < b.key ? -1 : 1;
+    return a.id - b.id;
+  };
+}
+
 export function groupProjects(
   projects: Project[],
   teams: Team[],
@@ -30,11 +54,7 @@ export function groupProjects(
   const groups = new Map<number, TeamGroup>(
     teams.map((team) => [team.id, { teamId: team.id, teamName: team.name, projects: [] }]),
   );
-  const tokens = normalizeSearch(query).split(/\s+/).filter(Boolean);
-  const matches = (value: string) => {
-    const normalized = normalizeSearch(value);
-    return tokens.every((token) => normalized.includes(token));
-  };
+  const matches = searchMatcher(query);
 
   for (const project of projects) {
     let group = groups.get(project.teamId);
@@ -47,28 +67,15 @@ export function groupProjects(
     }
   }
 
-  const collator = new Intl.Collator(locale, { sensitivity: 'base' });
-  const compareKeys = (a: Project, b: Project) => {
-    const order = collator.compare(a.key, b.key);
-    if (order) return order;
-    if (a.key !== b.key) return a.key < b.key ? -1 : 1;
-    return a.id - b.id;
-  };
+  const compare = projectComparator(sort, locale);
   const result = [...groups.values()].filter(
     (group) => group.projects.length > 0 || matches(group.teamName),
   );
 
   for (const group of result) {
-    group.projects.sort((a, b) => {
-      const favoriteOrder = Number(Boolean(b.isFavorite)) - Number(Boolean(a.isFavorite));
-      if (favoriteOrder) return favoriteOrder;
-      let order = 0;
-      if (sort === 'name') order = collator.compare(a.name, b.name);
-      if (sort === 'created' || sort === 'activity') {
-        order = projectTimestamp(b, sort) - projectTimestamp(a, sort);
-      }
-      return order || compareKeys(a, b);
-    });
+    group.projects.sort(
+      (a, b) => Number(Boolean(b.isFavorite)) - Number(Boolean(a.isFavorite)) || compare(a, b),
+    );
   }
 
   const newest = (group: TeamGroup) =>
@@ -87,6 +94,26 @@ export function groupProjects(
   return result;
 }
 
+// Hidden rows show no team and no star, so they are sorted as one list and a
+// favorite does not go first.
+function hiddenProjects(
+  projects: Project[],
+  teams: Team[],
+  query: string,
+  sort: ProjectSort,
+  locale: string,
+): Project[] {
+  const teamNames = new Map(teams.map((team) => [team.id, team.name]));
+  const matches = searchMatcher(query);
+  return projects
+    .filter((project) =>
+      matches(
+        `${project.name} ${project.key} ${teamNames.get(project.teamId) ?? project.teamName}`,
+      ),
+    )
+    .sort(projectComparator(sort, locale));
+}
+
 export function projectSwitcherSections(
   projects: Project[],
   teams: Team[],
@@ -98,8 +125,6 @@ export function projectSwitcherSections(
   const hidden = projects.filter((project) => project.isHidden);
   return {
     visibleGroups: groupProjects(visible, teams, query, sort, locale),
-    hiddenProjects: groupProjects(hidden, teams, query, sort, locale).flatMap(
-      (group) => group.projects,
-    ),
+    hiddenProjects: hiddenProjects(hidden, teams, query, sort, locale),
   };
 }

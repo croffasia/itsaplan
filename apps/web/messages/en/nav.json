@@ -46,8 +46,7 @@
     "noResults": "No matching projects",
     "sortCreated": "Newest created",
     "hideHidden": "Hide hidden projects",
-    "resize": "Drag to resize the project picker",
-    "resetWidth": "Reset project picker width",
+    "resize": "Drag to resize the project picker, double-click to reset",
     "activityHint": "Latest work-item change or comment",
     "search": "Search projects by name, key, or team…",
     "sortActivity": "Recent activity",
@@ -63,11 +62,7 @@
     "hiddenProjects": "Hidden projects ({count})",
     "noHiddenResults": "No hidden projects match your search",
     "noVisibleProjects": "No projects in your view",
-    "projectActions": "Actions for {name}",
-    "starAction": "Star project",
-    "unstarAction": "Unstar project",
-    "hideAction": "Hide from my view",
-    "restoreAction": "Restore to my view",
-    "starred": "Starred"
+    "hintMove": "move",
+    "hintOpen": "open"
   }
 }

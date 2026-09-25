@@ -5,6 +5,7 @@ import type { Team } from '@/lib/api/endpoints/teams';
 import { Command, CommandInput, CommandList } from '@/components/ui/command';
 import ProjectSwitcherTeamGroup from './ProjectSwitcherTeamGroup';
 import ProjectSwitcherHiddenProjects from './ProjectSwitcherHiddenProjects';
+import ProjectSwitcherSort from './ProjectSwitcherSort';
 import { projectSwitcherSections, type ProjectSort } from './utils/projectSwitcher';
 
 export default function ProjectSwitcherList({
@@ -12,6 +13,7 @@ export default function ProjectSwitcherList({
   teams,
   current,
   sort,
+  onSortChange,
   showHidden,
   onShowHiddenChange,
   openTeams,
@@ -23,6 +25,7 @@ export default function ProjectSwitcherList({
   teams: Team[];
   current?: Project;
   sort: ProjectSort;
+  onSortChange: (sort: ProjectSort) => void;
   showHidden: boolean;
   onShowHiddenChange: (show: boolean) => void;
   openTeams: Record<number, boolean>;
@@ -42,6 +45,16 @@ export default function ProjectSwitcherList({
   );
   const searching = query.trim().length > 0;
   const hiddenCount = projects.filter((project) => project.isHidden).length;
+  const hiddenMatches = searching && hiddenProjects.length > 0;
+
+  function search(next: string) {
+    setQuery(next);
+    if (
+      next.trim() &&
+      projectSwitcherSections(projects, teams, next, sort, locale).hiddenProjects.length > 0
+    )
+      onShowHiddenChange(true);
+  }
 
   return (
     <Command
@@ -50,15 +63,19 @@ export default function ProjectSwitcherList({
       className="min-h-0 flex-1 rounded-none"
       label={t('projects')}
     >
-      <CommandInput
-        ref={inputRef}
-        value={query}
-        onValueChange={setQuery}
-        placeholder={t('projectPicker.search')}
-        aria-label={t('projectPicker.search')}
-      />
+      <div className="flex shrink-0 items-center gap-1 border-b pe-2 [&>[data-slot=command-input-wrapper]]:h-11 [&>[data-slot=command-input-wrapper]]:min-w-0 [&>[data-slot=command-input-wrapper]]:flex-1 [&>[data-slot=command-input-wrapper]]:border-0">
+        <CommandInput
+          ref={inputRef}
+          value={query}
+          onValueChange={search}
+          className="text-[13px]"
+          placeholder={t('projectPicker.search')}
+          aria-label={t('projectPicker.search')}
+        />
+        <ProjectSwitcherSort sort={sort} onSortChange={onSortChange} />
+      </div>
       <CommandList className="max-h-none min-h-0 flex-1 p-1">
-        {groups.every((group) => group.projects.length === 0) && (
+        {groups.every((group) => group.projects.length === 0) && !hiddenMatches && (
           <p role="status" className="px-3 py-6 text-center text-sm text-muted-foreground">
             {searching ? t('projectPicker.noResults') : t('projectPicker.noVisibleProjects')}
           </p>
@@ -79,7 +96,7 @@ export default function ProjectSwitcherList({
             onSelectProject={onSelectProject}
           />
         ))}
-        {(hiddenCount > 0 || showHidden) && (
+        {hiddenCount > 0 && (
           <ProjectSwitcherHiddenProjects
             projects={hiddenProjects}
             hiddenCount={hiddenCount}

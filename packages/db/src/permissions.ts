@@ -1,8 +1,7 @@
 // Permission model for team roles. A role carries a matrix: for each resource the
 // create/edit/read/delete flags. The matrix is stored as jsonb on team_role and
 // enforced by the API (apps/api/src/shared/access.ts). Owners bypass the matrix
-// entirely (full access). It lives here because both the API and the sign-up hook
-// in @repo/auth, which seeds a new team's default role, write it.
+// entirely (full access).
 
 export const PERMISSION_RESOURCES = [
   'work_items',

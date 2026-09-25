@@ -131,7 +131,15 @@ describe('teams', () => {
   });
 
   describe('list', () => {
-    it('lists the team the account was registered with', async () => {
+    it('gives a new account no team, so it has nowhere to create a project', async () => {
+      const user = await signUpTestUser({ team: false });
+      const api = authedApi(user.cookie);
+
+      expect((await api.teams.get()).data).toEqual([]);
+      expect((await api.projects.post({ key: 'MKT', name: 'Marketing' })).status).toBe(400);
+    });
+
+    it('lists the team the account owns', async () => {
       const { user, api } = await signUpClient();
 
       const list = await api.teams.get();
@@ -205,7 +213,7 @@ describe('teams', () => {
 
     it('refuses one more team than the limits allow', async () => {
       const { api } = await signUpClient();
-      // The account already owns the team it was registered with.
+      // The account already owns the team signUpTestUser gave it.
       setLimits({ maxTeams: 1 });
 
       const created = await api.teams.post({ name: 'Design', slug: 'design' });
@@ -586,7 +594,7 @@ describe('teams', () => {
   });
 
   describe('team projects', () => {
-    // The team the account was registered with, which owns the projects it creates.
+    // The team signUpTestUser gave the account, which owns the projects it creates.
     async function ownTeamId(api: Api): Promise<number> {
       return (await api.teams.get()).data![0].id;
     }

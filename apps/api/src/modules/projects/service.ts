@@ -345,8 +345,7 @@ export interface TargetTeam {
   defaultAgentIds: number[];
 }
 
-// The team the caller owns. Every account is given one when it is created, so a
-// caller without one is a broken account rather than a state the UI can reach.
+// The first team the caller owns. An account has none until it creates one.
 async function ownedTeam(userId: string): Promise<TargetTeam> {
   const [row] = await db
     .select({

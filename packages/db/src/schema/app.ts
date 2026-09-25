@@ -49,9 +49,8 @@ export const appSecret = pgTable('app_secret', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-// A team owns projects and holds its own member list. Every account is given one at
-// registration, named after its username, and every project belongs to exactly one
-// team.
+// A team owns projects and holds its own member list. Every project belongs to exactly
+// one team.
 export const team = pgTable('team', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),

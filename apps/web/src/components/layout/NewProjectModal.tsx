@@ -14,8 +14,8 @@ import { allSelected, type CopyInclude } from '@/components/layout/CopyProjectOp
 
 // Creates a project, or — when `copyFrom` is set — copies that project's structure
 // (states, issue types, labels, custom fields) into a new project without its
-// issues. `teamId` is the team the project belongs to; without one it goes to the
-// team the caller owns. A copy is always made within the source project's team.
+// issues. `teamId` is the team the project belongs to; a copy is always made within
+// the source project's team.
 export default function NewProjectModal({
   onClose,
   onCreated,
@@ -24,7 +24,7 @@ export default function NewProjectModal({
 }: {
   onClose: () => void;
   onCreated: (projectKey: string) => void;
-  teamId?: number;
+  teamId: number;
   copyFrom?: { id: number; name: string; description: string };
 }) {
   const t = useTranslations('newProject');
@@ -44,12 +44,9 @@ export default function NewProjectModal({
   const createProject = useCreateProject();
   // Names the team in the header, so the dialog says where the project lands.
   const teams = useTeamsQuery().data;
-  const team =
-    teamId != null
-      ? teams?.find((one) => one.id === teamId)
-      : teams?.filter((one) => one.role === 'owner').sort((a, b) => a.id - b.id)[0];
-  const defaults = useTeamProjectDefaultsQuery(copyFrom ? null : (team?.id ?? null)).data;
-  const agents = useAiAgentsQuery(copyFrom ? null : (team?.id ?? null)).data ?? [];
+  const team = teams?.find((one) => one.id === teamId);
+  const defaults = useTeamProjectDefaultsQuery(copyFrom ? null : teamId).data;
+  const agents = useAiAgentsQuery(copyFrom ? null : teamId).data ?? [];
   const defaultAgentNames = agents
     .filter((agent) => defaults?.defaultAgentIds.includes(agent.id))
     .map((agent) => agent.name);

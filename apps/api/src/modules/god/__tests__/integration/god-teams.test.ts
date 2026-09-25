@@ -9,7 +9,7 @@ import { addUser, createAgentUser, setup, type Actor } from '../helpers';
 
 const PAGE = { page: 1, pageSize: 50 };
 
-// Every account is given a team at registration, so the actor's own team is its first.
+// signUpTestUser gives every account a team, so the actor's own team is its first.
 async function ownTeamId(actor: Actor): Promise<number> {
   const teams = await actor.api.teams.get();
   return teams.data![0]!.id;
@@ -107,7 +107,7 @@ describe('god teams', () => {
       const first = await god.api.god.teams.get({ query: { page: 1, pageSize: 2 } });
       const second = await god.api.god.teams.get({ query: { page: 2, pageSize: 2 } });
 
-      // The two created teams plus the one the god account registered with.
+      // The two created teams plus the one signUpTestUser gave the god account.
       expect(first.data?.items).toHaveLength(2);
       expect(second.data?.items).toHaveLength(1);
       expect(first.data?.total).toBe(3);

@@ -64,7 +64,7 @@ async function requireTeamProject(teamId: number, projectId: number): Promise<vo
 }
 
 // The teams the session user belongs to. A team owns projects and its own member
-// list; every account is given one at registration and may create more, becoming
+// list; an account creates its own after registration, and may create more, becoming
 // their owner.
 export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] } })
   .use(authContext)

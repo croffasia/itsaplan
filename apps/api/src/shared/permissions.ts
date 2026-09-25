@@ -1,8 +1,7 @@
 import { t } from 'elysia';
 
 // The permission model lives in @repo/db, next to the team_role table whose
-// `permissions` column holds the matrix, so the sign-up hook in @repo/auth can seed
-// a new team's default role with it. This module adds the API-side pieces.
+// `permissions` column holds the matrix. This module adds the API-side pieces.
 export {
   PERMISSION_RESOURCES,
   PERMISSION_ACTIONS,

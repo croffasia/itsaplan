@@ -13,7 +13,6 @@ import {
   listProjects,
   getProject,
   getBoardIssues,
-  createProject,
   updateProject,
   updateProjectPreferences,
 } from '@/lib/api/endpoints/projects';
@@ -77,9 +76,8 @@ export function useInvalidateProject(projectKey: string | null) {
   };
 }
 
-// Creates a project, in a given team or — without one — in the team the caller owns.
-// `copyFromId` copies that project's structure instead of starting from a preset; the
-// source belongs to the same team.
+// Creates a project in a team. `copyFromId` copies that project's structure instead of
+// starting from a preset; the source belongs to the same team.
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
@@ -88,7 +86,7 @@ export function useCreateProject() {
       copyFromId,
       input,
     }: {
-      teamId?: number;
+      teamId: number;
       copyFromId?: number;
       input: {
         key: string;
@@ -97,12 +95,10 @@ export function useCreateProject() {
         include?: Partial<Record<CopyProjectIncludeKey, boolean>>;
         preset?: string;
       };
-    }) => {
-      if (teamId == null) return createProject(input);
-      return copyFromId == null
+    }) =>
+      copyFromId == null
         ? createTeamProject(teamId, input)
-        : copyTeamProject(teamId, copyFromId, input);
-    },
+        : copyTeamProject(teamId, copyFromId, input),
     onSuccess: (project) => {
       // Add the new project to the cached list immediately so navigating to it
       // (onCreated → setProjectKey) sticks. Otherwise the list has not refetched

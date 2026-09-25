@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useInitiativeOptionsQuery } from '@/services/initiatives.service';
 import { useIssueBySeqQuery } from '@/services/issues.service';
+import { useTeamsQuery } from '@/services/teams.service';
 import { useAccountPreferences } from '@/services/preferences.service';
 import type { IssueOpenMode } from '@/lib/api/endpoints/userPreferences';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
@@ -74,6 +75,11 @@ export default function Shell({
   const chatAvailable = !!projectKey && can('ai_agents', 'read');
   const canCreateInitiative = !!project?.project.initiativesEnabled && can('initiatives', 'create');
   const issueQuery = useIssueBySeqQuery(projectKey, routeIssueSeq);
+  // A project is created in a team by its owner or manager: the current project's team
+  // when the user ranks so there, otherwise the first team they do.
+  const managedTeams = (useTeamsQuery().data ?? []).filter((one) => one.role !== 'member');
+  const newProjectTeamId = (managedTeams.find((one) => one.id === teamId) ?? managedTeams[0])?.id;
+  const openNewProject = newProjectTeamId != null ? () => overlays.setShowNewProject(true) : null;
 
   useProjectRouteSync({ projects, projectsLoaded, projectKey });
 
@@ -112,7 +118,7 @@ export default function Shell({
     onChangeView: editor.changeView,
     onNewIssue: () => canCreateIssue && openNewIssue(),
     onNewInitiative: () => canCreateInitiative && overlays.setShowNewInitiative(true),
-    onNewProject: () => overlays.setShowNewProject(true),
+    onNewProject: () => openNewProject?.(),
     onSettings: () => firstSettingsHref && router.push(firstSettingsHref),
     onToggleChat: chatPanel.toggle,
   });
@@ -225,7 +231,7 @@ export default function Shell({
           // board); the constant matches BOARD_SELECT_ALL_EVENT in useSelection.
           onSelectAll={() => window.dispatchEvent(new Event('board:select-all'))}
           onNewInitiative={() => overlays.setShowNewInitiative(true)}
-          onNewProject={() => overlays.setShowNewProject(true)}
+          onNewProject={openNewProject}
           onSelectProject={(key) => router.push(projectPath(key))}
           onOpenIssue={(seq) => projectKey && router.push(issuePath(projectKey, seq))}
           onIssueDeleted={onIssueDeleted}
@@ -233,7 +239,12 @@ export default function Shell({
         />
 
         <IssueRefsProvider refs={issueRefs}>
-          <ShellOverlays project={project} projectKey={projectKey} overlays={overlays} />
+          <ShellOverlays
+            project={project}
+            projectKey={projectKey}
+            newProjectTeamId={newProjectTeamId}
+            overlays={overlays}
+          />
         </IssueRefsProvider>
       </SidebarProvider>
     </ShellCtx.Provider>

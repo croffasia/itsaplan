@@ -715,9 +715,7 @@ export async function listTeamProjectMembers(
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
-// Writes a team owned by one account, with the default role its projects assign. Every
-// account owns one; the sign-up hook in @repo/auth writes the same rows inline, since
-// it runs inside better-auth rather than through this module.
+// Writes a team owned by one account, with the default role its projects assign.
 export async function insertOwnedTeam(
   tx: Transaction,
   name: string,
@@ -767,8 +765,6 @@ export async function assertTeamSeatFree(teamId: number): Promise<void> {
   }
 }
 
-// The team an account gets at sign-up is written by the hook in @repo/auth, which does
-// not come through here — the ceiling applies to the teams created on top of that one.
 export async function createTeam(name: string, slug: string, ownerId: string): Promise<TeamRow> {
   const { maxTeams } = await getLimits({ ownerUserId: ownerId });
   if (maxTeams > 0 && (await countOwnedTeams(ownerId)) >= maxTeams) {

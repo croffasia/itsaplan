@@ -129,13 +129,6 @@ export const updateProjectPreferences = (projectKey: string, patch: ProjectPrefe
     body: JSON.stringify(patch),
   });
 
-export const createProject = (input: {
-  key: string;
-  name: string;
-  description?: string;
-  preset?: string;
-}) => request<Project>('/projects', { method: 'POST', body: JSON.stringify(input) });
-
 // Update a project's name/description. The key is immutable, so it is not sent.
 export const updateProject = (projectKey: string, patch: { name?: string; description?: string }) =>
   request<Project>(`/projects/${projectKey}`, { method: 'PATCH', body: JSON.stringify(patch) });

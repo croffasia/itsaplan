@@ -59,6 +59,7 @@ export const team = pgTable('team', {
   // team's own resources (agents, skills, tools, roles, integrations) and every
   // project it owns, whatever each project's own flag says.
   mcpEnabled: boolean('mcp_enabled').notNull().default(true),
+  defaultAgentIds: jsonb('default_agent_ids').$type<number[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -785,15 +786,7 @@ export const gitProviderConnection = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [
-    unique('git_provider_connection_team_provider_url_account_unique').on(
-      t.teamId,
-      t.provider,
-      t.baseUrl,
-      t.accountLogin,
-    ),
-    index('git_provider_connection_team_idx').on(t.teamId),
-  ],
+  (t) => [index('git_provider_connection_team_idx').on(t.teamId)],
 );
 
 export const gitManagedRepository = pgTable(

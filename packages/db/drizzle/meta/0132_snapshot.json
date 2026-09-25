@@ -1,6 +1,6 @@
 {
-  "id": "f2784228-7125-41b3-a08a-0d06e0ac734a",
-  "prevId": "119aa919-9472-49b6-9b15-d9964a32f00d",
+  "id": "823a497e-ee1b-405b-b747-b4e7a63dc52f",
+  "prevId": "f2784228-7125-41b3-a08a-0d06e0ac734a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -3682,6 +3682,12 @@
           "primaryKey": true,
           "notNull": true
         },
+        "project_id": {
+          "name": "project_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "connection_id": {
           "name": "connection_id",
           "type": "integer",
@@ -3741,17 +3747,17 @@
         }
       },
       "indexes": {
-        "git_managed_repository_connection_idx": {
-          "name": "git_managed_repository_connection_idx",
+        "git_managed_repository_project_connection_idx": {
+          "name": "git_managed_repository_project_connection_idx",
           "columns": [
             {
-              "expression": "connection_id",
+              "expression": "project_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
             },
             {
-              "expression": "full_name",
+              "expression": "connection_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3764,6 +3770,19 @@
         }
       },
       "foreignKeys": {
+        "git_managed_repository_project_id_project_id_fk": {
+          "name": "git_managed_repository_project_id_project_id_fk",
+          "tableFrom": "git_managed_repository",
+          "tableTo": "project",
+          "columnsFrom": [
+            "project_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "git_managed_repository_connection_id_git_provider_connection_id_fk": {
           "name": "git_managed_repository_connection_id_git_provider_connection_id_fk",
           "tableFrom": "git_managed_repository",
@@ -3780,10 +3799,11 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "git_managed_repository_connection_external_unique": {
-          "name": "git_managed_repository_connection_external_unique",
+        "git_managed_repository_project_connection_external_unique": {
+          "name": "git_managed_repository_project_connection_external_unique",
           "nullsNotDistinct": false,
           "columns": [
+            "project_id",
             "connection_id",
             "external_id"
           ]
@@ -3803,8 +3823,8 @@
           "primaryKey": true,
           "notNull": true
         },
-        "project_id": {
-          "name": "project_id",
+        "team_id": {
+          "name": "team_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
@@ -3861,11 +3881,11 @@
         }
       },
       "indexes": {
-        "git_provider_connection_project_idx": {
-          "name": "git_provider_connection_project_idx",
+        "git_provider_connection_team_idx": {
+          "name": "git_provider_connection_team_idx",
           "columns": [
             {
-              "expression": "project_id",
+              "expression": "team_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -3878,12 +3898,12 @@
         }
       },
       "foreignKeys": {
-        "git_provider_connection_project_id_project_id_fk": {
-          "name": "git_provider_connection_project_id_project_id_fk",
+        "git_provider_connection_team_id_team_id_fk": {
+          "name": "git_provider_connection_team_id_team_id_fk",
           "tableFrom": "git_provider_connection",
-          "tableTo": "project",
+          "tableTo": "team",
           "columnsFrom": [
-            "project_id"
+            "team_id"
           ],
           "columnsTo": [
             "id"
@@ -3893,18 +3913,7 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "git_provider_connection_project_provider_url_account_unique": {
-          "name": "git_provider_connection_project_provider_url_account_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "project_id",
-            "provider",
-            "base_url",
-            "account_login"
-          ]
-        }
-      },
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -9530,19 +9539,19 @@
           "notNull": true,
           "default": true
         },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
         "default_agent_ids": {
           "name": "default_agent_ids",
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true,
           "default": "'[]'::jsonb"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},

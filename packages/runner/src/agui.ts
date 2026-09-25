@@ -576,7 +576,9 @@ export class UsageReader {
 }
 
 function tail(text: string, limit: number): string {
-  return text.length <= limit ? text : `…${text.slice(-limit)}`;
+  if (text.length <= limit) return text;
+  const mark = '…';
+  return mark + text.slice(-(limit - mark.length));
 }
 
 function textOfResult(content: unknown): string {

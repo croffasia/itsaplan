@@ -6,6 +6,7 @@ export const qk = {
   teams: ['teams'] as const,
   // One team: its counters and what the caller may do with what it holds.
   team: (teamId: number) => ['team', teamId] as const,
+  teamProjectDefaults: (teamId: number) => ['team', teamId, 'project-defaults'] as const,
   // The members of a team and the projects it owns, each read by its own section. A
   // page is scoped by the search term and the window it was read with.
   teamMembers: (teamId: number, params: unknown) => ['team', teamId, 'members', params] as const,

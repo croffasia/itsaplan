@@ -50,10 +50,10 @@ change.
 
 ## 4. Deploy
 
-Press **Deploy**. Postgres, MinIO, api, worker, bot, and web come up together; the api
+Press **Deploy**. Postgres, RustFS, api, worker, bot, and web come up together; the api
 applies the migrations on startup. The first account registered becomes the instance admin.
 
-Secrets (database password, auth secret, encryption key, worker token, MinIO credentials)
+Secrets (database password, auth secret, encryption key, worker token, object store credentials)
 are generated on the first deploy and stay stable across later ones — nothing to fill in by
 hand. Optional variables from `.env.example` — legal document URLs, telemetry opt-out,
 worker tuning — go in **Configuration → Environment Variables**.

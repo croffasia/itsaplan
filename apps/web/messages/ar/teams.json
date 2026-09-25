@@ -319,6 +319,17 @@
     "noAccess": "ليس لديك صلاحية الوصول إلى أدوات هذا الفريق."
   },
   "agents": {
+    "projectDefaultsColumn": "المشاريع الجديدة",
+    "projectDefaultsHint": "ينضم الوكلاء المحددون إلى كل مشروع جديد في هذا الفريق. تحتفظ المشاريع الحالية والنسخ بوكلائها.",
+    "projectDefaultAria": "إضافة {agent} إلى المشاريع الجديدة",
+    "projectDefaultsReadOnly": "يختار مالكو الفريق ومديروه الوكلاء الذين ينضمون إلى المشاريع الجديدة.",
+    "projectDefaultsSaved": "تم حفظ الوكلاء الافتراضيين",
+    "projectDefaultOn": "مفعّل",
+    "projectDefaultOff": "معطّل",
+    "joinNewProjects": "إضافة إلى المشاريع الجديدة",
+    "joinNewProjectsHint": "ينضم الوكيل إلى كل مشروع جديد في هذا الفريق.",
+    "selectAllProjects": "تحديد الكل",
+    "clearProjects": "إلغاء تحديد الكل",
     "newAgent": "وكيل ذكاء اصطناعي جديد",
     "create": "إنشاء وكيل ذكاء اصطناعي",
     "save": "حفظ الوكيل",

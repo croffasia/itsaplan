@@ -224,7 +224,7 @@ const mode = answer(
       {
         value: 'dev',
         label: 'Develop',
-        hint: 'Postgres and MinIO in Docker, the apps on your machine',
+        hint: 'Postgres and RustFS in Docker, the apps on your machine',
       },
       { value: 'env', label: 'Generate env', hint: 'the secrets and every value, step by step' },
     ],
@@ -355,7 +355,7 @@ if (mode === 'dev') {
   }
 
   await stopOther(['docker', 'compose'], 'Try it');
-  // The PR stack fixes the MinIO ports in its own compose file, so no port question can
+  // The PR stack fixes the RustFS ports in its own compose file, so no port question can
   // resolve an overlap with the dev one.
   await stopOther(
     ['docker', 'compose', '-f', 'docker-compose.dev.pr.yml'],
@@ -384,11 +384,11 @@ if (mode === 'dev') {
   web.save();
 
   const spinner = p.spinner();
-  spinner.start('Starting Postgres and MinIO');
+  spinner.start('Starting Postgres and RustFS');
   await run(...compose, 'up', '-d');
   // --wait names postgres only: minio-init is a one-shot and its exit counts as a failure.
   await run(...compose, 'up', '-d', '--wait', '--no-recreate', 'postgres');
-  spinner.stop('Postgres and MinIO are up');
+  spinner.stop('Postgres and RustFS are up');
 
   await matchPort(compose, dbPort);
   await matchCredentials(compose, env);

@@ -55,6 +55,8 @@ export default function TeamAiAgentFields({
   toolsBadge,
   revealedKey,
   onRevealedKey,
+  joinsNewProjects,
+  onJoinsNewProjectsChange,
 }: {
   value: AgentFormValue;
   onChange: (patch: Partial<AgentFormValue>) => void;
@@ -86,6 +88,8 @@ export default function TeamAiAgentFields({
   // API key section, and the way to drop it or replace it after a regenerate.
   revealedKey: string | null;
   onRevealedKey: (apiKey: string | null) => void;
+  joinsNewProjects: boolean;
+  onJoinsNewProjectsChange?: (on: boolean) => void;
 }) {
   const t = useTranslations('teams.agents');
   const tCommon = useTranslations('common');
@@ -181,6 +185,8 @@ export default function TeamAiAgentFields({
       value={value}
       onChange={onChange}
       projects={projects}
+      joinsNewProjects={joinsNewProjects}
+      onJoinsNewProjectsChange={onJoinsNewProjectsChange}
     />
   );
 

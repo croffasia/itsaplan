@@ -38,7 +38,7 @@ export const agentChatConfig = {
   maxAttempts: () => intEnv('AGENT_CHAT_MAX_ATTEMPTS', 3),
   // How long a claim waits for work before it answers "nothing", and how often it looks
   // while it waits. The wait is what makes an answer start the moment it is sent.
-  claimWaitMs: () => intEnv('AGENT_CHAT_CLAIM_WAIT_MS', 25_000),
+  claimWaitMs: () => Math.min(intEnv('AGENT_CHAT_CLAIM_WAIT_MS', 25_000), 30_000),
   claimPollMs: () => intEnv('AGENT_CHAT_CLAIM_POLL_MS', 500),
   streamPollMs: () => intEnv('AGENT_CHAT_STREAM_POLL_MS', 300),
   historyMessages: () => intEnv('AGENT_CHAT_HISTORY_MESSAGES', 20),
@@ -428,7 +428,7 @@ export async function claimNextMessage(agent: RunnerAgent): Promise<ClaimedChat 
     const message = await claimMessage(agent);
     if (message) return message;
     if (Date.now() >= deadline) return null;
-    await sleep(agentChatConfig.claimPollMs());
+    await sleep(Math.min(agentChatConfig.claimPollMs(), Math.max(0, deadline - Date.now())));
   }
 }
 

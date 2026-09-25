@@ -309,22 +309,32 @@ export async function connectGitProvider(
   const baseUrl = await normalizeProviderBaseUrl(input.provider, input.baseUrl);
   const accountLogin = await getProviderAccount({ provider: input.provider, baseUrl, token });
   const encrypted = encryptSecret(token);
-  const rows = await db
-    .insert(gitProviderConnection)
-    .values({ teamId, provider: input.provider, baseUrl, accountLogin, ...encrypted })
-    .onConflictDoUpdate({
-      target: [
-        gitProviderConnection.teamId,
-        gitProviderConnection.provider,
-        gitProviderConnection.baseUrl,
-        gitProviderConnection.accountLogin,
-      ],
-      set: { accountLogin, ...encrypted, updatedAt: new Date() },
-    })
+  // A team can hold several connections of one account: the migration from
+  // project-owned connections keeps each project's token. Saving the account
+  // rotates all of them.
+  let rows = await db
+    .update(gitProviderConnection)
+    .set({ ...encrypted, updatedAt: new Date() })
+    .where(
+      and(
+        eq(gitProviderConnection.teamId, teamId),
+        eq(gitProviderConnection.provider, input.provider),
+        eq(gitProviderConnection.baseUrl, baseUrl),
+        eq(gitProviderConnection.accountLogin, accountLogin),
+      ),
+    )
     .returning({ id: gitProviderConnection.id });
+  if (rows.length === 0) {
+    rows = await db
+      .insert(gitProviderConnection)
+      .values({ teamId, provider: input.provider, baseUrl, accountLogin, ...encrypted })
+      .returning({ id: gitProviderConnection.id });
+  }
   const connectionId = rows[0]?.id;
   if (!connectionId) throw new HttpError(500, 'Provider connection was not stored');
-  await reconcileConnectionWebhooks(connectionId, { provider: input.provider, baseUrl, token });
+  for (const row of rows) {
+    await reconcileConnectionWebhooks(row.id, { provider: input.provider, baseUrl, token });
+  }
   const connections = await listTeamGitProviderConnections(teamId);
   const connection = connections.find((item) => item.id === connectionId);
   if (!connection) throw new HttpError(500, 'Provider connection was not stored');

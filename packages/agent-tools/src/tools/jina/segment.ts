@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 import { jinaAuth } from './auth';
@@ -19,7 +20,7 @@ export const jinaSegment: CustomToolEntry = {
       .describe('Maximum characters per chunk (default 1000).'),
   }),
   execute: async (credential, input) => {
-    const res = await fetch('https://api.jina.ai/v1/segment', {
+    const res = await pinnedFetch('https://api.jina.ai/v1/segment', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...jinaAuth(credential) },
       body: JSON.stringify({

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 import { jinaAuth } from './auth';
@@ -11,7 +12,7 @@ export const jinaReader: CustomToolEntry = {
     'Read a web page and return its main content as clean markdown. Use to fetch and read an article, documentation, or any single URL.',
   inputSchema: z.object({ url: z.string().url().describe('The URL of the page to read.') }),
   execute: async (credential, input) => {
-    const res = await fetch('https://r.jina.ai/', {
+    const res = await pinnedFetch('https://r.jina.ai/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

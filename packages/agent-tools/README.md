@@ -23,6 +23,7 @@ You only touch that integration's folder.
 
    ```ts
    import { z } from "zod";
+   import { pinnedFetch } from "@repo/net";
    import type { CustomToolEntry } from "../../types";
    import { jsonOrThrow } from "../../http";
 
@@ -34,7 +35,7 @@ You only touch that integration's folder.
        text: z.string().min(1).describe("Field docs help the model."),
      }),
      execute: async (credential, input) => {
-       const res = await fetch("https://api.telegram.org/...", { ... });
+       const res = await pinnedFetch("https://api.telegram.org/...", { ... });
        return await jsonOrThrow(res, "Telegram foo");
      },
    };
@@ -86,3 +87,15 @@ other file needs editing.
 
 `string`, `secret`, `url`, `number`, `boolean`. `coerceConfig` validates and coerces
 submitted values against the schema; a missing required field returns a 400.
+
+A `url` field is the address a tool sends its secret to, so it is checked against the
+`@repo/net` rules when stored: https only, no private or local host unless
+`SSRF_ALLOWED_HOSTS` names it, no userinfo, query string or fragment. The stored value
+is the origin plus path with no trailing slash, so a path prefix such as `/v1` or a
+Gitea under a sub-path is kept.
+
+Every outbound call in this package goes through `pinnedFetch` from `@repo/net` rather
+than global `fetch`. It vets the URL, connects to the address that check resolved, and
+returns a 3xx instead of following it, so a credential is never sent to a host the
+check did not clear. That matters most for a `url` field, whose value is operator
+input; `tools/gitea/client.ts` is the example.

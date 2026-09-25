@@ -39,14 +39,14 @@ afterEach(() => {
   }
 });
 
-function mount(content: string, keys: () => string[], open: (href: string) => void = () => {}) {
+function mount(content: string, refs: () => string[], open: (href: string) => void = () => {}) {
   return new Editor({
     element: document.querySelector('div')!,
     editable: false,
     extensions: [
       StarterKit.configure(editorStarterKitOptions),
       Link.configure({ openOnClick: false, autolink: true }),
-      IssueRef.configure({ keys, open, rich: () => false }),
+      IssueRef.configure({ refs, open, rich: () => false }),
       Markdown.configure({ html: true, linkify: true, breaks: true }),
     ],
     content,
@@ -58,20 +58,20 @@ const links = (editor: Editor) => [...editor.view.dom.querySelectorAll('a.issue-
 describe('issue identifiers in the editor', () => {
   it('links an identifier without changing the stored markdown', () => {
     const content = 'See MKT-42, mkt-7 and `MKT-9` in [MKT-3](https://example.com)';
-    const editor = mount(content, () => ['MKT']);
+    const editor = mount(content, () => ['acme.MKT']);
     assert.deepEqual(
       links(editor).map((link) => [link.textContent, link.getAttribute('href')]),
-      [['MKT-42', '/project/MKT/issue/42']],
+      [['MKT-42', '/acme/issue/MKT-42']],
     );
     assert.equal(editor.storage.markdown.getMarkdown(), content);
     editor.destroy();
   });
 
   it('links the keys that arrive after the editor was built', () => {
-    let keys: string[] = [];
-    const editor = mount('OPS-3 and MKT-42', () => keys);
+    let refs: string[] = [];
+    const editor = mount('OPS-3 and MKT-42', () => refs);
     assert.equal(links(editor).length, 0);
-    keys = ['MKT', 'OPS'];
+    refs = ['acme.MKT', 'acme.OPS'];
     refreshDecorations(editor);
     assert.deepEqual(
       links(editor).map((link) => link.textContent),
@@ -84,7 +84,7 @@ describe('issue identifiers in the editor', () => {
     const opened: string[] = [];
     const editor = mount(
       'See MKT-42',
-      () => ['MKT'],
+      () => ['acme.MKT'],
       (href) => opened.push(href),
     );
     const event = new dom.window.MouseEvent('click', { button: 0, cancelable: true });
@@ -92,7 +92,7 @@ describe('issue identifiers in the editor', () => {
     const handled = editor.view.someProp('handleClick', (handle) => handle(editor.view, 5, event));
     assert.equal(handled, true);
     assert.equal(event.defaultPrevented, true);
-    assert.deepEqual(opened, ['/project/MKT/issue/42']);
+    assert.deepEqual(opened, ['/acme/issue/MKT-42']);
     editor.destroy();
   });
 });

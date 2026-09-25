@@ -3,13 +3,14 @@ import { ReactRenderer, type Editor as ReactEditor } from '@tiptap/react';
 import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';
-import { issuePath } from '@/utils/paths';
+import { issuePath, splitProjectRef } from '@/utils/paths';
 import { splitIssueRefs } from './issueRef';
 import { REFRESH_DECORATIONS } from './refreshDecorations';
 import IssueRefChip from './IssueRefChip';
 
 type IssueRefOptions = {
-  keys: () => readonly string[];
+  // Project refs of one team: an identifier names a project by its key within the team.
+  refs: () => readonly string[];
   open: (href: string) => void;
   // Read-only text shows the issue's state and title. Editable text keeps the
   // identifier as typed, so the caret moves through characters that are all there.
@@ -22,7 +23,7 @@ export const IssueRef = Extension.create<IssueRefOptions>({
   name: 'issueRef',
 
   addOptions() {
-    return { keys: () => [], open: () => undefined, rich: () => false };
+    return { refs: () => [], open: () => undefined, rich: () => false };
   },
 
   addProseMirrorPlugins() {
@@ -31,8 +32,9 @@ export const IssueRef = Extension.create<IssueRefOptions>({
     const renderers = new Map<Node, ReactRenderer>();
 
     function build(doc: ProseMirrorNode) {
-      const keys = options.keys();
-      if (keys.length === 0) return DecorationSet.empty;
+      const refByKey = new Map(options.refs().map((ref) => [splitProjectRef(ref).key, ref]));
+      if (refByKey.size === 0) return DecorationSet.empty;
+      const keys = [...refByKey.keys()];
       const rich = options.rich();
       const decorations: Decoration[] = [];
       doc.descendants((node, pos) => {
@@ -47,7 +49,8 @@ export const IssueRef = Extension.create<IssueRefOptions>({
             continue;
           }
           const to = from + part.key.length + 1 + String(part.sequence).length;
-          const href = issuePath(part.key, part.sequence);
+          const projectRef = refByKey.get(part.key)!;
+          const href = issuePath(projectRef, part.sequence);
           if (rich) {
             decorations.push(
               Decoration.inline(from, to, { class: 'issue-ref-source', 'aria-hidden': 'true' }),
@@ -57,7 +60,7 @@ export const IssueRef = Extension.create<IssueRefOptions>({
                   const renderer = new ReactRenderer(IssueRefChip, {
                     editor,
                     as: 'span',
-                    props: { projectKey: part.key, sequence: part.sequence },
+                    props: { projectRef, sequence: part.sequence },
                   });
                   renderer.element.setAttribute('data-issue-ref', '');
                   renderers.set(renderer.element, renderer);

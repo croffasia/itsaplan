@@ -56,7 +56,11 @@ export default function Shell({
     errorMsg,
     forbidden,
   } = useShellProject(projectKey, route.activeViewId);
-  const issueRefKeys = useMemo(() => projects.map((item) => item.key), [projects]);
+  const teamId = project?.project.teamId;
+  const issueRefs = useMemo(
+    () => projects.filter((item) => item.teamId === teamId).map((item) => item.ref),
+    [projects, teamId],
+  );
 
   const initiativeOptions = useInitiativeOptionsQuery(projectKey).data ?? [];
   const { issueOpenMode, showChatByDefault } = useAccountPreferences();
@@ -187,7 +191,7 @@ export default function Shell({
                 projectsLoaded={projectsLoaded}
                 projectCount={projects.length}
               >
-                <IssueRefsProvider keys={issueRefKeys}>{children}</IssueRefsProvider>
+                <IssueRefsProvider refs={issueRefs}>{children}</IssueRefsProvider>
               </ShellBody>
             </div>
 
@@ -228,7 +232,7 @@ export default function Shell({
           onToggleChat={chatPanel.toggle}
         />
 
-        <IssueRefsProvider keys={issueRefKeys}>
+        <IssueRefsProvider refs={issueRefs}>
           <ShellOverlays project={project} projectKey={projectKey} overlays={overlays} />
         </IssueRefsProvider>
       </SidebarProvider>

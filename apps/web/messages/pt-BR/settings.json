@@ -414,6 +414,7 @@
     "nativeConnectionsHint": "Autorize um provedor Git, escolha repositórios e deixe o Plan configurar seus webhooks.",
     "nativeConnectProvider": "Conectar {provider}",
     "nativeNoConnections": "Nenhuma conta de provedor conectada ainda. A configuração manual de webhook permanece disponível abaixo.",
+    "nativeAskTeamManager": "Peça a um proprietário ou gerente da equipe para conectar uma conta de provedor.",
     "nativeConnectTitle": "Conectar {provider}",
     "nativeTokenHint": {
       "github": "Use um token fine-grained com acesso de leitura de Metadata, escrita de Webhooks e escrita de Pull requests para os repositórios que você quer conectar.",

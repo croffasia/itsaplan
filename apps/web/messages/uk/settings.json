@@ -414,6 +414,7 @@
     "nativeConnectionsHint": "Авторизуйте Git-провайдера, виберіть репозиторії, а Plan налаштує їхні webhooks.",
     "nativeConnectProvider": "Підключити {provider}",
     "nativeNoConnections": "Облікові записи провайдерів ще не підключено. Нижче залишається ручне налаштування webhook.",
+    "nativeAskTeamManager": "Попросіть власника або менеджера команди підключити обліковий запис провайдера.",
     "nativeConnectTitle": "Підключити {provider}",
     "nativeTokenHint": {
       "github": "Використовуйте fine-grained token із правами Metadata read, Webhooks write і Pull requests write для репозиторіїв, які хочете підключити.",

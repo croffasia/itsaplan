@@ -1,8 +1,10 @@
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
+import { Plus } from 'lucide-react';
 import { teamSectionPath } from '@/utils/paths';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsSection from '@/components/common/page/SettingsSection';
+import { Button } from '@/components/ui/button';
 import { useGitProviderConnectionsQuery } from '../../services/settings.service';
 import GitProviderConnectionCard from './GitProviderConnectionCard';
 
@@ -18,19 +20,21 @@ export default function GitProviderConnections({
   editable: boolean;
 }) {
   const t = useTranslations('settings.git');
+  const tc = useTranslations('common');
   const connections = useGitProviderConnectionsQuery(projectKey);
+  const empty = !connections.isPending && connections.data?.length === 0;
+  const addButton = canManageTeam && (
+    <Button asChild variant="ghost" size="sm">
+      <Link href={teamSectionPath(teamId, 'git')}>
+        <Plus className="size-3.5" />
+        {tc('add')}
+      </Link>
+    </Button>
+  );
 
   return (
-    <SettingsSection title={t('nativeConnectionsRecommended')}>
+    <SettingsSection title={t('nativeConnectionsRecommended')} action={!empty && addButton}>
       <div className="space-y-3">
-        {canManageTeam && (
-          <Link
-            className="text-sm text-primary hover:underline"
-            href={teamSectionPath(teamId, 'git')}
-          >
-            Git
-          </Link>
-        )}
         {connections.isPending ? (
           <ListSkeleton rows={2} rowClassName="h-24" />
         ) : (
@@ -43,10 +47,11 @@ export default function GitProviderConnections({
             />
           ))
         )}
-        {!connections.isPending && connections.data?.length === 0 && (
-          <p className="rounded-md border border-dashed p-5 text-sm text-muted-foreground">
-            {t('nativeNoConnections')}
-          </p>
+        {empty && (
+          <div className="flex flex-col items-start gap-3 rounded-md border border-dashed p-5 text-sm text-muted-foreground">
+            <p>{t('nativeNoConnections')}</p>
+            {addButton || <p>{t('nativeAskTeamManager')}</p>}
+          </div>
         )}
       </div>
     </SettingsSection>

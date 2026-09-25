@@ -414,6 +414,7 @@
     "nativeConnectionsHint": "فوّض مزوّد Git، واختر المستودعات، ودع Plan يضبط خطافات الويب تلقائيًا.",
     "nativeConnectProvider": "ربط {provider}",
     "nativeNoConnections": "لم يتم ربط أي حساب مزوّد بعد. يظل الإعداد اليدوي لخطاف الويب متاحًا أدناه.",
+    "nativeAskTeamManager": "اطلب من مالك الفريق أو مديره ربط حساب مزوّد.",
     "nativeConnectTitle": "ربط {provider}",
     "nativeTokenHint": {
       "github": "استخدم رمزًا دقيق الصلاحيات يملك قراءة Metadata وكتابة Webhooks وPull requests للمستودعات التي تريد ربطها.",

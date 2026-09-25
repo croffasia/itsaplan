@@ -414,6 +414,7 @@
     "nativeConnectionsHint": "授权 Git 代码托管平台，选择仓库，然后由 Plan 自动配置 webhook。",
     "nativeConnectProvider": "连接 {provider}",
     "nativeNoConnections": "尚未连接代码托管平台账户。下方仍可手动配置 webhook。",
+    "nativeAskTeamManager": "请联系团队所有者或管理员连接代码托管平台账户。",
     "nativeConnectTitle": "连接 {provider}",
     "nativeTokenHint": {
       "github": "请使用对目标仓库具有 Metadata 读取、Webhooks 写入和 Pull requests 写入权限的 fine-grained token。",

@@ -36,11 +36,8 @@ RUN bun install --frozen-lockfile $INSTALL_FILTER $INSTALL_FLAGS
 # clobber the copied dependencies.
 FROM base AS release
 ENV NODE_ENV=production
-# pg_dump, for the backup migrate.ts takes before it applies anything. The package
-# tracks the Postgres the compose file runs (17), and a client older than the server
-# refuses to dump, so an instance on a newer server needs a newer image or
-# SKIP_PRE_MIGRATION_BACKUP=1.
-RUN apk add --no-cache postgresql-client
+# PostgreSQL 18 client for the pre-migration dump.
+RUN apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/v3.23/main postgresql18-client
 COPY --from=install /app ./
 COPY . .
 

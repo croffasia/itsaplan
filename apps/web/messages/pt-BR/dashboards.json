@@ -49,6 +49,10 @@
       "label": "Vazão",
       "description": "Issues criadas vs. fechadas por semana"
     },
+    "burnup": {
+      "label": "Burnup",
+      "description": "Escopo, issues iniciadas e concluídas por dia com uma data de conclusão prevista"
+    },
     "breakdown": {
       "label": "Distribuição",
       "description": "Contagens de issues por status, prioridade, tipo ou responsável"
@@ -151,6 +155,29 @@
     "lastWeeks": "Últimas {weeks} semanas",
     "created": "Criadas",
     "closed": "Fechadas"
+  },
+  "burnup": {
+    "empty": "Nenhuma issue neste período.",
+    "scope": "Escopo",
+    "started": "Iniciadas",
+    "completed": "Concluídas",
+    "projection": "Projeção",
+    "band": "Intervalo da previsão",
+    "projected": "Previsto para {date}",
+    "range": "{from} – {to}",
+    "forecastShape": {
+      "line": "Linha de previsão",
+      "range": "Intervalo de previsão"
+    },
+    "noForecast": "Sem progresso {weeks, plural, one {na última semana} other {nas últimas # semanas}}",
+    "allDone": "Tudo concluído",
+    "velocity": "{rate}/dia",
+    "growth": "+{rate}/dia novas",
+    "target": "Meta: {date}",
+    "targetLabel": "Meta",
+    "today": "Hoje",
+    "wholeProject": "Projeto inteiro",
+    "forecastWeeks": "Ritmo {weeks, plural, one {da última semana} other {das últimas # semanas}}"
   },
   "agentRuns": {
     "empty": "Nenhuma execução de agente ainda.",

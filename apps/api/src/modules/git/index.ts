@@ -1,7 +1,6 @@
 import { Elysia, t } from 'elysia';
 import { guards } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { checkPermission } from '#shared/access';
 import { noContent } from '#shared/http';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
@@ -71,28 +70,20 @@ export const gitSettingsRoutes = new Elysia({
       detail: { summary: 'Disconnect a team Git provider account and its managed webhooks' },
     },
   )
-  .get(
-    '/projects/:projectKey/settings/git',
-    async ({ project, user }) => {
-      const settings = await getOrCreateGitSettings(project.id);
-      const canEdit = await checkPermission(project.id, user, 'integrations', 'edit');
-      return { ...settings, secret: canEdit ? settings.secret : null };
+  .get('/projects/:projectKey/settings/git', ({ project }) => getOrCreateGitSettings(project.id), {
+    permission: ['repositories', 'edit'],
+    response: { 200: GitSettingsResponse, ...accessErrors },
+    detail: {
+      summary: "Get a project's repository integration settings",
+      description:
+        'Return the webhook endpoint, enabled events, merge automation, and the secret only when the caller may edit integrations.',
     },
-    {
-      permission: ['integrations', 'read'],
-      response: { 200: GitSettingsResponse, ...accessErrors },
-      detail: {
-        summary: "Get a project's repository integration settings",
-        description:
-          'Return the webhook endpoint, enabled events, merge automation, and the secret only when the caller may edit integrations.',
-      },
-    },
-  )
+  })
   .patch(
     '/projects/:projectKey/settings/git',
     ({ project, body }) => updateGitSettings(project.id, body),
     {
-      permission: ['integrations', 'edit'],
+      permission: ['repositories', 'edit'],
       body: updateGitSettingsBody,
       response: { 200: GitSettingsResponse, ...commonErrors },
       detail: {
@@ -110,7 +101,7 @@ export const gitSettingsRoutes = new Elysia({
       return settings;
     },
     {
-      permission: ['integrations', 'edit'],
+      permission: ['repositories', 'edit'],
       response: { 200: GitSettingsResponse, ...accessErrors },
       detail: {
         summary: "Regenerate a project's repository webhook secret",
@@ -123,7 +114,7 @@ export const gitSettingsRoutes = new Elysia({
     '/projects/:projectKey/settings/git/connections',
     ({ project }) => listGitProviderConnections(project.id),
     {
-      permission: ['integrations', 'read'],
+      permission: ['repositories', 'edit'],
       response: { 200: GitProviderConnectionListResponse, ...accessErrors },
       detail: {
         summary: 'List team Git provider accounts available to a project',
@@ -142,7 +133,7 @@ export const gitSettingsRoutes = new Elysia({
         query.search ?? '',
       ),
     {
-      permission: ['integrations', 'edit'],
+      permission: ['repositories', 'edit'],
       params: gitProviderConnectionParams,
       query: availableRepositoriesQuery,
       response: { 200: AvailableGitRepositoryPageResponse, ...commonErrors, ...errors(502) },
@@ -158,7 +149,7 @@ export const gitSettingsRoutes = new Elysia({
     ({ project, params, body }) =>
       connectRepositories(project.id, params.connectionId, body.externalIds),
     {
-      permission: ['integrations', 'edit'],
+      permission: ['repositories', 'edit'],
       params: gitProviderConnectionParams,
       body: connectRepositoriesBody,
       response: { 200: GitProviderConnectionResponse, ...commonErrors, ...errors(502) },
@@ -176,7 +167,7 @@ export const gitSettingsRoutes = new Elysia({
       return noContent();
     },
     {
-      permission: ['integrations', 'edit'],
+      permission: ['repositories', 'edit'],
       params: gitManagedRepositoryParams,
       response: { 204: t.Void(), ...commonErrors, ...errors(502) },
       detail: {

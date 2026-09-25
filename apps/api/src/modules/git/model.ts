@@ -49,14 +49,11 @@ export const DevelopmentLinkResponse = t.Object({
   updatedAt: t.String(),
 });
 
-// The repository integration DTO (GitSettings from the service). Unlike outgoing
-// webhook secrets, this secret authorizes issue moves through the receiver, so
-// it is shown only to members with integrations edit access; read-only callers
-// get null.
+// The repository integration DTO (GitSettings from the service).
 export const GitSettingsResponse = t.Object({
   enabled: t.Boolean(),
   webhookId: t.String(),
-  secret: t.Nullable(t.String()),
+  secret: t.String(),
   onMergeColumnId: t.Nullable(t.Number()),
   onOpenColumnId: t.Nullable(t.Number()),
   linkbackComments: t.Boolean(),

@@ -395,7 +395,6 @@
     "connectionHint": "Conecta un repositorio de GitHub, GitLab, Gitea, Forgejo o Bitbucket.",
     "webhookEndpoint": "Endpoint del webhook",
     "webhookEndpointHint": "Un endpoint recibe las actualizaciones de rama, pull request y CI de cada repositorio conectado.",
-    "connectionRestricted": "Necesitas acceso de edición de la integración para ver los detalles de la conexión.",
     "payloadUrl": "URL de la carga",
     "webhookSecret": "Secreto del webhook",
     "howToConnect": "Cómo conectar",

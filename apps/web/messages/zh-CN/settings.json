@@ -395,7 +395,6 @@
     "connectionHint": "连接 GitHub、GitLab、Gitea、Forgejo 或 Bitbucket 上的仓库。",
     "webhookEndpoint": "Webhook 端点",
     "webhookEndpointHint": "一个端点接收所有已连接仓库的分支、拉取请求和 CI 更新。",
-    "connectionRestricted": "需要集成编辑权限才能查看连接详情。",
     "payloadUrl": "请求地址",
     "webhookSecret": "Webhook 密钥",
     "howToConnect": "如何连接",

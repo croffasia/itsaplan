@@ -395,7 +395,6 @@
     "connectionHint": "Hubungkan repositori dari GitHub, GitLab, Gitea, Forgejo, atau Bitbucket.",
     "webhookEndpoint": "Endpoint webhook",
     "webhookEndpointHint": "Satu endpoint menerima pembaruan branch, pull request, dan CI dari setiap repositori yang terhubung.",
-    "connectionRestricted": "Anda memerlukan izin untuk mengedit integrasi agar dapat melihat detail koneksi.",
     "payloadUrl": "URL payload",
     "webhookSecret": "Rahasia webhook",
     "howToConnect": "Cara menghubungkan",

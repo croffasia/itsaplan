@@ -12,12 +12,10 @@ export default function GitProviderConnections({
   projectKey,
   teamId,
   canManageTeam,
-  editable,
 }: {
   projectKey: string;
   teamId: number;
   canManageTeam: boolean;
-  editable: boolean;
 }) {
   const t = useTranslations('settings.git');
   const tc = useTranslations('common');
@@ -43,7 +41,6 @@ export default function GitProviderConnections({
               key={connection.id}
               projectKey={projectKey}
               connection={connection}
-              editable={editable}
             />
           ))
         )}

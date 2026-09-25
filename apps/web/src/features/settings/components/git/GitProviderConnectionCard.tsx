@@ -13,11 +13,9 @@ import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
 export default function GitProviderConnectionCard({
   projectKey,
   connection,
-  editable,
 }: {
   projectKey: string;
   connection: GitProviderConnection;
-  editable: boolean;
 }) {
   const t = useTranslations('settings.git');
   const [pickerOpen, setPickerOpen] = useState(false);
@@ -46,13 +44,11 @@ export default function GitProviderConnectionCard({
               {connection.accountLogin} · {connection.baseUrl}
             </p>
           </div>
-          {editable && (
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
-                {t('nativeChooseRepositories')}
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+              {t('nativeChooseRepositories')}
+            </Button>
+          </div>
         </div>
         <div className="divide-y border-t">
           {connection.repositories.length === 0 ? (
@@ -87,18 +83,16 @@ export default function GitProviderConnectionCard({
                     ? t('nativeWebhookActive')
                     : t('nativeWebhookError')}
                 </Badge>
-                {editable && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={t('nativeDisconnectRepository')}
-                    disabled={disconnectRepository.isPending}
-                    onClick={() => void removeRepository(repository.id)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t('nativeDisconnectRepository')}
+                  disabled={disconnectRepository.isPending}
+                  onClick={() => void removeRepository(repository.id)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
               </div>
             ))
           )}

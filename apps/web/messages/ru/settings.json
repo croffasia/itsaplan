@@ -395,7 +395,6 @@
     "connectionHint": "Подключите репозиторий на GitHub, GitLab, Gitea, Forgejo или Bitbucket.",
     "webhookEndpoint": "Адрес webhook",
     "webhookEndpointHint": "Один адрес принимает события веток, pull request и CI из всех подключённых репозиториев.",
-    "connectionRestricted": "Данные подключения видят только участники, которые могут редактировать интеграции.",
     "payloadUrl": "URL для запросов",
     "webhookSecret": "Секрет вебхука",
     "howToConnect": "Как подключить",

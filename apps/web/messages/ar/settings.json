@@ -395,7 +395,6 @@
     "connectionHint": "اربط مستودعًا من GitHub أو GitLab أو Gitea أو Forgejo أو Bitbucket.",
     "webhookEndpoint": "نقطة نهاية Webhook",
     "webhookEndpointHint": "تستقبل نقطة واحدة تحديثات الفروع وطلبات السحب وCI من كل المستودعات المتصلة.",
-    "connectionRestricted": "عشان تشوف تفاصيل الاتصال لازم تكون معاك صلاحية تعديل التكاملات.",
     "payloadUrl": "رابط الحمولة",
     "webhookSecret": "سر خطاف الويب",
     "howToConnect": "طريقة الربط",

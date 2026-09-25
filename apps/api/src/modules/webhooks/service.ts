@@ -9,12 +9,12 @@ import { iso } from '#shared/lib';
 // The delivery side is separate.
 
 // The event types a subscription can select. Keep this list in sync with the events
-// the delivery side emits (modules/issues/service.ts, activity.ts, links.ts) and
-// with the frontend list (apps/web src/lib/api/endpoints/webhooks.ts).
+// emitted through modules/issues/webhook-payload.ts and with the frontend list
+// (apps/web src/lib/api/endpoints/webhooks.ts).
 //
-// issue.updated fires on any field change. The granular issue.assigned,
-// issue.state_changed, and issue.label_changed fire in addition, and only when that
-// specific field changes on an existing issue. issue.state_changed fires when the
+// issue.updated fires on any field change, archiving and restoring included. The
+// granular issue.assigned, issue.state_changed, and issue.label_changed fire in
+// addition, and only when that specific field changes on an existing issue. issue.state_changed fires when the
 // issue moves to a different state (column). issue.link_changed fires for both issues
 // of an added or removed relation, and without issue.updated: no field of either
 // issue changed.

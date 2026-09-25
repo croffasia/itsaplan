@@ -3,7 +3,7 @@ import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { HttpError } from '#shared/lib';
 import { recordActivityEntries, rowSide, textSide, type ActivityInput } from './activity';
-import { emitWebhookEvents } from '#modules/webhooks/emit';
+import { emitIssueEvents } from './webhook-payload';
 import { getIssues } from './service';
 
 // Relations between issues of one project. A relation is one row (issue_link);
@@ -278,8 +278,11 @@ export async function addIssueLink(
     return { target, linkId: target.linkId };
   });
 
-  await emitWebhookEvents(target.projectId, 'issue.link_changed', () =>
-    getIssues([issueId, targetIssueId]),
+  await emitIssueEvents(
+    target.projectId,
+    'issue.link_changed',
+    () => getIssues([issueId, targetIssueId]),
+    actorUserId,
   );
 
   return {
@@ -364,8 +367,11 @@ export async function removeIssueLink(
   });
 
   if (!removed) return false;
-  await emitWebhookEvents(removed.projectId, 'issue.link_changed', () =>
-    getIssues(removed.issueIds),
+  await emitIssueEvents(
+    removed.projectId,
+    'issue.link_changed',
+    () => getIssues(removed.issueIds),
+    actorUserId,
   );
   return true;
 }

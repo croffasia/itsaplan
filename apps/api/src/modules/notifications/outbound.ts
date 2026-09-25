@@ -15,7 +15,7 @@ import { readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
 import { escapeHtml } from '#shared/lib';
-import { issueWebPath, teamRef } from '#modules/teams/ref';
+import { issueUrl, teamRef } from '#modules/teams/ref';
 import type { NotificationType, NewNotificationRow } from './service';
 
 // Outbound notification delivery: turns the inbox notification rows produced by an
@@ -41,13 +41,6 @@ interface OutboxRow {
 // The issue reference shown in messages, e.g. "IAP-42".
 function issueRef(projectKey: string, seq: number): string {
   return `${projectKey}-${seq}`;
-}
-
-// The public URL of an issue, or undefined when the web origin is not configured
-// (then messages carry no link rather than a localhost fallback).
-function issueUrl(teamRef: string, projectKey: string, seq: number): string | undefined {
-  const base = process.env.APP_URL;
-  return base ? `${base}${issueWebPath(teamRef, projectKey, seq)}` : undefined;
 }
 
 interface StateChange {

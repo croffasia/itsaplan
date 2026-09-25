@@ -59,7 +59,7 @@ import { recordCycleChange } from './cycle-history';
 import { recordStatusChange } from './status-history';
 import { mapAttachment, type AttachmentRow } from '#modules/attachments/service';
 import { notifyIssueChange, notifyTextMentions } from '#modules/notifications/service';
-import { emitWebhookEvent } from '#modules/webhooks/emit';
+import { emitIssueEvent } from './webhook-payload';
 import {
   getAssignTriggerAgent,
   getFieldTriggerAgent,
@@ -452,7 +452,9 @@ export async function archiveIssue(
     return getIssue(id);
   }
   await recordActivity(id, [{ action: 'archived' }], actorUserId);
-  return getIssue(id);
+  const archived = await getIssue(id);
+  if (archived) await emitIssueEvent('issue.updated', archived, actorUserId);
+  return archived;
 }
 
 // Restores an archived issue back onto the board (archived_at -> null). Records a
@@ -468,7 +470,9 @@ export async function restoreIssue(
     .returning({ id: issue.id });
   if (!row) return getIssue(id);
   await recordActivity(id, [{ action: 'restored' }], actorUserId);
-  return getIssue(id);
+  const restored = await getIssue(id);
+  if (restored) await emitIssueEvent('issue.updated', restored, actorUserId);
+  return restored;
 }
 
 // Expands what an issue is planned under — its initiative and its cycle — to
@@ -900,7 +904,7 @@ export async function createIssue(
   // The author follows what they filed; the assignee is subscribed by the
   // assignment notification below, the same as a later assignment does.
   await autoWatchIssue(project.id, issueId, [actorUserId]);
-  await emitWebhookEvent(project.id, 'issue.created', created);
+  await emitIssueEvent('issue.created', created, actorUserId);
   // An issue created already delegated to an agent enqueues a run, the same as
   // delegating one later does.
   await enqueueDelegateRun(created, actorUserId);
@@ -1076,13 +1080,13 @@ export async function updateIssue(
     if (before.parentId !== after.parentId)
       await recordParentChange(id, before.parentId, after.parentId, actor);
     if (changed) {
-      await emitWebhookEvent(after.projectId, 'issue.updated', after);
+      await emitIssueEvent('issue.updated', after, actor);
       // Granular events fire in addition to issue.updated when their field changed.
       if (before.assigneeUserId !== after.assigneeUserId)
-        await emitWebhookEvent(after.projectId, 'issue.assigned', after);
+        await emitIssueEvent('issue.assigned', after, actor);
       if (before.delegateUserId !== after.delegateUserId) await enqueueDelegateRun(after, actor);
       if (before.columnId !== after.columnId) {
-        await emitWebhookEvent(after.projectId, 'issue.state_changed', after);
+        await emitIssueEvent('issue.state_changed', after, actor);
         await applySubtaskAutomation(after, actor);
       }
     }
@@ -1113,31 +1117,24 @@ async function enqueueDelegateRun(after: IssueRow, actor?: ActivityActor): Promi
 // attachments, and activity all go by their ON DELETE CASCADE on issue_id. Returns
 // the deleted attachment rows so the caller can remove their objects from the store.
 // Returns null if the issue did not exist.
-export async function deleteIssue(issueId: number): Promise<AttachmentRow[] | null> {
-  const result = await db.transaction(async (tx) => {
-    const rows = await tx
-      .select({ projectId: issue.projectId, seq: issue.sequenceNumber, key: projectTable.key })
-      .from(issue)
-      .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
-      .where(eq(issue.id, issueId));
-    if (rows.length === 0) return null;
+export async function deleteIssue(
+  issueId: number,
+  actorUserId?: string | null,
+): Promise<AttachmentRow[] | null> {
+  // Read before the delete: the issue.deleted payload is the issue as it last read.
+  const deleted = await getIssue(issueId);
+  if (!deleted) return null;
+  const attachments = await db.transaction(async (tx) => {
     const attachmentRows = await tx
       .select()
       .from(issueAttachment)
       .where(eq(issueAttachment.issueId, issueId));
-    await tx.delete(issue).where(eq(issue.id, issueId));
-    return {
-      attachments: attachmentRows.map(mapAttachment),
-      projectId: rows[0].projectId,
-      identifier: `${rows[0].key}-${rows[0].seq}`,
-    };
+    const removed = await tx.delete(issue).where(eq(issue.id, issueId)).returning({ id: issue.id });
+    return removed.length ? attachmentRows.map(mapAttachment) : null;
   });
-  if (!result) return null;
-  await emitWebhookEvent(result.projectId, 'issue.deleted', {
-    id: issueId,
-    identifier: result.identifier,
-  });
-  return result.attachments;
+  if (!attachments) return null;
+  await emitIssueEvent('issue.deleted', deleted, actorUserId);
+  return attachments;
 }
 
 // Replaces the issue's full label set (not an add/remove diff) and logs the
@@ -1188,7 +1185,7 @@ export async function setIssueLabels(
 
   if (emitEvent && (added.length > 0 || removed.length > 0)) {
     const issueRow = await getIssue(issueId);
-    if (issueRow) await emitWebhookEvent(issueRow.projectId, 'issue.label_changed', issueRow);
+    if (issueRow) await emitIssueEvent('issue.label_changed', issueRow, actorUserId);
   }
 }
 
@@ -1324,11 +1321,12 @@ export async function bulkArchiveIssues(
 export async function bulkDeleteIssues(
   projectId: number,
   ids: number[],
+  actorUserId: string | null,
 ): Promise<{ deleted: number; attachments: AttachmentRow[] }> {
   const valid = await issuesInProject(projectId, ids);
   const attachments: AttachmentRow[] = [];
   for (const id of valid) {
-    const rows = await deleteIssue(id);
+    const rows = await deleteIssue(id, actorUserId);
     if (rows) attachments.push(...rows);
   }
   return { deleted: valid.length, attachments };

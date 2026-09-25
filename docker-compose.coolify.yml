@@ -89,6 +89,7 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     restart: 'no'
+    exclude_from_hc: true
     command: ['bun', 'run', 'packages/db/src/migrate.ts']
     depends_on:
       postgres:

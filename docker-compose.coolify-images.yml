@@ -90,6 +90,7 @@ services:
   migrate:
     image: ghcr.io/croffasia/itsaplan-api:${VERSION:-latest}
     restart: 'no'
+    exclude_from_hc: true
     command: ['bun', 'run', 'packages/db/src/migrate.ts']
     depends_on:
       postgres:

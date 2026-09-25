@@ -18,7 +18,9 @@ if (!connectionString) {
   throw new Error('DATABASE_URL is not set — cannot run migrations.');
 }
 
-const migrationClient = postgres(connectionString, { max: 1 });
+// max_lifetime off: postgres.js otherwise closes the connection after 30–60 minutes,
+// which would release the migration lock below while a long pg_dump is still running.
+const migrationClient = postgres(connectionString, { max: 1, max_lifetime: null });
 const db = drizzle(migrationClient);
 
 const migrationsFolder = fileURLToPath(new URL('../drizzle', import.meta.url));

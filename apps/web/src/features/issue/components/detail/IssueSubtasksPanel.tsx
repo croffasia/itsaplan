@@ -14,9 +14,14 @@ import {
 import IssuePickerDialog from '@/components/common/overlay/IssuePickerDialog';
 import NewIssueModal from '../create/NewIssueModal';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { useSubtaskStateFilter } from '../../hooks/useSubtaskStateFilter';
 import { useSetIssueParent } from '../../services/subtasks.service';
+import { useSetRelatedIssueState } from '../../services/relatedIssues.service';
 import IssueSectionHeading from './IssueSectionHeading';
 import IssueRefRow from './IssueRefRow';
+import IssueRefList from './IssueRefList';
+import IssueSubtasksFilterChip from './IssueSubtasksFilterChip';
+import IssueSubtasksFilterMenu from './IssueSubtasksFilterMenu';
 import { useTranslations } from 'next-intl';
 
 // The issue's place in the subtask hierarchy: the parent it hangs under, or the
@@ -46,7 +51,9 @@ export default function IssueSubtasksPanel({
   const [attaching, setAttaching] = useState(false);
   const [creating, setCreating] = useState(false);
   const { open, toggle } = usePersistedOpen('issue-subtasks-open');
+  const filter = useSubtaskStateFilter(project, issue.subtasks);
   const setParent = useSetIssueParent();
+  const setState = useSetRelatedIssueState(project.project.ref, issue.id);
 
   const parent = issue.parent;
   if (readOnly && !parent && issue.subtasks.length === 0) return null;
@@ -65,15 +72,18 @@ export default function IssueSubtasksPanel({
   function body() {
     if (parent)
       return (
-        <IssueRefRow
-          project={project}
-          issue={parent}
-          scrollAnchorKey={`parent:${parent.id}`}
-          removeLabel={t('detachFromParent', { parent: parent.identifier })}
-          readOnly={readOnly}
-          onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
-          onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
-        />
+        <IssueRefList>
+          <IssueRefRow
+            project={project}
+            issue={parent}
+            scrollAnchorKey={`parent:${parent.id}`}
+            removeLabel={t('detachFromParent', { parent: parent.identifier })}
+            readOnly={readOnly}
+            onOpen={onOpenIssue && (() => onOpenIssue(parent.id))}
+            onRemove={canEdit ? () => detach(issue.id, parent.id) : undefined}
+            onChangeState={canEdit ? (columnId) => setState(parent.id, columnId) : undefined}
+          />
+        </IssueRefList>
       );
     if (issue.subtasks.length === 0)
       return (
@@ -81,53 +91,75 @@ export default function IssueSubtasksPanel({
           {canEdit ? t('emptyHint') : t('empty')}
         </p>
       );
-    return issue.subtasks.map((subtask) => (
-      <IssueRefRow
-        key={subtask.id}
-        project={project}
-        issue={subtask}
-        scrollAnchorKey={`subtask:${subtask.id}`}
-        removeLabel={t('detach', { subtask: subtask.identifier })}
-        readOnly={readOnly}
-        onOpen={onOpenIssue && (() => onOpenIssue(subtask.id))}
-        onRemove={canEdit ? () => detach(subtask.id, issue.id) : undefined}
-      />
-    ));
+    if (filter.shownSubtasks.length === 0)
+      return (
+        <p className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+          {t('allHidden')}
+        </p>
+      );
+    return (
+      <IssueRefList>
+        {filter.shownSubtasks.map((subtask) => (
+          <IssueRefRow
+            key={subtask.id}
+            project={project}
+            issue={subtask}
+            scrollAnchorKey={`subtask:${subtask.id}`}
+            removeLabel={t('detach', { subtask: subtask.identifier })}
+            readOnly={readOnly}
+            onOpen={onOpenIssue && (() => onOpenIssue(subtask.id))}
+            onRemove={canEdit ? () => detach(subtask.id, issue.id) : undefined}
+            onChangeState={canEdit ? (columnId) => setState(subtask.id, columnId) : undefined}
+          />
+        ))}
+      </IssueRefList>
+    );
   }
 
   return (
     // Collapsed, the heading row is all there is, so the section pulls itself up
     // against the section below it.
     <div className={`mt-6 border-t pt-5 ${open ? '' : '-mb-2'}`}>
-      {/* Fixed height: the Add button only renders while the section is open, and
+      {/* Fixed height: the buttons only render while the section is open, and
           without it the row would shrink to the height of the heading text. */}
       <div className={`flex h-7 items-center justify-between gap-3 ${open ? 'mb-3' : ''}`}>
-        <IssueSectionHeading
-          label={parent ? t('parent') : t('title')}
-          open={open}
-          onToggle={toggle}
-          tally={done}
-        />
-        {open && !parent && canEdit && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-7 gap-1.5">
-                <Plus className="size-4" />
-                {tCommon('add')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {canCreate && (
-                <DropdownMenuItem onSelect={() => setCreating(true)}>
-                  {t('newSubtask')}
+        <div className="flex min-w-0 items-center gap-2">
+          <IssueSectionHeading
+            label={parent ? t('parent') : t('title')}
+            open={open}
+            onToggle={toggle}
+            tally={done}
+          />
+          {open && !parent && <IssueSubtasksFilterChip filter={filter} />}
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          {open && !parent && <IssueSubtasksFilterMenu filter={filter} />}
+          {open && !parent && canEdit && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7"
+                  title={tCommon('add')}
+                  aria-label={tCommon('add')}
+                >
+                  <Plus className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {canCreate && (
+                  <DropdownMenuItem onSelect={() => setCreating(true)}>
+                    {t('newSubtask')}
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuItem onSelect={() => setAttaching(true)}>
+                  {t('existingIssue')}
                 </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onSelect={() => setAttaching(true)}>
-                {t('existingIssue')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
 
       {open && body()}

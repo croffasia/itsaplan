@@ -198,7 +198,11 @@
     "detachFromParent": "Desvincular de {parent}",
     "subtaskOf": "Subtarefa de {issue}",
     "existingIssue": "Issue existente",
-    "searchPrompt": "Buscar issues para adicionar como subtarefa…"
+    "searchPrompt": "Buscar issues para adicionar como subtarefa…",
+    "filter": "Filtrar por status",
+    "hiding": "Ocultando {states}",
+    "clearFilter": "Limpar filtro",
+    "allHidden": "Todas as subtarefas estão ocultas pelo filtro."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, one {Esta issue tem} other {Estas issues têm}} {count, plural, one {# subtarefa} other {# subtarefas}}.",

@@ -62,5 +62,14 @@ export function usePersistedOpenGroups(storageKey: string) {
     [storageKey],
   );
 
-  return { isOpen: (key: string) => !closed.includes(key), toggle };
+  const openAll = useCallback(() => {
+    setClosed([]);
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      // Ignore write failures (private mode / quota); the state still updates.
+    }
+  }, [storageKey]);
+
+  return { isOpen: (key: string) => !closed.includes(key), toggle, openAll };
 }

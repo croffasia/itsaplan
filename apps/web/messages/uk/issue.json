@@ -198,7 +198,11 @@
     "detachFromParent": "Відв'язати від {parent}",
     "subtaskOf": "Підзадача {issue}",
     "existingIssue": "Наявна задача",
-    "searchPrompt": "Пошук задач, щоб додати підзадачею…"
+    "searchPrompt": "Пошук задач, щоб додати підзадачею…",
+    "filter": "Фільтр за статусом",
+    "hiding": "Приховано: {states}",
+    "clearFilter": "Скинути фільтр",
+    "allHidden": "Усі підзадачі приховані фільтром."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, one {Ця задача має} other {Ці задачі мають}} {count, plural, one {# підзадачу} few {# підзадачі} many {# підзадач} other {# підзадачі}}.",

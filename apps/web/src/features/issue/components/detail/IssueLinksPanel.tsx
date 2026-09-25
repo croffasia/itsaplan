@@ -6,10 +6,12 @@ import { LINK_RELATIONS, inverseRelation, linkRelation, storedKind } from '@/uti
 import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
 import { usePersistedOpen } from '../../hooks/usePersistedOpen';
 import { useLinkIssues, useUnlinkIssues } from '../../services/links.service';
+import { useSetRelatedIssueState } from '../../services/relatedIssues.service';
 import NewIssueModal from '../create/NewIssueModal';
 import IssueLinkDialog from './IssueLinkDialog';
 import IssueLinksAddMenu from './IssueLinksAddMenu';
 import IssueRefRow from './IssueRefRow';
+import IssueRefList from './IssueRefList';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useTranslations } from 'next-intl';
 
@@ -44,6 +46,7 @@ export default function IssueLinksPanel({
   const { open, toggle } = usePersistedOpen('issue-links-open');
   const linkIssues = useLinkIssues();
   const unlinkIssues = useUnlinkIssues();
+  const setState = useSetRelatedIssueState(project.project.ref, issue.id);
 
   const links = issue.links;
   if (readOnly && links.length === 0) return null;
@@ -77,10 +80,10 @@ export default function IssueLinksPanel({
             {t('emptyHint')}
           </p>
         ) : (
-          <div className="flex flex-col gap-3">
+          <IssueRefList className="gap-y-3">
             {groups.map((group) => (
-              <div key={group.relation}>
-                <h4 className="mb-1 px-2 text-xs font-medium text-muted-foreground">
+              <div key={group.relation} className="col-span-full grid grid-cols-subgrid">
+                <h4 className="col-span-full mb-1 px-2 text-xs font-medium text-muted-foreground">
                   {relationLabel(group.relation)}
                 </h4>
                 {group.links.map((link) => (
@@ -92,6 +95,9 @@ export default function IssueLinksPanel({
                     removeLabel={t('remove', { issue: link.issue.identifier })}
                     readOnly={readOnly}
                     onOpen={onOpenIssue && (() => onOpenIssue(link.issue.id))}
+                    onChangeState={
+                      canEdit ? (columnId) => setState(link.issue.id, columnId) : undefined
+                    }
                     onRemove={
                       canEdit
                         ? () =>
@@ -107,7 +113,7 @@ export default function IssueLinksPanel({
                 ))}
               </div>
             ))}
-          </div>
+          </IssueRefList>
         ))}
 
       {adding && (

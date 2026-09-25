@@ -198,7 +198,11 @@
     "detachFromParent": "الفصل عن {parent}",
     "subtaskOf": "مهمة فرعية من {issue}",
     "existingIssue": "مهمة موجودة",
-    "searchPrompt": "ابحث عن مهام لإضافتها كمهمة فرعية…"
+    "searchPrompt": "ابحث عن مهام لإضافتها كمهمة فرعية…",
+    "filter": "التصفية حسب الحالة",
+    "hiding": "مخفية: {states}",
+    "clearFilter": "مسح التصفية",
+    "allHidden": "كل المهام الفرعية مخفية بالتصفية."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, zero {لا مهام} one {هذه المهمة لديها} two {هاتان المهمتان لديهما} few {هذه المهام لديها} many {هذه المهام لديها} other {هذه المهام لديها}} {count, plural, zero {لا مهام فرعية} one {مهمة فرعية واحدة} two {مهمتان فرعيتان} few {# مهام فرعية} many {# مهمة فرعية} other {# مهمة فرعية}}.",

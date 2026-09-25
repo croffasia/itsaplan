@@ -11,10 +11,12 @@ export default function ResizeGrip({
   label,
   className,
   onDrag,
+  onReset,
 }: {
   label: string;
   className?: string;
   onDrag: (deltaX: number) => void;
+  onReset?: () => void;
 }) {
   // The drag listens on the window, since the pointer leaves the 6px grip as soon
   // as it moves. The host can unmount mid-drag (switching layout or project), and
@@ -39,7 +41,9 @@ export default function ResizeGrip({
   return (
     <div
       onPointerDown={beginResize}
+      onDoubleClick={onReset}
       aria-label={label}
+      title={label}
       className={cn('w-1.5 cursor-col-resize hover:bg-primary/40', className)}
     />
   );

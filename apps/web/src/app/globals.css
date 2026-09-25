@@ -188,7 +188,8 @@
   --chat-composer-shadow: 0 -2px 22px 4px rgb(0 0 0 / 0.7);
 }
 
-/* Every floating surface lifts off the page with the same shadow. It is set here
+/* Every floating surface lifts off the page with the same shadow, and a border
+   fainter than the page's so it does not read as a bright outline. It is set here
    rather than per component: the shadcn components are kept as generated, and
    `shadow-md` on a popover reads as nothing against a background of nearly the
    same lightness. These rules sit outside @layer, so they win over the utility. */
@@ -201,6 +202,7 @@
 [data-slot='combobox-content'],
 [data-slot='tooltip-content'] {
   box-shadow: var(--overlay-shadow);
+  border-color: color-mix(in oklab, var(--border) 55%, transparent);
 }
 
 /* A tooltip is never pointed at, so it must not take the pointer from what it

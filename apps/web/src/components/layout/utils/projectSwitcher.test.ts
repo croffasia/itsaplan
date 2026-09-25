@@ -346,4 +346,23 @@ describe('projectSwitcherSections', () => {
       ['NEWER', 'OLDER'],
     );
   });
+
+  it('sorts hidden projects as one list across teams, ignoring favorites', () => {
+    const projects = [
+      project({ id: 1, key: 'CCC', isHidden: true, isFavorite: true }),
+      project({ id: 2, teamId: 2, key: 'AAA', isHidden: true }),
+      project({ id: 3, key: 'BBB', isHidden: true }),
+    ];
+    const sections = projectSwitcherSections(
+      projects,
+      [team(), team({ id: 2, name: 'Design' })],
+      '',
+      'key',
+      'en',
+    );
+    assert.deepEqual(
+      sections.hiddenProjects.map((item) => item.key),
+      ['AAA', 'BBB', 'CCC'],
+    );
+  });
 });

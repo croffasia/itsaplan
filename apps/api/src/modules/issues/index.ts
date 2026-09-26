@@ -351,7 +351,11 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         disposition(body),
         requireUser(user).id,
       );
-      const { deleted, attachments } = await bulkDeleteIssues(project.id, body.ids);
+      const { deleted, attachments } = await bulkDeleteIssues(
+        project.id,
+        body.ids,
+        requireUser(user).id,
+      );
       await purgeObjects([...fromSubtasks, ...attachments]);
       return { deleted };
     },
@@ -732,7 +736,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         disposition(query),
         requireUser(user).id,
       );
-      const attachments = await deleteIssue(params.issueId);
+      const attachments = await deleteIssue(params.issueId, requireUser(user).id);
       if (!attachments) throw new HttpError(404, 'Issue not found');
       await purgeObjects([...fromSubtasks, ...attachments]);
       return noContent();

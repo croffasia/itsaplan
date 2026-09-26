@@ -13,7 +13,7 @@ import {
 } from '@repo/db';
 import { and, desc, eq, gte, inArray, isNull, lt, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
-import { emitWebhookEvent } from '#modules/webhooks/emit';
+import { emitCommentEvent } from './webhook-payload';
 import { addedMentionHandles, parseMentionHandles, resolveMentionHandles } from '#shared/mentions';
 import { isAgentUser, listMentionTriggerAgents } from '#modules/agents/core/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
@@ -295,7 +295,7 @@ export async function createComment(input: {
     .where(eq(issue.id, input.issueId));
   const projectId = projectRows[0]?.projectId;
   if (projectId != null) {
-    await emitWebhookEvent(projectId, 'comment.created', comment);
+    await emitCommentEvent(projectId, 'comment.created', comment, actorUserId);
     // Resolved once: the agent halves start runs, the member half is notified.
     const mentioned = await resolveMentionHandles(
       projectId,
@@ -355,7 +355,7 @@ export async function updateComment(
   const comment = mapFeedItem(row);
 
   await recordActivity(comment.issueId, [{ action: 'comment_edited' }], actorUserId);
-  await emitWebhookEvent(projectId, 'comment.updated', comment);
+  await emitCommentEvent(projectId, 'comment.updated', comment, actorUserId);
 
   const added = addedMentionHandles(before.body ?? '', body);
   if (added.length > 0) {
@@ -384,7 +384,7 @@ export async function deleteComment(
   if (!before) return false;
   await db.delete(issueActivity).where(eq(issueActivity.id, commentId));
   await recordActivity(before.issueId as number, [{ action: 'comment_deleted' }], actorUserId);
-  await emitWebhookEvent(projectId, 'comment.deleted', mapFeedItem(before));
+  await emitCommentEvent(projectId, 'comment.deleted', mapFeedItem(before), actorUserId);
   return true;
 }
 

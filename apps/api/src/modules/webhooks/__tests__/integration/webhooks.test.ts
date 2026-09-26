@@ -1,16 +1,29 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
-import { authedApi, type Api } from '#tests/helpers/app';
+import { apiKeyApi, authedApi, type Api } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
+import { createAgent } from '#tests/helpers/agents';
 import type { WebhookEventType } from '../../service';
 
 async function setupOwnerProject() {
-  const owner = await signUpTestUser();
+  const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
   const project = await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
   // createProject seeds five default columns; the first is the target for issues.
   const view = await asOwner.projects({ projectKey: 'MKT' }).get();
-  return { asOwner, projectId: project.data!.id, columnId: view.data!.columns[0].id };
+  return {
+    owner,
+    asOwner,
+    projectId: project.data!.id,
+    columnId: view.data!.columns[0].id,
+    columns: view.data!.columns,
+  };
+}
+
+// The payloads queued for a webhook, newest first.
+async function payloads(client: Api, webhookId: number) {
+  const res = await client.webhooks({ webhookId }).deliveries.get();
+  return res.data!.items.map((d) => d.payload as { actor: unknown; data: Record<string, unknown> });
 }
 
 // Registers a webhook on MKT and returns its id.
@@ -374,6 +387,154 @@ describe('webhooks', () => {
           // A delete carries the comment as it last read.
           data: expect.objectContaining({ id: comment.id, body: 'final' }),
         }),
+      });
+    });
+  });
+
+  describe('payload', () => {
+    it('names the actor, state, assignee, type, and labels of an issue event', async () => {
+      const { owner, asOwner, columnId, columns } = await setupOwnerProject();
+      const id = await createWebhook(asOwner, ['issue.assigned']);
+      const label = (
+        await asOwner.projects({ projectKey: 'MKT' }).labels.post({ name: 'bug', color: '#ff0000' })
+      ).data!;
+      const issue = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .issues.post({ columnId, title: 'Task', labelIds: [label.id] })
+      ).data!;
+
+      await asOwner.issues({ issueId: issue.id }).patch({ assigneeUserId: owner.userId });
+
+      const [payload] = await payloads(asOwner, id);
+      expect(payload.actor).toEqual({ type: 'human', id: owner.userId, name: 'Owner' });
+      expect(payload.data).toMatchObject({
+        id: issue.id,
+        title: 'Task',
+        assigneeUserId: owner.userId,
+        assignee: { id: owner.userId, name: 'Owner' },
+        delegate: null,
+        state: { id: columnId, name: columns[0].name, type: columns[0].stateType },
+        labels: [{ id: label.id, name: 'bug', color: '#ff0000' }],
+      });
+    });
+
+    it('marks an agent as the actor of what it does', async () => {
+      const { asOwner, columnId } = await setupOwnerProject();
+      const id = await createWebhook(asOwner, ['issue.created']);
+      const created = (
+        await createAgent(asOwner, 'MKT', {
+          name: 'Triage Bot',
+          username: 'triage',
+          kind: 'external',
+        })
+      ).data!;
+
+      const res = await apiKeyApi(created.apiKey!)
+        .projects({ projectKey: 'MKT' })
+        .issues.post({ columnId, title: 'Filed by the agent' });
+      expect(res.status).toBe(201);
+
+      const [payload] = await payloads(asOwner, id);
+      expect(payload.actor).toEqual({
+        type: 'agent',
+        id: created.agent.userId,
+        name: 'Triage Bot',
+      });
+    });
+
+    it('carries the issue as it last read on issue.deleted', async () => {
+      const { asOwner, columnId } = await setupOwnerProject();
+      const id = await createWebhook(asOwner, ['issue.deleted']);
+      const issue = (
+        await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Doomed' })
+      ).data!;
+
+      await asOwner.issues({ issueId: issue.id }).delete();
+
+      const [payload] = await payloads(asOwner, id);
+      expect(payload).toMatchObject({ action: 'remove', actor: { type: 'human' } });
+      expect(payload.data).toMatchObject({
+        id: issue.id,
+        identifier: issue.identifier,
+        title: 'Doomed',
+        state: { id: columnId },
+      });
+    });
+
+    it('names the issue a comment is on', async () => {
+      const { asOwner, columnId } = await setupOwnerProject();
+      const id = await createWebhook(asOwner, ['comment.created']);
+      const issue = (
+        await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task' })
+      ).data!;
+
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'looks good' });
+
+      const [payload] = await payloads(asOwner, id);
+      expect(payload.data.issue).toMatchObject({
+        id: issue.id,
+        identifier: issue.identifier,
+        title: 'Task',
+      });
+    });
+  });
+
+  describe('events without a field edit', () => {
+    it('fires issue.updated on archive and restore', async () => {
+      const { asOwner, columnId } = await setupOwnerProject();
+      const id = await createWebhook(asOwner, ['issue.updated']);
+      const issue = (
+        await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task' })
+      ).data!;
+
+      await asOwner.issues({ issueId: issue.id }).archive.post({});
+      await asOwner.issues({ issueId: issue.id }).restore.post();
+
+      const [restored, archived] = await payloads(asOwner, id);
+      expect(archived.data.archivedAt).not.toBeNull();
+      expect(restored.data.archivedAt).toBeNull();
+    });
+
+    it('fires issue.state_changed for the issues a deleted column moves', async () => {
+      const { asOwner, columns } = await setupOwnerProject();
+      const [from, to] = columns.filter((c) => c.stateType !== 'backlog');
+      const id = await createWebhook(asOwner, ['issue.state_changed']);
+      const issue = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .issues.post({ columnId: from.id, title: 'Task' })
+      ).data!;
+
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: from.id })
+        .delete({ mode: 'move', targetColumnId: to.id });
+
+      const [payload] = await payloads(asOwner, id);
+      expect(payload.data).toMatchObject({ id: issue.id, state: { id: to.id } });
+    });
+
+    it('fires issue.deleted for the issues a deleted column removes', async () => {
+      const { asOwner, columns } = await setupOwnerProject();
+      const column = columns.find((c) => c.stateType !== 'backlog')!;
+      const id = await createWebhook(asOwner, ['issue.deleted']);
+      const issue = (
+        await asOwner
+          .projects({ projectKey: 'MKT' })
+          .issues.post({ columnId: column.id, title: 'Task' })
+      ).data!;
+
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: column.id })
+        .delete({ mode: 'delete' });
+
+      const [payload] = await payloads(asOwner, id);
+      expect(payload.data).toMatchObject({
+        id: issue.id,
+        title: 'Task',
+        state: { id: column.id, name: column.name },
       });
     });
   });

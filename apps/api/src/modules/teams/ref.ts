@@ -45,3 +45,10 @@ export const projectRefSql = sql<string>`coalesce(${team.slug}, ${team.id}::text
 export function issueWebPath(teamRef: string, key: string, seq: number): string {
   return `/${teamRef}/issue/${key}-${seq}`;
 }
+
+// The full URL of an issue's page, or undefined when the web origin is not configured
+// (then messages carry no link rather than a localhost fallback).
+export function issueUrl(teamRef: string, key: string, seq: number): string | undefined {
+  const base = process.env.APP_URL;
+  return base ? `${base}${issueWebPath(teamRef, key, seq)}` : undefined;
+}

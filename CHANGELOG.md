@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/croffasia/itsaplan/compare/v1.2.0...v1.2.1) (2026-09-26)
+
+
+### Bug Fixes
+
+* let a project with a legacy key take a valid one ([#449](https://github.com/croffasia/itsaplan/issues/449)) ([c9e82d9](https://github.com/croffasia/itsaplan/commit/c9e82d9376cbfd253b1d29c878aeb23887ea97f9))
+
 ## [1.2.0](https://github.com/croffasia/itsaplan/compare/v1.1.0...v1.2.0) (2026-09-26)
 
 

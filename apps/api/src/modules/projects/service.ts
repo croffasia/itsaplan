@@ -31,6 +31,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
+import { PROJECT_KEY_PATTERN } from './key';
 import {
   defaultMemberPermissions,
   fullPermissions,
@@ -519,14 +520,23 @@ export async function createProject(
   });
 }
 
-// Updates a project's editable metadata (name, description). The key is the
-// issue-identifier prefix (e.g. "MKT-42") and is immutable, so it is not editable
-// here. Only the provided fields change.
+// A key stored before PROJECT_KEY_PATTERN existed (e.g. "7XTR") cannot form an issue
+// identifier, so it may be replaced once. A valid key does not change.
 export async function updateProject(
   projectId: number,
-  patch: { name?: string; description?: string },
+  patch: { key?: string; name?: string; description?: string },
 ): Promise<ProjectRow | null> {
   const values: Partial<typeof project.$inferInsert> = {};
+  if (patch.key !== undefined) {
+    const current = await getProjectById(projectId);
+    if (!current) return null;
+    if (patch.key !== current.key) {
+      if (new RegExp(PROJECT_KEY_PATTERN).test(current.key)) {
+        throw new HttpError(400, 'The project key cannot change');
+      }
+      values.key = patch.key;
+    }
+  }
   if (patch.name !== undefined) values.name = patch.name;
   if (patch.description !== undefined) values.description = patch.description;
   if (Object.keys(values).length === 0) return getProjectById(projectId);

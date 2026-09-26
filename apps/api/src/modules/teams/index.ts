@@ -359,11 +359,13 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       teamManager: true,
       params: teamProjectParams,
       body: updateProjectBody,
-      response: { 200: ProjectResponse, ...errors(400, 401, 403, 404) },
+      response: { 200: ProjectResponse, ...errors(400, 401, 403, 404, 409) },
       detail: {
         summary: 'Update a project of the team',
         description:
-          'Update the name and/or description of a project the team owns. The key is immutable.',
+          'Update the name and/or description of a project the team owns. The key changes ' +
+          'only when it does not match the key pattern, for example one that starts with a ' +
+          'digit. A key that another project of the team has is refused with 409.',
       },
     },
   )

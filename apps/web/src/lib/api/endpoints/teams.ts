@@ -271,7 +271,7 @@ export const copyTeamProject = (
 export const updateTeamProject = (
   teamId: number,
   projectId: number,
-  patch: { name?: string; description?: string },
+  patch: { key?: string; name?: string; description?: string },
 ) =>
   request<Project>(`/teams/${teamId}/projects/${projectId}`, {
     method: 'PATCH',

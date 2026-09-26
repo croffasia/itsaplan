@@ -72,3 +72,9 @@ export function normalizeKey(input: string): string {
     .replace(/^\d+/, '')
     .slice(0, KEY_MAX_LENGTH);
 }
+
+// Whether a stored key matches what normalizeKey produces. A project created before
+// that rule existed may carry a key that does not, and may then change it.
+export function isValidKey(key: string): boolean {
+  return normalizeKey(key) === key && key !== '';
+}

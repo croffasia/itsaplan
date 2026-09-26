@@ -16,6 +16,8 @@
   },
   "editDialog": {
     "title": "Edit project",
+    "key": "Key",
+    "keyHint": "Issue links need a key of capital letters and digits that starts with a letter. After you save it, the key cannot change.",
     "name": "Name",
     "description": "Description",
     "submit": "Save"

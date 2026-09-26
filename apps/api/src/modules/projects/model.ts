@@ -1,4 +1,5 @@
 import { t } from 'elysia';
+import { PROJECT_KEY_PATTERN } from './key';
 import { PROJECT_FEATURES } from '#shared/features';
 import { ColumnResponse } from '#modules/columns/model';
 import { CustomFieldResponse } from '#modules/custom-fields/model';
@@ -13,11 +14,13 @@ import { COPY_INCLUDE_KEYS } from './copy';
 // input tokens each time, so it is capped on the way in and cut again in the prompt.
 export const PROJECT_DESCRIPTION_LIMIT = 2000;
 
+const projectKey = t.String({
+  pattern: PROJECT_KEY_PATTERN,
+  description: 'Upper-case letters and digits, starting with a letter, up to 10 characters.',
+});
+
 const projectBody = t.Object({
-  key: t.String({
-    pattern: '^[A-Z][A-Z0-9]{0,9}$',
-    description: 'Upper-case letters and digits, starting with a letter, up to 10 characters.',
-  }),
+  key: projectKey,
   name: t.String({ minLength: 1 }),
   description: t.Optional(t.String({ maxLength: PROJECT_DESCRIPTION_LIMIT })),
 });
@@ -51,6 +54,7 @@ export const copyProjectBody = t.Composite([
 ]);
 
 export const updateProjectBody = t.Object({
+  key: t.Optional(projectKey),
   name: t.Optional(t.String({ minLength: 1 })),
   description: t.Optional(t.String({ maxLength: PROJECT_DESCRIPTION_LIMIT })),
 });

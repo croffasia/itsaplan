@@ -29,6 +29,7 @@ import {
 } from './service';
 import {
   listFeed,
+  countFeed,
   listFeedRange,
   listGroupedFeed,
   createComment,
@@ -111,6 +112,7 @@ import {
   FeedPageResponse,
   GroupedFeedPageResponse,
   feedPageQuery,
+  FeedCountsResponse,
   TimelineSegmentResponse,
   IssueCycleResponse,
   projectKeyParams,
@@ -1212,15 +1214,15 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     },
   )
 
-  // One page of an issue's timeline, newest first: comments and change-log
-  // activity merged in issue_activity. `limit` (default 25) and an opaque
-  // `cursor` (the JSON-encoded nextCursor from the previous page) drive keyset
-  // pagination. The response is { items, nextCursor }, and nextCursor is null on the
-  // last page.
+  // One page of an issue's timeline: comments and change-log activity merged in
+  // issue_activity, newest first unless `order` is 'asc', narrowed by `filter`.
+  // `limit` (default 25) and an opaque `cursor` (the JSON-encoded nextCursor from the
+  // previous page) drive keyset pagination. The response is { items, nextCursor }, and
+  // nextCursor is null on the last page.
   .get(
     '/issues/:issueId/feed',
     async ({ params, query }) =>
-      listFeed(params.issueId, { before: feedCursor(query.cursor), limit: query.limit }),
+      listFeed(params.issueId, { ...query, cursor: feedCursor(query.cursor) }),
     {
       params: issueParams,
       query: feedPageQuery,
@@ -1230,7 +1232,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
         summary: 'Get an issue feed',
         description:
           "Get an issue's activity feed by its numeric id: comments and change-log " +
-          'entries, newest first. The page holds the top-level entries; the replies of ' +
+          'entries, newest first by default. The page holds the top-level entries; the replies of ' +
           "its comments come with them, each carrying its parent's id in replyToId.",
         ...mcpTool('list_issue_activity'),
       },
@@ -1242,7 +1244,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   .get(
     '/issues/:issueId/feed/grouped',
     async ({ params, query }) =>
-      listGroupedFeed(params.issueId, { before: feedCursor(query.cursor), limit: query.limit }),
+      listGroupedFeed(params.issueId, { ...query, cursor: feedCursor(query.cursor) }),
     {
       params: issueParams,
       query: feedPageQuery,
@@ -1255,6 +1257,17 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       },
     },
   )
+
+  // The number of entries behind each feed filter, for the tabs of the activity log.
+  .get('/issues/:issueId/feed/counts', async ({ params }) => countFeed(params.issueId), {
+    params: issueParams,
+    workItem: 'read',
+    response: { 200: FeedCountsResponse, ...commonErrors },
+    detail: {
+      summary: 'Count an issue feed',
+      description: "Count an issue's comments, change-log entries and time entries.",
+    },
+  })
 
   // The stretches the issue spent in one column, oldest first, with the duration of
   // each. Entry-free and unpaged: the change log holds a handful of status entries,

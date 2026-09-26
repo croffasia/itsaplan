@@ -5,6 +5,7 @@ import Avatar from '@/components/common/Avatar';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { cn } from '@/lib/utils';
 import { useLastComment } from '../../hooks/useLastComment';
+import type { ActivityFeedView } from '../../hooks/useActivityFeedView';
 import { commentPreview } from '../../utils/commentPreview';
 
 const SHOW_MS = 5000;
@@ -17,16 +18,18 @@ export default function LastCommentBubble({
   issueId,
   feedRef,
   imageByUserId,
+  view,
 }: {
   issueId: number;
   // The feed section to watch: the bubble stands in for it only while it is off screen.
   feedRef: RefObject<HTMLDivElement | null>;
   imageByUserId: Map<string, string | null>;
+  view: ActivityFeedView;
 }) {
   const t = useTranslations('issue.comments');
   const tCommon = useTranslations('common');
   const relativeTime = useRelativeTime();
-  const comment = useLastComment(issueId);
+  const comment = useLastComment(issueId, view);
   const preview = commentPreview(comment?.body ?? '');
   // One turn per mounted issue: it waits for the feed to leave the screen, runs its few
   // seconds, and is then done for good. Starting in 'waiting' keeps the bubble off an

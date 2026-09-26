@@ -370,10 +370,30 @@ export const GroupedFeedPageResponse = t.Object({
   nextCursor: FeedCursorResponse,
 });
 
-// Both feed routes page the same way: a limit and the previous page's cursor.
+// Both feed routes page the same way: a limit and the previous page's cursor, over
+// the entries the filter keeps, in the order asked for.
 export const feedPageQuery = t.Object({
   limit: t.Optional(t.Numeric({ description: 'Max items per page (1-100). Default 25.' })),
   cursor: t.Optional(t.String({ description: 'nextCursor from the previous page, for paging.' })),
+  filter: t.Optional(
+    t.Union([t.Literal('comments'), t.Literal('history'), t.Literal('worklog')], {
+      description:
+        'Only comments, only the change log without time entries, or only time entries. Omit for every entry.',
+    }),
+  ),
+  order: t.Optional(
+    t.Union([t.Literal('desc'), t.Literal('asc')], {
+      description: "'desc' (default) serves the newest entries first, 'asc' the oldest.",
+    }),
+  ),
+});
+
+// FeedCounts from activity.ts: how many entries each feed filter keeps.
+export const FeedCountsResponse = t.Object({
+  all: t.Number(),
+  comments: t.Number(),
+  history: t.Number(),
+  worklog: t.Number(),
 });
 
 // TimelineSegment from status-history.ts: one stretch the issue spent in a column.

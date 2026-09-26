@@ -2,16 +2,11 @@ import { useState } from 'react';
 import type { FeedItem } from '@/lib/api/endpoints/activity';
 import { useSession } from '@/lib/auth-client';
 import { usePermissions } from '@/hooks/usePermissions';
-import { cn } from '@/lib/utils';
 import CommentItem from './CommentItem';
 import CommentComposer, { type ComposerContext } from './CommentComposer';
 
-// A comment and everything written under it, as one card: the comments are its rows,
-// split by a hairline, each reply a step further in than what it answers, and the
-// reply box opens at the bottom. Read as one exchange rather than a stack of boxes.
-// The issue panel is itself a `card` surface, so the thread stands off it by a
-// darker fill and a soft shadow; an outline at this size would pull more attention
-// than the comments do.
+// A comment and everything written under it: each reply a step further in than what
+// it answers, and the reply box opens at the bottom.
 
 // How deep a reply keeps stepping in. Past it the thread still nests, but on the same
 // indent, so a long exchange does not squeeze the text off the screen.
@@ -54,16 +49,9 @@ export default function CommentThread({
   collect(root, 0);
 
   return (
-    <li className="overflow-hidden rounded-lg border border-black/4 bg-muted/40 shadow-xs dark:border-white/8 dark:bg-background/60">
-      {rows.map((row, index) => (
-        <div
-          key={row.item.id}
-          className={cn(
-            'px-3 py-2.5',
-            index > 0 && 'border-t border-border/50',
-            indentClass(row.depth),
-          )}
-        >
+    <li className="flex flex-col gap-2 py-1.5">
+      {rows.map((row) => (
+        <div key={row.item.id} className={indentClass(row.depth)}>
           <CommentItem
             item={row.item}
             image={(row.item.actorUserId && imageByUserId.get(row.item.actorUserId)) ?? null}
@@ -75,9 +63,7 @@ export default function CommentThread({
         </div>
       ))}
       {replyTo && composer && (
-        <div
-          className={cn('border-t border-border/50 px-3 py-2.5', indentClass(replyTo.depth + 1))}
-        >
+        <div className={indentClass(replyTo.depth + 1)}>
           <CommentComposer
             {...composer}
             replyToId={replyTo.item.id}
@@ -94,5 +80,5 @@ export default function CommentThread({
 // the source.
 function indentClass(depth: number): string {
   const step = Math.min(depth, MAX_INDENT_DEPTH);
-  return ['', 'ps-7', 'ps-11', 'ps-15'][step];
+  return ['', 'ps-8.5', 'ps-12.5', 'ps-16.5'][step];
 }

@@ -151,6 +151,62 @@ describe('issue activity', () => {
       const res = await feed(asOwner, 999999);
       expect(res.status).toBe(404);
     });
+
+    it('serves the oldest entries first for order=asc, paging forward', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      for (const body of ['a', 'b', 'c']) {
+        await asOwner.issues({ issueId: issue.id }).comments.post({ body });
+      }
+
+      const first = await feed(asOwner, issue.id, { order: 'asc', filter: 'comments', limit: '2' });
+      expect(first.data!.items.map((i) => i.body)).toEqual(['a', 'b']);
+      const second = await feed(asOwner, issue.id, {
+        order: 'asc',
+        filter: 'comments',
+        limit: '2',
+        cursor: JSON.stringify(first.data!.nextCursor),
+      });
+      expect(second.data!.items.map((i) => i.body)).toEqual(['c']);
+      expect(second.data!.nextCursor).toBeNull();
+    });
+
+    it('narrows the page to comments, the change log, or the work log', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const comment = (await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'hi' }))
+        .data!;
+      await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'reply', replyToId: comment.id });
+      await asOwner
+        .issues({ issueId: issue.id })
+        .worklogs.post({ minutes: 30, spentOn: new Date().toISOString().slice(0, 10) });
+
+      const comments = await feed(asOwner, issue.id, { filter: 'comments' });
+      expect(comments.data!.items.map((i) => i.body)).toEqual(['hi', 'reply']);
+      const history = await feed(asOwner, issue.id, { filter: 'history' });
+      expect(history.data!.items.map((i) => i.action)).toEqual(['created']);
+      const worklog = await feed(asOwner, issue.id, { filter: 'worklog' });
+      expect(worklog.data!.items.map((i) => i.action)).toEqual(['worklog']);
+    });
+
+    it('counts the entries behind each filter, replies included', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      const comment = (await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'hi' }))
+        .data!;
+      await asOwner
+        .issues({ issueId: issue.id })
+        .comments.post({ body: 'reply', replyToId: comment.id });
+      await asOwner
+        .issues({ issueId: issue.id })
+        .worklogs.post({ minutes: 30, spentOn: new Date().toISOString().slice(0, 10) });
+
+      const res = await asOwner.issues({ issueId: issue.id }).feed.counts.get();
+      expect(res.status).toBe(200);
+      expect(res.data).toEqual({ all: 4, comments: 2, history: 1, worklog: 1 });
+    });
   });
 
   // A reply is a comment carrying replyToId. The feed pages over the top-level
@@ -539,6 +595,26 @@ describe('issue activity', () => {
         g.items.filter((i) => i.kind === 'comment').map((i) => i.body),
       );
       expect(bodies).toEqual([['after the move'], ['before the move']]);
+    });
+
+    it('runs the stretches oldest first for order=asc', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const view = await asOwner.projects({ projectKey: 'MKT' }).get();
+      const names = new Map(view.data!.columns.map((c) => [c.id, c.name]));
+      const issue = (await createIssue(asOwner, columnId)).data!;
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'before the move' });
+      await asOwner.issues({ issueId: issue.id }).patch({ columnId: columnIds[1] });
+      await asOwner.issues({ issueId: issue.id }).comments.post({ body: 'after the move' });
+
+      const res = await grouped(asOwner, issue.id, { order: 'asc', filter: 'comments' });
+      expect(res.data!.groups.map((g) => g.status)).toEqual([
+        names.get(columnId)!,
+        names.get(columnIds[1])!,
+      ]);
+      expect(res.data!.groups.map((g) => g.items.map((i) => i.body))).toEqual([
+        ['before the move'],
+        ['after the move'],
+      ]);
     });
 
     it('marks a status the issue had already been in as a repeat', async () => {

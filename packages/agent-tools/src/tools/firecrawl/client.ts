@@ -1,3 +1,4 @@
+import { pinnedFetch } from '@repo/net';
 import { jsonOrThrow } from '../../http';
 import { sleep } from '../time';
 
@@ -18,7 +19,7 @@ export async function firecrawlPost(
   body: Record<string, unknown>,
   what: string,
 ): Promise<unknown> {
-  const res = await fetch(`${FIRECRAWL_BASE}/${path}`, {
+  const res = await pinnedFetch(`${FIRECRAWL_BASE}/${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
     body: JSON.stringify(body),
@@ -41,7 +42,7 @@ export async function pollJob(
 ): Promise<JobStatus> {
   const deadline = Date.now() + maxWaitMs;
   for (;;) {
-    const res = await fetch(`${FIRECRAWL_BASE}/${jobPath}`, {
+    const res = await pinnedFetch(`${FIRECRAWL_BASE}/${jobPath}`, {
       headers: { Authorization: `Bearer ${apiKey}` },
     });
     const data = (await jsonOrThrow(res, what)) as JobStatus;

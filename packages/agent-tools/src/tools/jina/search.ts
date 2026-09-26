@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 import { jinaAuth } from './auth';
@@ -24,7 +25,7 @@ export const jinaSearch: CustomToolEntry = {
       .describe('How many results to return (default 5).'),
   }),
   execute: async (credential, input) => {
-    const res = await fetch('https://s.jina.ai/', {
+    const res = await pinnedFetch('https://s.jina.ai/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -83,6 +83,81 @@ describe('integrations', () => {
     });
   });
 
+  // A url field is where the secret is sent, so it is held to the SSRF rules when it
+  // is stored: https only, no private or local host, no userinfo. The rules are the
+  // strict ones under NODE_ENV=test.
+  it('rejects a credential whose url field is not a public https origin', async () => {
+    const { asOwner, teamId } = await setup();
+    const rejected = [
+      'http://git.example.com',
+      'https://127.0.0.1',
+      'https://localhost:3000',
+      'https://169.254.169.254/latest/meta-data/',
+      'https://user:pw@git.example.com',
+      'https://git.example.com/?x=1',
+      'not a url',
+    ];
+    for (const baseUrl of rejected) {
+      const res = await integrations(asOwner, teamId).post({
+        integrationKey: 'gitea',
+        credential: { baseUrl, token: 'token-secret-abcd' },
+      });
+      expect(res.status).toBe(400);
+      expect(res.error?.value).toMatchObject({ error: expect.stringContaining('Instance URL') });
+    }
+    expect((await integrations(asOwner, teamId).get()).data?.total).toBe(0);
+  });
+
+  it('rejects a model credential whose base URL is not a public https endpoint', async () => {
+    const { asOwner, teamId } = await setup();
+    for (const baseUrl of ['http://llm.example.com/v1', 'https://10.0.0.5/v1']) {
+      const res = await integrations(asOwner, teamId).post({
+        integrationKey: 'openai-compatible',
+        credential: { apiKey: 'sk-secret-1234', baseUrl },
+      });
+      expect(res.status).toBe(400);
+    }
+    const ok = await integrations(asOwner, teamId).post({
+      integrationKey: 'openai-compatible',
+      credential: { apiKey: 'sk-secret-1234', baseUrl: 'https://llm.example.com/v1/' },
+    });
+    expect(ok.status).toBe(201);
+    expect(ok.data!.redacted).toMatchObject({ baseUrl: 'https://llm.example.com/v1' });
+  });
+
+  it('requires the secret again when the url it is sent to changes', async () => {
+    const { asOwner, teamId } = await setup();
+    const created = await integrations(asOwner, teamId).post({
+      integrationKey: 'gitea',
+      credential: { baseUrl: 'https://git.example.com', token: 'token-secret-abcd' },
+    });
+    const id = created.data!.id;
+    const route = integrations(asOwner, teamId)({ credentialId: id });
+
+    const moved = await route.patch({ credential: { baseUrl: 'https://git.example.org' } });
+    expect(moved.status).toBe(400);
+    expect(moved.error?.value).toMatchObject({
+      error: 'Changing Instance URL requires entering Access token again',
+    });
+    expect((await integrations(asOwner, teamId).get()).data?.items[0]?.redacted).toMatchObject({
+      baseUrl: 'https://git.example.com',
+    });
+
+    // The same url resent by the edit form is not a change.
+    const same = await route.patch({ credential: { baseUrl: 'https://git.example.com/' } });
+    expect(same.status).toBe(200);
+    expect(same.data!.redacted).toMatchObject({ token: '••••abcd' });
+
+    const withToken = await route.patch({
+      credential: { baseUrl: 'https://git.example.org', token: 'token-secret-wxyz' },
+    });
+    expect(withToken.status).toBe(200);
+    expect(withToken.data!.redacted).toMatchObject({
+      baseUrl: 'https://git.example.org',
+      token: '••••wxyz',
+    });
+  });
+
   it('rejects an unknown integration', async () => {
     const { asOwner, teamId } = await setup();
     const res = await integrations(asOwner, teamId).post({

@@ -22,6 +22,37 @@ const text = (events: AgUiEvent[]) =>
     .join('');
 
 describe('answer stream', () => {
+  it('reports long answers within the server event limit', async () => {
+    const batches: AgUiEvent[][] = [];
+    const stream = new AnswerStream('text', 'chat:1:u:x', '7', async (batch) => {
+      batches.push(batch);
+    });
+
+    for (let index = 0; index < 201; index += 1) stream.write('x'.repeat(1500));
+    await stream.finish('');
+
+    expect(batches.map((batch) => batch.length)).toEqual([200, 5]);
+    expect(types(batches.flat()).at(-1)).toBe('RUN_FINISHED');
+  });
+
+  it('retries only the unsent part of a long answer', async () => {
+    const batches: AgUiEvent[][] = [];
+    let fail = true;
+    const stream = new AnswerStream('text', 'chat:1:u:x', '7', async (batch) => {
+      batches.push(batch);
+      if (batches.length === 2 && fail) {
+        fail = false;
+        throw new Error('send failed');
+      }
+    });
+
+    for (let index = 0; index < 201; index += 1) stream.write('x'.repeat(1500));
+    await expect(stream.finish('')).rejects.toThrow('send failed');
+    await stream.flush();
+
+    expect(batches.map((batch) => batch.length)).toEqual([200, 5, 5]);
+  });
+
   it('reports plain output as one message', async () => {
     const sink = collect();
     const stream = new AnswerStream('text', 'chat:1:u:x', '7', sink.send);

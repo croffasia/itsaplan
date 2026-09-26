@@ -34,6 +34,7 @@ const DELTA_LIMIT = 12_000;
 // indents and highlights. An outsized one is cut from the front, where a long output says
 // least.
 const TOOL_TEXT_LIMIT = 32_000;
+const EVENT_BATCH_LIMIT = 200;
 
 // Produces the events of one answer and hands them to `send` in batches. The caller
 // writes the command's output as it arrives and calls flush on a timer, so a long
@@ -106,13 +107,16 @@ export class AnswerStream {
   private async sendQueued(): Promise<void> {
     this.drainText();
     if (this.queued.length === 0) return;
-    const batch = this.queued;
+    const queued = this.queued;
     this.queued = [];
-    try {
-      await this.send(batch);
-    } catch (err) {
-      this.queued.unshift(...batch);
-      throw err;
+    for (let start = 0; start < queued.length; start += EVENT_BATCH_LIMIT) {
+      const batch = queued.slice(start, start + EVENT_BATCH_LIMIT);
+      try {
+        await this.send(batch);
+      } catch (err) {
+        this.queued.unshift(...queued.slice(start));
+        throw err;
+      }
     }
   }
 

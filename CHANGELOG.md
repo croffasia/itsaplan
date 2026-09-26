@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.2.0](https://github.com/croffasia/itsaplan/compare/v1.1.0...v1.2.0) (2026-09-26)
+
+
+### Features
+
+* add team agent defaults and cap chat claim waits ([#425](https://github.com/croffasia/itsaplan/issues/425)) ([942a40c](https://github.com/croffasia/itsaplan/commit/942a40cef274667c85db21c45621963f0ba22cb7))
+* **api:** let MCP assistants open and view attachment images ([#431](https://github.com/croffasia/itsaplan/issues/431)) ([9a030c2](https://github.com/croffasia/itsaplan/commit/9a030c2d3026ee4f836eba4966d657e2c675e9ee))
+* **dashboards:** add a burnup widget with a projected completion date ([#285](https://github.com/croffasia/itsaplan/issues/285)) ([6246152](https://github.com/croffasia/itsaplan/commit/62461525eff28f9ce0759e456b9735d46ee7a518))
+* enrich webhook payloads and cap webhook response reads ([#446](https://github.com/croffasia/itsaplan/issues/446)) ([dd4d0b5](https://github.com/croffasia/itsaplan/commit/dd4d0b54433bfb5212623a0b2b0141e09caf5325))
+* per-team project keys and team-first URLs ([#433](https://github.com/croffasia/itsaplan/issues/433)) ([79e6675](https://github.com/croffasia/itsaplan/commit/79e66756debadb2cf0f8fb1a5ce2aa3f4603da3b))
+* replace MinIO with RustFS for attachment storage ([#437](https://github.com/croffasia/itsaplan/issues/437)) ([e063a15](https://github.com/croffasia/itsaplan/commit/e063a152857e5b754d7b40d4bce5f623dda5250a))
+* share Git provider connections across a team ([#426](https://github.com/croffasia/itsaplan/issues/426)) ([86a8b18](https://github.com/croffasia/itsaplan/commit/86a8b18acdda00362d937fe79899d4b6f266c1bb))
+* **web:** filter subtasks by state and change state from issue rows ([#443](https://github.com/croffasia/itsaplan/issues/443)) ([08647f4](https://github.com/croffasia/itsaplan/commit/08647f4c1b909e33310f320bbcf6f22b68e1cd52))
+* **web:** link issue identifiers and highlight mentions of the viewer ([#435](https://github.com/croffasia/itsaplan/issues/435)) ([6d71dca](https://github.com/croffasia/itsaplan/commit/6d71dca523f380b05c2a6458015b058ee5237f3f))
+
+
+### Improvements
+
+* **web:** redesign the project switcher dropdown ([#439](https://github.com/croffasia/itsaplan/issues/439)) ([8080f6a](https://github.com/croffasia/itsaplan/commit/8080f6a5b3dd91eb2c372fb7a626d779e8fd0aab))
+* **web:** show project keys and last activity under the name in the switcher ([#445](https://github.com/croffasia/itsaplan/issues/445)) ([384f862](https://github.com/croffasia/itsaplan/commit/384f862e6df93c3b2dbcce034abbd66a4357e3bf))
+* **web:** show the burnup forecast range by default ([#442](https://github.com/croffasia/itsaplan/issues/442)) ([2c64d57](https://github.com/croffasia/itsaplan/commit/2c64d570649f444957452daca231d84b06acc8fa))
+
+
+### Bug Fixes
+
+* **api:** send x-opencode-session to OpenCode Go ([#440](https://github.com/croffasia/itsaplan/issues/440)) ([4c5c4a6](https://github.com/croffasia/itsaplan/commit/4c5c4a67a18733cd4744c54e1352c4405c4a290c))
+* run migrations as a separate step before the apps start ([#444](https://github.com/croffasia/itsaplan/issues/444)) ([9425514](https://github.com/croffasia/itsaplan/commit/942551408ab6c59875ababe7a9b825fea35391d9))
+* **runner:** keep chat tool text within the 32000 character limit ([#424](https://github.com/croffasia/itsaplan/issues/424)) ([4dd4e8a](https://github.com/croffasia/itsaplan/commit/4dd4e8a5c38168a6ee6cf8e31da62a26967bfc4c))
+
 ## [1.1.0](https://github.com/croffasia/itsaplan/compare/v1.0.0...v1.1.0) (2026-09-23)
 
 

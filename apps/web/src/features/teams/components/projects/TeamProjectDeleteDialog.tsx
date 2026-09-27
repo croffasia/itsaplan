@@ -28,7 +28,7 @@ export default function TeamProjectDeleteDialog({
       confirmDisabled={!matches}
       onClose={onClose}
       onConfirm={async () => {
-        await deleteProject.mutateAsync({ teamId, projectId: project.id, projectKey: project.key });
+        await deleteProject.mutateAsync({ teamId, projectId: project.id, projectKey: project.ref });
         onClose();
       }}
     >

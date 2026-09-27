@@ -395,7 +395,6 @@
     "connectionHint": "Connect a repository from GitHub, GitLab, Gitea, Forgejo, or Bitbucket.",
     "webhookEndpoint": "Webhook endpoint",
     "webhookEndpointHint": "One endpoint receives branch, pull request, and CI updates from every connected repository.",
-    "connectionRestricted": "You need integration edit access to see the connection details.",
     "payloadUrl": "Payload URL",
     "webhookSecret": "Webhook secret",
     "howToConnect": "How to connect",
@@ -414,6 +413,7 @@
     "nativeConnectionsHint": "Authorize a Git provider, choose repositories, and let Plan configure their webhooks.",
     "nativeConnectProvider": "Connect {provider}",
     "nativeNoConnections": "No provider accounts connected yet. Manual webhook setup remains available below.",
+    "nativeAskTeamManager": "Ask a team owner or manager to connect a provider account.",
     "nativeConnectTitle": "Connect {provider}",
     "nativeTokenHint": {
       "github": "Use a fine-grained token with Metadata read, Webhooks write, and Pull requests write access for the repositories you want to connect.",

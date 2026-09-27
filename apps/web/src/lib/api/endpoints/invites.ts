@@ -40,10 +40,11 @@ export interface InviteEmailResult {
 }
 
 // An invite as shown to the invitee opening the link: enough team and project
-// context to decide, never the internal ids.
+// context to decide, never the internal project id.
 export interface InviteView {
   token: string;
   teamName: string;
+  teamRef: string;
   projectKey: string | null;
   projectName: string | null;
   email: string;
@@ -61,6 +62,7 @@ export interface InviteView {
 // Where an invitee landed once the invite was accepted.
 export interface AcceptedInvite {
   teamName: string;
+  teamRef: string;
   projectKey: string | null;
   projectName: string | null;
   role: MemberRole | null;

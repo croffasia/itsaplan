@@ -110,7 +110,7 @@ function buildOne(
     execute: async (input) => {
       const args: Record<string, unknown> = { ...input };
       for (const name of hidden) delete args[name];
-      if (bindsProject) args.projectKey = project.key;
+      if (bindsProject) args.projectKey = project.ref;
       const { text, isError } = await dispatchTool(
         getMcpApp(),
         route,

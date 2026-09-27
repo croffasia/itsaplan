@@ -2,18 +2,20 @@ import Link from 'next/link';
 import { X } from 'lucide-react';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueRef } from '@/lib/api/endpoints/issues';
-import { issuePath } from '@/utils/paths';
+import { issuePath, projectRefOf, splitProjectRef } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
+import PopoverPick from '@/components/common/fields/PopoverPick';
 import ArchivedBadge from '@/components/common/ArchivedBadge';
 import {
   historyScrollRestorationAnchorProps,
   historyScrollRestorationLinkProps,
 } from '@/hooks/useHistoryScrollRestoration';
 import { StateIcon } from '../shared/IssueIcons';
+import { useTranslations } from 'next-intl';
 
 // One other issue in the Links or Subtasks panel — the far end of a relation, a
 // subtask, or the parent an issue hangs under — with its status, opening its page
-// on click. onRemove is absent when the member cannot edit; removeLabel names what
+// on click. onRemove and onChangeState are absent when the member cannot edit; removeLabel names what
 // removing it does, for the screen reader. A public share has no issue pages to
 // link to, so it passes onOpen and the row opens the issue where it stands; a
 // share that cannot open it at all (a single shared issue) passes neither and the
@@ -24,6 +26,7 @@ export default function IssueRefRow({
   scrollAnchorKey,
   removeLabel,
   onRemove,
+  onChangeState,
   onOpen,
   readOnly,
 }: {
@@ -32,24 +35,30 @@ export default function IssueRefRow({
   scrollAnchorKey: string;
   removeLabel: string;
   onRemove?: () => void;
+  onChangeState?: (columnId: number) => void;
   onOpen?: () => void;
   readOnly?: boolean;
 }) {
+  const t = useTranslations('issue.fieldSelects');
   const column = project.columns.find((c) => c.id === issue.columnId);
   const targetProjectKey = issue.identifier.slice(0, -String(issue.sequenceNumber).length - 1);
   const sameProject = targetProjectKey === project.project.key;
+  const targetProjectRef = projectRefOf(splitProjectRef(project.project.ref).teamRef, targetProjectKey);
   const label = (
     <>
-      <span className="shrink-0 font-mono text-xs text-muted-foreground">{issue.identifier}</span>
-      <span className="truncate text-sm">{issue.title}</span>
+      <span className="font-mono text-xs text-muted-foreground">{issue.identifier}</span>
+      <span className="flex min-w-0 items-center gap-2">
+        <span className="truncate text-sm">{issue.title}</span>
+        {issue.archived && <ArchivedBadge />}
+      </span>
     </>
   );
-  const labelClass = 'flex min-w-0 flex-1 items-center gap-2';
+  const labelClass = 'col-span-2 col-start-2 grid grid-cols-subgrid items-center';
 
   function renderName() {
     if (onOpen)
       return (
-        <button type="button" onClick={onOpen} className={`${labelClass} text-left`}>
+        <button type="button" onClick={onOpen} className={`${labelClass} text-start`}>
           {label}
         </button>
       );
@@ -58,7 +67,7 @@ export default function IssueRefRow({
       <Link
         {...historyScrollRestorationLinkProps}
         {...historyScrollRestorationAnchorProps(scrollAnchorKey)}
-        href={issuePath(targetProjectKey, issue.sequenceNumber)}
+        href={issuePath(targetProjectRef, issue.sequenceNumber)}
         className={labelClass}
       >
         {label}
@@ -67,18 +76,42 @@ export default function IssueRefRow({
   }
 
   return (
-    <div className="group flex items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent/50">
-      {sameProject && column && <StateIcon stateType={column.stateType} color={column.color} />}
-      {renderName()}
-      {issue.archived && <ArchivedBadge />}
+    <div className="group col-span-full grid grid-cols-subgrid items-center rounded-md px-2 py-1.5 hover:bg-accent/50">
       {sameProject && column && (
-        <span className="shrink-0 text-xs text-muted-foreground">{column.name}</span>
+        <StateIcon className="col-start-1" stateType={column.stateType} color={column.color} />
       )}
+      {renderName()}
+      {sameProject && column &&
+        (onChangeState ? (
+          <PopoverPick
+            align="end"
+            inputPlaceholder={t('changeState')}
+            emptyText={t('noState')}
+            trigger={
+              <button
+                type="button"
+                className="col-start-4 text-start text-xs text-muted-foreground hover:text-foreground"
+              >
+                {column.name}
+              </button>
+            }
+            items={project.columns.map((c) => ({
+              key: String(c.id),
+              search: c.name,
+              icon: <StateIcon stateType={c.stateType} color={c.color} />,
+              label: c.name,
+              selected: c.id === column.id,
+              onSelect: () => onChangeState(c.id),
+            }))}
+          />
+        ) : (
+          <span className="col-start-4 text-xs text-muted-foreground">{column.name}</span>
+        ))}
       {onRemove && (
         <Button
           variant="ghost"
           size="icon"
-          className="size-6 shrink-0 opacity-0 group-hover:opacity-100 hover:text-destructive"
+          className="col-start-5 size-6 opacity-0 group-hover:opacity-100 hover:text-destructive"
           aria-label={removeLabel}
           onClick={onRemove}
         >

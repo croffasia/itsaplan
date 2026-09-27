@@ -41,7 +41,7 @@ export default function IssueLinkDialog({
   const phrase = byKey(useTranslations('issueLinks.phrases'));
   const relationLabel = useLinkRelationLabel();
   const [query, setQuery] = useState('');
-  const [targetProjectKey, setTargetProjectKey] = useState(project.project.key);
+  const [targetProjectRef, setTargetProjectRef] = useState(project.project.ref);
   const [error, setError] = useState<string | null>(null);
   const linkIssues = useLinkIssues();
 
@@ -57,7 +57,7 @@ export default function IssueLinkDialog({
   const choices = (projects.data ?? [project.project]).filter(
     (p) => p.teamId === project.project.teamId,
   );
-  const search = useIssueSearchQuery(targetProjectKey, debounced, {
+  const search = useIssueSearchQuery(targetProjectRef, debounced, {
     enabled: query.trim().length > 0 && query.trim() === debounced.trim(),
   });
   const hits = (query.trim() && !search.isPlaceholderData ? (search.data ?? []) : []).filter(
@@ -69,7 +69,7 @@ export default function IssueLinkDialog({
     setError(null);
     try {
       await linkIssues.mutateAsync({
-        projectKey: project.project.key,
+        projectKey: project.project.ref,
         issueId,
         otherIssueId: targetIssueId,
         kind: relation,
@@ -96,15 +96,15 @@ export default function IssueLinkDialog({
         </label>
         <select
           id="link-target-project"
-          value={targetProjectKey}
+          value={targetProjectRef}
           onChange={(event) => {
-            setTargetProjectKey(event.target.value);
+            setTargetProjectRef(event.target.value);
             setQuery('');
           }}
           className="w-full rounded-md bg-transparent px-2 py-1 text-sm text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {choices.map((choice) => (
-            <option key={choice.id} value={choice.key}>
+            <option key={choice.id} value={choice.ref}>
               {choice.name} · {choice.key}
             </option>
           ))}

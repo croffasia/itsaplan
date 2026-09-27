@@ -9,8 +9,8 @@ type Client = ReturnType<typeof authedApi>;
 async function setupProject() {
   const owner = await signUpTestUser();
   const asOwner = authedApi(owner.cookie);
-  await asOwner.projects.post({ key: 'MKT', name: 'Marketing' });
-  return { asOwner, owner };
+  const project = (await asOwner.projects.post({ key: 'MKT', name: 'Marketing' })).data!;
+  return { asOwner, owner, project };
 }
 
 async function addMember(owner: Client, roleId?: number) {
@@ -43,7 +43,7 @@ describe('document assets', () => {
   beforeEach(resetDb);
 
   it('uploads, lists, securely downloads, and deletes an asset', async () => {
-    const { asOwner } = await setupProject();
+    const { asOwner, project } = await setupProject();
     const page = (await documents(asOwner).post({ title: 'Guide' })).data!;
     const uploaded = await upload(asOwner, page.id, '../unsafe.svg', 'image/svg+xml');
     expect(uploaded.status).toBe(201);
@@ -53,7 +53,7 @@ describe('document assets', () => {
       sizeBytes: 11,
     });
     expect(uploaded.data!.url).toBe(
-      `/projects/MKT/documents/${page.id}/assets/${uploaded.data!.id}/raw`,
+      `/projects/${project.teamId}.MKT/documents/${page.id}/assets/${uploaded.data!.id}/raw`,
     );
     expect(uploaded.data).not.toHaveProperty('s3Key');
 

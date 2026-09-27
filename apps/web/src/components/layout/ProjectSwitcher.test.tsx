@@ -40,7 +40,9 @@ const projects: Project[] = Array.from({ length: 20 }, (_, index) => ({
   id: index + 1,
   teamId: 1,
   teamName: 'Engineering',
+  teamRef: 'eng',
   key: `P${String(index + 1).padStart(2, '0')}`,
+  ref: `eng.P${String(index + 1).padStart(2, '0')}`,
   name: `Project ${index + 1}`,
   description: '',
   mcpEnabled: true,
@@ -87,20 +89,23 @@ async function render(mobile = true) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: mobile ? 390 : 1280 });
   const { Sidebar, SidebarProvider, SidebarTrigger } = await import('@/components/ui/sidebar');
   const { default: ProjectSwitcher } = await import('./ProjectSwitcher');
+  const { RelativeTimeProvider } = await import('@/context/relativeTimeContext');
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
         <NextIntlClientProvider locale="en" messages={{ nav, common }} timeZone="UTC">
-          <SidebarProvider>
-            <SidebarTrigger />
-            <Sidebar>
-              <ProjectSwitcher
-                projects={projects}
-                currentProjectKey="P01"
-                onSelectProject={(key) => selections.push(key)}
-              />
-            </Sidebar>
-          </SidebarProvider>
+          <RelativeTimeProvider>
+            <SidebarProvider>
+              <SidebarTrigger />
+              <Sidebar>
+                <ProjectSwitcher
+                  projects={projects}
+                  currentProjectKey="eng.P01"
+                  onSelectProject={(key) => selections.push(key)}
+                />
+              </Sidebar>
+            </SidebarProvider>
+          </RelativeTimeProvider>
         </NextIntlClientProvider>
       </QueryClientProvider>,
     ),
@@ -115,14 +120,6 @@ function touch(target: HTMLElement, type: 'touchstart' | 'touchmove', y: number)
   Object.defineProperty(event, 'touches', { value: [{ clientX: 20, clientY: y }] });
   act(() => target.dispatchEvent(event));
   return event;
-}
-
-async function pointer(target: HTMLElement, type: string, pointerType: string) {
-  await act(async () => {
-    const event = new window.MouseEvent(type, { bubbles: true, cancelable: true, button: 0 });
-    Object.defineProperty(event, 'pointerType', { value: pointerType });
-    target.dispatchEvent(event);
-  });
 }
 
 function scrollableList() {
@@ -144,7 +141,7 @@ beforeEach(async () => {
     replacedGlobals.map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]),
   );
   dom = new JSDOM('<!doctype html><div id="root"></div>', {
-    url: 'https://example.test/project/P01',
+    url: 'https://example.test/eng/P01',
     pretendToBeVisual: true,
   });
   for (const name of replacedGlobals) {
@@ -239,7 +236,7 @@ describe('ProjectSwitcher', () => {
     await render();
     assert.equal(document.activeElement, element('[data-slot="popover-content"]'));
     await click('[data-value="project-2"]');
-    assert.deepEqual(selections, ['P02']);
+    assert.deepEqual(selections, ['eng.P02']);
     assert.equal(document.querySelector('[data-slot="popover-content"]'), null);
   });
 
@@ -253,35 +250,7 @@ describe('ProjectSwitcher', () => {
     assert.equal(touch(input, 'touchmove', 140).defaultPrevented, false);
     await key(input, 'ArrowDown');
     await key(input, 'Enter');
-    assert.deepEqual(selections, ['P02']);
-  });
-
-  it('restores picker focus and scrolling after closing nested project actions', async () => {
-    await render();
-    const trigger = element('[aria-label="Actions for Project 2"]');
-    await key(trigger, 'Enter');
-    const menu = element('[role="menu"]');
-    await key(menu, 'Escape');
-    assert.equal(document.querySelector('[role="menu"]'), null);
-    assert.equal(document.activeElement, trigger);
-    scrollableList();
-    const row = element('[data-value="project-2"]');
-    touch(row, 'touchstart', 200);
-    assert.equal(touch(row, 'touchmove', 140).defaultPrevented, false);
-    assert.deepEqual(selections, []);
-  });
-
-  it('allows a swipe starting on project actions without opening the menu', async () => {
-    await render();
-    scrollableList();
-    const trigger = element('[aria-label="Actions for Project 2"]');
-    await pointer(trigger, 'pointerdown', 'touch');
-    assert.equal(document.querySelector('[role="menu"]'), null);
-    touch(trigger, 'touchstart', 200);
-    assert.equal(touch(trigger, 'touchmove', 140).defaultPrevented, false);
-    await pointer(trigger, 'pointercancel', 'touch');
-    assert.equal(document.querySelector('[role="menu"]'), null);
-    assert.deepEqual(selections, []);
+    assert.deepEqual(selections, ['eng.P02']);
   });
 
   it('keeps the picker scrollable after closing the sort selector', async () => {
@@ -295,18 +264,6 @@ describe('ProjectSwitcher', () => {
     const row = element('[data-value="project-2"]');
     touch(row, 'touchstart', 200);
     assert.equal(touch(row, 'touchmove', 140).defaultPrevented, false);
-    assert.deepEqual(selections, []);
-  });
-
-  it('opens project actions on a completed tap and preserves mouse activation', async () => {
-    await render();
-    const trigger = element('[aria-label="Actions for Project 2"]');
-    await pointer(trigger, 'pointerdown', 'touch');
-    await pointer(trigger, 'pointerup', 'touch');
-    await act(async () => trigger.click());
-    await key(element('[role="menu"]'), 'Escape');
-    await pointer(trigger, 'pointerdown', 'mouse');
-    assert.ok(element('[role="menu"]'));
     assert.deepEqual(selections, []);
   });
 

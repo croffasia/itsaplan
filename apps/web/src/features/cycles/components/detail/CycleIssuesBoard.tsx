@@ -24,7 +24,7 @@ export default function CycleIssuesBoard({ cycle }: { cycle: Cycle }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
   const cycleId = cycle.id;
   const board = useLocalBoardSettings(CYCLE_BOARD_STORE_KEY, cycleId);
-  const initiativeOptions = useInitiativeOptionsQuery(project?.project.key ?? null).data ?? [];
+  const initiativeOptions = useInitiativeOptionsQuery(project?.project.ref ?? null).data ?? [];
 
   const viewProject = useMemo(() => {
     if (!project) return null;

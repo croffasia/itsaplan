@@ -25,7 +25,7 @@ export default function InboxDetail({
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <InboxDetailHeader
-        projectKey={project.project.key}
+        projectKey={project.project.ref}
         issueSeq={issueSeq}
         isMobile={isMobile}
         onBack={onBack}

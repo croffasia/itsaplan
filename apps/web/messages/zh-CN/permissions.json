@@ -22,6 +22,7 @@
     "workflow_config": "工作流配置",
     "actions": "操作",
     "webhooks": "Webhook",
+    "repositories": "代码仓库",
     "note_boards": "便签板",
     "import_export": "导入/导出",
     "danger_zone": "危险操作"

@@ -1,6 +1,7 @@
 import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
+import { teamRef } from '#modules/teams/ref';
 import { getMembership, type MemberRole } from '#modules/members/service';
 import {
   assertTeamSeatFree,
@@ -54,10 +55,12 @@ export interface InviteRow {
 }
 
 // Row shown to the invitee opening the link, with enough context to decide. Never
-// exposes the internal team or project id.
+// exposes the internal project id; the team is named by its ref, which the project's
+// own URLs carry.
 export interface InviteView {
   token: string;
   teamName: string;
+  teamRef: string;
   projectKey: string | null;
   projectName: string | null;
   email: string;
@@ -76,6 +79,7 @@ export interface InviteView {
 // Where an invitee landed once the invite was accepted.
 export interface AcceptedInvite {
   teamName: string;
+  teamRef: string;
   projectKey: string | null;
   projectName: string | null;
   role: MemberRole | null;
@@ -285,7 +289,9 @@ export async function getInviteByToken(token: string): Promise<InviteView | null
   const rows = await db
     .select({
       token: teamInvite.token,
+      teamId: team.id,
       teamName: team.name,
+      teamSlug: team.slug,
       projectKey: project.key,
       projectName: project.name,
       email: teamInvite.email,
@@ -307,6 +313,7 @@ export async function getInviteByToken(token: string): Promise<InviteView | null
   return {
     token: r.token,
     teamName: r.teamName,
+    teamRef: teamRef({ id: r.teamId, slug: r.teamSlug }),
     projectKey: r.projectKey,
     projectName: r.projectName,
     email: r.email,
@@ -415,7 +422,7 @@ export async function acceptInvite(
       .where(eq(teamInvite.id, invite.id));
 
     const [joinedTeam] = await tx
-      .select({ name: team.name })
+      .select({ id: team.id, name: team.name, slug: team.slug })
       .from(team)
       .where(eq(team.id, invite.teamId));
     const [joinedProject] = invite.projectId
@@ -426,6 +433,7 @@ export async function acceptInvite(
       : [];
     return {
       teamName: joinedTeam.name,
+      teamRef: teamRef(joinedTeam),
       projectKey: joinedProject?.key ?? null,
       projectName: joinedProject?.name ?? null,
       role: invite.projectRole as MemberRole | null,

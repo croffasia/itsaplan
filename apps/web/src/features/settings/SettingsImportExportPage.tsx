@@ -10,7 +10,7 @@ import SettingsImportExport from './components/import-export/SettingsImportExpor
 
 const section = settingsSection('import-export');
 
-// The Plane import page (/project/:projectKey/settings/import-export).
+// The Plane import page (/:team/:projectKey/settings/import-export).
 export default function SettingsImportExportPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();

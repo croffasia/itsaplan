@@ -46,27 +46,31 @@ services:
       timeout: 3s
       retries: 20
 
-  # Throwaway MinIO for the attachments feature test (object bytes). Ephemeral:
+  # Throwaway RustFS for the attachments feature test (object bytes). Ephemeral:
   # /data is tmpfs, wiped when the run ends.
-  minio-test:
-    image: quay.io/minio/minio:latest
-    command: server /data
+  rustfs-test:
+    image: rustfs/rustfs:1.0.0
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      RUSTFS_ACCESS_KEY: minioadmin
+      RUSTFS_SECRET_KEY: minioadmin
     tmpfs:
-      - /data
+      - /data:uid=10001,gid=10001
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://127.0.0.1:9000/health']
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
-  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
-  minio-test-init:
-    image: quay.io/minio/mc:latest
+  # One-shot: creates the attachments bucket, then exits.
+  rustfs-test-init:
+    image: rustfs/rustfs:1.0.0
     depends_on:
-      - minio-test
+      rustfs-test:
+        condition: service_healthy
     entrypoint: >
       sh -c "
-      until mc alias set local http://minio-test:9000 minioadmin minioadmin; do echo 'waiting for minio...'; sleep 2; done;
-      mc mb --ignore-existing local/planner-attachments;
-      echo 'bucket ready';
+      curl -fsS -X PUT --aws-sigv4 aws:amz:us-east-1:s3 --user minioadmin:minioadmin http://rustfs-test:9000/planner-attachments &&
+      echo 'bucket ready'
       "
 
   api-test:
@@ -83,7 +87,7 @@ services:
     depends_on:
       postgres-test:
         condition: service_healthy
-      minio-test-init:
+      rustfs-test-init:
         condition: service_completed_successfully
     environment:
       NODE_ENV: test
@@ -94,8 +98,8 @@ services:
       APP_ENCRYPTION_KEY: dGVzdC1lbmNyeXB0aW9uLWtleS0zMmJ5dGVzLWxlbiE=
       API_URL: http://localhost:3000
       APP_URL: http://localhost:3001
-      # Object store for the attachments test (throwaway MinIO above).
-      S3_ENDPOINT: http://minio-test:9000
+      # Object store for the attachments test (throwaway RustFS above).
+      S3_ENDPOINT: http://rustfs-test:9000
       S3_REGION: us-east-1
       S3_BUCKET: planner-attachments
       S3_ACCESS_KEY_ID: minioadmin

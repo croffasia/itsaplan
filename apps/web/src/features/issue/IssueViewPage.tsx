@@ -1,35 +1,30 @@
 'use client';
 
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useShell } from '@/context/shellContext';
 import { issuePath, projectPath } from '@/utils/paths';
 import { useExitOnEscape } from '@/hooks/useExitOnEscape';
+import { useShellRoute } from '@/hooks/useShellRoute';
 import { useHistoryScrollRestoration } from '@/hooks/useHistoryScrollRestoration';
 import { useIssueBySeqQuery } from '@/services/issues.service';
 import IssueDetailContent from './components/detail/IssueDetailContent';
 import IssueDetailSkeleton from './components/detail/IssueDetailSkeleton';
 import { useTranslations } from 'next-intl';
 
-// The full-page issue view (/project/:projectKey/issue/:sequenceNumber), rendered
-// inside the Shell layout. The URL carries the project-scoped number, resolved to
-// the issue here; the project comes from the Shell. Escape returns to the work
-// items view.
+// The full-page issue view (/:team/issue/:identifier), rendered inside the Shell
+// layout. The URL carries the issue identifier, resolved to the issue here; the
+// project comes from the Shell. Escape returns to the work items view.
 export default function IssueViewPage() {
   const t = useTranslations('issue');
   const router = useRouter();
-  const params = useParams();
   const { project } = useShell();
-  const seq = Number(typeof params.issueId === 'string' ? params.issueId : NaN);
+  const seq = useShellRoute().routeIssueSeq;
 
-  const exit = () => project && router.push(projectPath(project.project.key));
+  const exit = () => project && router.push(projectPath(project.project.ref));
   useExitOnEscape(exit);
 
-  const issueQuery = useIssueBySeqQuery(
-    project?.project.key ?? null,
-    Number.isNaN(seq) ? null : seq,
-  );
-  const currentIssuePath =
-    project && !Number.isNaN(seq) ? issuePath(project.project.key, seq) : null;
+  const issueQuery = useIssueBySeqQuery(project?.project.ref ?? null, seq);
+  const currentIssuePath = project && seq != null ? issuePath(project.project.ref, seq) : null;
   const scrollRestorationProps = useHistoryScrollRestoration({ pathname: currentIssuePath });
 
   if (!project) return null;

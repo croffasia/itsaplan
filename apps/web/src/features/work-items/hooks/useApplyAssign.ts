@@ -9,8 +9,8 @@ import { useSetFieldValue, useUpdateIssue } from '@/services/issues.service';
 // left alone — rewriting the same value would log another activity entry and start
 // another run of an agent that reacts to the field.
 export function useApplyAssign(project: ProjectDetail) {
-  const updateIssue = useUpdateIssue(project.project.key);
-  const setFieldValue = useSetFieldValue(project.project.key);
+  const updateIssue = useUpdateIssue(project.project.ref);
+  const setFieldValue = useSetFieldValue(project.project.ref);
 
   return function applyAssign(issueId: number, assign: GroupAssign | null, position: number) {
     updateIssue.mutate({ id: issueId, patch: { ...assign?.patch, position } });

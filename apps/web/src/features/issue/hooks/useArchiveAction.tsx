@@ -17,7 +17,7 @@ export function useArchiveAction(
   project: ProjectDetail | null,
   onArchived?: () => void,
 ): { archive: (issue: Issue) => void; dialog: ReactNode } {
-  const archiveIssue = useArchiveIssue(project?.project.key ?? null);
+  const archiveIssue = useArchiveIssue(project?.project.ref ?? null);
   const [confirming, setConfirming] = useState<Issue | null>(null);
 
   const archive = (issue: Issue) => {

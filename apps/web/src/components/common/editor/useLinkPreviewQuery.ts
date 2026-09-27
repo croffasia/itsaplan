@@ -1,5 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
+import { getProject } from '@/lib/api/endpoints/projects';
+import { qk } from '@/services/queryKeys';
 import { resolveLinkPreview } from './resolveLinkPreview';
 import { linkPreviewDestination } from './linkPreviewDestination';
 
@@ -24,6 +26,7 @@ async function preloadImage(src: string, signal: AbortSignal) {
 }
 
 export function useLinkPreviewQuery(url: string | undefined) {
+  const queryClient = useQueryClient();
   const { data: session, isPending: sessionPending } = useSession();
   const origin = typeof window === 'undefined' ? undefined : window.location.origin;
   const destination = url ? linkPreviewDestination(url, origin) : null;
@@ -36,7 +39,11 @@ export function useLinkPreviewQuery(url: string | undefined) {
     queryKey,
     enabled,
     queryFn: async ({ signal }) => {
-      const preview = await resolveLinkPreview(href!, window.location.origin, signal);
+      // Through the project query, links to several issues of one project that load at
+      // the same time share one request, and each load still checks access again.
+      const preview = await resolveLinkPreview(href!, window.location.origin, signal, (key) =>
+        queryClient.fetchQuery({ queryKey: qk.project(key), queryFn: () => getProject(key) }),
+      );
       if (preview.image && !signal.aborted) {
         await preloadImage(preview.image, signal);
       }

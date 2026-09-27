@@ -8,6 +8,7 @@ import {
   Bot,
   ChevronRight,
   FolderKanban,
+  GitBranch,
   Info,
   Plug,
   Radio,
@@ -53,7 +54,7 @@ export default function TeamSectionNav({ team }: { team: Team }) {
       label,
       icon,
       badge: count === undefined ? undefined : String(count),
-      href: teamSectionPath(team.id, id),
+      href: teamSectionPath(team.ref, id),
     };
   }
 
@@ -82,6 +83,7 @@ export default function TeamSectionNav({ team }: { team: Team }) {
   ];
   // The notification providers are the owner's: nobody else reads or writes them.
   const bottom = [
+    ...(team.role === 'owner' || team.role === 'manager' ? [section('git', 'Git', GitBranch)] : []),
     section('mcp', t('mcp.title'), Radio),
     ...(team.role === 'owner' ? [section('notifications', t('notifications.title'), Bell)] : []),
   ];

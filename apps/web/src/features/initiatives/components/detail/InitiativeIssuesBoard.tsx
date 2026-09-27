@@ -21,7 +21,7 @@ const INITIATIVE_BOARD_STORE_KEY = 'planner_initiative_board_settings';
 export default function InitiativeIssuesBoard({ initiativeId }: { initiativeId: number }) {
   const { project, customFields, onOpenIssue, onAddIssue } = useShell();
   const board = useLocalBoardSettings(INITIATIVE_BOARD_STORE_KEY, initiativeId);
-  const initiativeOptions = useInitiativeOptionsQuery(project?.project.key ?? null).data ?? [];
+  const initiativeOptions = useInitiativeOptionsQuery(project?.project.ref ?? null).data ?? [];
 
   const viewProject = useMemo(() => {
     if (!project) return null;

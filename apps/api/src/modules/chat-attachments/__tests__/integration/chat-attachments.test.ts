@@ -6,7 +6,7 @@ import { resetDb } from '#tests/helpers/db';
 
 // Chat attachments: the upload and read routes behind the upload_chat_attachment
 // and read_chat_attachment MCP tools, and the public download route the chat
-// message links to. Needs MinIO like the attachments suite.
+// message links to. Needs RustFS like the attachments suite.
 
 async function setup() {
   const owner = await signUpTestUser();

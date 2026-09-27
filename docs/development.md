@@ -12,13 +12,13 @@ bun run setup   # "Develop", or "Generate env" for just the .env files
 bun run dev     # api + web together, via Turborepo
 ```
 
-**Develop** writes the env files, generates the secrets, starts Postgres and MinIO, creates
+**Develop** writes the env files, generates the secrets, starts Postgres and RustFS, creates
 the test database, and migrates both. Run it again any time: it restarts the stack and
 re-applies the migrations, keeping the data. It offers another port when one is taken, and
 offers to stop the **Try it** stack, which publishes the same ones.
 
 `bun run dev` runs the workspace in watch mode: web on <http://localhost:3001>, api on
-<http://localhost:3000>, MinIO console on <http://localhost:9001>. Only Postgres and MinIO
+<http://localhost:3000>, RustFS console on <http://localhost:9001/rustfs/console/>. Only Postgres and RustFS
 run in Docker; the apps run on the host.
 
 ## Environment

@@ -14,18 +14,21 @@ import IssueDetail from '@/features/issue/components/detail/IssueDetail';
 export default function ShellOverlays({
   project,
   projectKey,
+  newProjectTeamId,
   overlays,
 }: {
   project: ProjectDetail | null;
   projectKey: string | null;
+  newProjectTeamId: number | undefined;
   overlays: ReturnType<typeof useOverlays>;
 }) {
   const router = useRouter();
 
   return (
     <>
-      {overlays.showNewProject && (
+      {newProjectTeamId != null && overlays.showNewProject && (
         <NewProjectModal
+          teamId={newProjectTeamId}
           onClose={() => overlays.setShowNewProject(false)}
           onCreated={(key) => {
             overlays.setShowNewProject(false);

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { exportProject } from '@/lib/api/endpoints/importExport';
+import { splitProjectRef } from '@/utils/paths';
 
 // Downloads a self-contained JSON snapshot of the project's data. A plain read, not a
 // mutation, so it builds and triggers the file save itself rather than going through
@@ -23,7 +24,7 @@ export default function SettingsImportExportDownloadButton({ projectKey }: { pro
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `${projectKey}-export.json`;
+      anchor.download = `${splitProjectRef(projectKey).key}-export.json`;
       anchor.hidden = true;
       try {
         document.body.append(anchor);

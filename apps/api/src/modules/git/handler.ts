@@ -20,6 +20,7 @@ import {
 import type { GitEvent, GitProviderKey, PullRequestEvent } from './providers';
 import { columnStateTypes, firstCompletedColumnId, type GitSettings } from './service';
 import { postPullRequestLinkback } from './connections-service';
+import { issueWebPath } from '#modules/teams/ref';
 
 // Stores normalized repository events and applies pull request automation:
 // - a pull request merged into the repository's default branch moves the issues
@@ -56,7 +57,7 @@ async function resolveIssues(
 }
 
 export async function handleGitEvent(
-  project: { id: number; key: string },
+  project: { id: number; key: string; teamRef: string },
   settings: GitSettings,
   providerKey: GitProviderKey,
   providerLabel: string,
@@ -133,7 +134,7 @@ export async function handleGitEvent(
       .map((item) => {
         const identifier = `${projectKey}-${item.sequenceNumber}`;
         return appUrl
-          ? `- [${identifier}](${appUrl}/project/${project.key}/issue/${item.sequenceNumber})`
+          ? `- [${identifier}](${appUrl}${issueWebPath(project.teamRef, project.key, item.sequenceNumber)})`
           : `- ${identifier}`;
       });
     try {

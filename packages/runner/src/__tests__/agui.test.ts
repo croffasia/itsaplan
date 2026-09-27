@@ -493,6 +493,30 @@ describe('answer stream', () => {
     expect(text(sink.events)).toBe('All done.');
   });
 
+  it('keeps a long pi tool result inside the 32000 character chat limit', async () => {
+    const sink = collect();
+    const stream = new AnswerStream('pi-json', 'chat:1:u:x', '7', sink.send);
+    const body = `HEAD${'x'.repeat(40_000)}TAIL`;
+
+    stream.write(
+      `${JSON.stringify({
+        type: 'tool_execution_end',
+        toolCallId: 'call_1',
+        toolName: 'read',
+        result: { content: [{ type: 'text', text: body }] },
+        isError: false,
+      })}\n`,
+    );
+    await stream.finish('');
+
+    const result = sink.events.find((event) => event.type === 'TOOL_CALL_RESULT') as {
+      content: string;
+    };
+    expect(result.content.length).toBeLessThanOrEqual(32_000);
+    expect(result.content.startsWith('…')).toBe(true);
+    expect(result.content.endsWith('TAIL')).toBe(true);
+  });
+
   it('reports what a denied Copilot tool call said', async () => {
     const sink = collect();
     const stream = new AnswerStream('copilot-json', 'chat:1:u:x', '7', sink.send);

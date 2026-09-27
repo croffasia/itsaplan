@@ -96,6 +96,7 @@ const GROUP_DEFS: PermissionGroup[] = [
       'workflow_config',
       'actions',
       'webhooks',
+      'repositories',
     ],
   },
   { key: 'members', resources: ['members_manage', 'members_invite'] },

@@ -395,7 +395,6 @@
     "connectionHint": "Hubungkan repositori dari GitHub, GitLab, Gitea, Forgejo, atau Bitbucket.",
     "webhookEndpoint": "Endpoint webhook",
     "webhookEndpointHint": "Satu endpoint menerima pembaruan branch, pull request, dan CI dari setiap repositori yang terhubung.",
-    "connectionRestricted": "Anda memerlukan izin untuk mengedit integrasi agar dapat melihat detail koneksi.",
     "payloadUrl": "URL payload",
     "webhookSecret": "Rahasia webhook",
     "howToConnect": "Cara menghubungkan",
@@ -414,6 +413,7 @@
     "nativeConnectionsHint": "Otorisasi penyedia Git, pilih repositori, dan biarkan Plan mengonfigurasi webhook-nya.",
     "nativeConnectProvider": "Hubungkan {provider}",
     "nativeNoConnections": "Belum ada akun penyedia yang terhubung. Pengaturan webhook manual tetap tersedia di bawah.",
+    "nativeAskTeamManager": "Minta pemilik atau manajer tim untuk menghubungkan akun penyedia.",
     "nativeConnectTitle": "Hubungkan {provider}",
     "nativeTokenHint": {
       "github": "Gunakan fine-grained token dengan akses Metadata read, Webhooks write, dan Pull requests write untuk repositori yang ingin Anda hubungkan.",

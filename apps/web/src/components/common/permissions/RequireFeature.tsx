@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useShellRoute } from '@/hooks/useShellRoute';
 import type { ProjectFeatures } from '@/lib/api/endpoints/settings';
 import { settingsPath } from '@/utils/paths';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -27,7 +27,7 @@ export default function RequireFeature({
   const featureLabel = useFeatureLabel();
   const features = useProjectFeatures();
   const { isOwner } = usePermissions();
-  const params = useParams<{ projectKey: string }>();
+  const { projectKey } = useShellRoute();
 
   if (features[feature]) return <>{children}</>;
 
@@ -36,9 +36,9 @@ export default function RequireFeature({
       title={t('featureOffTitle', { feature: featureLabel(feature) })}
       description={t('featureOffHint')}
     >
-      {isOwner && params.projectKey && (
+      {isOwner && projectKey && (
         <Button size="sm" asChild>
-          <Link href={settingsPath(params.projectKey, 'general')}>{t('openGeneralSettings')}</Link>
+          <Link href={settingsPath(projectKey, 'general')}>{t('openGeneralSettings')}</Link>
         </Button>
       )}
     </EmptyState>

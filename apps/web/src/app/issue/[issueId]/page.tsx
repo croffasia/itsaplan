@@ -1,28 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
+import LegacyRedirect from '@/components/common/LegacyRedirect';
 import { useIssueQuery } from '@/services/issues.service';
 import { issuePath } from '@/utils/paths';
 
-// A bare deep link /issue/:issueId has no project key in the URL. Resolve the
-// issue's project (its identifier is "<projectKey>-<number>") and redirect to the
-// project-scoped issue route so it opens inside the Shell layout.
+// A bare deep link /issue/:issueId carries neither the team nor the key: the issue
+// names its project by id, which the viewer's project list maps to its path.
 export default function IssueRedirect() {
-  const router = useRouter();
-  const params = useParams();
-  const id = Number(typeof params.issueId === 'string' ? params.issueId : NaN);
+  const { issueId } = useParams<{ issueId: string }>();
+  const id = Number(issueId);
   const { data, isLoading } = useIssueQuery(Number.isNaN(id) ? null : id);
 
-  useEffect(() => {
-    if (isLoading) return;
-    const projectKey = data ? data.identifier.replace(/-\d+$/, '') : null;
-    router.replace(projectKey && data ? issuePath(projectKey, data.sequenceNumber) : '/');
-  }, [data, isLoading, router]);
-
+  if (isLoading) return null;
   return (
-    <div className="flex h-svh items-center justify-center bg-background text-sm text-muted-foreground">
-      Loading…
-    </div>
+    <LegacyRedirect
+      resolve={(projects) => {
+        const project = data && projects.find((p) => p.id === data.projectId);
+        return project && issuePath(project.ref, data.sequenceNumber);
+      }}
+    />
   );
 }

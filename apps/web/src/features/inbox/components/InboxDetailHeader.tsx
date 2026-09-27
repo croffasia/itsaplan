@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { ChevronLeft, Maximize2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
-import { issuePath } from '@/utils/paths';
+import { issuePath, splitProjectRef } from '@/utils/paths';
 
 export default function InboxDetailHeader({
   projectKey,
@@ -30,7 +30,7 @@ export default function InboxDetailHeader({
         </Button>
       )}
       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
-        {projectKey}-{issueSeq}
+        {splitProjectRef(projectKey).key}-{issueSeq}
       </span>
       <Button
         asChild

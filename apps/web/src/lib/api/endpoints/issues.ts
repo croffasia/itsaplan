@@ -29,7 +29,7 @@ export interface Issue {
   id: number;
   projectId: number;
   // Project-scoped sequence number (the "42" in "MKT-42"). Addresses the issue by
-  // its human number in URLs (/project/MKT/issue/42).
+  // its human number in URLs (/acme/issue/MKT-42).
   sequenceNumber: number;
   identifier: string;
   typeId: number | null;

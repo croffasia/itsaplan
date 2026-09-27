@@ -16,6 +16,8 @@
   },
   "editDialog": {
     "title": "Editar projeto",
+    "key": "Chave",
+    "keyHint": "Os links de issues precisam de uma chave com letras maiúsculas e dígitos que comece com uma letra. Depois de salva, a chave não pode ser alterada.",
     "name": "Nome",
     "description": "Descrição",
     "submit": "Salvar"

@@ -17,6 +17,10 @@ get_issue_by_number directly with those two values — do not call list_projects
 get_project first, the key needs no resolving. Most issue tools take the issue's
 internal numeric id, which comes back in that result.
 
+A project key is unique within its team, not across teams. If a bare key is
+refused because several of your teams use it, pass the project's ref instead,
+"<team>.KEY" — the ref field that list_projects returns.
+
 When you have no identifier, start with list_projects to find the project, then
 get_project to resolve its ids. Every id another tool takes — columnId, typeId,
 labelIds, assigneeUserId, custom field ids, member user ids — comes from
@@ -73,6 +77,15 @@ replies of the comments on a page come with them, so a thread arrives whole. Ans
 a question someone asked in a comment with add_comment carrying replyToId set to
 that comment's id, so the answer reads in the thread rather than at the end of the
 issue.
+
+## Attachments
+
+An image or file in an issue or initiative, and each entry of list_attachments and
+list_initiative_attachments, carries a url that downloads the file without a session.
+A url in a result does not show you the picture. To look at the images of an issue,
+call view_issue_images (view_initiative_images for an initiative); to look at one
+image, call view_attachment with its url. A file can be replaced behind the same url,
+so view it again rather than reusing what you saw earlier.
 
 ## Mentions
 

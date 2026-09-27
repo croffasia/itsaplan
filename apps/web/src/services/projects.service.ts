@@ -13,7 +13,6 @@ import {
   listProjects,
   getProject,
   getBoardIssues,
-  createProject,
   updateProject,
   updateProjectPreferences,
 } from '@/lib/api/endpoints/projects';
@@ -31,7 +30,7 @@ export function useUpdateProjectPreferences() {
     onSuccess: (preferences, { projectKey }) => {
       qc.setQueryData<Project[]>(qk.projects, (projects) =>
         projects?.map((project) =>
-          project.key === projectKey ? { ...project, ...preferences } : project,
+          project.ref === projectKey ? { ...project, ...preferences } : project,
         ),
       );
       void qc.invalidateQueries({ queryKey: qk.projects });
@@ -77,9 +76,8 @@ export function useInvalidateProject(projectKey: string | null) {
   };
 }
 
-// Creates a project, in a given team or — without one — in the team the caller owns.
-// `copyFromId` copies that project's structure instead of starting from a preset; the
-// source belongs to the same team.
+// Creates a project in a team. `copyFromId` copies that project's structure instead of
+// starting from a preset; the source belongs to the same team.
 export function useCreateProject() {
   const qc = useQueryClient();
   return useMutation({
@@ -88,7 +86,7 @@ export function useCreateProject() {
       copyFromId,
       input,
     }: {
-      teamId?: number;
+      teamId: number;
       copyFromId?: number;
       input: {
         key: string;
@@ -97,12 +95,10 @@ export function useCreateProject() {
         include?: Partial<Record<CopyProjectIncludeKey, boolean>>;
         preset?: string;
       };
-    }) => {
-      if (teamId == null) return createProject(input);
-      return copyFromId == null
+    }) =>
+      copyFromId == null
         ? createTeamProject(teamId, input)
-        : copyTeamProject(teamId, copyFromId, input);
-    },
+        : copyTeamProject(teamId, copyFromId, input),
     onSuccess: (project) => {
       // Add the new project to the cached list immediately so navigating to it
       // (onCreated → setProjectKey) sticks. Otherwise the list has not refetched
@@ -134,7 +130,7 @@ export function useUpdateProject() {
       // spreading the whole object would wipe the caller's role in the list item.
       qc.setQueryData<Project[]>(qk.projects, (prev) =>
         prev?.map((p) =>
-          p.key === projectKey ? { ...p, name: updated.name, description: updated.description } : p,
+          p.ref === projectKey ? { ...p, name: updated.name, description: updated.description } : p,
         ),
       );
       void qc.invalidateQueries({ queryKey: qk.projects });
@@ -156,16 +152,27 @@ export function useUpdateTeamProject() {
       teamId: number;
       projectId: number;
       projectKey: string;
-      patch: { name?: string; description?: string };
+      patch: { key?: string; name?: string; description?: string };
     }) => updateTeamProject(teamId, projectId, patch),
     onSuccess: (updated, { teamId, projectKey }) => {
       qc.setQueryData<Project[]>(qk.projects, (prev) =>
         prev?.map((p) =>
-          p.key === projectKey ? { ...p, name: updated.name, description: updated.description } : p,
+          p.ref === projectKey
+            ? {
+                ...p,
+                key: updated.key,
+                ref: updated.ref,
+                name: updated.name,
+                description: updated.description,
+              }
+            : p,
         ),
       );
       void qc.invalidateQueries({ queryKey: qk.projects });
-      void qc.invalidateQueries({ queryKey: qk.project(projectKey) });
+      // A renamed key leaves the old ref naming no project, so its cache is dropped
+      // rather than refetched.
+      if (updated.ref !== projectKey) qc.removeQueries({ queryKey: qk.project(projectKey) });
+      else void qc.invalidateQueries({ queryKey: qk.project(projectKey) });
       void qc.invalidateQueries({ queryKey: qk.team(teamId) });
     },
   });
@@ -175,7 +182,7 @@ export function useUpdateTeamProject() {
 // before the refetch resolves) and discards its now-dead per-project caches so it
 // cannot be reopened with stale data. Then refetches the list to reconcile.
 function forgetProject(qc: ReturnType<typeof useQueryClient>, projectKey: string) {
-  qc.setQueryData<Project[]>(qk.projects, (prev) => prev?.filter((p) => p.key !== projectKey));
+  qc.setQueryData<Project[]>(qk.projects, (prev) => prev?.filter((p) => p.ref !== projectKey));
   qc.removeQueries({ queryKey: qk.project(projectKey) });
   qc.removeQueries({ queryKey: qk.boardIssues(projectKey) });
   qc.removeQueries({ queryKey: qk.views(projectKey) });

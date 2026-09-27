@@ -88,7 +88,7 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
       detail: {
         summary: 'Create a project',
         description:
-          'Create a project you own. `key` is the unique, immutable prefix for issue ids ' +
+          'Create a project you own. `key` is the immutable prefix for issue ids, unique within the team ' +
           "(e.g. 'MKT' -> 'MKT-1'). Seeds the default columns and the issue types of the " +
           'chosen `preset`.',
         ...mcpTool('create_project'),
@@ -184,8 +184,8 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     },
   )
 
-  // Updates a project's editable metadata (name, description). The key is the
-  // immutable issue-identifier prefix and cannot change. Owner-only.
+  // Updates a project's name, description, and a key that does not match the key
+  // pattern (see updateProject). Owner-only.
   .patch(
     '/projects/:projectKey',
     async ({ project, body }) => {
@@ -196,13 +196,15 @@ export const projectRoutes = new Elysia({ name: 'projects', detail: { tags: ['Pr
     {
       body: updateProjectBody,
       projectOwner: true,
-      response: { 200: ProjectResponse, ...commonErrors },
+      response: { 200: ProjectResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update a project',
         description:
           "Update a project's name and/or description. The description is given to the " +
           `agents of the project in their system prompt; up to ${PROJECT_DESCRIPTION_LIMIT} ` +
-          'characters. The key is immutable.',
+          'characters. The key changes only when it does not match the key pattern: a key ' +
+          'created before the pattern existed, for example one that starts with a digit. ' +
+          'A key that another project of the team has is refused with 409.',
         ...mcpTool('update_project'),
       },
     },

@@ -177,7 +177,7 @@ export default function IssueProperties({
               </ReadOnlyPill>
             ) : (
               <InitiativeSelect
-                projectKey={project.project.key}
+                projectKey={project.project.ref}
                 value={issue.initiative?.id ?? null}
                 onChange={(id) => onPatch({ initiativeId: id })}
               />
@@ -199,7 +199,7 @@ export default function IssueProperties({
             ) : (
               <div className="flex min-w-0 items-center gap-1.5">
                 <CycleSelect
-                  projectKey={project.project.key}
+                  projectKey={project.project.ref}
                   value={issue.cycle}
                   onChange={(cycle) => onPatch({ cycleId: cycle?.id ?? null })}
                 />

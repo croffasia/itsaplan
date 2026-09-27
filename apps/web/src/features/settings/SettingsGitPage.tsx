@@ -10,7 +10,7 @@ import SettingsGit from './components/git/SettingsGit';
 
 const section = settingsSection('git');
 
-// The repository integration page (/project/:projectKey/settings/git).
+// The repository integration page (/:team/:projectKey/settings/git).
 export default function SettingsGitPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
@@ -18,7 +18,7 @@ export default function SettingsGitPage() {
   return (
     <SectionPageView title={sectionText.label} description={sectionText.description}>
       <SettingsResourceProvider resource={section.resource}>
-        <RequirePermission resource={section.resource} action="read">
+        <RequirePermission resource={section.resource} action="edit">
           <SettingsGit project={project} />
         </RequirePermission>
       </SettingsResourceProvider>

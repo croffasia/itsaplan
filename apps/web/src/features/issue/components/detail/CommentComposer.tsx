@@ -61,6 +61,7 @@ export default function CommentComposer({
   const [menu, setMenu] = useState<MentionQuery | null>(null);
   const [active, setActive] = useState(0);
   const [pendingCaret, setPendingCaret] = useState<number | null>(null);
+  const [focused, setFocused] = useState(false);
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   const isReply = replyToId != null;
@@ -181,9 +182,12 @@ export default function CommentComposer({
   if (isEdit) submitLabel = tCommon('save');
   if (posting) submitLabel = isEdit ? tCommon('saving') : t('posting');
 
-  // The reply and edit boxes sit inside a thread card, so they render compact and
+  // The reply and edit boxes open inside a thread, so they render compact and
   // without the bottom gap the standalone composer keeps.
   const compact = isReply || isEdit;
+  // The standalone box stays one line until it is used, so it weighs no more than
+  // the feed under it; it grows its footer once focused or holding a draft.
+  const expanded = compact || focused || body.length > 0;
 
   return (
     <div className={cn(!compact && 'mb-5')}>
@@ -191,7 +195,7 @@ export default function CommentComposer({
         <Avatar
           name={authorName}
           image={authorImage}
-          className={cn('mt-0.5 shrink-0 text-[11px]', compact ? 'size-6' : 'size-7')}
+          className={cn('shrink-0 text-[11px]', compact ? 'mt-0.5 size-6' : 'mt-1.5 size-7')}
           title={t('commentAs', { name: authorName })}
         />
         <div className="relative min-w-0 flex-1">
@@ -206,36 +210,42 @@ export default function CommentComposer({
               onChange={(e) =>
                 onChange(e.target.value, e.target.selectionStart ?? e.target.value.length)
               }
-              onBlur={() => setMenu(null)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => {
+                setMenu(null);
+                setFocused(false);
+              }}
               placeholder={placeholder}
               className={cn(
                 'resize-none rounded-none border-0 bg-transparent px-3 py-2.5 shadow-none focus-visible:ring-0',
-                compact ? 'min-h-[52px]' : 'min-h-[64px]',
+                !expanded ? 'min-h-10' : compact ? 'min-h-[52px]' : 'min-h-[64px]',
               )}
               onKeyDown={onKeyDown}
             />
-            <div className="flex items-center justify-between gap-2 border-t px-2.5 py-2">
-              {isEdit ? (
-                <span />
-              ) : (
-                <span className="text-[11px] text-muted-foreground/70">
-                  <kbd className="rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium">
-                    {cmdKey} ↵
-                  </kbd>
-                  <span className="ml-1.5">{t('toSend')}</span>
-                </span>
-              )}
-              <div className="flex items-center gap-1.5">
-                {onClose && (
-                  <Button size="sm" variant="ghost" onClick={onClose}>
-                    {t('cancel')}
-                  </Button>
+            {expanded && (
+              <div className="flex items-center justify-between gap-2 border-t px-2.5 py-2">
+                {isEdit ? (
+                  <span />
+                ) : (
+                  <span className="text-[11px] text-muted-foreground/70">
+                    <kbd className="rounded bg-muted px-1.5 py-0.5 font-sans text-[10px] font-medium">
+                      {cmdKey} ↵
+                    </kbd>
+                    <span className="ml-1.5">{t('toSend')}</span>
+                  </span>
                 )}
-                <Button size="sm" disabled={!body.trim() || posting} onClick={() => void post()}>
-                  {submitLabel}
-                </Button>
+                <div className="flex items-center gap-1.5">
+                  {onClose && (
+                    <Button size="sm" variant="ghost" onClick={onClose}>
+                      {t('cancel')}
+                    </Button>
+                  )}
+                  <Button size="sm" disabled={!body.trim() || posting} onClick={() => void post()}>
+                    {submitLabel}
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {menu && matches.length > 0 && (

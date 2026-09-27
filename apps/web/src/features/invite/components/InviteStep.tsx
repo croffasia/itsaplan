@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import type { InviteView } from '@/lib/api/endpoints/invites';
 import { signOut, useSession } from '@/lib/auth-client';
+import { projectRefOf } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import InviteActions from './InviteActions';
 import InviteAuthForm from './InviteAuthForm';
@@ -44,7 +45,12 @@ export default function InviteStep({ token, invite }: { token: string; invite: I
 
   const sessionEmail = session.user.email;
   if (sessionEmail.toLowerCase() === invite.email.toLowerCase()) {
-    return <InviteActions token={token} projectKey={invite.projectKey} />;
+    return (
+      <InviteActions
+        token={token}
+        projectKey={invite.projectKey && projectRefOf(invite.teamRef, invite.projectKey)}
+      />
+    );
   }
 
   return (

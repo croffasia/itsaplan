@@ -34,7 +34,7 @@ export default function SettingsActions({
   onNewHandled: () => void;
 }) {
   const t = useTranslations('settings.actions');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const actionsQuery = useActionsQuery(projectKey);
   const actions = actionsQuery.data ?? [];
   const createAction = useCreateAction(projectKey);

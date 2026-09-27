@@ -767,9 +767,9 @@ describe('Repository webhook', () => {
     expect((await issueState(asOwner, issue.id)).columnId).toBe(started.id);
   });
 
-  it('hides the secret from a member who may read but not edit integrations', async () => {
+  it('denies the repository settings to a member without repositories edit', async () => {
     const { asOwner } = await setupProject();
-    // A custom role with integrations read only, assigned to an invited member.
+    // A custom role with no permissions, assigned to an invited member.
     const catalog = await listProjectRoles(asOwner, 'MKT');
     const emptyMatrix = Object.fromEntries(
       Object.keys(catalog.data![0].permissions).map((r) => [
@@ -777,13 +777,7 @@ describe('Repository webhook', () => {
         { create: false, edit: false, read: false, delete: false },
       ]),
     );
-    const role = await createRole(asOwner, 'MKT', {
-      name: 'Integrations viewer',
-      permissions: {
-        ...emptyMatrix,
-        integrations: { create: false, edit: false, read: true, delete: false },
-      },
-    });
+    const role = await createRole(asOwner, 'MKT', { name: 'No access', permissions: emptyMatrix });
     const viewer = await signUpTestUser({ name: 'Viewer' });
     const invite = await asOwner
       .projects({ projectKey: 'MKT' })
@@ -796,14 +790,12 @@ describe('Repository webhook', () => {
       .patch({ role: 'member', roleId: role.data!.id });
 
     const forViewer = await asViewer.projects({ projectKey: 'MKT' }).settings.git.get();
-    expect(forViewer.status).toBe(200);
-    expect(forViewer.data!.secret).toBeNull();
+    expect(forViewer.status).toBe(403);
 
     const connections = await asViewer
       .projects({ projectKey: 'MKT' })
       .settings.git.connections.get();
-    expect(connections.status).toBe(200);
-    expect(connections.data).toEqual([]);
+    expect(connections.status).toBe(403);
 
     const repositoryDiscovery = await asViewer
       .projects({ projectKey: 'MKT' })

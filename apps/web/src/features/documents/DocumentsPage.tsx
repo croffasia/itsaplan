@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useShellRoute } from '@/hooks/useShellRoute';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
@@ -31,11 +32,11 @@ const listDefaults: { search: string; tab: DocumentListTab } = { search: '', tab
 
 export default function DocumentsPage() {
   const { project } = useShell();
-  const params = useParams<{ projectKey: string; documentId?: string }>();
+  const params = useParams<{ documentId?: string }>();
   const router = useRouter();
   const t = useTranslations('documents');
   const { can, isOwner } = usePermissions();
-  const projectKey = params.projectKey;
+  const projectKey = useShellRoute().projectKey ?? '';
   const routeId = params.documentId ? Number(params.documentId) : null;
   const documentId = routeId && Number.isFinite(routeId) ? routeId : null;
   const [navigation, setNavigation] = useDocumentNavigation(projectKey, 'list', listDefaults);

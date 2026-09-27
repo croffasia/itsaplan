@@ -108,7 +108,7 @@ export default function InitiativesList({
             <InitiativeRow
               key={it.id}
               initiative={it}
-              projectKey={project.project.key}
+              projectKey={project.project.ref}
               owner={it.ownerUserId ? (ownerById.get(it.ownerUserId) ?? null) : null}
             />
           ))}

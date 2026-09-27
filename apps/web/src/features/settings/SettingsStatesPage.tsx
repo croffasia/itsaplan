@@ -11,7 +11,7 @@ import StatesToolbar from './components/states/StatesToolbar';
 
 const section = settingsSection('states');
 
-// The States settings page (/project/:projectKey/settings/states).
+// The States settings page (/:team/:projectKey/settings/states).
 export default function SettingsStatesPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
@@ -20,7 +20,7 @@ export default function SettingsStatesPage() {
     <SectionPageView
       title={sectionText.label}
       description={sectionText.description}
-      actions={<StatesToolbar projectKey={project.project.key} columns={project.columns} />}
+      actions={<StatesToolbar projectKey={project.project.ref} columns={project.columns} />}
     >
       <SettingsResourceProvider resource={section.resource}>
         <RequirePermission resource={section.resource} action="read">

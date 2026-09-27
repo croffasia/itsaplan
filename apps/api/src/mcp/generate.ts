@@ -40,6 +40,8 @@ export interface McpRouteTool {
   inputSchema: McpInputSchema;
   outputSchema: McpOutputSchema;
   annotations: McpToolAnnotations;
+  // Set by mcpImageTool.
+  images: boolean;
   // The cell of the role matrix the route's guard asserts, published by the guard as
   // `x-permission` on the route's detail. Absent on a route that asks only for
   // project membership.
@@ -65,6 +67,12 @@ export function mcpTool(
   annotations?: McpToolAnnotations,
 ): { 'x-mcp': { tool: string; annotations?: McpToolAnnotations } } {
   return { 'x-mcp': { tool, annotations } };
+}
+
+// Marks a route answering with ViewAttachmentsResponse as an MCP tool whose images
+// reach the model as image content, not as base64 text.
+export function mcpImageTool(tool: string): { 'x-mcp': { tool: string; images: true } } {
+  return { 'x-mcp': { tool, images: true } };
 }
 
 // What the HTTP method alone says about a route. A GET only reads; a DELETE
@@ -162,7 +170,7 @@ function generateRouteTools(app: McpApp): McpRouteTool[] {
       | {
           summary?: string;
           description?: string;
-          'x-mcp'?: { tool?: string; annotations?: McpToolAnnotations };
+          'x-mcp'?: { tool?: string; annotations?: McpToolAnnotations; images?: boolean };
           'x-permission'?: Permission;
         }
       | undefined;
@@ -182,6 +190,7 @@ function generateRouteTools(app: McpApp): McpRouteTool[] {
       inputSchema: mergeInputSchema(hooks, pathParams),
       outputSchema: outputSchema(hooks.response),
       permission: detail?.['x-permission'],
+      images: detail?.['x-mcp']?.images === true,
       // Every tool acts on this tracker's own data and reaches nothing outside it,
       // so openWorldHint is false throughout; the route may still override it.
       annotations: {

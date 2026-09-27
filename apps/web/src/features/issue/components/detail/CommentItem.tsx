@@ -10,10 +10,10 @@ import CommentComposer, { type ComposerContext } from './CommentComposer';
 import { useDeleteComment } from '../../services/comments.service';
 import { useTranslations } from 'next-intl';
 
-// One comment inside a thread card: a line of author, age and the reply button over
-// the rendered markdown body. A feed entry stores the author's name, not their
-// picture, so the uploaded avatar comes in as a prop (null falls back to the initials
-// circle). The card and the indent of a reply belong to CommentThread.
+// One comment inside a thread: a line of author, age and the reply button over the
+// rendered markdown body. A feed entry stores the author's name, not their picture,
+// so the uploaded avatar comes in as a prop (null falls back to the initials circle).
+// The indent of a reply belongs to CommentThread.
 
 export default function CommentItem({
   item,
@@ -45,9 +45,9 @@ export default function CommentItem({
   return (
     // The id is the scroll target of the last-comment bubble.
     <div id={`feed-item-${item.id}`} className="group/comment">
-      <div className="flex items-center gap-2">
-        <Avatar name={author} image={image} className="size-5 shrink-0 text-[10px]" />
-        <span className="truncate text-sm font-medium">{author}</span>
+      <div className="flex items-center gap-2.5">
+        <Avatar name={author} image={image} className="size-6 shrink-0 text-[10px]" />
+        <span className="truncate text-[13px] font-semibold">{author}</span>
         <span className="shrink-0 text-xs text-muted-foreground">
           · {relativeTime(item.createdAt)}
           {item.editedAt && ` · ${t('edited')}`}
@@ -91,7 +91,7 @@ export default function CommentItem({
         )}
       </div>
       {editing && composer ? (
-        <div className="mt-1 ps-7">
+        <div className="mt-1 ps-8.5">
           <CommentComposer
             {...composer}
             commentId={item.id}
@@ -100,11 +100,15 @@ export default function CommentItem({
           />
         </div>
       ) : (
-        <MarkdownEditor
-          className="mt-1 ps-7 text-sm text-foreground/85"
-          defaultValue={item.body ?? ''}
-          editable={false}
-        />
+        <div className="mt-1 ps-8.5">
+          <div className="w-fit max-w-full rounded-xl rounded-ss-sm bg-muted/60 px-3 py-2">
+            <MarkdownEditor
+              className="text-sm text-foreground/90 [&_a.issue-ref]:mx-1 [&_a.issue-ref]:text-[0.9em]"
+              defaultValue={item.body ?? ''}
+              editable={false}
+            />
+          </div>
+        </div>
       )}
 
       {confirmingDelete && (

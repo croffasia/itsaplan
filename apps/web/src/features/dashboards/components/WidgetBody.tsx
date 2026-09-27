@@ -3,6 +3,7 @@ import type { WidgetInstance } from '@/utils/dashboardWidgets';
 import StatWidget from './widgets/StatWidget';
 import BreakdownWidget from './widgets/BreakdownWidget';
 import ThroughputWidget from './widgets/ThroughputWidget';
+import BurnupWidget from './widgets/BurnupWidget';
 import PulseWidget from './widgets/PulseWidget';
 import RecentIssuesWidget from './widgets/RecentIssuesWidget';
 import ActivityFeedWidget from './widgets/ActivityFeedWidget';
@@ -30,6 +31,8 @@ export default function WidgetBody({
       return <BreakdownWidget projectKey={projectKey} config={config} />;
     case 'throughput':
       return <ThroughputWidget projectKey={projectKey} config={config} />;
+    case 'burnup':
+      return <BurnupWidget projectKey={projectKey} config={config} />;
     case 'pulse':
       return <PulseWidget projectKey={projectKey} config={config} />;
     case 'recent_issues':

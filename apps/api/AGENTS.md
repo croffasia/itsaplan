@@ -248,8 +248,8 @@ bun run test                          # from apps/api, or at root via turbo
 ```
 
 The `test` script loads `--env-file=../../.env.test`. The attachments test also needs
-MinIO + `S3_*` in `.env.test` (`docker compose -f docker-compose.dev.yml up -d` creates
-the bucket); the Docker test gate starts its own throwaway MinIO.
+RustFS + `S3_*` in `.env.test` (`docker compose -f docker-compose.dev.yml up -d` creates
+the bucket); the Docker test gate starts its own throwaway RustFS.
 
 **Layout.** Tests colocated under `__tests__/`, `integration/` (Treaty vs running app +
 test DB, one file per feature) or `unit/` (pure functions, no session/HTTP/DB — import
@@ -287,4 +287,4 @@ directly). Helpers in `src/__tests__/helpers/`: `api` (anonymous client), `authe
   `APP_URL` here.
 - swagger `/docs` (planner) is separate from better-auth's `/api/auth/reference`; both
   stay reachable without a session.
-- Dev: `bun run dev`. Prod: the Dockerfile migrates, then starts the server.
+- Dev: `bun run dev`. Prod: the Dockerfile migrates, then starts the server; the compose files and the Helm chart run the migrations as a separate step and start only the server.

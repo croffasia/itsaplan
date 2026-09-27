@@ -5,7 +5,7 @@ import { resetDb } from '#tests/helpers/db';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
 
 // Initiative attachments: metadata in Postgres, bytes in the object store (real
-// MinIO — see the api Tests setup for S3_*). The raw route is public, like the
+// RustFS — see the api Tests setup for S3_*). The raw route is public, like the
 // issue one, so an attachment can be embedded in the description.
 
 async function setupInitiative() {

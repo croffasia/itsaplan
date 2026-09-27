@@ -31,7 +31,7 @@ const SOURCES = [
 // requires; the export tab needs create too.
 export default function SettingsImportExport({ project }: { project: ProjectDetail }) {
   const t = useTranslations('settings.importExport');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const { can } = usePermissions();
   const canCreate = can('import_export', 'create');
   const canEdit = can('import_export', 'edit');

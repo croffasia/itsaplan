@@ -136,7 +136,7 @@ describe('project discovery', () => {
   it('combines team and search filters without revealing projects to a non-member', async () => {
     const { api } = await setup();
     const first = (await api.projects.post({ key: 'ONE', name: 'Shared name' })).data!;
-    const team = (await api.teams.post({ name: 'Second team' })).data!;
+    const team = (await api.teams.post({ name: 'Second team', slug: 'second-team' })).data!;
     const second = await api.teams({ teamId: team.id }).projects.post({
       key: 'TWO',
       name: 'Shared name',
@@ -166,7 +166,7 @@ describe('project discovery', () => {
     const { user, api } = await setup();
     const on = (await api.projects.post({ key: 'ON', name: 'Visible project' })).data!;
     const off = (await api.projects.post({ key: 'OFF', name: 'Visible disabled project' })).data!;
-    const secondTeam = (await api.teams.post({ name: 'Closed team' })).data!;
+    const secondTeam = (await api.teams.post({ name: 'Closed team', slug: 'closed-team' })).data!;
     await api
       .teams({ teamId: secondTeam.id })
       .projects.post({ key: 'TEAMOFF', name: 'Visible team' });

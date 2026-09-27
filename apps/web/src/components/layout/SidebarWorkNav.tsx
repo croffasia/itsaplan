@@ -1,4 +1,5 @@
 import { usePathname } from 'next/navigation';
+import { useShellRoute } from '@/hooks/useShellRoute';
 import { useTranslations } from 'next-intl';
 import {
   BookOpenText,
@@ -40,6 +41,7 @@ export default function SidebarWorkNav({
 }) {
   const t = useTranslations('nav');
   const pathname = usePathname();
+  const routeSub = useShellRoute().sub;
   const { can } = usePermissions();
   const features = useProjectFeatures();
   const disabled = !projectKey;
@@ -57,7 +59,7 @@ export default function SidebarWorkNav({
     !!projectKey &&
     (pathname === projectPath(projectKey) ||
       pathname.startsWith(`${projectPath(projectKey)}/view`) ||
-      pathname.startsWith(`${projectPath(projectKey)}/issue`));
+      routeSub === 'issue');
 
   // With favorites, Work items becomes a sub-list: the unfiltered board plus one
   // entry per favorite view.

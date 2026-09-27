@@ -157,7 +157,7 @@ describe('ai agents', () => {
 
   it("rejects another team's model credential with 400", async () => {
     const { asOwner } = await setup();
-    const otherTeam = await asOwner.teams.post({ name: 'Engineering' });
+    const otherTeam = await asOwner.teams.post({ name: 'Engineering', slug: 'engineering' });
     await asOwner.teams({ teamId: otherTeam.data!.id }).projects.post({
       key: 'ENG',
       name: 'Engineering',

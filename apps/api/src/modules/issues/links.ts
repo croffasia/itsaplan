@@ -3,7 +3,7 @@ import { and, eq, isNull, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { HttpError } from '#shared/lib';
 import { recordActivityEntries, rowSide, textSide, type ActivityInput } from './activity';
-import { emitWebhookEvents } from '#modules/webhooks/emit';
+import { emitIssueEvents } from './webhook-payload';
 import { getIssues } from './service';
 import { assertPermission, type AuthUser } from '#shared/access';
 import { assertMcpAllowed } from '#shared/guards';
@@ -338,12 +338,13 @@ export async function addIssueLink(
     return { target, linkId: target.linkId, sourceProjectId: source.projectId };
   });
 
-  await emitWebhookEvents(sourceProjectId, 'issue.link_changed', () =>
+  await emitIssueEvents(sourceProjectId, 'issue.link_changed', () =>
     getIssues(sourceProjectId === target.projectId ? [issueId, targetIssueId] : [issueId]),
+    actorUserId,
   );
   if (sourceProjectId !== target.projectId)
-    await emitWebhookEvents(target.projectId, 'issue.link_changed', () =>
-      getIssues([targetIssueId]),
+    await emitIssueEvents(target.projectId, 'issue.link_changed', () =>
+      getIssues([targetIssueId]), actorUserId,
     );
 
   return {
@@ -436,12 +437,13 @@ export async function removeIssueLink(
   });
 
   if (!removed) return false;
-  await emitWebhookEvents(removed.projectId, 'issue.link_changed', () =>
+  await emitIssueEvents(removed.projectId, 'issue.link_changed', () =>
     getIssues(removed.projectId === removed.otherProjectId ? removed.issueIds : [issueId]),
+    actorUserId,
   );
   if (removed.otherProjectId !== removed.projectId)
-    await emitWebhookEvents(removed.otherProjectId, 'issue.link_changed', () =>
-      getIssues([removed.issueIds[1]]),
+    await emitIssueEvents(removed.otherProjectId, 'issue.link_changed', () =>
+      getIssues([removed.issueIds[1]]), actorUserId,
     );
   return true;
 }

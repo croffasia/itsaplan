@@ -46,9 +46,9 @@
     "noResults": "No hay proyectos que coincidan",
     "sortCreated": "Creados recientemente",
     "hideHidden": "Ocultar proyectos ocultos",
-    "resize": "Arrastra para cambiar el ancho del selector de proyectos",
-    "resetWidth": "Restablecer el ancho del selector de proyectos",
+    "resize": "Arrastra para cambiar el ancho del selector de proyectos; doble clic para restablecerlo",
     "activityHint": "Último cambio o comentario en un elemento de trabajo",
+    "activeAgo": "Activo {time}",
     "search": "Buscar proyectos por nombre, clave o equipo…",
     "sortActivity": "Actividad reciente",
     "sort": "Ordenar proyectos",
@@ -63,11 +63,7 @@
     "hiddenProjects": "Proyectos ocultos ({count})",
     "noHiddenResults": "Ningún proyecto oculto coincide con tu búsqueda",
     "noVisibleProjects": "No hay proyectos en tu vista",
-    "projectActions": "Acciones para {name}",
-    "starAction": "Destacar proyecto",
-    "unstarAction": "Quitar de destacados",
-    "hideAction": "Ocultar de mi vista",
-    "restoreAction": "Restaurar a mi vista",
-    "starred": "Destacados"
+    "hintMove": "mover",
+    "hintOpen": "abrir"
   }
 }

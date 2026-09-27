@@ -1,10 +1,24 @@
 import { request } from '@/lib/api/core/client';
 
-// The query string both feed reads take, empty for the first page.
-function feedPageQuery(params: { cursor?: FeedCursor | null; limit?: number }): string {
+// Which entries a feed page holds: only comments, only the change log without time
+// entries, or only time entries. Absent serves every entry.
+export type FeedFilter = 'comments' | 'history' | 'worklog';
+export type FeedOrder = 'desc' | 'asc';
+
+export interface FeedPageParams {
+  cursor?: FeedCursor | null;
+  limit?: number;
+  filter?: FeedFilter;
+  order?: FeedOrder;
+}
+
+// The query string both feed reads take, empty for the first page of every entry.
+function feedPageQuery(params: FeedPageParams): string {
   const q = new URLSearchParams();
   if (params.limit) q.set('limit', String(params.limit));
   if (params.cursor) q.set('cursor', JSON.stringify(params.cursor));
+  if (params.filter) q.set('filter', params.filter);
+  if (params.order) q.set('order', params.order);
   const qs = q.toString();
   return qs ? `?${qs}` : '';
 }
@@ -154,16 +168,23 @@ export interface TimelineSegment {
   durationMs: number;
 }
 
-export const listFeed = (
-  issueId: number,
-  params: { cursor?: FeedCursor | null; limit?: number } = {},
-) => request<FeedPage>(`/issues/${issueId}/feed${feedPageQuery(params)}`);
+export const listFeed = (issueId: number, params: FeedPageParams = {}) =>
+  request<FeedPage>(`/issues/${issueId}/feed${feedPageQuery(params)}`);
 
 // The same page, split into the stretches the issue spent in one status.
-export const listGroupedFeed = (
-  issueId: number,
-  params: { cursor?: FeedCursor | null; limit?: number } = {},
-) => request<GroupedFeedPage>(`/issues/${issueId}/feed/grouped${feedPageQuery(params)}`);
+export const listGroupedFeed = (issueId: number, params: FeedPageParams = {}) =>
+  request<GroupedFeedPage>(`/issues/${issueId}/feed/grouped${feedPageQuery(params)}`);
+
+// How many entries each filter keeps; `all` is every entry. A reply counts as a comment.
+export interface FeedCounts {
+  all: number;
+  comments: number;
+  history: number;
+  worklog: number;
+}
+
+export const getFeedCounts = (issueId: number) =>
+  request<FeedCounts>(`/issues/${issueId}/feed/counts`);
 
 export const listTimeline = (issueId: number) =>
   request<TimelineSegment[]>(`/issues/${issueId}/timeline`);

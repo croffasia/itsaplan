@@ -1,4 +1,6 @@
 import { auth } from '@repo/auth';
+import { db } from '@repo/db';
+import { insertOwnedTeam } from '#modules/teams/service';
 
 export interface TestUser {
   // The session cookie header to pass to authenticated requests, e.g.
@@ -18,11 +20,14 @@ let counter = 0;
 // we read the Set-Cookie off the response. Each call uses a unique email so
 // tests do not collide. Pass this cookie to authenticated requests.
 //
+// Sign-up creates no team. Most tests need one to create projects in, so the user is
+// given a team named after its username, without a slug, unless `team` is false.
+//
 // Note: the very first user created in a fresh database becomes the "god" role
 // (better-auth create hook). resetDb() clears users between tests, so whichever
 // user a test creates first is "god" — keep that in mind for role-sensitive tests.
 export async function signUpTestUser(
-  overrides: { email?: string; password?: string; name?: string } = {},
+  overrides: { email?: string; password?: string; name?: string; team?: boolean } = {},
 ): Promise<TestUser> {
   counter += 1;
   const email = overrides.email ?? `test-user-${counter}@example.com`;
@@ -49,6 +54,9 @@ export async function signUpTestUser(
   if (!userId) throw new Error(`signUpTestUser: no user id returned for ${email}`);
   const username = body.user?.username;
   if (!username) throw new Error(`signUpTestUser: no username returned for ${email}`);
+  if (overrides.team !== false) {
+    await db.transaction((tx) => insertOwnedTeam(tx, username, userId));
+  }
 
   return { cookie, userId, email, username };
 }

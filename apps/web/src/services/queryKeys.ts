@@ -1,3 +1,5 @@
+import type { FeedFilter, FeedOrder } from '@/lib/api/endpoints/activity';
+
 // Query keys shared by every service. Each is a stable tuple; a project/issue id
 // or key scopes its entry. Kept in one registry so a mutation in one service can
 // invalidate another service's queries by the same key.
@@ -6,6 +8,7 @@ export const qk = {
   teams: ['teams'] as const,
   // One team: its counters and what the caller may do with what it holds.
   team: (teamId: number) => ['team', teamId] as const,
+  teamProjectDefaults: (teamId: number) => ['team', teamId, 'project-defaults'] as const,
   // The members of a team and the projects it owns, each read by its own section. A
   // page is scoped by the search term and the window it was read with.
   teamMembers: (teamId: number, params: unknown) => ['team', teamId, 'members', params] as const,
@@ -194,9 +197,15 @@ export const qk = {
   anyIssue: ['issue'] as const,
   // Resolving an issue by its project-scoped number (the identifier-based URL).
   issueBySeq: (projectKey: string, seq: number) => ['issueBySeq', projectKey, seq] as const,
+  // Every read of one issue's feed sits under this key, so invalidating it refreshes
+  // them all.
   feed: (id: number) => ['feed', id] as const,
+  flatFeed: (id: number, filter: FeedFilter | null, order: FeedOrder) =>
+    ['feed', id, 'flat', filter, order] as const,
   // The same feed split by status, paged on its own.
-  groupedFeed: (id: number) => ['feed', id, 'grouped'] as const,
+  groupedFeed: (id: number, filter: FeedFilter | null, order: FeedOrder) =>
+    ['feed', id, 'grouped', filter, order] as const,
+  feedCounts: (id: number) => ['feed', id, 'counts'] as const,
   // The status stretches of the timeline view, and the entries of one stretch read
   // when it is opened. Both keyed under the feed, so every existing feed
   // invalidation refreshes them too.

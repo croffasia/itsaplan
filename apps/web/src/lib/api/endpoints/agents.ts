@@ -17,6 +17,7 @@ export interface AgentFieldTriggerRead extends AgentFieldTrigger {
 export interface AgentProject {
   id: number;
   key: string;
+  ref: string;
   name: string;
 }
 

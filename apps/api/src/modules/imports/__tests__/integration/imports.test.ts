@@ -3,13 +3,13 @@ import ExcelJS from 'exceljs';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
-import { getProjectByKey } from '#modules/projects/service';
+import { getProjectByRef } from '#modules/projects/service';
 import { createMappedImport } from '../../service';
 
 // The import flow: the file is uploaded through the chat-attachments route, an
 // agent turns it into a draft by saving a column mapping (the
 // prepare_issue_import tool calls createMappedImport in process), and the confirm
-// route creates the issues. Needs MinIO like the attachments suite.
+// route creates the issues. Needs RustFS like the attachments suite.
 
 async function setup() {
   const owner = await signUpTestUser();
@@ -35,7 +35,7 @@ async function uploadWorkbook(
 }
 
 async function mapImport(attachmentId: string, mapping: Record<string, string>) {
-  const project = await getProjectByKey('MKT');
+  const project = await getProjectByRef('MKT', '');
   if (!project) throw new Error('Test project was not created');
   return createMappedImport(project.id, attachmentId, mapping);
 }
@@ -147,7 +147,7 @@ describe('imports', () => {
     const { asOwner } = await setup();
     await asOwner.projects.post({ key: 'OPS', name: 'Ops' });
     const uploaded = await uploadWorkbook(asOwner, [['Task'], ['Only']]);
-    const ops = await getProjectByKey('OPS');
+    const ops = await getProjectByRef('OPS', '');
     if (!ops) throw new Error('Test project was not created');
     await expect(createMappedImport(ops.id, uploaded.data!.id, { title: 'Task' })).rejects.toThrow(
       'Attachment not found',

@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { mcpTool } from '#mcp/generate';
+import { mcpImageTool, mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
@@ -14,6 +14,7 @@ import {
   publicIdParams,
   rawAttachmentQuery,
   uploadAttachmentBody,
+  ViewAttachmentsResponse,
 } from '#modules/attachments/model';
 import {
   assertAttachmentUploadAllowed,
@@ -22,6 +23,8 @@ import {
   deleteAttachmentObject,
   safeAttachmentFilename,
   storeAttachmentObject,
+  viewAttachments,
+  VIEWABLE_IMAGES,
 } from '#modules/attachments/storage';
 import {
   FeedPageResponse,
@@ -277,6 +280,25 @@ export const initiativeRoutes = new Elysia({
       detail: {
         summary: 'List initiative attachments',
         description: "List an initiative's attachments by its numeric id.",
+        ...mcpTool('list_initiative_attachments'),
+      },
+    },
+  )
+
+  .get(
+    '/initiatives/:initiativeId/images',
+    async ({ params }) =>
+      viewAttachments(await listInitiativeAttachments(params.initiativeId), attachmentDto),
+    {
+      params: initiativeParams,
+      initiative: 'read',
+      response: { 200: ViewAttachmentsResponse, ...commonErrors },
+      detail: {
+        summary: 'View the images of an initiative',
+        description:
+          `Look at the images attached to an initiative, by its numeric id: ${VIEWABLE_IMAGES}. ` +
+          'Every other attachment comes back in `others` with its url.',
+        ...mcpImageTool('view_initiative_images'),
       },
     },
   )

@@ -7,9 +7,11 @@ import ResizeGrip from '@/components/common/ResizeGrip';
 import { PopoverContent } from '@/components/ui/popover';
 import { useSidebar } from '@/components/ui/sidebar';
 import ProjectSwitcherList from './ProjectSwitcherList';
-import ProjectSwitcherToolbar from './ProjectSwitcherToolbar';
 import ProjectSwitcherFooter from './ProjectSwitcherFooter';
-import type { useProjectSwitcherPreferences } from './hooks/useProjectSwitcherPreferences';
+import {
+  PROJECT_PICKER_WIDTH,
+  type useProjectSwitcherPreferences,
+} from './hooks/useProjectSwitcherPreferences';
 
 export default function ProjectSwitcherMenu({
   projects,
@@ -61,12 +63,12 @@ export default function ProjectSwitcherMenu({
         else inputRef.current?.focus();
       }}
     >
-      <ProjectSwitcherToolbar preferences={preferences} isMobile={isMobile} />
       <ProjectSwitcherList
         projects={projects}
         teams={teams}
         current={current}
         sort={preferences.sort}
+        onSortChange={preferences.setSort}
         showHidden={showHidden}
         onShowHiddenChange={setShowHidden}
         openTeams={openTeams}
@@ -74,7 +76,7 @@ export default function ProjectSwitcherMenu({
         onSelectProject={onSelectProject}
         inputRef={inputRef}
       />
-      <ProjectSwitcherFooter onClose={onClose} />
+      <ProjectSwitcherFooter isMobile={isMobile} onClose={onClose} />
       {!isMobile && (
         <ResizeGrip
           label={t('projectPicker.resize')}
@@ -83,6 +85,7 @@ export default function ProjectSwitcherMenu({
             const direction = contentRef.current?.dataset.side === 'left' ? -1 : 1;
             preferences.setWidth(resizeStart.current + delta * direction);
           }}
+          onReset={() => preferences.setWidth(PROJECT_PICKER_WIDTH.initial)}
         />
       )}
     </PopoverContent>

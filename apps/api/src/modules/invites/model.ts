@@ -56,6 +56,7 @@ export const InviteRowListResponse = t.Array(InviteRowResponse);
 export const InviteViewResponse = t.Object({
   token: t.String(),
   teamName: t.String(),
+  teamRef: t.String(),
   projectKey: t.Nullable(t.String()),
   projectName: t.Nullable(t.String()),
   email: t.String(),
@@ -70,6 +71,7 @@ export const InviteViewResponse = t.Object({
 
 export const AcceptInviteResponse = t.Object({
   teamName: t.String(),
+  teamRef: t.String(),
   projectKey: t.Nullable(t.String()),
   projectName: t.Nullable(t.String()),
   role: t.Nullable(projectRole),

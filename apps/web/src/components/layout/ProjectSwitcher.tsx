@@ -24,7 +24,7 @@ export default function ProjectSwitcher({
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const preferences = useProjectSwitcherPreferences(session?.user.id);
-  const current = projects.find((project) => project.key === currentProjectKey);
+  const current = projects.find((project) => project.ref === currentProjectKey);
   const [open, setOpen] = useState(false);
   const [openTeams, setOpenTeams] = useState<Record<number, boolean>>({});
 

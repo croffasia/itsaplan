@@ -22,6 +22,7 @@
     "workflow_config": "تهيئة سير العمل",
     "actions": "الإجراءات",
     "webhooks": "خطافات الويب (webhooks)",
+    "repositories": "المستودعات",
     "note_boards": "لوحات الملاحظات",
     "import_export": "استيراد/تصدير",
     "danger_zone": "منطقة الخطر"

@@ -35,8 +35,6 @@ import {
   updateGitSettings,
   regenerateGitSecret,
   listGitProviderConnections,
-  connectGitProvider,
-  disconnectGitProvider,
   listAvailableGitRepositories,
   connectGitRepositories,
   disconnectGitRepository,
@@ -236,23 +234,6 @@ export function useGitProviderConnectionsQuery(projectKey: string) {
   return useQuery({
     queryKey: qk.gitConnections(projectKey),
     queryFn: () => listGitProviderConnections(projectKey),
-  });
-}
-
-export function useConnectGitProvider(projectKey: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (input: Parameters<typeof connectGitProvider>[1]) =>
-      connectGitProvider(projectKey, input),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
-  });
-}
-
-export function useDisconnectGitProvider(projectKey: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (connectionId: number) => disconnectGitProvider(projectKey, connectionId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.gitConnections(projectKey) }),
   });
 }
 

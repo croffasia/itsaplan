@@ -36,7 +36,15 @@ describe('MCP structured results through the SDK client', () => {
     const client = await connect(user.userId);
     const listed = await client.listTools();
     expect(listed.tools.length).toBeGreaterThan(0);
-    expect(listed.tools.every((tool) => tool.outputSchema?.type === 'object')).toBe(true);
+    const withoutSchema = listed.tools.filter((tool) => tool.outputSchema === undefined);
+    expect(withoutSchema.map((tool) => tool.name).sort()).toEqual([
+      'view_attachment',
+      'view_initiative_images',
+      'view_issue_images',
+    ]);
+    expect(
+      listed.tools.every((tool) => !tool.outputSchema || tool.outputSchema.type === 'object'),
+    ).toBe(true);
 
     const created = await callTool(client, {
       name: 'create_project',
@@ -111,7 +119,7 @@ describe('MCP structured results through the SDK client', () => {
 
   it('returns the same error envelope for missing team arguments and unknown tools', async () => {
     const user = await signUpTestUser();
-    await authedApi(user.cookie).teams.post({ name: 'Another team' });
+    await authedApi(user.cookie).teams.post({ name: 'Another team', slug: 'another-team' });
     const client = await connect(user.userId);
     await client.listTools();
     const missing = await callTool(client, { name: 'list_ai_agents' });

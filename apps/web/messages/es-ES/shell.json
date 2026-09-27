@@ -2,6 +2,10 @@
   "noProjectAccess": "No tienes acceso a este proyecto.",
   "projectUnavailable": "Este proyecto no está disponible.",
   "noProjects": "Todavía no hay proyectos, crea uno para empezar.",
+  "noTeamsTitle": "Aún no hay equipo",
+  "noTeamsHint": "Crea tu equipo. En él estarán sus proyectos, miembros y agentes.",
+  "noProjectAccessHint": "Pide al propietario o a un administrador del equipo que te añada a un proyecto, o crea tu propio equipo.",
+  "createTeam": "Crear equipo",
   "noProjectsTitle": "Todavía no hay proyectos",
   "noProjectsHint": "Crea tu primer proyecto para empezar a planificar tickets en un tablero.",
   "createProject": "Crear proyecto"

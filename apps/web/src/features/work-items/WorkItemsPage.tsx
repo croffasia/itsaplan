@@ -53,7 +53,7 @@ export default function WorkItemsPage() {
 
   // Live board: refetch the issues when anything on the board changes, so another
   // user's create/move/edit shows without a manual reload.
-  const projectKey = project?.project.key ?? '';
+  const projectKey = project?.project.ref ?? '';
   useLiveRefresh({
     scope: project ? revScope.board(project.project.id) : null,
     targets: [qk.boardIssues(projectKey)],
@@ -166,7 +166,7 @@ export default function WorkItemsPage() {
     <>
       <ViewTabs
         views={views}
-        projectKey={project.project.key}
+        projectKey={project.project.ref}
         activeViewId={editor.activeViewId}
         onSelect={editor.selectView}
         onNewView={editor.beginNewView}

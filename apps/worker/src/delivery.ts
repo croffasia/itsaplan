@@ -52,6 +52,9 @@ export async function deliver(input: DeliverInput): Promise<DeliveryResult> {
         'X-Itsaplan-Signature': signature,
       },
       body: input.body,
+      // Only a prefix is kept, so the rest is never read; a UTF-8 char is at most 4 bytes.
+      maxBytes: MAX_RESPONSE_CHARS * 4,
+      truncateBody: true,
     });
     const responseBody = (await res.text().catch(() => '')).slice(0, MAX_RESPONSE_CHARS);
     if (res.status >= 200 && res.status < 300)

@@ -58,7 +58,7 @@ export default function TeamsRail({
             return (
               <li key={team.id}>
                 <Link
-                  href={teamPath(team.id)}
+                  href={teamPath(team.ref)}
                   aria-current={active ? 'page' : undefined}
                   className={cn(
                     'flex h-8 w-full items-center gap-2 rounded-md px-2 text-start text-sm transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring/60',

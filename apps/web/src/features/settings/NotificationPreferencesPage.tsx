@@ -11,7 +11,7 @@ import { useNotificationPreferencesQuery } from './services/settings.service';
 import { useNotificationPreferencesForm } from './hooks/useNotificationPreferencesForm';
 import { useTranslations } from 'next-intl';
 
-// The member's own notification preferences (/project/:projectKey/notifications).
+// The member's own notification preferences (/:team/:projectKey/notifications).
 // A main-nav Configuration destination, open to any member: choose which issue events
 // you get and where (email, Telegram), plus your Telegram chat id. The delivery
 // providers are configured separately by the owner of the team that runs the project
@@ -19,7 +19,7 @@ import { useTranslations } from 'next-intl';
 export default function NotificationPreferencesPage() {
   const { project } = useShell();
   if (!project) return null;
-  return <PreferencesPage projectKey={project.project.key} />;
+  return <PreferencesPage projectKey={project.project.ref} />;
 }
 
 function Chrome({ actions, children }: { actions?: ReactNode; children: ReactNode }) {

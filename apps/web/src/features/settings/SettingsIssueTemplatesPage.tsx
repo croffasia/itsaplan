@@ -13,7 +13,7 @@ import SettingsIssueTemplates from './components/issue-templates/SettingsIssueTe
 
 const section = settingsSection('issue-templates');
 
-// The Issue templates settings page (/project/:projectKey/settings/issue-templates).
+// The Issue templates settings page (/:team/:projectKey/settings/issue-templates).
 export default function SettingsIssueTemplatesPage() {
   const t = useTranslations('settings.issueTemplates');
   const sectionText = useSettingsSectionText()(section.slug);

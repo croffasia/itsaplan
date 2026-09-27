@@ -33,7 +33,7 @@ const apiDescription = `REST API for projects, work items, AI agents, Git integr
 
 1. Create a personal API key in [Account settings](${appUrl}/account/api-keys). The key is shown once and carries the same permissions as its owner.
 2. Send it in the \`x-api-key\` header. Never put a key in a URL, issue, comment, or source file.
-3. Use the project key from the URL in routes containing \`{projectKey}\`. This page is opened from a project, but the API document is instance-wide.
+3. In routes containing \`{projectKey}\`, name the project by its \`ref\`, \`<team>.<KEY>\` (e.g. \`acme.MKT\`). A bare key also works while only one of your teams has a project with it. This page is opened from a project, but the API document is instance-wide.
 
 \`\`\`sh
 curl "${apiUrl}/projects" \\

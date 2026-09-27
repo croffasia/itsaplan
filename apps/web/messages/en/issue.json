@@ -5,6 +5,9 @@
   "openAsPage": "Open as page",
   "titlePlaceholder": "Issue title",
   "noActivity": "No activity yet.",
+  "noComments": "No comments yet.",
+  "noHistory": "No changes yet.",
+  "noWorklog": "No time logged yet.",
   "noActivityInStretch": "No activity in this stretch.",
   "activityLoadFailed": "Could not load the activity.",
   "fields": {
@@ -199,7 +202,11 @@
     "detachFromParent": "Detach from {parent}",
     "subtaskOf": "Subtask of {issue}",
     "existingIssue": "Existing issue",
-    "searchPrompt": "Search issues to add as a subtask…"
+    "searchPrompt": "Search issues to add as a subtask…",
+    "filter": "Filter by state",
+    "hiding": "Hiding {states}",
+    "clearFilter": "Clear filter",
+    "allHidden": "All subtasks are hidden by the filter."
   },
   "subtaskDisposal": {
     "intro": "{issues, plural, one {This issue has} other {These issues have}} {count, plural, one {# subtask} other {# subtasks}}.",
@@ -399,8 +406,16 @@
   },
   "archived": "Archived",
   "activityHeading": "Activity",
-  "feedFlat": "Flat",
-  "feedGrouped": "Grouped",
+  "feedTabAll": "All",
+  "feedTabComments": "Comments",
+  "feedTabHistory": "History",
+  "feedTabWorklog": "Work log",
+  "feedStatus": "Status",
+  "feedGroupByStatus": "Group by status",
+  "feedNewest": "Newest",
+  "feedOldest": "Oldest",
+  "feedChangeOrder": "Change order",
+  "feedRunToggle": "Show similar changes",
   "shareUnavailable": "This shared issue is not available. The link may have been revoked.",
   "fieldSelects": {
     "changeState": "Change state…",

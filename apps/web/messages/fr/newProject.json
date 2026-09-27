@@ -46,5 +46,6 @@
   "copyTitle": "Copier le projet « {name} »",
   "create": "Créer le projet",
   "copyAction": "Copier le projet",
+  "defaultAgents": "Agents ajoutés à ce projet : {names}",
   "copyName": "{name} (copie)"
 }

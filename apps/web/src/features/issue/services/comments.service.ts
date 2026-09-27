@@ -10,6 +10,9 @@ import {
 } from '@tanstack/react-query';
 import {
   type FeedCursor,
+  type FeedFilter,
+  type FeedOrder,
+  getFeedCounts,
   listFeed,
   listGroupedFeed,
   listTimeline,
@@ -20,12 +23,20 @@ import {
 } from '@/lib/api/endpoints/activity';
 import { qk } from '@/services/queryKeys';
 
-// The issue's timeline (comments + activity), paged newest first. Each page is
-// 25 items; getNextPageParam yields the server's cursor until it returns null.
-export function useFeedQuery(id: number, enabled = true) {
+// Which slice of the feed a query reads and in what order: the tab the activity log
+// is on and the direction it runs.
+export interface FeedSlice {
+  filter: FeedFilter | null;
+  order: FeedOrder;
+}
+
+// The issue's timeline (comments + activity), 25 items a page; getNextPageParam
+// yields the server's cursor until it returns null.
+export function useFeedQuery(id: number, { filter, order }: FeedSlice, enabled = true) {
   return useInfiniteQuery({
-    queryKey: qk.feed(id),
-    queryFn: ({ pageParam }) => listFeed(id, { cursor: pageParam, limit: 25 }),
+    queryKey: qk.flatFeed(id, filter, order),
+    queryFn: ({ pageParam }) =>
+      listFeed(id, { cursor: pageParam, limit: 25, filter: filter ?? undefined, order }),
     initialPageParam: null as FeedCursor | null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
@@ -35,14 +46,20 @@ export function useFeedQuery(id: number, enabled = true) {
 // The same entries as useFeedQuery, split by the status the issue was in when each
 // was written. Paged the same way, and by the same cursor: a stretch that spans a page
 // boundary comes back in both pages, and the feed joins the halves.
-export function useGroupedFeedQuery(id: number, enabled = true) {
+export function useGroupedFeedQuery(id: number, { filter, order }: FeedSlice, enabled = true) {
   return useInfiniteQuery({
-    queryKey: qk.groupedFeed(id),
-    queryFn: ({ pageParam }) => listGroupedFeed(id, { cursor: pageParam, limit: 25 }),
+    queryKey: qk.groupedFeed(id, filter, order),
+    queryFn: ({ pageParam }) =>
+      listGroupedFeed(id, { cursor: pageParam, limit: 25, filter: filter ?? undefined, order }),
     initialPageParam: null as FeedCursor | null,
     getNextPageParam: (last) => last.nextCursor,
     enabled,
   });
+}
+
+// The number of entries behind each tab of the activity log.
+export function useFeedCountsQuery(id: number) {
+  return useQuery({ queryKey: qk.feedCounts(id), queryFn: () => getFeedCounts(id) });
 }
 
 // The stretches the issue spent in one status, oldest first. Carries no entries,

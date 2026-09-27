@@ -107,9 +107,12 @@ const configFields = {
 export const AiAgentResponse = t.Object({
   id: t.Number(),
   teamId: t.Number(),
-  projects: t.Array(t.Object({ id: t.Number(), key: t.String(), name: t.String() }), {
-    description: 'The projects of the team the agent works in.',
-  }),
+  projects: t.Array(
+    t.Object({ id: t.Number(), key: t.String(), ref: t.String(), name: t.String() }),
+    {
+      description: 'The projects of the team the agent works in.',
+    },
+  ),
   userId: t.String(),
   name: t.String(),
   username: t.String(),

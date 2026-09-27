@@ -24,7 +24,7 @@ export default function FilterBar({
   customFields: CustomField[];
 }) {
   const t = useTranslations('filters');
-  const { fieldSpecs } = useFilterFields(project.project.key);
+  const { fieldSpecs } = useFilterFields(project.project.ref);
   const [addOpen, setAddOpen] = useState(false);
   const specs = fieldSpecs(project, customFields);
   // The pills read a catalog that also carries the fields only the current

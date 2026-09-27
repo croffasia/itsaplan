@@ -1,10 +1,10 @@
-import { Check, Clock3, Star } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api/endpoints/projects';
-import { formatDateTime } from '@/utils/dates';
-import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { useRelativeTime } from '@/context/relativeTimeContext';
 import { CommandItem } from '@/components/ui/command';
-import ProjectSwitcherProjectActions from './ProjectSwitcherProjectActions';
+import ProjectSwitcherHideButton from './ProjectSwitcherHideButton';
+import ProjectSwitcherStarButton from './ProjectSwitcherStarButton';
 
 export default function ProjectSwitcherProjectRow({
   project,
@@ -16,41 +16,47 @@ export default function ProjectSwitcherProjectRow({
   onSelectProject: (key: string) => void;
 }) {
   const t = useTranslations('nav.projectPicker');
+  const current = project.ref === currentProjectKey;
+  const relativeTime = useRelativeTime();
 
   return (
-    <div className="flex items-center gap-0.5">
+    <div className="group/row relative flex items-center gap-0.5 rounded-sm has-[[data-selected=true]]:bg-accent">
+      {current && (
+        <span aria-hidden className="absolute inset-y-2 start-0 w-0.5 rounded-full bg-foreground" />
+      )}
       <CommandItem
         value={`project-${project.id}`}
-        onSelect={() => onSelectProject(project.key)}
-        className="min-w-0 flex-1 gap-2 p-2"
+        onSelect={() => onSelectProject(project.ref)}
+        aria-current={current || undefined}
+        className="min-w-0 flex-1 gap-2.5 p-2 data-[selected=true]:bg-transparent"
       >
-        <div className="min-w-0 flex-1 space-y-1">
-          <span className="block text-sm wrap-anywhere whitespace-normal" dir="auto">
+        <div className="min-w-0 flex-1">
+          <span
+            className={cn(
+              'block text-sm wrap-anywhere whitespace-normal',
+              current ? 'font-semibold' : 'font-medium',
+            )}
+            dir="auto"
+          >
             {project.name}
           </span>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-            <Badge
-              variant="outline"
-              className="max-w-full rounded px-1 py-0 font-mono text-[10px] wrap-anywhere whitespace-normal"
-            >
+          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground/70">
+            <span dir="ltr" className="shrink-0 font-mono text-[10px] tracking-wider uppercase">
               {project.key}
-            </Badge>
-            {project.isFavorite && (
-              <Star className="size-3! fill-current" aria-label={t('starred')} />
-            )}
+            </span>
             {project.lastActivityAt && (
-              <span className="inline-flex items-center gap-1" title={t('activityHint')}>
-                <Clock3 className="size-3!" />
+              <>
+                <span aria-hidden>·</span>
                 <time dateTime={project.lastActivityAt}>
-                  {formatDateTime(project.lastActivityAt)}
+                  {t('activeAgo', { time: relativeTime(project.lastActivityAt) })}
                 </time>
-              </span>
+              </>
             )}
           </span>
         </div>
-        {project.key === currentProjectKey && <Check className="size-4 shrink-0" />}
       </CommandItem>
-      <ProjectSwitcherProjectActions project={project} />
+      <ProjectSwitcherHideButton project={project} />
+      {!project.isHidden && <ProjectSwitcherStarButton project={project} />}
     </div>
   );
 }

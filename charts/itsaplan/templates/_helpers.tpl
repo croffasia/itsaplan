@@ -56,7 +56,7 @@ Otherwise, use the override in .Values.externalDatabase.url.
 
 {{/*
 Compute the S3 endpoint.
-When the built-in MinIO is enabled, use the internal MinIO service URL.
+When the built-in store is enabled, use its internal service URL.
 Otherwise, use the override in .Values.externalS3.endpoint.
 */}}
 {{- define "itsaplan.s3Endpoint" -}}
@@ -78,4 +78,25 @@ Compute the internal API URL for inter-service communication.
 {{- else }}
 {{- printf "http://%s-api:%d" (include "itsaplan.fullname" .) (int .Values.api.port) }}
 {{- end }}
+{{- end }}
+
+{{/*
+Init container of the worker and bot pods: holds them until the api pods' migrate init
+container has applied this release's migrations.
+*/}}
+{{- define "itsaplan.waitForMigrations" -}}
+initContainers:
+  - name: wait-for-migrations
+    image: "{{ .Values.api.image.repository }}:{{ .Values.api.image.tag | default .Chart.AppVersion }}"
+    imagePullPolicy: {{ .Values.api.image.pullPolicy }}
+    command: ["bun", "run", "packages/db/src/wait-for-migrations.ts"]
+    {{- with .Values.securityContext }}
+    securityContext:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    envFrom:
+      - configMapRef:
+          name: {{ include "itsaplan.fullname" . }}
+      - secretRef:
+          name: {{ include "itsaplan.fullname" . }}
 {{- end }}

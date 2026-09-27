@@ -338,13 +338,18 @@ export async function addIssueLink(
     return { target, linkId: target.linkId, sourceProjectId: source.projectId };
   });
 
-  await emitIssueEvents(sourceProjectId, 'issue.link_changed', () =>
-    getIssues(sourceProjectId === target.projectId ? [issueId, targetIssueId] : [issueId]),
+  await emitIssueEvents(
+    sourceProjectId,
+    'issue.link_changed',
+    () => getIssues(sourceProjectId === target.projectId ? [issueId, targetIssueId] : [issueId]),
     actorUserId,
   );
   if (sourceProjectId !== target.projectId)
-    await emitIssueEvents(target.projectId, 'issue.link_changed', () =>
-      getIssues([targetIssueId]), actorUserId,
+    await emitIssueEvents(
+      target.projectId,
+      'issue.link_changed',
+      () => getIssues([targetIssueId]),
+      actorUserId,
     );
 
   return {
@@ -437,13 +442,18 @@ export async function removeIssueLink(
   });
 
   if (!removed) return false;
-  await emitIssueEvents(removed.projectId, 'issue.link_changed', () =>
-    getIssues(removed.projectId === removed.otherProjectId ? removed.issueIds : [issueId]),
+  await emitIssueEvents(
+    removed.projectId,
+    'issue.link_changed',
+    () => getIssues(removed.projectId === removed.otherProjectId ? removed.issueIds : [issueId]),
     actorUserId,
   );
   if (removed.otherProjectId !== removed.projectId)
-    await emitIssueEvents(removed.otherProjectId, 'issue.link_changed', () =>
-      getIssues([removed.issueIds[1]]), actorUserId,
+    await emitIssueEvents(
+      removed.otherProjectId,
+      'issue.link_changed',
+      () => getIssues([removed.issueIds[1]]),
+      actorUserId,
     );
   return true;
 }

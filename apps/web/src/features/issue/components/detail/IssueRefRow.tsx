@@ -43,7 +43,10 @@ export default function IssueRefRow({
   const column = project.columns.find((c) => c.id === issue.columnId);
   const targetProjectKey = issue.identifier.slice(0, -String(issue.sequenceNumber).length - 1);
   const sameProject = targetProjectKey === project.project.key;
-  const targetProjectRef = projectRefOf(splitProjectRef(project.project.ref).teamRef, targetProjectKey);
+  const targetProjectRef = projectRefOf(
+    splitProjectRef(project.project.ref).teamRef,
+    targetProjectKey,
+  );
   const label = (
     <>
       <span className="font-mono text-xs text-muted-foreground">{issue.identifier}</span>
@@ -81,7 +84,8 @@ export default function IssueRefRow({
         <StateIcon className="col-start-1" stateType={column.stateType} color={column.color} />
       )}
       {renderName()}
-      {sameProject && column &&
+      {sameProject &&
+        column &&
         (onChangeState ? (
           <PopoverPick
             align="end"

@@ -185,7 +185,7 @@ describe('issue links', () => {
     it('does not link issues owned by different teams', async () => {
       const { asOwner, columnId } = await setupProject();
       const source = (await createIssue(asOwner, columnId)).data!;
-      const team = (await asOwner.teams.post({ name: 'Other Team' })).data!;
+      const team = (await asOwner.teams.post({ name: 'Other Team', slug: 'other-team' })).data!;
       await asOwner.teams({ teamId: team.id }).projects.post({ key: 'OTH', name: 'Other' });
       const targetProject = await asOwner.projects({ projectKey: 'OTH' }).get();
       const target = (

@@ -46,7 +46,7 @@ export default function MailboxDetail({
   const summary = useMailboxSummary(projectKey, message?.uid, folder, aiAssistance);
   if (error) {
     return (
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-3 text-sm text-muted-foreground">
         Could not load this email.
         <Button variant="outline" size="sm" onClick={onRetry}>
           Try again
@@ -56,7 +56,7 @@ export default function MailboxDetail({
   }
   if (loading || !message) {
     return (
-      <div className="flex min-h-0 flex-1 items-center justify-center text-sm text-muted-foreground">
+      <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center text-sm text-muted-foreground">
         Loading email…
       </div>
     );
@@ -64,7 +64,7 @@ export default function MailboxDetail({
 
   const senderName = addressLabel(message.from);
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-background">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-background">
       <div className="flex min-h-14 items-center gap-3 border-b px-3 sm:px-5">
         {mobile && (
           <Button variant="ghost" size="icon" className="size-8" onClick={onBack}>
@@ -129,7 +129,7 @@ export default function MailboxDetail({
             </div>
           </div>
 
-          <div className="pb-8 text-sm leading-6 break-words whitespace-pre-wrap">
+          <div className="pb-8 text-sm leading-6 wrap-anywhere whitespace-pre-wrap">
             {message.body}
           </div>
           {message.truncated && (

@@ -1,12 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { ChevronDown, Pin, Sparkles } from 'lucide-react';
 import type { MailMessageSummary } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import MailboxListItem from './MailboxListItem';
+
+function dayLabel(value: string): string {
+  const date = new Date(value);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return 'Today';
+  if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: date.getFullYear() === today.getFullYear() ? undefined : 'numeric',
+  }).format(date);
+}
 
 export default function MailboxList({
   messages,
@@ -106,17 +121,31 @@ export default function MailboxList({
             ))}
         </>
       )}
-      <p className="px-3 pt-3 pb-1 text-[11px] font-medium text-muted-foreground">Today</p>
-      {unpinned.map((message) => (
-        <MailboxListItem
-          key={message.uid}
-          message={message}
-          selected={selectedUid === message.uid}
-          pinned={false}
-          onSelect={() => onSelect(message)}
-          onTogglePin={() => onTogglePin(message.uid)}
-        />
-      ))}
+      {unpinned.map((message, index) => {
+        const day = dayLabel(message.receivedAt);
+        const newDay = index === 0 || day !== dayLabel(unpinned[index - 1]!.receivedAt);
+        return (
+          <Fragment key={message.uid}>
+            {newDay && (
+              <p
+                className={cn(
+                  'px-3 pt-3 pb-1 text-[11px] font-medium text-muted-foreground',
+                  (index > 0 || pinned.length > 0) && 'mt-2 border-t border-border/60',
+                )}
+              >
+                {day}
+              </p>
+            )}
+            <MailboxListItem
+              message={message}
+              selected={selectedUid === message.uid}
+              pinned={false}
+              onSelect={() => onSelect(message)}
+              onTogglePin={() => onTogglePin(message.uid)}
+            />
+          </Fragment>
+        );
+      })}
     </div>
   );
 }

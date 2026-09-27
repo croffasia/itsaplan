@@ -191,6 +191,7 @@ export async function verifyMailboxConnection(config: MailboxConfig): Promise<vo
 }
 
 const SPECIAL_USE: Record<string, MailFolder['kind']> = {
+  '\\Inbox': 'inbox',
   '\\Sent': 'sent',
   '\\Drafts': 'drafts',
   '\\Junk': 'spam',
@@ -208,6 +209,13 @@ const FOLDER_ORDER: MailFolder['kind'][] = [
   'other',
 ];
 
+// Zoho's own Notification folder is shown right after the inbox.
+function folderRank(folder: MailFolder): number {
+  if (folder.kind === 'inbox') return 0;
+  if (folder.kind === 'other' && folder.name.toLowerCase() === 'notification') return 1;
+  return 2 + FOLDER_ORDER.indexOf(folder.kind);
+}
+
 export async function listMailboxFolders(config: MailboxConfig): Promise<MailFolder[]> {
   const client = imapClient(config);
   try {
@@ -216,25 +224,23 @@ export async function listMailboxFolders(config: MailboxConfig): Promise<MailFol
     for (const entry of await client.list()) {
       // A container that holds only other folders cannot be opened.
       if (entry.flags?.has('\\Noselect')) continue;
-      const kind =
-        entry.path.toUpperCase() === INBOX
-          ? 'inbox'
-          : (SPECIAL_USE[entry.specialUse ?? ''] ?? 'other');
+      const namedInbox = entry.path.toUpperCase() === INBOX;
+      const kind = namedInbox ? 'inbox' : (SPECIAL_USE[entry.specialUse ?? ''] ?? 'other');
       const status = await client
         .status(entry.path, { messages: true, unseen: true })
         .catch(() => null);
+      // A localized account names its inbox itself (Zoho NL: "Postvak In"). It is
+      // still reported as INBOX, the name IMAP reserves for it, which is the folder
+      // the dashboard opens by default.
       folders.push({
-        path: entry.path,
-        name: kind === 'inbox' ? 'Inbox' : (entry.name ?? entry.path),
+        path: kind === 'inbox' ? INBOX : entry.path,
+        name: namedInbox ? 'Inbox' : (entry.name ?? entry.path),
         kind,
         total: status?.messages ?? 0,
         unread: status?.unseen ?? 0,
       });
     }
-    return folders.sort(
-      (a, b) =>
-        FOLDER_ORDER.indexOf(a.kind) - FOLDER_ORDER.indexOf(b.kind) || a.name.localeCompare(b.name),
-    );
+    return folders.sort((a, b) => folderRank(a) - folderRank(b) || a.name.localeCompare(b.name));
   } catch (error) {
     return connectionError('folder list', error, config);
   } finally {

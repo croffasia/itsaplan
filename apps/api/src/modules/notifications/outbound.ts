@@ -4,6 +4,7 @@ import {
   issue,
   issueActivity,
   project,
+  team,
   user,
   emailSource,
   getProjectEmailConfig,
@@ -14,6 +15,7 @@ import { readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
 import { escapeHtml } from '#shared/lib';
+import { issueUrl, teamRef } from '#modules/teams/ref';
 import type { NotificationType, NewNotificationRow } from './service';
 
 // Outbound notification delivery: turns the inbox notification rows produced by an
@@ -39,13 +41,6 @@ interface OutboxRow {
 // The issue reference shown in messages, e.g. "IAP-42".
 function issueRef(projectKey: string, seq: number): string {
   return `${projectKey}-${seq}`;
-}
-
-// The public URL of an issue, or undefined when the web origin is not configured
-// (then messages carry no link rather than a localhost fallback).
-function issueUrl(projectKey: string, seq: number): string | undefined {
-  const base = process.env.APP_URL;
-  return base ? `${base}/project/${projectKey}/issue/${seq}` : undefined;
 }
 
 interface StateChange {
@@ -140,8 +135,9 @@ export async function enqueueOutbound(
   const projectId = notifications[0].projectId;
 
   const [projectRow] = await db
-    .select({ key: project.key, name: project.name, teamId: project.teamId })
+    .select({ key: project.key, name: project.name, teamId: project.teamId, teamSlug: team.slug })
     .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
     .where(eq(project.id, projectId));
   if (!projectRow) return;
 
@@ -172,7 +168,11 @@ export async function enqueueOutbound(
   if (!issueRow) return;
 
   const ref = issueRef(projectRow.key, issueRow.seq);
-  const url = issueUrl(projectRow.key, issueRow.seq);
+  const url = issueUrl(
+    teamRef({ id: projectRow.teamId, slug: projectRow.teamSlug }),
+    projectRow.key,
+    issueRow.seq,
+  );
   const actor = actorName ?? 'Someone';
   // One issue event, so every 'state_changed' row points at the same activity row.
   const statusActivityId =

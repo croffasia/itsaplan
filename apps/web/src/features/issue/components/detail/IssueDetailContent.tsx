@@ -73,10 +73,11 @@ export default function IssueDetailContent({
     uploadFile,
     imageAttachments,
     setDescEditor,
+    activityView,
   } = useIssueDetail(project, issueId, onIssueLoaded);
   const permissions = usePermissions(project);
   const canEdit = permissions.can('work_items', 'edit');
-  const canManageDevelopment = permissions.can('integrations', 'edit');
+  const canManageDevelopment = permissions.can('repositories', 'edit');
   const canReadDocuments = permissions.can('documents', 'read');
   const canLinkDocuments = canEdit && permissions.can('documents', 'edit');
   const features = useProjectFeatures();
@@ -200,7 +201,7 @@ export default function IssueDetailContent({
 
       {features.documents && (
         <IssueDocumentsPanel
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           issueId={issue.id}
           canRead={canReadDocuments}
           canLink={canLinkDocuments}
@@ -270,6 +271,7 @@ export default function IssueDetailContent({
           assignees={project.assignees}
           columns={project.columns}
           imageByUserId={imageByUserId}
+          view={activityView}
         />
       </div>
       <LastCommentBubble
@@ -277,6 +279,7 @@ export default function IssueDetailContent({
         issueId={issue.id}
         feedRef={feedRef}
         imageByUserId={imageByUserId}
+        view={activityView}
       />
     </>
   );

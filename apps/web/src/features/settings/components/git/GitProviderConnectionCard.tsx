@@ -6,25 +6,19 @@ import type { GitProviderConnection } from '@/lib/api/endpoints/git';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import SettingsCard from '@/components/common/page/SettingsCard';
-import {
-  useDisconnectGitProvider,
-  useDisconnectGitRepository,
-} from '../../services/settings.service';
+import { useDisconnectGitRepository } from '../../services/settings.service';
 import GitRepositoryPickerDialog from './GitRepositoryPickerDialog';
-import { GIT_PROVIDER_CONFIG } from './providerConfig';
+import { GIT_PROVIDER_CONFIG } from '@/utils/gitProviderConfig';
 
 export default function GitProviderConnectionCard({
   projectKey,
   connection,
-  editable,
 }: {
   projectKey: string;
   connection: GitProviderConnection;
-  editable: boolean;
 }) {
   const t = useTranslations('settings.git');
   const [pickerOpen, setPickerOpen] = useState(false);
-  const disconnectProvider = useDisconnectGitProvider(projectKey);
   const disconnectRepository = useDisconnectGitRepository(projectKey, connection.id);
   const providerLabel = GIT_PROVIDER_CONFIG[connection.provider].label;
 
@@ -32,16 +26,6 @@ export default function GitProviderConnectionCard({
     try {
       await disconnectRepository.mutateAsync(repositoryId);
       toast.success(t('nativeRepositoryDisconnected'));
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : t('nativeDisconnectFailed'));
-    }
-  }
-
-  async function removeProvider() {
-    if (!window.confirm(t('nativeDisconnectConfirm', { provider: providerLabel }))) return;
-    try {
-      await disconnectProvider.mutateAsync(connection.id);
-      toast.success(t('nativeDisconnected', { provider: providerLabel }));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : t('nativeDisconnectFailed'));
     }
@@ -60,23 +44,11 @@ export default function GitProviderConnectionCard({
               {connection.accountLogin} · {connection.baseUrl}
             </p>
           </div>
-          {editable && (
-            <div className="flex gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
-                {t('nativeChooseRepositories')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                aria-label={t('nativeDisconnectProvider')}
-                disabled={disconnectProvider.isPending}
-                onClick={() => void removeProvider()}
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => setPickerOpen(true)}>
+              {t('nativeChooseRepositories')}
+            </Button>
+          </div>
         </div>
         <div className="divide-y border-t">
           {connection.repositories.length === 0 ? (
@@ -111,18 +83,16 @@ export default function GitProviderConnectionCard({
                     ? t('nativeWebhookActive')
                     : t('nativeWebhookError')}
                 </Badge>
-                {editable && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={t('nativeDisconnectRepository')}
-                    disabled={disconnectRepository.isPending}
-                    onClick={() => void removeRepository(repository.id)}
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={t('nativeDisconnectRepository')}
+                  disabled={disconnectRepository.isPending}
+                  onClick={() => void removeRepository(repository.id)}
+                >
+                  <Trash2 className="size-4" />
+                </Button>
               </div>
             ))
           )}

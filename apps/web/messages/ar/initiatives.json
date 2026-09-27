@@ -153,7 +153,9 @@
     "open": "فتح {name}",
     "download": "تنزيل",
     "downloadFile": "تنزيل {name}",
-    "deleteFile": "حذف {name}"
+    "deleteFile": "حذف {name}",
+    "deleteTitle": "حذف المرفق",
+    "deleteConfirmation": "حذف {name}؟ سيُزال أيضًا من الوصف في كل موضع مضمَّن فيه. لا يمكن التراجع عن ذلك."
   },
   "documents": {
     "title": "المستندات",

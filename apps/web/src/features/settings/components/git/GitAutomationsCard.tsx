@@ -12,12 +12,10 @@ import GitColumnSelect from './GitColumnSelect';
 export default function GitAutomationsCard({
   columns,
   settings,
-  editable,
   onChange,
 }: {
   columns: Column[];
   settings: GitSettings;
-  editable: boolean;
   onChange: (patch: {
     onMergeColumnId?: number | null;
     onOpenColumnId?: number | null;
@@ -35,7 +33,6 @@ export default function GitAutomationsCard({
           control={
             <Switch
               checked={settings.linkbackComments}
-              disabled={!editable}
               onCheckedChange={(linkbackComments) => onChange({ linkbackComments })}
             />
           }
@@ -48,7 +45,6 @@ export default function GitAutomationsCard({
               columns={columns}
               value={settings.onMergeColumnId}
               noneLabel={t('onMergeNone')}
-              readOnly={!editable}
               onChange={(id) => onChange({ onMergeColumnId: id })}
             />
           }
@@ -61,7 +57,6 @@ export default function GitAutomationsCard({
               columns={columns}
               value={settings.onOpenColumnId}
               noneLabel={t('onOpenNone')}
-              readOnly={!editable}
               onChange={(id) => onChange({ onOpenColumnId: id })}
             />
           }

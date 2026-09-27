@@ -7,6 +7,7 @@ import type { Attachment } from '@/lib/api/endpoints/attachments';
 import { isImage, isVideo } from '@/components/common/editor/attachmentEmbed';
 import AttachmentThumb from '@/components/common/attachments/AttachmentThumb';
 import AttachmentViewer from '@/components/common/attachments/AttachmentViewer';
+import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import { Button } from '@/components/ui/button';
 import { useFileDragZone } from '@/hooks/useFileDragZone';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -33,6 +34,7 @@ export default function InitiativeAttachments({ initiativeId }: { initiativeId: 
   const limits = useStorageSettingsQuery().data;
   const [error, setError] = useState<string | null>(null);
   const [viewing, setViewing] = useState<Attachment | null>(null);
+  const [deleting, setDeleting] = useState<Attachment | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   async function send(files: FileList | null) {
@@ -134,7 +136,7 @@ export default function InitiativeAttachments({ initiativeId }: { initiativeId: 
                     className="size-7 text-muted-foreground hover:text-destructive"
                     title={tCommon('delete')}
                     aria-label={t('deleteFile', { name: a.filename })}
-                    onClick={() => remove.mutate(a.id)}
+                    onClick={() => setDeleting(a)}
                   >
                     <Trash2 />
                   </Button>
@@ -146,6 +148,22 @@ export default function InitiativeAttachments({ initiativeId }: { initiativeId: 
       )}
 
       {viewing && <AttachmentViewer attachment={viewing} onClose={() => setViewing(null)} />}
+
+      {deleting && (
+        <ConfirmDialog
+          title={t('deleteTitle')}
+          confirmLabel={tCommon('delete')}
+          onConfirm={async () => {
+            await remove.mutateAsync(deleting.id);
+            setDeleting(null);
+          }}
+          onClose={() => setDeleting(null)}
+        >
+          <p className="text-sm text-muted-foreground">
+            {t('deleteConfirmation', { name: deleting.filename })}
+          </p>
+        </ConfirmDialog>
+      )}
 
       {draggedFiles !== null && (
         <div className="pointer-events-none absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 rounded-md border-2 border-dashed border-primary bg-background/80 text-primary backdrop-blur-sm">

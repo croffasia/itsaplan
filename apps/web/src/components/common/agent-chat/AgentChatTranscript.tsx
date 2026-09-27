@@ -97,6 +97,7 @@ export function AgentChatTranscript({
               <AgentChatMessage
                 key={message.id}
                 message={message}
+                complete={status === 'ready' || index < messages.length - 1}
                 showDate={!previous || dayKey(previous.createdAt) !== dayKey(message.createdAt)}
               />
             );

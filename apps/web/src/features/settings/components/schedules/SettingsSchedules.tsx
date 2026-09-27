@@ -34,7 +34,7 @@ export default function SettingsSchedules({
   onNewHandled: () => void;
 }) {
   const t = useTranslations('settings.schedules');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const can = useSettingsCan();
   const paging = usePaging();
   const schedulesQuery = useAgentSchedules(projectKey, paging.params);

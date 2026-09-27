@@ -1,6 +1,9 @@
 import { Node, mergeAttributes } from '@tiptap/core';
-import { PluginKey } from '@tiptap/pm/state';
+import type { Node as ProseMirrorNode } from '@tiptap/pm/model';
+import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { Decoration, DecorationSet } from '@tiptap/pm/view';
 import { ReactRenderer } from '@tiptap/react';
+import { REFRESH_DECORATIONS } from '@/components/common/editor/refreshDecorations';
 import Suggestion from '@tiptap/suggestion';
 import EditorMentionMenu, {
   type MentionMenuRef,
@@ -18,11 +21,27 @@ export type MentionOptions = {
   // Read on every keystroke rather than captured once, so a roster that arrives
   // after the editor was built is still offered.
   items: () => MentionCandidate[];
+  // The viewer's own handle. A mention of it is painted in a second colour.
+  self: () => string;
 };
 
 // Its own key, so this suggestion plugin and the slash command's can both run in
 // one editor — two plugins under the default key are rejected by ProseMirror.
 const mentionPluginKey = new PluginKey('mentionSuggestion');
+const selfMentionKey = new PluginKey<DecorationSet>('selfMention');
+
+// A decoration rather than a class set in renderHTML: the session can arrive after the
+// nodes are drawn, and a decoration is recomputed on refresh where a node is not.
+function selfMentions(doc: ProseMirrorNode, self: string): DecorationSet {
+  if (!self) return DecorationSet.empty;
+  const handle = self.toLowerCase();
+  const decorations: Decoration[] = [];
+  doc.descendants((node, pos) => {
+    if (node.type.name === 'mention' && String(node.attrs.username).toLowerCase() === handle)
+      decorations.push(Decoration.node(pos, pos + node.nodeSize, { class: 'mention-self' }));
+  });
+  return DecorationSet.create(doc, decorations);
+}
 
 // A mention in the text is @handle — a member's username, or an agent's. Handles
 // hold letters, digits and . _ - and never end on . or -, so a mention that closes a
@@ -76,7 +95,7 @@ export const Mention = Node.create<MentionOptions>({
   selectable: false,
 
   addOptions() {
-    return { items: () => [] };
+    return { items: () => [], self: () => '' };
   },
 
   addAttributes() {
@@ -126,8 +145,19 @@ export const Mention = Node.create<MentionOptions>({
   },
 
   addProseMirrorPlugins() {
-    const { items } = this.options;
+    const { items, self } = this.options;
     return [
+      new Plugin<DecorationSet>({
+        key: selfMentionKey,
+        state: {
+          init: (_, state) => selfMentions(state.doc, self()),
+          apply: (tr, previous) =>
+            tr.docChanged || tr.getMeta(REFRESH_DECORATIONS)
+              ? selfMentions(tr.doc, self())
+              : previous.map(tr.mapping, tr.doc),
+        },
+        props: { decorations: (state) => selfMentionKey.getState(state) },
+      }),
       Suggestion<MentionCandidate, MentionCandidate>({
         pluginKey: mentionPluginKey,
         editor: this.editor,

@@ -1,103 +1,37 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { createHash } from 'node:crypto';
 import {
-  chatAttachment,
   db,
-  documentAsset,
-  initiative,
-  initiativeAttachment,
-  issue,
-  issueAttachment,
-  project,
-  projectDocument,
+  type DbExecutor,
+  getStorageSettings,
+  mimeAllowed,
+  MB,
+  projectStoredBytes,
+  projectTeamId,
+  teamStoredBytes,
 } from '@repo/db';
-import { eq, sql } from 'drizzle-orm';
-import { putObject, getObject, deleteObject } from '#shared/s3';
-import { HttpError, num } from '#shared/lib';
-import { getStorageSettings, mimeAllowed, MB } from '#modules/settings/service';
+import { putObject, getObject, deleteObject } from '@repo/storage';
+import { HttpError } from '#shared/lib';
 import { getLimits } from '#shared/limits';
 
-export type AttachmentStorageExecutor =
-  typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
-
-const ATTACHMENT_QUOTA_LOCK_NAMESPACE = 1_145_390_932;
-
-async function projectStoredBytes(
-  executor: AttachmentStorageExecutor,
-  projectId: number,
-): Promise<number> {
-  // Keep these sequential: callers commonly pass a transaction-bound executor,
-  // and all four reads must observe the same post-lock snapshot/connection.
-  const issues = await executor
-    .select({ total: sql<string>`coalesce(sum(${issueAttachment.sizeBytes}), 0)` })
-    .from(issueAttachment)
-    .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
-    .where(eq(issue.projectId, projectId));
-  const chats = await executor
-    .select({ total: sql<string>`coalesce(sum(${chatAttachment.sizeBytes}), 0)` })
-    .from(chatAttachment)
-    .where(eq(chatAttachment.projectId, projectId));
-  const documents = await executor
-    .select({ total: sql<string>`coalesce(sum(${documentAsset.sizeBytes}), 0)` })
-    .from(documentAsset)
-    .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
-    .where(eq(projectDocument.projectId, projectId));
-  const initiatives = await executor
-    .select({ total: sql<string>`coalesce(sum(${initiativeAttachment.sizeBytes}), 0)` })
-    .from(initiativeAttachment)
-    .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
-    .where(eq(initiative.projectId, projectId));
-  return (
-    num(issues[0]?.total ?? 0) +
-    num(chats[0]?.total ?? 0) +
-    num(documents[0]?.total ?? 0) +
-    num(initiatives[0]?.total ?? 0)
-  );
-}
-
-async function teamStoredBytes(
-  executor: AttachmentStorageExecutor,
-  teamId: number,
-): Promise<number> {
-  const issues = await executor
-    .select({ total: sql<string>`coalesce(sum(${issueAttachment.sizeBytes}), 0)` })
-    .from(issueAttachment)
-    .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
-    .innerJoin(project, eq(project.id, issue.projectId))
-    .where(eq(project.teamId, teamId));
-  const chats = await executor
-    .select({ total: sql<string>`coalesce(sum(${chatAttachment.sizeBytes}), 0)` })
-    .from(chatAttachment)
-    .innerJoin(project, eq(project.id, chatAttachment.projectId))
-    .where(eq(project.teamId, teamId));
-  const documents = await executor
-    .select({ total: sql<string>`coalesce(sum(${documentAsset.sizeBytes}), 0)` })
-    .from(documentAsset)
-    .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
-    .innerJoin(project, eq(project.id, projectDocument.projectId))
-    .where(eq(project.teamId, teamId));
-  const initiatives = await executor
-    .select({ total: sql<string>`coalesce(sum(${initiativeAttachment.sizeBytes}), 0)` })
-    .from(initiativeAttachment)
-    .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
-    .innerJoin(project, eq(project.id, initiative.projectId))
-    .where(eq(project.teamId, teamId));
-  return (
-    num(issues[0]?.total ?? 0) +
-    num(chats[0]?.total ?? 0) +
-    num(documents[0]?.total ?? 0) +
-    num(initiatives[0]?.total ?? 0)
-  );
-}
+// Re-exported so this stays the one place every attachment-owning module (issue,
+// chat, document, initiative) imports the key/filename helpers from — the
+// functions themselves live in @repo/storage so the worker can use them too.
+export { safeAttachmentFilename, attachmentObjectKey } from '@repo/storage';
+// Same reasoning: the worker takes this same advisory lock (by the same
+// namespace constant) before it checks an imported attachment against the
+// project's quota, so the two processes actually contend on one lock rather
+// than each thinking it has exclusive access.
+export { lockAttachmentStorage } from '@repo/db';
 
 export async function assertAttachmentStorageCapacity(
   projectId: number,
   addedBytes: number,
   replacedBytes = 0,
-  executor: AttachmentStorageExecutor = db,
+  executor: DbExecutor = db,
 ): Promise<void> {
   const limits = await getStorageSettings();
   if (limits.projectQuotaMb > 0) {
-    const used = (await projectStoredBytes(executor, projectId)) - replacedBytes;
+    const used = (await projectStoredBytes(projectId, executor)) - replacedBytes;
     if (used + addedBytes > limits.projectQuotaMb * MB) {
       throw new HttpError(
         413,
@@ -108,15 +42,11 @@ export async function assertAttachmentStorageCapacity(
   // The instance quota above is per project; a team may hold a ceiling of its own
   // across all of them. The team is read through the same executor: a project copy
   // checks the quota of a project its own transaction has not committed yet.
-  const [owner] = await executor
-    .select({ teamId: project.teamId })
-    .from(project)
-    .where(eq(project.id, projectId));
-  if (!owner) throw new HttpError(404, 'Project not found');
-  const teamId = owner.teamId;
+  const teamId = await projectTeamId(projectId, executor);
+  if (teamId == null) throw new HttpError(404, 'Project not found');
   const { maxStorageBytes } = await getLimits({ teamId });
   if (maxStorageBytes > 0) {
-    const used = (await teamStoredBytes(executor, teamId)) - replacedBytes;
+    const used = (await teamStoredBytes(teamId, executor)) - replacedBytes;
     if (used + addedBytes > maxStorageBytes) {
       throw new HttpError(
         413,
@@ -124,15 +54,6 @@ export async function assertAttachmentStorageCapacity(
       );
     }
   }
-}
-
-export async function lockAttachmentStorage(
-  executor: AttachmentStorageExecutor,
-  projectId: number,
-): Promise<void> {
-  await executor.execute(
-    sql`select pg_advisory_xact_lock(${ATTACHMENT_QUOTA_LOCK_NAMESPACE}, ${projectId})`,
-  );
 }
 
 export async function assertAttachmentUploadAllowed(
@@ -156,32 +77,6 @@ export async function assertAttachmentFileAllowed(
   if (!mimeAllowed(contentType, limits.attachmentMimeTypes)) {
     throw new HttpError(400, `Files of type "${contentType}" are not accepted on this instance`);
   }
-}
-
-export function safeAttachmentFilename(input: string, fallback = 'file'): string {
-  const basename = input.split(/[\\/]/).pop() ?? '';
-  const printable = [...basename]
-    .map((character) => {
-      const code = character.charCodeAt(0);
-      return code < 32 || code === 127 ? '_' : character;
-    })
-    .join('')
-    .trim();
-  const filename = printable.slice(-255);
-  return filename && filename !== '.' && filename !== '..' ? filename : fallback;
-}
-
-export function attachmentObjectKey(
-  projectId: number,
-  namespace: 'attachments' | 'chat' | 'documents' | 'initiatives',
-  ownerId: number | null,
-  filename: string,
-): string {
-  const safeName = safeAttachmentFilename(filename)
-    .replace(/[^\w.-]+/g, '_')
-    .slice(-100);
-  const ownerPath = ownerId === null ? '' : `${ownerId}/`;
-  return `projects/${projectId}/${namespace}/${ownerPath}${randomUUID()}-${safeName}`;
 }
 
 export async function storeAttachmentObject(
@@ -223,6 +118,51 @@ export async function deleteAttachmentObject(key: string): Promise<void> {
       error instanceof Error ? error.message : error,
     );
   });
+}
+
+const VIEWABLE_IMAGE = /^image\/(png|jpeg|gif|webp)$/i;
+const MAX_IMAGE_MB = 5;
+const MAX_IMAGES = 8;
+const MAX_VIEW_MB = 10;
+
+export const VIEWABLE_IMAGES = `PNG, JPEG, GIF and WebP images of up to ${MAX_IMAGE_MB} MB, at most ${MAX_IMAGES} images and ${MAX_VIEW_MB} MB per call`;
+
+// The images go into the assistant's context whole, so a call is bounded; an attachment
+// left out comes back as its DTO, whose url fetches it.
+export async function viewAttachments<
+  Row extends {
+    publicId: string;
+    s3Key: string;
+    filename: string;
+    contentType: string;
+    sizeBytes: number;
+  },
+  Dto,
+>(rows: Row[], dto: (row: Row) => Dto) {
+  const images: { id: string; filename: string; contentType: string; data: string }[] = [];
+  const others: Dto[] = [];
+  let bytes = 0;
+  for (const row of rows) {
+    const fits =
+      VIEWABLE_IMAGE.test(row.contentType) &&
+      row.sizeBytes <= MAX_IMAGE_MB * MB &&
+      images.length < MAX_IMAGES &&
+      bytes + row.sizeBytes <= MAX_VIEW_MB * MB;
+    if (!fits) {
+      others.push(dto(row));
+      continue;
+    }
+    const object = await getObject(row.s3Key).catch((error) => {
+      throw new HttpError(
+        502,
+        `Could not read ${row.filename}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    });
+    const data = Buffer.from(await new Response(object.body).arrayBuffer()).toString('base64');
+    images.push({ id: row.publicId, filename: row.filename, contentType: row.contentType, data });
+    bytes += row.sizeBytes;
+  }
+  return { images, others };
 }
 
 export function attachmentEtag(s3Key: string): string {

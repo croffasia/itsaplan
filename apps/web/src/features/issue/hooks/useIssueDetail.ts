@@ -13,9 +13,14 @@ import { useIssueQuery, useSetFieldValue, useUpdateIssue } from '@/services/issu
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
 import { qk } from '@/services/queryKeys';
-import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { useAttachmentsQuery, useUploadAttachment } from '../services/attachments.service';
-import { useFeedQuery, useGroupedFeedQuery, useTimelineQuery } from '../services/comments.service';
+import {
+  useFeedCountsQuery,
+  useFeedQuery,
+  useGroupedFeedQuery,
+  useTimelineQuery,
+} from '../services/comments.service';
+import { useActivityFeedView } from './useActivityFeedView';
 import { attachmentMarkdown, isImage } from '@/components/common/editor/attachmentEmbed';
 import { fieldDefsForType } from '../utils/fieldDefs';
 
@@ -33,20 +38,20 @@ export function useIssueDetail(
 
   // Started here, not in the components that read them: those mount only after the
   // issue arrives, which would put these reads in a second wave after it. Only the
-  // activity shape the preference opens with is read; the other one waits for a switch.
+  // activity view the log opens with is read; the others wait for a switch, and none
+  // is read before the saved view is known.
   const attachmentsQuery = useAttachmentsQuery(issueId);
-  // Undefined until the preferences arrive — the saved shape is read, never the
-  // default standing in for it, so neither feed is fetched to be thrown away.
-  const activityView = useAccountPreferencesQuery().data?.issueActivityView;
+  const activityView = useActivityFeedView();
   useTimelineQuery(issueId);
-  useFeedQuery(issueId, activityView === 'flat');
-  useGroupedFeedQuery(issueId, activityView === 'grouped');
+  useFeedCountsQuery(issueId);
+  useFeedQuery(issueId, activityView.slice, activityView.ready && !activityView.grouped);
+  useGroupedFeedQuery(issueId, activityView.slice, activityView.ready && activityView.grouped);
 
   // What the markdown editors' image picker offers.
   const imageAttachments = (attachmentsQuery.data ?? []).filter(isImage);
 
-  const updateIssue = useUpdateIssue(project.project.key);
-  const setFieldValue = useSetFieldValue(project.project.key);
+  const updateIssue = useUpdateIssue(project.project.ref);
+  const setFieldValue = useSetFieldValue(project.project.ref);
   const uploadAttachment = useUploadAttachment();
   const [descEditor, setDescEditor] = useState<Editor | null>(null);
 
@@ -57,7 +62,7 @@ export function useIssueDetail(
     targets: [
       qk.issue(issueId),
       qk.feed(issueId),
-      qk.issueDocumentLinks(project.project.key, issueId),
+      qk.issueDocumentLinks(project.project.ref, issueId),
     ],
   });
 
@@ -129,5 +134,6 @@ export function useIssueDetail(
     uploadFile,
     imageAttachments,
     setDescEditor,
+    activityView,
   };
 }

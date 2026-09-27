@@ -41,7 +41,7 @@ export default function IssueWorklogPanel({
   const [adding, setAdding] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const entries = useWorklogsQuery(issue.id).data ?? [];
   const createWorklog = useCreateWorklog();
   const updateWorklog = useUpdateWorklog();

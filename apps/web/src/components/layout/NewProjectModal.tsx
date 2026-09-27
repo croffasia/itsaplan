@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Users } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCreateProject } from '@/services/projects.service';
-import { useTeamsQuery } from '@/services/teams.service';
+import { useTeamsQuery, useTeamProjectDefaultsQuery } from '@/services/teams.service';
+import { useAiAgentsQuery } from '@/services/aiAgents.service';
 import { normalizeKey, suggestKey } from '@/utils/projectKey';
 import type { PresetKey } from '@/utils/projectPresets';
 import Modal from '@/components/common/overlay/Modal';
@@ -13,8 +14,8 @@ import { allSelected, type CopyInclude } from '@/components/layout/CopyProjectOp
 
 // Creates a project, or — when `copyFrom` is set — copies that project's structure
 // (states, issue types, labels, custom fields) into a new project without its
-// issues. `teamId` is the team the project belongs to; without one it goes to the
-// team the caller owns. A copy is always made within the source project's team.
+// issues. `teamId` is the team the project belongs to; a copy is always made within
+// the source project's team.
 export default function NewProjectModal({
   onClose,
   onCreated,
@@ -23,7 +24,7 @@ export default function NewProjectModal({
 }: {
   onClose: () => void;
   onCreated: (projectKey: string) => void;
-  teamId?: number;
+  teamId: number;
   copyFrom?: { id: number; name: string; description: string };
 }) {
   const t = useTranslations('newProject');
@@ -42,7 +43,13 @@ export default function NewProjectModal({
   const [preset, setPreset] = useState<PresetKey>('general');
   const createProject = useCreateProject();
   // Names the team in the header, so the dialog says where the project lands.
-  const team = useTeamsQuery().data?.find((one) => one.id === teamId);
+  const teams = useTeamsQuery().data;
+  const team = teams?.find((one) => one.id === teamId);
+  const defaults = useTeamProjectDefaultsQuery(copyFrom ? null : teamId).data;
+  const agents = useAiAgentsQuery(copyFrom ? null : teamId).data ?? [];
+  const defaultAgentNames = agents
+    .filter((agent) => defaults?.defaultAgentIds.includes(agent.id))
+    .map((agent) => agent.name);
 
   function onNameChange(value: string) {
     setName(value);
@@ -64,7 +71,7 @@ export default function NewProjectModal({
     };
     createProject.mutate(
       { teamId, copyFromId: copyFrom?.id, input },
-      { onSuccess: (project) => onCreated(project.key) },
+      { onSuccess: (project) => onCreated(project.ref) },
     );
   }
 
@@ -109,6 +116,11 @@ export default function NewProjectModal({
               onDescriptionChange={setDescription}
               onPresetChange={setPreset}
             />
+          )}
+          {!copyFrom && defaultAgentNames.length > 0 && (
+            <p className="mt-4 text-sm text-muted-foreground">
+              {t('defaultAgents', { names: defaultAgentNames.join(', ') })}
+            </p>
           )}
         </div>
         <div className="mt-4 flex justify-end border-t pt-3">

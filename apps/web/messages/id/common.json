@@ -188,7 +188,17 @@
     "previewCustomField": "Bidang kustom",
     "previewAllWorkItems": "Semua item pekerjaan",
     "previewUpdated": "Diperbarui {date}",
-    "previewOtherValues": "({count} lainnya)"
+    "previewOtherValues": "({count} lainnya)",
+    "previewLink": "Pratinjau tautan",
+    "previewLinks": "Pratinjau tautan ({count})",
+    "previewNamedLink": "Pratinjau {name}",
+    "backToLinks": "Kembali ke tautan",
+    "openLink": "Buka tautan",
+    "copyLink": "Salin tautan",
+    "copiedLink": "Tersalin",
+    "editLink": "Edit tautan",
+    "retryPreview": "Coba lagi",
+    "copyLinkFailed": "Tautan tidak dapat disalin. Pilih dan salin URL di atas."
   },
   "chart": {
     "download": "Simpan grafik",

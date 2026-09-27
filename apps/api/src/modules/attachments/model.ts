@@ -12,6 +12,23 @@ export const AttachmentResponse = t.Object({
 
 export const AttachmentListResponse = t.Array(AttachmentResponse);
 
+// `others` are the attachments not returned as an image, each with the url to fetch it.
+export const ViewAttachmentsResponse = t.Object({
+  images: t.Array(
+    t.Object({
+      id: t.String(),
+      filename: t.String(),
+      contentType: t.String(),
+      data: t.String({ description: 'The bytes, base64-encoded.' }),
+    }),
+  ),
+  others: AttachmentListResponse,
+});
+
+export const viewAttachmentQuery = t.Object({
+  attachment: t.String({ description: "The attachment's url, or its id." }),
+});
+
 export const issueParams = t.Object({ issueId: t.Numeric() });
 
 // The public id is a UUID column. Validating its format here turns a malformed id

@@ -49,7 +49,7 @@ export function useSettingsNavGroups(
   // The readable sections of one group as nav items.
   const toItems = (sections: SettingsSection[]): SettingsNavItem[] =>
     sections
-      .filter((s) => can(s.resource, 'read'))
+      .filter((s) => can(s.resource, s.viewAction ?? 'read'))
       .map((s) => ({
         key: s.slug,
         href: projectKey ? settingsPath(projectKey, s.slug) : '#',

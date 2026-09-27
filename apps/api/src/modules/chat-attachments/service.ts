@@ -1,7 +1,7 @@
 import { db, chatAttachment } from '@repo/db';
 import { eq, sql } from 'drizzle-orm';
 import { HttpError, iso, num } from '#shared/lib';
-import { getObject } from '#shared/s3';
+import { getObject } from '@repo/storage';
 import { isTableFilename, parseImportFile } from './parse';
 import {
   assertAttachmentStorageCapacity,
@@ -9,7 +9,7 @@ import {
 } from '#modules/attachments/storage';
 
 // Data access for chat attachments. File bytes live in the S3-compatible object
-// store (#shared/s3); these rows hold the metadata and the object key. publicId is
+// store (@repo/storage); these rows hold the metadata and the object key. publicId is
 // the unguessable id used in the public download URL and in the marker a chat
 // message carries for an attached file.
 

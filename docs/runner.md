@@ -1,7 +1,7 @@
 # Coding agent setup
 
 [`@itsaplan/runner`](https://www.npmjs.com/package/@itsaplan/runner) runs an external agent
-on your own machine. It has a preset for each of five coding agent CLIs. A preset builds
+on your own machine. It has a preset for each of seven coding agent CLIs. A preset builds
 the command itself: the flags for an unattended run, and the session resume.
 
 Each preset needs two files in the working directory:
@@ -202,3 +202,82 @@ thus stays out of the file:
 - Set `model` as `provider/model`. opencode supports many providers. Without this key, a
   run uses the model of the last interactive session. Run `opencode auth login` to make a
   provider available.
+
+## Pi
+
+Pi reads MCP servers through the `pi-mcp-adapter` extension. Install it once:
+
+```bash
+pi install npm:pi-mcp-adapter
+```
+
+The extension reads `.mcp.json` from the working directory:
+
+```json
+{
+  "mcpServers": {
+    "itsaplan": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+    }
+  }
+}
+```
+
+`itsaplan-runner.json`:
+
+```json
+{
+  "url": "http://localhost:3000",
+  "apiKey": "the key you copied on creation",
+  "agent": "pi",
+  "cwd": "/path/to/working-dir"
+}
+```
+
+- The preset passes `-p --mode json`. The stream gives the chat answer word by word, the
+  tool calls, and the session id on the first line. `--session-id` resumes that session.
+- `--append-system-prompt` gives Pi the context of the run.
+- Print mode does not wait for tool approval. `--approve` is only project-trust for
+  `.pi/settings.json`, not tool permission.
+- Sign in once with `pi` interactively so a provider is available.
+- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` only if your `pi-mcp-adapter` version
+  does. If they stay literal, write the key in the file the way Copilot's config does.
+
+## Oh My Pi
+
+Oh My Pi reads `.mcp.json` from the working directory:
+
+```json
+{
+  "mcpServers": {
+    "itsaplan": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": { "Authorization": "Bearer ${ITSAPLAN_API_KEY}" }
+    }
+  }
+}
+```
+
+`itsaplan-runner.json`:
+
+```json
+{
+  "url": "http://localhost:3000",
+  "apiKey": "the key you copied on creation",
+  "agent": "omp",
+  "cwd": "/path/to/working-dir"
+}
+```
+
+- The binary is `omp`. Sign in once by running it interactively.
+- The preset passes `-p --mode json --auto-approve`. No person is available to approve a
+  tool. Repeat `--approval-mode` in `args` to pick `write` instead of skipping every
+  prompt.
+- `--mode json` is the same stream Pi writes. `--resume` takes the session id from the
+  opening line.
+- `--append-system-prompt` gives Oh My Pi the context of the run.
+- Headers in `.mcp.json` expand `${ITSAPLAN_API_KEY}` only if your Oh My Pi build does.
+  If they stay literal, write the key in the file the way Copilot's config does.

@@ -21,7 +21,7 @@ export function openLinkOnEnter(
   return openLink(event, root);
 }
 
-function openLink(
+export function openLink(
   event: MouseEvent | KeyboardEvent,
   root: HTMLElement,
   target = event.target as Element | null,

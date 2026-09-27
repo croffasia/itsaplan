@@ -52,6 +52,36 @@ describe('preset arguments', () => {
     expect(resumed.slice(-4)).toEqual(['--session-id', 'c66bf000', '-p', 'do it']);
   });
 
+  it('prints through pi json mode and resumes by session id, task last', () => {
+    const fresh = presetArgv(PRESETS.pi, null, 'context', [], 'do it');
+    expect(fresh.slice(0, 3)).toEqual(['-p', '--mode', 'json']);
+    expect(fresh).not.toContain('--session-id');
+    expect(fresh).toContain('--append-system-prompt');
+    expect(fresh.at(-1)).toBe('do it');
+
+    const resumed = presetArgv(PRESETS.pi, 'sess-9', '', [], 'do it');
+    expect(resumed).toEqual(['-p', '--mode', 'json', '--session-id', 'sess-9', 'do it']);
+  });
+
+  it('prints through omp json mode unattended and resumes with --resume', () => {
+    const fresh = presetArgv(PRESETS.omp, null, '', [], 'do it');
+    expect(fresh).toContain('--auto-approve');
+    expect(fresh).not.toContain('--resume');
+    expect(fresh.at(-1)).toBe('do it');
+
+    const resumed = presetArgv(PRESETS.omp, '01a0c317', 'context', [], 'do it');
+    expect(resumed.slice(0, 6)).toEqual([
+      '-p',
+      '--mode',
+      'json',
+      '--auto-approve',
+      '--resume',
+      '01a0c317',
+    ]);
+    expect(resumed).toContain('--append-system-prompt');
+    expect(resumed.at(-1)).toBe('do it');
+  });
+
   it("appends the operator's arguments after the preset's, so a repeated flag wins", () => {
     const argv = presetArgv(PRESETS.claude, null, '', ['--permission-mode', 'plan'], 'do it');
     expect(argv.lastIndexOf('--permission-mode')).toBeGreaterThan(

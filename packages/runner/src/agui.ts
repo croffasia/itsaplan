@@ -200,6 +200,49 @@ export class AnswerStream {
       case 'copilot-json':
         this.readCopilotLine(parsed as CopilotLine);
         break;
+      case 'pi-json':
+        this.readPiLine(parsed as PiJsonLine);
+        break;
+    }
+  }
+
+  // Pi and Oh My Pi share this stream. The first line is the session header. Text arrives
+  // as text_delta; a tool is the pair of execution_start / execution_end. The stream emits
+  // a message_end for the user turn before any text, so only the assistant's counts, and
+  // only when no delta arrived.
+  private readPiLine(message: PiJsonLine): void {
+    if (message.type === 'session' && message.id) this.sessionId ??= message.id;
+    switch (message.type) {
+      case 'message_update': {
+        const event = message.assistantMessageEvent;
+        if (event?.type === 'text_delta' && event.delta) {
+          this.sawPartialText = true;
+          this.appendText(event.delta);
+        }
+        return;
+      }
+      case 'tool_execution_start':
+        if (message.toolCallId && !this.openToolCalls.has(message.toolCallId)) {
+          this.openToolCalls.add(message.toolCallId);
+          this.pushToolCall(
+            message.toolCallId,
+            message.toolName ?? 'tool',
+            JSON.stringify(message.args ?? {}),
+          );
+        }
+        return;
+      case 'tool_execution_end': {
+        if (!message.toolCallId || this.closedToolCalls.has(message.toolCallId)) return;
+        this.closedToolCalls.add(message.toolCallId);
+        this.pushToolResult(message.toolCallId, piResultText(message.result));
+        return;
+      }
+      case 'message_end':
+        if (message.message?.role === 'assistant' && !this.sawAnyText && message.message.content) {
+          const body = textOfResult(message.message.content);
+          if (body) this.appendText(body);
+        }
+        return;
     }
   }
 
@@ -458,6 +501,9 @@ export class UsageReader {
       case 'antigravity-stream-json':
         this.readAntigravity(parsed as AntigravityLine);
         return;
+      case 'pi-json':
+        this.readPi(parsed as PiJsonLine);
+        return;
     }
   }
 
@@ -516,13 +562,25 @@ export class UsageReader {
       outputTokens: (usage.output_tokens ?? 0) + (usage.thinking_tokens ?? 0),
     };
   }
+
+  // Pi reports the latest cumulative usage on each message_update. Cache reads sit
+  // beside the rest of the input, the same split Claude uses.
+  private readPi(message: PiJsonLine): void {
+    const usage = message.usage;
+    if (!usage) return;
+    this.last = {
+      inputTokens: (usage.input ?? usage.input_tokens ?? 0) + (usage.cacheRead ?? 0),
+      outputTokens: usage.output ?? usage.output_tokens ?? 0,
+    };
+  }
 }
 
 function tail(text: string, limit: number): string {
-  return text.length <= limit ? text : `…${text.slice(-limit)}`;
+  if (text.length <= limit) return text;
+  const mark = '…';
+  return mark + text.slice(-(limit - mark.length));
 }
 
-// A tool result is either a string or the block list the model was shown.
 function textOfResult(content: unknown): string {
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) {
@@ -531,6 +589,14 @@ function textOfResult(content: unknown): string {
       .join('');
   }
   return '';
+}
+
+function piResultText(result: unknown): string {
+  if (result && typeof result === 'object' && !Array.isArray(result) && 'content' in result) {
+    return textOfResult(result.content);
+  }
+  const text = textOfResult(result);
+  return text || (result == null ? '' : JSON.stringify(result));
 }
 
 // The parts of Claude Code's stream-json this adapter reads. `session_id` rides on every
@@ -634,6 +700,26 @@ interface CopilotLine {
     result?: { content?: string } | null;
     error?: { message?: string };
   };
+}
+
+// The parts of pi / omp --mode json this adapter reads. The session id is on the
+// opening header; usage rides on message_update.
+interface PiJsonLine {
+  type?: string;
+  id?: string;
+  usage?: {
+    input?: number;
+    output?: number;
+    cacheRead?: number;
+    input_tokens?: number;
+    output_tokens?: number;
+  };
+  assistantMessageEvent?: { type?: string; delta?: string };
+  toolCallId?: string;
+  toolName?: string;
+  args?: unknown;
+  result?: unknown;
+  message?: { role?: string; content?: unknown };
 }
 
 interface StreamEvent {

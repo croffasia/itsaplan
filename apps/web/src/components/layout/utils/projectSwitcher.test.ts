@@ -9,7 +9,9 @@ function project(overrides: Partial<Project> = {}): Project {
     id: 1,
     teamId: 1,
     teamName: 'Engineering',
+    teamRef: 'eng',
     key: 'API',
+    ref: 'eng.API',
     name: 'API platform',
     description: '',
     mcpEnabled: true,
@@ -35,6 +37,8 @@ function team(overrides: Partial<Team> = {}): Team {
   return {
     id: 1,
     name: 'Engineering',
+    slug: 'eng',
+    ref: 'eng',
     mcpEnabled: true,
     role: 'owner',
     source: 'invite',
@@ -340,6 +344,25 @@ describe('projectSwitcherSections', () => {
     assert.deepEqual(
       sections.hiddenProjects.map((item) => item.key),
       ['NEWER', 'OLDER'],
+    );
+  });
+
+  it('sorts hidden projects as one list across teams, ignoring favorites', () => {
+    const projects = [
+      project({ id: 1, key: 'CCC', isHidden: true, isFavorite: true }),
+      project({ id: 2, teamId: 2, key: 'AAA', isHidden: true }),
+      project({ id: 3, key: 'BBB', isHidden: true }),
+    ];
+    const sections = projectSwitcherSections(
+      projects,
+      [team(), team({ id: 2, name: 'Design' })],
+      '',
+      'key',
+      'en',
+    );
+    assert.deepEqual(
+      sections.hiddenProjects.map((item) => item.key),
+      ['AAA', 'BBB', 'CCC'],
     );
   });
 });

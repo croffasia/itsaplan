@@ -101,6 +101,10 @@
       "label": "Dépôts",
       "description": "Fermez les tickets quand leurs pull requests sont fusionnées sur GitHub, GitLab, Gitea, Forgejo ou Bitbucket."
     },
+    "import-export": {
+      "label": "Import/Export",
+      "description": "Importez les tickets, commentaires et étiquettes depuis une instance Plane auto-hébergée, ou exportez les données du projet au format JSON."
+    },
     "ai-agents": {
       "label": "Agents",
       "description": "Des comptes bots auxquels vous pouvez déléguer des tickets."

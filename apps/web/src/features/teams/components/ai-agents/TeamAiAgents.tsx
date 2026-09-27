@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
 import { useAiAgentsQuery, useDeleteAiAgent } from '@/services/aiAgents.service';
 import { useIntegrationCatalogQuery } from '@/services/integrations.service';
@@ -13,7 +15,12 @@ import { TeamAiAgentRow } from './TeamAiAgentRow';
 import { TeamAiAgentSheet } from './TeamAiAgentSheet';
 import { TeamAiAgentRunsSheet } from './TeamAiAgentRunsSheet';
 import { integrationLabel } from '@/utils/integrationLabels';
-import { useTranslations } from 'next-intl';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  useTeam,
+  useTeamProjectDefaultsQuery,
+  useUpdateTeamProjectDefaults,
+} from '@/services/teams.service';
 
 // The agents of a team: bot users that issues can be delegated to in any project the
 // team attaches them to. An external agent is driven through the API; an internal
@@ -27,6 +34,11 @@ export default function TeamAiAgents() {
   const { teamId } = useAgentSection();
   const agentsQuery = useAiAgentsQuery(teamId);
   const agents = agentsQuery.data ?? [];
+  const team = useTeam(teamId);
+  const { data: defaults } = useTeamProjectDefaultsQuery(teamId);
+  const updateDefaults = useUpdateTeamProjectDefaults(teamId);
+  const defaultIds = defaults?.defaultAgentIds ?? [];
+  const canEditDefaults = team != null && team.role !== 'member';
   const deleteAgent = useDeleteAiAgent(teamId);
   // The integration catalog maps a provider key to a readable label for the meta row.
   const catalog = useIntegrationCatalogQuery(teamId).data ?? [];
@@ -55,9 +67,10 @@ export default function TeamAiAgents() {
           <Table className="min-w-[1000px] table-fixed">
             <colgroup>
               <col className="w-[32%]" />
-              <col className="w-[20%]" />
-              <col className="w-[36%]" />
-              <col className="w-[12%]" />
+              <col className="w-[18%]" />
+              <col className="w-[32%]" />
+              <col className="w-[10%]" />
+              <col className="w-[8%]" />
             </colgroup>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -69,6 +82,16 @@ export default function TeamAiAgents() {
                 </TableHead>
                 <TableHead className="text-xs font-medium text-muted-foreground">
                   {t('columns.configuration')}
+                </TableHead>
+                <TableHead className="text-xs font-medium text-muted-foreground">
+                  <Tooltip>
+                    <TooltipTrigger className="cursor-help underline decoration-dotted underline-offset-4">
+                      {t('projectDefaultsColumn')}
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {t(canEditDefaults ? 'projectDefaultsHint' : 'projectDefaultsReadOnly')}
+                    </TooltipContent>
+                  </Tooltip>
                 </TableHead>
                 <TableHead className="text-end text-xs font-medium text-muted-foreground">
                   {tCommon('actions')}
@@ -85,6 +108,17 @@ export default function TeamAiAgents() {
                   onRuns={() => setRunsAgent(a)}
                   onEdit={() => setEditingId(a.id)}
                   onDelete={() => setDeleting(a)}
+                  joinsNewProjects={defaultIds.includes(a.id)}
+                  joinsNewProjectsPending={updateDefaults.isPending}
+                  onJoinsNewProjectsChange={
+                    canEditDefaults && defaults
+                      ? (on) =>
+                          updateDefaults.mutate(
+                            on ? [...defaultIds, a.id] : defaultIds.filter((id) => id !== a.id),
+                            { onSuccess: () => toast.success(t('projectDefaultsSaved')) },
+                          )
+                      : undefined
+                  }
                 />
               ))}
             </TableBody>

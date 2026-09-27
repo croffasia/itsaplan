@@ -11,7 +11,7 @@ import SettingsLabels from './components/labels/SettingsLabels';
 
 const section = settingsSection('labels');
 
-// The Labels settings page (/project/:projectKey/settings/labels).
+// The Labels settings page (/:team/:projectKey/settings/labels).
 export default function SettingsLabelsPage() {
   const sectionText = useSettingsSectionText()(section.slug);
   const { project } = useShell();
@@ -22,7 +22,7 @@ export default function SettingsLabelsPage() {
       description={sectionText.description}
       actions={
         <LabelsToolbar
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           resource={section.resource}
           groups={project.labelGroups}
           labels={project.labels}

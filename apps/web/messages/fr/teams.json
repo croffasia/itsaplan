@@ -2,6 +2,9 @@
   "create": {
     "title": "Nouvelle équipe",
     "namePlaceholder": "Nom de l'équipe",
+    "slug": "URL",
+    "slugHint": "Les liens vers les projets de l'équipe commencent par lui, par ex. /acme.",
+    "slugInvalid": "Utilisez 2 à 40 lettres minuscules, chiffres ou tirets, en commençant par une lettre.",
     "hint": "Vous serez le propriétaire de cette équipe.",
     "submit": "Créer l'équipe"
   },
@@ -50,11 +53,14 @@
   "info": {
     "team": "Équipe",
     "teamHint": "Le nom sous lequel les projets de l'équipe sont regroupés.",
+    "slug": "URL",
+    "slugHint": "Obligatoire pour enregistrer les modifications. Lettres minuscules, chiffres et tirets.",
+    "slugInvalid": "Utilisez 2 à 40 lettres minuscules, chiffres ou tirets, en commençant par une lettre.",
     "role": "Votre rôle",
     "created": "Créé le",
     "leads": "Propriétaires et responsables",
     "leadsHint": "Les personnes qui peuvent gérer cette équipe et ses projets.",
-    "saved": "Nom de l'équipe enregistré",
+    "saved": "Équipe enregistrée",
     "leaveHint": "Vous conservez les projets dont vous êtes membre. Pour revenir, un propriétaire doit vous ajouter à nouveau."
   },
   "columns": {
@@ -319,6 +325,17 @@
     "noAccess": "Vous n'avez pas accès aux outils de cette équipe."
   },
   "agents": {
+    "projectDefaultsColumn": "Nouveaux projets",
+    "projectDefaultsHint": "Les agents sélectionnés rejoignent chaque nouveau projet de cette équipe. Les projets existants et les copies conservent leurs agents.",
+    "projectDefaultAria": "Ajouter {agent} aux nouveaux projets",
+    "projectDefaultsReadOnly": "Les propriétaires et responsables de l’équipe choisissent les agents ajoutés aux nouveaux projets.",
+    "projectDefaultsSaved": "Agents par défaut enregistrés",
+    "projectDefaultOn": "Activé",
+    "projectDefaultOff": "Désactivé",
+    "joinNewProjects": "Ajouter aux nouveaux projets",
+    "joinNewProjectsHint": "L’agent rejoint chaque nouveau projet de cette équipe.",
+    "selectAllProjects": "Tout sélectionner",
+    "clearProjects": "Tout désélectionner",
     "newAgent": "Nouvel agent IA",
     "create": "Créer l'agent IA",
     "save": "Enregistrer l'agent IA",
@@ -394,6 +411,7 @@
     "runnerHelpToolHint": "Sur la machine qui fera tourner le runner. Le runner ne peut pas se connecter à votre place.",
     "runnerHelpRun": "Enregistrez les fichiers là où l'agent doit travailler",
     "runnerHelpTabCustom": "Le vôtre",
+    "runnerHelpPiAdapter": "Pi lit .mcp.json via une extension. Installez-la une fois : pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "Vérifiez qu'il est connecté",
     "runnerHelpCheckHint": "La section Runner affiche En ligne.",
     "runnerOnline": "Runner en ligne",

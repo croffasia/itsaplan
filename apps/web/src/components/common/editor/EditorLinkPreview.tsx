@@ -5,15 +5,31 @@ import { Popover, PopoverAnchor, PopoverContent } from '@/components/ui/popover'
 import { useEditorLinkPreview } from './useEditorLinkPreview';
 import { useLinkPreviewQuery } from './useLinkPreviewQuery';
 import EditorLinkPreviewCard from './EditorLinkPreviewCard';
+import LinkPreviewDialog from './LinkPreviewDialog';
+import { useEditorLinkPresentation } from './useEditorLinkPresentation';
 import styles from './EditorLinkPreview.module.css';
 
-export default function EditorLinkPreview({ editor }: { editor: Editor }) {
+export default function EditorLinkPreview({
+  editor,
+  source = '',
+  compact = true,
+}: {
+  editor: Editor;
+  source?: string;
+  compact?: boolean;
+}) {
   const t = useTranslations('common.editor');
-  const { anchor, candidateAnchor, open, close, keepOpen, leave } = useEditorLinkPreview(editor);
+  const { dialog, closeDialog } = useEditorLinkPresentation(editor, source, compact);
+  const { anchor, candidateAnchor, open, close, keepOpen, leave } = useEditorLinkPreview(
+    editor,
+    !!dialog,
+  );
   const virtualRef = useRef({ getBoundingClientRect: () => new DOMRect() });
   virtualRef.current.getBoundingClientRect = () => anchor?.getBoundingClientRect() ?? new DOMRect();
   useLinkPreviewQuery(candidateAnchor?.href);
   const { data, isPending } = useLinkPreviewQuery(anchor?.href);
+  if (dialog)
+    return <LinkPreviewDialog {...dialog} onClose={closeDialog} container={editor.view.dom} />;
   if (!anchor) return null;
 
   return (

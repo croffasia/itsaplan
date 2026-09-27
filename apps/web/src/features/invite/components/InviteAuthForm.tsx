@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { projectPath } from '@/utils/paths';
+import { projectPath, projectRefOf } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
@@ -64,7 +64,9 @@ export default function InviteAuthForm({
           token,
           registerFailed: t('registerFailed'),
         });
-        router.push(result.projectKey ? projectPath(result.projectKey) : '/');
+        router.push(
+          result.projectKey ? projectPath(projectRefOf(result.teamRef, result.projectKey)) : '/',
+        );
         router.refresh();
       } else {
         await signInForInvite({ email, password, signInFailed: t('signInFailed') });

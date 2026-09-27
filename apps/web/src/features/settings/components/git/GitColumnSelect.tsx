@@ -11,20 +11,17 @@ export default function GitColumnSelect({
   columns,
   value,
   noneLabel,
-  readOnly,
   onChange,
 }: {
   columns: Column[];
   value: number | null;
   noneLabel: string;
-  readOnly?: boolean;
   onChange: (id: number | null) => void;
 }) {
   const t = useTranslations('settings.git');
   const column = value == null ? undefined : columns.find((c) => c.id === value);
   return (
     <PopoverPick
-      readOnly={readOnly}
       trigger={
         <Pill active={column != null}>
           {column ? colorDot(column.color) : <CircleDashed />}

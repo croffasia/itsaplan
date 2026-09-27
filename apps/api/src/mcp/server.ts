@@ -61,7 +61,7 @@ export async function buildMcpServer(
           ? withoutFields(t.inputSchema, [TEAM_PARAM])
           : t.inputSchema,
       annotations: t.annotations,
-      outputSchema: t.outputSchema,
+      outputSchema: t.images ? undefined : t.outputSchema,
     })),
   }));
 
@@ -92,8 +92,31 @@ export async function buildMcpServer(
     const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {
       viaMcpEndpoint: true,
     });
+    if (tool.images && !isError) return { content: imageContent(text) };
     return { content: [{ type: 'text', text }], isError, structuredContent };
   });
 
   return server;
+}
+
+interface ViewedAttachments {
+  images: { id: string; filename: string; contentType: string; data: string }[];
+  others: unknown[];
+}
+
+// The images of an image tool follow a text block that names them in the same order and
+// lists the attachments left out. There is no structuredContent (nor an outputSchema to
+// require one): Claude Code gives the model structuredContent in place of the text
+// block when it is present, and earlier versions dropped the images as well.
+function imageContent(text: string) {
+  const { images, others } = JSON.parse(text) as ViewedAttachments;
+  const named = images.map(({ id, filename, contentType }) => ({ id, filename, contentType }));
+  return [
+    { type: 'text' as const, text: JSON.stringify({ images: named, others }) },
+    ...images.map((image) => ({
+      type: 'image' as const,
+      data: image.data,
+      mimeType: image.contentType,
+    })),
+  ];
 }

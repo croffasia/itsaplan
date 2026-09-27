@@ -1,6 +1,8 @@
 import { FolderKanban } from 'lucide-react';
 import type { TeamProjectOption } from '@/lib/api/endpoints/teams';
 import type { AgentFormValue } from '../../utils/agentForm';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { AgentCapabilityList } from './AgentCapabilityList';
 import { AgentEmptyNotice } from './AgentEmptyNotice';
 import { AgentFormSection } from './AgentFormSection';
@@ -15,12 +17,17 @@ export default function AgentProjectsSection({
   value,
   onChange,
   projects,
+  joinsNewProjects,
+  onJoinsNewProjectsChange,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   value: AgentFormValue;
   onChange: (patch: Partial<AgentFormValue>) => void;
   projects: TeamProjectOption[];
+  joinsNewProjects: boolean;
+  // Undefined for a member who cannot change the team's defaults; the checkbox is hidden.
+  onJoinsNewProjectsChange?: (on: boolean) => void;
 }) {
   const t = useTranslations('teams.agents');
 
@@ -43,6 +50,43 @@ export default function AgentProjectsSection({
         projects.length > 0 ? `${value.projectIds.length} / ${projects.length}` : undefined
       }
     >
+      {onJoinsNewProjectsChange && (
+        <label className="flex cursor-pointer items-start gap-2 border-b border-border/60 pb-4">
+          <Checkbox
+            className="mt-0.5"
+            checked={joinsNewProjects}
+            onCheckedChange={(v) => onJoinsNewProjectsChange(v === true)}
+          />
+          <span>
+            <span className="text-sm">{t('joinNewProjects')}</span>
+            <span className="block text-xs text-muted-foreground">{t('joinNewProjectsHint')}</span>
+          </span>
+        </label>
+      )}
+      {projects.length > 1 && (
+        <div className="flex gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            disabled={value.projectIds.length === projects.length}
+            onClick={() => onChange({ projectIds: projects.map((project) => project.id) })}
+          >
+            {t('selectAllProjects')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-xs"
+            disabled={value.projectIds.length === 0}
+            onClick={() => onChange({ projectIds: [] })}
+          >
+            {t('clearProjects')}
+          </Button>
+        </div>
+      )}
       {projects.length === 0 ? (
         <AgentEmptyNotice icon={FolderKanban} title={t('noProjects')} hint={t('noProjectsHint')} />
       ) : (

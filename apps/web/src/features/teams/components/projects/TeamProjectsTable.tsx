@@ -122,7 +122,7 @@ export default function TeamProjectsTable({
                     title={t('panel.openProject')}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Link href={projectPath(project.key)}>
+                    <Link href={projectPath(project.ref)}>
                       <ArrowUpRight className="size-4" />
                     </Link>
                   </Button>

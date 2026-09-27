@@ -24,7 +24,7 @@ import {
 
 export default function InboxView({ project }: { project: ProjectDetail }) {
   const t = useTranslations('inbox');
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const projectId = project.project.id;
 
   const { filters, changeFilters } = useInboxFilters(projectKey);

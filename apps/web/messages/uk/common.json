@@ -188,7 +188,17 @@
     "previewCustomField": "Custom field",
     "previewAllWorkItems": "All work items",
     "previewUpdated": "Updated {date}",
-    "previewOtherValues": "({count} more)"
+    "previewOtherValues": "({count} more)",
+    "previewLink": "Перегляд посилання",
+    "previewLinks": "Перегляд посилань ({count})",
+    "previewNamedLink": "Перегляд: {name}",
+    "backToLinks": "Назад до посилань",
+    "openLink": "Відкрити посилання",
+    "copyLink": "Копіювати посилання",
+    "copiedLink": "Скопійовано",
+    "editLink": "Редагувати посилання",
+    "retryPreview": "Спробувати ще раз",
+    "copyLinkFailed": "Не вдалося скопіювати посилання. Виділіть і скопіюйте URL вище."
   },
   "chart": {
     "download": "Зберегти графік",

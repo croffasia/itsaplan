@@ -6,6 +6,7 @@ import {
   project,
   projectColumn,
   projectMember,
+  team,
   teamMember,
   agentSkillLink,
   agentToolLink,
@@ -23,6 +24,7 @@ import { normalizeToolKeys, ALWAYS_ON_ACTIONS } from './runtime/tools/catalog';
 import { deleteThreadsWhere } from './runtime/memory';
 import { listAgentMemberFieldIds } from '#modules/custom-fields/service';
 import { runsTeam, type TeamStanding } from '#modules/teams/service';
+import { projectRefSql } from '#modules/teams/ref';
 import { getDefaultRoleId } from '#modules/roles/service';
 import { deleteAccount } from '#shared/account-deletion';
 
@@ -68,6 +70,7 @@ export interface FieldTriggerRead extends FieldTrigger {
 export interface AgentProject {
   id: number;
   key: string;
+  ref: string;
   name: string;
 }
 
@@ -191,7 +194,7 @@ const agentColumns = {
   // of another team cannot happen (the attach route refuses it) and is not listed.
   projects: sql<
     AgentProject[]
-  >`(select coalesce(json_agg(json_build_object('id', p.id, 'key', p.key, 'name', p.name) order by p.key), '[]'::json) from ${projectMember} pm join ${project} p on p.id = pm.project_id where pm.user_id = ${aiAgent.userId} and p.team_id = ${aiAgent.teamId})`,
+  >`(select coalesce(json_agg(json_build_object('id', ${project.id}, 'key', ${project.key}, 'ref', ${projectRefSql}, 'name', ${project.name}) order by ${project.key}), '[]'::json) from ${projectMember} join ${project} on ${project.id} = ${projectMember.projectId} join ${team} on ${team.id} = ${project.teamId} where ${projectMember.userId} = ${aiAgent.userId} and ${project.teamId} = ${aiAgent.teamId})`,
   userId: aiAgent.userId,
   name: user.name,
   username: aiAgent.username,

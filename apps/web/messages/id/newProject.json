@@ -46,5 +46,6 @@
   "copyTitle": "Salin proyek \"{name}\"",
   "create": "Buat proyek",
   "copyAction": "Salin proyek",
+  "defaultAgents": "Agen yang akan bergabung dengan proyek ini: {names}",
   "copyName": "Salinan {name}"
 }

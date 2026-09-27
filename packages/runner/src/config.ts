@@ -43,6 +43,7 @@ const OUTPUT_FORMATS = [
   'opencode-json',
   'antigravity-stream-json',
   'copilot-json',
+  'pi-json',
 ] as const;
 
 export type OutputFormat = (typeof OUTPUT_FORMATS)[number];

@@ -1,10 +1,10 @@
 # ─────────────────────────────────────────────────────────────
 # Local development: brings up the backing services the app needs — Postgres and
-# MinIO — with host-published ports, so one command starts them together instead
+# RustFS — with host-published ports, so one command starts them together instead
 # of running each by hand. The api, web, worker, and Telegram bot apps run on the
 # host via `bun run dev` (watch/hot-reload, turbo) and reach these over localhost.
 #
-#   docker compose -f docker-compose.dev.yml up -d      # starts postgres + minio (+ bucket init)
+#   docker compose -f docker-compose.dev.yml up -d      # starts postgres + rustfs (+ bucket init)
 #
 # If host port 5432 is taken (a local Postgres is already running),
 # pick another:  POSTGRES_PORT=5433 docker compose -f docker-compose.dev.yml up -d
@@ -33,38 +33,48 @@ services:
       timeout: 5s
       retries: 10
 
-  # S3-compatible object store for issue attachments (MinIO).
+  # S3-compatible object store for issue attachments (RustFS).
   # The attachments bucket is created by the minio-init service below.
   #   S3 API:      http://localhost:9000
-  #   Web console: http://localhost:9001
+  #   Web console: http://localhost:9001/rustfs/console/
   #     login with S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY from .env
+  #
+  # The service and volume keep their MinIO-era names so an existing dev stack
+  # upgrades in place: RustFS reads the files MinIO wrote, and runs as root because
+  # MinIO wrote them as root.
   minio:
-    image: quay.io/minio/minio:latest
+    image: rustfs/rustfs:1.0.0
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    user: '0:0'
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY_ID:-minioadmin}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
     ports:
       - '9000:9000'
       - '9001:9001'
     volumes:
       - minio-dev-data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', '-o', '/dev/null', 'http://127.0.0.1:9000/health']
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
-  # One-shot: waits for MinIO, creates the attachments bucket, then exits.
+  # One-shot: creates the attachments bucket, then exits. A PUT on a bucket that
+  # already exists succeeds, so it runs on every start.
   minio-init:
-    image: quay.io/minio/mc:latest
+    image: rustfs/rustfs:1.0.0
     depends_on:
-      - minio
+      minio:
+        condition: service_healthy
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY:-minioadmin}
+      S3_ACCESS_KEY_ID: ${S3_ACCESS_KEY_ID:-minioadmin}
+      S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY:-minioadmin}
       S3_BUCKET: ${S3_BUCKET:-planner-attachments}
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://minio:9000 \"$$MINIO_ROOT_USER\" \"$$MINIO_ROOT_PASSWORD\"; do echo 'waiting for minio...'; sleep 2; done;
-      mc mb --ignore-existing local/\"$$S3_BUCKET\";
-      echo 'bucket ready: '\"$$S3_BUCKET\";
+      curl -fsS -X PUT --aws-sigv4 aws:amz:us-east-1:s3 --user \"$$S3_ACCESS_KEY_ID:$$S3_SECRET_ACCESS_KEY\" http://minio:9000/\"$$S3_BUCKET\" &&
+      echo 'bucket ready: '\"$$S3_BUCKET\"
       "
 
 volumes:

@@ -70,7 +70,7 @@ function SheetBody({ initialAgent }: { initialAgent: AiAgent | null }) {
   const chatProject = agent?.projects[0] ?? null;
   // Held here so the transcript and thread survive re-renders. No agent yet during
   // create → id 0; the chat is only reachable once the agent exists.
-  const chat = useAgentChat(chatProject?.key ?? '', agent?.id ?? 0, agent?.kind === 'external');
+  const chat = useAgentChat(chatProject?.ref ?? '', agent?.id ?? 0, agent?.kind === 'external');
 
   // The form and the test chat always sit side by side, so the sheet keeps its shape
   // from create through edit. There is nothing to chat in until the agent exists and
@@ -121,7 +121,7 @@ function SheetBody({ initialAgent }: { initialAgent: AiAgent | null }) {
           {chatReady ? (
             <AgentChatPanel
               agent={agent}
-              projectKey={chatProject.key}
+              projectKey={chatProject.ref}
               messages={chat.messages}
               status={chat.status}
               activeTool={chat.activeTool}

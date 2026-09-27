@@ -1,9 +1,29 @@
 # MCP tool results
 
-Every MCP tool result contains an object in `structuredContent`. The existing text block
+Every MCP tool result contains an object in `structuredContent`, except a successful call
+of an image tool (see below). The existing text block
 contains the original REST response body, including an empty string for HTTP 204. Existing
 clients can continue reading that text. The internal agent runtime keeps its existing result
 format.
+
+## Attachment urls and images
+
+The body is the REST body with one change: the path of an issue or initiative attachment,
+whether the api's `/attachments/<id>/raw` or the web's `/media/attachments/<id>/raw`, is
+written as a url on the public api origin (`API_URL`). The url is computed on each call and
+is never stored. The arguments of a call get the web path back, so a description an
+assistant writes keeps `/media/...`. A string argument that is only a url is passed as it
+is. Document assets need a session and keep their paths.
+
+`view_attachment` (one attachment, by its url or id), `view_issue_images` and
+`view_initiative_images` return images as `image` content blocks: PNG, JPEG, GIF and
+WebP, up to 5 MB each, 8 images and 10 MB per call. A text block comes first and names
+the images in order, `{ images: [{ id, filename, contentType }], others: [...] }`, where
+`others` holds every attachment left out, with its url. These three tools advertise no
+`outputSchema` and a successful call has no `structuredContent`: Claude Code gives the
+model `structuredContent` in place of the text block when it is present, which loses the
+names and the urls of the attachments left out, and earlier versions dropped the images as
+well. A failed call has the error envelope below.
 
 A successful call returns:
 

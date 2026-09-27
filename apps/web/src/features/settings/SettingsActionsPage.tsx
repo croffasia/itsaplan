@@ -13,7 +13,7 @@ import SettingsActions from './components/actions/SettingsActions';
 
 const section = settingsSection('actions');
 
-// The Actions settings page (/project/:projectKey/settings/actions). The actions
+// The Actions settings page (/:team/:projectKey/settings/actions). The actions
 // section also needs the project's custom fields for the condition editor.
 export default function SettingsActionsPage() {
   const t = useTranslations('settings.actions');

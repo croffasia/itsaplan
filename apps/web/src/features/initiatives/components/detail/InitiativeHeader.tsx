@@ -28,7 +28,7 @@ export default function InitiativeHeader({
   project: ProjectDetail;
 }) {
   const t = useTranslations('initiatives');
-  const update = useUpdateInitiative(project.project.key);
+  const update = useUpdateInitiative(project.project.ref);
   const hasDescription = initiative.description.trim().length > 0;
   // The calendars grey out days that would put one date on the wrong side of the
   // other. Equal dates are allowed.
@@ -118,7 +118,7 @@ export default function InitiativeHeader({
           <HealthBadge health={initiative.health} />
         </div>
         <ProgressBar progress={initiative.progress} />
-        <InitiativeActions initiative={initiative} projectKey={project.project.key} />
+        <InitiativeActions initiative={initiative} projectKey={project.project.ref} />
       </div>
     </div>
   );

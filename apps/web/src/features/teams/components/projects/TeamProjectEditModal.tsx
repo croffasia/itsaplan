@@ -11,9 +11,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { isValidKey, normalizeKey } from '@/utils/projectKey';
 
-// Renames a project the team owns and edits what it is for. The key is immutable,
-// so it trails the title instead of being a field.
+// Renames a project the team owns and edits what it is for. The key trails the
+// title, and is a field only while it is not a valid key (see isValidKey).
 export default function TeamProjectEditModal({
   teamId,
   project,
@@ -26,10 +27,12 @@ export default function TeamProjectEditModal({
   const t = useTranslations('projects.editDialog');
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description);
+  const keyEditable = !isValidKey(project.key);
+  const [key, setKey] = useState(() => normalizeKey(project.key));
   const updateProject = useUpdateTeamProject();
   // Names the team in the header, the same as when the project was created.
   const team = useTeam(teamId);
-  const canSubmit = !updateProject.isPending && name.trim() !== '';
+  const canSubmit = !updateProject.isPending && name.trim() !== '' && key !== '';
 
   function submit() {
     if (!canSubmit) return;
@@ -37,8 +40,12 @@ export default function TeamProjectEditModal({
       {
         teamId,
         projectId: project.id,
-        projectKey: project.key,
-        patch: { name: name.trim(), description: description.trim() },
+        projectKey: project.ref,
+        patch: {
+          name: name.trim(),
+          description: description.trim(),
+          ...(keyEditable && { key }),
+        },
       },
       { onSuccess: onClose },
     );
@@ -60,6 +67,13 @@ export default function TeamProjectEditModal({
       className="pb-3"
     >
       <div className="flex flex-col gap-3">
+        {keyEditable && (
+          <div className="space-y-1.5">
+            <Label>{t('key')}</Label>
+            <Input value={key} onChange={(e) => setKey(normalizeKey(e.target.value))} />
+            <p className="text-xs text-muted-foreground">{t('keyHint')}</p>
+          </div>
+        )}
         <div className="space-y-1.5">
           <Label>{t('name')}</Label>
           <Input

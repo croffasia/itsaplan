@@ -9,7 +9,7 @@ import type { OutputFormat } from './config';
 // Anything else about the invocation — MCP servers, model, working directory — is the
 // operator's, passed through `args` and the `--` tail.
 
-export type PresetName = 'claude' | 'codex' | 'opencode' | 'antigravity' | 'copilot';
+export type PresetName = 'claude' | 'codex' | 'opencode' | 'antigravity' | 'copilot' | 'pi' | 'omp';
 
 export interface Preset {
   bin: string;
@@ -113,6 +113,39 @@ export const PRESETS: Record<PresetName, Preset> = {
       ...(sessionId ? ['--session-id', sessionId] : []),
     ],
     tail: ['-p'],
+  },
+
+  // --mode json writes one event per line. The opening `session` line names the id that
+  // --session-id resumes. Print mode does not wait for tool approval.
+  pi: {
+    bin: 'pi',
+    outputFormat: 'pi-json',
+    promptVia: 'arg',
+    systemPromptFlag: '--append-system-prompt',
+    head: (sessionId) => [
+      '-p',
+      '--mode',
+      'json',
+      ...(sessionId ? ['--session-id', sessionId] : []),
+    ],
+    tail: [],
+  },
+
+  // Same JSON stream as pi. --auto-approve is required: without it a tool waits for a
+  // person who is not there. --resume takes the session id the stream named.
+  omp: {
+    bin: 'omp',
+    outputFormat: 'pi-json',
+    promptVia: 'arg',
+    systemPromptFlag: '--append-system-prompt',
+    head: (sessionId) => [
+      '-p',
+      '--mode',
+      'json',
+      '--auto-approve',
+      ...(sessionId ? ['--resume', sessionId] : []),
+    ],
+    tail: [],
   },
 };
 

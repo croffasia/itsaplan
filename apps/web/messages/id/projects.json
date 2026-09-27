@@ -16,6 +16,8 @@
   },
   "editDialog": {
     "title": "Ubah proyek",
+    "key": "Kunci",
+    "keyHint": "Tautan issue memerlukan kunci berupa huruf kapital dan angka yang diawali huruf. Setelah disimpan, kunci tidak dapat diubah.",
     "name": "Nama",
     "description": "Deskripsi",
     "submit": "Simpan"

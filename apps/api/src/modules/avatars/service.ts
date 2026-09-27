@@ -1,9 +1,8 @@
-import { db, user } from '@repo/db';
+import { db, user, getStorageSettings, MB } from '@repo/db';
 import { eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { HttpError } from '#shared/lib';
-import { putObject, getObject, deleteObject } from '#shared/s3';
-import { getStorageSettings, MB } from '#modules/settings/service';
+import { putObject, getObject, deleteObject } from '@repo/storage';
 
 // Avatar images for the signed-in user. The bytes live in the S3-compatible
 // object store under `avatars/<uuid>`; the user's `image` column (managed by

@@ -60,6 +60,16 @@ api:
     periodSeconds: 15
     timeoutSeconds: 5
     failureThreshold: 5
+  # The dump the migrate init container takes before it applies a migration. Without
+  # a volume it is kept in an emptyDir and lost with the pod. ReadWriteOnce only works while
+  # every api replica runs on one node; spread across nodes, use ReadWriteMany, or set
+  # SKIP_PRE_MIGRATION_BACKUP=1 in api.env when the database is backed up another way.
+  backups:
+    persistence:
+      enabled: false
+      size: 10Gi
+      storageClass: ""
+      accessMode: ReadWriteOnce
 
 # -- Web (Next.js frontend)
 web:
@@ -187,16 +197,14 @@ postgresql:
   tolerations: []
   affinity: {}
 
-# -- MinIO
+# -- In-cluster S3 store (RustFS). The key keeps its MinIO-era name so existing values
+# files and the PVC carry over.
 minio:
   enabled: true
   bucket: "planner-attachments"
   image:
-    repository: quay.io/minio/minio
-    tag: "RELEASE.2025-09-07T16-13-09Z"
-  mcImage:
-    repository: quay.io/minio/mc
-    tag: "RELEASE.2025-08-13T08-35-41Z"
+    repository: rustfs/rustfs
+    tag: "1.0.0"
   persistence:
     size: 20Gi
     storageClass: ""

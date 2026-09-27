@@ -30,7 +30,7 @@ import { SettingsLabelsAddMenu } from './SettingsLabelsAddMenu';
 // adds labels into that group; the "Add" action below the list adds a group or an
 // ungrouped label. Labels drag between groups and the root.
 export default function SettingsLabels({ project }: { project: ProjectDetail }) {
-  const projectKey = project.project.key;
+  const projectKey = project.project.ref;
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   // The open label add/edit form, and the open group add/edit form. At most one is
   // set at a time (opening either closes the other).

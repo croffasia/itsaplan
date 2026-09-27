@@ -46,9 +46,9 @@ export default function SettingsIssueTypes({
   const t = useTranslations('settings.issueTypes');
   const tCommon = useTranslations('common');
   const can = useSettingsCan();
-  const createIssueType = useCreateIssueType(project.project.key);
-  const updateIssueType = useUpdateIssueType(project.project.key);
-  const deleteIssueType = useDeleteIssueType(project.project.key);
+  const createIssueType = useCreateIssueType(project.project.ref);
+  const updateIssueType = useUpdateIssueType(project.project.ref);
+  const deleteIssueType = useDeleteIssueType(project.project.ref);
 
   const types = project.issueTypes;
   const issueCount = (typeId: number) =>

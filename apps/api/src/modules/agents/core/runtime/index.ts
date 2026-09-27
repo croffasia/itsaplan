@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Agent } from '@mastra/core/agent';
 import { getAgentInProject, getInternalAgentApiKey, type AiAgentRow } from '../service';
 import { getProjectById } from '#modules/projects/service';
@@ -35,12 +36,19 @@ const DEFAULT_MAX_STEPS = 12;
 
 // Mastra's model config: an object carrying the provider id, model id, and the
 // explicit apiKey (and url for OpenAI-compatible endpoints).
-type ModelConfig = { providerId: string; modelId: string; apiKey: string; url?: string };
+type ModelConfig = {
+  providerId: string;
+  modelId: string;
+  apiKey: string;
+  url?: string;
+  headers?: Record<string, string>;
+};
 
 // Builds the model config for an agent from its model credential. The credential's
 // integration key is the provider id; its decrypted config carries the apiKey and an
-// optional base URL. The model id is stored on the agent.
-async function resolveModel(row: AiAgentRow): Promise<ModelConfig> {
+// optional base URL. The model id is stored on the agent. OpenCode Go rejects a request
+// without an x-opencode-session header, which has to stay the same across one conversation.
+async function resolveModel(row: AiAgentRow, sessionId: string): Promise<ModelConfig> {
   if (row.modelCredentialId == null) {
     throw new HttpError(400, 'Agent has no model credential set');
   }
@@ -57,6 +65,7 @@ async function resolveModel(row: AiAgentRow): Promise<ModelConfig> {
     modelId,
     apiKey: String(secret.config.apiKey ?? ''),
     ...(baseUrl ? { url: baseUrl } : {}),
+    ...(provider === 'opencode-go' ? { headers: { 'x-opencode-session': sessionId } } : {}),
   };
 }
 
@@ -75,10 +84,11 @@ async function buildAgent(
   row: AiAgentRow,
   projectId: number,
   contextPreamble: string,
+  sessionId: string,
 ): Promise<Agent> {
   const project = await getProjectById(projectId);
   if (!project) throw new HttpError(404, 'Project not found');
-  const model = await resolveModel(row);
+  const model = await resolveModel(row, sessionId);
   const skills = await listAgentSkills(row.id);
   const customTools = await listAgentToolsForRun(row.id);
   const apiKey = await getInternalAgentApiKey(row);
@@ -219,21 +229,28 @@ async function prepareRun(
   if (row.kind !== 'internal') {
     throw new HttpError(400, 'Only internal agents can be run');
   }
-  const agent = await buildAgent(row, projectId, opts.contextPreamble ?? '');
+  // A chat run with no threadId starts a new conversation; every other run continues
+  // the thread its caller named (see thread-ids). Without memory every run is a
+  // conversation of its own, which is what the model's session id follows.
+  const threadId = row.memoryEnabled
+    ? (opts.threadId ?? newChatThreadId(row.id, opts.callerUserId))
+    : null;
+  const agent = await buildAgent(
+    row,
+    projectId,
+    opts.contextPreamble ?? '',
+    threadId ?? randomUUID(),
+  );
 
   // Mastra's generate/stream have overloaded options; type the shape we use. In
   // Mastra v1 the temperature belongs to the call's model settings — a flat
   // `temperature` option is only read by the legacy generate.
   const options: RunOptions = { maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS };
   if (row.temperature != null) options.modelSettings = { temperature: row.temperature };
-  let threadId: string | null = null;
-  if (row.memoryEnabled) {
-    // A chat run with no threadId starts a new conversation; every other run continues
-    // the thread its caller named (see thread-ids). The thread is created up front with
-    // what it is bound to and a title, so the chat history can list it and deleting the
-    // agent, project or issue can find it. The threadId used is returned so the caller
-    // can continue.
-    threadId = opts.threadId ?? newChatThreadId(row.id, opts.callerUserId);
+  if (threadId) {
+    // The thread is created up front with what it is bound to and a title, so the chat
+    // history can list it and deleting the agent, project or issue can find it. The
+    // threadId used is returned so the caller can continue.
     await ensureThread(
       threadId,
       opts.callerUserId,

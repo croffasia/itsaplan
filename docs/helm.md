@@ -1,7 +1,7 @@
 # Deploy on Kubernetes (Helm)
 
 The Helm chart in `charts/itsaplan/` deploys the full stack on any Kubernetes 1.24+ cluster. It runs the published
-images from GHCR, with built-in PostgreSQL and MinIO that can each be swapped for an external service.
+images from GHCR, with built-in PostgreSQL and RustFS that can each be swapped for an external service.
 
 ## Prerequisites
 
@@ -33,7 +33,7 @@ Install the chart:
 helm install itsaplan charts/itsaplan -f values.yaml
 ```
 
-The API applies database migrations on startup. The first account registered becomes the instance admin.
+Each API pod applies the database migrations in its `migrate` init container before the server starts. With several replicas, one applies them and the others wait on a Postgres advisory lock. Worker and bot pods wait in their own init container until the migrations are applied. The first account registered becomes the instance admin.
 
 ## What gets deployed
 
@@ -44,8 +44,8 @@ The API applies database migrations on startup. The first account registered bec
 | Worker            | Deployment                  | always                                |
 | Bot (Telegram)    | Deployment                  | `bot.enabled` (default `true`)        |
 | PostgreSQL        | StatefulSet + Service + PVC | `postgresql.enabled` (default `true`) |
-| MinIO             | Deployment + Service + PVC  | `minio.enabled` (default `true`)      |
-| MinIO bucket init | Job (Helm hook)             | `minio.enabled`                       |
+| RustFS            | Deployment + Service + PVC  | `minio.enabled` (default `true`)      |
+| RustFS bucket init | Job (Helm hook)            | `minio.enabled`                       |
 
 Ingress, TLS certificates, and a ServiceAccount are available but disabled by default.
 
@@ -125,7 +125,7 @@ externalDatabase:
 
 ## External S3
 
-Disable the built-in MinIO and point to an external S3-compatible store:
+Disable the built-in RustFS and point to an external S3-compatible store:
 
 ```yaml
 minio:
@@ -145,7 +145,7 @@ secrets:
   s3SecretAccessKey: "..."
 ```
 
-`S3_FORCE_PATH_STYLE` is `false` for AWS and Cloudflare R2, `true` for MinIO.
+`S3_FORCE_PATH_STYLE` is `false` for AWS and Cloudflare R2, `true` for RustFS.
 
 ## Secrets in production
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Editor } from '@tiptap/react';
 import { previewableLink } from './previewableLink';
 
-export function useEditorLinkPreview(editor: Editor) {
+export function useEditorLinkPreview(editor: Editor, disabled = false) {
   const [anchor, setAnchor] = useState<HTMLAnchorElement | null>(null);
   const [candidateAnchor, setCandidateAnchor] = useState<HTMLAnchorElement | null>(null);
   const [open, setOpen] = useState(false);
@@ -38,9 +38,21 @@ export function useEditorLinkPreview(editor: Editor) {
   }, [close]);
 
   useEffect(() => {
+    if (disabled) {
+      close();
+      return;
+    }
     const root = editor.view.dom;
+    let touchFocus = false;
+    const pointerDown = (event: PointerEvent) => {
+      touchFocus = event.pointerType === 'touch' || event.pointerType === 'pen';
+    };
+    const keyDown = () => {
+      touchFocus = false;
+    };
     const enter = (event: Event) => {
       if (event instanceof PointerEvent && event.pointerType === 'touch') return;
+      if (event.type === 'focusin' && touchFocus) return;
       const link = previewableLink(event.target, root);
       if (!link) return;
       keepOpen();
@@ -70,6 +82,8 @@ export function useEditorLinkPreview(editor: Editor) {
       close();
     };
     root.addEventListener('pointerover', enter);
+    root.addEventListener('pointerdown', pointerDown, true);
+    root.addEventListener('keydown', keyDown, true);
     root.addEventListener('pointerout', exit);
     root.addEventListener('focusin', enter);
     root.addEventListener('focusout', exit);
@@ -77,6 +91,8 @@ export function useEditorLinkPreview(editor: Editor) {
     window.addEventListener('scroll', close, true);
     return () => {
       root.removeEventListener('pointerover', enter);
+      root.removeEventListener('pointerdown', pointerDown, true);
+      root.removeEventListener('keydown', keyDown, true);
       root.removeEventListener('pointerout', exit);
       root.removeEventListener('focusin', enter);
       root.removeEventListener('focusout', exit);
@@ -86,7 +102,14 @@ export function useEditorLinkPreview(editor: Editor) {
       clearTimeout(closeTimer.current);
       clearTimeout(clearTimer.current);
     };
-  }, [editor, close, leave, keepOpen]);
+  }, [editor, close, leave, keepOpen, disabled]);
 
-  return { anchor, candidateAnchor, open, keepOpen, leave, close };
+  return {
+    anchor: disabled ? null : anchor,
+    candidateAnchor: disabled ? null : candidateAnchor,
+    open: !disabled && open,
+    keepOpen,
+    leave,
+    close,
+  };
 }

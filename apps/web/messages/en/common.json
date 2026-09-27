@@ -188,7 +188,17 @@
     "previewCustomField": "Custom field",
     "previewAllWorkItems": "All work items",
     "previewUpdated": "Updated {date}",
-    "previewOtherValues": "({count} more)"
+    "previewOtherValues": "({count} more)",
+    "previewLink": "Preview link",
+    "previewLinks": "Preview links ({count})",
+    "previewNamedLink": "Preview {name}",
+    "backToLinks": "Back to links",
+    "openLink": "Open link",
+    "copyLink": "Copy link",
+    "copiedLink": "Copied",
+    "editLink": "Edit link",
+    "retryPreview": "Try again",
+    "copyLinkFailed": "Could not copy the link. Select and copy the URL above."
   },
   "chart": {
     "download": "Save chart",

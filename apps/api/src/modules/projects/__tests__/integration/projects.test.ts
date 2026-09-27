@@ -14,8 +14,8 @@ import { clearLimits, setLimits } from '#tests/helpers/limits';
 // See apps/api/AGENTS.md "Tests" for the setup.
 //
 // The projects feature owns five routes: list, create, copy, the full work-items
-// view, and delete. createProject seeds five default columns (one per state type);
-// it seeds no issue types or assignees.
+// view, and delete. createProject seeds five default columns (one per state type)
+// and any agents selected as the team's defaults.
 
 // createProject seeds one column per state type; a new project always has these
 // five and nothing else.
@@ -579,7 +579,7 @@ describe('projects', () => {
       const { api } = await signUpClient();
       await api.projects.post({ key: 'SRC', name: 'Source' });
       await createAgent(api, 'SRC', { name: 'Ext', username: 'ext', kind: 'external' });
-      const target = (await api.teams.post({ name: 'Other Team' })).data!;
+      const target = (await api.teams.post({ name: 'Other Team', slug: 'other-team' })).data!;
       const sourceId = await projectIdOf(api, 'SRC');
 
       await api

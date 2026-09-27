@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import type { JSONContent } from '@tiptap/core';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Color from '@tiptap/extension-color';
@@ -20,6 +21,9 @@ import { Markdown } from 'tiptap-markdown';
 import EditorSelectionMenu from '@/components/common/editor/EditorSelectionMenu';
 import EditorTableMenu from '@/components/common/editor/EditorTableMenu';
 import EditorLinkPreview from '@/components/common/editor/EditorLinkPreview';
+import { IssueRef } from '@/components/common/editor/issueRefDecorations';
+import { refreshDecorations } from '@/components/common/editor/refreshDecorations';
+import { useIssueRefs } from '@/context/issueRefs';
 import { createLinkKeyboardHandlers } from '@/components/common/editor/linkKeyboardHandlers';
 import { openLinkOnModifierClick } from '@/components/common/editor/modifierClickLink';
 import { ResizableImage } from '@/components/common/editor/tiptap-image';
@@ -148,12 +152,23 @@ export default function DocumentMarkdownEditor({
   onUploadImage?: (file: File) => Promise<{ url: string; filename: string }>;
 }) {
   const t = useTranslations('documents.toolbar');
+  const router = useRouter();
+  const issueRefs = useIssueRefs();
   const editorRef = useRef<Editor | null>(null);
   const linkKeyboardHandlers = useMemo(createLinkKeyboardHandlers, []);
   const editableRef = useRef(editable);
   editableRef.current = editable;
+  // False while the document can be typed into but has no focus: the chip shows,
+  // and swaps for the plain identifier only once editing actually starts.
+  const focusedRef = useRef(false);
+  const [focused, setFocused] = useState(false);
+  const issueRefsRef = useRef(issueRefs);
+  issueRefsRef.current = issueRefs;
+  const openIssueRefRef = useRef(router.push);
+  openIssueRefRef.current = (href: string) => router.push(href);
 
   const editor = useEditor({
+    immediatelyRender: false,
     editable,
     extensions: documentEditorExtensions({
       placeholder,
@@ -176,7 +191,13 @@ export default function DocumentMarkdownEditor({
         divider: t('divider'),
       },
       image: onPickImage ? { label: t('uploadImage'), onPick: onPickImage } : undefined,
-    }),
+    }).concat(
+      IssueRef.configure({
+        refs: () => issueRefsRef.current.refs,
+        open: (href) => openIssueRefRef.current(href),
+        rich: () => issueRefsRef.current.resolve && (!editableRef.current || !focusedRef.current),
+      }),
+    ),
     content: defaultJson ?? defaultValue,
     editorProps: {
       handleDOMEvents: linkKeyboardHandlers,
@@ -226,7 +247,15 @@ export default function DocumentMarkdownEditor({
     onUpdate: ({ editor: currentEditor }) => {
       if (!collaborative) onChange(editorValue(currentEditor));
     },
-    onBlur: ({ editor: currentEditor }) => onBlur(editorValue(currentEditor)),
+    onFocus: () => {
+      focusedRef.current = true;
+      setFocused(true);
+    },
+    onBlur: ({ editor: currentEditor }) => {
+      focusedRef.current = false;
+      setFocused(false);
+      onBlur(editorValue(currentEditor));
+    },
     onDestroy: () => {
       editorRef.current = null;
     },
@@ -239,6 +268,12 @@ export default function DocumentMarkdownEditor({
     onReady(editor);
     return () => onReady(null);
   }, [editor, onReady]);
+
+  const issueRefList = issueRefs.refs.join(',');
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => refreshDecorations(editor));
+    return () => cancelAnimationFrame(frame);
+  }, [editor, issueRefList, issueRefs.resolve, editable, focused]);
 
   useLayoutEffect(() => {
     syncDocumentEditorEditable(editor, editable);
@@ -263,7 +298,7 @@ export default function DocumentMarkdownEditor({
       )}
       {editable && <EditorTableMenu editor={editor} />}
       <EditorContent editor={editor} className="flex min-h-full flex-col" />
-      <EditorLinkPreview editor={editor} />
+      <EditorLinkPreview editor={editor} source={defaultJson ? '' : defaultValue} />
     </div>
   );
 }

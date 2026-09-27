@@ -81,16 +81,16 @@ jobs:
       - uses: actions/checkout@v7
 
       # Integration tests need a live database, so they run in the compose gate:
-      # a throwaway Postgres and MinIO, with the api built from the production
+      # a throwaway Postgres and RustFS, with the api built from the production
       # Dockerfile. Building both api-test and worker-test also verifies their
       # Dockerfiles build.
       - name: Build test images
         run: docker compose -f docker-compose.test.yml build
 
-      # `run` starts api-test's dependencies (Postgres healthy, the MinIO bucket
+      # `run` starts api-test's dependencies (Postgres healthy, the RustFS bucket
       # init completed), runs the suite, and exits with its code. It does not use
       # --abort-on-container-exit, which would tear the stack down the moment the
-      # one-shot minio-test-init exits, before api-test starts.
+      # one-shot rustfs-test-init exits, before api-test starts.
       - name: Run the compose test gate
         run: docker compose -f docker-compose.test.yml run --rm api-test
 

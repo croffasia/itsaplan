@@ -21,7 +21,7 @@ export default function ArchiveIssueDialog({
   onArchived?: () => void;
 }) {
   const t = useTranslations('issue.actions');
-  const archiveIssue = useArchiveIssue(project.project.key);
+  const archiveIssue = useArchiveIssue(project.project.ref);
   const subtasks = subtaskCount(project.issues, [issue.id]);
   const [disposition, setDisposition] = useState<SubtaskDisposition | null>(null);
 
@@ -41,7 +41,7 @@ export default function ArchiveIssueDialog({
         {t('archiveDescription', { issue: issue.identifier })}
       </p>
       <SubtaskDisposalChoice
-        projectKey={project.project.key}
+        projectKey={project.project.ref}
         action="archive"
         count={subtasks}
         removedIssueIds={[issue.id]}

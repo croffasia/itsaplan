@@ -2,6 +2,9 @@
   "create": {
     "title": "新建团队",
     "namePlaceholder": "团队名称",
+    "slug": "URL",
+    "slugHint": "团队项目的链接以它开头，例如 /acme。",
+    "slugInvalid": "请使用 2–40 个小写字母、数字或连字符，并以字母开头。",
     "hint": "你将成为该团队的所有者。",
     "submit": "创建团队"
   },
@@ -50,11 +53,14 @@
   "info": {
     "team": "团队",
     "teamHint": "团队项目归属的名称。",
+    "slug": "URL",
+    "slugHint": "保存更改前必须填写。仅限小写字母、数字和连字符。",
+    "slugInvalid": "请使用 2–40 个小写字母、数字或连字符，并以字母开头。",
     "role": "你的角色",
     "created": "创建于",
     "leads": "所有者和管理员",
     "leadsHint": "可以管理此团队及其项目的成员。",
-    "saved": "团队名称已保存",
+    "saved": "团队已保存",
     "leaveHint": "你仍保留你参与的项目。若要重新加入，需由所有者再次添加你。"
   },
   "columns": {
@@ -319,6 +325,17 @@
     "noAccess": "你没有权限查看该团队的工具。"
   },
   "agents": {
+    "projectDefaultsColumn": "新项目",
+    "projectDefaultsHint": "所选代理会加入此团队创建的每个新项目。现有项目及项目副本保留各自的代理。",
+    "projectDefaultAria": "将 {agent} 添加到新项目",
+    "projectDefaultsReadOnly": "团队所有者和管理员选择加入新项目的代理。",
+    "projectDefaultsSaved": "已保存默认代理",
+    "projectDefaultOn": "开启",
+    "projectDefaultOff": "关闭",
+    "joinNewProjects": "添加到新项目",
+    "joinNewProjectsHint": "该代理会加入此团队的每个新项目。",
+    "selectAllProjects": "全选",
+    "clearProjects": "全部取消",
     "newAgent": "新建 AI 代理",
     "create": "创建 AI 代理",
     "save": "保存 AI 代理",
@@ -394,6 +411,7 @@
     "runnerHelpToolHint": "在将要运行运行器的机器上。运行器无法替你登录。",
     "runnerHelpRun": "把这些文件保存到智能体要工作的目录",
     "runnerHelpTabCustom": "自定义",
+    "runnerHelpPiAdapter": "Pi 通过扩展读取 .mcp.json。安装一次即可：pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "确认已连接",
     "runnerHelpCheckHint": "“运行器”一节会显示“在线”。",
     "runnerOnline": "运行器在线",

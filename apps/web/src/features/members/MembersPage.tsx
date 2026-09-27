@@ -11,7 +11,7 @@ import InvitesManager from './components/invites/InvitesManager';
 import MemberAddDialog from './components/members/MemberAddDialog';
 import MembersList from './components/members/MembersList';
 
-// The Members page (/project/:projectKey/members): who has access to the project.
+// The Members page (/:team/:projectKey/members): who has access to the project.
 // Pending invites sit above the members list; the header action opens the dialog
 // that adds someone from the team or invites them by email.
 export default function MembersPage() {
@@ -41,12 +41,12 @@ export default function MembersPage() {
         )
       }
     >
-      <InvitesManager projectKey={project.project.key} />
-      <MembersList projectKey={project.project.key} teamId={project.project.teamId} />
+      <InvitesManager projectKey={project.project.ref} />
+      <MembersList projectKey={project.project.ref} teamId={project.project.teamId} />
 
       {adding && (
         <MemberAddDialog
-          projectKey={project.project.key}
+          projectKey={project.project.ref}
           projectName={project.project.name}
           teamId={project.project.teamId}
           teamName={project.project.teamName}

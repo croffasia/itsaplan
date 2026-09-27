@@ -2,6 +2,9 @@
   "create": {
     "title": "Novo time",
     "namePlaceholder": "Nome do time",
+    "slug": "URL",
+    "slugHint": "Os links para os projetos da equipe começam com ele, por exemplo /acme.",
+    "slugInvalid": "Use de 2 a 40 letras minúsculas, números ou hifens, começando com uma letra.",
     "hint": "Você será o dono deste time.",
     "submit": "Criar time"
   },
@@ -50,11 +53,14 @@
   "info": {
     "team": "Time",
     "teamHint": "O nome sob o qual os projetos do time são agrupados.",
+    "slug": "URL",
+    "slugHint": "Obrigatória para salvar as alterações. Letras minúsculas, números e hifens.",
+    "slugInvalid": "Use de 2 a 40 letras minúsculas, números ou hifens, começando com uma letra.",
     "role": "Sua função",
     "created": "Criado",
     "leads": "Donos e gerentes",
     "leadsHint": "Pessoas que podem gerenciar este time e seus projetos.",
-    "saved": "Nome do time salvo",
+    "saved": "Equipe salva",
     "leaveHint": "Você mantém os projetos de que é membro. Para entrar de novo, um dono precisa readicioná-lo."
   },
   "columns": {
@@ -319,6 +325,17 @@
     "noAccess": "Você não tem acesso às ferramentas deste time."
   },
   "agents": {
+    "projectDefaultsColumn": "Novos projetos",
+    "projectDefaultsHint": "Os agentes selecionados entram em cada novo projeto desta equipe. Projetos existentes e cópias mantêm seus agentes.",
+    "projectDefaultAria": "Adicionar {agent} aos novos projetos",
+    "projectDefaultsReadOnly": "Proprietários e gerentes da equipe escolhem quais agentes entram em novos projetos.",
+    "projectDefaultsSaved": "Agentes padrão salvos",
+    "projectDefaultOn": "Ativado",
+    "projectDefaultOff": "Desativado",
+    "joinNewProjects": "Adicionar a novos projetos",
+    "joinNewProjectsHint": "O agente entra em cada novo projeto desta equipe.",
+    "selectAllProjects": "Selecionar todos",
+    "clearProjects": "Desmarcar todos",
     "newAgent": "Novo agente de IA",
     "create": "Criar agente de IA",
     "save": "Salvar agente de IA",
@@ -394,6 +411,7 @@
     "runnerHelpToolHint": "Na máquina que vai rodar o runner. O runner não consegue entrar por você.",
     "runnerHelpRun": "Salvar os arquivos onde o agente deve trabalhar",
     "runnerHelpTabCustom": "O seu",
+    "runnerHelpPiAdapter": "O Pi lê o .mcp.json por meio de uma extensão. Instale-a uma vez: pi install npm:pi-mcp-adapter",
     "runnerHelpCheck": "Verificar se está conectado",
     "runnerHelpCheckHint": "A seção Runner mostra Online.",
     "runnerOnline": "Runner online",

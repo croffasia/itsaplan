@@ -157,7 +157,8 @@ async function disposeSubtasks(
   if (mode === 'cascade') {
     const attachments: AttachmentRow[] = [];
     for (const subtask of subtasks) {
-      if (action === 'delete') attachments.push(...((await deleteIssue(subtask.id)) ?? []));
+      if (action === 'delete')
+        attachments.push(...((await deleteIssue(subtask.id, actorUserId)) ?? []));
       else await archiveIssue(subtask.id, actorUserId);
     }
     return attachments;

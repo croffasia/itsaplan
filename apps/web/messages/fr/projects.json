@@ -16,6 +16,8 @@
   },
   "editDialog": {
     "title": "Modifier le projet",
+    "key": "Clé",
+    "keyHint": "Les liens vers les tickets exigent une clé en lettres majuscules et chiffres qui commence par une lettre. Une fois enregistrée, la clé ne peut plus changer.",
     "name": "Nom",
     "description": "Description",
     "submit": "Enregistrer"

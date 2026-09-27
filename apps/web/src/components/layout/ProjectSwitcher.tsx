@@ -5,7 +5,7 @@ import { useSession } from '@/lib/auth-client';
 import { useTeamsQuery } from '@/services/teams.service';
 import { qk } from '@/services/queryKeys';
 import { Popover, PopoverTrigger } from '@/components/ui/popover';
-import { SidebarMenu, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarMenu, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
 import ProjectSwitcherTrigger from './ProjectSwitcherTrigger';
 import ProjectSwitcherMenu from './ProjectSwitcherMenu';
 import { useProjectSwitcherPreferences } from './hooks/useProjectSwitcherPreferences';
@@ -19,11 +19,12 @@ export default function ProjectSwitcher({
   currentProjectKey: string | null;
   onSelectProject: (key: string) => void;
 }) {
+  const { isMobile } = useSidebar();
   const teams = useTeamsQuery().data ?? [];
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const preferences = useProjectSwitcherPreferences(session?.user.id);
-  const current = projects.find((project) => project.key === currentProjectKey);
+  const current = projects.find((project) => project.ref === currentProjectKey);
   const [open, setOpen] = useState(false);
   const [openTeams, setOpenTeams] = useState<Record<number, boolean>>({});
 
@@ -31,6 +32,7 @@ export default function ProjectSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <Popover
+          modal={isMobile}
           open={open}
           onOpenChange={(value) => {
             setOpen(value);

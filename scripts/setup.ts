@@ -224,7 +224,7 @@ const mode = answer(
       {
         value: 'dev',
         label: 'Develop',
-        hint: 'Postgres and MinIO in Docker, the apps on your machine',
+        hint: 'Postgres and RustFS in Docker, the apps on your machine',
       },
       { value: 'env', label: 'Generate env', hint: 'the secrets and every value, step by step' },
     ],
@@ -331,9 +331,9 @@ if (mode === 'try') {
   const spinner = p.spinner();
   spinner.start('Starting the rest of the stack');
   await run(...compose, 'up', '-d');
-  // --wait names api and web only: minio-init is a one-shot and its exit counts as a
-  // failure. api is worth waiting for on its own — it migrates before it listens, and
-  // web renders /login without it.
+  // --wait names api and web only: minio-init and migrate are one-shots and their exit
+  // counts as a failure. api is worth waiting for on its own — it starts only after the
+  // migrations, and web renders /login without it.
   await run(...compose, 'up', '-d', '--wait', '--no-recreate', 'api', 'web');
   spinner.stop('Stack is up');
 
@@ -355,7 +355,7 @@ if (mode === 'dev') {
   }
 
   await stopOther(['docker', 'compose'], 'Try it');
-  // The PR stack fixes the MinIO ports in its own compose file, so no port question can
+  // The PR stack fixes the RustFS ports in its own compose file, so no port question can
   // resolve an overlap with the dev one.
   await stopOther(
     ['docker', 'compose', '-f', 'docker-compose.dev.pr.yml'],
@@ -384,11 +384,11 @@ if (mode === 'dev') {
   web.save();
 
   const spinner = p.spinner();
-  spinner.start('Starting Postgres and MinIO');
+  spinner.start('Starting Postgres and RustFS');
   await run(...compose, 'up', '-d');
   // --wait names postgres only: minio-init is a one-shot and its exit counts as a failure.
   await run(...compose, 'up', '-d', '--wait', '--no-recreate', 'postgres');
-  spinner.stop('Postgres and MinIO are up');
+  spinner.stop('Postgres and RustFS are up');
 
   await matchPort(compose, dbPort);
   await matchCredentials(compose, env);
@@ -422,7 +422,7 @@ if (mode === 'dev') {
   migrations.start('Applying migrations');
   // The programmatic runner, not `bun run db:migrate`: drizzle-kit exits 1 without printing
   // what the database refused, and a failure here is exactly what needs reading.
-  // Its pre-migration dump goes to BACKUP_DIR, a path only the api container has, and a
+  // Its pre-migration dump goes to BACKUP_DIR, a path only the migrate container has, and a
   // local database the operator recreates at will has nothing to go back to anyway.
   process.env.SKIP_PRE_MIGRATION_BACKUP = '1';
   await run('bun', '--env-file=.env', 'packages/db/src/migrate.ts');

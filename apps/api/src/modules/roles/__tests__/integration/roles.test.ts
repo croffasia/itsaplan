@@ -16,7 +16,7 @@ import { createAgent, setAgentProjectRole } from '#tests/helpers/agents';
 type Actor = { user: TestUser; api: ReturnType<typeof authedApi>; teamId: number };
 
 // Creates a project MKT owned by a fresh user and returns a Treaty client acting as
-// that owner, with the team the account was registered with. The first user in a
+// that owner, with the team signUpTestUser gave the account. The first user in a
 // reset DB is "god"; the owner still reaches the project only through its
 // project_member row, so this is a plain owner.
 async function setupOwner(projectKey = 'MKT'): Promise<Actor> {

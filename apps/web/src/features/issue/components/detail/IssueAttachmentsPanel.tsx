@@ -13,6 +13,7 @@ import { baseName } from '../../utils/filename';
 import IssueImageAnnotator from '../IssueImageAnnotator';
 import IssueAttachmentCard from './IssueAttachmentCard';
 import AttachmentViewer from '@/components/common/attachments/AttachmentViewer';
+import ConfirmDialog from '@/components/common/overlay/ConfirmDialog';
 import IssueSectionHeading from './IssueSectionHeading';
 import { useStorageSettingsQuery } from '@/services/storage.service';
 import { attachmentAccept, attachmentError, attachmentLimitHint } from '@/utils/uploadLimits';
@@ -35,6 +36,7 @@ export default function IssueAttachmentsPanel({
   readOnly?: boolean;
 }) {
   const t = useTranslations('issue.attachments');
+  const tCommon = useTranslations('common');
   const attachmentsQuery = useAttachmentsQuery(issueId);
   const items = attachmentsQuery.data ?? [];
   const uploadAttachment = useUploadAttachment();
@@ -44,6 +46,7 @@ export default function IssueAttachmentsPanel({
   const [error, setError] = useState<string | null>(null);
   const [annotating, setAnnotating] = useState<Attachment | null>(null);
   const [viewing, setViewing] = useState<Attachment | null>(null);
+  const [deleting, setDeleting] = useState<Attachment | null>(null);
   // A replaced attachment keeps its URL, which the image optimizer caches its
   // thumbnail under. Stamping the ones replaced here tells the two versions apart.
   const [replacedAt, setReplacedAt] = useState<Record<string, number>>({});
@@ -131,7 +134,7 @@ export default function IssueAttachmentsPanel({
                 onOpen={() => setViewing(a)}
                 onInsert={() => onInsert(a)}
                 onAnnotate={() => setAnnotating(a)}
-                onDelete={() => deleteAttachment.mutate(a.id)}
+                onDelete={() => setDeleting(a)}
                 readOnly={readOnly}
               />
             ))}
@@ -139,6 +142,22 @@ export default function IssueAttachmentsPanel({
         ))}
 
       {viewing && <AttachmentViewer attachment={viewing} onClose={() => setViewing(null)} />}
+
+      {deleting && (
+        <ConfirmDialog
+          title={t('deleteTitle')}
+          confirmLabel={tCommon('delete')}
+          onConfirm={async () => {
+            await deleteAttachment.mutateAsync(deleting.id);
+            setDeleting(null);
+          }}
+          onClose={() => setDeleting(null)}
+        >
+          <p className="text-sm text-muted-foreground">
+            {t('deleteConfirmation', { name: deleting.filename })}
+          </p>
+        </ConfirmDialog>
+      )}
 
       {annotating && (
         <IssueImageAnnotator

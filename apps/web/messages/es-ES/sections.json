@@ -101,6 +101,10 @@
       "label": "Repositorios",
       "description": "Cerrar tickets cuando sus pull requests se integran en GitHub, GitLab, Gitea, Forgejo o Bitbucket."
     },
+    "import-export": {
+      "label": "Importar/Exportar",
+      "description": "Traer tickets, comentarios y etiquetas desde una instancia autoalojada de Plane, o exportar los datos de este proyecto como JSON."
+    },
     "ai-agents": {
       "label": "Agentes de IA",
       "description": "Agentes de IA que trabajan en este proyecto."

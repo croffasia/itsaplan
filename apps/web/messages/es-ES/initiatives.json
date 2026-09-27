@@ -153,7 +153,9 @@
     "open": "Abrir {name}",
     "download": "Descargar",
     "downloadFile": "Descargar {name}",
-    "deleteFile": "Eliminar {name}"
+    "deleteFile": "Eliminar {name}",
+    "deleteTitle": "Eliminar el archivo adjunto",
+    "deleteConfirmation": "¿Eliminar {name}? También se quitará de la descripción allí donde esté incrustado. No se puede deshacer."
   },
   "documents": {
     "title": "Documentos",

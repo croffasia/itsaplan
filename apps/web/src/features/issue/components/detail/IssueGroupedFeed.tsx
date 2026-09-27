@@ -1,37 +1,39 @@
-import { useTranslations } from 'next-intl';
 import type { Column } from '@/lib/api/endpoints/columns';
 import type { FeedGroup, GroupedFeedPage } from '@/lib/api/endpoints/activity';
 import ShowMoreButton from '@/components/common/ShowMoreButton';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
-import { useGroupedFeedQuery } from '../../services/comments.service';
+import { type FeedSlice, useGroupedFeedQuery } from '../../services/comments.service';
 import { statusColor } from '../../utils/timeline';
 import IssueActivityGroup from './IssueActivityGroup';
 import { type ComposerContext } from './CommentComposer';
 
 // The activity log split by the status the issue was in when each entry was written,
-// newest first and paged 25 at a time like the flat one. The server does the
+// in the slice's order and paged 25 at a time like the flat one. The server does the
 // splitting; this only joins a stretch whose entries fell into two pages.
 
 export default function IssueGroupedFeed({
   issueId,
+  slice,
   columns,
   imageByUserId,
   composer,
+  emptyText,
 }: {
   issueId: number;
+  slice: FeedSlice;
   // The project's columns, for the status colors.
   columns: Column[];
   imageByUserId: Map<string, string | null>;
   composer: ComposerContext;
+  emptyText: string;
 }) {
-  const t = useTranslations('issue');
-  const feedQuery = useGroupedFeedQuery(issueId);
+  const feedQuery = useGroupedFeedQuery(issueId, slice);
   const groups = joinGroups(feedQuery.data?.pages ?? []);
 
   if (feedQuery.isLoading) return <ListSkeleton rows={3} rowClassName="h-12" />;
 
   if (groups.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t('noActivity')}</p>;
+    return <p className="text-sm text-muted-foreground">{emptyText}</p>;
   }
 
   return (

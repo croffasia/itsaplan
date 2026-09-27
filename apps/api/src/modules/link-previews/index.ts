@@ -1,6 +1,7 @@
 import { Elysia } from 'elysia';
 import { authContext } from '#shared/auth-context';
 import { errors } from '#shared/responses';
+import { linkPreviewMaxAge } from './cache';
 import { linkPreviewQuery, LinkPreviewResponse } from './model';
 import { getLinkPreview } from './service';
 
@@ -11,9 +12,10 @@ export const linkPreviewRoutes = new Elysia({
   .use(authContext)
   .get(
     '/link-previews',
-    ({ query, set }) => {
-      set.headers['Cache-Control'] = 'private, max-age=300';
-      return getLinkPreview(query.url);
+    async ({ query, set }) => {
+      const preview = await getLinkPreview(query.url);
+      set.headers['Cache-Control'] = `private, max-age=${linkPreviewMaxAge(preview)}`;
+      return preview;
     },
     {
       query: linkPreviewQuery,

@@ -33,8 +33,8 @@ export default function CalendarView({
   readOnly,
 }: WorkItemsViewProps) {
   const t = useTranslations('workItems.calendar');
-  const updateIssue = useUpdateIssue(project.project.key);
-  const setFieldValue = useSetFieldValue(project.project.key);
+  const updateIssue = useUpdateIssue(project.project.ref);
+  const setFieldValue = useSetFieldValue(project.project.ref);
   const [cursor, setCursor] = useState<Date>(() => startOfMonth(new Date()));
   const [activeId, setActiveId] = useState<number | null>(null);
   const sensors = useDndSensors(readOnly);

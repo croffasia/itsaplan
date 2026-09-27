@@ -11,7 +11,7 @@ import CycleIssuesBoard from './components/detail/CycleIssuesBoard';
 export default function CycleDetailPage({ cycleId }: { cycleId: number }) {
   const t = useTranslations('cycles');
   const { project } = useShell();
-  const projectKey = project?.project.key ?? null;
+  const projectKey = project?.project.ref ?? null;
   const query = useCycleQuery(cycleId);
   const cycle = query.data;
 

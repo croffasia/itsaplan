@@ -1,6 +1,8 @@
 import { db } from '@repo/db';
 import { sql } from 'drizzle-orm';
 import { recordActivityForIssues } from './activity';
+import { getIssues } from './service';
+import { emitIssueEvents } from './webhook-payload';
 
 // Archives active issues that have sat inactive in a completed/canceled column past
 // their project's threshold. Inactivity is measured by issue.updated_at: moving to a
@@ -29,9 +31,19 @@ export async function sweepStaleIssues(): Promise<number> {
           AND (s.value->>'canceledDays') ~ '^[0-9]{1,4}$'
           AND i.updated_at < now() - make_interval(days => (s.value->>'canceledDays')::int))
       )
-    RETURNING i.id
+    RETURNING i.id, i.project_id
   `);
-  const archived = (rows as unknown as Array<{ id: number }>).map((row) => row.id);
-  await recordActivityForIssues(archived, { action: 'archived' }, { system: 'Auto-archive' });
+  const archivedRows = rows as unknown as Array<{ id: number; project_id: number }>;
+  const archived = archivedRows.map((row) => row.id);
+  const actor = { system: 'Auto-archive' };
+  await recordActivityForIssues(archived, { action: 'archived' }, actor);
+  const idsByProject = new Map<number, number[]>();
+  for (const row of archivedRows) {
+    const ids = idsByProject.get(row.project_id) ?? [];
+    ids.push(row.id);
+    idsByProject.set(row.project_id, ids);
+  }
+  for (const [projectId, ids] of idsByProject)
+    await emitIssueEvents(projectId, 'issue.updated', () => getIssues(ids), actor);
   return archived.length;
 }

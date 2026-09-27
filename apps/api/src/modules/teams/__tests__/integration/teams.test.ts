@@ -39,8 +39,107 @@ describe('teams', () => {
   });
   afterEach(clearLimits);
 
+  describe('project defaults', () => {
+    it('attaches selected team agents only to new projects', async () => {
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
+      const created = await createAgent(owner.api, 'SRC', {
+        name: 'Triage',
+        username: 'triage',
+        kind: 'external',
+      });
+      const agent = created.data!.agent;
+
+      const saved = await owner.api.teams({ teamId })['project-defaults'].patch({
+        defaultAgentIds: [agent.id],
+      });
+      expect(saved.status).toBe(200);
+      await owner.api.teams({ teamId }).projects.post({ key: 'NEW', name: 'New' });
+      const members = await owner.api.projects({ projectKey: 'NEW' }).members.get();
+      expect(members.data?.items.some((member) => member.userId === agent.userId)).toBe(true);
+
+      await owner.api.teams({ teamId })['project-defaults'].patch({ defaultAgentIds: [] });
+      await owner.api.teams({ teamId }).projects.post({ key: 'NEXT', name: 'Next' });
+      const nextMembers = await owner.api.projects({ projectKey: 'NEXT' }).members.get();
+      expect(nextMembers.data?.items.some((member) => member.userId === agent.userId)).toBe(false);
+      const existingMembers = await owner.api.projects({ projectKey: 'NEW' }).members.get();
+      expect(existingMembers.data?.items.some((member) => member.userId === agent.userId)).toBe(
+        true,
+      );
+    });
+
+    it('keeps the source agents when copying a project', async () => {
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      await owner.api.projects.post({ key: 'SRC', name: 'Source' });
+      await owner.api.projects.post({ key: 'OTHER', name: 'Other' });
+      const sourceAgent = await createAgent(owner.api, 'SRC', {
+        name: 'Source agent',
+        username: 'source-agent',
+        kind: 'external',
+      });
+      const defaultAgent = await createAgent(owner.api, 'OTHER', {
+        name: 'Default agent',
+        username: 'default-agent',
+        kind: 'external',
+      });
+      await owner.api.teams({ teamId })['project-defaults'].patch({
+        defaultAgentIds: [defaultAgent.data!.agent.id],
+      });
+
+      const copy = await owner.api.projects({ projectKey: 'SRC' }).copy.post({
+        key: 'DST',
+        name: 'Destination',
+        include: { agents: true },
+      });
+      expect(copy.status).toBe(201);
+      const members = await owner.api.projects({ projectKey: 'DST' }).members.get();
+      const memberIds = members.data?.items.map((member) => member.userId);
+      expect(memberIds).toContain(sourceAgent.data!.agent.userId);
+      expect(memberIds).not.toContain(defaultAgent.data!.agent.userId);
+    });
+
+    it('rejects agents from another team and member edits', async () => {
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      const member = await addTeamMember(owner, teamId);
+      const other = await signUpClient();
+      const otherTeamId = (await other.api.teams.get()).data![0].id;
+      await other.api.teams({ teamId: otherTeamId }).projects.post({ key: 'OTH', name: 'Other' });
+      const agent = await createAgent(other.api, 'OTH', {
+        name: 'Other',
+        username: 'other',
+        kind: 'external',
+      });
+
+      expect(
+        (
+          await owner.api.teams({ teamId })['project-defaults'].patch({
+            defaultAgentIds: [agent.data!.agent.id],
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await member.api.teams({ teamId })['project-defaults'].patch({
+            defaultAgentIds: [],
+          })
+        ).status,
+      ).toBe(403);
+    });
+  });
+
   describe('list', () => {
-    it('lists the team the account was registered with', async () => {
+    it('gives a new account no team, so it has nowhere to create a project', async () => {
+      const user = await signUpTestUser({ team: false });
+      const api = authedApi(user.cookie);
+
+      expect((await api.teams.get()).data).toEqual([]);
+      expect((await api.projects.post({ key: 'MKT', name: 'Marketing' })).status).toBe(400);
+    });
+
+    it('lists the team the account owns', async () => {
       const { user, api } = await signUpClient();
 
       const list = await api.teams.get();
@@ -66,7 +165,7 @@ describe('teams', () => {
     it("lists only the caller's own teams", async () => {
       const { api } = await signUpClient();
       const other = await signUpClient();
-      await other.api.teams.post({ name: 'Design' });
+      await other.api.teams.post({ name: 'Design', slug: 'design' });
 
       const list = await api.teams.get();
       expect(list.data?.map((t) => t.name)).not.toContain('Design');
@@ -82,7 +181,7 @@ describe('teams', () => {
     it('creates a team with the caller as its owner', async () => {
       const { api } = await signUpClient();
 
-      const created = await api.teams.post({ name: 'Design' });
+      const created = await api.teams.post({ name: 'Design', slug: 'design' });
       expect(created.status).toBe(201);
       expect(created.data).toMatchObject({ name: 'Design', role: 'owner' });
 
@@ -94,36 +193,54 @@ describe('teams', () => {
     it('trims the name', async () => {
       const { api } = await signUpClient();
 
-      const created = await api.teams.post({ name: '  Design  ' });
+      const created = await api.teams.post({ name: '  Design  ', slug: 'design' });
       expect(created.data).toMatchObject({ name: 'Design' });
     });
 
     it('rejects an empty or blank name', async () => {
       const { api } = await signUpClient();
 
-      expect((await api.teams.post({ name: '' })).status).toBe(400);
-      expect((await api.teams.post({ name: '   ' })).status).toBe(400);
+      expect((await api.teams.post({ name: '', slug: 'team' })).status).toBe(400);
+      expect((await api.teams.post({ name: '   ', slug: 'team' })).status).toBe(400);
     });
 
     it('rejects a name longer than 60 characters', async () => {
       const { api } = await signUpClient();
 
-      expect((await api.teams.post({ name: 'a'.repeat(60) })).status).toBe(201);
-      expect((await api.teams.post({ name: 'a'.repeat(61) })).status).toBe(400);
+      expect((await api.teams.post({ name: 'a'.repeat(60), slug: 'long' })).status).toBe(201);
+      expect((await api.teams.post({ name: 'a'.repeat(61), slug: 'longer' })).status).toBe(400);
     });
 
     it('refuses one more team than the limits allow', async () => {
       const { api } = await signUpClient();
-      // The account already owns the team it was registered with.
+      // The account already owns the team signUpTestUser gave it.
       setLimits({ maxTeams: 1 });
 
-      const created = await api.teams.post({ name: 'Design' });
+      const created = await api.teams.post({ name: 'Design', slug: 'design' });
       expect(created.status).toBe(409);
       expect(await api.teams.get().then((list) => list.data)).toHaveLength(1);
     });
 
+    it('creates the team under the slug it is given', async () => {
+      const { api } = await signUpClient();
+
+      const created = await api.teams.post({ name: 'Design', slug: 'design' });
+      expect(created.status).toBe(201);
+      expect(created.data).toMatchObject({ slug: 'design', ref: 'design' });
+    });
+
+    it('refuses a slug that is malformed, reserved or taken', async () => {
+      const { api } = await signUpClient();
+      await api.teams.post({ name: 'Design', slug: 'design' });
+
+      expect((await api.teams.post({ name: 'Bad', slug: 'Bad Slug' })).status).toBe(400);
+      expect((await api.teams.post({ name: 'Settings', slug: 'settings' })).status).toBe(400);
+      expect((await api.teams.post({ name: 'Design 2', slug: 'design' })).status).toBe(409);
+      expect(await api.teams.get().then((list) => list.data)).toHaveLength(2);
+    });
+
     it('rejects a request without a session', async () => {
-      const created = await anonApi.teams.post({ name: 'Design' });
+      const created = await anonApi.teams.post({ name: 'Design', slug: 'design' });
       expect(created.status).toBe(401);
     });
   });
@@ -477,7 +594,7 @@ describe('teams', () => {
   });
 
   describe('team projects', () => {
-    // The team the account was registered with, which owns the projects it creates.
+    // The team signUpTestUser gave the account, which owns the projects it creates.
     async function ownTeamId(api: Api): Promise<number> {
       return (await api.teams.get()).data![0].id;
     }
@@ -741,7 +858,7 @@ describe('teams', () => {
     it('hides a team with MCP off from an MCP list_teams call', async () => {
       const { api } = await signUpClient();
       const teamId = (await api.teams.get()).data![0].id;
-      const second = (await api.teams.post({ name: 'Growth' })).data!;
+      const second = (await api.teams.post({ name: 'Growth', slug: 'growth' })).data!;
       await api.teams({ teamId }).mcp.patch({ enabled: false });
 
       expect((await api.teams.get()).data?.map((t) => t.id).sort()).toEqual(
@@ -755,6 +872,7 @@ describe('teams', () => {
     it('renames a team the caller owns', async () => {
       const { api } = await signUpClient();
       const teamId = (await api.teams.get()).data![0].id;
+      await api.teams({ teamId }).patch({ slug: 'growth' });
 
       const renamed = await api.teams({ teamId }).patch({ name: '  Growth  ' });
       expect(renamed.status).toBe(200);
@@ -778,6 +896,66 @@ describe('teams', () => {
 
       const renamed = await api.teams({ teamId: otherTeamId }).patch({ name: 'Growth' });
       expect(renamed.status).toBe(404);
+    });
+  });
+
+  describe('slug', () => {
+    it('answers with the team id as its ref until a slug is set', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+      expect((await api.teams.get()).data?.[0]).toMatchObject({ slug: null, ref: String(teamId) });
+
+      const set = await api.teams({ teamId }).patch({ slug: 'acme' });
+      expect(set.status).toBe(200);
+      expect(set.data).toMatchObject({ slug: 'acme', ref: 'acme' });
+
+      const cleared = await api.teams({ teamId }).patch({ slug: null as never });
+      expect(cleared.status).toBe(400);
+    });
+
+    it('refuses a rename until the team has a slug', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+
+      expect((await api.teams({ teamId }).patch({ name: 'Growth' })).status).toBe(400);
+      const res = await api.teams({ teamId }).patch({ name: 'Growth', slug: 'growth' });
+      expect(res.status).toBe(200);
+      expect(res.data).toMatchObject({ name: 'Growth', slug: 'growth' });
+    });
+
+    it('keeps the name when only the slug changes', async () => {
+      const { user, api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+
+      const res = await api.teams({ teamId }).patch({ slug: 'acme' });
+      expect(res.data).toMatchObject({ name: user.username, slug: 'acme' });
+    });
+
+    it('rejects a slug outside the allowed form', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+
+      for (const slug of ['a', '42', '1acme', 'Acme', 'ac.me', 'acme-', 'a'.repeat(41)]) {
+        expect((await api.teams({ teamId }).patch({ slug })).status).toBe(400);
+      }
+      expect((await api.teams({ teamId }).patch({ slug: 'a'.repeat(40) })).status).toBe(200);
+    });
+
+    it('rejects a slug the web app uses as a path', async () => {
+      const { api } = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+
+      expect((await api.teams({ teamId }).patch({ slug: 'account' })).status).toBe(400);
+    });
+
+    it('rejects a slug another team uses with 409', async () => {
+      const { api } = await signUpClient();
+      const other = await signUpClient();
+      const teamId = (await api.teams.get()).data![0].id;
+      const otherTeamId = (await other.api.teams.get()).data![0].id;
+      await other.api.teams({ teamId: otherTeamId }).patch({ slug: 'acme' });
+
+      expect((await api.teams({ teamId }).patch({ slug: 'acme' })).status).toBe(409);
     });
   });
 

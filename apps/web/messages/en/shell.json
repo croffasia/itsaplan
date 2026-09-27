@@ -2,6 +2,10 @@
   "noProjectAccess": "You do not have access to this project.",
   "projectUnavailable": "This project is not available.",
   "noProjects": "No projects yet, create one to get started.",
+  "noTeamsTitle": "No team yet",
+  "noTeamsHint": "Create your team. Its projects, members and agents are kept in it.",
+  "noProjectAccessHint": "Ask a team owner or manager to add you to a project, or create your own team.",
+  "createTeam": "Create team",
   "noProjectsTitle": "No projects yet",
   "noProjectsHint": "Create your first project to start planning issues on a board.",
   "createProject": "Create project"

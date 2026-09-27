@@ -26,8 +26,10 @@ export type PermissionResource =
   | 'workflow_config'
   | 'actions'
   | 'webhooks'
+  | 'repositories'
   | 'note_boards'
-  | 'danger_zone';
+  | 'danger_zone'
+  | 'import_export';
 
 export type ResourcePermissions = Record<PermissionAction, boolean>;
 

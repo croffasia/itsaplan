@@ -50,6 +50,12 @@
     "dueDate": "Tenggat waktu",
     "clearDueDate": "Hapus tenggat waktu",
     "labels": "Label",
+    "copyId": "Salin ID",
+    "copyShortLink": "Salin tautan pendek",
+    "copyFullUrl": "Salin URL lengkap",
+    "copyTitle": "Salin judul",
+    "copyDescription": "Salin deskripsi",
+    "copyBranch": "Salin nama branch",
     "copyPrompt": "Salin prompt",
     "restore": "Pulihkan",
     "archive": "Arsipkan",
@@ -57,6 +63,7 @@
     "noDelegate": "Tanpa delegasi",
     "noInitiative": "Tanpa inisiatif",
     "noCycle": "Tanpa cycle",
+    "copyFailed": "Gagal menyalin ke papan klip",
     "promptCopied": "Prompt disalin ke papan klip"
   },
   "commands": {

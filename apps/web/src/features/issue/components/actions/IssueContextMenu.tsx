@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import type { ActionDef } from '@/lib/api/endpoints/actions';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
-import type { Issue, IssuePatch } from '@/lib/api/endpoints/issues';
+import { getIssue, type Issue, type IssuePatch } from '@/lib/api/endpoints/issues';
 import { actionIcon } from '@/utils/actionIcons';
 import { useActionsQuery } from '@/services/actions.service';
 import { useRestoreIssue, useUpdateIssue } from '@/services/issues.service';
@@ -32,7 +32,7 @@ import { usePriorityLabel } from '@/hooks/usePriorityLabel';
 import { ShellCtx } from '@/context/shellContext';
 import { useArchiveAction } from '../../hooks/useArchiveAction';
 import { ApplyActionDialog, DeleteIssueDialog, matchedActions } from './IssueActions';
-import { buildIssuePrompt } from '../../utils/issuePrompt';
+import { buildIssueBranchName, buildIssuePrompt } from '../../utils/issuePrompt';
 import { delegatableAgents } from '../../utils/delegates';
 import { useSession } from '@/lib/auth-client';
 import { toDateStr } from '@/utils/dates';
@@ -41,6 +41,7 @@ import { PRIORITY_FIELDS } from '@/components/common/fields/priorityFields';
 import { StateIcon } from '../shared/IssueIcons';
 import { dueDatePresets } from '../../utils/dueDatePresets';
 import { useDueDatePresetLabel } from '../../hooks/useDueDatePresetLabel';
+import { issuePath } from '@/utils/paths';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -58,12 +59,6 @@ function SelectedCheck({ selected }: { selected: boolean }) {
   return selected ? <Check className="ml-auto size-4" /> : null;
 }
 
-// Wraps a issue card/row (any single element) so a right-click opens a context
-// menu that changes its status, priority, assignee, initiative, cycle, labels or
-// due date, or deletes it. Shared by every project view (Kanban, Table, Calendar, Timeline).
-// onDeleted lets a host that is showing this one issue (the detail panel/page)
-// leave after deletion; the project views leave it unset — the card just
-// disappears when the project cache updates.
 export default function IssueContextMenu({
   project,
   issue,
@@ -92,6 +87,7 @@ export default function IssueContextMenu({
   const priorityLabel = usePriorityLabel();
   const presetLabel = useDueDatePresetLabel();
   const [open, setOpen] = useState(false);
+  const [copyIssue, setCopyIssue] = useState<Issue | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [confirmingAction, setConfirmingAction] = useState<ActionDef | null>(null);
   // Initiatives are not in the board scaffold, so they are fetched here — only
@@ -117,10 +113,25 @@ export default function IssueContextMenu({
     patch({ labelIds: next });
   }
 
-  async function copyPrompt() {
-    await navigator.clipboard.writeText(buildIssuePrompt(issue, project, session?.user));
-    toast.success(t('promptCopied'));
+  async function copyText(value: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      toast.success(tCommon('copied'));
+    } catch {
+      toast.error(t('copyFailed'));
+    }
   }
+
+  function openCopySubmenu(next: boolean) {
+    if (!next) return;
+    setCopyIssue(null);
+    // Fetch while the submenu opens so the clipboard write stays in the selection gesture.
+    void getIssue(issue.id).then(setCopyIssue).catch(() => toast.error(t('copyFailed')));
+  }
+
+  const copyShortLink = () => copyText(`${window.location.origin}/${issue.identifier}`);
+  const copyFullUrl = () =>
+    copyText(`${window.location.origin}${issuePath(project.project.ref, issue.sequenceNumber)}`);
 
   const currentColumn = project.columns.find((c) => c.id === issue.columnId);
   const currentPriority =
@@ -368,12 +379,44 @@ export default function IssueContextMenu({
 
           {canEdit && <ContextMenuSeparator />}
 
-          {/* Copy the issue as a Markdown prompt for an AI coding agent. Available
-              to everyone — it only reads the issue, so no permission gate. */}
-          <ContextMenuItem onSelect={copyPrompt}>
-            <ClipboardCopy />
-            {t('copyPrompt')}
-          </ContextMenuItem>
+          <ContextMenuSub onOpenChange={openCopySubmenu}>
+            <ContextMenuSubTrigger>
+              <ClipboardCopy />
+              {tCommon('copy')}
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="w-52">
+              <ContextMenuItem onSelect={() => copyText(issue.identifier)}>
+                {t('copyId')}
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={copyShortLink}>
+                {t('copyShortLink')}
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={copyFullUrl}>
+                {t('copyFullUrl')}
+              </ContextMenuItem>
+              <ContextMenuItem onSelect={() => copyText(issue.title)}>
+                {t('copyTitle')}
+              </ContextMenuItem>
+              <ContextMenuItem
+                disabled={!copyIssue}
+                onSelect={() => copyText(copyIssue!.description)}
+              >
+                {t('copyDescription')}
+              </ContextMenuItem>
+              <ContextMenuItem
+                onSelect={() => copyText(buildIssueBranchName(issue, session?.user))}
+              >
+                {t('copyBranch')}
+              </ContextMenuItem>
+              <ContextMenuSeparator />
+              <ContextMenuItem
+                disabled={!copyIssue}
+                onSelect={() => copyText(buildIssuePrompt(copyIssue!, project, session?.user))}
+              >
+                {t('copyPrompt')}
+              </ContextMenuItem>
+            </ContextMenuSubContent>
+          </ContextMenuSub>
 
           {canEdit && <ContextMenuSeparator />}
 

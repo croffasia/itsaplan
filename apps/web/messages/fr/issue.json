@@ -50,6 +50,12 @@
     "dueDate": "Échéance",
     "clearDueDate": "Effacer l'échéance",
     "labels": "Étiquettes",
+    "copyId": "Copier l’identifiant",
+    "copyShortLink": "Copier le lien court",
+    "copyFullUrl": "Copier l’URL complète",
+    "copyTitle": "Copier le titre",
+    "copyDescription": "Copier la description",
+    "copyBranch": "Copier le nom de branche",
     "copyPrompt": "Copier le prompt",
     "restore": "Restaurer",
     "archive": "Archiver",
@@ -57,6 +63,7 @@
     "noDelegate": "Aucun délégué",
     "noInitiative": "Aucune initiative",
     "noCycle": "Aucun cycle",
+    "copyFailed": "Impossible de copier dans le presse-papiers",
     "promptCopied": "Prompt copié dans le presse-papiers"
   },
   "commands": {

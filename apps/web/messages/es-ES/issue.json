@@ -50,6 +50,12 @@
     "dueDate": "Fecha de vencimiento",
     "clearDueDate": "Vaciar la fecha de vencimiento",
     "labels": "Etiquetas",
+    "copyId": "Copiar ID",
+    "copyShortLink": "Copiar enlace corto",
+    "copyFullUrl": "Copiar URL completa",
+    "copyTitle": "Copiar título",
+    "copyDescription": "Copiar descripción",
+    "copyBranch": "Copiar nombre de rama",
     "copyPrompt": "Copiar la consigna",
     "restore": "Restaurar",
     "archive": "Archivar",
@@ -57,6 +63,7 @@
     "noDelegate": "Sin delegado",
     "noInitiative": "Sin iniciitiva",
     "noCycle": "Sin ciclo",
+    "copyFailed": "No se pudo copiar al portapapeles",
     "promptCopied": "La consigna se ha copiado al portapapeles"
   },
   "commands": {

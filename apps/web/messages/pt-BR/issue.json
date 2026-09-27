@@ -50,6 +50,12 @@
     "dueDate": "Data de vencimento",
     "clearDueDate": "Limpar data de vencimento",
     "labels": "Etiquetas",
+    "copyId": "Copiar ID",
+    "copyShortLink": "Copiar link curto",
+    "copyFullUrl": "Copiar URL completa",
+    "copyTitle": "Copiar título",
+    "copyDescription": "Copiar descrição",
+    "copyBranch": "Copiar nome da branch",
     "copyPrompt": "Copiar prompt",
     "restore": "Restaurar",
     "archive": "Arquivar",
@@ -57,6 +63,7 @@
     "noDelegate": "Sem delegado",
     "noInitiative": "Sem iniciativa",
     "noCycle": "Sem ciclo",
+    "copyFailed": "Não foi possível copiar",
     "promptCopied": "Prompt copiado para a área de transferência"
   },
   "commands": {

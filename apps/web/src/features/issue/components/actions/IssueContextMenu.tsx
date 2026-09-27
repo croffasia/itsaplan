@@ -126,7 +126,9 @@ export default function IssueContextMenu({
     if (!next) return;
     setCopyIssue(null);
     // Fetch while the submenu opens so the clipboard write stays in the selection gesture.
-    void getIssue(issue.id).then(setCopyIssue).catch(() => toast.error(t('copyFailed')));
+    void getIssue(issue.id)
+      .then(setCopyIssue)
+      .catch(() => toast.error(t('copyFailed')));
   }
 
   const copyShortLink = () => copyText(`${window.location.origin}/${issue.identifier}`);
@@ -388,12 +390,8 @@ export default function IssueContextMenu({
               <ContextMenuItem onSelect={() => copyText(issue.identifier)}>
                 {t('copyId')}
               </ContextMenuItem>
-              <ContextMenuItem onSelect={copyShortLink}>
-                {t('copyShortLink')}
-              </ContextMenuItem>
-              <ContextMenuItem onSelect={copyFullUrl}>
-                {t('copyFullUrl')}
-              </ContextMenuItem>
+              <ContextMenuItem onSelect={copyShortLink}>{t('copyShortLink')}</ContextMenuItem>
+              <ContextMenuItem onSelect={copyFullUrl}>{t('copyFullUrl')}</ContextMenuItem>
               <ContextMenuItem onSelect={() => copyText(issue.title)}>
                 {t('copyTitle')}
               </ContextMenuItem>

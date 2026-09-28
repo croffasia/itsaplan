@@ -7,11 +7,13 @@ import {
   issueActivity,
   project,
   projectColumn,
+  team,
   type ActivityPayload,
 } from '@repo/db';
 import { and, desc, eq, inArray, lt, or, sql, isNull } from 'drizzle-orm';
 import { addedMentionHandles, resolveMentionHandles, type MentionedUsers } from '#shared/mentions';
 import { autoWatchIssue, watcherUserIds } from '#modules/issues/watchers';
+import { projectRefSql } from '#modules/teams/ref';
 import { iso } from '#shared/lib';
 import { enqueueOutbound } from './outbound';
 
@@ -340,7 +342,7 @@ export async function listNotifications(
       issueTitle: issue.title,
       issueStateType: projectColumn.stateType,
       projectId: project.id,
-      projectKey: project.key,
+      projectKey: projectRefSql,
       projectName: project.name,
       payload: issueActivity.payload,
     })
@@ -351,6 +353,7 @@ export async function listNotifications(
     )
     .innerJoin(issue, eq(issue.id, notification.issueId))
     .innerJoin(project, eq(project.id, notification.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
     .innerJoin(projectColumn, eq(projectColumn.id, issue.columnId))
     .leftJoin(issueActivity, eq(issueActivity.id, notification.sourceActivityId))
     .where(and(...conds))

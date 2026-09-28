@@ -18,6 +18,7 @@ export interface Notification {
   issueTitle: string;
   issueStateType: StateType;
   projectId: number;
+  // Team-scoped project ref (for example, "acme.MKT").
   projectKey: string;
   projectName: string;
   // Only a 'state_changed' notification has them.

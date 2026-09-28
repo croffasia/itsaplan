@@ -28,6 +28,7 @@ import ShellOverlays from '@/components/layout/ShellOverlays';
 import { ChatPanel } from '@/features/ai-chat/components/panel/ChatPanel';
 import { useChatPanel } from '@/features/ai-chat/hooks/useChatPanel';
 import { useTranslations } from 'next-intl';
+import { useSession } from '@/lib/auth-client';
 
 // The layout for /:team/:projectKey and its children (the work items view and the
 // settings pages). It owns the project data, the view editor and the
@@ -41,6 +42,7 @@ export default function Shell({
   defaultSidebarOpen?: boolean;
 }) {
   const t = useTranslations('nav');
+  const viewerId = useSession().data?.user.id ?? null;
   const router = useRouter();
   const route = useShellRoute();
   const { projectKey, routeIssueSeq } = route;
@@ -56,6 +58,7 @@ export default function Shell({
     canCreateIssue,
     errorMsg,
     forbidden,
+    boardStatus,
   } = useShellProject(projectKey, route.activeViewId);
   const teamId = project?.project.teamId;
   const issueRefs = useMemo(
@@ -66,6 +69,7 @@ export default function Shell({
   const initiativeOptions = useInitiativeOptionsQuery(projectKey).data ?? [];
   const { issueOpenMode, showChatByDefault } = useAccountPreferences();
   const overlays = useOverlays();
+  const [boardOverlayOpen, setBoardOverlayOpen] = useState(false);
   const chatPanel = useChatPanel(projectKey, showChatByDefault);
   // The agent a page asked to chat with, held until the panel has opened its tab.
   const [chatAgentId, setChatAgentId] = useState<number | null>(null);
@@ -113,7 +117,7 @@ export default function Shell({
   useKeyboardShortcuts({
     hasProject: !!project,
     hasChat: chatAvailable,
-    overlayOpen: overlays.anyOpen,
+    overlayOpen: overlays.anyOpen || boardOverlayOpen,
     onToggleCommand: () => overlays.setShowCommand((v) => !v),
     onChangeView: editor.changeView,
     onNewIssue: () => canCreateIssue && openNewIssue(),
@@ -149,6 +153,10 @@ export default function Shell({
     views,
     editor,
     customFields,
+    boardStatus,
+    overlayOpen: overlays.anyOpen,
+    setBoardOverlayOpen,
+    viewerId,
     onOpenIssue: openIssue,
     onAddIssue: addIssue,
     onChatWithAgent: (agentId: number) => {

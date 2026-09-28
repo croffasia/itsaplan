@@ -26,6 +26,7 @@ export function BoardCard({
   properties,
   onOpen,
   readOnly,
+  interactionDisabled,
 }: {
   project: ProjectDetail;
   issue: BoardIssue;
@@ -34,6 +35,7 @@ export function BoardCard({
   onOpen: (id: number) => void;
   // In a read-only share a click always opens the issue; multi-select is off.
   readOnly?: boolean;
+  interactionDisabled?: boolean;
 }) {
   // Drag is disabled on phones so a touch scrolls the board instead of picking
   // up a card (see the `sm:touch-none` on the card below), and without work_items
@@ -44,7 +46,7 @@ export function BoardCard({
   const { setNodeRef, attributes, listeners } = useDraggable({
     id: issue.id,
     data: { issueIds: selected ? [...selection.selected] : [issue.id] },
-    disabled: useIsPhone() || !can('work_items', 'edit'),
+    disabled: useIsPhone() || !can('work_items', 'edit') || interactionDisabled,
   });
   // Every card that moves with the drag dims, not just the grabbed one.
   const { active } = useDndContext();

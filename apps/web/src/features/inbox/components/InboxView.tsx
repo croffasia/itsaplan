@@ -10,8 +10,6 @@ import { revScope } from '@/utils/revScopes';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useInboxScope } from '@/hooks/useInboxScope';
-import { useRouter } from 'next/navigation';
-import { issuePath } from '@/utils/paths';
 import InboxToolbar from './InboxToolbar';
 import InboxList from './InboxList';
 import InboxDetail from './InboxDetail';
@@ -32,7 +30,6 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
 
   const { filters, changeFilters } = useInboxFilters(projectKey);
   const { allProjects, setAllProjects } = useInboxScope();
-  const router = useRouter();
   const inboxKey = allProjects ? 'all' : projectKey;
   const inboxProjectId = allProjects ? null : projectId;
   const [selected, setSelected] = useState<Notification | null>(null);
@@ -56,10 +53,6 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
 
   const onSelect = (n: Notification) => {
     if (n.readAt == null) setRead.mutate({ id: n.id, read: true });
-    if (n.projectKey !== projectKey) {
-      router.push(issuePath(n.projectKey, n.issueSeq));
-      return;
-    }
     setSelected(n);
   };
 
@@ -107,6 +100,7 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
         <InboxDetail
           key={selected.issueId}
           project={project}
+          projectKey={selected.projectKey}
           issueId={selected.issueId}
           issueSeq={selected.issueSeq}
           isMobile={isMobile}

@@ -16,7 +16,7 @@ async function callTool(client: Client, params: CallToolRequest['params']) {
 
 async function connect(userId: string) {
   const { key } = await auth.api.createApiKey({ body: { userId, name: 'structured-results' } });
-  const server = await buildMcpServer(app, { kind: 'api-key', apiKey: key }, userId);
+  const server = await buildMcpServer(app, { kind: 'api-key', apiKey: key }, userId, 'full');
   const client = new Client({ name: 'structured-results-test', version: '1.0.0' });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);

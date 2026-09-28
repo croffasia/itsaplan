@@ -4,7 +4,8 @@ Every MCP tool result contains an object in `structuredContent`, except a succes
 of an image tool (see below). The existing text block
 contains the original REST response body, including an empty string for HTTP 204. Existing
 clients can continue reading that text. The internal agent runtime keeps its existing result
-format.
+format. A document tool leaves `contentJson` out of both unless the call passes
+`includeContentJson: true` (see [agent discovery](mcp-discovery.md#documents)).
 
 ## Attachment urls and images
 

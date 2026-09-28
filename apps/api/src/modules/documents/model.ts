@@ -59,8 +59,18 @@ export const listDocumentsQuery = t.Object({
 
 const documentFields = {
   title: t.Optional(t.String({ maxLength: 255 })),
-  content: t.Optional(t.String({ maxLength: 250_000 })),
-  contentJson: t.Optional(t.Nullable(t.Record(t.String(), t.Any()))),
+  content: t.Optional(
+    t.String({
+      maxLength: 250_000,
+      description: 'Markdown body. Sending it without contentJson clears the stored editor JSON.',
+    }),
+  ),
+  contentJson: t.Optional(
+    t.Nullable(t.Record(t.String(), t.Any()), {
+      description:
+        'Optional rich-text editor document. Supply matching Markdown in content when preserving editor formatting.',
+    }),
+  ),
   icon: t.Optional(t.Nullable(t.String({ maxLength: 64 }))),
   metadata: t.Optional(t.Record(t.String(), t.Any())),
   fullWidth: t.Optional(t.Boolean()),

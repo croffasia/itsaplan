@@ -2,10 +2,9 @@ import type { McpApp } from './types';
 import type { McpRouteTool } from './generate';
 import { MCP_LOOPBACK_HEADER, setMcpOAuthToken } from '../shared/mcp-request';
 import type { McpCredential } from './credential';
-import { structuredResult, type StructuredResult } from './result';
+import { structuredResult, toolError, type StructuredResult } from './result';
 import { withPublicAttachmentUrls, withStoredAttachmentUrls } from './attachment-urls';
-
-// Methods that carry a request body; the rest put their arguments in the query.
+import { documentResponse, isDocumentResponseTool } from './document-response';
 
 // Elysia's router needs a multi-label host to parse the path; a single-label host
 // like "http://x" fails to route. localhost is never resolved (app.handle runs in
@@ -14,9 +13,9 @@ const BASE = 'http://localhost';
 
 // Runs a tool call as an in-process request against the real route and returns the
 // response body as text. Path params fill the URL; the remaining arguments become
-// the JSON body (POST/PUT/PATCH) or the query string (GET/DELETE). The caller's API
-// credential is forwarded to the route session guard so permission checks run
-// exactly as they do over HTTP.
+// the JSON body when the route declares one, otherwise the query string. The
+// caller's API credential is forwarded to the route session guard so permission
+// checks run exactly as they do over HTTP.
 //
 // viaMcpEndpoint says whether the call came from POST /mcp. It is explicit at both
 // call sites because it selects a real behaviour: only an MCP call carries the
@@ -31,10 +30,30 @@ export async function dispatchTool(
   opts: { viaMcpEndpoint: boolean },
 ): Promise<{ text: string; isError: boolean; structuredContent: StructuredResult }> {
   const rest = withStoredAttachmentUrls(args);
+  const invalid = (text: string) => ({
+    text,
+    isError: true,
+    structuredContent: toolError(400, text),
+  });
+  if (isDocumentResponseTool(tool.name)) {
+    if (rest.includeContentJson !== undefined && typeof rest.includeContentJson !== 'boolean')
+      return invalid('includeContentJson must be a boolean.');
+    delete rest.includeContentJson;
+  }
 
   let path = tool.path;
   for (const name of tool.pathParams) {
-    path = path.replace(`:${name}`, encodeURIComponent(String(rest[name] ?? '')));
+    const value = rest[name];
+    // URL parsing resolves a "." or ".." segment, which would reach another route.
+    if (
+      (typeof value !== 'string' && typeof value !== 'number') ||
+      String(value).trim() === '' ||
+      value === '.' ||
+      value === '..' ||
+      (typeof value === 'number' && !Number.isFinite(value))
+    )
+      return invalid(`Required path argument ${name} must be a non-empty string or number.`);
+    path = path.replace(`:${name}`, encodeURIComponent(String(value)));
     delete rest[name];
   }
 
@@ -64,7 +83,10 @@ export async function dispatchTool(
   });
   if (credential.kind === 'oauth') setMcpOAuthToken(request, credential.accessToken);
   const response = await app.handle(request);
-  const text = withPublicAttachmentUrls(await response.text());
+  const raw = await response.text();
+  const text = withPublicAttachmentUrls(
+    response.status >= 400 ? raw : documentResponse(tool.name, raw, args),
+  );
   return {
     text,
     isError: response.status >= 400,

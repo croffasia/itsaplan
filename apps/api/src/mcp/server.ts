@@ -8,6 +8,8 @@ import { dispatchTool } from './dispatch';
 import { SERVER_INSTRUCTIONS } from './instructions';
 import type { McpCredential } from './credential';
 import { toolError } from './result';
+import { documentInputSchema, documentOutputSchema } from './document-response';
+import { discoverTools, invocationArguments, listCatalog, type ToolDescriptor } from './catalog';
 
 // The path param of every team-scoped route.
 const TEAM_PARAM = 'teamId';
@@ -26,15 +28,18 @@ async function callerTeam(userId: string): Promise<number | null> {
   return teams.length === 1 ? teams[0].id : null;
 }
 
-// A low-level MCP Server for one request. tools/list returns every route tagged
-// with x-mcp; tools/call dispatches to the real route via app.handle with the
-// caller's API key. The low-level Server (not McpServer) is used so the route's
-// TypeBox JSON Schema can be served as the tool inputSchema without converting to
-// Zod. Arguments are validated by the route itself, not here.
+// A low-level MCP Server for one request. tools/list returns the catalog (see
+// catalog.ts): by default the common reads and the tools that find and run the
+// rest, with `full` every route tagged with x-mcp. tools/call dispatches to the real
+// route via app.handle with the caller's API key, whether the tool is named directly
+// or through call_read_tool or call_tool. The low-level Server (not McpServer) is
+// used so the route's TypeBox JSON Schema can be served as the tool inputSchema
+// without converting to Zod. Arguments are validated by the route itself, not here.
 export async function buildMcpServer(
   app: McpApp,
   credential: McpCredential,
   userId: string,
+  catalog: 'compact' | 'full' = 'compact',
 ): Promise<Server> {
   const server = new Server(
     // `name` is the stable programmatic identifier; `title` is the human-readable
@@ -51,42 +56,68 @@ export async function buildMcpServer(
   const teamId = await callerTeam(userId);
   const needsTeam = (tool: McpRouteTool) => tool.pathParams.includes(TEAM_PARAM);
 
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({
-    tools: table.map((t) => ({
+  const descriptors: ToolDescriptor[] = table.map((t) => {
+    const schema = documentInputSchema(t);
+    return {
       name: t.name,
       description: t.description,
       // A caller whose team is already known does not get to name one.
-      inputSchema:
-        teamId !== null && needsTeam(t)
-          ? withoutFields(t.inputSchema, [TEAM_PARAM])
-          : t.inputSchema,
+      inputSchema: teamId !== null && needsTeam(t) ? withoutFields(schema, [TEAM_PARAM]) : schema,
       annotations: t.annotations,
-      outputSchema: t.images ? undefined : t.outputSchema,
-    })),
-  }));
+      outputSchema: t.images ? undefined : documentOutputSchema(t),
+      permission: t.permission,
+      images: t.images || undefined,
+    };
+  });
+
+  server.setRequestHandler(ListToolsRequestSchema, async () => listCatalog(descriptors, catalog));
+
+  const errorResult = (status: number, text: string) => ({
+    content: [{ type: 'text' as const, text }],
+    isError: true,
+    structuredContent: toolError(status, text),
+  });
 
   server.setRequestHandler(CallToolRequestSchema, async (req) => {
-    const tool = byName.get(req.params.name);
-    if (!tool) {
-      const text = `Unknown tool: ${req.params.name}`;
+    let name = req.params.name;
+    let args = { ...(req.params.arguments ?? {}) };
+    if (name === 'discover_tools') {
+      const result = discoverTools(descriptors, args);
+      if (result.error !== undefined) return errorResult(400, result.error);
       return {
-        content: [{ type: 'text', text }],
-        isError: true,
-        structuredContent: toolError(404, text),
+        content: [{ type: 'text', text: JSON.stringify(result) }],
+        isError: false,
+        structuredContent: { ok: true, status: 200, data: result },
       };
     }
-    const args = { ...(req.params.arguments ?? {}) };
+    const readOnly = name === 'call_read_tool';
+    const invoked = readOnly || name === 'call_tool';
+    if (invoked) {
+      const parsed = invocationArguments.safeParse(args);
+      if (!parsed.success) return errorResult(400, parsed.error.message);
+      name = parsed.data.name;
+      args = parsed.data.arguments;
+    }
+    const tool = byName.get(name);
+    if (!tool) {
+      return errorResult(404, `Unknown tool: ${name}`);
+    }
+    if (readOnly && tool.annotations.readOnlyHint !== true)
+      return errorResult(
+        400,
+        `${name} can change data. Use call_tool after checking its description.`,
+      );
+    // Images reach the model as image content, which call_read_tool and call_tool
+    // cannot return: both promise a structured result.
+    if (invoked && tool.images)
+      return errorResult(400, `${name} returns images. Call it by its own name.`);
     if (needsTeam(tool)) {
       if (teamId !== null) args[TEAM_PARAM] = teamId;
       else if (args[TEAM_PARAM] == null) {
         const text =
           'teamId is required: no single team follows from your key. Call list_teams and ' +
           'pass the id of the team to act in.';
-        return {
-          content: [{ type: 'text', text }],
-          isError: true,
-          structuredContent: toolError(400, text),
-        };
+        return errorResult(400, text);
       }
     }
     const { text, isError, structuredContent } = await dispatchTool(app, tool, args, credential, {

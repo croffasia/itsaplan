@@ -2,6 +2,7 @@ import { Elysia } from 'elysia';
 import { HttpError, pgErrorCode } from './shared/lib';
 import { authContext } from './shared/auth-context';
 import { projectRoutes } from './modules/projects';
+import { discoveryRoutes } from './modules/discovery';
 import { teamRoutes } from './modules/teams';
 import { memberRoutes } from './modules/members';
 import { roleRoutes } from './modules/roles';
@@ -86,6 +87,7 @@ export const planner = new Elysia({ name: 'planner' })
     return { error: 'Internal server error' };
   })
   .use(projectRoutes)
+  .use(discoveryRoutes)
   .use(teamRoutes)
   .use(memberRoutes)
   .use(roleRoutes)

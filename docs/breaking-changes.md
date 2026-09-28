@@ -4,6 +4,17 @@ Each release that removes or moves an API path is listed here, newest first. A s
 or an MCP client that calls the API by path needs the replacement. The web app is
 released with the API and needs no change.
 
+## MCP lists a compact tool catalog
+
+`tools/list` on `/mcp` lists workspace search, the common reads, the image tools and
+three discovery operations: `discover_tools`, `call_read_tool` and `call_tool`. The
+other tools are found with `discover_tools` and run through the two executors. A call
+by a tool's own name still works. `/mcp?catalog=full` lists every tool, as before.
+
+The document tools answer with Markdown `content` and leave out `contentJson` unless
+the call passes `includeContentJson: true`. The REST routes are unchanged. See
+[agent discovery over MCP](mcp-discovery.md).
+
 ## MCP access moves to the team
 
 Whether MCP reaches a project is now set on the team that owns it, not on the project.

@@ -29,7 +29,11 @@ async function rpc(apiKey: string, method: string, params: Record<string, unknow
 }
 
 async function toolNamed(apiKey: string, name: string) {
-  const { tools } = await rpc(apiKey, 'tools/list');
+  const result = await rpc(apiKey, 'tools/call', {
+    name: 'discover_tools',
+    arguments: { query: name, limit: 1 },
+  });
+  const { tools } = JSON.parse(result.content[0].text);
   return tools.find((tool: { name: string }) => tool.name === name);
 }
 

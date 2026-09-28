@@ -15,6 +15,8 @@ runner's own settings are in its
 
 Enable MCP for the project first, in Settings, MCP Server. It is off by default.
 
+The default MCP catalog uses [on-demand tool discovery](mcp-discovery.md) and compact workspace search. Existing clients should reconnect after an upgrade to refresh their cached tools.
+
 ## Claude Code
 
 Claude Code reads `.mcp.json` from the working directory:

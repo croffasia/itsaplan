@@ -4,6 +4,7 @@ import type { ProjectRow } from '#modules/projects/service';
 import { routeTools, withoutFields, type McpInputSchema, type McpRouteTool } from '#mcp/generate';
 import type { Permission } from '#shared/guards';
 import { dispatchTool } from '#mcp/dispatch';
+import { documentInputSchema } from '#mcp/document-response';
 import { getMcpApp } from '#mcp/app-ref';
 import {
   AGENT_ACTIONS,
@@ -101,7 +102,7 @@ function buildOne(
   // the catalog hides.
   const hidden = [...(overrides?.hide ?? [])];
   if (bindsProject) hidden.push('projectKey');
-  const schema = withoutFields(route.inputSchema, hidden);
+  const schema = withoutFields(documentInputSchema(route), hidden);
 
   return createTool({
     id: route.name,

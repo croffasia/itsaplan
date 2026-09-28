@@ -9,6 +9,14 @@ export const SERVER_INSTRUCTIONS = `
 Itsaplan is a project tracker. A project holds issues, and defines its own columns
 (states), issue types, labels, custom fields, and members.
 
+## Finding tools
+
+If a tool named here is not in your tool list, find it with discover_tools: pass an
+action or a resource ("update issue", "add comment", "list documents") and it returns
+the matching tools with their input schemas. Run a read through call_read_tool and a
+change through call_tool, each with the tool's name and arguments. call_read_tool
+refuses a tool that changes data.
+
 ## Resolving ids
 
 An identifier a person writes is "KEY-42": the part before the dash is the
@@ -19,13 +27,14 @@ internal numeric id, which comes back in that result.
 
 A project key is unique within its team, not across teams. If a bare key is
 refused because several of your teams use it, pass the project's ref instead,
-"<team>.KEY" — the ref field that list_projects returns.
+"<team>.KEY" — the ref field that list_projects returns, projectRef in a
+search_workspace result.
 
-When you have no identifier, start with list_projects to find the project, then
-get_project to resolve its ids. Every id another tool takes — columnId, typeId,
-labelIds, assigneeUserId, custom field ids, member user ids — comes from
-get_project. Never invent an id, and never reuse one across projects: ids are per
-project.
+When you have no identifier, search_workspace finds projects and issues from a few
+words, and list_projects lists every project; then get_project resolves its ids.
+Every id another tool takes — columnId, typeId, labelIds, assigneeUserId, custom
+field ids, member user ids — comes from get_project. Never invent an id, and never
+reuse one across projects: ids are per project.
 
 A checklistId and a checklist item's id come from get_issue: an issue carries its
 checklists and their items.
@@ -86,6 +95,11 @@ A url in a result does not show you the picture. To look at the images of an iss
 call view_issue_images (view_initiative_images for an initiative); to look at one
 image, call view_attachment with its url. A file can be replaced behind the same url,
 so view it again rather than reusing what you saw earlier.
+
+## Documents
+
+get_document and the other document tools return the content as Markdown. Pass
+includeContentJson: true only when you also need the editor JSON.
 
 ## Mentions
 

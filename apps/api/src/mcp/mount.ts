@@ -31,7 +31,10 @@ export function mountMcp(app: any): void {
     '/mcp',
     async ({ request, body }: { request: Request; body: unknown }) => {
       const serve = async (credential: McpCredential, userId: string) => {
-        const server = await buildMcpServer(mcpApp, credential, userId);
+        const catalog = new URL(request.url).searchParams.get('catalog');
+        if (catalog !== null && catalog !== 'compact' && catalog !== 'full')
+          return Response.json({ error: 'catalog must be compact or full.' }, { status: 400 });
+        const server = await buildMcpServer(mcpApp, credential, userId, catalog ?? 'compact');
         const transport = new WebStandardStreamableHTTPServerTransport({
           sessionIdGenerator: undefined,
         });

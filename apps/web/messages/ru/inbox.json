@@ -33,5 +33,8 @@
     "commented": "{who} оставил(а) комментарий",
     "stateChanged": "{who} изменил(а) статус с {from} на {to}",
     "stateChangedPlain": "{who} изменил(а) статус"
-  }
+  },
+  "thisProject": "Этот проект",
+  "allProjects": "Все проекты",
+  "scopeHint": "Показывать уведомления из этого проекта или всех проектов"
 }

@@ -50,6 +50,12 @@
     "dueDate": "Due date",
     "clearDueDate": "Clear due date",
     "labels": "Labels",
+    "copyId": "Copy ID",
+    "copyShortLink": "Copy short link",
+    "copyFullUrl": "Copy full URL",
+    "copyTitle": "Copy title",
+    "copyDescription": "Copy description",
+    "copyBranch": "Copy branch name",
     "copyPrompt": "Copy Prompt",
     "restore": "Restore",
     "archive": "Archive",
@@ -57,6 +63,7 @@
     "noDelegate": "No delegate",
     "noInitiative": "No initiative",
     "noCycle": "No cycle",
+    "copyFailed": "Could not copy to clipboard",
     "promptCopied": "Prompt copied to clipboard"
   },
   "commands": {

@@ -50,6 +50,12 @@
     "dueDate": "截止日期",
     "clearDueDate": "清除截止日期",
     "labels": "标签",
+    "copyId": "复制 ID",
+    "copyShortLink": "复制短链接",
+    "copyFullUrl": "复制完整网址",
+    "copyTitle": "复制标题",
+    "copyDescription": "复制描述",
+    "copyBranch": "复制分支名称",
     "copyPrompt": "复制提示词",
     "restore": "恢复",
     "archive": "归档",
@@ -57,6 +63,7 @@
     "noDelegate": "无执行代理",
     "noInitiative": "无计划",
     "noCycle": "无周期",
+    "copyFailed": "无法复制到剪贴板",
     "promptCopied": "提示词已复制到剪贴板"
   },
   "commands": {

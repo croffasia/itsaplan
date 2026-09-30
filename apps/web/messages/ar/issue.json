@@ -50,6 +50,12 @@
     "dueDate": "تاريخ الاستحقاق",
     "clearDueDate": "مسح تاريخ الاستحقاق",
     "labels": "الوسوم",
+    "copyId": "نسخ المعرّف",
+    "copyShortLink": "نسخ الرابط المختصر",
+    "copyFullUrl": "نسخ الرابط الكامل",
+    "copyTitle": "نسخ العنوان",
+    "copyDescription": "نسخ الوصف",
+    "copyBranch": "نسخ اسم الفرع",
     "copyPrompt": "نسخ التوجيه",
     "restore": "استعادة",
     "archive": "أرشفة",
@@ -57,6 +63,7 @@
     "noDelegate": "بلا مفوَّض",
     "noInitiative": "بلا مبادرة",
     "noCycle": "بلا دورة",
+    "copyFailed": "تعذّر النسخ إلى الحافظة",
     "promptCopied": "تم نسخ التوجيه إلى الحافظة"
   },
   "commands": {

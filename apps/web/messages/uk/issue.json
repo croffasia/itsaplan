@@ -50,6 +50,12 @@
     "dueDate": "Дедлайн",
     "clearDueDate": "Прибрати дедлайн",
     "labels": "Мітки",
+    "copyId": "Скопіювати ID",
+    "copyShortLink": "Скопіювати коротке посилання",
+    "copyFullUrl": "Скопіювати повне посилання",
+    "copyTitle": "Скопіювати назву",
+    "copyDescription": "Скопіювати опис",
+    "copyBranch": "Скопіювати назву гілки",
     "copyPrompt": "Скопіювати промпт",
     "restore": "Відновити",
     "archive": "Архівувати",
@@ -57,6 +63,7 @@
     "noDelegate": "Без делегата",
     "noInitiative": "Без ініціативи",
     "noCycle": "Без циклу",
+    "copyFailed": "Не вдалося скопіювати",
     "promptCopied": "Промпт скопійовано"
   },
   "commands": {

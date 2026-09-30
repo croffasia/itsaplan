@@ -4,6 +4,7 @@
   "valuePlaceholder": "значение",
   "noOptions": "Нет вариантов",
   "selected": "Выбрано: {count}",
+  "currentUser": "Текущий пользователь",
   "operators": {
     "is": "равно",
     "is_not": "не равно",
@@ -12,7 +13,11 @@
     "is_set": "задано",
     "is_not_set": "не задано",
     "contains": "содержит",
-    "not_contains": "не содержит"
+    "not_contains": "не содержит",
+    "overdue": "просрочен",
+    "today": "сегодня",
+    "next_3_days": "в следующие 3 дня",
+    "next_7_days": "в следующие 7 дней"
   },
   "boolean": {
     "true": "Да",

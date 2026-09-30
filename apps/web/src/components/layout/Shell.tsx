@@ -16,6 +16,7 @@ import { useShellRoute } from '@/hooks/useShellRoute';
 import { useProjectRouteSync } from '@/hooks/useProjectRouteSync';
 import { projectPath, issuePath } from '@/utils/paths';
 import { defaultsFromFilters, type NewIssueDefaults } from '@/utils/project';
+import { resolveFilterSet } from '@/utils/filters';
 import { IssueRefsProvider } from '@/context/issueRefs';
 import { ShellCtx, type ShellContext } from '@/context/shellContext';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
@@ -53,6 +54,7 @@ export default function Shell({
     views,
     editor,
     customFields,
+    filterContext,
     canCreateIssue,
     errorMsg,
     forbidden,
@@ -90,7 +92,7 @@ export default function Shell({
   // Only the work items routes: a cycle or an initiative board carries its own
   // filters and merges them itself.
   const filterDefaults = route.onBoard
-    ? defaultsFromFilters(editor.effectiveFilters, {
+    ? defaultsFromFilters(resolveFilterSet(editor.effectiveFilters, filterContext), {
         cycles: project?.plannedCycles ?? [],
         initiatives: initiativeOptions,
       })
@@ -149,6 +151,7 @@ export default function Shell({
     views,
     editor,
     customFields,
+    filterContext,
     onOpenIssue: openIssue,
     onAddIssue: addIssue,
     onChatWithAgent: (agentId: number) => {

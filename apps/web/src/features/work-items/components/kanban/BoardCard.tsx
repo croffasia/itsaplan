@@ -12,6 +12,7 @@ import type { PropertyKey } from '@/utils/viewSettings';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
 import { useSelection } from '../../context/useSelection';
 import { draggedIds } from '../../utils/kanban';
+import { usePrefetchIssue } from '../../hooks/usePrefetchIssue';
 import { IssueCardBody } from './IssueCardBody';
 
 // A draggable board card. Dragging it starts a move; the drop target that inserts
@@ -41,6 +42,7 @@ export function BoardCard({
   const { can } = usePermissions();
   const selection = useSelection();
   const selected = selection.isSelected(issue.id);
+  const prefetchIssue = usePrefetchIssue(project.project.key, issue.sequenceNumber);
   const { setNodeRef, attributes, listeners } = useDraggable({
     id: issue.id,
     data: { issueIds: selected ? [...selection.selected] : [issue.id] },
@@ -72,6 +74,7 @@ export function BoardCard({
           pressedAt.current = { x: e.clientX, y: e.clientY };
           listeners?.onPointerDown?.(e);
         }}
+        onPointerEnter={prefetchIssue}
         onClick={(e) => {
           // Both stopPropagation calls keep the click off the board background,
           // which would clear the selection — the one the drag has just moved, or

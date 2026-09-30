@@ -17,6 +17,7 @@ import { TableBuiltinCell } from './TableBuiltinCell';
 import { TableCustomCell } from './TableCustomCell';
 import { TableRowLinks } from './TableRowLinks';
 import { TableRowSubtasks } from './TableRowSubtasks';
+import { usePrefetchIssue } from '../../hooks/usePrefetchIssue';
 
 // A draggable, droppable table row. Dragging it starts a move; dropping another
 // row on it inserts before this one (onDrop). A click (no drag) opens it.
@@ -58,6 +59,7 @@ export function TableRow({
   // is an issue edit).
   const { can } = usePermissions();
   const subtasks = useSubtaskFold();
+  const prefetchIssue = usePrefetchIssue(project.project.key, issue.sequenceNumber);
   const {
     setNodeRef: dragRef,
     attributes,
@@ -90,6 +92,7 @@ export function TableRow({
           e.preventDefault();
           onClick();
         }}
+        onPointerEnter={prefetchIssue}
         className={cn(
           'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors sm:touch-none',
           isBlocked(issue) ? 'row-blocked' : 'hover:bg-accent/40',

@@ -11,6 +11,7 @@ import { IssueIdentifier } from '../shared/IssueIdentifier';
 import { SubtaskProgress } from '../shared/SubtaskProgress';
 import { useIssueSubtaskFold } from '../../context/useSubtasks';
 import { TimelineBar } from './TimelineBar';
+import { usePrefetchIssue } from '../../hooks/usePrefetchIssue';
 
 // One issue row: the sticky label on the left and its bar on the day track.
 // Dragging the label moves the issue between sections and reorders it inside one
@@ -57,6 +58,7 @@ export function TimelineIssueRow({
   // up a row (see the `sm:touch-none` below).
   const isPhone = useIsPhone();
   const fold = useIssueSubtaskFold();
+  const prefetchIssue = usePrefetchIssue(project.project.key, issue.sequenceNumber);
   const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
     id: issue.id,
     disabled: isPhone || readOnly,
@@ -66,6 +68,7 @@ export function TimelineIssueRow({
     <div
       className={cn('flex border-b hover:bg-accent/20', isDragging && 'opacity-40')}
       style={{ height: ROW_H }}
+      onPointerEnter={prefetchIssue}
     >
       <IssueContextMenu project={project} issue={issue}>
         <div

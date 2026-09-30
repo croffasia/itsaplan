@@ -368,13 +368,19 @@ export async function listNotifications(
 
 // The number of unread, non-snoozed notifications for the inbox badge, optionally
 // scoped to one project. Counts only what listNotifications shows.
-export async function unreadCount(userId: string, projectId?: number): Promise<number> {
+export async function unreadCount(
+  userId: string,
+  projectId?: number,
+  types?: NotificationType[],
+): Promise<number> {
+  if (types && types.length === 0) return 0;
   const conds = [
     eq(notification.userId, userId),
     isNull(notification.readAt),
     or(isNull(notification.snoozedUntil), lt(notification.snoozedUntil, sql`now()`)),
   ];
   if (projectId != null) conds.push(eq(notification.projectId, projectId));
+  if (types?.length) conds.push(inArray(notification.type, types));
   const [row] = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(notification)

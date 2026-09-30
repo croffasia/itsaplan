@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "عدد",
-      "description": "بيعدّ المهام اللي بتطابق تصفية إنت بتحددها"
+      "description": "بيعدّ المهام اللي بتطابق تصفية إنت بتحددها",
+      "viewIssues": "عرض المهام: {title} ({count})"
     },
     "recent_issues": {
       "label": "المهام الأخيرة",

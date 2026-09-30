@@ -6,6 +6,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import IssueContextMenu from '@/features/issue/components/actions/IssueContextMenu';
+import { usePrefetchIssue } from '../../hooks/usePrefetchIssue';
 
 // A draggable chip inside a day cell. A click (no drag) opens the issue; a drag
 // moves it to another day or the unscheduled panel.
@@ -24,6 +25,7 @@ export function CalendarDayChip({
   // (see the `sm:touch-none` below), and without work_items edit (rescheduling a
   // issue is an issue edit).
   const { can } = usePermissions();
+  const prefetchIssue = usePrefetchIssue(project.project.key, issue.sequenceNumber);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: issue.id,
     disabled: useIsPhone() || !can('work_items', 'edit'),
@@ -41,6 +43,7 @@ export function CalendarDayChip({
               e.preventDefault();
               onOpen(issue.id);
             }}
+            onPointerEnter={prefetchIssue}
             className={cn(
               'flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-xs transition-colors hover:bg-accent sm:touch-none',
               isDragging && 'opacity-40',

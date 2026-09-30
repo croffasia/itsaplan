@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "Nombre",
-      "description": "Nombre de tickets correspondant à un filtre"
+      "description": "Nombre de tickets correspondant à un filtre",
+      "viewIssues": "Voir les tickets : {title} ({count})"
     },
     "recent_issues": {
       "label": "Tickets récents",

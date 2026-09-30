@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "Число",
-      "description": "Кількість задач, що відповідають фільтру"
+      "description": "Кількість задач, що відповідають фільтру",
+      "viewIssues": "Відкрити задачі: {title} ({count})"
     },
     "recent_issues": {
       "label": "Останні задачі",

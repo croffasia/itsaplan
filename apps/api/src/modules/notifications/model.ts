@@ -43,6 +43,7 @@ export const listNotificationsQuery = t.Object({
 
 export const unreadCountQuery = t.Object({
   projectId: t.Optional(t.String({ description: 'Scope the count to one project.' })),
+  types: t.Optional(t.String({ description: 'Comma-separated notification types to include.' })),
 });
 
 export const markAllReadBody = t.Optional(t.Object({ projectId: t.Optional(t.Number()) }));

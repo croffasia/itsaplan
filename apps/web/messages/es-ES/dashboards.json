@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "Número",
-      "description": "Recuento de tickets que coinciden con un filtro"
+      "description": "Recuento de tickets que coinciden con un filtro",
+      "viewIssues": "Ver tareas: {title} ({count})"
     },
     "recent_issues": {
       "label": "Tickets recientes",

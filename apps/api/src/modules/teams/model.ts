@@ -127,6 +127,7 @@ export const TeamProjectPageResponse = pageResponse(
       { description: 'The project members who own it.' },
     ),
     isMember: t.Boolean(),
+    archivedAt: t.Nullable(t.String()),
     createdAt: t.String(),
   }),
 );

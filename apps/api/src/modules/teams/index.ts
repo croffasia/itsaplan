@@ -14,7 +14,12 @@ import {
   createProjectBody,
   updateProjectBody,
 } from '#modules/projects/model';
-import { createProject, deleteProject, updateProject } from '#modules/projects/service';
+import {
+  createProject,
+  deleteProject,
+  setProjectArchived,
+  updateProject,
+} from '#modules/projects/service';
 import { copyProject } from '#modules/projects/copy';
 import {
   TeamDetailResponse,
@@ -367,6 +372,44 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
           'only when it does not match the key pattern, for example one that starts with a ' +
           'digit. A key that another project of the team has is refused with 409.',
       },
+    },
+  )
+
+  .post(
+    '/teams/:teamId/projects/:projectId/archive',
+    async ({ membership, params }) => {
+      await requireTeamProject(membership.teamId, params.projectId);
+      const updated = await setProjectArchived(params.projectId, true);
+      if (!updated) throw new HttpError(404, 'Project not found');
+      return updated;
+    },
+    {
+      teamManager: true,
+      params: teamProjectParams,
+      response: { 200: ProjectResponse, ...errors(401, 403, 404) },
+      detail: {
+        summary: 'Archive a project of the team',
+        description:
+          'Archive a project the team owns. It leaves the project lists of its members and ' +
+          'list_projects, becomes read-only, and its agent schedules stop running. Nothing ' +
+          'in it is deleted, and it can still be copied or deleted.',
+      },
+    },
+  )
+
+  .post(
+    '/teams/:teamId/projects/:projectId/restore',
+    async ({ membership, params }) => {
+      await requireTeamProject(membership.teamId, params.projectId);
+      const updated = await setProjectArchived(params.projectId, false);
+      if (!updated) throw new HttpError(404, 'Project not found');
+      return updated;
+    },
+    {
+      teamManager: true,
+      params: teamProjectParams,
+      response: { 200: ProjectResponse, ...errors(401, 403, 404) },
+      detail: { summary: 'Restore an archived project of the team' },
     },
   )
 

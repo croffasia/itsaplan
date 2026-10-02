@@ -84,6 +84,7 @@ export interface ProjectRow {
   // the team that owns the project: its flag above reads as off and the settings page
   // does not offer it.
   availableFeatures: ProjectFeature[];
+  archivedAt: string | null;
   createdAt: string;
 }
 
@@ -156,6 +157,7 @@ export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
     timeEstimateEnabled: row.timeEstimateEnabled,
     timeLoggingEnabled: row.timeLoggingEnabled,
     availableFeatures: PROJECT_FEATURES.filter((feature) => !blockedFeatures.includes(feature)),
+    archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     createdAt: iso(row.createdAt),
   };
 }
@@ -173,6 +175,7 @@ export async function listProjects(
   const term = opts.q?.trim().replace(/[\\%_]/g, '\\$&');
   const where = and(
     eq(projectMember.userId, userId),
+    isNull(project.archivedAt),
     opts.mcpOnly ? and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true)) : undefined,
     opts.teamId !== undefined ? eq(project.teamId, opts.teamId) : undefined,
     term
@@ -541,6 +544,17 @@ export async function updateProject(
   if (patch.description !== undefined) values.description = patch.description;
   if (Object.keys(values).length === 0) return getProjectById(projectId);
   await db.update(project).set(values).where(eq(project.id, projectId));
+  return getProjectById(projectId);
+}
+
+export async function setProjectArchived(
+  projectId: number,
+  archived: boolean,
+): Promise<ProjectRow | null> {
+  await db
+    .update(project)
+    .set({ archivedAt: archived ? new Date() : null })
+    .where(eq(project.id, projectId));
   return getProjectById(projectId);
 }
 

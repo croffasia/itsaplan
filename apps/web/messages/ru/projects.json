@@ -3,6 +3,10 @@
   "copyAction": "Скопировать проект",
   "deleteAction": "Удалить проект",
   "leaveAction": "Выйти из проекта",
+  "archiveAction": "Архивировать проект",
+  "restoreAction": "Восстановить проект",
+  "archived": "Проект {name} архивирован",
+  "restored": "Проект {name} восстановлен",
   "deleteDialog": {
     "title": "Удалить {name}?",
     "confirm": "Удалить навсегда",

@@ -59,6 +59,7 @@ const projects: Project[] = Array.from({ length: 20 }, (_, index) => ({
   pointsEstimateEnabled: false,
   timeEstimateEnabled: false,
   timeLoggingEnabled: false,
+  archivedAt: null,
   createdAt: '2026-01-01T00:00:00Z',
 }));
 

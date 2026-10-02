@@ -3,6 +3,10 @@
   "copyAction": "复制项目",
   "deleteAction": "删除项目",
   "leaveAction": "退出项目",
+  "archiveAction": "归档项目",
+  "restoreAction": "恢复项目",
+  "archived": "已归档 {name}",
+  "restored": "已恢复 {name}",
   "deleteDialog": {
     "title": "删除 {name}？",
     "confirm": "永久删除",

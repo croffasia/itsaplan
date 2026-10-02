@@ -3,6 +3,10 @@
   "copyAction": "Скопіювати проєкт",
   "deleteAction": "Видалити проєкт",
   "leaveAction": "Вийти з проєкту",
+  "archiveAction": "Архівувати проєкт",
+  "restoreAction": "Відновити проєкт",
+  "archived": "Проєкт {name} архівовано",
+  "restored": "Проєкт {name} відновлено",
   "deleteDialog": {
     "title": "Видалити {name}?",
     "confirm": "Видалити назавжди",

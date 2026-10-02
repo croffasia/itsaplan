@@ -76,6 +76,7 @@ export interface TeamProject {
   memberCount: number;
   owners: { userId: string; name: string; image: string | null }[];
   isMember: boolean;
+  archivedAt: string | null;
   createdAt: string;
 }
 
@@ -277,6 +278,12 @@ export const updateTeamProject = (
     method: 'PATCH',
     body: JSON.stringify(patch),
   });
+
+export const archiveTeamProject = (teamId: number, projectId: number) =>
+  request<Project>(`/teams/${teamId}/projects/${projectId}/archive`, { method: 'POST' });
+
+export const restoreTeamProject = (teamId: number, projectId: number) =>
+  request<Project>(`/teams/${teamId}/projects/${projectId}/restore`, { method: 'POST' });
 
 export const deleteTeamProject = (teamId: number, projectId: number) =>
   request<void>(`/teams/${teamId}/projects/${projectId}`, { method: 'DELETE' });

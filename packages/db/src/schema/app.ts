@@ -135,6 +135,9 @@ export const project = pgTable(
     // the same place. Independent of the time estimate: a team can log time without
     // estimating first. Turning it off hides the entries and keeps them.
     timeLoggingEnabled: boolean('time_logging_enabled').notNull().default(false),
+    // When set, the project is archived: read-only, left out of the members' project
+    // lists, and its agent schedules do not run. Its rows are kept and it can be restored.
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique('project_team_key_uq').on(t.teamId, t.key)],

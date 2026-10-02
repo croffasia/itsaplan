@@ -1,6 +1,7 @@
 import { db, agentChatEvent, agentChatFavorite, agentChatMessage, agentChatThread } from '@repo/db';
 import { and, asc, desc, eq, gt, inArray, notExists, sql } from 'drizzle-orm';
 import { setTimeout as sleep } from 'node:timers/promises';
+import { idlePollDebug, nextIdlePollMs } from '#shared/idle-poll';
 import { intEnv, iso } from '#shared/lib';
 import { deleteContextUsage, recordContextUsage, type ContextUsage } from '../chat-usage';
 import { deleteFavorite, FAVORITES_LIMIT } from '../chat-favorites';
@@ -40,6 +41,7 @@ export const agentChatConfig = {
   // while it waits. The wait is what makes an answer start the moment it is sent.
   claimWaitMs: () => Math.min(intEnv('AGENT_CHAT_CLAIM_WAIT_MS', 25_000), 30_000),
   claimPollMs: () => intEnv('AGENT_CHAT_CLAIM_POLL_MS', 500),
+  claimPollMaxMs: () => intEnv('AGENT_CHAT_CLAIM_POLL_MAX_MS', 5_000),
   streamPollMs: () => intEnv('AGENT_CHAT_STREAM_POLL_MS', 300),
   historyMessages: () => intEnv('AGENT_CHAT_HISTORY_MESSAGES', 20),
 };
@@ -424,11 +426,19 @@ export async function claimNextMessage(agent: RunnerAgent): Promise<ClaimedChat 
   await touchRunner(agent.id);
   await expireExhausted(agent.id);
   const deadline = Date.now() + agentChatConfig.claimWaitMs();
+  let emptyStreak = 0;
   for (;;) {
     const message = await claimMessage(agent);
     if (message) return message;
     if (Date.now() >= deadline) return null;
-    await sleep(Math.min(agentChatConfig.claimPollMs(), Math.max(0, deadline - Date.now())));
+    const delay = nextIdlePollMs(
+      emptyStreak,
+      agentChatConfig.claimPollMs(),
+      agentChatConfig.claimPollMaxMs(),
+    );
+    idlePollDebug('agent-chat-claim', delay, emptyStreak);
+    emptyStreak += 1;
+    await sleep(Math.min(delay, Math.max(0, deadline - Date.now())));
   }
 }
 

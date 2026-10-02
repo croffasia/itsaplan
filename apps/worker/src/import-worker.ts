@@ -48,7 +48,12 @@ import {
 // work, then reschedules — a large import interleaves across many ticks
 // rather than running to completion in one.
 export function startImportWorker(): WorkerHandle {
-  return startPollLoop('import-worker', tick, () => intEnv('IMPORT_POLL_INTERVAL_MS', 3000));
+  return startPollLoop(
+    'import-worker',
+    tick,
+    () => intEnv('IMPORT_POLL_INTERVAL_MS', 3000),
+    () => intEnv('IMPORT_POLL_INTERVAL_MAX_MS', 60_000),
+  );
 }
 
 // How many issues Create/Link process per tick. Each issue costs several
@@ -61,9 +66,9 @@ const ISSUES_PER_TICK = 15;
 // import doesn't fail itself out just by running long.
 const MAX_ATTEMPTS = 10;
 
-async function tick(): Promise<void> {
+async function tick(): Promise<boolean> {
   const [job] = await claimDueImportJobs();
-  if (!job) return;
+  if (!job) return false;
   try {
     const reader = buildReader(job);
     switch (job.phase) {
@@ -88,6 +93,7 @@ async function tick(): Promise<void> {
   } catch (error) {
     await handleTickError(job, error);
   }
+  return true;
 }
 
 async function handleTickError(job: ClaimedImportJob, error: unknown): Promise<void> {

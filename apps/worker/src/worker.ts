@@ -19,19 +19,24 @@ let ticksSinceCleanup = 0;
 let ticksSinceTelemetry = TELEMETRY_CHECK_EVERY_TICKS;
 
 export function startWorker(): WorkerHandle {
-  return startPollLoop('worker', tick, () => workerConfig().pollIntervalMs);
+  return startPollLoop(
+    'worker',
+    tick,
+    () => workerConfig().pollIntervalMs,
+    () => workerConfig().pollIntervalMaxMs,
+  );
 }
 
 // One poll: claim a batch of due deliveries, send them concurrently, record each
 // outcome, then run the delivery cleanup and the telemetry check on their own tick
 // intervals.
-async function tick(): Promise<void> {
+async function tick(): Promise<boolean> {
   const cfg = workerConfig();
   const claimed = await claimDueDeliveries();
   if (claimed.length > 0) {
     await Promise.all(claimed.map(processDelivery));
   }
-  await processNotificationDeliveries();
+  const notified = await processNotificationDeliveries();
   if (++ticksSinceCleanup >= cfg.cleanupEveryTicks) {
     ticksSinceCleanup = 0;
     const removed = await cleanupOldDeliveries();
@@ -46,6 +51,7 @@ async function tick(): Promise<void> {
       console.error('[worker] telemetry send failed:', error);
     }
   }
+  return claimed.length > 0 || notified;
 }
 
 async function processDelivery(d: ClaimedDelivery): Promise<void> {

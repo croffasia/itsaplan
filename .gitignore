@@ -44,3 +44,5 @@ coverage
 
 # agent scratch space (test docs, drafts)
 .workspace/
+.venv-plot/
+.tmp/

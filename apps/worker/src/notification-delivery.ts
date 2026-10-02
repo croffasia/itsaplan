@@ -18,9 +18,10 @@ interface ClaimedNotification {
   attempts: number;
 }
 
-export async function processNotificationDeliveries(): Promise<void> {
+export async function processNotificationDeliveries(): Promise<boolean> {
   const claimed = await claimDueDeliveries();
   await Promise.all(claimed.map(processDelivery));
+  return claimed.length > 0;
 }
 
 // Atomically claims up to the batch size of due rows. FOR UPDATE SKIP LOCKED lets

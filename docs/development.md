@@ -68,5 +68,6 @@ docker compose -f docker-compose.test.yml run --rm api-test
 
 The integration suite is in `apps/api`. `apps/api/AGENTS.md` explains how to write a test.
 
-The mechanisms that span several apps — the revision engine, the interface languages — are
-described in [`docs/dev/`](dev/).
+The mechanisms that span several apps — the revision engine, the interface languages, idle
+poll backoff — are described in [`docs/dev/`](dev/). Operator idle-poll tuning:
+[`docs/idle-poll/`](idle-poll/).

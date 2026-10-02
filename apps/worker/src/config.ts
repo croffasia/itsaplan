@@ -6,8 +6,9 @@
 import { intEnv } from './env';
 
 export interface WorkerConfig {
-  // How often to poll for due deliveries.
+  // How often to poll for due deliveries, and how far an empty queue stretches that wait.
   pollIntervalMs: number;
+  pollIntervalMaxMs: number;
   // Max deliveries claimed and sent per tick (also the concurrency ceiling).
   batchSize: number;
   // Per-delivery HTTP timeout.
@@ -31,6 +32,7 @@ export function workerConfig(): WorkerConfig {
   if (cached) return cached;
   cached = {
     pollIntervalMs: intEnv('WEBHOOK_POLL_INTERVAL_MS', 2000),
+    pollIntervalMaxMs: intEnv('WEBHOOK_POLL_INTERVAL_MAX_MS', 60_000),
     batchSize: intEnv('WEBHOOK_BATCH_SIZE', 20),
     timeoutMs: intEnv('WEBHOOK_TIMEOUT_MS', 10_000),
     maxAttempts: intEnv('WEBHOOK_MAX_ATTEMPTS', 8),

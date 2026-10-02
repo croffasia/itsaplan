@@ -32,7 +32,9 @@ of the newest. The `migrate` service applies migrations before the api starts, a
 becomes the instance admin.
 
 `.env.example` documents every variable, including the optional ones: legal document URLs,
-passkey and cookie settings, telemetry opt-out, and worker tuning.
+passkey and cookie settings, telemetry opt-out, and worker tuning. Quiet-hour poll
+backoff (fewer empty database checks and runner claims) is covered in
+[idle-poll tuning](idle-poll/).
 
 ## Single sign-on
 

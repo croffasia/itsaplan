@@ -26,8 +26,10 @@ export interface RunnerConfig {
   // On top of the runner's own environment.
   env: Record<string, string>;
   concurrency: number;
-  // How often to ask for work when the queue was empty.
+  // How often to ask for work when the queue was empty, and how far consecutive
+  // empties stretch that wait. An old config that omits the max keeps the default.
   pollIntervalMs: number;
+  pollIntervalMaxMs: number;
   // How long one task may take before it is killed and reported as failed.
   timeoutMs: number;
   // How the output is read when the command answers a chat message. 'text' takes whatever
@@ -57,6 +59,7 @@ export function presetOf(config: Pick<RunnerConfig, 'agent' | 'command'>): Prese
 const DEFAULTS = {
   concurrency: 1,
   pollIntervalMs: 3000,
+  pollIntervalMaxMs: 60_000,
   timeoutMs: 30 * 60 * 1000,
 };
 
@@ -210,6 +213,7 @@ function configFrom(fields: Fields, name: string, extraArgs: string[]): RunnerCo
       intFrom(fields.pollIntervalMs, DEFAULTS.pollIntervalMs),
       MIN_POLL_INTERVAL_MS,
     ),
+    pollIntervalMaxMs: intFrom(fields.pollIntervalMaxMs, DEFAULTS.pollIntervalMaxMs),
     timeoutMs: intFrom(fields.timeoutMs, DEFAULTS.timeoutMs),
     outputFormat: outputFormatFrom(fields.outputFormat, presetOf({ agent, command })),
   };
@@ -228,6 +232,7 @@ function sharedFields(file: Fields, overrides: ConfigOverrides): Fields {
     cwd: env.ITSAPLAN_CWD,
     concurrency: env.ITSAPLAN_CONCURRENCY,
     pollIntervalMs: env.ITSAPLAN_POLL_INTERVAL_MS,
+    pollIntervalMaxMs: env.ITSAPLAN_POLL_INTERVAL_MAX_MS,
     timeoutMs: env.ITSAPLAN_TIMEOUT_MS,
     outputFormat: env.ITSAPLAN_OUTPUT_FORMAT,
   };

@@ -1,9 +1,11 @@
 import { startWorker } from './worker';
 import { startAgentWorker } from './agent-worker';
 import { startImportWorker } from './import-worker';
+import { assertWorkerLeaseEnv } from './env-guards';
 
 // Entry point for webhook delivery, agent scheduling, autonomous agent runs,
 // and source imports. The api applies database migrations on startup.
+assertWorkerLeaseEnv();
 console.log('[worker] worker starting');
 const worker = startWorker();
 const agentWorker = startAgentWorker();

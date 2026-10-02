@@ -3,6 +3,7 @@ import { ChevronDown, ChevronRight, ListTree } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { type Maps } from '@/utils/project';
 import { subtaskProgress } from '@/utils/subtasks';
+import { noDragProps } from '@/lib/dnd';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { StateIcon } from '@/features/issue/components/shared/IssueIcons';
@@ -38,9 +39,9 @@ export function IssueCardSubtasks({
     <div className="mt-2.5 flex flex-col gap-1 border-t border-border/50 pt-2">
       <button
         type="button"
-        // The card starts a drag on pointerdown and opens itself on click, so the
+        // The card starts a drag on press and opens itself on click, so the
         // header has to refuse both the way a subtask row does.
-        onPointerDown={(e) => e.stopPropagation()}
+        {...noDragProps}
         onClick={(e) => {
           e.stopPropagation();
           e.preventDefault();
@@ -68,9 +69,9 @@ export function IssueCardSubtasks({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  // The card above starts a drag on pointerdown and opens itself
-                  // on click; a subtask row must do neither.
-                  onPointerDown={(e) => e.stopPropagation()}
+                  // The card above starts a drag on press and opens itself on
+                  // click; a subtask row must do neither.
+                  {...noDragProps}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();

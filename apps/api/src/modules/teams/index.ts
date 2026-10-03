@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { requireUser } from '#shared/access';
+import { assertProjectWritable, requireUser } from '#shared/access';
 import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { noContent } from '#shared/http';
@@ -354,8 +354,9 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
 
   .patch(
     '/teams/:teamId/projects/:projectId',
-    async ({ body, membership, params }) => {
+    async ({ body, membership, params, request }) => {
       await requireTeamProject(membership.teamId, params.projectId);
+      await assertProjectWritable(params.projectId, request.method);
       const updated = await updateProject(params.projectId, body);
       if (!updated) throw new HttpError(404, 'Project not found');
       return updated;

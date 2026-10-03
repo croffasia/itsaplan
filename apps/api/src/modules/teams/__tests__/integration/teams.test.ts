@@ -796,6 +796,7 @@ describe('teams', () => {
           error: 'This project is archived; restore it to make changes',
         });
         expect((await board.issues.post({ columnId, title: 'New' })).status).toBe(403);
+        expect((await one.patch({ name: 'Renamed' })).status).toBe(403);
         expect((await api.issues({ issueId }).get()).data).toMatchObject({ title: 'Launch' });
 
         await one.restore.post();

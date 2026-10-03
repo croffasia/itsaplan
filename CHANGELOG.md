@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/croffasia/itsaplan/compare/v1.2.1...v1.3.0) (2026-10-03)
+
+
+### Features
+
+* add workspaces above teams ([#468](https://github.com/croffasia/itsaplan/issues/468)) ([bd8a474](https://github.com/croffasia/itsaplan/commit/bd8a4740fa6f9d3be6d787ee77525e1acc30ca72))
+* archive and restore projects ([#465](https://github.com/croffasia/itsaplan/issues/465)) ([59c83e3](https://github.com/croffasia/itsaplan/commit/59c83e3054128b444a0de70faec985343fb1171a))
+* **web:** add issue copy submenu ([#451](https://github.com/croffasia/itsaplan/issues/451)) ([7cbaa78](https://github.com/croffasia/itsaplan/commit/7cbaa78672b578f8fc7082692fee3059c7b9c156))
+
+
+### Bug Fixes
+
+* **web:** keep Ctrl+B in text fields from toggling the sidebar ([#469](https://github.com/croffasia/itsaplan/issues/469)) ([451226c](https://github.com/croffasia/itsaplan/commit/451226c8cd5e5de030d0371a13c9c65093ac4580))
+
 ## [1.2.1](https://github.com/croffasia/itsaplan/compare/v1.2.0...v1.2.1) (2026-09-26)
 
 

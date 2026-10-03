@@ -7,11 +7,11 @@ import {
   buildMaps,
   groupDefaults,
   groupIssues,
-  positionsAt,
-  sortIssues,
+  sortGroupedIssues,
   type WorkItemsViewProps,
   type IssueGroup,
 } from '@/utils/project';
+import { effectiveColumnSort, withColumnSort } from '@/utils/viewSettings';
 import { isActiveFilterSet } from '@/utils/filters';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
 import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
@@ -19,7 +19,7 @@ import { useWipLimitMessage } from '../../hooks/useWipLimitMessage';
 import { countEntering, wipAllows, wipStateFor } from '../../utils/wipLimit';
 import { useGroupLabels } from '@/hooks/useGroupLabels';
 import { useSelection } from '../../context/useSelection';
-import { boardCollision, issuesToMove } from '../../utils/kanban';
+import { boardCollision, dropPositions, issuesToMove } from '../../utils/kanban';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { GroupDot } from '../shared/GroupDot';
@@ -79,8 +79,12 @@ export default function FlatBoard({
     onSettingsChange({ ...settings, pinnedGroup: settings.pinnedGroup === key ? null : key });
 
   const groups = buildGroups(project, settings.group, groupLabels, filters);
-  const sorted = sortIssues(project.issues, settings.sort, project);
-  const issuesByGroup = groupIssues(groups, sorted, settings.group);
+  const issuesByGroup = sortGroupedIssues(
+    groupIssues(groups, project.issues, settings.group),
+    settings,
+    project,
+  );
+  const boardOrder = groups.flatMap((group) => issuesByGroup.get(group.key) ?? []);
   const maps = buildMaps(project);
 
   // Empty groups are removed when "Show empty columns" is off. A manual hide moves
@@ -98,33 +102,34 @@ export default function FlatBoard({
     ? [pinnedGroup, ...visibleGroups.filter((g) => g !== pinnedGroup)]
     : visibleGroups;
 
-  // A reorder inside a column only holds when the view is ordered manually. With
-  // any other sort field, the card returns to the position that the sort gives it.
-  // The board then skips cards that are already in the target column. A drop with
-  // no card left to move is refused, and the reason is shown. A card from another
-  // column is still moved, because that changes the grouping field, not the order.
-  const manualOrder = settings.sort.field === 'manual';
-
   const wipOf = (group: IssueGroup) => wipStateFor(group, project.columns, columnCounts);
 
   function moveIssue(issueIds: number[], group: IssueGroup, index: number) {
     const assign = group.assign;
     if (!assign) return;
     const target = issuesByGroup.get(group.key) ?? [];
-    const ids = issuesToMove(issueIds, sorted, target, manualOrder);
+    // A reorder inside a column only holds when that column is ordered manually.
+    // With any other sort field, the card returns to the position that the sort
+    // gives it. The board then skips cards that are already in the target column. A
+    // drop with no card left to move is refused, and the reason is shown. A card
+    // from another column is still moved, because that changes the grouping field,
+    // not the order.
+    const targetSort = effectiveColumnSort(settings, group.key);
+    const manualOrder = targetSort.field === 'manual';
+    const ids = issuesToMove(issueIds, boardOrder, target, manualOrder);
     if (ids.length === 0) {
-      toast.info(sortedOrderMessage(settings.sort.field));
+      toast.info(sortedOrderMessage(targetSort.field));
       return;
     }
     // The board refuses the move instead of the server, because the move is
     // optimistic. The card would otherwise appear in the column and then return to
     // its old column.
     const wip = wipOf(group);
-    if (wip && !wipAllows(wip, countEntering(ids, sorted, group))) {
+    if (wip && !wipAllows(wip, countEntering(ids, project.issues, group))) {
       toast.info(wipLimitMessage(group.name, wip.limit));
       return;
     }
-    const positions = positionsAt(target, index, ids.length);
+    const positions = dropPositions(target, index, ids.length, manualOrder);
     ids.forEach((id, n) => dnd.move(id, assign, positions[n]));
   }
 
@@ -165,10 +170,12 @@ export default function FlatBoard({
               issues={issuesByGroup.get(group.key) ?? []}
               maps={maps}
               properties={settings.properties}
-              manualOrder={manualOrder}
+              sort={effectiveColumnSort(settings, group.key)}
+              inheritedSort={settings.columnSorts[group.key] === undefined}
+              onSortChange={(sort) => onSettingsChange(withColumnSort(settings, group.key, sort))}
               wip={wipOf(group)}
               filtered={filtered}
-              boardIssues={sorted}
+              boardIssues={project.issues}
               onMoveIssue={moveIssue}
               onOpenIssue={onOpenIssue}
               onAddIssue={() => addIssueTo(group)}

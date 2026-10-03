@@ -9,12 +9,12 @@ import {
   buildMaps,
   mergeAssign,
   nestIssues,
-  positionsAt,
-  sortIssues,
+  sortGroupedIssues,
   type WorkItemsViewProps,
   type IssueGroup,
 } from '@/utils/project';
 import { isActiveFilterSet } from '@/utils/filters';
+import { effectiveColumnSort, withColumnSort } from '@/utils/viewSettings';
 import { usePersistedSet } from '@/hooks/usePersistedSet';
 import { useBoardDnd } from '../../hooks/useBoardDnd';
 import { useSortedOrderMessage } from '../../hooks/useSortedOrderMessage';
@@ -25,12 +25,14 @@ import { useSelection } from '../../context/useSelection';
 import { GroupDot } from '../shared/GroupDot';
 import { WipCount } from './WipCount';
 import { SelectAllToggle } from './SelectAllToggle';
+import { ColumnSortControl } from './ColumnSortControl';
 import { CardOverlay } from './CardOverlay';
 import { SwimlaneCell } from './SwimlaneCell';
 import {
   boardCollision,
   COLUMN_WIDTH,
   collapsedSwimlanesKey,
+  dropPositions,
   issuesToMove,
 } from '../../utils/kanban';
 
@@ -53,6 +55,7 @@ export default function SwimlaneBoard({
   filters,
   columnCounts,
   settings,
+  onSettingsChange,
   onOpenIssue,
   readOnly,
 }: WorkItemsViewProps) {
@@ -67,14 +70,15 @@ export default function SwimlaneBoard({
   const maps = buildMaps(project);
   const columnGroups = buildGroups(project, settings.group, groupLabels, filters);
   const swimlaneGroups = buildGroups(project, settings.subgroup, groupLabels, filters);
-  const sorted = sortIssues(project.issues, settings.sort, project);
   const nested = nestIssues(
     swimlaneGroups,
     columnGroups,
-    sorted,
+    project.issues,
     settings.subgroup,
     settings.group,
   );
+  for (const issuesByColumn of nested.values())
+    sortGroupedIssues(issuesByColumn, settings, project);
 
   // A column is shown unless it is empty across every swimlane and empty columns
   // are hidden; its header count is the project-wide total for that column.
@@ -112,6 +116,7 @@ export default function SwimlaneBoard({
       idsByColumn.set(cell.column.key, list);
     }
   }
+  const boardOrder = rows.flatMap((row) => row.cells.flatMap((cell) => cell.issues));
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
@@ -121,13 +126,6 @@ export default function SwimlaneBoard({
     overscan: 3,
     getItemKey: (index) => rows[index].swimlane.key,
   });
-
-  // Reordering inside a cell only holds when the view is ordered manually: with any
-  // other sort field the card would snap back to where the sort puts it. Cards
-  // already in the target cell are then skipped, and a drop left with nothing to
-  // move is refused and explained; a card from another cell still goes through,
-  // since that changes the grouping fields rather than the order.
-  const manualOrder = settings.sort.field === 'manual';
 
   const wipOf = (column: IssueGroup) => wipStateFor(column, project.columns, columnCounts);
 
@@ -140,19 +138,26 @@ export default function SwimlaneBoard({
   ) {
     const assign = mergeAssign(column.assign, swimlane.assign);
     if (!assign) return;
-    const ids = issuesToMove(issueIds, sorted, cellIssues, manualOrder);
+    // Reordering inside a cell only holds when its column is ordered manually: with
+    // any other sort field the card would snap back to where the sort puts it. Cards
+    // already in the target cell are then skipped, and a drop left with nothing to
+    // move is refused and explained; a card from another cell still goes through,
+    // since that changes the grouping fields rather than the order.
+    const targetSort = effectiveColumnSort(settings, column.key);
+    const manualOrder = targetSort.field === 'manual';
+    const ids = issuesToMove(issueIds, boardOrder, cellIssues, manualOrder);
     if (ids.length === 0) {
-      toast.info(sortedOrderMessage(settings.sort.field));
+      toast.info(sortedOrderMessage(targetSort.field));
       return;
     }
     // Measured against the whole column, across every swimlane: moving a card
     // between two swimlanes of the same column adds nothing to it.
     const wip = wipOf(column);
-    if (wip && !wipAllows(wip, countEntering(ids, sorted, column))) {
+    if (wip && !wipAllows(wip, countEntering(ids, project.issues, column))) {
       toast.info(wipLimitMessage(column.name, wip.limit));
       return;
     }
-    const positions = positionsAt(cellIssues, index, ids.length);
+    const positions = dropPositions(cellIssues, index, ids.length, manualOrder);
     ids.forEach((id, n) => dnd.move(id, assign, positions[n]));
   }
 
@@ -197,7 +202,17 @@ export default function SwimlaneBoard({
                   filtered={filtered}
                 />
                 {!readOnly && (
-                  <SelectAllToggle ids={idsByColumn.get(column.key) ?? []} className="ml-auto" />
+                  <div className="ml-auto flex items-center gap-1">
+                    <SelectAllToggle ids={idsByColumn.get(column.key) ?? []} />
+                    <ColumnSortControl
+                      columnName={column.name}
+                      sort={effectiveColumnSort(settings, column.key)}
+                      inherited={settings.columnSorts[column.key] === undefined}
+                      onChange={(sort) =>
+                        onSettingsChange(withColumnSort(settings, column.key, sort))
+                      }
+                    />
+                  </div>
                 )}
               </div>
             ))}
@@ -248,7 +263,7 @@ export default function SwimlaneBoard({
                           maps={maps}
                           properties={settings.properties}
                           cellKey={`${row.swimlane.key}|${column.key}`}
-                          manualOrder={manualOrder}
+                          manualOrder={effectiveColumnSort(settings, column.key).field === 'manual'}
                           readOnly={readOnly}
                           onOpenIssue={onOpenIssue}
                           onMoveIssue={(issueIds, index) =>

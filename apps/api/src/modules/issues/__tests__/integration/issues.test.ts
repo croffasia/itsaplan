@@ -1271,6 +1271,67 @@ describe('issues', () => {
       expect(res.data!.every((i) => i.columnId === columnId)).toBe(true);
     });
 
+    it('sorts by stored update time by default and can sort by creation time', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const first = (await createIssue(asOwner, columnId, { title: 'First' })).data!;
+      await Bun.sleep(10);
+      const second = (await createIssue(asOwner, columnId, { title: 'Second' })).data!;
+      await Bun.sleep(10);
+      await asOwner.issues({ issueId: first.id }).patch({ title: 'First updated' });
+
+      const byUpdated = await list(asOwner);
+      expect(byUpdated.data!.map((item) => item.id)).toEqual([first.id, second.id]);
+      expect(byUpdated.data![0]!.createdAt).toBeInstanceOf(Date);
+      expect(byUpdated.data![0]!.updatedAt).toBeInstanceOf(Date);
+
+      const byCreated = await list(asOwner, { sort: 'created' });
+      expect(byCreated.data!.map((item) => item.id)).toEqual([second.id, first.id]);
+    });
+
+    it('orders equal update timestamps by descending id', async () => {
+      const { asOwner, columnIds } = await setupProject();
+      const sourceColumnId = columnIds[1];
+      const targetColumnId = columnIds[0];
+      const created = [];
+      for (let i = 0; i < 3; i++) {
+        created.push((await createIssue(asOwner, sourceColumnId, { title: `Issue ${i}` })).data!);
+      }
+      await asOwner
+        .projects({ projectKey: 'MKT' })
+        .columns({ columnId: sourceColumnId })
+        .delete({ mode: 'move', targetColumnId });
+
+      const result = await list(asOwner, { columnId: targetColumnId });
+      expect(new Set(result.data!.map((item) => new Date(item.updatedAt).getTime())).size).toBe(1);
+      expect(result.data!.map((item) => item.id)).toEqual(created.map((item) => item.id).reverse());
+    });
+
+    it('applies offset after filtering and ordering', async () => {
+      const { asOwner, columnId, columnIds } = await setupProject();
+      const matching = [];
+      for (let i = 0; i < 4; i++) {
+        matching.push((await createIssue(asOwner, columnId, { title: `Match ${i}` })).data!);
+      }
+      await createIssue(asOwner, columnIds[1], { title: 'Other column' });
+
+      const firstPage = await list(asOwner, { columnId, sort: 'created', limit: 2, offset: 0 });
+      const secondPage = await list(asOwner, { columnId, sort: 'created', limit: 2, offset: 2 });
+      const firstIds = firstPage.data!.map((item) => item.id);
+      const secondIds = secondPage.data!.map((item) => item.id);
+      const expectedIds = matching.map((item) => item.id).reverse();
+
+      expect(firstIds).toEqual(expectedIds.slice(0, 2));
+      expect(secondIds).toEqual(expectedIds.slice(2));
+    });
+
+    it('rejects an unknown sort and negative offset', async () => {
+      const { asOwner } = await setupProject();
+
+      expect((await list(asOwner, { sort: 'oldest' })).status).toBe(400);
+      expect((await list(asOwner, { offset: -1 })).status).toBe(400);
+      expect((await list(asOwner, { offset: 0.5 })).status).toBe(400);
+    });
+
     it('applies the labelIds filter with AND semantics', async () => {
       const { asOwner, columnId } = await setupProject();
       const a = (await asOwner.projects({ projectKey: 'MKT' }).labels.post({ name: 'a' })).data!;

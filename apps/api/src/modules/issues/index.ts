@@ -435,7 +435,11 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           dueTo: str(query.dueTo),
           limit,
         },
-        { includeArchived: query.includeArchived === 'true' },
+        {
+          includeArchived: query.includeArchived === 'true',
+          sort: query.sort,
+          offset: query.offset,
+        },
       );
     },
     {
@@ -445,7 +449,8 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
       response: { 200: t.Array(IssueSearchHitResponse), ...commonErrors },
       detail: {
         summary: 'List issues by filters',
-        description: "List a project's issues by field filters.",
+        description:
+          "List a project's issues by exact field filters. Sort newest first by the stored issue modification time (default) or creation time; offset skips results after filtering and ordering.",
         ...mcpTool('list_issues'),
       },
     },

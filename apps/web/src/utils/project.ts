@@ -24,6 +24,7 @@ import {
 import { compareByGroupOrder } from '@/utils/initiativeMeta';
 import {
   customFieldId,
+  effectiveColumnSort,
   isCustomFieldKey,
   type CustomFieldKey,
   type GroupField,
@@ -556,6 +557,21 @@ export function groupIssues<T extends Issue>(
   for (const g of groups) byGroup.set(g.key, []);
   for (const issue of issues) byGroup.get(groupKeyOf(issue, group))?.push(issue);
   return byGroup;
+}
+
+// Sorts every group in place by its own ordering (see effectiveColumnSort).
+export function sortGroupedIssues<T extends Issue>(
+  issuesByGroup: Map<string, T[]>,
+  settings: Pick<ViewSettings, 'sort' | 'columnSorts'>,
+  project: ProjectDetail,
+): Map<string, T[]> {
+  for (const [groupKey, issues] of issuesByGroup) {
+    issuesByGroup.set(
+      groupKey,
+      sortIssues(issues, effectiveColumnSort(settings, groupKey), project),
+    );
+  }
+  return issuesByGroup;
 }
 
 // Issues bucketed two levels deep: subgroup key -> group key -> issues, order

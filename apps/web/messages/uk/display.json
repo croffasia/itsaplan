@@ -19,6 +19,12 @@
     "created": "Створено",
     "updated": "Оновлено"
   },
+  "columnOrdering": {
+    "title": "Сортування: {column}",
+    "button": "{column}: {field}, {direction}",
+    "field": "Сортування стовпця",
+    "board": "Сортування дошки"
+  },
   "groupFields": {
     "none": "Без групування",
     "status": "Статус",

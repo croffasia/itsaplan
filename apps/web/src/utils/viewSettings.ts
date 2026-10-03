@@ -5,7 +5,7 @@
 // back to per-view defaults, so the store grows new options without a migration.
 
 import type { ProjectFeatureSet } from '@/utils/projectFeatures';
-import type { Sort, WorkItemsView } from '@/utils/viewTypes';
+import { SORT_FIELDS, type Sort, type WorkItemsView } from '@/utils/viewTypes';
 
 // Field the Project columns / Table sections group by. 'none' is a single flat
 // list (Table only). Project always groups by something. `subgroup` (below) adds a
@@ -114,6 +114,9 @@ export type WeekStart = 0 | 1;
 
 export interface ViewSettings {
   sort: Sort;
+  // Orderings of single Project columns, keyed like hiddenGroups. A column without
+  // an entry follows `sort`. Part of the display, so each saved view keeps its own.
+  columnSorts: Record<string, Sort>;
   group: GroupField;
   // Second grouping level: Project swimlanes (rows) / Table and Timeline
   // sub-sections. 'none' disables it. Kept distinct from `group`; the Display
@@ -164,7 +167,7 @@ export interface ViewSettings {
 const DEFAULT_SORT: Sort = { field: 'manual', dir: 'asc' };
 
 // Options shared by every view; group, subgroup and properties differ per view.
-const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort'> = {
+const COMMON: Omit<ViewSettings, 'group' | 'subgroup' | 'properties' | 'sort' | 'columnSorts'> = {
   showEmptyGroups: true,
   showLinks: false,
   showSubtasks: true,
@@ -204,6 +207,7 @@ export function defaultViewSettings(view: WorkItemsView): ViewSettings {
   return {
     ...COMMON,
     sort: { ...DEFAULT_SORT },
+    columnSorts: {},
     group,
     subgroup: 'none',
     properties: [...DEFAULT_PROPERTIES[view]],
@@ -230,9 +234,37 @@ const isGroupField = (value: unknown): value is GroupField =>
 function normalizeSort(sort: unknown): Sort | null {
   if (sort && typeof sort === 'object') {
     const s = sort as Partial<Sort>;
-    if (s.field && (s.dir === 'asc' || s.dir === 'desc')) return { field: s.field, dir: s.dir };
+    if (SORT_FIELDS.includes(s.field as Sort['field']) && (s.dir === 'asc' || s.dir === 'desc'))
+      return { field: s.field as Sort['field'], dir: s.dir };
   }
   return null;
+}
+
+function normalizeColumnSorts(value: unknown): Record<string, Sort> {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value).flatMap(([key, sort]) => {
+      const normalized = normalizeSort(sort);
+      return normalized ? [[key, normalized]] : [];
+    }),
+  );
+}
+
+export function effectiveColumnSort(
+  settings: Pick<ViewSettings, 'sort' | 'columnSorts'>,
+  groupKey: string,
+): Sort {
+  return settings.columnSorts[groupKey] ?? settings.sort;
+}
+
+// A null sort removes the group's override, so it follows the board ordering again.
+export function withColumnSort(
+  settings: ViewSettings,
+  groupKey: string,
+  sort: Sort | null,
+): ViewSettings {
+  const { [groupKey]: _previous, ...columnSorts } = settings.columnSorts;
+  return { ...settings, columnSorts: sort ? { ...columnSorts, [groupKey]: sort } : columnSorts };
 }
 
 // localStorage holds a map of project key -> per-view settings, each stored as a
@@ -282,6 +314,7 @@ export function normalizeViewSettings(
   const rawSubgroup = isGroupField(s.subgroup) ? s.subgroup : 'none';
   return {
     sort: normalizeSort(s.sort) ?? d.sort,
+    columnSorts: normalizeColumnSorts(s.columnSorts),
     group,
     subgroup: rawSubgroup !== 'none' && rawSubgroup !== group ? rawSubgroup : 'none',
     showEmptyGroups: typeof s.showEmptyGroups === 'boolean' ? s.showEmptyGroups : d.showEmptyGroups,

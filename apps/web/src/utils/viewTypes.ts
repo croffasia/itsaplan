@@ -27,6 +27,11 @@ export interface Sort {
   dir: 'asc' | 'desc';
 }
 
+export function sortForField(field: SortField, current: Sort): Sort {
+  if (current.field === field) return current;
+  return { field, dir: field === 'created' || field === 'updated' ? 'desc' : 'asc' };
+}
+
 // The project's four display modes. Which mode is active is a global preference
 // (see App); each mode's settings are stored per project (see viewSettings).
 export type WorkItemsView = 'kanban' | 'table' | 'timeline' | 'calendar';

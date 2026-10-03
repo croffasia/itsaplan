@@ -19,6 +19,12 @@
     "created": "Создано",
     "updated": "Обновлено"
   },
+  "columnOrdering": {
+    "title": "Сортировка: {column}",
+    "button": "{column}: {field}, {direction}",
+    "field": "Сортировка столбца",
+    "board": "Сортировка доски"
+  },
   "groupFields": {
     "none": "Без группировки",
     "status": "Статус",

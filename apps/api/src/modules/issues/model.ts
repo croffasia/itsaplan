@@ -328,6 +328,8 @@ export const IssueSearchHitResponse = t.Object({
   dueDate: t.Nullable(t.String()),
   labelIds: t.Array(t.Number()),
   archived: t.Boolean(),
+  createdAt: t.String(),
+  updatedAt: t.String(),
 });
 
 // FeedItemRow from activity.ts: one timeline entry (comment or change-log).
@@ -544,7 +546,20 @@ export const listIssuesQuery = t.Object({
   includeArchived: t.Optional(
     t.String({ description: "'true' to include archived issues. Default false." }),
   ),
+  sort: t.Optional(
+    t.UnionEnum(['updated', 'created'], {
+      description:
+        'Sort newest first by the stored issue modification time (default) or creation time. Ties use descending issue id.',
+    }),
+  ),
   limit: t.Optional(t.Numeric({ description: 'Max results (1-500). Default 50.' })),
+  offset: t.Optional(
+    t.Numeric({
+      minimum: 0,
+      multipleOf: 1,
+      description: 'Number of ordered results to skip. Default 0.',
+    }),
+  ),
 });
 
 export const issueSequenceParams = t.Object({

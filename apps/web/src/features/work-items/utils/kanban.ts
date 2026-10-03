@@ -1,5 +1,6 @@
 import { type Active } from '@dnd-kit/core';
 import type { Issue } from '@/lib/api/endpoints/issues';
+import { positionsAt } from '@/utils/project';
 import { preferPrefix } from './dnd';
 
 // What a board drop target does with the dropped issues. A board drag carries
@@ -30,6 +31,20 @@ export function issuesToMove(
   const ids = manualOrder ? issueIds : issueIds.filter((id) => !target.some((i) => i.id === id));
   const rank = new Map(boardOrder.map((issue, index) => [issue.id, index]));
   return [...ids].sort((a, b) => (rank.get(a) ?? 0) - (rank.get(b) ?? 0));
+}
+
+// Positions for `count` issues dropped at `index` in `target`. A column ordered by
+// a field shows that order, not the manual one, so a drop there goes to the end of
+// the manual order instead of between the cards it landed next to.
+export function dropPositions(
+  target: Issue[],
+  index: number,
+  count: number,
+  manualOrder: boolean,
+): number[] {
+  if (manualOrder) return positionsAt(target, index, count);
+  const byPosition = [...target].sort((a, b) => a.position - b.position);
+  return positionsAt(byPosition, byPosition.length, count);
 }
 
 // Width of one board column, shared by the flat board and the swimlane grid so

@@ -4,7 +4,7 @@ import type { IssueLinkInputKind, IssueRelations } from '@/lib/api/endpoints/iss
 import { usePermissions } from '@/hooks/usePermissions';
 import { LINK_RELATIONS, inverseRelation, linkRelation, storedKind } from '@/utils/issueLinks';
 import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
-import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import { useLinkIssues, useUnlinkIssues } from '../../services/links.service';
 import { useSetRelatedIssueState } from '../../services/relatedIssues.service';
 import NewIssueModal from '../create/NewIssueModal';

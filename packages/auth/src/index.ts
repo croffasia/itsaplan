@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { db } from '@repo/db';
+import { db, instanceWorkspaceId } from '@repo/db';
 import { eq, sql, type SQL } from 'drizzle-orm';
 import { betterAuth } from 'better-auth';
 import { createAuthMiddleware, APIError } from 'better-auth/api';
@@ -360,21 +360,6 @@ export const auth = betterAuth({
         defaultValue: 'user',
         input: false,
       },
-      // Deprovisioning flag, written only over SCIM. Nullable, so every check is
-      // `active !== false` — an account that predates the column has no value.
-      active: {
-        type: 'boolean',
-        required: false,
-        defaultValue: true,
-        input: false,
-      },
-      // The identity provider's own id for this account, used by SCIM to correlate
-      // a user it did not create the id for.
-      scimExternalId: {
-        type: 'string',
-        required: false,
-        input: false,
-      },
     },
   },
 
@@ -393,6 +378,16 @@ export const auth = betterAuth({
           code: 'PASSWORD_AUTH_DISABLED',
           message: 'Password sign-in is disabled on this instance',
         });
+      }
+
+      // RFC 7591 makes `client_name` optional, and the MCP plugin stores it as the
+      // client's name, which its table requires.
+      if (ctx.path === '/mcp/register') {
+        const body = ctx.body as { client_name?: string } | undefined;
+        if (body && !body.client_name) {
+          return { context: { body: { ...body, client_name: 'MCP client' } } };
+        }
+        return;
       }
 
       if (ctx.path === '/sign-up/email') {
@@ -512,24 +507,12 @@ export const auth = betterAuth({
             },
           };
         },
-      },
-    },
-    session: {
-      create: {
-        // Every sign-in method ends here, so one check covers password, magic link,
-        // passkey, Google and OIDC. Deactivation arrives over SCIM; apps/api refuses
-        // the sessions that are already open.
-        before: async (session) => {
-          const rows = await db
-            .select({ active: schema.user.active })
-            .from(schema.user)
-            .where(eq(schema.user.id, session.userId));
-          if (rows[0]?.active === false) {
-            throw new APIError('FORBIDDEN', {
-              code: 'ACCOUNT_DEACTIVATED',
-              message: 'This account is deactivated',
-            });
-          }
+        after: async (user) => {
+          if (user.role !== 'god') return;
+          await db
+            .insert(schema.workspaceManager)
+            .values({ workspaceId: await instanceWorkspaceId(db), userId: user.id, role: 'owner' })
+            .onConflictDoNothing();
         },
       },
     },
@@ -703,7 +686,6 @@ export {
   getScimSettings,
   setScimSettings,
   rotateScimToken,
-  isScimEnabled,
   verifyScimToken,
 } from './instance';
 export type {
@@ -717,7 +699,7 @@ export type {
   InstanceOidcDto,
   InstanceOidcPatch,
   InstanceOidcConfig,
-  InstanceScimDto,
+  WorkspaceScimDto,
 } from './instance';
 
 export {

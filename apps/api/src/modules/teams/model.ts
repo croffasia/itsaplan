@@ -27,7 +27,17 @@ const teamSlug = t.String({
     'starting with a letter, 2 to 40 characters.',
 });
 
-export const createTeamBody = t.Object({ name: teamName, slug: teamSlug });
+export const createTeamBody = t.Object({
+  name: teamName,
+  slug: teamSlug,
+  workspaceId: t.Optional(
+    t.Integer({
+      minimum: 1,
+      description:
+        'The workspace that holds the team. A self-hosted instance has one, which is the default.',
+    }),
+  ),
+});
 
 // A team made before slugs were required has none, and takes no change until one is set.
 export const updateTeamBody = t.Partial(t.Object({ name: teamName, slug: teamSlug }));
@@ -35,6 +45,7 @@ export const updateTeamBody = t.Partial(t.Object({ name: teamName, slug: teamSlu
 // A team DTO (TeamRow from the service).
 export const TeamResponse = t.Object({
   id: t.Number(),
+  workspaceId: t.Number(),
   name: t.String(),
   slug: t.Nullable(t.String()),
   ref: t.String({ description: 'How web URLs name the team: its slug, or its id without one.' }),

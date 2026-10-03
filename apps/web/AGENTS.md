@@ -14,10 +14,17 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
 - The shared layer never imports a feature. `app/` routes stay thin: mount the feature page and
   providers only.
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
-  exports what a self-hosted instance runs — a screen it does not sell renders nothing. A
-  cloud-only component is imported from there and nowhere else. The hosted build points
-  `CLOUD_UI_ENTRY` at its own module exporting the same names, and `WEB_TRACING_ROOT` at the
-  root its workspace has; unset, both are what this repository needs.
+  exports what a self-hosted instance runs. A cloud-only part is imported from there and
+  nowhere else. `useWorkspaceSections(workspace)` returns the sections the hosted build adds
+  to a workspace's settings — each a menu entry and a page, shown by
+  `WorkspaceSectionNav` and opened at `/workspaces/:id/:sectionId`; here it returns none.
+  `WorkspaceRailActions` renders below the workspace tiles of both rails (the project picker
+  and the teams page), where the hosted build puts creating a workspace; here it is a
+  button whose popover says where more workspaces are available. `NoTeamStart` is the start
+  page of an account with no team and no workspace it owns; here it says who adds them, and
+  the hosted build offers to create a workspace.
+  The hosted build points `CLOUD_UI_ENTRY` at its own module exporting the same names, and
+  `WEB_TRACING_ROOT` at the root its workspace has; unset, both are what this repository needs.
 
 ## Feature structure & decomposition
 

@@ -50,10 +50,6 @@
     "auth-provider": {
       "label": "Penyedia autentikasi",
       "description": "Akun eksternal yang dapat digunakan pengguna untuk masuk."
-    },
-    "scim": {
-      "label": "SCIM",
-      "description": "Izinkan penyedia identitas membuat, memperbarui, dan menonaktifkan akun di instance ini, serta memberikan akses proyek melalui grupnya."
     }
   },
   "settings": {

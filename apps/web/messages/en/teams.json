@@ -10,6 +10,8 @@
     "submit": "Create team"
   },
   "sections": {
+    "collapse": "Collapse sections",
+    "expand": "Expand sections",
     "info": {
       "title": "Info",
       "description": "The team and your place in it."
@@ -539,5 +541,87 @@
     "projectsHint": "A new project starts with the instance default.",
     "noProjects": "This team has no projects yet.",
     "projectToggleAria": "Toggle MCP access for {project}"
+  },
+  "workspace": {
+    "rail": "Workspaces",
+    "create": "New workspace",
+    "createUnavailableTitle": "More workspaces",
+    "createUnavailableHint": "This instance has one workspace. Creating and managing workspaces is available in Cloud and self-hosted Pro.",
+    "general": "General",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin"
+    },
+    "info": {
+      "title": "Workspace",
+      "description": "The workspace that owns your teams.",
+      "workspace": "Workspace",
+      "workspaceHint": "The name everyone sees for this workspace.",
+      "role": "Your role",
+      "saved": "Workspace saved"
+    },
+    "managers": {
+      "title": "Managers",
+      "description": "The owner and admins manage the workspace.",
+      "ownerOnly": "The owner and admins manage the workspace. Only the owner adds or removes admins.",
+      "person": "Person",
+      "role": "Role",
+      "addAction": "Add admin",
+      "addTitle": "Add admin",
+      "addDescription": "Pick someone from the workspace's teams.",
+      "search": "Search by name or email",
+      "noCandidates": "No one to add",
+      "added": "{name} is now an admin",
+      "removeAction": "Remove admin",
+      "removeTitle": "Remove {name} as admin?",
+      "removeDescription": "They stay in their teams but can't manage the workspace.",
+      "removed": "{name} is no longer an admin"
+    },
+    "scim": {
+      "title": "SCIM",
+      "description": "Let an identity provider add people to this workspace, remove them, and grant project access through its groups.",
+      "saved": "SCIM settings saved",
+      "provisioning": "Provisioning",
+      "provisioningConfigured": "Your identity provider adds people to this workspace and removes them.",
+      "provisioningMissing": "Generate a token first.",
+      "token": "Token",
+      "noToken": "No token generated yet",
+      "tokenHint": "The bearer token your identity provider sends. It is shown once; generating a new one stops the old one working.",
+      "generateToken": "Generate token",
+      "replaceToken": "Replace token",
+      "baseUrl": "SCIM endpoint",
+      "baseUrlHint": "Point your identity provider at this address.",
+      "copyBaseUrl": "Copy SCIM endpoint",
+      "groups": "Groups",
+      "groupsHint": "The groups your identity provider has pushed. The list is theirs; what each group grants is set here.",
+      "groupsEmpty": "No groups have been pushed yet.",
+      "memberCount": "{count, plural, =0 {No members} one {# member} other {# members}}",
+      "grantsNothing": "grants nothing yet",
+      "editMappings": "Edit access",
+      "roleOwner": "Owner",
+      "roleMember": "Member",
+      "tokenDialog": {
+        "title": "Generate a SCIM token",
+        "description": "The token is shown once and cannot be read back. Any token already in use stops working.",
+        "submit": "Generate",
+        "submitPending": "Generating…",
+        "createdTitle": "Your SCIM token",
+        "createdDescription": "Copy it into your identity provider now. It cannot be shown again.",
+        "copy": "Copy token"
+      },
+      "mappings": {
+        "title": "What {group} grants",
+        "description": "Members of this group join the projects listed here. Removing a project takes away the memberships this group gave it.",
+        "empty": "This group grants nothing yet.",
+        "addProject": "Add a project…",
+        "role": "Role",
+        "roleOwner": "Owner",
+        "roleMember": "Member",
+        "projectRole": "Project role",
+        "defaultRole": "Default role",
+        "remove": "Remove project",
+        "saved": "Group access saved"
+      }
+    }
   }
 }

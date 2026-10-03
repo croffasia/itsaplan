@@ -3,6 +3,7 @@ export * from './schema';
 export * from './permissions';
 export { getSetting, getOrCreateSetting, setSetting } from './settings';
 export { readSecret, writeSecret } from './secrets';
+export { instanceWorkspaceId, teamWorkspaceId } from './workspace';
 export {
   TELEGRAM_BOT_SECRET_KEY,
   getInstanceBotConfig,
@@ -33,7 +34,7 @@ export {
   mimeAllowed,
   projectStoredBytes,
   projectTeamId,
-  teamStoredBytes,
+  workspaceStoredBytes,
   lockAttachmentStorage,
   type StorageSettings,
 } from './domains/storage';

@@ -18,7 +18,6 @@ const MESSAGE_KEYS = {
   signup_disabled: 'signupDisabled',
   OIDC_DISABLED: 'ssoDisabled',
   PASSWORD_AUTH_DISABLED: 'passwordDisabled',
-  ACCOUNT_DEACTIVATED: 'accountDeactivated',
   email_not_found: 'emailNotFound',
   // The confirmation link failed. better-auth redirects with these uppercase codes.
   TOKEN_EXPIRED: 'tokenExpired',

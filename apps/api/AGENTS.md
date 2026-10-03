@@ -119,6 +119,9 @@ Enforced declaratively through macros, never imperative calls in handlers.
   from the route once it expands the macro, so there is nothing else to read it from.
 - Guards/macros wrap the `shared/access.ts` primitives. Handlers that still need
   `user` (project create, invite accept/reject, self-removal) call `requireUser(user)`.
+- **Only the owner of a workspace creates a team in it** (`POST /teams`, `createTeam` in
+  `teams/service.ts`). `workspaceId` in the body names the workspace; left out, it is the
+  instance workspace, which is the only one a self-hosted instance has. Anyone else gets 403.
 - **A member of the team joins a project directly** (`POST /projects/:key/members`,
   from the candidate list); anyone else joins through an invite, which puts them in
   the team as well. A team invite (`/teams/:teamId/invites`) names no project. One
@@ -187,8 +190,10 @@ flag reaches: the agents, the skills, the tools, the roles and the credentials.
 to provision users and groups with. Three things make it unlike every other module:
 
 - **Mounted on the root app in `app.ts`, not under `planner`.** The planner's `authContext`
-  answers 401 before the bearer check could run. Authentication is one `onBeforeHandle`
-  against the instance SCIM token from `@repo/auth`.
+  answers 401 before the bearer check could run. Authentication is one `resolve` that hands
+  the token to `verifyScimToken` from `@repo/auth`, which answers with the workspace the
+  token belongs to. Every route acts for that workspace, and every function in `service.ts`
+  takes its id.
 - **Its own error document.** `onError` sits on a parent instance that `.use()`s the routes
   and answers only for paths under `/scim/v2`, handing everything else back to the planner's
   handler. Two reasons for that shape: an `onError` beside the routes widens the inferred
@@ -203,12 +208,33 @@ Filtering is `<attribute> eq "<value>"` only, over the attributes each resource 
 `service.ts`; that is what Okta, Entra and Authentik send, and `ServiceProviderConfig`
 advertises exactly that. A create inserts the `user` row directly, the way `createAgent`
 does, which deliberately skips the registration gate — with SCIM on, the identity provider
-decides who exists, and that is what makes `registration: 'closed'` plus SSO work.
+brings people in, and that is what makes `registration: 'closed'` plus SSO work.
 
-`createScimUser`/`updateScimUser` refuse a `god`-role account outright (409): the role is
-what grants god mode, and nothing about the instance owner's account is provider-owned. A
-create for an address already linked (`user.scimExternalId` set) is refused the same way —
-it is a retry, not a new person, and must not overwrite the link a first create wrote.
+An account is one `user` row across the instance, and a workspace's provider decides who is
+in the workspace, not who has an account. What it says about a person — its own id for them
+and whether they are active — is a `scim_user` row per (workspace, user), so the same person
+can be linked by several workspaces. The provider sees the accounts it linked and the people
+in the workspace's teams (`inWorkspace` in `service.ts`). A create for an address that has an
+account links it; a name or address sent on a create, PUT or PATCH is accepted and the
+account keeps its own. Groups belong to a workspace (`scim_group.workspace_id`), their names
+are unique within it, and their members must be accounts it sees. The group mappings and the
+settings are routes of `modules/workspaces/`, open to the workspace owner only.
+
+A create first asks the installed policy whether the workspace may provision the address
+(`email-policy.ts`). A self-hosted instance has one workspace and allows any address; a
+hosted build calls `setScimEmailPolicy` with a check against the domains the workspace has
+verified, and a refused address answers 400 `invalidValue`.
+
+Deactivation (`active: false`) and DELETE take the person out of every team of the
+workspace through `dropWorkspaceMemberships` in `teams/service.ts`, invite memberships
+included, and a team or project they owned alone passes to the workspace owner. Neither
+touches the account or its sessions. A deactivated person stays linked, so the provider can
+turn them back on, and `reconcile.ts` grants them nothing through the groups until then.
+The `god`-role account and the workspace owner are refused (409): the first because nothing
+about the instance owner is provider-owned, the second because the owner is who receives
+what a deprovisioned person owned alone. A create for an address the provider already linked
+with an `externalId` is refused the same way — it is a retry, not a new person, and must not
+overwrite the link the first create wrote.
 
 A group member removal arrives in two shapes: `path: 'members'` with the id(s) to drop in
 `value`, or RFC 7644 §3.5.2.2's path filter, `path: 'members[value eq "<id>"]'`, which Okta
@@ -224,7 +250,7 @@ its own: `resource.ts`'s `groupDisplayNames` reads a SCIM User's `groups` attrib
 channel and is read only for a claim, not for authentication. Both funnel into
 `syncEmbeddedGroups`, the same additive-only join a group pushed through `POST /Groups`
 gets — a name missing from a later sync is never removed by this path, only by an explicit
-`PATCH /Groups/:id` or an unmapping in god mode.
+`PATCH /Groups/:id` or an unmapping in the workspace settings.
 
 ## Security
 

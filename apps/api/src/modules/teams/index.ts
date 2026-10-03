@@ -69,8 +69,7 @@ async function requireTeamProject(teamId: number, projectId: number): Promise<vo
 }
 
 // The teams the session user belongs to. A team owns projects and its own member
-// list; an account creates its own after registration, and may create more, becoming
-// their owner.
+// list. Only the owner of a workspace creates a team in it, and becomes the team's owner.
 export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] } })
   .use(authContext)
   .use(guards)
@@ -278,14 +277,15 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       const name = body.name.trim();
       if (!name) throw new HttpError(400, 'Team name is required');
       set.status = 201;
-      return createTeam(name, body.slug, requireUser(user).id);
+      return createTeam(name, body.slug, requireUser(user).id, body.workspaceId);
     },
     {
       body: createTeamBody,
-      response: { 201: TeamResponse, ...errors(400, 401, 409) },
+      response: { 201: TeamResponse, ...errors(400, 401, 403, 409) },
       detail: {
         summary: 'Create a team',
-        description: 'Create a team and become its owner.',
+        description:
+          'Create a team in a workspace and become its owner. Only the workspace owner can.',
       },
     },
   )

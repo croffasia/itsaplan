@@ -10,6 +10,8 @@
     "submit": "创建团队"
   },
   "sections": {
+    "collapse": "收起分区",
+    "expand": "展开分区",
     "info": {
       "title": "信息",
       "description": "团队及你在其中的角色。"
@@ -539,5 +541,87 @@
     "projectsHint": "新项目创建时采用实例的默认设置。",
     "noProjects": "该团队还没有项目。",
     "projectToggleAria": "切换 {project} 的 MCP 访问"
+  },
+  "workspace": {
+    "rail": "工作区",
+    "create": "新建工作区",
+    "createUnavailableTitle": "更多工作区",
+    "createUnavailableHint": "此实例只有一个工作区。创建和管理工作区可在 Cloud 和自托管 Pro 版中使用。",
+    "general": "常规",
+    "roles": {
+      "owner": "所有者",
+      "admin": "管理员"
+    },
+    "info": {
+      "title": "工作区",
+      "description": "你的团队所属的工作区。",
+      "workspace": "工作区",
+      "workspaceHint": "所有人都能看到的名称。",
+      "role": "你的角色",
+      "saved": "工作区已保存"
+    },
+    "managers": {
+      "title": "管理者",
+      "description": "所有者和管理员管理工作区。",
+      "ownerOnly": "所有者和管理员管理工作区。只有所有者可以添加或移除管理员。",
+      "person": "成员",
+      "role": "角色",
+      "addAction": "添加管理员",
+      "addTitle": "添加管理员",
+      "addDescription": "从工作区的团队中选择一个人。",
+      "search": "按姓名或邮箱搜索",
+      "noCandidates": "没有可添加的人",
+      "added": "{name} 现在是管理员",
+      "removeAction": "移除管理员",
+      "removeTitle": "将 {name} 从管理员中移除？",
+      "removeDescription": "对方仍留在自己的团队中，但无法再管理工作区。",
+      "removed": "{name} 不再是管理员"
+    },
+    "scim": {
+      "title": "SCIM",
+      "description": "让身份提供方将成员加入此工作区、将其移出，并通过其群组授予项目访问权限。",
+      "saved": "SCIM 设置已保存",
+      "provisioning": "账号预配",
+      "provisioningConfigured": "身份提供方会将成员加入此工作区或将其移出。",
+      "provisioningMissing": "请先生成令牌。",
+      "token": "令牌",
+      "noToken": "尚未生成令牌",
+      "tokenHint": "身份提供方发送的持有者令牌。仅显示一次；生成新令牌会使旧令牌失效。",
+      "generateToken": "生成令牌",
+      "replaceToken": "更换令牌",
+      "baseUrl": "SCIM 地址",
+      "baseUrlHint": "在身份提供方中填入此地址。",
+      "copyBaseUrl": "复制 SCIM 地址",
+      "groups": "群组",
+      "groupsHint": "身份提供方推送的群组。列表由其维护；每个群组授予什么在这里设置。",
+      "groupsEmpty": "尚未推送任何群组。",
+      "memberCount": "{count, plural, =0 {没有成员} other {# 位成员}}",
+      "grantsNothing": "尚未授予任何权限",
+      "editMappings": "编辑权限",
+      "roleOwner": "所有者",
+      "roleMember": "成员",
+      "tokenDialog": {
+        "title": "生成 SCIM 令牌",
+        "description": "令牌仅显示一次，之后无法查看。正在使用的令牌将立即失效。",
+        "submit": "生成",
+        "submitPending": "正在生成…",
+        "createdTitle": "你的 SCIM 令牌",
+        "createdDescription": "现在把它复制到身份提供方。之后无法再次显示。",
+        "copy": "复制令牌"
+      },
+      "mappings": {
+        "title": "{group} 授予的权限",
+        "description": "该群组的成员会加入这里列出的项目。移除项目会收回此群组授予的成员资格。",
+        "empty": "该群组尚未授予任何权限。",
+        "addProject": "添加项目…",
+        "role": "角色",
+        "roleOwner": "所有者",
+        "roleMember": "成员",
+        "projectRole": "项目角色",
+        "defaultRole": "默认角色",
+        "remove": "移除项目",
+        "saved": "群组权限已保存"
+      }
+    }
   }
 }

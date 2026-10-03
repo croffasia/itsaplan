@@ -35,14 +35,13 @@ describe('god teams', () => {
     it('lists every team on the instance, including ones the owner is not in', async () => {
       const { god } = await setup();
       const alice = await addUser({ email: 'alice@example.com' });
-      await alice.api.teams.post({ name: 'Alice Only', slug: 'alice-only' });
+      const aliceTeamId = await ownTeamId(alice);
 
       const res = await god.api.god.teams.get({ query: PAGE });
 
       expect(res.status).toBe(200);
-      // The god's own team, Alice's registration team, and the one she created.
-      expect(res.data?.total).toBe(3);
-      expect(res.data?.items.map((one) => one.name)).toContain('Alice Only');
+      expect(res.data?.total).toBe(2);
+      expect(res.data?.items.map((one) => one.id)).toContain(aliceTeamId);
     });
 
     it('counts what a team holds', async () => {

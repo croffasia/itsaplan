@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
-import { db, team, project, user, aiAgent, agentSchedule, agentRun } from '@repo/db';
+import { db, team, workspace, project, user, aiAgent, agentSchedule, agentRun } from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
 import { enqueueDueSchedules } from '../../schedules';
 
@@ -26,7 +26,14 @@ async function makeDueSchedule(teamId: number, agentId: number, archivedAt: Date
 
 describe('enqueueDueSchedules', () => {
   it('queues a due schedule of an active project and skips one of an archived project', async () => {
-    const [teamRow] = await db.insert(team).values({ name: 'Schedulers' }).returning();
+    const [ws] = await db
+      .insert(workspace)
+      .values({ name: 'Schedulers' })
+      .returning({ id: workspace.id });
+    const [teamRow] = await db
+      .insert(team)
+      .values({ workspaceId: ws!.id, name: 'Schedulers' })
+      .returning();
     const userId = randomUUID();
     await db.insert(user).values({ id: userId, name: 'Bot', email: `${userId}@example.test` });
     const [agent] = await db

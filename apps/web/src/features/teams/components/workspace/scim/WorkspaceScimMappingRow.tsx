@@ -2,7 +2,7 @@
 
 import { X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { InstanceProjectOption } from '@/lib/api/endpoints/god';
+import type { WorkspaceProjectOption } from '@/lib/api/endpoints/workspaces';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -11,27 +11,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { ScimMappingDraft } from '../../hooks/useGodScimMappingForm';
-import { useInstanceProjectQuery } from '../../services/god.service';
+import type { ScimMappingDraft } from '../../../hooks/useWorkspaceScimMappingForm';
 
 // One project a group grants membership in, and the role it grants there. The custom
-// roles belong to that project, so they are read from its detail; owners bypass the
-// permission matrix and carry none.
+// roles are those of the team that owns the project; owners bypass the permission
+// matrix and carry none.
 const DEFAULT_ROLE = 'default';
 
-export default function GodScimMappingRow({
+export default function WorkspaceScimMappingRow({
   mapping,
   projects,
   onChange,
   onRemove,
 }: {
   mapping: ScimMappingDraft;
-  projects: InstanceProjectOption[];
+  projects: WorkspaceProjectOption[];
   onChange: (patch: Partial<ScimMappingDraft>) => void;
   onRemove: () => void;
 }) {
-  const t = useTranslations('god.scim.mappings');
-  const detail = useInstanceProjectQuery(mapping.projectId);
+  const t = useTranslations('teams.workspace.scim.mappings');
   const project = projects.find((p) => p.id === mapping.projectId);
 
   return (
@@ -65,7 +63,7 @@ export default function GodScimMappingRow({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={DEFAULT_ROLE}>{t('defaultRole')}</SelectItem>
-            {(detail.data?.roles ?? []).map((role) => (
+            {(project?.roles ?? []).map((role) => (
               <SelectItem key={role.id} value={String(role.id)}>
                 {role.name}
               </SelectItem>

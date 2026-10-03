@@ -31,7 +31,9 @@ export default function SecretInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={hasStored ? '••••••••••••' : placeholder}
         className="pr-9"
-        autoComplete="off"
+        // Browsers ignore "off" on a password field and fill the account's own login
+        // into it; "new-password" is the value they respect.
+        autoComplete="new-password"
       />
       <button
         type="button"

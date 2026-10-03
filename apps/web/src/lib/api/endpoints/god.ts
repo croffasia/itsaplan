@@ -209,16 +209,6 @@ export interface InstanceProjectMember {
 
 export interface InstanceProjectDetail extends InstanceProject {
   members: InstanceProjectMember[];
-  // The custom roles a member of this project can be put on, for the SCIM group
-  // mapping form.
-  roles: { id: number; name: string; isDefault: boolean }[];
-}
-
-// One instance project as a picker entry: what the SCIM mapping form needs to name it.
-export interface InstanceProjectOption {
-  id: number;
-  key: string;
-  name: string;
 }
 
 // Instance administration (god mode). Every route below is owner-only; a plain
@@ -321,10 +311,6 @@ export const deleteInstanceUser = (userId: string, withProjects: boolean) =>
 // members. Search and paging run on the server.
 export const listInstanceProjects = (params: PageParams & { search?: string }) =>
   request<Page<InstanceProject>>(`/god/projects${pageQuery(params, { search: params.search })}`);
-
-// Every project, for the SCIM mapping picker; the directory above is paged.
-export const listInstanceProjectOptions = () =>
-  request<InstanceProjectOption[]>('/god/projects/options');
 
 export const getInstanceProject = (projectId: number) =>
   request<InstanceProjectDetail>(`/god/projects/${projectId}`);

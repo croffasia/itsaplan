@@ -3,21 +3,27 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { InstanceScimSettings } from '@/lib/api/endpoints/scim';
+import type { WorkspaceScimSettings as Settings } from '@/lib/api/endpoints/workspaces';
+import { useUpdateWorkspaceScim } from '@/services/workspaces.service';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import SettingsCard from '@/components/common/page/SettingsCard';
 import CopyableValue from '@/components/common/page/CopyableValue';
 import EnabledSwitch from '@/components/common/inputs/EnabledSwitch';
 import { Button } from '@/components/ui/button';
-import GodScimTokenDialog from './GodScimTokenDialog';
-import GodScimGroupList from './GodScimGroupList';
-import { useUpdateInstanceScimSettings } from '../../services/god.service';
+import WorkspaceScimTokenDialog from './WorkspaceScimTokenDialog';
+import WorkspaceScimGroupList from './WorkspaceScimGroupList';
 
 // The endpoint and the token go into the identity provider; the groups it then
 // pushes appear below, where the owner says what each one grants.
-export default function GodScimSettings({ settings }: { settings: InstanceScimSettings }) {
-  const t = useTranslations('god.scim');
-  const update = useUpdateInstanceScimSettings();
+export default function WorkspaceScimSettings({
+  workspaceId,
+  settings,
+}: {
+  workspaceId: number;
+  settings: Settings;
+}) {
+  const t = useTranslations('teams.workspace.scim');
+  const update = useUpdateWorkspaceScim(workspaceId);
   const [generating, setGenerating] = useState(false);
 
   async function toggle(enabled: boolean) {
@@ -71,9 +77,11 @@ export default function GodScimSettings({ settings }: { settings: InstanceScimSe
         </SettingsCard>
       </SettingsSection>
 
-      <GodScimGroupList />
+      <WorkspaceScimGroupList workspaceId={workspaceId} />
 
-      {generating && <GodScimTokenDialog onClose={() => setGenerating(false)} />}
+      {generating && (
+        <WorkspaceScimTokenDialog workspaceId={workspaceId} onClose={() => setGenerating(false)} />
+      )}
     </div>
   );
 }

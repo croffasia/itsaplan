@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 export const sectionNavItemClass =
   'flex h-8 w-full items-center gap-2 rounded-md px-2 text-start text-sm transition-colors duration-150 outline-none focus-visible:ring-2 focus-visible:ring-ring/60';
@@ -19,38 +20,51 @@ export interface SectionNavItem {
 }
 
 // A rail listing the sections of a page. It highlights the active one and reports
-// the section clicked. The caller places and sizes it through `className`.
+// the section clicked. The caller places and sizes it through `className`. Collapsed,
+// it shows the icons only, each label in a tooltip; the icons run in a row below `lg`,
+// where the page stacks its rails.
 export function SectionNav({
   sections,
   activeId,
   label,
   onJump,
+  collapsed = false,
   className,
 }: {
   sections: SectionNavItem[];
   activeId: string | null;
   label: string;
   onJump?: (id: string) => void;
+  collapsed?: boolean;
   className?: string;
 }) {
   return (
     <nav className={className} aria-label={label}>
-      <ul className="space-y-0.5">
+      <ul className={collapsed ? 'flex flex-wrap gap-0.5 lg:flex-col' : 'space-y-0.5'}>
         {sections.map((section) => {
           const active = section.id === activeId;
           const Icon = section.icon;
           const itemClassName = cn(
             sectionNavItemClass,
+            collapsed && 'w-8 justify-center px-0',
             active ? 'bg-secondary font-medium text-secondary-foreground' : sectionNavIdleClass,
           );
-          const content = (
+          const icon = (
+            <Icon
+              className={cn(
+                'size-4 shrink-0',
+                active ? 'text-foreground' : 'text-muted-foreground',
+              )}
+            />
+          );
+          const content = collapsed ? (
             <>
-              <Icon
-                className={cn(
-                  'size-4 shrink-0',
-                  active ? 'text-foreground' : 'text-muted-foreground',
-                )}
-              />
+              {icon}
+              <span className="sr-only">{section.label}</span>
+            </>
+          ) : (
+            <>
+              {icon}
               <span className="min-w-0 flex-1 truncate">{section.label}</span>
               {section.badge && (
                 <span className="shrink-0 text-xs text-muted-foreground tabular-nums">
@@ -59,25 +73,33 @@ export function SectionNav({
               )}
             </>
           );
+          const entry = section.href ? (
+            <Link
+              href={section.href}
+              aria-current={active ? 'page' : undefined}
+              className={itemClassName}
+            >
+              {content}
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => onJump?.(section.id)}
+              aria-current={active ? 'location' : undefined}
+              className={itemClassName}
+            >
+              {content}
+            </button>
+          );
           return (
             <li key={section.id}>
-              {section.href ? (
-                <Link
-                  href={section.href}
-                  aria-current={active ? 'page' : undefined}
-                  className={itemClassName}
-                >
-                  {content}
-                </Link>
+              {collapsed ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>{entry}</TooltipTrigger>
+                  <TooltipContent side="right">{section.label}</TooltipContent>
+                </Tooltip>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => onJump?.(section.id)}
-                  aria-current={active ? 'location' : undefined}
-                  className={itemClassName}
-                >
-                  {content}
-                </button>
+                entry
               )}
             </li>
           );

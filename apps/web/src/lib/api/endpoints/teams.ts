@@ -12,6 +12,7 @@ import {
 // A team the caller belongs to. It owns projects and holds its own member list.
 export interface Team {
   id: number;
+  workspaceId: number;
   name: string;
   // The team's segment in the app's paths (/acme/MKT). Null until an owner sets one.
   slug: string | null;
@@ -207,7 +208,7 @@ export const listTeamProjectMembers = (
     `/teams/${teamId}/projects/${projectId}/members${memberListQuery(params)}`,
   );
 
-export const createTeam = (input: { name: string; slug: string }) =>
+export const createTeam = (input: { name: string; slug: string; workspaceId: number }) =>
   request<Team>('/teams', { method: 'POST', body: JSON.stringify(input) });
 
 export const updateTeam = (teamId: number, input: { name?: string; slug?: string }) =>

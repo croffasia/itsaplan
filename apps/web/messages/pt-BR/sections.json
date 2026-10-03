@@ -50,10 +50,6 @@
     "auth-provider": {
       "label": "Provedor de autenticação",
       "description": "As contas externas com que as pessoas podem entrar."
-    },
-    "scim": {
-      "label": "SCIM",
-      "description": "Permita que um provedor de identidade crie, atualize e desative contas nesta instância e conceda acesso a projetos por seus grupos."
     }
   },
   "settings": {

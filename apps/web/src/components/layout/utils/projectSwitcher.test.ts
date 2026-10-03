@@ -37,6 +37,7 @@ function project(overrides: Partial<Project> = {}): Project {
 function team(overrides: Partial<Team> = {}): Team {
   return {
     id: 1,
+    workspaceId: 1,
     name: 'Engineering',
     slug: 'eng',
     ref: 'eng',

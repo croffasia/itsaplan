@@ -4,6 +4,13 @@ Each release that removes or moves an API path is listed here, newest first. A s
 or an MCP client that calls the API by path needs the replacement. The web app is
 released with the API and needs no change.
 
+## Only the workspace owner creates a team
+
+`POST /teams` answers 403 to anyone who does not own the workspace. The body takes an
+optional `workspaceId`; left out, it is the instance workspace, the only one a self-hosted
+instance has. On a self-hosted instance the owner is the first account, so every other
+account is added to teams by invite.
+
 ## MCP access moves to the team
 
 Whether MCP reaches a project is now set on the team that owns it, not on the project.

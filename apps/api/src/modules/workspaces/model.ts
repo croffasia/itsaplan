@@ -1,10 +1,24 @@
 import { t } from 'elysia';
+import { TEAM_CREATION } from './service';
 
 export const workspaceParams = t.Object({ workspaceId: t.Numeric() });
 
 export const workspaceManagerParams = t.Object({ workspaceId: t.Numeric(), userId: t.String() });
 
-export const updateWorkspaceBody = t.Object({ name: t.String({ minLength: 1, maxLength: 60 }) });
+export const updateWorkspaceBody = t.Object({
+  name: t.Optional(t.String({ minLength: 1, maxLength: 60 })),
+  color: t.Optional(t.Nullable(t.String({ pattern: '^#[0-9a-fA-F]{6}$' }))),
+  // t.UnionEnum defaults to its first value, which would fill in the setting for a
+  // request that leaves it out; the update is partial.
+  teamCreation: t.Optional(
+    t.UnionEnum([...TEAM_CREATION], {
+      default: undefined,
+      description:
+        'Who creates teams: the owner alone, the owner and admins, or anyone in its teams. ' +
+        'Only the owner changes it.',
+    }),
+  ),
+});
 
 export const addManagerBody = t.Object({ userId: t.String() });
 
@@ -21,6 +35,8 @@ export const WorkspaceListResponse = t.Array(
     role: t.Nullable(workspaceRole, {
       description: 'Your standing in the workspace; null when you are only in a team of it.',
     }),
+    color: t.Nullable(t.String()),
+    canCreateTeam: t.Boolean(),
   }),
 );
 
@@ -29,6 +45,13 @@ export const WorkspaceResponse = t.Object({
   name: t.String(),
   role: workspaceRole,
   managerCount: t.Number(),
+  color: t.Nullable(t.String()),
+  teamCreation: t.UnionEnum([...TEAM_CREATION]),
+  deletion: t.UnionEnum(['allowed', 'instance', 'work'], {
+    description:
+      'Whether the owner may delete it: instance for the instance workspace, which stays; ' +
+      'work while a team of it holds a project or an AI agent.',
+  }),
 });
 
 const person = {

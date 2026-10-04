@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import { db, team, workspace, workspaceManager } from '@repo/db';
+import { db, instanceWorkspaceId, team, workspace, workspaceManager } from '@repo/db';
+import { eq } from 'drizzle-orm';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { authedApi } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
@@ -11,7 +12,10 @@ describe('instance workspace', () => {
     const first = await signUpTestUser({ team: false });
     await signUpTestUser({ team: false });
 
-    const managers = await db.select().from(workspaceManager);
+    const managers = await db
+      .select()
+      .from(workspaceManager)
+      .where(eq(workspaceManager.workspaceId, await instanceWorkspaceId(db)));
     expect(managers).toHaveLength(1);
     expect(managers[0]).toMatchObject({ userId: first.userId, role: 'owner' });
   });

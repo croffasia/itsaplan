@@ -476,11 +476,14 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       if (target.isAgent) {
         throw new HttpError(400, 'Delete the AI agent from its project instead');
       }
-      // Projects this user owns alone. Their membership goes with the account, so
-      // the project would be left with nobody who can manage it (god mode does not
-      // bypass project membership). Either the caller takes those projects down
-      // with the account, or the request is refused until another owner is added.
-      const sole = target.projects.filter((p) => p.role === 'owner' && p.ownerCount === 1);
+      // Projects this user owns alone outside the workspaces they own. Their membership
+      // goes with the account, so the project would be left with nobody who can manage
+      // it (god mode does not bypass project membership). Either the caller takes those
+      // projects down with the account, or the request is refused until another owner is
+      // added. The ones in their own workspaces pass to the instance owner with it.
+      const sole = target.projects.filter(
+        (p) => p.role === 'owner' && p.ownerCount === 1 && !p.inOwnWorkspace,
+      );
       if (sole.length > 0 && !query.withProjects) {
         throw new HttpError(
           400,
@@ -500,7 +503,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: 'Delete a user',
         description:
-          'Remove an account from the instance, with its sessions, memberships and preferences. Optionally deletes the projects it owns alone.',
+          'Remove an account from the instance, with its sessions, memberships and preferences. Optionally deletes the projects it owns alone; a workspace it owns goes with it while it holds no project or AI agent, and passes to the instance owner otherwise.',
       },
     },
   )

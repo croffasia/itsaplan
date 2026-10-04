@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia';
-import { verifyScimToken } from '@repo/auth';
+import { verifyScimToken, workspaceScim } from '@repo/auth';
 import { HttpError } from '#shared/lib';
 import { noContent } from '#shared/http';
 import {
@@ -15,7 +15,10 @@ import {
   parseFilter,
   parsePatch,
   readAccountEmail,
+  readEmail,
+  readUserNameEmail,
   scimErrorBody,
+  splitName,
   toListResponse,
   toScimGroup,
   toScimUser,
@@ -62,9 +65,24 @@ function extractToken(authorization: string | undefined): string | null {
 // which raises SCIM errors rather than the planner's validation error.
 const anyBody = { body: t.Any() };
 
-// The name and address of the account. They are the person's own, not the workspace's,
-// so a provider that sends them on every sync gets them accepted and left as they are.
+// The name and address of the account. While SCIM is the instance's, the provider keeps
+// them in step. Set up per workspace, they are the person's own, not the workspace's, so
+// a provider that sends them on every sync gets them accepted and left as they are.
 const ACCOUNT_ATTRIBUTE = /^(username|displayname|name(\..+)?|emails(\[.*])?(\..+)?)$/;
+
+// What one PATCH operation on an account attribute sets. `name` is the name before it,
+// which a partial name change completes.
+function accountOp(path: string, value: unknown, name: string): { email?: string; name?: string } {
+  if (path === 'username') return { email: readUserNameEmail(value) };
+  if (path.startsWith('emails')) return { email: readEmail(value) };
+  if (path === 'displayname' || path === 'name.formatted') return { name: asString(value, 'name') };
+  if (path === 'name') return { name: joinName(value as never, name) };
+  if (path === 'name.givenname' || path === 'name.familyname') {
+    const key = path === 'name.givenname' ? 'givenName' : 'familyName';
+    return { name: joinName({ ...splitName(name), [key]: asString(value, 'name') }, name) };
+  }
+  return {};
+}
 
 // A create or replace body, cast and checked. Guards the four spots that read
 // `doc.<attribute>` straight off the request body: without this, a request that
@@ -208,7 +226,17 @@ const scimHandlers = new Elysia({
     '/Users/:id',
     async ({ workspaceId, params, body }) => {
       const doc = asDoc(body);
+      const account = workspaceScim()
+        ? {}
+        : {
+            email: readAccountEmail(doc),
+            name: joinName(
+              doc.name as never,
+              (doc.displayName as string) || (await requireUser(workspaceId, params.id)).name,
+            ),
+          };
       const updated = await updateScimUser(workspaceId, params.id, {
+        ...account,
         active: doc.active === undefined ? true : asBoolean(doc.active),
         externalId: typeof doc.externalId === 'string' ? doc.externalId : null,
       });
@@ -227,8 +255,12 @@ const scimHandlers = new Elysia({
   .patch(
     '/Users/:id',
     async ({ workspaceId, params, body }) => {
-      const patch: { active?: boolean; externalId?: string | null } = {};
-      for (const op of parsePatch(body)) {
+      const patch: { email?: string; name?: string; active?: boolean; externalId?: string | null } =
+        {};
+      const ops = parsePatch(body);
+      // The address comes from `emails` when the request carries it, as on a create.
+      const sendsEmails = ops.some((op) => op.path!.toLowerCase().startsWith('emails'));
+      for (const op of ops) {
         const path = op.path!.toLowerCase();
         if (op.op === 'remove') {
           // The only removable attribute is the deprovisioning flag; everything
@@ -243,6 +275,9 @@ const scimHandlers = new Elysia({
         else if (path === 'externalid') patch.externalId = asString(op.value, 'externalId');
         else if (!ACCOUNT_ATTRIBUTE.test(path)) {
           throw new ScimError(400, `Attribute '${op.path}' is not writable`, 'invalidPath');
+        } else if (!workspaceScim() && !(path === 'username' && sendsEmails)) {
+          const name = patch.name ?? (await requireUser(workspaceId, params.id)).name;
+          Object.assign(patch, accountOp(path, op.value, name));
         }
       }
       const updated = await updateScimUser(workspaceId, params.id, patch);

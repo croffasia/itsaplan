@@ -166,7 +166,7 @@ export const teamSectionPath = (teamRef: string, section: TeamSection) =>
   section === 'info' ? teamPath(teamRef) : `${teamPath(teamRef)}/${section}`;
 
 // A workspace's settings, which only its owner and admins open. `section` is one of the
-// settings pages ('managers', 'scim') or an id a hosted build adds.
+// settings pages ('managers') or an id a hosted build adds.
 export const workspacePath = (workspaceId: number, section = 'info') =>
   section === 'info' ? `/workspaces/${workspaceId}` : `/workspaces/${workspaceId}/${section}`;
 

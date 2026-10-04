@@ -8,6 +8,7 @@ import {
   hasConfiguredGoogle,
   hasConfiguredOidc,
   getOidcLabel,
+  isAccountDeactivated,
 } from '@repo/auth';
 import { db, hasConfiguredEmailProvider, user } from '@repo/db';
 import { cors } from '@elysiajs/cors';
@@ -248,7 +249,12 @@ export const app = new Elysia()
     '/me',
     async ({ request }) => {
       const session = await getSessionFromHeaders(request.headers);
-      if (!session) return { authenticated: false };
+      // A deactivated account is not signed in as far as the app is concerned:
+      // every planner route answers 401 for it, and this is what the screens ask
+      // first. Deactivation arrives over SCIM, after the session was opened.
+      if (!session || isAccountDeactivated(session.user)) {
+        return { authenticated: false };
+      }
       return { authenticated: true, user: session.user };
     },
     {
@@ -257,7 +263,8 @@ export const app = new Elysia()
         summary: 'Get the current session user',
         description:
           'Resolve the request credentials to a session and return the user it belongs to. ' +
-          'Without a session it answers `{ authenticated: false }` instead of failing.',
+          'Without a session, or for a deactivated account, it answers ' +
+          '`{ authenticated: false }` instead of failing.',
       },
     },
   )

@@ -1,4 +1,7 @@
-import { describe, expect, it, beforeEach } from 'bun:test';
+import { afterEach, describe, expect, it, beforeEach } from 'bun:test';
+import { eq } from 'drizzle-orm';
+import { setWorkspaceScim } from '@repo/auth';
+import { createWorkspace, db, team } from '@repo/db';
 import { resetDb } from '#tests/helpers/db';
 import { addUser } from '#modules/god/__tests__/helpers';
 import { patchOps, scimUserBody, setupOtherWorkspace, setupScim } from '../helpers';
@@ -232,7 +235,28 @@ describe('SCIM groups', () => {
     });
   });
 
-  describe('workspaces', () => {
+  describe('the instance', () => {
+    it('takes a member in any workspace', async () => {
+      const { scim } = await setupScim();
+      const outsider = await addUser({ email: 'outsider@example.com' });
+      const [outsiderTeam] = (await outsider.api.teams.get()).data!;
+      await db
+        .update(team)
+        .set({ workspaceId: await createWorkspace(db, 'Other', outsider.id) })
+        .where(eq(team.id, outsiderTeam!.id));
+
+      const res = await scim.scim.v2.Groups.post(groupBody({ members: [{ value: outsider.id }] }));
+
+      expect(res.status).toBe(201);
+    });
+  });
+
+  // Set up per workspace, as in a hosted build, each workspace's provider has groups of
+  // its own and sees only its own people.
+  describe('set up per workspace', () => {
+    beforeEach(() => setWorkspaceScim());
+    afterEach(() => setWorkspaceScim(false));
+
     it("keeps one workspace's groups away from another's provider", async () => {
       const { god, scim } = await setupScim();
       const other = await setupOtherWorkspace(god);

@@ -8,13 +8,15 @@ import {
   teamRole,
 } from '@repo/db';
 import { and, asc, eq, inArray, sql } from 'drizzle-orm';
+import { workspaceScim } from '@repo/auth';
 import { HttpError } from '#shared/lib';
 import { mappedProjectIds, reconcileProjects } from '#modules/scim/reconcile';
 
 // The groups a workspace's identity provider has pushed, and what each one grants.
 // The group and its members belong to the provider and are read-only here; the
 // mappings are the workspace owner's, and are what turns group membership into
-// project access.
+// project access. A group grants projects of its own workspace when SCIM is set up per
+// workspace, and any project while it is the instance's.
 export interface WorkspaceScimGroupMapping {
   projectId: number;
   projectKey: string;
@@ -80,8 +82,7 @@ export async function listWorkspaceScimGroups(workspaceId: number): Promise<Work
 
 // Replaces what a group grants, then reconciles every project the change touched —
 // the ones it granted before as well as the ones it grants now, so a project it was
-// unmapped from loses the memberships that came from it. A group grants access only
-// to projects of its own workspace.
+// unmapped from loses the memberships that came from it.
 export async function setWorkspaceScimGroupMappings(
   workspaceId: number,
   groupId: string,
@@ -102,7 +103,7 @@ export async function setWorkspaceScimGroupMappings(
       .select({ id: project.id, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(and(inArray(project.id, projectIds), eq(team.workspaceId, workspaceId)));
+      .where(and(inArray(project.id, projectIds), grantable(workspaceId)));
     if (known.length !== projectIds.length) throw new HttpError(400, 'Unknown project');
     // A role belongs to one team, so a mapping that names another team's role would
     // silently grant the wrong permissions.
@@ -144,7 +145,7 @@ export async function setWorkspaceScimGroupMappings(
   return groups.find((g) => g.id === groupId)!;
 }
 
-// Every project of the workspace with the roles of the team that owns it. What the
+// Every project a group may grant, with the roles of the team that owns it. What the
 // group mapping form fills its project and role selects from.
 export async function listWorkspaceProjectOptions(workspaceId: number) {
   const [projects, roles] = await Promise.all([
@@ -152,17 +153,22 @@ export async function listWorkspaceProjectOptions(workspaceId: number) {
       .select({ id: project.id, key: project.key, name: project.name, teamId: project.teamId })
       .from(project)
       .innerJoin(team, eq(team.id, project.teamId))
-      .where(eq(team.workspaceId, workspaceId))
+      .where(grantable(workspaceId))
       .orderBy(asc(project.key)),
     db
       .select({ id: teamRole.id, name: teamRole.name, teamId: teamRole.teamId })
       .from(teamRole)
       .innerJoin(team, eq(team.id, teamRole.teamId))
-      .where(eq(team.workspaceId, workspaceId))
+      .where(grantable(workspaceId))
       .orderBy(asc(teamRole.id)),
   ]);
   return projects.map(({ teamId, ...entry }) => ({
     ...entry,
     roles: roles.filter((role) => role.teamId === teamId).map(({ id, name }) => ({ id, name })),
   }));
+}
+
+// The teams whose projects a workspace's groups may grant, as a condition on `team`.
+function grantable(workspaceId: number) {
+  return workspaceScim() ? eq(team.workspaceId, workspaceId) : undefined;
 }

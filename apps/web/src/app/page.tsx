@@ -19,9 +19,9 @@ import StartEmpty from '@/components/layout/StartEmpty';
 // first visible favorite or project, on the user's preferred start page. Waits for both
 // the project list and the preferences before deciding so it does not flash the
 // wrong destination. With no projects at all, an account that owns or manages a team
-// is offered to create the first one there. The owner of a workspace is offered to create
-// a team in it, an account with no team and no workspace it owns gets `NoTeamStart`, and a
-// team member is told who adds them to a project.
+// is offered to create the first one there. An account that may create a team in a
+// workspace, its own first, is offered to; one with no team and nowhere to create one gets
+// `NoTeamStart`, and a team member is told who adds them to a project.
 export default function Home() {
   const t = useTranslations('shell');
   const tCommon = useTranslations('common');
@@ -46,20 +46,25 @@ export default function Home() {
   }
 
   const managedTeam = teams?.find((one) => one.role !== 'member');
-  const ownedWorkspace = workspaces?.find((one) => one.role === 'owner');
+  const teamWorkspace =
+    workspaces?.find((one) => one.role === 'owner') ?? workspaces?.find((one) => one.canCreateTeam);
 
   if (teams && workspaces && !managedTeam && projects?.length === 0) {
-    if (teams.length === 0 && !ownedWorkspace) return <NoTeamStart />;
+    if (teams.length === 0 && !teamWorkspace) return <NoTeamStart />;
     return (
       <StartEmpty
         icon={<Users />}
         title={teams.length === 0 ? t('noTeamsTitle') : t('noProjectsTitle')}
-        hint={teams.length === 0 ? t('noTeamsHint') : t('noProjectAccessHint')}
-        action={ownedWorkspace && t('createTeam')}
+        hint={
+          teams.length === 0
+            ? t('noTeamsHint')
+            : t(teamWorkspace ? 'noProjectAccessOwnerHint' : 'noProjectAccessHint')
+        }
+        action={teamWorkspace && t('createTeam')}
         onAction={() => setCreating(true)}
       >
-        {creating && ownedWorkspace && (
-          <NewTeamModal workspaceId={ownedWorkspace.id} onClose={() => setCreating(false)} />
+        {creating && teamWorkspace && (
+          <NewTeamModal workspaceId={teamWorkspace.id} onClose={() => setCreating(false)} />
         )}
       </StartEmpty>
     );

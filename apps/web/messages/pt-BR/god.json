@@ -57,6 +57,7 @@
     "deleteConfirm": "Excluir conta",
     "deleteConfirmWithProjects": "{count, plural, one {Excluir conta e projeto} other {Excluir conta e projetos}}",
     "deleteMessage": "<strong>{name}</strong> perde acesso a esta instância. Issues e comentários que escreveram permanecem, com o autor desatribuído. Isso não pode ser desfeito.",
+    "deleteWorkspaceNote": "Um workspace desta conta é excluído com ela se não tiver projetos nem agentes de IA. Caso contrário, ele passa para você, com tudo o que a conta possuía sozinha nele.",
     "soleOwnerTitle": "{count, plural, one {Único dono de um projeto} other {Único dono de # projetos}}",
     "soleOwnerHint": "{count, plural, one {Quando a conta se for, ninguém poderá gerenciá-lo.} other {Quando a conta se for, ninguém poderá gerenciá-los.}}",
     "deleteWithProjects": "{count, plural, one {Excluir o projeto com a conta} other {Excluir os projetos com a conta}}",
@@ -159,7 +160,11 @@
     "saved": "Padrões de projeto salvos",
     "projectDefaults": "Padrões de projeto",
     "mcpEnabled": "Ativar MCP em novos projetos",
-    "mcpEnabledHint": "Um novo projeto está no alcance de MCP do seu time desde o momento em que é criado."
+    "mcpEnabledHint": "Um novo projeto está no alcance de MCP do seu time desde o momento em que é criado.",
+    "workspacesSaved": "Configurações de workspace salvas",
+    "workspaces": "Workspaces",
+    "personalWorkspaces": "Um workspace para cada pessoa",
+    "personalWorkspacesHint": "Cada conta recebe um workspace próprio com o nome da pessoa. Desativado, as pessoas trabalham apenas nos workspaces aos quais foram adicionadas."
   },
   "authentication": {
     "saved": "Configurações de autenticação salvas",

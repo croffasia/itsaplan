@@ -2,6 +2,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   addWorkspaceAdmin,
   createWorkspaceScimToken,
+  deleteWorkspace,
   getWorkspace,
   getWorkspaceScim,
   listWorkspaceManagerCandidates,
@@ -12,6 +13,7 @@ import {
   removeWorkspaceAdmin,
   setWorkspaceScimGroupMappings,
   updateWorkspace,
+  type WorkspacePatch,
   updateWorkspaceScim,
 } from '@/lib/api/endpoints/workspaces';
 import { qk } from '@/services/queryKeys';
@@ -30,10 +32,23 @@ export function useWorkspaceQuery(workspaceId: number) {
 export function useUpdateWorkspace(workspaceId: number) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (name: string) => updateWorkspace(workspaceId, { name }),
+    mutationFn: (patch: WorkspacePatch) => updateWorkspace(workspaceId, patch),
     onSuccess: (workspace) => {
       qc.setQueryData(qk.workspace(workspaceId), workspace);
       void qc.invalidateQueries({ queryKey: qk.workspaces });
+    },
+  });
+}
+
+// Its teams go with it, so the team list changes as well as the workspace list.
+export function useDeleteWorkspace(workspaceId: number) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => deleteWorkspace(workspaceId),
+    onSuccess: () => {
+      qc.removeQueries({ queryKey: qk.workspace(workspaceId) });
+      void qc.invalidateQueries({ queryKey: qk.workspaces });
+      void qc.invalidateQueries({ queryKey: qk.teams });
     },
   });
 }

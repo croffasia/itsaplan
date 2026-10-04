@@ -7,13 +7,30 @@ export interface WorkspaceSummary {
   id: number;
   name: string;
   role: WorkspaceRole | null;
+  color: string | null;
+  canCreateTeam: boolean;
 }
 
+// Who creates teams in a workspace: the owner alone, the owner and admins, or anyone in
+// one of its teams.
+export type TeamCreation = 'owner' | 'managers' | 'members';
+
+// `deletion` says whether the owner may delete it: `instance` for the instance workspace,
+// which stays; `work` while a team of it holds a project or an AI agent.
 export interface Workspace {
   id: number;
   name: string;
   role: WorkspaceRole;
   managerCount: number;
+  color: string | null;
+  teamCreation: TeamCreation;
+  deletion: 'allowed' | 'instance' | 'work';
+}
+
+export interface WorkspacePatch {
+  name?: string;
+  color?: string | null;
+  teamCreation?: TeamCreation;
 }
 
 export interface WorkspacePerson {
@@ -32,11 +49,14 @@ export const listWorkspaces = () => request<WorkspaceSummary[]>('/workspaces');
 export const getWorkspace = (workspaceId: number) =>
   request<Workspace>(`/workspaces/${workspaceId}`);
 
-export const updateWorkspace = (workspaceId: number, input: { name: string }) =>
+export const updateWorkspace = (workspaceId: number, input: WorkspacePatch) =>
   request<Workspace>(`/workspaces/${workspaceId}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
   });
+
+export const deleteWorkspace = (workspaceId: number) =>
+  request<void>(`/workspaces/${workspaceId}`, { method: 'DELETE' });
 
 export const listWorkspaceManagers = (workspaceId: number) =>
   request<WorkspaceManager[]>(`/workspaces/${workspaceId}/managers`);

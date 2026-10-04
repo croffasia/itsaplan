@@ -1,4 +1,5 @@
 import { Elysia, type DocumentDecoration } from 'elysia';
+import { workspaceScim as isScimPerWorkspace } from '@repo/auth';
 import { authContext } from './auth-context';
 import {
   requireProjectAccess,
@@ -337,6 +338,29 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
         );
         if (standing.role !== 'owner')
           throw new HttpError(403, 'Only the workspace owner can do this');
+        return { standing };
+      },
+    };
+  },
+
+  // SCIM creates accounts and attaches existing ones to the workspace, which reaches past
+  // the workspace to the whole instance, so only the instance owner sets it up, in a
+  // workspace they own, unless SCIM is set up per workspace (setWorkspaceScim in
+  // @repo/auth).
+  workspaceScim(_enabled: boolean) {
+    return {
+      async resolve({ params, user }) {
+        const standing = await requireWorkspaceManager(
+          Number((params as WorkspaceIdParams).workspaceId),
+          user,
+        );
+        const perWorkspace = isScimPerWorkspace();
+        if (standing.role !== 'owner' || (!perWorkspace && user?.role !== 'god')) {
+          throw new HttpError(
+            403,
+            `Only the ${perWorkspace ? 'workspace' : 'instance'} owner sets up SCIM provisioning`,
+          );
+        }
         return { standing };
       },
     };

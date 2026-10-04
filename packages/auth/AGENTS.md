@@ -17,6 +17,13 @@ The **server-side** better-auth instance. Consumed by `apps/api`. See root `AGEN
 The user table has a `role` column (`"god"` | `"user"`), declared as a better-auth
 `additionalField` with `input: false` (not client-settable). A `databaseHooks.user.create.before`
 hook sets it: the first user to register gets `"god"`, everyone after gets `"user"`.
+`databaseHooks.user.create.after` makes the `"god"` account the owner of the instance
+workspace and gives every other account a workspace of its own, named after the person,
+while `personalWorkspaces` is on in the auth settings (`ensurePersonalWorkspace`). apps/api
+calls the same function on every request, so an account made before, by SCIM (a direct
+insert, which passes no hook) or while the setting was off gets its own on its next
+request. It remembers per process who needs nothing, so a request costs a lookup; an
+agent's bot user never gets one.
 
 ## Instance settings (`src/instance.ts`)
 
@@ -133,10 +140,16 @@ which is what stops an instance being left with no way in.
 
 ## SCIM
 
-A workspace's identity provider decides who is in the workspace, not who has an account, so
-nothing here refuses a session for it: there is no deactivation flag on the user table, and
-what a provider says about a person is kept per workspace in `scim_user`, written by
-`apps/api`.
+What a provider says about a person is kept per workspace in `scim_user`, written by
+`apps/api`. How far it reaches is `workspaceScim()`, which a hosted build turns on with
+`setWorkspaceScim()`. Off, as on a self-hosted instance, SCIM is the instance's: only the
+instance workspace's token opens it, and it also writes `active`, one more
+`additionalField` on the user table (nullable, so every check is `active !== false`). An
+account with `active` false (`isAccountDeactivated`) is refused at sign-in by the
+`session.create.before` hook with `ACCOUNT_DEACTIVATED`, which covers every sign-in method
+at once; `apps/api` refuses the sessions and keys it already holds. On, a workspace's
+provider decides who is in the workspace, not who has an account, `active` is not read,
+and nothing here refuses a session.
 
 `getScimSettings` / `rotateScimToken` / `verifyScimToken` hold the bearer token of each
 workspace that the SCIM endpoints in `apps/api` authenticate with. A token reads

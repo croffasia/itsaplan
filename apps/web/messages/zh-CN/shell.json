@@ -6,6 +6,7 @@
   "noTeamsHint": "创建你的团队。团队的项目、成员和智能体都在其中。",
   "noTeamsMemberHint": "请工作区所有者将你添加到团队中。",
   "noProjectAccessHint": "请团队所有者或管理员将你添加到项目中。",
+  "noProjectAccessOwnerHint": "请团队所有者或管理员将你添加到项目中，或创建你自己的团队。",
   "createTeam": "创建团队",
   "noProjectsTitle": "暂无项目",
   "noProjectsHint": "新建第一个项目，然后开始在看板中规划工作项。",

@@ -4,8 +4,9 @@ import { workspaceTileClass } from '@/components/layout/utils/workspaceTile';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-// Below the workspace tiles of a rail. A self-hosted instance has one workspace, so the
-// button says where more are available; the hosted build creates a workspace instead.
+// Below the workspace tiles of a rail. On a self-hosted instance a person owns one
+// workspace, made at sign-up, so the button says where more are available; the hosted
+// build creates a workspace instead.
 export default function WorkspaceRailActions() {
   const t = useTranslations('teams.workspace');
 

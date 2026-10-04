@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Defaults for new projects."
+      "description": "Personal workspaces and defaults for new projects."
     },
     "authentication": {
       "label": "Authentication",
@@ -50,6 +50,10 @@
     "auth-provider": {
       "label": "Auth provider",
       "description": "The external accounts people may sign in with."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Let an identity provider create, update and deactivate accounts on this instance, and grant project access through its groups."
     }
   },
   "settings": {

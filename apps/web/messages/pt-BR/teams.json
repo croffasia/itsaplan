@@ -546,7 +546,7 @@
     "rail": "Workspaces",
     "create": "Novo workspace",
     "createUnavailableTitle": "Mais workspaces",
-    "createUnavailableHint": "Esta instância tem um workspace. Criar e gerenciar workspaces está disponível no Cloud e no Pro auto-hospedado.",
+    "createUnavailableHint": "Mais workspaces por pessoa estão disponíveis no Cloud e no Pro auto-hospedado.",
     "general": "Geral",
     "roles": {
       "owner": "Proprietário",
@@ -558,7 +558,17 @@
       "workspace": "Workspace",
       "workspaceHint": "O nome que todos veem.",
       "role": "Sua função",
-      "saved": "Workspace salvo"
+      "saved": "Workspace salvo",
+      "color": "Cor",
+      "colorReset": "Usar padrão"
+    },
+    "teamCreation": {
+      "title": "Quem cria times",
+      "description": "Quem cria um time é o dono dele.",
+      "ownerOnly": "Só o dono decide quem cria times.",
+      "owner": "Só o dono",
+      "managers": "O dono e os admins",
+      "members": "Todos dos times dele"
     },
     "managers": {
       "title": "Gestores",
@@ -583,6 +593,7 @@
       "saved": "Configurações SCIM salvas",
       "provisioning": "Provisionamento",
       "provisioningConfigured": "Seu provedor de identidade adiciona pessoas a este workspace e as remove.",
+      "provisioningInstance": "Seu provedor de identidade cria, atualiza e desativa contas nesta instância.",
       "provisioningMissing": "Gere um token primeiro.",
       "token": "Token",
       "noToken": "Nenhum token gerado ainda",
@@ -622,6 +633,14 @@
         "remove": "Remover projeto",
         "saved": "Acesso do grupo salvo"
       }
+    },
+    "delete": {
+      "action": "Excluir workspace",
+      "hint": "Os times dele são excluídos junto. As pessoas mantêm suas contas e seus outros times.",
+      "blocked": "Exclua primeiro os projetos e os agentes de IA dos times dele.",
+      "title": "Excluir {name}?",
+      "description": "<strong>{name}</strong> e os times dele são excluídos. As pessoas mantêm suas contas e seus outros times. Isso não pode ser desfeito.",
+      "deleted": "Workspace excluído"
     }
   }
 }

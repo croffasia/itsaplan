@@ -1,10 +1,13 @@
 import { db, documentAsset, projectDocument, user } from '@repo/db';
 import { and, asc, eq, inArray, or, sql } from 'drizzle-orm';
 import { deleteObjects } from '@repo/storage';
+import { releaseOwnedWorkspaces } from '#modules/teams/service';
 
 const DOCUMENT_TREE_LOCK_NAMESPACE = 1_145_390_931;
 
 export async function deleteAccount(userId: string): Promise<boolean> {
+  // Before the account goes, so a workspace it owned is not left without an owner.
+  await releaseOwnedWorkspaces(userId);
   const result = await db.transaction(async (tx) => {
     const locked = await tx.execute(sql`select id from "user" where id = ${userId} for update`);
     if (locked.length === 0) return { deleted: false, assetKeys: [] as string[] };

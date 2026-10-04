@@ -285,7 +285,8 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       detail: {
         summary: 'Create a team',
         description:
-          'Create a team in a workspace and become its owner. Only the workspace owner can.',
+          'Create a team in a workspace and become its owner. The workspace decides who may: ' +
+          'its owner, also its admins, or anyone in its teams.',
       },
     },
   )

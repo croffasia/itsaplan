@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Info, ShieldCheck, UsersRound } from 'lucide-react';
+import { Info, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useWorkspaceSections } from '@/cloud';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
@@ -24,16 +24,6 @@ export default function WorkspaceSectionNav({ workspace }: { workspace: Workspac
       badge: detail && String(detail.managerCount),
       href: workspacePath(workspace.id, 'managers'),
     },
-    ...(workspace.role === 'owner'
-      ? [
-          {
-            id: 'scim',
-            label: t('scim.title'),
-            icon: UsersRound,
-            href: workspacePath(workspace.id, 'scim'),
-          },
-        ]
-      : []),
     ...extra.map(({ id, label, icon }) => ({
       id,
       label,

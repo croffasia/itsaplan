@@ -546,7 +546,7 @@
     "rail": "Workspace",
     "create": "Workspace baru",
     "createUnavailableTitle": "Lebih banyak workspace",
-    "createUnavailableHint": "Instance ini memiliki satu workspace. Membuat dan mengelola workspace tersedia di Cloud dan Pro self-hosted.",
+    "createUnavailableHint": "Lebih banyak workspace per orang tersedia di Cloud dan Pro self-hosted.",
     "general": "Umum",
     "roles": {
       "owner": "Pemilik",
@@ -558,7 +558,17 @@
       "workspace": "Workspace",
       "workspaceHint": "Nama yang dilihat semua orang.",
       "role": "Peran Anda",
-      "saved": "Workspace disimpan"
+      "saved": "Workspace disimpan",
+      "color": "Warna",
+      "colorReset": "Gunakan bawaan"
+    },
+    "teamCreation": {
+      "title": "Siapa yang membuat tim",
+      "description": "Pembuat tim menjadi pemiliknya.",
+      "ownerOnly": "Hanya pemilik yang menentukan siapa yang membuat tim.",
+      "owner": "Hanya pemilik",
+      "managers": "Pemilik dan admin",
+      "members": "Semua orang di timnya"
     },
     "managers": {
       "title": "Pengelola",
@@ -583,6 +593,7 @@
       "saved": "Pengaturan SCIM disimpan",
       "provisioning": "Provisioning",
       "provisioningConfigured": "Penyedia identitas Anda menambahkan orang ke workspace ini dan mengeluarkan mereka.",
+      "provisioningInstance": "Penyedia identitas Anda membuat, memperbarui, dan menonaktifkan akun pada instance ini.",
       "provisioningMissing": "Buat token terlebih dahulu.",
       "token": "Token",
       "noToken": "Belum ada token yang dibuat",
@@ -622,6 +633,14 @@
         "remove": "Hapus proyek",
         "saved": "Akses grup disimpan"
       }
+    },
+    "delete": {
+      "action": "Hapus workspace",
+      "hint": "Timnya ikut dihapus. Orang-orang tetap memiliki akun dan tim lain mereka.",
+      "blocked": "Hapus dulu proyek dan agen AI di timnya.",
+      "title": "Hapus {name}?",
+      "description": "<strong>{name}</strong> dan timnya akan dihapus. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
+      "deleted": "Workspace dihapus"
     }
   }
 }

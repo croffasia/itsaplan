@@ -447,6 +447,25 @@ describe('god users', () => {
       expect((await god.api.god.users({ userId: bob.id }).get()).data?.projects).toHaveLength(1);
     });
 
+    it('hands a project in their own workspace to the instance owner without asking', async () => {
+      const { god } = await setup();
+      const alice = await addUser({ email: 'alice@example.com' });
+      const [own] = (await alice.api.workspaces.get()).data!;
+      const team = await alice.api.teams.post({ name: 'Solo', slug: 'solo', workspaceId: own!.id });
+      await alice.api.teams({ teamId: team.data!.id }).projects.post({ key: 'SOL', name: 'Solo' });
+
+      const detail = await god.api.god.users({ userId: alice.id }).get();
+      expect(detail.data?.projects[0]).toMatchObject({ ownerCount: 1, inOwnWorkspace: true });
+
+      const res = await god.api.god.users({ userId: alice.id }).delete();
+
+      expect(res.status).toBe(204);
+      const kept = await god.api.god.users({ userId: god.id }).get();
+      expect(kept.data?.projects).toEqual([
+        expect.objectContaining({ projectKey: 'SOL', role: 'owner' }),
+      ]);
+    });
+
     it('deletes the sole-owned projects with the account when asked', async () => {
       const { god } = await setup();
       const alice = await addUser({ email: 'alice@example.com' });

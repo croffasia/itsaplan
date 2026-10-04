@@ -15,6 +15,7 @@ import {
   teamMember,
   teamRole,
   user,
+  workspace,
   workspaceManager,
 } from '@repo/db';
 import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
@@ -34,7 +35,7 @@ import {
   type MemberSource,
 } from '#modules/members/service';
 import { getStats, type StatsDto } from '#modules/analytics/service';
-import { assertWorkspaceOwner } from '#modules/workspaces/service';
+import { assertMayCreateTeam, workspaceHoldsWork } from '#modules/workspaces/service';
 
 // The rank a person holds in a team.
 export type TeamRole = 'owner' | 'manager' | 'member';
@@ -777,7 +778,7 @@ export async function createTeam(
   requestedWorkspaceId?: number,
 ): Promise<TeamRow> {
   const workspaceId = requestedWorkspaceId ?? (await instanceWorkspaceId(db));
-  await assertWorkspaceOwner(workspaceId, ownerId);
+  await assertMayCreateTeam(workspaceId, ownerId);
   const { maxTeams } = await getLimits(workspaceId);
   if (maxTeams > 0 && (await db.$count(team, eq(team.workspaceId, workspaceId))) >= maxTeams) {
     throw new HttpError(409, `The workspace already has ${maxTeams} teams`);
@@ -1012,6 +1013,50 @@ export async function leaveTeam(teamId: number, userId: string): Promise<void> {
     await assertLeavesNoProjectOwnerless(tx, teamId, userId, 'You');
     await dropTeamMembership(tx, teamId, userId);
   });
+}
+
+// The workspaces an account owns, as it is deleted. One holding no project and no AI
+// agent goes with the account, teams and all. Any other passes to the instance owner,
+// with the teams and projects the account owned alone in it, so its people keep a
+// workspace somebody manages.
+export async function releaseOwnedWorkspaces(userId: string): Promise<void> {
+  const owned = await db
+    .select({ workspaceId: workspaceManager.workspaceId })
+    .from(workspaceManager)
+    .where(and(eq(workspaceManager.userId, userId), eq(workspaceManager.role, 'owner')));
+  if (owned.length === 0) return;
+  const [instanceOwner] = await db
+    .select({ userId: workspaceManager.userId })
+    .from(workspaceManager)
+    .where(
+      and(
+        eq(workspaceManager.workspaceId, await instanceWorkspaceId(db)),
+        eq(workspaceManager.role, 'owner'),
+      ),
+    );
+  const successor = instanceOwner?.userId;
+  for (const { workspaceId } of owned) {
+    if (!(await workspaceHoldsWork(workspaceId))) {
+      await db.delete(workspace).where(eq(workspace.id, workspaceId));
+      continue;
+    }
+    if (!successor || successor === userId) continue;
+    await db.transaction(async (tx) => {
+      await tx
+        .delete(workspaceManager)
+        .where(
+          and(eq(workspaceManager.workspaceId, workspaceId), eq(workspaceManager.userId, userId)),
+        );
+      await tx
+        .insert(workspaceManager)
+        .values({ workspaceId, userId: successor, role: 'owner' })
+        .onConflictDoUpdate({
+          target: [workspaceManager.workspaceId, workspaceManager.userId],
+          set: { role: 'owner' },
+        });
+    });
+    await dropWorkspaceMemberships(workspaceId, userId);
+  }
 }
 
 // Takes a person out of every team of the workspace, and with that out of all of its

@@ -10,6 +10,7 @@ import {
   teamWorkspaceId,
 } from '@repo/db';
 import { and, eq, isNull, or } from 'drizzle-orm';
+import { workspaceScim } from '@repo/auth';
 import { removeMember, setMembership, type MemberRole } from '#modules/members/service';
 import { listSeatHolderIds } from '#modules/teams/service';
 import { getLimits } from '#shared/limits';
@@ -35,7 +36,9 @@ export async function reconcileProjects(projectIds: number[]): Promise<void> {
 // Who the mappings say should be a member of this project. A user reachable
 // through two mappings resolves to the strongest: 'owner' beats 'member', and among
 // equals the lowest mapping id wins, so the result does not depend on row order.
-// A person the workspace's provider deactivated is granted nothing by its groups.
+// Set up per workspace, a person the workspace's provider deactivated is granted
+// nothing by its groups. While SCIM is the instance's, a deactivated account keeps
+// what it had: it cannot sign in, and is back where it was once reactivated.
 async function desiredMembers(projectId: number): Promise<Map<string, Desired>> {
   const rows = await db
     .select({
@@ -56,7 +59,7 @@ async function desiredMembers(projectId: number): Promise<Map<string, Desired>> 
     .where(
       and(
         eq(scimGroupMapping.projectId, projectId),
-        or(isNull(scimUser.active), eq(scimUser.active, true)),
+        workspaceScim() ? or(isNull(scimUser.active), eq(scimUser.active, true)) : undefined,
       ),
     )
     .orderBy(scimGroupMapping.id);

@@ -57,6 +57,7 @@
     "deleteConfirm": "Delete account",
     "deleteConfirmWithProjects": "{count, plural, one {Delete account and project} other {Delete account and projects}}",
     "deleteMessage": "<strong>{name}</strong> loses access to this instance. Issues and comments they wrote stay, with the author unassigned. This cannot be undone.",
+    "deleteWorkspaceNote": "A workspace this account owns is deleted with it while it has no projects or AI agents. Otherwise it passes to you, with everything the account owned alone in it.",
     "soleOwnerTitle": "{count, plural, one {Only owner of a project} other {Only owner of # projects}}",
     "soleOwnerHint": "{count, plural, one {Once the account is gone, nobody can manage it.} other {Once the account is gone, nobody can manage them.}}",
     "deleteWithProjects": "{count, plural, one {Delete the project with the account} other {Delete the projects with the account}}",
@@ -159,7 +160,11 @@
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",
     "mcpEnabled": "Enable MCP on new projects",
-    "mcpEnabledHint": "A new project is in its team's MCP reach from the moment it is created."
+    "mcpEnabledHint": "A new project is in its team's MCP reach from the moment it is created.",
+    "workspacesSaved": "Workspace settings saved",
+    "workspaces": "Workspaces",
+    "personalWorkspaces": "A workspace for everyone",
+    "personalWorkspacesHint": "Every account gets a workspace of its own, named after the person. Off, people work only in the workspaces they are added to."
   },
   "authentication": {
     "saved": "Authentication settings saved",

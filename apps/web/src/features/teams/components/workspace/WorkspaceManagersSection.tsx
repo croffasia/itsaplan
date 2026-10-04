@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
+import { WorkspaceSectionExtras } from '@/cloud';
 import type { WorkspaceManager } from '@/lib/api/endpoints/workspaces';
 import {
   useRemoveWorkspaceAdmin,
@@ -22,7 +23,8 @@ import WorkspaceManagerRow from './WorkspaceManagerRow';
 export default function WorkspaceManagersSection({ workspaceId }: { workspaceId: number }) {
   const t = useTranslations('teams.workspace');
   const tCommon = useTranslations('common');
-  const isOwner = useWorkspaceQuery(workspaceId).data?.role === 'owner';
+  const workspace = useWorkspaceQuery(workspaceId).data;
+  const isOwner = workspace?.role === 'owner';
   const managersQuery = useWorkspaceManagersQuery(workspaceId);
   const remove = useRemoveWorkspaceAdmin(workspaceId);
   const [adding, setAdding] = useState(false);
@@ -77,6 +79,8 @@ export default function WorkspaceManagersSection({ workspaceId }: { workspaceId:
           </Table>
         </div>
       )}
+
+      {workspace && <WorkspaceSectionExtras slug="managers" workspace={workspace} />}
 
       {adding && (
         <WorkspaceAdminAddDialog workspaceId={workspaceId} onClose={() => setAdding(false)} />

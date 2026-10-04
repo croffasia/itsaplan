@@ -22,6 +22,7 @@ export interface InstanceAuthSettings {
   magicLink: boolean;
   emailPassword: boolean;
   trustProviderEmails: boolean;
+  personalWorkspaces: boolean;
   hasEmailProvider: boolean;
   // Whether Google or the OIDC provider can run. Password sign-in may only be turned
   // off while one of them can.
@@ -34,6 +35,7 @@ export interface InstanceAuthSettingsPatch {
   magicLink?: boolean;
   emailPassword?: boolean;
   trustProviderEmails?: boolean;
+  personalWorkspaces?: boolean;
 }
 
 // The instance mail provider used for authentication email (password reset, address
@@ -155,8 +157,11 @@ export interface InstanceUserProject {
   roleName: string | null;
   permissions: Permissions;
   // How many owners the project has. 1 on a project this user owns means deleting
-  // the account would leave the project with nobody who can manage it.
+  // the account would leave the project with nobody who can manage it, unless it is in a
+  // workspace of theirs.
   ownerCount: number;
+  // In a workspace this user owns: it passes to the instance owner with the account.
+  inOwnWorkspace: boolean;
   joinedAt: string;
 }
 

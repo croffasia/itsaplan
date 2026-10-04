@@ -1,5 +1,6 @@
 import type { IssueLinkRef } from '@/lib/api/endpoints/issues';
 import { type Maps } from '@/utils/project';
+import { noDragProps } from '@/lib/dnd';
 import { cn } from '@/lib/utils';
 import { LINK_RELATION_ICONS } from '@/utils/issueLinks';
 import { useLinkRelationLabel } from '@/hooks/useLinkRelationLabel';
@@ -46,9 +47,9 @@ export function IssueCardLinks({
               <TooltipTrigger asChild>
                 <button
                   type="button"
-                  // The card below starts a drag on pointerdown and opens itself
-                  // on click; a link row must do neither.
-                  onPointerDown={(e) => e.stopPropagation()}
+                  // The card below starts a drag on press and opens itself on
+                  // click; a link row must do neither.
+                  {...noDragProps}
                   onClick={(e) => {
                     e.stopPropagation();
                     e.preventDefault();

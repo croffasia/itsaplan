@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { byKey } from '@/utils/messageKey';
 import type { CustomField } from '@/lib/api/endpoints/customFields';
 import type { IssueType } from '@/lib/api/endpoints/issueTypes';
-import { useStripSortSensors } from '@/lib/dnd';
+import { useDndSensors } from '@/lib/dnd';
 import {
   DISPLAY_PROPERTIES,
   customFieldId,
@@ -39,7 +39,7 @@ export default function TableProperties({
   trailing?: ReactNode;
 }) {
   const t = byKey(useTranslations('display.properties'));
-  const sensors = useStripSortSensors();
+  const sensors = useDndSensors();
   const fieldById = new Map(customFields.map((f) => [f.id, f]));
   const builtins = new Set<PropertyKey>(DISPLAY_PROPERTIES);
   const labelFor = (key: PropertyKey): string | null => {

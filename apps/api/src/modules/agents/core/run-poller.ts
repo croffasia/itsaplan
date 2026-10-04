@@ -1,3 +1,4 @@
+import { db, teamWorkspaceId } from '@repo/db';
 import { getProjectTeamId } from '#modules/projects/service';
 import { intEnv } from '#shared/lib';
 import { getLimits } from '#shared/limits';
@@ -22,7 +23,7 @@ import { runThreadId } from './runtime/thread-ids';
 // the only thing a run is built from, so nothing about which project or which bot user
 // it acts as can be handed in from outside.
 
-// How long a run waits when its team has no free slot.
+// How long a run waits when its workspace has no free slot.
 const DEFERRED_RETRY_SECONDS = 30;
 const RETRY_BASE_MS = 30_000;
 const RETRY_CAP_MS = 30 * 60_000;
@@ -34,9 +35,9 @@ export async function processAgentRuns(): Promise<boolean> {
 }
 
 async function processRun(run: ClaimedRun): Promise<void> {
-  const teamId = await getProjectTeamId(run.projectId);
-  const { maxConcurrentRuns, maxRunSeconds } = await getLimits({ teamId });
-  if (maxConcurrentRuns > 0 && (await countRunsAhead(teamId, run.id)) >= maxConcurrentRuns) {
+  const workspaceId = await teamWorkspaceId(await getProjectTeamId(run.projectId), db);
+  const { maxConcurrentRuns, maxRunSeconds } = await getLimits(workspaceId);
+  if (maxConcurrentRuns > 0 && (await countRunsAhead(workspaceId, run.id)) >= maxConcurrentRuns) {
     await deferRun(run.id, DEFERRED_RETRY_SECONDS);
     return;
   }
@@ -70,7 +71,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
   }
 }
 
-// The wall time a run gets: the team's ceiling where it has one, and a cap of its own
+// The wall time a run gets: the workspace's ceiling where it has one, and a cap of its own
 // either way. Without it a run that never returns holds its slot until the claim lease
 // expires and is then started again, having recorded nothing.
 function runTimeoutMs(maxRunSeconds: number): number {

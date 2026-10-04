@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Copy, LogOut, Pencil, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, Copy, LogOut, Pencil, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import type { MemberRole } from '@/lib/api/endpoints/members';
 import type { TeamProject, TeamRole } from '@/lib/api/endpoints/teams';
 import { useSession } from '@/lib/auth-client';
+import { useSetTeamProjectArchived } from '@/services/projects.service';
 import { projectPath } from '@/utils/paths';
 import RowAction from '@/components/common/RowAction';
 import NewProjectModal from '@/components/layout/NewProjectModal';
@@ -15,9 +17,10 @@ import TeamProjectEditModal from './TeamProjectEditModal';
 import TeamProjectLeaveDialog from './TeamProjectLeaveDialog';
 
 // What the reader may do with one project of the team, as the actions of the panel
-// header. Editing and copying follow their rank in the team — a manager does both,
-// an owner also deletes — while leaving follows their membership in the project,
-// which its last owner, and anyone a provisioned group put there, cannot give up.
+// header. Editing, copying and archiving follow their rank in the team — a manager
+// does all three, an owner also deletes — while leaving follows their membership in
+// the project, which its last owner, and anyone a provisioned group put there, cannot
+// give up.
 export default function TeamProjectActions({
   teamId,
   teamRole,
@@ -36,6 +39,7 @@ export default function TeamProjectActions({
   const [copying, setCopying] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const setArchived = useSetTeamProjectArchived();
 
   const userId = session?.user.id;
   const isLastOwner = viewer?.role === 'owner' && project.owners.length === 1;
@@ -43,6 +47,17 @@ export default function TeamProjectActions({
   const canLeave = !!viewer && !isLastOwner && viewer.source !== 'scim';
   const canEdit = teamRole !== 'member';
   const canDelete = teamRole === 'owner';
+  const archived = project.archivedAt != null;
+
+  function toggleArchived() {
+    setArchived.mutate(
+      { teamId, projectId: project.id, archived: !archived },
+      {
+        onSuccess: () =>
+          toast.success(t(archived ? 'restored' : 'archived', { name: project.name })),
+      },
+    );
+  }
 
   return (
     <div className="flex items-center gap-1">
@@ -50,6 +65,11 @@ export default function TeamProjectActions({
         <>
           <RowAction icon={Pencil} label={t('editAction')} onClick={() => setEditing(true)} />
           <RowAction icon={Copy} label={t('copyAction')} onClick={() => setCopying(true)} />
+          <RowAction
+            icon={archived ? ArchiveRestore : Archive}
+            label={t(archived ? 'restoreAction' : 'archiveAction')}
+            onClick={toggleArchived}
+          />
         </>
       )}
       {canLeave && (

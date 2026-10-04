@@ -50,6 +50,7 @@ export interface Project {
   // Whether members log the time they spend on the issues, set in the same place.
   // Independent of the time estimate.
   timeLoggingEnabled: boolean;
+  archivedAt: string | null;
   createdAt: string;
   // Latest work-item activity or comment, present on the project list response.
   lastActivityAt?: string | null;

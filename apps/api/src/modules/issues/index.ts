@@ -3,7 +3,12 @@ import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { guards, entityGuard, assertMcpAllowed, requiresPermission } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { assertPermission, assertProjectOwner, requireUser } from '#shared/access';
+import {
+  assertPermission,
+  assertProjectOwner,
+  assertProjectWritable,
+  requireUser,
+} from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
@@ -241,6 +246,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           if (entry.userId !== requireUser(user).id)
             await assertProjectOwner(entry.projectId, user);
           await assertMcpAllowed(entry.projectId, request.headers);
+          await assertProjectWritable(entry.projectId, request.method);
           return { projectId: entry.projectId };
         },
       };
@@ -257,6 +263,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           if (entry.actorUserId !== requireUser(user).id)
             await assertProjectOwner(entry.projectId, user);
           await assertMcpAllowed(entry.projectId, request.headers);
+          await assertProjectWritable(entry.projectId, request.method);
           return { projectId: entry.projectId };
         },
       };

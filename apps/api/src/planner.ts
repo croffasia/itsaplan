@@ -3,6 +3,7 @@ import { HttpError, pgErrorCode } from './shared/lib';
 import { authContext } from './shared/auth-context';
 import { projectRoutes } from './modules/projects';
 import { teamRoutes } from './modules/teams';
+import { workspaceRoutes } from './modules/workspaces';
 import { memberRoutes } from './modules/members';
 import { roleRoutes } from './modules/roles';
 import { inviteRoutes } from './modules/invites';
@@ -87,6 +88,7 @@ export const planner = new Elysia({ name: 'planner' })
   })
   .use(projectRoutes)
   .use(teamRoutes)
+  .use(workspaceRoutes)
   .use(memberRoutes)
   .use(roleRoutes)
   .use(inviteRoutes)

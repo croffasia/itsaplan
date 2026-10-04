@@ -9,7 +9,7 @@ import { useSession } from '@/lib/auth-client';
 import { usePermissions } from '@/hooks/usePermissions';
 import { formatMinutes } from '@/utils/estimate';
 import { Button } from '@/components/ui/button';
-import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import {
   useCreateWorklog,
   useDeleteWorklog,

@@ -83,6 +83,7 @@ export const app = new Elysia()
         tags: [
           { name: 'Projects', description: 'Projects and the full work items view' },
           { name: 'Teams', description: 'Teams that own projects' },
+          { name: 'Workspaces', description: 'Workspaces that own teams, and who manages them' },
           { name: 'Members', description: 'Project membership and roles' },
           { name: 'Roles', description: 'Project roles and their permissions' },
           { name: 'Invites', description: 'Project invites (create, accept, reject)' },
@@ -247,10 +248,7 @@ export const app = new Elysia()
     '/me',
     async ({ request }) => {
       const session = await getSessionFromHeaders(request.headers);
-      // A deactivated account is not signed in as far as the app is concerned:
-      // every planner route answers 401 for it, and this is what the screens ask
-      // first. Deactivation arrives over SCIM, after the session was opened.
-      if (!session || session.user.active === false) return { authenticated: false };
+      if (!session) return { authenticated: false };
       return { authenticated: true, user: session.user };
     },
     {
@@ -259,8 +257,7 @@ export const app = new Elysia()
         summary: 'Get the current session user',
         description:
           'Resolve the request credentials to a session and return the user it belongs to. ' +
-          'Without a session, or for a deactivated account, it answers ' +
-          '`{ authenticated: false }` instead of failing.',
+          'Without a session it answers `{ authenticated: false }` instead of failing.',
       },
     },
   )

@@ -12,6 +12,8 @@ import {
   requireTeamPermission,
   assertPermission,
   assertMcpEnabled,
+  assertWritable,
+  assertProjectWritable,
   assertFeatureEnabled,
   assertProjectFeature,
   type AuthUser,
@@ -19,6 +21,7 @@ import {
 import type { ProjectFeature } from './features';
 import { getProjectById } from '#modules/projects/service';
 import { runsTeam, teamMcpEnabled } from '#modules/teams/service';
+import { requireWorkspaceManager } from '#modules/workspaces/service';
 import { isMcpRequest } from './mcp-request';
 import { HttpError } from './lib';
 import type { PermissionResource, PermissionAction } from './permissions';
@@ -82,6 +85,7 @@ export function entityGuard(
       await assertPermission(projectId, user, resource, action);
       if (feature) await assertProjectFeature(projectId, feature);
       await assertMcpAllowed(projectId, request.headers);
+      await assertProjectWritable(projectId, request.method);
       return { projectId };
     },
   });
@@ -104,6 +108,8 @@ type ProjectKeyParams = { projectKey: string };
 // The path param carried by every team-scoped route, and its resolution to the
 // caller's membership — shared by the three team macros below.
 type TeamIdParams = { teamId: string };
+
+type WorkspaceIdParams = { workspaceId: string };
 
 function resolveTeam(params: unknown, user: AuthUser | undefined | null) {
   return requireTeamMembership(Number((params as TeamIdParams).teamId), user);
@@ -141,6 +147,7 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
       async resolve({ params, user, request }) {
         const project = await requireProjectAccess((params as ProjectKeyParams).projectKey, user);
         assertMcpEnabled(project, isMcpRequest(request.headers));
+        assertWritable(project, request.method);
         return { project };
       },
     };
@@ -172,6 +179,8 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
           permission[1],
         );
         assertMcpEnabled(project, isMcpRequest(request.headers));
+        // Deleting the project is the one change an archived project still takes.
+        if (permission[0] !== 'danger_zone') assertWritable(project, request.method);
         return { project };
       },
     };
@@ -185,6 +194,7 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
       async resolve({ params, user, request }) {
         const project = await requireProjectOwner((params as ProjectKeyParams).projectKey, user);
         assertMcpEnabled(project, isMcpRequest(request.headers));
+        assertWritable(project, request.method);
         return { project };
       },
     };
@@ -197,6 +207,7 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
       async resolve({ params, user, request }) {
         const project = await requireProjectAdmin((params as ProjectKeyParams).projectKey, user);
         assertMcpEnabled(project, isMcpRequest(request.headers));
+        assertWritable(project, request.method);
         return { project };
       },
     };
@@ -204,6 +215,7 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
 
   // A project the caller's team runs, for what follows their rank in the team rather
   // than any project role: copying the project into one of their own.
+  // Copying only reads the source, so an archived project can still be copied.
   teamRunsProject(_enabled: boolean) {
     return {
       async resolve({ params, user, request }) {
@@ -229,6 +241,7 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
           permission[1],
         );
         assertMcpEnabled(project, isMcpRequest(request.headers));
+        assertWritable(project, request.method);
         return { project };
       },
     };
@@ -247,6 +260,7 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
           permission[1],
         );
         assertMcpEnabled(project, isMcpRequest(request.headers));
+        assertWritable(project, request.method);
         return { project };
       },
     };
@@ -295,6 +309,35 @@ export const guards = new Elysia({ name: 'guards' }).use(authContext).macro({
         );
         await assertTeamMcpAllowed(params, request.headers);
         return { membership };
+      },
+    };
+  },
+
+  // The workspace's owner or an admin. The workspace macros inject the resolved
+  // `standing` into the handler context.
+  workspaceManager(_enabled: boolean) {
+    return {
+      async resolve({ params, user }) {
+        const standing = await requireWorkspaceManager(
+          Number((params as WorkspaceIdParams).workspaceId),
+          user,
+        );
+        return { standing };
+      },
+    };
+  },
+
+  // Only the owner appoints and removes the admins.
+  workspaceOwner(_enabled: boolean) {
+    return {
+      async resolve({ params, user }) {
+        const standing = await requireWorkspaceManager(
+          Number((params as WorkspaceIdParams).workspaceId),
+          user,
+        );
+        if (standing.role !== 'owner')
+          throw new HttpError(403, 'Only the workspace owner can do this');
+        return { standing };
       },
     };
   },

@@ -3,7 +3,6 @@ import { auth } from '@repo/auth';
 import { app } from '#tests/helpers/app';
 import { resetDb } from '#tests/helpers/db';
 import { signUpTestUser } from '#tests/helpers/auth';
-import { patchOps, setupScim } from '#modules/scim/__tests__/helpers';
 
 // The MCP endpoint resolves the API key itself instead of going through
 // authContext, so the rules that gate a planner route have to hold here too.
@@ -46,19 +45,12 @@ describe('MCP authentication', () => {
     expect(res.status).toBe(401);
   });
 
-  it('refuses a key whose account was deactivated over SCIM', async () => {
-    const { scim } = await setupScim();
+  it('accepts a key of the account', async () => {
     const member = await signUpTestUser({ email: 'member@example.com' });
     const created = await auth.api.createApiKey({
       body: { userId: member.userId, name: 'mcp' },
     });
 
     expect((await initialize(created.key)).status).not.toBe(401);
-
-    await scim.scim.v2
-      .Users({ id: member.userId })
-      .patch(patchOps([{ op: 'replace', path: 'active', value: false }]));
-
-    expect((await initialize(created.key)).status).toBe(401);
   });
 });

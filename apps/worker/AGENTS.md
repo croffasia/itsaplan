@@ -65,8 +65,10 @@ running to completion in one.
   `putObject`/`attachmentObjectKey`) is checked before the upload and once
   more inside the same advisory lock (`lockAttachmentStorage`) an interactive
   upload takes, so the two never both pass a check that only one of them can
-  actually fit. A rejected attachment (`AttachmentRejectedError`) is logged
-  and skipped, not treated as a failed tick.
+  actually fit. A download that answers anything but 2xx (an error page, a
+  redirect) is refused before its body is read (`attachment-download.ts`). A
+  rejected attachment (`AttachmentRejectedError`) is logged and skipped, not
+  treated as a failed tick.
 
 ## Invariants
 
@@ -90,7 +92,8 @@ running to completion in one.
 - **Pure logic stays dependency-free.** `backoff.ts`, `signature.ts`, and
   `isRetryableStatus` import nothing from `@repo/db`, so unit tests run without a
   database. Keep DB access in `store.ts`. Same split for imports: `canonical.ts`,
-  `reader.ts`, `plane-adapter.ts`, and `cross-reference.ts` import nothing from
+  `reader.ts`, `plane-adapter.ts`, `cross-reference.ts`, and
+  `attachment-download.ts` import nothing from
   `@repo/db` (its state-category normalization, markdown conversion,
   cursor/rate-limit, and cross-reference matching logic are unit-tested
   directly); `@repo/db` access stays in `import-store.ts`.

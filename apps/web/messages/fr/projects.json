@@ -3,6 +3,10 @@
   "copyAction": "Copier le projet",
   "deleteAction": "Supprimer le projet",
   "leaveAction": "Quitter le projet",
+  "archiveAction": "Archiver le projet",
+  "restoreAction": "Restaurer le projet",
+  "archived": "{name} archivé",
+  "restored": "{name} restauré",
   "deleteDialog": {
     "title": "Supprimer {name} ?",
     "confirm": "Supprimer définitivement",

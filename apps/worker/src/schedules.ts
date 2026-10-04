@@ -17,12 +17,13 @@ type DueSchedule = {
 export async function enqueueDueSchedules(): Promise<boolean> {
   return await db.transaction(async (tx) => {
     const rows = (await tx.execute(sql`
-      SELECT id, agent_id AS "agentId", project_id AS "projectId", prompt, cron,
-             next_run_at AS "nextRunAt"
-      FROM agent_schedule
-      WHERE status = 'active' AND next_run_at <= now()
-      ORDER BY next_run_at, id
-      FOR UPDATE SKIP LOCKED
+      SELECT s.id, s.agent_id AS "agentId", s.project_id AS "projectId", s.prompt, s.cron,
+             s.next_run_at AS "nextRunAt"
+      FROM agent_schedule s
+      JOIN project p ON p.id = s.project_id
+      WHERE s.status = 'active' AND s.next_run_at <= now() AND p.archived_at IS NULL
+      ORDER BY s.next_run_at, s.id
+      FOR UPDATE OF s SKIP LOCKED
       LIMIT 50
     `)) as unknown as DueSchedule[];
 

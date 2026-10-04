@@ -125,6 +125,9 @@ export const ProjectResponse = t.Object({
   timeEstimateEnabled: t.Boolean(),
   timeLoggingEnabled: t.Boolean(),
   availableFeatures: t.Array(t.UnionEnum([...PROJECT_FEATURES])),
+  archivedAt: t.Nullable(
+    t.String({ description: 'When the project was archived, or null while it is active.' }),
+  ),
   createdAt: t.String(),
 });
 

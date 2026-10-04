@@ -30,6 +30,9 @@ import {
 } from '@repo/storage';
 import type { CanonicalState, CanonicalLabel, CanonicalCycle } from './canonical';
 import type { PlaneCredential } from './plane-adapter';
+import { AttachmentRejectedError } from './attachment-download';
+
+export { AttachmentRejectedError };
 
 // All @repo/db access for the Plane import: claiming due import_job rows (the
 // same FOR UPDATE SKIP LOCKED + lease pattern as store.ts uses for
@@ -698,12 +701,6 @@ export async function findProjectMemberUserId(
     .limit(1);
   return rows[0]?.userId ?? null;
 }
-
-// Thrown for an attachment that simply does not fit this instance's own
-// configured limits (file size, mime type, or project quota) — the Attachments
-// phase catches this specifically and moves on to the next attachment, rather
-// than treating it as a failed tick the way a network or database error is.
-export class AttachmentRejectedError extends Error {}
 
 export interface NewLocalAttachment {
   projectId: number;

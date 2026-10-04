@@ -24,6 +24,7 @@ const RESERVED_SLUGS = new Set([
   'reset-password',
   'settings',
   'share',
+  'workspaces',
 ]);
 
 export function isReservedSlug(slug: string): boolean {

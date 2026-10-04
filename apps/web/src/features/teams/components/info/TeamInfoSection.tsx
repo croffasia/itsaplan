@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { TeamBillingSection } from '@/cloud';
 import type { Team } from '@/lib/api/endpoints/teams';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/dates';
@@ -136,8 +135,6 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
         </SettingsSection>
 
         <TeamLeadsSection teamId={teamId} />
-
-        <TeamBillingSection teamId={teamId} />
 
         {canLeave(team) && (
           <SettingsSection

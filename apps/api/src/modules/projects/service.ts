@@ -40,7 +40,7 @@ import {
 } from '#shared/permissions';
 import { getProjectSetting, setProjectSetting } from '#shared/project-settings';
 import { PROJECT_FEATURES, featureLabel, type ProjectFeature } from '#shared/features';
-import { getLimits } from '#shared/limits';
+import { getTeamLimits } from '#shared/limits';
 import { deleteThreadsWhere } from '#modules/agents/core/runtime/memory';
 import { getProjectDefaults } from '#modules/settings/service';
 import { getDefaultRoleId } from '#modules/roles/service';
@@ -84,6 +84,7 @@ export interface ProjectRow {
   // the team that owns the project: its flag above reads as off and the settings page
   // does not offer it.
   availableFeatures: ProjectFeature[];
+  archivedAt: string | null;
   createdAt: string;
 }
 
@@ -130,7 +131,7 @@ const projectWithTeam = {
 // what turns a feature off everywhere: the web app reads the flags off this DTO, and
 // the route guards read them off the project the guard resolved.
 export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
-  const { blockedFeatures } = await getLimits({ teamId: row.teamId });
+  const { blockedFeatures } = await getTeamLimits(row.teamId);
   const on = (feature: ProjectFeature, stored: boolean) =>
     stored && !blockedFeatures.includes(feature);
   return {
@@ -156,6 +157,7 @@ export async function mapProject(row: ProjectWithTeam): Promise<ProjectRow> {
     timeEstimateEnabled: row.timeEstimateEnabled,
     timeLoggingEnabled: row.timeLoggingEnabled,
     availableFeatures: PROJECT_FEATURES.filter((feature) => !blockedFeatures.includes(feature)),
+    archivedAt: row.archivedAt ? iso(row.archivedAt) : null,
     createdAt: iso(row.createdAt),
   };
 }
@@ -173,6 +175,7 @@ export async function listProjects(
   const term = opts.q?.trim().replace(/[\\%_]/g, '\\$&');
   const where = and(
     eq(projectMember.userId, userId),
+    isNull(project.archivedAt),
     opts.mcpOnly ? and(eq(project.mcpEnabled, true), eq(team.mcpEnabled, true)) : undefined,
     opts.teamId !== undefined ? eq(project.teamId, opts.teamId) : undefined,
     term
@@ -544,6 +547,17 @@ export async function updateProject(
   return getProjectById(projectId);
 }
 
+export async function setProjectArchived(
+  projectId: number,
+  archived: boolean,
+): Promise<ProjectRow | null> {
+  await db
+    .update(project)
+    .set({ archivedAt: archived ? new Date() : null })
+    .where(eq(project.id, projectId));
+  return getProjectById(projectId);
+}
+
 // The project's feature toggles, read from the project row.
 export function projectFeatures(row: ProjectRow): ProjectFeatures {
   return {
@@ -564,7 +578,7 @@ export async function setProjectFeatures(
   projectId: number,
   patch: Partial<ProjectFeatures>,
 ): Promise<ProjectRow | null> {
-  const { blockedFeatures } = await getLimits({ teamId: await getProjectTeamId(projectId) });
+  const { blockedFeatures } = await getTeamLimits(await getProjectTeamId(projectId));
   const blocked = blockedFeatures.find((feature) => patch[feature]);
   if (blocked) {
     throw new HttpError(400, `${featureLabel(blocked)} are not available for this team`);

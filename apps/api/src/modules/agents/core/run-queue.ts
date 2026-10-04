@@ -1,4 +1,4 @@
-import { db, agentRun, issue, project } from '@repo/db';
+import { db, agentRun, issue, project, team } from '@repo/db';
 import { and, desc, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm';
 import { intEnv, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
@@ -17,20 +17,21 @@ export const agentRunConfig = {
   leaseSeconds: () => intEnv('AGENT_RUN_LEASE_SECONDS', 300),
 };
 
-// Runs of this team's agents that hold a slot and were queued before this one. A claim
+// Runs of this workspace's agents that hold a slot and were queued before this one. A claim
 // stamps started_at and pushes next_attempt_at forward, so a pending run that is
 // stamped and still inside that window is one of them — as is a run waiting out its
 // retry backoff, which holds a slot it is not using. Counting only the older runs is
 // what keeps a ceiling from turning away every run of a burst at once: each yields to
 // the ones ahead of it and the rest come back on their next attempt.
-export async function countRunsAhead(teamId: number, runId: number): Promise<number> {
+export async function countRunsAhead(workspaceId: number, runId: number): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(agentRun)
     .innerJoin(project, eq(project.id, agentRun.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
     .where(
       and(
-        eq(project.teamId, teamId),
+        eq(team.workspaceId, workspaceId),
         eq(agentRun.status, 'pending'),
         isNotNull(agentRun.startedAt),
         gt(agentRun.nextAttemptAt, sql`now()`),

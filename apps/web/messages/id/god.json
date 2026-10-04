@@ -269,49 +269,5 @@
     "scopes": "Cakupan (Scopes)",
     "scopesHint": "Dipisahkan oleh spasi. openid wajib diisi; profile dan email mengisi nama dan alamat.",
     "oidcRedirectUriHint": "Daftarkan ini sebagai URI pengalihan pada klien di penyedia identitas Anda. Penyedia akan menolak proses masuk jika tidak cocok persis."
-  },
-  "scim": {
-    "saved": "Pengaturan SCIM disimpan",
-    "provisioning": "Provisioning",
-    "provisioningConfigured": "Penyedia identitas Anda membuat, memperbarui, dan menonaktifkan akun pada instance ini.",
-    "provisioningMissing": "Buat token terlebih dahulu.",
-    "token": "Token",
-    "noToken": "Belum ada token yang dibuat",
-    "tokenHint": "Token pembawa (bearer) yang dikirimkan penyedia identitas Anda. Token hanya ditampilkan sekali; membuat token baru akan menghentikan fungsi token lama.",
-    "generateToken": "Buat token",
-    "replaceToken": "Ganti token",
-    "baseUrl": "Endpoint SCIM",
-    "baseUrlHint": "Arahkan penyedia identitas Anda ke alamat ini.",
-    "copyBaseUrl": "Salin titik akhir SCIM",
-    "groups": "Grup",
-    "groupsHint": "Grup yang telah didorong oleh penyedia identitas Anda. Daftar ini milik mereka; apa yang diberikan setiap grup diatur di sini.",
-    "groupsEmpty": "Belum ada grup yang didorong.",
-    "memberCount": "{count, plural, =0 {Tidak ada anggota} one {# anggota} other {# anggota}}",
-    "grantsNothing": "belum memberikan izin apa pun",
-    "editMappings": "Ubah akses",
-    "roleOwner": "Pemilik",
-    "roleMember": "Anggota",
-    "tokenDialog": {
-      "title": "Buat token SCIM",
-      "description": "Token ditampilkan sekali dan tidak dapat dibaca kembali. Token apa pun yang sedang digunakan akan berhenti berfungsi.",
-      "submit": "Buat",
-      "submitPending": "Membuat…",
-      "createdTitle": "Token SCIM Anda",
-      "createdDescription": "Salin ke penyedia identitas Anda sekarang. Token tidak dapat ditampilkan lagi.",
-      "copy": "Salin token"
-    },
-    "mappings": {
-      "title": "Apa yang diberikan {group}",
-      "description": "Anggota grup ini bergabung dengan proyek yang tercantum di sini. Menghapus proyek akan mencabut keanggotaan yang diberikan grup ini.",
-      "empty": "Grup ini belum memberikan akses apa pun.",
-      "addProject": "Tambah proyek…",
-      "role": "Peran",
-      "roleOwner": "Pemilik",
-      "roleMember": "Anggota",
-      "projectRole": "Peran proyek",
-      "defaultRole": "Peran bawaan",
-      "remove": "Hapus proyek",
-      "saved": "Akses grup disimpan"
-    }
   }
 }

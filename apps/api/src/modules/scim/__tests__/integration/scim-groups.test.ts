@@ -1,6 +1,7 @@
 import { describe, expect, it, beforeEach } from 'bun:test';
 import { resetDb } from '#tests/helpers/db';
-import { patchOps, scimUserBody, setupScim } from '../helpers';
+import { addUser } from '#modules/god/__tests__/helpers';
+import { patchOps, scimUserBody, setupOtherWorkspace, setupScim } from '../helpers';
 
 const groupBody = (overrides: Record<string, unknown> = {}) => ({
   schemas: ['urn:ietf:params:scim:schemas:core:2.0:Group'],
@@ -228,6 +229,53 @@ describe('SCIM groups', () => {
       expect(
         (await scim.scim.v2.Groups({ id: '00000000-0000-4000-8000-000000000000' }).delete()).status,
       ).toBe(404);
+    });
+  });
+
+  describe('workspaces', () => {
+    it("keeps one workspace's groups away from another's provider", async () => {
+      const { god, scim } = await setupScim();
+      const other = await setupOtherWorkspace(god);
+      const created = await scim.scim.v2.Groups.post(groupBody());
+
+      const list = await other.scim.scim.v2.Groups.get({ query: {} });
+      expect(list.data).toMatchObject({ totalResults: 0 });
+      expect((await other.scim.scim.v2.Groups({ id: created.data!.id }).get()).status).toBe(404);
+      expect((await other.scim.scim.v2.Groups({ id: created.data!.id }).delete()).status).toBe(404);
+      // A name is unique within a workspace only.
+      expect((await other.scim.scim.v2.Groups.post(groupBody())).status).toBe(201);
+    });
+
+    it('refuses a member the workspace does not see', async () => {
+      const { god } = await setupScim();
+      const other = await setupOtherWorkspace(god);
+      const outsider = await addUser({ email: 'outsider@example.com' });
+
+      const res = await other.scim.scim.v2.Groups.post(
+        groupBody({ members: [{ value: outsider.id }] }),
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it('keeps accepting changes to a group holding a member the workspace no longer sees', async () => {
+      const { god, scim } = await setupScim();
+      const outsider = await addUser({ email: 'outsider@example.com' });
+      const created = await scim.scim.v2.Groups.post(
+        groupBody({ members: [{ value: outsider.id }] }),
+      );
+      const [outsiderTeam] = (await outsider.api.teams.get()).data!;
+      await setupOtherWorkspace(god, [outsiderTeam!.id]);
+      const ada = await scim.scim.v2.Users.post(scimUserBody());
+
+      const res = await scim.scim.v2
+        .Groups({ id: created.data!.id })
+        .patch(patchOps([{ op: 'add', path: 'members', value: [{ value: ada.data!.id }] }]));
+
+      expect(res.status).toBe(200);
+      expect(res.data!.members.map((m) => m.value).sort()).toEqual(
+        [outsider.id, ada.data!.id].sort(),
+      );
     });
   });
 });

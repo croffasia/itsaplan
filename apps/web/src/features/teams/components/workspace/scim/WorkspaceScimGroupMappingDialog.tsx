@@ -2,7 +2,8 @@
 
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import type { InstanceScimGroup } from '@/lib/api/endpoints/scim';
+import type { WorkspaceScimGroup } from '@/lib/api/endpoints/workspaces';
+import { useWorkspaceProjectOptionsQuery } from '@/services/workspaces.service';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,24 +13,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import GodScimMappingRow from './GodScimMappingRow';
-import { useGodScimMappingForm } from '../../hooks/useGodScimMappingForm';
-import { useInstanceProjectOptionsQuery } from '../../services/god.service';
+import WorkspaceScimMappingRow from './WorkspaceScimMappingRow';
+import { useWorkspaceScimMappingForm } from '../../../hooks/useWorkspaceScimMappingForm';
 
 // What one provisioned group grants. Saving reconciles the membership of every
 // project the change touched, so a project taken off this list loses the members the
 // group put there.
-export default function GodScimGroupMappingDialog({
+export default function WorkspaceScimGroupMappingDialog({
+  workspaceId,
   group,
   onClose,
 }: {
-  group: InstanceScimGroup;
+  workspaceId: number;
+  group: WorkspaceScimGroup;
   onClose: () => void;
 }) {
-  const t = useTranslations('god.scim.mappings');
+  const t = useTranslations('teams.workspace.scim.mappings');
   const tCommon = useTranslations('common');
-  const form = useGodScimMappingForm(group);
-  const projects = useInstanceProjectOptionsQuery();
+  const form = useWorkspaceScimMappingForm(workspaceId, group);
+  const projects = useWorkspaceProjectOptionsQuery(workspaceId);
 
   const available = (projects.data ?? []).filter(
     (project) => !form.takenProjectIds.includes(project.id),
@@ -55,7 +57,7 @@ export default function GodScimGroupMappingDialog({
         ) : (
           <div className="space-y-3">
             {form.mappings.map((mapping, index) => (
-              <GodScimMappingRow
+              <WorkspaceScimMappingRow
                 key={mapping.projectId}
                 mapping={mapping}
                 projects={projects.data ?? []}

@@ -269,49 +269,5 @@
     "scopes": "权限范围",
     "scopesHint": "以空格分隔。openid 为必需；profile 和 email 用于填充姓名和邮箱。",
     "oidcRedirectUriHint": "将此地址注册为身份提供方客户端的重定向 URI。不完全一致时提供方会拒绝登录。"
-  },
-  "scim": {
-    "saved": "SCIM 设置已保存",
-    "provisioning": "账号预配",
-    "provisioningConfigured": "身份提供方会在此实例上创建、更新和停用账号。",
-    "provisioningMissing": "请先生成令牌。",
-    "token": "令牌",
-    "noToken": "尚未生成令牌",
-    "tokenHint": "身份提供方发送的持有者令牌。仅显示一次；生成新令牌会使旧令牌失效。",
-    "generateToken": "生成令牌",
-    "replaceToken": "更换令牌",
-    "baseUrl": "SCIM 地址",
-    "baseUrlHint": "在身份提供方中填入此地址。",
-    "copyBaseUrl": "复制 SCIM 地址",
-    "groups": "群组",
-    "groupsHint": "身份提供方推送的群组。列表由其维护；每个群组授予什么在这里设置。",
-    "groupsEmpty": "尚未推送任何群组。",
-    "memberCount": "{count, plural, =0 {没有成员} other {# 位成员}}",
-    "grantsNothing": "尚未授予任何权限",
-    "editMappings": "编辑权限",
-    "roleOwner": "所有者",
-    "roleMember": "成员",
-    "tokenDialog": {
-      "title": "生成 SCIM 令牌",
-      "description": "令牌仅显示一次，之后无法查看。正在使用的令牌将立即失效。",
-      "submit": "生成",
-      "submitPending": "正在生成…",
-      "createdTitle": "你的 SCIM 令牌",
-      "createdDescription": "现在把它复制到身份提供方。之后无法再次显示。",
-      "copy": "复制令牌"
-    },
-    "mappings": {
-      "title": "{group} 授予的权限",
-      "description": "该群组的成员会加入这里列出的项目。移除项目会收回此群组授予的成员资格。",
-      "empty": "该群组尚未授予任何权限。",
-      "addProject": "添加项目…",
-      "role": "角色",
-      "roleOwner": "所有者",
-      "roleMember": "成员",
-      "projectRole": "项目角色",
-      "defaultRole": "默认角色",
-      "remove": "移除项目",
-      "saved": "群组权限已保存"
-    }
   }
 }

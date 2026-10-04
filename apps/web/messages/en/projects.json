@@ -3,6 +3,10 @@
   "copyAction": "Copy project",
   "deleteAction": "Delete project",
   "leaveAction": "Leave project",
+  "archiveAction": "Archive project",
+  "restoreAction": "Restore project",
+  "archived": "{name} archived",
+  "restored": "{name} restored",
   "deleteDialog": {
     "title": "Delete {name}?",
     "confirm": "Delete permanently",

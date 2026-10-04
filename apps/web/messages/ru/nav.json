@@ -64,6 +64,8 @@
     "noHiddenResults": "No hidden projects match your search",
     "noVisibleProjects": "No projects in your view",
     "hintMove": "перейти",
-    "hintOpen": "открыть"
+    "hintOpen": "открыть",
+    "workspaces": "Воркспейсы",
+    "workspaceSettings": "Настройки воркспейса"
   }
 }

@@ -185,6 +185,20 @@ export async function assertProjectFeature(
   if (project) assertFeatureEnabled(project, feature);
 }
 
+// An archived project is read-only until it is restored: only a GET or HEAD passes.
+export function assertWritable(project: ProjectRow, method: string): void {
+  if (project.archivedAt && method !== 'GET' && method !== 'HEAD') {
+    throw new HttpError(403, 'This project is archived; restore it to make changes');
+  }
+}
+
+// The same check for a caller that resolved only the project's id.
+export async function assertProjectWritable(projectId: number, method: string): Promise<void> {
+  if (method === 'GET' || method === 'HEAD') return;
+  const project = await getProjectById(projectId);
+  if (project) assertWritable(project, method);
+}
+
 // Formats a resource key for an error message: "custom_fields" -> "custom fields".
 function resourceLabel(resource: PermissionResource): string {
   return resource.replace(/_/g, ' ');

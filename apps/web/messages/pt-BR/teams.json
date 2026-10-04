@@ -1,4 +1,5 @@
 {
+  "archived": "Arquivado",
   "create": {
     "title": "Novo time",
     "namePlaceholder": "Nome do time",
@@ -9,6 +10,8 @@
     "submit": "Criar time"
   },
   "sections": {
+    "collapse": "Recolher seções",
+    "expand": "Expandir seções",
     "info": {
       "title": "Informações",
       "description": "O time e seu lugar nele."
@@ -538,5 +541,87 @@
     "projectsHint": "Um novo projeto começa com o padrão da instância.",
     "noProjects": "Este time ainda não tem projetos.",
     "projectToggleAria": "Alternar acesso MCP para {project}"
+  },
+  "workspace": {
+    "rail": "Workspaces",
+    "create": "Novo workspace",
+    "createUnavailableTitle": "Mais workspaces",
+    "createUnavailableHint": "Esta instância tem um workspace. Criar e gerenciar workspaces está disponível no Cloud e no Pro auto-hospedado.",
+    "general": "Geral",
+    "roles": {
+      "owner": "Proprietário",
+      "admin": "Administrador"
+    },
+    "info": {
+      "title": "Workspace",
+      "description": "O workspace ao qual suas equipes pertencem.",
+      "workspace": "Workspace",
+      "workspaceHint": "O nome que todos veem.",
+      "role": "Sua função",
+      "saved": "Workspace salvo"
+    },
+    "managers": {
+      "title": "Gestores",
+      "description": "O proprietário e os administradores gerenciam o workspace.",
+      "ownerOnly": "O proprietário e os administradores gerenciam o workspace. Só o proprietário adiciona ou remove administradores.",
+      "person": "Pessoa",
+      "role": "Função",
+      "addAction": "Adicionar administrador",
+      "addTitle": "Adicionar administrador",
+      "addDescription": "Escolha alguém das equipes do workspace.",
+      "search": "Buscar por nome ou e-mail",
+      "noCandidates": "Ninguém para adicionar",
+      "added": "{name} agora é administrador",
+      "removeAction": "Remover administrador",
+      "removeTitle": "Remover {name} como administrador?",
+      "removeDescription": "A pessoa continua nas equipes, mas não pode gerenciar o workspace.",
+      "removed": "{name} não é mais administrador"
+    },
+    "scim": {
+      "title": "SCIM",
+      "description": "Permita que um provedor de identidade adicione pessoas a este workspace, remova-as e conceda acesso a projetos por seus grupos.",
+      "saved": "Configurações SCIM salvas",
+      "provisioning": "Provisionamento",
+      "provisioningConfigured": "Seu provedor de identidade adiciona pessoas a este workspace e as remove.",
+      "provisioningMissing": "Gere um token primeiro.",
+      "token": "Token",
+      "noToken": "Nenhum token gerado ainda",
+      "tokenHint": "O token bearer que seu provedor de identidade envia. É mostrado uma vez; gerar um novo faz o antigo parar de funcionar.",
+      "generateToken": "Gerar token",
+      "replaceToken": "Substituir token",
+      "baseUrl": "Endpoint SCIM",
+      "baseUrlHint": "Aponte seu provedor de identidade para este endereço.",
+      "copyBaseUrl": "Copiar endpoint SCIM",
+      "groups": "Grupos",
+      "groupsHint": "Os grupos que seu provedor de identidade enviou. A lista é dele; o que cada grupo concede é definido aqui.",
+      "groupsEmpty": "Nenhum grupo foi enviado ainda.",
+      "memberCount": "{count, plural, =0 {Nenhum membro} one {# membro} other {# membros}}",
+      "grantsNothing": "ainda não concede nada",
+      "editMappings": "Editar acesso",
+      "roleOwner": "Dono",
+      "roleMember": "Membro",
+      "tokenDialog": {
+        "title": "Gerar um token SCIM",
+        "description": "O token é mostrado uma vez e não pode ser lido de volta. Qualquer token já em uso para de funcionar.",
+        "submit": "Gerar",
+        "submitPending": "Gerando…",
+        "createdTitle": "Seu token SCIM",
+        "createdDescription": "Copie-o para seu provedor de identidade agora. Ele não pode ser mostrado novamente.",
+        "copy": "Copiar token"
+      },
+      "mappings": {
+        "title": "O que {group} concede",
+        "description": "Membros deste grupo entram nos projetos listados aqui. Remover um projeto tira os vínculos que este grupo lhe deu.",
+        "empty": "Este grupo ainda não concede nada.",
+        "addProject": "Adicionar um projeto…",
+        "role": "Função",
+        "roleOwner": "Dono",
+        "roleMember": "Membro",
+        "projectRole": "Função no projeto",
+        "defaultRole": "Função padrão",
+        "remove": "Remover projeto",
+        "saved": "Acesso do grupo salvo"
+      }
+    }
   }
 }

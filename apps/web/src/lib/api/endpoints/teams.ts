@@ -12,6 +12,7 @@ import {
 // A team the caller belongs to. It owns projects and holds its own member list.
 export interface Team {
   id: number;
+  workspaceId: number;
   name: string;
   // The team's segment in the app's paths (/acme/MKT). Null until an owner sets one.
   slug: string | null;
@@ -76,6 +77,7 @@ export interface TeamProject {
   memberCount: number;
   owners: { userId: string; name: string; image: string | null }[];
   isMember: boolean;
+  archivedAt: string | null;
   createdAt: string;
 }
 
@@ -206,7 +208,7 @@ export const listTeamProjectMembers = (
     `/teams/${teamId}/projects/${projectId}/members${memberListQuery(params)}`,
   );
 
-export const createTeam = (input: { name: string; slug: string }) =>
+export const createTeam = (input: { name: string; slug: string; workspaceId: number }) =>
   request<Team>('/teams', { method: 'POST', body: JSON.stringify(input) });
 
 export const updateTeam = (teamId: number, input: { name?: string; slug?: string }) =>
@@ -277,6 +279,12 @@ export const updateTeamProject = (
     method: 'PATCH',
     body: JSON.stringify(patch),
   });
+
+export const archiveTeamProject = (teamId: number, projectId: number) =>
+  request<Project>(`/teams/${teamId}/projects/${projectId}/archive`, { method: 'POST' });
+
+export const restoreTeamProject = (teamId: number, projectId: number) =>
+  request<Project>(`/teams/${teamId}/projects/${projectId}/restore`, { method: 'POST' });
 
 export const deleteTeamProject = (teamId: number, projectId: number) =>
   request<void>(`/teams/${teamId}/projects/${projectId}`, { method: 'DELETE' });

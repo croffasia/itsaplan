@@ -45,7 +45,8 @@ of them affect data you may not notice is missing until later.
 - **Attachment files**, downloaded and attached to the same issue they were on in Plane.
   A file is skipped, not imported, when it is larger than this instance's own upload
   limit or of a file type this instance doesn't accept — the same limits an ordinary
-  attachment upload on this instance is held to. A skipped file is only noted in the
+  attachment upload on this instance is held to — or when Plane's file storage answers
+  the download with an error instead of the file. A skipped file is only noted in the
   server log, not shown anywhere in this screen today. Re-running an import reuses a
   file already attached with the same name on the same issue, rather than attaching it
   a second time.

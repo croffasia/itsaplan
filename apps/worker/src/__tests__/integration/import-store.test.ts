@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import {
   db,
   team,
+  workspace,
   project,
   projectColumn,
   issue,
@@ -30,7 +31,14 @@ import {
 // matching notification-send.test.ts's own convention.
 
 async function makeProject(): Promise<{ projectId: number; columnId: number; userId: string }> {
-  const [teamRow] = await db.insert(team).values({ name: 'Importers' }).returning({ id: team.id });
+  const [ws] = await db
+    .insert(workspace)
+    .values({ name: 'Importers' })
+    .returning({ id: workspace.id });
+  const [teamRow] = await db
+    .insert(team)
+    .values({ workspaceId: ws!.id, name: 'Importers' })
+    .returning({ id: team.id });
   const [projectRow] = await db
     .insert(project)
     .values({ teamId: teamRow!.id, key: randomUUID().slice(0, 8), name: 'Imported' })

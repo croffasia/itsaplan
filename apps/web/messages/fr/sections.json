@@ -50,10 +50,6 @@
     "auth-provider": {
       "label": "Fournisseur d'authentification",
       "description": "Les comptes externes avec lesquels les utilisateurs peuvent se connecter."
-    },
-    "scim": {
-      "label": "SCIM",
-      "description": "Permettez à un fournisseur d'identité de créer, mettre à jour et désactiver des comptes sur cette instance, et d'accorder l'accès aux projets via ses groupes."
     }
   },
   "settings": {

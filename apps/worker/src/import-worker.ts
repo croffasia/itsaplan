@@ -1,4 +1,3 @@
-import { pinnedFetch } from '@repo/net';
 import { getStorageSettings, mimeAllowed, MB } from '@repo/db';
 import { startPollLoop, type WorkerHandle } from './poll-loop';
 import { intEnv } from './env';
@@ -7,6 +6,7 @@ import { PlaneReader, PlaneRateLimitedError } from './plane-adapter';
 import type { SourceReader } from './reader';
 import type { CanonicalComment, CanonicalStateCategory } from './canonical';
 import { extractCrossReferences, applyCrossReferenceReplacements } from './cross-reference';
+import { downloadAttachment } from './attachment-download';
 import {
   claimDueImportJobs,
   decryptImportCredential,
@@ -486,11 +486,7 @@ async function runAttachments(job: ClaimedImportJob, reader: SourceReader): Prom
           );
         }
         const url = await reader.resolveAttachmentDownloadUrl(record.sourceId, attachment.sourceId);
-        const res = await pinnedFetch(url, {
-          timeoutMs: 30_000,
-          maxBytes: limits.maxAttachmentMb * MB,
-        });
-        const bytes = Buffer.from(await res.arrayBuffer());
+        const bytes = await downloadAttachment(url, limits.maxAttachmentMb * MB);
         await createLocalAttachmentAndRecord(job.id, attachment.sourceId, {
           projectId: job.projectId,
           issueId: record.localId,

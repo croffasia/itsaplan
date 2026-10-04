@@ -57,7 +57,7 @@ export const HOTKEYS: HotkeyDef[] = [
     id: 'sidebar.toggle',
     group: 'general',
     combo: 'mod+b',
-    scope: 'global',
+    scope: 'app',
     fixed: true,
   },
   { id: 'issue.new', group: 'general', combo: 'n', scope: 'app' },

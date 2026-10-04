@@ -1,5 +1,5 @@
 import { auth } from '@repo/auth';
-import { db } from '@repo/db';
+import { db, instanceWorkspaceId } from '@repo/db';
 import { insertOwnedTeam } from '#modules/teams/service';
 
 export interface TestUser {
@@ -55,7 +55,9 @@ export async function signUpTestUser(
   const username = body.user?.username;
   if (!username) throw new Error(`signUpTestUser: no username returned for ${email}`);
   if (overrides.team !== false) {
-    await db.transaction((tx) => insertOwnedTeam(tx, username, userId));
+    await db.transaction(async (tx) =>
+      insertOwnedTeam(tx, await instanceWorkspaceId(tx), username, userId),
+    );
   }
 
   return { cookie, userId, email, username };

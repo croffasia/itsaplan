@@ -92,9 +92,12 @@ and mime type are checked against the instance's own upload settings (`getStorag
 checked once before the upload (so an already-over-quota file is never written to the
 object store at all) and once more inside the same advisory lock
 (`lockAttachmentStorage`) an interactive upload takes, immediately before the insert — the
-two never both pass a check the project can only actually fit one of. A rejected attachment
-(`AttachmentRejectedError`, `import-store.ts`) is logged and skipped, not treated as a
-failed tick that retries. Re-running an import reuses an existing attachment by exact
+two never both pass a check the project can only actually fit one of. A download that
+answers anything but 2xx is refused before its body is read (`downloadAttachment`,
+`attachment-download.ts`): `pinnedFetch` returns error statuses and redirects as-is, and
+their body is not the file. A rejected attachment (`AttachmentRejectedError`) is logged and
+skipped, not treated as a failed tick that retries. Re-running an import reuses an existing
+attachment by exact
 filename on the same issue, the same reuse-by-content-match philosophy every other entity
 here already has.
 

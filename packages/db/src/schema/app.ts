@@ -49,21 +49,60 @@ export const appSecret = pgTable('app_secret', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-// A team owns projects and holds its own member list. Every project belongs to exactly
-// one team.
-export const team = pgTable('team', {
+// A workspace owns teams. A self-hosted instance has exactly one, created by the
+// migration that introduced the table; its members are derived from its teams.
+export const workspace = pgTable('workspace', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
-  // The team's segment in web URLs (/acme/MKT). Null until an owner sets one; the
-  // team id stands in for it until then.
-  slug: text('slug').unique(),
-  // Whether the team is reachable through the MCP server at all. Off closes both the
-  // team's own resources (agents, skills, tools, roles, integrations) and every
-  // project it owns, whatever each project's own flag says.
-  mcpEnabled: boolean('mcp_enabled').notNull().default(true),
-  defaultAgentIds: jsonb('default_agent_ids').$type<number[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+// The people who administer a workspace. Nobody else is listed here: membership comes
+// from team_member.
+export const workspaceManager = pgTable(
+  'workspace_manager',
+  {
+    workspaceId: integer('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    role: text('role').notNull().default('admin'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.workspaceId, t.userId] }),
+    check('workspace_manager_role_check', sql`${t.role} IN ('owner', 'admin')`),
+    uniqueIndex('workspace_manager_owner_uq')
+      .on(t.workspaceId)
+      .where(sql`${t.role} = 'owner'`),
+    index('workspace_manager_user_idx').on(t.userId),
+  ],
+);
+
+// A team owns projects and holds its own member list. Every project belongs to exactly
+// one team.
+export const team = pgTable(
+  'team',
+  {
+    id: serial('id').primaryKey(),
+    workspaceId: integer('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // The team's segment in web URLs (/acme/MKT). Null until an owner sets one; the
+    // team id stands in for it until then.
+    slug: text('slug').unique(),
+    // Whether the team is reachable through the MCP server at all. Off closes both the
+    // team's own resources (agents, skills, tools, roles, integrations) and every
+    // project it owns, whatever each project's own flag says.
+    mcpEnabled: boolean('mcp_enabled').notNull().default(true),
+    defaultAgentIds: jsonb('default_agent_ids').$type<number[]>().notNull().default([]),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('team_workspace_idx').on(t.workspaceId)],
+);
 
 // Team membership and the role it carries. The roles are fixed, unlike the
 // per-project ones: 'owner' is the account the team was created for, 'manager' and
@@ -135,6 +174,9 @@ export const project = pgTable(
     // the same place. Independent of the time estimate: a team can log time without
     // estimating first. Turning it off hides the entries and keeps them.
     timeLoggingEnabled: boolean('time_logging_enabled').notNull().default(false),
+    // When set, the project is archived: read-only, left out of the members' project
+    // lists, and its agent schedules do not run. Its rows are kept and it can be restored.
+    archivedAt: timestamp('archived_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [unique('project_team_key_uq').on(t.teamId, t.key)],

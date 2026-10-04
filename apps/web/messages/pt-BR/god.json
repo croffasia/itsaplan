@@ -269,49 +269,5 @@
     "scopes": "Escopos",
     "scopesHint": "Separados por espaços. openid é obrigatório; profile e email preenchem o nome e o endereço.",
     "oidcRedirectUriHint": "Registre isto como um URI de redirecionamento no cliente no seu provedor de identidade. O provedor recusa o login se não corresponder exatamente."
-  },
-  "scim": {
-    "saved": "Configurações SCIM salvas",
-    "provisioning": "Provisionamento",
-    "provisioningConfigured": "Seu provedor de identidade cria, atualiza e desativa contas nesta instância.",
-    "provisioningMissing": "Gere um token primeiro.",
-    "token": "Token",
-    "noToken": "Nenhum token gerado ainda",
-    "tokenHint": "O token bearer que seu provedor de identidade envia. É mostrado uma vez; gerar um novo faz o antigo parar de funcionar.",
-    "generateToken": "Gerar token",
-    "replaceToken": "Substituir token",
-    "baseUrl": "Endpoint SCIM",
-    "baseUrlHint": "Aponte seu provedor de identidade para este endereço.",
-    "copyBaseUrl": "Copiar endpoint SCIM",
-    "groups": "Grupos",
-    "groupsHint": "Os grupos que seu provedor de identidade enviou. A lista é dele; o que cada grupo concede é definido aqui.",
-    "groupsEmpty": "Nenhum grupo foi enviado ainda.",
-    "memberCount": "{count, plural, =0 {Nenhum membro} one {# membro} other {# membros}}",
-    "grantsNothing": "ainda não concede nada",
-    "editMappings": "Editar acesso",
-    "roleOwner": "Dono",
-    "roleMember": "Membro",
-    "tokenDialog": {
-      "title": "Gerar um token SCIM",
-      "description": "O token é mostrado uma vez e não pode ser lido de volta. Qualquer token já em uso para de funcionar.",
-      "submit": "Gerar",
-      "submitPending": "Gerando…",
-      "createdTitle": "Seu token SCIM",
-      "createdDescription": "Copie-o para seu provedor de identidade agora. Ele não pode ser mostrado novamente.",
-      "copy": "Copiar token"
-    },
-    "mappings": {
-      "title": "O que {group} concede",
-      "description": "Membros deste grupo entram nos projetos listados aqui. Remover um projeto tira os vínculos que este grupo lhe deu.",
-      "empty": "Este grupo ainda não concede nada.",
-      "addProject": "Adicionar um projeto…",
-      "role": "Função",
-      "roleOwner": "Dono",
-      "roleMember": "Membro",
-      "projectRole": "Função no projeto",
-      "defaultRole": "Função padrão",
-      "remove": "Remover projeto",
-      "saved": "Acesso do grupo salvo"
-    }
   }
 }

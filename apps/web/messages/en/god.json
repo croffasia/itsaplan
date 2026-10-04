@@ -269,49 +269,5 @@
     "scopes": "Scopes",
     "scopesHint": "Separated by spaces. openid is required; profile and email fill in the name and address.",
     "oidcRedirectUriHint": "Register this as a redirect URI on the client at your identity provider. The provider refuses the sign-in if it does not match exactly."
-  },
-  "scim": {
-    "saved": "SCIM settings saved",
-    "provisioning": "Provisioning",
-    "provisioningConfigured": "Your identity provider creates, updates and deactivates accounts on this instance.",
-    "provisioningMissing": "Generate a token first.",
-    "token": "Token",
-    "noToken": "No token generated yet",
-    "tokenHint": "The bearer token your identity provider sends. It is shown once; generating a new one stops the old one working.",
-    "generateToken": "Generate token",
-    "replaceToken": "Replace token",
-    "baseUrl": "SCIM endpoint",
-    "baseUrlHint": "Point your identity provider at this address.",
-    "copyBaseUrl": "Copy SCIM endpoint",
-    "groups": "Groups",
-    "groupsHint": "The groups your identity provider has pushed. The list is theirs; what each group grants is set here.",
-    "groupsEmpty": "No groups have been pushed yet.",
-    "memberCount": "{count, plural, =0 {No members} one {# member} other {# members}}",
-    "grantsNothing": "grants nothing yet",
-    "editMappings": "Edit access",
-    "roleOwner": "Owner",
-    "roleMember": "Member",
-    "tokenDialog": {
-      "title": "Generate a SCIM token",
-      "description": "The token is shown once and cannot be read back. Any token already in use stops working.",
-      "submit": "Generate",
-      "submitPending": "Generating…",
-      "createdTitle": "Your SCIM token",
-      "createdDescription": "Copy it into your identity provider now. It cannot be shown again.",
-      "copy": "Copy token"
-    },
-    "mappings": {
-      "title": "What {group} grants",
-      "description": "Members of this group join the projects listed here. Removing a project takes away the memberships this group gave it.",
-      "empty": "This group grants nothing yet.",
-      "addProject": "Add a project…",
-      "role": "Role",
-      "roleOwner": "Owner",
-      "roleMember": "Member",
-      "projectRole": "Project role",
-      "defaultRole": "Default role",
-      "remove": "Remove project",
-      "saved": "Group access saved"
-    }
   }
 }

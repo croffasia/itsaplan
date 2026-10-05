@@ -66,7 +66,6 @@
     "hintMove": "移动",
     "hintOpen": "打开",
     "workspaces": "工作区",
-    "workspaceSettings": "工作区设置",
-    "viaWorkspace": "通过工作区"
+    "workspaceSettings": "工作区设置"
   }
 }

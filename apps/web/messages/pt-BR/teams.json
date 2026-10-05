@@ -112,8 +112,7 @@
       "manager": "Gerente",
       "member": "Membro",
       "agent": "Agente de IA"
-    },
-    "viaWorkspace": "Pelo workspace"
+    }
   },
   "roles": {
     "ownerOnly": "Só um dono ou gerente do time pode gerenciar funções.",
@@ -552,6 +551,10 @@
     "roles": {
       "owner": "Proprietário",
       "admin": "Administrador"
+    },
+    "titles": {
+      "owner": "Proprietário do workspace",
+      "admin": "Administrador do workspace"
     },
     "info": {
       "title": "Workspace",

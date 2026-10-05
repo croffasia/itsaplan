@@ -57,6 +57,7 @@ export default function ManageTeamsLayout({ children }: { children: ReactNode })
             isPending={isPending}
             activeId={routeTeam?.id ?? null}
             onCreate={workspace?.canCreateTeam ? () => setCreating(true) : undefined}
+            workspaceRole={workspace?.role ?? null}
           />
         </div>
       }

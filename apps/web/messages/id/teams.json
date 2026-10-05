@@ -112,8 +112,7 @@
       "manager": "Manajer",
       "member": "Anggota",
       "agent": "Agen AI"
-    },
-    "viaWorkspace": "Melalui workspace"
+    }
   },
   "roles": {
     "ownerOnly": "Hanya pemilik atau manajer tim yang dapat mengelola peran.",
@@ -552,6 +551,10 @@
     "roles": {
       "owner": "Pemilik",
       "admin": "Admin"
+    },
+    "titles": {
+      "owner": "Pemilik workspace",
+      "admin": "Admin workspace"
     },
     "info": {
       "title": "Workspace",

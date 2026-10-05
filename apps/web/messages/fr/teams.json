@@ -112,8 +112,7 @@
       "manager": "Responsable",
       "member": "Membre",
       "agent": "Agent IA"
-    },
-    "viaWorkspace": "Via l'espace de travail"
+    }
   },
   "roles": {
     "ownerOnly": "Seul un propriétaire ou un responsable de l'équipe peut gérer les rôles.",
@@ -552,6 +551,10 @@
     "roles": {
       "owner": "Propriétaire",
       "admin": "Administrateur"
+    },
+    "titles": {
+      "owner": "Propriétaire de l'espace",
+      "admin": "Administrateur de l'espace"
     },
     "info": {
       "title": "Espace de travail",

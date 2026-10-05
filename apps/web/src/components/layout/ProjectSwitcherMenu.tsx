@@ -93,6 +93,7 @@ export default function ProjectSwitcherMenu({
           onOpenTeam={onOpenTeam}
           onSelectProject={onSelectProject}
           inputRef={inputRef}
+          workspaceRole={workspace?.role ?? null}
         />
         <ProjectSwitcherFooter isMobile={isMobile} onClose={onClose} />
       </div>

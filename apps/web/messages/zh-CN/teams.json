@@ -112,8 +112,7 @@
       "manager": "管理者",
       "member": "成员",
       "agent": "AI 代理"
-    },
-    "viaWorkspace": "通过工作区"
+    }
   },
   "roles": {
     "ownerOnly": "只有团队所有者或管理者可以管理角色。",
@@ -552,6 +551,10 @@
     "roles": {
       "owner": "所有者",
       "admin": "管理员"
+    },
+    "titles": {
+      "owner": "工作区所有者",
+      "admin": "工作区管理员"
     },
     "info": {
       "title": "工作区",

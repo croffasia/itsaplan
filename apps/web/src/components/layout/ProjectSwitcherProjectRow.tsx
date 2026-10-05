@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api/endpoints/projects';
+import type { WorkspaceRole } from '@/lib/api/endpoints/workspaces';
 import { cn } from '@/lib/utils';
 import { useRelativeTime } from '@/context/relativeTimeContext';
 import { CommandItem } from '@/components/ui/command';
@@ -10,12 +11,15 @@ export default function ProjectSwitcherProjectRow({
   project,
   currentProjectKey,
   onSelectProject,
+  workspaceRole = null,
 }: {
   project: Project;
   currentProjectKey: string | null;
   onSelectProject: (key: string) => void;
+  workspaceRole?: WorkspaceRole | null;
 }) {
   const t = useTranslations('nav.projectPicker');
+  const tw = useTranslations('teams.workspace');
   const current = project.ref === currentProjectKey;
   // Stars and hiding are kept on the membership, which a project reached through the
   // workspace does not have.
@@ -55,10 +59,10 @@ export default function ProjectSwitcherProjectRow({
                 </time>
               </>
             )}
-            {viaWorkspace && (
+            {viaWorkspace && workspaceRole && (
               <>
                 <span aria-hidden>·</span>
-                <span>{t('viaWorkspace')}</span>
+                <span>{tw(`titles.${workspaceRole}`)}</span>
               </>
             )}
           </span>

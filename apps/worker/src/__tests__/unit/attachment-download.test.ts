@@ -14,7 +14,11 @@ function respondWith(response: Response): AttachmentFetch {
 
 describe('downloadAttachment', () => {
   it('returns the body of a 2xx response', async () => {
-    const bytes = await downloadAttachment(FILE_URL, 1024, respondWith(new Response('file bytes')));
+    const bytes = await downloadAttachment(
+      { url: FILE_URL },
+      1024,
+      respondWith(new Response('file bytes')),
+    );
     expect(bytes.toString()).toBe('file bytes');
   });
 
@@ -22,7 +26,7 @@ describe('downloadAttachment', () => {
     'rejects an HTTP %d response instead of returning its body as the file',
     async (status) => {
       const error = await downloadAttachment(
-        FILE_URL,
+        { url: FILE_URL },
         1024,
         respondWith(new Response('<Error>AccessDenied</Error>', { status })),
       ).catch((e: unknown) => e);
@@ -36,9 +40,9 @@ describe('downloadAttachment', () => {
       status: 302,
       headers: { location: 'https://elsewhere.example.test/report.pdf' },
     });
-    await expect(downloadAttachment(FILE_URL, 1024, respondWith(redirect))).rejects.toBeInstanceOf(
-      AttachmentRejectedError,
-    );
+    await expect(
+      downloadAttachment({ url: FILE_URL }, 1024, respondWith(redirect)),
+    ).rejects.toBeInstanceOf(AttachmentRejectedError);
   });
 
   it('downloads with the byte limit and a timeout', async () => {
@@ -47,7 +51,25 @@ describe('downloadAttachment', () => {
       seen = { url, init };
       return new Response('x');
     };
-    await downloadAttachment(FILE_URL, 2048, fetch);
+    await downloadAttachment({ url: FILE_URL }, 2048, fetch);
     expect(seen!).toEqual({ url: FILE_URL, init: { timeoutMs: 30_000, maxBytes: 2048 } });
+  });
+
+  it('sends the headers the source asked for', async () => {
+    let seen: PinnedRequestInit | undefined;
+    const fetch: AttachmentFetch = async (_url, init) => {
+      seen = init;
+      return new Response('x');
+    };
+    await downloadAttachment(
+      { url: FILE_URL, headers: { Authorization: 'source-token' } },
+      2048,
+      fetch,
+    );
+    expect(seen).toEqual({
+      headers: { Authorization: 'source-token' },
+      timeoutMs: 30_000,
+      maxBytes: 2048,
+    });
   });
 });

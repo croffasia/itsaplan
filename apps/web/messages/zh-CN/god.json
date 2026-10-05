@@ -57,6 +57,7 @@
     "deleteConfirm": "删除账户",
     "deleteConfirmWithProjects": "{count, plural, other {删除账户和项目}}",
     "deleteMessage": "<strong>{name}</strong> 将无法访问此实例。该用户创建的工作项和评论会保留，但作者将被取消关联。此操作无法撤销。",
+    "deleteWorkspaceNote": "该账户拥有的工作区若没有项目和 AI 代理，会随账户一起删除；否则将转给你，连同该账户在其中单独拥有的一切。",
     "soleOwnerTitle": "{count, plural, other {# 个项目的唯一所有者}}",
     "soleOwnerHint": "{count, plural, other {账户删除后，将无人能够管理这些项目。}}",
     "deleteWithProjects": "{count, plural, other {同时删除这些项目}}",
@@ -159,7 +160,11 @@
     "saved": "项目默认设置已保存",
     "projectDefaults": "项目默认设置",
     "mcpEnabled": "新项目默认启用 MCP",
-    "mcpEnabledHint": "新项目创建时即纳入所属团队的 MCP 覆盖范围。"
+    "mcpEnabledHint": "新项目创建时即纳入所属团队的 MCP 覆盖范围。",
+    "workspacesSaved": "工作区设置已保存",
+    "workspaces": "工作区",
+    "personalWorkspaces": "每人一个工作区",
+    "personalWorkspacesHint": "每个账户都会获得一个以其姓名命名的专属工作区。关闭后，成员只能在被添加到的工作区中工作。"
   },
   "authentication": {
     "saved": "身份验证设置已保存",

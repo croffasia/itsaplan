@@ -14,13 +14,16 @@ import WorkspaceScimTokenDialog from './WorkspaceScimTokenDialog';
 import WorkspaceScimGroupList from './WorkspaceScimGroupList';
 
 // The endpoint and the token go into the identity provider; the groups it then
-// pushes appear below, where the owner says what each one grants.
+// pushes appear below, where the owner says what each one grants. `instance` is set in
+// god mode, where the provider acts on the whole instance.
 export default function WorkspaceScimSettings({
   workspaceId,
   settings,
+  instance = false,
 }: {
   workspaceId: number;
   settings: Settings;
+  instance?: boolean;
 }) {
   const t = useTranslations('teams.workspace.scim');
   const update = useUpdateWorkspaceScim(workspaceId);
@@ -39,7 +42,7 @@ export default function WorkspaceScimSettings({
     <div className="space-y-10">
       <SettingsSection
         title={t('provisioning')}
-        description={t(settings.hasToken ? 'provisioningConfigured' : 'provisioningMissing')}
+        description={t(provisioningHint(settings.hasToken, instance))}
         action={
           <EnabledSwitch
             checked={settings.enabled}
@@ -84,4 +87,10 @@ export default function WorkspaceScimSettings({
       )}
     </div>
   );
+}
+
+function provisioningHint(hasToken: boolean, instance: boolean) {
+  if (!hasToken) return 'provisioningMissing';
+  if (instance) return 'provisioningInstance';
+  return 'provisioningConfigured';
 }

@@ -139,8 +139,8 @@ the volume before it costs one command:
 docker run --rm -v itsaplan_minio-data:/data -v "$PWD":/out alpine tar czf /out/minio-data.tgz -C /data .
 ```
 
-If you call the API from your own scripts or from an MCP client, read
-[breaking changes](breaking-changes.md) for the paths a release removed.
+If you call the API from your own scripts or from an MCP client, read the
+[release notes](https://github.com/croffasia/itsaplan/releases) for the paths a release removed.
 
 ## Building from source instead
 

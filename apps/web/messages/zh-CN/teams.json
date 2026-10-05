@@ -546,7 +546,7 @@
     "rail": "工作区",
     "create": "新建工作区",
     "createUnavailableTitle": "更多工作区",
-    "createUnavailableHint": "此实例只有一个工作区。创建和管理工作区可在 Cloud 和自托管 Pro 版中使用。",
+    "createUnavailableHint": "每人拥有多个工作区的功能可在 Cloud 和自托管 Pro 版中使用。",
     "general": "常规",
     "roles": {
       "owner": "所有者",
@@ -558,7 +558,17 @@
       "workspace": "工作区",
       "workspaceHint": "所有人都能看到的名称。",
       "role": "你的角色",
-      "saved": "工作区已保存"
+      "saved": "工作区已保存",
+      "color": "颜色",
+      "colorReset": "恢复默认"
+    },
+    "teamCreation": {
+      "title": "谁可以创建团队",
+      "description": "创建团队的人即为其所有者。",
+      "ownerOnly": "只有所有者可以决定谁能创建团队。",
+      "owner": "仅所有者",
+      "managers": "所有者和管理员",
+      "members": "其团队中的所有人"
     },
     "managers": {
       "title": "管理者",
@@ -583,6 +593,7 @@
       "saved": "SCIM 设置已保存",
       "provisioning": "账号预配",
       "provisioningConfigured": "身份提供方会将成员加入此工作区或将其移出。",
+      "provisioningInstance": "身份提供方会在此实例上创建、更新和停用账号。",
       "provisioningMissing": "请先生成令牌。",
       "token": "令牌",
       "noToken": "尚未生成令牌",
@@ -622,6 +633,14 @@
         "remove": "移除项目",
         "saved": "群组权限已保存"
       }
+    },
+    "delete": {
+      "action": "删除工作区",
+      "hint": "其中的团队会一并删除。成员会保留自己的账户和其他团队。",
+      "blocked": "请先删除其团队中的项目和 AI 代理。",
+      "title": "删除 {name}？",
+      "description": "<strong>{name}</strong> 及其团队将被删除。成员会保留自己的账户和其他团队。此操作无法撤销。",
+      "deleted": "工作区已删除"
     }
   }
 }

@@ -2,7 +2,7 @@ import { useTranslations } from 'next-intl';
 import { WorkspaceRailActions } from '@/cloud';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import { workspaceInitial, workspaceTileClass } from './utils/workspaceTile';
+import { workspaceInitial, workspaceTileClass, workspaceTileStyle } from './utils/workspaceTile';
 
 export default function ProjectSwitcherWorkspaceRail({
   workspaces,
@@ -32,6 +32,7 @@ export default function ProjectSwitcherWorkspaceRail({
                 aria-pressed={active}
                 onClick={() => onPick(workspace.id)}
                 className={workspaceTileClass(active)}
+                style={workspaceTileStyle(workspace.color)}
               >
                 {workspaceInitial(workspace.name)}
               </button>

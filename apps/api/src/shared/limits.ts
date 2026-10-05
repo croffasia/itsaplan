@@ -50,3 +50,15 @@ export function getLimits(workspaceId: number): Promise<Limits> {
 export async function getTeamLimits(teamId: number, executor: DbExecutor = db): Promise<Limits> {
   return provider(await teamWorkspaceId(teamId, executor));
 }
+
+// How many workspaces one person may own. A self-hosted instance gives each person one;
+// a hosted build raises it. 0 reads as unlimited, as in Limits.
+let ownedWorkspaceLimit = 1;
+
+export function setOwnedWorkspaceLimit(next = 1): void {
+  ownedWorkspaceLimit = next;
+}
+
+export function getOwnedWorkspaceLimit(): number {
+  return ownedWorkspaceLimit;
+}

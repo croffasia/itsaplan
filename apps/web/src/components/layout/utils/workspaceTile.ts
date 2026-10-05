@@ -9,3 +9,6 @@ export const workspaceTileClass = (active: boolean) =>
   );
 
 export const workspaceInitial = (name: string) => [...name.trim()][0]?.toUpperCase();
+
+export const workspaceTileStyle = (color: string | null) =>
+  color ? { backgroundColor: color, color: '#fff' } : undefined;

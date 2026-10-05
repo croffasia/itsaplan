@@ -1,4 +1,7 @@
 import { describe, expect, it, afterEach, beforeEach } from 'bun:test';
+import { eq } from 'drizzle-orm';
+import { setWorkspaceScim } from '@repo/auth';
+import { createWorkspace, db, team } from '@repo/db';
 import { resetDb } from '#tests/helpers/db';
 import { addUser, joinProject, type Actor } from '#modules/god/__tests__/helpers';
 import { createRole, teamIdOf } from '#tests/helpers/roles';
@@ -109,30 +112,6 @@ describe('SCIM group reconciliation', () => {
 
     const members = await membersOf(setup.god, 'MKT');
     expect(members.map((m) => m.userId)).not.toContain(ada.data!.id);
-  });
-
-  it('grants a deactivated member nothing, and grants it again once they are back', async () => {
-    const setup = await setupScim();
-    const project = await createProject(setup.god, 'Marketing', 'MKT');
-    const ada = await setup.scim.scim.v2.Users.post(scimUserBody());
-    const groupId = await provisionGroup(setup, 'Engineering', [ada.data!.id]);
-    await setup.settings.groups({ groupId }).mappings.put({
-      mappings: [{ projectId: project.id, role: 'member', roleId: null }],
-    });
-    const setActive = (value: boolean) =>
-      setup.scim.scim.v2
-        .Users({ id: ada.data!.id })
-        .patch(patchOps([{ op: 'replace', path: 'active', value }]));
-
-    await setActive(false);
-    // A group change reconciles the project again; the deactivated member stays out.
-    await setup.scim.scim.v2
-      .Groups({ id: groupId })
-      .patch(patchOps([{ op: 'replace', path: 'displayName', value: 'Engineers' }]));
-    expect((await membersOf(setup.god, 'MKT')).map((m) => m.userId)).not.toContain(ada.data!.id);
-
-    await setActive(true);
-    expect((await membersOf(setup.god, 'MKT')).map((m) => m.userId)).toContain(ada.data!.id);
   });
 
   it('grants the team membership the project one stands on, and takes it back', async () => {
@@ -420,6 +399,77 @@ describe('SCIM group reconciliation', () => {
 
       expect((await scim.groups.get()).status).toBe(403);
       expect((await scim.groups({ groupId }).mappings.put({ mappings: [] })).status).toBe(403);
+    });
+  });
+
+  it('leaves a deactivated member what the groups granted', async () => {
+    const setup = await setupScim();
+    const project = await createProject(setup.god, 'Marketing', 'MKT');
+    const ada = await setup.scim.scim.v2.Users.post(scimUserBody());
+    const groupId = await provisionGroup(setup, 'Engineering', [ada.data!.id]);
+    await setup.settings.groups({ groupId }).mappings.put({
+      mappings: [{ projectId: project.id, role: 'member', roleId: null }],
+    });
+
+    await setup.scim.scim.v2
+      .Users({ id: ada.data!.id })
+      .patch(patchOps([{ op: 'replace', path: 'active', value: false }]));
+    await setup.scim.scim.v2
+      .Groups({ id: groupId })
+      .patch(patchOps([{ op: 'replace', path: 'displayName', value: 'Engineers' }]));
+
+    expect((await membersOf(setup.god, 'MKT')).map((m) => m.userId)).toContain(ada.data!.id);
+  });
+
+  it('maps a project of any workspace', async () => {
+    const setup = await setupScim();
+    const outsider = await addUser({ email: 'outsider@example.com' });
+    const project = await createProject(outsider, 'Sales', 'SAL');
+    await db
+      .update(team)
+      .set({ workspaceId: await createWorkspace(db, 'Other', outsider.id) })
+      .where(eq(team.id, project.teamId));
+    const groupId = await provisionGroup(setup, 'Engineering', []);
+
+    const res = await setup.settings.groups({ groupId }).mappings.put({
+      mappings: [{ projectId: project.id, role: 'member', roleId: null }],
+    });
+
+    expect(res.status).toBe(200);
+    const options = (
+      await setup.god.api.workspaces({ workspaceId: setup.workspaceId }).projects.options.get()
+    ).data!;
+    expect(options.map((o) => o.key)).toContain('SAL');
+  });
+
+  // Set up per workspace, as in a hosted build, a group grants projects of its own
+  // workspace only, and nothing to a person its provider deactivated.
+  describe('set up per workspace', () => {
+    beforeEach(() => setWorkspaceScim());
+    afterEach(() => setWorkspaceScim(false));
+
+    it('grants a deactivated member nothing, and grants it again once they are back', async () => {
+      const setup = await setupScim();
+      const project = await createProject(setup.god, 'Marketing', 'MKT');
+      const ada = await setup.scim.scim.v2.Users.post(scimUserBody());
+      const groupId = await provisionGroup(setup, 'Engineering', [ada.data!.id]);
+      await setup.settings.groups({ groupId }).mappings.put({
+        mappings: [{ projectId: project.id, role: 'member', roleId: null }],
+      });
+      const setActive = (value: boolean) =>
+        setup.scim.scim.v2
+          .Users({ id: ada.data!.id })
+          .patch(patchOps([{ op: 'replace', path: 'active', value }]));
+
+      await setActive(false);
+      // A group change reconciles the project again; the deactivated member stays out.
+      await setup.scim.scim.v2
+        .Groups({ id: groupId })
+        .patch(patchOps([{ op: 'replace', path: 'displayName', value: 'Engineers' }]));
+      expect((await membersOf(setup.god, 'MKT')).map((m) => m.userId)).not.toContain(ada.data!.id);
+
+      await setActive(true);
+      expect((await membersOf(setup.god, 'MKT')).map((m) => m.userId)).toContain(ada.data!.id);
     });
 
     it('refuses a project of another workspace', async () => {

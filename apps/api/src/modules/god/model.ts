@@ -37,6 +37,7 @@ export const AuthSettingsResponse = t.Object({
   magicLink: t.Boolean(),
   emailPassword: t.Boolean(),
   trustProviderEmails: t.Boolean(),
+  personalWorkspaces: t.Boolean(),
   // The settings that depend on outbound email cannot be turned on without a mail
   // provider, and the UI explains why.
   hasEmailProvider: t.Boolean(),
@@ -46,11 +47,14 @@ export const AuthSettingsResponse = t.Object({
 });
 
 export const AuthSettingsBody = t.Object({
-  registration: t.Optional(t.UnionEnum([...REGISTRATION_MODES])),
+  // t.UnionEnum defaults to its first value, which would fill in the mode for a request
+  // that leaves it out and so reset it; the update is partial.
+  registration: t.Optional(t.UnionEnum([...REGISTRATION_MODES], { default: undefined })),
   requireEmailVerification: t.Optional(t.Boolean()),
   magicLink: t.Optional(t.Boolean()),
   emailPassword: t.Optional(t.Boolean()),
   trustProviderEmails: t.Optional(t.Boolean()),
+  personalWorkspaces: t.Optional(t.Boolean()),
 });
 
 export const EmailSettingsResponse = t.Object({
@@ -174,6 +178,7 @@ export const InstanceUserDetailResponse = t.Composite([
         roleName: t.Nullable(t.String()),
         permissions: PermissionMatrixSchema,
         ownerCount: t.Number(),
+        inOwnWorkspace: t.Boolean(),
         joinedAt: t.String(),
       }),
     ),

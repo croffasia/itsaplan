@@ -49,9 +49,12 @@ export default function GodUserDetailPanel({
   const [withProjects, setWithProjects] = useState(false);
   const user = userQuery.data;
 
-  // Projects this user owns alone. Deleting the account leaves them without anyone
-  // who can manage them, so the API refuses unless they are deleted along with it.
-  const soleOwned = (user?.projects ?? []).filter((p) => p.role === 'owner' && p.ownerCount === 1);
+  // Projects this user owns alone outside their own workspaces. Deleting the account
+  // leaves them without anyone who can manage them, so the API refuses unless they are
+  // deleted along with it. The ones in their own workspaces pass to the instance owner.
+  const soleOwned = (user?.projects ?? []).filter(
+    (p) => p.role === 'owner' && p.ownerCount === 1 && !p.inOwnWorkspace,
+  );
 
   // Escape closes the confirm dialog first; the panel stays until it is gone.
   useExitOnEscape(() => {
@@ -238,6 +241,7 @@ export default function GodUserDetailPanel({
                 strong: (chunks) => <span className="font-medium text-foreground">{chunks}</span>,
               })}
             </p>
+            <p className="text-sm text-muted-foreground">{t('deleteWorkspaceNote')}</p>
 
             {soleOwned.length > 0 && (
               <div className="space-y-4 rounded-lg bg-muted/60 p-4">

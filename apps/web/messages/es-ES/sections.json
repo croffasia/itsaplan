@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Valores por defecto para los proyectos nuevos."
+      "description": "Espacios de trabajo personales y valores por defecto para los proyectos nuevos."
     },
     "authentication": {
       "label": "Autenticación",
@@ -50,6 +50,10 @@
     "auth-provider": {
       "label": "Proveedor de autenticación",
       "description": "Las cuentas externas con las que las personas pueden iniciar sesión."
+    },
+    "scim": {
+      "label": "SCIM",
+      "description": "Permite que un proveedor de identidades cree, actualize y desactive cuentas en esta instancia, y conceda acceso a proyectos a través de sus grupos."
     }
   },
   "settings": {

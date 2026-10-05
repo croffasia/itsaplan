@@ -49,13 +49,28 @@ export const appSecret = pgTable('app_secret', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-// A workspace owns teams. A self-hosted instance has exactly one, created by the
-// migration that introduced the table; its members are derived from its teams.
-export const workspace = pgTable('workspace', {
-  id: serial('id').primaryKey(),
-  name: text('name').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+// A workspace owns teams; its members are derived from them. The instance workspace was
+// created by the migration that introduced the table and belongs to the instance owner;
+// everyone else gets one of their own at sign-up.
+export const workspace = pgTable(
+  'workspace',
+  {
+    id: serial('id').primaryKey(),
+    name: text('name').notNull(),
+    // The tile colour in the workspace rails, as #rrggbb; null keeps the neutral tile.
+    color: text('color'),
+    // Who creates teams in it: the owner alone, the owner and admins (managers), or
+    // anyone in one of its teams (members).
+    teamCreation: text('team_creation').notNull().default('owner'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      'workspace_team_creation_check',
+      sql`${t.teamCreation} IN ('owner', 'managers', 'members')`,
+    ),
+  ],
+);
 
 // The people who administer a workspace. Nobody else is listed here: membership comes
 // from team_member.

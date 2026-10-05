@@ -546,7 +546,7 @@
     "rail": "Espacios de trabajo",
     "create": "Nuevo espacio de trabajo",
     "createUnavailableTitle": "Más espacios de trabajo",
-    "createUnavailableHint": "Esta instancia tiene un solo espacio de trabajo. Crear y gestionar espacios de trabajo está disponible en Cloud y en Pro autoalojado.",
+    "createUnavailableHint": "Más espacios de trabajo por persona están disponibles en Cloud y en Pro autoalojado.",
     "general": "General",
     "roles": {
       "owner": "Propietario",
@@ -558,7 +558,17 @@
       "workspace": "Espacio de trabajo",
       "workspaceHint": "El nombre que ve todo el mundo.",
       "role": "Tu rol",
-      "saved": "Espacio de trabajo guardado"
+      "saved": "Espacio de trabajo guardado",
+      "color": "Color",
+      "colorReset": "Usar el predeterminado"
+    },
+    "teamCreation": {
+      "title": "Quién crea equipos",
+      "description": "Quien crea un equipo es su propietario.",
+      "ownerOnly": "Solo el propietario decide quién crea equipos.",
+      "owner": "Solo el propietario",
+      "managers": "El propietario y los administradores",
+      "members": "Todos los de sus equipos"
     },
     "managers": {
       "title": "Responsables",
@@ -583,6 +593,7 @@
       "saved": "Los ajustes de SCIM se han guardado",
       "provisioning": "Preparación",
       "provisioningConfigured": "Tu proveedor de identidades añade personas a este espacio de trabajo y las quita.",
+      "provisioningInstance": "Tu proveedor de identidades crea, actualiza y desactive cuentas en esta instancia.",
       "provisioningMissing": "Genera primero un token.",
       "token": "Token",
       "noToken": "Todavía no se ha generado un token",
@@ -622,6 +633,14 @@
         "remove": "Quitar el proyecto",
         "saved": "El acceso del grupo se ha guardado"
       }
+    },
+    "delete": {
+      "action": "Eliminar espacio de trabajo",
+      "hint": "Sus equipos se eliminan con él. Las personas conservan sus cuentas y sus otros equipos.",
+      "blocked": "Elimina primero los proyectos y los agentes de IA de sus equipos.",
+      "title": "¿Eliminar {name}?",
+      "description": "<strong>{name}</strong> y sus equipos se eliminan. Las personas conservan sus cuentas y sus otros equipos. No se puede deshacer.",
+      "deleted": "Espacio de trabajo eliminado"
     }
   }
 }

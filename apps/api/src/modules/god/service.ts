@@ -16,6 +16,7 @@ import {
   teamMember,
   teamRole,
   projectView,
+  workspaceManager,
 } from '@repo/db';
 import {
   and,
@@ -79,8 +80,12 @@ export interface InstanceUserProject {
   // member, the default member matrix when no role is assigned.
   permissions: Permissions;
   // How many owners the project has. 1 on a project this user owns means deleting
-  // the account would leave the project with nobody who can manage it.
+  // the account would leave the project with nobody who can manage it, unless it is in a
+  // workspace of theirs.
   ownerCount: number;
+  // Whether the project's team is in a workspace this user owns. That workspace passes to
+  // the instance owner with the account, and with it what the user owned alone there.
+  inOwnWorkspace: boolean;
   joinedAt: string;
 }
 
@@ -231,13 +236,14 @@ export async function getInstanceUser(userId: string): Promise<InstanceUserDetai
   const row = rows[0];
   if (!row) return null;
 
-  const [facts, memberships] = await Promise.all([
+  const [facts, memberships, ownedWorkspaces] = await Promise.all([
     loadUserFacts([row.id]),
     db
       .select({
         projectId: project.id,
         projectKey: project.key,
         projectName: project.name,
+        workspaceId: team.workspaceId,
         role: projectMember.role,
         roleId: projectMember.roleId,
         roleName: teamRole.name,
@@ -246,10 +252,16 @@ export async function getInstanceUser(userId: string): Promise<InstanceUserDetai
       })
       .from(projectMember)
       .innerJoin(project, eq(project.id, projectMember.projectId))
+      .innerJoin(team, eq(team.id, project.teamId))
       .leftJoin(teamRole, eq(teamRole.id, projectMember.roleId))
       .where(eq(projectMember.userId, userId))
       .orderBy(project.name),
+    db
+      .select({ id: workspaceManager.workspaceId })
+      .from(workspaceManager)
+      .where(and(eq(workspaceManager.userId, userId), eq(workspaceManager.role, 'owner'))),
   ]);
+  const owned = new Set(ownedWorkspaces.map((w) => w.id));
 
   const ownerCounts = await countOwnersByProject(memberships.map((m) => m.projectId));
 
@@ -263,6 +275,7 @@ export async function getInstanceUser(userId: string): Promise<InstanceUserDetai
       roleId: m.roleId,
       roleName: m.roleName,
       ownerCount: ownerCounts.get(m.projectId) ?? 0,
+      inOwnWorkspace: owned.has(m.workspaceId),
       permissions: resolvePermissions(role, m.permissions),
       joinedAt: iso(m.joinedAt),
     };

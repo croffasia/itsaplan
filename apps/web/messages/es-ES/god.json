@@ -57,6 +57,7 @@
     "deleteConfirm": "Eliminar la cuenta",
     "deleteConfirmWithProjects": "{count, plural, one {Eliminar la cuenta y el proyecto} other {Eliminar la cuenta y los proyectos}}",
     "deleteMessage": "<strong>{name}</strong> pierde el acceso a esta instancia. Los tickets y los comentarios que ha escrito se quedan, sin el autor asignado. No se puede deshacer.",
+    "deleteWorkspaceNote": "Un espacio de trabajo de esta cuenta se elimina con ella si no tiene proyectos ni agentes de IA. Si los tiene, pasa a ti, con todo lo que la cuenta tenía en exclusiva en él.",
     "soleOwnerTitle": "{count, plural, one {Único propietario de un proyecto} other {Único propietario de # proyectos}}",
     "soleOwnerHint": "{count, plural, one {Cuando la cuenta se vaya, nadie la podrá gestionar.} other {Cuando la cuenta se vaya, nadie los podrá gestionar.}}",
     "deleteWithProjects": "{count, plural, one {Eliminar el proyecto con la cuenta} other {Eliminar los proyectos con la cuenta}}",
@@ -159,7 +160,11 @@
     "saved": "Los valores por defecto del proyecto se han guardado",
     "projectDefaults": "Valores por defecto del proyecto",
     "mcpEnabled": "Activar MCP en los proyectos nuevos",
-    "mcpEnabledHint": "Un proyecto nuevo está en el alcance de MCP de su equipo desde el momento en que se crea."
+    "mcpEnabledHint": "Un proyecto nuevo está en el alcance de MCP de su equipo desde el momento en que se crea.",
+    "workspacesSaved": "Ajustes de espacios de trabajo guardados",
+    "workspaces": "Espacios de trabajo",
+    "personalWorkspaces": "Un espacio de trabajo para cada persona",
+    "personalWorkspacesHint": "Cada cuenta recibe un espacio de trabajo propio con el nombre de la persona. Desactivado, cada persona trabaja solo en los espacios de trabajo a los que se le ha añadido."
   },
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",

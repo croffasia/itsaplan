@@ -57,6 +57,7 @@
     "deleteConfirm": "Hapus akun",
     "deleteConfirmWithProjects": "{count, plural, one {Hapus akun dan proyek} other {Hapus akun dan proyek}}",
     "deleteMessage": "<strong>{name}</strong> akan kehilangan akses ke instance ini. Issue dan komentar yang mereka tulis tetap ada, dengan pembuat tidak ditetapkan. Tindakan ini tidak dapat dibatalkan.",
+    "deleteWorkspaceNote": "Workspace milik akun ini ikut dihapus jika tidak memiliki proyek atau agen AI. Jika ada, workspace itu berpindah ke Anda, beserta semua yang dimiliki akun ini sendiri di dalamnya.",
     "soleOwnerTitle": "{count, plural, one {Satu-satunya pemilik proyek} other {Satu-satunya pemilik dari # proyek}}",
     "soleOwnerHint": "{count, plural, one {Setelah akun dihapus, tidak ada yang dapat mengelolanya.} other {Setelah akun dihapus, tidak ada yang dapat mengelolanya.}}",
     "deleteWithProjects": "{count, plural, one {Hapus proyek bersama akun} other {Hapus proyek-proyek bersama akun}}",
@@ -159,7 +160,11 @@
     "saved": "Pengaturan bawaan proyek disimpan",
     "projectDefaults": "Pengaturan bawaan proyek",
     "mcpEnabled": "Aktifkan MCP pada proyek baru",
-    "mcpEnabledHint": "Proyek baru berada dalam jangkauan MCP timnya sejak saat dibuat."
+    "mcpEnabledHint": "Proyek baru berada dalam jangkauan MCP timnya sejak saat dibuat.",
+    "workspacesSaved": "Pengaturan workspace disimpan",
+    "workspaces": "Workspace",
+    "personalWorkspaces": "Workspace untuk setiap orang",
+    "personalWorkspacesHint": "Setiap akun mendapat workspace sendiri dengan nama pemiliknya. Jika nonaktif, orang hanya bekerja di workspace tempat mereka ditambahkan."
   },
   "authentication": {
     "saved": "Pengaturan autentikasi disimpan",

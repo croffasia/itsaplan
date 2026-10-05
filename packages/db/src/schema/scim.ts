@@ -18,10 +18,12 @@ import { sql } from 'drizzle-orm';
 import { user } from './auth';
 import { project, teamRole, workspace } from './app';
 
-// An account as the identity provider of one workspace sees it. The provider decides
-// who has the workspace, not who has an account: `active` false means the person was
-// taken out of the workspace's teams and its groups grant them nothing, and the account
-// itself is untouched. Every workspace's provider keeps its own row for the same person.
+// An account as the identity provider of one workspace sees it. While SCIM is the
+// instance's, the instance workspace's provider speaks for the whole instance and
+// `active` false means the account cannot sign in. Set up per workspace, the provider
+// decides who has the workspace, not who has an account: `active` false means the person
+// was taken out of the workspace's teams and its groups grant them nothing. Every
+// workspace's provider keeps its own row for the same person.
 export const scimUser = pgTable(
   'scim_user',
   {

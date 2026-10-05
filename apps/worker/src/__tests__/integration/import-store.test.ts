@@ -16,14 +16,19 @@ import {
   type StorageSettings,
 } from '@repo/db';
 import { eq } from 'drizzle-orm';
+import { encryptSecret } from '@repo/crypto';
 import { getObject } from '@repo/storage';
+import { readerForJob, sourceProjectKeyForJob } from '../../import-sources';
+import { PlaneReader } from '../../plane-adapter';
 import {
   claimDueImportJobs,
+  decryptImportCredential,
   createLocalStateAndRecord,
   createLocalIssueAndRecord,
   createLocalAttachmentAndRecord,
   findImportRecord,
   AttachmentRejectedError,
+  type NewLocalIssue,
 } from '../../import-store';
 
 // Nothing here calls resetDb (the worker has no api to reset for), so every
@@ -66,6 +71,21 @@ async function makeIssue(projectId: number, columnId: number, title = 'Task'): P
     .values({ projectId, columnId, sequenceNumber: Math.floor(Math.random() * 1_000_000), title })
     .returning({ id: issue.id });
   return row!.id;
+}
+
+function newIssue(projectId: number, columnId: number, title: string): NewLocalIssue {
+  return {
+    projectId,
+    columnId,
+    cycleId: null,
+    parentId: null,
+    assigneeUserId: null,
+    title,
+    description: '',
+    priority: null,
+    startDate: null,
+    dueDate: null,
+  };
 }
 
 describe('claimDueImportJobs', () => {
@@ -113,6 +133,45 @@ describe('claimDueImportJobs', () => {
 
     const claimed = await claimDueImportJobs(50);
     expect(claimed.some((j) => j.id === jobId)).toBe(false);
+  });
+});
+
+describe('decryptImportCredential', () => {
+  it('resumes a Plane job the api created, mid-phase, with the same reader and key', async () => {
+    const { projectId, userId } = await makeProject();
+    const credential = {
+      baseUrl: 'https://plane.example.test',
+      workspaceSlug: 'acme',
+      apiKey: 'plane-api-key',
+    };
+    const encrypted = encryptSecret(JSON.stringify(credential));
+    const [row] = await db
+      .insert(importJob)
+      .values({
+        projectId,
+        createdByUserId: userId,
+        source: 'plane',
+        phase: 'create',
+        config: {
+          planeProjectId: 'project-1',
+          planeProjectKey: 'ROOMS',
+          unmatchedUserPolicy: 'unassigned',
+        },
+        cursor: { lastRecordId: 41 },
+        credentialCiphertext: encrypted.ciphertext,
+        credentialIv: encrypted.iv,
+        credentialAuthTag: encrypted.authTag,
+        nextAttemptAt: new Date(Date.now() - 1000),
+      })
+      .returning({ id: importJob.id });
+
+    const job = (await claimDueImportJobs(1000)).find((j) => j.id === row!.id);
+
+    expect(job).toMatchObject({ source: 'plane', phase: 'create', cursor: { lastRecordId: 41 } });
+    const decrypted = decryptImportCredential(job!);
+    expect(decrypted).toEqual(credential);
+    expect(readerForJob(job!, decrypted)).toBeInstanceOf(PlaneReader);
+    expect(sourceProjectKeyForJob(job!)).toBe('ROOMS');
   });
 });
 
@@ -198,6 +257,53 @@ describe('createLocalIssueAndRecord', () => {
     const [row] = await db.select().from(issue).where(eq(issue.id, issueId));
     // The reused issue keeps its own content; the import does not overwrite it.
     expect(row?.description).toBe('');
+  });
+
+  it("keeps the source's created and updated dates", async () => {
+    const { projectId, columnId, userId } = await makeProject();
+    const jobId = await makeImportJob(projectId, userId);
+
+    const issueId = await createLocalIssueAndRecord(jobId, 'plane-issue-3', 'ROOMS-3', {
+      ...newIssue(projectId, columnId, 'Old work'),
+      createdAt: '2024-03-01T09:30:00.000Z',
+      updatedAt: '2024-05-20T17:00:00.000Z',
+    });
+
+    const [row] = await db.select().from(issue).where(eq(issue.id, issueId));
+    expect(row?.createdAt.toISOString()).toBe('2024-03-01T09:30:00.000Z');
+    expect(row?.updatedAt.toISOString()).toBe('2024-05-20T17:00:00.000Z');
+  });
+
+  it('falls back to now for a missing or unparseable source date', async () => {
+    const { projectId, columnId, userId } = await makeProject();
+    const jobId = await makeImportJob(projectId, userId);
+    const before = Date.now() - 60_000;
+
+    const issueId = await createLocalIssueAndRecord(jobId, 'plane-issue-4', 'ROOMS-4', {
+      ...newIssue(projectId, columnId, 'Undated work'),
+      createdAt: 'not a date',
+    });
+
+    const [row] = await db.select().from(issue).where(eq(issue.id, issueId));
+    expect(row!.createdAt.getTime()).toBeGreaterThan(before);
+    expect(row!.updatedAt.getTime()).toBeGreaterThan(before);
+  });
+
+  it("leaves a reused issue's own dates alone", async () => {
+    const { projectId, columnId, userId } = await makeProject();
+    const existingId = await makeIssue(projectId, columnId, 'Shared title');
+    const [existing] = await db.select().from(issue).where(eq(issue.id, existingId));
+    const jobId = await makeImportJob(projectId, userId);
+
+    await createLocalIssueAndRecord(jobId, 'plane-issue-5', 'ROOMS-5', {
+      ...newIssue(projectId, columnId, 'Shared title'),
+      createdAt: '2020-01-01T00:00:00.000Z',
+      updatedAt: '2020-01-02T00:00:00.000Z',
+    });
+
+    const [row] = await db.select().from(issue).where(eq(issue.id, existingId));
+    expect(row?.createdAt).toEqual(existing!.createdAt);
+    expect(row?.updatedAt).toEqual(existing!.updatedAt);
   });
 });
 

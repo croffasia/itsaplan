@@ -6,7 +6,11 @@ import { WorkspaceRailActions } from '@/cloud';
 import type { Team } from '@/lib/api/endpoints/teams';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
 import { teamPath, workspacePath } from '@/utils/paths';
-import { workspaceInitial, workspaceTileClass } from '@/components/layout/utils/workspaceTile';
+import {
+  workspaceInitial,
+  workspaceTileClass,
+  workspaceTileStyle,
+} from '@/components/layout/utils/workspaceTile';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 // The workspaces the account sees, as the page's leftmost rail. One the caller manages
@@ -41,6 +45,7 @@ export default function WorkspacesRail({
                 aria-label={workspace.name}
                 aria-current={active || undefined}
                 className={workspaceTileClass(active)}
+                style={workspaceTileStyle(workspace.color)}
               >
                 {workspaceInitial(workspace.name)}
               </Link>

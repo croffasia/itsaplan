@@ -31,7 +31,14 @@ running to completion in one.
 
 - `canonical.ts` — the source-independent shape an adapter produces
   (`CanonicalIssue`, `CanonicalState`, ...). Plain types, no logic.
-- `reader.ts` — the `SourceReader` port a source adapter implements.
+- `reader.ts` — the `SourceReader` port a source adapter implements, and the
+  `SourceRateLimitedError` an adapter throws when the source's rate limit is reached.
+- `import-sources.ts` — one entry per `import_job.source`: its credential and
+  config types, how to build its reader, and its issue-key prefix for Rewrite. A
+  new source adds an entry here; the phases do not change.
+- `import-retry.ts` — what a failed tick does: a rate limit is waited out and
+  never fails the job by itself, any other error retries with backoff until
+  `MAX_ATTEMPTS` in a row.
 - `plane-adapter.ts` — the only implementation today. HTTP against a Plane
   instance via `pinnedFetch`, using the credential decrypted from the job row
   (base URL, workspace slug, API key — never from env, since this has to work
@@ -92,8 +99,8 @@ running to completion in one.
 - **Pure logic stays dependency-free.** `backoff.ts`, `signature.ts`, and
   `isRetryableStatus` import nothing from `@repo/db`, so unit tests run without a
   database. Keep DB access in `store.ts`. Same split for imports: `canonical.ts`,
-  `reader.ts`, `plane-adapter.ts`, `cross-reference.ts`, and
-  `attachment-download.ts` import nothing from
+  `reader.ts`, `plane-adapter.ts`, `cross-reference.ts`, `attachment-download.ts`,
+  `import-sources.ts`, and `import-retry.ts` import nothing from
   `@repo/db` (its state-category normalization, markdown conversion,
   cursor/rate-limit, and cross-reference matching logic are unit-tested
   directly); `@repo/db` access stays in `import-store.ts`.
@@ -111,13 +118,13 @@ All via env with defaults (see `src/config.ts`): `WEBHOOK_POLL_INTERVAL_MS`,
 `WEBHOOK_CLEANUP_EVERY_TICKS`. Only `DATABASE_URL` is required for webhook
 delivery. Notification delivery also needs `APP_ENCRYPTION_KEY` (the same value the
 api uses) to read the stored provider credentials, and so does source import (it
-decrypts the stored Plane credential with it too). `IMPORT_POLL_INTERVAL_MS` and `IMPORT_POLL_INTERVAL_MAX_MS` tune
-the import worker's poll interval. `AGENT_RUN_POLL_INTERVAL_MS` and
-`AGENT_RUN_POLL_INTERVAL_MAX_MS` tune how often due schedules are queued. Idle
-backoff charts and tuning notes: `docs/idle-poll/`. The Attachments phase needs the same `S3_*`
-variables (`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
-`S3_REGION`, `S3_FORCE_PATH_STYLE`) the api reads for its own uploads — both
-processes write to the same bucket.
+decrypts the stored source credential with it too). `IMPORT_POLL_INTERVAL_MS` and
+`IMPORT_POLL_INTERVAL_MAX_MS` tune the import worker's poll interval.
+`AGENT_RUN_POLL_INTERVAL_MS` and `AGENT_RUN_POLL_INTERVAL_MAX_MS` tune how often
+due schedules are queued. Idle backoff charts and tuning notes: `docs/idle-poll/`.
+The Attachments phase needs the same `S3_*` variables (`S3_ENDPOINT`, `S3_BUCKET`,
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`, `S3_FORCE_PATH_STYLE`)
+the api reads for its own uploads — both processes write to the same bucket.
 
 ## Tests
 

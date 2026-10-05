@@ -86,14 +86,17 @@ export function joinName(
 // assume the value is a real address.
 export function readAccountEmail(doc: Record<string, unknown>): string {
   if (doc.emails !== undefined) return readEmail(doc.emails);
-  if (typeof doc.userName === 'string' && doc.userName.trim()) {
-    const userName = doc.userName.trim();
-    if (!userName.includes('@')) {
-      throw new ScimError(400, 'userName is not an email address', 'invalidValue');
-    }
-    return userName;
-  }
+  if (typeof doc.userName === 'string' && doc.userName.trim())
+    return readUserNameEmail(doc.userName);
   throw new ScimError(400, 'userName or emails is required', 'invalidValue');
+}
+
+export function readUserNameEmail(value: unknown): string {
+  const userName = asString(value, 'userName');
+  if (!userName.includes('@')) {
+    throw new ScimError(400, 'userName is not an email address', 'invalidValue');
+  }
+  return userName;
 }
 
 // One address out of a multi-valued `emails` attribute: the one marked primary, or

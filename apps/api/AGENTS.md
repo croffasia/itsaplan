@@ -119,9 +119,27 @@ Enforced declaratively through macros, never imperative calls in handlers.
   from the route once it expands the macro, so there is nothing else to read it from.
 - Guards/macros wrap the `shared/access.ts` primitives. Handlers that still need
   `user` (project create, invite accept/reject, self-removal) call `requireUser(user)`.
-- **Only the owner of a workspace creates a team in it** (`POST /teams`, `createTeam` in
-  `teams/service.ts`). `workspaceId` in the body names the workspace; left out, it is the
-  instance workspace, which is the only one a self-hosted instance has. Anyone else gets 403.
+- **The workspace decides who creates a team in it** (`POST /teams`, `createTeam` in
+  `teams/service.ts`, `assertMayCreateTeam` in `workspaces/service.ts`): its owner by
+  default, also its admins, or anyone in one of its teams, as its owner sets
+  `teamCreation`. `workspaceId` in the body names the workspace; left out, it is the
+  instance workspace, the one the instance owner owns. Anyone else gets 403.
+- **Every person owns one workspace.** No route creates one: sign-up makes it
+  (`@repo/auth`), and `authContext` makes it on the next request for an account that has
+  none (`ensurePersonalWorkspace`), while `personalWorkspaces` is on in the auth settings.
+  A build that lets a person own more mounts its own route on `createOwnWorkspace` and
+  `workspaceCreation` (`workspaces/service.ts`, which refuse an agent's bot user) and
+  raises the number with `setOwnedWorkspaceLimit` (`shared/limits.ts`). When an account is deleted (`deleteAccount`), a workspace it
+  owned goes with it while it holds no project and no AI agent; any other passes to the
+  instance owner with what the account owned alone in it (`releaseOwnedWorkspaces` in
+  `teams/service.ts`). God mode asks about sole-owned projects only outside the account's
+  own workspaces. The owner deletes a workspace under the same rule
+  (`DELETE /workspaces/:id`, `workspaceDeletion` in `workspaces/service.ts`); the instance
+  workspace never goes. No core route hands a workspace over; `transferWorkspace` is
+  there for a build that offers it. SCIM provisioning creates and attaches accounts across the
+  instance, so its routes (`workspaceScim` guard) are the instance owner's alone; a hosted
+  build sets SCIM up per workspace with `setWorkspaceScim()` from `@repo/auth`, which lets
+  every workspace owner (see SCIM below).
 - **A member of the team joins a project directly** (`POST /projects/:key/members`,
   from the candidate list); anyone else joins through an invite, which puts them in
   the team as well. A team invite (`/teams/:teamId/invites`) names no project. One
@@ -210,29 +228,42 @@ advertises exactly that. A create inserts the `user` row directly, the way `crea
 does, which deliberately skips the registration gate — with SCIM on, the identity provider
 brings people in, and that is what makes `registration: 'closed'` plus SSO work.
 
-An account is one `user` row across the instance, and a workspace's provider decides who is
-in the workspace, not who has an account. What it says about a person — its own id for them
-and whether they are active — is a `scim_user` row per (workspace, user), so the same person
-can be linked by several workspaces. The provider sees the accounts it linked and the people
-in the workspace's teams (`inWorkspace` in `service.ts`). A create for an address that has an
-account links it; a name or address sent on a create, PUT or PATCH is accepted and the
-account keeps its own. Groups belong to a workspace (`scim_group.workspace_id`), their names
-are unique within it, and their members must be accounts it sees. The group mappings and the
-settings are routes of `modules/workspaces/`, open to the workspace owner only.
+An account is one `user` row across the instance. What a provider says about a person — its
+own id for them and whether they are active — is a `scim_user` row per (workspace, user).
+Groups belong to a workspace (`scim_group.workspace_id`), their names are unique within it,
+and their members must be accounts it sees. A create for an address that has an account
+links it. The group mappings and the settings are routes of `modules/workspaces/` (see the
+`workspaceScim` guard above). How far a provider reaches is `workspaceScim()` from
+`@repo/auth`:
+
+- **Off, as on a self-hosted instance, SCIM is the instance's.** God mode sets it up for the
+  instance workspace, and only that workspace's token opens `/scim/v2`. The provider sees
+  every account, PUT and PATCH write the name and address, a group maps to any project, and
+  DELETE removes the account the way god mode does (409 for the only owner of a project
+  outside the workspaces they own, whose projects pass to the instance owner).
+  A deactivated account (`user.active` false, written alongside `scim_user.active`) keeps
+  its teams and projects but cannot sign in, and `isAccountDeactivated` makes
+  `authContext`, `/me` and the MCP key check refuse what it already holds.
+- **On, as in a hosted build, SCIM is each workspace's.** A workspace's provider decides who
+  is in the workspace, not who has an account, so the same person can be linked by several
+  workspaces. It sees the accounts it linked and the people in the workspace's teams
+  (`inWorkspace` in `service.ts`), a name or address it sends is accepted and the account
+  keeps its own, and a group maps to projects of its workspace only.
 
 A create first asks the installed policy whether the workspace may provision the address
-(`email-policy.ts`). A self-hosted instance has one workspace and allows any address; a
-hosted build calls `setScimEmailPolicy` with a check against the domains the workspace has
+(`email-policy.ts`). A self-hosted instance allows any address, since only its owner sets
+up provisioning; a hosted build calls `setScimEmailPolicy` with a check against the domains the workspace has
 verified, and a refused address answers 400 `invalidValue`.
 
-Deactivation (`active: false`) and DELETE take the person out of every team of the
-workspace through `dropWorkspaceMemberships` in `teams/service.ts`, invite memberships
+Set up per workspace, deactivation (`active: false`) and DELETE take the person out of every
+team of the workspace through `dropWorkspaceMemberships` in `teams/service.ts`, invite memberships
 included, and a team or project they owned alone passes to the workspace owner. Neither
 touches the account or its sessions. A deactivated person stays linked, so the provider can
 turn them back on, and `reconcile.ts` grants them nothing through the groups until then.
-The `god`-role account and the workspace owner are refused (409): the first because nothing
-about the instance owner is provider-owned, the second because the owner is who receives
-what a deprovisioned person owned alone. A create for an address the provider already linked
+
+The `god`-role account is refused (409), because nothing about the instance owner is
+provider-owned; set up per workspace, so is the workspace owner, who receives what a
+deprovisioned person owned alone. A create for an address the provider already linked
 with an `externalId` is refused the same way — it is a retry, not a new person, and must not
 overwrite the link the first create wrote.
 

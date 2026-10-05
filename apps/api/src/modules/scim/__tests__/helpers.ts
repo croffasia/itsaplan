@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
-import { db, team, workspace, workspaceManager } from '@repo/db';
+import { rotateScimToken, setScimSettings } from '@repo/auth';
+import { createWorkspace, db, team } from '@repo/db';
 import { scimApi } from '#tests/helpers/app';
 import { addUser, type Actor } from '#modules/god/__tests__/helpers';
 
@@ -30,25 +31,24 @@ export async function setupScim(): Promise<ScimSetup> {
   return { god, workspaceId, settings, token, scim: scimApi(token) };
 }
 
-// A second workspace owned by `owner`, with provisioning on, holding `teamIds`. The
-// api cannot create a workspace, so it is written directly.
+// A second workspace owned by `owner`, with provisioning on, holding `teamIds`. Its
+// provisioning is set up directly, since through the api only the instance owner may.
 export async function setupOtherWorkspace(
   owner: Actor,
   teamIds: number[] = [],
 ): Promise<Omit<ScimSetup, 'god'>> {
-  const [created] = await db
-    .insert(workspace)
-    .values({ name: 'Other' })
-    .returning({ id: workspace.id });
-  const workspaceId = created!.id;
-  await db.insert(workspaceManager).values({ workspaceId, userId: owner.id, role: 'owner' });
+  const workspaceId = await createWorkspace(db, 'Other', owner.id);
   for (const teamId of teamIds) {
     await db.update(team).set({ workspaceId }).where(eq(team.id, teamId));
   }
-  const settings = workspaceScim(owner, workspaceId);
-  const token = (await settings.token.post()).data!.token;
-  await settings.patch({ enabled: true });
-  return { workspaceId, settings, token, scim: scimApi(token) };
+  const token = await rotateScimToken(workspaceId);
+  await setScimSettings(workspaceId, { enabled: true });
+  return {
+    workspaceId,
+    settings: workspaceScim(owner, workspaceId),
+    token,
+    scim: scimApi(token),
+  };
 }
 
 // `emails` follows `userName` by default, so overriding just `userName` in a test

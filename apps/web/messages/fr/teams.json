@@ -546,7 +546,7 @@
     "rail": "Espaces de travail",
     "create": "Nouvel espace de travail",
     "createUnavailableTitle": "Plus d'espaces de travail",
-    "createUnavailableHint": "Cette instance a un seul espace de travail. La création et la gestion des espaces de travail sont disponibles dans Cloud et dans Pro auto-hébergé.",
+    "createUnavailableHint": "Plusieurs espaces de travail par personne sont disponibles dans Cloud et dans Pro auto-hébergé.",
     "general": "Général",
     "roles": {
       "owner": "Propriétaire",
@@ -558,7 +558,17 @@
       "workspace": "Espace de travail",
       "workspaceHint": "Le nom que tout le monde voit.",
       "role": "Votre rôle",
-      "saved": "Espace de travail enregistré"
+      "saved": "Espace de travail enregistré",
+      "color": "Couleur",
+      "colorReset": "Par défaut"
+    },
+    "teamCreation": {
+      "title": "Qui crée des équipes",
+      "description": "Qui crée une équipe en est le propriétaire.",
+      "ownerOnly": "Seul le propriétaire décide qui crée des équipes.",
+      "owner": "Seulement le propriétaire",
+      "managers": "Le propriétaire et les administrateurs",
+      "members": "Tous les membres de ses équipes"
     },
     "managers": {
       "title": "Responsables",
@@ -583,6 +593,7 @@
       "saved": "Paramètres SCIM enregistrés",
       "provisioning": "Provisionnement",
       "provisioningConfigured": "Votre fournisseur d'identité ajoute des personnes à cet espace de travail et les en retire.",
+      "provisioningInstance": "Votre fournisseur d'identité crée, met à jour et désactive les comptes de cette instance.",
       "provisioningMissing": "Générez d'abord un token.",
       "token": "Token",
       "noToken": "Aucun token généré pour l'instant",
@@ -622,6 +633,14 @@
         "remove": "Retirer le projet",
         "saved": "Accès du groupe enregistré"
       }
+    },
+    "delete": {
+      "action": "Supprimer l'espace de travail",
+      "hint": "Ses équipes sont supprimées avec lui. Les personnes gardent leur compte et leurs autres équipes.",
+      "blocked": "Supprimez d'abord les projets et les agents IA de ses équipes.",
+      "title": "Supprimer {name} ?",
+      "description": "<strong>{name}</strong> et ses équipes sont supprimés. Les personnes gardent leur compte et leurs autres équipes. Cette action est irréversible.",
+      "deleted": "Espace de travail supprimé"
     }
   }
 }

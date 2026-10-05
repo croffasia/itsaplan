@@ -12,8 +12,9 @@ returns.
   `next_attempt_at`/`last_error` the same shape as `webhook_delivery`, credential columns
   encrypted the same way as `integration_credential`) and `import_record` (source id →
   local id mapping, the idempotency and resume primitive).
-- `apps/worker/src/{canonical,reader,plane-adapter,import-store,import-worker}.ts` — the
-  `SourceReader` port, the only implementation (Plane), and the phase state machine
+- `apps/worker/src/{canonical,reader,import-sources,plane-adapter,import-store,import-worker}.ts`
+  — the `SourceReader` port, the per-source registry the worker dispatches on
+  `import_job.source` through, the only implementation (Plane), and the phase state machine
   (discover → create → link → rewrite → attachments → done) that drives a job one bounded chunk per
   tick.
 - `packages/storage` and `packages/db/src/domains/storage.ts` — object storage and upload
@@ -140,7 +141,10 @@ attachment) are a distinct path, not covered by this — see "Inline images" in
   via its own `(project_id, name)` unique constraint. A match is reused, never overwritten:
   an existing column's `stateType` is left as Plane's category disagrees with it, for
   instance. This is a content match, not provenance tracking, so it also matches content a
-  user created by hand before importing, not only a previous import's output. `issue_link`
+  user created by hand before importing, not only a previous import's output. An issue or
+  comment the same job already mapped is excluded from the lookup (`notMappedByJob`): it
+  belongs to another source record, so two source issues with one title, or two comments
+  with one body and timestamp, stay apart within a job. `issue_link`
   needs no equivalent logic — its `(pair, kind)` unique index rejects the duplicate insert
   outright, caught by `isUniqueViolation` in `createIssueLink`.
   State/cycle name matching is exact (case-sensitive); issue title matching is not. Nothing
@@ -158,10 +162,12 @@ attachment) are a distinct path, not covered by this — see "Inline images" in
 ## Rate limiting and resumability, working as designed
 
 `rateLimitBackoffMs` (`plane-adapter.ts`) reads `x-ratelimit-remaining`/`x-ratelimit-reset`/
-a 429 off every response; hitting the limit throws `PlaneRateLimitedError`, and
-`handleTickError` (`import-worker.ts`) reschedules via `retryImportJobLater` rather than
-counting it as a failed attempt. `import_job.last_error` is cleared the moment a claim starts
-a new attempt, as well as on success and on completion (`import-store.ts`'s
+a 429 off every response; hitting the limit throws `SourceRateLimitedError` (`reader.ts`).
+`tickErrorOutcome` (`import-retry.ts`) only decides what a failed tick does — for a rate
+limit, retry after the reset with `last_error` `'rate limited'` — and `handleTickError`
+(`import-worker.ts`) reschedules the job via `retryImportJobLater`, so a rate limit is waited
+out and never fails the job by itself. `import_job.last_error` is cleared the moment a claim
+starts a new attempt, as well as on success and on completion (`import-store.ts`'s
 `claimDueImportJobs`/`saveImportJobCursor`/`advanceImportJobPhase`/`completeImportJob`), so a
 non-null `lastError` on a still-`pending` job reliably means "currently waiting out a retry,"
 never "an attempt is in flight" — which is what the Settings page's warning banner reads.

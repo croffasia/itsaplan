@@ -1,5 +1,5 @@
 import type { AnalyticsStats } from '@/lib/api/endpoints/analytics';
-import type { Project } from '@/lib/api/endpoints/projects';
+import type { AccessVia, Project } from '@/lib/api/endpoints/projects';
 import { request } from '@/lib/api/core/client';
 import type { Permissions } from '@/lib/api/endpoints/roles';
 import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
@@ -24,6 +24,9 @@ export interface Team {
   // The caller's rank in the team. The API also answers an agent's own key, which reads
   // 'agent' there; an agent never opens this app, so a person's rank is what arrives.
   role: TeamRole;
+  // 'workspace' when the caller is not in the team and reaches it through their role in
+  // its workspace; source and joinedAt are then the team's defaults.
+  via: AccessVia;
   // How the caller's own membership came about. A provisioned one is the identity
   // provider's: the team cannot be left while it stands.
   source: 'invite' | 'scim';
@@ -118,9 +121,14 @@ export interface TeamLead {
 export interface TeamProjectDetail {
   lastActivityAt: string | null;
   stats: AnalyticsStats;
-  // The reader's own membership in the project, null when they only run the team.
-  // A provisioned one ends at the identity provider, so it cannot be left here.
-  viewer: { role: MemberRole; source: 'invite' | 'scim'; permissions: Permissions } | null;
+  // The reader's access to the project, null when they only run the team. A
+  // provisioned membership ends at the identity provider, so it cannot be left here.
+  viewer: {
+    role: MemberRole;
+    via: AccessVia;
+    source: 'invite' | 'scim';
+    permissions: Permissions;
+  } | null;
 }
 
 // One member of a project the team owns. The access their membership resolves to is

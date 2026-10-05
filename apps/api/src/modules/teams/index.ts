@@ -155,7 +155,8 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
         summary: 'List team projects',
         description:
           'One page of the projects a team owns, by key. `search` matches the key or the ' +
-          'name. An owner or a manager sees them all; anyone else only the ones they belong to.',
+          'name. An owner or a manager, and anyone whose workspace role reaches the team, sees ' +
+          'them all; anyone else only the ones they belong to.',
       },
     },
   )

@@ -21,6 +21,7 @@ import { HttpError } from '#shared/lib';
 import {
   DEFAULT_COLUMNS,
   getProjectById,
+  joinTeamAsCreator,
   mapProject,
   targetTeam,
   type ProjectRow,
@@ -291,6 +292,7 @@ export async function copyProject(
       teamSlug: ownerTeam.slug,
       teamMcpEnabled: ownerTeam.mcpEnabled,
     });
+    await joinTeamAsCreator(tx, ownerTeam.id, ownerId);
     await tx.insert(projectMember).values({ projectId: proj.id, userId: ownerId, role: 'owner' });
 
     // States (columns). When copied, every source column is carried over so views,

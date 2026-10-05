@@ -25,6 +25,7 @@ import { TEAM_SLUG_PATTERN } from '../../utils/teamSlug';
 // the team over to, and a membership a provisioned group granted ends at the identity
 // provider.
 function canLeave(team: Team): boolean {
+  if (team.via === 'workspace') return false;
   if (team.role === 'owner' && team.ownerCount === 1) return false;
   return !(team.source === 'scim' && team.role === 'member');
 }

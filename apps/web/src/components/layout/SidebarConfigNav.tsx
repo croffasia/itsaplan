@@ -20,7 +20,7 @@ export default function SidebarConfigNav({ projectKey }: { projectKey: string | 
   const pathname = usePathname();
   const disabled = !projectKey;
   const { firstHref } = useSettingsNavGroups(projectKey);
-  const { can } = usePermissions();
+  const { can, isMember } = usePermissions();
 
   return (
     <SidebarGroup>
@@ -36,13 +36,15 @@ export default function SidebarConfigNav({ projectKey }: { projectKey: string | 
               disabled={disabled}
             />
           )}
-          <SidebarNavItem
-            href={projectKey ? notificationsPath(projectKey) : '#'}
-            icon={Bell}
-            label={t('notifications')}
-            active={!!projectKey && pathname === notificationsPath(projectKey)}
-            disabled={disabled}
-          />
+          {isMember && (
+            <SidebarNavItem
+              href={projectKey ? notificationsPath(projectKey) : '#'}
+              icon={Bell}
+              label={t('notifications')}
+              active={!!projectKey && pathname === notificationsPath(projectKey)}
+              disabled={disabled}
+            />
+          )}
           {firstHref && (
             <SidebarNavItem
               href={firstHref}

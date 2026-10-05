@@ -71,7 +71,7 @@ export default function TeamsRail({
                 >
                   <span className="min-w-0 flex-1 truncate">{team.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {t(`roles.${team.role}`)}
+                    {team.via === 'workspace' ? t('viaWorkspace') : t(`roles.${team.role}`)}
                   </span>
                 </Link>
               </li>

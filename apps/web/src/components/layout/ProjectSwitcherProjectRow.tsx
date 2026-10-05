@@ -17,6 +17,9 @@ export default function ProjectSwitcherProjectRow({
 }) {
   const t = useTranslations('nav.projectPicker');
   const current = project.ref === currentProjectKey;
+  // Stars and hiding are kept on the membership, which a project reached through the
+  // workspace does not have.
+  const viaWorkspace = project.via === 'workspace';
   const relativeTime = useRelativeTime();
 
   return (
@@ -52,11 +55,17 @@ export default function ProjectSwitcherProjectRow({
                 </time>
               </>
             )}
+            {viaWorkspace && (
+              <>
+                <span aria-hidden>·</span>
+                <span>{t('viaWorkspace')}</span>
+              </>
+            )}
           </span>
         </div>
       </CommandItem>
-      <ProjectSwitcherHideButton project={project} />
-      {!project.isHidden && <ProjectSwitcherStarButton project={project} />}
+      {!viaWorkspace && <ProjectSwitcherHideButton project={project} />}
+      {!viaWorkspace && !project.isHidden && <ProjectSwitcherStarButton project={project} />}
     </div>
   );
 }

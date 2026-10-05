@@ -66,6 +66,7 @@
     "hintMove": "mover",
     "hintOpen": "abrir",
     "workspaces": "Espacios de trabajo",
-    "workspaceSettings": "Ajustes del espacio de trabajo"
+    "workspaceSettings": "Ajustes del espacio de trabajo",
+    "viaWorkspace": "A través del espacio de trabajo"
   }
 }

@@ -1,6 +1,7 @@
 import { db, teamInvite, teamMember, projectMember, teamRole, team, project, user } from '@repo/db';
 import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import { HttpError, iso, pgErrorCode } from '#shared/lib';
+import { getProjectAccess, getTeamAccess } from '#shared/access';
 import { teamRef } from '#modules/teams/ref';
 import { getMembership, type MemberRole } from '#modules/members/service';
 import { assertSeatFree, getTeamMembership, runsTeam, type TeamRole } from '#modules/teams/service';
@@ -199,10 +200,10 @@ export async function mayGrantInviteRanks(
   if (!grantsTeamRank && !grantsProjectOwner) return true;
   if (!senderId) return false;
 
-  const standing = await getTeamMembership(invite.teamId, senderId);
+  const standing = (await getTeamAccess(invite.teamId, senderId))?.role ?? null;
   if (grantsTeamRank && standing !== 'owner') return false;
   if (grantsProjectOwner && !runsTeam(standing)) {
-    return (await getMembership(invite.projectId!, senderId)) === 'owner';
+    return (await getProjectAccess(invite.projectId!, senderId))?.role === 'owner';
   }
   return true;
 }

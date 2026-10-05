@@ -154,6 +154,11 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   depend on them change nothing until it is on. One read-only state looks the same everywhere:
   the same icon and the same wording for on and off, in the row the control would have taken —
   reuse the component that already renders it rather than styling a second variant.
+- **A workspace's owner and admins reach its projects and teams without being members.**
+  The API says so with `via: 'workspace'` on the project viewer (`usePermissions().isMember`
+  is false), on a project in the list and on a team. What hangs on the membership itself
+  is left out for them: starring and hiding a project, leaving it or the team, and the
+  project's notification settings. Everything else follows `can()` as for a member.
 - Add shadcn components with `bunx shadcn@latest add <name>` (config in `components.json`).
 - **Don't edit `src/components/ui/`** — those files are generated and re-adding a component
   overwrites them. Style them from the outside instead: every primitive carries a `data-slot`

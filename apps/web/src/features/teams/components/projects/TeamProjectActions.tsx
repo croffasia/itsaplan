@@ -6,6 +6,7 @@ import { Archive, ArchiveRestore, Copy, LogOut, Pencil, Trash2 } from 'lucide-re
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import type { MemberRole } from '@/lib/api/endpoints/members';
+import type { AccessVia } from '@/lib/api/endpoints/projects';
 import type { TeamProject, TeamRole } from '@/lib/api/endpoints/teams';
 import { useSession } from '@/lib/auth-client';
 import { useSetTeamProjectArchived } from '@/services/projects.service';
@@ -30,7 +31,7 @@ export default function TeamProjectActions({
   teamId: number;
   teamRole: TeamRole;
   project: TeamProject;
-  viewer: { role: MemberRole; source: 'invite' | 'scim' } | null;
+  viewer: { role: MemberRole; via: AccessVia; source: 'invite' | 'scim' } | null;
 }) {
   const t = useTranslations('projects');
   const router = useRouter();
@@ -44,7 +45,7 @@ export default function TeamProjectActions({
   const userId = session?.user.id;
   const isLastOwner = viewer?.role === 'owner' && project.owners.length === 1;
   // A provisioned membership ends at the identity provider, so it is not given up here.
-  const canLeave = !!viewer && !isLastOwner && viewer.source !== 'scim';
+  const canLeave = viewer?.via === 'member' && !isLastOwner && viewer.source !== 'scim';
   const canEdit = teamRole !== 'member';
   const canDelete = teamRole === 'owner';
   const archived = project.archivedAt != null;

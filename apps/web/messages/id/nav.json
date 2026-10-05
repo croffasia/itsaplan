@@ -66,6 +66,7 @@
     "hintMove": "pindah",
     "hintOpen": "buka",
     "workspaces": "Workspace",
-    "workspaceSettings": "Pengaturan workspace"
+    "workspaceSettings": "Pengaturan workspace",
+    "viaWorkspace": "Melalui workspace"
   }
 }

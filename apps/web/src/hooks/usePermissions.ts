@@ -32,5 +32,9 @@ export function usePermissions(source?: ProjectDetail | null) {
   const isAdmin =
     viewer?.role === 'owner' || viewer?.teamRole === 'owner' || viewer?.teamRole === 'manager';
 
-  return { can, role: viewer?.role ?? null, isOwner: viewer?.role === 'owner', isAdmin };
+  // Someone who reaches the project only through their role in its workspace keeps no
+  // preferences in it and gets none of its notifications.
+  const isMember = viewer?.via === 'member';
+
+  return { can, role: viewer?.role ?? null, isOwner: viewer?.role === 'owner', isAdmin, isMember };
 }

@@ -112,7 +112,8 @@
       "manager": "Manager",
       "member": "Member",
       "agent": "AI agent"
-    }
+    },
+    "viaWorkspace": "Via workspace"
   },
   "roles": {
     "ownerOnly": "Only a team owner or manager can manage roles.",

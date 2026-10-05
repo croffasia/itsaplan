@@ -43,6 +43,7 @@ function team(overrides: Partial<Team> = {}): Team {
     ref: 'eng',
     mcpEnabled: true,
     role: 'owner',
+    via: 'member',
     source: 'invite',
     joinedAt: '2026-01-01T00:00:00Z',
     projectCount: 1,

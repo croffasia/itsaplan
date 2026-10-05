@@ -28,6 +28,7 @@ import {
 import { requireUser, type AuthUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
 import { getOwnedWorkspaceLimit } from '#shared/limits';
+import { workspaceRoleGrant, type WorkspaceGrant } from '#shared/workspace-roles';
 
 export type WorkspaceRole = 'owner' | 'admin';
 
@@ -40,6 +41,53 @@ export async function getWorkspaceRole(
     .from(workspaceManager)
     .where(and(eq(workspaceManager.workspaceId, workspaceId), eq(workspaceManager.userId, userId)));
   return (row?.role as WorkspaceRole | undefined) ?? null;
+}
+
+// What the person's role in the workspace that holds the team grants there.
+export async function workspaceGrant(
+  teamId: number,
+  userId: string,
+): Promise<WorkspaceGrant | null> {
+  const [row] = await db
+    .select({ role: workspaceManager.role })
+    .from(team)
+    .innerJoin(
+      workspaceManager,
+      and(eq(workspaceManager.workspaceId, team.workspaceId), eq(workspaceManager.userId, userId)),
+    )
+    .where(eq(team.id, teamId));
+  return row ? workspaceRoleGrant(row.role) : null;
+}
+
+export async function projectWorkspaceGrant(
+  projectId: number,
+  userId: string,
+): Promise<WorkspaceGrant | null> {
+  const [row] = await db
+    .select({ role: workspaceManager.role })
+    .from(project)
+    .innerJoin(team, eq(team.id, project.teamId))
+    .innerJoin(
+      workspaceManager,
+      and(eq(workspaceManager.workspaceId, team.workspaceId), eq(workspaceManager.userId, userId)),
+    )
+    .where(eq(project.id, projectId));
+  return row ? workspaceRoleGrant(row.role) : null;
+}
+
+// Every team the person reaches through a workspace role, with what the role grants.
+export async function workspaceGrants(userId: string): Promise<Map<number, WorkspaceGrant>> {
+  const rows = await db
+    .select({ teamId: team.id, role: workspaceManager.role })
+    .from(workspaceManager)
+    .innerJoin(team, eq(team.workspaceId, workspaceManager.workspaceId))
+    .where(eq(workspaceManager.userId, userId));
+  const out = new Map<number, WorkspaceGrant>();
+  for (const row of rows) {
+    const grant = workspaceRoleGrant(row.role);
+    if (grant) out.set(row.teamId, grant);
+  }
+  return out;
 }
 
 export interface WorkspaceStanding {

@@ -1,6 +1,7 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
+import { AccessViaSchema } from '#shared/workspace-roles';
 import { StatsDto } from '#modules/analytics/model';
 import { TEAM_SLUG_PATTERN } from './ref';
 
@@ -58,6 +59,11 @@ export const TeamResponse = t.Object({
     [t.Literal('owner'), t.Literal('manager'), t.Literal('member'), t.Literal('agent')],
     { description: 'Your standing in this team.' },
   ),
+  via: t.Union([t.Literal('member'), t.Literal('workspace')], {
+    description:
+      "'workspace' when you are not in the team and reach it through your role in its " +
+      'workspace.',
+  }),
   source: t.Union([t.Literal('invite'), t.Literal('scim')], {
     description:
       "How your membership came about. A provisioned one is the identity provider's: you " +
@@ -162,6 +168,7 @@ export const TeamProjectDetailResponse = t.Object({
   viewer: t.Nullable(
     t.Object({
       role: t.Union([t.Literal('owner'), t.Literal('member')]),
+      via: AccessViaSchema,
       source: t.Union([t.Literal('invite'), t.Literal('scim')], {
         description: "A provisioned membership is the identity provider's: it cannot be left.",
       }),

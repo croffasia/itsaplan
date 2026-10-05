@@ -103,9 +103,21 @@ Enforced declaratively through macros, never imperative calls in handlers.
   `user` on context, throws 401 with none. `planner.ts` gates every planner route;
   a feature also `.use(authContext)` when its handlers/macros reference `user`. An
   `x-api-key` header resolves through `getSession` — no special-casing.
-- **Membership:** access is strictly by a `project_member` row (`owner` | `member`).
-  Owners bypass the permission matrix; the global `user.role` (`god` | `user`) does
-  **not**. Keep at least one owner per project.
+- **Membership:** access is by a `project_member` row (`owner` | `member`), raised by
+  the caller's role in the workspace that holds the project. Owners bypass the
+  permission matrix; the global `user.role` (`god` | `user`) does **not**. Keep at least
+  one owner per project.
+- **Workspace roles reach every team and project of the workspace** without a membership
+  row: the owner as an owner of each, an admin with a matrix that only reads. The table
+  is `shared/workspace-roles.ts`; `setWorkspaceRoleGrant(role, grant)` changes what a role
+  grants or adds a role, for a build that has more. `getProjectAccess` and
+  `getTeamAccess` in `shared/access.ts` merge the membership with the grant, and every
+  guard reads them. The lists that decide what the caller sees — `listProjects`, the
+  team list, `readRevs` — take the reached teams the same way, and answer `via:
+  'workspace'` for what the caller reaches only through the workspace. Everything that
+  asks whether *someone else* is a member — assignees, mentions, watchers, notification
+  recipients, seats, the last-owner check, SCIM — still reads the rows, so a workspace
+  manager is in none of the member lists, gets no notifications and takes no seat.
 - **`:projectKey` routes:** `.use(guards)` and set `permission: ["<resource>",
 "<action>"]` / `projectMember: true` / `projectOwner: true`; read the resolved
   `project` from context.

@@ -66,6 +66,7 @@
     "hintMove": "перейти",
     "hintOpen": "відкрити",
     "workspaces": "Воркспейси",
-    "workspaceSettings": "Налаштування воркспейсу"
+    "workspaceSettings": "Налаштування воркспейсу",
+    "viaWorkspace": "Через воркспейс"
   }
 }

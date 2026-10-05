@@ -112,7 +112,8 @@
       "manager": "管理者",
       "member": "成员",
       "agent": "AI 代理"
-    }
+    },
+    "viaWorkspace": "通过工作区"
   },
   "roles": {
     "ownerOnly": "只有团队所有者或管理者可以管理角色。",

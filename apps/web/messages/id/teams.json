@@ -112,7 +112,8 @@
       "manager": "Manajer",
       "member": "Anggota",
       "agent": "Agen AI"
-    }
+    },
+    "viaWorkspace": "Melalui workspace"
   },
   "roles": {
     "ownerOnly": "Hanya pemilik atau manajer tim yang dapat mengelola peran.",

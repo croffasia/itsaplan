@@ -66,6 +66,7 @@
     "hintMove": "تنقل",
     "hintOpen": "فتح",
     "workspaces": "مساحات العمل",
-    "workspaceSettings": "إعدادات مساحة العمل"
+    "workspaceSettings": "إعدادات مساحة العمل",
+    "viaWorkspace": "عن طريق مساحة العمل"
   }
 }

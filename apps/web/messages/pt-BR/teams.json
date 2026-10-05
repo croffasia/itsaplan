@@ -64,7 +64,15 @@
     "leads": "Donos e gerentes",
     "leadsHint": "Pessoas que podem gerenciar este time e seus projetos.",
     "saved": "Equipe salva",
-    "leaveHint": "Você mantém os projetos de que é membro. Para entrar de novo, um dono precisa readicioná-lo."
+    "leaveHint": "Você mantém os projetos de que é membro. Para entrar de novo, um dono precisa readicioná-lo.",
+    "delete": {
+      "action": "Excluir equipe",
+      "hint": "Seus membros, funções, convites, habilidades, ferramentas e integrações são excluídos com ela. As pessoas mantêm suas contas e suas outras equipes.",
+      "blocked": "Exclua primeiro os projetos e os agentes de IA da equipe.",
+      "title": "Excluir {name}?",
+      "description": "<strong>{name}</strong> é excluída com seus membros, funções, convites, habilidades, ferramentas e integrações. As pessoas mantêm suas contas e suas outras equipes. Isso não pode ser desfeito.",
+      "deleted": "Equipe excluída"
+    }
   },
   "columns": {
     "project": "Projeto",

@@ -35,6 +35,8 @@ import {
   type MemberSource,
 } from '#modules/members/service';
 import { getStats, type StatsDto } from '#modules/analytics/service';
+import { teamSkillObjectKeys } from '#modules/agents/skills/service';
+import { deleteObjects } from '@repo/storage';
 import {
   assertMayCreateTeam,
   projectWorkspaceGrant,
@@ -896,6 +898,26 @@ export async function updateTeam(
   }
   const [row] = await loadTeamRows(userId, teamId);
   return row;
+}
+
+// A team holding a project or an AI agent is kept: those are people's work, and the
+// delete cascades to everything the team owns.
+export async function deleteTeam(teamId: number): Promise<void> {
+  const skillKeys = await teamSkillObjectKeys(teamId);
+  const deleted = await db
+    .delete(team)
+    .where(
+      and(
+        eq(team.id, teamId),
+        sql`not exists (select 1 from ${project} where ${project.teamId} = ${team.id})`,
+        sql`not exists (select 1 from ${aiAgent} where ${aiAgent.teamId} = ${team.id})`,
+      ),
+    )
+    .returning({ id: team.id });
+  if (deleted.length === 0) {
+    throw new HttpError(409, 'Delete the projects and AI agents of the team first');
+  }
+  await deleteObjects(skillKeys);
 }
 
 async function membershipInTransaction(

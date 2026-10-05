@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import TeamDeleteSection from './TeamDeleteSection';
 import TeamLeadsSection from './TeamLeadsSection';
 import TeamLeaveDialog from './TeamLeaveDialog';
 import { TEAM_SLUG_PATTERN } from '../../utils/teamSlug';
@@ -31,7 +32,7 @@ function canLeave(team: Team): boolean {
 }
 
 // The team itself: the name and the URL slug its owner edits here, the caller's rank
-// in it, and the way out of it. Everything it shows comes with the team list.
+// in it, and leaving or deleting it. Everything it shows comes with the team list.
 export default function TeamInfoSection({ teamId }: { teamId: number }) {
   const t = useTranslations('teams.info');
   const tSection = useTranslations('teams.sections.info');
@@ -148,6 +149,8 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
             }
           />
         )}
+
+        {isOwner && <TeamDeleteSection team={team} />}
       </div>
 
       {leaving && <TeamLeaveDialog team={team} onClose={() => setLeaving(false)} />}

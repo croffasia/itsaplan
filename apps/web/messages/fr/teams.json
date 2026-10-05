@@ -64,7 +64,15 @@
     "leads": "Propriétaires et responsables",
     "leadsHint": "Les personnes qui peuvent gérer cette équipe et ses projets.",
     "saved": "Équipe enregistrée",
-    "leaveHint": "Vous conservez les projets dont vous êtes membre. Pour revenir, un propriétaire doit vous ajouter à nouveau."
+    "leaveHint": "Vous conservez les projets dont vous êtes membre. Pour revenir, un propriétaire doit vous ajouter à nouveau.",
+    "delete": {
+      "action": "Supprimer l'équipe",
+      "hint": "Ses membres, rôles, invitations, compétences, outils et intégrations sont supprimés avec elle. Les personnes conservent leur compte et leurs autres équipes.",
+      "blocked": "Supprimez d'abord les projets et les agents IA de l'équipe.",
+      "title": "Supprimer {name} ?",
+      "description": "<strong>{name}</strong> est supprimée avec ses membres, rôles, invitations, compétences, outils et intégrations. Les personnes conservent leur compte et leurs autres équipes. Cette action est irréversible.",
+      "deleted": "Équipe supprimée"
+    }
   },
   "columns": {
     "project": "Projet",

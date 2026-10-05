@@ -5,6 +5,8 @@ import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
 import { createAgent } from '#tests/helpers/agents';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
+import { teamSkillObjectKeys } from '#modules/agents/skills/service';
+import { getObjectText } from '@repo/storage';
 
 // The teams feature owns list, create, detail, rename, and leave. Every account is
 // given a team at registration, named after its username, so a fresh account already
@@ -1276,6 +1278,72 @@ describe('teams', () => {
       ]);
       expect(results.filter((result) => result.status === 204)).toHaveLength(1);
       expect(results.some((result) => result.status === 403 || result.status === 404)).toBe(true);
+    });
+  });
+
+  describe('delete', () => {
+    // The first account owns the instance workspace, which reaches every team in it, so
+    // the team owner is the second.
+    async function teamOwner() {
+      await signUpTestUser();
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      return { owner, teamId };
+    }
+
+    it('lets the owner delete a team that holds no work', async () => {
+      const { owner, teamId } = await teamOwner();
+      await addTeamMember(owner, teamId);
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(204);
+      expect((await owner.api.teams.get()).data).toEqual([]);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(404);
+    });
+
+    it("removes the team's skill files from the object store", async () => {
+      const { owner, teamId } = await teamOwner();
+      await owner.api
+        .teams({ teamId })
+        ['agent-skills'].post({ source: 'inline', name: 'Triage', markdown: 'Set a priority.' });
+      const keys = await teamSkillObjectKeys(teamId);
+      expect(keys).not.toHaveLength(0);
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(204);
+      for (const key of keys) await expect(getObjectText(key)).rejects.toThrow();
+    });
+
+    it('keeps a team that holds a project', async () => {
+      const { owner, teamId } = await teamOwner();
+      await owner.api.teams({ teamId }).projects.post({ key: 'OPS', name: 'Operations' });
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(409);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
+    });
+
+    it('keeps a team that holds an AI agent', async () => {
+      const { owner, teamId } = await teamOwner();
+      const created = await owner.api.teams({ teamId }).projects.post({ key: 'OPS', name: 'Ops' });
+      await createAgent(owner.api, 'OPS', { name: 'Triage', username: 'triage', kind: 'external' });
+      await owner.api.teams({ teamId }).projects({ projectId: created.data!.id }).delete();
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(409);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
+    });
+
+    it('leaves deleting to an owner', async () => {
+      const { owner, teamId } = await teamOwner();
+      const manager = await addTeamMember(owner, teamId, 'manager');
+
+      expect((await manager.api.teams({ teamId }).delete()).status).toBe(403);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
+    });
+
+    it('404s for a team the caller is not a member of', async () => {
+      const { owner, teamId } = await teamOwner();
+      const outsider = await signUpClient();
+
+      expect((await outsider.api.teams({ teamId }).delete()).status).toBe(404);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
     });
   });
 

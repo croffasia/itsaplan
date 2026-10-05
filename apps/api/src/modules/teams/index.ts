@@ -45,6 +45,7 @@ import {
 } from './model';
 import {
   createTeam,
+  deleteTeam,
   getTeam,
   getTeamProject,
   leaveTeam,
@@ -307,6 +308,26 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       detail: {
         summary: 'Update a team',
         description: 'Rename a team you own, or set the slug its web URLs use.',
+      },
+    },
+  )
+
+  .delete(
+    '/teams/:teamId',
+    async ({ membership }) => {
+      await deleteTeam(membership.teamId);
+      return noContent();
+    },
+    {
+      teamOwner: true,
+      params: teamParams,
+      response: { 204: t.Void(), ...errors(401, 403, 404, 409) },
+      detail: {
+        summary: 'Delete a team',
+        description:
+          'Delete a team you own, with its members, roles, invites, skills, tools and ' +
+          'integrations. A team that holds a project or an AI agent is refused until those ' +
+          'are gone. Irreversible.',
       },
     },
   )

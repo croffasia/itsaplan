@@ -64,7 +64,15 @@
     "leads": "Propietarios y administradores",
     "leadsHint": "Personas que pueden gestionar este equipo y sus proyectos.",
     "saved": "Equipo guardado",
-    "leaveHint": "Conservas los proyectos de los que eres miembro. Para volver a unirte, un propietario tiene que añadirte de vuelta."
+    "leaveHint": "Conservas los proyectos de los que eres miembro. Para volver a unirte, un propietario tiene que añadirte de vuelta.",
+    "delete": {
+      "action": "Eliminar equipo",
+      "hint": "Se eliminan con él sus miembros, roles, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos.",
+      "blocked": "Elimina primero los proyectos y los agentes de IA del equipo.",
+      "title": "¿Eliminar {name}?",
+      "description": "<strong>{name}</strong> se elimina junto con sus miembros, roles, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos. No se puede deshacer.",
+      "deleted": "Equipo eliminado"
+    }
   },
   "columns": {
     "project": "Proyecto",

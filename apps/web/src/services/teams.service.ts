@@ -30,6 +30,7 @@ import {
   updateTeam,
   setTeamMemberRole,
   removeTeamMember,
+  deleteTeam,
   leaveTeam,
 } from '@/lib/api/endpoints/teams';
 import { nextPageParam } from '@/lib/api/core/paging';
@@ -212,6 +213,17 @@ export function useRemoveTeamMember(teamId: number) {
       void qc.invalidateQueries({ queryKey: qk.team(teamId) });
       void qc.invalidateQueries({ queryKey: qk.teams });
       void qc.invalidateQueries({ queryKey: qk.anyMembers });
+    },
+  });
+}
+
+export function useDeleteTeam() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (teamId: number) => deleteTeam(teamId),
+    onSuccess: (_result, teamId) => {
+      qc.setQueryData<Team[]>(qk.teams, (prev) => prev?.filter((t) => t.id !== teamId));
+      void qc.invalidateQueries({ queryKey: qk.teams });
     },
   });
 }

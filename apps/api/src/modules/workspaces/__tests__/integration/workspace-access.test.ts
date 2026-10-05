@@ -42,6 +42,15 @@ describe('workspace access', () => {
   beforeEach(resetDb);
   afterEach(() => setWorkspaceRoleGrant('admin', readOnlyPermissions()));
 
+  it('lets the workspace owner delete a team, and not an admin', async () => {
+    const { asOwner, asAdmin, teamId } = await setup();
+    const project = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.project;
+    await asOwner.teams({ teamId }).projects({ projectId: project.id }).delete();
+
+    expect((await asAdmin.teams({ teamId }).delete()).status).toBe(403);
+    expect((await asOwner.teams({ teamId }).delete()).status).toBe(204);
+  });
+
   it('lets the workspace owner work in every project as its owner', async () => {
     const { asOwner, teamId, columnId } = await setup();
 

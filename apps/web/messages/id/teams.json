@@ -64,7 +64,15 @@
     "leads": "Pemilik dan manajer",
     "leadsHint": "Orang yang dapat mengelola tim ini beserta proyeknya.",
     "saved": "Tim disimpan",
-    "leaveHint": "Anda tetap menjadi anggota proyek yang Anda ikuti. Untuk bergabung kembali, pemilik harus menambahkan Anda lagi."
+    "leaveHint": "Anda tetap menjadi anggota proyek yang Anda ikuti. Untuk bergabung kembali, pemilik harus menambahkan Anda lagi.",
+    "delete": {
+      "action": "Hapus tim",
+      "hint": "Anggota, peran, undangan, keterampilan, alat, dan integrasinya ikut dihapus. Orang-orang tetap memiliki akun dan tim lain mereka.",
+      "blocked": "Hapus dulu proyek dan agen AI milik tim.",
+      "title": "Hapus {name}?",
+      "description": "<strong>{name}</strong> dihapus beserta anggota, peran, undangan, keterampilan, alat, dan integrasinya. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
+      "deleted": "Tim dihapus"
+    }
   },
   "columns": {
     "project": "Proyek",

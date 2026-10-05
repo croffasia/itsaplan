@@ -64,7 +64,15 @@
     "leads": "Owners and managers",
     "leadsHint": "People who can manage this team and its projects.",
     "saved": "Team saved",
-    "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back."
+    "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back.",
+    "delete": {
+      "action": "Delete team",
+      "hint": "Its members, roles, invites, skills, tools and integrations are deleted with it. People keep their accounts and their other teams.",
+      "blocked": "Delete the projects and AI agents of the team first.",
+      "title": "Delete {name}?",
+      "description": "<strong>{name}</strong> is deleted with its members, roles, invites, skills, tools and integrations. People keep their accounts and their other teams. This cannot be undone.",
+      "deleted": "Team deleted"
+    }
   },
   "columns": {
     "project": "Project",

@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -42,7 +43,10 @@ export default function TakeoverScreen({
   actionLabel: string;
   onAction: () => void;
 }) {
-  return (
+  if (typeof document === 'undefined') return null;
+  // Portaled to the body: an opener inside a stacking context, like the sidebar
+  // footer, would otherwise put the screen under page content of the same z-index.
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto bg-background">
       <div className="grid min-h-full w-full lg:grid-cols-[20rem_minmax(0,1fr)] xl:grid-cols-[24rem_minmax(0,1fr)]">
         <aside className="flex flex-col gap-10 bg-muted/40 px-6 py-10 lg:sticky lg:top-0 lg:h-dvh lg:px-10 lg:py-14">
@@ -138,6 +142,7 @@ export default function TakeoverScreen({
           </Button>
         </main>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

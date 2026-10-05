@@ -69,9 +69,11 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
           unread={unreadQuery.data ?? 0}
           filters={filters}
           onFiltersChange={changeFilters}
-          onMarkAllRead={() => markAllRead.mutate()}
-          onDeleteRead={() => deleteNotifications.mutate('read')}
-          onDeleteReadCompleted={() => deleteNotifications.mutate('read-completed')}
+          onMarkAllRead={() => markAllRead.mutate(filters)}
+          onDeleteRead={() => deleteNotifications.mutate({ scope: 'read', filters })}
+          onDeleteReadCompleted={() =>
+            deleteNotifications.mutate({ scope: 'read-completed', filters })
+          }
         />
         <InboxList
           items={items}

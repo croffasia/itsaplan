@@ -47,7 +47,7 @@ export function useSetNotificationRead(projectKey: string) {
 export function useMarkAllRead(projectKey: string, projectId: number) {
   const invalidate = useInvalidateInbox(projectKey);
   return useMutation({
-    mutationFn: () => markAllNotificationsRead(projectId),
+    mutationFn: (filters: NotificationFilters) => markAllNotificationsRead(projectId, filters),
     onSuccess: invalidate,
   });
 }
@@ -72,7 +72,13 @@ export function useDeleteNotification(projectKey: string) {
 export function useDeleteNotifications(projectKey: string, projectId: number) {
   const invalidate = useInvalidateInbox(projectKey);
   return useMutation({
-    mutationFn: (scope: NotificationDeleteScope) => deleteNotifications(scope, projectId),
+    mutationFn: ({
+      scope,
+      filters,
+    }: {
+      scope: NotificationDeleteScope;
+      filters: NotificationFilters;
+    }) => deleteNotifications(scope, projectId, filters),
     onSuccess: invalidate,
   });
 }

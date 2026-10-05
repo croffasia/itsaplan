@@ -94,7 +94,12 @@ export const notificationRoutes = new Elysia({
     '/notifications/read-all',
     async ({ user, body }) => {
       const userId = requireUser(user).id;
-      const count = await markAllRead(userId, body?.projectId ?? undefined);
+      const count = await markAllRead(userId, body?.projectId, {
+        types: body?.types,
+        fromUserId: body?.from,
+        includeRead: body?.includeRead,
+        includeSnoozed: body?.includeSnoozed ?? true,
+      });
       return { count };
     },
     {
@@ -110,12 +115,24 @@ export const notificationRoutes = new Elysia({
       const userId = requireUser(user).id;
       const scope = (query.scope ?? 'read') as DeleteScope;
       const projectId = query.projectId ? Number(query.projectId) : undefined;
-      const count = await deleteNotifications(userId, scope, projectId);
+      let types: NotificationType[] | undefined;
+      if (query.types != null) {
+        const supplied = query.types.split(',');
+        if (supplied.some((value) => !(NOTIFICATION_TYPES as readonly string[]).includes(value)))
+          throw new HttpError(400, 'Invalid notification type');
+        types = supplied as NotificationType[];
+      }
+      const count = await deleteNotifications(userId, scope, projectId, {
+        types,
+        fromUserId: query.from,
+        includeRead: query.includeRead !== 'false',
+        includeSnoozed: query.includeSnoozed !== 'false',
+      });
       return { count };
     },
     {
       query: deleteNotificationsQuery,
-      response: { 200: AffectedCountResponse, ...errors(401) },
+      response: { 200: AffectedCountResponse, ...errors(400, 401) },
       detail: { summary: 'Delete inbox notifications' },
     },
   )

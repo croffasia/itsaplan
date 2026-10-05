@@ -262,6 +262,17 @@ export interface NotificationFilters {
   includeSnoozed?: boolean;
 }
 
+function notificationConditions(userId: string, f: NotificationFilters) {
+  const conds = [eq(notification.userId, userId)];
+  if (f.types && f.types.length) conds.push(inArray(notification.type, f.types));
+  if (f.fromUserId) conds.push(eq(notification.actorUserId, f.fromUserId));
+  if (f.projectId != null) conds.push(eq(notification.projectId, f.projectId));
+  if (f.includeRead === false) conds.push(isNull(notification.readAt));
+  if (!f.includeSnoozed)
+    conds.push(or(isNull(notification.snoozedUntil), lt(notification.snoozedUntil, sql`now()`))!);
+  return conds;
+}
+
 function mapRow(r: {
   id: number;
   type: string;
@@ -313,13 +324,7 @@ export async function listNotifications(
   const limit = Math.min(Math.max(opts.limit ?? 30, 1), 100);
   const before = opts.before ?? null;
   const f = opts.filters ?? {};
-  const conds = [eq(notification.userId, userId)];
-  if (f.types && f.types.length) conds.push(inArray(notification.type, f.types));
-  if (f.fromUserId) conds.push(eq(notification.actorUserId, f.fromUserId));
-  if (f.projectId != null) conds.push(eq(notification.projectId, f.projectId));
-  if (f.includeRead === false) conds.push(isNull(notification.readAt));
-  if (!f.includeSnoozed)
-    conds.push(or(isNull(notification.snoozedUntil), lt(notification.snoozedUntil, sql`now()`))!);
+  const conds = notificationConditions(userId, f);
   if (before)
     conds.push(
       sql`(${notification.createdAt}, ${notification.id}) < (${before.ts}::timestamptz, ${before.id}::integer)`,
@@ -401,11 +406,15 @@ export async function setNotificationRead(
   return rows.length > 0;
 }
 
-// Marks every unread notification of the user read, optionally scoped to a project.
+// Marks the user's matching unread notifications read.
 // Returns how many were updated.
-export async function markAllRead(userId: string, projectId?: number): Promise<number> {
-  const conds = [eq(notification.userId, userId), isNull(notification.readAt)];
-  if (projectId != null) conds.push(eq(notification.projectId, projectId));
+export async function markAllRead(
+  userId: string,
+  projectId?: number,
+  filters: NotificationFilters = { includeSnoozed: true },
+): Promise<number> {
+  const conds = notificationConditions(userId, { ...filters, projectId });
+  conds.push(isNull(notification.readAt));
   const rows = await db
     .update(notification)
     .set({ readAt: sql`now()` })
@@ -441,16 +450,15 @@ export async function deleteNotification(userId: string, id: number): Promise<bo
 
 export type DeleteScope = 'all' | 'read' | 'read-completed';
 
-// Bulk-deletes the user's notifications by scope: all, all read, or all read whose
-// issue is in a completed or canceled column. Scoped to one project when projectId
-// is given (the per-project inbox). Returns how many were deleted.
+// Bulk-deletes matching notifications: all, read, or read on completed/canceled issues.
+// Returns how many were deleted.
 export async function deleteNotifications(
   userId: string,
   scope: DeleteScope,
   projectId?: number,
+  filters: NotificationFilters = { includeSnoozed: true },
 ): Promise<number> {
-  const conds = [eq(notification.userId, userId)];
-  if (projectId != null) conds.push(eq(notification.projectId, projectId));
+  const conds = notificationConditions(userId, { ...filters, projectId });
   if (scope === 'read' || scope === 'read-completed')
     conds.push(sql`${notification.readAt} is not null`);
   if (scope === 'read-completed') {

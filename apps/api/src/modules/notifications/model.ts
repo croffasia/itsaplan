@@ -45,7 +45,25 @@ export const unreadCountQuery = t.Object({
   projectId: t.Optional(t.String({ description: 'Scope the count to one project.' })),
 });
 
-export const markAllReadBody = t.Optional(t.Object({ projectId: t.Optional(t.Number()) }));
+export const markAllReadBody = t.Optional(
+  t.Object({
+    projectId: t.Optional(t.Number()),
+    types: t.Optional(
+      t.Array(
+        t.Union([
+          t.Literal('assigned'),
+          t.Literal('mentioned'),
+          t.Literal('commented'),
+          t.Literal('state_changed'),
+        ]),
+        { minItems: 1 },
+      ),
+    ),
+    from: t.Optional(t.String()),
+    includeRead: t.Optional(t.Boolean()),
+    includeSnoozed: t.Optional(t.Boolean()),
+  }),
+);
 
 export const deleteNotificationsQuery = t.Object({
   scope: t.Optional(
@@ -54,6 +72,10 @@ export const deleteNotificationsQuery = t.Object({
     }),
   ),
   projectId: t.Optional(t.String({ description: 'Scope the delete to one project.' })),
+  types: t.Optional(t.String()),
+  from: t.Optional(t.String()),
+  includeRead: t.Optional(t.String()),
+  includeSnoozed: t.Optional(t.String()),
 });
 
 export const setNotificationReadBody = t.Optional(t.Object({ read: t.Optional(t.Boolean()) }));

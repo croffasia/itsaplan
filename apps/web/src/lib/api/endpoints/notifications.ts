@@ -80,16 +80,28 @@ export const snoozeNotification = (id: number, until: string | null) =>
     body: JSON.stringify({ until }),
   });
 
-export const markAllNotificationsRead = (projectId: number) =>
+export const markAllNotificationsRead = (projectId: number, filters: NotificationFilters) =>
   request<{ count: number }>(`/notifications/read-all`, {
     method: 'POST',
-    body: JSON.stringify({ projectId }),
+    body: JSON.stringify({
+      projectId,
+      ...filters,
+      includeSnoozed: filters.includeSnoozed ?? false,
+    }),
   });
 
 export const deleteNotification = (id: number) =>
   request<void>(`/notifications/${id}`, { method: 'DELETE' });
 
-export const deleteNotifications = (scope: NotificationDeleteScope, projectId: number) =>
-  request<{ count: number }>(`/notifications?scope=${scope}&projectId=${projectId}`, {
-    method: 'DELETE',
-  });
+export const deleteNotifications = (
+  scope: NotificationDeleteScope,
+  projectId: number,
+  filters: NotificationFilters,
+) => {
+  const q = new URLSearchParams({ scope, projectId: String(projectId) });
+  if (filters.types?.length) q.set('types', filters.types.join(','));
+  if (filters.from) q.set('from', filters.from);
+  if (filters.includeRead === false) q.set('includeRead', 'false');
+  q.set('includeSnoozed', String(filters.includeSnoozed ?? false));
+  return request<{ count: number }>(`/notifications?${q.toString()}`, { method: 'DELETE' });
+};

@@ -1226,6 +1226,8 @@ describe('teams', () => {
   });
 
   describe('concurrent ownership changes', () => {
+    // `owner` owns the workspace and keeps the owner standing without the team owner row,
+    // so when the other request lands first the last-owner check refuses it with 409.
     async function twoOwners() {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
@@ -1264,7 +1266,8 @@ describe('teams', () => {
           .members({ userId: owner.user.userId })
           .patch({ role: 'member' }),
       ]);
-      expect(results.map((result) => result.status).sort()).toEqual([204, 403]);
+      const statuses = results.map((result) => result.status);
+      expect(statuses).toEqual(statuses[0] === 204 ? [204, 403] : [409, 204]);
       expect((await owner.api.teams({ teamId }).get()).data?.ownerCount).toBe(1);
     });
 
@@ -1274,8 +1277,8 @@ describe('teams', () => {
         owner.api.teams({ teamId }).members({ userId: second.user.userId }).delete(),
         second.api.teams({ teamId }).members({ userId: owner.user.userId }).delete(),
       ]);
-      expect(results.filter((result) => result.status === 204)).toHaveLength(1);
-      expect(results.some((result) => result.status === 403 || result.status === 404)).toBe(true);
+      const statuses = results.map((result) => result.status);
+      expect(statuses).toEqual(statuses[0] === 204 ? [204, 403] : [409, 204]);
     });
   });
 

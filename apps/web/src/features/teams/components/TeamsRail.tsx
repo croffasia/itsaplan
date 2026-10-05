@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Team } from '@/lib/api/endpoints/teams';
+import type { WorkspaceRole } from '@/lib/api/endpoints/workspaces';
 import { cn } from '@/lib/utils';
 import { teamPath } from '@/utils/paths';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
@@ -17,13 +18,16 @@ export default function TeamsRail({
   isPending,
   activeId,
   onCreate,
+  workspaceRole,
 }: {
   teams: Team[];
   isPending: boolean;
   activeId: number | null;
-  onCreate: () => void;
+  onCreate?: () => void;
+  workspaceRole: WorkspaceRole | null;
 }) {
   const t = useTranslations('teams.manage');
+  const tw = useTranslations('teams.workspace');
 
   return (
     <div className="space-y-2">
@@ -31,20 +35,22 @@ export default function TeamsRail({
         <h2 className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
           {t('teams')}
         </h2>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="ms-auto size-7 text-muted-foreground hover:text-foreground"
-              aria-label={t('newTeam')}
-              onClick={onCreate}
-            >
-              <Plus className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('newTeam')}</TooltipContent>
-        </Tooltip>
+        {onCreate && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="ms-auto size-7 text-muted-foreground hover:text-foreground"
+                aria-label={t('newTeam')}
+                onClick={onCreate}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('newTeam')}</TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
       {isPending ? (
@@ -69,7 +75,9 @@ export default function TeamsRail({
                 >
                   <span className="min-w-0 flex-1 truncate">{team.name}</span>
                   <span className="shrink-0 text-xs text-muted-foreground">
-                    {t(`roles.${team.role}`)}
+                    {team.via === 'workspace' && workspaceRole
+                      ? tw(`titles.${workspaceRole}`)
+                      : t(`roles.${team.role}`)}
                   </span>
                 </Link>
               </li>

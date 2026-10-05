@@ -6,6 +6,7 @@ import {
   applyFilters,
   CURRENT_USER_FILTER_VALUE,
   filterToday,
+  resolveFilterSet,
   type FilterCondition,
   type FilterSet,
 } from './filters';
@@ -38,6 +39,25 @@ function filters(condition: Omit<FilterCondition, 'id'>): FilterSet {
 }
 
 describe('dynamic filters', () => {
+  it('keeps stored presence filters without values when resolving Current user', () => {
+    const stored: FilterSet = JSON.parse(
+      '{"conditions":[{"id":"no-date","field":"dueDate","op":"is_not_set"},{"id":"date","field":"startDate","op":"is_set"}]}',
+    );
+
+    assert.equal(resolveFilterSet(stored, { currentUserId: 'me' }), stored);
+  });
+
+  it('resolves Current user beside a stored presence filter without changing it', () => {
+    const stored: FilterSet = JSON.parse(
+      '{"conditions":[{"id":"no-date","field":"dueDate","op":"is_not_set"},{"id":"mine","field":"assignee","op":"is","values":["$currentUser"]}]}',
+    );
+
+    const resolved = resolveFilterSet(stored, { currentUserId: 'me' });
+    assert.equal(resolved.conditions[0], stored.conditions[0]);
+    assert.deepEqual(resolved.conditions[1]?.values, ['me']);
+    assert.deepEqual(stored.conditions[1]?.values, [CURRENT_USER_FILTER_VALUE]);
+  });
+
   it('derives today from the account timezone', () => {
     const now = new Date('2026-08-29T23:30:00.000Z');
 

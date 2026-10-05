@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.0](https://github.com/croffasia/itsaplan/compare/v1.2.1...v1.3.0) (2026-10-04)
+
+
+### Features
+
+* add workspaces above teams ([#468](https://github.com/croffasia/itsaplan/issues/468)) ([bd8a474](https://github.com/croffasia/itsaplan/commit/bd8a4740fa6f9d3be6d787ee77525e1acc30ca72))
+* archive and restore projects ([#465](https://github.com/croffasia/itsaplan/issues/465)) ([59c83e3](https://github.com/croffasia/itsaplan/commit/59c83e3054128b444a0de70faec985343fb1171a))
+* **web:** add issue copy submenu ([#451](https://github.com/croffasia/itsaplan/issues/451)) ([7cbaa78](https://github.com/croffasia/itsaplan/commit/7cbaa78672b578f8fc7082692fee3059c7b9c156))
+
+
+### Bug Fixes
+
+* **api:** serialize external agent chat replies by thread ([#461](https://github.com/croffasia/itsaplan/issues/461)) ([ed2eaac](https://github.com/croffasia/itsaplan/commit/ed2eaac8d961cd4f9c29a9efaf303b0db4f72ce3))
+* **web:** keep Ctrl+B in text fields from toggling the sidebar ([#469](https://github.com/croffasia/itsaplan/issues/469)) ([451226c](https://github.com/croffasia/itsaplan/commit/451226c8cd5e5de030d0371a13c9c65093ac4580))
+* **web:** scroll lists on touch instead of dragging cards on tablets ([#464](https://github.com/croffasia/itsaplan/issues/464)) ([91a30b2](https://github.com/croffasia/itsaplan/commit/91a30b2bb520cd76c94992ed71b6b4a6097c75ee))
+* **worker:** reject a failed attachment download ([#471](https://github.com/croffasia/itsaplan/issues/471)) ([4fa48da](https://github.com/croffasia/itsaplan/commit/4fa48da0f5d44fbb253240cbd6a73fde0efbc689))
+
 ## [1.2.1](https://github.com/croffasia/itsaplan/compare/v1.2.0...v1.2.1) (2026-09-26)
 
 

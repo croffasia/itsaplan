@@ -14,10 +14,29 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
 - The shared layer never imports a feature. `app/` routes stay thin: mount the feature page and
   providers only.
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
-  exports what a self-hosted instance runs — a screen it does not sell renders nothing. A
-  cloud-only component is imported from there and nowhere else. The hosted build points
-  `CLOUD_UI_ENTRY` at its own module exporting the same names, and `WEB_TRACING_ROOT` at the
-  root its workspace has; unset, both are what this repository needs.
+  exports what a self-hosted instance runs. A cloud-only part is imported from there and
+  nowhere else. `useWorkspaceSections(workspace)` returns the sections the hosted build adds
+  to a workspace's settings — each a menu entry and a page, shown by
+  `WorkspaceSectionNav` and opened at `/workspaces/:id/:sectionId`; here it returns none.
+  `NoTeamStart` is the start page of an account with no team and no workspace it owns,
+  which happens while personal workspaces are off; here it says who adds them.
+  `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
+  than one workspace per person is available. `godSections(core)` returns the god mode
+  sections: here the core's as they are, while the hosted build adds, replaces or drops
+  some. One it adds carries in `Component` the page `/god/<slug>` opens. SCIM is set up in
+  god mode, for the instance workspace; the hosted build that moves it to every
+  workspace drops the god section and adds `WorkspaceScimSection` through
+  `useWorkspaceSections`. `GodSectionExtras` renders at the end of every god section page, by
+  its slug, for settings the hosted build adds to an existing section; `WorkspaceSectionExtras`
+  does the same on a workspace's own settings pages (`general`, `managers`), with the
+  workspace, and its controls save themselves. `cloudMessages` is the
+  hosted build's English, merged into the catalogue the keys are typed against (a god
+  section's name and blurb go under `sections.god.<slug>` like the core ones), and
+  `loadCloudMessages(locale)` returns its other languages. The i18n request config imports
+  `@/cloud` on the server for the messages, so every component file it exports starts with
+  `'use client'`.
+  The hosted build points `CLOUD_UI_ENTRY` at its own module exporting the same names, and
+  `WEB_TRACING_ROOT` at the root its workspace has; unset, both are what this repository needs.
 
 ## Feature structure & decomposition
 
@@ -63,7 +82,7 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
 - English is the source: `src/i18n/messages.ts` imports it statically, merges the chosen
   language over it, and types every `t('…')`. A new key goes there first or typecheck fails;
   an untranslated one renders its English text.
-- A new namespace needs its file in every language plus an entry in `defaultMessages`.
+- A new namespace needs its file in every language plus an entry in `coreMessages`.
 - A new language: `messages/<code>/`, `src/i18n/locales.ts`, `src/hooks/useDateFnsLocale.ts`,
   and `LOCALES`/`Locale` in `apps/api/src/modules/user-preferences/`. No migration — the `locale`
   column has no CHECK. One written right to left also goes in `RTL_LOCALES`.
@@ -135,6 +154,11 @@ next-intl, language from the `NEXT_LOCALE` cookie — no `[locale]` route segmen
   depend on them change nothing until it is on. One read-only state looks the same everywhere:
   the same icon and the same wording for on and off, in the row the control would have taken —
   reuse the component that already renders it rather than styling a second variant.
+- **A workspace's owner and admins reach its projects and teams without being members.**
+  The API says so with `via: 'workspace'` on the project viewer (`usePermissions().isMember`
+  is false), on a project in the list and on a team. What hangs on the membership itself
+  is left out for them: starring and hiding a project, leaving it or the team, and the
+  project's notification settings. Everything else follows `can()` as for a member.
 - Add shadcn components with `bunx shadcn@latest add <name>` (config in `components.json`).
 - **Don't edit `src/components/ui/`** — those files are generated and re-adding a component
   overwrites them. Style them from the outside instead: every primitive carries a `data-slot`

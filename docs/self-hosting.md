@@ -66,20 +66,29 @@ instance cannot be left with no way in.
 
 ## Provisioning with SCIM
 
-An identity provider can create, update and deactivate accounts over SCIM 2.0, and grant
-project access through its groups.
+An identity provider can add people to a workspace and remove them over SCIM 2.0, and grant
+project access through its groups. Provisioning is a setting of the workspace, and only its
+owner can change it.
 
-1. In god mode, open **Integrations → SCIM**, generate a token and copy it — it is shown
+1. In the workspace settings, open **SCIM**, generate a token and copy it — it is shown
    once — then turn provisioning on.
 2. Point your provider's SCIM application at the endpoint the page shows
    (`<API_URL>/scim/v2`), authenticating with `Authorization: Bearer <token>`.
 3. Push users, and groups if you use them.
 
-Deactivating someone at the provider (`active: false`) ends their sessions and refuses
-their API keys; reactivating restores them with their projects intact. The instance owner's
-own account is outside SCIM's reach — a provisioning run can neither change nor deactivate
-it, and a repeated create for an address it already provisioned answers "already exists"
-rather than overwriting the link back to the provider.
+An account belongs to the person, not to the workspace: one person can be in the teams of
+several workspaces, and each workspace's provider only decides whether they are in its own.
+The provider sees the people it created or linked and the people in the workspace's teams. A
+create for an address that already has an account links that account instead of making a
+second one; a name or address the provider sends is accepted and left as the account has it.
+
+Deactivating someone at the provider (`active: false`) or deleting them takes them out of
+every team and project of the workspace, including the ones they joined through an invite. A
+team or project they were the only owner of passes to the workspace owner. The account, its
+sign-in and the person's other workspaces are not touched. Reactivating gives back the
+projects their groups grant; memberships from invites do not come back. The instance owner and
+the workspace owner are outside SCIM's reach, and a repeated create for an address the
+provider already linked answers "already exists" rather than overwriting the link.
 
 A pushed group grants nothing until you say what it is for: on the same page, open a group
 and add the projects its members should join, and the role they join on. A project belongs
@@ -128,8 +137,8 @@ the volume before it costs one command:
 docker run --rm -v itsaplan_minio-data:/data -v "$PWD":/out alpine tar czf /out/minio-data.tgz -C /data .
 ```
 
-If you call the API from your own scripts or from an MCP client, read
-[breaking changes](breaking-changes.md) for the paths a release removed.
+If you call the API from your own scripts or from an MCP client, read the
+[release notes](https://github.com/croffasia/itsaplan/releases) for the paths a release removed.
 
 ## Building from source instead
 

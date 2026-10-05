@@ -1,6 +1,6 @@
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { IssueRef } from '@/lib/api/endpoints/issues';
-import { usePersistedOpenGroups } from './usePersistedOpen';
+import { usePersistedOpenGroups } from '@/hooks/usePersistedOpen';
 
 // Which states the Subtasks panel hides, remembered per project. Only the states
 // the subtasks are in are offered, each with how many subtasks it holds.

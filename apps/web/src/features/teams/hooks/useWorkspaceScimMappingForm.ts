@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { InstanceScimGroup } from '@/lib/api/endpoints/scim';
-import { useSetInstanceScimGroupMappings } from '../services/god.service';
+import type { WorkspaceScimGroup } from '@/lib/api/endpoints/workspaces';
+import { useSetWorkspaceScimGroupMappings } from '@/services/workspaces.service';
 
 // One row of the form: a project the group grants membership in, and the role it
 // grants there. `roleId` is null for an owner (owners bypass the permission matrix)
@@ -13,7 +13,7 @@ export interface ScimMappingDraft {
   roleId: number | null;
 }
 
-export interface GodScimMappingForm {
+export interface WorkspaceScimMappingForm {
   mappings: ScimMappingDraft[];
   add: (projectId: number) => void;
   update: (index: number, patch: Partial<ScimMappingDraft>) => void;
@@ -30,8 +30,11 @@ function serialize(mappings: ScimMappingDraft[]): string {
   return JSON.stringify([...mappings].sort((a, b) => a.projectId - b.projectId));
 }
 
-export function useGodScimMappingForm(group: InstanceScimGroup): GodScimMappingForm {
-  const update = useSetInstanceScimGroupMappings();
+export function useWorkspaceScimMappingForm(
+  workspaceId: number,
+  group: WorkspaceScimGroup,
+): WorkspaceScimMappingForm {
+  const update = useSetWorkspaceScimGroupMappings(workspaceId);
   const initial: ScimMappingDraft[] = group.mappings.map((m) => ({
     projectId: m.projectId,
     role: m.role,

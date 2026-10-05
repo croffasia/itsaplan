@@ -8,6 +8,25 @@ import type {
   CanonicalAttachment,
 } from './canonical';
 
+// Thrown by a source adapter when the source's rate limit is reached. The worker
+// reschedules the job after retryAfterMs: a rate limit is waited out and never
+// fails the job by itself.
+export class SourceRateLimitedError extends Error {
+  constructor(
+    public readonly retryAfterMs: number,
+    message = 'source rate limit reached',
+  ) {
+    super(message);
+  }
+}
+
+// headers is for a source whose file host needs the source's own credential; the
+// Attachments phase sends them with the download and nowhere else.
+export interface AttachmentDownload {
+  url: string;
+  headers?: Record<string, string>;
+}
+
 // One page of a cursor-paginated list. cursor is the exact, opaque value the
 // source API returned for the next page, or null when there is no next page.
 // It must be passed back to the source verbatim — never reconstructed — and a
@@ -40,9 +59,12 @@ export interface SourceReader {
   listIssueRelations(issueSourceId: string): Promise<CanonicalRelation[]>;
   listIssueComments(issueSourceId: string): Promise<CanonicalComment[]>;
   listIssueAttachments(issueSourceId: string): Promise<CanonicalAttachment[]>;
-  // Resolves one attachment's download URL, fresh each call: the source's own
+  // Resolves how to download one attachment, fresh each call: the source's own
   // resolved URL is a presigned link that expires (Plane's lasts exactly an
   // hour), so this is called at the moment of download, never cached or
   // resolved ahead of time.
-  resolveAttachmentDownloadUrl(issueSourceId: string, attachmentSourceId: string): Promise<string>;
+  resolveAttachmentDownload(
+    issueSourceId: string,
+    attachmentSourceId: string,
+  ): Promise<AttachmentDownload>;
 }

@@ -2,12 +2,15 @@ import { useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api/endpoints/projects';
 import type { Team } from '@/lib/api/endpoints/teams';
+import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
 import { useSidebarSide } from '@/hooks/useSidebarSide';
 import ResizeGrip from '@/components/common/ResizeGrip';
 import { PopoverContent } from '@/components/ui/popover';
 import { useSidebar } from '@/components/ui/sidebar';
 import ProjectSwitcherList from './ProjectSwitcherList';
 import ProjectSwitcherFooter from './ProjectSwitcherFooter';
+import ProjectSwitcherWorkspaceHeader from './ProjectSwitcherWorkspaceHeader';
+import ProjectSwitcherWorkspaceRail from './ProjectSwitcherWorkspaceRail';
 import {
   PROJECT_PICKER_WIDTH,
   type useProjectSwitcherPreferences,
@@ -16,6 +19,9 @@ import {
 export default function ProjectSwitcherMenu({
   projects,
   teams,
+  workspaces,
+  workspace,
+  onPickWorkspace,
   current,
   preferences,
   openTeams,
@@ -25,6 +31,9 @@ export default function ProjectSwitcherMenu({
 }: {
   projects: Project[];
   teams: Team[];
+  workspaces: WorkspaceSummary[];
+  workspace?: WorkspaceSummary;
+  onPickWorkspace: (workspaceId: number) => void;
   current?: Project;
   preferences: ReturnType<typeof useProjectSwitcherPreferences>;
   openTeams: Record<number, boolean>;
@@ -45,7 +54,7 @@ export default function ProjectSwitcherMenu({
     <PopoverContent
       ref={contentRef}
       aria-label={t('projects')}
-      className="group/picker flex max-h-[min(720px,var(--radix-popover-content-available-height))] flex-col overflow-hidden rounded-lg p-0"
+      className="group/picker flex max-h-[min(720px,var(--radix-popover-content-available-height))] overflow-hidden rounded-lg p-0"
       style={{
         width: preferences.width,
         maxWidth: 'min(calc(100vw - 16px), var(--radix-popover-content-available-width))',
@@ -63,20 +72,31 @@ export default function ProjectSwitcherMenu({
         else inputRef.current?.focus();
       }}
     >
-      <ProjectSwitcherList
-        projects={projects}
-        teams={teams}
-        current={current}
-        sort={preferences.sort}
-        onSortChange={preferences.setSort}
-        showHidden={showHidden}
-        onShowHiddenChange={setShowHidden}
-        openTeams={openTeams}
-        onOpenTeam={onOpenTeam}
-        onSelectProject={onSelectProject}
-        inputRef={inputRef}
-      />
-      <ProjectSwitcherFooter isMobile={isMobile} onClose={onClose} />
+      {workspace && (
+        <ProjectSwitcherWorkspaceRail
+          workspaces={workspaces}
+          activeId={workspace.id}
+          onPick={onPickWorkspace}
+        />
+      )}
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+        {workspace && <ProjectSwitcherWorkspaceHeader workspace={workspace} onClose={onClose} />}
+        <ProjectSwitcherList
+          projects={projects}
+          teams={teams}
+          current={current}
+          sort={preferences.sort}
+          onSortChange={preferences.setSort}
+          showHidden={showHidden}
+          onShowHiddenChange={setShowHidden}
+          openTeams={openTeams}
+          onOpenTeam={onOpenTeam}
+          onSelectProject={onSelectProject}
+          inputRef={inputRef}
+          workspaceRole={workspace?.role ?? null}
+        />
+        <ProjectSwitcherFooter isMobile={isMobile} onClose={onClose} />
+      </div>
       {!isMobile && (
         <ResizeGrip
           label={t('projectPicker.resize')}

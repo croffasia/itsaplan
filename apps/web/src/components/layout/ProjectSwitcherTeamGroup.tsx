@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import ProjectSwitcherProjectRow from './ProjectSwitcherProjectRow';
+import type { WorkspaceRole } from '@/lib/api/endpoints/workspaces';
 import type { TeamGroup } from './utils/projectSwitcher';
 
 export default function ProjectSwitcherTeamGroup({
@@ -13,6 +14,7 @@ export default function ProjectSwitcherTeamGroup({
   searching,
   onOpenChange,
   onSelectProject,
+  workspaceRole,
 }: {
   group: TeamGroup;
   currentProjectKey: string | null;
@@ -20,6 +22,7 @@ export default function ProjectSwitcherTeamGroup({
   searching: boolean;
   onOpenChange: (open: boolean) => void;
   onSelectProject: (key: string) => void;
+  workspaceRole: WorkspaceRole | null;
 }) {
   const t = useTranslations('nav');
 
@@ -57,6 +60,7 @@ export default function ProjectSwitcherTeamGroup({
             project={project}
             currentProjectKey={currentProjectKey}
             onSelectProject={onSelectProject}
+            workspaceRole={workspaceRole}
           />
         ))}
       </CollapsibleContent>

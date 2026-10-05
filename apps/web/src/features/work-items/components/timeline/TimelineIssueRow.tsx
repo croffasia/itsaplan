@@ -54,8 +54,6 @@ export function TimelineIssueRow({
   onBeginDrag: (e: React.PointerEvent, issue: Issue, mode: TimelineDragMode) => void;
   onOpen: (id: number) => void;
 }) {
-  // Drag is disabled on phones so a touch scrolls the timeline instead of picking
-  // up a row (see the `sm:touch-none` below).
   const isPhone = useIsPhone();
   const fold = useIssueSubtaskFold();
   const prefetchIssue = usePrefetchIssue(project.project.key, issue.sequenceNumber);
@@ -76,7 +74,7 @@ export function TimelineIssueRow({
           {...attributes}
           {...listeners}
           className={cn(
-            'sticky left-0 z-10 flex shrink-0 items-center gap-2 overflow-hidden border-r bg-background pr-3 sm:touch-none',
+            'sticky left-0 z-10 flex shrink-0 items-center gap-2 overflow-hidden border-r bg-background pr-3',
             indented ? 'pl-7' : 'pl-3',
             readOnly ? 'cursor-pointer' : 'cursor-grab',
           )}

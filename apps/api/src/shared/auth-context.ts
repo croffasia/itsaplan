@@ -2,7 +2,12 @@ import { Elysia } from 'elysia';
 import { db } from '@repo/db';
 import { user as users } from '@repo/db/schema';
 import { eq } from 'drizzle-orm';
-import { auth, getSessionFromHeaders } from '@repo/auth';
+import {
+  auth,
+  ensurePersonalWorkspace,
+  getSessionFromHeaders,
+  isAccountDeactivated,
+} from '@repo/auth';
 import { HttpError } from './lib';
 import { getMcpOAuthToken } from './mcp-request';
 
@@ -30,17 +35,14 @@ export type SessionUser = SessionResult['user'];
 // macros reference `user`, which is what makes the `user` type flow there. The
 // plugin is named, so its resolve runs once per request (dedup).
 //
-// A deactivated account is refused here rather than at sign-in: deactivation
-// arrives over SCIM while sessions and API keys are already open, and this is the
-// one place every planner route and the MCP surface pass through.
+// A deactivated account is refused here as well as at sign-in: deactivation arrives
+// over SCIM while sessions and API keys are already open, and this is the one place
+// every planner route and the MCP surface pass through.
 export const authContext = new Elysia({ name: 'auth-context' }).resolve(
   { as: 'scoped' },
   async ({ request, path }): Promise<{ user: SessionUser | null }> => {
     const session = await getSessionFromHeaders(request.headers);
-    if (session) {
-      if (session.user.active === false) throw new HttpError(401, 'This account is deactivated');
-      return { user: session.user };
-    }
+    if (session) return { user: await signedIn(session.user) };
     const mcpToken = getMcpOAuthToken(request);
     if (mcpToken) {
       const oauthSession = await auth.api.getMcpSession({
@@ -48,10 +50,7 @@ export const authContext = new Elysia({ name: 'auth-context' }).resolve(
       });
       if (oauthSession) {
         const user = await db.query.user.findFirst({ where: eq(users.id, oauthSession.userId) });
-        if (user) {
-          if (user.active === false) throw new HttpError(401, 'This account is deactivated');
-          return { user: user as SessionUser };
-        }
+        if (user) return { user: await signedIn(user as SessionUser) };
       }
     }
     // The public raw-attachment route has no session and needs none.
@@ -59,3 +58,12 @@ export const authContext = new Elysia({ name: 'auth-context' }).resolve(
     throw new HttpError(401, 'Authentication required');
   },
 );
+
+// A deactivated account goes no further. Any other gets its personal workspace here when
+// it has none yet, so one made before personal workspaces, by SCIM or while they were off
+// has it on its next request instead of its next sign-in.
+async function signedIn(user: SessionUser): Promise<SessionUser> {
+  if (isAccountDeactivated(user)) throw new HttpError(401, 'This account is deactivated');
+  await ensurePersonalWorkspace(user.id);
+  return user;
+}

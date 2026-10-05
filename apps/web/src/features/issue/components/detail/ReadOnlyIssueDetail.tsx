@@ -1,6 +1,6 @@
 import type { SharedIssueBundle } from '@/lib/api/endpoints/share';
 import { toPublicProjectDetail } from '@/utils/publicProject';
-import { usePersistedOpen, usePersistedOpenGroups } from '../../hooks/usePersistedOpen';
+import { usePersistedOpen, usePersistedOpenGroups } from '@/hooks/usePersistedOpen';
 import { fieldDefsForType } from '../../utils/fieldDefs';
 import MarkdownEditor from '@/components/common/editor/MarkdownEditor';
 import { IssueRefsProvider } from '@/context/issueRefs';

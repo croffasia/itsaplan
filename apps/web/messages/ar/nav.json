@@ -64,6 +64,8 @@
     "noHiddenResults": "No hidden projects match your search",
     "noVisibleProjects": "No projects in your view",
     "hintMove": "تنقل",
-    "hintOpen": "فتح"
+    "hintOpen": "فتح",
+    "workspaces": "مساحات العمل",
+    "workspaceSettings": "إعدادات مساحة العمل"
   }
 }

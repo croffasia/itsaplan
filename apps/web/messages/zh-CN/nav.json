@@ -64,6 +64,8 @@
     "noHiddenResults": "No hidden projects match your search",
     "noVisibleProjects": "No projects in your view",
     "hintMove": "移动",
-    "hintOpen": "打开"
+    "hintOpen": "打开",
+    "workspaces": "工作区",
+    "workspaceSettings": "工作区设置"
   }
 }

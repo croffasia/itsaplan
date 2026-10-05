@@ -36,9 +36,8 @@ export function BoardCard({
   // In a read-only share a click always opens the issue; multi-select is off.
   readOnly?: boolean;
 }) {
-  // Drag is disabled on phones so a touch scrolls the board instead of picking
-  // up a card (see the `sm:touch-none` on the card below), and without work_items
-  // edit (moving a card is an issue edit).
+  // Drag is disabled on phones, and without work_items edit (moving a card is an
+  // issue edit).
   const { can } = usePermissions();
   const selection = useSelection();
   const selected = selection.isSelected(issue.id);
@@ -72,7 +71,6 @@ export function BoardCard({
         {...listeners}
         onPointerDown={(e) => {
           pressedAt.current = { x: e.clientX, y: e.clientY };
-          listeners?.onPointerDown?.(e);
         }}
         onPointerEnter={prefetchIssue}
         onClick={(e) => {
@@ -97,7 +95,7 @@ export function BoardCard({
         className={cn(
           // select-none so a Shift/Cmd-click toggles selection without the browser
           // also starting a native text selection across cards.
-          'kanban-card cursor-grab rounded-md p-2 select-none sm:touch-none',
+          'kanban-card cursor-grab rounded-md p-2 select-none',
           isDragging && 'opacity-40',
           isBlocked(issue) && 'kanban-card-blocked',
           // Selected cards read as a primary-tinted fill, like Linear — no border,

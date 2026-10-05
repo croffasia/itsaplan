@@ -64,6 +64,8 @@
     "noHiddenResults": "No hidden projects match your search",
     "noVisibleProjects": "No projects in your view",
     "hintMove": "pindah",
-    "hintOpen": "buka"
+    "hintOpen": "buka",
+    "workspaces": "Workspace",
+    "workspaceSettings": "Pengaturan workspace"
   }
 }

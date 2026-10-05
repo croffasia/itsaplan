@@ -13,9 +13,6 @@ import {
   getOidcSettings,
   setOidcSettings,
   hasConfiguredOidc,
-  getScimSettings,
-  setScimSettings,
-  rotateScimToken,
 } from '@repo/auth';
 import { hasConfiguredEmailProvider, getStorageSettings } from '@repo/db';
 import { emailBody, hasEmailProvider, sendEmail } from '@repo/mailer';
@@ -32,13 +29,10 @@ import {
   getInstanceTeam,
   getInstanceUser,
   listInstanceProjects,
-  listInstanceProjectOptions,
   listInstanceTeams,
   listInstanceTeamProjects,
   listInstanceTeamMembers,
   listInstanceUsers,
-  listScimGroups,
-  setScimGroupMappings,
   verifyInstanceUserEmail,
 } from './service';
 import {
@@ -50,7 +44,6 @@ import {
   GoogleSettingsBody,
   GoogleSettingsResponse,
   InstanceProjectDetailResponse,
-  InstanceProjectOptionListResponse,
   InstanceProjectPageResponse,
   InstanceTeamMemberPageResponse,
   InstanceTeamPageResponse,
@@ -60,25 +53,18 @@ import {
   InstanceUserPageResponse,
   OidcSettingsBody,
   OidcSettingsResponse,
-  ScimGroupMappingsBody,
-  ScimGroupResponse,
-  ScimSettingsBody,
-  ScimSettingsResponse,
-  ScimTokenResponse,
   StorageSettingsBody,
   TelegramSettingsBody,
   TelegramSettingsResponse,
   deleteUserQuery,
   listUsersQuery,
   projectParams,
-  scimGroupParams,
   searchPageQuery,
   teamParams,
   userParams,
 } from './model';
 import { emailTestError } from './email-test';
 import { getInstanceBotSettings, setInstanceBotSettings } from '#modules/telegram/service';
-import { SCIM_BASE_URL } from '#modules/scim/resource';
 import {
   setStorageSettings,
   getHotkeySettings,
@@ -96,8 +82,8 @@ import {
 
 // God mode: instance-wide administration, open only to the "god" user (the first
 // registered account). It covers how people may register, the mail provider that
-// sends authentication email, the OAuth credentials, and SCIM provisioning. Invites
-// are per team (team_invite), managed in the team panel and in the project's Members
+// sends authentication email, and the OAuth credentials. SCIM provisioning belongs to
+// a workspace and is set in its settings. Invites are per team (team_invite), managed in the team panel and in the project's Members
 // section — there is nothing instance-level to add here.
 //
 // The settings themselves are owned by @repo/auth, which reads them at sign-up and
@@ -311,75 +297,6 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
     },
   )
 
-  .get(
-    '/god/scim-settings',
-    async () => ({ ...(await getScimSettings()), baseUrl: SCIM_BASE_URL }),
-    {
-      response: { 200: ScimSettingsResponse, ...errors(401, 403) },
-      detail: {
-        summary: 'Get SCIM provisioning settings',
-        description: 'Get whether SCIM provisioning is on and whether a token has been generated.',
-      },
-    },
-  )
-
-  .put(
-    '/god/scim-settings',
-    async ({ body }) => {
-      const current = await getScimSettings();
-      // Enabling it without a token would leave the endpoint answering 401 to
-      // everything, which reads as a broken integration rather than a missing step.
-      if (body.enabled && !current.hasToken) {
-        throw new HttpError(400, 'Generate a SCIM token first');
-      }
-      return { ...(await setScimSettings(body)), baseUrl: SCIM_BASE_URL };
-    },
-    {
-      body: ScimSettingsBody,
-      response: { 200: ScimSettingsResponse, ...errors(400, 401, 403) },
-      detail: {
-        summary: 'Update SCIM provisioning settings',
-        description: 'Turn SCIM provisioning on or off.',
-      },
-    },
-  )
-
-  .post('/god/scim-settings/token', async () => ({ token: await rotateScimToken() }), {
-    response: { 200: ScimTokenResponse, ...errors(401, 403) },
-    detail: {
-      summary: 'Generate a SCIM token',
-      description:
-        'Generate the bearer token an identity provider sends to /scim/v2, replacing any ' +
-        'previous one. The value is returned once and cannot be read back.',
-    },
-  })
-
-  .get('/god/scim-groups', () => listScimGroups(), {
-    response: { 200: t.Array(ScimGroupResponse), ...errors(401, 403) },
-    detail: {
-      summary: 'List provisioned groups',
-      description:
-        'List the groups an identity provider has pushed, with their member counts and the ' +
-        'projects they grant membership in.',
-    },
-  })
-
-  .put(
-    '/god/scim-groups/:groupId/mappings',
-    ({ params, body }) => setScimGroupMappings(params.groupId, body.mappings),
-    {
-      params: scimGroupParams,
-      body: ScimGroupMappingsBody,
-      response: { 200: ScimGroupResponse, ...commonErrors },
-      detail: {
-        summary: "Set a group's project mappings",
-        description:
-          'Replace the list of projects a provisioned group grants membership in, then ' +
-          'reconcile the membership of every project the change touched.',
-      },
-    },
-  )
-
   .get('/god/storage-settings', () => getStorageSettings(), {
     response: { 200: StorageSettingsSchema, ...errors(401, 403) },
     detail: {
@@ -559,11 +476,14 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       if (target.isAgent) {
         throw new HttpError(400, 'Delete the AI agent from its project instead');
       }
-      // Projects this user owns alone. Their membership goes with the account, so
-      // the project would be left with nobody who can manage it (god mode does not
-      // bypass project membership). Either the caller takes those projects down
-      // with the account, or the request is refused until another owner is added.
-      const sole = target.projects.filter((p) => p.role === 'owner' && p.ownerCount === 1);
+      // Projects this user owns alone outside the workspaces they own. Their membership
+      // goes with the account, so the project would be left with nobody who can manage
+      // it (god mode does not bypass project membership). Either the caller takes those
+      // projects down with the account, or the request is refused until another owner is
+      // added. The ones in their own workspaces pass to the instance owner with it.
+      const sole = target.projects.filter(
+        (p) => p.role === 'owner' && p.ownerCount === 1 && !p.inOwnWorkspace,
+      );
       if (sole.length > 0 && !query.withProjects) {
         throw new HttpError(
           400,
@@ -583,7 +503,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       detail: {
         summary: 'Delete a user',
         description:
-          'Remove an account from the instance, with its sessions, memberships and preferences. Optionally deletes the projects it owns alone.',
+          'Remove an account from the instance, with its sessions, memberships and preferences. Optionally deletes the projects it owns alone; a workspace it owns goes with it while it holds no project or AI agent, and passes to the instance owner otherwise.',
       },
     },
   )
@@ -601,14 +521,6 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
       },
     },
   )
-
-  .get('/god/projects/options', () => listInstanceProjectOptions(), {
-    response: { 200: InstanceProjectOptionListResponse, ...errors(401, 403) },
-    detail: {
-      summary: 'List every instance project',
-      description: 'Every project on the instance as id, key and name, for a picker.',
-    },
-  })
 
   .get(
     '/god/projects/:projectId',

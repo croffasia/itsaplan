@@ -53,7 +53,7 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
   const godText = useGodSectionText();
   const accountLabel = useAccountSectionLabel();
   const router = useRouter();
-  const { can } = usePermissions();
+  const { can, isMember } = usePermissions();
   const features = useProjectFeatures();
   const { data: session } = useSession();
   const { groups } = useSettingsNavGroups(projectKey);
@@ -106,13 +106,14 @@ export function useNavigationCommands(projectKey: string | null): CommandSection
         'ai team agents',
       );
     add('nav.members', t('members'), <Users />, membersPath(key), 'team people invite');
-    add(
-      'nav.notifications',
-      t('notificationPreferences'),
-      <Bell />,
-      notificationsPath(key),
-      'email telegram',
-    );
+    if (isMember)
+      add(
+        'nav.notifications',
+        t('notificationPreferences'),
+        <Bell />,
+        notificationsPath(key),
+        'email telegram',
+      );
     // The settings destinations, already permission-filtered by the hook the
     // settings sidebar uses. The group label is a keyword so "workflow" or
     // "automation" finds its sections.

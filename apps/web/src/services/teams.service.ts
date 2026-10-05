@@ -155,7 +155,7 @@ export function useUpdateTeamProjectDefaults(teamId: number) {
 export function useCreateTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; slug: string }) => createTeam(input),
+    mutationFn: (input: { name: string; slug: string; workspaceId: number }) => createTeam(input),
     onSuccess: (team) => {
       // Put the team in the cached list right away so the switcher shows it before
       // the refetch lands; it has no projects yet, so nothing else has to load.

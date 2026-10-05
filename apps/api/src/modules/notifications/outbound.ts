@@ -11,6 +11,7 @@ import {
   type DeliveryPayload,
 } from '@repo/db';
 import { eq, inArray } from 'drizzle-orm';
+import { isAccountDeactivated } from '@repo/auth';
 import { readRedactedSettings } from '#modules/notification-settings/service';
 import { getPreferencesForUsers } from '#modules/notification-preferences/service';
 import { getTelegramChatIds, hasUsableInstanceBot } from '#modules/telegram/service';
@@ -181,27 +182,31 @@ export async function enqueueOutbound(
 
   const userIds = [...new Set(notifications.map((n) => n.userId))];
   const [users, prefsByUser, chatIdByUser] = await Promise.all([
-    db.select({ id: user.id, email: user.email }).from(user).where(inArray(user.id, userIds)),
+    db
+      .select({ id: user.id, email: user.email, active: user.active })
+      .from(user)
+      .where(inArray(user.id, userIds)),
     getPreferencesForUsers(projectId, userIds),
     telegramEnabled ? getTelegramChatIds(userIds) : Promise.resolve(new Map<string, string>()),
   ]);
-  const emailById = new Map(users.map((u) => [u.id, u.email]));
+  // A deactivated account keeps its projects, but nothing from them reaches it.
+  const emailById = new Map(
+    users.filter((u) => !isAccountDeactivated(u)).map((u) => [u.id, u.email]),
+  );
 
   const out: OutboxRow[] = [];
   for (const n of notifications) {
     const prefs = prefsByUser.get(n.userId);
-    if (!prefs) continue; // member has not opted in
+    const email = emailById.get(n.userId);
+    if (!prefs || !email) continue; // not opted in, or deactivated
 
     if (emailEnabled && prefs.emailEvents[n.type]) {
-      const email = emailById.get(n.userId);
-      if (email) {
-        out.push({
-          projectId,
-          channel: 'email',
-          recipient: email,
-          payload: emailPayload(n.type, ref, issueRow.title, actor, url, stateChange),
-        });
-      }
+      out.push({
+        projectId,
+        channel: 'email',
+        recipient: email,
+        payload: emailPayload(n.type, ref, issueRow.title, actor, url, stateChange),
+      });
     }
     if (telegramEnabled && prefs.telegramEvents[n.type]) {
       // No linked Telegram account means nowhere to send; the member sees the prompt

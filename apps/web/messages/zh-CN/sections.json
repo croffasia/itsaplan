@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "通用",
-      "description": "新建项目的默认设置。"
+      "description": "个人工作区和新建项目的默认设置。"
     },
     "authentication": {
       "label": "身份验证",

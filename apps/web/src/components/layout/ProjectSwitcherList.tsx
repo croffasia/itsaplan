@@ -2,6 +2,7 @@ import { useState, type Ref } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import type { Project } from '@/lib/api/endpoints/projects';
 import type { Team } from '@/lib/api/endpoints/teams';
+import type { WorkspaceRole } from '@/lib/api/endpoints/workspaces';
 import { Command, CommandInput, CommandList } from '@/components/ui/command';
 import ProjectSwitcherTeamGroup from './ProjectSwitcherTeamGroup';
 import ProjectSwitcherHiddenProjects from './ProjectSwitcherHiddenProjects';
@@ -20,6 +21,7 @@ export default function ProjectSwitcherList({
   onOpenTeam,
   onSelectProject,
   inputRef,
+  workspaceRole,
 }: {
   projects: Project[];
   teams: Team[];
@@ -32,6 +34,7 @@ export default function ProjectSwitcherList({
   onOpenTeam: (teamId: number, open: boolean) => void;
   onSelectProject: (key: string) => void;
   inputRef: Ref<HTMLInputElement>;
+  workspaceRole: WorkspaceRole | null;
 }) {
   const t = useTranslations('nav');
   const locale = useLocale();
@@ -94,6 +97,7 @@ export default function ProjectSwitcherList({
             searching={searching}
             onOpenChange={(open) => onOpenTeam(group.teamId, open)}
             onSelectProject={onSelectProject}
+            workspaceRole={workspaceRole}
           />
         ))}
         {hiddenCount > 0 && (

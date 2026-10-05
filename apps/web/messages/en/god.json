@@ -57,6 +57,7 @@
     "deleteConfirm": "Delete account",
     "deleteConfirmWithProjects": "{count, plural, one {Delete account and project} other {Delete account and projects}}",
     "deleteMessage": "<strong>{name}</strong> loses access to this instance. Issues and comments they wrote stay, with the author unassigned. This cannot be undone.",
+    "deleteWorkspaceNote": "A workspace this account owns is deleted with it while it has no projects or AI agents. Otherwise it passes to you, with everything the account owned alone in it.",
     "soleOwnerTitle": "{count, plural, one {Only owner of a project} other {Only owner of # projects}}",
     "soleOwnerHint": "{count, plural, one {Once the account is gone, nobody can manage it.} other {Once the account is gone, nobody can manage them.}}",
     "deleteWithProjects": "{count, plural, one {Delete the project with the account} other {Delete the projects with the account}}",
@@ -159,7 +160,11 @@
     "saved": "Project defaults saved",
     "projectDefaults": "Project defaults",
     "mcpEnabled": "Enable MCP on new projects",
-    "mcpEnabledHint": "A new project is in its team's MCP reach from the moment it is created."
+    "mcpEnabledHint": "A new project is in its team's MCP reach from the moment it is created.",
+    "workspacesSaved": "Workspace settings saved",
+    "workspaces": "Workspaces",
+    "personalWorkspaces": "A workspace for everyone",
+    "personalWorkspacesHint": "Every account gets a workspace of its own, named after the person. Off, people work only in the workspaces they are added to."
   },
   "authentication": {
     "saved": "Authentication settings saved",
@@ -269,49 +274,5 @@
     "scopes": "Scopes",
     "scopesHint": "Separated by spaces. openid is required; profile and email fill in the name and address.",
     "oidcRedirectUriHint": "Register this as a redirect URI on the client at your identity provider. The provider refuses the sign-in if it does not match exactly."
-  },
-  "scim": {
-    "saved": "SCIM settings saved",
-    "provisioning": "Provisioning",
-    "provisioningConfigured": "Your identity provider creates, updates and deactivates accounts on this instance.",
-    "provisioningMissing": "Generate a token first.",
-    "token": "Token",
-    "noToken": "No token generated yet",
-    "tokenHint": "The bearer token your identity provider sends. It is shown once; generating a new one stops the old one working.",
-    "generateToken": "Generate token",
-    "replaceToken": "Replace token",
-    "baseUrl": "SCIM endpoint",
-    "baseUrlHint": "Point your identity provider at this address.",
-    "copyBaseUrl": "Copy SCIM endpoint",
-    "groups": "Groups",
-    "groupsHint": "The groups your identity provider has pushed. The list is theirs; what each group grants is set here.",
-    "groupsEmpty": "No groups have been pushed yet.",
-    "memberCount": "{count, plural, =0 {No members} one {# member} other {# members}}",
-    "grantsNothing": "grants nothing yet",
-    "editMappings": "Edit access",
-    "roleOwner": "Owner",
-    "roleMember": "Member",
-    "tokenDialog": {
-      "title": "Generate a SCIM token",
-      "description": "The token is shown once and cannot be read back. Any token already in use stops working.",
-      "submit": "Generate",
-      "submitPending": "Generating…",
-      "createdTitle": "Your SCIM token",
-      "createdDescription": "Copy it into your identity provider now. It cannot be shown again.",
-      "copy": "Copy token"
-    },
-    "mappings": {
-      "title": "What {group} grants",
-      "description": "Members of this group join the projects listed here. Removing a project takes away the memberships this group gave it.",
-      "empty": "This group grants nothing yet.",
-      "addProject": "Add a project…",
-      "role": "Role",
-      "roleOwner": "Owner",
-      "roleMember": "Member",
-      "projectRole": "Project role",
-      "defaultRole": "Default role",
-      "remove": "Remove project",
-      "saved": "Group access saved"
-    }
   }
 }

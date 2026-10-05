@@ -5,6 +5,8 @@ import {
   createTeamProject,
   copyTeamProject,
   updateTeamProject,
+  archiveTeamProject,
+  restoreTeamProject,
   deleteTeamProject,
 } from '@/lib/api/endpoints/teams';
 import {
@@ -174,6 +176,27 @@ export function useUpdateTeamProject() {
       if (updated.ref !== projectKey) qc.removeQueries({ queryKey: qk.project(projectKey) });
       else void qc.invalidateQueries({ queryKey: qk.project(projectKey) });
       void qc.invalidateQueries({ queryKey: qk.team(teamId) });
+    },
+  });
+}
+
+// The project list carries only active projects, so it is refetched either way.
+export function useSetTeamProjectArchived() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      teamId,
+      projectId,
+      archived,
+    }: {
+      teamId: number;
+      projectId: number;
+      archived: boolean;
+    }) =>
+      archived ? archiveTeamProject(teamId, projectId) : restoreTeamProject(teamId, projectId),
+    onSuccess: (_project, { teamId }) => {
+      void qc.invalidateQueries({ queryKey: qk.projects });
+      void qc.invalidateQueries({ queryKey: qk.anyTeamProjects(teamId) });
     },
   });
 }

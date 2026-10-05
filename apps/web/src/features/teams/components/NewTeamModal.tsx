@@ -16,9 +16,11 @@ import { TEAM_SLUG_PATTERN, suggestTeamSlug } from '../utils/teamSlug';
 // else a team carries (its members, its projects) is added afterwards. `onCreated` is where
 // the caller takes it from there — the teams page opens the new team.
 export default function NewTeamModal({
+  workspaceId,
   onClose,
   onCreated,
 }: {
+  workspaceId: number;
   onClose: () => void;
   onCreated?: (team: Team) => void;
 }) {
@@ -47,7 +49,7 @@ export default function NewTeamModal({
   function submit() {
     if (!canSubmit) return;
     createTeam.mutate(
-      { name: name.trim(), slug },
+      { name: name.trim(), slug, workspaceId },
       {
         onSuccess: (team) => {
           onClose();

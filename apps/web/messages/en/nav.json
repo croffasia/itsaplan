@@ -64,6 +64,8 @@
     "noHiddenResults": "No hidden projects match your search",
     "noVisibleProjects": "No projects in your view",
     "hintMove": "move",
-    "hintOpen": "open"
+    "hintOpen": "open",
+    "workspaces": "Workspaces",
+    "workspaceSettings": "Workspace settings"
   }
 }

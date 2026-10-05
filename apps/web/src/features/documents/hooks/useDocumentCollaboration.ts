@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { createDocument } from '@tiptap/core';
 import type { Editor } from '@tiptap/react';
 import { Step } from '@tiptap/pm/transform';
 import { history } from '@tiptap/pm/history';
@@ -181,11 +182,19 @@ export function useDocumentCollaboration({
     const start = async () => {
       setStatus('connecting');
       try {
+        // The seed must come from the same version as the one sent: the editor can
+        // still show an older body after another writer replaced the Markdown.
+        const current = latest.current.document;
         const session = await openDocumentSession(
           projectKey,
           document.id,
-          latest.current.document.version,
-          editor.getJSON(),
+          current.version,
+          current.contentJson ??
+            createDocument(
+              editor.storage.markdown.parser.parse(current.content),
+              editor.schema,
+              editor.options.parseOptions,
+            ).toJSON(),
         );
         if (cancelled || editor.isDestroyed) return;
         const recovery = readDocumentRecovery(storageKey);

@@ -11,7 +11,7 @@ import {
   useUnlinkDocumentIssue,
 } from '@/features/documents/services/documents.service';
 import { useTranslations } from 'next-intl';
-import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import IssueSectionHeading from './IssueSectionHeading';
 
 export default function IssueDocumentsPanel({

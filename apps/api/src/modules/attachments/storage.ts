@@ -7,7 +7,8 @@ import {
   MB,
   projectStoredBytes,
   projectTeamId,
-  teamStoredBytes,
+  teamWorkspaceId,
+  workspaceStoredBytes,
 } from '@repo/db';
 import { putObject, getObject, deleteObject } from '@repo/storage';
 import { HttpError } from '#shared/lib';
@@ -39,18 +40,19 @@ export async function assertAttachmentStorageCapacity(
       );
     }
   }
-  // The instance quota above is per project; a team may hold a ceiling of its own
+  // The instance quota above is per project; a workspace may hold a ceiling of its own
   // across all of them. The team is read through the same executor: a project copy
   // checks the quota of a project its own transaction has not committed yet.
   const teamId = await projectTeamId(projectId, executor);
   if (teamId == null) throw new HttpError(404, 'Project not found');
-  const { maxStorageBytes } = await getLimits({ teamId });
+  const workspaceId = await teamWorkspaceId(teamId, executor);
+  const { maxStorageBytes } = await getLimits(workspaceId);
   if (maxStorageBytes > 0) {
-    const used = (await teamStoredBytes(teamId, executor)) - replacedBytes;
+    const used = (await workspaceStoredBytes(workspaceId, executor)) - replacedBytes;
     if (used + addedBytes > maxStorageBytes) {
       throw new HttpError(
         413,
-        `The team has used its ${Math.round(maxStorageBytes / MB)} MB of storage. Delete attachments to free space.`,
+        `The workspace has used its ${Math.round(maxStorageBytes / MB)} MB of storage. Delete attachments to free space.`,
       );
     }
   }

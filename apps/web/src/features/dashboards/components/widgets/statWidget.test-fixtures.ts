@@ -99,6 +99,7 @@ export function projectFixture(): ProjectDetail {
       pointsEstimateEnabled: false,
       timeEstimateEnabled: false,
       timeLoggingEnabled: false,
+      archivedAt: null,
     },
     issues: [issue(1, 1, null), issue(2, 1, 1), issue(3, 2, 1)],
     columns: [
@@ -125,7 +126,7 @@ export function projectFixture(): ProjectDetail {
         autoAssignUserId: null,
       },
     ],
-    viewer: { role: 'member', teamRole: 'member' },
+    viewer: { role: 'member', teamRole: 'member', via: 'member' },
     permissions,
     issueTypes: [],
     labels: [],

@@ -64,6 +64,8 @@
     "noHiddenResults": "Ningún proyecto oculto coincide con tu búsqueda",
     "noVisibleProjects": "No hay proyectos en tu vista",
     "hintMove": "mover",
-    "hintOpen": "abrir"
+    "hintOpen": "abrir",
+    "workspaces": "Espacios de trabajo",
+    "workspaceSettings": "Ajustes del espacio de trabajo"
   }
 }

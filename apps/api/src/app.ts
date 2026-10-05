@@ -8,6 +8,7 @@ import {
   hasConfiguredGoogle,
   hasConfiguredOidc,
   getOidcLabel,
+  isAccountDeactivated,
 } from '@repo/auth';
 import { db, hasConfiguredEmailProvider, user } from '@repo/db';
 import { cors } from '@elysiajs/cors';
@@ -83,6 +84,7 @@ export const app = new Elysia()
         tags: [
           { name: 'Projects', description: 'Projects and the full work items view' },
           { name: 'Teams', description: 'Teams that own projects' },
+          { name: 'Workspaces', description: 'Workspaces that own teams, and who manages them' },
           { name: 'Members', description: 'Project membership and roles' },
           { name: 'Roles', description: 'Project roles and their permissions' },
           { name: 'Invites', description: 'Project invites (create, accept, reject)' },
@@ -250,7 +252,9 @@ export const app = new Elysia()
       // A deactivated account is not signed in as far as the app is concerned:
       // every planner route answers 401 for it, and this is what the screens ask
       // first. Deactivation arrives over SCIM, after the session was opened.
-      if (!session || session.user.active === false) return { authenticated: false };
+      if (!session || isAccountDeactivated(session.user)) {
+        return { authenticated: false };
+      }
       return { authenticated: true, user: session.user };
     },
     {

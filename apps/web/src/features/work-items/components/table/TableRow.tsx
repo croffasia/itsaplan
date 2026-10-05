@@ -54,9 +54,8 @@ export function TableRow({
   // Opens a linked issue from a sub-row.
   onOpenIssue: (id: number) => void;
 }) {
-  // Drag is disabled on phones so a touch scrolls the list instead of picking up
-  // a row (see the `sm:touch-none` below), and without work_items edit (reordering
-  // is an issue edit).
+  // Drag is disabled on phones, and without work_items edit (reordering is an
+  // issue edit).
   const { can } = usePermissions();
   const subtasks = useSubtaskFold();
   const prefetchIssue = usePrefetchIssue(project.project.key, issue.sequenceNumber);
@@ -94,7 +93,7 @@ export function TableRow({
         }}
         onPointerEnter={prefetchIssue}
         className={cn(
-          'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors sm:touch-none',
+          'relative grid cursor-grab gap-3 border-b py-2 pr-4 text-sm transition-colors',
           isBlocked(issue) ? 'row-blocked' : 'hover:bg-accent/40',
           alignTop ? 'items-start' : 'items-center',
           indented ? 'pl-9' : 'pl-4',

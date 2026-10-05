@@ -6,15 +6,21 @@ import { useTranslations } from 'next-intl';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useCreateInstanceScimToken } from '../../services/god.service';
+import { useCreateWorkspaceScimToken } from '@/services/workspaces.service';
 
 // The generated token is kept in this dialog only, never lifted into page state: it
 // is shown once, right after it is generated, and cannot be retrieved later.
 // Generating one replaces the previous token, which stops working immediately.
-export default function GodScimTokenDialog({ onClose }: { onClose: () => void }) {
-  const t = useTranslations('god.scim.tokenDialog');
+export default function WorkspaceScimTokenDialog({
+  workspaceId,
+  onClose,
+}: {
+  workspaceId: number;
+  onClose: () => void;
+}) {
+  const t = useTranslations('teams.workspace.scim.tokenDialog');
   const tCommon = useTranslations('common');
-  const create = useCreateInstanceScimToken();
+  const create = useCreateWorkspaceScimToken(workspaceId);
   const [token, setToken] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 

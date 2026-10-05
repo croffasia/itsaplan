@@ -123,7 +123,8 @@ export function resolveFilterSet(filters: FilterSet, context: FilterEvaluationCo
   if (!currentUserId) return filters;
   let changed = false;
   const conditions = filters.conditions.map((condition) => {
-    if (!condition.values.includes(CURRENT_USER_FILTER_VALUE)) return condition;
+    if (!Array.isArray(condition.values) || !condition.values.includes(CURRENT_USER_FILTER_VALUE))
+      return condition;
     changed = true;
     return {
       ...condition,

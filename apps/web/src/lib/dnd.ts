@@ -1,23 +1,17 @@
-import {
-  KeyboardSensor,
-  MouseSensor,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from '@dnd-kit/core';
+import { KeyboardSensor, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import type { SyntheticEvent } from 'react';
 
 // How far the pointer must move before a press becomes a drag. Also the threshold
 // a draggable uses to tell a click apart from the click the browser fires after a
 // drag ends.
 export const DRAG_ACTIVATION_DISTANCE = 4;
 
-// Shared drag sensors for every dnd-kit surface in the planner. The pointer
-// sensor uses a small activation distance so a click on a draggable element
-// still registers as a click (select a tab, open a issue) instead of starting
-// a drag; the keyboard sensor adds accessible reordering. Drag is turned off on
-// phones per-draggable via `useDraggable({ disabled })` (see useIsPhone), not by
+// Shared drag sensors for every dnd-kit surface. A mouse drag starts after a
+// small move, so a click on a draggable still registers as a click. A touch drag
+// starts after a press-and-hold, so a swipe scrolls the list or strip under it;
+// draggables must not set `touch-none` for that. Drag is turned off on phones
+// per-draggable via `useDraggable({ disabled })` (see useIsPhone), not by
 // dropping sensors here — dnd-kit puts the sensors in a useEffect dependency
 // array and warns if its length changes between renders.
 //
@@ -27,21 +21,21 @@ export const DRAG_ACTIVATION_DISTANCE = 4;
 // instance, so the sensor-array length still never changes between its renders.
 export function useDndSensors(inert = false) {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
   const inertSensors = useSensors();
   return inert ? inertSensors : sensors;
 }
 
-// Sensors for a horizontally-scrollable sortable strip (the view tabs). Mouse
-// drags start after a small move; touch requires a short press-and-hold, so a
-// quick swipe scrolls the strip natively instead of starting a reorder. Pair
-// this with NO `touch-none` on the items so native touch scrolling works.
-export function useStripSortSensors() {
-  return useSensors(
-    useSensor(MouseSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
-}
+const stopPropagation = (e: SyntheticEvent) => e.stopPropagation();
+
+// Spread on a control inside a draggable so pressing it does not start a drag of
+// the draggable. pointerdown is stopped too: a board card records where a press
+// started on it.
+export const noDragProps = {
+  onMouseDown: stopPropagation,
+  onTouchStart: stopPropagation,
+  onPointerDown: stopPropagation,
+};

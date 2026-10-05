@@ -2,7 +2,7 @@
 
 import { UsersRound } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import type { InstanceScimGroup } from '@/lib/api/endpoints/scim';
+import type { WorkspaceScimGroup } from '@/lib/api/endpoints/workspaces';
 import { Button } from '@/components/ui/button';
 import {
   Item,
@@ -13,14 +13,14 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 
-export default function GodScimGroupItem({
+export default function WorkspaceScimGroupItem({
   group,
   onEdit,
 }: {
-  group: InstanceScimGroup;
+  group: WorkspaceScimGroup;
   onEdit: () => void;
 }) {
-  const t = useTranslations('god.scim');
+  const t = useTranslations('teams.workspace.scim');
 
   const grants = group.mappings
     .map((m) => `${m.projectKey} (${t(m.role === 'owner' ? 'roleOwner' : 'roleMember')})`)

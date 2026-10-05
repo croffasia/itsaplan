@@ -7,6 +7,7 @@ import { IssueTemplateResponse } from '#modules/issue-templates/model';
 import { IssueTypeResponse } from '#modules/issue-types/model';
 import { LabelGroupResponse, LabelResponse } from '#modules/labels/model';
 import { PermissionMatrixSchema } from '#shared/permissions';
+import { AccessViaSchema } from '#shared/workspace-roles';
 import { ISSUE_TYPE_PRESET_KEYS } from './service';
 import { COPY_INCLUDE_KEYS } from './copy';
 
@@ -125,6 +126,9 @@ export const ProjectResponse = t.Object({
   timeEstimateEnabled: t.Boolean(),
   timeLoggingEnabled: t.Boolean(),
   availableFeatures: t.Array(t.UnionEnum([...PROJECT_FEATURES])),
+  archivedAt: t.Nullable(
+    t.String({ description: 'When the project was archived, or null while it is active.' }),
+  ),
   createdAt: t.String(),
 });
 
@@ -136,6 +140,7 @@ export const ProjectListResponse = t.Array(
     ProjectResponse,
     t.Object({
       role: t.Union([t.Literal('owner'), t.Literal('member')]),
+      via: AccessViaSchema,
       lastActivityAt: t.Nullable(
         t.String({
           description: 'Newest readable work-item activity or comment timestamp, or null.',
@@ -175,6 +180,9 @@ const ViewerResponse = t.Object({
   teamRole: t.Nullable(
     t.Union([t.Literal('owner'), t.Literal('manager'), t.Literal('member'), t.Literal('agent')]),
   ),
+  // 'workspace' when the caller is not a member of the project and reaches it through
+  // their role in the workspace that holds it.
+  via: AccessViaSchema,
 });
 
 // The project board scaffold (GET /projects/:projectKey): the project plus its

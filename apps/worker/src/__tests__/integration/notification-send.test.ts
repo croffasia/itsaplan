@@ -1,6 +1,6 @@
 import { beforeEach, describe, it, expect } from 'bun:test';
 import { randomUUID } from 'node:crypto';
-import { appSecret, db, project, team, teamInvite } from '@repo/db';
+import { appSecret, db, project, team, teamInvite, workspace } from '@repo/db';
 import { deliverNotification } from '../../notification-send';
 
 // The send reads the credentials itself, so these cover the two decisions it makes
@@ -10,7 +10,14 @@ import { deliverNotification } from '../../notification-send';
 // directly — there is no api to call.
 
 async function makeProject(): Promise<{ teamId: number; projectId: number }> {
-  const [row] = await db.insert(team).values({ name: 'Senders' }).returning({ id: team.id });
+  const [ws] = await db
+    .insert(workspace)
+    .values({ name: 'Senders' })
+    .returning({ id: workspace.id });
+  const [row] = await db
+    .insert(team)
+    .values({ workspaceId: ws!.id, name: 'Senders' })
+    .returning({ id: team.id });
   const [created] = await db
     .insert(project)
     .values({ teamId: row!.id, key: randomUUID().slice(0, 8), name: 'Marketing' })

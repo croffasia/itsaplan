@@ -57,6 +57,7 @@
     "deleteConfirm": "Eliminar la cuenta",
     "deleteConfirmWithProjects": "{count, plural, one {Eliminar la cuenta y el proyecto} other {Eliminar la cuenta y los proyectos}}",
     "deleteMessage": "<strong>{name}</strong> pierde el acceso a esta instancia. Los tickets y los comentarios que ha escrito se quedan, sin el autor asignado. No se puede deshacer.",
+    "deleteWorkspaceNote": "Un espacio de trabajo de esta cuenta se elimina con ella si no tiene proyectos ni agentes de IA. Si los tiene, pasa a ti, con todo lo que la cuenta tenía en exclusiva en él.",
     "soleOwnerTitle": "{count, plural, one {Único propietario de un proyecto} other {Único propietario de # proyectos}}",
     "soleOwnerHint": "{count, plural, one {Cuando la cuenta se vaya, nadie la podrá gestionar.} other {Cuando la cuenta se vaya, nadie los podrá gestionar.}}",
     "deleteWithProjects": "{count, plural, one {Eliminar el proyecto con la cuenta} other {Eliminar los proyectos con la cuenta}}",
@@ -159,7 +160,11 @@
     "saved": "Los valores por defecto del proyecto se han guardado",
     "projectDefaults": "Valores por defecto del proyecto",
     "mcpEnabled": "Activar MCP en los proyectos nuevos",
-    "mcpEnabledHint": "Un proyecto nuevo está en el alcance de MCP de su equipo desde el momento en que se crea."
+    "mcpEnabledHint": "Un proyecto nuevo está en el alcance de MCP de su equipo desde el momento en que se crea.",
+    "workspacesSaved": "Ajustes de espacios de trabajo guardados",
+    "workspaces": "Espacios de trabajo",
+    "personalWorkspaces": "Un espacio de trabajo para cada persona",
+    "personalWorkspacesHint": "Cada cuenta recibe un espacio de trabajo propio con el nombre de la persona. Desactivado, cada persona trabaja solo en los espacios de trabajo a los que se le ha añadido."
   },
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",
@@ -269,49 +274,5 @@
     "scopes": "Ámbitos",
     "scopesHint": "Separados por espacios. openid es obligatoria; profile y email rellenan el nombre y la dirección.",
     "oidcRedirectUriHint": "Regístrala como una URI de redirección en el cliente de tu proveedor de identidades. El proveedor rechaza el inicio de sesión si no coincide exactamente."
-  },
-  "scim": {
-    "saved": "Los ajustes de SCIM se han guardado",
-    "provisioning": "Preparación",
-    "provisioningConfigured": "Tu proveedor de identidades crea, actualiza y desactive cuentas en esta instancia.",
-    "provisioningMissing": "Genera primero un token.",
-    "token": "Token",
-    "noToken": "Todavía no se ha generado un token",
-    "tokenHint": "El token de portador que envía tu proveedor de identidades. Se muestra una sola vez; generar uno nuevo deja de hacer funcionar al viejo.",
-    "generateToken": "Generar token",
-    "replaceToken": "Sustituir token",
-    "baseUrl": "Endpoint de SCIM",
-    "baseUrlHint": "Apunta a tu proveedor de identidades a esta dirección.",
-    "copyBaseUrl": "Copiar el endpoint de SCIM",
-    "groups": "Grupos",
-    "groupsHint": "Los grupos que tu proveedor de identidades ha empujado. La lista es suya; lo que cada grupo concede se define aquí.",
-    "groupsEmpty": "Todavía no se ha empujado ningún grupo.",
-    "memberCount": "{count, plural, =0 {Sin miembros} one {# miembro} other {# miembros}}",
-    "grantsNothing": "todavía no concede nada",
-    "editMappings": "Editar el acceso",
-    "roleOwner": "Propietario",
-    "roleMember": "Miembro",
-    "tokenDialog": {
-      "title": "Generar un token de SCIM",
-      "description": "El token se muestra una sola vez y no se puede volver a leer. Cualquier token ya en uso deja de funcionar.",
-      "submit": "Generar",
-      "submitPending": "Generando…",
-      "createdTitle": "Tu token de SCIM",
-      "createdDescription": "Cópialo a tu proveedor de identidades ahora. No se puede volver a mostrar.",
-      "copy": "Copiar el token"
-    },
-    "mappings": {
-      "title": "Lo que concede {group}",
-      "description": "Los miembros de este grupo se unen a los proyectos listados aquí. Quitar un proyecto leva los miembros que este grupo le había dado.",
-      "empty": "Este grupo todavía no concede nada.",
-      "addProject": "Añadir un proyecto…",
-      "role": "Rol",
-      "roleOwner": "Propietario",
-      "roleMember": "Miembro",
-      "projectRole": "Rol del proyecto",
-      "defaultRole": "Rol por defecto",
-      "remove": "Quitar el proyecto",
-      "saved": "El acceso del grupo se ha guardado"
-    }
   }
 }

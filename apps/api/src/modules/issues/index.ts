@@ -7,8 +7,10 @@ import {
   assertPermission,
   assertProjectOwner,
   assertProjectWritable,
+  assertWritable,
   requireUser,
 } from '#shared/access';
+import { getProjectById } from '#modules/projects/service';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
@@ -65,6 +67,7 @@ import {
   updateWorklog,
 } from './worklogs';
 import { listIssueCycles } from './cycle-history';
+import { moveIssue } from './move';
 import {
   createAndLinkPullRequest,
   linkExistingPullRequest,
@@ -143,6 +146,7 @@ import {
   updateCommentBody,
   commentParams,
   archiveIssueBody,
+  moveIssueBody,
   BulkUpdatedResponse,
   BulkArchivedResponse,
   BulkDeletedResponse,
@@ -248,6 +252,20 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           await assertMcpAllowed(entry.projectId, request.headers);
           await assertProjectWritable(entry.projectId, request.method);
           return { projectId: entry.projectId };
+        },
+      };
+    },
+    // The project an issue moves to: the caller must be allowed to create issues there,
+    // on top of the delete the issue's own project asks for through workItem.
+    moveTarget(_enabled: boolean) {
+      return {
+        async resolve({ body, user, request }) {
+          const target = await getProjectById((body as { projectId: number }).projectId);
+          if (!target) throw new HttpError(404, 'Project not found');
+          await assertPermission(target.id, user, 'work_items', 'create');
+          await assertMcpAllowed(target.id, request.headers);
+          assertWritable(target, request.method);
+          return { target };
         },
       };
     },
@@ -490,12 +508,18 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // identifier-based issue page. Same read permission as the by-id read.
   .get(
     '/projects/:projectKey/issues/:sequenceNumber',
-    async ({ project, params }) => {
+    async ({ project, params, user, request }) => {
       const issue = await getIssueBySequence(project.id, params.sequenceNumber);
       if (!issue) throw new HttpError(404, 'Issue not found');
+      // An old number of a moved issue resolves to it in the project it is in now,
+      // which the caller must be able to read as well.
+      if (issue.projectId !== project.id) {
+        await assertPermission(issue.projectId, user, 'work_items', 'read');
+        await assertMcpAllowed(issue.projectId, request.headers);
+      }
       const fields = await getIssueFieldValues(issue.id);
       const links = await listIssueLinks(issue.id);
-      const watchers = await listIssueWatchers(project.id, issue.id);
+      const watchers = await listIssueWatchers(issue.projectId, issue.id);
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
       const checklists = await listChecklists(issue.id);
@@ -575,6 +599,30 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'Update an issue by its numeric id. Moving it into a column that is at a ' +
           'hard WIP limit fails with 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
+      },
+    },
+  )
+
+  // Moves the issue, with its subtasks, to another project of the same team. It takes
+  // the next number there; the old identifier keeps resolving to it.
+  .post(
+    '/issues/:issueId/move',
+    async ({ params, body, target, user }) =>
+      moveIssue(params.issueId, target, body.columnId, requireUser(user).id),
+    {
+      params: issueParams,
+      body: moveIssueBody,
+      workItem: 'delete',
+      moveTarget: true,
+      response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Move an issue to another project',
+        description:
+          'Move an issue, with its subtasks, to another project of the same team. Each ' +
+          'moved issue gets a new number in the target project and its old identifier ' +
+          'still resolves. Column, type, labels and custom fields are matched by name; ' +
+          'cycle, initiative and links to issues left behind are dropped.',
+        ...mcpTool('move_issue'),
       },
     },
   )

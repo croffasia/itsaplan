@@ -552,6 +552,19 @@ export const issueSequenceParams = t.Object({
   sequenceNumber: t.Numeric(),
 });
 
+export const moveIssueBody = t.Object({
+  projectId: t.Integer({
+    description:
+      'The project id to move the issue to, from list_projects. Must be in the same team.',
+  }),
+  columnId: t.Optional(
+    t.Integer({
+      description:
+        'The column (state) id in the target project, from get_project. Left out, the column of the same name or state type is used.',
+    }),
+  ),
+});
+
 export const updateIssueBody = t.Object({
   columnId: t.Optional(t.Integer({ description: 'Move the issue to this column (state) id.' })),
   position: t.Optional(t.Number({ description: 'Ordering position within the column.' })),

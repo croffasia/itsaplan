@@ -74,7 +74,10 @@ Rules and invariants for this package below; read the code for the walkthrough.
 - **jsonb** (view `filters`/`display`, action `condition`/`effect`) passes through as
   JS objects — never `JSON.stringify`; validate only as `t.Any()`.
 - **Sequence numbers** ("MKT-42") are issued under a row lock on `project` inside
-  `createIssue`'s transaction — keep the lock so concurrent creates don't collide.
+  the transaction of `createIssue` and of `moveIssue` (`issues/move.ts`) — keep the
+  lock so concurrent writes don't collide. A moved issue's old number goes to
+  `issue_key_alias`, and `getIssueBySequence` resolves it to the issue in its new
+  project. The counter never goes back, so an alias never collides with an issue.
 - **`position` is a sparse float** (`MAX(position) + 1000`); do not assume contiguous
   integers.
 - **Deletes cascade in the DB** (every project/issue-scoped FK is `ON DELETE CASCADE`).
@@ -125,7 +128,10 @@ Enforced declaratively through macros, never imperative calls in handlers.
   macro via `entityGuard(resource, notFound, resolveProjectId)` and set it in route
   options (e.g. `workItem: "edit"`). `GET /issues/:issueId` instead asserts
   `assertPermission` on the fetched row, and spreads `requiresPermission([...])` into its
-  `detail` so the MCP tool table still reports what it requires.
+  `detail` so the MCP tool table still reports what it requires. `GET
+  /projects/:projectKey/issues/:sequenceNumber` does the same for an old number that
+  resolved to an issue now in another project. `POST /issues/:issueId/move` checks the
+  target project in the `moveTarget` macro, which reads `projectId` from the body.
 - Every guard publishes the pair it asserts as `x-permission` on the route's OpenAPI
   detail, which is where `mcp/generate.ts` reads it — Elysia deletes a macro's own key
   from the route once it expands the macro, so there is nothing else to read it from.

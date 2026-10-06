@@ -1410,6 +1410,26 @@ export const issue = pgTable(
   ],
 );
 
+// The number an issue held in a project it was moved out of, so a link to the old
+// identifier still resolves. project.next_sequence never hands that number out again,
+// so it cannot collide with an issue of that project.
+export const issueKeyAlias = pgTable(
+  'issue_key_alias',
+  {
+    projectId: integer('project_id')
+      .notNull()
+      .references(() => project.id, { onDelete: 'cascade' }),
+    sequenceNumber: integer('sequence_number').notNull(),
+    issueId: integer('issue_id')
+      .notNull()
+      .references(() => issue.id, { onDelete: 'cascade' }),
+  },
+  (t) => [
+    primaryKey({ columns: [t.projectId, t.sequenceNumber] }),
+    index('issue_key_alias_issue_idx').on(t.issueId),
+  ],
+);
+
 // One stretch an issue spent on a cycle: a record is opened when the issue is
 // planned into the cycle and closed when it leaves it. This is what the cycle
 // history of an issue reads, and what carry-over metrics are counted from.

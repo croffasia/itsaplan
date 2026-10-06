@@ -5,6 +5,7 @@ import { answer } from './chat';
 import { Client, RequestError, type ChatMessage, type Run } from './client';
 import { loadConfig, type RunnerConfig } from './config';
 import { execute } from './execute';
+import { idlePollDebug, nextIdlePollMs } from './idle-poll';
 
 // The runner holds no state — the queue is the server's — so stopping it mid-task only
 // means that task's lease expires and another runner picks it up.
@@ -182,18 +183,31 @@ async function serve(state: { stopping: boolean }, config: RunnerConfig): Promis
   const log: Log = (message) => console.log(`${prefix} ${message}`);
   log(
     `running ${config.agent ?? 'the configured command'}, polling ${config.url} every ` +
-      `${config.pollIntervalMs}ms, up to ${config.concurrency} at once`,
+      `${config.pollIntervalMs}ms (idle backoff up to ${config.pollIntervalMaxMs}ms), ` +
+      `up to ${config.concurrency} at once`,
   );
   let chatSupported = true;
+  let runEmptyStreak = 0;
   await Promise.all([
     drain<Run>(
       state,
       log,
       config.concurrency,
-      () => client.claim(),
+      async () => {
+        const run = await client.claim();
+        if (run) runEmptyStreak = 0;
+        return run;
+      },
       (run) => handle(config, client, log, run),
       async () => {
-        await sleep(config.pollIntervalMs);
+        const delay = nextIdlePollMs(
+          runEmptyStreak,
+          config.pollIntervalMs,
+          config.pollIntervalMaxMs,
+        );
+        idlePollDebug(config.name ? `runner/${config.name}` : 'runner', delay, runEmptyStreak);
+        runEmptyStreak += 1;
+        await sleep(delay);
         return true;
       },
     ),

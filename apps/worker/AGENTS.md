@@ -112,16 +112,19 @@ running to completion in one.
 ## Config
 
 All via env with defaults (see `src/config.ts`): `WEBHOOK_POLL_INTERVAL_MS`,
+`WEBHOOK_POLL_INTERVAL_MAX_MS`,
 `WEBHOOK_BATCH_SIZE`, `WEBHOOK_TIMEOUT_MS`, `WEBHOOK_MAX_ATTEMPTS`,
 `WEBHOOK_DISABLE_THRESHOLD`, `WEBHOOK_LEASE_SECONDS`, `WEBHOOK_CLEANUP_DAYS`,
 `WEBHOOK_CLEANUP_EVERY_TICKS`. Only `DATABASE_URL` is required for webhook
 delivery. Notification delivery also needs `APP_ENCRYPTION_KEY` (the same value the
 api uses) to read the stored provider credentials, and so does source import (it
-decrypts the stored source credential with it too). `IMPORT_POLL_INTERVAL_MS` tunes
-the import worker's poll interval. The Attachments phase needs the same `S3_*`
-variables (`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`,
-`S3_REGION`, `S3_FORCE_PATH_STYLE`) the api reads for its own uploads — both
-processes write to the same bucket.
+decrypts the stored source credential with it too). `IMPORT_POLL_INTERVAL_MS` and
+`IMPORT_POLL_INTERVAL_MAX_MS` tune the import worker's poll interval.
+`AGENT_RUN_POLL_INTERVAL_MS` and `AGENT_RUN_POLL_INTERVAL_MAX_MS` tune how often
+due schedules are queued. Idle backoff charts and tuning notes: `docs/idle-poll/`.
+The Attachments phase needs the same `S3_*` variables (`S3_ENDPOINT`, `S3_BUCKET`,
+`S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_REGION`, `S3_FORCE_PATH_STYLE`)
+the api reads for its own uploads — both processes write to the same bucket.
 
 ## Tests
 

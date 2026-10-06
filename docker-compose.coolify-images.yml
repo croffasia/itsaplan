@@ -144,6 +144,10 @@ services:
       # Hosts trusted even though they resolve privately. Also governs webhook URL
       # validation and attachment import.
       - SSRF_ALLOWED_HOSTS=${SSRF_ALLOWED_HOSTS:-}
+      # Idle backoff caps (docs/idle-poll/). Empty keeps the default.
+      - AGENT_RUN_POLL_INTERVAL_MAX_MS=${AGENT_RUN_POLL_INTERVAL_MAX_MS:-}
+      - AGENT_CHAT_CLAIM_POLL_MAX_MS=${AGENT_CHAT_CLAIM_POLL_MAX_MS:-}
+      - IDLE_POLL_DEBUG=${IDLE_POLL_DEBUG:-}
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
       interval: 15s
@@ -184,6 +188,11 @@ services:
       S3_SECRET_ACCESS_KEY: ${SERVICE_PASSWORD_MINIO}
       S3_REGION: ${S3_REGION:-us-east-1}
       S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE:-}
+      # Idle backoff caps (docs/idle-poll/). Empty keeps the default.
+      WEBHOOK_POLL_INTERVAL_MAX_MS: ${WEBHOOK_POLL_INTERVAL_MAX_MS:-}
+      IMPORT_POLL_INTERVAL_MAX_MS: ${IMPORT_POLL_INTERVAL_MAX_MS:-}
+      AGENT_RUN_POLL_INTERVAL_MAX_MS: ${AGENT_RUN_POLL_INTERVAL_MAX_MS:-}
+      IDLE_POLL_DEBUG: ${IDLE_POLL_DEBUG:-}
       # Optional tuning — defaults live in apps/worker/src/config.ts:
       # WEBHOOK_POLL_INTERVAL_MS, WEBHOOK_BATCH_SIZE, WEBHOOK_TIMEOUT_MS,
       # WEBHOOK_MAX_ATTEMPTS, WEBHOOK_DISABLE_THRESHOLD, WEBHOOK_LEASE_SECONDS,

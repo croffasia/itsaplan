@@ -28,9 +28,10 @@ const DEFERRED_RETRY_SECONDS = 30;
 const RETRY_BASE_MS = 30_000;
 const RETRY_CAP_MS = 30 * 60_000;
 
-export async function processAgentRuns(): Promise<void> {
+export async function processAgentRuns(): Promise<boolean> {
   const runs = await claimDueRuns();
   await Promise.all(runs.map(processRun));
+  return runs.length > 0;
 }
 
 async function processRun(run: ClaimedRun): Promise<void> {

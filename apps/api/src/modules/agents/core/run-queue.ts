@@ -11,6 +11,7 @@ import type { AgentRunTrigger } from '../model';
 // row is not re-claimed while its run is still in flight.
 export const agentRunConfig = {
   pollIntervalMs: () => intEnv('AGENT_RUN_POLL_INTERVAL_MS', 2000),
+  pollIntervalMaxMs: () => intEnv('AGENT_RUN_POLL_INTERVAL_MAX_MS', 60_000),
   batchSize: () => intEnv('AGENT_RUN_BATCH_SIZE', 5),
   maxAttempts: () => intEnv('AGENT_RUN_MAX_ATTEMPTS', 3),
   leaseSeconds: () => intEnv('AGENT_RUN_LEASE_SECONDS', 300),

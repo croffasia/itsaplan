@@ -14,8 +14,8 @@ type DueSchedule = {
   nextRunAt: string;
 };
 
-export async function enqueueDueSchedules(): Promise<void> {
-  await db.transaction(async (tx) => {
+export async function enqueueDueSchedules(): Promise<boolean> {
+  return await db.transaction(async (tx) => {
     const rows = (await tx.execute(sql`
       SELECT s.id, s.agent_id AS "agentId", s.project_id AS "projectId", s.prompt, s.cron,
              s.next_run_at AS "nextRunAt"
@@ -58,5 +58,6 @@ export async function enqueueDueSchedules(): Promise<void> {
         .set({ nextRunAt: next, lastRunAt: scheduledFor, updatedAt: new Date() })
         .where(eq(agentSchedule.id, row.id));
     }
+    return rows.length > 0;
   });
 }

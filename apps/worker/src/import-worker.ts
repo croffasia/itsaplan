@@ -48,7 +48,12 @@ import {
 // work, then reschedules — a large import interleaves across many ticks
 // rather than running to completion in one.
 export function startImportWorker(): WorkerHandle {
-  return startPollLoop('import-worker', tick, () => intEnv('IMPORT_POLL_INTERVAL_MS', 3000));
+  return startPollLoop(
+    'import-worker',
+    tick,
+    () => intEnv('IMPORT_POLL_INTERVAL_MS', 3000),
+    () => intEnv('IMPORT_POLL_INTERVAL_MAX_MS', 60_000),
+  );
 }
 
 // How many issues Create/Link process per tick. Each issue costs several
@@ -56,9 +61,9 @@ export function startImportWorker(): WorkerHandle {
 // ~60 requests/minute budget, so this stays well under the discover page size.
 const ISSUES_PER_TICK = 15;
 
-async function tick(): Promise<void> {
+async function tick(): Promise<boolean> {
   const [job] = await claimDueImportJobs();
-  if (!job) return;
+  if (!job) return false;
   try {
     const reader = buildReader(job);
     switch (job.phase) {
@@ -83,6 +88,7 @@ async function tick(): Promise<void> {
   } catch (error) {
     await handleTickError(job, error);
   }
+  return true;
 }
 
 async function handleTickError(job: ClaimedImportJob, error: unknown): Promise<void> {

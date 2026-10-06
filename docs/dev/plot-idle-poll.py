@@ -38,12 +38,28 @@ except ImportError as err:
 # waits at most AGENT_CHAT_CLAIM_WAIT_MS (25s) and the next claim starts again at
 # the base. The other loops keep their streak across ticks, so their window is 0.
 CHAT_CLAIM_WAIT_MS = 25_000
-LOOPS: list[tuple[str, int, int, int]] = [
-    ("agent-chat-claim\nbase 500 ms · cap 5 s\nresets every 25 s", 500, 5_000, CHAT_CLAIM_WAIT_MS),
-    ("background/agent-runs\nbase 2 s · cap 60 s", 2_000, 60_000, 0),
-    ("worker / agent-worker\nbase 2 s · cap 60 s", 2_000, 60_000, 0),
-    ("import-worker\nbase 3 s · cap 60 s", 3_000, 60_000, 0),
-    ("runner runs\nbase 3 s · cap 60 s", 3_000, 60_000, 0),
+# title, base ms, cap ms, claim window ms, horizon ms (0 = the figure horizon).
+# The first panel is the chat claim over 5 minutes, so the 25 s reset is visible.
+# The second is that same loop over the full horizon.
+LOOPS: list[tuple[str, int, int, int, int]] = [
+    (
+        "agent-chat-claim, 5 min\nresets every 25 s",
+        500,
+        5_000,
+        CHAT_CLAIM_WAIT_MS,
+        5 * 60_000,
+    ),
+    (
+        "agent-chat-claim\nbase 500 ms · cap 5 s\nresets every 25 s",
+        500,
+        5_000,
+        CHAT_CLAIM_WAIT_MS,
+        0,
+    ),
+    ("background/agent-runs\nbase 2 s · cap 60 s", 2_000, 60_000, 0, 0),
+    ("worker / agent-worker\nbase 2 s · cap 60 s", 2_000, 60_000, 0, 0),
+    ("import-worker\nbase 3 s · cap 60 s", 3_000, 60_000, 0, 0),
+    ("runner runs\nbase 3 s · cap 60 s", 3_000, 60_000, 0, 0),
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -135,8 +151,9 @@ def plot(out_dir: Path, horizon_ms: int, log_y: bool) -> Path:
         ax.set_visible(False)
 
     rows: list[tuple[str, int, int, int]] = []
-    for ax, (title, base, cap, window_ms) in zip(axes_flat, LOOPS):
-        bt, bn, ft, fn, end_b, end_f = simulate(base, cap, horizon_ms, window_ms)
+    for ax, (title, base, cap, window_ms, panel_horizon_ms) in zip(axes_flat, LOOPS):
+        span_ms = panel_horizon_ms or horizon_ms
+        bt, bn, ft, fn, end_b, end_f = simulate(base, cap, span_ms, window_ms)
         cut = round((1 - end_b / end_f) * 100)
         rows.append((title.split("\n", 1)[0], end_b, end_f, cut))
         ax.plot([t / 60_000 for t in ft], fn, color="#2563eb", lw=2.0, label="Fixed poll")
@@ -145,7 +162,7 @@ def plot(out_dir: Path, horizon_ms: int, log_y: bool) -> Path:
             ax.set_yscale("log")
         else:
             ax.set_ylim(bottom=0)
-        ax.set_xlim(0, horizon_ms / 60_000)
+        ax.set_xlim(0, span_ms / 60_000)
         ax.set_title(title, fontsize=10, pad=6)
         ax.grid(True, which="major", ls="-", lw=0.5, alpha=0.35)
         if log_y:
@@ -175,17 +192,16 @@ def plot(out_dir: Path, horizon_ms: int, log_y: bool) -> Path:
         fontsize=10,
         bbox_to_anchor=(0.5, 0.995),
     )
-    hours = horizon_ms / 3_600_000
-    horizon_label = f"{hours:g} h" if hours != 1 else "1 h"
     scale = "log Y" if log_y else "linear Y"
     fig.suptitle(
-        f"Cumulative ops over {horizon_label} ({scale}) — backoff vs fixed poll",
+        f"Cumulative ops ({scale}) — backoff vs fixed poll",
         fontsize=13,
         y=1.02,
     )
     fig.tight_layout(rect=[0, 0, 1, 0.96])
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    hours = horizon_ms / 3_600_000
     name = "cumulative-1h-log.png" if log_y else "cumulative-1h-linear.png"
     if abs(hours - 1) > 1e-9:
         name = f"cumulative-{hours:g}h-{'log' if log_y else 'linear'}.png"

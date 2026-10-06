@@ -39,15 +39,15 @@ except ImportError as err:
 # the base. The other loops keep their streak across ticks, so their window is 0.
 CHAT_CLAIM_WAIT_MS = 25_000
 # title, base ms, cap ms, claim window ms, horizon ms (0 = the figure horizon).
-# The first panel is the chat claim over 5 minutes, so the 25 s reset is visible.
+# The first panel is the chat claim over 3 minutes, so the 25 s reset is visible.
 # The second is that same loop over the full horizon.
 LOOPS: list[tuple[str, int, int, int, int]] = [
     (
-        "agent-chat-claim, 5 min\nresets every 25 s",
+        "agent-chat-claim, 3 min\nresets every 25 s",
         500,
         5_000,
         CHAT_CLAIM_WAIT_MS,
-        5 * 60_000,
+        3 * 60_000,
     ),
     (
         "agent-chat-claim\nbase 500 ms · cap 5 s\nresets every 25 s",

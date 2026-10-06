@@ -28,7 +28,7 @@ the [developer notes](../dev/idle-poll.md).
 ## Idle cost over one hour
 
 Blue is the old fixed interval; orange is backoff. The first panel is the chat claim
-over 5 minutes, so each 25 s reset is on the axis. The next panel is that same
+over 3 minutes, so each 25 s reset is on the axis. The next panel is that same
 loop over the full hour.
 
 ![Cumulative ops over 1 h, linear Y](cumulative-1h-linear.png)

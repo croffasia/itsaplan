@@ -1,8 +1,8 @@
 'use client';
 
 import { notFound } from 'next/navigation';
-import { useWorkspaceSections } from '@/cloud';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
+import { useWorkspaceSettingsSections } from '../../hooks/useWorkspaceSettingsSections';
 
 export default function WorkspaceExtraSectionPage({
   workspace,
@@ -11,7 +11,8 @@ export default function WorkspaceExtraSectionPage({
   workspace: WorkspaceSummary;
   sectionId: string;
 }) {
-  const section = useWorkspaceSections(workspace).find((entry) => entry.id === sectionId);
-  if (!section) notFound();
-  return <section.Component workspaceId={workspace.id} />;
+  const sections = useWorkspaceSettingsSections(workspace);
+  const Component = sections.find((entry) => entry.id === sectionId)?.Component;
+  if (!Component) notFound();
+  return <Component workspaceId={workspace.id} />;
 }

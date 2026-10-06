@@ -1,11 +1,13 @@
 import type { ComponentType } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-// A section the hosted build adds to a workspace's settings: a menu entry and the page
-// it opens at /workspaces/:workspaceId/:id.
-export interface WorkspaceExtraSection {
+// An entry in a workspace's settings menu, opened at workspacePath(workspaceId, id). The
+// core's entries have routes of their own; one the hosted build adds carries its page in
+// `Component`.
+export interface WorkspaceSection {
   id: string;
   label: string;
   icon: LucideIcon;
-  Component: ComponentType<{ workspaceId: number }>;
+  badge?: string;
+  Component?: ComponentType<{ workspaceId: number }>;
 }

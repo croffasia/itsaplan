@@ -1,36 +1,24 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Info, ShieldCheck } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useWorkspaceSections } from '@/cloud';
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
 import { workspacePath } from '@/utils/paths';
-import { useWorkspaceQuery } from '@/services/workspaces.service';
+import { useWorkspaceSettingsSections } from '../../hooks/useWorkspaceSettingsSections';
 import { SectionNav, type SectionNavItem } from '@/components/common/page/SectionNav';
 
 export default function WorkspaceSectionNav({ workspace }: { workspace: WorkspaceSummary }) {
   const t = useTranslations('teams.workspace');
   const pathname = usePathname();
-  const detail = useWorkspaceQuery(workspace.id).data;
-  const extra = useWorkspaceSections(workspace);
-
-  const sections: SectionNavItem[] = [
-    { id: 'info', label: t('general'), icon: Info, href: workspacePath(workspace.id) },
-    {
-      id: 'managers',
-      label: t('managers.title'),
-      icon: ShieldCheck,
-      badge: detail && String(detail.managerCount),
-      href: workspacePath(workspace.id, 'managers'),
-    },
-    ...extra.map(({ id, label, icon }) => ({
+  const sections: SectionNavItem[] = useWorkspaceSettingsSections(workspace).map(
+    ({ id, label, icon, badge }) => ({
       id,
       label,
       icon,
+      badge,
       href: workspacePath(workspace.id, id),
-    })),
-  ];
+    }),
+  );
   const activeId = sections.find((entry) => entry.href === pathname)?.id ?? null;
 
   return (

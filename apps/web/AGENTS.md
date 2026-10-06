@@ -15,9 +15,11 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   providers only.
 - **`@/cloud` is the seam for the hosted edition.** It resolves to `src/ce/index.ts`, which
   exports what a self-hosted instance runs. A cloud-only part is imported from there and
-  nowhere else. `useWorkspaceSections(workspace)` returns the sections the hosted build adds
-  to a workspace's settings — each a menu entry and a page, shown by
-  `WorkspaceSectionNav` and opened at `/workspaces/:id/:sectionId`; here it returns none.
+  nowhere else. `useWorkspaceSections(workspace, core)` returns a workspace's settings menu,
+  shown by `WorkspaceSectionNav`: here the core's sections as they are, while the hosted
+  build adds its own at any position or drops some. One it adds carries in `Component` the
+  page `/workspaces/:id/:sectionId` opens. `/workspaces/:id` names no section and opens the
+  first entry of the menu, so the order also decides the page a workspace opens on.
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
   which happens while personal workspaces are off; here it says who adds them.
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more

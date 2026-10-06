@@ -1,10 +1,12 @@
 import type { WorkspaceSummary } from '@/lib/api/endpoints/workspaces';
-import type { WorkspaceExtraSection } from '@/features/teams/types/workspaceSection';
+import type { WorkspaceSection } from '@/features/teams/types/workspaceSection';
 
-// A self-hosted instance adds no section to a workspace's settings. The hosted build
-// resolves `@/cloud` to a hook that returns its own, such as single sign-on and billing.
+// A self-hosted instance lists the core's workspace settings sections as they are. The
+// hosted build returns them with its own added at any position, such as single sign-on
+// and billing, or with one left out.
 export default function useWorkspaceSections(
   _workspace: WorkspaceSummary,
-): WorkspaceExtraSection[] {
-  return [];
+  core: WorkspaceSection[],
+): WorkspaceSection[] {
+  return core;
 }

@@ -346,8 +346,10 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
       detail: {
         summary: 'Create a project in a team',
         description:
-          'Create a project the team owns and become its owner. Takes the same body as ' +
-          'create_project, which creates in the team you own.',
+          'Create a project in a team you own or manage and become its owner. Takes the ' +
+          'same fields as create_project. Over MCP, uses the team from your key when ' +
+          'there is one; otherwise call list_teams and pass teamId.',
+        ...mcpTool('create_team_project'),
       },
     },
   )

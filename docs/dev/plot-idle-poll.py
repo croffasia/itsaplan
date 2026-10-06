@@ -33,13 +33,17 @@ except ImportError as err:
         "  .venv-plot/bin/python docs/dev/plot-idle-poll.py"
     ) from err
 
-# Keep in sync with the sources listed in the module docstring.
-LOOPS: list[tuple[str, int, int]] = [
-    ("agent-chat-claim\nbase 500 ms · cap 5 s", 500, 5_000),
-    ("background/agent-runs\nbase 2 s · cap 60 s", 2_000, 60_000),
-    ("worker / agent-worker\nbase 2 s · cap 60 s", 2_000, 60_000),
-    ("import-worker\nbase 3 s · cap 60 s", 3_000, 60_000),
-    ("runner runs\nbase 3 s · cap 60 s", 3_000, 60_000),
+# title, base ms, cap ms, claim window ms.
+# A window resets the empty streak the way claimNextMessage does: one HTTP claim
+# waits at most AGENT_CHAT_CLAIM_WAIT_MS (25s) and the next claim starts again at
+# the base. The other loops keep their streak across ticks, so their window is 0.
+CHAT_CLAIM_WAIT_MS = 25_000
+LOOPS: list[tuple[str, int, int, int]] = [
+    ("agent-chat-claim\nbase 500 ms · cap 5 s\nresets every 25 s", 500, 5_000, CHAT_CLAIM_WAIT_MS),
+    ("background/agent-runs\nbase 2 s · cap 60 s", 2_000, 60_000, 0),
+    ("worker / agent-worker\nbase 2 s · cap 60 s", 2_000, 60_000, 0),
+    ("import-worker\nbase 3 s · cap 60 s", 3_000, 60_000, 0),
+    ("runner runs\nbase 3 s · cap 60 s", 3_000, 60_000, 0),
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -54,7 +58,12 @@ def next_idle_poll_ms(empty_streak: int, base_ms: int, cap_ms: int) -> int:
     return min(cap, base * 2**exp)
 
 
-def simulate(base_ms: int, cap_ms: int, horizon_ms: int) -> tuple[list[int], list[int], list[int], list[int], int, int]:
+def simulate(
+    base_ms: int, cap_ms: int, horizon_ms: int, window_ms: int = 0
+) -> tuple[list[int], list[int], list[int], list[int], int, int]:
+    if window_ms > 0:
+        return simulate_claims(base_ms, cap_ms, window_ms, horizon_ms)
+
     back_t: list[int] = [0]
     back_n: list[int] = [0]
     t = streak = 0
@@ -78,6 +87,47 @@ def simulate(base_ms: int, cap_ms: int, horizon_ms: int) -> tuple[list[int], lis
     return back_t, back_n, flat_t, flat_n, streak, flat_count
 
 
+def looks_in_claim(base_ms: int, cap_ms: int, window_ms: int) -> list[int]:
+    """Database look times inside one claim, matching claimNextMessage."""
+    now = streak = 0
+    times = [0]
+    while now < window_ms:
+        delay = next_idle_poll_ms(streak, base_ms, cap_ms)
+        now += min(delay, window_ms - now)
+        streak += 1
+        times.append(now)
+    return times
+
+
+def simulate_claims(
+    base_ms: int, cap_ms: int, window_ms: int, horizon_ms: int
+) -> tuple[list[int], list[int], list[int], list[int], int, int]:
+    """Back-to-back empty claims. Each claim resets the streak; fixed poll uses the base as its cap."""
+    back_steps = looks_in_claim(base_ms, cap_ms, window_ms)
+    flat_steps = looks_in_claim(base_ms, base_ms, window_ms)
+
+    def repeat(steps: list[int]) -> tuple[list[int], list[int], int]:
+        # Each claim includes the look at 0 and the look at the deadline. Back-to-back
+        # claims therefore count both, which is what claimNextMessage does.
+        times = [0]
+        counts = [0]
+        t = n = 0
+        while t < horizon_ms:
+            span = min(window_ms, horizon_ms - t)
+            for step in steps:
+                if step > span:
+                    break
+                n += 1
+                times.append(t + step)
+                counts.append(n)
+            t += span
+        return times, counts, n
+
+    back_t, back_n, end_b = repeat(back_steps)
+    flat_t, flat_n, end_f = repeat(flat_steps)
+    return back_t, back_n, flat_t, flat_n, end_b, end_f
+
+
 def plot(out_dir: Path, horizon_ms: int, log_y: bool) -> Path:
     fig, axes = plt.subplots(2, 3, figsize=(12.5, 7.8), dpi=140)
     axes_flat = axes.flatten()
@@ -85,8 +135,8 @@ def plot(out_dir: Path, horizon_ms: int, log_y: bool) -> Path:
         ax.set_visible(False)
 
     rows: list[tuple[str, int, int, int]] = []
-    for ax, (title, base, cap) in zip(axes_flat, LOOPS):
-        bt, bn, ft, fn, end_b, end_f = simulate(base, cap, horizon_ms)
+    for ax, (title, base, cap, window_ms) in zip(axes_flat, LOOPS):
+        bt, bn, ft, fn, end_b, end_f = simulate(base, cap, horizon_ms, window_ms)
         cut = round((1 - end_b / end_f) * 100)
         rows.append((title.split("\n", 1)[0], end_b, end_f, cut))
         ax.plot([t / 60_000 for t in ft], fn, color="#2563eb", lw=2.0, label="Fixed poll")

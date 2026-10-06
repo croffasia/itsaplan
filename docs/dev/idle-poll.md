@@ -91,6 +91,9 @@ tested). No startup failure for that pair.
 
 [`docs/idle-poll/`](../idle-poll/) is the install/tuning guide (defaults, env,
 embedded charts). The PNGs there are produced by `docs/dev/plot-idle-poll.py`.
+The chat series resets the empty streak every `AGENT_CHAT_CLAIM_WAIT_MS` (25 s),
+because `claimNextMessage` starts `emptyStreak` at 0 on each claim. The other
+loops keep their streak across ticks.
 
 ### Regenerating the charts
 

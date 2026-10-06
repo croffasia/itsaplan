@@ -35,13 +35,17 @@ Blue is the old fixed interval; orange is backoff.
 
 | Loop | Ops with backoff | Ops fixed | Reduction |
 | ---- | ---------------: | --------: | --------: |
-| agent-chat-claim | 723 | 7 200 | −90 % |
+| agent-chat-claim | 1 296 | 7 344 | −82 % |
 | background/agent-runs | 64 | 1 800 | −96 % |
 | worker / agent-worker | 64 | 1 800 | −96 % |
 | import-worker | 64 | 1 200 | −95 % |
 | runner runs | 64 | 1 200 | −95 % |
 
-Quiet-hour floor only; busy periods reset to the base.
+Quiet-hour floor only; busy periods reset to the base. Chat is counted inside each
+25 s claim (`AGENT_CHAT_CLAIM_WAIT_MS`): the streak starts again on the next claim,
+so the 5 s cap is not held for the whole hour. The fixed column for chat is a look
+every 500 ms inside that same window. These are simulated counts, with the next
+claim starting as soon as the previous one ends.
 
 ## Tuning
 

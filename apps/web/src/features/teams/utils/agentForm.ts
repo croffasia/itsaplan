@@ -1,4 +1,10 @@
-import type { AgentTool, AiAgent, NewAiAgentInput, AiAgentPatch } from '@/lib/api/endpoints/agents';
+import type {
+  AgentTool,
+  AiAgent,
+  NewAiAgentInput,
+  AiAgentPatch,
+  ReasoningEffort,
+} from '@/lib/api/endpoints/agents';
 import { transliterate } from '@/utils/projectKey';
 import { delaySecFromMinutes } from '@/utils/runDelay';
 
@@ -13,6 +19,7 @@ export interface AgentFormValue {
   instructions: string;
   tools: string[];
   temperature: string;
+  reasoningEffort: ReasoningEffort | null;
   maxSteps: string;
   memoryEnabled: boolean;
   memoryLastMessages: string;
@@ -68,6 +75,7 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     instructions: agent?.instructions ?? '',
     tools: agent?.tools ?? [],
     temperature: agent?.temperature != null ? String(agent.temperature) : '',
+    reasoningEffort: agent?.reasoningEffort ?? null,
     maxSteps: agent?.maxSteps != null ? String(agent.maxSteps) : '',
     memoryEnabled: agent?.memoryEnabled ?? false,
     memoryLastMessages: agent?.memoryLastMessages != null ? String(agent.memoryLastMessages) : '',
@@ -117,6 +125,7 @@ function configFields(v: AgentFormValue) {
     model: v.model.trim() || null,
     tools: v.tools,
     temperature: parseNum(v.temperature),
+    reasoningEffort: v.reasoningEffort,
     maxSteps: parseNum(v.maxSteps),
     memoryEnabled: v.memoryEnabled,
     memoryLastMessages: v.memoryEnabled ? parseNum(v.memoryLastMessages) : null,

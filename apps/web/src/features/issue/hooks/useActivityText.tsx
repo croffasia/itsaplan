@@ -117,6 +117,8 @@ export function useActivityText() {
         return { line: rich('subtaskAdded', { subtask: to ?? '' }) };
       case 'subtask_remove':
         return { line: rich('subtaskRemoved', { subtask: from ?? '' }) };
+      case 'moved':
+        return { line: rich('issueMoved', { from: from ?? '', to: to ?? '' }) };
       case 'checklist_add':
         return { line: rich('checklistAdded', { checklist: to ?? '' }) };
       case 'checklist_rename':

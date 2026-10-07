@@ -8,9 +8,17 @@ import type {
   CanonicalAttachment,
 } from './canonical';
 
+// Thrown when a job's source has no entry in the import source registry. No retry
+// can fix it, so the worker fails the job at once instead of retrying it.
+export class UnsupportedImportSourceError extends Error {
+  constructor(jobId: number, source: string) {
+    super(`import job ${jobId} has unsupported source "${source}"`);
+  }
+}
+
 // Thrown by a source adapter when the source's rate limit is reached. The worker
-// reschedules the job after retryAfterMs: a rate limit is waited out and never
-// fails the job by itself.
+// reschedules the job after retryAfterMs; a rate limit is waited out and does not
+// count toward the attempt limit.
 export class SourceRateLimitedError extends Error {
   constructor(
     public readonly retryAfterMs: number,

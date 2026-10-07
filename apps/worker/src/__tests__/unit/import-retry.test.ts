@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'bun:test';
 import { tickErrorOutcome, MAX_ATTEMPTS } from '../../import-retry';
-import { SourceRateLimitedError } from '../../reader';
+import { SourceRateLimitedError, UnsupportedImportSourceError } from '../../reader';
 
 describe('tickErrorOutcome', () => {
   it('waits out a rate limit with the exact last_error the Settings page matches', () => {
@@ -8,6 +8,7 @@ describe('tickErrorOutcome', () => {
       action: 'retry',
       delayMs: 45_000,
       lastError: 'rate limited',
+      countsAsAttempt: false,
     });
   });
 
@@ -22,6 +23,7 @@ describe('tickErrorOutcome', () => {
     expect(outcome).toMatchObject({
       action: 'retry',
       lastError: 'Plane request failed: HTTP 502',
+      countsAsAttempt: true,
     });
     const delayMs = (outcome as { delayMs: number }).delayMs;
     expect(delayMs).toBeGreaterThanOrEqual(30_000);
@@ -37,5 +39,12 @@ describe('tickErrorOutcome', () => {
 
   it('records a thrown non-Error as its string form', () => {
     expect(tickErrorOutcome('boom', MAX_ATTEMPTS)).toEqual({ action: 'fail', lastError: 'boom' });
+  });
+
+  it('fails at once for an unsupported source, on the first attempt', () => {
+    expect(tickErrorOutcome(new UnsupportedImportSourceError(7, 'jira'), 0)).toEqual({
+      action: 'fail',
+      lastError: 'import job 7 has unsupported source "jira"',
+    });
   });
 });

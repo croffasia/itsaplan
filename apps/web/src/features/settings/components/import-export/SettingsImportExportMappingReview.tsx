@@ -3,7 +3,11 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { useCreateImportJob, useTestPlaneStatesPreview } from '../../services/settings.service';
+import {
+  useCreateImportJob,
+  useTestLinearStatesPreview,
+  useTestPlaneStatesPreview,
+} from '../../services/settings.service';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
@@ -17,34 +21,68 @@ import SettingsCard from '@/components/common/page/SettingsCard';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import SettingsImportExportStateOverrideRow from './SettingsImportExportStateOverrideRow';
 import type {
+  LinearImportJobFields,
+  LinearTeamOption,
+  PlaneConnectionInput,
+  PlaneImportJobFields,
   PlaneProjectOption,
   StateCategory,
   UnmatchedUserPolicy,
 } from '@/lib/api/endpoints/importExport';
-import type { PlaneConnection } from './SettingsImportExport';
+
+// What is about to be imported: one Plane project, or one Linear team's project
+// (projectId) or its issues with no project (projectId null).
+export type ImportReviewTarget =
+  | { source: 'plane'; connection: PlaneConnectionInput; project: PlaneProjectOption }
+  | { source: 'linear'; apiToken: string; team: LinearTeamOption; projectId: string | null };
+
+function jobFields(target: ImportReviewTarget): PlaneImportJobFields | LinearImportJobFields {
+  if (target.source === 'plane') {
+    return {
+      source: 'plane',
+      baseUrl: target.connection.baseUrl,
+      workspaceSlug: target.connection.workspaceSlug,
+      apiToken: target.connection.apiToken,
+      planeProjectId: target.project.id,
+      planeProjectKey: target.project.identifier,
+    };
+  }
+  const team = { apiToken: target.apiToken, teamId: target.team.id, teamKey: target.team.key };
+  return target.projectId
+    ? { source: 'linear', ...team, projectFilter: 'project', projectId: target.projectId }
+    : { source: 'linear', ...team, projectFilter: 'none' };
+}
 
 // Shown once a source project is picked, before the job is created: the states
-// Plane reports for it, each pre-filled with the category itsaplan would map it to
-// automatically, and the unmatched-assignee/comment-author policy. Only a state row
-// the user actually changes from its default is sent as an override.
+// the source reports for it, each pre-filled with the category itsaplan would map it
+// to automatically, and the unmatched-assignee/comment-author policy. Only a state
+// row the user actually changes from its default is sent as an override.
 export default function SettingsImportExportMappingReview({
   projectKey,
-  connection,
-  selected,
+  target,
   onImported,
 }: {
   projectKey: string;
-  connection: PlaneConnection;
-  selected: PlaneProjectOption;
+  target: ImportReviewTarget;
   onImported: () => void;
 }) {
   const t = useTranslations('settings.importExport');
-  const preview = useTestPlaneStatesPreview(projectKey, {
-    baseUrl: connection.baseUrl,
-    workspaceSlug: connection.workspaceSlug,
-    apiToken: connection.apiToken,
-    planeProjectId: selected.id,
-  });
+  const planePreview = useTestPlaneStatesPreview(
+    projectKey,
+    target.source === 'plane'
+      ? {
+          baseUrl: target.connection.baseUrl,
+          workspaceSlug: target.connection.workspaceSlug,
+          apiToken: target.connection.apiToken,
+          planeProjectId: target.project.id,
+        }
+      : null,
+  );
+  const linearPreview = useTestLinearStatesPreview(
+    projectKey,
+    target.source === 'linear' ? { apiToken: target.apiToken, teamId: target.team.id } : null,
+  );
+  const preview = target.source === 'plane' ? planePreview : linearPreview;
   const createJob = useCreateImportJob(projectKey);
   const [overrides, setOverrides] = useState<Record<string, StateCategory>>({});
   const [unmatchedUserPolicy, setUnmatchedUserPolicy] = useState<UnmatchedUserPolicy>('unassigned');
@@ -52,11 +90,7 @@ export default function SettingsImportExportMappingReview({
   async function start() {
     try {
       await createJob.mutateAsync({
-        baseUrl: connection.baseUrl,
-        workspaceSlug: connection.workspaceSlug,
-        apiToken: connection.apiToken,
-        planeProjectId: selected.id,
-        planeProjectKey: selected.identifier,
+        ...jobFields(target),
         unmatchedUserPolicy,
         stateOverrides: overrides,
       });

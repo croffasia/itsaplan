@@ -62,7 +62,9 @@ without being a person in it.
 `revision` holds one counter per scope — the change markers the clients poll through
 `GET /sync/rev`. Nothing in the application writes them: the triggers in
 `drizzle/0070_revision_triggers.sql` do, so a write moves the marker whichever
-process it came from.
+process it came from. `rev_issue()` is redefined in `0142_issue_key_alias.sql`: an
+issue moved to another project bumps the board of both projects, and its `issue:`
+scope row takes the new project id.
 
 To make a new table move an existing scope, add one line to a migration:
 

@@ -1,12 +1,14 @@
 import { request } from '@/lib/api/core/client';
 
-// Import jobs bring issues in from a source Plane instance (mirrors apps/api
-// modules/import-export/service.ts). Creating one stores an encrypted credential
-// and leaves the job 'pending' for the worker to drive through its phases.
+// Import jobs bring issues in from a Plane instance or a Linear workspace (mirrors
+// apps/api modules/import-export/service.ts and linear.ts). Creating one stores an
+// encrypted credential and leaves the job 'pending' for the worker to drive through
+// its phases.
 
 export type ImportJobPhase = 'discover' | 'create' | 'link' | 'rewrite' | 'attachments' | 'done';
 export type ImportJobStatus = 'pending' | 'running' | 'paused' | 'completed' | 'failed';
 export type ImportEntityType = 'issue' | 'comment' | 'label' | 'state' | 'cycle' | 'attachment';
+export type ImportSource = 'plane' | 'linear';
 
 export interface ImportEntityCount {
   discovered: number;
@@ -16,7 +18,7 @@ export interface ImportEntityCount {
 export interface ImportJob {
   id: number;
   projectId: number;
-  source: 'plane';
+  source: ImportSource;
   phase: ImportJobPhase;
   status: ImportJobStatus;
   counts: Record<ImportEntityType, ImportEntityCount>;
@@ -47,12 +49,43 @@ export interface PlaneConnectionInput {
   apiToken: string;
 }
 
-export interface CreateImportJobInput extends PlaneConnectionInput {
-  planeProjectId: string;
-  planeProjectKey: string;
+export interface LinearProjectOption {
+  id: string;
+  name: string;
+}
+
+export interface LinearTeamOption {
+  id: string;
+  key: string;
+  name: string;
+  projects: LinearProjectOption[];
+}
+
+export interface LinearConnectionInput {
+  apiToken: string;
+}
+
+export interface ImportJobChoices {
   unmatchedUserPolicy?: UnmatchedUserPolicy;
   stateOverrides?: Record<string, StateCategory>;
 }
+
+export interface PlaneImportJobFields extends PlaneConnectionInput {
+  source: 'plane';
+  planeProjectId: string;
+  planeProjectKey: string;
+}
+
+export interface LinearImportJobFields extends LinearConnectionInput {
+  source: 'linear';
+  teamId: string;
+  teamKey: string;
+  projectFilter: 'project' | 'none';
+  projectId?: string;
+}
+
+export type CreateImportJobInput = ImportJobChoices &
+  (PlaneImportJobFields | LinearImportJobFields);
 
 export const testPlaneConnection = (projectKey: string, input: PlaneConnectionInput) =>
   request<{ projects: PlaneProjectOption[] }>(
@@ -65,6 +98,21 @@ export const testPlaneStatesPreview = (
   input: PlaneConnectionInput & { planeProjectId: string },
 ) =>
   request<{ states: PlaneStateOption[] }>(`/projects/${projectKey}/import-jobs/plane-preview`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  });
+
+export const testLinearConnection = (projectKey: string, input: LinearConnectionInput) =>
+  request<{ teams: LinearTeamOption[] }>(
+    `/projects/${projectKey}/import-jobs/linear-test-connection`,
+    { method: 'POST', body: JSON.stringify(input) },
+  );
+
+export const testLinearStatesPreview = (
+  projectKey: string,
+  input: LinearConnectionInput & { teamId: string },
+) =>
+  request<{ states: PlaneStateOption[] }>(`/projects/${projectKey}/import-jobs/linear-preview`, {
     method: 'POST',
     body: JSON.stringify(input),
   });

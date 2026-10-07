@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'bun:test';
 import { db, importJob } from '@repo/db';
 import { eq } from 'drizzle-orm';
+import { decryptSecret } from '@repo/crypto';
 import { authedApi } from '#tests/helpers/app';
 import { signUpTestUser } from '#tests/helpers/auth';
 import { resetDb } from '#tests/helpers/db';
@@ -322,6 +323,119 @@ describe('import jobs', () => {
         planeProjectId: validBody.planeProjectId,
       });
       expect(res.status).toBe(403);
+    });
+  });
+
+  describe('linear', () => {
+    const linearBody = {
+      source: 'linear' as const,
+      apiToken: 'lin_api_test_key',
+      teamId: 'team-ato',
+      teamKey: 'ATO',
+      projectFilter: 'project' as const,
+      projectId: 'proj-tool',
+    };
+
+    it('creates a pending Linear job and stores the credential and config the worker reads', async () => {
+      const { api } = await setupOwnerProject();
+
+      const res = await jobs(api).post({
+        ...linearBody,
+        stateOverrides: { 'state-triage': 'unstarted' },
+      });
+
+      expect(res.status).toBe(201);
+      expect(res.data).toMatchObject({
+        source: 'linear',
+        phase: 'discover',
+        status: 'pending',
+        counts: zeroedCounts,
+      });
+      expect(res.data).not.toHaveProperty('apiToken');
+      const [row] = await db.select().from(importJob).where(eq(importJob.id, res.data!.id));
+      expect(row!.config).toEqual({
+        teamId: 'team-ato',
+        teamKey: 'ATO',
+        projectFilter: 'project',
+        projectId: 'proj-tool',
+        unmatchedUserPolicy: 'unassigned',
+        stateOverrides: { 'state-triage': 'unstarted' },
+      });
+      const credential = decryptSecret({
+        ciphertext: row!.credentialCiphertext!,
+        iv: row!.credentialIv!,
+        authTag: row!.credentialAuthTag!,
+      });
+      expect(JSON.parse(credential)).toEqual({ apiKey: 'lin_api_test_key' });
+    });
+
+    it("creates a job for the team's issues with no project, listed next to Plane jobs", async () => {
+      const { api } = await setupOwnerProject();
+      const plane = (await jobs(api).post(validBody)).data!;
+
+      const { projectId: _projectId, ...team } = linearBody;
+      const res = await jobs(api).post({ ...team, projectFilter: 'none' as const });
+
+      expect(res.status).toBe(201);
+      const [row] = await db.select().from(importJob).where(eq(importJob.id, res.data!.id));
+      expect(row!.config).toMatchObject({ projectFilter: 'none', projectId: null });
+      const list = await jobs(api).get();
+      expect(list.data?.map((j) => [j.id, j.source])).toEqual([
+        [res.data!.id, 'linear'],
+        [plane.id, 'plane'],
+      ]);
+    });
+
+    it.each([
+      ['a missing teamKey', { teamKey: undefined }],
+      ['an empty apiToken', { apiToken: '' }],
+      ['a blank apiToken', { apiToken: '   ' }],
+      ['an unknown projectFilter', { projectFilter: 'some' }],
+      ['a project import with no projectId', { projectId: undefined }],
+      ['a no-project import with a projectId', { projectFilter: 'none' }],
+    ])('rejects %s', async (_case, change) => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api).post({ ...linearBody, ...change } as never);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a Plane body sent as a Linear job', async () => {
+      const { api } = await setupOwnerProject();
+      const res = await jobs(api).post({ ...validBody, source: 'linear' } as never);
+      expect(res.status).toBe(400);
+    });
+
+    it('rejects a missing or blank field on the Linear endpoints before calling Linear', async () => {
+      const { api } = await setupOwnerProject();
+      expect((await jobs(api)['linear-test-connection'].post({} as never)).status).toBe(400);
+      expect((await jobs(api)['linear-test-connection'].post({ apiToken: '   ' })).status).toBe(
+        400,
+      );
+      expect(
+        (await jobs(api)['linear-preview'].post({ apiToken: 'lin_api_test_key' } as never)).status,
+      ).toBe(400);
+      expect(
+        (await jobs(api)['linear-preview'].post({ apiToken: 'lin_api_test_key', teamId: ' ' }))
+          .status,
+      ).toBe(400);
+    });
+
+    it('denies a member whose role lacks the import_export permission', async () => {
+      const { api } = await setupOwnerProject();
+      const member = await addMember(api);
+      expect(
+        (await jobs(member)['linear-test-connection'].post({ apiToken: 'lin_api_test_key' }))
+          .status,
+      ).toBe(403);
+      expect(
+        (
+          await jobs(member)['linear-preview'].post({
+            apiToken: 'lin_api_test_key',
+            teamId: 'team-ato',
+          })
+        ).status,
+      ).toBe(403);
+      expect((await jobs(member).post(linearBody)).status).toBe(403);
     });
   });
 

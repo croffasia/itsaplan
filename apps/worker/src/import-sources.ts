@@ -1,6 +1,7 @@
 import type { CanonicalStateCategory } from './canonical';
+import { LinearReader, type LinearCredential } from './linear-adapter';
 import { PlaneReader, type PlaneCredential } from './plane-adapter';
-import type { SourceReader } from './reader';
+import { UnsupportedImportSourceError, type SourceReader } from './reader';
 
 // The import_job.config fields every source shares; the phases read them directly.
 export interface CommonImportConfig {
@@ -14,14 +15,25 @@ export interface PlaneImportConfig extends CommonImportConfig {
   planeProjectKey?: string;
 }
 
+export interface LinearImportConfig extends CommonImportConfig {
+  teamId: string;
+  // The team's issue-key prefix ("ATO" in "ATO-505") for Rewrite.
+  teamKey: string;
+  // One job imports one project of the team, or the team's issues with no project.
+  projectFilter: 'project' | 'none';
+  projectId: string | null;
+}
+
 // One entry per import_job.source. A new source adds a member to both maps and an
 // entry to IMPORT_SOURCES.
 export interface ImportCredentials {
   plane: PlaneCredential;
+  linear: LinearCredential;
 }
 
 export interface ImportConfigs {
   plane: PlaneImportConfig;
+  linear: LinearImportConfig;
 }
 
 export type ImportSourceKind = keyof ImportConfigs;
@@ -48,6 +60,26 @@ const IMPORT_SOURCES: { [S in ImportSourceKind]: ImportSourceDefinition<S> } = {
     },
     projectKey: (config) => config.planeProjectKey ?? null,
   },
+  linear: {
+    buildReader(credential, config, jobId) {
+      // The registry types do not tie a decrypted credential to its job's source.
+      // Exactly { apiKey }: a Plane credential also has an apiKey, plus baseUrl and workspaceSlug.
+      const keys = credential && typeof credential === 'object' ? Object.keys(credential) : [];
+      if (keys.length !== 1 || typeof credential.apiKey !== 'string' || credential.apiKey === '') {
+        throw new Error(`import job ${jobId} has a credential that is not a Linear API key`);
+      }
+      const { teamId, projectFilter, projectId } = config;
+      if (!teamId || !(projectFilter === 'none' || (projectFilter === 'project' && projectId))) {
+        throw new Error(`import job ${jobId} has no source project configured`);
+      }
+      return new LinearReader(credential, {
+        teamId,
+        projectFilter,
+        projectId: projectFilter === 'project' ? (projectId ?? null) : null,
+      });
+    },
+    projectKey: (config) => config.teamKey ?? null,
+  },
 };
 
 export interface ImportJobSource {
@@ -58,7 +90,7 @@ export interface ImportJobSource {
 
 function sourceOf(job: ImportJobSource): ImportSourceKind {
   if (!Object.hasOwn(IMPORT_SOURCES, job.source)) {
-    throw new Error(`import job ${job.id} has unsupported source "${job.source}"`);
+    throw new UnsupportedImportSourceError(job.id, job.source);
   }
   return job.source as ImportSourceKind;
 }

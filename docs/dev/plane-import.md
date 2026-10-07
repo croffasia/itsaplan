@@ -14,14 +14,16 @@ returns.
   local id mapping, the idempotency and resume primitive).
 - `apps/worker/src/{canonical,reader,import-sources,plane-adapter,import-store,import-worker}.ts`
   — the `SourceReader` port, the per-source registry the worker dispatches on
-  `import_job.source` through, the only implementation (Plane), and the phase state machine
+  `import_job.source` through, the Plane implementation, and the phase state machine
   (discover → create → link → rewrite → attachments → done) that drives a job one bounded chunk per
   tick.
 - `packages/storage` and `packages/db/src/domains/storage.ts` — object storage and upload
   limits, shared with `apps/api` so an imported attachment is held to the same rules an
   interactive upload is.
 - `apps/api/src/modules/import-export/` — create/test-connection/plane-preview/export/status/
-  pause/resume/cancel routes.
+  pause/resume/cancel routes, and linear-test-connection/linear-preview.
+- The Linear source (`linear-adapter.ts`, `linear-mapping.ts`, the api's `linear.ts`, the
+  Linear tab) has its own notes: [linear-import.md](linear-import.md).
 - `apps/web/src/features/settings/components/import-export/` — the Settings page.
 
 ## Export: a JSON snapshot, not a live sync
@@ -164,10 +166,11 @@ attachment) are a distinct path, not covered by this — see "Inline images" in
 `rateLimitBackoffMs` (`plane-adapter.ts`) reads `x-ratelimit-remaining`/`x-ratelimit-reset`/
 a 429 off every response; hitting the limit throws `SourceRateLimitedError` (`reader.ts`).
 `tickErrorOutcome` (`import-retry.ts`) only decides what a failed tick does — for a rate
-limit, retry after the reset with `last_error` `'rate limited'` — and `handleTickError`
-(`import-worker.ts`) reschedules the job via `retryImportJobLater`, so a rate limit is waited
-out and never fails the job by itself. `import_job.last_error` is cleared the moment a claim
-starts a new attempt, as well as on success and on completion (`import-store.ts`'s
+limit, retry after the reset with `last_error` `'rate limited'`, not counted as an attempt —
+and `handleTickError` (`import-worker.ts`) reschedules the job via `retryImportJobLater`,
+which gives back the claim's `attempts` bump, so a rate limit never counts toward
+`MAX_ATTEMPTS`. `import_job.last_error` is cleared the moment a claim starts a new attempt, as
+well as on success and on completion (`import-store.ts`'s
 `claimDueImportJobs`/`saveImportJobCursor`/`advanceImportJobPhase`/`completeImportJob`), so a
 non-null `lastError` on a still-`pending` job reliably means "currently waiting out a retry,"
 never "an attempt is in flight" — which is what the Settings page's warning banner reads.

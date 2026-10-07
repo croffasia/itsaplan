@@ -91,7 +91,7 @@ async function handleTickError(job: ClaimedImportJob, error: unknown): Promise<v
     await failImportJob(job.id, outcome.lastError);
     return;
   }
-  await retryImportJobLater(job.id, outcome.delayMs, outcome.lastError);
+  await retryImportJobLater(job.id, outcome.delayMs, outcome.lastError, outcome.countsAsAttempt);
 }
 
 function buildReader(job: ClaimedImportJob): SourceReader {
@@ -362,10 +362,13 @@ async function runLink(job: ClaimedImportJob, reader: SourceReader): Promise<voi
 // project's own identifier. Purely local: everything it needs was captured
 // during Create/Link, so it makes no further Plane requests.
 
+// A mention of the issue whose own text this is stays as written: it is how a
+// source records the issue's own identifier ("Imported from Linear: ATO-505").
 async function rewriteCrossReferences(
   jobId: number,
   sourceProjectKey: string,
   localProjectKey: string,
+  issueLocalId: number,
   text: string,
 ): Promise<string> {
   const references = extractCrossReferences(text, sourceProjectKey);
@@ -374,7 +377,7 @@ async function rewriteCrossReferences(
   const replacements = new Map<string, string>();
   for (const { reference, sequenceId } of references) {
     const record = await findImportRecordByDisplayId(jobId, 'issue', sequenceId);
-    if (record?.localId == null) continue;
+    if (record?.localId == null || record.localId === issueLocalId) continue;
     const targetSequence = await getIssueSequenceNumber(record.localId);
     if (targetSequence == null) continue;
     replacements.set(reference, `${localProjectKey}-${targetSequence}`);
@@ -382,7 +385,7 @@ async function rewriteCrossReferences(
   return applyCrossReferenceReplacements(text, sourceProjectKey, replacements);
 }
 
-async function runRewrite(job: ClaimedImportJob): Promise<void> {
+export async function runRewrite(job: ClaimedImportJob): Promise<void> {
   const cursor = job.cursor as Partial<RecordCursor>;
   const afterId = cursor.lastRecordId ?? 0;
   const pending = await listCreatedImportRecords(job.id, 'issue', afterId, ISSUES_PER_TICK);
@@ -402,6 +405,7 @@ async function runRewrite(job: ClaimedImportJob): Promise<void> {
         job.id,
         sourceProjectKey,
         localProjectKey,
+        record.localId,
         description,
       );
       if (nextDescription !== description) {
@@ -412,6 +416,7 @@ async function runRewrite(job: ClaimedImportJob): Promise<void> {
           job.id,
           sourceProjectKey,
           localProjectKey,
+          record.localId,
           comment.body,
         );
         if (nextBody !== comment.body) await updateCommentBody(comment.id, nextBody);

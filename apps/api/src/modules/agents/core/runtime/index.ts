@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { Agent } from '@mastra/core/agent';
-import { getAgentInProject, getInternalAgentApiKey, type AiAgentRow } from '../service';
+import { Agent, type AgentExecutionOptions } from '@mastra/core/agent';
+import {
+  getAgentInProject,
+  getInternalAgentApiKey,
+  type AiAgentRow,
+  type ReasoningEffort,
+} from '../service';
 import { getProjectById } from '#modules/projects/service';
 import { getCredentialSecret } from '../../integrations/service';
 import { listAgentSkills } from '../../skills/service';
@@ -66,6 +71,25 @@ async function resolveModel(row: AiAgentRow, sessionId: string): Promise<ModelCo
     apiKey: String(secret.config.apiKey ?? ''),
     ...(baseUrl ? { url: baseUrl } : {}),
     ...(provider === 'opencode-go' ? { headers: { 'x-opencode-session': sessionId } } : {}),
+  };
+}
+
+// The reasoning effort as provider options. Each provider SDK reads only its own key, so
+// one object covers whichever provider the model resolves to. `openaiCompatible` is read
+// by every provider Mastra addresses as an OpenAI-compatible endpoint — most of the
+// registry, and any credential with a base URL — and is sent as `reasoning_effort`.
+// Mastra's provider-neutral `modelSettings.reasoning` is not used: it only reaches
+// AI SDK v7 models, and the providers Mastra bundles are v6.
+function reasoningProviderOptions(effort: ReasoningEffort): ProviderOptions {
+  return {
+    openaiCompatible: { reasoningEffort: effort },
+    openai: { reasoningEffort: effort },
+    anthropic: { effort },
+    google: { thinkingConfig: { thinkingLevel: effort } },
+    xai: { reasoningEffort: effort },
+    groq: { reasoningEffort: effort },
+    deepseek: { reasoningEffort: effort },
+    openrouter: { reasoning: { effort } },
   };
 }
 
@@ -247,6 +271,9 @@ async function prepareRun(
   // `temperature` option is only read by the legacy generate.
   const options: RunOptions = { maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS };
   if (row.temperature != null) options.modelSettings = { temperature: row.temperature };
+  if (row.reasoningEffort != null) {
+    options.providerOptions = reasoningProviderOptions(row.reasoningEffort);
+  }
   if (threadId) {
     // The thread is created up front with what it is bound to and a title, so the chat
     // history can list it and deleting the agent, project or issue can find it. The
@@ -287,6 +314,9 @@ export type RunOpts = {
 type RunOptions = {
   maxSteps: number;
   modelSettings?: { temperature: number };
+  providerOptions?: ProviderOptions;
   memory?: { thread: string; resource: string };
   abortSignal?: AbortSignal;
 };
+
+type ProviderOptions = NonNullable<AgentExecutionOptions['providerOptions']>;

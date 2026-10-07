@@ -53,6 +53,9 @@ export type AgentKind = 'external' | 'internal';
 // credentials should serve nobody else.
 export type RunnerScope = 'owner' | 'team';
 
+// The reasoning effort levels the provider SDKs share (see runtime/index.ts).
+export type ReasoningEffort = 'low' | 'medium' | 'high';
+
 // One member custom field an agent reacts to, with the seconds its run waits before
 // the agent may pick it up.
 export interface FieldTrigger {
@@ -90,6 +93,7 @@ export interface AiAgentRow {
   instructions: string | null;
   tools: string[];
   temperature: number | null;
+  reasoningEffort: ReasoningEffort | null;
   maxSteps: number | null;
   // Conversation memory: recall the last memoryLastMessages messages of a thread.
   memoryEnabled: boolean;
@@ -138,6 +142,7 @@ function mapAgent(row: {
   instructions: string | null;
   tools: unknown;
   temperature: number | null;
+  reasoningEffort: string | null;
   maxSteps: number | null;
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
@@ -168,6 +173,7 @@ function mapAgent(row: {
     instructions: row.instructions,
     tools,
     temperature: row.temperature,
+    reasoningEffort: row.reasoningEffort as ReasoningEffort | null,
     maxSteps: row.maxSteps,
     memoryEnabled: row.memoryEnabled,
     memoryLastMessages: row.memoryLastMessages,
@@ -204,6 +210,7 @@ const agentColumns = {
   instructions: aiAgent.instructions,
   tools: aiAgent.tools,
   temperature: aiAgent.temperature,
+  reasoningEffort: aiAgent.reasoningEffort,
   maxSteps: aiAgent.maxSteps,
   memoryEnabled: aiAgent.memoryEnabled,
   memoryLastMessages: aiAgent.memoryLastMessages,
@@ -516,6 +523,7 @@ export interface NewAgentInput {
   instructions?: string | null;
   tools?: string[];
   temperature?: number | null;
+  reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
@@ -612,6 +620,7 @@ export async function createAgent(
           instructions: input.instructions ?? null,
           tools: isInternal ? normalizeToolKeys(input.tools) : [],
           temperature: isInternal ? (input.temperature ?? null) : null,
+          reasoningEffort: isInternal ? (input.reasoningEffort ?? null) : null,
           maxSteps: isInternal ? (input.maxSteps ?? null) : null,
           memoryEnabled: isInternal ? (input.memoryEnabled ?? false) : false,
           memoryLastMessages: isInternal ? (input.memoryLastMessages ?? null) : null,
@@ -769,6 +778,7 @@ export interface AgentPatch {
   instructions?: string | null;
   tools?: string[];
   temperature?: number | null;
+  reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
@@ -805,6 +815,7 @@ export async function updateAgent(
   if (patch.instructions !== undefined) set.instructions = patch.instructions;
   if (patch.tools !== undefined) set.tools = normalizeToolKeys(patch.tools);
   if (patch.temperature !== undefined) set.temperature = patch.temperature;
+  if (patch.reasoningEffort !== undefined) set.reasoningEffort = patch.reasoningEffort;
   if (patch.maxSteps !== undefined) set.maxSteps = patch.maxSteps;
   if (patch.memoryEnabled !== undefined) set.memoryEnabled = patch.memoryEnabled;
   if (patch.memoryLastMessages !== undefined) set.memoryLastMessages = patch.memoryLastMessages;

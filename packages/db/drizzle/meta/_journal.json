@@ -1016,6 +1016,13 @@
       "when": 1791379870030,
       "tag": "0144_agent_schedule_status_trigger",
       "breakpoints": true
+    },
+    {
+      "idx": 145,
+      "version": "7",
+      "when": 1791404364263,
+      "tag": "0145_agent_reasoning_effort",
+      "breakpoints": true
     }
   ]
 }

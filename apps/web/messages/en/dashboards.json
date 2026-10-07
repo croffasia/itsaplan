@@ -198,7 +198,8 @@
       "delegation": "ran on delegation of",
       "field": "ran on a field of",
       "manual": "ran manually",
-      "schedule": "ran on schedule"
+      "schedule": "ran on schedule",
+      "status": "ran on state change of"
     }
   },
   "agentHealth": {

@@ -110,6 +110,7 @@ export default function SettingsSchedules({
         <div className="space-y-4">
           <SettingsSchedulesTable
             schedules={schedules}
+            columns={project.columns}
             runningId={runSchedule.isPending ? (runSchedule.variables ?? null) : null}
             onToggle={(schedule) =>
               updateSchedule.mutate({
@@ -132,6 +133,7 @@ export default function SettingsSchedules({
           key={editingSchedule?.id ?? 'new'}
           projectKey={projectKey}
           agents={agents}
+          columns={project.columns}
           initial={editingSchedule}
           saving={saving}
           onSave={saveSchedule}
@@ -157,6 +159,7 @@ export default function SettingsSchedules({
       <SettingsScheduleRunsSheet
         projectKey={projectKey}
         schedule={history}
+        columnName={project.columns.find((column) => column.id === history?.columnId)?.name ?? null}
         onClose={() => setHistory(null)}
       />
     </>

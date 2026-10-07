@@ -98,7 +98,8 @@ const DEFAULT_INCLUDE: CopyProjectInclude = {
 
 // Resolves the selection and force-enables the dependencies each entity needs to be
 // copied correctly. Views/actions remap the ids of states, types, labels and fields,
-// so those must be copied too; a schedule cannot exist without its agent.
+// so those must be copied too; a schedule cannot exist without its agent, and a status
+// schedule without its state.
 function normalizeInclude(raw?: Partial<CopyProjectInclude>): CopyProjectInclude {
   const inc: CopyProjectInclude = raw ? { ...ALL_FALSE, ...raw } : { ...DEFAULT_INCLUDE };
   if (inc.customFields) inc.issueTypes = true;
@@ -113,7 +114,10 @@ function normalizeInclude(raw?: Partial<CopyProjectInclude>): CopyProjectInclude
     inc.issueTypes = true;
     inc.labels = true;
   }
-  if (inc.schedules) inc.agents = true;
+  if (inc.schedules) {
+    inc.agents = true;
+    inc.states = true;
+  }
   return inc;
 }
 
@@ -675,10 +679,13 @@ export async function copyProject(
         agentId: s.agentId,
         actorUserId: ownerId,
         name: s.name,
+        type: s.type,
         prompt: s.prompt,
         cron: s.cron,
+        nextRunAt: s.cron === null ? null : nextCronRun(s.cron),
+        columnId: s.columnId === null ? null : maps.column.get(s.columnId)!,
+        delaySec: s.delaySec,
         status: s.status,
-        nextRunAt: nextCronRun(s.cron),
       });
     }
   }

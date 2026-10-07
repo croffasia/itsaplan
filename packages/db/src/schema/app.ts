@@ -593,28 +593,41 @@ export const agentSchedule = pgTable(
       .notNull()
       .references(() => project.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    // Empty on a 'status' schedule that sends no task of its own.
     prompt: text('prompt').notNull(),
-    cron: text('cron').notNull(),
+    // 'cron' runs on `cron` and carries `next_run_at`; 'status' runs on an issue each
+    // time one enters `column_id`, `delay_sec` after it does.
+    type: text('type').notNull().default('cron'),
+    cron: text('cron'),
     timezone: text('timezone').notNull(),
     status: text('status').notNull().default('active'),
-    nextRunAt: timestamp('next_run_at', { withTimezone: true }).notNull(),
+    nextRunAt: timestamp('next_run_at', { withTimezone: true }),
+    columnId: integer('column_id').references(() => projectColumn.id, { onDelete: 'cascade' }),
+    delaySec: integer('delay_sec').notNull().default(0),
     lastRunAt: timestamp('last_run_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check('agent_schedule_status_check', sql`${t.status} IN ('active', 'paused')`),
+    check(
+      'agent_schedule_type_check',
+      sql`(${t.type} = 'cron' AND ${t.cron} IS NOT NULL AND ${t.nextRunAt} IS NOT NULL AND ${t.columnId} IS NULL)
+        OR (${t.type} = 'status' AND ${t.columnId} IS NOT NULL AND ${t.cron} IS NULL AND ${t.nextRunAt} IS NULL)`,
+    ),
+    check('agent_schedule_delay_check', sql`${t.delaySec} >= 0 AND ${t.delaySec} <= 86400`),
     // A schedule works in one project, and one agent works in several projects of
     // its team, so the same name is free again in each of them.
     unique().on(t.projectId, t.agentId, t.name),
     index('agent_schedule_due_idx').on(t.status, t.nextRunAt),
     index('agent_schedule_agent_idx').on(t.agentId),
     index('agent_schedule_project_idx').on(t.projectId),
+    index('agent_schedule_column_idx').on(t.columnId),
   ],
 );
 
-// Queued autonomous runs of an internal agent. Mentions and delegations carry an
-// issue; scheduled and manual runs do not. The worker claims due rows with a lease,
+// Queued autonomous runs of an internal agent. A run triggered on an issue carries it;
+// a cron schedule's run and a manual one do not. The worker claims due rows with a lease,
 // runs the agent, and records the result for history and retries.
 export const agentRun = pgTable(
   'agent_run',
@@ -665,7 +678,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),

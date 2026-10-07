@@ -70,6 +70,7 @@ import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
+import { queueStatusRuns } from '#modules/agents/schedules/status-runs';
 import { applySubtaskAutomation } from './automation';
 import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
 
@@ -927,6 +928,7 @@ export async function createIssue(
   // An issue created already delegated to an agent enqueues a run, the same as
   // delegating one later does.
   await enqueueDelegateRun(created, actorUserId);
+  await queueStatusRuns([issueId], input.columnId, actorUserId);
   // An issue created already assigned to a member notifies them, the same as
   // assigning one later does.
   if (created.assigneeUserId) {
@@ -1106,6 +1108,7 @@ export async function updateIssue(
       if (before.delegateUserId !== after.delegateUserId) await enqueueDelegateRun(after, actor);
       if (before.columnId !== after.columnId) {
         await emitIssueEvent('issue.state_changed', after, actor);
+        await queueStatusRuns([id], after.columnId, actorId(actor));
         await applySubtaskAutomation(after, actor);
       }
     }

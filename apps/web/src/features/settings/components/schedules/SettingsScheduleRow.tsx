@@ -26,11 +26,13 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { cn } from '@/lib/utils';
 import SettingsIconButton from '../SettingsIconButton';
 import { useSettingsCan } from '../../context/settingsPermission';
-import { formatUtc, parseScheduleInput } from '../../utils/cronSchedule';
+import { formatUtc } from '../../utils/cronSchedule';
+import { SettingsScheduleWhen } from './SettingsScheduleWhen';
 import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleRow({
   schedule,
+  columnName,
   running,
   onToggle,
   onRun,
@@ -40,6 +42,7 @@ export function SettingsScheduleRow({
   onDelete,
 }: {
   schedule: AgentSchedule;
+  columnName: string | null;
   running: boolean;
   onToggle: () => void;
   onRun: () => void;
@@ -50,8 +53,6 @@ export function SettingsScheduleRow({
 }) {
   const t = useTranslations('settings.schedules');
   const can = useSettingsCan();
-  const parsedSchedule = parseScheduleInput(schedule.cron);
-  const scheduleDescription = parsedSchedule.ok ? parsedSchedule.description : schedule.cron;
   return (
     <TableRow className="group/item cursor-pointer" onClick={onHistory}>
       <TableCell className="px-3 py-4 align-top whitespace-normal">
@@ -60,28 +61,30 @@ export function SettingsScheduleRow({
             className={cn('mt-[7px] size-2 shrink-0 rounded-full', statusDotClass(schedule.status))}
             title={schedule.status === 'active' ? t('statusActive') : t('statusPaused')}
           />
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MessageSquareText className="size-4" />
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent>{t('viewTask')}</TooltipContent>
-            </Tooltip>
-            <PopoverContent align="start" className="w-80">
-              <p className="text-xs font-medium text-muted-foreground">{t('task')}</p>
-              <p className="mt-1.5 text-sm whitespace-pre-wrap">{schedule.prompt}</p>
-            </PopoverContent>
-          </Popover>
+          {schedule.prompt && (
+            <Popover>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MessageSquareText className="size-4" />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipContent>{t('viewTask')}</TooltipContent>
+              </Tooltip>
+              <PopoverContent align="start" className="w-80">
+                <p className="text-xs font-medium text-muted-foreground">{t('task')}</p>
+                <p className="mt-1.5 text-sm whitespace-pre-wrap">{schedule.prompt}</p>
+              </PopoverContent>
+            </Popover>
+          )}
           <div className="flex min-w-0 flex-col gap-0.5 pt-1">
             <span className="truncate text-sm font-medium">{schedule.name}</span>
             <span className="flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
@@ -92,13 +95,16 @@ export function SettingsScheduleRow({
         </div>
       </TableCell>
       <TableCell className="px-3 py-4 align-top whitespace-normal">
-        <p className="text-sm" title={schedule.cron}>
-          {scheduleDescription}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">UTC</p>
+        <SettingsScheduleWhen schedule={schedule} columnName={columnName} />
       </TableCell>
       <TableCell className="px-3 py-4 align-top text-sm whitespace-nowrap tabular-nums">
-        {formatUtc(schedule.nextRunAt)}
+        {schedule.nextRunAt ? (
+          formatUtc(schedule.nextRunAt)
+        ) : (
+          <span className="text-xs whitespace-normal text-muted-foreground">
+            {t('nextRunOnStatus')}
+          </span>
+        )}
       </TableCell>
       <TableCell className="px-3 py-4 align-top whitespace-normal">
         {schedule.lastRunStatus ? (
@@ -153,7 +159,7 @@ export function SettingsScheduleRow({
                 <TooltipContent>{t('moreActions')}</TooltipContent>
               </Tooltip>
               <DropdownMenuContent align="end">
-                {can('edit') && (
+                {can('edit') && schedule.type === 'cron' && (
                   <DropdownMenuItem
                     className="min-h-11 sm:min-h-8"
                     disabled={running}

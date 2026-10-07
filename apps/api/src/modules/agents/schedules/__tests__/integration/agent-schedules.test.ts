@@ -110,7 +110,7 @@ describe('agent schedules', () => {
       lastRunAt: null,
       lastRunStatus: null,
     });
-    expect(new Date(created.data!.nextRunAt).getTime()).toBeGreaterThan(Date.now());
+    expect(new Date(created.data!.nextRunAt!).getTime()).toBeGreaterThan(Date.now());
 
     const list = await schedules(asOwner).get();
     expect(list.status).toBe(200);
@@ -234,13 +234,13 @@ describe('agent schedules', () => {
     const paused = await schedules(asOwner)({ scheduleId }).patch({ status: 'paused' });
     expect(paused.status).toBe(200);
     expect(paused.data).toMatchObject({ status: 'paused' });
-    expect(new Date(paused.data!.nextRunAt).getTime()).toBe(
-      new Date(created.data!.nextRunAt).getTime(),
+    expect(new Date(paused.data!.nextRunAt!).getTime()).toBe(
+      new Date(created.data!.nextRunAt!).getTime(),
     );
 
     const resumed = await schedules(asOwner)({ scheduleId }).patch({ status: 'active' });
     expect(resumed.data).toMatchObject({ status: 'active' });
-    expect(new Date(resumed.data!.nextRunAt).getTime()).toBeGreaterThan(Date.now());
+    expect(new Date(resumed.data!.nextRunAt!).getTime()).toBeGreaterThan(Date.now());
   });
 
   it('recomputes the next run when the cron changes', async () => {
@@ -256,7 +256,7 @@ describe('agent schedules', () => {
       cron: '30 9 * * *',
       prompt: 'Triage and label the new issues.',
     });
-    expect(new Date(updated.data!.nextRunAt).getUTCMinutes()).toBe(30);
+    expect(new Date(updated.data!.nextRunAt!).getUTCMinutes()).toBe(30);
   });
 
   it('queues a manual run and reports it in the run history', async () => {

@@ -200,12 +200,12 @@ sends `$ITSAPLAN_API_KEY` as a bearer token, and acts as its own user with its r
 
 Every run holds these variables:
 
-| Variable                 | What it holds                                                     |
-| ------------------------ | ----------------------------------------------------------------- |
-| `ITSAPLAN_URL`           | the instance that sent the task                                   |
-| `ITSAPLAN_API_KEY`       | the agent's key, for the API and the MCP server                   |
-| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `field`, `schedule`, `manual`, or `chat` |
-| `ITSAPLAN_SYSTEM_PROMPT` | the context of the run, for a command that takes a system prompt  |
+| Variable                 | What it holds                                                               |
+| ------------------------ | --------------------------------------------------------------------------- |
+| `ITSAPLAN_URL`           | the instance that sent the task                                             |
+| `ITSAPLAN_API_KEY`       | the agent's key, for the API and the MCP server                             |
+| `ITSAPLAN_TRIGGER`       | `mention`, `delegation`, `field`, `schedule`, `manual`, `status`, or `chat` |
+| `ITSAPLAN_SYSTEM_PROMPT` | the context of the run, for a command that takes a system prompt            |
 
 A queued run adds three more:
 

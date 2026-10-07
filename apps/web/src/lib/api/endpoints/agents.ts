@@ -75,12 +75,14 @@ export interface AiAgent {
 // pending run ended by hand.
 export type AgentRunStatus = 'pending' | 'success' | 'failed' | 'canceled';
 
-// One row of an agent's autonomous run history. Issue-triggered runs reference an
-// issue; scheduled and manual runs do not.
+export type AgentRunTrigger = 'mention' | 'delegation' | 'field' | 'schedule' | 'manual' | 'status';
+
+// One row of an agent's autonomous run history. A run triggered on an issue references
+// it; a cron schedule's run and a manual one do not.
 export interface AgentRun {
   id: number;
   status: AgentRunStatus;
-  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual';
+  trigger: AgentRunTrigger;
   issueId: number | null;
   issueIdentifier: string | null;
   issueTitle: string | null;

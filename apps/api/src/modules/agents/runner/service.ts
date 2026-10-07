@@ -1,8 +1,14 @@
 import { db, aiAgent, agentRun, project, projectMember } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
 import { type ContextUsage } from '../chat-usage';
-import { agentRunConfig, loadThreadContext } from '../core/run-queue';
-import { recordAgentRunFinished, recordAgentRunStarted } from '../core/run-activity';
+import {
+  agentRunConfig,
+  issueRunTurn,
+  loadThreadContext,
+  runRetryDelayMs,
+  scheduleRunRetry,
+} from '../core/run-queue';
+import { agentRunStarted, recordAgentRunFinished } from '../core/run-activity';
 import type { AgentKind } from '../core/service';
 import type { AgentRunTrigger } from '../model';
 import {
@@ -142,6 +148,7 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
     WHERE r.id = (
       SELECT id FROM agent_run q
       WHERE q.agent_id = ${agentId} AND q.status = 'pending' AND q.next_attempt_at <= now()
+        AND ${issueRunTurn}
       ORDER BY q.next_attempt_at, q.id
       FOR UPDATE SKIP LOCKED
       LIMIT 1
@@ -181,7 +188,15 @@ export async function claimRunnerRun(agent: RunnerAgent): Promise<RunnerRun | nu
     agentUsername: agent.username,
     threadContext,
   };
-  await recordAgentRunStarted(forPrompt);
+  // A start that fails is a failed attempt: the run comes back after the retry delay,
+  // with the error on it, rather than being handed out half started.
+  try {
+    await agentRunStarted(forPrompt);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await scheduleRunRetry(row.id, runRetryDelayMs(row.attempts), message);
+    return null;
+  }
   return {
     id: row.id,
     trigger: row.trigger,

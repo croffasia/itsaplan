@@ -21,10 +21,12 @@ import { useTranslations } from 'next-intl';
 export function SettingsScheduleRunsSheet({
   projectKey,
   schedule,
+  columnName,
   onClose,
 }: {
   projectKey: string;
   schedule: AgentSchedule | null;
+  columnName: string | null;
   onClose: () => void;
 }) {
   const t = useTranslations('settings.schedules');
@@ -33,8 +35,14 @@ export function SettingsScheduleRunsSheet({
   const cancelRuns = useCancelAgentScheduleRuns(projectKey);
   const canCancel = can('edit') && schedule?.canTrigger === true;
   const runs = query.data ?? [];
-  const parsed = schedule ? parseScheduleInput(schedule.cron) : null;
-  const cron = parsed?.ok ? parsed.description : (schedule?.cron ?? '');
+  const parsed = schedule?.cron ? parseScheduleInput(schedule.cron) : null;
+  const when = parsed?.ok
+    ? parsed.description
+    : (schedule?.cron ?? t('entersColumn', { column: columnName ?? '' }));
+  const delayMin = Math.round((schedule?.delaySec ?? 0) / 60);
+  let nextRun = t('startsAtOnce');
+  if (schedule?.nextRunAt) nextRun = `${t('nextRun')}: ${formatUtc(schedule.nextRunAt)}`;
+  else if (delayMin > 0) nextRun = t('startsAfter', { minutes: delayMin });
 
   function cancel(runId?: number) {
     if (schedule) cancelRuns.mutate({ scheduleId: schedule.id, runId });
@@ -72,11 +80,9 @@ export function SettingsScheduleRunsSheet({
             <SheetTitle className="truncate text-base">{schedule?.name}</SheetTitle>
           </div>
           <SheetDescription className="flex flex-wrap items-center gap-x-2 text-xs">
-            <span>{cron}</span>
+            <span>{when}</span>
             <span>·</span>
-            <span className="tabular-nums">
-              {t('nextRun')}: {schedule ? formatUtc(schedule.nextRunAt) : ''}
-            </span>
+            <span className="tabular-nums">{nextRun}</span>
           </SheetDescription>
         </SheetHeader>
         <div className="min-h-0 flex-1 overflow-y-auto">

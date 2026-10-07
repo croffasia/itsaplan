@@ -1,5 +1,6 @@
 import type { AgentTool, AiAgent, NewAiAgentInput, AiAgentPatch } from '@/lib/api/endpoints/agents';
 import { transliterate } from '@/utils/projectKey';
+import { delaySecFromMinutes } from '@/utils/runDelay';
 
 // The editable shape of an agent form. temperature/maxSteps are kept as strings so
 // the inputs can be left blank; they are parsed to numbers (or null) on submit.
@@ -80,15 +81,6 @@ export function initialAgentValue(agent?: AiAgent): AgentFormValue {
     projectIds: (agent?.projects ?? []).map((project) => project.id),
     runnerScope: agent?.runnerScope ?? 'team',
   };
-}
-
-// The delay the server stores, for delegation and for a field trigger alike. A blank
-// or unparseable input means no delay; the value is clamped to the server's 0..24h
-// range.
-export function delaySecFromMinutes(minutes: string): number {
-  const n = Math.round(Number(minutes.trim()));
-  if (!Number.isFinite(n) || n <= 0) return 0;
-  return Math.min(n, 1440) * 60;
 }
 
 // Parses an optional number input: blank becomes null (clears the field), a valid

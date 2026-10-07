@@ -79,6 +79,36 @@ describe('agent_run queue store', () => {
     expect(second.find((r) => r.id === runId)).toBeUndefined();
   });
 
+  it('runs the runs of one agent on one issue one at a time, oldest first', async () => {
+    const { asOwner, columnId } = await setup();
+    const { agent, issue, runId } = await enqueueRun(asOwner, columnId);
+    const run = {
+      agentId: agent.id,
+      projectId: agent.projects[0].id,
+      sourceActivityId: null,
+      prompt: 'and this',
+    };
+    await enqueueAgentRun({ ...run, issueId: issue.id });
+    const other = (
+      await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Other' })
+    ).data!;
+    await enqueueAgentRun({ ...run, issueId: other.id });
+    const [second, onOther] = await db
+      .select()
+      .from(agentRun)
+      .where(eq(agentRun.agentId, agent.id))
+      .orderBy(agentRun.id)
+      .then((rows) => rows.slice(1));
+
+    // The older run of the issue and the run of the other issue go together.
+    expect((await claimDueRuns()).map((r) => r.id).sort()).toEqual([runId, onOther.id].sort());
+    // The newer run of the issue waits while the older one is in flight.
+    expect(await claimDueRuns()).toEqual([]);
+
+    await markRunSuccess(runId, 'done', null);
+    expect((await claimDueRuns()).map((r) => r.id)).toEqual([second.id]);
+  });
+
   it('counts the in-flight runs a run waits behind', async () => {
     const { asOwner, columnId } = await setup();
     const { agent, issue, runId } = await enqueueRun(asOwner, columnId);

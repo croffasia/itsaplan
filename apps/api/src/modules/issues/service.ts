@@ -70,7 +70,7 @@ import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
-import { queueStatusRuns } from '#modules/agents/schedules/status-runs';
+import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 import { applySubtaskAutomation } from './automation';
 import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
 
@@ -1207,7 +1207,12 @@ export async function setIssueLabels(
 
   if (emitEvent && (added.length > 0 || removed.length > 0)) {
     const issueRow = await getIssue(issueId);
-    if (issueRow) await emitIssueEvent('issue.label_changed', issueRow, actorUserId);
+    if (issueRow) {
+      const named = (ids: number[]) => ids.map((id) => ({ id, name: names.get(id) ?? null }));
+      await emitIssueEvent('issue.label_changed', issueRow, actorUserId, {
+        labelChange: { added: named(added), removed: named(removed) },
+      });
+    }
   }
 }
 

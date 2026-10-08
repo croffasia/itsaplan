@@ -596,7 +596,9 @@ export const agentSchedule = pgTable(
     // Empty on a 'status' schedule that sends no task of its own.
     prompt: text('prompt').notNull(),
     // 'cron' runs on `cron` and carries `next_run_at`; 'status' runs on an issue each
-    // time one enters `column_id`, `delay_sec` after it does.
+    // time one enters `column_id`, `delay_sec` after it does. Any other type is one an
+    // extension of the api adds (modules/agents/schedules/extension.ts), which queues
+    // its runs itself.
     type: text('type').notNull().default('cron'),
     cron: text('cron'),
     timezone: text('timezone').notNull(),
@@ -604,6 +606,9 @@ export const agentSchedule = pgTable(
     nextRunAt: timestamp('next_run_at', { withTimezone: true }),
     columnId: integer('column_id').references(() => projectColumn.id, { onDelete: 'cascade' }),
     delaySec: integer('delay_sec').notNull().default(0),
+    // Settings an extension of the api keeps on the schedule. The core stores and
+    // copies them and reads none.
+    options: jsonb('options').$type<Record<string, unknown>>().notNull().default({}),
     lastRunAt: timestamp('last_run_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -613,7 +618,8 @@ export const agentSchedule = pgTable(
     check(
       'agent_schedule_type_check',
       sql`(${t.type} = 'cron' AND ${t.cron} IS NOT NULL AND ${t.nextRunAt} IS NOT NULL AND ${t.columnId} IS NULL)
-        OR (${t.type} = 'status' AND ${t.columnId} IS NOT NULL AND ${t.cron} IS NULL AND ${t.nextRunAt} IS NULL)`,
+        OR (${t.type} = 'status' AND ${t.columnId} IS NOT NULL AND ${t.cron} IS NULL AND ${t.nextRunAt} IS NULL)
+        OR (${t.type} NOT IN ('cron', 'status') AND ${t.cron} IS NULL AND ${t.nextRunAt} IS NULL AND ${t.columnId} IS NULL)`,
     ),
     check('agent_schedule_delay_check', sql`${t.delaySec} >= 0 AND ${t.delaySec} <= 86400`),
     // A schedule works in one project, and one agent works in several projects of
@@ -645,6 +651,7 @@ export const agentRun = pgTable(
       .references(() => project.id, { onDelete: 'cascade' }),
     issueId: integer('issue_id').references(() => issue.id, { onDelete: 'cascade' }),
     scheduleId: integer('schedule_id').references(() => agentSchedule.id, { onDelete: 'cascade' }),
+    // 'event' is a run an extension queued on an issue for a schedule of its own type.
     trigger: text('trigger').notNull().default('delegation'),
     scheduledFor: timestamp('scheduled_for', { withTimezone: true }),
     // The comment that mentioned the agent, kept for traceability. The prompt is
@@ -678,7 +685,7 @@ export const agentRun = pgTable(
     ),
     check(
       'agent_run_trigger_check',
-      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status')`,
+      sql`${t.trigger} IN ('mention', 'delegation', 'field', 'schedule', 'manual', 'status', 'event')`,
     ),
     uniqueIndex('agent_run_schedule_fire_uq').on(t.scheduleId, t.scheduledFor),
     index('agent_run_due_idx').on(t.status, t.nextAttemptAt),

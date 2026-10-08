@@ -8,6 +8,7 @@ import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { mcpTool } from '#mcp/generate';
 import { paginate } from '#shared/pagination';
 import { nextCronRun } from './cron';
+import { checkScheduleOptions, isScheduleType } from './extension';
 import {
   AgentScheduleResponse,
   AgentSchedulePageResponse,
@@ -61,7 +62,13 @@ export const agentScheduleRoutes = new Elysia({
     '/projects/:projectKey/agent-schedules',
     async ({ project, body, set, user }) => {
       const type = body.type ?? 'cron';
+      if (!isScheduleType(type)) throw new HttpError(400, 'Unknown schedule type');
       const trigger = await newScheduleTrigger(project, type, body);
+      const options = await checkScheduleOptions({
+        type,
+        options: body.options ?? {},
+        projectId: project.id,
+      });
       let row;
       try {
         row = await createAgentSchedule({
@@ -71,6 +78,7 @@ export const agentScheduleRoutes = new Elysia({
           name: requiredText(body.name, 'Name'),
           type,
           status: body.status ?? 'active',
+          options,
           ...trigger,
         });
       } catch (err) {
@@ -87,8 +95,8 @@ export const agentScheduleRoutes = new Elysia({
       detail: {
         summary: 'Create an agent schedule',
         description:
-          'Create a schedule that sends a task to an agent on a cron, or on an issue each ' +
-          'time one enters a column.',
+          'Create a schedule that sends a task to an agent on a cron, on an issue each ' +
+          'time one enters a column, or on a type this instance adds.',
         ...mcpTool('create_agent_schedule'),
       },
     },
@@ -104,6 +112,14 @@ export const agentScheduleRoutes = new Elysia({
       if (resuming && trigger.nextRunAt === undefined && current.cron !== null) {
         trigger.nextRunAt = nextCronRun(current.cron);
       }
+      const options =
+        body.options === undefined
+          ? undefined
+          : await checkScheduleOptions({
+              type: current.type,
+              options: body.options,
+              projectId: project.id,
+            });
       let row;
       try {
         row = await updateAgentSchedule(
@@ -113,6 +129,7 @@ export const agentScheduleRoutes = new Elysia({
             ...(body.agentId !== undefined ? { agentId: body.agentId } : {}),
             ...(body.name !== undefined ? { name: requiredText(body.name, 'Name') } : {}),
             ...trigger,
+            ...(options !== undefined ? { options } : {}),
             ...(body.status !== undefined ? { status: body.status } : {}),
           },
           requireUser(user).id,
@@ -131,8 +148,8 @@ export const agentScheduleRoutes = new Elysia({
       detail: {
         summary: 'Update an agent schedule',
         description:
-          "Update a schedule's agent, task, cron or column, or status. Its type stays the one " +
-          'it was created with.',
+          "Update a schedule's agent, task, cron or column, options, or status. Its type stays " +
+          'the one it was created with.',
         ...mcpTool('update_agent_schedule'),
       },
     },
@@ -176,8 +193,8 @@ export const agentScheduleRoutes = new Elysia({
         summary: 'Run an agent schedule now',
         description:
           'Queue a run of the schedule now and return its run id. It runs in the background; ' +
-          "read the result with list_agent_schedule_runs. A 'status' schedule is refused: its " +
-          'runs work on the issue that entered the column.',
+          "read the result with list_agent_schedule_runs. Only a 'cron' schedule runs on " +
+          'demand: the runs of the others work on the issue that started them.',
         ...mcpTool('run_agent_schedule'),
       },
     },

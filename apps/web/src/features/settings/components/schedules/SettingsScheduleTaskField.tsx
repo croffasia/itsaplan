@@ -2,8 +2,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { SettingsScheduleField } from './SettingsScheduleField';
 import { useTranslations } from 'next-intl';
 
-// A status schedule's run already names the issue and the column it entered, so its
-// task is optional.
+// A run on an issue already names the issue and what happened to it, so the task of a
+// schedule that is not a cron is optional.
 export function SettingsScheduleTaskField({
   optional,
   value,
@@ -22,11 +22,11 @@ export function SettingsScheduleTaskField({
         maxLength={20_000}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        placeholder={optional ? t('statusTaskPlaceholder') : t('taskPlaceholder')}
+        placeholder={optional ? t('issueTaskPlaceholder') : t('taskPlaceholder')}
         className="min-h-32 resize-y"
       />
       <p className="text-xs text-muted-foreground">
-        {optional ? t('statusTaskHint') : t('taskHint')}
+        {optional ? t('issueTaskHint') : t('taskHint')}
       </p>
     </SettingsScheduleField>
   );

@@ -19,13 +19,13 @@ export function SettingsScheduleTypeField({
   const t = useTranslations('settings.schedules');
   return (
     <SettingsScheduleField htmlFor="schedule-type" label={t('type')}>
-      <Select value={value} onValueChange={(next) => onChange(next as AgentScheduleType)}>
+      <Select value={value} onValueChange={onChange}>
         <SelectTrigger id="schedule-type" className="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="cron">{t('typeCron')}</SelectItem>
-          <SelectItem value="status">{t('typeStatus')}</SelectItem>
+          <SelectItem value="cron">{t('types.cron')}</SelectItem>
+          <SelectItem value="status">{t('types.status')}</SelectItem>
         </SelectContent>
       </Select>
     </SettingsScheduleField>

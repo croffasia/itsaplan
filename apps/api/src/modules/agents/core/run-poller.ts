@@ -4,6 +4,7 @@ import { intEnv } from '#shared/lib';
 import { getLimits } from '#shared/limits';
 import { framePrompt, peopleContext, runModePreamble } from './prompt/framing';
 import { agentRunStarted, recordAgentRunFinished } from './run-activity';
+import { runAdmissionDelay } from './run-admission';
 import {
   agentRunConfig,
   claimDueRuns,
@@ -36,6 +37,11 @@ async function processRun(run: ClaimedRun): Promise<void> {
   const { maxConcurrentRuns, maxRunSeconds } = await getLimits(workspaceId);
   if (maxConcurrentRuns > 0 && (await countRunsAhead(workspaceId, run.id)) >= maxConcurrentRuns) {
     await deferRun(run.id, DEFERRED_RETRY_SECONDS);
+    return;
+  }
+  const wait = await runAdmissionDelay(run);
+  if (wait > 0) {
+    await deferRun(run.id, wait);
     return;
   }
   // The issue's timeline entries are written here, where the agent's work actually

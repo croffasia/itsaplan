@@ -102,7 +102,7 @@ export function SettingsScheduleRow({
           formatUtc(schedule.nextRunAt)
         ) : (
           <span className="text-xs whitespace-normal text-muted-foreground">
-            {t('nextRunOnStatus')}
+            {schedule.type === 'status' ? t('nextRunOnStatus') : t('nextRunOnTrigger')}
           </span>
         )}
       </TableCell>

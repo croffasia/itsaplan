@@ -99,8 +99,14 @@ export async function emitIssueEvent(
   eventType: WebhookEventType,
   row: IssueRow,
   actor: ActivityActor,
+  extra: Record<string, unknown> = {},
 ): Promise<void> {
-  await emitIssueEvents(row.projectId, eventType, async () => [row], actor);
+  await emitWebhookEvents(
+    row.projectId,
+    eventType,
+    async () => (await issuePayloads([row])).map((payload) => ({ ...payload, ...extra })),
+    actor,
+  );
 }
 
 // A comment payload names the issue it is on, so a receiver can link to it.

@@ -31,7 +31,11 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   `useWorkspaceSections`. `GodSectionExtras` renders at the end of every god section page, by
   its slug, for settings the hosted build adds to an existing section; `WorkspaceSectionExtras`
   does the same on a workspace's own settings pages (`general`, `managers`), with the
-  workspace, and its controls save themselves. `cloudMessages` is the
+  workspace, and its controls save themselves. `ScheduleDialog` is the dialog that creates
+  and edits an agent schedule: here the core's, while the hosted build opens its own with
+  the same props, with the schedule types it adds and the `options` it keeps on a
+  schedule. The schedule list names such a type by the message
+  `settings.schedules.types.<id>`. `cloudMessages` is the
   hosted build's English, merged into the catalogue the keys are typed against (a god
   section's name and blurb go under `sections.god.<slug>` like the core ones), and
   `loadCloudMessages(locale)` returns its other languages. The i18n request config imports

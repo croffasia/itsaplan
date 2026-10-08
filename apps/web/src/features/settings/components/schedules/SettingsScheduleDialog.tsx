@@ -54,16 +54,19 @@ export function SettingsScheduleDialog({
   const [columnId, setColumnId] = useState(String(initial?.columnId ?? columns[0]?.id ?? ''));
   const [delayMin, setDelayMin] = useState(String(Math.round((initial?.delaySec ?? 0) / 60)));
   const selectedAgent = agents.find((a) => String(a.id) === agentId) ?? null;
+  const isCron = type === 'cron';
   const isStatus = type === 'status';
   const parsedSchedule = parseScheduleInput(scheduleInput);
+  // A schedule of a type the hosted build added, still listed on an instance without
+  // it, saves with no trigger fields.
   const isValid =
     Number(agentId) > 0 &&
     name.trim().length > 0 &&
     name.trim().length <= 120 &&
     prompt.trim().length <= 20_000 &&
-    (isStatus
-      ? Number(columnId) > 0
-      : prompt.trim().length > 0 && scheduleInput.length <= 120 && parsedSchedule.ok);
+    (isCron
+      ? prompt.trim().length > 0 && scheduleInput.length <= 120 && parsedSchedule.ok
+      : !isStatus || Number(columnId) > 0);
 
   async function submit() {
     if (!isValid) return;
@@ -74,14 +77,16 @@ export function SettingsScheduleDialog({
       status: initial?.status ?? 'active',
       ...(initial ? {} : { type }),
     };
-    if (isStatus) {
+    if (isCron) {
+      if (parsedSchedule.ok) await onSave({ ...value, cron: parsedSchedule.cron });
+    } else if (isStatus) {
       await onSave({
         ...value,
         columnId: Number(columnId),
         delaySec: delaySecFromMinutes(delayMin),
       });
-    } else if (parsedSchedule.ok) {
-      await onSave({ ...value, cron: parsedSchedule.cron });
+    } else {
+      await onSave(value);
     }
   }
 
@@ -138,10 +143,10 @@ export function SettingsScheduleDialog({
 
         {!initial && <SettingsScheduleTypeField value={type} onChange={setType} />}
 
-        <SettingsScheduleTaskField optional={isStatus} value={prompt} onChange={setPrompt} />
+        <SettingsScheduleTaskField optional={!isCron} value={prompt} onChange={setPrompt} />
 
         <div className="border-t border-border/50 pt-4">
-          {isStatus ? (
+          {isStatus && (
             <SettingsScheduleStatusFields
               columns={columns}
               columnId={columnId}
@@ -149,7 +154,8 @@ export function SettingsScheduleDialog({
               delayMin={delayMin}
               onDelayChange={setDelayMin}
             />
-          ) : (
+          )}
+          {isCron && (
             <SettingsScheduleField htmlFor="schedule-input" label={t('scheduleUtc')}>
               <SettingsScheduleInput
                 id="schedule-input"

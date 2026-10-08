@@ -253,14 +253,16 @@ export async function markRunFailed(id: number, error: string): Promise<void> {
 }
 
 // Puts a claimed run back in the queue without spending the attempt, for a run the
-// team has no free slot for. Waiting for a slot is not a failed attempt, and nothing
-// has been recorded on the issue yet, so the run leaves no trace of having been picked
-// up at all.
+// team has no free slot for or one held back by setRunAdmission. Waiting is not a failed
+// attempt, and nothing has been recorded on the issue yet, so the run leaves no trace of
+// having been picked up at all: a first claim's started_at goes too, so the waiting run
+// holds no slot in countRunsAhead and can be canceled as not started.
 export async function deferRun(id: number, delaySeconds: number): Promise<void> {
   await db
     .update(agentRun)
     .set({
       attempts: sql`${agentRun.attempts} - 1`,
+      startedAt: sql`CASE WHEN ${agentRun.attempts} = 1 THEN NULL ELSE ${agentRun.startedAt} END`,
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
     })
     .where(and(eq(agentRun.id, id), eq(agentRun.status, 'pending')));

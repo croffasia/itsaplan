@@ -18,10 +18,19 @@ export const scheduleStatus = t.UnionEnum(['active', 'paused'], {
   description: "'active' runs, 'paused' does not run until it is set back to 'active'.",
 });
 
-export const scheduleType = t.UnionEnum(['cron', 'status'], {
+export const scheduleType = t.String({
+  minLength: 1,
+  maxLength: 40,
   description:
     "'cron' runs the task on a cron. 'status' runs on an issue each time one enters a " +
-    'column: moved there, or created in it.',
+    'column: moved there, or created in it. An instance may add types of its own, which ' +
+    'take no cron and no column.',
+});
+
+export const scheduleOptions = t.Record(t.String(), t.Any(), {
+  description:
+    'Settings that extensions of this instance read, such as conditions on the issues ' +
+    'that start a run. {} on an instance with none, which refuses any other value.',
 });
 
 export const createScheduleBody = t.Object({
@@ -33,7 +42,7 @@ export const createScheduleBody = t.Object({
       maxLength: 20_000,
       description:
         "Task sent to the agent on every run. Required for a 'cron' schedule. Optional for " +
-        "a 'status' one, whose run already names the issue and the column it entered.",
+        'any other, whose run already names the issue and what happened to it.',
     }),
   ),
   cron: t.Optional(
@@ -42,14 +51,14 @@ export const createScheduleBody = t.Object({
       maxLength: 120,
       description:
         "Five-field cron expression in UTC, e.g. '0 9 * * 1' for Mondays at 09:00. " +
-        "Required for a 'cron' schedule, refused on a 'status' one.",
+        "Required for a 'cron' schedule, refused on any other.",
     }),
   ),
   columnId: t.Optional(
     t.Number({
       description:
         "Column id from get_project whose incoming issues start a run. Required for a 'status' " +
-        "schedule, refused on a 'cron' one.",
+        'schedule, refused on any other.',
     }),
   ),
   delaySec: t.Optional(
@@ -57,10 +66,12 @@ export const createScheduleBody = t.Object({
       minimum: 0,
       maximum: 86400,
       description:
-        "Seconds a 'status' run waits before the agent may pick it up; 0 by default. An issue " +
-        "that leaves the column in that time ends the run. Refused on a 'cron' schedule.",
+        'Seconds a run on an issue waits before the agent may pick it up; 0 by default. On a ' +
+        "'status' schedule, an issue that leaves the column in that time ends the run. " +
+        "Refused on a 'cron' schedule.",
     }),
   ),
+  options: t.Optional(scheduleOptions),
   status: t.Optional(scheduleStatus),
 });
 
@@ -78,6 +89,7 @@ export const AgentScheduleResponse = t.Object({
   timezone: t.Literal('UTC'),
   columnId: t.Nullable(t.Number()),
   delaySec: t.Number(),
+  options: scheduleOptions,
   status: scheduleStatus,
   nextRunAt: t.Nullable(t.String()),
   lastRunAt: t.Nullable(t.String()),

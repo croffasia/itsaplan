@@ -1,8 +1,10 @@
 import type { AgentSchedule } from '@/lib/api/endpoints/agentSchedules';
+import { useScheduleTypeName } from '../../hooks/useScheduleTypeName';
 import { parseScheduleInput } from '../../utils/cronSchedule';
 import { useTranslations } from 'next-intl';
 
-// When a schedule runs: its cron in words, or the column whose incoming issues start it.
+// When a schedule runs: its cron in words, the column whose incoming issues start it, or
+// the name of a type the hosted build added.
 export function SettingsScheduleWhen({
   schedule,
   columnName,
@@ -11,7 +13,8 @@ export function SettingsScheduleWhen({
   columnName: string | null;
 }) {
   const t = useTranslations('settings.schedules');
-  if (schedule.cron === null) {
+  const typeName = useScheduleTypeName();
+  if (schedule.type === 'status') {
     const minutes = Math.round(schedule.delaySec / 60);
     return (
       <>
@@ -22,6 +25,7 @@ export function SettingsScheduleWhen({
       </>
     );
   }
+  if (schedule.cron === null) return <p className="text-sm">{typeName(schedule.type)}</p>;
   const parsed = parseScheduleInput(schedule.cron);
   return (
     <>

@@ -220,6 +220,25 @@ carries `teamMcpEnabled` from the join it already makes. The team guards check t
 switch through `assertTeamMcpAllowed`, which is what covers the resources no project
 flag reaches: the agents, the skills, the tools, the roles and the credentials.
 
+## Extension hooks
+
+A build that extends the api, such as the hosted edition, installs these at startup
+before `listen`. A self-hosted instance installs none and runs the defaults. The schedule
+and run setters put their default back when called with no argument, which is how a test
+undoes one.
+
+- `setLimitsProvider`, `setOwnedWorkspaceLimit` (`shared/limits.ts`): a workspace's
+  ceilings.
+- `setScheduleTypes`, `setScheduleOptionsCheck`, `setScheduleIssueFilter`
+  (`modules/agents/schedules/extension.ts`): schedule types of its own beside `cron` and
+  `status`; the `options` it keeps on a schedule, checked on every write and, with the id
+  maps, on a project copy; and which issues start a schedule's run. `queueScheduleRuns`
+  (`issue-runs.ts`) queues the runs of its types on issues, with the trigger `event`.
+- `setRunAdmission` (`modules/agents/core/run-admission.ts`): the seconds a claimed run
+  waits before it starts, asked in the poller and in a runner's claim.
+- `onProjectEvent` (`modules/webhooks/emit.ts`): every issue and comment event the
+  webhooks get, inside the request that caused it.
+
 ## SCIM
 
 `modules/scim/` serves SCIM 2.0 (RFC 7643 / 7644) at `/scim/v2` for an identity provider

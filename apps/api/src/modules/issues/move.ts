@@ -26,7 +26,7 @@ import { recordActivity, textSide } from './activity';
 import { recordStatusChange } from './status-history';
 import { recordCycleChange } from './cycle-history';
 import { emitIssueEvent } from './webhook-payload';
-import { queueStatusRuns } from '#modules/agents/schedules/status-runs';
+import { queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 
 // Moves an issue, with its subtasks, to another project of the same team. Column,
 // type, labels and custom fields belong to one project, so they are matched by name

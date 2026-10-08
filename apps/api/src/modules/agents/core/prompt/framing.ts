@@ -59,7 +59,9 @@ export function framePrompt(run: RunForPrompt): string {
   if (run.trigger === 'schedule' || run.trigger === 'manual') {
     return `Carry out the following task:\n\n${run.prompt}`;
   }
-  if (run.trigger === 'status' || run.trigger === 'field') return frameIssueTask(run);
+  if (run.trigger === 'status' || run.trigger === 'event' || run.trigger === 'field') {
+    return frameIssueTask(run);
+  }
   const ref = run.issueIdentifier ?? `#${run.issueId}`;
   const titled = run.issueTitle ? `${ref} "${run.issueTitle}"` : ref;
   return run.trigger === 'delegation' ? frameDelegation(run, titled) : frameMention(run, titled);
@@ -79,7 +81,7 @@ function frameDelegation(run: RunForPrompt, titled: string): string {
 }
 
 // The run's prompt already names the issue and what put the agent on it: the member field
-// it was set into, or the column the issue entered followed by the schedule's task.
+// it was set into, or what happened to the issue followed by the schedule's task.
 // Moving the issue on is left to that task: a status schedule is often one step of
 // several, each started by the column before it.
 function frameIssueTask(run: RunForPrompt): string {

@@ -5,9 +5,9 @@ import { getMembership } from '#modules/members/service';
 import { recordActivityForIssues, statusSide } from '#modules/issues/activity';
 import { getIssues } from '#modules/issues/service';
 import { emitIssueEvents, issuePayloads } from '#modules/issues/webhook-payload';
-import { emitWebhookEvents, subscribedWebhooks } from '#modules/webhooks/emit';
+import { emitWebhookEvents, projectEventWanted } from '#modules/webhooks/emit';
 import { recordStatusChange } from '#modules/issues/status-history';
-import { hasUnfinishedStatusRuns, queueStatusRuns } from '#modules/agents/schedules/status-runs';
+import { hasUnfinishedStatusRuns, queueStatusRuns } from '#modules/agents/schedules/issue-runs';
 
 export interface ColumnRow {
   id: number;
@@ -241,7 +241,7 @@ export async function deleteColumn(
 
   // Built before the transaction: the payloads name the column, which it deletes.
   let deletedPayloads: unknown[] = [];
-  if (opts.mode === 'delete' && (await subscribedWebhooks(projectId, 'issue.deleted')).length > 0) {
+  if (opts.mode === 'delete' && (await projectEventWanted(projectId, 'issue.deleted'))) {
     const rows = await db.select({ id: issue.id }).from(issue).where(eq(issue.columnId, columnId));
     deletedPayloads = await issuePayloads(await getIssues(rows.map((r) => r.id)));
   }

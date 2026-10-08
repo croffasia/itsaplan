@@ -23,6 +23,7 @@ import { IssueDragOverlay } from '../shared/IssueDragOverlay';
 import { TableColumnHeader } from './TableColumnHeader';
 import { TableSectionHeader } from './TableSectionHeader';
 import { TableSubHeader } from './TableSubHeader';
+import { TableQuickAdd } from './TableQuickAdd';
 import { TableRow } from './TableRow';
 
 interface TableViewProps extends WorkItemsViewProps {
@@ -180,6 +181,13 @@ export default function TableView({
             </div>
           ))}
         </div>
+        {!grouped && (
+          <TableQuickAdd
+            projectKey={project.project.key}
+            columnId={project.columns[0]?.id ?? 0}
+            readOnly={readOnly}
+          />
+        )}
       </div>
 
       <IssueDragOverlay issue={reorder.activeIssue} />

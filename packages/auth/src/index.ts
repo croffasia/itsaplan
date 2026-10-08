@@ -71,13 +71,15 @@ if (!baseURL) {
 // requests per second, is set for the heaviest legitimate caller rather than a typical
 // one: an internal AI agent runs on its own key and dispatches every tool call through
 // a route, and a model that emits a batch of tool calls in one step turns them into a
-// burst of requests. The plugin copies the window and the maximum into each key row
-// when the key is created, so a change to those two applies to keys created after it;
-// turning the limit off applies to every key.
+// burst of requests. The plugin copies all three settings into each key row when the
+// key is created, so a change applies to keys created after it, except that turning the
+// limit off also stops it for existing keys. A key created while it is off stays
+// unlimited after it is turned back on.
 export function apiKeyRateLimit(env: Record<string, string | undefined> = process.env) {
+  // The key row stores both numbers in int4 columns.
   const positive = (raw: string | undefined, fallback: number) => {
     const n = Number(raw);
-    return raw && Number.isFinite(n) && n > 0 ? n : fallback;
+    return raw && Number.isInteger(n) && n > 0 && n <= 2_147_483_647 ? n : fallback;
   };
   return {
     enabled: env.API_KEY_RATE_LIMIT_ENABLED !== 'false',

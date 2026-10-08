@@ -23,4 +23,13 @@ describe('api key rate limit settings', () => {
       apiKeyRateLimit({ API_KEY_RATE_LIMIT_WINDOW_MS: '0', API_KEY_RATE_LIMIT_MAX: 'many' }),
     ).toEqual({ enabled: true, timeWindow: 1000, maxRequests: 100 });
   });
+
+  it('keeps the default for a value the key row cannot store', () => {
+    expect(
+      apiKeyRateLimit({
+        API_KEY_RATE_LIMIT_WINDOW_MS: '2592000000',
+        API_KEY_RATE_LIMIT_MAX: '10.5',
+      }),
+    ).toEqual({ enabled: true, timeWindow: 1000, maxRequests: 100 });
+  });
 });

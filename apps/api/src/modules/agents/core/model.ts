@@ -28,6 +28,9 @@ const username = t.String({
   description: 'Mention handle (letters, digits, . _ -).',
 });
 
+// The reasoning effort levels the provider SDKs share (see runtime/index.ts).
+const reasoningEffort = t.Union([t.Literal('low'), t.Literal('medium'), t.Literal('high')]);
+
 // Internal-agent model configuration, all optional so a config can be filled in
 // over time. Ignored (stored as null/empty) for an external agent.
 const configFields = {
@@ -57,6 +60,13 @@ const configFields = {
     }),
   ),
   temperature: t.Optional(t.Nullable(t.Number({ description: 'Sampling temperature.' }))),
+  reasoningEffort: t.Optional(
+    t.Nullable(reasoningEffort, {
+      description:
+        "How much a reasoning model thinks before it answers. Null leaves it to the provider's " +
+        'default.',
+    }),
+  ),
   maxSteps: t.Optional(t.Nullable(t.Integer({ description: 'Max tool-call steps per run.' }))),
   memoryEnabled: t.Optional(
     t.Boolean({ description: 'Keep conversation memory across a thread.' }),
@@ -122,6 +132,7 @@ export const AiAgentResponse = t.Object({
   instructions: t.Nullable(t.String()),
   tools: t.Array(t.String()),
   temperature: t.Nullable(t.Number()),
+  reasoningEffort: t.Nullable(reasoningEffort),
   maxSteps: t.Nullable(t.Number()),
   memoryEnabled: t.Boolean(),
   memoryLastMessages: t.Nullable(t.Number()),

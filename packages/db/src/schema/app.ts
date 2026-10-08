@@ -532,6 +532,8 @@ export const aiAgent = pgTable(
     // that act on the API with the agent's own token are implicit and not listed.
     tools: jsonb('tools').notNull().default([]),
     temperature: doublePrecision('temperature'),
+    // NULL leaves the reasoning effort to the provider's default.
+    reasoningEffort: text('reasoning_effort'),
     maxSteps: integer('max_steps'),
     // Internal-agent run triggers. A mention in a comment enqueues a run when
     // trigger_on_mention is set; being set as an issue's delegate enqueues one when
@@ -569,6 +571,10 @@ export const aiAgent = pgTable(
     unique().on(t.userId),
     check('ai_agent_kind_check', sql`${t.kind} IN ('external', 'internal')`),
     check('ai_agent_runner_scope_check', sql`${t.runnerScope} IN ('owner', 'team')`),
+    check(
+      'ai_agent_reasoning_effort_check',
+      sql`${t.reasoningEffort} IN ('low', 'medium', 'high')`,
+    ),
     check(
       'ai_agent_delegation_delay_check',
       sql`${t.delegationDelaySec} >= 0 AND ${t.delegationDelaySec} <= 86400`,

@@ -21,6 +21,10 @@ export interface AgentProject {
   name: string;
 }
 
+// How much a reasoning model thinks before it answers. Null on an agent leaves it to
+// the provider's default.
+export type ReasoningEffort = 'low' | 'medium' | 'high';
+
 // An AI agent of a team: a bot user plus its configuration. `kind` is
 // 'external' (driven by an outside caller through the API) or 'internal' (run by
 // the built-in runtime, so it carries provider/model/instructions/tools). Only an
@@ -42,6 +46,7 @@ export interface AiAgent {
   instructions: string | null;
   tools: string[];
   temperature: number | null;
+  reasoningEffort: ReasoningEffort | null;
   maxSteps: number | null;
   memoryEnabled: boolean;
   memoryLastMessages: number | null;
@@ -126,6 +131,7 @@ export interface NewAiAgentInput {
   instructions?: string | null;
   tools?: string[];
   temperature?: number | null;
+  reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;
@@ -145,6 +151,7 @@ export interface AiAgentPatch {
   instructions?: string | null;
   tools?: string[];
   temperature?: number | null;
+  reasoningEffort?: ReasoningEffort | null;
   maxSteps?: number | null;
   memoryEnabled?: boolean;
   memoryLastMessages?: number | null;

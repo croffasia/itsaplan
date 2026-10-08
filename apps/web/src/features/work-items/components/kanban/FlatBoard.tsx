@@ -27,6 +27,7 @@ import { CardOverlay } from './CardOverlay';
 import { BoardColumn } from './BoardColumn';
 import { CollapsedColumn } from './CollapsedColumn';
 import { WipCount } from './WipCount';
+import { useColumnSearchContext } from '../../context/columnSearchContext';
 
 // Flat board: one vertically-virtualized column per group, in a horizontal row. A
 // trailing "Hidden" panel holds the columns that the user hid.
@@ -41,6 +42,7 @@ export default function FlatBoard({
   readOnly,
 }: WorkItemsViewProps) {
   const t = useTranslations('workItems');
+  const search = useColumnSearchContext();
   const groupLabels = useGroupLabels();
   const sortedOrderMessage = useSortedOrderMessage();
   const wipLimitMessage = useWipLimitMessage();
@@ -79,6 +81,8 @@ export default function FlatBoard({
     onSettingsChange({ ...settings, pinnedGroup: settings.pinnedGroup === key ? null : key });
 
   const groups = buildGroups(project, settings.group, groupLabels, filters);
+  if (search.group && !groups.some((group) => group.key === search.group?.key))
+    groups.push(search.group);
   const sorted = sortIssues(project.issues, settings.sort, project);
   const issuesByGroup = groupIssues(groups, sorted, settings.group);
   const maps = buildMaps(project);
@@ -87,7 +91,9 @@ export default function FlatBoard({
   // any of the remaining groups into the "Hidden" panel.
   const baseGroups = settings.showEmptyGroups
     ? groups
-    : groups.filter((g) => (issuesByGroup.get(g.key)?.length ?? 0) > 0);
+    : groups.filter(
+        (g) => (issuesByGroup.get(g.key)?.length ?? 0) > 0 || g.key === search.active?.key,
+      );
   const visibleGroups = baseGroups.filter((g) => !hiddenSet.has(g.key));
   const hiddenGroups = baseGroups.filter((g) => hiddenSet.has(g.key));
 
@@ -141,6 +147,7 @@ export default function FlatBoard({
       onDragEnd={dnd.onDragEnd}
     >
       <div
+        ref={search.boardRef}
         className="flex h-full gap-3 overflow-x-auto p-4"
         onClick={() => selection.isSelecting && selection.clear()}
       >
@@ -172,8 +179,14 @@ export default function FlatBoard({
               onMoveIssue={moveIssue}
               onOpenIssue={onOpenIssue}
               onAddIssue={() => addIssueTo(group)}
-              onHide={() => setHidden(group.key, true)}
-              onCollapse={() => setCollapsed(group.key, true)}
+              onHide={() => {
+                if (search.active?.key === group.key) search.close(false);
+                setHidden(group.key, true);
+              }}
+              onCollapse={() => {
+                if (search.active?.key === group.key) search.close(false);
+                setCollapsed(group.key, true);
+              }}
               pinned={group === pinnedGroup}
               onTogglePin={() => togglePin(group.key)}
               readOnly={readOnly}

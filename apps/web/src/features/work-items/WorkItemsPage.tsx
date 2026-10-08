@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useShell } from '@/context/shellContext';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -9,6 +9,7 @@ import { useProjectFeatures } from '@/hooks/useProjectFeatures';
 import { useLiveRefresh } from '@/hooks/useLiveRefresh';
 import { revScope } from '@/utils/revScopes';
 import { qk } from '@/services/queryKeys';
+import { applyFilters } from '@/utils/filters';
 import { buildGroups, groupIssues } from '@/utils/project';
 import { countIssuesByColumn } from './utils/wipLimit';
 import {
@@ -41,8 +42,25 @@ interface TimelineCollapseState {
 export default function WorkItemsPage() {
   const t = useTranslations('workItems');
   const tCommon = useTranslations('common');
-  const { project, filteredProject, views, editor, customFields, onOpenIssue, onAddIssue } =
-    useShell();
+  const {
+    project,
+    filteredProject,
+    views,
+    editor,
+    customFields,
+    onOpenIssue,
+    onAddIssue,
+    boardStatus,
+  } = useShell();
+  const filterRef = useRef<HTMLDivElement>(null);
+  const searchIssues = useMemo(
+    () => (project ? applyFilters(project.issues, editor.effectiveFilters, project) : []),
+    [project, editor.effectiveFilters],
+  );
+  const viewFilters = () => {
+    if (!editor.showFilters && !editor.editing) editor.toggleFilters();
+    requestAnimationFrame(() => filterRef.current?.focus());
+  };
   const { can } = usePermissions();
   const groupLabels = useGroupLabels();
   const features = useProjectFeatures();
@@ -126,6 +144,8 @@ export default function WorkItemsPage() {
     onSettingsChange: changeSettings,
     onOpenIssue,
     onAddIssue,
+    searchSource: { ...boardStatus, issues: searchIssues, unfilteredIssues: project.issues },
+    onViewFilters: viewFilters,
   };
 
   function renderView() {
@@ -182,7 +202,11 @@ export default function WorkItemsPage() {
           appears only after Edit view or New view, and Save is the one write:
           it updates the active view or creates one from the live state. */}
       {(editor.editing || editor.showFilters) && (
-        <div className="border-b">
+        <div
+          ref={filterRef}
+          tabIndex={-1}
+          className="border-b focus-visible:outline-2 focus-visible:outline-ring"
+        >
           {editor.editing && (
             <div className="flex items-center gap-2 px-3 py-2">
               <ViewIconPicker icon={editor.draftIcon} onChange={editor.setDraftIcon} />

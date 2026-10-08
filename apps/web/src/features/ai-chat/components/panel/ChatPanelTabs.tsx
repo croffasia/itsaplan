@@ -4,7 +4,7 @@ import { closestCenter, DndContext, type DragEndEvent } from '@dnd-kit/core';
 import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortable';
 import { Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import { useStripSortSensors } from '@/lib/dnd';
+import { useDndSensors } from '@/lib/dnd';
 import { Button } from '@/components/ui/button';
 import { ChatPanelTab } from './ChatPanelTab';
 import { ChatPanelTabFavorite } from './ChatPanelTabFavorite';
@@ -35,7 +35,7 @@ export function ChatPanelTabs({
   onSwapTabs: (id: string, otherId: string) => void;
 }) {
   const t = useTranslations('aiChat');
-  const sensors = useStripSortSensors();
+  const sensors = useDndSensors();
   const { rowRef, measureRef, visible, hidden } = useTabOverflow(sessions, activeId);
   const lastVisibleId = visible[visible.length - 1]?.id ?? null;
   const active = sessions.find((session) => session.id === activeId);

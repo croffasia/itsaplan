@@ -157,7 +157,6 @@ needed. Run it again later to restart the instance; the data stays.
 - [Deploy on Kubernetes](docs/helm.md) — Helm chart for any Kubernetes cluster
 - [Local development](docs/development.md) — running the apps on the host, and the tests
 - [Coding agent setup](docs/runner.md) — the config for each CLI that `@itsaplan/runner` runs
-- [Breaking changes](docs/breaking-changes.md) — the API paths a release removed, and what replaced them
 
 ## Built with
 

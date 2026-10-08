@@ -3,6 +3,10 @@
   "copyAction": "نسخ المشروع",
   "deleteAction": "حذف المشروع",
   "leaveAction": "مغادرة المشروع",
+  "archiveAction": "أرشفة المشروع",
+  "restoreAction": "استعادة المشروع",
+  "archived": "تمت أرشفة {name}",
+  "restored": "تمت استعادة {name}",
   "deleteDialog": {
     "title": "حذف {name}؟",
     "confirm": "حذف نهائي",

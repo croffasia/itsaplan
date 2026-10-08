@@ -50,6 +50,12 @@
     "dueDate": "Fecha de vencimiento",
     "clearDueDate": "Vaciar la fecha de vencimiento",
     "labels": "Etiquetas",
+    "copyId": "Copiar ID",
+    "copyShortLink": "Copiar enlace corto",
+    "copyFullUrl": "Copiar URL completa",
+    "copyTitle": "Copiar título",
+    "copyDescription": "Copiar descripción",
+    "copyBranch": "Copiar nombre de rama",
     "copyPrompt": "Copiar la consigna",
     "restore": "Restaurar",
     "archive": "Archivar",
@@ -57,6 +63,7 @@
     "noDelegate": "Sin delegado",
     "noInitiative": "Sin iniciitiva",
     "noCycle": "Sin ciclo",
+    "copyFailed": "No se pudo copiar al portapapeles",
     "promptCopied": "La consigna se ha copiado al portapapeles"
   },
   "commands": {
@@ -101,7 +108,8 @@
     "restore": "Restaurar el ticket",
     "archive": "Archivar el ticket",
     "delete": "Eliminar el ticket",
-    "shareIssue": "Compartir el ticket"
+    "shareIssue": "Compartir el ticket",
+    "move": "Mover a otro proyecto"
   },
   "actions": {
     "deleteTitle": "Eliminar el ticket",
@@ -110,7 +118,16 @@
     "cannotBeUndone": "No se puede deshacer.",
     "deleteDescription": "¿Eliminar {issue}? Esto quita el ticket, sus comentarios, actividad y adjuntos.",
     "archiveDescription": "¿Archivar {issue}? Deja el tablero y se puede restaurar más tarde.",
-    "applyDescription": "¿Aplicar <v>{action}</v> a este ticket?"
+    "applyDescription": "¿Aplicar <v>{action}</v> a este ticket?",
+    "moveTitle": "Mover incidencia",
+    "move": "Mover",
+    "moveDescription": "Mover {issue} a otro proyecto de este equipo. Recibirá un número nuevo allí y el enlace anterior seguirá abriéndola.",
+    "moveSubtasks": "{count, plural, one {Su subtarea se mueve con ella.} other {Sus # subtareas se mueven con ella.}}",
+    "moveProject": "Proyecto",
+    "moveChooseProject": "Elige un proyecto",
+    "moveColumn": "Estado",
+    "moveColumnMatching": "Estado equivalente",
+    "moveCarriedOver": "El tipo, las etiquetas y los campos personalizados se conservan si el proyecto de destino tiene uno con el mismo nombre. Se quitan el ciclo, la iniciativa y los enlaces a incidencias de este proyecto."
   },
   "create": {
     "title": "Nuevo ticket",
@@ -335,7 +352,8 @@
     "worklogChanged": "ha cambiado el <v>{from}</v> registrado el <v>{fromDate}</v> a <v>{to}</v> el <v>{date}</v>",
     "worklogRemoved": "ha quitado los <v>{time}</v> registrados el <v>{date}</v>",
     "commentEdited": "editó un comentario",
-    "commentDeleted": "eliminó un comentario"
+    "commentDeleted": "eliminó un comentario",
+    "issueMoved": "movió esta incidencia de <v>{from}</v> a <v>{to}</v>"
   },
   "development": {
     "title": "Desarrollo",

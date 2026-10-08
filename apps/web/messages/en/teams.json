@@ -1,4 +1,5 @@
 {
+  "archived": "Archived",
   "create": {
     "title": "New team",
     "namePlaceholder": "Team name",
@@ -9,6 +10,8 @@
     "submit": "Create team"
   },
   "sections": {
+    "collapse": "Collapse sections",
+    "expand": "Expand sections",
     "info": {
       "title": "Info",
       "description": "The team and your place in it."
@@ -61,7 +64,15 @@
     "leads": "Owners and managers",
     "leadsHint": "People who can manage this team and its projects.",
     "saved": "Team saved",
-    "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back."
+    "leaveHint": "You keep the projects you are a member of. To join again an owner has to add you back.",
+    "delete": {
+      "action": "Delete team",
+      "hint": "Its members, roles, invites, skills, tools and integrations are deleted with it. People keep their accounts and their other teams.",
+      "blocked": "Delete the projects and AI agents of the team first.",
+      "title": "Delete {name}?",
+      "description": "<strong>{name}</strong> is deleted with its members, roles, invites, skills, tools and integrations. People keep their accounts and their other teams. This cannot be undone.",
+      "deleted": "Team deleted"
+    }
   },
   "columns": {
     "project": "Project",
@@ -538,5 +549,110 @@
     "projectsHint": "A new project starts with the instance default.",
     "noProjects": "This team has no projects yet.",
     "projectToggleAria": "Toggle MCP access for {project}"
+  },
+  "workspace": {
+    "rail": "Workspaces",
+    "create": "New workspace",
+    "createUnavailableTitle": "More workspaces",
+    "createUnavailableHint": "More workspaces per person are available in Cloud and self-hosted Pro.",
+    "general": "General",
+    "roles": {
+      "owner": "Owner",
+      "admin": "Admin"
+    },
+    "titles": {
+      "owner": "Workspace owner",
+      "admin": "Workspace admin"
+    },
+    "info": {
+      "title": "Workspace",
+      "description": "The workspace that owns your teams.",
+      "workspace": "Workspace",
+      "workspaceHint": "The name everyone sees for this workspace.",
+      "role": "Your role",
+      "saved": "Workspace saved",
+      "color": "Color",
+      "colorReset": "Use default"
+    },
+    "teamCreation": {
+      "title": "Who creates teams",
+      "description": "Whoever creates a team owns it.",
+      "ownerOnly": "Only the owner changes who creates teams.",
+      "owner": "Only the owner",
+      "managers": "The owner and admins",
+      "members": "Everyone in its teams"
+    },
+    "managers": {
+      "title": "Managers",
+      "description": "The owner and admins manage the workspace.",
+      "ownerOnly": "The owner and admins manage the workspace. Only the owner adds or removes admins.",
+      "person": "Person",
+      "role": "Role",
+      "addAction": "Add admin",
+      "addTitle": "Add admin",
+      "addDescription": "Pick someone from the workspace's teams.",
+      "search": "Search by name or email",
+      "noCandidates": "No one to add",
+      "added": "{name} is now an admin",
+      "removeAction": "Remove admin",
+      "removeTitle": "Remove {name} as admin?",
+      "removeDescription": "They stay in their teams but can't manage the workspace.",
+      "removed": "{name} is no longer an admin"
+    },
+    "scim": {
+      "title": "SCIM",
+      "description": "Let an identity provider add people to this workspace, remove them, and grant project access through its groups.",
+      "saved": "SCIM settings saved",
+      "provisioning": "Provisioning",
+      "provisioningConfigured": "Your identity provider adds people to this workspace and removes them.",
+      "provisioningInstance": "Your identity provider creates, updates and deactivates accounts on this instance.",
+      "provisioningMissing": "Generate a token first.",
+      "token": "Token",
+      "noToken": "No token generated yet",
+      "tokenHint": "The bearer token your identity provider sends. It is shown once; generating a new one stops the old one working.",
+      "generateToken": "Generate token",
+      "replaceToken": "Replace token",
+      "baseUrl": "SCIM endpoint",
+      "baseUrlHint": "Point your identity provider at this address.",
+      "copyBaseUrl": "Copy SCIM endpoint",
+      "groups": "Groups",
+      "groupsHint": "The groups your identity provider has pushed. The list is theirs; what each group grants is set here.",
+      "groupsEmpty": "No groups have been pushed yet.",
+      "memberCount": "{count, plural, =0 {No members} one {# member} other {# members}}",
+      "grantsNothing": "grants nothing yet",
+      "editMappings": "Edit access",
+      "roleOwner": "Owner",
+      "roleMember": "Member",
+      "tokenDialog": {
+        "title": "Generate a SCIM token",
+        "description": "The token is shown once and cannot be read back. Any token already in use stops working.",
+        "submit": "Generate",
+        "submitPending": "Generating…",
+        "createdTitle": "Your SCIM token",
+        "createdDescription": "Copy it into your identity provider now. It cannot be shown again.",
+        "copy": "Copy token"
+      },
+      "mappings": {
+        "title": "What {group} grants",
+        "description": "Members of this group join the projects listed here. Removing a project takes away the memberships this group gave it.",
+        "empty": "This group grants nothing yet.",
+        "addProject": "Add a project…",
+        "role": "Role",
+        "roleOwner": "Owner",
+        "roleMember": "Member",
+        "projectRole": "Project role",
+        "defaultRole": "Default role",
+        "remove": "Remove project",
+        "saved": "Group access saved"
+      }
+    },
+    "delete": {
+      "action": "Delete workspace",
+      "hint": "Its teams are deleted with it. People keep their accounts and their other teams.",
+      "blocked": "Delete the projects and AI agents of its teams first.",
+      "title": "Delete {name}?",
+      "description": "<strong>{name}</strong> and its teams are deleted. People keep their accounts and their other teams. This cannot be undone.",
+      "deleted": "Workspace deleted"
+    }
   }
 }

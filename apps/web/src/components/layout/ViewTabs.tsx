@@ -10,7 +10,7 @@ import { horizontalListSortingStrategy, SortableContext } from '@dnd-kit/sortabl
 import { Filter, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { View } from '@/lib/api/endpoints/views';
-import { useStripSortSensors } from '@/lib/dnd';
+import { useDndSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
 import AllViewTab, { ALL_DROP_ID } from '@/components/layout/AllViewTab';
 import MobileViewSwitcher from '@/components/layout/MobileViewSwitcher';
@@ -52,7 +52,7 @@ export default function ViewTabs({
   const canCreateView = can('views', 'create');
   const canEditView = can('views', 'edit');
   const canDeleteView = can('views', 'delete');
-  const sensors = useStripSortSensors();
+  const sensors = useDndSensors();
   // The view being dragged, used to render the DragOverlay preview.
   const [activeId, setActiveId] = useState<number | null>(null);
   const activeView = activeId != null ? (views.find((v) => v.id === activeId) ?? null) : null;

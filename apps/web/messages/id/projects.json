@@ -3,6 +3,10 @@
   "copyAction": "Salin proyek",
   "deleteAction": "Hapus proyek",
   "leaveAction": "Tinggalkan proyek",
+  "archiveAction": "Arsipkan proyek",
+  "restoreAction": "Pulihkan proyek",
+  "archived": "{name} diarsipkan",
+  "restored": "{name} dipulihkan",
   "deleteDialog": {
     "title": "Hapus {name}?",
     "confirm": "Hapus secara permanen",

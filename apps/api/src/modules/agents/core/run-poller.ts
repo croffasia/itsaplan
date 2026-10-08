@@ -1,9 +1,9 @@
+import { db, teamWorkspaceId } from '@repo/db';
 import { getProjectTeamId } from '#modules/projects/service';
 import { intEnv } from '#shared/lib';
 import { getLimits } from '#shared/limits';
-import { equalJitterBackoffMs } from './helpers/backoff';
 import { framePrompt, peopleContext, runModePreamble } from './prompt/framing';
-import { recordAgentRunFinished, recordAgentRunStarted } from './run-activity';
+import { agentRunStarted, recordAgentRunFinished } from './run-activity';
 import {
   agentRunConfig,
   claimDueRuns,
@@ -11,6 +11,7 @@ import {
   deferRun,
   markRunFailed,
   markRunSuccess,
+  runRetryDelayMs,
   scheduleRunRetry,
   type ClaimedRun,
 } from './run-queue';
@@ -22,10 +23,8 @@ import { runThreadId } from './runtime/thread-ids';
 // the only thing a run is built from, so nothing about which project or which bot user
 // it acts as can be handed in from outside.
 
-// How long a run waits when its team has no free slot.
+// How long a run waits when its workspace has no free slot.
 const DEFERRED_RETRY_SECONDS = 30;
-const RETRY_BASE_MS = 30_000;
-const RETRY_CAP_MS = 30 * 60_000;
 
 export async function processAgentRuns(): Promise<void> {
   const runs = await claimDueRuns();
@@ -33,17 +32,17 @@ export async function processAgentRuns(): Promise<void> {
 }
 
 async function processRun(run: ClaimedRun): Promise<void> {
-  const teamId = await getProjectTeamId(run.projectId);
-  const { maxConcurrentRuns, maxRunSeconds } = await getLimits({ teamId });
-  if (maxConcurrentRuns > 0 && (await countRunsAhead(teamId, run.id)) >= maxConcurrentRuns) {
+  const workspaceId = await teamWorkspaceId(await getProjectTeamId(run.projectId), db);
+  const { maxConcurrentRuns, maxRunSeconds } = await getLimits(workspaceId);
+  if (maxConcurrentRuns > 0 && (await countRunsAhead(workspaceId, run.id)) >= maxConcurrentRuns) {
     await deferRun(run.id, DEFERRED_RETRY_SECONDS);
     return;
   }
   // The issue's timeline entries are written here, where the agent's work actually
   // starts and ends. A failure that will be retried is not the end of the run, so only
   // the last attempt logs one.
-  await recordAgentRunStarted(run);
   try {
+    await agentRunStarted(run);
     const result = await runAgent(run.agentId, run.projectId, framePrompt(run), {
       callerUserId: run.agentUserId,
       threadId: runThreadId(run),
@@ -57,11 +56,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (run.attempts < agentRunConfig.maxAttempts()) {
-      await scheduleRunRetry(
-        run.id,
-        equalJitterBackoffMs(run.attempts, RETRY_BASE_MS, RETRY_CAP_MS),
-        message,
-      );
+      await scheduleRunRetry(run.id, runRetryDelayMs(run.attempts), message);
       return;
     }
     await recordAgentRunFinished(run, 'failed');
@@ -69,7 +64,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
   }
 }
 
-// The wall time a run gets: the team's ceiling where it has one, and a cap of its own
+// The wall time a run gets: the workspace's ceiling where it has one, and a cap of its own
 // either way. Without it a run that never returns holds its slot until the claim lease
 // expires and is then started again, having recorded nothing.
 function runTimeoutMs(maxRunSeconds: number): number {

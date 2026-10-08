@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "Umum",
-      "description": "Pengaturan bawaan untuk proyek baru."
+      "description": "Workspace pribadi dan pengaturan bawaan untuk proyek baru."
     },
     "authentication": {
       "label": "Autentikasi",

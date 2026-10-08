@@ -1,13 +1,12 @@
 import { documentCollaborationRoutes } from './collaboration-routes';
 import { Elysia, t } from 'elysia';
 import { authContext } from '#shared/auth-context';
-import { assertPermission, requireUser } from '#shared/access';
+import { assertPermission, getProjectAccess, requireUser } from '#shared/access';
 import { guards } from '#shared/guards';
 import { noContent } from '#shared/http';
 import { HttpError } from '#shared/lib';
 import { mcpTool } from '#mcp/generate';
 import { commonErrors, errors } from '#shared/responses';
-import { getMembership } from '#modules/members/service';
 import { rawAttachmentQuery } from '#modules/attachments/model';
 import {
   assertAttachmentUploadAllowed,
@@ -102,7 +101,7 @@ function documentAssetDto(
 }
 
 async function isProjectOwner(projectId: number, userId: string): Promise<boolean> {
-  return (await getMembership(projectId, userId)) === 'owner';
+  return (await getProjectAccess(projectId, userId))?.role === 'owner';
 }
 
 export const documentRoutes = new Elysia({

@@ -46,8 +46,10 @@ jobs:
         run: bun run typecheck
 
       # High and critical advisories fail the job; moderate and lower only print.
+      # GHSA-vfj7-8cjw-p6xm (braces) has no patched release and reaches us only through
+      # the Next.js ESLint plugin, which globs the repository's own files.
       - name: Audit dependencies
-        run: bun audit --audit-level=high
+        run: bun audit --audit-level=high --ignore=GHSA-vfj7-8cjw-p6xm
 
       - name: Script tests
         run: bun test scripts/

@@ -1,4 +1,5 @@
 {
+  "archived": "Diarsipkan",
   "create": {
     "title": "Tim baru",
     "namePlaceholder": "Nama tim",
@@ -9,6 +10,8 @@
     "submit": "Buat tim"
   },
   "sections": {
+    "collapse": "Ciutkan bagian",
+    "expand": "Luaskan bagian",
     "info": {
       "title": "Info",
       "description": "Tim dan posisi Anda di dalamnya."
@@ -61,7 +64,15 @@
     "leads": "Pemilik dan manajer",
     "leadsHint": "Orang yang dapat mengelola tim ini beserta proyeknya.",
     "saved": "Tim disimpan",
-    "leaveHint": "Anda tetap menjadi anggota proyek yang Anda ikuti. Untuk bergabung kembali, pemilik harus menambahkan Anda lagi."
+    "leaveHint": "Anda tetap menjadi anggota proyek yang Anda ikuti. Untuk bergabung kembali, pemilik harus menambahkan Anda lagi.",
+    "delete": {
+      "action": "Hapus tim",
+      "hint": "Anggota, peran, undangan, keterampilan, alat, dan integrasinya ikut dihapus. Orang-orang tetap memiliki akun dan tim lain mereka.",
+      "blocked": "Hapus dulu proyek dan agen AI milik tim.",
+      "title": "Hapus {name}?",
+      "description": "<strong>{name}</strong> dihapus beserta anggota, peran, undangan, keterampilan, alat, dan integrasinya. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
+      "deleted": "Tim dihapus"
+    }
   },
   "columns": {
     "project": "Proyek",
@@ -538,5 +549,110 @@
     "projectsHint": "Proyek baru dimulai dengan pengaturan bawaan instance.",
     "noProjects": "Tim ini belum memiliki proyek.",
     "projectToggleAria": "Aktifkan atau nonaktifkan akses MCP untuk {project}"
+  },
+  "workspace": {
+    "rail": "Workspace",
+    "create": "Workspace baru",
+    "createUnavailableTitle": "Lebih banyak workspace",
+    "createUnavailableHint": "Lebih banyak workspace per orang tersedia di Cloud dan Pro self-hosted.",
+    "general": "Umum",
+    "roles": {
+      "owner": "Pemilik",
+      "admin": "Admin"
+    },
+    "titles": {
+      "owner": "Pemilik workspace",
+      "admin": "Admin workspace"
+    },
+    "info": {
+      "title": "Workspace",
+      "description": "Workspace yang memiliki tim Anda.",
+      "workspace": "Workspace",
+      "workspaceHint": "Nama yang dilihat semua orang.",
+      "role": "Peran Anda",
+      "saved": "Workspace disimpan",
+      "color": "Warna",
+      "colorReset": "Gunakan bawaan"
+    },
+    "teamCreation": {
+      "title": "Siapa yang membuat tim",
+      "description": "Pembuat tim menjadi pemiliknya.",
+      "ownerOnly": "Hanya pemilik yang menentukan siapa yang membuat tim.",
+      "owner": "Hanya pemilik",
+      "managers": "Pemilik dan admin",
+      "members": "Semua orang di timnya"
+    },
+    "managers": {
+      "title": "Pengelola",
+      "description": "Pemilik dan admin mengelola workspace.",
+      "ownerOnly": "Pemilik dan admin mengelola workspace. Hanya pemilik yang menambah atau menghapus admin.",
+      "person": "Orang",
+      "role": "Peran",
+      "addAction": "Tambah admin",
+      "addTitle": "Tambah admin",
+      "addDescription": "Pilih seseorang dari tim di workspace.",
+      "search": "Cari berdasarkan nama atau email",
+      "noCandidates": "Tidak ada yang bisa ditambahkan",
+      "added": "{name} sekarang admin",
+      "removeAction": "Hapus admin",
+      "removeTitle": "Hapus {name} sebagai admin?",
+      "removeDescription": "Mereka tetap di tim, tetapi tidak bisa mengelola workspace.",
+      "removed": "{name} bukan admin lagi"
+    },
+    "scim": {
+      "title": "SCIM",
+      "description": "Izinkan penyedia identitas menambahkan orang ke workspace ini, mengeluarkan mereka, dan memberikan akses proyek melalui grupnya.",
+      "saved": "Pengaturan SCIM disimpan",
+      "provisioning": "Provisioning",
+      "provisioningConfigured": "Penyedia identitas Anda menambahkan orang ke workspace ini dan mengeluarkan mereka.",
+      "provisioningInstance": "Penyedia identitas Anda membuat, memperbarui, dan menonaktifkan akun pada instance ini.",
+      "provisioningMissing": "Buat token terlebih dahulu.",
+      "token": "Token",
+      "noToken": "Belum ada token yang dibuat",
+      "tokenHint": "Token pembawa (bearer) yang dikirimkan penyedia identitas Anda. Token hanya ditampilkan sekali; membuat token baru akan menghentikan fungsi token lama.",
+      "generateToken": "Buat token",
+      "replaceToken": "Ganti token",
+      "baseUrl": "Endpoint SCIM",
+      "baseUrlHint": "Arahkan penyedia identitas Anda ke alamat ini.",
+      "copyBaseUrl": "Salin titik akhir SCIM",
+      "groups": "Grup",
+      "groupsHint": "Grup yang telah didorong oleh penyedia identitas Anda. Daftar ini milik mereka; apa yang diberikan setiap grup diatur di sini.",
+      "groupsEmpty": "Belum ada grup yang didorong.",
+      "memberCount": "{count, plural, =0 {Tidak ada anggota} one {# anggota} other {# anggota}}",
+      "grantsNothing": "belum memberikan izin apa pun",
+      "editMappings": "Ubah akses",
+      "roleOwner": "Pemilik",
+      "roleMember": "Anggota",
+      "tokenDialog": {
+        "title": "Buat token SCIM",
+        "description": "Token ditampilkan sekali dan tidak dapat dibaca kembali. Token apa pun yang sedang digunakan akan berhenti berfungsi.",
+        "submit": "Buat",
+        "submitPending": "Membuat…",
+        "createdTitle": "Token SCIM Anda",
+        "createdDescription": "Salin ke penyedia identitas Anda sekarang. Token tidak dapat ditampilkan lagi.",
+        "copy": "Salin token"
+      },
+      "mappings": {
+        "title": "Apa yang diberikan {group}",
+        "description": "Anggota grup ini bergabung dengan proyek yang tercantum di sini. Menghapus proyek akan mencabut keanggotaan yang diberikan grup ini.",
+        "empty": "Grup ini belum memberikan akses apa pun.",
+        "addProject": "Tambah proyek…",
+        "role": "Peran",
+        "roleOwner": "Pemilik",
+        "roleMember": "Anggota",
+        "projectRole": "Peran proyek",
+        "defaultRole": "Peran bawaan",
+        "remove": "Hapus proyek",
+        "saved": "Akses grup disimpan"
+      }
+    },
+    "delete": {
+      "action": "Hapus workspace",
+      "hint": "Timnya ikut dihapus. Orang-orang tetap memiliki akun dan tim lain mereka.",
+      "blocked": "Hapus dulu proyek dan agen AI di timnya.",
+      "title": "Hapus {name}?",
+      "description": "<strong>{name}</strong> dan timnya akan dihapus. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
+      "deleted": "Workspace dihapus"
+    }
   }
 }

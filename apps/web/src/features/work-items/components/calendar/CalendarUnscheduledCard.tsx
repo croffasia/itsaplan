@@ -18,9 +18,8 @@ export function CalendarUnscheduledCard({
   color: string;
   onOpen: (id: number) => void;
 }) {
-  // Drag is disabled on phones so a touch scrolls instead of picking up the issue
-  // (see the `sm:touch-none` below), and without work_items edit (scheduling a
-  // issue by dropping it on a day is an issue edit).
+  // Drag is disabled on phones, and without work_items edit (scheduling an issue
+  // by dropping it on a day is an issue edit).
   const { can } = usePermissions();
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: issue.id,
@@ -37,7 +36,7 @@ export function CalendarUnscheduledCard({
           onOpen(issue.id);
         }}
         className={cn(
-          'kanban-card flex cursor-pointer items-center gap-2 rounded-md p-2 text-xs sm:touch-none',
+          'kanban-card flex cursor-pointer items-center gap-2 rounded-md p-2 text-xs',
           isDragging && 'opacity-40',
         )}
       >

@@ -7,7 +7,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { useDndSensors } from '@/lib/dnd';
 import { CHECKLIST_TITLE_MAX, checklistProgress, reorderIds } from '../../utils/checklists';
-import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import { useCreateChecklist, useReorderChecklists } from '../../services/checklists.service';
 import IssueChecklistAddInput from './IssueChecklistAddInput';
 import IssueChecklistCard from './IssueChecklistCard';

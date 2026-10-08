@@ -198,7 +198,8 @@
       "delegation": "因以下工作项的委派而运行：",
       "field": "因以下工作项的字段而运行：",
       "manual": "手动运行",
-      "schedule": "按定时任务运行"
+      "schedule": "按定时任务运行",
+      "status": "因以下工作项的状态变更而运行："
     }
   },
   "agentHealth": {

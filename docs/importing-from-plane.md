@@ -30,7 +30,11 @@ of them affect data you may not notice is missing until later.
 ## What is imported
 
 - **Issues** — title, description (converted from Plane's rich text to Markdown), state,
-  labels, cycle, priority, start date, due date, and the parent issue if it is a sub-issue.
+  labels, cycle, priority, start date, due date, the parent issue if it is a sub-issue, and
+  the dates the issue was created and last updated in Plane. If the project automatically
+  archives issues in completed or canceled columns, an imported issue in a completed or
+  canceled column whose last update in Plane is older than that threshold is archived on
+  the next sweep.
 - **Assignees and comment authors** — matched to an existing project member by email. It is
   never assigned to the wrong person, and no placeholder account is created; what happens
   when no member has that email is a choice you make in the mapping review step below.
@@ -45,7 +49,8 @@ of them affect data you may not notice is missing until later.
 - **Attachment files**, downloaded and attached to the same issue they were on in Plane.
   A file is skipped, not imported, when it is larger than this instance's own upload
   limit or of a file type this instance doesn't accept — the same limits an ordinary
-  attachment upload on this instance is held to. A skipped file is only noted in the
+  attachment upload on this instance is held to — or when Plane's file storage answers
+  the download with an error instead of the file. A skipped file is only noted in the
   server log, not shown anywhere in this screen today. Re-running an import reuses a
   file already attached with the same name on the same issue, rather than attaching it
   a second time.
@@ -83,8 +88,8 @@ attributed author.
 ## Rate limits are real, and the import waits them out
 
 Plane limits how many requests it will answer per minute. A project of any real size will
-run into that limit, and the job pauses to wait it out — you will see "Plane's rate limit
-was reached, retrying in Ns" in the job list when this happens. This is normal, not a
+run into that limit, and the job pauses to wait it out — you will see "The source's rate
+limit was reached. Retrying in Ns." in the job list when this happens. This is normal, not a
 failure; the import resumes on its own once the wait is over. A large project can take a
 long time to finish for this reason alone.
 
@@ -104,7 +109,10 @@ categorizes it differently.
 This is a name/content match, not a record of which import created what, so it also means
 an issue you created by hand before importing — one that happens to share an exact title
 with something in Plane — is treated as the same issue and gets Plane's labels, comments,
-and other fields attached to it rather than getting a second copy.
+and other fields attached to it rather than getting a second copy. Within one import, two
+different Plane issues with the same title stay two issues, and two comments with the same
+text and time stay two comments: what an import has already matched is never matched again
+by that same import.
 
 ## Exporting your project's data
 
@@ -114,7 +122,7 @@ snapshot, readable on its own, using this project's own identifiers rather than 
 ids. This is a download, not a live sync: it does not write anywhere, including back into
 Plane, and nothing is scheduled or kept running.
 
-## Only Plane, only import
+## Other sources
 
-Plane is the only supported source to import from today — Linear and Jira are not
-available.
+[Importing from Linear](importing-from-linear.md) describes the Linear source. Jira and Trello
+are not available.

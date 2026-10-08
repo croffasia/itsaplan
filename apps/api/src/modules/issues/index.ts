@@ -3,7 +3,15 @@ import { mcpTool } from '#mcp/generate';
 import { noContent } from '#shared/http';
 import { guards, entityGuard, assertMcpAllowed, requiresPermission } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
-import { assertPermission, assertProjectOwner, requireUser } from '#shared/access';
+import type { PermissionAction } from '#shared/permissions';
+import {
+  assertPermission,
+  assertProjectOwner,
+  assertProjectWritable,
+  assertWritable,
+  requireUser,
+} from '#shared/access';
+import { getProjectById } from '#modules/projects/service';
 import { HttpError } from '#shared/lib';
 import { accessErrors, commonErrors, errors } from '#shared/responses';
 import { deleteObject } from '@repo/storage';
@@ -66,6 +74,7 @@ import {
   updateWorklog,
 } from './worklogs';
 import { listIssueCycles } from './cycle-history';
+import { moveIssue } from './move';
 import {
   createAndLinkPullRequest,
   linkExistingPullRequest,
@@ -144,6 +153,7 @@ import {
   updateCommentBody,
   commentParams,
   archiveIssueBody,
+  moveIssueBody,
   BulkUpdatedResponse,
   BulkArchivedResponse,
   BulkDeletedResponse,
@@ -198,6 +208,14 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     workItem: entityGuard('work_items', 'Issue not found', (p) =>
       getIssueProjectId(Number(p.issueId)),
     ),
+    linkedWorkItem(action: PermissionAction) {
+      const guard = entityGuard('work_items', 'Link not found', async (p) => {
+        const issueId = await getOtherLinkedIssueId(Number(p.issueId), Number(p.linkId));
+        return issueId == null ? null : getIssueProjectId(issueId);
+      })(action);
+      // workItem already declares the permission; both guards enforce it.
+      return { resolve: guard.resolve };
+    },
     linkTarget(_enabled: boolean) {
       return {
         async resolve({ body, user, request }) {
@@ -206,6 +224,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           if (targetProjectId == null) throw new HttpError(404, 'Linked issue not found');
           await assertPermission(targetProjectId, user, 'work_items', 'edit');
           await assertMcpAllowed(targetProjectId, request.headers);
+          await assertProjectWritable(targetProjectId, request.method);
           return {};
         },
       };
@@ -259,7 +278,22 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           if (entry.userId !== requireUser(user).id)
             await assertProjectOwner(entry.projectId, user);
           await assertMcpAllowed(entry.projectId, request.headers);
+          await assertProjectWritable(entry.projectId, request.method);
           return { projectId: entry.projectId };
+        },
+      };
+    },
+    // The project an issue moves to: the caller must be allowed to create issues there,
+    // on top of the delete the issue's own project asks for through workItem.
+    moveTarget(_enabled: boolean) {
+      return {
+        async resolve({ body, user, request }) {
+          const target = await getProjectById((body as { projectId: number }).projectId);
+          if (!target) throw new HttpError(404, 'Project not found');
+          await assertPermission(target.id, user, 'work_items', 'create');
+          await assertMcpAllowed(target.id, request.headers);
+          assertWritable(target, request.method);
+          return { target };
         },
       };
     },
@@ -275,6 +309,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           if (entry.actorUserId !== requireUser(user).id)
             await assertProjectOwner(entry.projectId, user);
           await assertMcpAllowed(entry.projectId, request.headers);
+          await assertProjectWritable(entry.projectId, request.method);
           return { projectId: entry.projectId };
         },
       };
@@ -504,9 +539,15 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     async ({ project, params, user, request }) => {
       const issue = await getIssueBySequence(project.id, params.sequenceNumber);
       if (!issue) throw new HttpError(404, 'Issue not found');
+      // An old number of a moved issue resolves to it in the project it is in now,
+      // which the caller must be able to read as well.
+      if (issue.projectId !== project.id) {
+        await assertPermission(issue.projectId, user, 'work_items', 'read');
+        await assertMcpAllowed(issue.projectId, request.headers);
+      }
       const fields = await getIssueFieldValues(issue.id);
       const links = await listIssueLinks(issue.id, issue.projectId, user, request.headers);
-      const watchers = await listIssueWatchers(project.id, issue.id);
+      const watchers = await listIssueWatchers(issue.projectId, issue.id);
       const parent = await getParentRef(issue.parentId);
       const subtasks = await listSubtasks(issue.id);
       const checklists = await listChecklists(issue.id);
@@ -586,6 +627,30 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
           'Update an issue by its numeric id. Moving it into a column that is at a ' +
           'hard WIP limit fails with 409 (code wip_limit_exceeded).',
         ...mcpTool('update_issue'),
+      },
+    },
+  )
+
+  // Moves the issue, with its subtasks, to another project of the same team. It takes
+  // the next number there; the old identifier keeps resolving to it.
+  .post(
+    '/issues/:issueId/move',
+    async ({ params, body, target, user }) =>
+      moveIssue(params.issueId, target, body.columnId, requireUser(user).id),
+    {
+      params: issueParams,
+      body: moveIssueBody,
+      workItem: 'delete',
+      moveTarget: true,
+      response: { 200: IssueResponse, ...commonErrors, ...errors(409) },
+      detail: {
+        summary: 'Move an issue to another project',
+        description:
+          'Move an issue, with its subtasks, to another project of the same team. Each ' +
+          'moved issue gets a new number in the target project and its old identifier ' +
+          'still resolves. Column, type, labels and custom fields are matched by name; ' +
+          'cycle, initiative and links to issues left behind are dropped.',
+        ...mcpTool('move_issue'),
       },
     },
   )
@@ -892,13 +957,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
   // between two other issues cannot be removed through it.
   .delete(
     '/issues/:issueId/links/:linkId',
-    async ({ params, user, request }) => {
-      const otherIssueId = await getOtherLinkedIssueId(params.issueId, params.linkId);
-      if (otherIssueId == null) throw new HttpError(404, 'Link not found');
-      const otherProjectId = await getIssueProjectId(otherIssueId);
-      if (otherProjectId == null) throw new HttpError(404, 'Linked issue not found');
-      await assertPermission(otherProjectId, user, 'work_items', 'edit');
-      await assertMcpAllowed(otherProjectId, request.headers);
+    async ({ params, user }) => {
       const removed = await removeIssueLink(params.issueId, params.linkId, requireUser(user).id);
       if (!removed) throw new HttpError(404, 'Link not found');
       return noContent();
@@ -906,6 +965,7 @@ export const issueRoutes = new Elysia({ name: 'issues', detail: { tags: ['Issues
     {
       params: issueLinkParams,
       workItem: 'edit',
+      linkedWorkItem: 'edit',
       response: { 204: t.Void(), ...commonErrors },
       detail: {
         summary: 'Unlink two issues',

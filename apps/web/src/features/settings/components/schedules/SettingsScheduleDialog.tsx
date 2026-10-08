@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Terminal } from 'lucide-react';
 import type { AiAgent } from '@/lib/api/endpoints/agents';
-import type { AgentSchedule, AgentScheduleInput } from '@/lib/api/endpoints/agentSchedules';
-import { AgentRunnerStatus } from '@/components/common/agent-chat/AgentRunnerStatus';
+import type { Column } from '@/lib/api/endpoints/columns';
+import type {
+  AgentSchedule,
+  AgentScheduleInput,
+  AgentScheduleType,
+} from '@/lib/api/endpoints/agentSchedules';
 import Modal from '@/components/common/overlay/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -14,14 +16,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
+import { delaySecFromMinutes } from '@/utils/runDelay';
 import { parseScheduleInput } from '../../utils/cronSchedule';
+import { SettingsScheduleField } from './SettingsScheduleField';
 import { SettingsScheduleInput } from './SettingsScheduleInput';
+import { SettingsScheduleRunnerHint } from './SettingsScheduleRunnerHint';
+import { SettingsScheduleStatusFields } from './SettingsScheduleStatusFields';
+import { SettingsScheduleTaskField } from './SettingsScheduleTaskField';
+import { SettingsScheduleTypeField } from './SettingsScheduleTypeField';
 import { useTranslations } from 'next-intl';
 
 export function SettingsScheduleDialog({
   projectKey,
   agents,
+  columns,
   initial,
   saving,
   onSave,
@@ -29,6 +37,7 @@ export function SettingsScheduleDialog({
 }: {
   projectKey: string;
   agents: AiAgent[];
+  columns: Column[];
   initial?: AgentSchedule;
   saving: boolean;
   onSave: (value: AgentScheduleInput) => Promise<void>;
@@ -39,28 +48,41 @@ export function SettingsScheduleDialog({
   const tAgents = useTranslations('teams.agents');
   const [agentId, setAgentId] = useState(String(initial?.agentId ?? agents[0]?.id ?? ''));
   const [name, setName] = useState(initial?.name ?? '');
+  const [type, setType] = useState<AgentScheduleType>(initial?.type ?? 'cron');
   const [prompt, setPrompt] = useState(initial?.prompt ?? '');
   const [scheduleInput, setScheduleInput] = useState(initial?.cron ?? 'Every day at 9:00 AM');
+  const [columnId, setColumnId] = useState(String(initial?.columnId ?? columns[0]?.id ?? ''));
+  const [delayMin, setDelayMin] = useState(String(Math.round((initial?.delaySec ?? 0) / 60)));
   const selectedAgent = agents.find((a) => String(a.id) === agentId) ?? null;
+  const isStatus = type === 'status';
   const parsedSchedule = parseScheduleInput(scheduleInput);
   const isValid =
     Number(agentId) > 0 &&
     name.trim().length > 0 &&
     name.trim().length <= 120 &&
-    prompt.trim().length > 0 &&
     prompt.trim().length <= 20_000 &&
-    scheduleInput.length <= 120 &&
-    parsedSchedule.ok;
+    (isStatus
+      ? Number(columnId) > 0
+      : prompt.trim().length > 0 && scheduleInput.length <= 120 && parsedSchedule.ok);
 
   async function submit() {
-    if (!isValid || !parsedSchedule.ok) return;
-    await onSave({
+    if (!isValid) return;
+    const value: AgentScheduleInput = {
       agentId: Number(agentId),
       name: name.trim(),
       prompt: prompt.trim(),
-      cron: parsedSchedule.cron,
       status: initial?.status ?? 'active',
-    });
+      ...(initial ? {} : { type }),
+    };
+    if (isStatus) {
+      await onSave({
+        ...value,
+        columnId: Number(columnId),
+        delaySec: delaySecFromMinutes(delayMin),
+      });
+    } else if (parsedSchedule.ok) {
+      await onSave({ ...value, cron: parsedSchedule.cron });
+    }
   }
 
   const actionLabel = initial ? t('save') : t('create');
@@ -82,7 +104,7 @@ export function SettingsScheduleDialog({
         }}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field htmlFor="schedule-name" label={tCommon('name')}>
+          <SettingsScheduleField htmlFor="schedule-name" label={tCommon('name')}>
             <Input
               id="schedule-name"
               autoFocus
@@ -92,8 +114,8 @@ export function SettingsScheduleDialog({
               onChange={(event) => setName(event.target.value)}
               placeholder={t('namePlaceholder')}
             />
-          </Field>
-          <Field htmlFor="schedule-agent" label={t('agent')}>
+          </SettingsScheduleField>
+          <SettingsScheduleField htmlFor="schedule-agent" label={t('agent')}>
             <Select value={agentId} onValueChange={setAgentId}>
               <SelectTrigger id="schedule-agent" className="w-full" aria-required="true">
                 <SelectValue placeholder={t('selectAgent')} />
@@ -109,40 +131,33 @@ export function SettingsScheduleDialog({
                 ))}
               </SelectContent>
             </Select>
-          </Field>
+          </SettingsScheduleField>
         </div>
 
-        {selectedAgent?.kind === 'external' && (
-          <div className="flex items-start gap-2.5 rounded-md border border-border/60 bg-muted/30 px-3 py-2.5">
-            <Terminal className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-            <div className="min-w-0 flex-1 space-y-1">
-              <p className="text-xs text-muted-foreground">{t('externalAgentHint')}</p>
-              <AgentRunnerStatus agent={selectedAgent} />
-            </div>
-          </div>
-        )}
+        {selectedAgent?.kind === 'external' && <SettingsScheduleRunnerHint agent={selectedAgent} />}
 
-        <Field htmlFor="schedule-task" label={t('task')}>
-          <Textarea
-            id="schedule-task"
-            required
-            maxLength={20_000}
-            value={prompt}
-            onChange={(event) => setPrompt(event.target.value)}
-            placeholder={t('taskPlaceholder')}
-            className="min-h-32 resize-y"
-          />
-          <p className="text-xs text-muted-foreground">{t('taskHint')}</p>
-        </Field>
+        {!initial && <SettingsScheduleTypeField value={type} onChange={setType} />}
+
+        <SettingsScheduleTaskField optional={isStatus} value={prompt} onChange={setPrompt} />
 
         <div className="border-t border-border/50 pt-4">
-          <Field htmlFor="schedule-input" label={t('scheduleUtc')}>
-            <SettingsScheduleInput
-              id="schedule-input"
-              value={scheduleInput}
-              onChange={setScheduleInput}
+          {isStatus ? (
+            <SettingsScheduleStatusFields
+              columns={columns}
+              columnId={columnId}
+              onColumnChange={setColumnId}
+              delayMin={delayMin}
+              onDelayChange={setDelayMin}
             />
-          </Field>
+          ) : (
+            <SettingsScheduleField htmlFor="schedule-input" label={t('scheduleUtc')}>
+              <SettingsScheduleInput
+                id="schedule-input"
+                value={scheduleInput}
+                onChange={setScheduleInput}
+              />
+            </SettingsScheduleField>
+          )}
         </div>
 
         <div className="flex justify-end gap-2 border-t border-border/50 pt-4">
@@ -155,22 +170,5 @@ export function SettingsScheduleDialog({
         </div>
       </form>
     </Modal>
-  );
-}
-
-function Field({
-  htmlFor,
-  label,
-  children,
-}: {
-  htmlFor: string;
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <Label htmlFor={htmlFor}>{label}</Label>
-      {children}
-    </div>
   );
 }

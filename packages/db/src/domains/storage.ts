@@ -10,6 +10,7 @@ import {
   issueAttachment,
   project,
   projectDocument,
+  team,
 } from '../schema';
 
 // Instance-wide upload limits (app_setting key 'storage'). Read by the api (every
@@ -153,32 +154,39 @@ export async function projectTeamId(
   return owner?.teamId ?? null;
 }
 
-// The same total as projectStoredBytes, summed across every project of one team —
-// what a team-wide storage ceiling is checked against.
-export async function teamStoredBytes(teamId: number, executor: DbExecutor = db): Promise<number> {
+// The same total as projectStoredBytes, summed across every project of one workspace —
+// what a workspace-wide storage ceiling is checked against.
+export async function workspaceStoredBytes(
+  workspaceId: number,
+  executor: DbExecutor = db,
+): Promise<number> {
   const issues = await executor
     .select({ total: sql<string>`coalesce(sum(${issueAttachment.sizeBytes}), 0)` })
     .from(issueAttachment)
     .innerJoin(issue, eq(issue.id, issueAttachment.issueId))
     .innerJoin(project, eq(project.id, issue.projectId))
-    .where(eq(project.teamId, teamId));
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(eq(team.workspaceId, workspaceId));
   const chats = await executor
     .select({ total: sql<string>`coalesce(sum(${chatAttachment.sizeBytes}), 0)` })
     .from(chatAttachment)
     .innerJoin(project, eq(project.id, chatAttachment.projectId))
-    .where(eq(project.teamId, teamId));
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(eq(team.workspaceId, workspaceId));
   const documents = await executor
     .select({ total: sql<string>`coalesce(sum(${documentAsset.sizeBytes}), 0)` })
     .from(documentAsset)
     .innerJoin(projectDocument, eq(projectDocument.id, documentAsset.documentId))
     .innerJoin(project, eq(project.id, projectDocument.projectId))
-    .where(eq(project.teamId, teamId));
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(eq(team.workspaceId, workspaceId));
   const initiatives = await executor
     .select({ total: sql<string>`coalesce(sum(${initiativeAttachment.sizeBytes}), 0)` })
     .from(initiativeAttachment)
     .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
     .innerJoin(project, eq(project.id, initiative.projectId))
-    .where(eq(project.teamId, teamId));
+    .innerJoin(team, eq(team.id, project.teamId))
+    .where(eq(team.workspaceId, workspaceId));
   return (
     num(issues[0]?.total) +
     num(chats[0]?.total) +

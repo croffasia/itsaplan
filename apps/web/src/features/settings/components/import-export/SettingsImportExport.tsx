@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
-import type { PlaneConnectionInput, PlaneProjectOption } from '@/lib/api/endpoints/importExport';
+import type {
+  ImportSource,
+  PlaneConnectionInput,
+  PlaneProjectOption,
+} from '@/lib/api/endpoints/importExport';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import SettingsCard from '@/components/common/page/SettingsCard';
@@ -11,15 +15,16 @@ import SettingsImportExportProjectPicker from './SettingsImportExportProjectPick
 import SettingsImportExportMappingReview from './SettingsImportExportMappingReview';
 import SettingsImportExportJobList from './SettingsImportExportJobList';
 import SettingsImportExportDownloadButton from './SettingsImportExportDownloadButton';
+import SettingsImportExportLinear from './SettingsImportExportLinear';
 
 export interface PlaneConnection extends PlaneConnectionInput {
   projects: PlaneProjectOption[];
 }
 
-// Plane is the only source that imports today; the rest are listed disabled.
+// Plane and Linear import today; the rest are listed disabled.
 const SOURCES = [
   { key: 'plane', label: 'Plane', available: true },
-  { key: 'linear', label: 'Linear', available: false },
+  { key: 'linear', label: 'Linear', available: true },
   { key: 'jira', label: 'Jira', available: false },
   { key: 'trello', label: 'Trello', available: false },
 ] as const;
@@ -35,6 +40,7 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
   const { can } = usePermissions();
   const canCreate = can('import_export', 'create');
   const canEdit = can('import_export', 'edit');
+  const [source, setSource] = useState<ImportSource>('plane');
   const [connection, setConnection] = useState<PlaneConnection | null>(null);
   const [selected, setSelected] = useState<PlaneProjectOption | null>(null);
 
@@ -53,12 +59,12 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
         {canCreate && (
           <>
             <SettingsSection title={t('source')} description={t('sourceHint')}>
-              <Tabs value="plane">
+              <Tabs value={source} onValueChange={(value) => setSource(value as ImportSource)}>
                 <TabsList variant="line">
-                  {SOURCES.map((source) => (
-                    <TabsTrigger key={source.key} value={source.key} disabled={!source.available}>
-                      {source.label}
-                      {!source.available && (
+                  {SOURCES.map((option) => (
+                    <TabsTrigger key={option.key} value={option.key} disabled={!option.available}>
+                      {option.label}
+                      {!option.available && (
                         <span className="text-[10px] font-normal tracking-wide uppercase">
                           {t('comingSoon')}
                         </span>
@@ -68,31 +74,35 @@ export default function SettingsImportExport({ project }: { project: ProjectDeta
                 </TabsList>
               </Tabs>
             </SettingsSection>
-            <SettingsSection title={t('connect')} description={t('connectHint')}>
-              <SettingsCard className="p-4">
-                <SettingsImportExportConnectForm projectKey={projectKey} onTested={onTested} />
-              </SettingsCard>
-            </SettingsSection>
-            {connection && (
-              <SettingsSection title={t('sourceProject')} description={t('sourceProjectHint')}>
-                <SettingsCard className="space-y-6 p-4">
-                  <SettingsImportExportProjectPicker
-                    key={connection.baseUrl + connection.workspaceSlug}
-                    connection={connection}
-                    selected={selected}
-                    onSelect={setSelected}
-                  />
-                  {selected && (
-                    <SettingsImportExportMappingReview
-                      projectKey={projectKey}
-                      connection={connection}
-                      selected={selected}
-                      onImported={() => setSelected(null)}
-                    />
-                  )}
-                </SettingsCard>
-              </SettingsSection>
+            {source === 'plane' && (
+              <>
+                <SettingsSection title={t('connect')} description={t('connectHint')}>
+                  <SettingsCard className="p-4">
+                    <SettingsImportExportConnectForm projectKey={projectKey} onTested={onTested} />
+                  </SettingsCard>
+                </SettingsSection>
+                {connection && (
+                  <SettingsSection title={t('sourceProject')} description={t('sourceProjectHint')}>
+                    <SettingsCard className="space-y-6 p-4">
+                      <SettingsImportExportProjectPicker
+                        key={connection.baseUrl + connection.workspaceSlug}
+                        connection={connection}
+                        selected={selected}
+                        onSelect={setSelected}
+                      />
+                      {selected && (
+                        <SettingsImportExportMappingReview
+                          projectKey={projectKey}
+                          target={{ source: 'plane', connection, project: selected }}
+                          onImported={() => setSelected(null)}
+                        />
+                      )}
+                    </SettingsCard>
+                  </SettingsSection>
+                )}
+              </>
             )}
+            {source === 'linear' && <SettingsImportExportLinear projectKey={projectKey} />}
           </>
         )}
         <SettingsSection title={t('jobs')} description={t('jobsHint')}>

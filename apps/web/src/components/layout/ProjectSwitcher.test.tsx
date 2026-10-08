@@ -6,9 +6,11 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { NextIntlClientProvider } from 'next-intl';
 import { JSDOM } from 'jsdom';
 import type { Project } from '@/lib/api/endpoints/projects';
+import type { Team } from '@/lib/api/endpoints/teams';
 import { qk } from '@/services/queryKeys';
 import nav from '../../../messages/en/nav.json';
 import common from '../../../messages/en/common.json';
+import teams from '../../../messages/en/teams.json';
 
 const replacedGlobals = [
   'window',
@@ -59,8 +61,33 @@ const projects: Project[] = Array.from({ length: 20 }, (_, index) => ({
   pointsEstimateEnabled: false,
   timeEstimateEnabled: false,
   timeLoggingEnabled: false,
+  archivedAt: null,
   createdAt: '2026-01-01T00:00:00Z',
 }));
+
+function team(id: number, workspaceId: number): Team {
+  return {
+    id,
+    workspaceId,
+    name: `Team ${id}`,
+    slug: null,
+    ref: String(id),
+    mcpEnabled: true,
+    role: 'owner',
+    via: 'member',
+    source: 'invite',
+    joinedAt: '2026-01-01T00:00:00Z',
+    projectCount: 0,
+    memberCount: 1,
+    ownerCount: 1,
+    roleCount: 0,
+    integrationCount: 0,
+    agentCount: 0,
+    skillCount: 0,
+    toolCount: 0,
+    createdAt: '2026-01-01T00:00:00Z',
+  };
+}
 
 let dom: JSDOM;
 let root: Root;
@@ -85,7 +112,7 @@ async function key(target: HTMLElement, value: string) {
   });
 }
 
-async function render(mobile = true) {
+async function render(mobile = true, items = projects) {
   Object.defineProperty(window, 'innerWidth', { configurable: true, value: mobile ? 390 : 1280 });
   const { Sidebar, SidebarProvider, SidebarTrigger } = await import('@/components/ui/sidebar');
   const { default: ProjectSwitcher } = await import('./ProjectSwitcher');
@@ -93,13 +120,13 @@ async function render(mobile = true) {
   await act(async () =>
     root.render(
       <QueryClientProvider client={client}>
-        <NextIntlClientProvider locale="en" messages={{ nav, common }} timeZone="UTC">
+        <NextIntlClientProvider locale="en" messages={{ nav, common, teams }} timeZone="UTC">
           <RelativeTimeProvider>
             <SidebarProvider>
               <SidebarTrigger />
               <Sidebar>
                 <ProjectSwitcher
-                  projects={projects}
+                  projects={items}
                   currentProjectKey="eng.P01"
                   onSelectProject={(key) => selections.push(key)}
                 />
@@ -190,6 +217,7 @@ beforeEach(async () => {
   selections = [];
   client = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime: Infinity } } });
   client.setQueryData(qk.teams, []);
+  client.setQueryData(qk.workspaces, []);
   const { createRoot } = await import('react-dom/client');
   root = createRoot(element('#root'));
 });
@@ -267,10 +295,34 @@ describe('ProjectSwitcher', () => {
     assert.deepEqual(selections, []);
   });
 
+  it('lists the teams and projects of the workspace picked on the rail', async () => {
+    client.setQueryData(qk.teams, [team(1, 1), team(2, 2)]);
+    client.setQueryData(qk.workspaces, [
+      { id: 1, name: 'Alpha', role: 'owner' },
+      { id: 2, name: 'Beta', role: null },
+    ]);
+    const other = {
+      ...projects[0]!,
+      id: 21,
+      teamId: 2,
+      key: 'B01',
+      ref: '2.B01',
+      isFavorite: true,
+    };
+    await render(false, [...projects, other]);
+    assert.ok(document.querySelector('[data-value="project-1"]'));
+    assert.equal(document.querySelector('[data-value="project-21"]'), null);
+    await click('[aria-label="Beta"]');
+    assert.ok(document.querySelector('[data-value="project-21"]'));
+    assert.equal(document.querySelector('[data-value="project-1"]'), null);
+  });
+
   it('closes the picker before its sidebar and releases the scroll lock', async () => {
     await render();
     await key(element('[data-slot="popover-content"]'), 'Escape');
     assert.equal(document.querySelector('[data-slot="popover-content"]'), null);
+    // Radix hands focus back to the trigger in a timeout once the content unmounts.
+    await act(async () => new Promise((resolve) => setTimeout(resolve, 0)));
     assert.equal(document.activeElement, element('[data-slot="popover-trigger"]'));
     await key(element('[data-slot="sidebar"]'), 'Escape');
     assert.equal(document.querySelector('[data-mobile="true"]'), null);

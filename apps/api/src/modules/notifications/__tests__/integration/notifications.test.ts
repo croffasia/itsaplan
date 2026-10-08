@@ -49,6 +49,85 @@ function createIssue(client: Api, columnId: number, patch: Record<string, unknow
 }
 
 describe('notifications', () => {
+  it('bulk read and delete keep notifications outside the active type filter', async () => {
+    const { owner, columnId, doneColumnId } = await setup();
+    const member = await addMember(owner);
+    const issue = (await createIssue(owner.api, columnId, { assigneeUserId: member.userId })).data!;
+    const client = owner.api.issues({ issueId: issue.id });
+    await client.comments.post({ body: 'Please review' } as never);
+    await client.patch({ description: `@${member.username} review this` });
+    await client.patch({ columnId: doneColumnId });
+
+    const before = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(before.map((item) => item.type).sort()).toEqual([
+      'assigned',
+      'commented',
+      'mentioned',
+      'state_changed',
+    ]);
+    const read = await member.api.notifications['read-all'].post({
+      types: ['state_changed'],
+      includeSnoozed: false,
+    });
+    expect(read.status).toBe(200);
+    expect(read.data!.count).toBe(1);
+    const afterRead = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(afterRead.filter((item) => item.readAt != null).map((item) => item.type)).toEqual([
+      'state_changed',
+    ]);
+    expect((await member.api.notifications['read-all'].post()).data!.count).toBe(3);
+    const deleted = await member.api.notifications.delete(undefined, {
+      query: { scope: 'read-completed', types: 'state_changed', includeSnoozed: 'false' },
+    });
+    expect(deleted.data!.count).toBe(1);
+    const remaining = (await member.api.notifications.get({ query: {} })).data!.items;
+    expect(remaining.map((item) => item.type).sort()).toEqual([
+      'assigned',
+      'commented',
+      'mentioned',
+    ]);
+    expect(remaining.every((item) => item.readAt != null)).toBe(true);
+  });
+
+  it('bulk actions respect actor and snooze filters', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    const other = await addMember(owner);
+    const issue = (await createIssue(owner.api, columnId, { assigneeUserId: member.userId })).data!;
+    await other.api.issues({ issueId: issue.id }).comments.post({ body: 'Other actor' } as never);
+    await owner.api.issues({ issueId: issue.id }).comments.post({ body: 'Owner actor' } as never);
+    const items = (await member.api.notifications.get({ query: {} })).data!.items;
+    const snoozed = items.find((item) => item.type === 'assigned')!;
+    await member.api.notifications({ id: snoozed.id }).snooze.post({
+      until: new Date(Date.now() + 86_400_000).toISOString(),
+    });
+    const read = await member.api.notifications['read-all'].post({
+      from: owner.userId,
+      includeSnoozed: false,
+    });
+    expect(read.data!.count).toBe(1);
+    const deleted = await member.api.notifications.delete(undefined, {
+      query: { scope: 'all', from: owner.userId, includeSnoozed: 'false' },
+    });
+    expect(deleted.data!.count).toBe(1);
+    const remaining = (await member.api.notifications.get({ query: { includeSnoozed: 'true' } }))
+      .data!.items;
+    expect(remaining).toHaveLength(2);
+    expect(remaining.every((item) => item.readAt == null)).toBe(true);
+    expect(remaining.some((item) => item.id === snoozed.id)).toBe(true);
+  });
+
+  it('rejects an unknown bulk delete type without deleting notifications', async () => {
+    const { owner, columnId } = await setup();
+    const member = await addMember(owner);
+    await createIssue(owner.api, columnId, { assigneeUserId: member.userId });
+    const deleted = await member.api.notifications.delete(undefined, {
+      query: { scope: 'all', types: 'unknown' },
+    });
+    expect(deleted.status).toBe(400);
+    expect((await member.api.notifications.get({ query: {} })).data!.items).toHaveLength(1);
+  });
+
   beforeEach(async () => {
     await resetDb();
   });

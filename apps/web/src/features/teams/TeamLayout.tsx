@@ -3,20 +3,23 @@
 import { useEffect, type ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { manageTeamsPath } from '@/utils/paths';
+import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import { useTeamsQuery } from '@/services/teams.service';
 import TeamsPageRail from './components/TeamsPageRail';
 import TeamSectionNav from './components/TeamSectionNav';
 import { useRouteTeam } from './hooks/useRouteTeam';
 
-// One team, as the second rail of the page and the section open beside it. Each
+// One team, as the last rail of the page and the section open beside it. Each
 // section is a route of its own and loads only what it shows. A path that names the
 // team by its id moves to its slug, and a team the account is no longer in falls back
-// to the first one left.
+// to the first one left. The section rail collapses to its icons, and stays so across
+// teams and visits.
 export default function TeamLayout({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { data } = useTeamsQuery();
   const team = useRouteTeam();
+  const sections = usePersistedOpen('team-sections-open');
 
   useEffect(() => {
     if (data && !team) router.replace(manageTeamsPath());
@@ -28,7 +31,15 @@ export default function TeamLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <TeamsPageRail className="lg:w-60">{team && <TeamSectionNav team={team} />}</TeamsPageRail>
+      <TeamsPageRail className={sections.open ? 'lg:w-60' : 'lg:w-14'}>
+        {team && (
+          <TeamSectionNav
+            team={team}
+            collapsed={!sections.open}
+            onToggleCollapsed={sections.toggle}
+          />
+        )}
+      </TeamsPageRail>
       <div className="flex min-w-0 flex-1 flex-col">{team && children}</div>
     </>
   );

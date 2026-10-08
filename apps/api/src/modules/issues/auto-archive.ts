@@ -17,9 +17,11 @@ export async function sweepStaleIssues(): Promise<number> {
   const rows = await db.execute(sql`
     UPDATE issue i
     SET archived_at = now()
-    FROM project_column c, project_setting s
+    FROM project_column c, project_setting s, project p
     WHERE i.column_id = c.id
       AND i.project_id = s.project_id
+      AND p.id = i.project_id
+      AND p.archived_at IS NULL
       AND s.key = 'auto_archive'
       AND i.archived_at IS NULL
       AND (

@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "General",
-      "description": "Valores por defecto para los proyectos nuevos."
+      "description": "Espacios de trabajo personales y valores por defecto para los proyectos nuevos."
     },
     "authentication": {
       "label": "Autenticación",

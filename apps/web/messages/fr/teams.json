@@ -1,4 +1,5 @@
 {
+  "archived": "Archivé",
   "create": {
     "title": "Nouvelle équipe",
     "namePlaceholder": "Nom de l'équipe",
@@ -9,6 +10,8 @@
     "submit": "Créer l'équipe"
   },
   "sections": {
+    "collapse": "Réduire les sections",
+    "expand": "Développer les sections",
     "info": {
       "title": "Informations",
       "description": "L'équipe et votre place au sein de celle-ci."
@@ -61,7 +64,15 @@
     "leads": "Propriétaires et responsables",
     "leadsHint": "Les personnes qui peuvent gérer cette équipe et ses projets.",
     "saved": "Équipe enregistrée",
-    "leaveHint": "Vous conservez les projets dont vous êtes membre. Pour revenir, un propriétaire doit vous ajouter à nouveau."
+    "leaveHint": "Vous conservez les projets dont vous êtes membre. Pour revenir, un propriétaire doit vous ajouter à nouveau.",
+    "delete": {
+      "action": "Supprimer l'équipe",
+      "hint": "Ses membres, rôles, invitations, compétences, outils et intégrations sont supprimés avec elle. Les personnes conservent leur compte et leurs autres équipes.",
+      "blocked": "Supprimez d'abord les projets et les agents IA de l'équipe.",
+      "title": "Supprimer {name} ?",
+      "description": "<strong>{name}</strong> est supprimée avec ses membres, rôles, invitations, compétences, outils et intégrations. Les personnes conservent leur compte et leurs autres équipes. Cette action est irréversible.",
+      "deleted": "Équipe supprimée"
+    }
   },
   "columns": {
     "project": "Projet",
@@ -538,5 +549,110 @@
     "projectsHint": "Un nouveau projet démarre avec la valeur par défaut de l'instance.",
     "noProjects": "Cette équipe n'a encore aucun projet.",
     "projectToggleAria": "Basculer l'accès MCP pour {project}"
+  },
+  "workspace": {
+    "rail": "Espaces de travail",
+    "create": "Nouvel espace de travail",
+    "createUnavailableTitle": "Plus d'espaces de travail",
+    "createUnavailableHint": "Plusieurs espaces de travail par personne sont disponibles dans Cloud et dans Pro auto-hébergé.",
+    "general": "Général",
+    "roles": {
+      "owner": "Propriétaire",
+      "admin": "Administrateur"
+    },
+    "titles": {
+      "owner": "Propriétaire de l'espace",
+      "admin": "Administrateur de l'espace"
+    },
+    "info": {
+      "title": "Espace de travail",
+      "description": "L'espace de travail auquel appartiennent vos équipes.",
+      "workspace": "Espace de travail",
+      "workspaceHint": "Le nom que tout le monde voit.",
+      "role": "Votre rôle",
+      "saved": "Espace de travail enregistré",
+      "color": "Couleur",
+      "colorReset": "Par défaut"
+    },
+    "teamCreation": {
+      "title": "Qui crée des équipes",
+      "description": "Qui crée une équipe en est le propriétaire.",
+      "ownerOnly": "Seul le propriétaire décide qui crée des équipes.",
+      "owner": "Seulement le propriétaire",
+      "managers": "Le propriétaire et les administrateurs",
+      "members": "Tous les membres de ses équipes"
+    },
+    "managers": {
+      "title": "Responsables",
+      "description": "Le propriétaire et les administrateurs gèrent l'espace de travail.",
+      "ownerOnly": "Le propriétaire et les administrateurs gèrent l'espace de travail. Seul le propriétaire ajoute ou retire des administrateurs.",
+      "person": "Personne",
+      "role": "Rôle",
+      "addAction": "Ajouter un administrateur",
+      "addTitle": "Ajouter un administrateur",
+      "addDescription": "Choisissez quelqu'un dans les équipes de l'espace de travail.",
+      "search": "Rechercher par nom ou e-mail",
+      "noCandidates": "Personne à ajouter",
+      "added": "{name} est maintenant administrateur",
+      "removeAction": "Retirer l'administrateur",
+      "removeTitle": "Retirer {name} des administrateurs ?",
+      "removeDescription": "Cette personne reste dans ses équipes, mais ne peut plus gérer l'espace de travail.",
+      "removed": "{name} n'est plus administrateur"
+    },
+    "scim": {
+      "title": "SCIM",
+      "description": "Permettez à un fournisseur d'identité d'ajouter des personnes à cet espace de travail, de les en retirer et d'accorder l'accès aux projets via ses groupes.",
+      "saved": "Paramètres SCIM enregistrés",
+      "provisioning": "Provisionnement",
+      "provisioningConfigured": "Votre fournisseur d'identité ajoute des personnes à cet espace de travail et les en retire.",
+      "provisioningInstance": "Votre fournisseur d'identité crée, met à jour et désactive les comptes de cette instance.",
+      "provisioningMissing": "Générez d'abord un token.",
+      "token": "Token",
+      "noToken": "Aucun token généré pour l'instant",
+      "tokenHint": "Le token bearer que votre fournisseur d'identité envoie. Il n'est affiché qu'une fois ; en générer un nouveau invalide l'ancien.",
+      "generateToken": "Générer un token",
+      "replaceToken": "Remplacer le token",
+      "baseUrl": "Point d'accès SCIM",
+      "baseUrlHint": "Faites pointer votre fournisseur d'identité vers cette adresse.",
+      "copyBaseUrl": "Copier le point d'accès SCIM",
+      "groups": "Groupes",
+      "groupsHint": "Les groupes transmis par votre fournisseur d'identité. La liste vient de lui ; ce que chaque groupe accorde se définit ici.",
+      "groupsEmpty": "Aucun groupe n'a encore été transmis.",
+      "memberCount": "{count, plural, =0 {Aucun membre} one {# membre} other {# membres}}",
+      "grantsNothing": "n'accorde rien pour l'instant",
+      "editMappings": "Modifier l'accès",
+      "roleOwner": "Propriétaire",
+      "roleMember": "Membre",
+      "tokenDialog": {
+        "title": "Générer un token SCIM",
+        "description": "Le token n'est affiché qu'une fois et ne peut pas être relu. Tout token déjà en usage cesse de fonctionner.",
+        "submit": "Générer",
+        "submitPending": "Génération…",
+        "createdTitle": "Votre token SCIM",
+        "createdDescription": "Copiez-le dès maintenant dans votre fournisseur d'identité. Il ne sera plus affiché.",
+        "copy": "Copier le token"
+      },
+      "mappings": {
+        "title": "Ce que {group} accorde",
+        "description": "Les membres de ce groupe rejoignent les projets listés ici. Retirer un projet supprime les adhésions que ce groupe y avait accordées.",
+        "empty": "Ce groupe n'accorde rien pour l'instant.",
+        "addProject": "Ajouter un projet…",
+        "role": "Rôle",
+        "roleOwner": "Propriétaire",
+        "roleMember": "Membre",
+        "projectRole": "Rôle dans le projet",
+        "defaultRole": "Rôle par défaut",
+        "remove": "Retirer le projet",
+        "saved": "Accès du groupe enregistré"
+      }
+    },
+    "delete": {
+      "action": "Supprimer l'espace de travail",
+      "hint": "Ses équipes sont supprimées avec lui. Les personnes gardent leur compte et leurs autres équipes.",
+      "blocked": "Supprimez d'abord les projets et les agents IA de ses équipes.",
+      "title": "Supprimer {name} ?",
+      "description": "<strong>{name}</strong> et ses équipes sont supprimés. Les personnes gardent leur compte et leurs autres équipes. Cette action est irréversible.",
+      "deleted": "Espace de travail supprimé"
+    }
   }
 }

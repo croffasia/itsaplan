@@ -50,6 +50,12 @@
     "dueDate": "تاريخ الاستحقاق",
     "clearDueDate": "مسح تاريخ الاستحقاق",
     "labels": "الوسوم",
+    "copyId": "نسخ المعرّف",
+    "copyShortLink": "نسخ الرابط المختصر",
+    "copyFullUrl": "نسخ الرابط الكامل",
+    "copyTitle": "نسخ العنوان",
+    "copyDescription": "نسخ الوصف",
+    "copyBranch": "نسخ اسم الفرع",
     "copyPrompt": "نسخ التوجيه",
     "restore": "استعادة",
     "archive": "أرشفة",
@@ -57,6 +63,7 @@
     "noDelegate": "بلا مفوَّض",
     "noInitiative": "بلا مبادرة",
     "noCycle": "بلا دورة",
+    "copyFailed": "تعذّر النسخ إلى الحافظة",
     "promptCopied": "تم نسخ التوجيه إلى الحافظة"
   },
   "commands": {
@@ -101,7 +108,8 @@
     "restore": "استعادة المهمة",
     "archive": "أرشفة المهمة",
     "delete": "حذف المهمة",
-    "shareIssue": "مشاركة المهمة"
+    "shareIssue": "مشاركة المهمة",
+    "move": "نقل إلى مشروع آخر"
   },
   "actions": {
     "deleteTitle": "حذف المهمة",
@@ -110,7 +118,16 @@
     "cannotBeUndone": "لا يمكن التراجع عن هذا.",
     "deleteDescription": "تحذف {issue}؟ ده هيشيل المهمة وتعليقاتها ونشاطها ومرفقاتها.",
     "archiveDescription": "تأرشف {issue}؟ هتخرج من اللوحة وتقدر ترجّعها بعدين.",
-    "applyDescription": "تطبّق <v>{action}</v> على المهمة دي؟"
+    "applyDescription": "تطبّق <v>{action}</v> على المهمة دي؟",
+    "moveTitle": "نقل المهمة",
+    "move": "نقل",
+    "moveDescription": "انقل {issue} إلى مشروع آخر في هذا الفريق. ستحصل على رقم جديد هناك، ويظل الرابط القديم يفتحها.",
+    "moveSubtasks": "{count, plural, one {تنتقل مهمتها الفرعية معها.} two {تنتقل مهمتاها الفرعيتان معها.} few {تنتقل مهامها الفرعية الـ # معها.} many {تنتقل مهامها الفرعية الـ # معها.} other {تنتقل مهامها الفرعية الـ # معها.}}",
+    "moveProject": "المشروع",
+    "moveChooseProject": "اختر مشروعًا",
+    "moveColumn": "الحالة",
+    "moveColumnMatching": "الحالة المطابقة",
+    "moveCarriedOver": "يُحتفظ بالنوع والتسميات والحقول المخصصة إذا كان في المشروع الهدف ما يحمل الاسم نفسه. تُزال الدورة والمبادرة والروابط إلى مهام هذا المشروع."
   },
   "create": {
     "title": "مهمة جديدة",
@@ -335,7 +352,8 @@
     "worklogChanged": "غيّر التسجيل من <v>{from}</v> ليوم <v>{fromDate}</v> إلى <v>{to}</v> ليوم <v>{date}</v>",
     "worklogRemoved": "حذف تسجيل <v>{time}</v> ليوم <v>{date}</v>",
     "commentEdited": "عدّل تعليقًا",
-    "commentDeleted": "حذف تعليقًا"
+    "commentDeleted": "حذف تعليقًا",
+    "issueMoved": "نقل هذه المهمة من <v>{from}</v> إلى <v>{to}</v>"
   },
   "development": {
     "title": "التطوير",

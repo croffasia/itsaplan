@@ -5,13 +5,15 @@ import { resetDb } from '#tests/helpers/db';
 import { addProjectMember } from '#tests/helpers/members';
 import { createAgent } from '#tests/helpers/agents';
 import { clearLimits, setLimits } from '#tests/helpers/limits';
+import { teamSkillObjectKeys } from '#modules/agents/skills/service';
+import { getObjectText } from '@repo/storage';
 
 // The teams feature owns list, create, detail, rename, and leave. Every account is
 // given a team at registration, named after its username, so a fresh account already
 // lists one.
 
-async function signUpClient() {
-  const user = await signUpTestUser();
+async function signUpClient(overrides: { team?: boolean } = {}) {
+  const user = await signUpTestUser(overrides);
   return { user, api: authedApi(user.cookie) };
 }
 
@@ -163,9 +165,9 @@ describe('teams', () => {
     });
 
     it("lists only the caller's own teams", async () => {
+      const owner = await signUpClient();
       const { api } = await signUpClient();
-      const other = await signUpClient();
-      await other.api.teams.post({ name: 'Design', slug: 'design' });
+      expect((await owner.api.teams.post({ name: 'Design', slug: 'design' })).status).toBe(201);
 
       const list = await api.teams.get();
       expect(list.data?.map((t) => t.name)).not.toContain('Design');
@@ -211,14 +213,16 @@ describe('teams', () => {
       expect((await api.teams.post({ name: 'a'.repeat(61), slug: 'longer' })).status).toBe(400);
     });
 
-    it('refuses one more team than the limits allow', async () => {
-      const { api } = await signUpClient();
-      // The account already owns the team signUpTestUser gave it.
+    it('refuses one more team than the workspace limits allow', async () => {
+      const { api } = await signUpClient({ team: false });
+      // The other account's team already fills the workspace.
+      await signUpClient();
       setLimits({ maxTeams: 1 });
 
       const created = await api.teams.post({ name: 'Design', slug: 'design' });
       expect(created.status).toBe(409);
-      expect(await api.teams.get().then((list) => list.data)).toHaveLength(1);
+      const names = (await api.teams.get()).data!.map((team) => team.name);
+      expect(names).not.toContain('Design');
     });
 
     it('creates the team under the slug it is given', async () => {
@@ -402,8 +406,9 @@ describe('teams', () => {
     });
 
     it('hides the members and the projects of a team the caller is not in', async () => {
-      const { api } = await signUpClient();
+      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
+      const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
 
       expect((await api.teams({ teamId: otherTeamId }).members.get()).status).toBe(404);
@@ -411,8 +416,9 @@ describe('teams', () => {
     });
 
     it('hides a team the caller is not a member of', async () => {
-      const { api } = await signUpClient();
+      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
+      const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
 
       const detail = await api.teams({ teamId: otherTeamId }).get();
@@ -456,8 +462,9 @@ describe('teams', () => {
     });
 
     it("404s for a project of another account's team", async () => {
-      const { api } = await signUpClient();
+      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
+      const { api } = await signUpClient();
       const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
       const teamId = (await api.teams.get()).data![0].id;
 
@@ -469,8 +476,9 @@ describe('teams', () => {
     });
 
     it('404s for a team the caller is not a member of', async () => {
-      const { api } = await signUpClient();
+      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
+      const { api } = await signUpClient();
       const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
       const otherTeamId = (await other.api.teams.get()).data![0].id;
 
@@ -624,8 +632,9 @@ describe('teams', () => {
       });
 
       it("404s for another account's team", async () => {
-        const { api } = await signUpClient();
+        // The first account owns the instance workspace, which reaches every team in it.
         const other = await signUpClient();
+        const { api } = await signUpClient();
         const otherTeamId = await ownTeamId(other.api);
 
         const created = await api
@@ -748,6 +757,102 @@ describe('teams', () => {
           .projects({ projectId: otherProject.data!.id })
           .delete();
         expect(deleted.status).toBe(404);
+        expect((await other.api.projects.get()).data).toHaveLength(1);
+      });
+    });
+
+    describe('archive', () => {
+      it('leaves an archived project out of the project list until it is restored', async () => {
+        const { api } = await signUpClient();
+        const teamId = await ownTeamId(api);
+        const project = await api
+          .teams({ teamId })
+          .projects.post({ key: 'MKT', name: 'Marketing' });
+        const one = api.teams({ teamId }).projects({ projectId: project.data!.id });
+
+        const archived = await one.archive.post();
+        expect(archived.status).toBe(200);
+        expect(archived.data?.archivedAt).not.toBeNull();
+        expect((await api.projects.get()).data).toHaveLength(0);
+        expect((await api.teams({ teamId }).projects.get()).data?.items).toMatchObject([
+          { key: 'MKT', archivedAt: expect.anything() },
+        ]);
+        expect((await api.projects({ projectKey: 'MKT' }).get()).status).toBe(200);
+
+        const restored = await one.restore.post();
+        expect(restored.status).toBe(200);
+        expect(restored.data?.archivedAt).toBeNull();
+        expect((await api.projects.get()).data).toMatchObject([{ key: 'MKT', archivedAt: null }]);
+      });
+
+      it('keeps an archived project readable and refuses changes until it is restored', async () => {
+        const { api } = await signUpClient();
+        const teamId = await ownTeamId(api);
+        const project = await api
+          .teams({ teamId })
+          .projects.post({ key: 'MKT', name: 'Marketing' });
+        const board = api.projects({ projectKey: 'MKT' });
+        const columnId = (await board.get()).data!.columns[0].id;
+        const issueId = (await board.issues.post({ columnId, title: 'Launch' })).data!.id;
+        const one = api.teams({ teamId }).projects({ projectId: project.data!.id });
+        await one.archive.post();
+
+        expect((await api.issues({ issueId }).get()).status).toBe(200);
+        const edited = await api.issues({ issueId }).patch({ title: 'Changed' });
+        expect(edited.status).toBe(403);
+        expect(edited.error?.value).toMatchObject({
+          error: 'This project is archived; restore it to make changes',
+        });
+        expect((await board.issues.post({ columnId, title: 'New' })).status).toBe(403);
+        expect((await one.patch({ name: 'Renamed' })).status).toBe(403);
+        expect((await api.issues({ issueId }).get()).data).toMatchObject({ title: 'Launch' });
+
+        await one.restore.post();
+        expect((await api.issues({ issueId }).patch({ title: 'Changed' })).status).toBe(200);
+      });
+
+      it('still copies and deletes an archived project', async () => {
+        const { api } = await signUpClient();
+        const teamId = await ownTeamId(api);
+        const project = await api
+          .teams({ teamId })
+          .projects.post({ key: 'MKT', name: 'Marketing' });
+        await api.teams({ teamId }).projects({ projectId: project.data!.id }).archive.post();
+
+        const copied = await api
+          .projects({ projectKey: 'MKT' })
+          .copy.post({ key: 'DST', name: 'Destination' });
+        expect(copied.status).toBe(201);
+        expect((await api.projects({ projectKey: 'MKT' }).delete()).status).toBe(204);
+      });
+
+      it('refuses a plain member of the team', async () => {
+        const owner = await signUpClient();
+        const teamId = await ownTeamId(owner.api);
+        const project = await owner.api
+          .teams({ teamId })
+          .projects.post({ key: 'MKT', name: 'Marketing' });
+        const member = await addTeamMember(owner, teamId);
+
+        const archived = await member.api
+          .teams({ teamId })
+          .projects({ projectId: project.data!.id })
+          .archive.post();
+        expect(archived.status).toBe(403);
+        expect((await owner.api.projects.get()).data).toHaveLength(1);
+      });
+
+      it('404s for a project of another team', async () => {
+        const { api } = await signUpClient();
+        const other = await signUpClient();
+        const otherProject = await other.api.projects.post({ key: 'OTH', name: 'Other' });
+        const teamId = await ownTeamId(api);
+
+        const archived = await api
+          .teams({ teamId })
+          .projects({ projectId: otherProject.data!.id })
+          .archive.post();
+        expect(archived.status).toBe(404);
         expect((await other.api.projects.get()).data).toHaveLength(1);
       });
     });
@@ -890,8 +995,9 @@ describe('teams', () => {
     });
 
     it("rejects a rename of another account's team", async () => {
-      const { api } = await signUpClient();
+      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
+      const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
 
       const renamed = await api.teams({ teamId: otherTeamId }).patch({ name: 'Growth' });
@@ -1122,6 +1228,8 @@ describe('teams', () => {
   });
 
   describe('concurrent ownership changes', () => {
+    // `owner` owns the workspace and keeps the owner standing without the team owner row,
+    // so when the other request lands first the last-owner check refuses it with 409.
     async function twoOwners() {
       const owner = await signUpClient();
       const teamId = (await owner.api.teams.get()).data![0].id;
@@ -1142,7 +1250,9 @@ describe('teams', () => {
       expect(results.map((result) => result.status).sort()).toEqual([204, 409]);
       const teams = await Promise.all([owner.api.teams.get(), second.api.teams.get()]);
       expect(
-        teams.flatMap((result) => result.data ?? []).filter((row) => row.id === teamId),
+        teams
+          .flatMap((result) => result.data ?? [])
+          .filter((row) => row.id === teamId && row.via === 'member'),
       ).toHaveLength(1);
     });
 
@@ -1158,7 +1268,8 @@ describe('teams', () => {
           .members({ userId: owner.user.userId })
           .patch({ role: 'member' }),
       ]);
-      expect(results.map((result) => result.status).sort()).toEqual([204, 403]);
+      const statuses = results.map((result) => result.status);
+      expect(statuses).toEqual(statuses[0] === 204 ? [204, 403] : [409, 204]);
       expect((await owner.api.teams({ teamId }).get()).data?.ownerCount).toBe(1);
     });
 
@@ -1168,8 +1279,74 @@ describe('teams', () => {
         owner.api.teams({ teamId }).members({ userId: second.user.userId }).delete(),
         second.api.teams({ teamId }).members({ userId: owner.user.userId }).delete(),
       ]);
-      expect(results.filter((result) => result.status === 204)).toHaveLength(1);
-      expect(results.some((result) => result.status === 403 || result.status === 404)).toBe(true);
+      const statuses = results.map((result) => result.status);
+      expect(statuses).toEqual(statuses[0] === 204 ? [204, 403] : [409, 204]);
+    });
+  });
+
+  describe('delete', () => {
+    // The first account owns the instance workspace, which reaches every team in it, so
+    // the team owner is the second.
+    async function teamOwner() {
+      await signUpTestUser();
+      const owner = await signUpClient();
+      const teamId = (await owner.api.teams.get()).data![0].id;
+      return { owner, teamId };
+    }
+
+    it('lets the owner delete a team that holds no work', async () => {
+      const { owner, teamId } = await teamOwner();
+      await addTeamMember(owner, teamId);
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(204);
+      expect((await owner.api.teams.get()).data).toEqual([]);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(404);
+    });
+
+    it("removes the team's skill files from the object store", async () => {
+      const { owner, teamId } = await teamOwner();
+      await owner.api
+        .teams({ teamId })
+        ['agent-skills'].post({ source: 'inline', name: 'Triage', markdown: 'Set a priority.' });
+      const keys = await teamSkillObjectKeys(teamId);
+      expect(keys).not.toHaveLength(0);
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(204);
+      for (const key of keys) await expect(getObjectText(key)).rejects.toThrow();
+    });
+
+    it('keeps a team that holds a project', async () => {
+      const { owner, teamId } = await teamOwner();
+      await owner.api.teams({ teamId }).projects.post({ key: 'OPS', name: 'Operations' });
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(409);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
+    });
+
+    it('keeps a team that holds an AI agent', async () => {
+      const { owner, teamId } = await teamOwner();
+      const created = await owner.api.teams({ teamId }).projects.post({ key: 'OPS', name: 'Ops' });
+      await createAgent(owner.api, 'OPS', { name: 'Triage', username: 'triage', kind: 'external' });
+      await owner.api.teams({ teamId }).projects({ projectId: created.data!.id }).delete();
+
+      expect((await owner.api.teams({ teamId }).delete()).status).toBe(409);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
+    });
+
+    it('leaves deleting to an owner', async () => {
+      const { owner, teamId } = await teamOwner();
+      const manager = await addTeamMember(owner, teamId, 'manager');
+
+      expect((await manager.api.teams({ teamId }).delete()).status).toBe(403);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
+    });
+
+    it('404s for a team the caller is not a member of', async () => {
+      const { owner, teamId } = await teamOwner();
+      const outsider = await signUpClient();
+
+      expect((await outsider.api.teams({ teamId }).delete()).status).toBe(404);
+      expect((await owner.api.teams({ teamId }).get()).status).toBe(200);
     });
   });
 
@@ -1197,8 +1374,9 @@ describe('teams', () => {
     });
 
     it('404s for a team the caller is not a member of', async () => {
-      const { api } = await signUpClient();
+      // The first account owns the instance workspace, which reaches every team in it.
       const other = await signUpClient();
+      const { api } = await signUpClient();
       const otherTeamId = (await other.api.teams.get()).data![0].id;
 
       expect((await api.teams({ teamId: otherTeamId }).leave.post()).status).toBe(404);

@@ -8,6 +8,18 @@ export const qk = {
   teams: ['teams'] as const,
   // One team: its counters and what the caller may do with what it holds.
   team: (teamId: number) => ['team', teamId] as const,
+  workspaces: ['workspaces'] as const,
+  // One workspace a caller manages. Its managers, candidates and settings sit under it, so
+  // invalidating the workspace refreshes all of them.
+  workspace: (workspaceId: number) => ['workspace', workspaceId] as const,
+  workspaceManagers: (workspaceId: number) => ['workspace', workspaceId, 'managers'] as const,
+  workspaceManagerCandidates: (workspaceId: number, search: string) =>
+    ['workspace', workspaceId, 'managers', 'candidates', search] as const,
+  workspaceScim: (workspaceId: number) => ['workspace', workspaceId, 'scim'] as const,
+  workspaceScimGroups: (workspaceId: number) =>
+    ['workspace', workspaceId, 'scim', 'groups'] as const,
+  workspaceProjectOptions: (workspaceId: number) =>
+    ['workspace', workspaceId, 'projectOptions'] as const,
   teamProjectDefaults: (teamId: number) => ['team', teamId, 'project-defaults'] as const,
   // The members of a team and the projects it owns, each read by its own section. A
   // page is scoped by the search term and the window it was read with.
@@ -58,11 +70,14 @@ export const qk = {
   actions: (projectKey: string) => ['actions', projectKey] as const,
   webhooks: (projectKey: string) => ['webhooks', projectKey] as const,
   webhookDeliveries: (webhookId: number) => ['webhookDeliveries', webhookId] as const,
-  // The project's Plane import jobs (the Import/Export settings section).
+  // The project's import jobs (the Import/Export settings section).
   importJobs: (projectKey: string) => ['importJobs', projectKey] as const,
   // The mapping review preview for one candidate Plane project, before a job exists.
   planePreview: (projectKey: string, planeProjectId: string) =>
     ['planePreview', projectKey, planeProjectId] as const,
+  // The same preview for one Linear team's workflow states.
+  linearPreview: (projectKey: string, teamId: string) =>
+    ['linearPreview', projectKey, teamId] as const,
   // Saved dashboards (the analytics tabs) and the read-only metrics behind their
   // widgets. `kind` names the metric (stats/pulse/throughput/breakdown/...) and
   // `params` scopes it to the widget's query (window, filters).
@@ -263,13 +278,11 @@ export const qk = {
   // start page). Read app-wide, not just on the preferences page.
   accountPreferences: ['accountPreferences'] as const,
   // Instance administration (god mode): the sign-in policy, the mail provider, the
-  // sign-in providers, SCIM provisioning and the Telegram bot. Not scoped to a project.
+  // sign-in providers (Google and OIDC) and the Telegram bot. Not scoped to a project.
   instanceAuthSettings: ['instanceAuthSettings'] as const,
   instanceEmailSettings: ['instanceEmailSettings'] as const,
   instanceGoogleSettings: ['instanceGoogleSettings'] as const,
   instanceOidcSettings: ['instanceOidcSettings'] as const,
-  instanceScimSettings: ['instanceScimSettings'] as const,
-  instanceScimGroups: ['instanceScimGroups'] as const,
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,
   instanceProjectDefaults: ['instanceProjectDefaults'] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
@@ -292,7 +305,6 @@ export const qk = {
   // The instance project directory: the list (scoped by the active filters) and one
   // project with its members.
   instanceProjects: (filters: unknown) => ['instanceProjects', filters] as const,
-  instanceProjectOptions: ['instanceProjectOptions'] as const,
   instanceProject: (projectId: number) => ['instanceProject', projectId] as const,
   // The instance team directory: the list (scoped by the active filters) and one team
   // with its projects and members.

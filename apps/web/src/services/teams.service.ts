@@ -30,6 +30,7 @@ import {
   updateTeam,
   setTeamMemberRole,
   removeTeamMember,
+  deleteTeam,
   leaveTeam,
 } from '@/lib/api/endpoints/teams';
 import { nextPageParam } from '@/lib/api/core/paging';
@@ -155,7 +156,7 @@ export function useUpdateTeamProjectDefaults(teamId: number) {
 export function useCreateTeam() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: { name: string; slug: string }) => createTeam(input),
+    mutationFn: (input: { name: string; slug: string; workspaceId: number }) => createTeam(input),
     onSuccess: (team) => {
       // Put the team in the cached list right away so the switcher shows it before
       // the refetch lands; it has no projects yet, so nothing else has to load.
@@ -212,6 +213,17 @@ export function useRemoveTeamMember(teamId: number) {
       void qc.invalidateQueries({ queryKey: qk.team(teamId) });
       void qc.invalidateQueries({ queryKey: qk.teams });
       void qc.invalidateQueries({ queryKey: qk.anyMembers });
+    },
+  });
+}
+
+export function useDeleteTeam() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (teamId: number) => deleteTeam(teamId),
+    onSuccess: (_result, teamId) => {
+      qc.setQueryData<Team[]>(qk.teams, (prev) => prev?.filter((t) => t.id !== teamId));
+      void qc.invalidateQueries({ queryKey: qk.teams });
     },
   });
 }

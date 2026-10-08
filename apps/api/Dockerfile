@@ -34,13 +34,17 @@ RUN bun install --frozen-lockfile $INSTALL_FILTER $INSTALL_FLAGS
 # the root, so copy the whole install tree (manifests + every node_modules), then
 # overlay the source. .dockerignore excludes node_modules, so `COPY . .` does not
 # clobber the copied dependencies.
-FROM base AS release
+#
+# pg_dump, for the backup migrate.ts takes before it applies anything, refuses a server
+# newer than itself. The Railway template runs Postgres 18 and the compose files run 17,
+# so the image ships the 18 client, which dumps both. The bun image is built on Alpine
+# 3.22, which has no 18 client, so this stage is Alpine 3.23 with bun copied in.
+FROM alpine:3.23 AS release
+WORKDIR /app
 ENV NODE_ENV=production
-# pg_dump, for the backup migrate.ts takes before it applies anything. The package
-# tracks the Postgres the compose file runs (17), and a client older than the server
-# refuses to dump, so an instance on a newer server needs a newer image or
-# SKIP_PRE_MIGRATION_BACKUP=1.
-RUN apk add --no-cache postgresql-client
+ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH=0
+RUN apk add --no-cache libgcc libstdc++ postgresql18-client
+COPY --from=base /usr/local/bin/bun /usr/local/bin/
 COPY --from=install /app ./
 COPY . .
 

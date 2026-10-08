@@ -1,4 +1,5 @@
 {
+  "archived": "Archivado",
   "create": {
     "title": "Nuevo equipo",
     "namePlaceholder": "Nombre del equipo",
@@ -9,6 +10,8 @@
     "submit": "Crear equipo"
   },
   "sections": {
+    "collapse": "Contraer secciones",
+    "expand": "Expandir secciones",
     "info": {
       "title": "Información",
       "description": "El equipo y tu lugar en él."
@@ -61,7 +64,15 @@
     "leads": "Propietarios y administradores",
     "leadsHint": "Personas que pueden gestionar este equipo y sus proyectos.",
     "saved": "Equipo guardado",
-    "leaveHint": "Conservas los proyectos de los que eres miembro. Para volver a unirte, un propietario tiene que añadirte de vuelta."
+    "leaveHint": "Conservas los proyectos de los que eres miembro. Para volver a unirte, un propietario tiene que añadirte de vuelta.",
+    "delete": {
+      "action": "Eliminar equipo",
+      "hint": "Se eliminan con él sus miembros, roles, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos.",
+      "blocked": "Elimina primero los proyectos y los agentes de IA del equipo.",
+      "title": "¿Eliminar {name}?",
+      "description": "<strong>{name}</strong> se elimina junto con sus miembros, roles, invitaciones, habilidades, herramientas e integraciones. Las personas conservan sus cuentas y sus otros equipos. No se puede deshacer.",
+      "deleted": "Equipo eliminado"
+    }
   },
   "columns": {
     "project": "Proyecto",
@@ -538,5 +549,110 @@
     "projectsHint": "Un proyecto nuevo empieza con el valor por defecto de la instancia.",
     "noProjects": "Este equipo todavía no tiene proyectos.",
     "projectToggleAria": "Alternar el acceso de MCP para {project}"
+  },
+  "workspace": {
+    "rail": "Espacios de trabajo",
+    "create": "Nuevo espacio de trabajo",
+    "createUnavailableTitle": "Más espacios de trabajo",
+    "createUnavailableHint": "Más espacios de trabajo por persona están disponibles en Cloud y en Pro autoalojado.",
+    "general": "General",
+    "roles": {
+      "owner": "Propietario",
+      "admin": "Administrador"
+    },
+    "titles": {
+      "owner": "Propietario del espacio",
+      "admin": "Administrador del espacio"
+    },
+    "info": {
+      "title": "Espacio de trabajo",
+      "description": "El espacio de trabajo al que pertenecen tus equipos.",
+      "workspace": "Espacio de trabajo",
+      "workspaceHint": "El nombre que ve todo el mundo.",
+      "role": "Tu rol",
+      "saved": "Espacio de trabajo guardado",
+      "color": "Color",
+      "colorReset": "Usar el predeterminado"
+    },
+    "teamCreation": {
+      "title": "Quién crea equipos",
+      "description": "Quien crea un equipo es su propietario.",
+      "ownerOnly": "Solo el propietario decide quién crea equipos.",
+      "owner": "Solo el propietario",
+      "managers": "El propietario y los administradores",
+      "members": "Todos los de sus equipos"
+    },
+    "managers": {
+      "title": "Responsables",
+      "description": "El propietario y los administradores gestionan el espacio de trabajo.",
+      "ownerOnly": "El propietario y los administradores gestionan el espacio de trabajo. Solo el propietario añade o quita administradores.",
+      "person": "Persona",
+      "role": "Rol",
+      "addAction": "Añadir administrador",
+      "addTitle": "Añadir administrador",
+      "addDescription": "Elige a alguien de los equipos del espacio de trabajo.",
+      "search": "Buscar por nombre o correo",
+      "noCandidates": "No hay nadie que añadir",
+      "added": "{name} ahora es administrador",
+      "removeAction": "Quitar administrador",
+      "removeTitle": "¿Quitar a {name} como administrador?",
+      "removeDescription": "Seguirá en sus equipos, pero no podrá gestionar el espacio de trabajo.",
+      "removed": "{name} ya no es administrador"
+    },
+    "scim": {
+      "title": "SCIM",
+      "description": "Permite que un proveedor de identidades añada personas a este espacio de trabajo, las quite y conceda acceso a proyectos a través de sus grupos.",
+      "saved": "Los ajustes de SCIM se han guardado",
+      "provisioning": "Preparación",
+      "provisioningConfigured": "Tu proveedor de identidades añade personas a este espacio de trabajo y las quita.",
+      "provisioningInstance": "Tu proveedor de identidades crea, actualiza y desactive cuentas en esta instancia.",
+      "provisioningMissing": "Genera primero un token.",
+      "token": "Token",
+      "noToken": "Todavía no se ha generado un token",
+      "tokenHint": "El token de portador que envía tu proveedor de identidades. Se muestra una sola vez; generar uno nuevo deja de hacer funcionar al viejo.",
+      "generateToken": "Generar token",
+      "replaceToken": "Sustituir token",
+      "baseUrl": "Endpoint de SCIM",
+      "baseUrlHint": "Apunta a tu proveedor de identidades a esta dirección.",
+      "copyBaseUrl": "Copiar el endpoint de SCIM",
+      "groups": "Grupos",
+      "groupsHint": "Los grupos que tu proveedor de identidades ha empujado. La lista es suya; lo que cada grupo concede se define aquí.",
+      "groupsEmpty": "Todavía no se ha empujado ningún grupo.",
+      "memberCount": "{count, plural, =0 {Sin miembros} one {# miembro} other {# miembros}}",
+      "grantsNothing": "todavía no concede nada",
+      "editMappings": "Editar el acceso",
+      "roleOwner": "Propietario",
+      "roleMember": "Miembro",
+      "tokenDialog": {
+        "title": "Generar un token de SCIM",
+        "description": "El token se muestra una sola vez y no se puede volver a leer. Cualquier token ya en uso deja de funcionar.",
+        "submit": "Generar",
+        "submitPending": "Generando…",
+        "createdTitle": "Tu token de SCIM",
+        "createdDescription": "Cópialo a tu proveedor de identidades ahora. No se puede volver a mostrar.",
+        "copy": "Copiar el token"
+      },
+      "mappings": {
+        "title": "Lo que concede {group}",
+        "description": "Los miembros de este grupo se unen a los proyectos listados aquí. Quitar un proyecto leva los miembros que este grupo le había dado.",
+        "empty": "Este grupo todavía no concede nada.",
+        "addProject": "Añadir un proyecto…",
+        "role": "Rol",
+        "roleOwner": "Propietario",
+        "roleMember": "Miembro",
+        "projectRole": "Rol del proyecto",
+        "defaultRole": "Rol por defecto",
+        "remove": "Quitar el proyecto",
+        "saved": "El acceso del grupo se ha guardado"
+      }
+    },
+    "delete": {
+      "action": "Eliminar espacio de trabajo",
+      "hint": "Sus equipos se eliminan con él. Las personas conservan sus cuentas y sus otros equipos.",
+      "blocked": "Elimina primero los proyectos y los agentes de IA de sus equipos.",
+      "title": "¿Eliminar {name}?",
+      "description": "<strong>{name}</strong> y sus equipos se eliminan. Las personas conservan sus cuentas y sus otros equipos. No se puede deshacer.",
+      "deleted": "Espacio de trabajo eliminado"
+    }
   }
 }

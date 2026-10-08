@@ -10,6 +10,8 @@ import {
   FolderKanban,
   GitBranch,
   Info,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plug,
   Radio,
   ShieldCheck,
@@ -28,16 +30,27 @@ import {
   sectionNavItemClass,
   type SectionNavItem,
 } from '@/components/common/page/SectionNav';
+import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
-// The sections of the open team, as the page's second rail: the team itself, its
+// The sections of the open team, as the page's last rail: the team itself, its
 // projects, the roles they assign from and its members, then the AI group — the
 // integration credentials the agents run on, the agents themselves, the skills they
 // load and the tools they can call — with what MCP clients reach and the notification
 // providers last. The counts come with the team list, so each is shown before its
 // section is opened. A section the caller may not read is left out, and the AI group with it
-// once none of its four is readable.
-export default function TeamSectionNav({ team }: { team: Team }) {
+// once none of its four is readable. Collapsed, the rail shows the icons of every
+// section, the AI group's included, without the group.
+export default function TeamSectionNav({
+  team,
+  collapsed,
+  onToggleCollapsed,
+}: {
+  team: Team;
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+}) {
   const t = useTranslations('teams.sections');
   const tNav = useTranslations('nav');
   const pathname = usePathname();
@@ -95,11 +108,51 @@ export default function TeamSectionNav({ team }: { team: Team }) {
   const [toggled, setToggled] = useState<boolean | null>(null);
   const aiOpen = toggled ?? aiActive;
 
+  const toggleLabel = collapsed ? t('expand') : t('collapse');
+  const toggle = (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-7 shrink-0 text-muted-foreground hover:text-foreground"
+          aria-label={toggleLabel}
+          aria-expanded={!collapsed}
+          onClick={onToggleCollapsed}
+        >
+          {collapsed ? (
+            <PanelLeftOpen className="size-4 rtl:-scale-x-100" />
+          ) : (
+            <PanelLeftClose className="size-4 rtl:-scale-x-100" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">{toggleLabel}</TooltipContent>
+    </Tooltip>
+  );
+
+  if (collapsed) {
+    return (
+      <div className="space-y-2">
+        <div className="flex w-8 justify-center">{toggle}</div>
+        <SectionNav
+          sections={[...top, ...ai, ...bottom]}
+          activeId={activeId}
+          label={team.name}
+          collapsed
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-2">
-      <h2 className="truncate px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase">
-        {team.name}
-      </h2>
+      <div className="flex items-center gap-2 px-2">
+        <h2 className="min-w-0 truncate text-xs font-medium tracking-wide text-muted-foreground uppercase">
+          {team.name}
+        </h2>
+        <div className="ms-auto">{toggle}</div>
+      </div>
       <div className="space-y-0.5">
         <SectionNav sections={top} activeId={activeId} label={team.name} />
         {ai.length > 0 && (

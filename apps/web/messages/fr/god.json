@@ -57,6 +57,7 @@
     "deleteConfirm": "Supprimer le compte",
     "deleteConfirmWithProjects": "{count, plural, one {Supprimer le compte et le projet} other {Supprimer le compte et les projets}}",
     "deleteMessage": "<strong>{name}</strong> perd l'accès à cette instance. Les tickets et commentaires rédigés par cette personne sont conservés, sans auteur. Cette action est irréversible.",
+    "deleteWorkspaceNote": "Un espace de travail détenu par ce compte est supprimé avec lui s'il ne contient ni projet ni agent IA. Sinon, il vous revient, avec tout ce que le compte y détenait seul.",
     "soleOwnerTitle": "{count, plural, one {Seul propriétaire d'un projet} other {Seul propriétaire de # projets}}",
     "soleOwnerHint": "{count, plural, one {Une fois le compte supprimé, personne ne pourra le gérer.} other {Une fois le compte supprimé, personne ne pourra les gérer.}}",
     "deleteWithProjects": "{count, plural, one {Supprimer le projet avec le compte} other {Supprimer les projets avec le compte}}",
@@ -159,7 +160,11 @@
     "saved": "Valeurs par défaut des projets enregistrées",
     "projectDefaults": "Valeurs par défaut des projets",
     "mcpEnabled": "Activer MCP sur les nouveaux projets",
-    "mcpEnabledHint": "Un nouveau projet est accessible via MCP dès sa création."
+    "mcpEnabledHint": "Un nouveau projet est accessible via MCP dès sa création.",
+    "workspacesSaved": "Paramètres des espaces de travail enregistrés",
+    "workspaces": "Espaces de travail",
+    "personalWorkspaces": "Un espace de travail pour chacun",
+    "personalWorkspacesHint": "Chaque compte reçoit son propre espace de travail, à son nom. Désactivé, chacun travaille seulement dans les espaces de travail où il a été ajouté."
   },
   "authentication": {
     "saved": "Paramètres d'authentification enregistrés",
@@ -269,49 +274,5 @@
     "scopes": "Scopes",
     "scopesHint": "Séparés par des espaces. openid est obligatoire ; profile et email renseignent le nom et l'adresse.",
     "oidcRedirectUriHint": "Enregistrez-la comme URI de redirection sur le client de votre fournisseur d'identité. Le fournisseur refuse la connexion si elle ne correspond pas exactement."
-  },
-  "scim": {
-    "saved": "Paramètres SCIM enregistrés",
-    "provisioning": "Provisionnement",
-    "provisioningConfigured": "Votre fournisseur d'identité crée, met à jour et désactive les comptes de cette instance.",
-    "provisioningMissing": "Générez d'abord un token.",
-    "token": "Token",
-    "noToken": "Aucun token généré pour l'instant",
-    "tokenHint": "Le token bearer que votre fournisseur d'identité envoie. Il n'est affiché qu'une fois ; en générer un nouveau invalide l'ancien.",
-    "generateToken": "Générer un token",
-    "replaceToken": "Remplacer le token",
-    "baseUrl": "Point d'accès SCIM",
-    "baseUrlHint": "Faites pointer votre fournisseur d'identité vers cette adresse.",
-    "copyBaseUrl": "Copier le point d'accès SCIM",
-    "groups": "Groupes",
-    "groupsHint": "Les groupes transmis par votre fournisseur d'identité. La liste vient de lui ; ce que chaque groupe accorde se définit ici.",
-    "groupsEmpty": "Aucun groupe n'a encore été transmis.",
-    "memberCount": "{count, plural, =0 {Aucun membre} one {# membre} other {# membres}}",
-    "grantsNothing": "n'accorde rien pour l'instant",
-    "editMappings": "Modifier l'accès",
-    "roleOwner": "Propriétaire",
-    "roleMember": "Membre",
-    "tokenDialog": {
-      "title": "Générer un token SCIM",
-      "description": "Le token n'est affiché qu'une fois et ne peut pas être relu. Tout token déjà en usage cesse de fonctionner.",
-      "submit": "Générer",
-      "submitPending": "Génération…",
-      "createdTitle": "Votre token SCIM",
-      "createdDescription": "Copiez-le dès maintenant dans votre fournisseur d'identité. Il ne sera plus affiché.",
-      "copy": "Copier le token"
-    },
-    "mappings": {
-      "title": "Ce que {group} accorde",
-      "description": "Les membres de ce groupe rejoignent les projets listés ici. Retirer un projet supprime les adhésions que ce groupe y avait accordées.",
-      "empty": "Ce groupe n'accorde rien pour l'instant.",
-      "addProject": "Ajouter un projet…",
-      "role": "Rôle",
-      "roleOwner": "Propriétaire",
-      "roleMember": "Membre",
-      "projectRole": "Rôle dans le projet",
-      "defaultRole": "Rôle par défaut",
-      "remove": "Retirer le projet",
-      "saved": "Accès du groupe enregistré"
-    }
   }
 }

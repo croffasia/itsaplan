@@ -2,16 +2,25 @@ import { request } from '@/lib/api/core/client';
 import type { AgentRunStatus } from '@/lib/api/endpoints/agents';
 import { pageQuery, type Page, type PageParams } from '@/lib/api/core/paging';
 
+// 'cron' runs on its cron; 'status' runs on an issue each time one enters its column.
+export type AgentScheduleType = 'cron' | 'status';
+
 export interface AgentSchedule {
   id: number;
   agentId: number;
   agentName: string;
   name: string;
+  type: AgentScheduleType;
+  // Empty on a status schedule that sends no task of its own.
   prompt: string;
-  cron: string;
+  // Set on a cron schedule only, as is nextRunAt.
+  cron: string | null;
   timezone: 'UTC';
+  // Set on a status schedule only.
+  columnId: number | null;
+  delaySec: number;
   status: 'active' | 'paused';
-  nextRunAt: string;
+  nextRunAt: string | null;
   lastRunAt: string | null;
   lastRunStatus: AgentRunStatus | null;
   pendingRuns: number;
@@ -22,18 +31,22 @@ export interface AgentSchedule {
   updatedAt: string;
 }
 
+// `type` is set on a create only: a schedule keeps the type it was created with.
 export interface AgentScheduleInput {
   agentId: number;
   name: string;
+  type?: AgentScheduleType;
   prompt: string;
-  cron: string;
+  cron?: string;
+  columnId?: number;
+  delaySec?: number;
   status?: 'active' | 'paused';
 }
 
 export interface AgentScheduleRun {
   id: number;
   status: AgentRunStatus;
-  trigger: 'schedule' | 'manual';
+  trigger: 'schedule' | 'manual' | 'status';
   prompt: string;
   attempts: number;
   lastError: string | null;

@@ -10,6 +10,7 @@ import {
   issueFieldValue,
   issueFieldOption,
   issueAttachment,
+  issueKeyAlias,
   customField,
   customFieldOption,
   initiative,
@@ -69,6 +70,7 @@ import { getInitiativeProjectId } from '#modules/initiatives/service';
 import { cycleStatus, getCycleRef, type CycleStatus } from '#modules/cycles/service';
 import { getMembership } from '#modules/members/service';
 import { enqueueAgentRun } from '#modules/agents/core/run-queue';
+import { queueStatusRuns } from '#modules/agents/schedules/status-runs';
 import { applySubtaskAutomation } from './automation';
 import { assertWipLimit, columnAutoAssignee, wipLimitBreach } from '#modules/columns/service';
 
@@ -660,7 +662,9 @@ export async function getIssues(ids: number[]): Promise<IssueRow[]> {
 
 // Loads an issue by its project-scoped sequence number (the human number in a URL
 // like /acme/issue/MKT-42). Returns null if the project has no issue with that
-// number. Archived issues resolve too, so a link to one still opens.
+// number. Archived issues resolve too, so a link to one still opens, and so does the
+// number of an issue that moved to another project — the row returned then carries
+// its current project and identifier.
 export async function getIssueBySequence(
   projectId: number,
   sequenceNumber: number,
@@ -669,7 +673,23 @@ export async function getIssueBySequence(
     .select({ issue, projectKey: projectTable.key })
     .from(issue)
     .innerJoin(projectTable, eq(projectTable.id, issue.projectId))
-    .where(and(eq(issue.projectId, projectId), eq(issue.sequenceNumber, sequenceNumber)));
+    .where(
+      or(
+        and(eq(issue.projectId, projectId), eq(issue.sequenceNumber, sequenceNumber)),
+        exists(
+          db
+            .select({ id: issueKeyAlias.issueId })
+            .from(issueKeyAlias)
+            .where(
+              and(
+                eq(issueKeyAlias.issueId, issue.id),
+                eq(issueKeyAlias.projectId, projectId),
+                eq(issueKeyAlias.sequenceNumber, sequenceNumber),
+              ),
+            ),
+        ),
+      ),
+    );
   if (!rows[0]) return null;
   const mapped = mapIssue(rows[0].issue, rows[0].projectKey);
   await attachLabels([mapped]);
@@ -908,6 +928,7 @@ export async function createIssue(
   // An issue created already delegated to an agent enqueues a run, the same as
   // delegating one later does.
   await enqueueDelegateRun(created, actorUserId);
+  await queueStatusRuns([issueId], input.columnId, actorUserId);
   // An issue created already assigned to a member notifies them, the same as
   // assigning one later does.
   if (created.assigneeUserId) {
@@ -947,7 +968,7 @@ async function identifiers(ids: number[]): Promise<Map<number, string>> {
 
 // Writes a parent change to the feeds of every issue it concerns: the subtask reads
 // which parent it moved between, each parent reads the subtask it gained or lost.
-async function recordParentChange(
+export async function recordParentChange(
   childId: number,
   before: number | null,
   after: number | null,
@@ -1087,6 +1108,7 @@ export async function updateIssue(
       if (before.delegateUserId !== after.delegateUserId) await enqueueDelegateRun(after, actor);
       if (before.columnId !== after.columnId) {
         await emitIssueEvent('issue.state_changed', after, actor);
+        await queueStatusRuns([id], after.columnId, actorId(actor));
         await applySubtaskAutomation(after, actor);
       }
     }

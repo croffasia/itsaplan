@@ -1,6 +1,7 @@
 import { t } from 'elysia';
 import { pageQueryFields, pageResponse } from '#shared/pagination';
 import { PermissionMatrixSchema } from '#shared/permissions';
+import { AccessViaSchema } from '#shared/workspace-roles';
 import { StatsDto } from '#modules/analytics/model';
 import { TEAM_SLUG_PATTERN } from './ref';
 
@@ -27,7 +28,17 @@ const teamSlug = t.String({
     'starting with a letter, 2 to 40 characters.',
 });
 
-export const createTeamBody = t.Object({ name: teamName, slug: teamSlug });
+export const createTeamBody = t.Object({
+  name: teamName,
+  slug: teamSlug,
+  workspaceId: t.Optional(
+    t.Integer({
+      minimum: 1,
+      description:
+        'The workspace that holds the team. A self-hosted instance has one, which is the default.',
+    }),
+  ),
+});
 
 // A team made before slugs were required has none, and takes no change until one is set.
 export const updateTeamBody = t.Partial(t.Object({ name: teamName, slug: teamSlug }));
@@ -35,6 +46,7 @@ export const updateTeamBody = t.Partial(t.Object({ name: teamName, slug: teamSlu
 // A team DTO (TeamRow from the service).
 export const TeamResponse = t.Object({
   id: t.Number(),
+  workspaceId: t.Number(),
   name: t.String(),
   slug: t.Nullable(t.String()),
   ref: t.String({ description: 'How web URLs name the team: its slug, or its id without one.' }),
@@ -47,6 +59,11 @@ export const TeamResponse = t.Object({
     [t.Literal('owner'), t.Literal('manager'), t.Literal('member'), t.Literal('agent')],
     { description: 'Your standing in this team.' },
   ),
+  via: t.Union([t.Literal('member'), t.Literal('workspace')], {
+    description:
+      "'workspace' when you are not in the team and reach it through your role in its " +
+      'workspace.',
+  }),
   source: t.Union([t.Literal('invite'), t.Literal('scim')], {
     description:
       "How your membership came about. A provisioned one is the identity provider's: you " +
@@ -127,6 +144,7 @@ export const TeamProjectPageResponse = pageResponse(
       { description: 'The project members who own it.' },
     ),
     isMember: t.Boolean(),
+    archivedAt: t.Nullable(t.String()),
     createdAt: t.String(),
   }),
 );
@@ -150,6 +168,7 @@ export const TeamProjectDetailResponse = t.Object({
   viewer: t.Nullable(
     t.Object({
       role: t.Union([t.Literal('owner'), t.Literal('member')]),
+      via: AccessViaSchema,
       source: t.Union([t.Literal('invite'), t.Literal('scim')], {
         description: "A provisioned membership is the identity provider's: it cannot be left.",
       }),

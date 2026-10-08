@@ -20,7 +20,7 @@ async function updatePreferences(
     .set(preferences)
     .where(and(eq(projectMember.projectId, projectId), eq(projectMember.userId, userId)))
     .returning({ isFavorite: projectMember.isFavorite, isHidden: projectMember.isHidden });
-  if (!updated) throw new HttpError(403, 'You do not have access to this project');
+  if (!updated) throw new HttpError(403, 'Only a member of the project keeps preferences for it');
   return updated;
 }
 

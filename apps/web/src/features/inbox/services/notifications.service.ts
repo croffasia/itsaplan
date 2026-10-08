@@ -25,7 +25,6 @@ export function useNotificationsQuery(
       listNotifications(projectId, { cursor: pageParam, limit: 30, filters }),
     initialPageParam: null as NotificationCursor | null,
     getNextPageParam: (last) => last.nextCursor,
-    refetchInterval: projectId == null ? 30_000 : false,
   });
 }
 
@@ -55,7 +54,7 @@ export function useSetNotificationRead(projectKey: string) {
 export function useMarkAllRead(projectKey: string, projectId: number | null) {
   const invalidate = useInvalidateInbox(projectKey);
   return useMutation({
-    mutationFn: () => markAllNotificationsRead(projectId),
+    mutationFn: (filters: NotificationFilters) => markAllNotificationsRead(projectId, filters),
     onSuccess: invalidate,
   });
 }
@@ -80,7 +79,13 @@ export function useDeleteNotification(projectKey: string) {
 export function useDeleteNotifications(projectKey: string, projectId: number | null) {
   const invalidate = useInvalidateInbox(projectKey);
   return useMutation({
-    mutationFn: (scope: NotificationDeleteScope) => deleteNotifications(scope, projectId),
+    mutationFn: ({
+      scope,
+      filters,
+    }: {
+      scope: NotificationDeleteScope;
+      filters: NotificationFilters;
+    }) => deleteNotifications(scope, projectId, filters),
     onSuccess: invalidate,
   });
 }

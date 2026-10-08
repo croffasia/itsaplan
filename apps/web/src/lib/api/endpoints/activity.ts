@@ -64,6 +64,7 @@ export type ActivityAction =
   | 'parent'
   | 'subtask_add'
   | 'subtask_remove'
+  | 'moved'
   | 'checklist_add'
   | 'checklist_rename'
   | 'checklist_remove'

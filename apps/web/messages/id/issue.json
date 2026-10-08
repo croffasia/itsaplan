@@ -50,6 +50,12 @@
     "dueDate": "Tenggat waktu",
     "clearDueDate": "Hapus tenggat waktu",
     "labels": "Label",
+    "copyId": "Salin ID",
+    "copyShortLink": "Salin tautan pendek",
+    "copyFullUrl": "Salin URL lengkap",
+    "copyTitle": "Salin judul",
+    "copyDescription": "Salin deskripsi",
+    "copyBranch": "Salin nama branch",
     "copyPrompt": "Salin prompt",
     "restore": "Pulihkan",
     "archive": "Arsipkan",
@@ -57,6 +63,7 @@
     "noDelegate": "Tanpa delegasi",
     "noInitiative": "Tanpa inisiatif",
     "noCycle": "Tanpa cycle",
+    "copyFailed": "Gagal menyalin ke papan klip",
     "promptCopied": "Prompt disalin ke papan klip"
   },
   "commands": {
@@ -101,7 +108,8 @@
     "restore": "Pulihkan issue",
     "archive": "Arsipkan issue",
     "delete": "Hapus issue",
-    "shareIssue": "Bagikan issue"
+    "shareIssue": "Bagikan issue",
+    "move": "Pindahkan ke proyek lain"
   },
   "actions": {
     "deleteTitle": "Hapus issue",
@@ -110,7 +118,16 @@
     "cannotBeUndone": "Tindakan ini tidak dapat dibatalkan.",
     "deleteDescription": "Hapus {issue}? Tindakan ini akan menghapus issue, komentar, aktivitas, dan lampirannya.",
     "archiveDescription": "Arsipkan {issue}? Issue ini akan meninggalkan papan dan dapat dipulihkan nanti.",
-    "applyDescription": "Terapkan <v>{action}</v> pada issue ini?"
+    "applyDescription": "Terapkan <v>{action}</v> pada issue ini?",
+    "moveTitle": "Pindahkan isu",
+    "move": "Pindahkan",
+    "moveDescription": "Pindahkan {issue} ke proyek lain di tim ini. Isu mendapat nomor baru di sana, dan tautan lama tetap membukanya.",
+    "moveSubtasks": "{count, plural, other {# subtugasnya ikut dipindahkan.}}",
+    "moveProject": "Proyek",
+    "moveChooseProject": "Pilih proyek",
+    "moveColumn": "Status",
+    "moveColumnMatching": "Status yang sesuai",
+    "moveCarriedOver": "Tipe, label, dan bidang kustom dipertahankan jika proyek tujuan memiliki yang bernama sama. Siklus, inisiatif, dan tautan ke isu di proyek ini dihapus."
   },
   "create": {
     "title": "Issue baru",
@@ -335,7 +352,8 @@
     "worklogChanged": "mengubah catatan <v>{from}</v> pada <v>{fromDate}</v> menjadi <v>{to}</v> pada <v>{date}</v>",
     "worklogRemoved": "menghapus catatan <v>{time}</v> pada <v>{date}</v>",
     "commentEdited": "mengedit komentar",
-    "commentDeleted": "menghapus komentar"
+    "commentDeleted": "menghapus komentar",
+    "issueMoved": "memindahkan isu ini dari <v>{from}</v> ke <v>{to}</v>"
   },
   "development": {
     "title": "Pengembangan",

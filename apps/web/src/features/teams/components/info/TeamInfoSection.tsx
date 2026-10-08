@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useTranslations } from 'next-intl';
-import { TeamBillingSection } from '@/cloud';
 import type { Team } from '@/lib/api/endpoints/teams';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/utils/dates';
@@ -18,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import TeamDeleteSection from './TeamDeleteSection';
 import TeamLeadsSection from './TeamLeadsSection';
 import TeamLeaveDialog from './TeamLeaveDialog';
 import { TEAM_SLUG_PATTERN } from '../../utils/teamSlug';
@@ -26,12 +26,13 @@ import { TEAM_SLUG_PATTERN } from '../../utils/teamSlug';
 // the team over to, and a membership a provisioned group granted ends at the identity
 // provider.
 function canLeave(team: Team): boolean {
+  if (team.via === 'workspace') return false;
   if (team.role === 'owner' && team.ownerCount === 1) return false;
   return !(team.source === 'scim' && team.role === 'member');
 }
 
 // The team itself: the name and the URL slug its owner edits here, the caller's rank
-// in it, and the way out of it. Everything it shows comes with the team list.
+// in it, and leaving or deleting it. Everything it shows comes with the team list.
 export default function TeamInfoSection({ teamId }: { teamId: number }) {
   const t = useTranslations('teams.info');
   const tSection = useTranslations('teams.sections.info');
@@ -137,8 +138,6 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
 
         <TeamLeadsSection teamId={teamId} />
 
-        <TeamBillingSection teamId={teamId} />
-
         {canLeave(team) && (
           <SettingsSection
             title={tManage('leaveAction')}
@@ -150,6 +149,8 @@ export default function TeamInfoSection({ teamId }: { teamId: number }) {
             }
           />
         )}
+
+        {isOwner && <TeamDeleteSection team={team} />}
       </div>
 
       {leaving && <TeamLeaveDialog team={team} onClose={() => setLeaving(false)} />}

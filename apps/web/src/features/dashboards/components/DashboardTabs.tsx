@@ -10,7 +10,7 @@ import { SortableContext, horizontalListSortingStrategy } from '@dnd-kit/sortabl
 import { LayoutDashboard, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { Dashboard } from '@/lib/api/endpoints/dashboards';
-import { useStripSortSensors } from '@/lib/dnd';
+import { useDndSensors } from '@/lib/dnd';
 import { usePermissions } from '@/hooks/usePermissions';
 import { cn } from '@/lib/utils';
 import DashboardTab from './DashboardTab';
@@ -45,7 +45,7 @@ export default function DashboardTabs({
   const canCreate = can('dashboards', 'create');
   const canEdit = can('dashboards', 'edit');
   const canDelete = can('dashboards', 'delete');
-  const sensors = useStripSortSensors();
+  const sensors = useDndSensors();
   const [activeId, setActiveId] = useState<number | null>(null);
   const dragged = activeId != null ? dashboards.find((d) => d.id === activeId) : null;
   // Name dialog state: 'new' to create, a dashboard to rename, or null (closed).

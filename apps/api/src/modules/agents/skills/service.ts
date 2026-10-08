@@ -326,10 +326,23 @@ export async function deleteSkill(id: number, teamId: number): Promise<boolean> 
     .where(and(eq(agentSkill.id, id), eq(agentSkill.teamId, teamId)));
   const skill = rows[0];
   if (!skill) return false;
-  const keys = [skillMdKey(skill.s3Prefix), ...(skill.files as SkillRef[]).map((f) => f.s3Key)];
-  await deleteObjects(keys);
+  await deleteObjects(skillObjectKeys(skill));
   await db.delete(agentSkill).where(eq(agentSkill.id, id));
   return true;
+}
+
+function skillObjectKeys(skill: { s3Prefix: string; files: unknown }): string[] {
+  return [skillMdKey(skill.s3Prefix), ...(skill.files as SkillRef[]).map((f) => f.s3Key)];
+}
+
+// The object-store keys of every skill of the team. Read them before the team is
+// deleted: the cascade removes the rows that name them.
+export async function teamSkillObjectKeys(teamId: number): Promise<string[]> {
+  const skills = await db
+    .select({ s3Prefix: agentSkill.s3Prefix, files: agentSkill.files })
+    .from(agentSkill)
+    .where(eq(agentSkill.teamId, teamId));
+  return skills.flatMap(skillObjectKeys);
 }
 
 // The skills enabled on an agent, as DTOs. Used by the agent editor and the runtime.

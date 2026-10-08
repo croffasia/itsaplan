@@ -20,7 +20,7 @@ import {
   lockAttachmentStorage,
   type ImportSource,
 } from '@repo/db';
-import { and, eq, gt, isNull, isNotNull, sql } from 'drizzle-orm';
+import { and, eq, gt, isNull, isNotNull, sql, type Column } from 'drizzle-orm';
 import { decryptSecret, type EncryptedSecret } from '@repo/crypto';
 import {
   putObject,
@@ -29,9 +29,12 @@ import {
   attachmentObjectKey,
 } from '@repo/storage';
 import type { CanonicalState, CanonicalLabel, CanonicalCycle } from './canonical';
-import type { PlaneCredential } from './plane-adapter';
+import type { ImportCredential } from './import-sources';
+import { AttachmentRejectedError } from './attachment-download';
 
-// All @repo/db access for the Plane import: claiming due import_job rows (the
+export { AttachmentRejectedError };
+
+// All @repo/db access for a source import: claiming due import_job rows (the
 // same FOR UPDATE SKIP LOCKED + lease pattern as store.ts uses for
 // webhook_delivery), reading/writing a job's progress, the import_record
 // upsert primitive, and creating the local rows an import produces. The
@@ -98,7 +101,7 @@ export async function claimDueImportJobs(limit = 1): Promise<ClaimedImportJob[]>
   return rows as unknown as ClaimedImportJob[];
 }
 
-export function decryptImportCredential(job: ClaimedImportJob): PlaneCredential {
+export function decryptImportCredential(job: ClaimedImportJob): ImportCredential {
   if (!job.credentialCiphertext || !job.credentialIv || !job.credentialAuthTag) {
     throw new Error(`import job ${job.id} has no stored credential`);
   }
@@ -107,7 +110,7 @@ export function decryptImportCredential(job: ClaimedImportJob): PlaneCredential 
     iv: job.credentialIv,
     authTag: job.credentialAuthTag,
   };
-  return JSON.parse(decryptSecret(encrypted)) as PlaneCredential;
+  return JSON.parse(decryptSecret(encrypted)) as ImportCredential;
 }
 
 // A successful tick clears the claim lease (nextAttemptAt) and lastError, and
@@ -174,16 +177,19 @@ export async function failImportJob(jobId: number, error: string): Promise<void>
 }
 
 // A transient failure (rate limited, a network error, an unreachable
-// instance): reschedule rather than fail the job outright.
+// instance): reschedule rather than fail the job outright. A tick that does not
+// count as an attempt (a rate limit) gives back the bump its claim made.
 export async function retryImportJobLater(
   jobId: number,
   delayMs: number,
   error: string,
+  countsAsAttempt: boolean,
 ): Promise<void> {
   const delaySeconds = Math.max(1, Math.ceil(delayMs / 1000));
   await db
     .update(importJob)
     .set({
+      ...(countsAsAttempt ? {} : { attempts: sql`greatest(${importJob.attempts} - 1, 0)` }),
       nextAttemptAt: sql`now() + make_interval(secs => ${delaySeconds})`,
       lastError: error.slice(0, 500),
       updatedAt: new Date(),
@@ -243,6 +249,19 @@ async function upsertImportRecordWith(
       target: [importRecord.importJobId, importRecord.sourceEntityType, importRecord.sourceId],
       set: { localEntityType, localId, sourceDisplayId },
     });
+}
+
+// True for a local row this job has not mapped yet. A row the same job already
+// mapped belongs to another source record, so it is never that record's duplicate:
+// two source issues may share a title, two comments a body and a timestamp. A row an
+// earlier job mapped stays reusable, which is what makes a re-run not duplicate.
+function notMappedByJob(jobId: number, entityType: ImportEntityType, localId: Column) {
+  return sql`NOT EXISTS (
+    SELECT 1 FROM ${importRecord}
+    WHERE ${importRecord.importJobId} = ${jobId}
+      AND ${importRecord.sourceEntityType} = ${entityType}
+      AND ${importRecord.localId} = ${localId}
+  )`;
 }
 
 export async function upsertImportRecord(
@@ -518,11 +537,21 @@ export interface NewLocalIssue {
   priority: string | null;
   startDate: string | null;
   dueDate: string | null;
+  // The source's own ISO timestamps. Absent or unparseable leaves the column default, now().
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+function sourceTimestamp(value: string | undefined): Date | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date;
 }
 
 // An issue whose title matches one already in the project (case- and
-// whitespace-insensitive, the same comparison the file-based importer uses)
-// is reused instead of duplicated — the same protection createLocalLabel and
+// whitespace-insensitive, the same comparison the file-based importer uses), and
+// that this job has not already mapped to another source issue, is reused
+// instead of duplicated — the same protection createLocalLabel and
 // createLocalStateAndRecord give their own entities. Comments and labels the
 // import attaches afterward land on that existing issue rather than being
 // orphaned. Skipped for a blank title: input.title falls back to
@@ -553,8 +582,11 @@ export async function createLocalIssueAndRecord(
           and(
             eq(issue.projectId, input.projectId),
             sql`lower(btrim(${issue.title})) = lower(btrim(${input.title}))`,
+            notMappedByJob(jobId, 'issue', issue.id),
           ),
-        );
+        )
+        .orderBy(issue.id)
+        .limit(1);
       if (existing) {
         await upsertImportRecordWith(
           tx,
@@ -592,6 +624,8 @@ export async function createLocalIssueAndRecord(
         startDate: input.startDate,
         dueDate: input.dueDate,
         position: Number(posRow!.pos),
+        createdAt: sourceTimestamp(input.createdAt),
+        updatedAt: sourceTimestamp(input.updatedAt),
       })
       .returning({ id: issue.id });
     await upsertImportRecordWith(tx, jobId, 'issue', sourceId, 'issue', row!.id, sourceDisplayId);
@@ -608,12 +642,13 @@ export async function setIssueLabels(issueId: number, labelIds: number[]): Promi
 }
 
 // A comment already on the issue with the same body and createdAt (the two
-// fields Plane's own record carries verbatim) is reused instead of
-// duplicated — the same reuse-by-content protection issues, states, and
-// cycles get, needed here because a second import job resolves the parent
-// issue to the same, already-created row and would otherwise re-post every
-// comment on it.
+// fields Plane's own record carries verbatim), and not already mapped by this
+// job, is reused instead of duplicated — the same reuse-by-content protection
+// issues, states, and cycles get, needed here because a second import job
+// resolves the parent issue to the same, already-created row and would otherwise
+// re-post every comment on it.
 export async function createLocalComment(
+  jobId: number,
   issueId: number,
   authorUserId: string | null,
   authorName: string,
@@ -630,8 +665,11 @@ export async function createLocalComment(
         eq(issueActivity.kind, 'comment'),
         eq(issueActivity.body, bodyMarkdown),
         eq(issueActivity.createdAt, createdAt),
+        notMappedByJob(jobId, 'comment', issueActivity.id),
       ),
-    );
+    )
+    .orderBy(issueActivity.id)
+    .limit(1);
   if (existing) return existing.id;
 
   const [row] = await db
@@ -698,12 +736,6 @@ export async function findProjectMemberUserId(
     .limit(1);
   return rows[0]?.userId ?? null;
 }
-
-// Thrown for an attachment that simply does not fit this instance's own
-// configured limits (file size, mime type, or project quota) — the Attachments
-// phase catches this specifically and moves on to the next attachment, rather
-// than treating it as a failed tick the way a network or database error is.
-export class AttachmentRejectedError extends Error {}
 
 export interface NewLocalAttachment {
   projectId: number;

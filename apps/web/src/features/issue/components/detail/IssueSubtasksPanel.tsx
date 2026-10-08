@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import IssuePickerDialog from '@/components/common/overlay/IssuePickerDialog';
 import NewIssueModal from '../create/NewIssueModal';
-import { usePersistedOpen } from '../../hooks/usePersistedOpen';
+import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import { useSubtaskStateFilter } from '../../hooks/useSubtaskStateFilter';
 import { useSetIssueParent } from '../../services/subtasks.service';
 import { useSetRelatedIssueState } from '../../services/relatedIssues.service';

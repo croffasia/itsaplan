@@ -5,7 +5,7 @@ import { authContext } from '#shared/auth-context';
 import { guards } from '#shared/guards';
 import { requireUser } from '#shared/access';
 import { HttpError } from '#shared/lib';
-import { commonErrors } from '#shared/responses';
+import { commonErrors, errors } from '#shared/responses';
 import {
   ColumnListResponse,
   ColumnResponse,
@@ -92,12 +92,14 @@ export const columnRoutes = new Elysia({ name: 'columns', detail: { tags: ['Colu
       body: deleteColumnBody,
       params: columnParams,
       permission: ['states', 'delete'],
-      response: { 204: t.Void(), ...commonErrors },
+      response: { 204: t.Void(), ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Delete a column',
         description:
           "Delete a column. Body mode 'move' reassigns its issues to targetColumnId, " +
-          "'delete' removes them. Backlog columns cannot be deleted.",
+          "'delete' removes them. Backlog columns cannot be deleted, nor a column whose " +
+          'agent schedules have runs that have not finished. The schedules of a deleted ' +
+          'column are deleted with it.',
         ...mcpTool('delete_column'),
       },
     },

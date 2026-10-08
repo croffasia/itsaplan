@@ -83,17 +83,29 @@ export const snoozeNotification = (id: number, until: string | null) =>
     body: JSON.stringify({ until }),
   });
 
-export const markAllNotificationsRead = (projectId: number | null) =>
+export const markAllNotificationsRead = (projectId: number | null, filters: NotificationFilters) =>
   request<{ count: number }>(`/notifications/read-all`, {
     method: 'POST',
-    body: JSON.stringify(projectId == null ? {} : { projectId }),
+    body: JSON.stringify({
+      ...(projectId == null ? {} : { projectId }),
+      ...filters,
+      includeSnoozed: filters.includeSnoozed ?? false,
+    }),
   });
 
 export const deleteNotification = (id: number) =>
   request<void>(`/notifications/${id}`, { method: 'DELETE' });
 
-export const deleteNotifications = (scope: NotificationDeleteScope, projectId: number | null) =>
-  request<{ count: number }>(
-    `/notifications?scope=${scope}${projectId == null ? '' : `&projectId=${projectId}`}`,
-    { method: 'DELETE' },
-  );
+export const deleteNotifications = (
+  scope: NotificationDeleteScope,
+  projectId: number | null,
+  filters: NotificationFilters,
+) => {
+  const q = new URLSearchParams({ scope });
+  if (projectId != null) q.set('projectId', String(projectId));
+  if (filters.types?.length) q.set('types', filters.types.join(','));
+  if (filters.from) q.set('from', filters.from);
+  if (filters.includeRead === false) q.set('includeRead', 'false');
+  q.set('includeSnoozed', String(filters.includeSnoozed ?? false));
+  return request<{ count: number }>(`/notifications?${q.toString()}`, { method: 'DELETE' });
+};

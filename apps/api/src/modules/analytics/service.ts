@@ -15,6 +15,7 @@ import {
 } from '@repo/db';
 import { and, desc, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { HttpError, iso } from '#shared/lib';
+import type { AgentRunTrigger } from '#modules/agents/model';
 
 // Read-only project metrics for the dashboards feature. Every figure is derived
 // from the existing issue / project_column / issue_activity / issue_status tables —
@@ -611,7 +612,7 @@ export async function listActivity(
 export interface AgentRunFeedItem {
   id: number;
   status: string;
-  trigger: 'mention' | 'delegation' | 'field' | 'schedule' | 'manual';
+  trigger: AgentRunTrigger;
   agentId: number;
   agentName: string;
   issueId: number | null;

@@ -74,7 +74,10 @@ Rules and invariants for this package below; read the code for the walkthrough.
 - **jsonb** (view `filters`/`display`, action `condition`/`effect`) passes through as
   JS objects — never `JSON.stringify`; validate only as `t.Any()`.
 - **Sequence numbers** ("MKT-42") are issued under a row lock on `project` inside
-  `createIssue`'s transaction — keep the lock so concurrent creates don't collide.
+  the transaction of `createIssue` and of `moveIssue` (`issues/move.ts`) — keep the
+  lock so concurrent writes don't collide. A moved issue's old number goes to
+  `issue_key_alias`, and `getIssueBySequence` resolves it to the issue in its new
+  project. The counter never goes back, so an alias never collides with an issue.
 - **`position` is a sparse float** (`MAX(position) + 1000`); do not assume contiguous
   integers.
 - **Deletes cascade in the DB** (every project/issue-scoped FK is `ON DELETE CASCADE`).
@@ -103,9 +106,21 @@ Enforced declaratively through macros, never imperative calls in handlers.
   `user` on context, throws 401 with none. `planner.ts` gates every planner route;
   a feature also `.use(authContext)` when its handlers/macros reference `user`. An
   `x-api-key` header resolves through `getSession` — no special-casing.
-- **Membership:** access is strictly by a `project_member` row (`owner` | `member`).
-  Owners bypass the permission matrix; the global `user.role` (`god` | `user`) does
-  **not**. Keep at least one owner per project.
+- **Membership:** access is by a `project_member` row (`owner` | `member`), raised by
+  the caller's role in the workspace that holds the project. Owners bypass the
+  permission matrix; the global `user.role` (`god` | `user`) does **not**. Keep at least
+  one owner per project.
+- **Workspace roles reach every team and project of the workspace** without a membership
+  row: the owner as an owner of each, an admin with a matrix that only reads. The table
+  is `shared/workspace-roles.ts`; `setWorkspaceRoleGrant(role, grant)` changes what a role
+  grants or adds a role, for a build that has more. `getProjectAccess` and
+  `getTeamAccess` in `shared/access.ts` merge the membership with the grant, and every
+  guard reads them. The lists that decide what the caller sees — `listProjects`, the
+  team list, `readRevs` — take the reached teams the same way, and answer `via:
+  'workspace'` for what the caller reaches only through the workspace. Everything that
+  asks whether *someone else* is a member — assignees, mentions, watchers, notification
+  recipients, seats, the last-owner check, SCIM — still reads the rows, so a workspace
+  manager is in none of the member lists, gets no notifications and takes no seat.
 - **`:projectKey` routes:** `.use(guards)` and set `permission: ["<resource>",
 "<action>"]` / `projectMember: true` / `projectOwner: true`; read the resolved
   `project` from context.
@@ -113,12 +128,36 @@ Enforced declaratively through macros, never imperative calls in handlers.
   macro via `entityGuard(resource, notFound, resolveProjectId)` and set it in route
   options (e.g. `workItem: "edit"`). `GET /issues/:issueId` instead asserts
   `assertPermission` on the fetched row, and spreads `requiresPermission([...])` into its
-  `detail` so the MCP tool table still reports what it requires.
+  `detail` so the MCP tool table still reports what it requires. `GET
+  /projects/:projectKey/issues/:sequenceNumber` does the same for an old number that
+  resolved to an issue now in another project. `POST /issues/:issueId/move` checks the
+  target project in the `moveTarget` macro, which reads `projectId` from the body.
 - Every guard publishes the pair it asserts as `x-permission` on the route's OpenAPI
   detail, which is where `mcp/generate.ts` reads it — Elysia deletes a macro's own key
   from the route once it expands the macro, so there is nothing else to read it from.
 - Guards/macros wrap the `shared/access.ts` primitives. Handlers that still need
   `user` (project create, invite accept/reject, self-removal) call `requireUser(user)`.
+- **The workspace decides who creates a team in it** (`POST /teams`, `createTeam` in
+  `teams/service.ts`, `assertMayCreateTeam` in `workspaces/service.ts`): its owner by
+  default, also its admins, or anyone in one of its teams, as its owner sets
+  `teamCreation`. `workspaceId` in the body names the workspace; left out, it is the
+  instance workspace, the one the instance owner owns. Anyone else gets 403.
+- **Every person owns one workspace.** No route creates one: sign-up makes it
+  (`@repo/auth`), and `authContext` makes it on the next request for an account that has
+  none (`ensurePersonalWorkspace`), while `personalWorkspaces` is on in the auth settings.
+  A build that lets a person own more mounts its own route on `createOwnWorkspace` and
+  `workspaceCreation` (`workspaces/service.ts`, which refuse an agent's bot user) and
+  raises the number with `setOwnedWorkspaceLimit` (`shared/limits.ts`). When an account is deleted (`deleteAccount`), a workspace it
+  owned goes with it while it holds no project and no AI agent; any other passes to the
+  instance owner with what the account owned alone in it (`releaseOwnedWorkspaces` in
+  `teams/service.ts`). God mode asks about sole-owned projects only outside the account's
+  own workspaces. The owner deletes a workspace under the same rule
+  (`DELETE /workspaces/:id`, `workspaceDeletion` in `workspaces/service.ts`); the instance
+  workspace never goes. No core route hands a workspace over; `transferWorkspace` is
+  there for a build that offers it. SCIM provisioning creates and attaches accounts across the
+  instance, so its routes (`workspaceScim` guard) are the instance owner's alone; a hosted
+  build sets SCIM up per workspace with `setWorkspaceScim()` from `@repo/auth`, which lets
+  every workspace owner (see SCIM below).
 - **A member of the team joins a project directly** (`POST /projects/:key/members`,
   from the candidate list); anyone else joins through an invite, which puts them in
   the team as well. A team invite (`/teams/:teamId/invites`) names no project. One
@@ -187,8 +226,10 @@ flag reaches: the agents, the skills, the tools, the roles and the credentials.
 to provision users and groups with. Three things make it unlike every other module:
 
 - **Mounted on the root app in `app.ts`, not under `planner`.** The planner's `authContext`
-  answers 401 before the bearer check could run. Authentication is one `onBeforeHandle`
-  against the instance SCIM token from `@repo/auth`.
+  answers 401 before the bearer check could run. Authentication is one `resolve` that hands
+  the token to `verifyScimToken` from `@repo/auth`, which answers with the workspace the
+  token belongs to. Every route acts for that workspace, and every function in `service.ts`
+  takes its id.
 - **Its own error document.** `onError` sits on a parent instance that `.use()`s the routes
   and answers only for paths under `/scim/v2`, handing everything else back to the planner's
   handler. Two reasons for that shape: an `onError` beside the routes widens the inferred
@@ -203,12 +244,46 @@ Filtering is `<attribute> eq "<value>"` only, over the attributes each resource 
 `service.ts`; that is what Okta, Entra and Authentik send, and `ServiceProviderConfig`
 advertises exactly that. A create inserts the `user` row directly, the way `createAgent`
 does, which deliberately skips the registration gate — with SCIM on, the identity provider
-decides who exists, and that is what makes `registration: 'closed'` plus SSO work.
+brings people in, and that is what makes `registration: 'closed'` plus SSO work.
 
-`createScimUser`/`updateScimUser` refuse a `god`-role account outright (409): the role is
-what grants god mode, and nothing about the instance owner's account is provider-owned. A
-create for an address already linked (`user.scimExternalId` set) is refused the same way —
-it is a retry, not a new person, and must not overwrite the link a first create wrote.
+An account is one `user` row across the instance. What a provider says about a person — its
+own id for them and whether they are active — is a `scim_user` row per (workspace, user).
+Groups belong to a workspace (`scim_group.workspace_id`), their names are unique within it,
+and their members must be accounts it sees. A create for an address that has an account
+links it. The group mappings and the settings are routes of `modules/workspaces/` (see the
+`workspaceScim` guard above). How far a provider reaches is `workspaceScim()` from
+`@repo/auth`:
+
+- **Off, as on a self-hosted instance, SCIM is the instance's.** God mode sets it up for the
+  instance workspace, and only that workspace's token opens `/scim/v2`. The provider sees
+  every account, PUT and PATCH write the name and address, a group maps to any project, and
+  DELETE removes the account the way god mode does (409 for the only owner of a project
+  outside the workspaces they own, whose projects pass to the instance owner).
+  A deactivated account (`user.active` false, written alongside `scim_user.active`) keeps
+  its teams and projects but cannot sign in, and `isAccountDeactivated` makes
+  `authContext`, `/me` and the MCP key check refuse what it already holds.
+- **On, as in a hosted build, SCIM is each workspace's.** A workspace's provider decides who
+  is in the workspace, not who has an account, so the same person can be linked by several
+  workspaces. It sees the accounts it linked and the people in the workspace's teams
+  (`inWorkspace` in `service.ts`), a name or address it sends is accepted and the account
+  keeps its own, and a group maps to projects of its workspace only.
+
+A create first asks the installed policy whether the workspace may provision the address
+(`email-policy.ts`). A self-hosted instance allows any address, since only its owner sets
+up provisioning; a hosted build calls `setScimEmailPolicy` with a check against the domains the workspace has
+verified, and a refused address answers 400 `invalidValue`.
+
+Set up per workspace, deactivation (`active: false`) and DELETE take the person out of every
+team of the workspace through `dropWorkspaceMemberships` in `teams/service.ts`, invite memberships
+included, and a team or project they owned alone passes to the workspace owner. Neither
+touches the account or its sessions. A deactivated person stays linked, so the provider can
+turn them back on, and `reconcile.ts` grants them nothing through the groups until then.
+
+The `god`-role account is refused (409), because nothing about the instance owner is
+provider-owned; set up per workspace, so is the workspace owner, who receives what a
+deprovisioned person owned alone. A create for an address the provider already linked
+with an `externalId` is refused the same way — it is a retry, not a new person, and must not
+overwrite the link the first create wrote.
 
 A group member removal arrives in two shapes: `path: 'members'` with the id(s) to drop in
 `value`, or RFC 7644 §3.5.2.2's path filter, `path: 'members[value eq "<id>"]'`, which Okta
@@ -224,7 +299,7 @@ its own: `resource.ts`'s `groupDisplayNames` reads a SCIM User's `groups` attrib
 channel and is read only for a claim, not for authentication. Both funnel into
 `syncEmbeddedGroups`, the same additive-only join a group pushed through `POST /Groups`
 gets — a name missing from a later sync is never removed by this path, only by an explicit
-`PATCH /Groups/:id` or an unmapping in god mode.
+`PATCH /Groups/:id` or an unmapping in the workspace settings.
 
 ## Security
 

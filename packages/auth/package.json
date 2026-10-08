@@ -7,7 +7,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "auth:generate": "dotenv -e ../../.env -- bunx @better-auth/cli@1.6.27 generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes",
+    "auth:generate": "dotenv -e ../../.env -- bunx auth@1.6.27 generate --config ./src/index.ts --output ../db/src/schema/auth.ts --yes",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit"
   },

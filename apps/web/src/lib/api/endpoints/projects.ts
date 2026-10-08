@@ -50,14 +50,17 @@ export interface Project {
   // Whether members log the time they spend on the issues, set in the same place.
   // Independent of the time estimate.
   timeLoggingEnabled: boolean;
+  archivedAt: string | null;
   createdAt: string;
   // Latest work-item activity or comment, present on the project list response.
   lastActivityAt?: string | null;
   isFavorite?: boolean;
   isHidden?: boolean;
-  // The caller's role in this project. Only present on the /projects list
+  // The caller's role in this project, and whether it comes from their membership or
+  // only from their role in the workspace. Only present on the /projects list
   // response; absent on the create/copy responses.
   role?: MemberRole;
+  via?: AccessVia;
 }
 
 export interface Assignee {
@@ -87,7 +90,12 @@ export interface ProjectViewer {
   // project's own owner; 'agent' is a bot user reading its own board, which governs
   // nothing.
   teamRole: TeamRole | 'agent' | null;
+  // 'workspace' when the caller is not a member of the project and reaches it through
+  // their role in the workspace that holds it.
+  via: AccessVia;
 }
+
+export type AccessVia = 'member' | 'workspace';
 
 // The board scaffold, returned by getProject: everything the work-items UI needs
 // except the issues themselves (those come from getBoardIssues).

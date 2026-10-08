@@ -1,7 +1,8 @@
-import { db, agentRun, issue, project } from '@repo/db';
+import { db, agentRun, issue, project, team } from '@repo/db';
 import { and, desc, eq, gt, inArray, isNotNull, lt, sql } from 'drizzle-orm';
 import { intEnv, iso } from '#shared/lib';
 import type { AgentRunTrigger } from '../model';
+import { equalJitterBackoffMs } from './helpers/backoff';
 
 // The agent_run outbox: data access for triggered runs and run history. The api's
 // run poller claims pending rows, runs them, and records the outcome.
@@ -16,20 +17,42 @@ export const agentRunConfig = {
   leaseSeconds: () => intEnv('AGENT_RUN_LEASE_SECONDS', 300),
 };
 
-// Runs of this team's agents that hold a slot and were queued before this one. A claim
+const RETRY_BASE_MS = 30_000;
+const RETRY_CAP_MS = 30 * 60_000;
+
+// How long a run waits before its next attempt after the given one failed.
+export function runRetryDelayMs(attempts: number): number {
+  return equalJitterBackoffMs(attempts, RETRY_BASE_MS, RETRY_CAP_MS);
+}
+
+// The condition a candidate run `q` of a claim meets when it is its turn. The runs of
+// one agent on one issue share the agent's conversation thread and act on the same
+// issue, so they go one at a time, oldest first: a run waits while another of them
+// holds a slot (claimed and inside its lease, or waiting out a retry), and while an
+// older one is due, which the same claim takes instead.
+export const issueRunTurn = sql`NOT EXISTS (
+  SELECT 1 FROM agent_run o
+  WHERE o.agent_id = q.agent_id AND o.issue_id = q.issue_id AND o.id <> q.id
+    AND o.status = 'pending'
+    AND ((o.started_at IS NOT NULL AND o.next_attempt_at > now())
+      OR (o.next_attempt_at <= now() AND o.id < q.id))
+)`;
+
+// Runs of this workspace's agents that hold a slot and were queued before this one. A claim
 // stamps started_at and pushes next_attempt_at forward, so a pending run that is
 // stamped and still inside that window is one of them — as is a run waiting out its
 // retry backoff, which holds a slot it is not using. Counting only the older runs is
 // what keeps a ceiling from turning away every run of a burst at once: each yields to
 // the ones ahead of it and the rest come back on their next attempt.
-export async function countRunsAhead(teamId: number, runId: number): Promise<number> {
+export async function countRunsAhead(workspaceId: number, runId: number): Promise<number> {
   const [row] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(agentRun)
     .innerJoin(project, eq(project.id, agentRun.projectId))
+    .innerJoin(team, eq(team.id, project.teamId))
     .where(
       and(
-        eq(project.teamId, teamId),
+        eq(team.workspaceId, workspaceId),
         eq(agentRun.status, 'pending'),
         isNotNull(agentRun.startedAt),
         gt(agentRun.nextAttemptAt, sql`now()`),
@@ -67,7 +90,7 @@ export async function enqueueAgentRun(input: {
 export interface ClaimedRun {
   id: number;
   agentId: number;
-  // Null for a scheduled or manual run, which works on no single issue.
+  // Null for a cron schedule's run or a manual one, which works on no single issue.
   issueId: number | null;
   scheduleId: number | null;
   trigger: AgentRunTrigger;
@@ -118,6 +141,7 @@ export async function claimDueRuns(): Promise<ClaimedRun[]> {
       SELECT id FROM agent_run q
       WHERE q.status = 'pending' AND q.next_attempt_at <= now()
         AND (SELECT kind FROM ai_agent a WHERE a.id = q.agent_id) = 'internal'
+        AND ${issueRunTurn}
       ORDER BY q.next_attempt_at, q.id
       FOR UPDATE SKIP LOCKED
       LIMIT ${batchSize}

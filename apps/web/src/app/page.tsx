@@ -4,8 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { SquareKanban, Users } from 'lucide-react';
+import { NoTeamStart } from '@/cloud';
 import { useProjectsQuery } from '@/services/projects.service';
 import { useTeamsQuery } from '@/services/teams.service';
+import { useWorkspacesQuery } from '@/services/workspaces.service';
 import { useAccountPreferencesQuery } from '@/services/preferences.service';
 import { startPagePath, projectPath } from '@/utils/paths';
 import NewProjectModal from '@/components/layout/NewProjectModal';
@@ -17,13 +19,15 @@ import StartEmpty from '@/components/layout/StartEmpty';
 // first visible favorite or project, on the user's preferred start page. Waits for both
 // the project list and the preferences before deciding so it does not flash the
 // wrong destination. With no projects at all, an account that owns or manages a team
-// is offered to create the first one there, and any other to create its own team — a
-// plain member is also told who adds them to the team's projects.
+// is offered to create the first one there. An account that may create a team in a
+// workspace, its own first, is offered to; one with no team and nowhere to create one gets
+// `NoTeamStart`, and a team member is told who adds them to a project.
 export default function Home() {
   const t = useTranslations('shell');
   const tCommon = useTranslations('common');
   const router = useRouter();
   const { data: teams } = useTeamsQuery();
+  const { data: workspaces } = useWorkspacesQuery();
   const { data: projects } = useProjectsQuery();
   const { data: prefs, isPending: prefsPending } = useAccountPreferencesQuery();
   const [creating, setCreating] = useState(false);
@@ -42,17 +46,26 @@ export default function Home() {
   }
 
   const managedTeam = teams?.find((one) => one.role !== 'member');
+  const teamWorkspace =
+    workspaces?.find((one) => one.role === 'owner') ?? workspaces?.find((one) => one.canCreateTeam);
 
-  if (teams && !managedTeam && projects?.length === 0) {
+  if (teams && workspaces && !managedTeam && projects?.length === 0) {
+    if (teams.length === 0 && !teamWorkspace) return <NoTeamStart />;
     return (
       <StartEmpty
         icon={<Users />}
         title={teams.length === 0 ? t('noTeamsTitle') : t('noProjectsTitle')}
-        hint={teams.length === 0 ? t('noTeamsHint') : t('noProjectAccessHint')}
-        action={t('createTeam')}
+        hint={
+          teams.length === 0
+            ? t('noTeamsHint')
+            : t(teamWorkspace ? 'noProjectAccessOwnerHint' : 'noProjectAccessHint')
+        }
+        action={teamWorkspace && t('createTeam')}
         onAction={() => setCreating(true)}
       >
-        {creating && <NewTeamModal onClose={() => setCreating(false)} />}
+        {creating && teamWorkspace && (
+          <NewTeamModal workspaceId={teamWorkspace.id} onClose={() => setCreating(false)} />
+        )}
       </StartEmpty>
     );
   }

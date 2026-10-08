@@ -21,7 +21,6 @@ import {
   updateScheduleBody,
 } from './model';
 import {
-  assertScheduleInterval,
   cancelPendingScheduleRuns,
   createAgentSchedule,
   deleteAgentSchedule,
@@ -29,14 +28,11 @@ import {
   getAgentSchedule,
   listAgentSchedules,
   listScheduleRuns,
+  newScheduleTrigger,
+  requiredText,
+  scheduleTriggerFields,
   updateAgentSchedule,
 } from './service';
-
-function requiredText(value: string, field: string): string {
-  const trimmed = value.trim();
-  if (!trimmed) throw new HttpError(400, `${field} is required`);
-  return trimmed;
-}
 
 export const agentScheduleRoutes = new Elysia({
   name: 'agent-schedules',
@@ -55,8 +51,8 @@ export const agentScheduleRoutes = new Elysia({
       detail: {
         summary: 'List agent schedules',
         description:
-          "One page of the project's agent schedules with their cron, next run, and last " +
-          'run, newest first.',
+          "One page of the project's agent schedules with their cron or column, next run, " +
+          'and last run, newest first.',
         ...mcpTool('list_agent_schedules'),
       },
     },
@@ -64,8 +60,8 @@ export const agentScheduleRoutes = new Elysia({
   .post(
     '/projects/:projectKey/agent-schedules',
     async ({ project, body, set, user }) => {
-      const cron = body.cron.trim();
-      await assertScheduleInterval(project.teamId, cron);
+      const type = body.type ?? 'cron';
+      const trigger = await newScheduleTrigger(project, type, body);
       let row;
       try {
         row = await createAgentSchedule({
@@ -73,10 +69,9 @@ export const agentScheduleRoutes = new Elysia({
           agentId: body.agentId,
           actorUserId: requireUser(user).id,
           name: requiredText(body.name, 'Name'),
-          prompt: requiredText(body.prompt, 'Task'),
-          cron,
+          type,
           status: body.status ?? 'active',
-          nextRunAt: nextCronRun(cron),
+          ...trigger,
         });
       } catch (err) {
         rethrowDuplicate(err, 'schedule');
@@ -91,7 +86,9 @@ export const agentScheduleRoutes = new Elysia({
       response: { 201: AgentScheduleResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an agent schedule',
-        description: 'Create a schedule that sends a task to an agent on a cron.',
+        description:
+          'Create a schedule that sends a task to an agent on a cron, or on an issue each ' +
+          'time one enters a column.',
         ...mcpTool('create_agent_schedule'),
       },
     },
@@ -99,15 +96,14 @@ export const agentScheduleRoutes = new Elysia({
   .patch(
     '/projects/:projectKey/agent-schedules/:scheduleId',
     async ({ project, params, body, user }) => {
-      const cron = body.cron?.trim();
-      if (cron !== undefined) await assertScheduleInterval(project.teamId, cron);
       const current = await getAgentSchedule(project.id, params.scheduleId, requireUser(user).id);
       if (!current) throw new HttpError(404, 'Schedule not found');
-      // Recompute the next run when the cron changes, or when resuming a paused schedule.
+      const trigger = await scheduleTriggerFields(project, current.type, body);
+      // A resumed cron schedule runs next from now, not from when it was paused.
       const resuming = body.status === 'active' && current.status === 'paused';
-      let nextRunAt: Date | undefined;
-      if (cron !== undefined) nextRunAt = nextCronRun(cron);
-      else if (resuming) nextRunAt = nextCronRun(current.cron);
+      if (resuming && trigger.nextRunAt === undefined && current.cron !== null) {
+        trigger.nextRunAt = nextCronRun(current.cron);
+      }
       let row;
       try {
         row = await updateAgentSchedule(
@@ -116,9 +112,7 @@ export const agentScheduleRoutes = new Elysia({
           {
             ...(body.agentId !== undefined ? { agentId: body.agentId } : {}),
             ...(body.name !== undefined ? { name: requiredText(body.name, 'Name') } : {}),
-            ...(body.prompt !== undefined ? { prompt: requiredText(body.prompt, 'Task') } : {}),
-            ...(cron !== undefined ? { cron } : {}),
-            ...(nextRunAt !== undefined ? { nextRunAt } : {}),
+            ...trigger,
             ...(body.status !== undefined ? { status: body.status } : {}),
           },
           requireUser(user).id,
@@ -136,7 +130,9 @@ export const agentScheduleRoutes = new Elysia({
       response: { 200: AgentScheduleResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Update an agent schedule',
-        description: "Update a schedule's agent, task, cron, or status.",
+        description:
+          "Update a schedule's agent, task, cron or column, or status. Its type stays the one " +
+          'it was created with.',
         ...mcpTool('update_agent_schedule'),
       },
     },
@@ -180,7 +176,8 @@ export const agentScheduleRoutes = new Elysia({
         summary: 'Run an agent schedule now',
         description:
           'Queue a run of the schedule now and return its run id. It runs in the background; ' +
-          'read the result with list_agent_schedule_runs.',
+          "read the result with list_agent_schedule_runs. A 'status' schedule is refused: its " +
+          'runs work on the issue that entered the column.',
         ...mcpTool('run_agent_schedule'),
       },
     },

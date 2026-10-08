@@ -16,7 +16,8 @@ import { processAgentRuns } from '../../run-poller';
 
 // Leaves one run of the team in flight and a second one due, which is the pair the
 // ceiling is read against. Claiming the first stamps it without running it, so it holds
-// a slot for as long as its lease.
+// a slot for as long as its lease. The two work on different issues: a second run on
+// the same issue would wait for the first whatever the ceiling.
 async function setup() {
   const owner = await signUpTestUser({ name: 'Owner' });
   const asOwner = authedApi(owner.cookie);
@@ -26,27 +27,24 @@ async function setup() {
   const agent = (
     await createAgent(asOwner, 'MKT', { name: 'Bot', username: 'bot', kind: 'internal' })
   ).data!.agent;
-  const issue = (
-    await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title: 'Task' })
-  ).data!;
   const projectId = agent.projects[0].id;
-  const enqueue = (prompt: string) =>
-    enqueueAgentRun({
+  const enqueue = async (title: string) => {
+    const issue = (await asOwner.projects({ projectKey: 'MKT' }).issues.post({ columnId, title }))
+      .data!;
+    await enqueueAgentRun({
       agentId: agent.id,
       projectId,
       issueId: issue.id,
       sourceActivityId: null,
-      prompt,
+      prompt: title,
     });
+    return issue.id;
+  };
 
   await enqueue('first');
   await claimDueRuns();
-  await enqueue('second');
-  const [, second] = await db
-    .select()
-    .from(agentRun)
-    .where(eq(agentRun.issueId, issue.id))
-    .orderBy(agentRun.id);
+  const issueId = await enqueue('second');
+  const [second] = await db.select().from(agentRun).where(eq(agentRun.issueId, issueId));
   return { second };
 }
 

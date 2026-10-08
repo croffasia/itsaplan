@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react';
 import {
   Building2,
   FolderKanban,
@@ -11,6 +12,7 @@ import {
   UsersRound,
   type LucideIcon,
 } from 'lucide-react';
+import { godSections } from '@/cloud';
 
 // The god mode sections, in sidebar order. God mode is instance administration,
 // open only to the owner account; the sections mirror the project settings pattern
@@ -18,7 +20,10 @@ import {
 // `group` is the sidebar heading a section sits under; GOD_GROUPS gives the order.
 // A section with `integration: true` is not listed under its group directly: it sits
 // inside the "Integrations" item at the end of the group. The name and the blurb of
-// a section, and the name of a group, are messages under `sections.god`.
+// a section, and the name of a group, are messages under `sections.god`. The hosted
+// build gets the list through `godSections` in `@/cloud` and may add, replace or drop
+// sections; one it adds carries its page in `Component`, opened at /god/<slug>, and its
+// messages come with the hosted build's.
 
 export const GOD_GROUPS = ['management', 'instance'] as const;
 export type GodGroup = (typeof GOD_GROUPS)[number];
@@ -28,9 +33,10 @@ export interface GodSection {
   group: GodGroup;
   icon: LucideIcon;
   integration?: true;
+  Component?: ComponentType;
 }
 
-export const GOD_SECTIONS: GodSection[] = [
+export const GOD_SECTIONS: GodSection[] = godSections([
   {
     slug: 'users',
     group: 'management',
@@ -90,7 +96,7 @@ export const GOD_SECTIONS: GodSection[] = [
     icon: UsersRound,
     integration: true,
   },
-];
+]);
 
 export function godSection(slug: string): GodSection {
   const section = GOD_SECTIONS.find((s) => s.slug === slug);

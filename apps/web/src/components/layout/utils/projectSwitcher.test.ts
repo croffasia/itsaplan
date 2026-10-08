@@ -28,6 +28,7 @@ function project(overrides: Partial<Project> = {}): Project {
     pointsEstimateEnabled: false,
     timeEstimateEnabled: false,
     timeLoggingEnabled: false,
+    archivedAt: null,
     createdAt: '2026-01-01T00:00:00Z',
     ...overrides,
   };
@@ -36,11 +37,13 @@ function project(overrides: Partial<Project> = {}): Project {
 function team(overrides: Partial<Team> = {}): Team {
   return {
     id: 1,
+    workspaceId: 1,
     name: 'Engineering',
     slug: 'eng',
     ref: 'eng',
     mcpEnabled: true,
     role: 'owner',
+    via: 'member',
     source: 'invite',
     joinedAt: '2026-01-01T00:00:00Z',
     projectCount: 1,

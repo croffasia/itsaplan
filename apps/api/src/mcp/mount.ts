@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { auth, isAccountDeactivated, withMcpAuth } from '@repo/auth';
+import { auth, isAccountDeactivated, rateLimitRetryAfter, withMcpAuth } from '@repo/auth';
 import { buildMcpServer } from './server';
 import type { McpApp } from './types';
 import type { McpCredential } from './credential';
@@ -14,9 +14,9 @@ function extractApiKey(request: Request): string | null {
 
 // Adds the MCP endpoint (POST /mcp) to the app and returns the same app. Mounted on
 // the root app, outside the planner session guard, because the MCP handshake is not
-// a planner route: auth is resolved here and the key is forwarded to the loopback
-// requests the tools make. `app` is captured so the tool generator can read
-// app.routes and each tool call can dispatch through app.handle.
+// a planner route: auth is resolved here, and the user it resolves to (or the OAuth
+// token) is passed to the loopback requests the tools make. `app` is captured so the
+// tool generator can read app.routes and each tool call can dispatch through app.handle.
 //
 // Stateless transport (sessionIdGenerator undefined): a fresh server and transport
 // per request. Personal API keys remain supported for existing integrations; native
@@ -50,8 +50,15 @@ export function mountMcp(app: any): void {
           // refuses it for every planner route. Deactivation arrives over SCIM, after
           // the key was issued.
           if (session && !isAccountDeactivated(session.user))
-            return serve({ kind: 'api-key', apiKey }, session.user.id);
-        } catch {
+            return serve({ kind: 'user', userId: session.user.id }, session.user.id);
+        } catch (error) {
+          const retryAfter = rateLimitRetryAfter(error);
+          if (retryAfter !== null) {
+            return Response.json(
+              { error: 'Too many requests', code: 'RATE_LIMITED' },
+              { status: 429, headers: { 'retry-after': String(retryAfter) } },
+            );
+          }
           // Not an API key: let the native OAuth handler validate the bearer token.
         }
       }

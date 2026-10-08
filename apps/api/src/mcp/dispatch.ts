@@ -1,6 +1,6 @@
 import type { McpApp } from './types';
 import type { McpRouteTool } from './generate';
-import { MCP_LOOPBACK_HEADER, setMcpOAuthToken } from '../shared/mcp-request';
+import { MCP_LOOPBACK_HEADER, setMcpOAuthToken, setMcpUserId } from '../shared/mcp-request';
 import type { McpCredential } from './credential';
 import { structuredResult, type StructuredResult } from './result';
 import { withPublicAttachmentUrls, withStoredAttachmentUrls } from './attachment-urls';
@@ -63,6 +63,7 @@ export async function dispatchTool(
     body,
   });
   if (credential.kind === 'oauth') setMcpOAuthToken(request, credential.accessToken);
+  if (credential.kind === 'user') setMcpUserId(request, credential.userId);
   const response = await app.handle(request);
   const text = withPublicAttachmentUrls(await response.text());
   return {

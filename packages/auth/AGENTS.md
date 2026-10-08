@@ -217,6 +217,13 @@ with nothing that would renew it, and an external agent's operator rotates it th
 `regenerate-key`. The plugin applies the default to every key it creates, so `issueKey` in
 `apps/api/src/modules/agents/core/service.ts` clears `expires_at` on the row afterwards.
 
+Each key is rate-limited, 100 requests per second by default, set by
+`API_KEY_RATE_LIMIT_ENABLED`, `API_KEY_RATE_LIMIT_WINDOW_MS` and `API_KEY_RATE_LIMIT_MAX`
+(`apiKeyRateLimit`). The plugin copies the window and the maximum into the key row at
+creation, so a change to them reaches only keys created afterwards. A refused key throws
+an `APIError` with code `RATE_LIMITED`; `rateLimitRetryAfter` turns it into the seconds
+for a `Retry-After` header.
+
 A key the plugin will not accept makes it throw out of `auth.api.getSession` rather than
 return no session. `getSessionFromHeaders` turns that back into "no session", so an expired
 key is answered with a 401 instead of a 500. Use it instead of `auth.api.getSession` where

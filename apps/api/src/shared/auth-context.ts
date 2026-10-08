@@ -9,7 +9,7 @@ import {
   isAccountDeactivated,
 } from '@repo/auth';
 import { HttpError } from './lib';
-import { getMcpOAuthToken } from './mcp-request';
+import { getMcpOAuthToken, getMcpUserId } from './mcp-request';
 
 // GET routes that need no session. The raw attachment and avatar bytes routes
 // must work in <img>/<video> and external fetches. The invite lookup
@@ -43,21 +43,25 @@ export const authContext = new Elysia({ name: 'auth-context' }).resolve(
   async ({ request, path }): Promise<{ user: SessionUser | null }> => {
     const session = await getSessionFromHeaders(request.headers);
     if (session) return { user: await signedIn(session.user) };
-    const mcpToken = getMcpOAuthToken(request);
-    if (mcpToken) {
-      const oauthSession = await auth.api.getMcpSession({
-        headers: new Headers({ Authorization: `Bearer ${mcpToken}` }),
-      });
-      if (oauthSession) {
-        const user = await db.query.user.findFirst({ where: eq(users.id, oauthSession.userId) });
-        if (user) return { user: await signedIn(user as SessionUser) };
-      }
+    const userId = getMcpUserId(request) ?? (await mcpOAuthUserId(request));
+    if (userId) {
+      const user = await db.query.user.findFirst({ where: eq(users.id, userId) });
+      if (user) return { user: await signedIn(user as SessionUser) };
     }
     // The public raw-attachment route has no session and needs none.
     if (request.method === 'GET' && PUBLIC_GET.test(path)) return { user: null };
     throw new HttpError(401, 'Authentication required');
   },
 );
+
+async function mcpOAuthUserId(request: Request): Promise<string | undefined> {
+  const token = getMcpOAuthToken(request);
+  if (!token) return undefined;
+  const oauthSession = await auth.api.getMcpSession({
+    headers: new Headers({ Authorization: `Bearer ${token}` }),
+  });
+  return oauthSession?.userId;
+}
 
 // A deactivated account goes no further. Any other gets its personal workspace here when
 // it has none yet, so one made before personal workspaces, by SCIM or while they were off

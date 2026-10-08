@@ -14,6 +14,11 @@ data:
   {{- with .Values.api.env.COOKIE_DOMAIN }}
   COOKIE_DOMAIN: {{ . | quote }}
   {{- end }}
+  {{- range $name := list "API_KEY_RATE_LIMIT_ENABLED" "API_KEY_RATE_LIMIT_WINDOW_MS" "API_KEY_RATE_LIMIT_MAX" }}
+  {{- if hasKey $.Values.api.env $name }}
+  {{ $name }}: {{ index $.Values.api.env $name | quote }}
+  {{- end }}
+  {{- end }}
   S3_BUCKET: {{ .Values.api.env.S3_BUCKET | quote }}
   S3_REGION: {{ .Values.api.env.S3_REGION | quote }}
   S3_ENDPOINT: {{ include "itsaplan.s3Endpoint" . | quote }}

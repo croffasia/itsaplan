@@ -1,4 +1,5 @@
 import { Elysia } from 'elysia';
+import { rateLimitRetryAfter } from '@repo/auth';
 import { HttpError, pgErrorCode } from './shared/lib';
 import { authContext } from './shared/auth-context';
 import { projectRoutes } from './modules/projects';
@@ -56,14 +57,21 @@ import { linkPreviewRoutes } from './modules/link-previews';
 // client sends the session cookie with `credentials: "include"`.
 //
 // Errors are normalized to a { error } JSON body: HttpError carries its own
-// status; a Postgres unique_violation becomes 409; request-body validation
-// failures become 400; anything else is a 500 with the error logged.
+// status; a rate-limited API key becomes 429 with Retry-After; a Postgres
+// unique_violation becomes 409; request-body validation failures become 400;
+// anything else is a 500 with the error logged.
 export const planner = new Elysia({ name: 'planner' })
   .use(authContext)
   .onError({ as: 'global' }, ({ code, error, set }) => {
     if (error instanceof HttpError) {
       set.status = error.status;
       return error.code ? { error: error.message, code: error.code } : { error: error.message };
+    }
+    const retryAfter = rateLimitRetryAfter(error);
+    if (retryAfter !== null) {
+      set.status = 429;
+      set.headers['retry-after'] = String(retryAfter);
+      return { error: 'Too many requests', code: 'RATE_LIMITED' };
     }
     if (code === 'VALIDATION') {
       set.status = 400;

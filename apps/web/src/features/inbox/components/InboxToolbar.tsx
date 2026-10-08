@@ -3,6 +3,7 @@
 import { CheckCheck, ListFilter, MoreHorizontal, SlidersHorizontal, Trash2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { NotificationFilters, NotificationType } from '@/lib/api/endpoints/notifications';
+import { PRIORITY_INBOX_TYPES } from '@/lib/api/endpoints/notifications';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -35,13 +36,16 @@ export default function InboxToolbar({
 }) {
   const t = useTranslations('inbox');
   const tCommon = useTranslations('common');
-  const selectedTypes = filters.types ?? [];
+  const selectedTypes = filters.types ?? PRIORITY_INBOX_TYPES;
 
   const toggleType = (type: NotificationType) => {
     const next = selectedTypes.includes(type)
       ? selectedTypes.filter((t) => t !== type)
       : [...selectedTypes, type];
-    onFiltersChange({ ...filters, types: next.length ? next : undefined });
+    onFiltersChange({
+      ...filters,
+      types: next.length ? next : [...PRIORITY_INBOX_TYPES],
+    });
   };
 
   return (

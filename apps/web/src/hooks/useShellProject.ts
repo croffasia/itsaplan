@@ -12,6 +12,7 @@ import { applyFilters } from '@/utils/filters';
 import { withoutShownSubtasks } from '@/utils/subtasks';
 import { viewPath } from '@/utils/paths';
 import { useViewEditor } from '@/hooks/useViewEditor';
+import { useFilterEvaluationContext } from '@/hooks/useFilterEvaluationContext';
 
 function errorMessage(error: unknown): string | null {
   if (!error) return null;
@@ -23,6 +24,7 @@ function errorMessage(error: unknown): string | null {
 // from. Kept out of the Shell so it stays a composition of chrome and overlays.
 export function useShellProject(projectKey: string | null, activeViewId: number | null) {
   const router = useRouter();
+  const filterContext = useFilterEvaluationContext();
 
   const projectsQuery = useProjectsQuery();
   const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
@@ -71,10 +73,10 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
   const separateSubtasks = editor.settings.separateSubtasks;
   const filteredProject = useMemo(() => {
     if (!project) return null;
-    const filtered = applyFilters(project.issues, editor.effectiveFilters, project);
+    const filtered = applyFilters(project.issues, editor.effectiveFilters, project, filterContext);
     const hideSubtaskRows = project.project.subtasksEnabled && !separateSubtasks;
     return { ...project, issues: hideSubtaskRows ? withoutShownSubtasks(filtered) : filtered };
-  }, [project, editor.effectiveFilters, separateSubtasks]);
+  }, [project, editor.effectiveFilters, separateSubtasks, filterContext]);
 
   // Every custom field of the project comes with the board payload; consumers
   // filter by issueTypeId locally.
@@ -105,6 +107,7 @@ export function useShellProject(projectKey: string | null, activeViewId: number 
     views,
     editor,
     customFields,
+    filterContext,
     canCreateIssue,
     errorMsg: errorMessage(error),
     // A 403 on the scaffold means the session is valid but the user is not a member

@@ -24,21 +24,21 @@ export default function RecentIssuesWidget({
 }) {
   const t = useTranslations('dashboards.recentIssues');
   const priorityLabel = usePriorityLabel();
-  const { project } = useShell();
+  const { project, filterContext } = useShell();
   const sort = config.sort ?? 'created';
   const limit = config.limit ?? 10;
   const filters: FilterSet = config.filters ?? EMPTY_FILTER_SET;
 
   const issues = useMemo(() => {
     if (!project) return [];
-    const filtered = applyFilters(project.issues, filters, project);
+    const filtered = applyFilters(project.issues, filters, project, filterContext);
     const sorted = [...filtered].sort((a, b) =>
       sort === 'updated'
         ? b.updatedAt.localeCompare(a.updatedAt)
         : b.createdAt.localeCompare(a.createdAt),
     );
     return sorted.slice(0, limit);
-  }, [project, filters, sort, limit]);
+  }, [project, filters, sort, limit, filterContext]);
 
   const columnById = useMemo(
     () => new Map((project?.columns ?? []).map((c) => [c.id, c])),

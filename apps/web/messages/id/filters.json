@@ -4,6 +4,7 @@
   "valuePlaceholder": "nilai",
   "noOptions": "Tidak ada opsi",
   "selected": "{count} dipilih",
+  "currentUser": "Pengguna saat ini",
   "operators": {
     "is": "adalah",
     "is_not": "bukan",
@@ -12,7 +13,11 @@
     "is_set": "diatur",
     "is_not_set": "tidak diatur",
     "contains": "berisi",
-    "not_contains": "tidak berisi"
+    "not_contains": "tidak berisi",
+    "overdue": "terlambat",
+    "today": "hari ini",
+    "next_3_days": "dalam 3 hari ke depan",
+    "next_7_days": "dalam 7 hari ke depan"
   },
   "boolean": {
     "true": "Benar",

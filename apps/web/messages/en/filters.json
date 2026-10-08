@@ -4,6 +4,7 @@
   "valuePlaceholder": "value",
   "noOptions": "No options",
   "selected": "{count} selected",
+  "currentUser": "Current user",
   "operators": {
     "is": "is",
     "is_not": "is not",
@@ -12,7 +13,11 @@
     "is_set": "is set",
     "is_not_set": "is not set",
     "contains": "contains",
-    "not_contains": "does not contain"
+    "not_contains": "does not contain",
+    "overdue": "is overdue",
+    "today": "is today",
+    "next_3_days": "is in the next 3 days",
+    "next_7_days": "is in the next 7 days"
   },
   "boolean": {
     "true": "True",

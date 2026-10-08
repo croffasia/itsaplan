@@ -4,6 +4,7 @@
   "valuePlaceholder": "值",
   "noOptions": "无可用选项",
   "selected": "已选择 {count} 项",
+  "currentUser": "当前用户",
   "operators": {
     "is": "是",
     "is_not": "不是",
@@ -12,7 +13,11 @@
     "is_set": "已设置",
     "is_not_set": "未设置",
     "contains": "包含",
-    "not_contains": "不包含"
+    "not_contains": "不包含",
+    "overdue": "已逾期",
+    "today": "是今天",
+    "next_3_days": "在未来 3 天内",
+    "next_7_days": "在未来 7 天内"
   },
   "boolean": {
     "true": "是",

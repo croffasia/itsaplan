@@ -31,7 +31,8 @@
   "widgets": {
     "stat": {
       "label": "Number",
-      "description": "Count of issues matching a filter"
+      "description": "Count of issues matching a filter",
+      "viewIssues": "View issues: {title} ({count})"
     },
     "recent_issues": {
       "label": "Recent issues",

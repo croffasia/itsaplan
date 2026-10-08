@@ -1,7 +1,7 @@
 import type { FilterOperator, FilterValue } from '@/utils/filters';
 
 // The kind of value a field holds, which decides its operators and value editor.
-export type FieldKind = 'set' | 'date' | 'text' | 'number' | 'boolean';
+export type FieldKind = 'set' | 'date' | 'due-date' | 'text' | 'number' | 'boolean';
 
 export interface FieldOption {
   value: FilterValue;
@@ -29,6 +29,16 @@ export interface FieldSpec {
 export const OPERATORS_BY_KIND: Record<FieldKind, FilterOperator[]> = {
   set: ['is', 'is_not'],
   date: ['before', 'after', 'is_set', 'is_not_set'],
+  'due-date': [
+    'before',
+    'after',
+    'overdue',
+    'today',
+    'next_3_days',
+    'next_7_days',
+    'is_set',
+    'is_not_set',
+  ],
   text: ['contains', 'not_contains', 'is_set', 'is_not_set'],
   number: ['is', 'is_not', 'is_set', 'is_not_set'],
   boolean: ['is'],

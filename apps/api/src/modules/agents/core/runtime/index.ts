@@ -152,19 +152,32 @@ async function buildAgent(
 // thread: threadId identifies the conversation (a new one is created when omitted)
 // and the caller (callerUserId) owns it. The thread id used is returned so the
 // caller can continue the conversation; it is null when memory is off.
+//
+// `aborted` is true when opts.abortSignal fired: Mastra then resolves with the partial
+// text instead of rejecting, so only this tells it from a normal finish.
 export async function runAgent(
   agentId: number,
   projectId: number,
   prompt: string,
   opts: RunOpts,
-): Promise<{ text: string; threadId: string | null; usage: ContextUsage | null }> {
+): Promise<{
+  text: string;
+  threadId: string | null;
+  usage: ContextUsage | null;
+  aborted: boolean;
+}> {
   const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
   const result = await agent.generate(prompt, { ...options, abortSignal: opts.abortSignal });
   const usage = contextOf(result.usage);
   // A chat thread keeps one number, replaced by each answer. An autonomous run keeps
   // the counts of that run instead, on its own row, so its caller stores them.
   if (threadId && isChatThreadId(threadId)) await recordContextUsage(threadId, row.id, usage);
-  return { text: (result.text ?? '').trim(), threadId, usage };
+  return {
+    text: (result.text ?? '').trim(),
+    threadId,
+    usage,
+    aborted: opts.abortSignal?.aborted ?? false,
+  };
 }
 
 // What the model reported about the last call of an answer, as the pair the chat keeps.

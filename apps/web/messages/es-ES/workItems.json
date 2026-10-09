@@ -85,7 +85,7 @@
     "labels": "Etiquetas",
     "noAssignee": "Sin asignar",
     "noDelegate": "Sin delegado",
-    "noInitiative": "Sin iniciitiva",
+    "noInitiative": "Sin iniciativa",
     "noCycle": "Sin ciclo",
     "archive": "Archivar",
     "clearSelection": "Limpiar la selección"
@@ -112,7 +112,7 @@
     "noDelegate": "Sin delegado",
     "noPriority": "Sin prioridad",
     "noType": "Sin tipo",
-    "noInitiative": "Sin iniciitiva",
+    "noInitiative": "Sin iniciativa",
     "noCycle": "Sin ciclo",
     "noMember": "Sin valor"
   }

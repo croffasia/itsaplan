@@ -39,11 +39,11 @@
     },
     "activity_feed": {
       "label": "Filtro de actividad",
-      "description": "Registo de cambios de todo el proyecto, filtrable por actor y acción"
+      "description": "Registro de cambios de todo el proyecto, filtrable por actor y acción"
     },
     "pulse": {
       "label": "Pulso",
-      "description": "Mapa de caldor de actividad diaria al estilo de GitHub"
+      "description": "Mapa de calor de actividad diaria al estilo de GitHub"
     },
     "throughput": {
       "label": "Rendimiento",

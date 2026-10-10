@@ -13,7 +13,7 @@
     "inviteEmail": "Invitar a {email}",
     "alreadyInvited": "{email} ya está invitado",
     "alreadyMember": "{email} ya está en este proyecto",
-    "alreadyInTeam": "{email} ya está en el equipo — seléccionalo de la lista de arriba",
+    "alreadyInTeam": "{email} ya está en el equipo — selecciónalo de la lista de arriba",
     "refused": "No se ha podido añadir a {email}",
     "typeEmail": "No se ha encontrado a nadie. Escribe una dirección de correo completa para invitarlo.",
     "noCandidates": "Todo el mundo del equipo ya está en este proyecto.",

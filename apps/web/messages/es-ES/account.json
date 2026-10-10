@@ -60,17 +60,17 @@
     "connected": "Conectada",
     "setPasswordFirst": "Define primero una contraseña",
     "googleConnectFailed": "No se ha podido conectar Google.",
-    "googleDisconnected": "Google se ha disconnectedo",
+    "googleDisconnected": "Google se ha desconectado",
     "telegramConnected": "Telegram se ha conectado",
-    "telegramDisconnected": "Telegram se ha disconnectedo",
+    "telegramDisconnected": "Telegram se ha desconectado",
     "telegramWaiting": "Esperando a que pulses Start en el chat del bot…",
     "telegramDescription": "Recibe notificaciones en Telegram.",
     "connect": "Conectar",
-    "disconnect": "Disconnectar",
+    "disconnect": "Desconectar",
     "telegramConnectedLabel": "Conectado",
     "loadFailed": "No se han podido cargar las cuentas conectadas.",
     "connectFailed": "No se ha podido conectar Google.",
-    "disconnectFailed": "No se ha podido disconnectar esta cuenta."
+    "disconnectFailed": "No se ha podido desconectar esta cuenta."
   },
   "preferences": {
     "label": "Preferencias",

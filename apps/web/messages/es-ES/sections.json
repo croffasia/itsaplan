@@ -17,7 +17,7 @@
     },
     "teams": {
       "label": "Equipos",
-      "description": "Todos los equipos de esta instancia: los proyectos que posee cada uno, y quién pertene a él."
+      "description": "Todos los equipos de esta instancia: los proyectos que posee cada uno, y quién pertenece a él."
     },
     "projects": {
       "label": "Proyectos",

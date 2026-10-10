@@ -83,7 +83,7 @@ export default function IssueContextMenu({
   const updateIssue = useUpdateIssue(project.project.ref);
   const { archive, dialog: archiveDialog } = useArchiveAction(project, onDeleted);
   const restoreIssue = useRestoreIssue(project.project.ref);
-  const actionsQuery = useActionsQuery(project.project.ref);
+  const actionsQuery = useActionsQuery(shell ? project.project.ref : null);
   const priorityLabel = usePriorityLabel();
   const presetLabel = useDueDatePresetLabel();
   const [open, setOpen] = useState(false);

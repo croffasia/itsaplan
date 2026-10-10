@@ -4,7 +4,7 @@ import { guards, entityGuard } from '#shared/guards';
 import { authContext } from '#shared/auth-context';
 import { HttpError } from '#shared/lib';
 import { mcpTool } from '#mcp/generate';
-import { accessErrors, commonErrors } from '#shared/responses';
+import { accessErrors, commonErrors, errors } from '#shared/responses';
 import {
   ActionResponse,
   ActionListResponse,
@@ -72,12 +72,12 @@ export const actionRoutes = new Elysia({ name: 'actions', detail: { tags: ['Acti
     '/projects/:projectKey/actions',
     async ({ project, body, set }) => {
       set.status = 201;
-      return createAction({ projectId: project.id, ...body });
+      return createAction({ ...body, projectId: project.id, expectedTeamId: project.teamId });
     },
     {
       body: createActionBody,
       permission: ['actions', 'create'],
-      response: { 201: ActionResponse, ...commonErrors },
+      response: { 201: ActionResponse, ...commonErrors, ...errors(409) },
       detail: {
         summary: 'Create an action',
         description: 'Create an action in a project.',

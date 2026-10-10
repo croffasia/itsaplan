@@ -752,29 +752,31 @@ export async function setSubtaskAutomationSettings(
   return next;
 }
 
-// Deletes a project and everything scoped to it. Every project-scoped foreign key
-// has ON DELETE CASCADE on project_id, so deleting the project row removes its
-// columns, issue types, labels, initiatives, issues, views, dashboards, and
-// actions, which in turn cascade to their own dependents (an issue's labels, field
-// values/options, attachments, and activity; a custom field's values). The
-// issue.column_id foreign key is NO ACTION, checked at end of statement — both the
-// issues and their columns are deleted by the same cascade, so it is satisfied. The
-// conversation threads of the project's agents are deleted first, since they live
-// outside those cascades.
-export async function deleteProject(projectId: number): Promise<void> {
-  await deleteThreadsWhere({ projectId });
-  // A team membership the SCIM reconciliation granted stands on the project
-  // memberships it granted with it, and no group change follows the delete to re-check
-  // it, so the members are read while they still exist and re-checked afterwards.
-  const provisioned = await db
-    .select({ teamId: project.teamId, userId: projectMember.userId })
-    .from(projectMember)
-    .innerJoin(project, eq(project.id, projectMember.projectId))
-    .where(and(eq(projectMember.projectId, projectId), eq(projectMember.source, 'scim')));
-  const assetKeys = await db.transaction(async (tx) => {
+// Foreign keys cascade project data; agent threads and stored objects need explicit cleanup.
+// Only the instance-admin path omits the team captured during authorization.
+export async function deleteProject(
+  projectId: number,
+  expectedTeamId: number | undefined,
+): Promise<void> {
+  const { assetKeys, provisioned } = await db.transaction(async (tx) => {
     // Serialize with the final upload quota check. A concurrent upload either
     // commits before these reads or loses its FK race and cleans its S3 object.
     await lockAttachmentStorage(tx, projectId);
+    const [current] = await tx
+      .select({ teamId: project.teamId })
+      .from(project)
+      .where(eq(project.id, projectId))
+      .for('update');
+    if (!current) throw new HttpError(404, 'Project not found');
+    if (expectedTeamId !== undefined && current.teamId !== expectedTeamId)
+      throw new HttpError(409, 'The project has moved to another team');
+    await deleteThreadsWhere({ projectId });
+    // SCIM team memberships must be reconciled after their project memberships disappear.
+    const provisioned = await tx
+      .select({ teamId: project.teamId, userId: projectMember.userId })
+      .from(projectMember)
+      .innerJoin(project, eq(project.id, projectMember.projectId))
+      .where(and(eq(projectMember.projectId, projectId), eq(projectMember.source, 'scim')));
     const issueAssets = await tx
       .select({ s3Key: issueAttachment.s3Key })
       .from(issueAttachment)
@@ -795,9 +797,12 @@ export async function deleteProject(projectId: number): Promise<void> {
       .innerJoin(initiative, eq(initiative.id, initiativeAttachment.initiativeId))
       .where(eq(initiative.projectId, projectId));
     await tx.delete(project).where(eq(project.id, projectId));
-    return [...issueAssets, ...chatAssets, ...documentAssets, ...initiativeAssets].map(
-      (asset) => asset.s3Key,
-    );
+    return {
+      assetKeys: [...issueAssets, ...chatAssets, ...documentAssets, ...initiativeAssets].map(
+        (asset) => asset.s3Key,
+      ),
+      provisioned,
+    };
   });
   await deleteObjects(assetKeys);
   for (const { teamId, userId } of provisioned) {

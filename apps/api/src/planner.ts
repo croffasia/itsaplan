@@ -80,6 +80,10 @@ export const planner = new Elysia({ name: 'planner' })
       set.status = 409;
       return { error: 'A record with this name already exists.' };
     }
+    if (pgErrorCode(error) === '40001' || pgErrorCode(error) === '40P01') {
+      set.status = 409;
+      return { error: 'The resource changed during this request; reload and try again.' };
+    }
     // The message stays in the log only. drizzle puts the failed statement and its
     // parameters in it, and the public routes would hand that to anyone.
     console.error('[planner] unhandled error:', error);

@@ -491,7 +491,7 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         );
       }
       if (query.withProjects) {
-        for (const p of sole) await deleteProject(p.projectId);
+        for (const p of sole) await deleteProject(p.projectId, undefined);
       }
       await deleteInstanceUser(params.userId);
       return noContent();

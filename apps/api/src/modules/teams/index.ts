@@ -443,13 +443,13 @@ export const teamRoutes = new Elysia({ name: 'teams', detail: { tags: ['Teams'] 
     '/teams/:teamId/projects/:projectId',
     async ({ membership, params }) => {
       await requireTeamProject(membership.teamId, params.projectId);
-      await deleteProject(params.projectId);
+      await deleteProject(params.projectId, membership.teamId);
       return noContent();
     },
     {
       teamOwner: true,
       params: teamProjectParams,
-      response: { 204: t.Void(), ...errors(401, 403, 404) },
+      response: { 204: t.Void(), ...errors(401, 403, 404, 409) },
       detail: {
         summary: 'Delete a project of the team',
         description:

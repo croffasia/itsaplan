@@ -156,6 +156,7 @@ needed. Run it again later to restart the instance; the data stays.
 - [Deploy on Coolify](docs/coolify.md) — the same stack on a Coolify instance
 - [Deploy on Kubernetes](docs/helm.md) — Helm chart for any Kubernetes cluster
 - [Local development](docs/development.md) — running the apps on the host, and the tests
+- [Project transfers](docs/project-transfers.md) — move existing projects between teams through MCP
 - [Coding agent setup](docs/runner.md) — the config for each CLI that `@itsaplan/runner` runs
 
 ## Built with

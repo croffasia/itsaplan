@@ -1,6 +1,6 @@
-import { db, projectAction } from '@repo/db';
+import { db, project, projectAction } from '@repo/db';
 import { and, eq, sql } from 'drizzle-orm';
-import { iso, num } from '#shared/lib';
+import { HttpError, iso, num } from '#shared/lib';
 
 // Manual actions: saved macros on a project. condition is a filter set deciding
 // which issues the action applies to (empty = always); effect is a partial issue
@@ -44,27 +44,40 @@ export async function listActions(projectId: number): Promise<ActionRow[]> {
 // stored verbatim in the jsonb columns.
 export async function createAction(input: {
   projectId: number;
+  expectedTeamId: number;
   name: string;
   icon?: string;
   condition?: unknown;
   effect?: unknown;
 }): Promise<ActionRow> {
-  const [{ pos }] = await db
-    .select({ pos: sql<number>`COALESCE(MAX(${projectAction.position}) + 1, 0)` })
-    .from(projectAction)
-    .where(eq(projectAction.projectId, input.projectId));
-  const [row] = await db
-    .insert(projectAction)
-    .values({
-      projectId: input.projectId,
-      name: input.name,
-      icon: input.icon ?? '',
-      condition: input.condition ?? {},
-      effect: input.effect ?? {},
-      position: Number(pos),
-    })
-    .returning();
-  return mapAction(row);
+  return db.transaction(async (tx) => {
+    // Keep the guard's team valid through insertion; a queued transfer cannot
+    // change ownership between this check and the saved JSON committing.
+    const [owner] = await tx
+      .select({ teamId: project.teamId })
+      .from(project)
+      .where(eq(project.id, input.projectId))
+      .for('share');
+    if (!owner) throw new HttpError(404, 'Project not found');
+    if (owner.teamId !== input.expectedTeamId)
+      throw new HttpError(409, 'The project changed teams; reload and try again');
+    const [{ pos }] = await tx
+      .select({ pos: sql<number>`COALESCE(MAX(${projectAction.position}) + 1, 0)` })
+      .from(projectAction)
+      .where(eq(projectAction.projectId, input.projectId));
+    const [row] = await tx
+      .insert(projectAction)
+      .values({
+        projectId: input.projectId,
+        name: input.name,
+        icon: input.icon ?? '',
+        condition: input.condition ?? {},
+        effect: input.effect ?? {},
+        position: Number(pos),
+      })
+      .returning();
+    return mapAction(row);
+  });
 }
 
 export async function getAction(id: number): Promise<ActionRow | null> {

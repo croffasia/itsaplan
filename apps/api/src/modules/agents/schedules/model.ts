@@ -15,6 +15,9 @@ export const scheduleRunParams = t.Object({
 });
 
 export const scheduleStatus = t.UnionEnum(['active', 'paused'], {
+  // t.UnionEnum defaults to its first value, which would resume a paused schedule on a
+  // PATCH that leaves the status out; the update is partial.
+  default: undefined,
   description: "'active' runs, 'paused' does not run until it is set back to 'active'.",
 });
 

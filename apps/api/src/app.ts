@@ -3,6 +3,7 @@ import {
   getSessionFromHeaders,
   oAuthDiscoveryMetadata,
   oAuthProtectedResourceMetadata,
+  withPublicDiscoveryUrls,
   trustedOrigins,
   getAuthSettings,
   hasConfiguredGoogle,
@@ -44,6 +45,11 @@ curl "${apiUrl}/projects" \\
 JSON errors use \`{ "error": "message" }\` and may also include a stable \`code\`. Pagination parameters and response envelopes are documented per operation.
 
 For agent clients, use the MCP endpoint at [${apiUrl}/mcp](${apiUrl}/mcp). SCIM, worker-internal routes, and repository webhooks use the separate credentials shown on their operations.`;
+
+const authorizationServer = async (request: Request) =>
+  withPublicDiscoveryUrls(await oAuthDiscoveryMetadata(auth)(request));
+const protectedResource = async (request: Request) =>
+  withPublicDiscoveryUrls(await oAuthProtectedResourceMetadata(auth)(request));
 
 // The assembled Elysia app, without `.listen()`. `index.ts` imports this and
 // binds the port; tests import it and pass it to Eden Treaty to drive routes in
@@ -227,12 +233,16 @@ export const app = new Elysia()
   // OAuth discovery lives at the API origin because MCP clients resolve the
   // authorization server from protected-resource metadata before entering the
   // Better Auth base path.
-  .get('/.well-known/oauth-authorization-server', ({ request }) =>
-    oAuthDiscoveryMetadata(auth)(request),
-  )
-  .get('/.well-known/oauth-protected-resource/mcp', ({ request }) =>
-    oAuthProtectedResourceMetadata(auth)(request),
-  )
+  //
+  // An issuer with a path is looked up with the path after the well-known segment
+  // (RFC 8414 §3), and some clients fall back to OpenID discovery, so each document
+  // answers under any suffix; the proxy decides which of these paths reach the api.
+  .get('/.well-known/oauth-authorization-server', ({ request }) => authorizationServer(request))
+  .get('/.well-known/oauth-authorization-server/*', ({ request }) => authorizationServer(request))
+  .get('/.well-known/openid-configuration', ({ request }) => authorizationServer(request))
+  .get('/.well-known/openid-configuration/*', ({ request }) => authorizationServer(request))
+  .get('/.well-known/oauth-protected-resource', ({ request }) => protectedResource(request))
+  .get('/.well-known/oauth-protected-resource/*', ({ request }) => protectedResource(request))
   // better-auth: forward every /api/auth/* request to its handler. The OIDC
   // callback gets one extra step afterwards: folding the provider's `groups` claim
   // into the SCIM group tables, so a group mapped to a project in god mode grants

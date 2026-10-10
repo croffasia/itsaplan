@@ -33,7 +33,9 @@ function clearSession(request: NextRequest): NextResponse {
   const response = NextResponse.next();
   for (const { name } of request.cookies.getAll()) {
     if (!name.includes('better-auth.')) continue;
-    response.cookies.delete({ name, path: '/', secure: name.startsWith('__Secure-') });
+    // A __Secure- or __Host- name is only accepted back with `secure`.
+    const secure = name.startsWith('__Secure-') || name.startsWith('__Host-');
+    response.cookies.delete({ name, path: '/', secure });
   }
   return response;
 }
@@ -55,7 +57,11 @@ export function proxy(request: NextRequest) {
 // `/login?expired=1`, where the cookie is cleared for good.
 function gate(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
-  const hasSession = getSessionCookie(request) != null;
+  // Over HTTPS the api names the session cookie with the __Host- prefix, which
+  // getSessionCookie only finds when told the prefix.
+  const hasSession =
+    (getSessionCookie(request) ??
+      getSessionCookie(request, { cookiePrefix: '__Host-better-auth' })) != null;
   const matches = matcher(pathname);
 
   if (OPEN_PATHS.some(matches)) return NextResponse.next();

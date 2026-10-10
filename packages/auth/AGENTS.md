@@ -245,14 +245,20 @@ not required for it.
   the web app owns its own `auth-client.ts`.
 - Changing the config (plugins, fields) can change the DB tables → run `bun run auth:generate`
   (writes `packages/db/src/schema/auth.ts`), then `db:generate` + `db:migrate`.
-- Config is env-driven: `API_URL` (backend origin, used as better-auth `baseURL`),
-  `BETTER_AUTH_SECRET`, `APP_URL` (frontend origin(s), comma-separated). `API_URL` and
-  `APP_URL` are mandatory and have no default — importing this module throws
-  when either is missing. Do not add a localhost fallback: cookies, the passkey
-  relying party, the cookie domain and every link in an authentication email are
-  derived from them, so a wrong value fails silently at runtime instead of at startup.
-  The parsed `trustedOrigins` list (from `APP_URL`) is exported so the api's CORS uses
-  the same value.
-- **Cross-domain prod:** default cookies are `sameSite: "lax"`. If frontend/backend run on
-  different domains, switch to `sameSite: "none"` + `secure: true`; for subdomains use
-  `advanced.crossSubDomainCookies`.
+- Config is env-driven: `API_URL` (public URL of the backend), `BETTER_AUTH_SECRET`,
+  `APP_URL` (frontend origin(s), comma-separated). `API_URL` and `APP_URL` are mandatory
+  and have no default — importing this module throws when either is missing. Do not add
+  a localhost fallback: cookies, the passkey relying party, the cookie domain and every
+  link in an authentication email are derived from them, so a wrong value fails silently
+  at runtime instead of at startup. The parsed `trustedOrigins` list (from `APP_URL`) is
+  exported so the api's CORS uses the same value.
+- **`API_URL` with a path** (the api under a path of the web's host): better-auth's
+  `baseURL` gets only the origin, because a path there replaces its `/api/auth` base path
+  and the api's fixed mount stops matching. Every public URL built from it — the OAuth
+  redirect URIs, the links in auth emails, the MCP resource and discovery documents — gets
+  the path back through `apiPublicUrl` / `withPublicOrigin`.
+- **Cookies:** `sameSite: "lax"`. Web and api on sibling subdomains share the cookie through
+  `advanced.crossSubDomainCookies` on the parent domain of `APP_URL` (`COOKIE_DOMAIN`
+  overrides it). On one host the cookie has no domain, and over HTTPS the session cookies
+  are named `__Host-better-auth.*`. If frontend/backend run on different domains, switch
+  to `sameSite: "none"` + `secure: true`.

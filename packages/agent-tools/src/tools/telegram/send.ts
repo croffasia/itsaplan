@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { pinnedFetch } from '@repo/net';
 import type { CustomToolEntry } from '../../types';
 import { jsonOrThrow } from '../../http';
 
@@ -18,7 +19,7 @@ export const telegramSend: CustomToolEntry = {
   execute: async (credential, input) => {
     const chatId = input.chatId ? String(input.chatId) : String(credential.defaultChatId ?? '');
     if (!chatId) throw new Error('No chatId given and no default chat configured.');
-    const res = await fetch(
+    const res = await pinnedFetch(
       `https://api.telegram.org/bot${String(credential.botToken)}/sendMessage`,
       {
         method: 'POST',

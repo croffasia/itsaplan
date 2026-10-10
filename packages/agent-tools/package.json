@@ -12,6 +12,7 @@
     "test": "bun test"
   },
   "dependencies": {
+    "@repo/net": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

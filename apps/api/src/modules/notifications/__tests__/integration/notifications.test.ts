@@ -14,7 +14,12 @@ interface Member {
   username: string;
 }
 
-async function setup(): Promise<{ owner: Member; columnId: number; doneColumnId: number }> {
+async function setup(): Promise<{
+  owner: Member;
+  columnId: number;
+  doneColumnId: number;
+  projectRef: string;
+}> {
   const u = await signUpTestUser();
   const api = authedApi(u.cookie);
   await api.projects.post({ key: 'MKT', name: 'Marketing' });
@@ -25,6 +30,7 @@ async function setup(): Promise<{ owner: Member; columnId: number; doneColumnId:
     owner: { api, userId: u.userId, username: u.username },
     columnId: columns[0].id,
     doneColumnId: done.id,
+    projectRef: view.data!.project.ref,
   };
 }
 
@@ -173,7 +179,7 @@ describe('notifications', () => {
   });
 
   it('notifies the new assignee, not the actor', async () => {
-    const { owner, columnId } = await setup();
+    const { owner, columnId, projectRef } = await setup();
     const member = await addMember(owner);
 
     await createIssue(owner.api, columnId, {
@@ -188,7 +194,7 @@ describe('notifications', () => {
       type: 'assigned',
       actorUserId: owner.userId,
       issueTitle: 'Ship it',
-      projectKey: 'MKT',
+      projectKey: projectRef,
       readAt: null,
     });
 

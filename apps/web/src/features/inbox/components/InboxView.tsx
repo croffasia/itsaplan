@@ -5,10 +5,10 @@ import { useTranslations } from 'next-intl';
 import type { ProjectDetail } from '@/lib/api/endpoints/projects';
 import type { Notification } from '@/lib/api/endpoints/notifications';
 import { cn } from '@/lib/utils';
-import { useLiveRefresh } from '@/hooks/useLiveRefresh';
-import { revScope } from '@/utils/revScopes';
+import { useInboxLiveRefresh } from '@/hooks/useInboxLiveRefresh';
 import { useInboxUnread } from '@/hooks/useInboxUnread';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useInboxScope } from '@/hooks/useInboxScope';
 import InboxToolbar from './InboxToolbar';
 import InboxList from './InboxList';
 import InboxDetail from './InboxDetail';
@@ -28,28 +28,28 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
   const projectId = project.project.id;
 
   const { filters, changeFilters } = useInboxFilters(projectKey);
+  const { allProjects, setAllProjects } = useInboxScope();
+  const inboxKey = allProjects ? 'all' : projectKey;
+  const inboxProjectId = allProjects ? null : projectId;
   const [selected, setSelected] = useState<Notification | null>(null);
   const isMobile = useIsMobile();
 
-  const query = useNotificationsQuery(projectKey, projectId, filters);
-  const unreadQuery = useInboxUnread(projectKey, projectId);
-  const setRead = useSetNotificationRead(projectKey);
-  const snooze = useSnoozeNotification(projectKey);
-  const deleteOne = useDeleteNotification(projectKey);
-  const markAllRead = useMarkAllRead(projectKey, projectId);
-  const deleteNotifications = useDeleteNotifications(projectKey, projectId);
+  const query = useNotificationsQuery(inboxKey, inboxProjectId, filters);
+  const unreadQuery = useInboxUnread(inboxKey, inboxProjectId);
+  const setRead = useSetNotificationRead(inboxKey);
+  const snooze = useSnoozeNotification(inboxKey);
+  const deleteOne = useDeleteNotification(inboxKey);
+  const markAllRead = useMarkAllRead(inboxKey, inboxProjectId);
+  const deleteNotifications = useDeleteNotifications(inboxKey, inboxProjectId);
 
   const items = useMemo(() => query.data?.pages.flatMap((p) => p.items) ?? [], [query.data]);
 
   // The unread count refreshes itself through useInboxUnread; this covers the list.
-  useLiveRefresh({
-    scope: revScope.inbox(projectId),
-    targets: [['notifications', projectKey]],
-  });
+  useInboxLiveRefresh(inboxProjectId, [['notifications', inboxKey]]);
 
   const onSelect = (n: Notification) => {
-    setSelected(n);
     if (n.readAt == null) setRead.mutate({ id: n.id, read: true });
+    setSelected(n);
   };
 
   const onDelete = (n: Notification) => {
@@ -69,6 +69,11 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
           unread={unreadQuery.data ?? 0}
           filters={filters}
           onFiltersChange={changeFilters}
+          allProjects={allProjects}
+          onAllProjectsChange={(enabled) => {
+            setSelected(null);
+            setAllProjects(enabled);
+          }}
           onMarkAllRead={() => markAllRead.mutate(filters)}
           onDeleteRead={() => deleteNotifications.mutate({ scope: 'read', filters })}
           onDeleteReadCompleted={() =>
@@ -93,6 +98,7 @@ export default function InboxView({ project }: { project: ProjectDetail }) {
         <InboxDetail
           key={selected.issueId}
           project={project}
+          projectKey={selected.projectKey}
           issueId={selected.issueId}
           issueSeq={selected.issueSeq}
           isMobile={isMobile}

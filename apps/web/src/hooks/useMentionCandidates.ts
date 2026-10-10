@@ -3,7 +3,7 @@ import { ShellCtx } from '@/context/shellContext';
 import { useSession } from '@/lib/auth-client';
 import type { Assignee } from '@/lib/api/endpoints/projects';
 import { type MentionCandidate } from '@/lib/tiptap-mention';
-import { isForeignAgent } from '@/features/issue/utils/delegates';
+import { isForeignAgent } from '@/utils/foreignAgent';
 
 // An agent is offered only when a mention by this user would start a run: one that
 // does not answer mentions, or works only for another member, would stay silent.

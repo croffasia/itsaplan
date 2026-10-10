@@ -60,7 +60,7 @@ async function processRun(run: ClaimedRun): Promise<void> {
     });
     if (result.aborted) {
       // Mastra resolves generate() on abort, so the partial text would read as a success.
-      // Not retried: hitting the time ceiling is the workload, not a transient error.
+      // Not retried: a run that hits the time limit will hit it again.
       await recordAgentRunFinished(run, 'failed');
       await markRunFailed(run.id, `Timed out after ${Math.round(timeoutMs / 1000)}s`);
       return;

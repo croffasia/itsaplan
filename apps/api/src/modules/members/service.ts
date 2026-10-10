@@ -191,6 +191,9 @@ export interface AssigneeCandidate {
   // The user an 'owner'-scoped external agent works for: only their runs reach its
   // runner, so delegating it to anyone else does nothing. Null for everyone else.
   restrictedToUserId: string | null;
+  // Whether @-mentioning this agent starts a run. Null for a person, whom a mention
+  // always reaches as a notification.
+  respondsToMention: boolean | null;
   canReadWorkItems: boolean;
 }
 
@@ -225,6 +228,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
         agentKind: aiAgent.kind,
         ownerUserId: aiAgent.ownerUserId,
         runnerScope: aiAgent.runnerScope,
+        triggerOnMention: aiAgent.triggerOnMention,
       })
       .from(aiAgent)
       .innerJoin(user, eq(user.id, aiAgent.userId))
@@ -248,6 +252,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
       role: r.role as MemberRole,
       description: r.description,
       restrictedToUserId: null,
+      respondsToMention: null,
       canReadWorkItems:
         context.role === 'owner' || hasPermission(context.permissions, 'work_items', 'read'),
     };
@@ -263,6 +268,7 @@ export async function listAssigneeCandidates(projectId: number): Promise<Assigne
     role: null,
     description: null,
     restrictedToUserId: r.runnerScope === 'owner' ? r.ownerUserId : null,
+    respondsToMention: r.triggerOnMention,
     canReadWorkItems: false,
   }));
   return [...members, ...agents].sort((a, b) => a.name.localeCompare(b.name));

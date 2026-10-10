@@ -386,6 +386,25 @@ describe('ai agents', () => {
     expect(upd.data).toMatchObject({ triggerOnMention: true, triggerOnAssign: true });
   });
 
+  // The "@" menu reads this to leave out the agents a mention would not start.
+  it("tells the project's assignees which agents answer a mention", async () => {
+    const { asOwner } = await setup();
+    await createAgent(asOwner, 'MKT', { name: 'Listens', username: 'listens', kind: 'internal' });
+    await createAgent(asOwner, 'MKT', {
+      name: 'Deaf',
+      username: 'deaf',
+      kind: 'internal',
+      triggerOnMention: false,
+    });
+
+    const project = await asOwner.projects({ projectKey: 'MKT' }).get();
+    const byHandle = new Map(project.data!.assignees.map((a) => [a.username, a]));
+
+    expect(byHandle.get('listens')?.respondsToMention).toBe(true);
+    expect(byHandle.get('deaf')?.respondsToMention).toBe(false);
+    expect(project.data!.assignees.find((a) => a.kind === 'member')?.respondsToMention).toBeNull();
+  });
+
   it("attaches an agent to a project on the team's default role", async () => {
     const { asOwner } = await setup();
     const roles = await listProjectRoles(asOwner, 'MKT');

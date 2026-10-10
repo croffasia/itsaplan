@@ -166,6 +166,7 @@ const AssigneeCandidateResponse = t.Object({
   kind: t.Union([t.Literal('member'), t.Literal('agent')]),
   agentKind: t.Nullable(t.Union([t.Literal('external'), t.Literal('internal')])),
   restrictedToUserId: t.Nullable(t.String()),
+  respondsToMention: t.Nullable(t.Boolean()),
   canReadWorkItems: t.Boolean(),
 });
 

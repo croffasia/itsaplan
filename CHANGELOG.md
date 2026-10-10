@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.5.0](https://github.com/croffasia/itsaplan/compare/v1.4.0...v1.5.0) (2026-10-10)
+
+
+### Features
+
+* **auth:** encrypt the OAuth access and refresh tokens at rest ([#517](https://github.com/croffasia/itsaplan/issues/517)) ([f1bd505](https://github.com/croffasia/itsaplan/commit/f1bd505e6ce57bb6aa45c3622268f091bf408157))
+
+
+### Bug Fixes
+
+* **api:** a timed-out agent run ends as failed ([#512](https://github.com/croffasia/itsaplan/issues/512)) ([bcab65d](https://github.com/croffasia/itsaplan/commit/bcab65dd6577ce43cf9ba46cfa34d592a790e121))
+* the @ menu offers agents a mention would leave silent ([#514](https://github.com/croffasia/itsaplan/issues/514)) ([8d8761f](https://github.com/croffasia/itsaplan/commit/8d8761fc1fb4bf8e54e1bc1fe754c970c5299a01))
+* **web:** "Add member" offers Owner for an AI agent ([#511](https://github.com/croffasia/itsaplan/issues/511)) ([ada3652](https://github.com/croffasia/itsaplan/commit/ada3652fdfc740b0a27292af8aa8069e6192a2b8))
+* **web:** spelling mistakes in the es-ES catalog ([#510](https://github.com/croffasia/itsaplan/issues/510)) ([7af3688](https://github.com/croffasia/itsaplan/commit/7af368867de776821018476083f2ee55d4168172))
+* **web:** the Security page offers a password change to an account without one ([#515](https://github.com/croffasia/itsaplan/issues/515)) ([67c7295](https://github.com/croffasia/itsaplan/commit/67c7295731807878dbc6bb8e32f27b2cfd5683ee))
+
 ## [1.4.0](https://github.com/croffasia/itsaplan/compare/v1.3.0...v1.4.0) (2026-10-08)
 
 

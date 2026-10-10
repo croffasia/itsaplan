@@ -243,6 +243,18 @@ describe('agent schedules', () => {
     expect(new Date(resumed.data!.nextRunAt!).getTime()).toBeGreaterThan(Date.now());
   });
 
+  it('keeps a paused schedule paused when a patch leaves the status out', async () => {
+    const { asOwner } = await setup();
+    const agentId = await makeAgent(asOwner);
+    const created = await createSchedule(asOwner, agentId);
+    const schedule = schedules(asOwner)({ scheduleId: created.data!.id });
+    expect((await schedule.patch({ status: 'paused' })).data?.status).toBe('paused');
+
+    const edited = await schedule.patch({ prompt: 'Triage the new issues.' });
+    expect(edited.status).toBe(200);
+    expect(edited.data?.status).toBe('paused');
+  });
+
   it('recomputes the next run when the cron changes', async () => {
     const { asOwner } = await setup();
     const agentId = await makeAgent(asOwner);

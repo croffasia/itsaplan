@@ -40,6 +40,10 @@ api:
     API_URL: ""
     APP_URL: ""
     # COOKIE_DOMAIN: ""
+    # Per-key API rate limit; unset keeps 100 requests per 1000 ms, enabled.
+    # API_KEY_RATE_LIMIT_ENABLED: "true"
+    # API_KEY_RATE_LIMIT_WINDOW_MS: "1000"
+    # API_KEY_RATE_LIMIT_MAX: "100"
     S3_BUCKET: ""
     S3_REGION: "us-east-1"
     S3_FORCE_PATH_STYLE: "true"

@@ -184,6 +184,9 @@ bot:
 | `api.env.API_URL`                     | Public API origin                                         | `""`                             |
 | `api.env.APP_URL`                     | Public web origin                                         | `""`                             |
 | `api.env.COOKIE_DOMAIN`               | Cookie domain override                                    | (unset)                          |
+| `api.env.API_KEY_RATE_LIMIT_ENABLED`  | Per-key API rate limit on or off                          | (unset: `true`)                  |
+| `api.env.API_KEY_RATE_LIMIT_WINDOW_MS`| Quiet time after which a key's count resets, in ms        | (unset: `1000`)                  |
+| `api.env.API_KEY_RATE_LIMIT_MAX`      | Requests a key may make before it is refused              | (unset: `100`)                   |
 | `api.env.S3_BUCKET`                   | S3 bucket name                                            | `""`                             |
 | `api.env.S3_REGION`                   | S3 region                                                 | `us-east-1`                      |
 | `api.env.S3_FORCE_PATH_STYLE`         | S3 path-style access                                      | `"true"`                         |

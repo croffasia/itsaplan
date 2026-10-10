@@ -105,7 +105,10 @@ Enforced declaratively through macros, never imperative calls in handlers.
 - **Session:** `authContext` (named plugin) reads the better-auth session once, puts
   `user` on context, throws 401 with none. `planner.ts` gates every planner route;
   a feature also `.use(authContext)` when its handlers/macros reference `user`. An
-  `x-api-key` header resolves through `getSession` — no special-casing.
+  `x-api-key` header resolves through `getSession` — no special-casing. A tool call
+  over `POST /mcp` verifies the key once: the endpoint resolves it and the loopback
+  request carries the user id (`setMcpUserId`), not the key. A rate-limited key is
+  answered 429 with `Retry-After`, by the planner error handler and by the endpoint.
 - **Membership:** access is by a `project_member` row (`owner` | `member`), raised by
   the caller's role in the workspace that holds the project. Owners bypass the
   permission matrix; the global `user.role` (`god` | `user`) does **not**. Keep at least

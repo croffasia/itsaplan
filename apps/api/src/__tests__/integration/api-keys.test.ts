@@ -140,4 +140,25 @@ describe('api keys', () => {
     expect(body.apiKeys).toHaveLength(1);
     expectSecondsFromNow(body.apiKeys[0].expiresAt, API_KEY_DEFAULT_EXPIRES_IN_SEC);
   });
+
+  it('answers a rate-limited key with 429 and Retry-After', async () => {
+    const user = await signUpTestUser();
+    const created = await auth.api.createApiKey({ body: { userId: user.userId, name: 'ci' } });
+    await db
+      .update(apikey)
+      .set({ rateLimitMax: 1, rateLimitTimeWindow: 60_000 })
+      .where(eq(apikey.id, created.id));
+    const projects = () =>
+      app.handle(
+        new Request('http://localhost/projects', { headers: { 'x-api-key': created.key } }),
+      );
+    expect((await projects()).status).toBe(200);
+
+    const res = await projects();
+
+    expect(res.status).toBe(429);
+    expect(Number(res.headers.get('retry-after'))).toBeGreaterThan(55);
+    expect(Number(res.headers.get('retry-after'))).toBeLessThanOrEqual(60);
+    expect(await res.json()).toMatchObject({ code: 'RATE_LIMITED' });
+  });
 });

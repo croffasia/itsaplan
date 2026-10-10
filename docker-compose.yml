@@ -141,6 +141,10 @@ services:
       # Hosts trusted even though they resolve privately. Also governs webhook URL
       # validation and attachment import.
       SSRF_ALLOWED_HOSTS: ${SSRF_ALLOWED_HOSTS:-}
+      # Per-key API rate limit; see .env.example. Unset keeps 100 requests per second.
+      API_KEY_RATE_LIMIT_ENABLED: ${API_KEY_RATE_LIMIT_ENABLED:-}
+      API_KEY_RATE_LIMIT_WINDOW_MS: ${API_KEY_RATE_LIMIT_WINDOW_MS:-}
+      API_KEY_RATE_LIMIT_MAX: ${API_KEY_RATE_LIMIT_MAX:-}
     healthcheck:
       test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:3000/']
       interval: 15s

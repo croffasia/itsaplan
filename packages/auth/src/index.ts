@@ -67,6 +67,27 @@ if (!baseURL) {
   throw new Error('API_URL is not set: public origin of the backend.');
 }
 
+// The per-key rate limit, read from the environment at startup. The default, 100
+// requests per second, is set for the heaviest legitimate caller rather than a typical
+// one: an internal AI agent runs on its own key and dispatches every tool call through
+// a route, and a model that emits a batch of tool calls in one step turns them into a
+// burst of requests. The plugin copies all three settings into each key row when the
+// key is created, so a change applies to keys created after it, except that turning the
+// limit off also stops it for existing keys. A key created while it is off stays
+// unlimited after it is turned back on.
+export function apiKeyRateLimit(env: Record<string, string | undefined> = process.env) {
+  // The key row stores both numbers in int4 columns.
+  const positive = (raw: string | undefined, fallback: number) => {
+    const n = Number(raw);
+    return raw && Number.isInteger(n) && n > 0 && n <= 2_147_483_647 ? n : fallback;
+  };
+  return {
+    enabled: env.API_KEY_RATE_LIMIT_ENABLED !== 'false',
+    timeWindow: positive(env.API_KEY_RATE_LIMIT_WINDOW_MS, 1000),
+    maxRequests: positive(env.API_KEY_RATE_LIMIT_MAX, 100),
+  };
+}
+
 // User roles. "god" is the owner of the instance: the very first registered user
 // gets it automatically; everyone after is a plain "user". The role is assigned
 // server-side (input: false) so a client cannot request it at sign-up.
@@ -622,11 +643,8 @@ export const auth = betterAuth({
     // at creation, and can list (value hidden) or delete it. Adds the `apikey` table.
     // enableSessionForAPIKeys makes a request carrying an `x-api-key` header resolve
     // to the key owner's session, so getSession (and every planner guard built on it)
-    // accepts API keys without any change in apps/api. Rate limit: 100 requests per
-    // second per key (timeWindow is in milliseconds). The ceiling is set for the
-    // heaviest legitimate caller rather than a typical one: an internal AI agent runs
-    // on its own key and dispatches every tool call through a route, and a model that
-    // emits a batch of tool calls in one step turns them into a burst of requests.
+    // accepts API keys without any change in apps/api. The rate limit comes from
+    // apiKeyRateLimit.
     apiKey({
       enableSessionForAPIKeys: true,
       // Brand prefix so a leaked key is identifiable by secret scanners and in logs.
@@ -639,11 +657,7 @@ export const auth = betterAuth({
         defaultExpiresIn: API_KEY_DEFAULT_EXPIRES_IN_SEC,
         maxExpiresIn: API_KEY_MAX_EXPIRES_IN_DAYS,
       },
-      rateLimit: {
-        enabled: true,
-        timeWindow: 1000,
-        maxRequests: 100,
-      },
+      rateLimit: apiKeyRateLimit(),
     }),
     // Sign-in by emailed link, offered alongside the password. Whether it is
     // available is an instance setting, so the plugin is always mounted and the
@@ -752,6 +766,16 @@ export async function getSessionFromHeaders(
     }
     throw error;
   }
+}
+
+// Seconds until a key the plugin refused as rate-limited is accepted again, or null
+// for any other error. The plugin reports the wait in milliseconds, counted from the
+// last request it accepted; refused requests do not move it.
+export function rateLimitRetryAfter(error: unknown): number | null {
+  if (!(error instanceof APIError)) return null;
+  const body = error.body as { code?: string; details?: { tryAgainIn?: number } } | undefined;
+  if (body?.code !== 'RATE_LIMITED') return null;
+  return Math.max(1, Math.ceil((body.details?.tryAgainIn ?? 0) / 1000));
 }
 
 // Instance-wide authentication settings (registration mode, mail provider, invite

@@ -96,7 +96,8 @@ export const agentScheduleRoutes = new Elysia({
         summary: 'Create an agent schedule',
         description:
           'Create a schedule that sends a task to an agent on a cron, on an issue each ' +
-          'time one enters a column, or on a type this instance adds.',
+          'time one enters a column, or on a type this instance adds. It starts active ' +
+          'unless status is given.',
         ...mcpTool('create_agent_schedule'),
       },
     },

@@ -448,6 +448,12 @@ export const auth = betterAuth({
         return;
       }
 
+      // Any client can register itself, and the MCP plugin releases the code straight to
+      // its redirect URI unless the request asks for consent, so every request asks.
+      if (ctx.path === '/mcp/authorize') {
+        return { context: { query: { ...ctx.query, prompt: 'consent' } } };
+      }
+
       if (ctx.path === '/sign-up/email') {
         await assertRegistrationAllowed((ctx.body as { email?: string } | undefined)?.email ?? '');
         return;

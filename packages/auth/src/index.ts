@@ -25,7 +25,7 @@ import { sendAuthEmail } from './mail';
 // that misses it has to fail at startup instead of running on a localhost default.
 export const trustedOrigins = (process.env.APP_URL ?? '')
   .split(',')
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 if (trustedOrigins.length === 0) {
   throw new Error('APP_URL is not set: public origin(s) of the web app.');
@@ -49,9 +49,23 @@ function parentDomain(origin: string | undefined): string | undefined {
   return '.' + labels.slice(1).join('.');
 }
 
-// Explicit COOKIE_DOMAIN wins (needed for multi-label TLDs or deep subdomains);
-// otherwise derive it from the frontend origin.
-const cookieDomain = process.env.COOKIE_DOMAIN || parentDomain(trustedOrigins[0]);
+function safeUrl(value: string | undefined): URL | undefined {
+  if (!value) return undefined;
+  try {
+    return new URL(value);
+  } catch {
+    return undefined;
+  }
+}
+
+// parentDomain() would widen the cookie to sibling subdomains even when web and api
+// share a host, where a host-only cookie is enough.
+const sameHost = safeUrl(trustedOrigins[0])?.hostname === safeUrl(process.env.API_URL)?.hostname;
+
+// COOKIE_DOMAIN wins (multi-label TLDs, deep subdomains); otherwise host-only when web
+// and api share a host, else the parent domain of the frontend.
+const cookieDomain =
+  process.env.COOKIE_DOMAIN || (sameHost ? undefined : parentDomain(trustedOrigins[0]));
 
 // WebAuthn relying-party id: the frontend domain the passkey is bound to (no port,
 // no scheme). The WebAuthn ceremony runs in the frontend JS, so the expected origin
@@ -60,12 +74,86 @@ const cookieDomain = process.env.COOKIE_DOMAIN || parentDomain(trustedOrigins[0]
 // public frontend hostname.
 const passkeyRpID = process.env.PASSKEY_RP_ID ?? new URL(trustedOrigins[0]).hostname;
 
-// Backend origin where the better-auth handler is mounted (/api/auth/*). Mandatory:
-// every link in an authentication email and the Google redirect URI are built from it.
-const baseURL = process.env.API_URL;
-if (!baseURL) {
-  throw new Error('API_URL is not set: public origin of the backend.');
+// Public URL of the backend, with the path a subpath proxy adds; the links in auth
+// emails and the OAuth redirect URIs are built from it.
+const apiPublicUrl = (process.env.API_URL ?? '').replace(/\/+$/, '');
+if (!apiPublicUrl) {
+  throw new Error('API_URL is not set: public URL of the backend.');
 }
+const apiUrl = safeUrl(apiPublicUrl);
+if (!apiUrl) {
+  throw new Error(`API_URL is not a valid URL: ${apiPublicUrl}`);
+}
+
+// A baseURL with a path replaces better-auth's /api/auth basePath and the api's fixed
+// mount stops matching, so it only gets the origin.
+const baseURL = apiUrl.origin;
+const apiHasPath = apiUrl.pathname !== '/';
+
+// Over HTTPS with a host-only cookie the session cookies carry the __Host- prefix:
+// the browser then refuses a cookie of that name planted by a sibling subdomain (with
+// a Domain, or a narrower Path), which __Secure- does not prevent. better-auth only
+// writes __Secure-, so its automatic prefix is turned off and both prefixes are written
+// into the names here.
+const hostPrefixedCookies = baseURL.startsWith('https://') && !cookieDomain;
+const SESSION_COOKIES = ['session_token', 'session_data', 'account_data', 'dont_remember'];
+
+// better-auth builds the links it hands to the mailers from the origin-only baseURL;
+// this puts the path back.
+function withPublicOrigin(url: string): string {
+  return url.startsWith(baseURL) ? apiPublicUrl + url.slice(baseURL.length) : url;
+}
+
+// MCP clients follow the discovery documents verbatim, and better-auth builds their
+// URLs from the same origin-only baseURL: behind a path prefix they would land on
+// whatever serves the root of the host. `resource` comes from apiPublicUrl already.
+const DISCOVERY_URL_KEYS = new Set([
+  'issuer',
+  'authorization_servers',
+  'authorization_endpoint',
+  'token_endpoint',
+  'userinfo_endpoint',
+  'jwks_uri',
+  'registration_endpoint',
+]);
+
+export async function withPublicDiscoveryUrls(response: Response): Promise<Response> {
+  const metadata = (await response.json()) as Record<string, unknown> | null;
+  // better-auth answers null when it cannot build the document (no issuer).
+  if (metadata === null || typeof metadata !== 'object') {
+    return new Response(JSON.stringify(metadata), {
+      status: response.status,
+      headers: response.headers,
+    });
+  }
+  for (const [key, value] of Object.entries(metadata)) {
+    if (!DISCOVERY_URL_KEYS.has(key)) continue;
+    if (typeof value === 'string') metadata[key] = withPublicOrigin(value);
+    else if (Array.isArray(value)) metadata[key] = value.map((v) => withPublicOrigin(String(v)));
+  }
+  return new Response(JSON.stringify(metadata), {
+    status: response.status,
+    headers: response.headers,
+  });
+}
+
+// withMcpAuth points the 401 challenge at better-auth's own copy of the metadata,
+// built from the origin-only baseURL; behind a path prefix it is replaced by the copy
+// served under the prefix. Without one, better-auth's challenge reaches the api as is.
+const MCP_CHALLENGE = `Bearer resource_metadata="${apiPublicUrl}/.well-known/oauth-protected-resource/mcp"`;
+
+export async function withPublicMcpChallenge(response: Response): Promise<Response> {
+  if (!apiHasPath || !response.headers.has('WWW-Authenticate')) return response;
+  const headers = new Headers(response.headers);
+  headers.set('WWW-Authenticate', MCP_CHALLENGE);
+  const body = (await response.json()) as { error?: Record<string, unknown> };
+  if (body.error) body.error['www-authenticate'] = MCP_CHALLENGE;
+  return new Response(JSON.stringify(body), { status: response.status, headers });
+}
+
+// The fallback for a callback that fails early is better-auth's own /api/auth/error;
+// under a path prefix that route is outside it, and /login turns ?error= into a message.
+const oauthErrorURL = apiHasPath ? `${trustedOrigins[0]}/login` : undefined;
 
 // User roles. "god" is the owner of the instance: the very first registered user
 // gets it automatically; everyone after is a plain "user". The role is assigned
@@ -73,16 +161,16 @@ if (!baseURL) {
 export const USER_ROLES = ['god', 'user'] as const;
 export type UserRole = (typeof USER_ROLES)[number];
 
+// The exact authorized redirect URI to register in the Google Cloud console;
+// god mode shows it for copying.
+export const GOOGLE_REDIRECT_URI = `${apiPublicUrl}/api/auth/callback/google`;
+
 // Google OAuth credentials live in the database (god mode), not in env. The provider
 // is built once at startup, but it keeps this options object by reference and reads
 // clientId / clientSecret off it on every call, so refreshing the object per request
 // is what lets the owner change or revoke the credentials without a restart.
-const googleOptions = { clientId: '', clientSecret: '' };
-
-// The exact value that has to be registered as an authorized redirect URI in the
-// Google Cloud console. better-auth derives it from baseURL; god mode shows it so the
-// owner can copy it instead of assembling it by hand.
-export const GOOGLE_REDIRECT_URI = `${baseURL}/api/auth/callback/google`;
+// redirectURI is explicit: the one inferred from the origin-only baseURL lacks the path.
+const googleOptions = { clientId: '', clientSecret: '', redirectURI: GOOGLE_REDIRECT_URI };
 
 // Loads the stored credentials into that object and reports whether Google sign-in
 // can run. A read failure disables the provider rather than failing the request with
@@ -107,6 +195,11 @@ async function refreshGoogleOptions(): Promise<boolean> {
 // without a restart. Assign the fields, never replace the object.
 export const OIDC_PROVIDER_ID = 'oidc';
 
+// The exact redirect URI to register with the identity provider; god mode shows it
+// for copying.
+export const OIDC_REDIRECT_URI = `${apiPublicUrl}/api/auth/oauth2/callback/${OIDC_PROVIDER_ID}`;
+
+// redirectURI is explicit for the same reason as in googleOptions.
 const oidcOptions: GenericOAuthConfig = {
   providerId: OIDC_PROVIDER_ID,
   clientId: '',
@@ -114,11 +207,8 @@ const oidcOptions: GenericOAuthConfig = {
   discoveryUrl: '',
   scopes: [],
   pkce: true,
+  redirectURI: OIDC_REDIRECT_URI,
 };
-
-// The exact value that has to be registered as a redirect URI with the identity
-// provider. god mode shows it so the owner can copy it instead of assembling it.
-export const OIDC_REDIRECT_URI = `${baseURL}/api/auth/oauth2/callback/${OIDC_PROVIDER_ID}`;
 
 // Loads the stored credentials into that object and reports whether OIDC sign-in can
 // run. A read failure disables the provider rather than failing the request with a
@@ -318,6 +408,7 @@ export const API_KEY_MAX_EXPIRES_IN_DAYS = 365;
 export const auth = betterAuth({
   baseURL,
   secret: process.env.BETTER_AUTH_SECRET,
+  onAPIError: oauthErrorURL ? { errorURL: oauthErrorURL } : undefined,
 
   database: drizzleAdapter(db, {
     provider: 'pg',
@@ -352,7 +443,7 @@ export const auth = betterAuth({
         to: user.email,
         subject: 'Reset your password',
         text: 'Use the link below to set a new password. Ignore this email if you did not ask for it.',
-        url,
+        url: withPublicOrigin(url),
       });
     },
   },
@@ -369,7 +460,7 @@ export const auth = betterAuth({
         to: user.email,
         subject: 'Confirm your email address',
         text: 'Use the link below to confirm this address and finish signing up.',
-        url,
+        url: withPublicOrigin(url),
       });
     },
   },
@@ -659,7 +750,7 @@ export const auth = betterAuth({
           to: email,
           subject: 'Your sign-in link',
           text: 'Use the link below to sign in. It works once and expires shortly.',
-          url,
+          url: withPublicOrigin(url),
         });
       },
     }),
@@ -683,7 +774,7 @@ export const auth = betterAuth({
     // clients such as ChatGPT without exposing a personal API key.
     mcp({
       loginPage: `${trustedOrigins[0]}/login`,
-      resource: `${baseURL}/mcp`,
+      resource: `${apiPublicUrl}/mcp`,
       oidcConfig: {
         loginPage: `${trustedOrigins[0]}/login`,
         requirePKCE: true,
@@ -725,9 +816,21 @@ export const auth = betterAuth({
       : {}),
     // For a single site (localhost / one domain) "lax" is enough. Subdomains of one
     // registrable domain are same-site, so "lax" cookies are still sent between them.
+    ...(hostPrefixedCookies
+      ? {
+          useSecureCookies: false,
+          cookiePrefix: '__Secure-better-auth',
+          cookies: Object.fromEntries(
+            SESSION_COOKIES.map((name) => [
+              name,
+              { name: `__Host-better-auth.${name}`, attributes: { path: '/', secure: true } },
+            ]),
+          ),
+        }
+      : {}),
     defaultCookieAttributes: {
       sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
+      secure: hostPrefixedCookies || process.env.NODE_ENV === 'production',
     },
   },
 });

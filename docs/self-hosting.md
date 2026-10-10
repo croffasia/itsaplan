@@ -14,7 +14,7 @@ The stack refuses to start while one of these is missing:
 
 | Variable                | Value                                      |
 | ----------------------- | ------------------------------------------ |
-| `API_URL`               | public origin of the api                   |
+| `API_URL`               | public URL of the api                      |
 | `APP_URL`               | public origin of the web app               |
 | `POSTGRES_PASSWORD`     | `openssl rand -base64 32`                  |
 | `BETTER_AUTH_SECRET`    | `openssl rand -base64 32`                  |
@@ -33,6 +33,36 @@ becomes the instance admin.
 
 `.env.example` documents every variable, including the optional ones: legal document URLs,
 passkey and cookie settings, telemetry opt-out, and worker tuning.
+
+## Where the api lives
+
+`API_URL` takes one of two forms:
+
+- **Its own subdomain**, such as `https://api.example.com` beside `APP_URL=https://app.example.com`.
+  The session cookie is set on the parent domain (`.example.com`), so every subdomain of it
+  receives the cookie. `COOKIE_DOMAIN` narrows it when the two share a deeper parent. An
+  `APP_URL` on the apex domain (`https://example.com`) has no parent to take, so this form
+  needs `COOKIE_DOMAIN=.example.com`.
+- **A path on the web's host**, such as `https://app.example.com/api` beside
+  `APP_URL=https://app.example.com`. No second hostname or certificate is needed, and the
+  session cookie stays on that one host: it has no `Domain`, and over HTTPS its name carries
+  the `__Host-` prefix, which keeps another subdomain from setting one in its place.
+
+With a path, the reverse proxy sends that path to the api and removes it on the way, so the
+api receives `/projects`, `/api/auth/...` and `/mcp` as it does on its own subdomain:
+
+```
+https://app.example.com/api/*  ->  api:3000/*   (prefix removed)
+https://app.example.com/*      ->  web:3001/*
+```
+
+For MCP clients that sign in with OAuth, the proxy also sends the discovery documents of the
+host to the api: `/.well-known/oauth-authorization-server*`,
+`/.well-known/oauth-protected-resource*` and `/.well-known/openid-configuration*`.
+
+The OAuth redirect URIs that god mode shows include the path. An api on a different
+registrable domain than the web app (`api.other.com`) does not work: the session cookie
+cannot be shared across sites.
 
 ## Single sign-on
 

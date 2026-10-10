@@ -46,6 +46,21 @@ describe('proxy', () => {
     assert.equal(res.headers.get('location'), 'http://localhost/');
   });
 
+  // Over HTTPS the api names the session cookie with the __Host- prefix.
+  it('treats a __Host- session cookie as a session', () => {
+    const res = run('/login', '__Host-better-auth.session_token=value');
+    assert.equal(res.headers.get('location'), 'http://localhost/');
+  });
+
+  it('expires a __Host- cookie only at Path=/, with Secure and no Domain', () => {
+    const res = run('/login?expired=1', '__Host-better-auth.session_token=stale');
+    const cleared = res.headers.getSetCookie();
+    assert.equal(cleared.length, 1);
+    assert.match(cleared[0]!, /^__Host-better-auth\.session_token=; Path=\/; Expires/);
+    assert.match(cleared[0]!, /Secure/);
+    assert.ok(!cleared[0]!.includes('Domain='));
+  });
+
   it('sends a visitor without a session to the login page', () => {
     const res = run('/', undefined);
     assert.equal(res.headers.get('location'), 'http://localhost/login');

@@ -5,11 +5,17 @@ import { passkeyClient } from '@better-auth/passkey/client';
 import { apiKeyClient } from '@better-auth/api-key/client';
 import { API_URL, markSigningOut } from '@/lib/api/core/client';
 
+// better-auth appends its default /api/auth only to a bare origin; an API_URL with a
+// path would be used as-is, so the mount is spelled out.
+export function authBaseURL(apiUrl: string): string {
+  return `${apiUrl.replace(/\/+$/, '')}/api/auth`;
+}
+
 // The better-auth handler lives on the backend (Elysia), so baseURL is the API origin.
 // inferAdditionalFields declares the custom `role` column added in @repo/auth so the
 // session user is typed with it (the web app never imports server packages).
 export const authClient = createAuthClient({
-  baseURL: API_URL,
+  baseURL: authBaseURL(API_URL),
   plugins: [
     inferAdditionalFields({
       user: {

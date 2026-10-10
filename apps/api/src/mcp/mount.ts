@@ -1,6 +1,6 @@
 import { t } from 'elysia';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { auth, isAccountDeactivated, withMcpAuth } from '@repo/auth';
+import { auth, isAccountDeactivated, withMcpAuth, withPublicMcpChallenge } from '@repo/auth';
 import { buildMcpServer } from './server';
 import type { McpApp } from './types';
 import type { McpCredential } from './credential';
@@ -57,9 +57,11 @@ export function mountMcp(app: any): void {
       }
       // withMcpAuth verifies the native OAuth token and returns the standard MCP
       // WWW-Authenticate challenge that clients use for OAuth discovery.
-      return withMcpAuth(auth, (_request, oauthSession) =>
-        serve({ kind: 'oauth', accessToken: oauthSession.accessToken }, oauthSession.userId),
-      )(request);
+      return withPublicMcpChallenge(
+        await withMcpAuth(auth, (_request, oauthSession) =>
+          serve({ kind: 'oauth', accessToken: oauthSession.accessToken }, oauthSession.userId),
+        )(request),
+      );
     },
     {
       body: t.Any(),

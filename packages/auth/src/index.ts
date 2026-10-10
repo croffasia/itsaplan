@@ -398,6 +398,9 @@ export const auth = betterAuth({
         return !trustProviderEmails;
       },
     },
+    // generic-oauth stores id_token unencrypted, so this covers only the access and
+    // refresh tokens.
+    encryptOAuthTokens: true,
   },
 
   // Extra column on the user table. Not client-settable (input: false) — the role

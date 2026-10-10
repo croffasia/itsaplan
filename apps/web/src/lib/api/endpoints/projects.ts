@@ -75,6 +75,8 @@ export interface Assignee {
   // The user an 'owner'-scoped agent works for: delegating it to anyone else queues a
   // run its runner never receives. Null for members and team-scoped agents.
   restrictedToUserId: string | null;
+  // Whether @-mentioning this agent starts a run. Null for a person.
+  respondsToMention: boolean | null;
   // Whether this person may read issues and can therefore receive watcher
   // notifications without leaking work-item content.
   canReadWorkItems: boolean;

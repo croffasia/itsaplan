@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useSession } from '@/lib/auth-client';
 import { qk } from '@/services/queryKeys';
 import FullPageView from '@/components/common/page/FullPageView';
+import { hasPasswordCredential, useLinkedAccountsQuery } from './services/accounts.service';
 import { usePasskeysQuery, type PasskeyRow } from './services/passkeys.service';
 import AccountSection from './components/AccountSection';
 import AccountSecurityPasswordForm from './components/security/AccountSecurityPasswordForm';
@@ -21,6 +22,10 @@ export default function AccountSecurityPage() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [deleting, setDeleting] = useState<PasskeyRow | null>(null);
+  const { data: linkedAccounts } = useLinkedAccountsQuery();
+  // An account created through single sign-on has no password to change; while the
+  // list loads the form stays, as it does when the list cannot be read.
+  const canChangePassword = !linkedAccounts || hasPasswordCredential(linkedAccounts);
 
   const { data: passkeys, isPending } = usePasskeysQuery();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: qk.passkeys });
@@ -31,9 +36,11 @@ export default function AccountSecurityPage() {
       title={t('title')}
       description={t('description', { email: session?.user.email ?? '…' })}
     >
-      <AccountSection title={t('passwordTitle')} description={t('passwordDescription')}>
-        <AccountSecurityPasswordForm />
-      </AccountSection>
+      {canChangePassword && (
+        <AccountSection title={t('passwordTitle')} description={t('passwordDescription')}>
+          <AccountSecurityPasswordForm />
+        </AccountSection>
+      )}
 
       <AccountSection
         title={t('passkeysTitle')}

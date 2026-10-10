@@ -1,5 +1,5 @@
 import type { SharedViewBundle } from '@/lib/api/endpoints/share';
-import { defaultViewSettings } from '@/utils/viewSettings';
+import { normalizeSavedDisplay } from '@/utils/viewSettings';
 import { EMPTY_FILTER_SET } from '@/utils/filters';
 import { type WorkItemsViewProps } from '@/utils/project';
 import { toPublicProjectDetail } from '@/utils/publicProject';
@@ -20,9 +20,7 @@ export default function ReadOnlyBoard({
   onOpenIssue: (id: number) => void;
 }) {
   const project = toPublicProjectDetail(bundle.project, bundle.issues);
-  const layout = bundle.view.display.layout ?? 'kanban';
-  const { layout: _omit, ...displaySettings } = bundle.view.display;
-  const settings = { ...defaultViewSettings(layout), ...displaySettings };
+  const { layout, ...settings } = normalizeSavedDisplay(bundle.view.display);
 
   const viewProps: WorkItemsViewProps = {
     project,

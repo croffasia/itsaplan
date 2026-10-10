@@ -19,6 +19,12 @@
     "created": "الإنشاء",
     "updated": "التحديث"
   },
+  "columnOrdering": {
+    "title": "ترتيب {column}",
+    "button": "{column}: {field}، {direction}",
+    "field": "ترتيب العمود",
+    "board": "ترتيب اللوحة"
+  },
   "groupFields": {
     "none": "بلا تجميع",
     "status": "الحالة",

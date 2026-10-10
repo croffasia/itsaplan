@@ -19,6 +19,12 @@
     "created": "创建时间",
     "updated": "更新时间"
   },
+  "columnOrdering": {
+    "title": "排序 {column}",
+    "button": "{column}：{field}，{direction}",
+    "field": "列排序",
+    "board": "看板排序"
+  },
   "groupFields": {
     "none": "不分组",
     "status": "状态",

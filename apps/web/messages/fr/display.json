@@ -19,6 +19,12 @@
     "created": "Date de création",
     "updated": "Date de mise à jour"
   },
+  "columnOrdering": {
+    "title": "Trier {column}",
+    "button": "{column} : {field}, {direction}",
+    "field": "Tri de la colonne",
+    "board": "Tri du tableau"
+  },
   "groupFields": {
     "none": "Aucun regroupement",
     "status": "État",

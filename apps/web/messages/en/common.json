@@ -211,5 +211,6 @@
     "page": "Page {number}",
     "perPage": "per page",
     "range": "{first}-{last} of {total}"
-  }
+  },
+  "aboutCloudAndPro": "Learn about Cloud and Pro"
 }

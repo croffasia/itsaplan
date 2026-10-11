@@ -1,10 +1,11 @@
 'use client';
 
-import { ChevronDown, Lock } from 'lucide-react';
+import { ChevronDown, ExternalLink, Lock } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { usePersistedOpen } from '@/hooks/usePersistedOpen';
 import { cn } from '@/lib/utils';
+import { PRO_URL } from '@/utils/app';
 import Panel from './Panel';
 
 const PANELS = ['byPerson', 'byTrigger', 'bySchedule', 'tools', 'latency'] as const;
@@ -17,6 +18,7 @@ const BARS = ['85%', '60%', '40%'];
 // empty shapes.
 export default function AgentAnalyticsPreview() {
   const t = useTranslations('agentAnalytics.preview');
+  const tCommon = useTranslations('common');
   const { open, toggle } = usePersistedOpen('agent-analytics-preview');
 
   return (
@@ -29,16 +31,20 @@ export default function AgentAnalyticsPreview() {
           </h3>
           <p className="mt-1 text-xs text-muted-foreground">{t('description')}</p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="shrink-0"
-          aria-expanded={open}
-          onClick={toggle}
-        >
-          {open ? t('hide') : t('show')}
-          <ChevronDown className={cn('transition-transform duration-150', open && 'rotate-180')} />
-        </Button>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
+          <Button variant="ghost" size="sm" asChild>
+            <a href={PRO_URL} target="_blank" rel="noreferrer">
+              {tCommon('aboutCloudAndPro')}
+              <ExternalLink />
+            </a>
+          </Button>
+          <Button variant="ghost" size="sm" aria-expanded={open} onClick={toggle}>
+            {open ? t('hide') : t('show')}
+            <ChevronDown
+              className={cn('transition-transform duration-150', open && 'rotate-180')}
+            />
+          </Button>
+        </div>
       </header>
       {open && (
         <div className="grid gap-4 xl:grid-cols-2">

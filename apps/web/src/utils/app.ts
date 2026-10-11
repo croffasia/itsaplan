@@ -7,6 +7,9 @@ export const APP_NAME = "It's a Plan";
 // The product site. The product mark on the public share pages links to it.
 export const APP_SITE_URL = 'https://itsaplan.dev/';
 
+// The page about Cloud and self-hosted Pro, linked wherever the app names what they add.
+export const PRO_URL = 'https://itsaplan.dev/pro';
+
 // The legal document URLs, linked from the logged-out screens: Google requires the
 // privacy policy and terms registered for the OAuth client to be reachable before
 // consent is given. Each instance points these at its own documents through its

@@ -39,19 +39,20 @@ export default function ManageTeamsLayout({ children }: { children: ReactNode })
       }
       list={
         <div className="space-y-6">
-          {workspace && (
-            <div className="flex items-baseline gap-2 px-2 pt-1">
-              <h2 dir="auto" className="min-w-0 truncate text-[15px] font-semibold">
-                {workspace.name}
-              </h2>
-              {workspace.role && (
+          {/* Only its owner and its admins have anything of the workspace to open. */}
+          {workspace?.role && (
+            <>
+              <div className="flex items-baseline gap-2 px-2 pt-1">
+                <h2 dir="auto" className="min-w-0 truncate text-[15px] font-semibold">
+                  {workspace.name}
+                </h2>
                 <span className="shrink-0 text-xs text-muted-foreground">
                   {tw(`roles.${workspace.role}`)}
                 </span>
-              )}
-            </div>
+              </div>
+              <WorkspaceSectionNav workspace={workspace} />
+            </>
           )}
-          {workspace?.role && <WorkspaceSectionNav workspace={workspace} />}
           <TeamsRail
             teams={workspace ? teams.filter((team) => team.workspaceId === workspace.id) : teams}
             isPending={isPending}

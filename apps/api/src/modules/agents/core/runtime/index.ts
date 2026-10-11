@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Agent, type AgentExecutionOptions } from '@mastra/core/agent';
+import type { TracingOptions } from '@mastra/core/observability';
 import {
   getAgentInProject,
   getInternalAgentApiKey,
@@ -15,12 +16,14 @@ import { buildRouteTools } from './tools/route-tools';
 import { buildLocalTools } from './tools/local';
 import { buildSkillTool, skillsPreamble } from './skill-runtime';
 import { buildMemory, ensureThread, DEFAULT_LAST_MESSAGES } from './memory';
+import { getMastra } from './observability';
 import { toolArgsText, toolText } from '../../chat-parts';
 import { recordContextUsage, type ContextUsage } from '../../chat-usage';
 import { isChatThreadId, newChatThreadId } from './thread-ids';
 import { errorMessage } from '../helpers/errors';
 import { projectPreamble } from '../prompt/framing';
 import { HttpError } from '#shared/lib';
+import type { AgentRunTrigger } from '../../model';
 
 // Runtime execution of internal agents via Mastra. An agent is built on demand
 // from its stored configuration (provider/model/instructions) and run against a
@@ -121,7 +124,7 @@ async function buildAgent(
     contextPreamble +
     (row.instructions ?? DEFAULT_INSTRUCTIONS) +
     skillsPreamble(skills);
-  return new Agent({
+  const agent = new Agent({
     id: `ai-agent-${row.id}`,
     name: row.name,
     instructions,
@@ -141,6 +144,9 @@ async function buildAgent(
       ? { memory: buildMemory(row.memoryLastMessages ?? DEFAULT_LAST_MESSAGES) }
       : {}),
   });
+  // An agent traces its run only through a container (see observability.ts).
+  agent.__registerMastra(getMastra());
+  return agent;
 }
 
 // Runs the internal agent identified by agentId in the given project against the
@@ -282,7 +288,24 @@ async function prepareRun(
   // Mastra's generate/stream have overloaded options; type the shape we use. In
   // Mastra v1 the temperature belongs to the call's model settings — a flat
   // `temperature` option is only read by the legacy generate.
-  const options: RunOptions = { maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS };
+  const options: RunOptions = {
+    maxSteps: row.maxSteps ?? DEFAULT_MAX_STEPS,
+    // What the run belongs to, kept on the trace: the spans hold no foreign keys of ours.
+    // A queued run names its run, a chat run the person who asked, since the caller of a
+    // queued run is the agent's own bot user.
+    tracingOptions: {
+      metadata: {
+        agentId: row.id,
+        teamId: row.teamId,
+        projectId,
+        ...(opts.runId != null
+          ? { runId: opts.runId, trigger: opts.trigger }
+          : { userId: opts.callerUserId }),
+        ...(opts.issueId != null ? { issueId: opts.issueId } : {}),
+        ...(opts.scheduleId != null ? { scheduleId: opts.scheduleId } : {}),
+      },
+    },
+  };
   if (row.temperature != null) options.modelSettings = { temperature: row.temperature };
   if (row.reasoningEffort != null) {
     options.providerOptions = reasoningProviderOptions(row.reasoningEffort);
@@ -321,11 +344,15 @@ export type RunOpts = {
   threadId?: string | null;
   issueId?: number | null;
   scheduleId?: number | null;
+  // The queued run this executes, and what triggered it. Absent for a chat run.
+  runId?: number;
+  trigger?: AgentRunTrigger;
   contextPreamble?: string;
 };
 
 type RunOptions = {
   maxSteps: number;
+  tracingOptions: TracingOptions;
   modelSettings?: { temperature: number };
   providerOptions?: ProviderOptions;
   memory?: { thread: string; resource: string };

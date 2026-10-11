@@ -51,6 +51,10 @@
     "agents": {
       "title": "AI 代理",
       "description": "该团队拥有的 AI 代理，以及各自工作的项目。"
+    },
+    "analytics": {
+      "title": "用量",
+      "description": "团队代理在模型上的花费，按代理、项目和日期统计。"
     }
   },
   "info": {
@@ -658,6 +662,11 @@
       "title": "删除 {name}？",
       "description": "<strong>{name}</strong> 及其团队将被删除。成员会保留自己的账户和其他团队。此操作无法撤销。",
       "deleted": "工作区已删除"
-    }
+    },
+    "agentUsage": {
+      "title": "AI 用量",
+      "description": "所有团队的代理在模型上的花费。"
+    },
+    "settingsGroup": "设置"
   }
 }

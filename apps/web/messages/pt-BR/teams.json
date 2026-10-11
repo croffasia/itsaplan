@@ -51,6 +51,10 @@
     "agents": {
       "title": "Agentes de IA",
       "description": "Os agentes de IA que este time possui e os projetos em que cada um trabalha."
+    },
+    "analytics": {
+      "title": "Consumo",
+      "description": "Quanto os agentes da equipe gastaram com modelos, por agente, projeto e dia."
     }
   },
   "info": {
@@ -658,6 +662,11 @@
       "title": "Excluir {name}?",
       "description": "<strong>{name}</strong> e os times dele são excluídos. As pessoas mantêm suas contas e seus outros times. Isso não pode ser desfeito.",
       "deleted": "Workspace excluído"
-    }
+    },
+    "agentUsage": {
+      "title": "Consumo de IA",
+      "description": "Quanto os agentes de todas as equipes gastaram com modelos."
+    },
+    "settingsGroup": "Configurações"
   }
 }

@@ -164,7 +164,13 @@
     "workspacesSaved": "工作区设置已保存",
     "workspaces": "工作区",
     "personalWorkspaces": "每人一个工作区",
-    "personalWorkspacesHint": "每个账户都会获得一个以其姓名命名的专属工作区。关闭后，成员只能在被添加到的工作区中工作。"
+    "personalWorkspacesHint": "每个账户都会获得一个以其姓名命名的专属工作区。关闭后，成员只能在被添加到的工作区中工作。",
+    "agents": "代理",
+    "agentsSaved": "代理设置已保存",
+    "traceRetention": "保留运行追踪",
+    "traceRetentionHint": "代理的每次运行都会记录模型和工具调用。用量面板只统计仍保留的运行。",
+    "traceDays": "{days} 天",
+    "traceForever": "永久"
   },
   "authentication": {
     "saved": "身份验证设置已保存",

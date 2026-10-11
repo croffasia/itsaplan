@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "Général",
-      "description": "Les espaces de travail personnels et les valeurs par défaut des nouveaux projets."
+      "description": "Les espaces de travail personnels, les valeurs par défaut des nouveaux projets et les traces des agents."
     },
     "authentication": {
       "label": "Authentification",

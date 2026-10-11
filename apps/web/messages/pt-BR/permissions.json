@@ -17,6 +17,7 @@
     "integrations": "Integrações",
     "agent_skills": "Habilidades de agente",
     "agent_tools": "Ferramentas de agente",
+    "agent_usage": "Consumo dos agentes",
     "custom_fields": "Campos personalizados",
     "issue_templates": "Modelos de issue",
     "workflow_config": "Configuração de fluxo de trabalho",

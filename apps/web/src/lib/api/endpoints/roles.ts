@@ -21,6 +21,7 @@ export type PermissionResource =
   | 'integrations'
   | 'agent_skills'
   | 'agent_tools'
+  | 'agent_usage'
   | 'custom_fields'
   | 'issue_templates'
   | 'workflow_config'

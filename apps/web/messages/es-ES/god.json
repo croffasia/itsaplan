@@ -164,7 +164,13 @@
     "workspacesSaved": "Ajustes de espacios de trabajo guardados",
     "workspaces": "Espacios de trabajo",
     "personalWorkspaces": "Un espacio de trabajo para cada persona",
-    "personalWorkspacesHint": "Cada cuenta recibe un espacio de trabajo propio con el nombre de la persona. Desactivado, cada persona trabaja solo en los espacios de trabajo a los que se le ha añadido."
+    "personalWorkspacesHint": "Cada cuenta recibe un espacio de trabajo propio con el nombre de la persona. Desactivado, cada persona trabaja solo en los espacios de trabajo a los que se le ha añadido.",
+    "agents": "Agentes",
+    "agentsSaved": "Ajustes de agentes guardados",
+    "traceRetention": "Conservar trazas de ejecución",
+    "traceRetentionHint": "Cada ejecución de un agente registra sus llamadas al modelo y a las herramientas. Los paneles de consumo solo cuentan las ejecuciones conservadas.",
+    "traceDays": "{days, plural, one {# día} other {# días}}",
+    "traceForever": "Siempre"
   },
   "authentication": {
     "saved": "Los ajustes de autenticación se han guardado",

@@ -109,6 +109,10 @@ export const qk = {
     ['noteBoards', projectKey, 'board', boardId] as const,
   noteBoardAccessCandidates: (projectKey: string) =>
     ['noteBoards', projectKey, 'accessCandidates'] as const,
+  agentAnalytics: (teamId: number, days: number, projectId: number | null) =>
+    ['agentAnalytics', teamId, days, projectId] as const,
+  workspaceAgentAnalytics: (workspaceId: number, days: number) =>
+    ['workspaceAgentAnalytics', workspaceId, days] as const,
   analytics: (projectKey: string, kind: string, params?: unknown) =>
     ['analytics', projectKey, kind, params ?? {}] as const,
   analyticsForProject: (projectKey: string) => ['analytics', projectKey] as const,
@@ -285,6 +289,7 @@ export const qk = {
   instanceOidcSettings: ['instanceOidcSettings'] as const,
   instanceTelegramSettings: ['instanceTelegramSettings'] as const,
   instanceProjectDefaults: ['instanceProjectDefaults'] as const,
+  instanceAgentSettings: ['instanceAgentSettings'] as const,
   instanceStorageSettings: ['instanceStorageSettings'] as const,
   // The upload limits as read by the upload UI (open to any signed-in user).
   storageSettings: ['storageSettings'] as const,

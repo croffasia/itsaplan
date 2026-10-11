@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "Geral",
-      "description": "Workspaces pessoais e padrões para novos projetos."
+      "description": "Workspaces pessoais, padrões para novos projetos e rastros de agentes."
     },
     "authentication": {
       "label": "Autenticação",

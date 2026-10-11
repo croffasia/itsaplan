@@ -18,8 +18,11 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   nowhere else. `useWorkspaceSections(workspace, core)` returns a workspace's settings menu,
   shown by `WorkspaceSectionNav`: here the core's sections as they are, while the hosted
   build adds its own at any position or drops some. One it adds carries in `Component` the
-  page `/workspaces/:id/:sectionId` opens. `/workspaces/:id` names no section and opens the
-  first entry of the menu, so the order also decides the page a workspace opens on.
+  page `/workspaces/:id/:sectionId` opens. Every section names its group: an `overview`
+  one sits at the top of the menu, a `settings` one in the folding Settings group below,
+  each in the order given.
+  `/workspaces/:id` names no section and opens the first entry of the menu, so the order
+  also decides the page a workspace opens on.
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
   which happens while personal workspaces are off; here it says who adds them.
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
@@ -35,7 +38,10 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   and edits an agent schedule: here the core's, while the hosted build opens its own with
   the same props, with the schedule types it adds and the `options` it keeps on a
   schedule. The schedule list names such a type by the message
-  `settings.schedules.types.<id>`. `cloudMessages` is the
+  `settings.schedules.types.<id>`. `AgentAnalyticsExtras` renders below the panels of an
+  agent dashboard, a team's or a workspace's, with the scope and the window it shows;
+  here a preview of the panels the hosted build and Pro add, which folds to its title and
+  description. `cloudMessages` is the
   hosted build's English, merged into the catalogue the keys are typed against (a god
   section's name and blurb go under `sections.god.<slug>` like the core ones), and
   `loadCloudMessages(locale)` returns its other languages. The i18n request config imports

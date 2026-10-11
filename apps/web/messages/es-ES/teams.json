@@ -51,6 +51,10 @@
     "agents": {
       "title": "Agentes de IA",
       "description": "Los agentes de IA que este equipo posee, y los proyectos en los que trabaja cada uno de ellos."
+    },
+    "analytics": {
+      "title": "Consumo",
+      "description": "Lo que han gastado en modelos los agentes del equipo, por agente, proyecto y día."
     }
   },
   "info": {
@@ -658,6 +662,11 @@
       "title": "¿Eliminar {name}?",
       "description": "<strong>{name}</strong> y sus equipos se eliminan. Las personas conservan sus cuentas y sus otros equipos. No se puede deshacer.",
       "deleted": "Espacio de trabajo eliminado"
-    }
+    },
+    "agentUsage": {
+      "title": "Consumo de IA",
+      "description": "Lo que han gastado en modelos los agentes de todos los equipos."
+    },
+    "settingsGroup": "Ajustes"
   }
 }

@@ -25,7 +25,7 @@
     },
     "general": {
       "label": "Umum",
-      "description": "Workspace pribadi dan pengaturan bawaan untuk proyek baru."
+      "description": "Workspace pribadi, pengaturan bawaan untuk proyek baru, dan trace agen."
     },
     "authentication": {
       "label": "Autentikasi",

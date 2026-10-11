@@ -51,6 +51,10 @@
     "agents": {
       "title": "Agen AI",
       "description": "Agen AI yang dimiliki tim ini, dan proyek tempat mereka bekerja."
+    },
+    "analytics": {
+      "title": "Penggunaan",
+      "description": "Biaya model yang dipakai agen tim, per agen, proyek, dan hari."
     }
   },
   "info": {
@@ -658,6 +662,11 @@
       "title": "Hapus {name}?",
       "description": "<strong>{name}</strong> dan timnya akan dihapus. Orang-orang tetap memiliki akun dan tim lain mereka. Tindakan ini tidak dapat dibatalkan.",
       "deleted": "Workspace dihapus"
-    }
+    },
+    "agentUsage": {
+      "title": "Penggunaan AI",
+      "description": "Biaya model yang dipakai agen semua tim."
+    },
+    "settingsGroup": "Pengaturan"
   }
 }

@@ -55,6 +55,8 @@ async function processRun(run: ClaimedRun): Promise<void> {
       threadId: runThreadId(run),
       issueId: run.issueId,
       scheduleId: run.scheduleId,
+      runId: run.id,
+      trigger: run.trigger,
       contextPreamble: runModePreamble(run.trigger) + peopleContext(run),
       abortSignal: AbortSignal.timeout(timeoutMs),
     });

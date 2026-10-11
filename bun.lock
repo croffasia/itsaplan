@@ -27,6 +27,7 @@
         "@firecrawl/pdf-inspector": "^1.17.0",
         "@mastra/core": "^1.58.0",
         "@mastra/memory": "^1.26.1",
+        "@mastra/observability": "^1.17.6",
         "@mastra/pg": "^1.20.0",
         "@modelcontextprotocol/sdk": "^1.30.0",
         "@repo/agent-tools": "workspace:*",
@@ -715,6 +716,8 @@
     "@mastra/core": ["@mastra/core@1.58.0", "", { "dependencies": { "@a2a-js/sdk-v0_3": "npm:@a2a-js/sdk@~0.3.14", "@a2a-js/sdk-v1": "npm:@a2a-js/sdk@~1.0.1", "@ai-sdk/provider-utils-v5": "npm:@ai-sdk/provider-utils@3.0.30", "@ai-sdk/provider-utils-v6": "npm:@ai-sdk/provider-utils@4.0.40", "@ai-sdk/provider-utils-v7": "npm:@ai-sdk/provider-utils@5.0.13", "@ai-sdk/provider-v5": "npm:@ai-sdk/provider@2.0.3", "@ai-sdk/provider-v6": "npm:@ai-sdk/provider@3.0.14", "@ai-sdk/provider-v7": "npm:@ai-sdk/provider@4.0.4", "@isaacs/ttlcache": "^2.1.5", "@lukeed/uuid": "^2.0.1", "@mastra/schema-compat": "1.3.6", "@modelcontextprotocol/server": "2.0.0", "@sindresorhus/slugify": "^2.2.1", "@standard-schema/spec": "^1.1.0", "ajv": "^8.20.0", "chat": "^4.34.0", "croner": "^10.0.1", "dotenv": "^17.3.1", "execa": "^9.6.1", "fastq": "^1.20.1", "gray-matter": "^4.0.3", "ignore": "^7.0.5", "jpeg-js": "^0.4.4", "json-schema": "^0.4.0", "lru-cache": "^11.2.7", "p-map": "^7.0.4", "p-retry": "^7.1.1", "picomatch": "^4.0.3", "posthog-node": "^5.46.1", "tokenx": "^1.3.0", "ws": "^8.21.0", "xxhash-wasm": "^1.1.0" }, "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" } }, "sha512-+41tyP9obK+OgO655gjQC7SGnZTnsEN+I0PociVFW6CghSdors++0X9jch5RFLr8Qi3eWQpefWPCA1ZjdDRKGg=="],
 
     "@mastra/memory": ["@mastra/memory@1.26.1", "", { "dependencies": { "@mastra/schema-compat": "1.3.6", "async-mutex": "^0.5.0", "diff": "^8.0.3", "json-schema": "^0.4.0", "lru-cache": "^11.2.7", "probe-image-size": "^7.2.3", "tokenx": "^1.3.0", "xxhash-wasm": "^1.1.0", "zod": "^4.4.3" }, "peerDependencies": { "@mastra/core": ">=1.4.1-0 <2.0.0-0" } }, "sha512-hKZCSEvfQJ9QWQY5gt0x9vLR4mnRValb325ZRL+ctxbuMTNKO4A8ssmFi5gdmDOpnQ5SWiQ/BPibrFcGNbA2Mg=="],
+
+    "@mastra/observability": ["@mastra/observability@1.18.4", "", { "peerDependencies": { "@mastra/core": ">=1.16.0-0 <2.0.0-0", "zod": "^3.25.0 || ^4.0.0" } }, "sha512-41T4v4ydBkpof36rpqKcJ64GS65RVHI/VN0/V2Peg1YS8KDAYqBkzLSv022TILZldC/dA9DqivPq7BqGMwrr+w=="],
 
     "@mastra/pg": ["@mastra/pg@1.20.0", "", { "dependencies": { "async-mutex": "^0.5.0", "pg": "^8.22.0", "pg-connection-string": "^2.12.0", "xxhash-wasm": "^1.1.0" }, "peerDependencies": { "@mastra/core": ">=1.53.0-0 <2.0.0-0" } }, "sha512-cuThEP0TdvgWW70KEkaONAaeiny/l/VOLz3nUIltQBm64TlPBu9iGN1cJdt0gWYXTfPWjTgqc7r0hOB34ay3bQ=="],
 

@@ -51,6 +51,10 @@
     "agents": {
       "title": "AI Agents",
       "description": "The AI agents this team owns, and the projects each of them works in."
+    },
+    "analytics": {
+      "title": "Usage",
+      "description": "What the team's agents spent on models, by agent, project and day."
     }
   },
   "info": {
@@ -658,6 +662,11 @@
       "title": "Delete {name}?",
       "description": "<strong>{name}</strong> and its teams are deleted. People keep their accounts and their other teams. This cannot be undone.",
       "deleted": "Workspace deleted"
-    }
+    },
+    "agentUsage": {
+      "title": "AI usage",
+      "description": "What the agents of every team spent on models."
+    },
+    "settingsGroup": "Settings"
   }
 }

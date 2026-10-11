@@ -2,6 +2,11 @@
 
 Requirements: Docker and a domain behind a TLS-terminating reverse proxy.
 
+The TLS proxy is required. In production the session cookie is marked `Secure`, and
+browsers do not keep a `Secure` cookie that arrives over plain HTTP: over `http://` the sign-in
+request succeeds, but no session is kept and the app stays signed out. `http://localhost` is the
+one exception in Chrome and Firefox; WebKit browsers such as Safari refuse it there too.
+
 ```bash
 git clone https://github.com/croffasia/itsaplan.git
 cd itsaplan

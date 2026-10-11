@@ -17,6 +17,8 @@
       "cron": "On a schedule",
       "status": "When an issue enters a state"
     },
+    "moreTypes": "More triggers in Cloud and Pro",
+    "moreTypesHint": "New issues, assignments, labels and comments",
     "taskOptional": "Task (optional)",
     "issueTaskPlaceholder": "Write the acceptance criteria into the issue description.",
     "issueTaskHint": "The agent gets the issue and what happened to it. Add what to do with it.",

@@ -17,6 +17,8 @@
       "cron": "Por agendamento",
       "status": "Quando uma issue entra em um estado"
     },
+    "moreTypes": "Mais gatilhos no Cloud e no Pro",
+    "moreTypesHint": "Novas issues, atribuições, etiquetas e comentários",
     "taskOptional": "Tarefa (opcional)",
     "issueTaskPlaceholder": "Escreva os critérios de aceitação na descrição da issue.",
     "issueTaskHint": "O agente recebe a issue e o que aconteceu com ela. Diga o que fazer com ela.",

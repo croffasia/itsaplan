@@ -17,6 +17,8 @@
       "cron": "Según una programación",
       "status": "Cuando un ticket entra en un estado"
     },
+    "moreTypes": "Más disparadores en Cloud y Pro",
+    "moreTypesHint": "Tickets nuevos, asignaciones, etiquetas y comentarios",
     "taskOptional": "Tarea (opcional)",
     "issueTaskPlaceholder": "Escribe los criterios de aceptación en la descripción del ticket.",
     "issueTaskHint": "El agente recibe el ticket y lo que le ha pasado. Añade qué hacer con él.",

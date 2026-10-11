@@ -17,6 +17,8 @@
       "cron": "Sesuai jadwal",
       "status": "Saat issue masuk ke status"
     },
+    "moreTypes": "Lebih banyak pemicu di Cloud dan Pro",
+    "moreTypesHint": "Issue baru, penugasan, label, dan komentar",
     "taskOptional": "Tugas (opsional)",
     "issueTaskPlaceholder": "Tulis kriteria penerimaan di deskripsi issue.",
     "issueTaskHint": "Agen menerima issue dan apa yang terjadi padanya. Tambahkan apa yang harus dilakukan.",

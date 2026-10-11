@@ -17,6 +17,8 @@
       "cron": "按定时",
       "status": "工作项进入某状态时"
     },
+    "moreTypes": "Cloud 和 Pro 中的更多触发方式",
+    "moreTypesHint": "新工作项、指派、标签和评论",
     "taskOptional": "任务（可选）",
     "issueTaskPlaceholder": "在工作项描述中写下验收标准。",
     "issueTaskHint": "代理会收到该工作项及其发生的变化。可补充要对它做什么。",

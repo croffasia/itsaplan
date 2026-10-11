@@ -16,7 +16,7 @@ import {
   scheduleRunRetry,
   type ClaimedRun,
 } from './run-queue';
-import { runAgent } from './runtime';
+import { STEP_LIMIT_MESSAGE, runAgent } from './runtime';
 import { runThreadId } from './runtime/thread-ids';
 
 // Drains the agent_run queue. The runtime, the model credentials and the limits are
@@ -63,6 +63,11 @@ async function processRun(run: ClaimedRun): Promise<void> {
       // Not retried: a run that hits the time limit will hit it again.
       await recordAgentRunFinished(run, 'failed');
       await markRunFailed(run.id, `Timed out after ${Math.round(timeoutMs / 1000)}s`);
+      return;
+    }
+    if (result.stepLimit) {
+      await recordAgentRunFinished(run, 'failed');
+      await markRunFailed(run.id, STEP_LIMIT_MESSAGE);
       return;
     }
     await recordAgentRunFinished(run, 'success');

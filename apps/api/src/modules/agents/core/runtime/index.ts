@@ -154,7 +154,9 @@ async function buildAgent(
 // caller can continue the conversation; it is null when memory is off.
 //
 // `aborted` is true when opts.abortSignal fired: Mastra then resolves with the partial
-// text instead of rejecting, so only this tells it from a normal finish.
+// text instead of rejecting, so only this tells it from a normal finish. `stepLimit` is
+// true when the run used its last step still calling tools: Mastra resolves that as a
+// finish too, with the text of the steps and no answer.
 export async function runAgent(
   agentId: number,
   projectId: number,
@@ -165,6 +167,7 @@ export async function runAgent(
   threadId: string | null;
   usage: ContextUsage | null;
   aborted: boolean;
+  stepLimit: boolean;
 }> {
   const { agent, row, options, threadId } = await prepareRun(agentId, projectId, prompt, opts);
   const result = await agent.generate(prompt, { ...options, abortSignal: opts.abortSignal });
@@ -177,7 +180,18 @@ export async function runAgent(
     threadId,
     usage,
     aborted: opts.abortSignal?.aborted ?? false,
+    stepLimit: reachedStepLimit(result.finishReason, result.steps.length, options.maxSteps),
   };
+}
+
+export const STEP_LIMIT_MESSAGE = 'Reached the step limit';
+
+function reachedStepLimit(
+  finishReason: string | undefined,
+  steps: number,
+  maxSteps: number,
+): boolean {
+  return finishReason === 'tool-calls' && steps >= maxSteps;
 }
 
 // What the model reported about the last call of an answer, as the pair the chat keeps.
@@ -241,6 +255,11 @@ export async function* streamAgent(
           yield { type: 'error', message: errorMessage(chunk.payload.error, 'Agent run failed') };
           break;
       }
+    }
+    if (
+      reachedStepLimit(await result.finishReason, (await result.steps).length, options.maxSteps)
+    ) {
+      yield { type: 'error', message: STEP_LIMIT_MESSAGE };
     }
     // An answer the member stopped never reaches here: the stream is aborted and the
     // thread keeps the number of the answer before it.

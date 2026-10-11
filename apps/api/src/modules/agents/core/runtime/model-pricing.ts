@@ -127,8 +127,8 @@ function tierFor(tiers: Tier[], inputTokens: number): Tier | null {
 // of `calls` calls; a tier is chosen by the input of one call, so a sum is priced at the
 // tier of its average call. Cached reads and writes are billed at their own rates where
 // the model has them, and at the plain input rate where it does not.
-// ponytail: calls of very different sizes in one sum share a tier; pricing each call
-// would need one row per call.
+// Calls of very different sizes in one sum share a tier; pricing each call would need
+// one row per call.
 export function estimateCost(
   provider: string,
   model: string,

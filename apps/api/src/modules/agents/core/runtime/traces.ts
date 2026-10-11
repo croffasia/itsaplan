@@ -71,17 +71,14 @@ type SpanRow = {
   parentSpanId?: string | null;
   name: string;
   spanType: string;
-  status?: string | null;
   startedAt: Date | string;
   endedAt?: Date | string | null;
   error?: unknown;
   metadata?: Record<string, unknown> | null;
 };
 
-// A span of the trace list carries a status Mastra computed; a span read through
-// getTrace carries none, so it is derived from its error and its end.
+// A span holds no status of its own: it is derived from its error and its end.
 function statusOf(span: SpanRow): string {
-  if (span.status) return span.status;
   if (span.error != null) return 'error';
   return span.endedAt ? 'success' : 'running';
 }

@@ -1,6 +1,6 @@
 import { db, agentRun, agentSchedule, aiAgent, issue, project, projectColumn } from '@repo/db';
 import { and, eq, inArray, ne, notInArray, sql } from 'drizzle-orm';
-import { filterScheduleIssues, type ScheduleForExtension } from './extension';
+import { filterScheduleIssues, isScheduleSupported, type ScheduleForExtension } from './extension';
 
 // The runs schedules queue on issues: a 'status' schedule's when an issue enters its
 // column, and those of an extension's types when the extension calls queueScheduleRuns.
@@ -107,7 +107,8 @@ export async function queueScheduleRuns(
   );
 }
 
-async function insertIssueRuns(schedules: IssueSchedule[], issueIds: number[]): Promise<void> {
+async function insertIssueRuns(all: IssueSchedule[], issueIds: number[]): Promise<void> {
+  const schedules = all.filter(isScheduleSupported);
   if (schedules.length === 0) return;
   const issues = await db
     .select({

@@ -266,7 +266,10 @@ undoes one.
   (`modules/agents/schedules/extension.ts`): schedule types of its own beside `cron` and
   `status`; the `options` it keeps on a schedule, checked on every write and, with the id
   maps, on a project copy; and which issues start a schedule's run. `queueScheduleRuns`
-  (`issue-runs.ts`) queues the runs of its types on issues, with the trigger `event`.
+  (`issue-runs.ts`) queues the runs of its types on issues, with the trigger `event`. A
+  schedule of a type or with options no installed extension reads (`isScheduleSupported`)
+  stays as it is, so it works again once the extension is back, but starts no run and
+  answers 409 to an update; only a delete goes through.
 - `setRunAdmission` (`modules/agents/core/run-admission.ts`): the seconds a claimed run
   waits before it starts, asked in the poller and in a runner's claim.
 - `onProjectEvent` (`modules/webhooks/emit.ts`): every issue and comment event the

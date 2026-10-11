@@ -46,6 +46,8 @@
     "runsSuffix": "{description} UTC",
     "statusActive": "Active",
     "statusPaused": "Paused",
+    "unavailable": "Needs Cloud or Pro",
+    "unavailableHint": "Set up with Cloud or Pro. Kept as it is, but it does not run here.",
     "viewTask": "View task",
     "noRunsShort": "No runs yet",
     "pause": "Pause schedule",

@@ -58,6 +58,16 @@ export function checkScheduleOptions(input: ScheduleOptionsInput): Promise<Sched
   return optionsCheck(input);
 }
 
+// Whether this instance runs the schedule as it was set up: its type is installed, and
+// what its options ask for is read by an installed extension. One made by an extension
+// since removed is kept as it is, so it works again once the extension is back, but it
+// starts no run and is not edited: run without its options it would start on issues
+// they leave out.
+export function isScheduleSupported(schedule: { type: string; options: ScheduleOptions }): boolean {
+  if (!isScheduleType(schedule.type)) return false;
+  return optionsCheck !== noOptions || Object.keys(schedule.options).length === 0;
+}
+
 type IssueFilter = (schedule: ScheduleForExtension, issueIds: number[]) => Promise<number[]>;
 
 const everyIssue: IssueFilter = async (_schedule, issueIds) => issueIds;

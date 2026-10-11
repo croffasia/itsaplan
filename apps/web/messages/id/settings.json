@@ -46,6 +46,8 @@
     "runsSuffix": "{description} UTC",
     "statusActive": "Aktif",
     "statusPaused": "Dijeda",
+    "unavailable": "Perlu Cloud atau Pro",
+    "unavailableHint": "Dibuat dengan Cloud atau Pro. Disimpan apa adanya, tetapi tidak berjalan di sini.",
     "viewTask": "Lihat tugas",
     "noRunsShort": "Belum pernah dijalankan",
     "pause": "Jeda jadwal",

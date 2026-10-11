@@ -254,4 +254,50 @@ describe('agent schedule extension', () => {
     const copied = (await schedules(asOwner, 'DST').get()).data!.items;
     expect(copied[0]).toMatchObject({ type: 'event', options: { event: 'issue.label_changed' } });
   });
+
+  it('keeps the schedules an extension made once it is removed, but runs and edits none', async () => {
+    const { asOwner, backlog, started, agent } = await setup();
+    setScheduleTypes(['event']);
+    setScheduleOptionsCheck(keepOptions);
+    const event = (
+      await schedules(asOwner).post({ agentId: agent.id, name: 'Labels', type: 'event' })
+    ).data!;
+    const filtered = (
+      await schedules(asOwner).post({
+        agentId: agent.id,
+        name: 'Bugs only',
+        type: 'status',
+        columnId: started.id,
+        options: { labels: ['bug'] },
+      })
+    ).data!;
+    const plain = (
+      await schedules(asOwner).post({
+        agentId: agent.id,
+        name: 'Every issue',
+        type: 'status',
+        columnId: started.id,
+      })
+    ).data!;
+    setScheduleTypes();
+    setScheduleOptionsCheck();
+
+    const listed = (await schedules(asOwner).get()).data!.items;
+    const supported = Object.fromEntries(listed.map((row) => [row.name, row.supported]));
+    expect(supported).toEqual({ Labels: false, 'Bugs only': false, 'Every issue': true });
+
+    const issue = (await createIssue(asOwner, backlog.id)).data!;
+    await asOwner.issues({ issueId: issue.id }).patch({ columnId: started.id });
+    expect(await runsOf(asOwner, filtered.id)).toEqual([]);
+    expect(await runsOf(asOwner, plain.id)).toHaveLength(1);
+
+    const paused = await schedules(asOwner)({ scheduleId: filtered.id }).patch({
+      status: 'paused',
+    });
+    expect(paused.status).toBe(409);
+    const renamed = await schedules(asOwner)({ scheduleId: event.id }).patch({ name: 'Other' });
+    expect(renamed.status).toBe(409);
+    const deleted = await schedules(asOwner)({ scheduleId: event.id }).delete();
+    expect(deleted.status).toBe(204);
+  });
 });

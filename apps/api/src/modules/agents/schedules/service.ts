@@ -3,7 +3,7 @@ import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { HttpError, iso, rethrowDuplicate } from '#shared/lib';
 import { getTeamLimits } from '#shared/limits';
 import { minCronIntervalSeconds, nextCronRun } from './cron';
-import type { ScheduleOptions } from './extension';
+import { isScheduleSupported, type ScheduleOptions } from './extension';
 import { agentWorksInProject, canTriggerAgent, isTriggerableBy } from '../core/service';
 import { contextTokensOf } from '../core/run-queue';
 import { deleteThreadsWhere } from '../core/runtime/memory';
@@ -35,6 +35,7 @@ export interface AgentScheduleRow {
   // Whether the member reading the schedule may send its agent a task: an 'owner'-scoped
   // runner serves its owner only.
   canTrigger: boolean;
+  supported: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -90,6 +91,7 @@ function mapSchedule(row: SelectedSchedule, actorUserId: string): AgentScheduleR
     nextRunAt: schedule.nextRunAt ? iso(schedule.nextRunAt) : null,
     lastRunAt: schedule.lastRunAt ? iso(schedule.lastRunAt) : null,
     canTrigger: isTriggerableBy({ kind, runnerScope, ownerUserId }, actorUserId),
+    supported: isScheduleSupported(schedule),
     createdAt: iso(schedule.createdAt),
     updatedAt: iso(schedule.updatedAt),
   };

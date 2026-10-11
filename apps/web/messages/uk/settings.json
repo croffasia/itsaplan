@@ -46,6 +46,8 @@
     "runsSuffix": "{description} UTC",
     "statusActive": "Активний",
     "statusPaused": "На паузі",
+    "unavailable": "Потрібен Cloud або Pro",
+    "unavailableHint": "Створено в Cloud або Pro. Збережено як є, але тут не запускається.",
     "viewTask": "Переглянути задачу",
     "noRunsShort": "Запусків ще немає",
     "pause": "Призупинити розклад",

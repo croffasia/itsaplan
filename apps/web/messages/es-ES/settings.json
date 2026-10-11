@@ -46,6 +46,8 @@
     "runsSuffix": "{description} UTC",
     "statusActive": "Activa",
     "statusPaused": "En pausa",
+    "unavailable": "Requiere Cloud o Pro",
+    "unavailableHint": "Creado con Cloud o Pro. Se conserva tal cual, pero aquí no se ejecuta.",
     "viewTask": "Ver la tarea",
     "noRunsShort": "Todavía no hay ejecuciones",
     "pause": "Posponer la programación",

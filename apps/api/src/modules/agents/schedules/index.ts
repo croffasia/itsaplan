@@ -107,6 +107,12 @@ export const agentScheduleRoutes = new Elysia({
     async ({ project, params, body, user }) => {
       const current = await getAgentSchedule(project.id, params.scheduleId, requireUser(user).id);
       if (!current) throw new HttpError(404, 'Schedule not found');
+      if (!current.supported) {
+        throw new HttpError(
+          409,
+          'This schedule was set up with Cloud or Pro and does not run here; it can only be deleted',
+        );
+      }
       const trigger = await scheduleTriggerFields(project, current.type, body);
       // A resumed cron schedule runs next from now, not from when it was paused.
       const resuming = body.status === 'active' && current.status === 'paused';
@@ -150,7 +156,7 @@ export const agentScheduleRoutes = new Elysia({
         summary: 'Update an agent schedule',
         description:
           "Update a schedule's agent, task, cron or column, options, or status. Its type stays " +
-          'the one it was created with.',
+          'the one it was created with. A schedule that is not supported here answers 409.',
         ...mcpTool('update_agent_schedule'),
       },
     },

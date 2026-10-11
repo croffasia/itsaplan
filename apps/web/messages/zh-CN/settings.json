@@ -46,6 +46,8 @@
     "runsSuffix": "{description} UTC",
     "statusActive": "已启用",
     "statusPaused": "已暂停",
+    "unavailable": "需要 Cloud 或 Pro",
+    "unavailableHint": "使用 Cloud 或 Pro 创建。按原样保留，但不会在此运行。",
     "viewTask": "查看任务",
     "noRunsShort": "暂无运行记录",
     "pause": "暂停定时任务",

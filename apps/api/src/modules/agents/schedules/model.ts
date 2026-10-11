@@ -102,6 +102,11 @@ export const AgentScheduleResponse = t.Object({
     description:
       "Whether you may run or stop this schedule; an 'owner'-scoped agent serves its owner only.",
   }),
+  supported: t.Boolean({
+    description:
+      'False for a schedule whose type or options come from Cloud or Pro and are not on this ' +
+      'instance. It is kept as it is but starts no run and cannot be updated, only deleted.',
+  }),
   createdAt: t.String(),
   updatedAt: t.String(),
 });

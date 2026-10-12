@@ -13,6 +13,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useSettingsNavGroups } from '@/hooks/useSettingsNavGroups';
 import { useShellProject } from '@/hooks/useShellProject';
 import { useShellRoute } from '@/hooks/useShellRoute';
+import { useAppBadge } from '@/hooks/useAppBadge';
 import { useProjectRouteSync } from '@/hooks/useProjectRouteSync';
 import { projectPath, issuePath } from '@/utils/paths';
 import { defaultsFromFilters, type NewIssueDefaults } from '@/utils/project';
@@ -58,6 +59,7 @@ export default function Shell({
     errorMsg,
     forbidden,
   } = useShellProject(projectKey, route.activeViewId);
+  useAppBadge(projects.map((item) => item.id));
   const teamId = project?.project.teamId;
   const issueRefs = useMemo(
     () => projects.filter((item) => item.teamId === teamId).map((item) => item.ref),

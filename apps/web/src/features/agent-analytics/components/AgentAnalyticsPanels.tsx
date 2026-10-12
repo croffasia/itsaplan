@@ -8,21 +8,24 @@ import UsageBreakdown from './UsageBreakdown';
 
 // The panels of one window of the dashboard. With `onSelectProject` a project of the
 // breakdown narrows the dashboard to it; `byTeam` compares the teams, for a dashboard
-// over several.
+// over several. `pricesHref` is where the reader sets the prices of the models the cost
+// leaves out, for one who may.
 export default function AgentAnalyticsPanels({
   data,
   onSelectProject,
   byTeam = false,
+  pricesHref,
 }: {
   data: AgentAnalytics;
   onSelectProject?: (projectId: number) => void;
   byTeam?: boolean;
+  pricesHref?: string | null;
 }) {
   const t = useTranslations('agentAnalytics');
 
   return (
     <div className="space-y-6">
-      <StatCards data={data} />
+      <StatCards data={data} pricesHref={pricesHref} />
       <div className="grid gap-4 xl:grid-cols-2">
         <TokensOverTime data={data} />
         <ModelUsage data={data} />

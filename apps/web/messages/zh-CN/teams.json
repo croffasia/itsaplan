@@ -667,6 +667,48 @@
       "title": "AI 用量",
       "description": "所有团队的代理在模型上的花费。"
     },
-    "settingsGroup": "设置"
+    "settingsGroup": "设置",
+    "modelPrices": {
+      "title": "模型价格",
+      "description": "AI 用量按这些价格（每 1M token）计算每次模型调用的花费。修改后，过去的调用也会重新计算。",
+      "used": {
+        "title": "本工作区使用的模型",
+        "description": "你的代理在过去 90 天调用过的模型，以及你设置了价格的模型。",
+        "unpriced": "{count, plural, other {# 个模型没有价格，它们的调用不计入花费。}}",
+        "empty": "过去 90 天没有模型调用。代理调用某个模型后，它会出现在这里。"
+      },
+      "all": {
+        "title": "全部模型",
+        "description": "内置价格。你可以为任意模型设置自己的价格。",
+        "search": "搜索模型",
+        "noMatch": "没有与“{query}”匹配的模型。"
+      },
+      "columns": {
+        "model": "模型",
+        "calls": "调用次数",
+        "input": "输入",
+        "output": "输出",
+        "cacheRead": "缓存读取",
+        "cacheWrite": "缓存写入",
+        "price": "价格"
+      },
+      "source": {
+        "own": "自定义",
+        "builtIn": "内置",
+        "none": "无价格"
+      },
+      "setPrice": "设置价格",
+      "edit": "编辑",
+      "setTitle": "设置价格",
+      "editTitle": "编辑价格",
+      "perMillion": "单位：美元 / 1M token。",
+      "builtInPrice": "内置：输入 {input}，输出 {output}。",
+      "noBuiltInPrice": "该模型没有内置价格。",
+      "sameAsInput": "同输入",
+      "appliesToPast": "适用于本工作区中该模型的所有调用，包括过去的调用。",
+      "useBuiltIn": "使用内置价格",
+      "removePrice": "删除价格",
+      "save": "保存价格"
+    }
   }
 }

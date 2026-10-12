@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { TriangleAlert } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import type { AgentAnalytics } from '@/lib/api/endpoints/agentAnalytics';
 import StatDelta, { type StatComparison } from './StatDelta';
@@ -6,9 +8,21 @@ import { formatCost, formatCount } from '../utils/format';
 type Stat = StatComparison & { key: string; label: string; value: string };
 
 // The headline figures of the window, each beside what the same span before it held.
-export default function StatCards({ data }: { data: AgentAnalytics }) {
+// The cost leaves out the calls of a model no price covers, so it says how many such
+// models there are, with a link to set their prices for whoever may (`pricesHref`).
+export default function StatCards({
+  data,
+  pricesHref,
+}: {
+  data: AgentAnalytics;
+  pricesHref?: string | null;
+}) {
   const t = useTranslations('agentAnalytics');
   const { totals, previous } = data;
+  // A call that names no model has no price to set, so it is not counted.
+  const unpriced = data.models.filter(
+    (model) => model.cost == null && model.provider && model.model,
+  ).length;
 
   const stats: Stat[] = [
     {
@@ -50,6 +64,22 @@ export default function StatCards({ data }: { data: AgentAnalytics }) {
           <p className="text-xs text-muted-foreground">{stat.label}</p>
           <p className="mt-1 text-3xl font-semibold tracking-tight tabular-nums">{stat.value}</p>
           <StatDelta stat={stat} />
+          {stat.key === 'cost' && unpriced > 0 && (
+            <p className="mt-1 flex items-center gap-1 text-xs text-amber-700 dark:text-amber-400">
+              <TriangleAlert className="size-3.5 shrink-0" />
+              <span>
+                {t('unpriced', { count: unpriced })}
+                {pricesHref && (
+                  <>
+                    {' · '}
+                    <Link href={pricesHref} className="font-medium text-foreground hover:underline">
+                      {t('setPrices')}
+                    </Link>
+                  </>
+                )}
+              </span>
+            </p>
+          )}
         </div>
       ))}
     </div>

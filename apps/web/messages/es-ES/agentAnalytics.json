@@ -14,6 +14,8 @@
     "runs": "Ejecuciones",
     "errors": "Ejecuciones fallidas"
   },
+  "unpriced": "{count, plural, one {# modelo sin precio} other {# modelos sin precio}}",
+  "setPrices": "Poner precios",
   "measure": {
     "tokens": "Tokens",
     "cost": "Coste"

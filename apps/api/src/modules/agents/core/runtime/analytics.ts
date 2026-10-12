@@ -1,8 +1,8 @@
-import { db, aiAgent, project, team, user } from '@repo/db';
+import { db, aiAgent, modelPrice, project, team, user } from '@repo/db';
 import { and, eq, inArray, sql, type SQL } from 'drizzle-orm';
 import { iso, num } from '#shared/lib';
 import { spansTableExists } from './store';
-import { estimateCost, type CallUsage } from './model-pricing';
+import { estimateCost, priceKey, type CallUsage, type OwnPrices } from './model-pricing';
 
 // The figures behind the agent dashboard, read from the traces the runtime records
 // (see observability.ts). One trace is one run: its root span carries the team, the
@@ -69,6 +69,25 @@ function emptyScope(scope: AnalyticsScope): boolean {
 export async function workspaceScope(workspaceId: number): Promise<AnalyticsScope> {
   const rows = await db.select({ id: team.id }).from(team).where(eq(team.workspaceId, workspaceId));
   return { teamIds: rows.map((row) => row.id) };
+}
+
+// The prices the workspace of the scope set itself, which the dashboard costs calls
+// with before the built-in table. The teams of one scope share a workspace.
+export async function ownPrices(scope: AnalyticsScope): Promise<OwnPrices> {
+  if (scope.teamIds.length === 0) return new Map();
+  const rows = await db
+    .selectDistinct({
+      provider: modelPrice.provider,
+      model: modelPrice.model,
+      input: modelPrice.input,
+      output: modelPrice.output,
+      cacheRead: modelPrice.cacheRead,
+      cacheWrite: modelPrice.cacheWrite,
+    })
+    .from(modelPrice)
+    .innerJoin(team, eq(team.workspaceId, modelPrice.workspaceId))
+    .where(inArray(team.id, scope.teamIds));
+  return new Map(rows.map((row) => [priceKey(row.provider, row.model), row]));
 }
 
 // The scope narrowed to one project, when one is asked for. A project it does not read
@@ -188,6 +207,29 @@ async function modelCalls(scope: AnalyticsScope, window: AnalyticsWindow): Promi
   return rows as unknown as CallRow[];
 }
 
+// The models the runs of the scope called since `from`, with how many calls each: the
+// models a workspace's price list starts from.
+export async function modelsCalled(
+  scope: AnalyticsScope,
+  from: Date,
+): Promise<{ provider: string; model: string; calls: number }[]> {
+  if (emptyScope(scope) || !(await spansTableExists())) return [];
+  const rows = await db.execute(sql`
+    WITH runs AS (${tracedRuns(scope, from)})
+    SELECT s.attributes->>'provider' AS provider,
+           s.attributes->>'model' AS model,
+           count(*)::int AS calls
+      FROM mastra_ai_spans s
+      JOIN runs ON runs.trace_id = s."traceId"
+     WHERE s."spanType" = 'model_inference'
+       AND s.attributes->>'provider' <> ''
+       AND s.attributes->>'model' <> ''
+     GROUP BY 1, 2
+     ORDER BY calls DESC, 1, 2
+  `);
+  return rows as unknown as { provider: string; model: string; calls: number }[];
+}
+
 type RunRow = {
   in_window: boolean;
   team_id: number | null;
@@ -272,7 +314,7 @@ export async function getAgentAnalytics(
   };
   if (emptyScope(scope) || !(await spansTableExists())) return result;
 
-  const [calls, runs, agentRows, projectRows, teamRows] = await Promise.all([
+  const [calls, runs, agentRows, projectRows, teamRows, own] = await Promise.all([
     modelCalls(scope, window),
     runsPerPeriod(scope, window),
     db
@@ -285,6 +327,7 @@ export async function getAgentAnalytics(
       .from(project)
       .where(inArray(project.teamId, scope.teamIds)),
     db.select({ id: team.id, name: team.name }).from(team).where(inArray(team.id, scope.teamIds)),
+    ownPrices(scope),
   ]);
 
   const agentNames = new Map(agentRows.map((row) => [row.id, row.name]));
@@ -311,7 +354,7 @@ export async function getAgentAnalytics(
     const usage = callUsage(row);
     const provider = row.provider ?? '';
     const model = row.model ?? '';
-    const cost = provider && model ? estimateCost(provider, model, usage, row.calls) : null;
+    const cost = provider && model ? estimateCost(provider, model, usage, row.calls, own) : null;
     if (!row.in_window) {
       addUsage(previous, usage, cost);
       continue;

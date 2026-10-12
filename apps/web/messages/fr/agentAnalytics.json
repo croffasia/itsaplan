@@ -14,6 +14,8 @@
     "runs": "Exécutions",
     "errors": "Exécutions en échec"
   },
+  "unpriced": "{count, plural, one {# modèle sans prix} other {# modèles sans prix}}",
+  "setPrices": "Fixer les prix",
   "measure": {
     "tokens": "Jetons",
     "cost": "Coût"

@@ -9,6 +9,18 @@ export function formatCount(value: number): string {
   }).format(value);
 }
 
+// A price per million tokens, as the price list reads it: cents, and the fractions of a
+// cent a cheap model is priced in.
+export function formatRate(value: number | null | undefined): string {
+  if (value == null) return '—';
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 4,
+  }).format(value);
+}
+
 // An amount in USD. A run of a small model costs fractions of a cent, so an amount under
 // a cent keeps enough digits to be read rather than rounding to $0.00. Null is what the
 // API sends for a model the price table does not name.

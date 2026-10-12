@@ -5,6 +5,8 @@ import { useTranslations } from 'next-intl';
 import { AgentAnalyticsExtras } from '@/cloud';
 import { useTeam, useTeamQuery } from '@/services/teams.service';
 import { useTeamAgentAnalyticsQuery } from '@/services/agentAnalytics.service';
+import { useWorkspacesQuery } from '@/services/workspaces.service';
+import { workspacePath } from '@/utils/paths';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import { Skeleton } from '@/components/ui/skeleton';
 import AgentAnalyticsPanels from './components/AgentAnalyticsPanels';
@@ -22,6 +24,9 @@ export default function TeamAgentAnalyticsSection({ teamId }: { teamId: number }
   const team = useTeam(teamId);
   const permissions = useTeamQuery(teamId).data?.permissions;
   const runsTeam = team?.role === 'owner' || team?.role === 'manager';
+  // The prices are the workspace's, set by its owner and its admins.
+  const workspace = useWorkspacesQuery().data?.find((entry) => entry.id === team?.workspaceId);
+  const pricesHref = workspace?.role ? workspacePath(workspace.id, 'model-prices') : null;
   const canRead = runsTeam || permissions?.agent_usage.read === true;
   const [days, setDays] = useState(30);
   const [projectId, setProjectId] = useState<number | null>(null);
@@ -47,6 +52,7 @@ export default function TeamAgentAnalyticsSection({ teamId }: { teamId: number }
         <AgentAnalyticsPanels
           data={data}
           onSelectProject={projects && projectId == null ? setProjectId : undefined}
+          pricesHref={pricesHref}
         />
         <AgentAnalyticsExtras scope={{ teamId, projectId }} days={days} />
       </div>

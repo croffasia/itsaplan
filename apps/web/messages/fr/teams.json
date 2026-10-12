@@ -667,6 +667,48 @@
       "title": "Consommation IA",
       "description": "Ce que les agents de toutes les équipes ont dépensé en modèles."
     },
-    "settingsGroup": "Paramètres"
+    "settingsGroup": "Paramètres",
+    "modelPrices": {
+      "title": "Prix des modèles",
+      "description": "Consommation IA calcule le coût de chaque appel de modèle à ces prix, par million de tokens. Une modification recalcule aussi les appels passés.",
+      "used": {
+        "title": "Utilisés dans cet espace de travail",
+        "description": "Les modèles que vos agents ont appelés ces 90 derniers jours, et ceux auxquels vous avez donné un prix.",
+        "unpriced": "{count, plural, one {# modèle n’a pas de prix : ses appels ne comptent pas dans le coût.} other {# modèles n’ont pas de prix : leurs appels ne comptent pas dans le coût.}}",
+        "empty": "Aucun appel de modèle ces 90 derniers jours. Un modèle apparaît ici dès que vos agents l’appellent."
+      },
+      "all": {
+        "title": "Tous les modèles",
+        "description": "Prix intégrés. Fixez votre propre prix pour n’importe quel modèle.",
+        "search": "Rechercher des modèles",
+        "noMatch": "Aucun modèle ne correspond à « {query} »."
+      },
+      "columns": {
+        "model": "Modèle",
+        "calls": "Appels",
+        "input": "Entrée",
+        "output": "Sortie",
+        "cacheRead": "Lecture du cache",
+        "cacheWrite": "Écriture du cache",
+        "price": "Prix"
+      },
+      "source": {
+        "own": "Le vôtre",
+        "builtIn": "Intégré",
+        "none": "Sans prix"
+      },
+      "setPrice": "Fixer le prix",
+      "edit": "Modifier",
+      "setTitle": "Fixer le prix",
+      "editTitle": "Modifier le prix",
+      "perMillion": "USD par million de tokens.",
+      "builtInPrice": "Intégré : {input} en entrée, {output} en sortie.",
+      "noBuiltInPrice": "Ce modèle n’a pas de prix intégré.",
+      "sameAsInput": "Comme l’entrée",
+      "appliesToPast": "S’applique à tous les appels de ce modèle dans cet espace de travail, passés compris.",
+      "useBuiltIn": "Revenir au prix intégré",
+      "removePrice": "Supprimer le prix",
+      "save": "Enregistrer le prix"
+    }
   }
 }

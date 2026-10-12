@@ -14,6 +14,8 @@
     "runs": "运行",
     "errors": "失败的运行"
   },
+  "unpriced": "{count, plural, other {# 个模型没有价格}}",
+  "setPrices": "设置价格",
   "measure": {
     "tokens": "Token",
     "cost": "花费"

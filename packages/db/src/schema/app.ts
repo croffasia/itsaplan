@@ -638,6 +638,35 @@ export const agentSchedule = pgTable(
   ],
 );
 
+// A price a workspace set for one model, in USD per million tokens. The agent dashboard
+// reads it before the built-in price table (apps/api/src/modules/agents/core/runtime/
+// model-pricing.ts), so a model the table lacks, or one bought at another rate, is
+// costed as the workspace pays for it. Provider and model are kept lowercased, as the
+// table compares them. A cache rate left null bills those tokens at the input rate.
+export const modelPrice = pgTable(
+  'model_price',
+  {
+    id: serial('id').primaryKey(),
+    workspaceId: integer('workspace_id')
+      .notNull()
+      .references(() => workspace.id, { onDelete: 'cascade' }),
+    provider: text('provider').notNull(),
+    model: text('model').notNull(),
+    input: doublePrecision('input').notNull(),
+    output: doublePrecision('output').notNull(),
+    cacheRead: doublePrecision('cache_read'),
+    cacheWrite: doublePrecision('cache_write'),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check(
+      'model_price_rates_check',
+      sql`${t.input} >= 0 AND ${t.output} >= 0 AND coalesce(${t.cacheRead}, 0) >= 0 AND coalesce(${t.cacheWrite}, 0) >= 0`,
+    ),
+    unique().on(t.workspaceId, t.provider, t.model),
+  ],
+);
+
 // Queued autonomous runs of an internal agent. A run triggered on an issue carries it;
 // a cron schedule's run and a manual one do not. The worker claims due rows with a lease,
 // runs the agent, and records the result for history and retries.

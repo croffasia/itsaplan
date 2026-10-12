@@ -667,6 +667,48 @@
       "title": "AI usage",
       "description": "What the agents of every team spent on models."
     },
-    "settingsGroup": "Settings"
+    "settingsGroup": "Settings",
+    "modelPrices": {
+      "title": "Model prices",
+      "description": "AI usage costs each model call at these prices, per 1M tokens. A change recounts past calls too.",
+      "used": {
+        "title": "Used in this workspace",
+        "description": "Models your agents called in the last 90 days, and those you set a price for.",
+        "unpriced": "{count, plural, one {# model has no price, so its calls are left out of the cost.} other {# models have no price, so their calls are left out of the cost.}}",
+        "empty": "No model calls in the last 90 days. A model shows up here once your agents call it."
+      },
+      "all": {
+        "title": "All models",
+        "description": "Built-in prices. Set your own for any model.",
+        "search": "Search models",
+        "noMatch": "No models match “{query}”."
+      },
+      "columns": {
+        "model": "Model",
+        "calls": "Calls",
+        "input": "Input",
+        "output": "Output",
+        "cacheRead": "Cache read",
+        "cacheWrite": "Cache write",
+        "price": "Price"
+      },
+      "source": {
+        "own": "Yours",
+        "builtIn": "Built-in",
+        "none": "No price"
+      },
+      "setPrice": "Set price",
+      "edit": "Edit",
+      "setTitle": "Set price",
+      "editTitle": "Edit price",
+      "perMillion": "USD per 1M tokens.",
+      "builtInPrice": "Built-in: {input} input, {output} output.",
+      "noBuiltInPrice": "This model has no built-in price.",
+      "sameAsInput": "Same as input",
+      "appliesToPast": "Applies to every call of this model in this workspace, past ones too.",
+      "useBuiltIn": "Use built-in price",
+      "removePrice": "Remove price",
+      "save": "Save price"
+    }
   }
 }

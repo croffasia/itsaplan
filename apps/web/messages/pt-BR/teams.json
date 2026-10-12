@@ -667,6 +667,48 @@
       "title": "Consumo de IA",
       "description": "Quanto os agentes de todas as equipes gastaram com modelos."
     },
-    "settingsGroup": "Configurações"
+    "settingsGroup": "Configurações",
+    "modelPrices": {
+      "title": "Preços dos modelos",
+      "description": "O Consumo de IA calcula o custo de cada chamada de modelo com estes preços, por 1M de tokens. Uma mudança também recalcula as chamadas passadas.",
+      "used": {
+        "title": "Em uso neste workspace",
+        "description": "Modelos que seus agentes chamaram nos últimos 90 dias e os que têm o seu preço.",
+        "unpriced": "{count, plural, one {# modelo não tem preço, então as chamadas dele ficam fora do custo.} other {# modelos não têm preço, então as chamadas deles ficam fora do custo.}}",
+        "empty": "Nenhuma chamada de modelo nos últimos 90 dias. Um modelo aparece aqui quando seus agentes o chamam."
+      },
+      "all": {
+        "title": "Todos os modelos",
+        "description": "Preços embutidos. Defina o seu para qualquer modelo.",
+        "search": "Buscar modelos",
+        "noMatch": "Nenhum modelo corresponde a “{query}”."
+      },
+      "columns": {
+        "model": "Modelo",
+        "calls": "Chamadas",
+        "input": "Entrada",
+        "output": "Saída",
+        "cacheRead": "Leitura de cache",
+        "cacheWrite": "Gravação de cache",
+        "price": "Preço"
+      },
+      "source": {
+        "own": "Seu",
+        "builtIn": "Embutido",
+        "none": "Sem preço"
+      },
+      "setPrice": "Definir preço",
+      "edit": "Editar",
+      "setTitle": "Definir preço",
+      "editTitle": "Editar preço",
+      "perMillion": "USD por 1M de tokens.",
+      "builtInPrice": "Embutido: {input} de entrada, {output} de saída.",
+      "noBuiltInPrice": "Este modelo não tem preço embutido.",
+      "sameAsInput": "Igual à entrada",
+      "appliesToPast": "Vale para todas as chamadas deste modelo neste workspace, inclusive as passadas.",
+      "useBuiltIn": "Usar o preço embutido",
+      "removePrice": "Remover preço",
+      "save": "Salvar preço"
+    }
   }
 }

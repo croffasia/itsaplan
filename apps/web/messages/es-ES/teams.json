@@ -667,6 +667,48 @@
       "title": "Consumo de IA",
       "description": "Lo que han gastado en modelos los agentes de todos los equipos."
     },
-    "settingsGroup": "Ajustes"
+    "settingsGroup": "Ajustes",
+    "modelPrices": {
+      "title": "Precios de modelos",
+      "description": "Consumo de IA calcula el coste de cada llamada a un modelo con estos precios, por 1M de tokens. Un cambio también recalcula las llamadas pasadas.",
+      "used": {
+        "title": "En uso en este espacio de trabajo",
+        "description": "Modelos que tus agentes llamaron en los últimos 90 días y los que tienen tu precio.",
+        "unpriced": "{count, plural, one {# modelo no tiene precio, así que sus llamadas no cuentan en el coste.} other {# modelos no tienen precio, así que sus llamadas no cuentan en el coste.}}",
+        "empty": "Ninguna llamada a modelos en los últimos 90 días. Un modelo aparece aquí cuando tus agentes lo llaman."
+      },
+      "all": {
+        "title": "Todos los modelos",
+        "description": "Precios incluidos. Pon tu propio precio a cualquier modelo.",
+        "search": "Buscar modelos",
+        "noMatch": "Ningún modelo coincide con «{query}»."
+      },
+      "columns": {
+        "model": "Modelo",
+        "calls": "Llamadas",
+        "input": "Entrada",
+        "output": "Salida",
+        "cacheRead": "Lectura de caché",
+        "cacheWrite": "Escritura en caché",
+        "price": "Precio"
+      },
+      "source": {
+        "own": "Tuyo",
+        "builtIn": "Incluido",
+        "none": "Sin precio"
+      },
+      "setPrice": "Poner precio",
+      "edit": "Editar",
+      "setTitle": "Poner precio",
+      "editTitle": "Editar precio",
+      "perMillion": "USD por 1M de tokens.",
+      "builtInPrice": "Incluido: {input} de entrada, {output} de salida.",
+      "noBuiltInPrice": "Este modelo no tiene precio incluido.",
+      "sameAsInput": "Igual que la entrada",
+      "appliesToPast": "Se aplica a todas las llamadas de este modelo en este espacio de trabajo, también a las pasadas.",
+      "useBuiltIn": "Usar el precio incluido",
+      "removePrice": "Quitar precio",
+      "save": "Guardar precio"
+    }
   }
 }

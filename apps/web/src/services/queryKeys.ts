@@ -113,6 +113,11 @@ export const qk = {
     ['agentAnalytics', teamId, days, projectId] as const,
   workspaceAgentAnalytics: (workspaceId: number, days: number) =>
     ['workspaceAgentAnalytics', workspaceId, days] as const,
+  // The model prices of a workspace: the models it uses, and pages of the built-in table.
+  modelPrices: (workspaceId: number) => ['modelPrices', workspaceId] as const,
+  usedModelPrices: (workspaceId: number) => ['modelPrices', workspaceId, 'used'] as const,
+  modelPriceCatalog: (workspaceId: number, params: unknown) =>
+    ['modelPrices', workspaceId, 'catalog', params] as const,
   analytics: (projectKey: string, kind: string, params?: unknown) =>
     ['analytics', projectKey, kind, params ?? {}] as const,
   analyticsForProject: (projectKey: string) => ['analytics', projectKey] as const,

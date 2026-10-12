@@ -241,6 +241,14 @@ key matches it directly. The file is outside the package's exports map: a releas
 moves it leaves the table empty, an unpriced call reports no cost, and the dashboard shows
 the tokens without an amount.
 
+A workspace sets its own price for any model in `model_price`, which the dashboards of its
+teams read before the table (`ownPrices` in `analytics.ts`): a model the table lacks, such
+as one behind an OpenAI-compatible proxy, or one bought at another rate. The cost is
+worked out when a dashboard is read, so a price also recounts past calls.
+`modules/agents/prices` serves the list to the workspace's owner and its admins: the
+models it called in the last 90 days with those no price covers first, and the whole
+table, paged, each beside the workspace's own price.
+
 Over MCP the team is resolved from the API key rather than asked for (`mcp/server.ts`):
 an agent's key acts in its own team, a person with one team in theirs, and a person in
 several passes `teamId` after reading `list_teams`.
@@ -286,7 +294,9 @@ Functions with no setter, for the routes such a build adds:
 - `workspaceScope(workspaceId)`, `onlyProject(scope, projectId)` (same file): the scope
   of the workspace dashboard, and a scope narrowed to one project as the team dashboard
   does it.
-- `estimateCost` (`runtime/model-pricing.ts`): what a model call costs.
+- `estimateCost(provider, model, usage, calls, own)` (`runtime/model-pricing.ts`): what
+  model calls cost, with `own` from `ownPrices(scope)` (`analytics.ts`) so a workspace's
+  prices count.
 - `projectsWithPermission` (`shared/access.ts`): the projects a member may read.
 
 ## SCIM

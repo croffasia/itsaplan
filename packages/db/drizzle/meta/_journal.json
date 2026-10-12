@@ -1030,6 +1030,13 @@
       "when": 1791476126995,
       "tag": "0146_agent_schedule_extension",
       "breakpoints": true
+    },
+    {
+      "idx": 147,
+      "version": "7",
+      "when": 1791744496755,
+      "tag": "0147_model_price",
+      "breakpoints": true
     }
   ]
 }

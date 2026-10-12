@@ -26,7 +26,9 @@ Next.js App Router, SSR (not SPA). Tailwind v4 + shadcn/ui. See root `AGENTS.md`
   `NoTeamStart` is the start page of an account with no team and no workspace it owns,
   which happens while personal workspaces are off; here it says who adds them.
   `WorkspaceRailActions` sits below the workspace tiles of a rail; here it says where more
-  than one workspace per person is available. `godSections(core)` returns the god mode
+  than one workspace per person is available. `ShellNotice` is a strip under the top bar of
+  the app shell, god mode and the teams pages; here it shows nothing, while the hosted
+  build shows notices about the instance there. `godSections(core)` returns the god mode
   sections: here the core's as they are, while the hosted build adds, replaces or drops
   some. One it adds carries in `Component` the page `/god/<slug>` opens. SCIM is set up in
   god mode, for the instance workspace; the hosted build that moves it to every

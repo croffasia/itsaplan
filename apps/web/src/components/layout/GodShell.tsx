@@ -10,6 +10,7 @@ import { LocaleToggle } from '@/components/locale-toggle';
 import SectionPageSkeleton from '@/components/common/skeleton/SectionPageSkeleton';
 import UserMenu from '@/components/layout/UserMenu';
 import GodSidebar from '@/components/layout/GodSidebar';
+import { ShellNotice } from '@/cloud';
 
 // The shell for god mode: the instance settings sidebar and a slim header, with no
 // project loaded. It is the counterpart of Shell for the project routes, but far
@@ -48,6 +49,7 @@ export default function GodShell({
             <UserMenu />
           </div>
         </header>
+        <ShellNotice />
 
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
           {isGod && children}

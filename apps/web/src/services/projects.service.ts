@@ -20,8 +20,8 @@ import {
 } from '@/lib/api/endpoints/projects';
 import { qk } from '@/services/queryKeys';
 
-export function useProjectsQuery() {
-  return useQuery({ queryKey: qk.projects, queryFn: () => listProjects() });
+export function useProjectsQuery(enabled = true) {
+  return useQuery({ queryKey: qk.projects, queryFn: () => listProjects(), enabled });
 }
 
 export function useUpdateProjectPreferences() {

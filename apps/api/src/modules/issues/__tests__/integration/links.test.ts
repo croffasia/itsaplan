@@ -50,7 +50,7 @@ function unlink(client: Api, issueId: number, linkId: number) {
   return client.issues({ issueId }).links({ linkId }).delete();
 }
 
-// An issue of a second project, which no issue of the first one may link to.
+// An issue of a second project owned by the same team.
 async function foreignIssue(client: Api) {
   await client.projects.post({ key: 'OPS', name: 'Operations' });
   const view = await client.projects({ projectKey: 'OPS' }).get();
@@ -63,6 +63,19 @@ async function foreignIssue(client: Api) {
 describe('issue links', () => {
   beforeEach(async () => {
     await resetDb();
+  });
+
+  it('keeps both link actions in the catalog with one edit permission', async () => {
+    const { asOwner } = await setupProject();
+    const project = (await asOwner.projects({ projectKey: 'MKT' }).get()).data!.project;
+    const catalog = await asOwner.teams({ teamId: project.teamId })['ai-agents'].tools.get();
+    expect(catalog.status).toBe(200);
+    expect(catalog.data).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'link_issues', permission: ['work_items', 'edit'] }),
+        expect.objectContaining({ key: 'unlink_issues', permission: ['work_items', 'edit'] }),
+      ]),
+    );
   });
 
   describe('create', () => {
@@ -158,13 +171,62 @@ describe('issue links', () => {
       expect(res.status).toBe(400);
     });
 
-    it('rejects a target in another project with 400', async () => {
+    it('links issues across projects in the same team without board markers', async () => {
       const { asOwner, columnId } = await setupProject();
       const issue = (await createIssue(asOwner, columnId)).data!;
       const outside = await foreignIssue(asOwner);
 
       const res = await link(asOwner, issue.id, outside.id, 'relates');
-      expect(res.status).toBe(400);
+      expect(res.status).toBe(201);
+      expect((await linksOf(asOwner, issue.id))[0].issue.identifier).toBe(outside.identifier);
+      expect((await linksOf(asOwner, outside.id))[0].issue.identifier).toBe(issue.identifier);
+      const board = await asOwner.projects({ projectKey: 'MKT' }).issues.board.get();
+      expect(board.data!.issues.find((row) => row.id === issue.id)!.links).toEqual([]);
+    });
+
+    it('denies a link when the caller cannot edit the target project', async () => {
+      // The first signup owns the workspace and can edit every project in it.
+      await signUpTestUser({ team: false });
+      const { asOwner, columnId } = await setupProject();
+      const source = (await createIssue(asOwner, columnId)).data!;
+      const outsider = authedApi((await signUpTestUser()).cookie);
+      const target = await foreignIssue(outsider);
+
+      const result = await link(asOwner, source.id, target.id, 'relates');
+      expect(result.status).toBe(403);
+      expect(await linksOf(asOwner, source.id)).toHaveLength(0);
+    });
+
+    it('rejects a link into an archived target project', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const source = (await createIssue(asOwner, columnId)).data!;
+      const target = await foreignIssue(asOwner);
+      const targetProject = (await asOwner.projects({ projectKey: 'OPS' }).get()).data!.project;
+      const archived = await asOwner
+        .teams({ teamId: targetProject.teamId })
+        .projects({ projectId: targetProject.id })
+        .archive.post();
+      expect(archived.status).toBe(200);
+
+      expect((await link(asOwner, source.id, target.id, 'relates')).status).toBe(403);
+      expect(await linksOf(asOwner, source.id)).toHaveLength(0);
+    });
+
+    it('does not link issues owned by different teams', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const source = (await createIssue(asOwner, columnId)).data!;
+      const team = (await asOwner.teams.post({ name: 'Other Team', slug: 'other-team' })).data!;
+      await asOwner.teams({ teamId: team.id }).projects.post({ key: 'OTH', name: 'Other' });
+      const targetProject = await asOwner.projects({ projectKey: 'OTH' }).get();
+      const target = (
+        await asOwner.projects({ projectKey: 'OTH' }).issues.post({
+          columnId: targetProject.data!.columns[0].id,
+          title: 'Other team issue',
+        })
+      ).data!;
+
+      expect((await link(asOwner, source.id, target.id, 'relates')).status).toBe(400);
+      expect(await linksOf(asOwner, source.id)).toHaveLength(0);
     });
 
     it('returns 404 for a missing target', async () => {
@@ -288,6 +350,40 @@ describe('issue links', () => {
       const res = await unlink(asOwner, second.id, onTarget.id);
       expect(res.status).toBe(204);
       expect(await linksOf(asOwner, first.id)).toHaveLength(0);
+    });
+
+    it('requires edit access to both projects for a cross-project removal', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const source = (await createIssue(asOwner, columnId)).data!;
+      const target = await foreignIssue(asOwner);
+      const created = (await link(asOwner, source.id, target.id, 'relates')).data!;
+      const member = await signUpTestUser();
+      const asMember = authedApi(member.cookie);
+      const invite = await asOwner
+        .projects({ projectKey: 'MKT' })
+        .invites.post({ email: member.email, role: 'member' });
+      await asMember.invites({ token: invite.data!.token }).accept.post();
+
+      expect(await linksOf(asMember, source.id)).toHaveLength(0);
+      expect((await unlink(asMember, source.id, created.id)).status).toBe(403);
+      expect(await linksOf(asOwner, source.id)).toHaveLength(1);
+    });
+
+    it('preserves a link when its target project is archived', async () => {
+      const { asOwner, columnId } = await setupProject();
+      const source = (await createIssue(asOwner, columnId)).data!;
+      const target = await foreignIssue(asOwner);
+      const created = (await link(asOwner, source.id, target.id, 'relates')).data!;
+      const targetProject = (await asOwner.projects({ projectKey: 'OPS' }).get()).data!.project;
+      const archived = await asOwner
+        .teams({ teamId: targetProject.teamId })
+        .projects({ projectId: targetProject.id })
+        .archive.post();
+      expect(archived.status).toBe(200);
+
+      expect((await unlink(asOwner, source.id, created.id)).status).toBe(403);
+      expect(await linksOf(asOwner, source.id)).toHaveLength(1);
+      expect(await linksOf(asOwner, target.id)).toHaveLength(1);
     });
 
     it('returns 404 for a link of two other issues', async () => {

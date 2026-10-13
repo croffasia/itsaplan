@@ -19,7 +19,8 @@
       "signIn": "로그인",
       "projects": "프로젝트",
       "lastSeen": "최근 활동",
-      "email": "이메일"
+      "email": "이메일",
+      "active": "활성"
     },
     "registered": "{date}에 가입",
     "roleGod": "최고 관리자",
@@ -30,7 +31,20 @@
     "verified": "인증됨",
     "notVerified": "인증되지 않음",
     "open": "계정 열기",
-    "showAccess": "프로젝트 접근 권한 보기"
+    "showAccess": "프로젝트 접근 권한 보기",
+    "activeAria": "계정 활성 상태: {email}",
+    "activeState": {
+      "on": "활성",
+      "off": "비활성"
+    },
+    "activeLock": {
+      "owner": "인스턴스 소유자는 항상 활성 상태입니다.",
+      "agent": "AI 에이전트 계정의 상태는 해당 에이전트를 따릅니다.",
+      "scim": "ID 공급자(SCIM)가 어떤 계정을 활성 상태로 둘지 결정합니다."
+    },
+    "deactivateTitle": "{email} 계정을 비활성화하시겠습니까?",
+    "deactivateBody": "즉시 로그아웃되며, 계정을 다시 활성화할 때까지 로그인하거나 API 키를 사용할 수 없습니다. MCP 연결과 이 사용자가 보낸 초대는 삭제됩니다. 그 외에는 아무것도 삭제되지 않습니다.",
+    "deactivateConfirm": "비활성화"
   },
   "userPanel": {
     "instanceOwner": "인스턴스 소유자",

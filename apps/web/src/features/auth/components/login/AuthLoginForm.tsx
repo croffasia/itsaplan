@@ -61,9 +61,9 @@ export default function AuthLoginForm() {
   // `apiFailure` in lib/api/core/client.ts sends the browser here with ?expired=1 after the API
   // refused the session, so the screen can say why the user is back on it.
   const sessionExpired = params.get('expired') === '1';
-  // A Google sign-in or a confirmation link that could not complete comes back here
-  // as a redirect rather than as a rejected promise, so its reason arrives in the
-  // query string.
+  // A Google, OIDC or magic-link sign-in, or a confirmation link, that could not
+  // complete comes back here as a redirect rather than as a rejected promise, so its
+  // reason arrives in the query string.
   const redirectErrorMessage = useRedirectError();
   const redirectError = redirectErrorMessage(params.get('error'), params.get('error_description'));
   // The confirmation link carries ?verified=1 and adds ?error=… when it failed, so

@@ -7,7 +7,9 @@ import { projectPath, projectRefOf } from '@/utils/paths';
 import { Button } from '@/components/ui/button';
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
+import { registrationRefusalKey } from '@/utils/registrationRefusals';
 import {
+  InviteAuthError,
   isExistingAccountError,
   registerAndAccept,
   signInForInvite,
@@ -29,6 +31,7 @@ export default function InviteAuthForm({
   hasAccount: boolean;
 }) {
   const t = useTranslations('invite');
+  const tAuth = useTranslations('auth.errors');
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(hasAccount ? 'signin' : 'register');
   const [password, setPassword] = useState('');
@@ -79,7 +82,10 @@ export default function InviteAuthForm({
         switchMode('signin');
         setNotice(t('existingAccountNotice'));
       } else {
-        setError(err instanceof Error ? err.message : t('genericError'));
+        const refusal =
+          err instanceof InviteAuthError ? registrationRefusalKey(err.code) : undefined;
+        if (refusal) setError(tAuth(refusal));
+        else setError(err instanceof Error ? err.message : t('genericError'));
       }
       setPending(false);
     }

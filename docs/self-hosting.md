@@ -86,7 +86,8 @@ nothing here needs a restart.
 
 The first sign-in creates the account, and the registration mode under **Authentication**
 decides whether it may: `open` creates it, `invite only` needs a pending project invite,
-`closed` refuses it. On a closed instance, provision people with SCIM.
+`closed` refuses it. A refused sign-in returns to the sign-in page, which says why: the
+instance is closed, or it needs an invite. On a closed instance, provision people with SCIM.
 
 A sign-in whose address already has an account joins that account instead of creating a
 second one. That needs the provider to report the address as verified and the account to

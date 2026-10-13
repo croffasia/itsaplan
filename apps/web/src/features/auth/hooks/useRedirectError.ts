@@ -1,13 +1,15 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { REGISTRATION_REFUSAL_KEYS } from '@/utils/registrationRefusals';
 
 // Some auth failures reach the sign-in screen as a redirect rather than a rejected
 // promise, and carry their reason in ?error=<code> (plus ?error_description=<text>
 // when the instance itself refused — the registration gate passes its own message
-// that way). Three flows land here: the Google round trip, the OIDC one, and the
-// confirmation link from the address verification email. Codes raised by better-auth
-// carry no description, so the ones a visitor can act on are spelled out here.
+// that way). Four flows land here: the Google round trip, the OIDC one, the magic link,
+// and the confirmation link from the address verification email. Codes raised by
+// better-auth carry no description, and the gate's is in English, so the ones a visitor
+// can act on are spelled out here.
 //
 // Linking a provider account to an account whose email was never confirmed is refused
 // unless the instance trusts provider addresses: anyone could have registered that
@@ -24,6 +26,7 @@ const MESSAGE_KEYS = {
   TOKEN_EXPIRED: 'tokenExpired',
   INVALID_TOKEN: 'invalidToken',
   USER_NOT_FOUND: 'userNotFound',
+  ...REGISTRATION_REFUSAL_KEYS,
 } as const;
 
 export function useRedirectError() {

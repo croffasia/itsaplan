@@ -411,6 +411,15 @@ export function isAccountDeactivated(account: { active?: boolean | null }): bool
   return !scimPerWorkspace && account.active === false;
 }
 
+// Whether an identity provider decides which accounts are active, so god does not: SCIM
+// per workspace, where a deactivation has no effect, or the instance workspace's SCIM set
+// up with a token, the same condition under which verifyScimToken opens /scim/v2.
+export async function accountsManagedByScim(): Promise<boolean> {
+  if (scimPerWorkspace) return true;
+  const config = await getScimConfig(await instanceWorkspaceId(db));
+  return config.enabled && config.token.length > 0;
+}
+
 // A token reads scim_<workspaceId>_<secret>, so the workspace it opens is found
 // without trying the token of every workspace. A token issued before workspaces
 // existed reads scim_<secret> and belongs to the instance workspace.

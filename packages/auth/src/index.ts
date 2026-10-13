@@ -684,8 +684,8 @@ export const auth = betterAuth({
     session: {
       create: {
         // Every sign-in method ends here, so one check covers password, magic link,
-        // passkey, Google and OIDC. Deactivation arrives over SCIM; apps/api refuses
-        // the sessions that are already open.
+        // passkey, Google and OIDC. Deactivation arrives over SCIM or from god mode;
+        // apps/api refuses the sessions that are already open.
         before: async (session) => {
           const [account] = await db
             .select({ active: schema.user.active })
@@ -886,6 +886,7 @@ export {
   setWorkspaceScim,
   workspaceScim,
   isAccountDeactivated,
+  accountsManagedByScim,
 } from './instance';
 export type {
   RegistrationMode,

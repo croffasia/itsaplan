@@ -142,6 +142,9 @@ export interface InstanceUser {
   isAgent: boolean;
   providers: string[];
   projectCount: number;
+  active: boolean;
+  // Why god cannot switch `active`, or null when it can.
+  activeLock: 'owner' | 'agent' | 'scim' | null;
   lastSeenAt: string | null;
   createdAt: string;
 }
@@ -315,6 +318,11 @@ export const listInstanceUsers = (
 
 export const getInstanceUser = (userId: string) =>
   request<InstanceUserDetail>(`/god/users/${userId}`);
+
+export const setInstanceUserActive = (userId: string, active: boolean) =>
+  request<InstanceUserDetail>(`/god/users/${userId}/${active ? 'reactivate' : 'deactivate'}`, {
+    method: 'POST',
+  });
 
 export const verifyInstanceUserEmail = (userId: string) =>
   request<InstanceUserDetail>(`/god/users/${userId}/verify-email`, { method: 'POST' });

@@ -19,7 +19,8 @@
       "signIn": "Inicio de sesión",
       "projects": "Proyectos",
       "lastSeen": "Última actividad",
-      "email": "Correo"
+      "email": "Correo",
+      "active": "Activa"
     },
     "registered": "se unió el {date}",
     "roleGod": "Dios",
@@ -30,7 +31,20 @@
     "verified": "Verificado",
     "notVerified": "No verificado",
     "open": "Abrir la cuenta",
-    "showAccess": "Mostrar el acceso a proyectos"
+    "showAccess": "Mostrar el acceso a proyectos",
+    "activeAria": "Cuenta activa: {email}",
+    "activeState": {
+      "on": "Activa",
+      "off": "Inactiva"
+    },
+    "activeLock": {
+      "owner": "El propietario de la instancia siempre está activo.",
+      "agent": "La cuenta de un agente sigue a su agente.",
+      "scim": "Tu proveedor de identidad (SCIM) decide qué cuentas están activas."
+    },
+    "deactivateTitle": "¿Desactivar {email}?",
+    "deactivateBody": "Se cierra su sesión al momento y no podrá entrar ni usar sus claves de API hasta que vuelvas a activar la cuenta. Se quitan sus conexiones MCP y las invitaciones que envió. No se borra nada más.",
+    "deactivateConfirm": "Desactivar"
   },
   "userPanel": {
     "instanceOwner": "Propietario de la instancia",

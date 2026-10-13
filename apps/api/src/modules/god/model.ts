@@ -161,6 +161,8 @@ const InstanceUserResponse = t.Object({
   isAgent: t.Boolean(),
   providers: t.Array(t.String()),
   projectCount: t.Number(),
+  active: t.Boolean(),
+  activeLock: t.Nullable(t.UnionEnum(['owner', 'agent', 'scim'])),
   lastSeenAt: t.Nullable(t.String()),
   createdAt: t.String(),
 });

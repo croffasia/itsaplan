@@ -341,6 +341,13 @@ links it. The group mappings and the settings are routes of `modules/workspaces/
   A deactivated account (`user.active` false, written alongside `scim_user.active`) keeps
   its teams and projects but cannot sign in, and `isAccountDeactivated` makes
   `authContext`, `/me` and the MCP key check refuse what it already holds.
+  God mode writes `user.active` too (`POST /god/users/:userId/deactivate` and
+  `/reactivate` in `modules/god/`) while no provider manages accounts
+  (`accountsManagedByScim` from `@repo/auth`), and answers 409 while one does. Deactivating
+  there also deletes the account's sessions, its MCP OAuth tokens and the pending invites
+  it created; its API keys are kept and answer 401 until it is reactivated. The instance
+  owner and an agent's account are refused (403). The user list and detail carry
+  `activeLock` (`owner`, `agent` or `scim`), the reason the switch is locked, or null.
 - **On, as in a hosted build, SCIM is each workspace's.** A workspace's provider decides who
   is in the workspace, not who has an account, so the same person can be linked by several
   workspaces. It sees the accounts it linked and the people in the workspace's teams

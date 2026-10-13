@@ -262,7 +262,8 @@ export const app = new Elysia()
       const session = await getSessionFromHeaders(request.headers);
       // A deactivated account is not signed in as far as the app is concerned:
       // every planner route answers 401 for it, and this is what the screens ask
-      // first. Deactivation arrives over SCIM, after the session was opened.
+      // first. Deactivation arrives over SCIM or from god mode, after the session
+      // was opened.
       if (!session || isAccountDeactivated(session.user)) {
         return { authenticated: false };
       }

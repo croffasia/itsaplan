@@ -144,7 +144,10 @@ What a provider says about a person is kept per workspace in `scim_user`, writte
 `apps/api`. How far it reaches is `workspaceScim()`, which a hosted build turns on with
 `setWorkspaceScim()`. Off, as on a self-hosted instance, SCIM is the instance's: only the
 instance workspace's token opens it, and it also writes `active`, one more
-`additionalField` on the user table (nullable, so every check is `active !== false`). An
+`additionalField` on the user table (nullable, so every check is `active !== false`).
+God mode writes `active` too, from the users table, while no provider manages accounts
+(`accountsManagedByScim`: SCIM per workspace, or the instance workspace's SCIM set up with
+a token); while one does, `apps/api` answers god's switch with 409. An
 account with `active` false (`isAccountDeactivated`) is refused at sign-in by the
 `session.create.before` hook with `ACCOUNT_DEACTIVATED`, which covers every sign-in method
 at once; `apps/api` refuses the sessions and keys it already holds. On, a workspace's

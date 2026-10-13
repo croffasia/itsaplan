@@ -37,6 +37,7 @@ import {
   getInstanceStorageSettings,
   updateInstanceStorageSettings,
   listInstanceUsers,
+  setInstanceUserActive,
   getInstanceUser,
   deleteInstanceUser,
   listInstanceProjects,
@@ -268,6 +269,18 @@ export function useInstanceProjectQuery(projectId: number) {
   return useQuery({
     queryKey: qk.instanceProject(projectId),
     queryFn: () => getInstanceProject(projectId),
+  });
+}
+
+export function useSetInstanceUserActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, active }: { userId: string; active: boolean }) =>
+      setInstanceUserActive(userId, active),
+    onSuccess: (data) => {
+      qc.setQueryData(qk.instanceUser(data.id), data);
+      void qc.invalidateQueries({ queryKey: qk.anyInstanceUsers });
+    },
   });
 }
 

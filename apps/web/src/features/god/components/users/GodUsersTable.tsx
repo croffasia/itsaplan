@@ -16,6 +16,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useProviderList } from '../../hooks/useProviderList';
+import GodUserActiveSwitch from './GodUserActiveSwitch';
 
 // The account list. A row (or the pencil in its Actions cell) opens the account in
 // the side panel, where the email can be confirmed and the account deleted.
@@ -33,13 +34,14 @@ export default function GodUsersTable({
   return (
     <Table className="min-w-[900px] table-fixed">
       <colgroup>
-        <col className="w-[30%]" />
+        <col className="w-[27%]" />
         <col className="w-[12%]" />
-        <col className="w-[15%]" />
-        <col className="w-[9%]" />
-        <col className="w-[13%]" />
-        <col className="w-[13%]" />
+        <col className="w-[14%]" />
         <col className="w-[8%]" />
+        <col className="w-[12%]" />
+        <col className="w-[12%]" />
+        <col className="w-[8%]" />
+        <col className="w-[7%]" />
       </colgroup>
       <TableHeader>
         <TableRow className="hover:bg-transparent">
@@ -60,6 +62,9 @@ export default function GodUsersTable({
           </TableHead>
           <TableHead className="text-xs font-medium text-muted-foreground">
             {t('columns.email')}
+          </TableHead>
+          <TableHead className="text-xs font-medium text-muted-foreground">
+            {t('columns.active')}
           </TableHead>
           <TableHead className="text-right text-xs font-medium text-muted-foreground">
             {tCommon('actions')}
@@ -132,6 +137,10 @@ export default function GodUsersTable({
                   {t('notVerified')}
                 </Badge>
               )}
+            </TableCell>
+
+            <TableCell className="px-3 py-3 align-top" onClick={(e) => e.stopPropagation()}>
+              <GodUserActiveSwitch user={u} />
             </TableCell>
 
             <TableCell className="px-3 py-3 text-right align-top">

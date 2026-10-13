@@ -19,7 +19,8 @@
       "signIn": "登录方式",
       "projects": "项目",
       "lastSeen": "最近登录",
-      "email": "邮箱"
+      "email": "邮箱",
+      "active": "启用"
     },
     "registered": "注册于 {date}",
     "roleGod": "实例管理员",
@@ -30,7 +31,20 @@
     "verified": "已验证",
     "notVerified": "未验证",
     "open": "打开账户",
-    "showAccess": "查看项目权限"
+    "showAccess": "查看项目权限",
+    "activeAria": "账号启用：{email}",
+    "activeState": {
+      "on": "启用",
+      "off": "停用"
+    },
+    "activeLock": {
+      "owner": "实例所有者始终处于启用状态。",
+      "agent": "代理的账号随其代理而定。",
+      "scim": "由你的身份提供方（SCIM）决定哪些账号处于启用状态。"
+    },
+    "deactivateTitle": "停用 {email}？",
+    "deactivateBody": "该用户会立即退出登录，在你重新启用账号之前无法登录，也无法使用其 API 密钥。其 MCP 连接和发出的邀请将被移除。其他内容不会被删除。",
+    "deactivateConfirm": "停用"
   },
   "userPanel": {
     "instanceOwner": "实例管理员",

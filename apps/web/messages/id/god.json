@@ -19,7 +19,8 @@
       "signIn": "Masuk",
       "projects": "Proyek",
       "lastSeen": "Terakhir dilihat",
-      "email": "Email"
+      "email": "Email",
+      "active": "Aktif"
     },
     "registered": "bergabung {date}",
     "roleGod": "God",
@@ -30,7 +31,20 @@
     "verified": "Terverifikasi",
     "notVerified": "Belum terverifikasi",
     "open": "Buka akun",
-    "showAccess": "Tampilkan akses proyek"
+    "showAccess": "Tampilkan akses proyek",
+    "activeAria": "Akun aktif: {email}",
+    "activeState": {
+      "on": "Aktif",
+      "off": "Nonaktif"
+    },
+    "activeLock": {
+      "owner": "Pemilik instans selalu aktif.",
+      "agent": "Akun agen mengikuti agennya.",
+      "scim": "Penyedia identitas Anda (SCIM) menentukan akun mana yang aktif."
+    },
+    "deactivateTitle": "Nonaktifkan {email}?",
+    "deactivateBody": "Orang ini langsung dikeluarkan dan tidak bisa masuk atau memakai kunci API-nya sampai Anda mengaktifkan akunnya lagi. Koneksi MCP dan undangan yang dikirimnya dihapus. Tidak ada yang lain yang dihapus.",
+    "deactivateConfirm": "Nonaktifkan"
   },
   "userPanel": {
     "instanceOwner": "Pemilik instance",

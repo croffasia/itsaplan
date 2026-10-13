@@ -1,21 +1,16 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Check, Minus } from 'lucide-react';
 import { useTeam, useTeamProjectOptionsQuery, useUpdateTeamMcp } from '@/services/teams.service';
 import SectionPageView from '@/components/common/page/SectionPageView';
 import ListSkeleton from '@/components/common/skeleton/ListSkeleton';
 import { Switch } from '@/components/ui/switch';
+import OnOffStatus from '@/components/common/fields/OnOffStatus';
 import McpConnectionGuide from '@/features/mcp/components/McpConnectionGuide';
 
 function McpStatus({ on }: { on: boolean }) {
   const t = useTranslations('teams.mcp');
-  return (
-    <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-      {on ? <Check className="size-4 text-green-500" /> : <Minus className="size-4" />}
-      {t(on ? 'statusOn' : 'statusOff')}
-    </span>
-  );
+  return <OnOffStatus on={on}>{t(on ? 'statusOn' : 'statusOff')}</OnOffStatus>;
 }
 
 // The team's MCP settings: the switch that opens the team to MCP clients at all, and

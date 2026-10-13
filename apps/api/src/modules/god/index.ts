@@ -33,7 +33,9 @@ import {
   listInstanceTeamProjects,
   listInstanceTeamMembers,
   listInstanceUsers,
+  setInstanceUserActive,
   verifyInstanceUserEmail,
+  type ActiveLock,
 } from './service';
 import {
   AuthSettingsBody,
@@ -106,6 +108,16 @@ async function assertUsableSignInMethod(
   const auth = await getAuthSettings();
   if (!auth.emailPassword && !nextProviderUsable && !otherProviderUsable) {
     throw new HttpError(400, 'Enable password sign-in or another single sign-on provider first');
+  }
+}
+
+// Deactivating the instance owner is how an instance locks itself out, and an agent's
+// account follows its agent; with SCIM the identity provider decides.
+function assertActiveSwitchable(lock: ActiveLock | null): void {
+  if (lock === 'owner') throw new HttpError(403, 'An instance owner cannot be deactivated');
+  if (lock === 'agent') throw new HttpError(403, "An agent's account follows its agent");
+  if (lock === 'scim') {
+    throw new HttpError(409, 'Accounts are activated and deactivated by the SCIM provider');
   }
 }
 
@@ -482,6 +494,51 @@ export const godRoutes = new Elysia({ name: 'god', detail: { tags: ['God'] } })
         summary: 'Confirm a user email address',
         description:
           'Mark an account as email-confirmed without the user opening a confirmation link.',
+      },
+    },
+  )
+
+  .post(
+    '/god/users/:userId/deactivate',
+    async ({ params }) => {
+      const target = await getInstanceUser(params.userId);
+      if (!target) throw new HttpError(404, 'User not found');
+      assertActiveSwitchable(target.activeLock);
+      const updated = await setInstanceUserActive(params.userId, false);
+      if (!updated) throw new HttpError(404, 'User not found');
+      return updated;
+    },
+    {
+      params: userParams,
+      response: { 200: InstanceUserDetailResponse, ...errors(401, 403, 404, 409) },
+      detail: {
+        summary: 'Deactivate a user',
+        description:
+          'Cut off an account without deleting it: end its sessions, revoke its MCP OAuth ' +
+          'tokens and pending invites, and refuse its sign-ins and API keys until it is ' +
+          'reactivated. Refused with 409 while a SCIM provider manages accounts.',
+      },
+    },
+  )
+
+  .post(
+    '/god/users/:userId/reactivate',
+    async ({ params }) => {
+      const target = await getInstanceUser(params.userId);
+      if (!target) throw new HttpError(404, 'User not found');
+      assertActiveSwitchable(target.activeLock);
+      const updated = await setInstanceUserActive(params.userId, true);
+      if (!updated) throw new HttpError(404, 'User not found');
+      return updated;
+    },
+    {
+      params: userParams,
+      response: { 200: InstanceUserDetailResponse, ...errors(401, 403, 404, 409) },
+      detail: {
+        summary: 'Reactivate a user',
+        description:
+          'Lift a deactivation so the account can sign in again and its API keys work. ' +
+          'Refused with 409 while a SCIM provider manages accounts.',
       },
     },
   )

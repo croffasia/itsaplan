@@ -47,8 +47,8 @@ export function mountMcp(app: any): void {
         try {
           const session = await auth.api.getSession({ headers });
           // A deactivated account is refused here too, the way shared/auth-context.ts
-          // refuses it for every planner route. Deactivation arrives over SCIM, after
-          // the key was issued.
+          // refuses it for every planner route. Deactivation arrives over SCIM or from
+          // god mode, after the key was issued.
           if (session && !isAccountDeactivated(session.user))
             return serve({ kind: 'api-key', apiKey }, session.user.id);
         } catch {

@@ -2,6 +2,8 @@ import {
   db,
   user,
   session,
+  oauthAccessToken,
+  teamInvite,
   account,
   agentSkill,
   agentTool,
@@ -33,6 +35,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { accountsManagedByScim } from '@repo/auth';
 import { iso } from '#shared/lib';
 import { deleteAccount } from '#shared/account-deletion';
 import {
@@ -49,6 +52,10 @@ import type { TeamStanding } from '#modules/teams/service';
 // account) and across projects the caller is not a member of, which no
 // project-scoped store may do — every function here is behind the god guard.
 
+// The instance owner keeps god mode; an agent's account follows its agent; with SCIM the
+// identity provider decides.
+export type ActiveLock = 'owner' | 'agent' | 'scim';
+
 export interface InstanceUserRow {
   id: string;
   name: string;
@@ -63,6 +70,11 @@ export interface InstanceUserRow {
   // The sign-in methods linked to the account ("credential", "google", …).
   providers: string[];
   projectCount: number;
+  // False when the account is deactivated (user.active), by god or the instance's SCIM
+  // provider: it cannot open a session until it is reactivated.
+  active: boolean;
+  // Why god cannot switch `active` here, or null when it can.
+  activeLock: ActiveLock | null;
   // The start of the most recent session, or null when the user never signed in.
   lastSeenAt: string | null;
   createdAt: string;
@@ -161,18 +173,28 @@ async function loadUserFacts(userIds: string[]): Promise<UserFacts> {
   };
 }
 
-function toRow(r: UserRow, facts: UserFacts): InstanceUserRow {
+function activeLockOf(role: string, isAgent: boolean, scim: boolean): ActiveLock | null {
+  if (role === 'god') return 'owner';
+  if (isAgent) return 'agent';
+  return scim ? 'scim' : null;
+}
+
+function toRow(r: UserRow, facts: UserFacts, scim: boolean): InstanceUserRow {
   const lastSeen = facts.lastSeen.get(r.id) ?? null;
+  const role = r.role ?? 'user';
+  const isAgent = facts.agents.has(r.id);
   return {
     id: r.id,
     name: r.name,
     email: r.email,
     image: r.image,
     emailVerified: r.emailVerified,
-    role: r.role ?? 'user',
-    isAgent: facts.agents.has(r.id),
+    role,
+    isAgent,
     providers: facts.providers.get(r.id) ?? [],
     projectCount: facts.projectCounts.get(r.id) ?? 0,
+    active: r.active !== false,
+    activeLock: activeLockOf(role, isAgent, scim),
     lastSeenAt: lastSeen ? iso(lastSeen) : null,
     createdAt: iso(r.createdAt),
   };
@@ -227,7 +249,8 @@ export async function listInstanceUsers(options: {
   ]);
 
   const facts = await loadUserFacts(rows.map((r) => r.id));
-  return { items: rows.map((r) => toRow(r, facts)), total: totals[0]?.count ?? 0 };
+  const scim = await accountsManagedByScim();
+  return { items: rows.map((r) => toRow(r, facts, scim)), total: totals[0]?.count ?? 0 };
 }
 
 // One account with the projects it can reach. Returns null for an unknown id.
@@ -281,7 +304,7 @@ export async function getInstanceUser(userId: string): Promise<InstanceUserDetai
     };
   });
 
-  return { ...toRow(row, facts), projects };
+  return { ...toRow(row, facts, await accountsManagedByScim()), projects };
 }
 
 // How many owners each of the given projects has, keyed by project id.
@@ -301,6 +324,28 @@ async function countOwnersByProject(projectIds: number[]): Promise<Map<number, n
 // delete.
 export async function deleteInstanceUser(userId: string): Promise<void> {
   await deleteAccount(userId);
+}
+
+// Deactivates or reactivates an account without deleting it, through the same user.active
+// a SCIM provider writes: the auth session hook and the request guard refuse it, API keys
+// included, which therefore stay and work again once it is reactivated. Its sessions, MCP
+// OAuth tokens and pending invites are dropped. Returns the updated user, or null if gone.
+export async function setInstanceUserActive(
+  userId: string,
+  active: boolean,
+): Promise<InstanceUserDetail | null> {
+  if (!(await getInstanceUser(userId))) return null;
+  // Marked first, so a sign-in that lands while the revocation runs is refused a session.
+  await db.update(user).set({ active }).where(eq(user.id, userId));
+  if (!active) {
+    await db.delete(session).where(eq(session.userId, userId));
+    await db.delete(oauthAccessToken).where(eq(oauthAccessToken.userId, userId));
+    // Their pending invites would otherwise keep the registration gate open.
+    await db
+      .delete(teamInvite)
+      .where(and(eq(teamInvite.invitedByUserId, userId), eq(teamInvite.status, 'pending')));
+  }
+  return getInstanceUser(userId);
 }
 
 // ── Project directory ────────────────────────────────────────────────────────

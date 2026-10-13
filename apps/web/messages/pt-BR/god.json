@@ -19,7 +19,8 @@
       "signIn": "Login",
       "projects": "Projetos",
       "lastSeen": "Visto por último",
-      "email": "E-mail"
+      "email": "E-mail",
+      "active": "Ativa"
     },
     "registered": "entrou em {date}",
     "roleGod": "God",
@@ -30,7 +31,20 @@
     "verified": "Verificado",
     "notVerified": "Não verificado",
     "open": "Abrir conta",
-    "showAccess": "Mostrar acesso a projetos"
+    "showAccess": "Mostrar acesso a projetos",
+    "activeAria": "Conta ativa: {email}",
+    "activeState": {
+      "on": "Ativa",
+      "off": "Inativa"
+    },
+    "activeLock": {
+      "owner": "O proprietário da instância está sempre ativo.",
+      "agent": "A conta de um agente acompanha o agente.",
+      "scim": "Seu provedor de identidade (SCIM) decide quais contas estão ativas."
+    },
+    "deactivateTitle": "Desativar {email}?",
+    "deactivateBody": "A pessoa é desconectada na hora e não pode entrar nem usar suas chaves de API até você reativar a conta. As conexões MCP e os convites que ela enviou são removidos. Nada mais é excluído.",
+    "deactivateConfirm": "Desativar"
   },
   "userPanel": {
     "instanceOwner": "Dono da instância",

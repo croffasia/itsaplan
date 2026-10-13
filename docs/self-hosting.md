@@ -65,6 +65,9 @@ For MCP clients that sign in with OAuth, the proxy also sends the discovery docu
 host to the api: `/.well-known/oauth-authorization-server*`,
 `/.well-known/oauth-protected-resource*` and `/.well-known/openid-configuration*`.
 
+MCP clients sign in with OAuth only over HTTPS. On an `API_URL` that is plain HTTP and not
+`localhost`, MCP takes personal API keys only.
+
 The OAuth redirect URIs that god mode shows include the path. An api on a different
 registrable domain than the web app (`api.other.com`) does not work: the session cookie
 cannot be shared across sites.

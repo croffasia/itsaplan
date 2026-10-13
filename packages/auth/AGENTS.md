@@ -43,12 +43,16 @@ The mail provider is read by the api and the worker as well, so its shape and re
 live in `@repo/db` (`domains/instance-email.ts`); what is here is the write side god
 mode drives.
 
-"Invite only" means the address has a pending `team_invite` (`hasPendingInvite`).
+"Invite only" means the address has a pending `team_invite` that has not expired
+(`hasPendingInvite`). An invite expires `inviteTtlDays` after it was created (7 by
+default, 0 for never, at most 3650; `inviteValidSince` gives the cutoff): it then neither gates
+registration nor can be accepted, and a new invite for the same address replaces it.
 Invites are created and revoked inside a team, so there is no instance-level invite
-table and god mode has no invite section — do not add one.
+table and god mode has no invite section — do not add one; god mode only sets how long
+they last.
 
-`hooks.before` gates `/sign-up/email` (closed → 403, invite → no pending invite for
-that address → 403) and holds back `/sign-in/email` for an unconfirmed address while
+`hooks.before` gates `/sign-up/email` (closed → 403, invite → no pending, unexpired
+invite for that address → 403) and holds back `/sign-in/email` for an unconfirmed address while
 verification is required. The requirement never outlives the mail provider: the api
 refuses to turn it on without one, and `setEmailSettings` clears it when the provider
 is removed, so the setting alone is what the gate, the sign-up endpoint and the
@@ -198,9 +202,14 @@ receive its real owner.
 
 The registration gate (`assertRegistrationAllowed`) runs in
 `databaseHooks.user.create.before`, which every account creation passes, and that is what
-applies closed/invite-only to a Google sign-up. Its `APIError`s carry a `code` because the
-social callback turns that into the `?error=` it redirects with; without one the callback
-fails the request instead. Agent bot users are written with a direct insert and never
+applies closed/invite-only to a Google, OIDC or magic-link sign-up. It refuses with
+`REGISTRATION_CLOSED` on a closed instance, `INVITE_ONLY` when the address has no pending
+invite, and `INVITE_EXPIRED` when its only invites have expired. That last one reveals that
+the address was invited, so it is given only where the address is proven (provider, magic
+link); the email form, open to anyone, gets `INVITE_ONLY`. Its `APIError`s carry a `code`
+because the provider callback and the magic link turn that into the `?error=` they redirect
+with; without one the callback fails the request instead (`invite-forms.test.ts` pins
+`INVITE_EXPIRED` and `INVITE_ONLY`). Agent bot users are written with a direct insert and never
 reach the hook.
 
 ## API keys

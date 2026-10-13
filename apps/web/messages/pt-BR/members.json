@@ -60,15 +60,22 @@
     "resendUnavailable": "E-mail não está configurado. Copie o link do convite para compartilhá-lo.",
     "resendEmail": "Enviar e-mail",
     "resendingEmail": "Colocando na fila…",
+    "renew": "Renovar",
+    "renewing": "Renovando…",
+    "renewed": "Convite renovado: um novo link foi enviado por e-mail",
+    "renewedNoEmail": "Convite renovado. O e-mail não está configurado: copie o novo link para compartilhá-lo.",
+    "renewedCopyLink": "Convite renovado. Copie o novo link para compartilhá-lo.",
     "revokeAction": "Revogar convite",
     "removeAction": "Remover convite",
     "invitedBy": "Convidado por {name} · ",
     "createdAt": "criado em {date}",
+    "expiredAt": "expirou em {date}",
     "respondedAt": "{status, select, accepted {aceito} rejected {recusado} other {atualizado}} em {date}",
     "status": {
       "pending": "Pendente",
       "accepted": "Aceito",
-      "rejected": "Recusado"
+      "rejected": "Recusado",
+      "expired": "Expirado"
     },
     "revokeTitle": "Revogar convite de {email}",
     "revokeConfirm": "Revogar convite",

@@ -190,6 +190,9 @@
     "saved": "Paramètres d'authentification enregistrés",
     "registration": "Inscription",
     "registrationHint": "Qui peut créer un compte sur cette instance.",
+    "inviteTtlDays": "Expiration des invitations (jours)",
+    "inviteTtlDaysHint": "Passé ce délai, le lien d'invitation ne fonctionne plus et, avec l'inscription sur invitation, ne permet plus de créer un compte. Avec 0, les invitations n'expirent pas.",
+    "inviteTtlDaysInvalid": "Saisissez un nombre entier de jours entre 0 et {max}.",
     "modes": {
       "open": {
         "label": "Ouverte",

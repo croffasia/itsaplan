@@ -111,7 +111,10 @@
     "revokeTitle": "إلغاء دعوة {email}؟",
     "revokeConfirm": "إلغاء الدعوة",
     "revokeDescription": "الرابط هيبطل يشتغل. تقدر تدعوه تاني بعدين.",
-    "pending": "مدعو"
+    "pending": "مدعو",
+    "expiredAt": "انتهت في {date}",
+    "renew": "تجديد",
+    "renewing": "جارٍ التجديد…"
   },
   "manage": {
     "label": "إدارة الفرق",

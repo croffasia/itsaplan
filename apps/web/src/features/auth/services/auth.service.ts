@@ -90,7 +90,13 @@ export async function setNewPassword(input: {
 // Sends a one-time sign-in link. Rejected by the API when the instance has magic
 // links turned off.
 export async function sendMagicLink(email: string): Promise<void> {
-  const result = await signIn.magicLink({ email, callbackURL: appUrl('/') });
+  // A refused sign-up comes back to errorCallbackURL; on / it would be lost in the
+  // redirect to the sign-in page.
+  const result = await signIn.magicLink({
+    email,
+    callbackURL: appUrl('/'),
+    errorCallbackURL: appUrl('/login'),
+  });
   if (result.error) throw new Error(result.error.message ?? '');
 }
 

@@ -190,6 +190,9 @@
     "saved": "Pengaturan autentikasi disimpan",
     "registration": "Pendaftaran",
     "registrationHint": "Siapa yang boleh membuat akun di instance ini.",
+    "inviteTtlDays": "Masa berlaku undangan (hari)",
+    "inviteTtlDaysHint": "Setelah jangka waktu ini, tautan undangan tidak berfungsi lagi dan, dengan pendaftaran khusus undangan, tidak bisa lagi dipakai untuk mendaftar. Dengan 0, undangan tidak kedaluwarsa.",
+    "inviteTtlDaysInvalid": "Masukkan jumlah hari berupa bilangan bulat dari 0 sampai {max}.",
     "modes": {
       "open": {
         "label": "Terbuka",

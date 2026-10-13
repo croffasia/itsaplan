@@ -1,6 +1,8 @@
+import { createHash } from 'node:crypto';
 import { auth } from '@repo/auth';
 import { db, instanceWorkspaceId } from '@repo/db';
 import { insertOwnedTeam } from '#modules/teams/service';
+import { app } from './app';
 
 export interface TestUser {
   // The session cookie header to pass to authenticated requests, e.g.
@@ -61,4 +63,24 @@ export async function signUpTestUser(
   }
 
   return { cookie, userId, email, username };
+}
+
+// Opens a magic link for `email` as the web asks for one (errorCallbackURL on the sign-in
+// page) and returns where it redirects. The token is written straight into the
+// verification table, as better-auth stores it (`storeToken: 'hashed'`), because the
+// real one only travels in the email.
+export async function openMagicLink(email: string, token: string): Promise<URL> {
+  const context = await auth.$context;
+  await context.internalAdapter.createVerificationValue({
+    identifier: `magic-link:${createHash('sha256').update(token).digest('base64url')}`,
+    value: JSON.stringify({ type: 'magic-link', email }),
+    expiresAt: new Date(Date.now() + 60_000),
+  });
+  const res = await app.handle(
+    new Request(
+      `http://localhost/api/auth/magic-link/verify?token=${token}&callbackURL=/&errorCallbackURL=/login`,
+    ),
+  );
+  if (res.status !== 302) throw new Error(`magic link answered ${res.status}`);
+  return new URL(res.headers.get('location') ?? '', 'http://localhost');
 }

@@ -190,6 +190,9 @@
     "saved": "인증 설정이 저장되었습니다",
     "registration": "회원가입",
     "registrationHint": "이 인스턴스에서 계정을 생성할 수 있는 사용자를 설정합니다.",
+    "inviteTtlDays": "초대 유효 기간(일)",
+    "inviteTtlDaysHint": "초대 링크는 이 일수가 지나면 더 이상 작동하지 않으며, 초대 전용 회원가입에서는 해당 주소로 가입할 수 없게 됩니다. 0으로 설정하면 초대에 응답할 때까지 유효합니다.",
+    "inviteTtlDaysInvalid": "0에서 {max} 사이의 정수 일수를 입력하세요.",
     "modes": {
       "open": {
         "label": "공개",

@@ -16,6 +16,7 @@ const MESSAGE_KEYS = {
   unable_to_link_account: 'linkRefused',
   account_not_linked: 'linkRefused',
   signup_disabled: 'signupDisabled',
+  INVITE_EXPIRED: 'inviteExpired',
   OIDC_DISABLED: 'ssoDisabled',
   PASSWORD_AUTH_DISABLED: 'passwordDisabled',
   ACCOUNT_DEACTIVATED: 'accountDeactivated',

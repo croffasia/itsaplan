@@ -190,6 +190,9 @@
     "saved": "身份验证设置已保存",
     "registration": "注册",
     "registrationHint": "设置哪些人可以创建此实例的账户。",
+    "inviteTtlDays": "邀请有效期（天）",
+    "inviteTtlDaysHint": "超过此期限后，邀请链接将失效；在仅限邀请注册时，也无法再用它注册。设为 0 则邀请永不过期。",
+    "inviteTtlDaysInvalid": "请输入 0 到 {max} 之间的整数天数。",
     "modes": {
       "open": {
         "label": "开放注册",

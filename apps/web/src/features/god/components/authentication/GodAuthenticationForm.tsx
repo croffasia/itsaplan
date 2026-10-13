@@ -7,10 +7,11 @@ import SettingsCard from '@/components/common/page/SettingsCard';
 import SettingsSection from '@/components/common/page/SettingsSection';
 import SettingsRow from '@/components/common/page/SettingsRow';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import GodSectionPage from '../GodSectionPage';
 import RegistrationModePicker from './RegistrationModePicker';
-import { useGodPolicyForm } from '../../hooks/useGodPolicyForm';
+import { MAX_INVITE_TTL_DAYS, useGodPolicyForm } from '../../hooks/useGodPolicyForm';
 
 // The registration policy and the sign-in options. The provider credentials live
 // under Integrations (Email provider, Auth provider).
@@ -43,7 +44,11 @@ export default function GodAuthenticationForm({
     <GodSectionPage
       slug="authentication"
       actions={
-        <Button size="sm" onClick={() => void save()} disabled={!policy.dirty || policy.saving}>
+        <Button
+          size="sm"
+          onClick={() => void save()}
+          disabled={!policy.dirty || !policy.inviteTtlDaysValid || policy.saving}
+        >
           {policy.saving ? tCommon('saving') : tCommon('save')}
         </Button>
       }
@@ -55,6 +60,30 @@ export default function GodAuthenticationForm({
               value={policy.registration}
               disabled={policy.saving}
               onChange={policy.setRegistration}
+            />
+            <SettingsRow
+              title={t('inviteTtlDays')}
+              description={t('inviteTtlDaysHint')}
+              note={
+                policy.inviteTtlDaysValid
+                  ? undefined
+                  : t('inviteTtlDaysInvalid', { max: MAX_INVITE_TTL_DAYS })
+              }
+              control={
+                <Input
+                  type="number"
+                  min={0}
+                  max={MAX_INVITE_TTL_DAYS}
+                  step={1}
+                  inputMode="numeric"
+                  className="w-24"
+                  aria-label={t('inviteTtlDays')}
+                  aria-invalid={!policy.inviteTtlDaysValid}
+                  value={policy.inviteTtlDays}
+                  disabled={policy.saving}
+                  onChange={(e) => policy.setInviteTtlDays(e.target.value)}
+                />
+              }
             />
           </SettingsCard>
         </SettingsSection>

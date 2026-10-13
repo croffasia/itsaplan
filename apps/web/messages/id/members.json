@@ -60,15 +60,22 @@
     "resendUnavailable": "Email tidak dikonfigurasi. Salin tautan undangan untuk membagikannya.",
     "resendEmail": "Kirim email",
     "resendingEmail": "Mengantrekan…",
+    "renew": "Perbarui",
+    "renewing": "Memperbarui…",
+    "renewed": "Undangan diperbarui: tautan baru telah dikirim lewat email",
+    "renewedNoEmail": "Undangan diperbarui. Email belum dikonfigurasi: salin tautan baru untuk membagikannya.",
+    "renewedCopyLink": "Undangan diperbarui. Salin tautan baru untuk membagikannya.",
     "revokeAction": "Cabut undangan",
     "removeAction": "Hapus undangan",
     "invitedBy": "Diundang oleh {name} · ",
     "createdAt": "dibuat {date}",
+    "expiredAt": "kedaluwarsa {date}",
     "respondedAt": "{status, select, accepted {diterima} rejected {ditolak} other {diperbarui}} {date}",
     "status": {
       "pending": "Tertunda",
       "accepted": "Diterima",
-      "rejected": "Ditolak"
+      "rejected": "Ditolak",
+      "expired": "Kedaluwarsa"
     },
     "revokeTitle": "Cabut undangan untuk {email}",
     "revokeConfirm": "Cabut undangan",

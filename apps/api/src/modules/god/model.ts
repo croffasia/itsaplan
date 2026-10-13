@@ -38,6 +38,7 @@ export const AuthSettingsResponse = t.Object({
   emailPassword: t.Boolean(),
   trustProviderEmails: t.Boolean(),
   personalWorkspaces: t.Boolean(),
+  inviteTtlDays: t.Integer(),
   // The settings that depend on outbound email cannot be turned on without a mail
   // provider, and the UI explains why.
   hasEmailProvider: t.Boolean(),
@@ -55,6 +56,8 @@ export const AuthSettingsBody = t.Object({
   emailPassword: t.Optional(t.Boolean()),
   trustProviderEmails: t.Optional(t.Boolean()),
   personalWorkspaces: t.Optional(t.Boolean()),
+  // The cap keeps createdAt plus the lifetime inside the range a Date can hold.
+  inviteTtlDays: t.Optional(t.Integer({ minimum: 0, maximum: 3650 })),
 });
 
 export const EmailSettingsResponse = t.Object({

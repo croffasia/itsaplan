@@ -60,15 +60,22 @@
     "resendUnavailable": "이메일이 설정되어 있지 않습니다. 초대 링크를 복사하여 공유하세요.",
     "resendEmail": "이메일 보내기",
     "resendingEmail": "전송 대기열에 추가 중…",
+    "renew": "갱신",
+    "renewing": "갱신 중…",
+    "renewed": "초대가 갱신되었습니다. 새 링크를 이메일로 보냈습니다",
+    "renewedNoEmail": "초대가 갱신되었습니다. 이메일이 설정되어 있지 않습니다. 새 링크를 복사하여 공유하세요.",
+    "renewedCopyLink": "초대가 갱신되었습니다. 새 링크를 복사하여 공유하세요.",
     "revokeAction": "초대 취소",
     "removeAction": "초대 삭제",
     "invitedBy": "{name}이(가) 초대 · ",
     "createdAt": "{date}에 생성",
+    "expiredAt": "{date}에 만료",
     "respondedAt": "{status, select, accepted {수락} rejected {거절} other {업데이트}} · {date}",
     "status": {
       "pending": "대기 중",
       "accepted": "수락됨",
-      "rejected": "거절됨"
+      "rejected": "거절됨",
+      "expired": "만료됨"
     },
     "revokeTitle": "{email} 초대 취소",
     "revokeConfirm": "초대 취소",

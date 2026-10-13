@@ -111,7 +111,10 @@
     "revokeTitle": "Revogar convite de {email}?",
     "revokeConfirm": "Revogar convite",
     "revokeDescription": "O link deixa de funcionar. Você pode convidá-lo de novo depois.",
-    "pending": "Convidado"
+    "pending": "Convidado",
+    "expiredAt": "expirou em {date}",
+    "renew": "Renovar",
+    "renewing": "Renovando…"
   },
   "manage": {
     "label": "Gerenciar times",

@@ -5,7 +5,7 @@ import { hasEmailProvider } from '@repo/mailer';
 import { and, eq, sql } from 'drizzle-orm';
 import type { InviteRow } from './service';
 
-interface InviteProject {
+export interface InviteProject {
   id: number;
   name: string;
 }

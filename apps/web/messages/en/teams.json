@@ -111,7 +111,10 @@
     "revokeTitle": "Revoke invite for {email}?",
     "revokeConfirm": "Revoke invite",
     "revokeDescription": "The link stops working. You can invite them again later.",
-    "pending": "Invited"
+    "pending": "Invited",
+    "expiredAt": "expired {date}",
+    "renew": "Renew",
+    "renewing": "Renewing…"
   },
   "manage": {
     "label": "Manage teams",

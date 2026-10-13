@@ -111,7 +111,10 @@
     "revokeTitle": "Cabut undangan untuk {email}?",
     "revokeConfirm": "Cabut undangan",
     "revokeDescription": "Tautan tidak akan berfungsi lagi. Anda dapat mengundangnya lagi nanti.",
-    "pending": "Diundang"
+    "pending": "Diundang",
+    "expiredAt": "kedaluwarsa {date}",
+    "renew": "Perbarui",
+    "renewing": "Memperbarui…"
   },
   "manage": {
     "label": "Kelola tim",

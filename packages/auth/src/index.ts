@@ -17,6 +17,7 @@ import * as schema from '@repo/db/schema';
 import {
   getAuthSettings,
   hasPendingInvite,
+  hasExpiredInvite,
   getGoogleConfig,
   isGoogleUsable,
   getOidcConfig,
@@ -353,24 +354,33 @@ const PASSWORD_PATHS = new Set([
   '/magic-link/verify',
 ]);
 
+const REGISTRATION_REFUSALS = {
+  REGISTRATION_CLOSED: 'Registration is closed on this instance',
+  INVITE_ONLY: 'This instance is invite-only. Ask a project owner to invite this address.',
+  INVITE_EXPIRED: 'The invite for this address has expired. Ask for a new one.',
+} as const;
+
+function refuseRegistration(code: keyof typeof REGISTRATION_REFUSALS): never {
+  throw new APIError('FORBIDDEN', { code, message: REGISTRATION_REFUSALS[code] });
+}
+
 // The registration gate: who may create an account. Both sign-up paths run it — the
 // email form checks it up front (below), and the user create hook catches every other
-// path, which is what stops a Google sign-up on a closed or invite-only instance.
-// Each refusal carries a `code`, which is what the social callback turns into the
-// ?error= it redirects with; without one the callback would fail the request instead.
-async function assertRegistrationAllowed(email: string): Promise<void> {
+// path, which is what stops a Google, OIDC or magic-link sign-up on a closed or
+// invite-only instance. Telling an expired invite apart reveals that the address was
+// invited, so it is said only once the address is proven (a provider or a magic link):
+// the email form, open to anyone, gets the plain invite-only refusal. Each refusal
+// carries a `code`, which is what the provider callback and the magic link turn into the
+// ?error= they redirect with; without one the callback would fail the request instead.
+async function assertRegistrationAllowed(
+  email: string,
+  { addressProven }: { addressProven: boolean },
+): Promise<void> {
   const settings = await getAuthSettings();
-  if (settings.registration === 'closed') {
-    throw new APIError('FORBIDDEN', {
-      code: 'REGISTRATION_CLOSED',
-      message: 'Registration is closed on this instance',
-    });
-  }
+  if (settings.registration === 'closed') refuseRegistration('REGISTRATION_CLOSED');
   if (settings.registration === 'invite' && !(await hasPendingInvite(email))) {
-    throw new APIError('FORBIDDEN', {
-      code: 'INVITE_ONLY',
-      message: 'This instance is invite-only. Ask a project owner to invite this address.',
-    });
+    const expired = addressProven && (await hasExpiredInvite(email));
+    refuseRegistration(expired ? 'INVITE_EXPIRED' : 'INVITE_ONLY');
   }
 }
 
@@ -625,7 +635,9 @@ export const auth = betterAuth({
       }
 
       if (ctx.path === '/sign-up/email') {
-        await assertRegistrationAllowed((ctx.body as { email?: string } | undefined)?.email ?? '');
+        await assertRegistrationAllowed((ctx.body as { email?: string } | undefined)?.email ?? '', {
+          addressProven: false,
+        });
         return;
       }
 
@@ -729,7 +741,9 @@ export const auth = betterAuth({
         // Assign the role before the row is inserted: first user ever → "god",
         // everyone else → "user".
         before: async (user) => {
-          await assertRegistrationAllowed(user.email);
+          // The email form is refused up front unless its invite is valid, so a refusal
+          // here comes from a provider or a magic link, which prove the address.
+          await assertRegistrationAllowed(user.email, { addressProven: true });
           const isFirstUser = (await db.$count(schema.user)) === 0;
           // A sign-up that carried its own username has passed the plugin's own
           // check against the other accounts by now, but not the one against the
@@ -955,6 +969,7 @@ export {
   REGISTRATION_MODES,
   getAuthSettings,
   setAuthSettings,
+  inviteValidSince,
   getEmailSettings,
   setEmailSettings,
   resolveEmailConfig,

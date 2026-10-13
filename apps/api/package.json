@@ -35,7 +35,7 @@
     "@repo/mailer": "workspace:*",
     "@repo/net": "workspace:*",
     "@repo/storage": "workspace:*",
-    "@tiptap/pm": "3.30.5",
+    "@tiptap/pm": "3.32.0",
     "croner": "^10.0.1",
     "decode-named-character-reference": "^1.3.0",
     "drizzle-orm": "^0.45.4",
